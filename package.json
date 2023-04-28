@@ -35,7 +35,7 @@
     "singleQuote": true,
     "trailingComma": "es5"
   },
-  "name": "upup",
+  "name": "@bassem97/upup",
   "author": "BASSEM",
   "module": "dist/upup.esm.js",
   "size-limit": [
