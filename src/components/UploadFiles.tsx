@@ -1,7 +1,11 @@
-import React, {useState, DragEvent} from 'react';
+import React, {useState, DragEvent, FC} from 'react';
 import FileUploader from './FileUploader/FileUploader';
 
-export function UploadFiles() {
+export interface UploadFilesProps {
+    children?: React.ReactNode;
+}
+
+export const  UploadFiles: FC<UploadFilesProps> = () =>  {
     const [dragging, setDragging] = useState<boolean>(false)
     const handleDragEnter = (e: DragEvent<HTMLDivElement>) => {
         e.preventDefault()
@@ -13,7 +17,7 @@ export function UploadFiles() {
 
     return (
         <div
-            className="flex justify-center h-full items-center relative"
+            className="max-w-full overflow-hidden flex w-full"
             onDragEnter={handleDragEnter}
         >
             <FileUploader
