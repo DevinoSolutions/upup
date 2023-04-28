@@ -51,7 +51,6 @@ export const UploadFiles: FC<UploadFilesProps>  = ({client,bucket}: UploadFilesP
     }
     return (
         <div
-            className="max-w-full overflow-hidden flex w-full"
             onDragEnter={handleDragEnter}
         >
             <FileUploader
@@ -68,7 +67,6 @@ export const UploadFiles: FC<UploadFilesProps>  = ({client,bucket}: UploadFilesP
             >
                 Upload
             </button>
-
         </div>
     )
 }
