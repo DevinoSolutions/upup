@@ -1,6 +1,5 @@
 import FileItem from "./FileItem";
 import React, { Dispatch, DragEvent, SetStateAction } from 'react'
-import {FaUpload} from "react-icons/all";
 
 type Props = {
     files: File[]
@@ -44,7 +43,6 @@ const FileUploader = ({
         <div className="flex flex-col gap-4 items-center z-50 w-full">
             {dragging && (
                 <div className="z-50 flex items-center justify-center fixed h-screen w-screen bg-black bg-opacity-80 top-0 left-0 pointer-events-none">
-                    <FaUpload className="text-5xl absolute text-white animate-pulse" />
                     <input
                         onDrop={handleDrop}
                         onDragLeave={handleDragLeave}
