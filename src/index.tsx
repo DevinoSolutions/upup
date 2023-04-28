@@ -1,3 +1,3 @@
 
 export * from './components/UploadFiles'
-export {getClient} from './lib/S3'
+export {getClient,s3Configs} from './lib/S3'
