@@ -35,7 +35,8 @@ export const UploadFiles: FC<UploadFilesProps>  = ({client,bucket}: UploadFilesP
         let key = '';
         files.forEach(element => {
             key = `${Date.now()}__${element.name}`
-            const req = client.putObject( {
+            client.putObject(
+                {
                     Bucket: bucket,
                     Key: `${key}`,
                     Body: element,
@@ -43,10 +44,8 @@ export const UploadFiles: FC<UploadFilesProps>  = ({client,bucket}: UploadFilesP
                 },
                 (err:any, _data:any) => {
                     if (err) console.log(err, err.stack)
-                });
-            req.httpRequest.headers['Access-Control-Allow-Origin'] = '*';
-            req.send(function (data:any) { console.log(data) });
-
+                }
+            )
         })
     }
     return (
