@@ -1,7 +1,7 @@
 import React from 'react';
-import { Dispatch, SetStateAction } from 'react'
-import { ImCross } from 'react-icons/im'
-import {bytesToSize} from "../../lib/bytesToSize";
+import { Dispatch, SetStateAction } from 'react';
+import { ImCross } from 'react-icons/im';
+import { bytesToSize } from "../../lib/bytesToSize";
 
 type Props = {
     file: File
