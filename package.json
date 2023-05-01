@@ -78,6 +78,7 @@
     "typescript": "^5.0.4"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.271.0"
+    "@aws-sdk/client-s3": "^3.271.0",
+    "react-icons": "^4.8.0"
   }
 }
