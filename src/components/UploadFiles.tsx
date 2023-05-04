@@ -5,9 +5,10 @@ import pako from 'pako'
 export interface UploadFilesProps {
     client: any
     bucket: string
+    setKey: (key: string) => void
 }
 
-export const UploadFiles: FC<UploadFilesProps>  = ({client,bucket}: UploadFilesProps) => {
+export const UploadFiles: FC<UploadFilesProps>  = ({client,bucket,setKey}: UploadFilesProps) => {
     const [dragging, setDragging] = useState<boolean>(false)
     const handleDragEnter = (e: DragEvent<HTMLDivElement>) => {
         e.preventDefault()
@@ -47,6 +48,9 @@ export const UploadFiles: FC<UploadFilesProps>  = ({client,bucket}: UploadFilesP
                 }
             )
         })
+        console.log('key', key)
+        setKey(key)
+
     }
     return (
         <div
