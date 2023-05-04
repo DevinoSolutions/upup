@@ -6,9 +6,10 @@ export interface UploadFilesProps {
     client: any
     bucket: string
     setKey: (key: string) => void
+    setHandleUpload: (handleUpload: () => void) => void
 }
 
-export const UploadFiles: FC<UploadFilesProps>  = ({client,bucket,setKey}: UploadFilesProps) => {
+export const UploadFiles: FC<UploadFilesProps>  = ({client,bucket,setKey,setHandleUpload}: UploadFilesProps) => {
     const [dragging, setDragging] = useState<boolean>(false)
     const handleDragEnter = (e: DragEvent<HTMLDivElement>) => {
         e.preventDefault()
@@ -52,6 +53,8 @@ export const UploadFiles: FC<UploadFilesProps>  = ({client,bucket,setKey}: Uploa
         setKey(key)
 
     }
+    setHandleUpload(handleUpload)
+
     return (
         <div
             onDragEnter={handleDragEnter}
@@ -63,13 +66,7 @@ export const UploadFiles: FC<UploadFilesProps>  = ({client,bucket,setKey}: Uploa
                 setFiles={setFiles}
                 multiple={false}
             />
-            <button
-                className="bg-primary text-white px-4 py-2 rounded-md"
-                onClick={handleUpload}
 
-            >
-                Upload
-            </button>
         </div>
     )
 }
