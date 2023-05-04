@@ -58,7 +58,7 @@ export const UploadFiles: FC<UploadFilesProps>  = ({client,bucket,setKey,setHand
         if (canUpload) {
             setHandleUpload(handleUpload)
         }
-    }, [canUpload])
+    }, [files])
 
 
     return (
