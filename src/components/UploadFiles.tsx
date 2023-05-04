@@ -6,10 +6,11 @@ export interface UploadFilesProps {
     client: any
     bucket: string
     setKey: (key: string) => void
-    setHandleUpload?: (handleUpload: () => void) => void
+    setHandleUpload: (handleUpload: () => void) => void
+    canUpload: boolean
 }
 
-export const UploadFiles: FC<UploadFilesProps>  = ({client,bucket,setKey,setHandleUpload}: UploadFilesProps) => {
+export const UploadFiles: FC<UploadFilesProps>  = ({client,bucket,setKey,setHandleUpload, canUpload}: UploadFilesProps) => {
     const [dragging, setDragging] = useState<boolean>(false)
     const handleDragEnter = (e: DragEvent<HTMLDivElement>) => {
         e.preventDefault()
@@ -54,10 +55,10 @@ export const UploadFiles: FC<UploadFilesProps>  = ({client,bucket,setKey,setHand
 
     }
     useEffect(() => {
-        if (setHandleUpload) {
+        if (canUpload) {
             setHandleUpload(handleUpload)
         }
-    }, [files]);
+    }, [canUpload])
 
 
     return (
