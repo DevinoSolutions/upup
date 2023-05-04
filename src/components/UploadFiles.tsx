@@ -6,7 +6,7 @@ export interface UploadFilesProps {
     client: any
     bucket: string
     setKey: (key: string) => void
-    setHandleUpload: (handleUpload: () => void) => void
+    setHandleUpload?: (handleUpload: () => void) => void
 }
 
 export const UploadFiles: FC<UploadFilesProps>  = ({client,bucket,setKey,setHandleUpload}: UploadFilesProps) => {
@@ -54,7 +54,9 @@ export const UploadFiles: FC<UploadFilesProps>  = ({client,bucket,setKey,setHand
 
     }
     useEffect(() => {
-        setHandleUpload(handleUpload)
+        if (setHandleUpload) {
+            setHandleUpload(handleUpload)
+        }
     }, [files]);
 
 
