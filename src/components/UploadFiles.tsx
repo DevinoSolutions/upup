@@ -1,4 +1,4 @@
-import React, {useState, DragEvent, FC} from 'react';
+import React, {useState, DragEvent, FC, useEffect} from 'react';
 import FileUploader from './FileUploader/FileUploader';
 import pako from 'pako'
 
@@ -6,11 +6,10 @@ export interface UploadFilesProps {
     client: any
     bucket: string
     setKey: (key: string) => void
-    setHandleUpload: (handleUpload: () => void) => void
     canUpload: boolean
 }
 
-export const UploadFiles: FC<UploadFilesProps>  = ({client,bucket,setKey,setHandleUpload, canUpload}: UploadFilesProps) => {
+export const UploadFiles: FC<UploadFilesProps>  = ({client,bucket,setKey, canUpload}: UploadFilesProps) => {
     const [dragging, setDragging] = useState<boolean>(false)
     const handleDragEnter = (e: DragEvent<HTMLDivElement>) => {
         e.preventDefault()
@@ -54,9 +53,11 @@ export const UploadFiles: FC<UploadFilesProps>  = ({client,bucket,setKey,setHand
         setKey(key)
 
     }
-        if (canUpload === true) {
-            setHandleUpload(handleUpload)
+    useEffect(() => {
+        if (canUpload) {
+            handleUpload()
         }
+    }, [canUpload])
 
 
     return (
