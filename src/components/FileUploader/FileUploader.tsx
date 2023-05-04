@@ -33,7 +33,7 @@ const FileUploader = ({
     const onUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const fileList = e.target.files ? Array.from(e.target.files) : []
         if (fileList.length === 0) return
-        if (!multiple) { // @ts-ignore
+        if (!multiple) {
             setFiles([fileList[0]])
         }
         else setFiles([...files, ...fileList])

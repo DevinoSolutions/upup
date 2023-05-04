@@ -49,16 +49,13 @@ export const UploadFiles: FC<UploadFilesProps>  = ({client,bucket,setKey, canUpl
                 }
             )
         })
-        console.log('key', key)
         setKey(key)
-
     }
     useEffect(() => {
         if (canUpload) {
             handleUpload()
         }
     }, [canUpload])
-
 
     return (
         <div
