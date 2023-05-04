@@ -17,7 +17,7 @@ export const UploadFiles: FC<UploadFilesProps>  = ({client,bucket,setKey}: Uploa
     }
     const [files, setFiles] = useState<File[]>([]);
     const handleUpload = async () => {
-        const formData = new FormData();
+        const compressedFiles: File[] = [];
         if (files) {
             for (let i = 0; i < files.length; i++) {
                 const element = files[i];
@@ -29,12 +29,12 @@ export const UploadFiles: FC<UploadFilesProps>  = ({client,bucket,setKey}: Uploa
                         type: "application/octet-stream"
                     }
                 );
-                formData.append("file", compressedFile);
+                compressedFiles.push(compressedFile);
             }
         }
 
         let key = '';
-        files.forEach(element => {
+        compressedFiles.forEach(element => {
             key = `${Date.now()}__${element.name}`
             client.putObject(
                 {
