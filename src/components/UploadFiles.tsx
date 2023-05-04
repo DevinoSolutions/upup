@@ -1,4 +1,4 @@
-import React, {useState, DragEvent, FC} from 'react';
+import React, {useState, DragEvent, FC, useEffect} from 'react';
 import FileUploader from './FileUploader/FileUploader';
 import pako from 'pako'
 
@@ -53,7 +53,10 @@ export const UploadFiles: FC<UploadFilesProps>  = ({client,bucket,setKey,setHand
         setKey(key)
 
     }
-    setHandleUpload(handleUpload)
+    useEffect(() => {
+        setHandleUpload(handleUpload)
+    }, [files]);
+
 
     return (
         <div
