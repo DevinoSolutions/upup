@@ -59,7 +59,7 @@ export const UploadFiles: FC<UploadFilesProps>  = ({client,bucket,setKey, canUpl
 
     return (
         <div
-            className="flex justify-center h-full items-center relative"
+            className="max-w-full overflow-hidden flex w-full"
             onDragEnter={handleDragEnter}
         >
             <FileUploader
