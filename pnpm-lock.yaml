@@ -14,11 +14,13 @@ specifiers:
   '@storybook/addons': ^7.0.7
   '@storybook/react': ^7.0.7
   '@storybook/react-webpack5': ^7.0.7
+  '@types/gapi': ^0.0.44
   '@types/pako': ^2.0.0
   '@types/react': ^18.2.0
   '@types/react-dom': ^18.2.1
   babel-loader: ^9.1.2
   husky: ^8.0.3
+  load-script: ^2.0.0
   pako: ^2.1.0
   react: ^18.2.0
   react-dom: ^18.2.0
@@ -32,6 +34,8 @@ specifiers:
 
 dependencies:
   '@aws-sdk/client-s3': 3.321.1
+  '@types/gapi': 0.0.44
+  load-script: 2.0.0
   react-icons: 4.8.0_react@18.2.0
 
 devDependencies:
@@ -4503,6 +4507,10 @@ packages:
   /@types/find-cache-dir/3.2.1:
     resolution: {integrity: sha512-frsJrz2t/CeGifcu/6uRo4b+SzAwT4NYCVPu1GN8IB9XTzrpPkGuV0tmh9mN+/L0PklAlsC3u5Fxt0ju00LXIw==}
     dev: true
+
+  /@types/gapi/0.0.44:
+    resolution: {integrity: sha512-hsgJMfZ/pMwI15UlAYHMNwj8DRoigo1odhbPwEXdp19ZQwQAXbcRrpzaDsfc+9XM6RtGpvl4Ja7uW8A+KPCa7w==}
+    dev: false
 
   /@types/glob/8.1.0:
     resolution: {integrity: sha512-IO+MJPVhoqz+28h1qLAcBEH2+xHMK6MTyHJc7MTnnYb6wsoLR29POVGJ7LycmVXIqyy/4/2ShP5sUwTXuOwb/w==}
@@ -9840,6 +9848,10 @@ packages:
   /lines-and-columns/1.2.4:
     resolution: {integrity: sha512-7ylylesZQ/PV29jhEDl3Ufjo6ZX7gCqJr5F7PKrqc93v7fzSymt1BpwEU8nAUXs8qzzvqhbjhK5QZg6Mt/HkBg==}
     dev: true
+
+  /load-script/2.0.0:
+    resolution: {integrity: sha512-km6cyoPW4rM22JMGb+SHUKPMZVDpUaMpMAKrv8UHWllIxc/qjgMGHD91nY+5hM+/NFs310OZ2pqQeJKs7HqWPA==}
+    dev: false
 
   /loader-runner/4.3.0:
     resolution: {integrity: sha512-3R/1M+yS3j5ou80Me59j7F9IMs4PXs3VqRrm0TU3AbKPxlmpoY1TNscJV/oGJXo8qCatFGTfDbY6W6ipGOYXfg==}
