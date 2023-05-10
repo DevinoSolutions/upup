@@ -1,7 +1,7 @@
 import load from 'load-script'
 import {useEffect, useState} from "react";
 
-const SCOPES = 'https://www.googleapis.com/auth/drive.metadata.readonly'
+const SCOPES = 'https://www.googleapis.com/auth/drive'
 
 interface props {
     CLIENT_ID: string
