@@ -9,10 +9,12 @@ export interface GoogleDriveProps {
     API_KEY: string,
     APP_ID: string,
     CLIENT_ID: string,
+    setKey: (key: string) => void
+    canUpload?: boolean
 }
 
 
-export const GoogleDrive: FC<GoogleDriveProps> = ({client,bucket, API_KEY, APP_ID, CLIENT_ID}: GoogleDriveProps) => {
+export const GoogleDrive: FC<GoogleDriveProps> = ({client,bucket, API_KEY, APP_ID, CLIENT_ID,setKey}: GoogleDriveProps) => {
     const {pickerApiLoaded, gisLoaded, tokenClient} = useLoadGAPI({CLIENT_ID})
 
     let accessToken: string
@@ -93,6 +95,7 @@ export const GoogleDrive: FC<GoogleDriveProps> = ({client,bucket, API_KEY, APP_I
                     if (err) console.log(err, err.stack)
                 }
             )
+            setKey(key)
 
 
         }
@@ -101,7 +104,7 @@ export const GoogleDrive: FC<GoogleDriveProps> = ({client,bucket, API_KEY, APP_I
     return (
         <div>
             {pickerApiLoaded && gisLoaded && (
-                <button onClick={createPicker}>Open Picker</button>
+                <button onClick={createPicker}>google drive</button>
             )}
         </div>
     )
