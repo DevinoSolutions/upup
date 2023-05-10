@@ -57,7 +57,9 @@ export const UploadFiles: FC<UploadFilesProps>  = ({client,bucket,setKey, canUpl
         }
     }, [canUpload])
 
+
     return (
+
         <div
             className="max-w-full overflow-hidden flex w-full"
             onDragEnter={handleDragEnter}
@@ -69,6 +71,7 @@ export const UploadFiles: FC<UploadFilesProps>  = ({client,bucket,setKey, canUpl
                 setFiles={setFiles}
                 multiple={false}
             />
+
 
         </div>
     )
