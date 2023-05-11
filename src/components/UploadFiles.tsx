@@ -1,6 +1,7 @@
 import React, {useState, DragEvent, FC, useEffect} from 'react';
 import FileUploader from './FileUploader/FileUploader';
-import pako from 'pako'
+import {pubObject} from "../lib/putObject";
+import {compressFile} from "../lib/compressFile";
 
 export interface UploadFilesProps {
     client: any
@@ -22,32 +23,15 @@ export const UploadFiles: FC<UploadFilesProps>  = ({client,bucket,setKey, canUpl
         if (files) {
             for (let i = 0; i < files.length; i++) {
                 const element = files[i];
-                const buffer: ArrayBuffer = await element.arrayBuffer();
-                const compressedFile = new File(
-                    [pako.gzip(buffer)],
-                    element.name + ".gz",
-                    {
-                        type: "application/octet-stream"
-                    }
-                );
+                const compressedFile = await compressFile({element,element_name: element.name})
                 compressedFiles.push(compressedFile);
             }
         }
 
         let key = '';
-        compressedFiles.forEach(element => {
-            key = `${Date.now()}__${element.name}`
-            client.putObject(
-                {
-                    Bucket: bucket,
-                    Key: `${key}`,
-                    Body: element,
-                    ACL: 'public-read',
-                },
-                (err:any, _data:any) => {
-                    if (err) console.log(err, err.stack)
-                }
-            )
+        compressedFiles.forEach(compressedFile => {
+            key = `${Date.now()}__${compressedFile.name}`
+            pubObject({client, bucket, key, compressedFile})
         })
         setKey(key)
     }

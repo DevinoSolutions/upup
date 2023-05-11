@@ -1,6 +1,7 @@
-import pako from 'pako'
 import React, {FC} from "react";
 import useLoadGAPI from "./hooks/useLoadGAPI";
+import {pubObject} from "./lib/putObject";
+import {compressFile} from "./lib/compressFile";
 
 
 export interface GoogleDriveProps {
@@ -54,6 +55,8 @@ export const GoogleDrive: FC<GoogleDriveProps> = ({client,bucket, API_KEY, APP_I
 
     // TO-DO: Make sure Google Workspace documents can be downloaded.
     const pickerCallback = async (data: any): Promise<void> => {
+
+
         if (data.action === window.google.picker.Action.PICKED) {
             const document = data[window.google.picker.Response.DOCUMENTS][0]
             const fileId = document[window.google.picker.Document.ID]
@@ -74,27 +77,9 @@ export const GoogleDrive: FC<GoogleDriveProps> = ({client,bucket, API_KEY, APP_I
             }
 
             // Read the file content as a Buffer
-            const buffer: ArrayBuffer = await response.arrayBuffer()
-            const compressedFile: File = new File(
-                [pako.gzip(buffer)],
-                document[window.google.picker.Document.NAME] + '.gz',
-                {
-                    type: 'application/octet-stream',
-                }
-            )
-
+            const compressedFile = await compressFile({element: response,element_name: document[window.google.picker.Document.NAME]})
             const key = `${Date.now()}__${compressedFile.name}`
-            client.putObject(
-                {
-                    Bucket: bucket,
-                    Key: `${key}`,
-                    Body: compressedFile,
-                    ACL: 'public-read',
-                },
-                (err: any, _data: any) => {
-                    if (err) console.log(err, err.stack)
-                }
-            )
+            pubObject({client, bucket, key, compressedFile})
             setKey(key)
 
 
@@ -104,7 +89,7 @@ export const GoogleDrive: FC<GoogleDriveProps> = ({client,bucket, API_KEY, APP_I
     return (
         <div>
             {pickerApiLoaded && gisLoaded && (
-                <button onClick={createPicker}>google drive</button>
+                <button onClick={createPicker}>google drive sss</button>
             )}
         </div>
     )
