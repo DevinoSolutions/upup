@@ -87,10 +87,15 @@ export const GoogleDrive: FC<GoogleDriveProps> = ({client,bucket, API_KEY, APP_I
 
             // Read the file content as a Buffer
             const compressedFile = await compressFile({element: response,element_name: document[window.google.picker.Document.NAME]})
-            const key = `${Date.now()}__${compressedFile.name}`
-            pubObject({client, bucket, key, compressedFile})
-            setKey(key)
 
+            // assign a unique name for the file, usually has to timestamp prefix
+            const key = `${Date.now()}__${compressedFile.name}`
+
+            // upload the file to the cloud
+            pubObject({client, bucket, key, compressedFile})
+
+            // set the file name
+            setKey(key)
 
         }
     }

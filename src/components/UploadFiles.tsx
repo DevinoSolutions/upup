@@ -31,16 +31,24 @@ export const UploadFiles: FC<UploadFilesProps>  = ({client,bucket,setKey, canUpl
         if (files) {
             for (let i = 0; i < files.length; i++) {
                 const element = files[i];
+
+                // Read the file content as a Buffer
                 const compressedFile = await compressFile({element,element_name: element.name})
+
                 compressedFiles.push(compressedFile);
             }
         }
 
         let key = '';
         compressedFiles.forEach(compressedFile => {
+            // assign a unique name for the file, usually has to timestamp prefix
             key = `${Date.now()}__${compressedFile.name}`
+
+            // upload the file to the cloud
             pubObject({client, bucket, key, compressedFile})
         })
+
+        // set the file name
         setKey(key)
     }
     useEffect(() => {
