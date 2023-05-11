@@ -12,13 +12,12 @@ export interface UploadFilesProps {
 
 /**
  *
- * @param client
- * @param bucket
- * @param setKey
- * @param canUpload
+ * @param client cloud provider client, ex: S3
+ * @param bucket bucket name
+ * @param setKey return the final name of the file, usually it has timestamp prefix
+ * @param canUpload to control when to upload the file , it has default false value
  * @constructor
  */
-
 export const UploadFiles: FC<UploadFilesProps>  = ({client,bucket,setKey, canUpload}: UploadFilesProps) => {
     const [dragging, setDragging] = useState<boolean>(false)
     const handleDragEnter = (e: DragEvent<HTMLDivElement>) => {

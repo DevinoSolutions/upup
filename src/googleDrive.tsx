@@ -16,12 +16,12 @@ export interface GoogleDriveProps {
 
 /**
  *
- * @param client
- * @param bucket
- * @param API_KEY
- * @param APP_ID
- * @param CLIENT_ID
- * @param setKey
+ * @param client cloud provider client, ex: S3
+ * @param bucket bucket name
+ * @param API_KEY you can get this from Google cloud console
+ * @param APP_ID the project ID inside Google cloud console
+ * @param CLIENT_ID the OAuth client ID
+ * @param setKey return the final name of the file, usually it has timestamp prefix
  * @constructor
  */
 export const GoogleDrive: FC<GoogleDriveProps> = ({client,bucket, API_KEY, APP_ID, CLIENT_ID,setKey}: GoogleDriveProps) => {

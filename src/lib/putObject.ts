@@ -8,10 +8,10 @@ interface props{
 
 /**
  *
- * @param client
- * @param bucket
- * @param key
- * @param compressedFile
+ * @param client cloud provider client, ex: S3
+ * @param bucket bucket name
+ * @param key the final file name, usually it has timestamp prefix
+ * @param compressedFile file to upload
  */
 export function pubObject({client,bucket, key, compressedFile} : props) {
     client.putObject(

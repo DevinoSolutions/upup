@@ -1,6 +1,6 @@
 /**
  *
- * @param bytes
+ * @param bytes assign keyword depend on size
  */
 export const bytesToSize = (bytes: number) => {
     const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB']

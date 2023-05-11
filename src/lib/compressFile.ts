@@ -7,8 +7,8 @@ interface props {
 
 /**
  * Read the file content as a Buffer
- * @param element
- * @param element_name
+ * @param element element to convert to Buffer
+ * @param element_name element name ex: element.name
  */
 export async function compressFile({element, element_name} : props) {
     const buffer: ArrayBuffer = await element.arrayBuffer();
