@@ -10,6 +10,15 @@ export interface UploadFilesProps {
     canUpload: boolean
 }
 
+/**
+ *
+ * @param client
+ * @param bucket
+ * @param setKey
+ * @param canUpload
+ * @constructor
+ */
+
 export const UploadFiles: FC<UploadFilesProps>  = ({client,bucket,setKey, canUpload}: UploadFilesProps) => {
     const [dragging, setDragging] = useState<boolean>(false)
     const handleDragEnter = (e: DragEvent<HTMLDivElement>) => {

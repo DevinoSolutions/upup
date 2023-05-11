@@ -14,7 +14,16 @@ export interface GoogleDriveProps {
     canUpload?: boolean
 }
 
-
+/**
+ *
+ * @param client
+ * @param bucket
+ * @param API_KEY
+ * @param APP_ID
+ * @param CLIENT_ID
+ * @param setKey
+ * @constructor
+ */
 export const GoogleDrive: FC<GoogleDriveProps> = ({client,bucket, API_KEY, APP_ID, CLIENT_ID,setKey}: GoogleDriveProps) => {
     const {pickerApiLoaded, gisLoaded, tokenClient} = useLoadGAPI({CLIENT_ID})
 
