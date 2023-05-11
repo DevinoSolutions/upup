@@ -9,6 +9,15 @@ type Props = {
     setDragging?: (value: boolean) => void
 }
 
+/**
+ *
+ * @param files
+ * @param setFiles
+ * @param dragging
+ * @param setDragging
+ * @param multiple
+ * @constructor
+ */
 const FileUploader = ({
                           files,
                           setFiles,
