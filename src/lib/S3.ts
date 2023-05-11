@@ -10,6 +10,10 @@ export interface s3Configs {
     }
 }
 
+/**
+ *
+ * @param configs S3 configs (region, endpoint...etc)
+ */
 export function getClient(configs: s3Configs) {
     if (client) return client
     const { region, endpoint, credentials } = configs

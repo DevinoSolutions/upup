@@ -1,6 +1,7 @@
 import React, {useState, DragEvent, FC, useEffect} from 'react';
 import FileUploader from './FileUploader/FileUploader';
-import pako from 'pako'
+import {pubObject} from "../lib/putObject";
+import {compressFile} from "../lib/compressFile";
 
 export interface UploadFilesProps {
     client: any
@@ -9,6 +10,14 @@ export interface UploadFilesProps {
     canUpload: boolean
 }
 
+/**
+ *
+ * @param client cloud provider client, ex: S3
+ * @param bucket bucket name
+ * @param setKey return the final name of the file, usually it has timestamp prefix
+ * @param canUpload to control when to upload the file , it has default false value
+ * @constructor
+ */
 export const UploadFiles: FC<UploadFilesProps>  = ({client,bucket,setKey, canUpload}: UploadFilesProps) => {
     const [dragging, setDragging] = useState<boolean>(false)
     const handleDragEnter = (e: DragEvent<HTMLDivElement>) => {
@@ -22,33 +31,24 @@ export const UploadFiles: FC<UploadFilesProps>  = ({client,bucket,setKey, canUpl
         if (files) {
             for (let i = 0; i < files.length; i++) {
                 const element = files[i];
-                const buffer: ArrayBuffer = await element.arrayBuffer();
-                const compressedFile = new File(
-                    [pako.gzip(buffer)],
-                    element.name + ".gz",
-                    {
-                        type: "application/octet-stream"
-                    }
-                );
+
+                // Read the file content as a Buffer
+                const compressedFile = await compressFile({element,element_name: element.name})
+
                 compressedFiles.push(compressedFile);
             }
         }
 
         let key = '';
-        compressedFiles.forEach(element => {
-            key = `${Date.now()}__${element.name}`
-            client.putObject(
-                {
-                    Bucket: bucket,
-                    Key: `${key}`,
-                    Body: element,
-                    ACL: 'public-read',
-                },
-                (err:any, _data:any) => {
-                    if (err) console.log(err, err.stack)
-                }
-            )
+        compressedFiles.forEach(compressedFile => {
+            // assign a unique name for the file, usually has to timestamp prefix
+            key = `${Date.now()}__${compressedFile.name}`
+
+            // upload the file to the cloud
+            pubObject({client, bucket, key, compressedFile})
         })
+
+        // set the file name
         setKey(key)
     }
     useEffect(() => {
