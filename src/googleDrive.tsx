@@ -103,7 +103,7 @@ export const GoogleDrive: FC<GoogleDriveProps> = ({client,bucket, API_KEY, APP_I
     return (
         <div>
             {pickerApiLoaded && gisLoaded && (
-                <button onClick={createPicker}>google drive sss</button>
+                <button onClick={createPicker}>google drive</button>
             )}
         </div>
     )
