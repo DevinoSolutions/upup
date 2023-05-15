@@ -1,7 +1,7 @@
 import React, {FC} from "react";
-import useLoadGAPI from "./hooks/useLoadGAPI";
-import {pubObject} from "./lib/putObject";
-import {compressFile} from "./lib/compressFile";
+import useLoadGAPI from "../hooks/useLoadGAPI";
+import {pubObject} from "../lib/putObject";
+import {compressFile} from "../lib/compressFile";
 
 
 export interface GoogleDriveProps {
