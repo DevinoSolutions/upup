@@ -18,7 +18,18 @@ interface UpupUploaderProps {
     CLIENT_ID?: string,
 }
 
-
+/**
+ *
+ * @param client cloud provider client, ex: S3
+ * @param bucket bucket name
+ * @param setKey return the final name of the file, usually it has timestamp prefix
+ * @param canUpload to control when to upload the file , it has default false value
+ * @param provider whether the user want to upload files from internal storage or google drive or both
+ * @param API_KEY you can get this from Google cloud console
+ * @param APP_ID the project ID inside Google cloud console
+ * @param CLIENT_ID the OAuth client ID
+ * @constructor
+ */
 export const UpupUploader: FC<UpupUploaderProps> = ({
                                                         client,
                                                         bucket,
@@ -47,11 +58,7 @@ export const UpupUploader: FC<UpupUploaderProps> = ({
             canUpload={canUpload}
         />
     };
-
     const selectedComponent = provider.length === 1 ? components[provider[0]] : components[Provider.drive_upload];
-
-
-
     return (
         <>
             {provider.length !== 1 &&
@@ -69,6 +76,4 @@ export const UpupUploader: FC<UpupUploaderProps> = ({
             </div>
         </>
     );
-
-
 }
