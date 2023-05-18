@@ -1,1 +1,1 @@
-export { uploadToBucket } from './putObject'
+export { uploadToBucket } from './uploadToBucket'
