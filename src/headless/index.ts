@@ -1,0 +1,1 @@
+export { uploadToBucket } from './putObject'
