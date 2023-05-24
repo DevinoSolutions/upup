@@ -11,7 +11,7 @@ export interface GoogleDriveProps {
     APP_ID: string,
     CLIENT_ID: string,
     setKey: (key: string) => void
-    compressible: boolean
+    toBeCompressed: boolean
     canUpload?: boolean
 }
 
@@ -23,10 +23,10 @@ export interface GoogleDriveProps {
  * @param APP_ID the project ID inside Google cloud console
  * @param CLIENT_ID the OAuth client ID
  * @param setKey return the final name of the file, usually it has timestamp prefix
- * @param compressible whether the user want to compress the file before uploading it or not. Default value is false
+ * @param toBeCompressed whether the user want to compress the file before uploading it or not. Default value is false
  * @constructor
  */
-export const GoogleDrive: FC<GoogleDriveProps> = ({client,bucket, API_KEY, APP_ID, CLIENT_ID,setKey, compressible}: GoogleDriveProps) => {
+export const GoogleDrive: FC<GoogleDriveProps> = ({client,bucket, API_KEY, APP_ID, CLIENT_ID,setKey, toBeCompressed}: GoogleDriveProps) => {
     const {pickerApiLoaded, gisLoaded, tokenClient} = useLoadGAPI({CLIENT_ID})
 
     let accessToken: string
@@ -88,7 +88,7 @@ export const GoogleDrive: FC<GoogleDriveProps> = ({client,bucket, API_KEY, APP_I
                 )
             }
 
-            if (compressible)
+            if (toBeCompressed)
                 // Compress the file
                 fileToUpload = await compressFile({element: response,element_name: document[window.google.picker.Document.NAME]})
             else // Read the file content as a Buffer

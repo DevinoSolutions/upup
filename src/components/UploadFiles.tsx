@@ -8,7 +8,7 @@ export interface UploadFilesProps {
     bucket: string
     setKey: (key: string) => void
     canUpload: boolean
-    compressible: boolean
+    toBeCompressed: boolean
 }
 
 /**
@@ -17,7 +17,7 @@ export interface UploadFilesProps {
  * @param bucket bucket name
  * @param setKey return the final name of the file, usually it has timestamp prefix
  * @param canUpload to control when to upload the file , it has default false value
- * @param compressible whether the user want to compress the file before uploading it or not. Default value is false
+ * @param toBeCompressed whether the user want to compress the file before uploading it or not. Default value is false
  * @constructor
  */
 export const UploadFiles: FC<UploadFilesProps> = ({
@@ -25,7 +25,7 @@ export const UploadFiles: FC<UploadFilesProps> = ({
                                                       bucket,
                                                       setKey,
                                                       canUpload,
-                                                      compressible
+                                                      toBeCompressed
                                                   }: UploadFilesProps) => {
     const [dragging, setDragging] = useState<boolean>(false)
     const handleDragEnter = (e: DragEvent<HTMLDivElement>) => {
@@ -38,7 +38,7 @@ export const UploadFiles: FC<UploadFilesProps> = ({
         let filesToUpload: File[];
         let key = '';
 
-        if (compressible)
+        if (toBeCompressed)
             filesToUpload = await Promise.all(files.map(async (file) => {
                 return await compressFile({element: file, element_name: file.name})
             }))
