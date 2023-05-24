@@ -13,6 +13,7 @@ interface UpupUploaderProps {
     setKey: (key: string) => void
     canUpload: boolean
     provider: Provider[],
+    compressible?: boolean,
     API_KEY?: string,
     APP_ID?: string,
     CLIENT_ID?: string,
@@ -24,10 +25,11 @@ interface UpupUploaderProps {
  * @param bucket bucket name
  * @param setKey return the final name of the file, usually it has timestamp prefix
  * @param canUpload to control when to upload the file , it has default false value
- * @param provider whether the user want to upload files from internal storage or google drive or both
+ * @param provider whether the user want to upload files from internal storage or Google drive or both
  * @param API_KEY you can get this from Google cloud console
  * @param APP_ID the project ID inside Google cloud console
  * @param CLIENT_ID the OAuth client ID
+ * @param compressible whether the user want to compress the file before uploading it or not. Default value is false
  * @constructor
  */
 export const UpupUploader: FC<UpupUploaderProps> = ({
@@ -36,6 +38,7 @@ export const UpupUploader: FC<UpupUploaderProps> = ({
                                                         setKey,
                                                         canUpload,
                                                         provider,
+                                                        compressible = false,
                                                         API_KEY,
                                                         APP_ID,
                                                         CLIENT_ID
@@ -47,6 +50,7 @@ export const UpupUploader: FC<UpupUploaderProps> = ({
             bucket={bucket}
             setKey={setKey}
             canUpload={canUpload}
+            compressible={compressible}
         />,
         [Provider.drive_upload]: <GoogleDrive
             client={client}
@@ -56,6 +60,7 @@ export const UpupUploader: FC<UpupUploaderProps> = ({
             CLIENT_ID={CLIENT_ID || ""}
             setKey={setKey}
             canUpload={canUpload}
+            compressible={compressible}
         />
     };
     const selectedComponent = provider.length === 1 ? components[provider[0]] : components[Provider.drive_upload];
@@ -68,6 +73,7 @@ export const UpupUploader: FC<UpupUploaderProps> = ({
                         bucket={bucket}
                         setKey={setKey}
                         canUpload={canUpload}
+                        compressible={compressible}
                     />
                 </div>
             }
