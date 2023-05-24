@@ -11,6 +11,7 @@ export interface GoogleDriveProps {
     APP_ID: string,
     CLIENT_ID: string,
     setKey: (key: string) => void
+    toBeCompressed: boolean
     canUpload?: boolean
 }
 
@@ -22,9 +23,10 @@ export interface GoogleDriveProps {
  * @param APP_ID the project ID inside Google cloud console
  * @param CLIENT_ID the OAuth client ID
  * @param setKey return the final name of the file, usually it has timestamp prefix
+ * @param toBeCompressed whether the user want to compress the file before uploading it or not. Default value is false
  * @constructor
  */
-export const GoogleDrive: FC<GoogleDriveProps> = ({client,bucket, API_KEY, APP_ID, CLIENT_ID,setKey}: GoogleDriveProps) => {
+export const GoogleDrive: FC<GoogleDriveProps> = ({client,bucket, API_KEY, APP_ID, CLIENT_ID,setKey, toBeCompressed}: GoogleDriveProps) => {
     const {pickerApiLoaded, gisLoaded, tokenClient} = useLoadGAPI({CLIENT_ID})
 
     let accessToken: string
@@ -69,6 +71,7 @@ export const GoogleDrive: FC<GoogleDriveProps> = ({client,bucket, API_KEY, APP_I
         if (data.action === window.google.picker.Action.PICKED) {
             const document = data[window.google.picker.Response.DOCUMENTS][0]
             const fileId = document[window.google.picker.Document.ID]
+            let fileToUpload: File;
 
             const downloadUrl = `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media&supportsAllDrives=true`
 
@@ -85,14 +88,22 @@ export const GoogleDrive: FC<GoogleDriveProps> = ({client,bucket, API_KEY, APP_I
                 )
             }
 
-            // Read the file content as a Buffer
-            const compressedFile = await compressFile({element: response,element_name: document[window.google.picker.Document.NAME]})
+            if (toBeCompressed)
+                // Compress the file
+                fileToUpload = await compressFile({element: response,element_name: document[window.google.picker.Document.NAME]})
+            else // Read the file content as a Buffer
+                fileToUpload = await response.arrayBuffer().then((buffer) =>
+                    new File([buffer], document[window.google.picker.Document.NAME])
+                )
+
+
+            console.log(fileToUpload)
 
             // assign a unique name for the file, usually has to timestamp prefix
-            const key = `${Date.now()}__${compressedFile.name}`
+            const key = `${Date.now()}__${fileToUpload.name}`
 
             // upload the file to the cloud
-            pubObject({client, bucket, key, compressedFile})
+            pubObject({client, bucket, key, file: fileToUpload})
 
             // set the file name
             setKey(key)
