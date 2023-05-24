@@ -10,7 +10,7 @@ interface props {
  * @param element element to convert to Buffer
  * @param element_name element name ex: element.name
  */
-export async function compressFile({element, element_name} : props) {
+export async function compressFile({element, element_name} : props) : Promise<File> {
     const buffer: ArrayBuffer = await element.arrayBuffer();
     return  new File(
         [pako.gzip(buffer)],
