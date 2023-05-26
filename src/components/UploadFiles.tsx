@@ -1,13 +1,13 @@
-import React, {useState, DragEvent, FC, useEffect} from 'react';
+import React, { useState, DragEvent, FC, useEffect } from 'react';
 import FileUploader from './FileUploader/FileUploader';
-import {pubObject} from "../lib/putObject";
-import {compressFile} from "../lib/compressFile";
+import { pubObject } from '../lib/putObject';
+import { compressFile } from '../lib/compressFile';
 
 export interface UploadFilesProps {
-    client: any
-    bucket: string
-    setKey: (key: string) => void
-    canUpload: boolean
+  client: any;
+  bucket: string;
+  setKey: (key: string) => void;
+  canUpload: boolean;
 }
 
 /**
@@ -18,61 +18,65 @@ export interface UploadFilesProps {
  * @param canUpload to control when to upload the file , it has default false value
  * @constructor
  */
-export const UploadFiles: FC<UploadFilesProps>  = ({client,bucket,setKey, canUpload}: UploadFilesProps) => {
-    const [dragging, setDragging] = useState<boolean>(false)
-    const handleDragEnter = (e: DragEvent<HTMLDivElement>) => {
-        e.preventDefault()
-        e.stopPropagation()
-        setDragging(() => true)
+export const UploadFiles: FC<UploadFilesProps> = ({
+  client,
+  bucket,
+  setKey,
+  canUpload,
+}: UploadFilesProps) => {
+  const [dragging, setDragging] = useState<boolean>(false);
+  const handleDragEnter = (e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragging(() => true);
+  };
+  const [files, setFiles] = useState<File[]>([]);
+  const handleUpload = async () => {
+    const compressedFiles: File[] = [];
+    if (files) {
+      for (let i = 0; i < files.length; i++) {
+        const element = files[i];
+
+        // Read the file content as a Buffer
+        const compressedFile = await compressFile({
+          element,
+          element_name: element.name,
+        });
+
+        compressedFiles.push(compressedFile);
+      }
     }
-    const [files, setFiles] = useState<File[]>([]);
-    const handleUpload = async () => {
-        const compressedFiles: File[] = [];
-        if (files) {
-            for (let i = 0; i < files.length; i++) {
-                const element = files[i];
 
-                // Read the file content as a Buffer
-                const compressedFile = await compressFile({element,element_name: element.name})
+    let key = '';
+    compressedFiles.forEach((compressedFile) => {
+      // assign a unique name for the file, usually has to timestamp prefix
+      key = `${Date.now()}__${compressedFile.name}`;
 
-                compressedFiles.push(compressedFile);
-            }
-        }
+      // upload the file to the cloud
+      pubObject({ client, bucket, key, compressedFile });
+    });
 
-        let key = '';
-        compressedFiles.forEach(compressedFile => {
-            // assign a unique name for the file, usually has to timestamp prefix
-            key = `${Date.now()}__${compressedFile.name}`
-
-            // upload the file to the cloud
-            pubObject({client, bucket, key, compressedFile})
-        })
-
-        // set the file name
-        setKey(key)
+    // set the file name
+    setKey(key);
+  };
+  useEffect(() => {
+    if (canUpload) {
+      handleUpload();
     }
-    useEffect(() => {
-        if (canUpload) {
-            handleUpload()
-        }
-    }, [canUpload])
+  }, [canUpload]);
 
-
-    return (
-
-        <div
-            className="max-w-full overflow-hidden flex w-full"
-            onDragEnter={handleDragEnter}
-        >
-            <FileUploader
-                dragging={dragging}
-                setDragging={setDragging}
-                files={files}
-                setFiles={setFiles}
-                multiple={false}
-            />
-
-
-        </div>
-    )
-}
+  return (
+    <div
+      className="max-w-full overflow-hidden flex w-full"
+      onDragEnter={handleDragEnter}
+    >
+      <FileUploader
+        dragging={dragging}
+        setDragging={setDragging}
+        files={files}
+        setFiles={setFiles}
+        multiple={false}
+      />
+    </div>
+  );
+};
