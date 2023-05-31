@@ -22,6 +22,7 @@ specifiers:
   husky: ^8.0.3
   load-script: ^2.0.0
   pako: ^2.1.0
+  prettier: ^2.8.8
   react: ^18.2.0
   react-dom: ^18.2.0
   react-icons: ^4.8.0
@@ -36,6 +37,7 @@ dependencies:
   '@aws-sdk/client-s3': 3.321.1
   '@types/gapi': 0.0.44
   load-script: 2.0.0
+  prettier: 2.8.8
   react-icons: 4.8.0_react@18.2.0
 
 devDependencies:
@@ -11306,7 +11308,6 @@ packages:
     resolution: {integrity: sha512-tdN8qQGvNjw4CHbY+XXk0JgCXn9QiF21a55rBe5LJAU+kDyC4WQn4+awm2Xfk2lQMk5fKup9XgzTZtGkjBdP9Q==}
     engines: {node: '>=10.13.0'}
     hasBin: true
-    dev: true
 
   /pretty-error/4.0.0:
     resolution: {integrity: sha512-AoJ5YMAcXKYxKhuJGdcvse+Voc6v1RgnsR3nWcYU7q4t6z0Q6T86sv5Zq8VIRbOWWFpvdGE83LtdSMNd+6Y0xw==}
