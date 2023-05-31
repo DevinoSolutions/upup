@@ -94,6 +94,7 @@ export const GoogleDrive: FC<GoogleDriveProps> = ({
         fileToUpload = await compressFile({
           element: response,
           element_name: document[google.picker.Document.NAME],
+
         });
       // Read the file content as a Buffer
       else
@@ -102,6 +103,7 @@ export const GoogleDrive: FC<GoogleDriveProps> = ({
           .then(
             (buffer) =>
               new File([buffer], document[google.picker.Document.NAME])
+
           );
 
       console.log(fileToUpload);
