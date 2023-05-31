@@ -15,6 +15,9 @@ jobs:
         with:
           node-version: 16.x
           cache: 'pnpm'
+
+      - run: pnpm install
+
       - uses: andresz1/size-limit-action@v1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
