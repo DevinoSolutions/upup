@@ -7,7 +7,7 @@ declare global {
 }
 
 export { getClient, s3Configs } from './lib/S3';
-export { UploadProvider, UpupUploader } from './UpupUploader';
+export * from './UpupUploader';
 export { BaseConfigs } from './types/BaseConfigs';
 export { CloudStorageConfigs } from './types/CloudStorageConfigs';
 export { GoogleConfigs } from './types/GoogleConfigs';
