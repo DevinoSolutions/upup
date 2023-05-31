@@ -1,14 +1,22 @@
-import React, { useEffect, useState } from 'react';
+import React, { FC, useEffect, useState } from 'react';
 import useLoadOdAPI from '../hooks/useLoadOdAPI';
+import { BaseConfigs } from '../types/BaseConfigs';
+import { OneDriveConfigs } from '../types/OneDriveConfigs';
 
-interface Params {
-  oneDriveClientId: string;
-  setKey: (key: string) => void;
-  toBeCompressed: boolean;
-  canUpload?: boolean;
+interface OneDriveParams {
+  baseConfigs: BaseConfigs;
+  oneDriveConfigs: OneDriveConfigs | undefined;
 }
 
-const OneDrive = ({ oneDriveClientId }: Params) => {
+/**
+ * @param baseConfigs  base configurations for the uploader : setKey, canUpload, toBeCompressed
+ * @param oneDriveConfigs configurations for OneDrive : ONEDRIVE_CLIENT_ID, multiSelect
+ * @constructor
+ */
+const OneDrive: FC<OneDriveParams> = ({
+  baseConfigs,
+  oneDriveConfigs,
+}: OneDriveParams) => {
   const [files, setFiles] = useState<File[]>([]);
 
   const { isLoaded } = useLoadOdAPI();
@@ -35,9 +43,9 @@ const OneDrive = ({ oneDriveClientId }: Params) => {
 
   const openPicker = () => {
     const odOptions = {
-      clientId: oneDriveClientId,
+      clientId: oneDriveConfigs?.ONEDRIVE_CLIENT_ID,
       action: 'download',
-      multiSelect: true,
+      multiSelect: oneDriveConfigs?.multiSelect,
       openInNewWindow: true,
       advanced: {
         //     redirectUri: 'http://localhost:3000',

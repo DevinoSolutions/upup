@@ -2,40 +2,33 @@ import React, { FC } from 'react';
 import useLoadGAPI from '../hooks/useLoadGAPI';
 import { pubObject } from '../lib/putObject';
 import { compressFile } from '../lib/compressFile';
+import { CloudStorageConfigs } from '../types/CloudStorageConfigs';
+import { BaseConfigs } from '../types/BaseConfigs';
+import { GoogleConfigs } from '../types/GoogleConfigs';
 
 export interface GoogleDriveProps {
-  client: any;
-  bucket: string;
-  API_KEY: string;
-  APP_ID: string;
-  CLIENT_ID: string;
-  setKey: (key: string) => void;
-  toBeCompressed: boolean;
-  canUpload?: boolean;
+  cloudStorageConfigs: CloudStorageConfigs;
+  baseConfigs: BaseConfigs;
+  googleConfigs: GoogleConfigs | undefined;
 }
 
 /**
  *
  * @param client cloud provider client, ex: S3
  * @param bucket bucket name
- * @param API_KEY you can get this from Google cloud console
- * @param APP_ID the project ID inside Google cloud console
- * @param CLIENT_ID the OAuth client ID
+ * @param googleConfigs  google configurations ex: API_KEY, APP_ID, GOOGLE_CLIENT_ID
  * @param setKey return the final name of the file, usually it has timestamp prefix
  * @param toBeCompressed whether the user want to compress the file before uploading it or not. Default value is false
  * @constructor
  */
 export const GoogleDrive: FC<GoogleDriveProps> = ({
-  client,
-  bucket,
-  API_KEY,
-  APP_ID,
-  CLIENT_ID,
-  setKey,
-  toBeCompressed,
+  cloudStorageConfigs: { client, bucket },
+  googleConfigs,
+  baseConfigs: { setKey, toBeCompressed },
 }: GoogleDriveProps) => {
+  const { API_KEY, APP_ID, GOOGLE_CLIENT_ID } = googleConfigs || {};
   const { pickerApiLoaded, gisLoaded, tokenClient } = useLoadGAPI({
-    CLIENT_ID,
+    CLIENT_ID: GOOGLE_CLIENT_ID,
   });
 
   let accessToken: string;

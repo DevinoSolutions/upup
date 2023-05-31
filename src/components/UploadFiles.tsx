@@ -1,14 +1,13 @@
-import React, {DragEvent, FC, useEffect, useState} from 'react';
+import React, { DragEvent, FC, useEffect, useState } from 'react';
 import FileUploader from './FileUploader/FileUploader';
-import {pubObject} from "../lib/putObject";
-import {compressFile} from "../lib/compressFile";
+import { pubObject } from '../lib/putObject';
+import { compressFile } from '../lib/compressFile';
+import { CloudStorageConfigs } from '../types/CloudStorageConfigs';
+import { BaseConfigs } from '../types/BaseConfigs';
 
 export interface UploadFilesProps {
-    client: any
-    bucket: string
-    setKey: (key: string) => void
-    canUpload: boolean
-    toBeCompressed: boolean
+  cloudStorageConfigs: CloudStorageConfigs;
+  baseConfigs: BaseConfigs;
 }
 
 /**
@@ -21,65 +20,59 @@ export interface UploadFilesProps {
  * @constructor
  */
 export const UploadFiles: FC<UploadFilesProps> = ({
-                                                      client,
-                                                      bucket,
-                                                      setKey,
-                                                      canUpload,
-                                                      toBeCompressed
-                                                  }: UploadFilesProps) => {
-    const [dragging, setDragging] = useState<boolean>(false)
-    const handleDragEnter = (e: DragEvent<HTMLDivElement>) => {
-        e.preventDefault()
-        e.stopPropagation()
-        setDragging(() => true)
+  baseConfigs: { setKey, canUpload, toBeCompressed = false },
+  cloudStorageConfigs: { client, bucket },
+}: UploadFilesProps) => {
+  const [dragging, setDragging] = useState<boolean>(false);
+  const handleDragEnter = (e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragging(() => true);
+  };
+  const [files, setFiles] = useState<File[]>([]);
+  const handleUpload = async () => {
+    let filesToUpload: File[];
+    let key = '';
+
+    if (toBeCompressed)
+      filesToUpload = await Promise.all(
+        files.map(async (file) => {
+          return await compressFile({ element: file, element_name: file.name });
+        })
+      );
+    else filesToUpload = files;
+
+    if (filesToUpload) {
+      filesToUpload.forEach((fileToUpload) => {
+        // assign a unique name for the file, usually has to timestamp prefix
+        key = `${Date.now()}__${fileToUpload.name}`;
+
+        // upload the file to the cloud
+        pubObject({ client, bucket, key, file: fileToUpload });
+      });
+
+      // set the file name
+      setKey(key);
     }
-    const [files, setFiles] = useState<File[]>([]);
-    const handleUpload = async () => {
-        let filesToUpload: File[];
-        let key = '';
-
-        if (toBeCompressed)
-            filesToUpload = await Promise.all(files.map(async (file) => {
-                return await compressFile({element: file, element_name: file.name})
-            }))
-        else
-            filesToUpload = files;
-
-        if (filesToUpload) {
-            filesToUpload.forEach(fileToUpload => {
-                // assign a unique name for the file, usually has to timestamp prefix
-                key = `${Date.now()}__${fileToUpload.name}`
-
-                // upload the file to the cloud
-                pubObject({client, bucket, key, file: fileToUpload})
-            })
-
-            // set the file name
-            setKey(key)
-        }
+  };
+  useEffect(() => {
+    if (canUpload) {
+      handleUpload();
     }
-    useEffect(() => {
-        if (canUpload) {
-            handleUpload()
-        }
-    }, [canUpload])
+  }, [canUpload]);
 
-
-    return (
-
-        <div
-            className="max-w-full overflow-hidden flex w-full"
-            onDragEnter={handleDragEnter}
-        >
-            <FileUploader
-                dragging={dragging}
-                setDragging={setDragging}
-                files={files}
-                setFiles={setFiles}
-                multiple={false}
-            />
-
-
-        </div>
-    )
-}
+  return (
+    <div
+      className="max-w-full overflow-hidden flex w-full"
+      onDragEnter={handleDragEnter}
+    >
+      <FileUploader
+        dragging={dragging}
+        setDragging={setDragging}
+        files={files}
+        setFiles={setFiles}
+        multiple={false}
+      />
+    </div>
+  );
+};
