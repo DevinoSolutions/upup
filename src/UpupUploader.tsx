@@ -7,7 +7,6 @@ import { CloudStorageConfigs } from './types/CloudStorageConfigs';
 import { BaseConfigs } from './types/BaseConfigs';
 import { GoogleConfigs } from './types/GoogleConfigs';
 
-
 // salem ss
 export enum Provider {
   internal_upload,
@@ -48,7 +47,6 @@ export const UpupUploader: FC<UpupUploaderProps> = ({
       />
     ),
     [Provider.google_drive_upload]: (
-
       <GoogleDrive
         cloudStorageConfigs={cloudStorageConfigs}
         googleConfigs={googleConfigs}
@@ -56,7 +54,11 @@ export const UpupUploader: FC<UpupUploaderProps> = ({
       />
     ),
     [Provider.one_drive_upload]: (
-      <OneDrive oneDriveConfigs={oneDriveConfigs} baseConfigs={baseConfigs} />
+      <OneDrive
+        cloudStorageConfigs={cloudStorageConfigs}
+        baseConfigs={baseConfigs}
+        oneDriveConfigs={oneDriveConfigs}
+      />
     ),
   };
   const selectedComponent = uploadProviders.map((p) => components[p]);
