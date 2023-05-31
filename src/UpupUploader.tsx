@@ -8,7 +8,7 @@ import { BaseConfigs } from './types/BaseConfigs';
 import { GoogleConfigs } from './types/GoogleConfigs';
 
 // salem ss
-export enum Provider {
+export enum UploadProvider {
   internal_upload,
   google_drive_upload,
   one_drive_upload,
@@ -17,7 +17,7 @@ export enum Provider {
 interface UpupUploaderProps {
   cloudStorageConfigs: CloudStorageConfigs;
   baseConfigs: BaseConfigs;
-  provider: Provider[];
+  uploadProvider: UploadProvider[];
   googleConfigs?: GoogleConfigs;
   oneDriveConfigs?: OneDriveConfigs;
 }
@@ -38,14 +38,14 @@ interface UpupUploaderProps {
 export const UpupUploader: FC<UpupUploaderProps> = ({
   cloudStorageConfigs: { client, bucket },
   baseConfigs: { setKey, canUpload, toBeCompressed = false },
-  provider,
+  uploadProvider,
   googleConfigs,
   oneDriveConfigs,
 }: UpupUploaderProps) => {
   const { API_KEY, APP_ID, GOOGLE_CLIENT_ID } = googleConfigs || {};
   const { ONEDRIVE_CLIENT_ID } = oneDriveConfigs || {};
   const components = {
-    [Provider.internal_upload]: (
+    [UploadProvider.internal_upload]: (
       <UploadFiles
         client={client}
         bucket={bucket}
@@ -54,7 +54,7 @@ export const UpupUploader: FC<UpupUploaderProps> = ({
         toBeCompressed={toBeCompressed}
       />
     ),
-    [Provider.google_drive_upload]: (
+    [UploadProvider.google_drive_upload]: (
       <GoogleDrive
         client={client}
         bucket={bucket}
@@ -66,7 +66,7 @@ export const UpupUploader: FC<UpupUploaderProps> = ({
         toBeCompressed={toBeCompressed}
       />
     ),
-    [Provider.one_drive_upload]: (
+    [UploadProvider.one_drive_upload]: (
       <OneDrive
         oneDriveClientId={ONEDRIVE_CLIENT_ID || ''}
         setKey={setKey}
@@ -75,6 +75,6 @@ export const UpupUploader: FC<UpupUploaderProps> = ({
       />
     ),
   };
-  const selectedComponent = provider.map((p) => components[p]);
+  const selectedComponent = uploadProvider.map((p) => components[p]);
   return <>{selectedComponent}</>;
 };
