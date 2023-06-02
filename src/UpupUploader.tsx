@@ -54,7 +54,7 @@ export const UpupUploader: FC<UpupUploaderProps> = ({
       <GoogleDrive
         client={client}
         cloudStorageConfigs={cloudStorageConfigs}
-        googleConfigs={googleConfigs}
+        googleConfigs={googleConfigs as IGoogleConfigs}
         baseConfigs={baseConfigs}
       />
     ),
