@@ -33,7 +33,6 @@ const FileUploader = ({
       : [];
     if (fileList.length === 0) return;
     if (!multiple) {
-      // @ts-ignore
       setFiles([fileList[0]]);
     } else setFiles([...files, ...fileList]);
   };
