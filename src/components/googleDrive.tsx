@@ -7,6 +7,7 @@ import { BaseConfigs } from '../types/BaseConfigs';
 import { GoogleConfigs } from '../types/GoogleConfigs';
 
 export interface GoogleDriveProps {
+  client: any;
   cloudStorageConfigs: CloudStorageConfigs;
   baseConfigs: BaseConfigs;
   googleConfigs: GoogleConfigs | undefined;
@@ -22,7 +23,8 @@ export interface GoogleDriveProps {
  * @constructor
  */
 export const GoogleDrive: FC<GoogleDriveProps> = ({
-  cloudStorageConfigs: { client, bucket },
+  client,
+  cloudStorageConfigs: { bucket },
   googleConfigs,
   baseConfigs: { setKey, toBeCompressed },
 }: GoogleDriveProps) => {

@@ -7,6 +7,7 @@ import { pubObject } from '../lib/putObject';
 import { CloudStorageConfigs } from '../types/CloudStorageConfigs';
 
 interface OneDriveParams {
+  client: any;
   cloudStorageConfigs: CloudStorageConfigs;
   baseConfigs: BaseConfigs;
   oneDriveConfigs: OneDriveConfigs | undefined;
@@ -21,7 +22,8 @@ interface OneDriveParams {
  * @constructor
  */
 const OneDrive: FC<OneDriveParams> = ({
-  cloudStorageConfigs: { client, bucket },
+  client,
+  cloudStorageConfigs: { bucket },
   baseConfigs,
   oneDriveConfigs,
 }: OneDriveParams) => {

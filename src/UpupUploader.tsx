@@ -6,6 +6,7 @@ import OneDrive from './components/oneDrive';
 import { CloudStorageConfigs } from './types/CloudStorageConfigs';
 import { BaseConfigs } from './types/BaseConfigs';
 import { GoogleConfigs } from './types/GoogleConfigs';
+import { getClient } from './lib/S3';
 
 // salem ss
 export enum Provider {
@@ -39,15 +40,19 @@ export const UpupUploader: FC<UpupUploaderProps> = ({
   googleConfigs,
   oneDriveConfigs,
 }: UpupUploaderProps) => {
+  const client = getClient(cloudStorageConfigs.s3Configs);
+
   const components = {
     [Provider.internal_upload]: (
       <UploadFiles
+        client={client}
         cloudStorageConfigs={cloudStorageConfigs}
         baseConfigs={baseConfigs}
       />
     ),
     [Provider.google_drive_upload]: (
       <GoogleDrive
+        client={client}
         cloudStorageConfigs={cloudStorageConfigs}
         googleConfigs={googleConfigs}
         baseConfigs={baseConfigs}
@@ -55,6 +60,7 @@ export const UpupUploader: FC<UpupUploaderProps> = ({
     ),
     [Provider.one_drive_upload]: (
       <OneDrive
+        client={client}
         cloudStorageConfigs={cloudStorageConfigs}
         baseConfigs={baseConfigs}
         oneDriveConfigs={oneDriveConfigs}

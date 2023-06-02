@@ -6,6 +6,7 @@ import { CloudStorageConfigs } from '../types/CloudStorageConfigs';
 import { BaseConfigs } from '../types/BaseConfigs';
 
 export interface UploadFilesProps {
+  client: any;
   cloudStorageConfigs: CloudStorageConfigs;
   baseConfigs: BaseConfigs;
 }
@@ -20,8 +21,9 @@ export interface UploadFilesProps {
  * @constructor
  */
 export const UploadFiles: FC<UploadFilesProps> = ({
+  client,
   baseConfigs: { setKey, canUpload, toBeCompressed = false },
-  cloudStorageConfigs: { client, bucket },
+  cloudStorageConfigs: { bucket },
 }: UploadFilesProps) => {
   const [dragging, setDragging] = useState<boolean>(false);
   const handleDragEnter = (e: DragEvent<HTMLDivElement>) => {
