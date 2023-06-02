@@ -1,91 +1,72 @@
 import React, { FC } from 'react';
+import { IOneDriveConfigs } from './types/IOneDriveConfigs';
 import { UploadFiles } from './components/UploadFiles';
 import { GoogleDrive } from './components/googleDrive';
+import OneDrive from './components/oneDrive';
+import { ICloudStorageConfigs } from './types/ICloudStorageConfigs';
+import { IBaseConfigs } from './types/IBaseConfigs';
+import { IGoogleConfigs } from './types/IGoogleConfigs';
+import { getClient } from './lib/getClient';
 
+// salem ss
 export enum Provider {
   internal_upload,
-  drive_upload,
+  google_drive_upload,
+  one_drive_upload,
 }
 
 interface UpupUploaderProps {
-  client: any;
-  bucket: string;
-  setKey: (key: string) => void;
-  canUpload: boolean;
-  provider: Provider[];
-  toBeCompressed?: boolean;
-  API_KEY?: string;
-  APP_ID?: string;
-  CLIENT_ID?: string;
+  cloudStorageConfigs: ICloudStorageConfigs;
+  baseConfigs: IBaseConfigs;
+  uploadProviders: Provider[];
+  googleConfigs?: IGoogleConfigs | undefined;
+  oneDriveConfigs?: IOneDriveConfigs | undefined;
 }
 
 /**
  *
- * @param client cloud provider client, ex: S3
- * @param bucket bucket name
- * @param setKey return the final name of the file, usually it has timestamp prefix
- * @param canUpload to control when to upload the file , it has default false value
- * @param provider whether the user want to upload files from internal storage or Google drive or both
- * @param API_KEY you can get this from Google cloud console
- * @param APP_ID the project ID inside Google cloud console
- * @param CLIENT_ID the OAuth client ID
+ * @param cloudStorageConfigs cloud provider configurations
+ * @param baseConfigs base configurations
  * @param toBeCompressed whether the user want to compress the file before uploading it or not. Default value is false
+ * @param uploadProviders whether the user want to upload files from internal storage or Google drive or both
+ * @param googleConfigs google configurations
+ * @param oneDriveConfigs one drive configurations
  * @constructor
  */
 export const UpupUploader: FC<UpupUploaderProps> = ({
-  client,
-  bucket,
-  setKey,
-  canUpload,
-  provider,
-  toBeCompressed = false,
-  API_KEY,
-  APP_ID,
-  CLIENT_ID,
+  cloudStorageConfigs,
+  baseConfigs: { toBeCompressed = false, ...baseConfigs },
+  uploadProviders,
+  googleConfigs,
+  oneDriveConfigs,
 }: UpupUploaderProps) => {
+  const client = getClient(cloudStorageConfigs.s3Configs);
+
   const components = {
     [Provider.internal_upload]: (
       <UploadFiles
         client={client}
-        bucket={bucket}
-        setKey={setKey}
-        canUpload={canUpload}
-        toBeCompressed={toBeCompressed}
+        cloudStorageConfigs={cloudStorageConfigs}
+        baseConfigs={baseConfigs}
       />
     ),
-    [Provider.drive_upload]: (
+    [Provider.google_drive_upload]: (
       <GoogleDrive
         client={client}
-        bucket={bucket}
-        API_KEY={API_KEY || ''}
-        APP_ID={APP_ID || ''}
-        CLIENT_ID={CLIENT_ID || ''}
-        setKey={setKey}
-        canUpload={canUpload}
-        toBeCompressed={toBeCompressed}
+        cloudStorageConfigs={cloudStorageConfigs}
+        googleConfigs={googleConfigs as IGoogleConfigs}
+        baseConfigs={baseConfigs}
+      />
+    ),
+    [Provider.one_drive_upload]: (
+      <OneDrive
+        client={client}
+        cloudStorageConfigs={cloudStorageConfigs}
+        baseConfigs={baseConfigs}
+        oneDriveConfigs={oneDriveConfigs}
       />
     ),
   };
-  const selectedComponent =
-    provider.length === 1
-      ? components[provider[0]]
-      : components[Provider.drive_upload];
-  return (
-    <>
-      {provider.length !== 1 && (
-        <div className="max-w-full overflow-hidden flex w-full">
-          <UploadFiles
-            client={client}
-            bucket={bucket}
-            setKey={setKey}
-            canUpload={canUpload}
-            toBeCompressed={toBeCompressed}
-          />
-        </div>
-      )}
-      <div className="flex flex-row items-center gap-2">
-        {selectedComponent}
-      </div>
-    </>
-  );
+  const selectedComponent = uploadProviders.map((p) => components[p]);
+  return <>{selectedComponent}</>;
 };

@@ -2,13 +2,13 @@ import React, { DragEvent, FC, useEffect, useState } from 'react';
 import FileUploader from './FileUploader/FileUploader';
 import { pubObject } from '../lib/putObject';
 import { compressFile } from '../lib/compressFile';
+import { ICloudStorageConfigs } from '../types/ICloudStorageConfigs';
+import { IBaseConfigs } from '../types/IBaseConfigs';
 
 export interface UploadFilesProps {
   client: any;
-  bucket: string;
-  setKey: (key: string) => void;
-  canUpload: boolean;
-  toBeCompressed: boolean;
+  cloudStorageConfigs: ICloudStorageConfigs;
+  baseConfigs: IBaseConfigs;
 }
 
 /**
@@ -22,10 +22,8 @@ export interface UploadFilesProps {
  */
 export const UploadFiles: FC<UploadFilesProps> = ({
   client,
-  bucket,
-  setKey,
-  canUpload,
-  toBeCompressed,
+  baseConfigs: { setKey, canUpload, toBeCompressed = false },
+  cloudStorageConfigs: { bucket },
 }: UploadFilesProps) => {
   const [dragging, setDragging] = useState<boolean>(false);
   const handleDragEnter = (e: DragEvent<HTMLDivElement>) => {

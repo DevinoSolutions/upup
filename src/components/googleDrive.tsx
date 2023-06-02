@@ -2,50 +2,47 @@ import React, { FC } from 'react';
 import useLoadGAPI from '../hooks/useLoadGAPI';
 import { pubObject } from '../lib/putObject';
 import { compressFile } from '../lib/compressFile';
+import { ICloudStorageConfigs } from '../types/ICloudStorageConfigs';
+import { IBaseConfigs } from '../types/IBaseConfigs';
+import { IGoogleConfigs } from '../types/IGoogleConfigs';
 
 export interface GoogleDriveProps {
   client: any;
-  bucket: string;
-  API_KEY: string;
-  APP_ID: string;
-  CLIENT_ID: string;
-  setKey: (key: string) => void;
-  toBeCompressed: boolean;
-  canUpload?: boolean;
+  cloudStorageConfigs: ICloudStorageConfigs;
+  baseConfigs: IBaseConfigs;
+  googleConfigs: IGoogleConfigs;
 }
 
 /**
- *
- * @param client cloud provider client, ex: S3
- * @param bucket bucket name
- * @param API_KEY you can get this from Google cloud console
- * @param APP_ID the project ID inside Google cloud console
- * @param CLIENT_ID the OAuth client ID
+ * Upload files from Google Drive to S3 bucket
+ * @param client S3 client
+ * @param bucket S3 bucket name
+ * @param GOOGLE_APP_ID app id from Google Cloud Platform
+ * @param GOOGLE_API_KEY api key from Google Cloud Platform
+ * @param GOOGLE_CLIENT_ID client id from Google Cloud Platform
  * @param setKey return the final name of the file, usually it has timestamp prefix
  * @param toBeCompressed whether the user want to compress the file before uploading it or not. Default value is false
  * @constructor
  */
 export const GoogleDrive: FC<GoogleDriveProps> = ({
   client,
-  bucket,
-  API_KEY,
-  APP_ID,
-  CLIENT_ID,
-  setKey,
-  toBeCompressed,
+  cloudStorageConfigs: { bucket },
+  googleConfigs: { GOOGLE_APP_ID, GOOGLE_API_KEY, GOOGLE_CLIENT_ID },
+  baseConfigs: { setKey, toBeCompressed },
 }: GoogleDriveProps) => {
   const { pickerApiLoaded, gisLoaded, tokenClient } = useLoadGAPI({
-    CLIENT_ID,
+    GOOGLE_CLIENT_ID,
   });
 
   let accessToken: string;
+  const google = (window as any).google;
 
   const showPicker = async () => {
-    const picker = new window.google.picker.PickerBuilder()
-      .addView(window.google.picker.ViewId.DOCS)
+    const picker = new google.picker.PickerBuilder()
+      .addView(google.picker.ViewId.DOCS)
       .setOAuthToken(accessToken)
-      .setDeveloperKey(API_KEY)
-      .setAppId(APP_ID)
+      .setDeveloperKey(GOOGLE_API_KEY)
+      .setAppId(GOOGLE_APP_ID)
       .setCallback(pickerCallback)
       .build();
     picker.setVisible(true);
@@ -75,9 +72,9 @@ export const GoogleDrive: FC<GoogleDriveProps> = ({
 
   // TO-DO: Make sure Google Workspace documents can be downloaded.
   const pickerCallback = async (data: any): Promise<void> => {
-    if (data.action === window.google.picker.Action.PICKED) {
-      const document = data[window.google.picker.Response.DOCUMENTS][0];
-      const fileId = document[window.google.picker.Document.ID];
+    if (data.action === google.picker.Action.PICKED) {
+      const document = data[google.picker.Response.DOCUMENTS][0];
+      const fileId = document[google.picker.Document.ID];
       let fileToUpload: File;
 
       const downloadUrl = `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media&supportsAllDrives=true`;
@@ -99,7 +96,7 @@ export const GoogleDrive: FC<GoogleDriveProps> = ({
         // Compress the file
         fileToUpload = await compressFile({
           element: response,
-          element_name: document[window.google.picker.Document.NAME],
+          element_name: document[google.picker.Document.NAME],
         });
       // Read the file content as a Buffer
       else
@@ -107,10 +104,8 @@ export const GoogleDrive: FC<GoogleDriveProps> = ({
           .arrayBuffer()
           .then(
             (buffer) =>
-              new File([buffer], document[window.google.picker.Document.NAME])
+              new File([buffer], document[google.picker.Document.NAME])
           );
-
-      console.log(fileToUpload);
 
       // assign a unique name for the file, usually has to timestamp prefix
       const key = `${Date.now()}__${fileToUpload.name}`;

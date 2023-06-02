@@ -1,9 +1,8 @@
-// window.google object is not natively defined in TypeScript.
-declare global {
-  interface Window {
-    google: any;
-  }
-}
+// Author: Bassem JADOUI 31/05/2023
 
-export { getClient, s3Configs } from './lib/S3';
 export * from './UpupUploader';
+export { Is3Configs } from './types/Is3Configs';
+export { IBaseConfigs } from './types/IBaseConfigs';
+export { ICloudStorageConfigs } from './types/ICloudStorageConfigs';
+export { IGoogleConfigs } from './types/IGoogleConfigs';
+export { IOneDriveConfigs } from './types/IOneDriveConfigs';
