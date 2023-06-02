@@ -2,22 +2,24 @@ import React, { FC } from 'react';
 import useLoadGAPI from '../hooks/useLoadGAPI';
 import { pubObject } from '../lib/putObject';
 import { compressFile } from '../lib/compressFile';
-import { CloudStorageConfigs } from '../types/CloudStorageConfigs';
-import { BaseConfigs } from '../types/BaseConfigs';
-import { GoogleConfigs } from '../types/GoogleConfigs';
+import { ICloudStorageConfigs } from '../types/ICloudStorageConfigs';
+import { IBaseConfigs } from '../types/IBaseConfigs';
+import { IGoogleConfigs } from '../types/IGoogleConfigs';
 
 export interface GoogleDriveProps {
   client: any;
-  cloudStorageConfigs: CloudStorageConfigs;
-  baseConfigs: BaseConfigs;
-  googleConfigs: GoogleConfigs | undefined;
+  cloudStorageConfigs: ICloudStorageConfigs;
+  baseConfigs: IBaseConfigs;
+  googleConfigs: IGoogleConfigs;
 }
 
 /**
- *
- * @param client cloud provider client, ex: S3
- * @param bucket bucket name
- * @param googleConfigs  google configurations ex: API_KEY, APP_ID, GOOGLE_CLIENT_ID
+ * Upload files from Google Drive to S3 bucket
+ * @param client S3 client
+ * @param bucket S3 bucket name
+ * @param GOOGLE_APP_ID app id from Google Cloud Platform
+ * @param GOOGLE_API_KEY api key from Google Cloud Platform
+ * @param GOOGLE_CLIENT_ID client id from Google Cloud Platform
  * @param setKey return the final name of the file, usually it has timestamp prefix
  * @param toBeCompressed whether the user want to compress the file before uploading it or not. Default value is false
  * @constructor
@@ -25,12 +27,11 @@ export interface GoogleDriveProps {
 export const GoogleDrive: FC<GoogleDriveProps> = ({
   client,
   cloudStorageConfigs: { bucket },
-  googleConfigs,
+  googleConfigs: { GOOGLE_APP_ID, GOOGLE_API_KEY, GOOGLE_CLIENT_ID },
   baseConfigs: { setKey, toBeCompressed },
 }: GoogleDriveProps) => {
-  const { API_KEY, APP_ID, GOOGLE_CLIENT_ID } = googleConfigs || {};
   const { pickerApiLoaded, gisLoaded, tokenClient } = useLoadGAPI({
-    CLIENT_ID: GOOGLE_CLIENT_ID,
+    GOOGLE_CLIENT_ID,
   });
 
   let accessToken: string;
@@ -40,8 +41,8 @@ export const GoogleDrive: FC<GoogleDriveProps> = ({
     const picker = new google.picker.PickerBuilder()
       .addView(google.picker.ViewId.DOCS)
       .setOAuthToken(accessToken)
-      .setDeveloperKey(API_KEY)
-      .setAppId(APP_ID)
+      .setDeveloperKey(GOOGLE_API_KEY)
+      .setAppId(GOOGLE_APP_ID)
       .setCallback(pickerCallback)
       .build();
     picker.setVisible(true);

@@ -1,12 +1,12 @@
 import React, { FC } from 'react';
-import { OneDriveConfigs } from './types/OneDriveConfigs';
+import { IOneDriveConfigs } from './types/IOneDriveConfigs';
 import { UploadFiles } from './components/UploadFiles';
 import { GoogleDrive } from './components/googleDrive';
 import OneDrive from './components/oneDrive';
-import { CloudStorageConfigs } from './types/CloudStorageConfigs';
-import { BaseConfigs } from './types/BaseConfigs';
-import { GoogleConfigs } from './types/GoogleConfigs';
-import { getClient } from './lib/S3';
+import { ICloudStorageConfigs } from './types/ICloudStorageConfigs';
+import { IBaseConfigs } from './types/IBaseConfigs';
+import { IGoogleConfigs } from './types/IGoogleConfigs';
+import { getClient } from './lib/getClient';
 
 // salem ss
 export enum Provider {
@@ -16,11 +16,11 @@ export enum Provider {
 }
 
 interface UpupUploaderProps {
-  cloudStorageConfigs: CloudStorageConfigs;
-  baseConfigs: BaseConfigs;
+  cloudStorageConfigs: ICloudStorageConfigs;
+  baseConfigs: IBaseConfigs;
   uploadProviders: Provider[];
-  googleConfigs?: GoogleConfigs | undefined;
-  oneDriveConfigs?: OneDriveConfigs | undefined;
+  googleConfigs?: IGoogleConfigs | undefined;
+  oneDriveConfigs?: IOneDriveConfigs | undefined;
 }
 
 /**

@@ -1,8 +1,8 @@
 // Author: Bassem JADOUI 31/05/2023
 
-export { IS3Configs } from './lib/S3';
 export * from './UpupUploader';
-export { BaseConfigs } from './types/BaseConfigs';
-export { CloudStorageConfigs } from './types/CloudStorageConfigs';
-export { GoogleConfigs } from './types/GoogleConfigs';
-export { OneDriveConfigs } from './types/OneDriveConfigs';
+export { Is3Configs } from './types/Is3Configs';
+export { IBaseConfigs } from './types/IBaseConfigs';
+export { ICloudStorageConfigs } from './types/ICloudStorageConfigs';
+export { IGoogleConfigs } from './types/IGoogleConfigs';
+export { IOneDriveConfigs } from './types/IOneDriveConfigs';

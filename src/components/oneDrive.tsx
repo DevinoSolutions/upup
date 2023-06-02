@@ -1,33 +1,33 @@
 import React, { FC, useEffect, useState } from 'react';
 import useLoadOdAPI from '../hooks/useLoadOdAPI';
-import { BaseConfigs } from '../types/BaseConfigs';
-import { OneDriveConfigs } from '../types/OneDriveConfigs';
+import { IBaseConfigs } from '../types/IBaseConfigs';
+import { IOneDriveConfigs } from '../types/IOneDriveConfigs';
 import { compressFile } from '../lib/compressFile';
 import { pubObject } from '../lib/putObject';
-import { CloudStorageConfigs } from '../types/CloudStorageConfigs';
+import { ICloudStorageConfigs } from '../types/ICloudStorageConfigs';
 
 interface OneDriveParams {
   client: any;
-  cloudStorageConfigs: CloudStorageConfigs;
-  baseConfigs: BaseConfigs;
-  oneDriveConfigs: OneDriveConfigs | undefined;
+  cloudStorageConfigs: ICloudStorageConfigs;
+  baseConfigs: IBaseConfigs;
+  oneDriveConfigs: IOneDriveConfigs | undefined;
 }
 
 /**
- *
- * @param client cloud provider client ex: S3
- * @param bucket bucket name
- * @param baseConfigs  base configurations for the uploader : setKey, canUpload, toBeCompressed
- * @param oneDriveConfigs configurations for OneDrive : ONEDRIVE_CLIENT_ID, multiSelect
+ * One Drive component
+ * @param client s3 client
+ * @param bucket s3 bucket
+ * @param setKey return the final name of the file, usually it has timestamp prefix
+ * @param toBeCompressed whether the user want to compress the file before uploading it or not. Default value is false
+ * @param oneDriveConfigs one drive configs
  * @constructor
  */
 const OneDrive: FC<OneDriveParams> = ({
   client,
   cloudStorageConfigs: { bucket },
-  baseConfigs,
+  baseConfigs: { setKey, toBeCompressed },
   oneDriveConfigs,
 }: OneDriveParams) => {
-  const { setKey, toBeCompressed } = baseConfigs;
   const [files, setFiles] = useState<File[]>([]);
 
   const { isLoaded } = useLoadOdAPI();

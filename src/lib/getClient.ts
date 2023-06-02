@@ -1,20 +1,12 @@
 import { S3 } from '@aws-sdk/client-s3';
+import { Is3Configs } from '../types/Is3Configs';
 let client: S3 | null = null;
 
-export interface IS3Configs {
-  region: string;
-  endpoint: string;
-  credentials: {
-    accessKeyId: string;
-    secretAccessKey: string;
-  };
-}
-
 /**
- *
+ * Get S3 client
  * @param configs S3 configs (region, endpoint...etc)
  */
-export function getClient(configs: IS3Configs) {
+export function getClient(configs: Is3Configs) {
   if (client) return client;
   const { region, endpoint, credentials } = configs;
   client = new S3({
