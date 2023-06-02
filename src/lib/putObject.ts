@@ -6,7 +6,7 @@ interface props {
 }
 
 /**
- *
+ * Upload file to cloud provider bucket with public access permission (ACL)
  * @param client cloud provider client, ex: S3
  * @param bucket bucket name
  * @param key the final file name, usually it has timestamp prefix

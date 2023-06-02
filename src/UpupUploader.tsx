@@ -40,8 +40,15 @@ export const UpupUploader: FC<UpupUploaderProps> = ({
   googleConfigs,
   oneDriveConfigs,
 }: UpupUploaderProps) => {
+  /**
+   * Get the client
+   */
   const client = getClient(cloudStorageConfigs.s3Configs);
 
+  /**
+   *  Define the components to be rendered based on the user selection of
+   *  the upload providers (internal, google drive, one drive)
+   */
   const components = {
     [Provider.internal_upload]: (
       <UploadFiles
@@ -67,6 +74,15 @@ export const UpupUploader: FC<UpupUploaderProps> = ({
       />
     ),
   };
+
+  /**
+   * Select the components to be rendered based on the user selection of
+   * the upload providers (internal, google drive, one drive)
+   */
   const selectedComponent = uploadProviders.map((p) => components[p]);
+
+  /**
+   *  Return the selected components
+   */
   return <>{selectedComponent}</>;
 };

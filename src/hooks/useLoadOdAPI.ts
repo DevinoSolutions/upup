@@ -5,6 +5,9 @@ const useLoadOdAPI = () => {
   const [isLoaded, setIsLoaded] = useState<boolean>(false);
 
   useEffect(() => {
+    /**
+     * Load the OneDrive API
+     */
     load('https://js.live.net/v7.2/OneDrive.js', (err, _script) => {
       if (err) {
         console.log('Error loading OneDrive', err);

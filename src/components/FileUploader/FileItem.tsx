@@ -15,6 +15,10 @@ type Props = {
  * @constructor
  */
 const FileItem = ({ file, setFiles }: Props) => {
+  /**
+   * Get file type
+   * @param file
+   */
   const getFileType = (file: File) => file.type.split('/')[1];
   return (
     <div className="flex items-center w-full py-1 font-poppins gap-2 relative justify-between">
