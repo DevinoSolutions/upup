@@ -7,18 +7,12 @@ import { ICloudStorageConfigs } from './types/ICloudStorageConfigs';
 import { IBaseConfigs } from './types/IBaseConfigs';
 import { IGoogleConfigs } from './types/IGoogleConfigs';
 import { getClient } from './lib/getClient';
-
-// salem ss
-export enum Provider {
-  internal_upload,
-  google_drive_upload,
-  one_drive_upload,
-}
+import { UploadAdapter } from './enums/UploadAdapter';
 
 interface UpupUploaderProps {
   cloudStorageConfigs: ICloudStorageConfigs;
   baseConfigs: IBaseConfigs;
-  uploadProviders: Provider[];
+  uploadAdapters: UploadAdapter[];
   googleConfigs?: IGoogleConfigs | undefined;
   oneDriveConfigs?: IOneDriveConfigs | undefined;
 }
@@ -36,7 +30,7 @@ interface UpupUploaderProps {
 export const UpupUploader: FC<UpupUploaderProps> = ({
   cloudStorageConfigs,
   baseConfigs: { toBeCompressed = false, ...baseConfigs },
-  uploadProviders,
+  uploadAdapters,
   googleConfigs,
   oneDriveConfigs,
 }: UpupUploaderProps) => {
@@ -47,17 +41,17 @@ export const UpupUploader: FC<UpupUploaderProps> = ({
 
   /**
    *  Define the components to be rendered based on the user selection of
-   *  the upload providers (internal, google drive, one drive)
+   *  the upload adapters (internal, google drive, one drive)
    */
   const components = {
-    [Provider.internal_upload]: (
+    [UploadAdapter.internal]: (
       <UploadFiles
         client={client}
         cloudStorageConfigs={cloudStorageConfigs}
         baseConfigs={baseConfigs}
       />
     ),
-    [Provider.google_drive_upload]: (
+    [UploadAdapter.google_drive]: (
       <GoogleDrive
         client={client}
         cloudStorageConfigs={cloudStorageConfigs}
@@ -65,7 +59,7 @@ export const UpupUploader: FC<UpupUploaderProps> = ({
         baseConfigs={baseConfigs}
       />
     ),
-    [Provider.one_drive_upload]: (
+    [UploadAdapter.one_drive]: (
       <OneDrive
         client={client}
         cloudStorageConfigs={cloudStorageConfigs}
@@ -77,9 +71,9 @@ export const UpupUploader: FC<UpupUploaderProps> = ({
 
   /**
    * Select the components to be rendered based on the user selection of
-   * the upload providers (internal, google drive, one drive)
+   * the upload adapters (internal, google drive, one drive)
    */
-  const selectedComponent = uploadProviders.map((p) => components[p]);
+  const selectedComponent = uploadAdapters.map((p) => components[p]);
 
   /**
    *  Return the selected components
