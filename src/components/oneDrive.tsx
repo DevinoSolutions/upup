@@ -32,6 +32,9 @@ const OneDrive: FC<OneDriveParams> = ({
 
   const { isLoaded } = useLoadOdAPI();
 
+  /**
+   * Upload the file to the cloud storage when the files array is updated
+   */
   useEffect(() => {
     files.map((file) => {
       const key = `${Date.now()}__${file.name}`;
@@ -40,31 +43,68 @@ const OneDrive: FC<OneDriveParams> = ({
     });
   }, [files]);
 
+  /**
+   * Save the files to the files array
+   * @param files
+   */
   const saveFiles = (files: any) => {
+    /**
+     * Create a new array to store the files
+     */
     const filesArray: File[] = [];
+
+    /**
+     * Loop through the files array and download the files
+     */
     Promise.all(
       files.map(async (file: any) => {
+        /**
+         * Download the file from the one drive
+         */
         const response = await fetch(file['@microsoft.graph.downloadUrl']);
+        /**
+         * Convert the file to blob
+         */
         const blob = await response.blob();
+        /**
+         * Create a new file from the blob
+         */
         const newFile = new File([blob], file.name, {
           type: file.file.mimeType,
         });
+        /**
+         * Push the new file to the files array
+         */
         filesArray.push(newFile);
       })
     ).then(() => {
+      /**
+       * Compress the files if the user want to compress the files
+       */
       if (files.length == 0) return;
       if (toBeCompressed)
+        /**
+         * Compress the files and set the files array
+         */
         filesArray.map(async (file) => {
           setFiles([
             ...files,
             await compressFile({ element: file, element_name: file.name }),
           ]);
         });
-      else setFiles(filesArray);
+      /**
+       * Otherwise, just set the files array
+       */ else setFiles(filesArray);
     });
   };
 
+  /**
+   * Open the one drive picker
+   */
   const openPicker = () => {
+    /**
+     * One Drive options
+     */
     const odOptions = {
       clientId: oneDriveConfigs ? oneDriveConfigs.ONEDRIVE_CLIENT_ID : '',
       action: 'download',
@@ -77,6 +117,9 @@ const OneDrive: FC<OneDriveParams> = ({
         //     scopes: 'files.readwrite.all',
       },
       success: (response: any) => {
+        /**
+         *  Save the files to the files array
+         */
         saveFiles(response.value);
       },
       cancel: () => {
@@ -86,8 +129,11 @@ const OneDrive: FC<OneDriveParams> = ({
         console.log(e);
       },
     };
-    const OneDrive = (window as any).OneDrive;
-    OneDrive.open(odOptions);
+    /**
+     * Open the one drive picker with the options above
+     * @see https://docs.microsoft.com/en-us/onedrive/developer/controls/file-pickers/js-v72/open-file-picker
+     */
+    (window as any).OneDrive.open(odOptions);
   };
 
   return (

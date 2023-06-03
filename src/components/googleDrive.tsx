@@ -37,6 +37,9 @@ export const GoogleDrive: FC<GoogleDriveProps> = ({
   let accessToken: string;
   const google = (window as any).google;
 
+  /**
+   * Get the access token
+   */
   const showPicker = async () => {
     const picker = new google.picker.PickerBuilder()
       .addView(google.picker.ViewId.DOCS)
@@ -48,14 +51,16 @@ export const GoogleDrive: FC<GoogleDriveProps> = ({
     picker.setVisible(true);
   };
 
+  /**
+   * Create a picker to select files from Google Drive
+   */
   const createPicker = () => {
     // Request an access token
     tokenClient.callback = async (response: any) => {
       if (response.error !== undefined) {
         throw response;
       }
-      accessToken = response.access_token;
-      if (accessToken) {
+      if (response.access_token) {
         await showPicker();
       }
     };
@@ -70,7 +75,10 @@ export const GoogleDrive: FC<GoogleDriveProps> = ({
     }
   };
 
-  // TO-DO: Make sure Google Workspace documents can be downloaded.
+  /**
+   * Callback function to get the file from Google Drive
+   * @param data
+   */
   const pickerCallback = async (data: any): Promise<void> => {
     if (data.action === google.picker.Action.PICKED) {
       const document = data[google.picker.Response.DOCUMENTS][0];
