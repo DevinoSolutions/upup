@@ -106,7 +106,7 @@ const OneDrive: FC<OneDriveParams> = ({
      * One Drive options
      */
     const odOptions = {
-      clientId: oneDriveConfigs ? oneDriveConfigs.ONEDRIVE_CLIENT_ID : '',
+      clientId: oneDriveConfigs ? oneDriveConfigs.onedrive_client_id : '',
       action: 'download',
       multiSelect: oneDriveConfigs ? oneDriveConfigs.multiSelect : false,
       openInNewWindow: true,
