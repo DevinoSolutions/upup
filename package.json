@@ -7,9 +7,14 @@
     "dist",
     "src"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/uNotesOfficial/upup.git"
+  },
   "engines": {
     "node": ">=10"
   },
+  "keywords": ["react", "typescript", "aws/sdk", "s3", "file", "uploader", "react-uploader", "one-drive", "google-drive", "pako", "gzip", "compress", "decompress"],
   "scripts": {
     "start": "tsdx watch",
     "build": "tsdx build",
