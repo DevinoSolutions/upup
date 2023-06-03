@@ -1,5 +1,5 @@
 export interface IGoogleConfigs {
-  GOOGLE_API_KEY: string;
-  GOOGLE_APP_ID: string;
-  GOOGLE_CLIENT_ID: string;
+  google_api_key: string;
+  google_app_id: string;
+  google_client_id: string;
 }

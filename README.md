@@ -35,49 +35,80 @@ yarn add @bassem97/upup
 
 ## Usage
 
-### Initialize
-
-Initialize s3 client inside you component :
+1 - Inside you component or App.tsx import UpupUploader and the types you need : 
 
 ```javascript
 // imports
-import { UploadFiles, getClient, s3Configs } from "@bassem97/upup";
-
- const client = getClient({
-    region: process.env.REGION,
-    endpoint: process.env.ENDPOINT,
-    credentials: {
-      accessKeyId: process.env.ACCESS_KEY_ID,
-      secretAccessKey: process.env.SECRET_ACCESS_KEY
-    }
-  } as s3Configs);
+import {
+  IBaseConfigs,
+  ICloudStorageConfigs,
+  IGoogleConfigs,
+  IOneDriveConfigs,
+  Is3Configs,
+  UploadAdapter,
+  UpupUploader,
+} from '@bassem97/upup'
 ```
 
-create state for key (which will be the final link of you file. ex: 'https://example-documents.nyc3.cdn.digitaloceanspaces.com/file.pdf')
+### 2 - Create 2 states one for key (which will be the final link of you file. ex: 'https://example-documents.nyc3.cdn.digitaloceanspaces.com/file.pdf') and another for canUpload ( which will be changed after uploading file and submitting )
 
 ```javascript
 const [key, setKey] = useState('');
-```
-
-create state for canUpload ( which will be changed after uploading file and submiting )
-
-```javascript
 const [canUpload, setCanUpload] = useState(false);
 ```
 
-### call the File uploader component with props bellow:
+### 3 - initialize the configs from the provider you want to use ( ex: DigitalOceanSpaces, GoogleDrive, OneDrive, S3 )
 
 ```javascript
-<UploadFiles
-  bucket={process.env.SPACE_OR_BUCKET}
-  client={client}
-  setKey={setKey}
-  canUpload={canUpload}
-/>
+  const s3Configs: Is3Configs = {
+  region: space_region,
+  endpoint: space_endpoint,
+  credentials: {
+    accessKeyId: space_key,
+    secretAccessKey: space_secret,
+  },
+}
+
+const baseConfigs: IBaseConfigs = {
+  canUpload: canUpload,
+  setKey: setKey,
+}
+
+const cloudStorageConfigs: ICloudStorageConfigs = {
+  bucket: document_space,
+  s3Configs,
+}
+
+const googleConfigs: IGoogleConfigs = {
+  GOOGLE_API_KEY: google_api_key,
+  GOOGLE_APP_ID: google_app_id,
+  GOOGLE_CLIENT_ID: google_client_id,
+}
+
+const oneDriveConfigs: IOneDriveConfigs = {
+  ONEDRIVE_CLIENT_ID: onedrive_client_id,
+  multiSelect: false,
+}
+
 ```
 
-### create a button that handle submitting file:
+### 4 - Render the UpupUploader component and pass the configs and the provider you want to use ( ex: Provider.internal_upload, Provider.google_drive_upload, Provider.one_drive_upload )
 
 ```javascript
-  <button onClick={ () => setCanUpload(true) }
+return (
+  <div>
+    <UpupUploader
+      baseConfigs={baseConfigs}
+      cloudStorageConfigs={cloudStorageConfigs}
+      googleConfigs={googleConfigs}
+      oneDriveConfigs={oneDriveConfigs}
+      uploadProviders={[
+        Provider.internal_upload,
+        Provider.google_drive_upload,
+        Provider.one_drive_upload,
+      ]}
+    />
+    <button onClick={() => setCanUpload(true)}> upload </button>
+  </div>
+);
 ```

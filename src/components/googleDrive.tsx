@@ -27,11 +27,11 @@ export interface GoogleDriveProps {
 export const GoogleDrive: FC<GoogleDriveProps> = ({
   client,
   cloudStorageConfigs: { bucket },
-  googleConfigs: { GOOGLE_APP_ID, GOOGLE_API_KEY, GOOGLE_CLIENT_ID },
+  googleConfigs: { google_app_id, google_api_key, google_client_id },
   baseConfigs: { setKey, toBeCompressed },
 }: GoogleDriveProps) => {
   const { pickerApiLoaded, gisLoaded, tokenClient } = useLoadGAPI({
-    GOOGLE_CLIENT_ID,
+    google_client_id,
   });
 
   let accessToken: string;
@@ -44,8 +44,8 @@ export const GoogleDrive: FC<GoogleDriveProps> = ({
     const picker = new google.picker.PickerBuilder()
       .addView(google.picker.ViewId.DOCS)
       .setOAuthToken(accessToken)
-      .setDeveloperKey(GOOGLE_API_KEY)
-      .setAppId(GOOGLE_APP_ID)
+      .setDeveloperKey(google_api_key)
+      .setAppId(google_app_id)
       .setCallback(pickerCallback)
       .build();
     picker.setVisible(true);
