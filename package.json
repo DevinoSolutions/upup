@@ -8,6 +8,8 @@
     "type": "git",
     "url": "https://github.com/uNotesOfficial/upup.git"
   },
+  "homepage": "",
+
   "readme": "README.md",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
