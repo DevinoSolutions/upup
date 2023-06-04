@@ -1,6 +1,7 @@
 // Author: Bassem JADOUI 31/05/2023
 
-export * from './UpupUploader';
+export { UpupUploader } from './UpupUploader';
+export { UploadAdapter } from './enums/UploadAdapter';
 export { Is3Configs } from './types/Is3Configs';
 export { IBaseConfigs } from './types/IBaseConfigs';
 export { ICloudStorageConfigs } from './types/ICloudStorageConfigs';

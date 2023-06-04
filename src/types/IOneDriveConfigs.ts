@@ -1,4 +1,4 @@
 export interface IOneDriveConfigs {
-  ONEDRIVE_CLIENT_ID: string;
+  onedrive_client_id: string;
   multiSelect: boolean;
 }

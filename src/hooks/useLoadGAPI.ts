@@ -4,14 +4,14 @@ import { useEffect, useState } from 'react';
 const SCOPES = 'https://www.googleapis.com/auth/drive';
 
 interface props {
-  GOOGLE_CLIENT_ID: string | undefined;
+  google_client_id: string;
 }
 
 /**
  * This hook loads the Google API and the Google Identity Services API
  * @param GOOGLE_CLIENT_ID
  */
-const useLoadGAPI = ({ GOOGLE_CLIENT_ID }: props) => {
+const useLoadGAPI = ({ google_client_id }: props) => {
   const [pickerApiLoaded, setPickerApiLoaded] = useState<boolean>(false);
   const [gisLoaded, setGisLoaded] = useState<boolean>(false);
   const [tokenClient, setTokenClient] = useState<any>(null);
@@ -31,7 +31,7 @@ const useLoadGAPI = ({ GOOGLE_CLIENT_ID }: props) => {
   const onGisLoaded = () => {
     setTokenClient(
       new (window as any).google.accounts.oauth2.initTokenClient({
-        client_id: GOOGLE_CLIENT_ID,
+        client_id: google_client_id,
         scope: SCOPES,
         callback: '', // defined later
       })
