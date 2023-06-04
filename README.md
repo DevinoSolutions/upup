@@ -53,11 +53,11 @@ import {
 ### 2 - Set your configurations keys from your .env file ( ex: .env.local ) :
 
 ```javascript
-const space_secret = process.env.NEXT_PUBLIC_UNOTES_SPACE_SECRET || ''
-const space_key = process.env.NEXT_PUBLIC_UNOTES_SPACE_KEY || ''
-const space_endpoint = process.env.NEXT_PUBLIC_UNOTES_SPACE_ENDPOINT || ''
-const space_region = process.env.NEXT_PUBLIC_UNOTES_SPACE_REGION || ''
-const document_space = process.env.NEXT_PUBLIC_UNOTES_DOCUMENT_SPACE || ''
+const space_secret = process.env.NEXT_PUBLIC_SPACE_SECRET || ''
+const space_key = process.env.NEXT_PUBLIC_SPACE_KEY || ''
+const space_endpoint = process.env.NEXT_PUBLIC_SPACE_ENDPOINT || ''
+const space_region = process.env.NEXT_PUBLIC_SPACE_REGION || ''
+const document_space = process.env.NEXT_PUBLIC_DOCUMENT_SPACE || ''
 const onedrive_client_id = process.env.NEXT_PUBLIC_ONEDRIVE_CLIENT_ID || ''
 const google_client_id = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID_PICKER || ''
 const google_app_id = process.env.NEXT_PUBLIC_GOOGLE_APP_ID || ''
