@@ -1,5 +1,5 @@
 {
-  "version": "1.3.2",
+  "version": "1.3.3",
   "license": "MIT",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -14,7 +14,21 @@
   "engines": {
     "node": ">=10"
   },
-  "keywords": ["react", "typescript", "aws/sdk", "s3", "file", "uploader", "react-uploader", "one-drive", "google-drive", "pako", "gzip", "compress", "decompress"],
+  "keywords": [
+    "react",
+    "typescript",
+    "aws/sdk",
+    "s3",
+    "file",
+    "uploader",
+    "react-uploader",
+    "one-drive",
+    "google-drive",
+    "pako",
+    "gzip",
+    "compress",
+    "decompress"
+  ],
   "scripts": {
     "start": "tsdx watch",
     "build": "tsdx build",
