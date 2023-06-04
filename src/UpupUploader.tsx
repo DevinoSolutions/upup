@@ -1,8 +1,8 @@
 import React, { FC } from 'react';
 import { IOneDriveConfigs } from './types/IOneDriveConfigs';
 import { UploadFiles } from './components/UploadFiles';
-import { GoogleDrive } from './components/googleDrive';
-import OneDrive from './components/oneDrive';
+import { GoogleDrive } from './components/GoogleDrive';
+import OneDrive from './components/OneDrive';
 import { ICloudStorageConfigs } from './types/ICloudStorageConfigs';
 import { IBaseConfigs } from './types/IBaseConfigs';
 import { IGoogleConfigs } from './types/IGoogleConfigs';
