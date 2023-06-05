@@ -6,7 +6,7 @@ on:
 
 jobs:
   build:
-    name: Install, Prettier check and Build
+    name: Prettier check, Install dependencies and Build project
 
     runs-on: ubuntu-latest
     steps:
