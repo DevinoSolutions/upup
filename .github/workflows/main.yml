@@ -1,8 +1,12 @@
 name: CI
-on: [push]
+
+on:
+  pull_request:
+    branches: [master]
+
 jobs:
   build:
-    name: Build, lint, and test
+    name: Install, Prettier check and Build
 
     runs-on: ubuntu-latest
     steps:
@@ -18,6 +22,11 @@ jobs:
           node-version: 16.x
           cache: 'pnpm'
 
-      - run: pnpm install 
-      # - run: pnpm run lint && pnpm run build
-      - run: pnpm run build
+      - name : Prettier check
+        run: npx prettier --check src/*.*
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Build project
+        run: pnpm run build
