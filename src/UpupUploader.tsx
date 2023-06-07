@@ -35,6 +35,13 @@ export const UpupUploader: FC<UpupUploaderProps> = ({
   oneDriveConfigs,
 }: UpupUploaderProps) => {
   /**
+   * Check if the user selected at least one upload adapter
+   */
+  if (uploadAdapters.length === 0) {
+    throw new Error('Please select at least one upload adapter');
+  }
+
+  /**
    * Get the client
    */
   const client = getClient(cloudStorageConfigs.s3Configs);
@@ -72,8 +79,11 @@ export const UpupUploader: FC<UpupUploaderProps> = ({
   /**
    * Select the components to be rendered based on the user selection of
    * the upload adapters (internal, google drive, one drive)
+   * using key as index to avoid the warning: Each child in a list should have a unique "key" prop.
    */
-  const selectedComponent = uploadAdapters.map((p) => components[p]);
+  const selectedComponent = uploadAdapters.map((uploadAdapter, index) => (
+    <div key={index}>{components[uploadAdapter]}</div>
+  ));
 
   /**
    *  Return the selected components
