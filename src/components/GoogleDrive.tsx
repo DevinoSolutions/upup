@@ -17,9 +17,9 @@ export interface GoogleDriveProps {
  * Upload files from Google Drive to S3 bucket
  * @param client S3 client
  * @param bucket S3 bucket name
- * @param GOOGLE_APP_ID app id from Google Cloud Platform
- * @param GOOGLE_API_KEY api key from Google Cloud Platform
- * @param GOOGLE_CLIENT_ID client id from Google Cloud Platform
+ * @param google_app_id app id from Google Cloud Platform
+ * @param google_api_key api key from Google Cloud Platform
+ * @param google_client_id client id from Google Cloud Platform
  * @param setKey return the final name of the file, usually it has timestamp prefix
  * @param toBeCompressed whether the user want to compress the file before uploading it or not. Default value is false
  * @constructor
