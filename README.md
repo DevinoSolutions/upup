@@ -13,7 +13,7 @@ Goodbye to nasty configs, painful APIs and hello to a simple, easy to use, file 
 
 <p align="center">
   <a href="https://github.com/uNotesOfficial/upup">
-    <img src="https://img.shields.io/badge/gzipped-80%20kb-4ba0f6" />
+    <img src="https://img.shields.io/badge/gzipped-206kb-4ba0f6" />
   </a>
 
 <hr/>
