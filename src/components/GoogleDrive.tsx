@@ -49,6 +49,7 @@ export const GoogleDrive: FC<GoogleDriveProps> = ({
       .setCallback(pickerCallback)
       .build();
     picker.setVisible(true);
+    console.log('picker', picker);
   };
 
   /**
@@ -60,6 +61,7 @@ export const GoogleDrive: FC<GoogleDriveProps> = ({
       if (response.error !== undefined) {
         throw response;
       }
+      accessToken = response.access_token;
       if (response.access_token) {
         await showPicker();
       }
