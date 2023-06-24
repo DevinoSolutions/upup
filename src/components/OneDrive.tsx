@@ -137,7 +137,24 @@ const OneDrive: FC<OneDriveParams> = ({
   };
 
   return (
-    <div>{isLoaded && <button onClick={openPicker}>One Drive</button>}</div>
+    <div>
+      {isLoaded && (
+        // one drive button with logo and text
+        <button
+          onClick={openPicker}
+          className="flex items-center justify-center bg-white hover:bg-gray-100 text-gray-900 py-2 px-4 rounded-lg shadow-md transition-colors duration-300"
+        >
+          <img
+            src="https://static2.sharepointonline.com/files/fabric/assets/brand-icons/product/svg/onedrive_32x1.svg"
+            alt="One Drive Logo"
+            className="w-5 h-5 mr-2 fill-current"
+            width="20"
+            height="20"
+          />
+          Select from One Drive
+        </button>
+      )}
+    </div>
   );
 };
 
