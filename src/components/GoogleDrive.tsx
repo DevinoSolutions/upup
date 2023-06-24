@@ -131,7 +131,20 @@ export const GoogleDrive: FC<GoogleDriveProps> = ({
   return (
     <div>
       {pickerApiLoaded && gisLoaded && (
-        <button onClick={createPicker}>google drive</button>
+        // google drive button with logo and text
+        <button
+          onClick={createPicker}
+          className="flex items-center justify-center bg-white hover:bg-gray-100 text-gray-900 py-2 px-4 rounded-lg shadow-md transition-colors duration-300"
+        >
+          <img
+            src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/Google_Drive_icon_%282020%29.svg/1200px-Google_Drive_icon_%282020%29.svg.png"
+            alt="Google Drive Logo"
+            className="w-5 h-5 mr-2 fill-current"
+            width="20"
+            height="20"
+          />
+          Select from Google Drive
+        </button>
       )}
     </div>
   );
