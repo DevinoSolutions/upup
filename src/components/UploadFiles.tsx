@@ -18,11 +18,19 @@ export interface UploadFilesProps {
  * @param setKey return the final name of the file, usually it has timestamp prefix
  * @param canUpload to control when to upload the file , it has default false value
  * @param toBeCompressed whether the user want to compress the file before uploading it or not. Default value is false
+ * @param multiple whether the user want to upload multiple files or not. Default value is false
+ * @param onChange return the files array
  * @constructor
  */
 export const UploadFiles: FC<UploadFilesProps> = ({
   client,
-  baseConfigs: { setKey, canUpload, toBeCompressed = false },
+  baseConfigs: {
+    setKey,
+    canUpload,
+    toBeCompressed = false,
+    multiple = false,
+    onChange,
+  },
   cloudStorageConfigs: { bucket },
 }: UploadFilesProps) => {
   /**
@@ -91,6 +99,10 @@ export const UploadFiles: FC<UploadFilesProps> = ({
     }
   }, [canUpload]);
 
+  useEffect(() => {
+    onChange && onChange(files);
+  }, [files]);
+
   return (
     <div
       className="max-w-full overflow-hidden flex w-full"
@@ -101,7 +113,7 @@ export const UploadFiles: FC<UploadFilesProps> = ({
         setDragging={setDragging}
         files={files}
         setFiles={setFiles}
-        multiple={false}
+        multiple={multiple}
       />
     </div>
   );
