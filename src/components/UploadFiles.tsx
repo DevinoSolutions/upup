@@ -9,7 +9,6 @@ export interface UploadFilesProps {
   client: any;
   cloudStorageConfigs: ICloudStorageConfigs;
   baseConfigs: IBaseConfigs;
-  onChange: (files: File[]) => void;
 }
 
 /**
@@ -25,9 +24,14 @@ export interface UploadFilesProps {
  */
 export const UploadFiles: FC<UploadFilesProps> = ({
   client,
-  baseConfigs: { setKey, canUpload, toBeCompressed = false, multiple = false },
+  baseConfigs: {
+    setKey,
+    canUpload,
+    toBeCompressed = false,
+    multiple = false,
+    onChange,
+  },
   cloudStorageConfigs: { bucket },
-  onChange,
 }: UploadFilesProps) => {
   /**
    * Handle the drag enter event
@@ -96,7 +100,7 @@ export const UploadFiles: FC<UploadFilesProps> = ({
   }, [canUpload]);
 
   useEffect(() => {
-    onChange(files);
+    onChange && onChange(files);
   }, [files]);
 
   return (
