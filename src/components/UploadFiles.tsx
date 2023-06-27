@@ -9,6 +9,7 @@ export interface UploadFilesProps {
   client: any;
   cloudStorageConfigs: ICloudStorageConfigs;
   baseConfigs: IBaseConfigs;
+  onChange: (files: File[]) => void;
 }
 
 /**
@@ -19,12 +20,14 @@ export interface UploadFilesProps {
  * @param canUpload to control when to upload the file , it has default false value
  * @param toBeCompressed whether the user want to compress the file before uploading it or not. Default value is false
  * @param multiple whether the user want to upload multiple files or not. Default value is false
+ * @param onChange return the files array
  * @constructor
  */
 export const UploadFiles: FC<UploadFilesProps> = ({
   client,
   baseConfigs: { setKey, canUpload, toBeCompressed = false, multiple = false },
   cloudStorageConfigs: { bucket },
+  onChange,
 }: UploadFilesProps) => {
   /**
    * Handle the drag enter event
@@ -91,6 +94,10 @@ export const UploadFiles: FC<UploadFilesProps> = ({
       handleUpload();
     }
   }, [canUpload]);
+
+  useEffect(() => {
+    onChange(files);
+  }, [files]);
 
   return (
     <div
