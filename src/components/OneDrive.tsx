@@ -3,7 +3,7 @@ import useLoadOdAPI from '../hooks/useLoadOdAPI';
 import { IBaseConfigs } from '../types/IBaseConfigs';
 import { IOneDriveConfigs } from '../types/IOneDriveConfigs';
 import { compressFile } from '../lib/compressFile';
-import { pubObject } from '../lib/putObject';
+import { putObject } from '../lib/putObject';
 import { ICloudStorageConfigs } from '../types/ICloudStorageConfigs';
 
 interface OneDriveParams {
@@ -38,8 +38,8 @@ const OneDrive: FC<OneDriveParams> = ({
   useEffect(() => {
     files.map((file) => {
       const key = `${Date.now()}__${file.name}`;
-      pubObject({ client, bucket, key, file });
-      setKey(key);
+      putObject({ client, bucket, key, file });
+      setKey([key]);
     });
   }, [files]);
 

@@ -1,6 +1,6 @@
 import React, { DragEvent, FC, useEffect, useState } from 'react';
 import FileUploader from './FileUploader/FileUploader';
-import { pubObject } from '../lib/putObject';
+import { putObject } from '../lib/putObject';
 import { compressFile } from '../lib/compressFile';
 import { ICloudStorageConfigs } from '../types/ICloudStorageConfigs';
 import { IBaseConfigs } from '../types/IBaseConfigs';
@@ -53,7 +53,7 @@ export const UploadFiles: FC<UploadFilesProps> = ({
    */
   const handleUpload = async () => {
     let filesToUpload: File[];
-    let key = '';
+    let key: string[] = [];
 
     /**
      * Compress the file before uploading it to the cloud storage
@@ -77,14 +77,15 @@ export const UploadFiles: FC<UploadFilesProps> = ({
         /**
          * assign a unique name for the file, usually has a timestamp prefix
          */
-        key = `${Date.now()}__${fileToUpload.name}`;
+        const k = `${Date.now()}__${fileToUpload.name}`;
+        key.push(k);
 
         /**
          * Upload the file to the cloud storage
          */
-        pubObject({ client, bucket, key, file: fileToUpload });
+        putObject({ client, bucket, key: k, file: fileToUpload });
       });
-
+      console.log(key);
       // set the file name
       setKey(key);
     }

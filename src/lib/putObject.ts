@@ -12,7 +12,7 @@ interface props {
  * @param key the final file name, usually it has timestamp prefix
  * @param file file to upload
  */
-export function pubObject({ client, bucket, key, file }: props) {
+export function putObject({ client, bucket, key, file }: props) {
   client.putObject(
     {
       Bucket: bucket,
