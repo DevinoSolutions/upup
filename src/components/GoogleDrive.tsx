@@ -1,6 +1,6 @@
 import React, { FC } from 'react';
 import useLoadGAPI from '../hooks/useLoadGAPI';
-import { pubObject } from '../lib/putObject';
+import { putObject } from '../lib/putObject';
 import { compressFile } from '../lib/compressFile';
 import { ICloudStorageConfigs } from '../types/ICloudStorageConfigs';
 import { IBaseConfigs } from '../types/IBaseConfigs';
@@ -121,10 +121,10 @@ export const GoogleDrive: FC<GoogleDriveProps> = ({
       const key = `${Date.now()}__${fileToUpload.name}`;
 
       // upload the file to the cloud
-      pubObject({ client, bucket, key, file: fileToUpload });
+      putObject({ client, bucket, key, file: fileToUpload });
 
       // set the file name
-      setKey(key);
+      setKey([key]);
     }
   };
 
