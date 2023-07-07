@@ -25,7 +25,7 @@ export interface UploadFilesProps {
 export const UploadFiles: FC<UploadFilesProps> = ({
   client,
   baseConfigs: {
-    setKey,
+    setKeys,
     canUpload,
     toBeCompressed = false,
     multiple = false,
@@ -87,7 +87,7 @@ export const UploadFiles: FC<UploadFilesProps> = ({
       });
 
       // set the file name
-      setKey(keys);
+      setKeys(keys);
     }
   };
 

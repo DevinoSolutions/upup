@@ -1,5 +1,5 @@
 export interface IBaseConfigs {
-  setKey: (key: string[]) => void;
+  setKeys: (key: string[]) => void;
   canUpload: boolean;
   toBeCompressed?: boolean;
   multiple?: boolean;

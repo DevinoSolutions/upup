@@ -25,7 +25,7 @@ interface OneDriveParams {
 const OneDrive: FC<OneDriveParams> = ({
   client,
   cloudStorageConfigs: { bucket },
-  baseConfigs: { setKey, toBeCompressed },
+  baseConfigs: { setKeys, toBeCompressed },
   oneDriveConfigs,
 }: OneDriveParams) => {
   const [files, setFiles] = useState<File[]>([]);
@@ -36,11 +36,13 @@ const OneDrive: FC<OneDriveParams> = ({
    * Upload the file to the cloud storage when the files array is updated
    */
   useEffect(() => {
+    let keys: string[] = [];
     files.map((file) => {
       const key = `${Date.now()}__${file.name}`;
+      keys.push(key);
       putObject({ client, bucket, key, file });
-      setKey([key]);
     });
+    setKeys(keys);
   }, [files]);
 
   /**
