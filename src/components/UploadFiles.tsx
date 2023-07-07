@@ -53,7 +53,7 @@ export const UploadFiles: FC<UploadFilesProps> = ({
    */
   const handleUpload = async () => {
     let filesToUpload: File[];
-    let key: string[] = [];
+    let keys: string[] = [];
 
     /**
      * Compress the file before uploading it to the cloud storage
@@ -73,21 +73,21 @@ export const UploadFiles: FC<UploadFilesProps> = ({
      * Loop through the files array and upload the files
      */
     if (filesToUpload) {
-      filesToUpload.forEach((fileToUpload) => {
+      filesToUpload.forEach((file) => {
         /**
          * assign a unique name for the file, usually has a timestamp prefix
          */
-        const k = `${Date.now()}__${fileToUpload.name}`;
-        key.push(k);
+        const key = `${Date.now()}__${file.name}`;
+        keys.push(key);
 
         /**
          * Upload the file to the cloud storage
          */
-        putObject({ client, bucket, key: k, file: fileToUpload });
+        putObject({ client, bucket, key, file });
       });
-      console.log(key);
+
       // set the file name
-      setKey(key);
+      setKey(keys);
     }
   };
 
