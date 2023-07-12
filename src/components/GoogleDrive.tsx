@@ -28,7 +28,7 @@ export const GoogleDrive: FC<GoogleDriveProps> = ({
   client,
   cloudStorageConfigs: { bucket },
   googleConfigs: { google_app_id, google_api_key, google_client_id },
-  baseConfigs: { setKey, toBeCompressed },
+  baseConfigs: { setKeys, toBeCompressed },
 }: GoogleDriveProps) => {
   const { pickerApiLoaded, gisLoaded, tokenClient } = useLoadGAPI({
     google_client_id,
@@ -124,7 +124,7 @@ export const GoogleDrive: FC<GoogleDriveProps> = ({
       putObject({ client, bucket, key, file: fileToUpload });
 
       // set the file name
-      setKey([key]);
+      setKeys([key]);
     }
   };
 
