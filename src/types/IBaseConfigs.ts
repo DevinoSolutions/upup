@@ -1,5 +1,7 @@
+import { Dispatch, SetStateAction } from 'react';
+
 export interface IBaseConfigs {
-  setKeys: (key: string[]) => void;
+  setKeys: Dispatch<SetStateAction<string[]>>;
   canUpload: boolean;
   toBeCompressed?: boolean;
   multiple?: boolean;
