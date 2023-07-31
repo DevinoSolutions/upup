@@ -1,5 +1,5 @@
 import { Meta, Story } from '@storybook/react';
-import { UploadFiles, UploadFilesProps } from '../src';
+import { UploadFiles, UploadFilesProps } from '../src/components/UploadFiles';
 
 const meta: Meta = {
   title: 'Upload files',
