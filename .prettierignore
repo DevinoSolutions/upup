@@ -2,3 +2,4 @@ node_modules
 .github
 dist
 pnpm-lock.yaml
+storybook-static

@@ -1,23 +1,23 @@
-import load from 'load-script';
-import { useEffect, useState } from 'react';
+import load from 'load-script'
+import { useEffect, useState } from 'react'
 
 const useLoadOdAPI = () => {
-  const [isLoaded, setIsLoaded] = useState<boolean>(false);
+    const [isLoaded, setIsLoaded] = useState<boolean>(false)
 
-  useEffect(() => {
-    /**
-     * Load the OneDrive API
-     */
-    load('https://js.live.net/v7.2/OneDrive.js', (err, _script) => {
-      if (err) {
-        console.log('Error loading OneDrive', err);
-      } else {
-        setIsLoaded(true);
-      }
-    });
-  }, []);
+    useEffect(() => {
+        /**
+         * Load the OneDrive API
+         */
+        load('https://js.live.net/v7.2/OneDrive.js', (err, _script) => {
+            if (err) {
+                console.log('Error loading OneDrive', err)
+            } else {
+                setIsLoaded(true)
+            }
+        })
+    }, [])
 
-  return { isLoaded };
-};
+    return { isLoaded }
+}
 
-export default useLoadOdAPI;
+export default useLoadOdAPI
