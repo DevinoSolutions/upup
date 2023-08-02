@@ -9,7 +9,7 @@ import { IGoogleConfigs } from './types/IGoogleConfigs';
 import { getClient } from './lib/getClient';
 import { UploadAdapter } from './enums/UploadAdapter';
 
-interface UpupUploaderProps {
+export interface UpupUploaderProps {
   cloudStorageConfigs: ICloudStorageConfigs;
   baseConfigs: IBaseConfigs;
   uploadAdapters: UploadAdapter[];
