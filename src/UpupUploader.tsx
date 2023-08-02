@@ -7,7 +7,7 @@ import { CloudStorageConfigs } from './types/CloudStorageConfigs'
 import { BaseConfigs } from './types/BaseConfigs'
 import { GoogleConfigs } from './types/GoogleConfigs'
 import { getClient } from './lib/getClient'
-import { UPLOAD_ADAPTER, UploadAdapter } from './enums/UploadAdapter'
+import { UPLOAD_ADAPTER, UploadAdapter } from './types/UploadAdapter'
 
 export interface UpupUploaderProps {
     cloudStorageConfigs: CloudStorageConfigs
