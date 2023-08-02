@@ -50,7 +50,8 @@
     "peerDependencies": {
         "react": "^18.2.0",
         "react-dom": "^18.2.0",
-        "react-is": "^18.2.0"
+        "react-is": "^18.2.0",
+        "styled-components": "^6.0.6"
     },
     "husky": {
         "hooks": {
@@ -93,7 +94,8 @@
         "tsdx": "^0.14.1",
         "tslib": "^2.5.0",
         "typescript": "^5.0.4",
-        "prettier": "^2.8.8"
+        "prettier": "^2.8.8",
+        "styled-components": "^6.0.6"
     },
     "dependencies": {
         "@aws-sdk/client-s3": "^3.271.0",
