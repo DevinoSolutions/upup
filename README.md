@@ -75,33 +75,33 @@ const [canUpload, setCanUpload] = useState(false)
 
 ```javascript
 const s3Configs: S3Configs = {
-  region: space_region,
-  endpoint: space_endpoint,
-  credentials: {
-    accessKeyId: space_key,
-    secretAccessKey: space_secret,
-  },
+    region: space_region,
+    endpoint: space_endpoint,
+    credentials: {
+        accessKeyId: space_key,
+        secretAccessKey: space_secret,
+    },
 }
 
 const baseConfigs: BaseConfigs = {
-  canUpload: canUpload,
-  setKey: setKey,
+    canUpload: canUpload,
+    setKey: setKey,
 }
 
 const cloudStorageConfigs: CloudStorageConfigs = {
-  bucket: document_space,
-  s3Configs,
+    bucket: document_space,
+    s3Configs,
 }
 
 const googleConfigs: GoogleConfigs = {
-  google_api_key,
-  google_app_id,
-  google_client_id,
+    google_api_key,
+    google_app_id,
+    google_client_id,
 }
 
 const oneDriveConfigs: OneDriveConfigs = {
-  onedrive_client_id,
-  multiSelect: false,
+    onedrive_client_id,
+    multiSelect: false,
 }
 ```
 
