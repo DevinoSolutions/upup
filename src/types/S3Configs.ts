@@ -1,4 +1,4 @@
-export interface Is3Configs {
+export type S3Configs = {
     region: string
     endpoint: string
     credentials: {

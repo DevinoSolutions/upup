@@ -2,13 +2,13 @@ import React, { DragEvent, FC, useEffect, useState } from 'react'
 import FileUploader from './FileUploader/FileUploader'
 import { putObject } from '../lib/putObject'
 import { compressFile } from '../lib/compressFile'
-import { ICloudStorageConfigs } from '../types/ICloudStorageConfigs'
-import { IBaseConfigs } from '../types/IBaseConfigs'
+import { CloudStorageConfigs } from '../types/CloudStorageConfigs'
+import { BaseConfigs } from '../types/BaseConfigs'
 
 export interface UploadFilesProps {
     client: any
-    cloudStorageConfigs: ICloudStorageConfigs
-    baseConfigs: IBaseConfigs
+    cloudStorageConfigs: CloudStorageConfigs
+    baseConfigs: BaseConfigs
 }
 
 /**

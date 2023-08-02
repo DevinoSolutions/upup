@@ -2,15 +2,15 @@ import React, { FC } from 'react'
 import useLoadGAPI from '../hooks/useLoadGAPI'
 import { putObject } from '../lib/putObject'
 import { compressFile } from '../lib/compressFile'
-import { ICloudStorageConfigs } from '../types/ICloudStorageConfigs'
-import { IBaseConfigs } from '../types/IBaseConfigs'
-import { IGoogleConfigs } from '../types/IGoogleConfigs'
+import { CloudStorageConfigs } from '../types/CloudStorageConfigs'
+import { BaseConfigs } from '../types/BaseConfigs'
+import { GoogleConfigs } from '../types/GoogleConfigs'
 
 export interface GoogleDriveProps {
     client: any
-    cloudStorageConfigs: ICloudStorageConfigs
-    baseConfigs: IBaseConfigs
-    googleConfigs: IGoogleConfigs
+    cloudStorageConfigs: CloudStorageConfigs
+    baseConfigs: BaseConfigs
+    googleConfigs: GoogleConfigs
 }
 
 /**

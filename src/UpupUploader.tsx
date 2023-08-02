@@ -1,20 +1,20 @@
 import React, { FC } from 'react'
-import { IOneDriveConfigs } from './types/IOneDriveConfigs'
+import { OneDriveConfigs } from './types/OneDriveConfigs'
 import { UploadFiles } from './components/UploadFiles'
 import { GoogleDrive } from './components/GoogleDrive'
 import OneDrive from './components/OneDrive'
-import { ICloudStorageConfigs } from './types/ICloudStorageConfigs'
-import { IBaseConfigs } from './types/IBaseConfigs'
-import { IGoogleConfigs } from './types/IGoogleConfigs'
+import { CloudStorageConfigs } from './types/CloudStorageConfigs'
+import { BaseConfigs } from './types/BaseConfigs'
+import { GoogleConfigs } from './types/GoogleConfigs'
 import { getClient } from './lib/getClient'
 import { UploadAdapter } from './enums/UploadAdapter'
 
 export interface UpupUploaderProps {
-    cloudStorageConfigs: ICloudStorageConfigs
-    baseConfigs: IBaseConfigs
+    cloudStorageConfigs: CloudStorageConfigs
+    baseConfigs: BaseConfigs
     uploadAdapters: UploadAdapter[]
-    googleConfigs?: IGoogleConfigs | undefined
-    oneDriveConfigs?: IOneDriveConfigs | undefined
+    googleConfigs?: GoogleConfigs | undefined
+    oneDriveConfigs?: OneDriveConfigs | undefined
 }
 
 /**
@@ -62,7 +62,7 @@ export const UpupUploader: FC<UpupUploaderProps> = ({
             <GoogleDrive
                 client={client}
                 cloudStorageConfigs={cloudStorageConfigs}
-                googleConfigs={googleConfigs as IGoogleConfigs}
+                googleConfigs={googleConfigs as GoogleConfigs}
                 baseConfigs={baseConfigs}
             />
         ),
