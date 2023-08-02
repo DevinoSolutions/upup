@@ -1,16 +1,16 @@
-import React, { FC } from 'react';
-import useLoadGAPI from '../hooks/useLoadGAPI';
-import { putObject } from '../lib/putObject';
-import { compressFile } from '../lib/compressFile';
-import { ICloudStorageConfigs } from '../types/ICloudStorageConfigs';
-import { IBaseConfigs } from '../types/IBaseConfigs';
-import { IGoogleConfigs } from '../types/IGoogleConfigs';
+import React, { FC } from 'react'
+import useLoadGAPI from '../hooks/useLoadGAPI'
+import { putObject } from '../lib/putObject'
+import { compressFile } from '../lib/compressFile'
+import { ICloudStorageConfigs } from '../types/ICloudStorageConfigs'
+import { IBaseConfigs } from '../types/IBaseConfigs'
+import { IGoogleConfigs } from '../types/IGoogleConfigs'
 
 export interface GoogleDriveProps {
-  client: any;
-  cloudStorageConfigs: ICloudStorageConfigs;
-  baseConfigs: IBaseConfigs;
-  googleConfigs: IGoogleConfigs;
+    client: any
+    cloudStorageConfigs: ICloudStorageConfigs
+    baseConfigs: IBaseConfigs
+    googleConfigs: IGoogleConfigs
 }
 
 /**
@@ -25,127 +25,130 @@ export interface GoogleDriveProps {
  * @constructor
  */
 export const GoogleDrive: FC<GoogleDriveProps> = ({
-  client,
-  cloudStorageConfigs: { bucket },
-  googleConfigs: { google_app_id, google_api_key, google_client_id },
-  baseConfigs: { setKeys, toBeCompressed },
+    client,
+    cloudStorageConfigs: { bucket },
+    googleConfigs: { google_app_id, google_api_key, google_client_id },
+    baseConfigs: { setKeys, toBeCompressed },
 }: GoogleDriveProps) => {
-  const { pickerApiLoaded, gisLoaded, tokenClient } = useLoadGAPI({
-    google_client_id,
-  });
+    const { pickerApiLoaded, gisLoaded, tokenClient } = useLoadGAPI({
+        google_client_id,
+    })
 
-  let accessToken: string;
-  const google = (window as any).google;
+    let accessToken: string
+    const google = (window as any).google
 
-  /**
-   * Get the access token
-   */
-  const showPicker = async () => {
-    const picker = new google.picker.PickerBuilder()
-      .addView(google.picker.ViewId.DOCS)
-      .setOAuthToken(accessToken)
-      .setDeveloperKey(google_api_key)
-      .setAppId(google_app_id)
-      .setCallback(pickerCallback)
-      .build();
-    picker.setVisible(true);
-    console.log('picker', picker);
-  };
-
-  /**
-   * Create a picker to select files from Google Drive
-   */
-  const createPicker = () => {
-    // Request an access token
-    tokenClient.callback = async (response: any) => {
-      if (response.error !== undefined) {
-        throw response;
-      }
-      accessToken = response.access_token;
-      if (response.access_token) {
-        await showPicker();
-      }
-    };
-
-    if (!accessToken) {
-      // Prompt the user to select a Google Account and ask for consent to share their data
-      // when establishing a new session.
-      tokenClient.requestAccessToken({ prompt: 'consent' });
-    } else {
-      // Skip display of account chooser and consent dialog for an existing session.
-      tokenClient.requestAccessToken({ prompt: '' });
+    /**
+     * Get the access token
+     */
+    const showPicker = async () => {
+        const picker = new google.picker.PickerBuilder()
+            .addView(google.picker.ViewId.DOCS)
+            .setOAuthToken(accessToken)
+            .setDeveloperKey(google_api_key)
+            .setAppId(google_app_id)
+            .setCallback(pickerCallback)
+            .build()
+        picker.setVisible(true)
+        console.log('picker', picker)
     }
-  };
 
-  /**
-   * Callback function to get the file from Google Drive
-   * @param data
-   */
-  const pickerCallback = async (data: any): Promise<void> => {
-    if (data.action === google.picker.Action.PICKED) {
-      const document = data[google.picker.Response.DOCUMENTS][0];
-      const fileId = document[google.picker.Document.ID];
-      let fileToUpload: File;
+    /**
+     * Create a picker to select files from Google Drive
+     */
+    const createPicker = () => {
+        // Request an access token
+        tokenClient.callback = async (response: any) => {
+            if (response.error !== undefined) {
+                throw response
+            }
+            accessToken = response.access_token
+            if (response.access_token) {
+                await showPicker()
+            }
+        }
 
-      const downloadUrl = `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media&supportsAllDrives=true`;
-
-      // Download the file
-      const response: Response = await fetch(downloadUrl, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(
-          `Failed to download file: ${response.status} ${response.statusText}`
-        );
-      }
-
-      if (toBeCompressed)
-        // Compress the file
-        fileToUpload = await compressFile({
-          element: response,
-          element_name: document[google.picker.Document.NAME],
-        });
-      // Read the file content as a Buffer
-      else
-        fileToUpload = await response
-          .arrayBuffer()
-          .then(
-            (buffer) =>
-              new File([buffer], document[google.picker.Document.NAME])
-          );
-
-      // assign a unique name for the file, usually has to timestamp prefix
-      const key = `${Date.now()}__${fileToUpload.name}`;
-
-      // upload the file to the cloud
-      putObject({ client, bucket, key, file: fileToUpload });
-
-      // set the file name
-      setKeys([key]);
+        if (!accessToken) {
+            // Prompt the user to select a Google Account and ask for consent to share their data
+            // when establishing a new session.
+            tokenClient.requestAccessToken({ prompt: 'consent' })
+        } else {
+            // Skip display of account chooser and consent dialog for an existing session.
+            tokenClient.requestAccessToken({ prompt: '' })
+        }
     }
-  };
 
-  return (
-    <div>
-      {pickerApiLoaded && gisLoaded && (
-        // google drive button with logo and text
-        <button
-          onClick={createPicker}
-          className="flex items-center justify-center bg-white hover:bg-gray-100 text-gray-900 py-2 px-4 rounded-lg shadow-md transition-colors duration-300"
-        >
-          <img
-            src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/Google_Drive_icon_%282020%29.svg/1200px-Google_Drive_icon_%282020%29.svg.png"
-            alt="Google Drive Logo"
-            className="w-5 h-5 mr-2 fill-current"
-            width="20"
-            height="20"
-          />
-          Select from Google Drive
-        </button>
-      )}
-    </div>
-  );
-};
+    /**
+     * Callback function to get the file from Google Drive
+     * @param data
+     */
+    const pickerCallback = async (data: any): Promise<void> => {
+        if (data.action === google.picker.Action.PICKED) {
+            const document = data[google.picker.Response.DOCUMENTS][0]
+            const fileId = document[google.picker.Document.ID]
+            let fileToUpload: File
+
+            const downloadUrl = `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media&supportsAllDrives=true`
+
+            // Download the file
+            const response: Response = await fetch(downloadUrl, {
+                headers: {
+                    Authorization: `Bearer ${accessToken}`,
+                },
+            })
+
+            if (!response.ok) {
+                throw new Error(
+                    `Failed to download file: ${response.status} ${response.statusText}`
+                )
+            }
+
+            if (toBeCompressed)
+                // Compress the file
+                fileToUpload = await compressFile({
+                    element: response,
+                    element_name: document[google.picker.Document.NAME],
+                })
+            // Read the file content as a Buffer
+            else
+                fileToUpload = await response
+                    .arrayBuffer()
+                    .then(
+                        buffer =>
+                            new File(
+                                [buffer],
+                                document[google.picker.Document.NAME]
+                            )
+                    )
+
+            // assign a unique name for the file, usually has to timestamp prefix
+            const key = `${Date.now()}__${fileToUpload.name}`
+
+            // upload the file to the cloud
+            putObject({ client, bucket, key, file: fileToUpload })
+
+            // set the file name
+            setKeys([key])
+        }
+    }
+
+    return (
+        <div>
+            {pickerApiLoaded && gisLoaded && (
+                // google drive button with logo and text
+                <button
+                    onClick={createPicker}
+                    className="flex items-center justify-center bg-white hover:bg-gray-100 text-gray-900 py-2 px-4 rounded-lg shadow-md transition-colors duration-300"
+                >
+                    <img
+                        src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/Google_Drive_icon_%282020%29.svg/1200px-Google_Drive_icon_%282020%29.svg.png"
+                        alt="Google Drive Logo"
+                        className="w-5 h-5 mr-2 fill-current"
+                        width="20"
+                        height="20"
+                    />
+                    Select from Google Drive
+                </button>
+            )}
+        </div>
+    )
+}

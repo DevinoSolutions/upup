@@ -1,8 +1,8 @@
 interface props {
-  client: any;
-  bucket: string;
-  key: string;
-  file: File;
+    client: any
+    bucket: string
+    key: string
+    file: File
 }
 
 /**
@@ -13,15 +13,15 @@ interface props {
  * @param file file to upload
  */
 export function putObject({ client, bucket, key, file }: props) {
-  client.putObject(
-    {
-      Bucket: bucket,
-      Key: `${key}`,
-      Body: file,
-      ACL: 'public-read',
-    },
-    (err: any, _data: any) => {
-      if (err) console.log(err, err.stack);
-    }
-  );
+    client.putObject(
+        {
+            Bucket: bucket,
+            Key: `${key}`,
+            Body: file,
+            ACL: 'public-read',
+        },
+        (err: any, _data: any) => {
+            if (err) console.log(err, err.stack)
+        }
+    )
 }
