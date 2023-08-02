@@ -7,12 +7,12 @@ import { CloudStorageConfigs } from './types/CloudStorageConfigs'
 import { BaseConfigs } from './types/BaseConfigs'
 import { GoogleConfigs } from './types/GoogleConfigs'
 import { getClient } from './lib/getClient'
-import { UploadAdapter } from './enums/UploadAdapter'
+import { UPLOAD_ADAPTER, UploadAdapter } from './enums/UploadAdapter'
 
 export interface UpupUploaderProps {
     cloudStorageConfigs: CloudStorageConfigs
     baseConfigs: BaseConfigs
-    uploadAdapters: UploadAdapter[]
+    uploadAdapters: UPLOAD_ADAPTER[]
     googleConfigs?: GoogleConfigs | undefined
     oneDriveConfigs?: OneDriveConfigs | undefined
 }
@@ -51,14 +51,14 @@ export const UpupUploader: FC<UpupUploaderProps> = ({
      *  the upload adapters (internal, google drive, one drive)
      */
     const components = {
-        [UploadAdapter.internal]: (
+        [UploadAdapter.INTERNAL]: (
             <UploadFiles
                 client={client}
                 cloudStorageConfigs={cloudStorageConfigs}
                 baseConfigs={baseConfigs}
             />
         ),
-        [UploadAdapter.google_drive]: (
+        [UploadAdapter.GOOGLE_DRIVE]: (
             <GoogleDrive
                 client={client}
                 cloudStorageConfigs={cloudStorageConfigs}
@@ -66,7 +66,7 @@ export const UpupUploader: FC<UpupUploaderProps> = ({
                 baseConfigs={baseConfigs}
             />
         ),
-        [UploadAdapter.one_drive]: (
+        [UploadAdapter.ONE_DRIVE]: (
             <OneDrive
                 client={client}
                 cloudStorageConfigs={cloudStorageConfigs}
