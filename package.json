@@ -41,6 +41,8 @@
     "lint": "tsdx lint",
     "prepare": "tsdx build",
     "size": "size-limit",
+    "prettier-check": "prettier --check .",
+    "prettier-write": "prettier --write .",
     "analyze": "size-limit --why",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build"
