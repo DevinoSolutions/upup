@@ -18,6 +18,7 @@ specifiers:
   '@types/pako': ^2.0.0
   '@types/react': ^18.2.0
   '@types/react-dom': ^18.2.1
+  '@types/styled-components': ^5.1.7
   babel-loader: ^9.1.2
   husky: ^8.0.3
   load-script: ^2.0.0
@@ -38,7 +39,6 @@ dependencies:
   '@aws-sdk/client-s3': 3.321.1
   '@types/gapi': 0.0.44
   load-script: 2.0.0
-  prettier: 2.8.8
   react-icons: 4.8.0_react@18.2.0
 
 devDependencies:
@@ -57,9 +57,11 @@ devDependencies:
   '@types/pako': 2.0.0
   '@types/react': 18.2.0
   '@types/react-dom': 18.2.1
+  '@types/styled-components': 5.1.26
   babel-loader: 9.1.2_@babel+core@7.21.5
   husky: 8.0.3
   pako: 2.1.0
+  prettier: 2.8.8
   react: 18.2.0
   react-dom: 18.2.0_react@18.2.0
   react-is: 18.2.0
@@ -6273,6 +6275,13 @@ packages:
       '@types/node': 18.16.3
     dev: true
 
+  /@types/hoist-non-react-statics/3.3.1:
+    resolution: {integrity: sha512-iMIqiko6ooLrTh1joXodJK5X9xeEALT1kM5G3ZLhD3hszxBdIEd5C75U834D9mLcINgD4OyZf5uQXjkuYydWvA==}
+    dependencies:
+      '@types/react': 18.2.0
+      hoist-non-react-statics: 3.3.2
+    dev: true
+
   /@types/html-minifier-terser/6.1.0:
     resolution: {integrity: sha512-oh/6byDPnL1zeNXFrDXFLyZjkr1MsBG667IM792caf1L2UPOOMf65NFzjUH/ltyfwjAGfs1rsX1eftK0jC/KIg==}
     dev: true
@@ -6458,6 +6467,14 @@ packages:
 
   /@types/stack-utils/1.0.1:
     resolution: {integrity: sha512-l42BggppR6zLmpfU6fq9HEa2oGPEI8yrSPL3GITjfRInppYFahObbIQOQK3UGxEnyQpltZLaPe75046NOZQikw==}
+    dev: true
+
+  /@types/styled-components/5.1.26:
+    resolution: {integrity: sha512-KuKJ9Z6xb93uJiIyxo/+ksS7yLjS1KzG6iv5i78dhVg/X3u5t1H7juRWqVmodIdz6wGVaIApo1u01kmFRdJHVw==}
+    dependencies:
+      '@types/hoist-non-react-statics': 3.3.1
+      '@types/react': 18.2.0
+      csstype: 3.1.2
     dev: true
 
   /@types/unist/2.0.6:
@@ -13143,6 +13160,7 @@ packages:
     resolution: {integrity: sha512-tdN8qQGvNjw4CHbY+XXk0JgCXn9QiF21a55rBe5LJAU+kDyC4WQn4+awm2Xfk2lQMk5fKup9XgzTZtGkjBdP9Q==}
     engines: {node: '>=10.13.0'}
     hasBin: true
+    dev: true
 
   /pretty-error/4.0.0:
     resolution: {integrity: sha512-AoJ5YMAcXKYxKhuJGdcvse+Voc6v1RgnsR3nWcYU7q4t6z0Q6T86sv5Zq8VIRbOWWFpvdGE83LtdSMNd+6Y0xw==}
