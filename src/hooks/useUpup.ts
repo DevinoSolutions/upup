@@ -1,9 +1,9 @@
 import { Dispatch, SetStateAction, useState } from 'react'
-import { ICloudStorageConfigs } from '../types/ICloudStorageConfigs'
-import { IGoogleConfigs } from '../types/IGoogleConfigs'
-import { IBaseConfigs } from '../types/IBaseConfigs'
-import { IOneDriveConfigs } from '../types/IOneDriveConfigs'
-import { Is3Configs } from '../types/Is3Configs'
+import { CloudStorageConfigs } from '../types/CloudStorageConfigs'
+import { GoogleConfigs } from '../types/GoogleConfigs'
+import { BaseConfigs } from '../types/BaseConfigs'
+import { OneDriveConfigs } from '../types/OneDriveConfigs'
+import { S3Configs } from '../types/S3Configs'
 
 const space_secret = process.env.UNOTES_SPACE_SECRET || ''
 const space_key = process.env.UNOTES_SPACE_KEY || ''
@@ -30,10 +30,10 @@ interface Props {
  * @param props
  */
 const useUpup: (props?: Props) => {
-    cloudStorageConfigs: ICloudStorageConfigs
-    googleConfigs: IGoogleConfigs
-    baseConfigs: IBaseConfigs
-    oneDriveConfigs: IOneDriveConfigs
+    cloudStorageConfigs: CloudStorageConfigs
+    googleConfigs: GoogleConfigs
+    baseConfigs: BaseConfigs
+    oneDriveConfigs: OneDriveConfigs
     keys: string[]
     setCanUpload: (value: ((prevState: boolean) => boolean) | boolean) => void
 } = (
@@ -47,7 +47,7 @@ const useUpup: (props?: Props) => {
     const [keys, setKeys] = useState<string[]>([])
     const [canUpload, setCanUpload] = useState(false)
 
-    const s3Configs: Is3Configs = {
+    const s3Configs: S3Configs = {
         region: space_region,
         endpoint: space_endpoint,
         credentials: {
@@ -56,25 +56,25 @@ const useUpup: (props?: Props) => {
         },
     }
 
-    const baseConfigs: IBaseConfigs = {
+    const baseConfigs: BaseConfigs = {
         canUpload: canUpload,
         setKeys,
         onChange: (files: File[]) => (setFiles ? setFiles(files) : () => {}),
         multiple: multiple,
     }
 
-    const cloudStorageConfigs: ICloudStorageConfigs = {
+    const cloudStorageConfigs: CloudStorageConfigs = {
         bucket: isDocument ? document_space : image_space,
         s3Configs,
     }
 
-    const googleConfigs: IGoogleConfigs = {
+    const googleConfigs: GoogleConfigs = {
         google_api_key,
         google_app_id,
         google_client_id,
     }
 
-    const oneDriveConfigs: IOneDriveConfigs = {
+    const oneDriveConfigs: OneDriveConfigs = {
         onedrive_client_id,
         multiSelect: false,
     }

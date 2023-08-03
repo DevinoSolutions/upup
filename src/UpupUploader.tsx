@@ -1,20 +1,20 @@
 import React, { FC } from 'react'
-import { IOneDriveConfigs } from './types/IOneDriveConfigs'
+import { OneDriveConfigs } from './types/OneDriveConfigs'
 import { UploadFiles } from './components/UploadFiles'
 import { GoogleDrive } from './components/GoogleDrive'
 import OneDrive from './components/OneDrive'
-import { ICloudStorageConfigs } from './types/ICloudStorageConfigs'
-import { IBaseConfigs } from './types/IBaseConfigs'
-import { IGoogleConfigs } from './types/IGoogleConfigs'
+import { CloudStorageConfigs } from './types/CloudStorageConfigs'
+import { BaseConfigs } from './types/BaseConfigs'
+import { GoogleConfigs } from './types/GoogleConfigs'
 import { getClient } from './lib/getClient'
-import { UploadAdapter } from './enums/UploadAdapter'
+import { UPLOAD_ADAPTER, UploadAdapter } from './types/UploadAdapter'
 
 export interface UpupUploaderProps {
-    cloudStorageConfigs: ICloudStorageConfigs
-    baseConfigs: IBaseConfigs
-    uploadAdapters: UploadAdapter[]
-    googleConfigs?: IGoogleConfigs | undefined
-    oneDriveConfigs?: IOneDriveConfigs | undefined
+    cloudStorageConfigs: CloudStorageConfigs
+    baseConfigs: BaseConfigs
+    uploadAdapters: UPLOAD_ADAPTER[]
+    googleConfigs?: GoogleConfigs | undefined
+    oneDriveConfigs?: OneDriveConfigs | undefined
 }
 
 /**
@@ -51,22 +51,22 @@ export const UpupUploader: FC<UpupUploaderProps> = ({
      *  the upload adapters (internal, google drive, one drive)
      */
     const components = {
-        [UploadAdapter.internal]: (
+        [UploadAdapter.INTERNAL]: (
             <UploadFiles
                 client={client}
                 cloudStorageConfigs={cloudStorageConfigs}
                 baseConfigs={baseConfigs}
             />
         ),
-        [UploadAdapter.google_drive]: (
+        [UploadAdapter.GOOGLE_DRIVE]: (
             <GoogleDrive
                 client={client}
                 cloudStorageConfigs={cloudStorageConfigs}
-                googleConfigs={googleConfigs as IGoogleConfigs}
+                googleConfigs={googleConfigs as GoogleConfigs}
                 baseConfigs={baseConfigs}
             />
         ),
-        [UploadAdapter.one_drive]: (
+        [UploadAdapter.ONE_DRIVE]: (
             <OneDrive
                 client={client}
                 cloudStorageConfigs={cloudStorageConfigs}

@@ -1,16 +1,16 @@
 import React, { FC, useEffect, useState } from 'react'
 import useLoadOdAPI from '../hooks/useLoadOdAPI'
-import { IBaseConfigs } from '../types/IBaseConfigs'
-import { IOneDriveConfigs } from '../types/IOneDriveConfigs'
+import { BaseConfigs } from '../types/BaseConfigs'
+import { OneDriveConfigs } from '../types/OneDriveConfigs'
 import { compressFile } from '../lib/compressFile'
 import { putObject } from '../lib/putObject'
-import { ICloudStorageConfigs } from '../types/ICloudStorageConfigs'
+import { CloudStorageConfigs } from '../types/CloudStorageConfigs'
 
 interface OneDriveParams {
     client: any
-    cloudStorageConfigs: ICloudStorageConfigs
-    baseConfigs: IBaseConfigs
-    oneDriveConfigs: IOneDriveConfigs | undefined
+    cloudStorageConfigs: CloudStorageConfigs
+    baseConfigs: BaseConfigs
+    oneDriveConfigs: OneDriveConfigs | undefined
 }
 
 /**

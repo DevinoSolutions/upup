@@ -40,10 +40,10 @@ yarn add @bassem97/upup
 ```javascript
 // imports
 import {
-    IBaseConfigs,
-    ICloudStorageConfigs,
-    IGoogleConfigs,
-    IOneDriveConfigs,
+    BaseConfigs,
+    CloudStorageConfigs,
+    GoogleConfigs,
+    OneDriveConfigs,
     Is3Configs,
     UploadAdapter,
     UpupUploader,
@@ -74,7 +74,7 @@ const [canUpload, setCanUpload] = useState(false)
 ### 4 - initialize the configs from the provider you want to use ( ex: DigitalOceanSpaces, GoogleDrive, OneDrive, S3 )
 
 ```javascript
-const s3Configs: Is3Configs = {
+const s3Configs: S3Configs = {
     region: space_region,
     endpoint: space_endpoint,
     credentials: {
@@ -83,23 +83,23 @@ const s3Configs: Is3Configs = {
     },
 }
 
-const baseConfigs: IBaseConfigs = {
+const baseConfigs: BaseConfigs = {
     canUpload: canUpload,
     setKey: setKey,
 }
 
-const cloudStorageConfigs: ICloudStorageConfigs = {
+const cloudStorageConfigs: CloudStorageConfigs = {
     bucket: document_space,
     s3Configs,
 }
 
-const googleConfigs: IGoogleConfigs = {
+const googleConfigs: GoogleConfigs = {
     google_api_key,
     google_app_id,
     google_client_id,
 }
 
-const oneDriveConfigs: IOneDriveConfigs = {
+const oneDriveConfigs: OneDriveConfigs = {
     onedrive_client_id,
     multiSelect: false,
 }

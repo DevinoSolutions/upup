@@ -1,4 +1,4 @@
-export interface IOneDriveConfigs {
+export type OneDriveConfigs = {
     onedrive_client_id: string
     multiSelect: boolean
 }
