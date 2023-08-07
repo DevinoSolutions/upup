@@ -1,5 +1,121 @@
 import FileItem from './FileItem'
 import React, { Dispatch, DragEvent, SetStateAction } from 'react'
+import styled from 'styled-components'
+import { FaUpload } from 'react-icons/fa'
+
+const StyledFileUploader = styled.div`
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    align-items: center;
+    z-index: 50;
+    width: 100%;
+`
+
+const DragOverlay = styled.div`
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+`
+
+const UploadInput = styled.input`
+    width: 100%;
+    pointer-events: auto;
+    cursor: pointer;
+    position: absolute;
+    max-width: 100%;
+    height: 100%;
+    opacity: 0;
+    top: 0;
+    left: 0;
+`
+
+const FileUploaderLabel = styled.label`
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 16rem;
+    border: 2px dashed #ccc;
+    border-radius: 8px;
+    cursor: pointer;
+    background-color: #f8f8f8;
+    &:hover {
+        background-color: #e2e8f0;
+    }
+`
+
+const ScrollerContainer = styled.div`
+    width: 100%;
+    max-height: 10rem;
+    padding: 8px 4px;
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    background-color: #f0f4f8;
+    border-radius: 20px;
+    opacity: 0.6;
+    overflow-y: auto;
+`
+
+const EmptyMessage = styled.h1`
+    text-align: center;
+    color: #9ca3af;
+`
+
+const FileItemContainer = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 8px;
+    background-color: #ffffff;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    border-radius: 8px;
+`
+
+const StyledParagraph = styled.p`
+    margin-bottom: 2px;
+    font-size: 0.875rem;
+    color: #6b7280;
+`
+
+const StyledSpan = styled.span`
+    font-weight: 600;
+`
+
+const StyledSmallParagraph = styled.p`
+    font-size: 0.75rem;
+    color: #6b7280;
+`
+
+const StyledSvg = styled.svg`
+    width: 2.5rem;
+    height: 2.5rem;
+    margin-bottom: 0.75rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 2;
+    color: #9ca3af;
+`
+
+const StyledCenteredDiv = styled.div`
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+`
 
 type Props = {
     files: File[]
@@ -49,31 +165,24 @@ const FileUploader = ({
         e.target.value = ''
     }
     return (
-        <div className="flex flex-col gap-4 items-center z-50 w-full">
+        <StyledFileUploader>
             {dragging && (
-                <div className="z-50 flex items-center justify-center fixed h-screen w-screen bg-black bg-opacity-80 top-0 left-0 pointer-events-none">
-                    <input
+                <DragOverlay>
+                    <UploadInput
                         onDrop={handleDrop}
                         onDragLeave={handleDragLeave}
                         id="dropzone-files"
                         type="file"
-                        className="w-full h-full z-50 opacity-0  pointer-events-auto"
                         multiple={multiple}
                         onChange={onUpload}
                     />
-                </div>
+                </DragOverlay>
             )}
-            <div className="flex w-full items-center justify-center h-[16rem]  ">
-                <label
-                    htmlFor="dropzone-file"
-                    className="flex flex-col relative items-center justify-center w-full h-full border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 dark:hover:bg-bray-800 dark:bg-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:hover:border-gray-500 dark:hover:bg-gray-600"
-                >
-                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                        <svg
+            <StyledCenteredDiv>
+                <FileUploaderLabel htmlFor="dropzone-file">
+                    <FileItemContainer>
+                        <StyledSvg
                             aria-hidden="true"
-                            className="w-10 h-10 mb-3 text-gray-400"
-                            fill="none"
-                            stroke="currentColor"
                             viewBox="0 0 24 24"
                             xmlns="http://www.w3.org/2000/svg"
                         >
@@ -83,41 +192,37 @@ const FileUploader = ({
                                 strokeWidth="2"
                                 d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
                             ></path>
-                        </svg>
-                        <p className="mb-2 text-sm text-gray-500 dark:text-gray-400">
-                            <span className="font-semibold">
-                                Click to upload
-                            </span>{' '}
-                            or drag and drop
-                        </p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                        </StyledSvg>
+
+                        <StyledParagraph>
+                            <StyledSpan>Click to upload</StyledSpan> or drag and
+                            drop PDF, DOC, DOCX OR TXT (MAX. 10MB)
+                        </StyledParagraph>
+
+                        <StyledSmallParagraph>
                             {/*SVG, PNG, JPG or GIF (MAX. 800x400px)*/}
-                            PDF, DOC, DOCX OR TXT (MAX. 10MB)
-                        </p>
-                    </div>
-                    <input
+                        </StyledSmallParagraph>
+                    </FileItemContainer>
+
+                    <UploadInput
                         id="dropzone-file"
                         type="file"
-                        className="w-full pointer-events-auto cursor-pointer absolute max-w-full h-full opacity-0 top-0 left-0"
                         multiple={multiple}
                         onChange={onUpload}
                     />
-                </label>
-            </div>
-            <div
-                className={
-                    'w-full max-h-[10rem] py-1 px-2 flex justify-center flex-wrap gap-2 bg-bg2 rounded-3xl bg-opacity-60 scroller2 overflow-y-auto overflow-x-hidden'
-                }
-            >
+                </FileUploaderLabel>
+            </StyledCenteredDiv>
+
+            <ScrollerContainer>
                 {files && files.length > 0 ? (
                     files.map((f, key) => (
                         <FileItem setFiles={setFiles} key={key} file={f} />
                     ))
                 ) : (
-                    <h1 className="text-center text-gray-400">No files</h1>
+                    <EmptyMessage>No files</EmptyMessage>
                 )}
-            </div>
-        </div>
+            </ScrollerContainer>
+        </StyledFileUploader>
     )
 }
 

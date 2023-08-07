@@ -4,7 +4,13 @@ import { putObject } from '../lib/putObject'
 import { compressFile } from '../lib/compressFile'
 import { CloudStorageConfigs } from '../types/CloudStorageConfigs'
 import { BaseConfigs } from '../types/BaseConfigs'
-
+import styled from 'styled-components'
+const UploadFilesContainer = styled.div`
+    max-width: 100%;
+    overflow: hidden;
+    display: flex;
+    width: 100%;
+`
 export interface UploadFilesProps {
     client: any
     cloudStorageConfigs: CloudStorageConfigs
@@ -108,10 +114,7 @@ export const UploadFiles: FC<UploadFilesProps> = ({
     }, [files])
 
     return (
-        <div
-            className="max-w-full overflow-hidden flex w-full"
-            onDragEnter={handleDragEnter}
-        >
+        <UploadFilesContainer onDragEnter={handleDragEnter}>
             <FileUploader
                 dragging={dragging}
                 setDragging={setDragging}
@@ -119,6 +122,6 @@ export const UploadFiles: FC<UploadFilesProps> = ({
                 setFiles={setFiles}
                 multiple={multiple}
             />
-        </div>
+        </UploadFilesContainer>
     )
 }
