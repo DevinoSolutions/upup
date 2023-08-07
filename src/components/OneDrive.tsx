@@ -15,7 +15,7 @@ const OneDriveButton = styled.button`
     color: #4a5568;
     padding: 0.5rem 1rem;
     border-radius: 0.375rem;
-    box-shadow: 0px 2px 3px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 3px rgba(0, 0, 0, 0.1);
     transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out;
 
     &:hover {
@@ -54,7 +54,7 @@ interface OneDriveParams {
 const OneDrive: FC<OneDriveParams> = ({
     client,
     cloudStorageConfigs: { bucket },
-    baseConfigs: { setKeys, toBeCompressed },
+    baseConfigs: { setKeys, toBeCompressed, onChange },
     oneDriveConfigs,
 }: OneDriveParams) => {
     const [files, setFiles] = useState<File[]>([])
@@ -72,6 +72,14 @@ const OneDrive: FC<OneDriveParams> = ({
             putObject({ client, bucket, key, file })
         })
         setKeys(keys)
+    }, [files])
+
+    /*
+     * Callback function to return the file to the parent component
+     * TODO: merge this useEffect with the previous one
+     */
+    useEffect(() => {
+        onChange && onChange(files)
     }, [files])
 
     /**
