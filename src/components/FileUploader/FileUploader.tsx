@@ -46,7 +46,7 @@ const FileUploaderLabel = styled.label`
     border: 2px dashed #ccc;
     border-radius: 8px;
     cursor: pointer;
-    background-color: rgba(248, 248, 248, 0.8); 
+    background-color: rgba(248, 248, 248, 0.8);
 
     position: relative;
     z-index: 1;
