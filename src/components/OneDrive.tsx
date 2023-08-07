@@ -5,7 +5,36 @@ import { OneDriveConfigs } from '../types/OneDriveConfigs'
 import { compressFile } from '../lib/compressFile'
 import { putObject } from '../lib/putObject'
 import { CloudStorageConfigs } from '../types/CloudStorageConfigs'
+import styled from 'styled-components'
 
+const OneDriveButton = styled.button`
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #ffffff;
+    color: #4a5568;
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+    box-shadow: 0px 2px 3px rgba(0, 0, 0, 0.1);
+    transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out;
+
+    &:hover {
+        background-color: #f0f4f8;
+        color: #2d3748;
+    }
+
+    img {
+        width: 1.25rem;
+        height: 1.25rem;
+        margin-right: 0.5rem;
+        fill: currentColor;
+    }
+`
+const OneDriveLogo = styled.img`
+    width: 20px;
+    height: 20px;
+    margin-right: 8px;
+`
 interface OneDriveParams {
     client: any
     cloudStorageConfigs: CloudStorageConfigs
@@ -147,19 +176,13 @@ const OneDrive: FC<OneDriveParams> = ({
         <div>
             {isLoaded && (
                 // one drive button with logo and text
-                <button
-                    onClick={openPicker}
-                    className="flex items-center justify-center bg-white hover:bg-gray-100 text-gray-900 py-2 px-4 rounded-lg shadow-md transition-colors duration-300"
-                >
-                    <img
+                <OneDriveButton onClick={openPicker}>
+                    <OneDriveLogo
                         src="https://static2.sharepointonline.com/files/fabric/assets/brand-icons/product/svg/onedrive_32x1.svg"
                         alt="One Drive Logo"
-                        className="w-5 h-5 mr-2 fill-current"
-                        width="20"
-                        height="20"
                     />
                     Select from One Drive
-                </button>
+                </OneDriveButton>
             )}
         </div>
     )

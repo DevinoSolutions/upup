@@ -5,7 +5,37 @@ import { compressFile } from '../lib/compressFile'
 import { CloudStorageConfigs } from '../types/CloudStorageConfigs'
 import { BaseConfigs } from '../types/BaseConfigs'
 import { GoogleConfigs } from '../types/GoogleConfigs'
+import styled from 'styled-components'
 
+const GoogleDriveButton = styled.button`
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #ffffff;
+    color: #4a5568;
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+    box-shadow: 0px 2px 3px rgba(0, 0, 0, 0.1);
+    transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out;
+
+    &:hover {
+        background-color: #f0f4f8;
+        color: #2d3748;
+    }
+
+    img {
+        width: 1.25rem;
+        height: 1.25rem;
+        margin-right: 0.5rem;
+        fill: currentColor;
+    }
+`
+
+const GoogleDriveLogo = styled.img`
+    width: 20px;
+    height: 20px;
+    margin-right: 8px;
+`
 export interface GoogleDriveProps {
     client: any
     cloudStorageConfigs: CloudStorageConfigs
@@ -135,19 +165,13 @@ export const GoogleDrive: FC<GoogleDriveProps> = ({
         <div>
             {pickerApiLoaded && gisLoaded && (
                 // google drive button with logo and text
-                <button
-                    onClick={createPicker}
-                    className="flex items-center justify-center bg-white hover:bg-gray-100 text-gray-900 py-2 px-4 rounded-lg shadow-md transition-colors duration-300"
-                >
-                    <img
+                <GoogleDriveButton onClick={createPicker}>
+                    <GoogleDriveLogo
                         src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/Google_Drive_icon_%282020%29.svg/1200px-Google_Drive_icon_%282020%29.svg.png"
                         alt="Google Drive Logo"
-                        className="w-5 h-5 mr-2 fill-current"
-                        width="20"
-                        height="20"
                     />
                     Select from Google Drive
-                </button>
+                </GoogleDriveButton>
             )}
         </div>
     )
