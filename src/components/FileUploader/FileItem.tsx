@@ -62,8 +62,17 @@ type Props = {
     file: File
     setFiles: Dispatch<SetStateAction<File[]>>
 }
-
+/**
+ *
+ * @param file
+ * @param setFiles
+ * @constructor
+ */
 const FileItem = ({ file, setFiles }: Props) => {
+    /**
+     * Get file type
+     * @param file
+     */
     const getFileType = (file: File) => file.type.split('/')[1]
 
     return (
