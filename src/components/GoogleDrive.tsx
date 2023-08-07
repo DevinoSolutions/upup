@@ -1,4 +1,4 @@
-import React, { FC } from 'react'
+import React, { FC, useEffect, useState } from 'react'
 import useLoadGAPI from '../hooks/useLoadGAPI'
 import { putObject } from '../lib/putObject'
 import { compressFile } from '../lib/compressFile'
@@ -15,7 +15,7 @@ const GoogleDriveButton = styled.button`
     color: #4a5568;
     padding: 0.5rem 1rem;
     border-radius: 0.375rem;
-    box-shadow: 0px 2px 3px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 3px rgba(0, 0, 0, 0.1);
     transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out;
 
     &:hover {
@@ -58,11 +58,13 @@ export const GoogleDrive: FC<GoogleDriveProps> = ({
     client,
     cloudStorageConfigs: { bucket },
     googleConfigs: { google_app_id, google_api_key, google_client_id },
-    baseConfigs: { setKeys, toBeCompressed },
+    baseConfigs: { setKeys, toBeCompressed, onChange },
 }: GoogleDriveProps) => {
     const { pickerApiLoaded, gisLoaded, tokenClient } = useLoadGAPI({
         google_client_id,
     })
+
+    const [files, setFiles] = useState<File[]>([])
 
     let accessToken: string
     const google = (window as any).google
@@ -107,6 +109,13 @@ export const GoogleDrive: FC<GoogleDriveProps> = ({
         }
     }
 
+    /*
+     * Callback function to return the file to the parent component
+     */
+    useEffect(() => {
+        onChange && onChange(files)
+    }, [files])
+
     /**
      * Callback function to get the file from Google Drive
      * @param data
@@ -116,7 +125,6 @@ export const GoogleDrive: FC<GoogleDriveProps> = ({
             const document = data[google.picker.Response.DOCUMENTS][0]
             const fileId = document[google.picker.Document.ID]
             let fileToUpload: File
-
             const downloadUrl = `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media&supportsAllDrives=true`
 
             // Download the file
@@ -132,12 +140,13 @@ export const GoogleDrive: FC<GoogleDriveProps> = ({
                 )
             }
 
-            if (toBeCompressed)
+            if (toBeCompressed) {
                 // Compress the file
                 fileToUpload = await compressFile({
                     element: response,
                     element_name: document[google.picker.Document.NAME],
                 })
+            }
             // Read the file content as a Buffer
             else
                 fileToUpload = await response
@@ -149,6 +158,11 @@ export const GoogleDrive: FC<GoogleDriveProps> = ({
                                 document[google.picker.Document.NAME]
                             )
                     )
+
+            /**
+             * Set the file to be uploaded
+             */
+            setFiles([fileToUpload])
 
             // assign a unique name for the file, usually has to timestamp prefix
             const key = `${Date.now()}__${fileToUpload.name}`
