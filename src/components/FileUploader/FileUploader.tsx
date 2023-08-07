@@ -46,7 +46,10 @@ const FileUploaderLabel = styled.label`
     border: 2px dashed #ccc;
     border-radius: 8px;
     cursor: pointer;
-    background-color: #f8f8f8;
+    background-color: rgba(248, 248, 248, 0.8); 
+
+    position: relative;
+    z-index: 1;
 
     &:hover {
         background-color: #e2e8f0;
@@ -65,11 +68,15 @@ const ScrollerContainer = styled.div`
     border-radius: 20px;
     opacity: 0.6;
     overflow-y: auto;
+    background-color: #f8f8f8;
+    background-opacity: 0.6;
+    overflow: hidden;
 `
 
 const EmptyMessage = styled.h1`
     text-align: center;
     color: #9ca3af;
+    font-size: 1rem;
 `
 
 const FileItemContainer = styled.div`
@@ -107,8 +114,9 @@ const StyledSvg = styled.svg`
     stroke-linejoin: round;
     stroke-width: 2;
     color: #9ca3af;
+    position: relative;
+    z-index: 1;
 `
-
 const StyledCenteredDiv = styled.div`
     display: flex;
     align-items: center;

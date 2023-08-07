@@ -27,7 +27,6 @@ const FileType = styled.div`
     color: #ffffff;
     aspect-ratio: 1/1;
     border-radius: 50%;
-    border: 2px solid #9c1f2b;
 `
 
 const FileInfoContainer = styled.div`
