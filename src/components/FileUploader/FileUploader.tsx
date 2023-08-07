@@ -1,7 +1,6 @@
 import FileItem from './FileItem'
 import React, { Dispatch, DragEvent, SetStateAction } from 'react'
 import styled from 'styled-components'
-import { FaUpload } from 'react-icons/fa'
 
 const StyledFileUploader = styled.div`
     display: flex;
@@ -48,6 +47,7 @@ const FileUploaderLabel = styled.label`
     border-radius: 8px;
     cursor: pointer;
     background-color: #f8f8f8;
+
     &:hover {
         background-color: #e2e8f0;
     }
