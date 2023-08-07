@@ -8,4 +8,9 @@ dist
 
 # storybook
 storybook-static
+
+# local env files
 .env
+
+# public folder temp files
+public
