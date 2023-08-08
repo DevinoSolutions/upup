@@ -68,9 +68,7 @@ const ScrollerContainer = styled.div`
     border-radius: 20px;
     opacity: 0.6;
     overflow-y: auto;
-    background-color: #f8f8f8;
     background-opacity: 0.6;
-    overflow: hidden;
 `
 
 const EmptyMessage = styled.h1`
@@ -82,9 +80,13 @@ const EmptyMessage = styled.h1`
 const FileItemContainer = styled.div`
     display: flex;
     align-items: center;
+    justify-content: center;
+
+    flex-direction: column;
     gap: 4px;
     padding: 8px;
-    background-color: #ffffff;
+    background-color: rgba(255, 255, 255, 0);
+    border: none;
     box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
     border-radius: 8px;
 `
@@ -102,6 +104,8 @@ const StyledSpan = styled.span`
 const StyledSmallParagraph = styled.p`
     font-size: 0.75rem;
     color: #6b7280;
+    margin-top: 2px;
+    text-align: center;
 `
 
 const StyledSvg = styled.svg`
@@ -203,12 +207,12 @@ const FileUploader = ({
                         </StyledSvg>
 
                         <StyledParagraph>
-                            <StyledSpan>Click to upload</StyledSpan> or drag and
-                            drop PDF, DOC, DOCX OR TXT (MAX. 10MB)
+                            <StyledSpan>Click to upload</StyledSpan>
                         </StyledParagraph>
 
                         <StyledSmallParagraph>
                             {/*SVG, PNG, JPG or GIF (MAX. 800x400px)*/}
+                            or drag and drop PDF, DOC, DOCX OR TXT (MAX. 10MB)
                         </StyledSmallParagraph>
                     </FileItemContainer>
 
@@ -230,6 +234,7 @@ const FileUploader = ({
                     <EmptyMessage>No files</EmptyMessage>
                 )}
             </ScrollerContainer>
+            <div>Select From :</div>
         </StyledFileUploader>
     )
 }

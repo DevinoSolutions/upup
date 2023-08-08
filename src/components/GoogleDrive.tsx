@@ -184,7 +184,7 @@ export const GoogleDrive: FC<GoogleDriveProps> = ({
                         src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/Google_Drive_icon_%282020%29.svg/1200px-Google_Drive_icon_%282020%29.svg.png"
                         alt="Google Drive Logo"
                     />
-                    Select from Google Drive
+                    Google Drive
                 </GoogleDriveButton>
             )}
         </div>

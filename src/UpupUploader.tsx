@@ -8,6 +8,14 @@ import { BaseConfigs } from './types/BaseConfigs'
 import { GoogleConfigs } from './types/GoogleConfigs'
 import { getClient } from './lib/getClient'
 import { UPLOAD_ADAPTER, UploadAdapter } from './types/UploadAdapter'
+import styled from 'styled-components'
+const UploadButtonsContainer = styled.div`
+    padding: 0.5rem;
+`
+
+const SpacedComponent = styled.div`
+    margin-bottom: 1rem;
+`
 
 export interface UpupUploaderProps {
     cloudStorageConfigs: CloudStorageConfigs
@@ -82,11 +90,13 @@ export const UpupUploader: FC<UpupUploaderProps> = ({
      * using key as index to avoid the warning: Each child in a list should have a unique "key" prop.
      */
     const selectedComponent = uploadAdapters.map((uploadAdapter, index) => (
-        <div key={index}>{components[uploadAdapter]}</div>
+        <SpacedComponent key={index}>
+            {components[uploadAdapter]}
+        </SpacedComponent>
     ))
 
     /**
      *  Return the selected components
      */
-    return <>{selectedComponent}</>
+    return <UploadButtonsContainer>{selectedComponent} </UploadButtonsContainer>
 }
