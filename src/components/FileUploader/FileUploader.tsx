@@ -81,6 +81,8 @@ const EmptyMessage = styled.h1`
 const FileItemContainer = styled.div`
     display: flex;
     align-items: center;
+    justify-content: center;
+
     flex-direction: column;
     gap: 4px;
     padding: 8px;
@@ -104,6 +106,7 @@ const StyledSmallParagraph = styled.p`
     font-size: 0.75rem;
     color: #6b7280;
     margin-top: 2px;
+    text-align: center;
 `
 
 const StyledSvg = styled.svg`
