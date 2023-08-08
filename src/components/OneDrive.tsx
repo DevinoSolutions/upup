@@ -189,7 +189,7 @@ const OneDrive: FC<OneDriveParams> = ({
                         src="https://static2.sharepointonline.com/files/fabric/assets/brand-icons/product/svg/onedrive_32x1.svg"
                         alt="One Drive Logo"
                     />
-                    Select from One Drive
+                    One Drive
                 </OneDriveButton>
             )}
         </div>

@@ -69,7 +69,6 @@ const ScrollerContainer = styled.div`
     opacity: 0.6;
     overflow-y: auto;
     background-opacity: 0.6;
-    overflow: hidden;
 `
 
 const EmptyMessage = styled.h1`
@@ -212,6 +211,7 @@ const FileUploader = ({
                         </StyledParagraph>
 
                         <StyledSmallParagraph>
+                            {/*SVG, PNG, JPG or GIF (MAX. 800x400px)*/}
                             or drag and drop PDF, DOC, DOCX OR TXT (MAX. 10MB)
                         </StyledSmallParagraph>
                     </FileItemContainer>
@@ -234,6 +234,7 @@ const FileUploader = ({
                     <EmptyMessage>No files</EmptyMessage>
                 )}
             </ScrollerContainer>
+            <div>Select From :</div>
         </StyledFileUploader>
     )
 }

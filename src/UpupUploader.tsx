@@ -9,14 +9,12 @@ import { GoogleConfigs } from './types/GoogleConfigs'
 import { getClient } from './lib/getClient'
 import { UPLOAD_ADAPTER, UploadAdapter } from './types/UploadAdapter'
 import styled from 'styled-components'
-
 const UploadButtonsContainer = styled.div`
-    //padding between the buttons let the same position
     padding: 0.5rem;
 `
 
 const SpacedComponent = styled.div`
-    margin-bottom: 1rem; // Add the desired margin
+    margin-bottom: 1rem;
 `
 
 export interface UpupUploaderProps {
@@ -100,11 +98,5 @@ export const UpupUploader: FC<UpupUploaderProps> = ({
     /**
      *  Return the selected components
      */
-    return (
-        <>
-            <UploadButtonsContainer>
-                {selectedComponent}{' '}
-            </UploadButtonsContainer>
-        </>
-    )
+    return <UploadButtonsContainer>{selectedComponent} </UploadButtonsContainer>
 }
