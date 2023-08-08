@@ -59,7 +59,7 @@ const space_endpoint = process.env.NEXT_PUBLIC_SPACE_ENDPOINT || ''
 const space_region = process.env.NEXT_PUBLIC_SPACE_REGION || ''
 const document_space = process.env.NEXT_PUBLIC_DOCUMENT_SPACE || ''
 const onedrive_client_id = process.env.NEXT_PUBLIC_ONEDRIVE_CLIENT_ID || ''
-const google_client_id = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID_PICKER || ''
+const google_client_id = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_PICKER_ID || ''
 const google_app_id = process.env.NEXT_PUBLIC_GOOGLE_APP_ID || ''
 const google_api_key = process.env.NEXT_PUBLIC_GOOGLE_API_KEY || ''
 ```

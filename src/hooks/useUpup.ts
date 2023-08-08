@@ -5,14 +5,14 @@ import { BaseConfigs } from '../types/BaseConfigs'
 import { OneDriveConfigs } from '../types/OneDriveConfigs'
 import { S3Configs } from '../types/S3Configs'
 
-const space_secret = process.env.UNOTES_SPACE_SECRET
-const space_key = process.env.UNOTES_SPACE_KEY
-const space_endpoint = process.env.UNOTES_SPACE_ENDPOINT
-const space_region = process.env.UNOTES_SPACE_REGION
-const document_space = process.env.UNOTES_DOCUMENT_SPACE
-const image_space = process.env.UNOTES_IMAGES_SPACE
+const space_secret = process.env.SPACE_SECRET
+const space_key = process.env.SPACE_KEY
+const space_endpoint = process.env.SPACE_ENDPOINT
+const space_region = process.env.SPACE_REGION
+const document_space = process.env.SPACE_DOCUMENTS
+const image_space = process.env.SPACE_IMAGES
 const onedrive_client_id = process.env.ONEDRIVE_CLIENT_ID
-const google_client_id = process.env.GOOGLE_CLIENT_ID_PICKER
+const google_client_id = process.env.GOOGLE_CLIENT_PICKER_ID
 const google_app_id = process.env.GOOGLE_APP_ID
 const google_api_key = process.env.GOOGLE_API_KEY
 
@@ -52,14 +52,14 @@ const useUpup: (props?: Props) => {
      */
     useEffect(() => {
         const requiredEnvVars = {
-            UNOTES_SPACE_SECRET: !!space_secret,
-            UNOTES_SPACE_KEY: !!space_key,
-            UNOTES_SPACE_ENDPOINT: !!space_endpoint,
-            UNOTES_SPACE_REGION: !!space_region,
-            UNOTES_DOCUMENT_SPACE: !!document_space,
-            UNOTES_IMAGES_SPACE: !!image_space,
+            SPACE_SECRET: !!space_secret,
+            SPACE_KEY: !!space_key,
+            SPACE_ENDPOINT: !!space_endpoint,
+            SPACE_REGION: !!space_region,
+            SPACE_DOCUMENTS: !!document_space,
+            SPACE_IMAGES: !!image_space,
             ONEDRIVE_CLIENT_ID: !!onedrive_client_id,
-            GOOGLE_CLIENT_ID_PICKER: !!google_client_id,
+            GOOGLE_CLIENT_PICKER_ID: !!google_client_id,
             GOOGLE_APP_ID: !!google_app_id,
             GOOGLE_API_KEY: !!google_api_key,
         }
