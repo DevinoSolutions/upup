@@ -20,7 +20,7 @@ const FileType = styled.div`
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 12px;
+    font-size: 10px;
     font-weight: bold;
     text-transform: uppercase;
     background-color: #9c1f2b;
