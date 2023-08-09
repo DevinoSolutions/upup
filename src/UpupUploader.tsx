@@ -9,16 +9,18 @@ import { GoogleConfigs } from './types/GoogleConfigs'
 import { getClient } from './lib/getClient'
 import { UPLOAD_ADAPTER, UploadAdapter } from './types/UploadAdapter'
 import styled from 'styled-components'
-
 const Container = styled.div`
-    display: grid; /* Use CSS Grid for the layout */
-    grid-template-columns: repeat(2 1fr); /* Create 2 columns */
-    grid-gap: 10px; /* Add gap between elements */
+    display: grid;
+    grid-template-columns: repeat(
+        2,
+        1fr
+    ); /* Fix the grid-template-columns syntax */
+    gap: 2px; /* Shorter syntax for grid-gap */
     width: 100%;
 `
 const SelectedComponent = styled.div`
     flex: 2; /* Distribute available space equally among all elements */
-    padding: 10px; /* Add padding for spacing */
+    padding: 4px; /* Add padding for spacing */
 `
 
 const SelectedComponentLarge = styled.div`
