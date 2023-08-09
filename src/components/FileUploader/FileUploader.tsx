@@ -61,8 +61,8 @@ const ScrollerContainer = styled.div`
     max-height: 10rem;
     padding: 8px 4px;
     display: flex;
-    justify-content: center;
     flex-wrap: wrap;
+    justify-content: flex-start;
     gap: 8px;
     background-color: #f0f4f8;
     border-radius: 20px;
@@ -234,7 +234,6 @@ const FileUploader = ({
                     <EmptyMessage>No files</EmptyMessage>
                 )}
             </ScrollerContainer>
-            <div>Select From :</div>
         </StyledFileUploader>
     )
 }

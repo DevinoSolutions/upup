@@ -9,12 +9,22 @@ import { GoogleConfigs } from './types/GoogleConfigs'
 import { getClient } from './lib/getClient'
 import { UPLOAD_ADAPTER, UploadAdapter } from './types/UploadAdapter'
 import styled from 'styled-components'
-const UploadButtonsContainer = styled.div`
-    padding: 0.5rem;
+const Container = styled.div`
+    display: grid;
+    grid-template-columns: repeat(
+        2,
+        1fr
+    ); /* Fix the grid-template-columns syntax */
+    gap: 2px; /* Shorter syntax for grid-gap */
+    width: 100%;
+`
+const SelectedComponent = styled.div`
+    flex: 2; /* Distribute available space equally among all elements */
+    padding: 4px; /* Add padding for spacing */
 `
 
-const SpacedComponent = styled.div`
-    margin-bottom: 1rem;
+const SelectedComponentLarge = styled.div`
+    grid-column: span 2; /* Make the element span 2 columns */
 `
 
 export interface UpupUploaderProps {
@@ -89,14 +99,24 @@ export const UpupUploader: FC<UpupUploaderProps> = ({
      * the upload adapters (internal, google drive, one drive)
      * using key as index to avoid the warning: Each child in a list should have a unique "key" prop.
      */
-    const selectedComponent = uploadAdapters.map((uploadAdapter, index) => (
-        <SpacedComponent key={index}>
-            {components[uploadAdapter]}
-        </SpacedComponent>
-    ))
+    const selectedComponent = uploadAdapters.map(uploadAdapter => {
+        if (uploadAdapter === UploadAdapter.INTERNAL) {
+            return (
+                <SelectedComponentLarge key={uploadAdapter}>
+                    {components[uploadAdapter]}
+                </SelectedComponentLarge>
+            )
+        } else {
+            return (
+                <SelectedComponent key={uploadAdapter}>
+                    {components[uploadAdapter]}
+                </SelectedComponent>
+            )
+        }
+    })
 
     /**
      *  Return the selected components
      */
-    return <UploadButtonsContainer>{selectedComponent} </UploadButtonsContainer>
+    return <Container>{selectedComponent}</Container>
 }
