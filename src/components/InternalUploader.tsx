@@ -12,7 +12,7 @@ const UploadFilesContainer = styled.div`
     width: 100%;
 `
 
-export interface UploadFilesProps {
+export interface Props {
     client: any
     cloudStorageConfigs: CloudStorageConfigs
     baseConfigs: BaseConfigs
@@ -26,10 +26,9 @@ export interface UploadFilesProps {
  * @param canUpload to control when to upload the file , it has default false value
  * @param toBeCompressed whether the user want to compress the file before uploading it or not. Default value is false
  * @param multiple whether the user want to upload multiple files or not. Default value is false
- * @param onChange return the files array
- * @constructor
- */
-export const UploadFiles: FC<UploadFilesProps> = ({
+ * @param onChange callback function to return the file to the parent component
+ * */
+export const InternalUploader: FC<Props> = ({
     client,
     baseConfigs: {
         setKeys,
@@ -39,7 +38,7 @@ export const UploadFiles: FC<UploadFilesProps> = ({
         onChange,
     },
     cloudStorageConfigs: { bucket },
-}: UploadFilesProps) => {
+}: Props) => {
     /**
      * Handle the drag enter event
      */

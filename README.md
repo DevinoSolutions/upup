@@ -72,7 +72,7 @@ const [key, setKey] = useState('')
 const [canUpload, setCanUpload] = useState(false)
 ```
 
-### 4 - initialize the configs from the provider you want to use ( ex: DigitalOceanSpaces, GoogleDrive, OneDrive, S3 )
+### 4 - initialize the configs from the provider you want to use ( ex: DigitalOceanSpaces, GoogleDriveUploader, OneDriveUploader, S3 )
 
 ```javascript
 const s3Configs: S3Configs = {
