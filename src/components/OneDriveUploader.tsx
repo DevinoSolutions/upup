@@ -35,7 +35,7 @@ const OneDriveLogo = styled.img`
     height: 20px;
     margin-right: 8px;
 `
-interface OneDriveParams {
+interface Props {
     client: any
     cloudStorageConfigs: CloudStorageConfigs
     baseConfigs: BaseConfigs
@@ -43,20 +43,21 @@ interface OneDriveParams {
 }
 
 /**
- * One Drive component
+ * Upload files from One Drive to S3 bucket
  * @param client s3 client
  * @param bucket s3 bucket
  * @param setKey return the final name of the file, usually it has timestamp prefix
  * @param toBeCompressed whether the user want to compress the file before uploading it or not. Default value is false
+ * @param onChange callback function to return the files to the parent component
  * @param oneDriveConfigs one drive configs
  * @constructor
  */
-const OneDrive: FC<OneDriveParams> = ({
+const OneDriveUploader: FC<Props> = ({
     client,
     cloudStorageConfigs: { bucket },
     baseConfigs: { setKeys, toBeCompressed, onChange },
     oneDriveConfigs,
-}: OneDriveParams) => {
+}: Props) => {
     const [files, setFiles] = useState<File[]>([])
 
     const { isLoaded } = useLoadOdAPI()
@@ -196,4 +197,4 @@ const OneDrive: FC<OneDriveParams> = ({
     )
 }
 
-export default OneDrive
+export default OneDriveUploader
