@@ -36,7 +36,7 @@ const GoogleDriveLogo = styled.img`
     height: 20px;
     margin-right: 8px;
 `
-export interface GoogleDriveProps {
+export interface Props {
     client: any
     cloudStorageConfigs: CloudStorageConfigs
     baseConfigs: BaseConfigs
@@ -52,14 +52,15 @@ export interface GoogleDriveProps {
  * @param google_client_id client id from Google Cloud Platform
  * @param setKey return the final name of the file, usually it has timestamp prefix
  * @param toBeCompressed whether the user want to compress the file before uploading it or not. Default value is false
+ * @param onChange callback function to return the file to the parent component
  * @constructor
  */
-export const GoogleDrive: FC<GoogleDriveProps> = ({
+export const GoogleDriveUploader: FC<Props> = ({
     client,
     cloudStorageConfigs: { bucket },
     googleConfigs: { google_app_id, google_api_key, google_client_id },
     baseConfigs: { setKeys, toBeCompressed, onChange },
-}: GoogleDriveProps) => {
+}: Props) => {
     const { pickerApiLoaded, gisLoaded, tokenClient } = useLoadGAPI({
         google_client_id,
     })

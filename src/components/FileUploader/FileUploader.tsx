@@ -138,7 +138,7 @@ type Props = {
 }
 
 /**
- *
+ * FileUploader component that allows you to upload files by dragging and dropping them or by clicking on the upload area.
  * @param files
  * @param setFiles
  * @param dragging

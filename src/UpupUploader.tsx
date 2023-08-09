@@ -1,8 +1,8 @@
 import React, { FC } from 'react'
 import { OneDriveConfigs } from './types/OneDriveConfigs'
-import { UploadFiles } from './components/UploadFiles'
-import { GoogleDrive } from './components/GoogleDrive'
-import OneDrive from './components/OneDrive'
+import { InternalUploader } from './components/InternalUploader'
+import { GoogleDriveUploader } from './components/GoogleDriveUploader'
+import OneDriveUploader from './components/OneDriveUploader'
 import { CloudStorageConfigs } from './types/CloudStorageConfigs'
 import { BaseConfigs } from './types/BaseConfigs'
 import { GoogleConfigs } from './types/GoogleConfigs'
@@ -70,14 +70,14 @@ export const UpupUploader: FC<UpupUploaderProps> = ({
      */
     const components = {
         [UploadAdapter.INTERNAL]: (
-            <UploadFiles
+            <InternalUploader
                 client={client}
                 cloudStorageConfigs={cloudStorageConfigs}
                 baseConfigs={baseConfigs}
             />
         ),
         [UploadAdapter.GOOGLE_DRIVE]: (
-            <GoogleDrive
+            <GoogleDriveUploader
                 client={client}
                 cloudStorageConfigs={cloudStorageConfigs}
                 googleConfigs={googleConfigs as GoogleConfigs}
@@ -85,7 +85,7 @@ export const UpupUploader: FC<UpupUploaderProps> = ({
             />
         ),
         [UploadAdapter.ONE_DRIVE]: (
-            <OneDrive
+            <OneDriveUploader
                 client={client}
                 cloudStorageConfigs={cloudStorageConfigs}
                 baseConfigs={baseConfigs}
