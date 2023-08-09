@@ -234,7 +234,6 @@ const FileUploader = ({
                     <EmptyMessage>No files</EmptyMessage>
                 )}
             </ScrollerContainer>
-            <div>Select From :</div>
         </StyledFileUploader>
     )
 }
