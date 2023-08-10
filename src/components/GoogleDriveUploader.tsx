@@ -1,8 +1,6 @@
 import React, { FC } from 'react'
 import useLoadGAPI from '../hooks/useLoadGAPI'
-import { putObject } from '../lib/putObject'
 import { compressFile } from '../lib/compressFile'
-import { CloudStorageConfigs } from '../types/CloudStorageConfigs'
 import { BaseConfigs } from '../types/BaseConfigs'
 import { GoogleConfigs } from '../types/GoogleConfigs'
 import styled from 'styled-components'
@@ -37,8 +35,6 @@ const GoogleDriveLogo = styled.img`
     margin-right: 8px;
 `
 export interface Props {
-    client: any
-    cloudStorageConfigs: CloudStorageConfigs
     baseConfigs: BaseConfigs
     googleConfigs: GoogleConfigs
     setFiles: React.Dispatch<React.SetStateAction<File[]>>
@@ -46,21 +42,16 @@ export interface Props {
 
 /**
  * Upload files from Google Drive to S3 bucket
- * @param client S3 client
- * @param bucket S3 bucket name
  * @param google_app_id app id from Google Cloud Platform
  * @param google_api_key api key from Google Cloud Platform
  * @param google_client_id client id from Google Cloud Platform
- * @param setKey return the final name of the file, usually it has timestamp prefix
  * @param toBeCompressed whether the user want to compress the file before uploading it or not. Default value is false
  * @param setFiles return the files to the parent component
  * @constructor
  */
 export const GoogleDriveUploader: FC<Props> = ({
-    client,
-    cloudStorageConfigs: { bucket },
     googleConfigs: { google_app_id, google_api_key, google_client_id },
-    baseConfigs: { setKeys, toBeCompressed },
+    baseConfigs: { toBeCompressed },
     setFiles,
 }: Props) => {
     const { pickerApiLoaded, gisLoaded, tokenClient } = useLoadGAPI({
@@ -156,15 +147,6 @@ export const GoogleDriveUploader: FC<Props> = ({
              * Set the file to be uploaded
              */
             setFiles((files: File[]) => [...files, fileToUpload])
-
-            // assign a unique name for the file, usually has to timestamp prefix
-            const key = `${Date.now()}__${fileToUpload.name}`
-
-            // upload the file to the cloud
-            putObject({ client, bucket, key, file: fileToUpload })
-
-            // set the file name
-            setKeys([key])
         }
     }
 
