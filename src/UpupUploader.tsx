@@ -89,9 +89,7 @@ export const UpupUploader: FC<UpupUploaderProps> = ({
         multiple = false,
         onChange,
     } = baseConfigs
-
     const [files, setFiles] = useState<File[]>([])
-
     useEffect(() => {
         onChange && onChange(files)
     }, [files])
