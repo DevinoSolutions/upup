@@ -62,9 +62,10 @@ export interface UpupUploaderProps {
  * @param cloudStorageConfigs cloud provider configurations
  * @param baseConfigs base configurations
  * @param toBeCompressed whether the user want to compress the file before uploading it or not. Default value is false
- * @param uploadProviders whether the user want to upload files from internal storage or Google drive or both
+ * @param uploadAdapters whether the user want to upload files from internal storage or Google drive or both
  * @param googleConfigs google configurations
  * @param oneDriveConfigs one drive configurations
+ * @param onChange return the files to the parent component
  * @constructor
  */
 export const UpupUploader: FC<UpupUploaderProps> = ({
