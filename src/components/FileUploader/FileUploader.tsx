@@ -59,14 +59,14 @@ const FileItemContainer = styled.div`
     display: flex;
     align-items: center;
     justify-content: center;
-
+    gap: 8px;
     flex-direction: column;
-    gap: 4px;
     padding: 8px;
     background-color: rgba(255, 255, 255, 0);
     border: none;
     box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
     border-radius: 8px;
+    width: 100%;
 `
 
 const StyledParagraph = styled.p`
