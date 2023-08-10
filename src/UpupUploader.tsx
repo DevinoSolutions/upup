@@ -1,4 +1,4 @@
-import React, { FC } from 'react'
+import React, { FC, useEffect, useState } from 'react'
 import { OneDriveConfigs } from './types/OneDriveConfigs'
 import { InternalUploader } from './components/InternalUploader'
 import { GoogleDriveUploader } from './components/GoogleDriveUploader'
@@ -9,11 +9,12 @@ import { GoogleConfigs } from './types/GoogleConfigs'
 import { getClient } from './lib/getClient'
 import { UPLOAD_ADAPTER, UploadAdapter } from './types/UploadAdapter'
 import styled from 'styled-components'
+import FileItem from './components/FileUploader/FileItem'
 const Container = styled.div`
     display: grid;
     grid-template-columns: repeat(
         2,
-        1fr
+        fr
     ); /* Fix the grid-template-columns syntax */
     gap: 2px; /* Shorter syntax for grid-gap */
     width: 100%;
@@ -25,6 +26,27 @@ const SelectedComponent = styled.div`
 
 const SelectedComponentLarge = styled.div`
     grid-column: span 2; /* Make the element span 2 columns */
+`
+
+const EmptyMessage = styled.h1`
+    text-align: center;
+    color: #9ca3af;
+    font-size: 1rem;
+`
+
+const ScrollerContainer = styled.div`
+    width: 100%;
+    max-height: 10rem;
+    padding: 8px 4px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    background-color: #f0f4f8;
+    border-radius: 20px;
+    opacity: 0.6;
+    overflow-y: auto;
+    border: 1px solid black;
 `
 
 export interface UpupUploaderProps {
@@ -47,11 +69,17 @@ export interface UpupUploaderProps {
  */
 export const UpupUploader: FC<UpupUploaderProps> = ({
     cloudStorageConfigs,
-    baseConfigs: { toBeCompressed = false, ...baseConfigs },
+    baseConfigs: { toBeCompressed = false, onChange, ...baseConfigs },
     uploadAdapters,
     googleConfigs,
     oneDriveConfigs,
 }: UpupUploaderProps) => {
+    const [files, setFiles] = useState<File[]>([])
+
+    useEffect(() => {
+        onChange && onChange(files)
+    }, [files])
+
     /**
      * Check if the user selected at least one upload adapter
      */
@@ -74,6 +102,8 @@ export const UpupUploader: FC<UpupUploaderProps> = ({
                 client={client}
                 cloudStorageConfigs={cloudStorageConfigs}
                 baseConfigs={baseConfigs}
+                setFiles={setFiles}
+                files={files}
             />
         ),
         [UploadAdapter.GOOGLE_DRIVE]: (
@@ -118,5 +148,18 @@ export const UpupUploader: FC<UpupUploaderProps> = ({
     /**
      *  Return the selected components
      */
-    return <Container>{selectedComponent}</Container>
+    return (
+        <Container>
+            {selectedComponent}
+            <ScrollerContainer>
+                {files && files.length > 0 ? (
+                    files.map((f, key) => (
+                        <FileItem setFiles={setFiles} key={key} file={f} />
+                    ))
+                ) : (
+                    <EmptyMessage>No files</EmptyMessage>
+                )}
+            </ScrollerContainer>
+        </Container>
+    )
 }

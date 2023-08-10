@@ -16,6 +16,8 @@ export interface Props {
     client: any
     cloudStorageConfigs: CloudStorageConfigs
     baseConfigs: BaseConfigs
+    files: File[]
+    setFiles: React.Dispatch<React.SetStateAction<File[]>>
 }
 
 /**
@@ -26,7 +28,6 @@ export interface Props {
  * @param canUpload to control when to upload the file , it has default false value
  * @param toBeCompressed whether the user want to compress the file before uploading it or not. Default value is false
  * @param multiple whether the user want to upload multiple files or not. Default value is false
- * @param onChange callback function to return the file to the parent component
  * */
 export const InternalUploader: FC<Props> = ({
     client,
@@ -35,8 +36,9 @@ export const InternalUploader: FC<Props> = ({
         canUpload,
         toBeCompressed = false,
         multiple = false,
-        onChange,
     },
+    setFiles,
+    files,
     cloudStorageConfigs: { bucket },
 }: Props) => {
     /**
@@ -48,11 +50,6 @@ export const InternalUploader: FC<Props> = ({
         e.stopPropagation()
         setDragging(() => true)
     }
-
-    /**
-     * Files array
-     */
-    const [files, setFiles] = useState<File[]>([])
 
     /**
      * Upload the file to the cloud storage
@@ -108,10 +105,6 @@ export const InternalUploader: FC<Props> = ({
             handleUpload()
         }
     }, [canUpload])
-
-    useEffect(() => {
-        onChange && onChange(files)
-    }, [files])
 
     return (
         <UploadFilesContainer onDragEnter={handleDragEnter}>
