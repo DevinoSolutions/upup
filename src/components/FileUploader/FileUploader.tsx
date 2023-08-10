@@ -1,4 +1,3 @@
-import FileItem from './FileItem'
 import React, { Dispatch, DragEvent, SetStateAction } from 'react'
 import styled from 'styled-components'
 
@@ -54,27 +53,6 @@ const FileUploaderLabel = styled.label`
     &:hover {
         background-color: #e2e8f0;
     }
-`
-
-const ScrollerContainer = styled.div`
-    width: 100%;
-    max-height: 10rem;
-    padding: 8px 4px;
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: flex-start;
-    gap: 8px;
-    background-color: #f0f4f8;
-    border-radius: 20px;
-    opacity: 0.6;
-    overflow-y: auto;
-    background-opacity: 0.6;
-`
-
-const EmptyMessage = styled.h1`
-    text-align: center;
-    color: #9ca3af;
-    font-size: 1rem;
 `
 
 const FileItemContainer = styled.div`
@@ -224,16 +202,6 @@ const FileUploader = ({
                     />
                 </FileUploaderLabel>
             </StyledCenteredDiv>
-
-            <ScrollerContainer>
-                {files && files.length > 0 ? (
-                    files.map((f, key) => (
-                        <FileItem setFiles={setFiles} key={key} file={f} />
-                    ))
-                ) : (
-                    <EmptyMessage>No files</EmptyMessage>
-                )}
-            </ScrollerContainer>
         </StyledFileUploader>
     )
 }
