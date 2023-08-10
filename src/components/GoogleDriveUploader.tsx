@@ -1,4 +1,4 @@
-import React, { FC, useEffect, useState } from 'react'
+import React, { FC } from 'react'
 import useLoadGAPI from '../hooks/useLoadGAPI'
 import { putObject } from '../lib/putObject'
 import { compressFile } from '../lib/compressFile'
@@ -41,6 +41,7 @@ export interface Props {
     cloudStorageConfigs: CloudStorageConfigs
     baseConfigs: BaseConfigs
     googleConfigs: GoogleConfigs
+    setFiles: React.Dispatch<React.SetStateAction<File[]>>
 }
 
 /**
@@ -52,20 +53,18 @@ export interface Props {
  * @param google_client_id client id from Google Cloud Platform
  * @param setKey return the final name of the file, usually it has timestamp prefix
  * @param toBeCompressed whether the user want to compress the file before uploading it or not. Default value is false
- * @param onChange callback function to return the file to the parent component
  * @constructor
  */
 export const GoogleDriveUploader: FC<Props> = ({
     client,
     cloudStorageConfigs: { bucket },
     googleConfigs: { google_app_id, google_api_key, google_client_id },
-    baseConfigs: { setKeys, toBeCompressed, onChange },
+    baseConfigs: { setKeys, toBeCompressed },
+    setFiles,
 }: Props) => {
     const { pickerApiLoaded, gisLoaded, tokenClient } = useLoadGAPI({
         google_client_id,
     })
-
-    const [files, setFiles] = useState<File[]>([])
 
     let accessToken: string
     const google = (window as any).google
@@ -82,7 +81,6 @@ export const GoogleDriveUploader: FC<Props> = ({
             .setCallback(pickerCallback)
             .build()
         picker.setVisible(true)
-        console.log('picker', picker)
     }
 
     /**
@@ -109,13 +107,6 @@ export const GoogleDriveUploader: FC<Props> = ({
             tokenClient.requestAccessToken({ prompt: '' })
         }
     }
-
-    /*
-     * Callback function to return the file to the parent component
-     */
-    useEffect(() => {
-        onChange && onChange(files)
-    }, [files])
 
     /**
      * Callback function to get the file from Google Drive
@@ -163,7 +154,7 @@ export const GoogleDriveUploader: FC<Props> = ({
             /**
              * Set the file to be uploaded
              */
-            setFiles([fileToUpload])
+            setFiles((files: File[]) => [...files, fileToUpload])
 
             // assign a unique name for the file, usually has to timestamp prefix
             const key = `${Date.now()}__${fileToUpload.name}`

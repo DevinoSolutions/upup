@@ -139,7 +139,7 @@ const FileUploader = ({
             : []
         if (fileList.length === 0) return
         if (!multiple) {
-            setFiles([fileList[0]])
+            setFiles([...files, fileList[0]])
         } else setFiles([...files, ...fileList])
     }
     const handleDragLeave = () => {
@@ -150,7 +150,7 @@ const FileUploader = ({
         const fileList = e.target.files ? Array.from(e.target.files) : []
         if (fileList.length === 0) return
         if (!multiple) {
-            setFiles([fileList[0]])
+            setFiles([...files, fileList[0]])
         } else setFiles([...files, ...fileList])
         e.target.value = ''
     }
