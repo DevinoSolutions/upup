@@ -53,6 +53,7 @@ export interface Props {
  * @param google_client_id client id from Google Cloud Platform
  * @param setKey return the final name of the file, usually it has timestamp prefix
  * @param toBeCompressed whether the user want to compress the file before uploading it or not. Default value is false
+ * @param setFiles return the files to the parent component
  * @constructor
  */
 export const GoogleDriveUploader: FC<Props> = ({
