@@ -18,10 +18,14 @@ const Container = styled.div`
     ); /* Fix the grid-template-columns syntax */
     gap: 2px; /* Shorter syntax for grid-gap */
     width: 100%;
+    max-width: 100%;
+    overflow: hidden;
+    padding: 8px;
+    border-radius: 20px;
+    background-color: transparent;
 `
 const SelectedComponent = styled.div`
-    flex: 2; /* Distribute available space equally among all elements */
-    padding: 4px; /* Add padding for spacing */
+    grid-column: span 1; /* Make the element span 2 columns */
 `
 
 const SelectedComponentLarge = styled.div`
@@ -152,8 +156,8 @@ export const UpupUploader: FC<UpupUploaderProps> = ({
      *  Return the selected components
      */
     return (
-        <Container>
-            {selectedComponent}
+        <>
+            <Container>{selectedComponent}</Container>
             <ScrollerContainer>
                 {files && files.length > 0 ? (
                     files.map((f, key) => (
@@ -163,6 +167,6 @@ export const UpupUploader: FC<UpupUploaderProps> = ({
                     <EmptyMessage>No files</EmptyMessage>
                 )}
             </ScrollerContainer>
-        </Container>
+        </>
     )
 }
