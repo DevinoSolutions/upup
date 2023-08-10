@@ -1,4 +1,4 @@
-import React, { FC, useEffect, useState } from 'react'
+import React, { Dispatch, FC, SetStateAction, useEffect, useState } from 'react'
 import useLoadOdAPI from '../hooks/useLoadOdAPI'
 import { BaseConfigs } from '../types/BaseConfigs'
 import { OneDriveConfigs } from '../types/OneDriveConfigs'
@@ -40,6 +40,7 @@ interface Props {
     cloudStorageConfigs: CloudStorageConfigs
     baseConfigs: BaseConfigs
     oneDriveConfigs: OneDriveConfigs | undefined
+    setFiles: Dispatch<SetStateAction<File[]>>
 }
 
 /**
@@ -48,15 +49,16 @@ interface Props {
  * @param bucket s3 bucket
  * @param setKey return the final name of the file, usually it has timestamp prefix
  * @param toBeCompressed whether the user want to compress the file before uploading it or not. Default value is false
- * @param onChange callback function to return the files to the parent component
  * @param oneDriveConfigs one drive configs
+ * @param setFilesFromParent return the files to the parent component
  * @constructor
  */
 const OneDriveUploader: FC<Props> = ({
     client,
     cloudStorageConfigs: { bucket },
-    baseConfigs: { setKeys, toBeCompressed, onChange },
+    baseConfigs: { setKeys, toBeCompressed },
     oneDriveConfigs,
+    setFiles: setFilesFromParent = () => {},
 }: Props) => {
     const [files, setFiles] = useState<File[]>([])
 
@@ -66,6 +68,7 @@ const OneDriveUploader: FC<Props> = ({
      * Upload the file to the cloud storage when the files array is updated
      */
     useEffect(() => {
+        setFilesFromParent(oldFiles => [...oldFiles, ...files])
         let keys: string[] = []
         files.map(file => {
             const key = `${Date.now()}__${file.name}`
@@ -73,14 +76,6 @@ const OneDriveUploader: FC<Props> = ({
             putObject({ client, bucket, key, file })
         })
         setKeys(keys)
-    }, [files])
-
-    /*
-     * Callback function to return the file to the parent component
-     * TODO: merge this useEffect with the previous one
-     */
-    useEffect(() => {
-        onChange && onChange(files)
     }, [files])
 
     /**
