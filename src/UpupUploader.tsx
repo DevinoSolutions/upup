@@ -177,8 +177,6 @@ export const UpupUploader: FC<UpupUploaderProps> = ({
         ),
         [UploadAdapter.GOOGLE_DRIVE]: (
             <GoogleDriveUploader
-                client={client}
-                cloudStorageConfigs={cloudStorageConfigs}
                 googleConfigs={googleConfigs as GoogleConfigs}
                 baseConfigs={baseConfigs}
                 setFiles={setFiles}
