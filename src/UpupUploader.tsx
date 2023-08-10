@@ -112,6 +112,7 @@ export const UpupUploader: FC<UpupUploaderProps> = ({
                 cloudStorageConfigs={cloudStorageConfigs}
                 googleConfigs={googleConfigs as GoogleConfigs}
                 baseConfigs={baseConfigs}
+                setFiles={setFiles}
             />
         ),
         [UploadAdapter.ONE_DRIVE]: (
