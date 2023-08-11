@@ -182,9 +182,6 @@ export const UpupUploader: FC<UpupUploaderProps> = ({
         ),
         [UploadAdapter.ONE_DRIVE]: (
             <OneDriveUploader
-                client={client}
-                cloudStorageConfigs={cloudStorageConfigs}
-                baseConfigs={baseConfigs}
                 oneDriveConfigs={oneDriveConfigs as OneDriveConfigs}
                 setFiles={setFiles}
             />
