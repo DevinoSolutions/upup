@@ -114,7 +114,7 @@ export const UpupUploader: FC<UpupUploaderProps> = ({
                         element: file,
                         element_name: file.name,
                     })
-                })
+                }),
             )
         else filesToUpload = files
 

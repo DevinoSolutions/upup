@@ -14,7 +14,9 @@ const GoogleDriveButton = styled.button`
     padding: 0.5rem 1rem;
     border-radius: 0.375rem;
     box-shadow: 0 2px 3px rgba(0, 0, 0, 0.1);
-    transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out;
+    transition:
+        background-color 0.3s ease-in-out,
+        color 0.3s ease-in-out;
 
     &:hover {
         background-color: #f0f4f8;
@@ -120,7 +122,7 @@ export const GoogleDriveUploader: FC<Props> = ({
 
             if (!response.ok) {
                 throw new Error(
-                    `Failed to download file: ${response.status} ${response.statusText}`
+                    `Failed to download file: ${response.status} ${response.statusText}`,
                 )
             }
 
@@ -139,8 +141,8 @@ export const GoogleDriveUploader: FC<Props> = ({
                         buffer =>
                             new File(
                                 [buffer],
-                                document[google.picker.Document.NAME]
-                            )
+                                document[google.picker.Document.NAME],
+                            ),
                     )
 
             /**
