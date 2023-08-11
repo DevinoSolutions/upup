@@ -41,7 +41,7 @@ const useUpup: (props?: Props) => {
         isDocument: false,
         setFiles: () => {},
         multiple: false,
-    }
+    },
 ) => {
     const { isDocument, setFiles, multiple } = props
     const [keys, setKeys] = useState<string[]>([])
@@ -70,7 +70,7 @@ const useUpup: (props?: Props) => {
 
         if (missingEnvVars.length > 0) {
             throw new Error(
-                `Missing environment variables: ${missingEnvVars.join(', ')}`
+                `Missing environment variables: ${missingEnvVars.join(', ')}`,
             )
         }
     }, [])

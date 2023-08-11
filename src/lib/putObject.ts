@@ -22,6 +22,6 @@ export function putObject({ client, bucket, key, file }: props) {
         },
         (err: any, _data: any) => {
             if (err) console.log(err, err.stack)
-        }
+        },
     )
 }

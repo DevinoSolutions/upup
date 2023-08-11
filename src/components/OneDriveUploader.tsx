@@ -16,7 +16,9 @@ const OneDriveButton = styled.button`
     padding: 0.5rem 1rem;
     border-radius: 0.375rem;
     box-shadow: 0 2px 3px rgba(0, 0, 0, 0.1);
-    transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out;
+    transition:
+        background-color 0.3s ease-in-out,
+        color 0.3s ease-in-out;
 
     &:hover {
         background-color: #f0f4f8;
@@ -97,7 +99,7 @@ const OneDriveUploader: FC<Props> = ({
                  * Download the file from the one drive
                  */
                 const response = await fetch(
-                    file['@microsoft.graph.downloadUrl']
+                    file['@microsoft.graph.downloadUrl'],
                 )
                 /**
                  * Convert the file to blob
@@ -113,7 +115,7 @@ const OneDriveUploader: FC<Props> = ({
                  * Push the new file to the files array
                  */
                 filesArray.push(newFile)
-            })
+            }),
         ).then(() => {
             /**
              * Compress the files if the user want to compress the files

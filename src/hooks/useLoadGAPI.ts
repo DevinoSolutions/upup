@@ -34,7 +34,7 @@ const useLoadGAPI = ({ google_client_id }: props) => {
                 client_id: google_client_id,
                 scope: SCOPES,
                 callback: '', // defined later
-            })
+            }),
         )
         setGisLoaded(true)
     }
