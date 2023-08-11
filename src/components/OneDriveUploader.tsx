@@ -41,7 +41,7 @@ interface Props {
     client: any
     cloudStorageConfigs: CloudStorageConfigs
     baseConfigs: BaseConfigs
-    oneDriveConfigs: OneDriveConfigs | undefined
+    oneDriveConfigs: OneDriveConfigs
     setFiles: Dispatch<SetStateAction<File[]>>
 }
 
