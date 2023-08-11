@@ -185,7 +185,7 @@ export const UpupUploader: FC<UpupUploaderProps> = ({
                 client={client}
                 cloudStorageConfigs={cloudStorageConfigs}
                 baseConfigs={baseConfigs}
-                oneDriveConfigs={oneDriveConfigs}
+                oneDriveConfigs={oneDriveConfigs as OneDriveConfigs}
                 setFiles={setFiles}
             />
         ),
