@@ -50,6 +50,7 @@ interface Props {
  */
 const OneDriveUploader: FC<Props> = ({ oneDriveConfigs, setFiles }: Props) => {
     const { isLoaded } = useLoadOdAPI()
+    const { multiSelect, onedrive_client_id: clientId } = oneDriveConfigs
 
     /**
      * Process the response from the one drive
@@ -93,9 +94,9 @@ const OneDriveUploader: FC<Props> = ({ oneDriveConfigs, setFiles }: Props) => {
          * One Drive options
          */
         const odOptions = {
-            clientId: oneDriveConfigs ? oneDriveConfigs.onedrive_client_id : '',
+            clientId,
             action: 'download',
-            multiSelect: oneDriveConfigs ? oneDriveConfigs.multiSelect : false,
+            multiSelect,
             openInNewWindow: true,
             advanced: {
                 //     redirectUri: 'http://localhost:3000',
@@ -105,7 +106,7 @@ const OneDriveUploader: FC<Props> = ({ oneDriveConfigs, setFiles }: Props) => {
             },
             success: (response: OneDriveResponse) => {
                 /**
-                 *  Save the files to the files array
+                 *  Process the response from the one drive picker after the user selected the files
                  */
                 processResponse(response)
             },
