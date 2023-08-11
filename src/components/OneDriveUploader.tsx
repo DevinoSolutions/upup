@@ -1,7 +1,7 @@
 import React, { Dispatch, FC, SetStateAction, useEffect, useState } from 'react'
 import useLoadOdAPI from '../hooks/useLoadOdAPI'
 import { BaseConfigs } from '../types/BaseConfigs'
-import { OneDriveConfigs } from '../types/OneDriveConfigs'
+import { OneDriveConfigs, OneDriveResponse } from '../types/OneDriveConfigs'
 import { compressFile } from '../lib/compressFile'
 import { putObject } from '../lib/putObject'
 import { CloudStorageConfigs } from '../types/CloudStorageConfigs'
@@ -82,9 +82,9 @@ const OneDriveUploader: FC<Props> = ({
 
     /**
      * Save the files to the files array
-     * @param files
+     * @param oneDriveResponse
      */
-    const saveFiles = (files: any) => {
+    const processResponse = (oneDriveResponse: OneDriveResponse) => {
         /**
          * Create a new array to store the files
          */
@@ -94,7 +94,7 @@ const OneDriveUploader: FC<Props> = ({
          * Loop through the files array and download the files
          */
         Promise.all(
-            files.map(async (file: any) => {
+            oneDriveResponse.value.map(async (file: any) => {
                 /**
                  * Download the file from the one drive
                  */
@@ -158,11 +158,11 @@ const OneDriveUploader: FC<Props> = ({
                 queryParameters: 'select=id,name,size,file,folder',
                 //     scopes: 'files.readwrite.all',
             },
-            success: (response: any) => {
+            success: (response: OneDriveResponse) => {
                 /**
                  *  Save the files to the files array
                  */
-                saveFiles(response.value)
+                processResponse(response)
             },
             cancel: () => {
                 console.log('User cancelled')
