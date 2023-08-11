@@ -1,7 +1,11 @@
 import React, { Dispatch, FC, SetStateAction, useEffect, useState } from 'react'
 import useLoadOdAPI from '../hooks/useLoadOdAPI'
 import { BaseConfigs } from '../types/BaseConfigs'
-import { OneDriveConfigs, OneDriveResponse } from '../types/OneDriveConfigs'
+import {
+    OneDriveConfigs,
+    OneDriveResponse,
+    OneDriveValue,
+} from '../types/OneDriveConfigs'
 import { compressFile } from '../lib/compressFile'
 import { putObject } from '../lib/putObject'
 import { CloudStorageConfigs } from '../types/CloudStorageConfigs'
@@ -81,8 +85,8 @@ const OneDriveUploader: FC<Props> = ({
     }, [files])
 
     /**
-     * Save the files to the files array
-     * @param oneDriveResponse
+     * Process the response from the one drive
+     * @param oneDriveResponse one drive response
      */
     const processResponse = (oneDriveResponse: OneDriveResponse) => {
         /**
@@ -94,7 +98,7 @@ const OneDriveUploader: FC<Props> = ({
          * Loop through the files array and download the files
          */
         Promise.all(
-            oneDriveResponse.value.map(async (file: any) => {
+            oneDriveResponse.value.map(async (file: OneDriveValue) => {
                 /**
                  * Download the file from the one drive
                  */
@@ -120,7 +124,7 @@ const OneDriveUploader: FC<Props> = ({
             /**
              * Compress the files if the user want to compress the files
              */
-            if (files.length == 0) return
+            if (oneDriveResponse.value.length == 0) return
             if (toBeCompressed)
                 /**
                  * Compress the files and set the files array
@@ -187,7 +191,7 @@ const OneDriveUploader: FC<Props> = ({
                         src="https://static2.sharepointonline.com/files/fabric/assets/brand-icons/product/svg/onedrive_32x1.svg"
                         alt="One Drive Logo"
                     />
-                    One Drive
+                    One Drive hh
                 </OneDriveButton>
             )}
         </div>
