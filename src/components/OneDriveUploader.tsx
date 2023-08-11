@@ -1,14 +1,10 @@
-import React, { Dispatch, FC, SetStateAction, useEffect, useState } from 'react'
+import React, { Dispatch, FC, SetStateAction } from 'react'
 import useLoadOdAPI from '../hooks/useLoadOdAPI'
-import { BaseConfigs } from '../types/BaseConfigs'
 import {
     OneDriveConfigs,
     OneDriveResponse,
     OneDriveValue,
 } from '../types/OneDriveConfigs'
-import { compressFile } from '../lib/compressFile'
-import { putObject } from '../lib/putObject'
-import { CloudStorageConfigs } from '../types/CloudStorageConfigs'
 import styled from 'styled-components'
 
 const OneDriveButton = styled.button`
@@ -42,47 +38,18 @@ const OneDriveLogo = styled.img`
     margin-right: 8px;
 `
 interface Props {
-    client: any
-    cloudStorageConfigs: CloudStorageConfigs
-    baseConfigs: BaseConfigs
     oneDriveConfigs: OneDriveConfigs
     setFiles: Dispatch<SetStateAction<File[]>>
 }
 
 /**
  * Upload files from One Drive to S3 bucket
- * @param client s3 client
- * @param bucket s3 bucket
- * @param setKey return the final name of the file, usually it has timestamp prefix
- * @param toBeCompressed whether the user want to compress the file before uploading it or not. Default value is false
  * @param oneDriveConfigs one drive configs
  * @param setFilesFromParent return the files to the parent component
  * @constructor
  */
-const OneDriveUploader: FC<Props> = ({
-    client,
-    cloudStorageConfigs: { bucket },
-    baseConfigs: { setKeys, toBeCompressed },
-    oneDriveConfigs,
-    setFiles: setFilesFromParent = () => {},
-}: Props) => {
-    const [files, setFiles] = useState<File[]>([])
-
+const OneDriveUploader: FC<Props> = ({ oneDriveConfigs, setFiles }: Props) => {
     const { isLoaded } = useLoadOdAPI()
-
-    /**
-     * Upload the file to the cloud storage when the files array is updated
-     */
-    useEffect(() => {
-        setFilesFromParent(oldFiles => [...oldFiles, ...files])
-        let keys: string[] = []
-        files.map(file => {
-            const key = `${Date.now()}__${file.name}`
-            keys.push(key)
-            putObject({ client, bucket, key, file })
-        })
-        setKeys(keys)
-    }, [files])
 
     /**
      * Process the response from the one drive
@@ -90,58 +57,32 @@ const OneDriveUploader: FC<Props> = ({
      */
     const processResponse = (oneDriveResponse: OneDriveResponse) => {
         /**
-         * Create a new array to store the files
-         */
-        const filesArray: File[] = []
-
-        /**
          * Loop through the files array and download the files
          */
-        Promise.all(
-            oneDriveResponse.value.map(async (file: OneDriveValue) => {
+        Promise.allSettled(
+            oneDriveResponse.value.map(async (oneDriveValue: OneDriveValue) => {
                 /**
                  * Download the file from the one drive
                  */
                 const response = await fetch(
-                    file['@microsoft.graph.downloadUrl'],
+                    oneDriveValue['@microsoft.graph.downloadUrl'],
                 )
                 /**
                  * Convert the file to blob
                  */
                 const blob = await response.blob()
+
                 /**
-                 * Create a new file from the blob
+                 * Create a new file from the blob then send it to the parent component
                  */
-                const newFile = new File([blob], file.name, {
-                    type: file.file.mimeType,
-                })
-                /**
-                 * Push the new file to the files array
-                 */
-                filesArray.push(newFile)
+                setFiles(oldFiles => [
+                    ...oldFiles,
+                    new File([blob], oneDriveValue.name, {
+                        type: oneDriveValue.file.mimeType,
+                    }),
+                ])
             }),
-        ).then(() => {
-            /**
-             * Compress the files if the user want to compress the files
-             */
-            if (oneDriveResponse.value.length == 0) return
-            if (toBeCompressed)
-                /**
-                 * Compress the files and set the files array
-                 */
-                filesArray.map(async file => {
-                    setFiles([
-                        ...files,
-                        await compressFile({
-                            element: file,
-                            element_name: file.name,
-                        }),
-                    ])
-                })
-            /**
-             * Otherwise, just set the files array
-             */ else setFiles(filesArray)
-        })
+        )
     }
 
     /**
@@ -169,10 +110,10 @@ const OneDriveUploader: FC<Props> = ({
                 processResponse(response)
             },
             cancel: () => {
-                console.log('User cancelled')
+                console.warn('User cancelled')
             },
             error: (e: any) => {
-                console.log(e)
+                console.error(e)
             },
         }
         /**
@@ -191,7 +132,7 @@ const OneDriveUploader: FC<Props> = ({
                         src="https://static2.sharepointonline.com/files/fabric/assets/brand-icons/product/svg/onedrive_32x1.svg"
                         alt="One Drive Logo"
                     />
-                    One Drive hh
+                    One Drive
                 </OneDriveButton>
             )}
         </div>
