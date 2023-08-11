@@ -10,6 +10,9 @@ import { getClient } from './lib/getClient'
 import { UPLOAD_ADAPTER, UploadAdapter } from './types/UploadAdapter'
 import styled from 'styled-components'
 import FileItem from './components/FileUploader/FileItem'
+import { compressFile } from './lib/compressFile'
+import { putObject } from './lib/putObject'
+
 const Container = styled.div`
     display: grid;
     grid-template-columns: repeat(
@@ -18,14 +21,10 @@ const Container = styled.div`
     ); /* Fix the grid-template-columns syntax */
     gap: 2px; /* Shorter syntax for grid-gap */
     width: 100%;
-    max-width: 100%;
-    overflow: hidden;
-    padding: 8px;
-    border-radius: 20px;
-    background-color: transparent;
 `
 const SelectedComponent = styled.div`
-    grid-column: span 1; /* Make the element span 2 columns */
+    flex: 2; /* Distribute available space equally among all elements */
+    padding: 4px; /* Add padding for spacing */
 `
 
 const SelectedComponentLarge = styled.div`
@@ -69,21 +68,82 @@ export interface UpupUploaderProps {
  * @param uploadAdapters whether the user want to upload files from internal storage or Google drive or both
  * @param googleConfigs google configurations
  * @param oneDriveConfigs one drive configurations
- * @param onChange return the files to the parent component
  * @constructor
  */
 export const UpupUploader: FC<UpupUploaderProps> = ({
     cloudStorageConfigs,
-    baseConfigs: { toBeCompressed = false, onChange, ...baseConfigs },
+    baseConfigs,
     uploadAdapters,
     googleConfigs,
     oneDriveConfigs,
 }: UpupUploaderProps) => {
+    const { bucket, s3Configs } = cloudStorageConfigs
+    const {
+        setKeys,
+        canUpload,
+        toBeCompressed = false,
+        multiple = false,
+        onChange,
+    } = baseConfigs
     const [files, setFiles] = useState<File[]>([])
-
     useEffect(() => {
         onChange && onChange(files)
     }, [files])
+
+    /**
+     * Upload the file to the cloud storage
+     */
+    const handleUpload = async () => {
+        let filesToUpload: File[]
+        let keys: string[] = []
+
+        /**
+         * Compress the file before uploading it to the cloud storage
+         */
+        if (toBeCompressed)
+            filesToUpload = await Promise.all(
+                files.map(async file => {
+                    /**
+                     * Compress the file
+                     */
+                    return await compressFile({
+                        element: file,
+                        element_name: file.name,
+                    })
+                })
+            )
+        else filesToUpload = files
+
+        /**
+         * Loop through the files array and upload the files
+         */
+        if (filesToUpload) {
+            filesToUpload.forEach(file => {
+                /**
+                 * assign a unique name for the file, usually has a timestamp prefix
+                 */
+                const key = `${Date.now()}__${file.name}`
+                keys.push(key)
+
+                /**
+                 * Upload the file to the cloud storage
+                 */
+                putObject({ client, bucket, key, file })
+            })
+
+            // set the file name
+            setKeys(keys)
+        }
+    }
+
+    /**
+     * Upload the file to the cloud storage when canUpload set is true
+     */
+    useEffect(() => {
+        if (canUpload) {
+            handleUpload()
+        }
+    }, [canUpload])
 
     /**
      * Check if the user selected at least one upload adapter
@@ -95,7 +155,7 @@ export const UpupUploader: FC<UpupUploaderProps> = ({
     /**
      * Get the client
      */
-    const client = getClient(cloudStorageConfigs.s3Configs)
+    const client = getClient(s3Configs)
 
     /**
      *  Define the components to be rendered based on the user selection of
@@ -104,17 +164,13 @@ export const UpupUploader: FC<UpupUploaderProps> = ({
     const components = {
         [UploadAdapter.INTERNAL]: (
             <InternalUploader
-                client={client}
-                cloudStorageConfigs={cloudStorageConfigs}
-                baseConfigs={baseConfigs}
                 setFiles={setFiles}
                 files={files}
+                multiple={multiple}
             />
         ),
         [UploadAdapter.GOOGLE_DRIVE]: (
             <GoogleDriveUploader
-                client={client}
-                cloudStorageConfigs={cloudStorageConfigs}
                 googleConfigs={googleConfigs as GoogleConfigs}
                 baseConfigs={baseConfigs}
                 setFiles={setFiles}
@@ -156,8 +212,8 @@ export const UpupUploader: FC<UpupUploaderProps> = ({
      *  Return the selected components
      */
     return (
-        <>
-            <Container>{selectedComponent}</Container>
+        <Container>
+            {selectedComponent}
             <ScrollerContainer>
                 {files && files.length > 0 ? (
                     files.map((f, key) => (
@@ -167,6 +223,6 @@ export const UpupUploader: FC<UpupUploaderProps> = ({
                     <EmptyMessage>No files</EmptyMessage>
                 )}
             </ScrollerContainer>
-        </>
+        </Container>
     )
 }
