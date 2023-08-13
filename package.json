@@ -47,7 +47,8 @@
         "analyze": "size-limit --why",
         "storybook": "storybook dev -p 6006",
         "build-storybook": "storybook build",
-        "ci": "pnpm run prettier-check && pnpm run build "
+        "ci": "pnpm run prettier-check && pnpm run build",
+        "release": "pnpm run prettier-check && pnpm run build && changeset publish"
     },
     "peerDependencies": {
         "react": "^18.2.0",
