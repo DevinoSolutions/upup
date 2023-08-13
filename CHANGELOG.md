@@ -1,5 +1,11 @@
 # @bassem97/upup
 
+## 1.4.3
+
+### Patch Changes
+
+-   920812f: update npmignore to igonore storybook and another stuffs from going live to npm registry
+
 ## 1.4.2
 
 ### Patch Changes
