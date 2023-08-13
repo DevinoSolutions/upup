@@ -45,7 +45,8 @@
         "prettier-write": "prettier --write .",
         "analyze": "size-limit --why",
         "storybook": "storybook dev -p 6006",
-        "build-storybook": "storybook build"
+        "build-storybook": "storybook build",
+        "ci": "pnpm run prettier-check && pnpm run build "
     },
     "peerDependencies": {
         "react": "^18.2.0",
