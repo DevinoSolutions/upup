@@ -1,5 +1,11 @@
 # @bassem97/upup
 
+## 1.4.2
+
+### Patch Changes
+
+-   5e9bac4: fix npmignore not working
+
 ## 1.4.1
 
 ### Patch Changes
