@@ -1,5 +1,10 @@
 src
+stories
 .changeset
 .github
+.storybook
+.babelrc.json
+.prettierignore
+.prettierrc.json
 pnpm-lock.yaml
 tsconfig.json
