@@ -1,5 +1,11 @@
 # @bassem97/upup
 
+## 1.4.4
+
+### Patch Changes
+
+-   45b6e9b: add publish config regsitry trying to make npm package appear in github repository
+
 ## 1.4.3
 
 ### Patch Changes
