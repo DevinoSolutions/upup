@@ -8,8 +8,9 @@
     "module": "dist/upup.esm.js",
     "types": "dist/index.d.ts",
     "typings": "dist/index.d.ts",
-    "publishConfig": {
-        "registry": "https://registry.npmjs.org/"
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/uNotesOfficial/upup.git"
     },
     "keywords": [
         "react",
