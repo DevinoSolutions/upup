@@ -10,7 +10,8 @@ dist
 storybook-static
 
 # local env files
-.env
+.env.*
+!.env.example
 
 # public folder temp files
 public
