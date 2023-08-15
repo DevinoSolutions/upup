@@ -1,4 +1,4 @@
-import React, { FC, useEffect, useState } from 'react'
+import React, { FC, useEffect, useRef, useState } from 'react'
 import { OneDriveConfigs } from './types/OneDriveConfigs'
 import { InternalUploader } from './components/InternalUploader'
 import { GoogleDriveUploader } from './components/GoogleDriveUploader'
@@ -74,7 +74,11 @@ export const UpupUploader: FC<UpupUploaderProps> = ({
         multiple = false,
         onChange,
     } = baseConfigs
+
     const [files, setFiles] = useState<File[]>([])
+    const [view, setView] = useState('internal')
+    const inputRef = useRef(null)
+
     useEffect(() => {
         onChange && onChange(files)
     }, [files])
@@ -198,32 +202,69 @@ export const UpupUploader: FC<UpupUploaderProps> = ({
      *  Return the selected components
      */
     return (
-        <div className="w-full max-w-5xl bg-[#f4f4f4] h-[min(98svh,32rem)] rounded-md p-2 border relative">
-            <div className="border-dotted w-full h-full border rounded-md flex flex-col items-center justify-center gap-6 border-[#dfdfdf]">
-                <h1 className="text-2xl">
-                    Drop files here,{' '}
-                    <span className="text-[#3782da]">browse files</span> or
-                    import from:
-                </h1>
-                <div className="grid grid-cols-6 grid-rows-2">
-                    {methods.map(method => (
-                        <button
-                            key={method.id}
-                            className="flex flex-col items-center justify-center gap-1 text-sm hover:bg-[#e9ecef] active:bg-[#dfe6f1] rounded-md p-2 px-4 transition-all duration-300 mb-4"
-                        >
-                            <span className="bg-white p-[6px] rounded-lg text-2xl shadow ">
-                                {method.icon}
-                            </span>
-                            <span className="text-[#525252]">
-                                {method.name}
-                            </span>
-                        </button>
-                    ))}
+        <div className="w-full max-w-[min(98svh,46rem)] bg-[#f4f4f4] h-[min(98svh,35rem)] rounded-md border grid grid-rows-[auto,1fr] relative overflow-hidden">
+            <input type="file" className="absolute w-0 h-0" ref={inputRef} />
+
+            <div className="absolute"></div>
+
+            {files.length > 0 ? (
+                <div className="h-12 bg-[#fafafa] border-b flex justify-between items-center p-2 text-sm text-[#1b5dab] font-medium">
+                    <button className="hover:bg-[#e9ecef] active:bg-[#dfe6f1] rounded-md p-2 px-4 transition-all duration-300">
+                        Cancel
+                    </button>
+                    <p className="text-[#333]">
+                        {files.length} file{files.length > 1 ? 's' : ''}{' '}
+                        selected
+                    </p>
+                    <button className="hover:bg-[#e9ecef] active:bg-[#dfe6f1] rounded-md p-2 px-4 transition-all duration-300">
+                        Add more
+                    </button>
+                </div>
+            ) : (
+                <div></div>
+            )}
+
+            <div className="p-2">
+                <div className="border-[#dfdfdf] border-dotted h-full w-full grid grid-rows-[1fr,auto] place-items-center border rounded-md">
+                    <div className="w-full h-full flex flex-col items-center justify-center gap-6 ">
+                        <h1 className="md:text-2xl text-center">
+                            Drop files here,{' '}
+                            <button
+                                className="text-[#3782da] hover:underline"
+                                // @ts-ignore
+                                onClick={() => inputRef.current.click()}
+                            >
+                                browse files
+                            </button>{' '}
+                            or import from:
+                        </h1>
+                        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 grid-rows-2">
+                            {methods.map(method => (
+                                <button
+                                    key={method.id}
+                                    className="flex flex-col items-center justify-center gap-1 text-sm hover:bg-[#e9ecef] active:bg-[#dfe6f1] rounded-md p-2 px-4 transition-all duration-300 mb-4"
+                                    onClick={() =>
+                                        method.id === 'internal'
+                                            ? // @ts-ignore
+                                              inputRef.current.click()
+                                            : setView(method.id)
+                                    }
+                                >
+                                    <span className="bg-white p-[6px] rounded-lg text-2xl shadow ">
+                                        {method.icon}
+                                    </span>
+                                    <span className="text-[#525252]">
+                                        {method.name}
+                                    </span>
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                    <p className="text-xs text-[#9d9d9d] mb-4">
+                        Powered by UpUp
+                    </p>
                 </div>
             </div>
-            <p className="absolute bottom-4 left-1/2 -translate-x-1/2 text-sm text-[#9d9d9d]">
-                Powered by UpUp
-            </p>
         </div>
     )
 }
