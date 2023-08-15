@@ -8,7 +8,7 @@ import { BaseConfigs } from './types/BaseConfigs'
 import { GoogleConfigs } from './types/GoogleConfigs'
 // import { getClient } from './lib/getClient'
 import { UPLOAD_ADAPTER, UploadAdapter } from './types/UploadAdapter'
-import FileItem from './components/FileUploader/FileItem'
+// import FileItem from './components/FileUploader/FileItem'
 import { compressFile } from './lib/compressFile'
 // import { putObject } from './lib/putObject'
 import {
@@ -25,6 +25,7 @@ import {
     ScreenCastIcon,
     UnsplashIcon,
 } from './components/Icons'
+import { motion, AnimatePresence } from 'framer-motion'
 
 const methods = [
     { id: 'internal', name: 'My Device', icon: <MyDeviceIcon /> },
@@ -205,24 +206,32 @@ export const UpupUploader: FC<UpupUploaderProps> = ({
         <div className="w-full max-w-[min(98svh,46rem)] bg-[#f4f4f4] h-[min(98svh,35rem)] rounded-md border grid grid-rows-[auto,1fr] relative overflow-hidden">
             <input type="file" className="absolute w-0 h-0" ref={inputRef} />
 
-            {view !== 'internal' && (
-                <div className="absolute h-full w-full bg-black grid grid-rows-[auto,1fr]">
-                    <div className="h-12 bg-[#fafafa] border-b flex justify-between items-center p-2 text-sm text-[#1b5dab] font-medium">
-                        <button
-                            className="hover:bg-[#e9ecef] active:bg-[#dfe6f1] rounded-md p-2 px-4 transition-all duration-300"
-                            onClick={() => setView('internal')}
-                        >
-                            Cancel
-                        </button>
-                        <p className="text-[#333]">
-                            Import from {methods.find(x => x.id === view)?.name}
-                        </p>
-                        <button className="hover:bg-[#e9ecef] active:bg-[#dfe6f1] rounded-md p-2 px-4 transition-all duration-300 opacity-0">
-                            Cancel
-                        </button>
-                    </div>
-                </div>
-            )}
+            <AnimatePresence>
+                {view !== 'internal' && (
+                    <motion.div
+                        initial={{ y: '-100%' }}
+                        animate={{ y: '0%' }}
+                        exit={{ y: '-100%' }}
+                        className="absolute h-full w-full bg-black grid grid-rows-[auto,1fr] z-10"
+                    >
+                        <div className="h-12 bg-[#fafafa] border-b flex justify-between items-center p-2 text-sm text-[#1b5dab] font-medium">
+                            <button
+                                className="hover:bg-[#e9ecef] active:bg-[#dfe6f1] rounded-md p-2 px-4 transition-all duration-300"
+                                onClick={() => setView('internal')}
+                            >
+                                Cancel
+                            </button>
+                            <p className="text-[#333]">
+                                Import from{' '}
+                                {methods.find(x => x.id === view)!.name}
+                            </p>
+                            <button className="hover:bg-[#e9ecef] active:bg-[#dfe6f1] rounded-md p-2 px-4 transition-all duration-300 opacity-0">
+                                Cancel
+                            </button>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             {files.length > 0 ? (
                 <div className="h-12 bg-[#fafafa] border-b flex justify-between items-center p-2 text-sm text-[#1b5dab] font-medium">
@@ -240,7 +249,6 @@ export const UpupUploader: FC<UpupUploaderProps> = ({
             ) : (
                 <div></div>
             )}
-
             <div className="p-2">
                 <div className="border-[#dfdfdf] border-dotted h-full w-full grid grid-rows-[1fr,auto] place-items-center border rounded-md">
                     <div className="w-full h-full flex flex-col items-center justify-center gap-6 ">
@@ -259,7 +267,12 @@ export const UpupUploader: FC<UpupUploaderProps> = ({
                             {methods.map(method => (
                                 <button
                                     key={method.id}
-                                    className="flex flex-col items-center justify-center gap-1 text-sm hover:bg-[#e9ecef] active:bg-[#dfe6f1] rounded-md p-2 px-4 transition-all duration-300 mb-4"
+                                    className="flex flex-col items-center justify-center gap-1 text-sm hover:bg-[#e9ecef] active:bg-[#dfe6f1] rounded-md p-2 px-4 transition-all duration-300 mb-4 disabled:opacity-30 disabled:pointer-events-none group relative"
+                                    disabled={
+                                        !/internal|drive|onedrive/.test(
+                                            method.id,
+                                        )
+                                    }
                                     onClick={() =>
                                         method.id === 'internal'
                                             ? // @ts-ignore
@@ -273,6 +286,9 @@ export const UpupUploader: FC<UpupUploaderProps> = ({
                                     <span className="text-[#525252]">
                                         {method.name}
                                     </span>
+                                    <span className="group-disabled:block hidden absolute -bottom-2 opacity-50">
+                                        (soon)
+                                    </span>
                                 </button>
                             ))}
                         </div>
@@ -285,3 +301,5 @@ export const UpupUploader: FC<UpupUploaderProps> = ({
         </div>
     )
 }
+
+// TODO: Clean up and document code
