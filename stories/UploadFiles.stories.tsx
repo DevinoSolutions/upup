@@ -1,3 +1,4 @@
+import React from 'react'
 import { Meta, Story } from '@storybook/react'
 import { InternalUploader } from '../src/components/InternalUploader'
 import { UPLOAD_ADAPTER, UploadAdapter, UpupUploader } from '../src'
