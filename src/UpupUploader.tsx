@@ -205,7 +205,24 @@ export const UpupUploader: FC<UpupUploaderProps> = ({
         <div className="w-full max-w-[min(98svh,46rem)] bg-[#f4f4f4] h-[min(98svh,35rem)] rounded-md border grid grid-rows-[auto,1fr] relative overflow-hidden">
             <input type="file" className="absolute w-0 h-0" ref={inputRef} />
 
-            <div className="absolute"></div>
+            {view !== 'internal' && (
+                <div className="absolute h-full w-full bg-black grid grid-rows-[auto,1fr]">
+                    <div className="h-12 bg-[#fafafa] border-b flex justify-between items-center p-2 text-sm text-[#1b5dab] font-medium">
+                        <button
+                            className="hover:bg-[#e9ecef] active:bg-[#dfe6f1] rounded-md p-2 px-4 transition-all duration-300"
+                            onClick={() => setView('internal')}
+                        >
+                            Cancel
+                        </button>
+                        <p className="text-[#333]">
+                            Import from {methods.find(x => x.id === view)?.name}
+                        </p>
+                        <button className="hover:bg-[#e9ecef] active:bg-[#dfe6f1] rounded-md p-2 px-4 transition-all duration-300 opacity-0">
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            )}
 
             {files.length > 0 ? (
                 <div className="h-12 bg-[#fafafa] border-b flex justify-between items-center p-2 text-sm text-[#1b5dab] font-medium">
