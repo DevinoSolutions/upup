@@ -1,4 +1,5 @@
 // Author: Bassem JADOUI 31/05/2023
+import './tailwind.css'
 
 export { UpupUploader } from './UpupUploader'
 export { UploadAdapter, UPLOAD_ADAPTER } from './types/UploadAdapter'
