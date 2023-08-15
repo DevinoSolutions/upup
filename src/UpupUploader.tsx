@@ -237,7 +237,9 @@ export const UpupUploader: FC<UpupUploaderProps> = ({
                             </button>
                         </div>
 
-                        <div className="bg-[#f5f5f5]"></div>
+                        <div className="bg-[#f5f5f5] flex justify-center items-center">
+                            Soon..
+                        </div>
                     </motion.div>
                 )}
             </AnimatePresence>
