@@ -6,55 +6,40 @@ import OneDriveUploader from './components/OneDriveUploader'
 import { CloudStorageConfigs } from './types/CloudStorageConfigs'
 import { BaseConfigs } from './types/BaseConfigs'
 import { GoogleConfigs } from './types/GoogleConfigs'
-import { getClient } from './lib/getClient'
+// import { getClient } from './lib/getClient'
 import { UPLOAD_ADAPTER, UploadAdapter } from './types/UploadAdapter'
-import styled from 'styled-components'
 import FileItem from './components/FileUploader/FileItem'
 import { compressFile } from './lib/compressFile'
-import { putObject } from './lib/putObject'
+// import { putObject } from './lib/putObject'
+import {
+    AudioIcon,
+    BoxIcon,
+    CameraIcon,
+    DropBoxIcon,
+    FacebookIcon,
+    GoogleDriveIcon,
+    InstagramIcon,
+    LinkIcon,
+    MyDeviceIcon,
+    OneDriveIcon,
+    ScreenCastIcon,
+    UnsplashIcon,
+} from './components/Icons'
 
-const Container = styled.div`
-    display: grid;
-    grid-template-columns: repeat(
-        2,
-        fr
-    ); /* Fix the grid-template-columns syntax */
-    gap: 2px; /* Shorter syntax for grid-gap */
-    width: 100%;
-    max-width: 100%;
-    overflow: hidden;
-    padding: 8px;
-    border-radius: 20px;
-    background-color: transparent;
-`
-const SelectedComponent = styled.div`
-    grid-column: span 1; /* Make the element span 2 columns */
-`
-
-const SelectedComponentLarge = styled.div`
-    grid-column: span 2; /* Make the element span 2 columns */
-`
-
-const EmptyMessage = styled.h1`
-    text-align: center;
-    color: #9ca3af;
-    font-size: 1rem;
-`
-
-const ScrollerContainer = styled.div`
-    width: 100%;
-    max-height: 10rem;
-    padding: 8px 4px;
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 8px;
-    background-color: #f0f4f8;
-    border-radius: 20px;
-    opacity: 0.6;
-    overflow-y: auto;
-    border: 1px solid black;
-`
+const methods = [
+    { id: 'internal', name: 'My Device', icon: <MyDeviceIcon /> },
+    { id: 'box', name: 'Box', icon: <BoxIcon /> },
+    { id: 'dropbox', name: 'Dropbox', icon: <DropBoxIcon /> },
+    { id: 'facebook', name: 'Facebook', icon: <FacebookIcon /> },
+    { id: 'drive', name: 'Google Drive', icon: <GoogleDriveIcon /> },
+    { id: 'instagram', name: 'Instagram', icon: <InstagramIcon /> },
+    { id: 'onedrive', name: 'OneDrive', icon: <OneDriveIcon /> },
+    { id: 'unsplash', name: 'Unsplash', icon: <UnsplashIcon /> },
+    { id: 'link', name: 'Link', icon: <LinkIcon /> },
+    { id: 'camera', name: 'Camera', icon: <CameraIcon /> },
+    { id: 'audio', name: 'Audio', icon: <AudioIcon /> },
+    { id: 'screencast', name: 'ScreenCast', icon: <ScreenCastIcon /> },
+]
 
 export interface UpupUploaderProps {
     cloudStorageConfigs: CloudStorageConfigs
@@ -193,37 +178,52 @@ export const UpupUploader: FC<UpupUploaderProps> = ({
      * the upload adapters (internal, google drive, one drive)
      * using key as index to avoid the warning: Each child in a list should have a unique "key" prop.
      */
-    const selectedComponent = uploadAdapters.map(uploadAdapter => {
-        if (uploadAdapter === UploadAdapter.INTERNAL) {
-            return (
-                <SelectedComponentLarge key={uploadAdapter}>
-                    {components[uploadAdapter]}
-                </SelectedComponentLarge>
-            )
-        } else {
-            return (
-                <SelectedComponent key={uploadAdapter}>
-                    {components[uploadAdapter]}
-                </SelectedComponent>
-            )
-        }
-    })
+    // const selectedComponent = uploadAdapters.map(uploadAdapter => {
+    //     if (uploadAdapter === UploadAdapter.INTERNAL) {
+    //         return (
+    //             <SelectedComponentLarge key={uploadAdapter}>
+    //                 {components[uploadAdapter]}
+    //             </SelectedComponentLarge>
+    //         )
+    //     } else {
+    //         return (
+    //             <SelectedComponent key={uploadAdapter}>
+    //                 {components[uploadAdapter]}
+    //             </SelectedComponent>
+    //         )
+    //     }
+    // })
 
     /**
      *  Return the selected components
      */
     return (
-        <>
-            <Container>{selectedComponent}</Container>
-            <ScrollerContainer>
-                {files && files.length > 0 ? (
-                    files.map((f, key) => (
-                        <FileItem setFiles={setFiles} key={key} file={f} />
-                    ))
-                ) : (
-                    <EmptyMessage>No files</EmptyMessage>
-                )}
-            </ScrollerContainer>
-        </>
+        <div className="w-full max-w-5xl bg-[#f4f4f4] h-[min(98svh,32rem)] rounded-md p-2 border relative">
+            <div className="border-dotted w-full h-full border rounded-md flex flex-col items-center justify-center gap-6 border-[#dfdfdf]">
+                <h1 className="text-2xl">
+                    Drop files here,{' '}
+                    <span className="text-[#3782da]">browse files</span> or
+                    import from:
+                </h1>
+                <div className="grid grid-cols-6 grid-rows-2">
+                    {methods.map(method => (
+                        <button
+                            key={method.id}
+                            className="flex flex-col items-center justify-center gap-1 text-sm hover:bg-[#e9ecef] active:bg-[#dfe6f1] rounded-md p-2 px-4 transition-all duration-300 mb-4"
+                        >
+                            <span className="bg-white p-[6px] rounded-lg text-2xl shadow ">
+                                {method.icon}
+                            </span>
+                            <span className="text-[#525252]">
+                                {method.name}
+                            </span>
+                        </button>
+                    ))}
+                </div>
+            </div>
+            <p className="absolute bottom-4 left-1/2 -translate-x-1/2 text-sm text-[#9d9d9d]">
+                Powered by UpUp
+            </p>
+        </div>
     )
 }
