@@ -212,7 +212,7 @@ export const UpupUploader: FC<UpupUploaderProps> = ({
                         initial={{ y: '-100%' }}
                         animate={{ y: '0%' }}
                         exit={{ y: '-100%' }}
-                        className="absolute h-full w-full bg-black grid grid-rows-[auto,1fr] z-10"
+                        className="absolute h-full w-full grid grid-rows-[auto,1fr] z-10"
                     >
                         <div className="h-12 bg-[#fafafa] border-b flex justify-between items-center p-2 text-sm text-[#1b5dab] font-medium">
                             <button
@@ -229,6 +229,8 @@ export const UpupUploader: FC<UpupUploaderProps> = ({
                                 Cancel
                             </button>
                         </div>
+
+                        <div className="bg-[#f5f5f5]"></div>
                     </motion.div>
                 )}
             </AnimatePresence>
