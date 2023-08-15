@@ -8,16 +8,16 @@ const config: StorybookConfig = {
     stories: ['../**/*.mdx', '../**/*.stories.@(js|jsx|mjs|ts|tsx)'],
     addons: [
         // Other addons go here
-        {
-            name: '@storybook/addon-docs',
-            options: {
-                mdxPluginOptions: {
-                    mdxCompileOptions: {
-                        remarkPlugins: [remarkGfm],
-                    },
-                },
-            },
-        },
+        // {
+        //     name: '@storybook/addon-docs',
+        //     options: {
+        //         mdxPluginOptions: {
+        //             mdxCompileOptions: {
+        //                 remarkPlugins: [remarkGfm],
+        //             },
+        //         },
+        //     },
+        // },
         {
             name: '@storybook/addon-styling',
             options: {
