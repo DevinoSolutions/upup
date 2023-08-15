@@ -203,8 +203,15 @@ export const UpupUploader: FC<UpupUploaderProps> = ({
      *  Return the selected components
      */
     return (
-        <div className="w-full max-w-[min(98svh,46rem)] bg-[#f4f4f4] h-[min(98svh,35rem)] rounded-md border grid grid-rows-[auto,1fr] relative overflow-hidden">
-            <input type="file" className="absolute w-0 h-0" ref={inputRef} />
+        <div className="w-full max-w-[min(98svh,46rem)] bg-[#f4f4f4] h-[min(98svh,35rem)] rounded-md border flex flex-col relative overflow-hidden select-none">
+            <input
+                type="file"
+                className="absolute w-0 h-0"
+                ref={inputRef}
+                multiple
+                // @ts-ignore
+                onChange={e => setFiles([...e.target.files])}
+            />
 
             <AnimatePresence>
                 {view !== 'internal' && (
@@ -234,25 +241,35 @@ export const UpupUploader: FC<UpupUploaderProps> = ({
                     </motion.div>
                 )}
             </AnimatePresence>
-
-            {files.length > 0 ? (
-                <div className="h-12 bg-[#fafafa] border-b flex justify-between items-center p-2 text-sm text-[#1b5dab] font-medium">
-                    <button className="hover:bg-[#e9ecef] active:bg-[#dfe6f1] rounded-md p-2 px-4 transition-all duration-300">
-                        Cancel
-                    </button>
-                    <p className="text-[#333]">
-                        {files.length} file{files.length > 1 ? 's' : ''}{' '}
-                        selected
-                    </p>
-                    <button className="hover:bg-[#e9ecef] active:bg-[#dfe6f1] rounded-md p-2 px-4 transition-all duration-300">
-                        Add more
-                    </button>
-                </div>
-            ) : (
-                <div></div>
-            )}
-            <div className="p-2">
-                <div className="border-[#dfdfdf] border-dotted h-full w-full grid grid-rows-[1fr,auto] place-items-center border rounded-md">
+            <AnimatePresence>
+                {files.length > 0 ? (
+                    <motion.div
+                        key={'files-counter'}
+                        initial={{ scaleY: '0%', height: '3rem' }}
+                        animate={{ scaleY: '100%' }}
+                        exit={{ scaleY: '0%', height: '0rem' }}
+                        className="h-12 bg-[#fafafa] border-b flex justify-between items-center p-2 text-sm text-[#1b5dab] font-medium origin-top"
+                    >
+                        <button
+                            className="hover:bg-[#e9ecef] active:bg-[#dfe6f1] rounded-md p-2 px-4 transition-all duration-300"
+                            onClick={() => setFiles([])}
+                        >
+                            Cancel
+                        </button>
+                        <p className="text-[#333]">
+                            {files.length} file{files.length > 1 ? 's' : ''}{' '}
+                            selected
+                        </p>
+                        <button className="hover:bg-[#e9ecef] active:bg-[#dfe6f1] rounded-md p-2 px-4 transition-all duration-300">
+                            Add more
+                        </button>
+                    </motion.div>
+                ) : (
+                    <div></div>
+                )}
+            </AnimatePresence>
+            <div className="p-2 h-full">
+                <div className="border-[#dfdfdf] border-dotted h-full w-full grid grid-rows-[1fr,auto] place-items-center border rounded-md transition-all">
                     <div className="w-full h-full flex flex-col items-center justify-center gap-6 ">
                         <h1 className="md:text-2xl text-center">
                             Drop files here,{' '}
