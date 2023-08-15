@@ -75,13 +75,13 @@ export interface UpupUploaderProps {
  * @constructor
  */
 export const UpupUploader: FC<UpupUploaderProps> = ({
-    cloudStorageConfigs,
+    // cloudStorageConfigs, // TODO: uncomment this line after you fix env variables
     baseConfigs,
     uploadAdapters,
     googleConfigs,
     oneDriveConfigs,
 }: UpupUploaderProps) => {
-    const { bucket, s3Configs } = cloudStorageConfigs
+    // const { bucket, s3Configs } = cloudStorageConfigs // TODO: uncomment this line after you fix env variables
     const {
         setKeys,
         canUpload,
@@ -132,7 +132,7 @@ export const UpupUploader: FC<UpupUploaderProps> = ({
                 /**
                  * Upload the file to the cloud storage
                  */
-                putObject({ client, bucket, key, file })
+                // putObject({ client, bucket, key, file }) // TODO: uncomment this line after you fix env variables
             })
 
             // set the file name
@@ -159,7 +159,7 @@ export const UpupUploader: FC<UpupUploaderProps> = ({
     /**
      * Get the client
      */
-    const client = getClient(s3Configs)
+    // const client = getClient(s3Configs) // TODO: uncomment this line after you fix env variables
 
     /**
      *  Define the components to be rendered based on the user selection of
