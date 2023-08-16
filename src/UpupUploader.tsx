@@ -82,10 +82,12 @@ export const UpupUploader: FC<UpupUploaderProps> = ({
 
     const [files, setFiles] = useState<File[]>([])
     const [view, setView] = useState('internal')
+    const [isAddingMore, setIsAddingMore] = useState(false)
     const inputRef = useRef(null)
 
     useEffect(() => {
         onChange && onChange(files)
+        setIsAddingMore(false)
     }, [files])
 
     /**
@@ -180,9 +182,6 @@ export const UpupUploader: FC<UpupUploaderProps> = ({
         ),
     }
 
-    /**
-     *  Return the selected components
-     */
     return (
         <div className="w-full max-w-[min(98svh,46rem)] bg-[#f4f4f4] h-[min(98svh,35rem)] rounded-md border flex flex-col relative overflow-hidden select-none">
             <input
@@ -190,12 +189,24 @@ export const UpupUploader: FC<UpupUploaderProps> = ({
                 className="absolute w-0 h-0"
                 ref={inputRef}
                 multiple
-                // @ts-ignore
-                onChange={e => setFiles([...e.target.files])}
+                onChange={e =>
+                    setFiles(files =>
+                        isAddingMore
+                            ? // @ts-ignore // FIXME
+                              [...files, ...e.target.files]
+                            : // @ts-ignore // FIXME
+                              [...e.target.files],
+                    )
+                }
             />
 
             <View view={view} setView={setView} methods={methods} />
-            <Preview files={files} setFiles={setFiles} />
+            <Preview
+                files={files}
+                setFiles={setFiles}
+                isAddingMore={isAddingMore}
+                setIsAddingMore={setIsAddingMore}
+            />
             <div className="p-2 h-full">
                 <div className="border-[#dfdfdf] border-dotted h-full w-full grid grid-rows-[1fr,auto] place-items-center border rounded-md transition-all">
                     <MethodsSelector
