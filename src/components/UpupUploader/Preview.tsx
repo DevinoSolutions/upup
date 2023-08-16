@@ -99,7 +99,7 @@ const Preview = ({
                     >
                         <button
                             className="bg-green-500 hover:bg-green-600 active:bg-green-700 rounded-md p-3 px-6 transition-all duration-300"
-                            onClick={() => setFiles([])}
+                            onClick={() => console.log('uploading...')}
                         >
                             Upload {files.length} file
                             {files.length > 1 ? 's' : ''}
