@@ -40,6 +40,7 @@ const OneDriveLogo = styled.img`
 interface Props {
     oneDriveConfigs: OneDriveConfigs
     setFiles: Dispatch<SetStateAction<File[]>>
+    setView: Dispatch<SetStateAction<string>>
 }
 
 /**
@@ -48,7 +49,11 @@ interface Props {
  * @param setFilesFromParent return the files to the parent component
  * @constructor
  */
-const OneDriveUploader: FC<Props> = ({ oneDriveConfigs, setFiles }: Props) => {
+const OneDriveUploader: FC<Props> = ({
+    oneDriveConfigs,
+    setFiles,
+    setView,
+}: Props) => {
     const { isLoaded } = useLoadOdAPI()
     const { multiSelect, onedrive_client_id: clientId } = oneDriveConfigs
 
@@ -82,6 +87,7 @@ const OneDriveUploader: FC<Props> = ({ oneDriveConfigs, setFiles }: Props) => {
                         type: oneDriveValue.file.mimeType,
                     }),
                 ])
+                setView('internal')
             }),
         )
     }

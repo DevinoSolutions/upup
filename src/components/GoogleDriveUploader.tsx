@@ -40,6 +40,7 @@ export interface Props {
     baseConfigs: BaseConfigs
     googleConfigs: GoogleConfigs
     setFiles: React.Dispatch<React.SetStateAction<File[]>>
+    setView: React.Dispatch<React.SetStateAction<string>>
 }
 
 /**
@@ -55,6 +56,7 @@ export const GoogleDriveUploader: FC<Props> = ({
     googleConfigs: { google_app_id, google_api_key, google_client_id },
     baseConfigs: { toBeCompressed },
     setFiles,
+    setView,
 }: Props) => {
     const { pickerApiLoaded, gisLoaded, tokenClient } = useLoadGAPI({
         google_client_id,
@@ -149,6 +151,7 @@ export const GoogleDriveUploader: FC<Props> = ({
              * Set the file to be uploaded
              */
             setFiles((files: File[]) => [...files, fileToUpload])
+            setView('internal')
         }
     }
 

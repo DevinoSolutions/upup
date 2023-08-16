@@ -171,12 +171,14 @@ export const UpupUploader: FC<UpupUploaderProps> = ({
                 googleConfigs={googleConfigs as GoogleConfigs}
                 baseConfigs={baseConfigs}
                 setFiles={setFiles}
+                setView={setView}
             />
         ),
         [UploadAdapter.ONE_DRIVE]: (
             <OneDriveUploader
                 oneDriveConfigs={oneDriveConfigs as OneDriveConfigs}
                 setFiles={setFiles}
+                setView={setView}
             />
         ),
     }
