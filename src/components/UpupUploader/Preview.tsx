@@ -6,24 +6,29 @@ import { bytesToSize } from '../../lib/bytesToSize'
 const Preview = ({
     files,
     setFiles,
+    isAddingMore,
+    setIsAddingMore,
 }: {
     files: File[]
     setFiles: (files: File[]) => void
+    isAddingMore: boolean
+    setIsAddingMore: (isAddingMore: boolean) => void
 }) => {
-    const removeFile = (index: number) => {
-        const newFiles = files.filter((_, i) => i !== index)
-        setFiles(newFiles)
-    }
+    /**
+     * Remove file from files array
+     */
+    const removeFile = (index: number) =>
+        setFiles([...files.filter((_, i) => i !== index)])
 
     return (
         <AnimatePresence>
             {files.length > 0 && (
-                <motion.div className="h-full w-full grid grid-rows-[auto,1fr,auto] text-sm font-medium absolute z-10">
+                <motion.div className="h-full w-full grid grid-rows-[auto,1fr,auto] text-sm font-medium absolute z-10 pointer-events-none">
                     <motion.div
                         initial={{ scaleY: '0%' }}
                         animate={{ scaleY: '100%' }}
                         exit={{ scaleY: '0%' }}
-                        className="flex justify-between items-center p-2 border-b bg-[#fafafa] text-[#1b5dab] origin-top"
+                        className="flex justify-between items-center p-2 border-b bg-[#fafafa] text-[#1b5dab] origin-top pointer-events-auto"
                     >
                         <button
                             className="hover:bg-[#e9ecef] active:bg-[#dfe6f1] rounded-md p-2 px-4 transition-all duration-300"
@@ -35,14 +40,21 @@ const Preview = ({
                             {files.length} file{files.length > 1 ? 's' : ''}{' '}
                             selected
                         </p>
-                        <button className="hover:bg-[#e9ecef] active:bg-[#dfe6f1] rounded-md p-2 px-4 transition-all duration-300">
-                            Add more
+                        <button
+                            className="hover:bg-[#e9ecef] active:bg-[#dfe6f1] rounded-md p-2 px-4 transition-all duration-300"
+                            onClick={() => setIsAddingMore(!isAddingMore)}
+                        >
+                            {isAddingMore ? 'Show Previews' : 'Add more'}
                         </button>
                     </motion.div>
 
                     <motion.div
                         initial={{ scaleY: '0%' }}
-                        animate={{ scaleY: '100%' }}
+                        animate={{
+                            scaleY: isAddingMore ? '0%' : '100%',
+                            opacity: isAddingMore ? 0 : 1,
+                            pointerEvents: isAddingMore ? 'none' : 'all',
+                        }}
                         exit={{ scaleY: '0%' }}
                         className="grid grid-cols-4 p-4 border-b bg-[#f4f4f4] origin-bottom gap-4 overflow-y-scroll"
                     >
@@ -83,7 +95,7 @@ const Preview = ({
                         initial={{ scaleY: '0%' }}
                         animate={{ scaleY: '100%' }}
                         exit={{ scaleY: '0%' }}
-                        className="flex justify-start items-center p-3 border-b bg-[#fafafa] text-white origin-bottom"
+                        className="flex justify-start items-center p-3 border-b bg-[#fafafa] text-white origin-bottom pointer-events-auto"
                     >
                         <button
                             className="bg-green-500 hover:bg-green-600 active:bg-green-700 rounded-md p-3 px-6 transition-all duration-300"
