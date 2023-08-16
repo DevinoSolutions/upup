@@ -8,7 +8,7 @@ import { BaseConfigs } from './types/BaseConfigs'
 import { GoogleConfigs } from './types/GoogleConfigs'
 import { getClient } from './lib/getClient'
 import { UPLOAD_ADAPTER, UploadAdapter } from './types/UploadAdapter'
-import FileItem from './components/FileUploader/FileItem'
+// import FileItem from './components/FileUploader/FileItem'
 import { compressFile } from './lib/compressFile'
 import { putObject } from './lib/putObject'
 import {
