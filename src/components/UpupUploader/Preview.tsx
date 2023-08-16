@@ -58,7 +58,7 @@ const Preview = ({
                             pointerEvents: isAddingMore ? 'none' : 'all',
                         }}
                         exit={{ scaleY: '0%' }}
-                        className="grid grid-cols-4 p-4 border-b bg-[#f4f4f4] origin-bottom gap-4 overflow-y-scroll"
+                        className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 p-4 border-b bg-[#f4f4f4] origin-bottom gap-4 overflow-y-scroll"
                     >
                         {files.map((file, i) => (
                             <div
