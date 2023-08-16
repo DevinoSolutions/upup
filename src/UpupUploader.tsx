@@ -25,7 +25,6 @@ import {
     ScreenCastIcon,
     UnsplashIcon,
 } from './components/Icons'
-import { motion, AnimatePresence } from 'framer-motion'
 import View from './components/UpupUploader/View'
 import MethodsSelector from './components/UpupUploader/MethodSelector'
 import Preview from './components/UpupUploader/Preview'
