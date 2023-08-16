@@ -10,6 +10,7 @@ dist
 storybook-static
 
 # local env files
+.env
 .env.*
 !.env.example
 
