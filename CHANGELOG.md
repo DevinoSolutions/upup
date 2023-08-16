@@ -1,5 +1,11 @@
 # @bassem97/upup
 
+## 2.0.0
+
+### Major Changes
+
+-   413df80: New UI , New challenge unlocked !
+
 ## 1.4.5
 
 ### Patch Changes
