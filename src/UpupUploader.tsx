@@ -6,11 +6,11 @@ import OneDriveUploader from './components/OneDriveUploader'
 import { CloudStorageConfigs } from './types/CloudStorageConfigs'
 import { BaseConfigs } from './types/BaseConfigs'
 import { GoogleConfigs } from './types/GoogleConfigs'
-// import { getClient } from './lib/getClient'
+import { getClient } from './lib/getClient'
 import { UPLOAD_ADAPTER, UploadAdapter } from './types/UploadAdapter'
-// import FileItem from './components/FileUploader/FileItem'
+import FileItem from './components/FileUploader/FileItem'
 import { compressFile } from './lib/compressFile'
-// import { putObject } from './lib/putObject'
+import { putObject } from './lib/putObject'
 import {
     AudioIcon,
     BoxIcon,
@@ -26,6 +26,9 @@ import {
     UnsplashIcon,
 } from './components/Icons'
 import { motion, AnimatePresence } from 'framer-motion'
+import View from './components/UpupUploader/View'
+import MethodsSelector from './components/UpupUploader/MethodSelector'
+import Preview from './components/UpupUploader/Preview'
 
 const methods = [
     { id: 'internal', name: 'My Device', icon: <MyDeviceIcon /> },
@@ -60,14 +63,15 @@ export interface UpupUploaderProps {
  * @param oneDriveConfigs one drive configurations
  * @constructor
  */
+
 export const UpupUploader: FC<UpupUploaderProps> = ({
-    // cloudStorageConfigs, // TODO: uncomment this line after you fix env variables
+    cloudStorageConfigs,
     baseConfigs,
     uploadAdapters,
     googleConfigs,
     oneDriveConfigs,
 }: UpupUploaderProps) => {
-    // const { bucket, s3Configs } = cloudStorageConfigs // TODO: uncomment this line after you fix env variables
+    const { bucket, s3Configs } = cloudStorageConfigs
     const {
         setKeys,
         canUpload,
@@ -122,7 +126,7 @@ export const UpupUploader: FC<UpupUploaderProps> = ({
                 /**
                  * Upload the file to the cloud storage
                  */
-                // putObject({ client, bucket, key, file }) // TODO: uncomment this line after you fix env variables
+                putObject({ client, bucket, key, file })
             })
 
             // set the file name
@@ -134,9 +138,7 @@ export const UpupUploader: FC<UpupUploaderProps> = ({
      * Upload the file to the cloud storage when canUpload set is true
      */
     useEffect(() => {
-        if (canUpload) {
-            handleUpload()
-        }
+        if (canUpload) handleUpload()
     }, [canUpload])
 
     /**
@@ -149,7 +151,7 @@ export const UpupUploader: FC<UpupUploaderProps> = ({
     /**
      * Get the client
      */
-    // const client = getClient(s3Configs) // TODO: uncomment this line after you fix env variables
+    const client = getClient(s3Configs)
 
     /**
      *  Define the components to be rendered based on the user selection of
@@ -179,27 +181,6 @@ export const UpupUploader: FC<UpupUploaderProps> = ({
     }
 
     /**
-     * Select the components to be rendered based on the user selection of
-     * the upload adapters (internal, google drive, one drive)
-     * using key as index to avoid the warning: Each child in a list should have a unique "key" prop.
-     */
-    // const selectedComponent = uploadAdapters.map(uploadAdapter => {
-    //     if (uploadAdapter === UploadAdapter.INTERNAL) {
-    //         return (
-    //             <SelectedComponentLarge key={uploadAdapter}>
-    //                 {components[uploadAdapter]}
-    //             </SelectedComponentLarge>
-    //         )
-    //     } else {
-    //         return (
-    //             <SelectedComponent key={uploadAdapter}>
-    //                 {components[uploadAdapter]}
-    //             </SelectedComponent>
-    //         )
-    //     }
-    // })
-
-    /**
      *  Return the selected components
      */
     return (
@@ -213,107 +194,15 @@ export const UpupUploader: FC<UpupUploaderProps> = ({
                 onChange={e => setFiles([...e.target.files])}
             />
 
-            <AnimatePresence>
-                {view !== 'internal' && (
-                    <motion.div
-                        initial={{ y: '-100%' }}
-                        animate={{ y: '0%' }}
-                        exit={{ y: '-100%' }}
-                        className="absolute h-full w-full grid grid-rows-[auto,1fr] z-10"
-                    >
-                        <div className="h-12 bg-[#fafafa] border-b flex justify-between items-center p-2 text-sm text-[#1b5dab] font-medium">
-                            <button
-                                className="hover:bg-[#e9ecef] active:bg-[#dfe6f1] rounded-md p-2 px-4 transition-all duration-300"
-                                onClick={() => setView('internal')}
-                            >
-                                Cancel
-                            </button>
-                            <p className="text-[#333]">
-                                Import from{' '}
-                                {methods.find(x => x.id === view)!.name}
-                            </p>
-                            <button className="hover:bg-[#e9ecef] active:bg-[#dfe6f1] rounded-md p-2 px-4 transition-all duration-300 opacity-0">
-                                Cancel
-                            </button>
-                        </div>
-
-                        <div className="bg-[#f5f5f5] flex justify-center items-center">
-                            Soon..
-                        </div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-            <AnimatePresence>
-                {files.length > 0 ? (
-                    <motion.div
-                        key={'files-counter'}
-                        initial={{ scaleY: '0%', height: '3rem' }}
-                        animate={{ scaleY: '100%' }}
-                        exit={{ scaleY: '0%', height: '0rem' }}
-                        className="h-12 bg-[#fafafa] border-b flex justify-between items-center p-2 text-sm text-[#1b5dab] font-medium origin-top"
-                    >
-                        <button
-                            className="hover:bg-[#e9ecef] active:bg-[#dfe6f1] rounded-md p-2 px-4 transition-all duration-300"
-                            onClick={() => setFiles([])}
-                        >
-                            Cancel
-                        </button>
-                        <p className="text-[#333]">
-                            {files.length} file{files.length > 1 ? 's' : ''}{' '}
-                            selected
-                        </p>
-                        <button className="hover:bg-[#e9ecef] active:bg-[#dfe6f1] rounded-md p-2 px-4 transition-all duration-300">
-                            Add more
-                        </button>
-                    </motion.div>
-                ) : (
-                    <div></div>
-                )}
-            </AnimatePresence>
+            <View view={view} setView={setView} methods={methods} />
+            <Preview files={files} setFiles={setFiles} />
             <div className="p-2 h-full">
                 <div className="border-[#dfdfdf] border-dotted h-full w-full grid grid-rows-[1fr,auto] place-items-center border rounded-md transition-all">
-                    <div className="w-full h-full flex flex-col items-center justify-center gap-6 ">
-                        <h1 className="md:text-2xl text-center">
-                            Drop files here,{' '}
-                            <button
-                                className="text-[#3782da] hover:underline"
-                                // @ts-ignore
-                                onClick={() => inputRef.current.click()}
-                            >
-                                browse files
-                            </button>{' '}
-                            or import from:
-                        </h1>
-                        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 grid-rows-2">
-                            {methods.map(method => (
-                                <button
-                                    key={method.id}
-                                    className="flex flex-col items-center justify-center gap-1 text-sm hover:bg-[#e9ecef] active:bg-[#dfe6f1] rounded-md p-2 px-4 transition-all duration-300 mb-4 disabled:opacity-30 disabled:pointer-events-none group relative"
-                                    disabled={
-                                        !/internal|drive|onedrive/.test(
-                                            method.id,
-                                        )
-                                    }
-                                    onClick={() =>
-                                        method.id === 'internal'
-                                            ? // @ts-ignore
-                                              inputRef.current.click()
-                                            : setView(method.id)
-                                    }
-                                >
-                                    <span className="bg-white p-[6px] rounded-lg text-2xl shadow ">
-                                        {method.icon}
-                                    </span>
-                                    <span className="text-[#525252]">
-                                        {method.name}
-                                    </span>
-                                    <span className="group-disabled:block hidden absolute -bottom-2 opacity-50">
-                                        (soon)
-                                    </span>
-                                </button>
-                            ))}
-                        </div>
-                    </div>
+                    <MethodsSelector
+                        setView={setView}
+                        inputRef={inputRef}
+                        methods={methods}
+                    />
                     <p className="text-xs text-[#9d9d9d] mb-4">
                         Powered by UpUp
                     </p>
@@ -322,5 +211,3 @@ export const UpupUploader: FC<UpupUploaderProps> = ({
         </div>
     )
 }
-
-// TODO: Clean up and document code
