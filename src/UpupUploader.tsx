@@ -34,9 +34,9 @@ const methods = [
     { id: 'box', name: 'Box', icon: <BoxIcon /> },
     { id: 'dropbox', name: 'Dropbox', icon: <DropBoxIcon /> },
     { id: 'facebook', name: 'Facebook', icon: <FacebookIcon /> },
-    { id: 'drive', name: 'Google Drive', icon: <GoogleDriveIcon /> },
+    { id: 'GOOGLE_DRIVE', name: 'Google Drive', icon: <GoogleDriveIcon /> },
     { id: 'instagram', name: 'Instagram', icon: <InstagramIcon /> },
-    { id: 'onedrive', name: 'OneDrive', icon: <OneDriveIcon /> },
+    { id: 'ONE_DRIVE', name: 'OneDrive', icon: <OneDriveIcon /> },
     { id: 'unsplash', name: 'Unsplash', icon: <UnsplashIcon /> },
     { id: 'link', name: 'Link', icon: <LinkIcon /> },
     { id: 'camera', name: 'Camera', icon: <CameraIcon /> },
@@ -199,7 +199,12 @@ export const UpupUploader: FC<UpupUploaderProps> = ({
                 }
             />
 
-            <View view={view} setView={setView} methods={methods} />
+            <View
+                view={view}
+                setView={setView}
+                methods={methods}
+                components={components}
+            />
             <Preview
                 files={files}
                 setFiles={setFiles}

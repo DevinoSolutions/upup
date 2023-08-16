@@ -5,10 +5,12 @@ const View = ({
     view,
     setView,
     methods,
+    components,
 }: {
     view: string
     setView: (view: string) => void
     methods: any[]
+    components: any
 }) => {
     return (
         <AnimatePresence>
@@ -35,7 +37,7 @@ const View = ({
                     </div>
 
                     <div className="bg-[#f5f5f5] flex justify-center items-center">
-                        Soon..
+                        {components[view]}
                     </div>
                 </motion.div>
             )}

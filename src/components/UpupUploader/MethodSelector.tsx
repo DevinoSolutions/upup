@@ -27,7 +27,9 @@ const MethodsSelector = ({
                     <button
                         key={method.id}
                         className="flex flex-col items-center justify-center gap-1 text-sm hover:bg-[#e9ecef] active:bg-[#dfe6f1] rounded-md p-2 px-4 transition-all duration-300 mb-4 disabled:opacity-30 disabled:pointer-events-none group relative"
-                        disabled={!/internal|drive|onedrive/.test(method.id)}
+                        disabled={
+                            !/internal|GOOGLE_DRIVE|ONE_DRIVE/.test(method.id)
+                        }
                         onClick={() =>
                             method.id === 'internal'
                                 ? // @ts-ignore
