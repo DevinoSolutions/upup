@@ -28,6 +28,7 @@ import {
 import View from './components/UpupUploader/View'
 import MethodsSelector from './components/UpupUploader/MethodSelector'
 import Preview from './components/UpupUploader/Preview'
+import DropZone from './components/UpupUploader/DropZone'
 
 const methods = [
     { id: 'internal', name: 'My Device', icon: <MyDeviceIcon /> },
@@ -82,7 +83,9 @@ export const UpupUploader: FC<UpupUploaderProps> = ({
     const [files, setFiles] = useState<File[]>([])
     const [view, setView] = useState('internal')
     const [isAddingMore, setIsAddingMore] = useState(false)
+    const [isDragging, setIsDragging] = useState(false)
     const inputRef = useRef(null)
+    const containerRef = useRef(null)
 
     useEffect(() => {
         onChange && onChange(files)
@@ -183,8 +186,51 @@ export const UpupUploader: FC<UpupUploaderProps> = ({
         ),
     }
 
+    // Define the event handler for drag enter
+    function handleDragEnter(e: DragEvent) {
+        // Prevent default behavior
+        e.preventDefault()
+        // Check if the mouse is entering the div or its children
+        if (
+            e.target === containerRef.current ||
+            // @ts-ignore // FIXME
+            containerRef.current!.contains(e.target as Node)
+        )
+            // Show the drop zone
+            setIsDragging(true)
+    }
+
+    // Define the event handler for drag leave
+    function handleDragLeave(e: DragEvent) {
+        // Prevent default behavior
+        e.preventDefault()
+        // Check if the mouse is leaving the div or its children
+        if (
+            e.target === containerRef.current ||
+            // @ts-ignore // FIXME
+            containerRef.current.contains(e.target)
+        ) {
+            // Check if the mouse is moving to another element inside the div
+            // @ts-ignore // FIXME
+            if (!containerRef.current.contains(e.relatedTarget))
+                // Hide the drop zone
+                setIsDragging(false)
+        }
+    }
+
     return (
-        <div className="w-full max-w-[min(98svh,46rem)] bg-[#f4f4f4] h-[min(98svh,35rem)] rounded-md border flex flex-col relative overflow-hidden select-none">
+        <div
+            className="w-full max-w-[min(98svh,46rem)] bg-[#f4f4f4] h-[min(98svh,35rem)] rounded-md border flex flex-col relative overflow-hidden select-none"
+            // @ts-ignore // FIXME
+            onDragEnter={handleDragEnter}
+            // @ts-ignore // FIXME
+            onDragLeave={handleDragLeave}
+            ref={containerRef}
+        >
+            {isDragging && (
+                <DropZone setFiles={setFiles} setIsDragging={setIsDragging} />
+            )}
+
             <input
                 type="file"
                 className="absolute w-0 h-0"
