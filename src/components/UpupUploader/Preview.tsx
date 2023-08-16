@@ -1,6 +1,7 @@
 import React from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { TbX } from 'react-icons/tb'
+import { TbEdit, TbX } from 'react-icons/tb'
+import { bytesToSize } from '../../lib/bytesToSize'
 
 const Preview = ({
     files,
@@ -48,16 +49,26 @@ const Preview = ({
                         {files.map((file, i) => (
                             <div
                                 key={i}
-                                className="flex flex-col items-start h-full w-full gap-1 relative"
+                                className="flex flex-col items-start h-full w-full relative"
                             >
                                 <img
                                     src={URL.createObjectURL(file)}
                                     alt=""
                                     className="h-40 w-full rounded-md object-cover shadow"
                                 />
-                                <p className="font-medium text-xs">
-                                    {file.name}
-                                </p>
+                                <div className="flex items-center justify-between w-full">
+                                    <div>
+                                        <p className="font-medium text-xs mt-1">
+                                            {file.name}
+                                        </p>
+                                        <p className="font-medium text-[10px] text-gray-500">
+                                            {bytesToSize(file.size)}
+                                        </p>
+                                    </div>
+                                    <button>
+                                        <TbEdit />
+                                    </button>
+                                </div>
                                 <button
                                     className="bg-black rounded-full absolute -top-1 -right-1"
                                     onClick={() => removeFile(i)}
