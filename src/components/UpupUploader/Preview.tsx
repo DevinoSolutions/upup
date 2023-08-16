@@ -8,11 +8,13 @@ const Preview = ({
     setFiles,
     isAddingMore,
     setIsAddingMore,
+    handleUpload,
 }: {
     files: File[]
     setFiles: (files: File[]) => void
     isAddingMore: boolean
     setIsAddingMore: (isAddingMore: boolean) => void
+    handleUpload: () => void
 }) => {
     /**
      * Remove file from files array
@@ -99,7 +101,7 @@ const Preview = ({
                     >
                         <button
                             className="bg-green-500 hover:bg-green-600 active:bg-green-700 rounded-md p-3 px-6 transition-all duration-300"
-                            onClick={() => console.log('uploading...')}
+                            onClick={handleUpload}
                         >
                             Upload {files.length} file
                             {files.length > 1 ? 's' : ''}
