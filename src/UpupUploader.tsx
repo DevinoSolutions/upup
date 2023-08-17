@@ -12,17 +12,12 @@ import { UPLOAD_ADAPTER, UploadAdapter } from './types/UploadAdapter'
 import { compressFile } from './lib/compressFile'
 import { putObject } from './lib/putObject'
 import {
-    AudioIcon,
-    BoxIcon,
     CameraIcon,
     DropBoxIcon,
-    FacebookIcon,
     GoogleDriveIcon,
-    InstagramIcon,
     LinkIcon,
     MyDeviceIcon,
     OneDriveIcon,
-    ScreenCastIcon,
     UnsplashIcon,
 } from './components/Icons'
 import View from './components/UpupUploader/View'
@@ -32,17 +27,17 @@ import DropZone from './components/UpupUploader/DropZone'
 
 const methods = [
     { id: 'internal', name: 'My Device', icon: <MyDeviceIcon /> },
-    { id: 'box', name: 'Box', icon: <BoxIcon /> },
-    { id: 'dropbox', name: 'Dropbox', icon: <DropBoxIcon /> },
-    { id: 'facebook', name: 'Facebook', icon: <FacebookIcon /> },
     { id: 'GOOGLE_DRIVE', name: 'Google Drive', icon: <GoogleDriveIcon /> },
-    { id: 'instagram', name: 'Instagram', icon: <InstagramIcon /> },
     { id: 'ONE_DRIVE', name: 'OneDrive', icon: <OneDriveIcon /> },
+    // { id: 'box', name: 'Box', icon: <BoxIcon /> },
+    { id: 'camera', name: 'Camera', icon: <CameraIcon /> },
+    { id: 'dropbox', name: 'Dropbox', icon: <DropBoxIcon /> },
     { id: 'unsplash', name: 'Unsplash', icon: <UnsplashIcon /> },
     { id: 'link', name: 'Link', icon: <LinkIcon /> },
-    { id: 'camera', name: 'Camera', icon: <CameraIcon /> },
-    { id: 'audio', name: 'Audio', icon: <AudioIcon /> },
-    { id: 'screencast', name: 'ScreenCast', icon: <ScreenCastIcon /> },
+    // { id: 'facebook', name: 'Facebook', icon: <FacebookIcon /> },
+    // { id: 'instagram', name: 'Instagram', icon: <InstagramIcon /> },
+    // { id: 'audio', name: 'Audio', icon: <AudioIcon /> },
+    // { id: 'screencast', name: 'ScreenCast', icon: <ScreenCastIcon /> },
 ]
 
 export interface UpupUploaderProps {
@@ -220,7 +215,7 @@ export const UpupUploader: FC<UpupUploaderProps> = ({
 
     return (
         <div
-            className="w-full max-w-[min(98svh,46rem)] bg-[#f4f4f4] h-[min(98svh,35rem)] rounded-md border flex flex-col relative overflow-hidden select-none"
+            className="w-full max-w-[min(98svh,46rem)] bg-[#f4f4f4] h-[min(98svh,35rem)] rounded-md border flex flex-col relative overflow-hidden select-none dark:bg-[#1f1f1f]"
             // @ts-ignore // FIXME
             onDragEnter={handleDragEnter}
             // @ts-ignore // FIXME
@@ -268,7 +263,7 @@ export const UpupUploader: FC<UpupUploaderProps> = ({
                         methods={methods}
                     />
                     <p className="text-xs text-[#9d9d9d] mb-4">
-                        Powered by UpUp
+                        Powered by uNotes
                     </p>
                 </div>
             </div>
