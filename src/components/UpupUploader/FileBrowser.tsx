@@ -95,7 +95,7 @@ const FileBrowser = ({}: {}) => {
                                 }
                                 onClick={() => handleClick(file)}
                             >
-                                // TODO: CLEAN THIS MESS
+                                {/* // TODO: CLEAN THIS MESS */}
                                 <div className="flex items-center gap-2">
                                     <i className="text-lg">
                                         {file.children ? (
