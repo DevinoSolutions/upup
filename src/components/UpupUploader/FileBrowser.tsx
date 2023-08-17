@@ -1,6 +1,14 @@
 import { motion } from 'framer-motion'
 import React from 'react'
-import { TbFolder, TbSearch } from 'react-icons/tb'
+import {
+    TbFileText,
+    TbFileUnknown,
+    TbFolder,
+    TbMusic,
+    TbPdf,
+    TbSearch,
+    TbVideo,
+} from 'react-icons/tb'
 
 const FileBrowser = ({}: {}) => {
     1
@@ -91,12 +99,36 @@ const FileBrowser = ({}: {}) => {
                                     <i className="text-lg">
                                         {file.children ? (
                                             <TbFolder />
-                                        ) : (
+                                        ) : // check if file is image
+                                        /\.(jpe?g|png|gif|bmp|webp)$/i.test(
+                                              file.name,
+                                          ) ? (
                                             <img
                                                 src={file.url}
                                                 alt={file.name}
                                                 className="w-5 h-5 rounded-md"
                                             />
+                                        ) : // check if file is video
+                                        /\.(mp4|avi|webm|mov|mkv)$/i.test(
+                                              file.name,
+                                          ) ? (
+                                            <TbVideo />
+                                        ) : // check if file is audio
+                                        /\.(mp3|wav|ogg|flac)$/i.test(
+                                              file.name,
+                                          ) ? (
+                                            <TbMusic />
+                                        ) : // check if file is pdf
+                                        /\.(pdf)$/i.test(file.name) ? (
+                                            <TbPdf />
+                                        ) : // check if file is text
+                                        /\.(txt|docx|doc|odt|rtf)$/i.test(
+                                              file.name,
+                                          ) ? (
+                                            <TbFileText />
+                                        ) : (
+                                            // default
+                                            <TbFileUnknown />
                                         )}
                                     </i>
                                     <h1 className="text-xs">{file.name}</h1>
