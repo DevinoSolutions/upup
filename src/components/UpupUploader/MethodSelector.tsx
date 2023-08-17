@@ -11,7 +11,7 @@ const MethodsSelector = ({
 }) => {
     return (
         <div className="w-full h-full flex flex-col items-center justify-center gap-6 ">
-            <h1 className="md:text-2xl text-center">
+            <h1 className="md:text-2xl text-center dark:text-white">
                 Drop files here,{' '}
                 <button
                     className="text-[#3782da] hover:underline"

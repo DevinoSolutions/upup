@@ -7,14 +7,13 @@ const Preview = ({
     files,
     setFiles,
     isAddingMore,
-    setIsAddingMore,
-    handleUpload,
+    setIsAddingMore, // handleUpload,
 }: {
     files: File[]
     setFiles: (files: File[]) => void
     isAddingMore: boolean
     setIsAddingMore: (isAddingMore: boolean) => void
-    handleUpload: () => void
+    // handleUpload: () => void
 }) => {
     /**
      * Remove file from files array
@@ -30,26 +29,25 @@ const Preview = ({
                         initial={{ scaleY: '0%' }}
                         animate={{ scaleY: '100%' }}
                         exit={{ scaleY: '0%' }}
-                        className="flex justify-between items-center p-2 border-b bg-[#fafafa] text-[#1b5dab] origin-top pointer-events-auto"
+                        className="flex justify-between items-center p-2 border-b bg-[#fafafa] text-[#1b5dab] dark:bg-[#1f1f1f] dark:text-[#fafafa] origin-top pointer-events-auto"
                     >
                         <button
-                            className="hover:bg-[#e9ecef] active:bg-[#dfe6f1] rounded-md p-2 px-4 transition-all duration-300"
+                            className="hover:bg-[#e9ecef] hover:text-[#1f1f1f] active:bg-[#dfe6f1] rounded-md p-2 px-4 transition-all duration-300"
                             onClick={() => setFiles([])}
                         >
                             Cancel
                         </button>
-                        <p className="text-[#333]">
+                        <p className="text-[#333] dark:text-[#fafafa]">
                             {files.length} file{files.length > 1 ? 's' : ''}{' '}
                             selected
                         </p>
                         <button
-                            className="hover:bg-[#e9ecef] active:bg-[#dfe6f1] rounded-md p-2 px-4 transition-all duration-300"
+                            className="hover:bg-[#e9ecef] hover:text-[#1f1f1f] active:bg-[#dfe6f1] rounded-md p-2 px-4 transition-all duration-300"
                             onClick={() => setIsAddingMore(!isAddingMore)}
                         >
                             {isAddingMore ? 'Show Previews' : 'Add more'}
                         </button>
                     </motion.div>
-
                     <motion.div
                         initial={{ scaleY: '0%' }}
                         animate={{
@@ -58,12 +56,12 @@ const Preview = ({
                             pointerEvents: isAddingMore ? 'none' : 'all',
                         }}
                         exit={{ scaleY: '0%' }}
-                        className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 p-4 border-b bg-[#f4f4f4] origin-bottom gap-4 overflow-y-scroll"
+                        className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 p-4 border-b bg-[#f4f4f4] dark:bg-[#1f1f1f] dark:text-[#fafafa] origin-bottom gap-4 overflow-y-scroll origin-top pointer-events-auto"
                     >
                         {files.map((file, i) => (
                             <div
                                 key={i}
-                                className="flex flex-col items-start h-full w-full relative"
+                                className="flex flex-col items-start h-full w-full relative dark:bg-[#1f1f1f] dark:text-[#fafafa]"
                             >
                                 <img
                                     src={URL.createObjectURL(file)}
@@ -92,21 +90,21 @@ const Preview = ({
                             </div>
                         ))}
                     </motion.div>
-
-                    <motion.div
-                        initial={{ scaleY: '0%' }}
-                        animate={{ scaleY: '100%' }}
-                        exit={{ scaleY: '0%' }}
-                        className="flex justify-start items-center p-3 border-b bg-[#fafafa] text-white origin-bottom pointer-events-auto"
-                    >
-                        <button
-                            className="bg-green-500 hover:bg-green-600 active:bg-green-700 rounded-md p-3 px-6 transition-all duration-300"
-                            onClick={handleUpload}
-                        >
-                            Upload {files.length} file
-                            {files.length > 1 ? 's' : ''}
-                        </button>
-                    </motion.div>
+                    {/*FIXME : KEEP THIS BUTTON ONE DAY WE GONNA NEED IT*/}
+                    {/*<motion.div*/}
+                    {/*    initial={{ scaleY: '0%' }}*/}
+                    {/*    animate={{ scaleY: '100%' }}*/}
+                    {/*    exit={{ scaleY: '0%' }}*/}
+                    {/*    className="flex justify-start items-center p-3 border-b bg-[#fafafa] text-white origin-bottom pointer-events-auto"*/}
+                    {/*>*/}
+                    {/*    <button*/}
+                    {/*        className="bg-green-500 hover:bg-green-600 active:bg-green-700 rounded-md p-3 px-6 transition-all duration-300"*/}
+                    {/*        onClick={handleUpload}*/}
+                    {/*    >*/}
+                    {/*        Upload {files.length} file*/}
+                    {/*        {files.length > 1 ? 's' : ''}*/}
+                    {/*    </button>*/}
+                    {/*</motion.div>*/}
                 </motion.div>
             )}
         </AnimatePresence>
