@@ -253,7 +253,7 @@ export const UpupUploader: FC<UpupUploaderProps> = ({
                 setFiles={setFiles}
                 isAddingMore={isAddingMore}
                 setIsAddingMore={setIsAddingMore}
-                handleUpload={handleUpload}
+                // handleUpload={handleUpload}
             />
             <div className="p-2 h-full">
                 <div className="border-[#dfdfdf] border-dotted h-full w-full grid grid-rows-[1fr,auto] place-items-center border rounded-md transition-all">
