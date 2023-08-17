@@ -256,7 +256,7 @@ export const UpupUploader: FC<UpupUploaderProps> = ({
                 // handleUpload={handleUpload}
             />
             <div className="p-2 h-full">
-                <div className="border-[#dfdfdf] border-dotted h-full w-full grid grid-rows-[1fr,auto] place-items-center border rounded-md transition-all">
+                <div className="border-[#dfdfdf] border-dashed h-full w-full grid grid-rows-[1fr,auto] place-items-center border rounded-md transition-all">
                     <MethodsSelector
                         setView={setView}
                         inputRef={inputRef}
