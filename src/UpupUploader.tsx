@@ -247,6 +247,7 @@ export const UpupUploader: FC<UpupUploaderProps> = ({
                 setView={setView}
                 methods={methods}
                 components={components}
+                setFiles={setFiles}
             />
             <Preview
                 files={files}
