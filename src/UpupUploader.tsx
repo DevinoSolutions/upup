@@ -24,6 +24,7 @@ import View from './components/UpupUploader/View'
 import MethodsSelector from './components/UpupUploader/MethodSelector'
 import Preview from './components/UpupUploader/Preview'
 import DropZone from './components/UpupUploader/DropZone'
+import { AnimatePresence } from 'framer-motion'
 
 const methods = [
     { id: 'internal', name: 'My Device', icon: <MyDeviceIcon /> },
@@ -222,10 +223,14 @@ export const UpupUploader: FC<UpupUploaderProps> = ({
             onDragLeave={handleDragLeave}
             ref={containerRef}
         >
-            {isDragging && (
-                <DropZone setFiles={setFiles} setIsDragging={setIsDragging} />
-            )}
-
+            <AnimatePresence>
+                {isDragging && (
+                    <DropZone
+                        setFiles={setFiles}
+                        setIsDragging={setIsDragging}
+                    />
+                )}
+            </AnimatePresence>
             <input
                 type="file"
                 className="absolute w-0 h-0"
