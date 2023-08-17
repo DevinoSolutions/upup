@@ -1,5 +1,11 @@
 # @bassem97/upup
 
+## 2.0.1
+
+### Patch Changes
+
+-   05907be: Remove upload button
+
 ## 2.0.0
 
 ### Major Changes
