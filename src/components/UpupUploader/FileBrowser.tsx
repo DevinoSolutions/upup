@@ -89,3 +89,68 @@ const FileBrowser = ({}: {}) => {
 }
 
 export default FileBrowser
+
+// mock data
+const data = {
+    id: 'gdrive',
+    name: 'Google Drive',
+    url: null,
+    children: [
+        {
+            id: '1',
+            name: 'Folder 1',
+            url: null,
+            children: [
+                {
+                    id: '1.1erg',
+                    name: 'file1.1',
+                    url: 'https://picsum.photos/200',
+                    children: [
+                        {
+                            id: '1.1.1erg',
+                            name: 'file1.1.1',
+                            url: 'https://picsum.photos/200',
+                            children: null,
+                        },
+                        {
+                            id: '2rgerg',
+                            name: 'File 1',
+                            url: 'https://picsum.photos/200',
+                            children: null,
+                        },
+                        {
+                            id: '3ergerg',
+                            name: 'File 2',
+                            url: 'https://picsum.photos/200',
+                            children: null,
+                        },
+                    ],
+                },
+                {
+                    id: '2htyj',
+                    name: 'File 1',
+                    url: 'https://picsum.photos/200',
+                    children: null,
+                },
+                {
+                    id: '3tyj',
+                    name: 'File 2',
+                    url: 'https://picsum.photos/200',
+                    children: null,
+                },
+            ],
+        },
+        {
+            id: '2yii',
+            name: 'File 1',
+            url: 'https://picsum.photos/200',
+            children: null,
+        },
+        {
+            id: '3uil',
+            name: 'File 2',
+            url: 'https://picsum.photos/200',
+            children: null,
+        },
+    ],
+}
