@@ -1,16 +1,19 @@
 import React from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
+import FileBrowser from './FileBrowser'
 
 const View = ({
     view,
     setView,
     methods,
     components,
+    setFiles,
 }: {
     view: string
     setView: (view: string) => void
     methods: any[]
     components: any
+    setFiles: React.Dispatch<React.SetStateAction<File[]>>
 }) => {
     return (
         <AnimatePresence>
@@ -37,7 +40,8 @@ const View = ({
                     </div>
 
                     <div className="bg-[#f5f5f5] flex justify-center items-center dark:bg-[#1f1f1f] dark:text-[#fafafa]">
-                        {components[view]}
+                        {/* {components[view]} */}
+                        <FileBrowser setFiles={setFiles} setView={setView} />
                     </div>
                 </motion.div>
             )}

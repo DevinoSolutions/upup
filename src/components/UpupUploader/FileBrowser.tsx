@@ -15,7 +15,7 @@ const FileBrowser = ({
     setView,
 }: {
     setFiles: React.Dispatch<React.SetStateAction<File[]>>
-    setView: React.Dispatch<React.SetStateAction<string>>
+    setView: (view: string) => void
 }) => {
     1
     const [path, setPath] = React.useState<any[]>([data])
