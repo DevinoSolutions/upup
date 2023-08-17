@@ -1,4 +1,4 @@
-import { motion } from 'framer-motion'
+import { AnimatePresence, motion } from 'framer-motion'
 import React from 'react'
 import {
     TbFileText,
@@ -10,7 +10,13 @@ import {
     TbVideo,
 } from 'react-icons/tb'
 
-const FileBrowser = ({}: {}) => {
+const FileBrowser = ({
+    setFiles,
+    setView,
+}: {
+    setFiles: React.Dispatch<React.SetStateAction<File[]>>
+    setView: React.Dispatch<React.SetStateAction<string>>
+}) => {
     1
     const [path, setPath] = React.useState<any[]>([data])
     const [selectedFiles, setSelectedFiles] = React.useState<any[]>([])
@@ -25,7 +31,7 @@ const FileBrowser = ({}: {}) => {
     }
 
     return (
-        <div className="h-full w-full grid grid-rows-[auto,auto,1fr]">
+        <div className="h-full w-full grid grid-rows-[auto,auto,1fr,auto] bg-white">
             <div className="h-12 bg-[#fafafa] text-[#333] border-b flex justify-between items-center p-2 text-xs font-medium dark:bg-[#1f1f1f] dark:text-[#fafafa]">
                 <div className="h p-2 px-4 flex gap-1">
                     {path.map((p, i) => (
@@ -77,7 +83,15 @@ const FileBrowser = ({}: {}) => {
                                         ? '#e9ecef99'
                                         : '#e9ecef00',
                                 }}
-                                animate={{ opacity: 1, y: 0 }}
+                                animate={{
+                                    opacity: 1,
+                                    y: 0,
+                                    backgroundColor: selectedFiles.includes(
+                                        file.id,
+                                    )
+                                        ? '#e9ecef99'
+                                        : '#e9ecef00',
+                                }}
                                 whileHover={{ backgroundColor: '#e9ecef' }}
                                 whileTap={{ backgroundColor: '#dfe6f1' }}
                                 exit={{ opacity: 0, y: 10 }}
@@ -139,6 +153,34 @@ const FileBrowser = ({}: {}) => {
                     )}
                 </ul>
             </div>
+
+            <AnimatePresence>
+                {selectedFiles.length > 0 && (
+                    <motion.div
+                        initial={{ y: '100%', height: 0 }}
+                        animate={{ y: '0%', height: 'auto' }}
+                        exit={{ y: '100%', height: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="border-t bg-white flex items-center justify-start gap-4 p-4 py-2 origin-bottom"
+                    >
+                        <button
+                            className="bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white font-medium rounded-md p-3 px-5 transition-all duration-300"
+                            onClick={() => {
+                                setFiles(prev => [...prev, ...selectedFiles])
+                                setView('internal')
+                            }}
+                        >
+                            Add {selectedFiles.length} files
+                        </button>
+                        <button
+                            className="hover:underline"
+                            onClick={() => setSelectedFiles([])}
+                        >
+                            Cancel
+                        </button>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     )
 }
