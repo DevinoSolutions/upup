@@ -10,7 +10,7 @@ module.exports = {
                 plugins: [
                     tailwindcss({
                         content: ['./src/**/*.{tsx,ts,css}'],
-                        darkMode: 'class', // or 'media' or 'class'
+                        // darkMode: false, // or 'media' or 'class'
                         theme: { extend: {} },
                         plugins: [],
                     }),
