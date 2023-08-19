@@ -1,5 +1,11 @@
 # @bassem97/upup
 
+## 2.0.2
+
+### Patch Changes
+
+-   e3c24dc: Fix tailwind not getting styles from parent
+
 ## 2.0.1
 
 ### Patch Changes
