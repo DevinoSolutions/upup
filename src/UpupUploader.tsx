@@ -25,6 +25,7 @@ import MethodsSelector from './components/UpupUploader/MethodSelector'
 import Preview from './components/UpupUploader/Preview'
 import DropZone from './components/UpupUploader/DropZone'
 import { AnimatePresence } from 'framer-motion'
+import UrlUploader from './components/UrlUploader'
 
 const methods = [
     { id: 'internal', name: 'My Device', icon: <MyDeviceIcon /> },
@@ -34,7 +35,7 @@ const methods = [
     { id: 'camera', name: 'Camera', icon: <CameraIcon /> },
     { id: 'dropbox', name: 'Dropbox', icon: <DropBoxIcon /> },
     { id: 'unsplash', name: 'Unsplash', icon: <UnsplashIcon /> },
-    { id: 'link', name: 'Link', icon: <LinkIcon /> },
+    { id: 'LINK', name: 'Link', icon: <LinkIcon /> },
     // { id: 'facebook', name: 'Facebook', icon: <FacebookIcon /> },
     // { id: 'instagram', name: 'Instagram', icon: <InstagramIcon /> },
     // { id: 'audio', name: 'Audio', icon: <AudioIcon /> },
@@ -179,6 +180,9 @@ export const UpupUploader: FC<UpupUploaderProps> = ({
                 setFiles={setFiles}
                 setView={setView}
             />
+        ),
+        [UploadAdapter.LINK]: (
+            <UrlUploader setFiles={setFiles} setView={setView} />
         ),
     }
 
