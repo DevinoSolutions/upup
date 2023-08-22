@@ -1,5 +1,11 @@
 # @bassem97/upup
 
+## 2.1.0
+
+### Minor Changes
+
+-   41d74b1: Add upload with link and enhance upload files logic
+
 ## 2.0.2
 
 ### Patch Changes
