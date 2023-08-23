@@ -12,13 +12,13 @@ export default function CameraUploader({
     setView: (view: string) => void
 }) {
     const webcamRef = useRef(null) as any
-    const [imgSrc, setImgSrc] = useState(null)
+    const [imgSrc, setImgSrc] = useState('')
     const [url, setUrl] = useState('')
 
     const { image, setTrigger } = useUrl(url)
 
     const capture = useCallback(() => {
-        const imageSrc = webcamRef.current?.getScreenshot()
+        const imageSrc = webcamRef.current.getScreenshot()
         setImgSrc(imageSrc) // show preview
         setUrl(imageSrc) // send to useUrl to convert to File
         setTrigger(true) // trigger conversion
@@ -43,7 +43,7 @@ export default function CameraUploader({
                 {imgSrc && (
                     <>
                         <button
-                            onClick={() => setImgSrc(null)}
+                            onClick={() => setImgSrc('')}
                             className="bg-[#272727] rounded-full absolute -top-2 -right-2 text-xl text-[#f5f5f5] p-1 z-10"
                         >
                             <TbX />
