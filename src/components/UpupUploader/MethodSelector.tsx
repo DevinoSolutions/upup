@@ -28,7 +28,7 @@ const MethodsSelector = ({
                         key={method.id}
                         className="flex flex-col items-center justify-center gap-1 text-sm dark:hover:bg-[#282828] hover:bg-[#e9ecef] dark:active:bg-[#333] active:bg-[#dfe6f1] rounded-md p-2 px-4 transition-all duration-300 mb-4 disabled:opacity-30 disabled:pointer-events-none group relative"
                         disabled={
-                            !/internal|GOOGLE_DRIVE|ONE_DRIVE|LINK/.test(
+                            !/internal|GOOGLE_DRIVE|ONE_DRIVE|LINK|CAMERA/.test(
                                 method.id,
                             )
                         }
