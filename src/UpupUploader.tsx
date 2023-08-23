@@ -34,6 +34,7 @@ import Preview from './components/UpupUploader/Preview'
 import DropZone from './components/UpupUploader/DropZone'
 import { AnimatePresence } from 'framer-motion'
 import UrlUploader from './components/UrlUploader'
+import CameraUploader from './components/CameraUploader'
 
 const methods = [
     { id: 'internal', name: 'My Device', icon: <MyDeviceIcon /> },
@@ -41,7 +42,7 @@ const methods = [
     { id: 'ONE_DRIVE', name: 'OneDrive', icon: <OneDriveIcon /> },
     // { id: 'box', name: 'Box', icon: <BoxIcon /> },
     { id: 'LINK', name: 'Link', icon: <LinkIcon /> },
-    { id: 'camera', name: 'Camera', icon: <CameraIcon /> },
+    { id: 'CAMERA', name: 'Camera', icon: <CameraIcon /> },
     { id: 'dropbox', name: 'Dropbox', icon: <DropBoxIcon /> },
     { id: 'unsplash', name: 'Unsplash', icon: <UnsplashIcon /> },
     // { id: 'facebook', name: 'Facebook', icon: <FacebookIcon /> },
@@ -203,6 +204,9 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
             ),
             [UploadAdapter.LINK]: (
                 <UrlUploader setFiles={setFiles} setView={setView} />
+            ),
+            [UploadAdapter.CAMERA]: (
+                <CameraUploader setFiles={setFiles} setView={setView} />
             ),
         }
 
