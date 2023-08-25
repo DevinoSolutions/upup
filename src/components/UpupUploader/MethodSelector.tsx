@@ -15,8 +15,7 @@ const MethodsSelector = ({
                 Drop files here,{' '}
                 <button
                     className="text-[#3782da] hover:underline"
-                    // @ts-ignore
-                    onClick={() => inputRef.current.click()}
+                    onClick={() => inputRef?.current!.click()}
                 >
                     browse files
                 </button>{' '}
@@ -34,8 +33,7 @@ const MethodsSelector = ({
                         }
                         onClick={() =>
                             method.id === 'internal'
-                                ? // @ts-ignore
-                                  inputRef.current.click()
+                                ? inputRef?.current!.click()
                                 : setView(method.id)
                         }
                     >
