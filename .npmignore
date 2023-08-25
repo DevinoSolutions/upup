@@ -11,3 +11,4 @@ tsconfig.json
 postcss.config.js
 tailwind.config.js
 tsdx.config.js
+dist/hooks/useUpup.d.ts
