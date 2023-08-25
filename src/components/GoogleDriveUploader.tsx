@@ -1,9 +1,9 @@
-import React, { FC } from 'react'
-import useLoadGAPI from '../hooks/useLoadGAPI'
-import { compressFile } from '../lib/compressFile'
-import { BaseConfigs } from '../types/BaseConfigs'
-import { GoogleConfigs } from '../types/GoogleConfigs'
-import styled from 'styled-components'
+import React, { FC } from "react";
+import useLoadGAPI from "../hooks/useLoadGAPI";
+import { compressFile } from "../lib/compressFile";
+import { BaseConfigs } from "../types/BaseConfigs";
+import { GoogleConfigs } from "../types/GoogleConfigs";
+import styled from "styled-components";
 
 const GoogleDriveButton = styled.button`
     display: flex;
@@ -49,12 +49,14 @@ export interface Props {
  * @param google_api_key api key from Google Cloud Platform
  * @param google_client_id client id from Google Cloud Platform
  * @param toBeCompressed whether the user want to compress the file before uploading it or not. Default value is false
+ * @param multiple whether the user want to upload multiple files or not. Default value is false
  * @param setFiles return the files to the parent component
+ * @param setView return the view to the parent component
  * @constructor
  */
 export const GoogleDriveUploader: FC<Props> = ({
     googleConfigs: { google_app_id, google_api_key, google_client_id },
-    baseConfigs: { toBeCompressed },
+    baseConfigs: { toBeCompressed, multiple },
     setFiles,
     setView,
 }: Props) => {
@@ -66,17 +68,26 @@ export const GoogleDriveUploader: FC<Props> = ({
     const google = (window as any).google
 
     /**
-     * Get the access token
+     * Show the file picker once authentication has been done.
+     * @private
      */
     const showPicker = async () => {
-        const picker = new google.picker.PickerBuilder()
-            .addView(google.picker.ViewId.DOCS)
+        const view = new google.picker.DocsView()
+            .setMimeTypes('image/png,image/jpeg,image/jpg,application/pdf')
+            .setMode(google.picker.DocsViewMode.LIST)
+
+        const pickerBuilder = new google.picker.PickerBuilder()
+
+        multiple && pickerBuilder.enableFeature(google.picker.Feature.MULTISELECT_ENABLED)
+
+        pickerBuilder
+            .addView(view)
             .setOAuthToken(accessToken)
             .setDeveloperKey(google_api_key)
             .setAppId(google_app_id)
             .setCallback(pickerCallback)
             .build()
-        picker.setVisible(true)
+            .setVisible(true)
     }
 
     /**
