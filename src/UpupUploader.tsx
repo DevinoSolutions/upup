@@ -267,10 +267,11 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
                     onChange={e =>
                         setFiles(files =>
                             isAddingMore
-                                ? // @ts-ignore // FIXME
-                                  [...files, ...e.target.files]
-                                : // @ts-ignore // FIXME
-                                  [...e.target.files],
+                                ? [
+                                      ...files,
+                                      ...Array.from(e.target.files as FileList),
+                                  ]
+                                : [...Array.from(e.target.files as FileList)],
                         )
                     }
                 />
