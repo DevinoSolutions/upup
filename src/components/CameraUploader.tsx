@@ -70,6 +70,7 @@ export default function CameraUploader({
                         setFiles((files: File[]) => [...files, image])
                         setView('internal')
                     }}
+                    disabled={!image}
                 >
                     Upload
                 </button>
