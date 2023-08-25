@@ -4,9 +4,7 @@ import React, {
     forwardRef,
     LegacyRef,
     RefAttributes,
-    useEffect,
     useImperativeHandle,
-    useRef,
     useState,
 } from 'react'
 import { OneDriveConfigs } from './types/OneDriveConfigs'
@@ -36,6 +34,7 @@ import { AnimatePresence } from 'framer-motion'
 import UrlUploader from './components/UrlUploader'
 import CameraUploader from './components/CameraUploader'
 import useDragAndDrop from './hooks/useDragAndDrop'
+import useAddMore from './hooks/useAddMore'
 
 const methods = [
     { id: 'internal', name: 'My Device', icon: <MyDeviceIcon /> },
@@ -90,8 +89,6 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
 
         const [files, setFiles] = useState<File[]>([])
         const [view, setView] = useState('internal')
-        const [isAddingMore, setIsAddingMore] = useState(false)
-        const inputRef = useRef<HTMLInputElement>(null)
 
         const {
             isDragging,
@@ -101,10 +98,10 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
             containerRef,
         } = useDragAndDrop()
 
-        useEffect(() => {
-            onChange && onChange(files)
-            setIsAddingMore(false)
-        }, [files])
+        const { isAddingMore, setIsAddingMore, inputRef } = useAddMore(
+            files,
+            onChange,
+        )
 
         /**
          * Expose the handleUpload function to the parent component
