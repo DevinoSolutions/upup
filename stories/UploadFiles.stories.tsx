@@ -1,13 +1,11 @@
-import React from 'react'
 import { Meta, Story } from '@storybook/react'
-import { InternalUploader } from '../src/components/InternalUploader'
 import { UPLOAD_ADAPTER, UploadAdapter, UpupUploader } from '../src'
 import useUpup from '../src/hooks/useUpup'
 import { UpupUploaderProps } from '../src/UpupUploader'
 
 const meta: Meta = {
     title: 'Upload files',
-    component: InternalUploader,
+    component: UpupUploader,
     argTypes: {},
     parameters: {
         controls: { expanded: true },

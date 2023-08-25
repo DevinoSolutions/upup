@@ -9,7 +9,6 @@ import React, {
     useState,
 } from 'react'
 import { OneDriveConfigs } from './types/OneDriveConfigs'
-import { InternalUploader } from './components/InternalUploader'
 import { GoogleDriveUploader } from './components/GoogleDriveUploader'
 import OneDriveUploader from './components/OneDriveUploader'
 import { CloudStorageConfigs } from './types/CloudStorageConfigs'
@@ -85,11 +84,7 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
             oneDriveConfigs,
         } = props
         const { bucket, s3Configs } = cloudStorageConfigs
-        const {
-            toBeCompressed = false,
-            multiple = false,
-            onChange,
-        } = baseConfigs
+        const { toBeCompressed = false, onChange } = baseConfigs
 
         const [files, setFiles] = useState<File[]>([])
         const [view, setView] = useState('internal')
@@ -180,13 +175,6 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
          *  the upload adapters (internal, google drive, one drive)
          */
         const components = {
-            [UploadAdapter.INTERNAL]: (
-                <InternalUploader
-                    setFiles={setFiles}
-                    files={files}
-                    multiple={multiple}
-                />
-            ),
             [UploadAdapter.GOOGLE_DRIVE]: (
                 <GoogleDriveUploader
                     googleConfigs={googleConfigs as GoogleConfigs}
@@ -211,7 +199,9 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
         }
 
         // Define the event handler for drag enter
-        function handleDragEnter(e: DragEvent) {
+        const handleDragEnter = (
+            e: React.MouseEvent<HTMLDivElement, DragEvent>,
+        ) => {
             // Prevent default behavior
             e.preventDefault()
             // Check if the mouse is entering the div or its children
@@ -225,7 +215,9 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
         }
 
         // Define the event handler for drag leave
-        function handleDragLeave(e: DragEvent) {
+        const handleDragLeave = (
+            e: React.MouseEvent<HTMLDivElement, DragEvent>,
+        ) => {
             // Prevent default behavior
             e.preventDefault()
             // Check if the mouse is leaving the div or its children
@@ -245,9 +237,7 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
         return (
             <div
                 className="w-full max-w-[min(98svh,46rem)] bg-[#f4f4f4] h-[min(98svh,35rem)] rounded-md border flex flex-col relative overflow-hidden select-none dark:bg-[#1f1f1f]"
-                // @ts-ignore // FIXME
                 onDragEnter={handleDragEnter}
-                // @ts-ignore // FIXME
                 onDragLeave={handleDragLeave}
                 ref={containerRef}
             >
