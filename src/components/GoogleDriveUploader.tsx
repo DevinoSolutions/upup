@@ -1,9 +1,9 @@
-import React, { FC } from "react";
-import useLoadGAPI from "../hooks/useLoadGAPI";
-import { compressFile } from "../lib/compressFile";
-import { BaseConfigs } from "../types/BaseConfigs";
-import { GoogleConfigs } from "../types/GoogleConfigs";
-import styled from "styled-components";
+import React, { FC } from 'react'
+import useLoadGAPI from '../hooks/useLoadGAPI'
+import { compressFile } from '../lib/compressFile'
+import { BaseConfigs } from '../types/BaseConfigs'
+import { GoogleConfigs } from '../types/GoogleConfigs'
+import styled from 'styled-components'
 
 const GoogleDriveButton = styled.button`
     display: flex;
@@ -75,10 +75,14 @@ export const GoogleDriveUploader: FC<Props> = ({
         const view = new google.picker.DocsView()
             .setMimeTypes('image/png,image/jpeg,image/jpg,application/pdf')
             .setMode(google.picker.DocsViewMode.LIST)
+            .setIncludeFolders(true)
 
         const pickerBuilder = new google.picker.PickerBuilder()
 
-        multiple && pickerBuilder.enableFeature(google.picker.Feature.MULTISELECT_ENABLED)
+        multiple &&
+            pickerBuilder.enableFeature(
+                google.picker.Feature.MULTISELECT_ENABLED,
+            )
 
         pickerBuilder
             .addView(view)
