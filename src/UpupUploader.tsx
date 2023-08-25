@@ -2,6 +2,7 @@ import React, {
     FC,
     ForwardedRef,
     forwardRef,
+    LegacyRef,
     RefAttributes,
     useEffect,
     useImperativeHandle,
@@ -34,6 +35,7 @@ import DropZone from './components/UpupUploader/DropZone'
 import { AnimatePresence } from 'framer-motion'
 import UrlUploader from './components/UrlUploader'
 import CameraUploader from './components/CameraUploader'
+import useDragAndDrop from './hooks/useDragAndDrop'
 
 const methods = [
     { id: 'internal', name: 'My Device', icon: <MyDeviceIcon /> },
@@ -89,9 +91,15 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
         const [files, setFiles] = useState<File[]>([])
         const [view, setView] = useState('internal')
         const [isAddingMore, setIsAddingMore] = useState(false)
-        const [isDragging, setIsDragging] = useState(false)
-        const inputRef = useRef(null)
-        const containerRef = useRef(null)
+        const inputRef = useRef<HTMLInputElement>(null)
+
+        const {
+            isDragging,
+            setIsDragging,
+            handleDragEnter,
+            handleDragLeave,
+            containerRef,
+        } = useDragAndDrop()
 
         useEffect(() => {
             onChange && onChange(files)
@@ -198,48 +206,12 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
             ),
         }
 
-        // Define the event handler for drag enter
-        const handleDragEnter = (
-            e: React.MouseEvent<HTMLDivElement, DragEvent>,
-        ) => {
-            // Prevent default behavior
-            e.preventDefault()
-            // Check if the mouse is entering the div or its children
-            if (
-                e.target === containerRef.current ||
-                // @ts-ignore // FIXME
-                containerRef.current!.contains(e.target as Node)
-            )
-                // Show the drop zone
-                setIsDragging(true)
-        }
-
-        // Define the event handler for drag leave
-        const handleDragLeave = (
-            e: React.MouseEvent<HTMLDivElement, DragEvent>,
-        ) => {
-            // Prevent default behavior
-            e.preventDefault()
-            // Check if the mouse is leaving the div or its children
-            if (
-                e.target === containerRef.current ||
-                // @ts-ignore // FIXME
-                containerRef.current.contains(e.target)
-            ) {
-                // Check if the mouse is moving to another element inside the div
-                // @ts-ignore // FIXME
-                if (!containerRef.current.contains(e.relatedTarget))
-                    // Hide the drop zone
-                    setIsDragging(false)
-            }
-        }
-
         return (
             <div
                 className="w-full max-w-[min(98svh,46rem)] bg-[#f4f4f4] h-[min(98svh,35rem)] rounded-md border flex flex-col relative overflow-hidden select-none dark:bg-[#1f1f1f]"
                 onDragEnter={handleDragEnter}
                 onDragLeave={handleDragLeave}
-                ref={containerRef}
+                ref={containerRef as LegacyRef<HTMLDivElement>}
             >
                 <AnimatePresence>
                     {isDragging && (
