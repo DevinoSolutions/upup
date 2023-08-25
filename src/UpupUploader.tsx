@@ -195,6 +195,7 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
             [UploadAdapter.ONE_DRIVE]: (
                 <OneDriveUploader
                     oneDriveConfigs={oneDriveConfigs as OneDriveConfigs}
+                    baseConfigs={baseConfigs}
                     setFiles={setFiles}
                     setView={setView}
                 />

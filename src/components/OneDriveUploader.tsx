@@ -6,6 +6,7 @@ import {
     OneDriveValue,
 } from '../types/OneDriveConfigs'
 import styled from 'styled-components'
+import { BaseConfigs } from '../types/BaseConfigs'
 
 const OneDriveButton = styled.button`
     display: flex;
@@ -38,6 +39,7 @@ const OneDriveLogo = styled.img`
     margin-right: 8px;
 `
 interface Props {
+    baseConfigs: BaseConfigs
     oneDriveConfigs: OneDriveConfigs
     setFiles: Dispatch<SetStateAction<File[]>>
     setView: Dispatch<SetStateAction<string>>
@@ -50,12 +52,13 @@ interface Props {
  * @constructor
  */
 const OneDriveUploader: FC<Props> = ({
+    baseConfigs: { multiple: multiSelect },
     oneDriveConfigs,
     setFiles,
     setView,
 }: Props) => {
     const { isLoaded } = useLoadOdAPI()
-    const { multiSelect, onedrive_client_id: clientId } = oneDriveConfigs
+    const { onedrive_client_id: clientId, redirectUri } = oneDriveConfigs
 
     /**
      * Process the response from the one drive
@@ -105,10 +108,10 @@ const OneDriveUploader: FC<Props> = ({
             multiSelect,
             openInNewWindow: true,
             advanced: {
-                //     redirectUri: 'http://localhost:3000',
+                redirectUri,
                 filter: '.jpg,.png,.pdf,.docx,.xlsx,.pptx',
                 queryParameters: 'select=id,name,size,file,folder',
-                //     scopes: 'files.readwrite.all',
+                scopes: 'files.readwrite.all',
             },
             success: (response: OneDriveResponse) => {
                 /**

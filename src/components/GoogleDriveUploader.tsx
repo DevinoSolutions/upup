@@ -1,6 +1,5 @@
 import React, { FC } from 'react'
 import useLoadGAPI from '../hooks/useLoadGAPI'
-import { compressFile } from '../lib/compressFile'
 import { BaseConfigs } from '../types/BaseConfigs'
 import { GoogleConfigs } from '../types/GoogleConfigs'
 import styled from 'styled-components'
@@ -56,7 +55,7 @@ export interface Props {
  */
 export const GoogleDriveUploader: FC<Props> = ({
     googleConfigs: { google_app_id, google_api_key, google_client_id },
-    baseConfigs: { toBeCompressed, multiple },
+    baseConfigs: { multiple },
     setFiles,
     setView,
 }: Props) => {
@@ -143,13 +142,6 @@ export const GoogleDriveUploader: FC<Props> = ({
                 )
             }
 
-            if (toBeCompressed) {
-                // Compress the file
-                fileToUpload = await compressFile({
-                    element: response,
-                    element_name: document[google.picker.Document.NAME],
-                })
-            }
             // Read the file content as a Buffer
             else
                 fileToUpload = await response
