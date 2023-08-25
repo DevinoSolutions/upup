@@ -85,7 +85,11 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
             oneDriveConfigs,
         } = props
         const { bucket, s3Configs } = cloudStorageConfigs
-        const { toBeCompressed = false, onChange } = baseConfigs
+        const {
+            toBeCompressed = false,
+            onChange,
+            multiple = false,
+        } = baseConfigs
 
         const [files, setFiles] = useState<File[]>([])
         const [view, setView] = useState('internal')
@@ -171,7 +175,7 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
         }
 
         /**
-         * Get the client
+         * Get the client instance
          */
         const client = getClient(s3Configs)
 
@@ -191,6 +195,7 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
             [UploadAdapter.ONE_DRIVE]: (
                 <OneDriveUploader
                     oneDriveConfigs={oneDriveConfigs as OneDriveConfigs}
+                    baseConfigs={baseConfigs}
                     setFiles={setFiles}
                     setView={setView}
                 />
@@ -222,7 +227,7 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
                     type="file"
                     className="absolute w-0 h-0"
                     ref={inputRef}
-                    multiple
+                    multiple={multiple}
                     onChange={e =>
                         setFiles(files =>
                             isAddingMore

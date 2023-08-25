@@ -98,7 +98,7 @@ const useUpup: (props?: Props) => {
 
     const oneDriveConfigs: OneDriveConfigs = {
         onedrive_client_id,
-        multiSelect: false,
+        redirectUri: window.location.href,
     }
 
     return {
