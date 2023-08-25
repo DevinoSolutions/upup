@@ -1,5 +1,11 @@
 # @bassem97/upup
 
+## 2.2.0
+
+### Minor Changes
+
+-   bbfd8b6: Add multiple file selection & Various tweaks
+
 ## 2.1.0
 
 ### Minor Changes
