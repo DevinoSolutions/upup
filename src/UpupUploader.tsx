@@ -15,8 +15,6 @@ import { BaseConfigs } from './types/BaseConfigs'
 import { GoogleConfigs } from './types/GoogleConfigs'
 import { getClient } from './lib/getClient'
 import { UPLOAD_ADAPTER, UploadAdapter } from './types/UploadAdapter'
-import { compressFile } from './lib/compressFile'
-import { putObject } from './lib/putObject'
 import {
     CameraIcon,
     DropBoxIcon,
@@ -35,6 +33,8 @@ import UrlUploader from './components/UrlUploader'
 import CameraUploader from './components/CameraUploader'
 import useDragAndDrop from './hooks/useDragAndDrop'
 import useAddMore from './hooks/useAddMore'
+import { compressFile } from './lib/compressFile'
+import { putObject } from './lib/putObject'
 
 const methods = [
     { id: 'internal', name: 'My Device', icon: <MyDeviceIcon /> },
@@ -108,62 +108,78 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
         )
 
         /**
+         * Get the client instance
+         */
+        const client = getClient(s3Configs)
+
+        /**
          * Expose the handleUpload function to the parent component
          */
         useImperativeHandle(ref, () => ({
-            /**
-             * Upload the file to the cloud storage
-             */
             async uploadFiles() {
-                let filesToUpload: File[]
-                let keys: string[] = []
+                return new Promise(async (resolve, reject) => {
+                    /**
+                     * Upload the file to the cloud storage
+                     */
+                    let filesToUpload: File[]
+                    let keys: string[] = []
 
-                /**
-                 * Compress the file before uploading it to the cloud storage
-                 */
-                if (toBeCompressed)
-                    filesToUpload = await Promise.all(
-                        files.map(async file => {
-                            /**
-                             * Compress the file
-                             */
-                            return await compressFile({
-                                element: file,
-                                element_name: file.name,
-                            })
-                        }),
-                    )
-                else filesToUpload = files
+                    /**
+                     * Compress the file before uploading it to the cloud storage
+                     */
+                    if (toBeCompressed)
+                        filesToUpload = await Promise.all(
+                            files.map(async file => {
+                                /**
+                                 * Compress the file
+                                 */
+                                return await compressFile({
+                                    element: file,
+                                    element_name: file.name,
+                                })
+                            }),
+                        )
+                    else filesToUpload = files
 
-                /**
-                 * Loop through the files array and upload the files
-                 */
-                try {
+                    /**
+                     * Loop through the files array and upload the files
+                     */
+
                     if (filesToUpload) {
-                        filesToUpload.forEach(file => {
-                            /**
-                             * assign a unique name for the file, usually has a timestamp prefix
-                             */
-                            const key = `${Date.now()}__${file.name}`
-                            keys.push(key)
+                        try {
+                            filesToUpload.map(async file => {
+                                /**
+                                 * assign a unique name for the file, usually has a timestamp prefix
+                                 */
+                                const key = `${Date.now()}__${file.name}`
 
-                            /**
-                             * Upload the file to the cloud storage
-                             */
-                            putObject({ client, bucket, key, file })
-                        })
-
-                        return keys
-                    }
-                } catch (err) {
-                    if (err instanceof Error) {
-                        // ✅ TypeScript knows err is Error
-                        throw new Error(err.message)
-                    } else {
-                        throw new Error('Unexpected error')
-                    }
-                }
-                return []
+                                /**
+                                 * Upload the file to the cloud storage
+                                 */
+                                await putObject({
+                                    client,
+                                    bucket,
+                                    key,
+                                    file,
+                                })
+                                    .then(() => {
+                                        keys.push(key)
+                                    })
+                                    .catch(err => {
+                                        throw new Error(err.message)
+                                    })
+                            })
+                            resolve(keys)
+                        } catch (error) {
+                            if (error instanceof Error) {
+                                // ✅ TypeScript knows err is Error
+                                reject(new Error(error.message))
+                            } else {
+                                reject(new Error('Something went wrong'))
+                            }
+                        }
+                    } else reject(undefined)
+                })
             },
         }))
 
@@ -173,11 +189,6 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
         if (uploadAdapters.length === 0) {
             throw new Error('Please select at least one upload adapter')
         }
-
-        /**
-         * Get the client instance
-         */
-        const client = getClient(s3Configs)
 
         /**
          *  Define the components to be rendered based on the user selection of
