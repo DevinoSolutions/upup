@@ -12,8 +12,8 @@ interface props {
  * @param key the final file name, usually it has timestamp prefix
  * @param file file to upload
  */
-export function putObject({ client, bucket, key, file }: props) {
-    client.putObject(
+export async function putObject({ client, bucket, key, file }: props) {
+    await client.putObject(
         {
             Bucket: bucket,
             Key: `${key}`,
