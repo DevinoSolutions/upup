@@ -124,6 +124,7 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
                     let filesToUpload: File[]
                     let keys: string[] = []
 
+
                     /**
                      * Compress the file before uploading it to the cloud storage
                      */
