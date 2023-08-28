@@ -122,7 +122,6 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
                      * Upload the file to the cloud storage
                      */
                     let filesToUpload: File[]
-                    let keys: string[] = []
 
                     /**
                      * Compress the file before uploading it to the cloud storage
@@ -146,6 +145,7 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
                      */
 
                     if (filesToUpload) {
+                        let keys: string[] = []
                         try {
                             filesToUpload.map(async file => {
                                 /**
@@ -169,7 +169,8 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
                                         throw new Error(err.message)
                                     })
                             })
-                            resolve(keys)
+                            if (keys.length > 0) resolve(keys)
+                            else reject(undefined)
                         } catch (error) {
                             if (error instanceof Error) {
                                 // ✅ TypeScript knows err is Error
