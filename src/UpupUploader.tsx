@@ -169,7 +169,7 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
                                         throw new Error(err.message)
                                     })
                             })
-                            resolve(keys)
+                            resolve(keys) // return the keys to the parent component
                         } catch (error) {
                             if (error instanceof Error) {
                                 // ✅ TypeScript knows err is Error
