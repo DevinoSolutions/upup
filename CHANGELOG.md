@@ -1,5 +1,13 @@
 # @bassem97/upup
 
+## 2.2.3
+
+### Patch Changes
+
+-   fefe4ee: UploadFiles return Promise
+-   c698143: UploadFiles promise tweak
+-   e573b0c: Rollback uploadFiles tweak
+
 ## 2.2.2
 
 ### Patch Changes
