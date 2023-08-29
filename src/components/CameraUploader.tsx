@@ -25,21 +25,21 @@ export default function CameraUploader({
     }, [webcamRef])
 
     return (
-        <div className="grid grid-rows-[1fr,auto] w-[32rem] justify-center">
+        <div className="grid grid-rows-[1fr,auto] w-[94%] justify-center">
             <div className="relative">
                 {imgSrc ? (
                     <img
                         src={imgSrc}
-                        className="rounded-xl border-2 border-[#272727]"
+                        className="rounded-xl border-2 border-[#272727] absolute"
                     />
-                ) : (
-                    <Webcam
-                        audio={false}
-                        ref={webcamRef}
-                        screenshotFormat="image/jpeg"
-                        className="h-[24rem] rounded-xl"
-                    />
-                )}
+                ) : null}
+                <Webcam
+                    audio={false}
+                    ref={webcamRef}
+                    screenshotFormat="image/jpeg"
+                    className="max-h-[24rem] h-max rounded-xl"
+                />
+
                 {imgSrc && (
                     <>
                         <button
