@@ -16,17 +16,13 @@ import { GoogleConfigs } from './types/GoogleConfigs'
 import { getClient } from './lib/getClient'
 import { UPLOAD_ADAPTER, UploadAdapter } from './types/UploadAdapter'
 import {
-    AudioIcon,
     BoxIcon,
     CameraIcon,
     DropBoxIcon,
-    FacebookIcon,
     GoogleDriveIcon,
-    InstagramIcon,
     LinkIcon,
     MyDeviceIcon,
     OneDriveIcon,
-    ScreenCastIcon,
     UnsplashIcon,
 } from './components/Icons'
 import View from './components/UpupUploader/View'
@@ -45,15 +41,11 @@ const methods = [
     { id: 'internal', name: 'My Device', icon: <MyDeviceIcon /> },
     { id: 'GOOGLE_DRIVE', name: 'Google Drive', icon: <GoogleDriveIcon /> },
     { id: 'ONE_DRIVE', name: 'OneDrive', icon: <OneDriveIcon /> },
-    { id: 'box', name: 'Box', icon: <BoxIcon /> },
+    { id: 'BOX', name: 'Box', icon: <BoxIcon /> },
     { id: 'LINK', name: 'Link', icon: <LinkIcon /> },
     { id: 'CAMERA', name: 'Camera', icon: <CameraIcon /> },
-    { id: 'dropbox', name: 'Dropbox', icon: <DropBoxIcon /> },
-    { id: 'unsplash', name: 'Unsplash', icon: <UnsplashIcon /> },
-    { id: 'facebook', name: 'Facebook', icon: <FacebookIcon /> },
-    { id: 'instagram', name: 'Instagram', icon: <InstagramIcon /> },
-    { id: 'audio', name: 'Audio', icon: <AudioIcon /> },
-    { id: 'screencast', name: 'ScreenCast', icon: <ScreenCastIcon /> },
+    { id: 'DROPBOX', name: 'Dropbox', icon: <DropBoxIcon /> },
+    { id: 'UNSPLASH', name: 'Unsplash', icon: <UnsplashIcon /> },
 ]
 
 export interface UpupUploaderProps {

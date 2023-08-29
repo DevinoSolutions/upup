@@ -7,10 +7,6 @@ export const UploadAdapter = {
     CAMERA: 'CAMERA',
     DROPBOX: 'DROPBOX',
     UNSPLASH: 'UNSPLASH',
-    FACEBOOK: 'FACEBOOK',
-    INSTAGRAM: 'INSTAGRAM',
-    AUDIO: 'AUDIO',
-    SCREENCAST: 'SCREENCAST',
 } as const
 
 type ObjectValues<T> = T[keyof T]
