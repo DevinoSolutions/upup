@@ -62,6 +62,7 @@ export interface UpupUploaderProps {
     uploadAdapters: UPLOAD_ADAPTER[]
     googleConfigs?: GoogleConfigs | undefined
     oneDriveConfigs?: OneDriveConfigs | undefined
+    disabled?: UPLOAD_ADAPTER[] | undefined
 }
 
 export type UploadFilesRef = {
@@ -274,7 +275,14 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
                         <MethodsSelector
                             setView={setView}
                             inputRef={inputRef}
-                            methods={methods}
+                            methods={methods.filter(method => {
+                                if (props.disabled) {
+                                    return !props.disabled.includes(
+                                        method.id as UPLOAD_ADAPTER,
+                                    )
+                                }
+                                return true
+                            })}
                         />
                         <p className="text-xs text-[#9d9d9d] mb-4">
                             Powered by uNotes
