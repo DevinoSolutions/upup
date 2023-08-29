@@ -16,6 +16,7 @@ import { GoogleConfigs } from './types/GoogleConfigs'
 import { getClient } from './lib/getClient'
 import { UPLOAD_ADAPTER, UploadAdapter } from './types/UploadAdapter'
 import {
+    BoxIcon,
     CameraIcon,
     DropBoxIcon,
     GoogleDriveIcon,
@@ -40,15 +41,11 @@ const methods = [
     { id: 'internal', name: 'My Device', icon: <MyDeviceIcon /> },
     { id: 'GOOGLE_DRIVE', name: 'Google Drive', icon: <GoogleDriveIcon /> },
     { id: 'ONE_DRIVE', name: 'OneDrive', icon: <OneDriveIcon /> },
-    // { id: 'box', name: 'Box', icon: <BoxIcon /> },
+    { id: 'BOX', name: 'Box', icon: <BoxIcon /> },
     { id: 'LINK', name: 'Link', icon: <LinkIcon /> },
     { id: 'CAMERA', name: 'Camera', icon: <CameraIcon /> },
-    { id: 'dropbox', name: 'Dropbox', icon: <DropBoxIcon /> },
-    { id: 'unsplash', name: 'Unsplash', icon: <UnsplashIcon /> },
-    // { id: 'facebook', name: 'Facebook', icon: <FacebookIcon /> },
-    // { id: 'instagram', name: 'Instagram', icon: <InstagramIcon /> },
-    // { id: 'audio', name: 'Audio', icon: <AudioIcon /> },
-    // { id: 'screencast', name: 'ScreenCast', icon: <ScreenCastIcon /> },
+    { id: 'DROPBOX', name: 'Dropbox', icon: <DropBoxIcon /> },
+    { id: 'UNSPLASH', name: 'Unsplash', icon: <UnsplashIcon /> },
 ]
 
 export interface UpupUploaderProps {
@@ -57,6 +54,7 @@ export interface UpupUploaderProps {
     uploadAdapters: UPLOAD_ADAPTER[]
     googleConfigs?: GoogleConfigs | undefined
     oneDriveConfigs?: OneDriveConfigs | undefined
+    disabled?: UPLOAD_ADAPTER[] | undefined
 }
 
 export type UploadFilesRef = {
@@ -269,7 +267,14 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
                         <MethodsSelector
                             setView={setView}
                             inputRef={inputRef}
-                            methods={methods}
+                            methods={methods.filter(method => {
+                                if (props.disabled) {
+                                    return !props.disabled.includes(
+                                        method.id as UPLOAD_ADAPTER,
+                                    )
+                                }
+                                return true
+                            })}
                         />
                         <p className="text-xs text-[#9d9d9d] mb-4">
                             Powered by uNotes
