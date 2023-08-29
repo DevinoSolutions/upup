@@ -2,6 +2,7 @@ import { Meta, Story } from '@storybook/react'
 import { UPLOAD_ADAPTER, UploadAdapter, UpupUploader } from '../src'
 import useUpup from '../src/hooks/useUpup'
 import { UpupUploaderProps } from '../src/UpupUploader'
+import React from 'react'
 
 const meta: Meta = {
     title: 'Upload files',
