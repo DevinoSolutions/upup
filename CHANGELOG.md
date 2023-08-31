@@ -1,5 +1,11 @@
 # @bassem97/upup
 
+## 2.2.6
+
+### Patch Changes
+
+-   19498a7: Filter Files in uploader & change imports to absolute
+
 ## 2.2.5
 
 ### Patch Changes
