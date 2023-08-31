@@ -4,20 +4,22 @@ const MethodsSelector = ({
     setView,
     inputRef,
     methods,
+    isDocument,
 }: {
     setView: (view: string) => void
     inputRef?: React.MutableRefObject<HTMLInputElement | null>
     methods: any[]
+    isDocument: boolean
 }) => {
     return (
         <div className="w-full h-full flex flex-col items-center justify-center gap-6 ">
             <h1 className="md:text-2xl text-center dark:text-white">
-                Drop files here,{' '}
+                Drop your {isDocument ? 'files' : 'images'} here,{' '}
                 <button
                     className="text-[#3782da] hover:underline"
                     onClick={() => inputRef && inputRef.current!.click()}
                 >
-                    browse files
+                    browse {isDocument ? 'files' : 'images'}
                 </button>{' '}
                 or import from:
             </h1>
