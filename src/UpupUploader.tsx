@@ -235,6 +235,7 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
                 </AnimatePresence>
                 <input
                     type="file"
+                    accept={isDocument ? 'application/pdf' : 'image/*'}
                     className="absolute w-0 h-0"
                     ref={inputRef}
                     multiple={multiple}
