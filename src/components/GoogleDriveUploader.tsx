@@ -1,7 +1,7 @@
 import React, { FC } from 'react'
-import useLoadGAPI from '../hooks/useLoadGAPI'
-import { BaseConfigs } from '../types/BaseConfigs'
-import { GoogleConfigs } from '../types/GoogleConfigs'
+import useLoadGAPI from 'hooks/useLoadGAPI'
+import { BaseConfigs } from 'types/BaseConfigs'
+import { GoogleConfigs } from 'types/GoogleConfigs'
 import styled from 'styled-components'
 
 const GoogleDriveButton = styled.button`

@@ -1,7 +1,7 @@
 import React from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { TbEdit, TbX } from 'react-icons/tb'
-import { bytesToSize } from '../../lib/bytesToSize'
+import { bytesToSize } from 'lib/bytesToSize'
 
 const Preview = ({
     files,
