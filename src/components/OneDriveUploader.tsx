@@ -1,12 +1,12 @@
 import React, { Dispatch, FC, SetStateAction } from 'react'
-import useLoadOdAPI from '../hooks/useLoadOdAPI'
+import useLoadOdAPI from 'hooks/useLoadOdAPI'
 import {
     OneDriveConfigs,
     OneDriveResponse,
     OneDriveValue,
-} from '../types/OneDriveConfigs'
+} from 'types/OneDriveConfigs'
 import styled from 'styled-components'
-import { BaseConfigs } from '../types/BaseConfigs'
+import { BaseConfigs } from 'types/BaseConfigs'
 
 const OneDriveButton = styled.button`
     display: flex;

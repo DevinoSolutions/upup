@@ -1,5 +1,6 @@
 import React from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
+import { Method } from 'types/Method'
 
 const View = ({
     view,
@@ -9,7 +10,7 @@ const View = ({
 }: {
     view: string
     setView: (view: string) => void
-    methods: any[]
+    methods: Method[]
     components: any
 }) => {
     return (
