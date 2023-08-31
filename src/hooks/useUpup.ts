@@ -21,7 +21,7 @@ const google_api_key = process.env.GOOGLE_API_KEY
  * @param isDocument
  */
 interface Props {
-    isDocument?: boolean | null
+    isDocument?: boolean
     multiple?: boolean
     setFiles?: Dispatch<SetStateAction<File[]>>
 }
@@ -82,7 +82,8 @@ const useUpup: (props?: Props) => {
 
     const baseConfigs: BaseConfigs = {
         onChange: (files: File[]) => (setFiles ? setFiles(files) : () => {}),
-        multiple: multiple,
+        multiple,
+        isDocument,
     }
 
     const cloudStorageConfigs: CloudStorageConfigs = {

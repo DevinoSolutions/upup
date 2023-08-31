@@ -87,6 +87,7 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
             toBeCompressed = false,
             onChange,
             multiple = false,
+            isDocument = false,
         } = baseConfigs
 
         const [files, setFiles] = useState<File[]>([])
@@ -265,6 +266,7 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
                 <div className="p-2 h-full">
                     <div className="border-[#dfdfdf] border-dashed h-full w-full grid grid-rows-[1fr,auto] place-items-center border rounded-md transition-all">
                         <MethodsSelector
+                            isDocument={isDocument}
                             setView={setView}
                             inputRef={inputRef}
                             methods={methods.filter(method => {
