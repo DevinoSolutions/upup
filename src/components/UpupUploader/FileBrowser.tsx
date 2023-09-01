@@ -1,4 +1,5 @@
 import { AnimatePresence, motion } from 'framer-motion'
+import useGoogleDrive from 'hooks/useGoogleDrive'
 import React from 'react'
 import {
     TbFileText,
@@ -29,6 +30,8 @@ const FileBrowser = ({
             else setSelectedFiles(prev => [...prev, file.id])
         }
     }
+
+    useGoogleDrive()
 
     return (
         <div className="h-full w-full grid grid-rows-[auto,auto,1fr,auto] bg-white">
