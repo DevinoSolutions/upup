@@ -36,7 +36,7 @@ const MethodsSelector = ({
                             )
                         }
                         onClick={() =>
-                            method.id === 'internal'
+                            method.id === 'INTERNAL'
                                 ? inputRef && inputRef.current!.click()
                                 : setView(method.id)
                         }
