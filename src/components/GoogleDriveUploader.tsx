@@ -59,7 +59,7 @@ export const GoogleDriveUploader: FC<Props> = ({
     setFiles,
     setView,
 }: Props) => {
-    const { pickerApiLoaded, gisLoaded, tokenClient } = useLoadGAPI({
+    const { gisLoaded, tokenClient } = useLoadGAPI({
         google_client_id,
     })
 
@@ -164,7 +164,7 @@ export const GoogleDriveUploader: FC<Props> = ({
 
     return (
         <div>
-            {pickerApiLoaded && gisLoaded && (
+            {gisLoaded && (
                 // google drive button with logo and text
                 <GoogleDriveButton onClick={createPicker}>
                     <GoogleDriveLogo

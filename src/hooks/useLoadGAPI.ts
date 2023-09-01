@@ -12,18 +12,9 @@ interface props {
  * @param GOOGLE_CLIENT_ID
  */
 const useLoadGAPI = ({ google_client_id }: props) => {
-    const [pickerApiLoaded, setPickerApiLoaded] = useState<boolean>(false)
+    // const [pickerApiLoaded, setPickerApiLoaded] = useState<boolean>(false)
     const [gisLoaded, setGisLoaded] = useState<boolean>(false)
     const [tokenClient, setTokenClient] = useState<any>(null)
-
-    /**
-     * This function is called when the Google Picker API is loaded
-     */
-    const onPickerApiLoad = () => {
-        gapi.load('picker', () => {
-            setPickerApiLoaded(true)
-        })
-    }
 
     /**
      * This function is called when the Google Identity Services API is loaded
@@ -34,6 +25,15 @@ const useLoadGAPI = ({ google_client_id }: props) => {
                 client_id: google_client_id,
                 scope: SCOPES,
                 callback: '', // defined later
+
+                // Optional arguments passed to gapi.auth2.init()
+                cookie_policy: 'single_host_origin',
+                fetch_basic_profile: true,
+
+                // Optional arguments passed to gapi.auth2.getAuthInstance().grantOfflineAccess()
+                access_type: 'offline',
+                prompt: 'consent',
+                include_granted_scopes: true,
             }),
         )
         setGisLoaded(true)
@@ -41,13 +41,17 @@ const useLoadGAPI = ({ google_client_id }: props) => {
 
     useEffect(() => {
         /**
-         * Load the Google API
+         * Load the Google Drive API
          */
         load('https://apis.google.com/js/api.js', (err, _script) => {
             if (err) {
                 console.log('Error loading GAPI', err)
             } else {
-                onPickerApiLoad()
+                gapi.load('client', () => {
+                    gapi.client.load('drive', 'v3', () => {
+                        console.log('Loaded Google Drive API')
+                    })
+                })
             }
         })
 
@@ -61,12 +65,12 @@ const useLoadGAPI = ({ google_client_id }: props) => {
                 onGisLoaded()
             }
         })
-    }, [pickerApiLoaded, gisLoaded])
+    }, [gisLoaded])
 
     /**
      * Return the tokenClient, pickerApiLoaded, and gisLoaded
      */
-    return { tokenClient, pickerApiLoaded, gisLoaded }
+    return { tokenClient, gisLoaded }
 }
 
 export default useLoadGAPI
