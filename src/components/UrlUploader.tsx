@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import useUrl from '../hooks/useUrl'
+import useUrl from 'hooks/useUrl'
 
 export default function UrlUploader({
     setFiles,

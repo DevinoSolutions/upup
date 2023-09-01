@@ -1,6 +1,6 @@
 {
     // see https://www.typescriptlang.org/tsconfig to better understand tsconfigs
-    "include": ["src", "types"],
+    "include": ["src"],
     "compilerOptions": {
         "module": "esnext",
         "lib": ["dom", "esnext"],
@@ -32,6 +32,16 @@
         // allow default imports from modules with no default export
         "allowSyntheticDefaultImports": true,
         // `tsdx build` ignores this option, but it is commonly used when type-checking separately with `tsc`
-        "noEmit": true
+        "noEmit": true,
+        "baseUrl": "./src",
+        // allow absolute imports from src/ and types/
+        "paths": {
+            // allow absolute imports from src/ and types/
+            "@/*": ["src/*"],
+            "#components/*": ["src/components/*"],
+            "#types/*": ["src/types/*"],
+            "#lib/*": ["src/lib/*"],
+            "#hooks/*": ["src/hooks/*"]
+        }
     }
 }

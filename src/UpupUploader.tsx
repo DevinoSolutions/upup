@@ -7,15 +7,16 @@ import React, {
     useImperativeHandle,
     useState,
 } from 'react'
-import { OneDriveConfigs } from './types/OneDriveConfigs'
-import { GoogleDriveUploader } from './components/GoogleDriveUploader'
-import OneDriveUploader from './components/OneDriveUploader'
-import { CloudStorageConfigs } from './types/CloudStorageConfigs'
-import { BaseConfigs } from './types/BaseConfigs'
-import { GoogleConfigs } from './types/GoogleConfigs'
-import { getClient } from './lib/getClient'
-import { UPLOAD_ADAPTER, UploadAdapter } from './types/UploadAdapter'
+import { OneDriveConfigs } from 'types/OneDriveConfigs'
+import { GoogleDriveUploader } from 'components/GoogleDriveUploader'
+import OneDriveUploader from 'components/OneDriveUploader'
+import { CloudStorageConfigs } from 'types/CloudStorageConfigs'
+import { BaseConfigs } from 'types/BaseConfigs'
+import { GoogleConfigs } from 'types/GoogleConfigs'
+import { getClient } from 'lib/getClient'
+import { UPLOAD_ADAPTER, UploadAdapter } from 'types/UploadAdapter'
 import {
+    BoxIcon,
     CameraIcon,
     DropBoxIcon,
     GoogleDriveIcon,
@@ -23,32 +24,29 @@ import {
     MyDeviceIcon,
     OneDriveIcon,
     UnsplashIcon,
-} from './components/Icons'
-import View from './components/UpupUploader/View'
-import MethodsSelector from './components/UpupUploader/MethodSelector'
-import Preview from './components/UpupUploader/Preview'
-import DropZone from './components/UpupUploader/DropZone'
+} from 'components/Icons'
+import View from 'components/UpupUploader/View'
+import MethodsSelector from 'components/UpupUploader/MethodSelector'
+import Preview from 'components/UpupUploader/Preview'
+import DropZone from 'components/UpupUploader/DropZone'
 import { AnimatePresence } from 'framer-motion'
-import UrlUploader from './components/UrlUploader'
-import CameraUploader from './components/CameraUploader'
-import useDragAndDrop from './hooks/useDragAndDrop'
-import useAddMore from './hooks/useAddMore'
-import { compressFile } from './lib/compressFile'
-import { putObject } from './lib/putObject'
+import UrlUploader from 'components/UrlUploader'
+import CameraUploader from 'components/CameraUploader'
+import useDragAndDrop from 'hooks/useDragAndDrop'
+import useAddMore from 'hooks/useAddMore'
+import { compressFile } from 'lib/compressFile'
+import { putObject } from 'lib/putObject'
+import { Method } from 'types/Method'
 
-const methods = [
-    { id: 'internal', name: 'My Device', icon: <MyDeviceIcon /> },
+const methods: Method[] = [
+    { id: 'INTERNAL', name: 'My Device', icon: <MyDeviceIcon /> },
     { id: 'GOOGLE_DRIVE', name: 'Google Drive', icon: <GoogleDriveIcon /> },
     { id: 'ONE_DRIVE', name: 'OneDrive', icon: <OneDriveIcon /> },
-    // { id: 'box', name: 'Box', icon: <BoxIcon /> },
+    { id: 'BOX', name: 'Box', icon: <BoxIcon /> },
     { id: 'LINK', name: 'Link', icon: <LinkIcon /> },
     { id: 'CAMERA', name: 'Camera', icon: <CameraIcon /> },
-    { id: 'dropbox', name: 'Dropbox', icon: <DropBoxIcon /> },
-    { id: 'unsplash', name: 'Unsplash', icon: <UnsplashIcon /> },
-    // { id: 'facebook', name: 'Facebook', icon: <FacebookIcon /> },
-    // { id: 'instagram', name: 'Instagram', icon: <InstagramIcon /> },
-    // { id: 'audio', name: 'Audio', icon: <AudioIcon /> },
-    // { id: 'screencast', name: 'ScreenCast', icon: <ScreenCastIcon /> },
+    { id: 'DROPBOX', name: 'Dropbox', icon: <DropBoxIcon /> },
+    { id: 'UNSPLASH', name: 'Unsplash', icon: <UnsplashIcon /> },
 ]
 
 export interface UpupUploaderProps {
@@ -68,7 +66,7 @@ export type UploadFilesRef = {
  * @param cloudStorageConfigs cloud provider configurations
  * @param baseConfigs base configurations
  * @param toBeCompressed whether the user want to compress the file before uploading it or not. Default value is false
- * @param uploadAdapters whether the user want to upload files from internal storage or Google drive or both
+ * @param uploadAdapters the methods you want to enable for the user to upload the files. Default value is ['INTERNAL']
  * @param googleConfigs google configurations
  * @param oneDriveConfigs one drive configurations
  * @param ref referrer to the component instance to access its method uploadFiles from the parent component
@@ -80,7 +78,7 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
         const {
             cloudStorageConfigs,
             baseConfigs,
-            uploadAdapters,
+            uploadAdapters = ['INTERNAL', 'LINK'],
             googleConfigs,
             oneDriveConfigs,
         } = props
@@ -89,6 +87,7 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
             toBeCompressed = false,
             onChange,
             multiple = false,
+            isDocument = false,
         } = baseConfigs
 
         const [files, setFiles] = useState<File[]>([])
@@ -236,6 +235,7 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
                 </AnimatePresence>
                 <input
                     type="file"
+                    accept={isDocument ? 'application/pdf' : 'image/*'}
                     className="absolute w-0 h-0"
                     ref={inputRef}
                     multiple={multiple}
@@ -263,14 +263,18 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
                     setFiles={setFiles}
                     isAddingMore={isAddingMore}
                     setIsAddingMore={setIsAddingMore}
+                    multiple={multiple}
                     // handleUpload={handleUpload}
                 />
                 <div className="p-2 h-full">
                     <div className="border-[#dfdfdf] border-dashed h-full w-full grid grid-rows-[1fr,auto] place-items-center border rounded-md transition-all">
                         <MethodsSelector
+                            isDocument={isDocument}
                             setView={setView}
                             inputRef={inputRef}
-                            methods={methods}
+                            methods={methods.filter(method => {
+                                return uploadAdapters.includes(method.id as any)
+                            })}
                         />
                         <p className="text-xs text-[#9d9d9d] mb-4">
                             Powered by uNotes

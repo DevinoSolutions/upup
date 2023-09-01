@@ -2,6 +2,7 @@ import { Meta, Story } from '@storybook/react'
 import { UPLOAD_ADAPTER, UploadAdapter, UpupUploader } from '../src'
 import useUpup from '../src/hooks/useUpup'
 import { UpupUploaderProps } from '../src/UpupUploader'
+import React from 'react'
 
 const meta: Meta = {
     title: 'Upload files',
@@ -16,11 +17,13 @@ export default meta
 
 const Template: Story<UpupUploaderProps> = args => {
     const { baseConfigs, cloudStorageConfigs, googleConfigs, oneDriveConfigs } =
-        useUpup()
+        useUpup({ isDocument: false, multiple: true })
     const uploadAdapters: UPLOAD_ADAPTER[] = [
         UploadAdapter.INTERNAL,
         UploadAdapter.GOOGLE_DRIVE,
         UploadAdapter.ONE_DRIVE,
+        UploadAdapter.LINK,
+        UploadAdapter.CAMERA,
     ]
     return (
         <UpupUploader

@@ -2,7 +2,7 @@
     "name": "@bassem97/upup",
     "author": "Bassem Jadoui",
     "license": "MIT",
-    "version": "2.2.4",
+    "version": "2.2.6",
     "readme": "README.md",
     "main": "dist/index.js",
     "module": "dist/upup.esm.js",
@@ -96,6 +96,7 @@
     "dependencies": {
         "@aws-sdk/client-s3": "^3.271.0",
         "@types/gapi": "^0.0.44",
+        "babel-plugin-module-resolver": "^5.0.0",
         "framer-motion": "^10.15.2",
         "load-script": "^2.0.0",
         "react": "^18.2.0",
