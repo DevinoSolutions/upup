@@ -28,7 +28,7 @@ const Template: Story<UpupUploaderProps> = args => {
     return (
         <UpupUploader
             {...args}
-            baseConfigs={baseConfigs}
+            baseConfigs={{ ...baseConfigs, multiple: false }}
             uploadAdapters={uploadAdapters}
             cloudStorageConfigs={cloudStorageConfigs}
             googleConfigs={googleConfigs}

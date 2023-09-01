@@ -7,12 +7,14 @@ const Preview = ({
     files,
     setFiles,
     isAddingMore,
-    setIsAddingMore, // handleUpload,
+    setIsAddingMore,
+    multiple, // handleUpload,
 }: {
     files: File[]
     setFiles: (files: File[]) => void
     isAddingMore: boolean
     setIsAddingMore: (isAddingMore: boolean) => void
+    multiple?: boolean
     // handleUpload: () => void
 }) => {
     /**
@@ -41,8 +43,14 @@ const Preview = ({
                             {files.length} file{files.length > 1 ? 's' : ''}{' '}
                             selected
                         </p>
+
                         <button
-                            className="hover:bg-[#e9ecef] hover:text-[#1f1f1f] active:bg-[#dfe6f1] rounded-md p-2 px-4 transition-all duration-300"
+                            className={
+                                'hover:bg-[#e9ecef] hover:text-[#1f1f1f] active:bg-[#dfe6f1] rounded-md p-2 px-4 transition-all duration-300 ' +
+                                (multiple
+                                    ? ''
+                                    : 'opacity-0 pointer-events-none')
+                            }
                             onClick={() => setIsAddingMore(!isAddingMore)}
                         >
                             {isAddingMore ? 'Show Previews' : 'Add more'}
@@ -56,7 +64,12 @@ const Preview = ({
                             pointerEvents: isAddingMore ? 'none' : 'all',
                         }}
                         exit={{ scaleY: '0%' }}
-                        className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 p-4 border-b bg-[#f4f4f4] dark:bg-[#1f1f1f] dark:text-[#fafafa] origin-bottom gap-4 overflow-y-scroll origin-top pointer-events-auto"
+                        className={
+                            'grid p-4 border-b bg-[#f4f4f4] dark:bg-[#1f1f1f] dark:text-[#fafafa] origin-bottom gap-4 overflow-y-scroll pointer-events-auto ' +
+                            (multiple
+                                ? 'grid-cols-1 sm:grid-cols-2 md:grid-cols-4'
+                                : 'grid-cols-1 grid-rows-1')
+                        }
                     >
                         {files.map((file, i) => (
                             <div
@@ -66,7 +79,10 @@ const Preview = ({
                                 <img
                                     src={URL.createObjectURL(file)}
                                     alt=""
-                                    className="h-40 w-full rounded-md object-cover shadow"
+                                    className={
+                                        'w-full rounded-md object-cover shadow' +
+                                        (multiple ? 'h-40' : ' h-full')
+                                    }
                                 />
                                 <div className="flex items-center justify-between w-full">
                                     <div>
