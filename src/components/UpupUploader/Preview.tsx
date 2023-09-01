@@ -1,6 +1,6 @@
 import React from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { TbEdit, TbFileUnknown, TbX } from 'react-icons/tb'
+import { TbEdit, TbX } from 'react-icons/tb'
 import { bytesToSize } from 'lib/bytesToSize'
 import FileIcon from 'components/FileIcon'
 
@@ -82,7 +82,7 @@ const Preview = ({
                                         src={URL.createObjectURL(file)}
                                         alt=""
                                         className={
-                                            'w-full rounded-md object-cover shadow' +
+                                            'w-full rounded-md object-cover shadow ' +
                                             (multiple ? 'h-40' : ' h-full')
                                         }
                                     />
