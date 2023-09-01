@@ -1,5 +1,50 @@
 # @bassem97/upup
 
+## 2.2.4
+
+### Patch Changes
+
+-   21d0b51: Fix bug
+
+## 2.2.3
+
+### Patch Changes
+
+-   fefe4ee: UploadFiles return Promise
+-   c698143: UploadFiles promise tweak
+-   e573b0c: Rollback uploadFiles tweak
+
+## 2.2.2
+
+### Patch Changes
+
+-   d85787f: UploadFiles return Promise
+-   8d3e5fc: UploadFiles promise tweak
+
+## 2.2.1
+
+### Patch Changes
+
+-   edd5b80: UploadFiles return Promise
+
+## 2.2.0
+
+### Minor Changes
+
+-   bbfd8b6: Add multiple file selection & Various tweaks
+
+## 2.1.0
+
+### Minor Changes
+
+-   41d74b1: Add upload with link and enhance upload files logic
+
+## 2.0.2
+
+### Patch Changes
+
+-   e3c24dc: Fix tailwind not getting styles from parent
+
 ## 2.0.1
 
 ### Patch Changes

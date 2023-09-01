@@ -1,4 +1,4 @@
-import { Dispatch, SetStateAction, useEffect, useState } from 'react'
+import { Dispatch, SetStateAction, useEffect } from 'react'
 import { CloudStorageConfigs } from '../types/CloudStorageConfigs'
 import { GoogleConfigs } from '../types/GoogleConfigs'
 import { BaseConfigs } from '../types/BaseConfigs'
@@ -34,8 +34,6 @@ const useUpup: (props?: Props) => {
     googleConfigs: GoogleConfigs
     baseConfigs: BaseConfigs
     oneDriveConfigs: OneDriveConfigs
-    keys: string[]
-    setCanUpload: (value: ((prevState: boolean) => boolean) | boolean) => void
 } = (
     props: Props = {
         isDocument: false,
@@ -44,8 +42,6 @@ const useUpup: (props?: Props) => {
     },
 ) => {
     const { isDocument, setFiles, multiple } = props
-    const [keys, setKeys] = useState<string[]>([])
-    const [canUpload, setCanUpload] = useState(false)
 
     /**
      * Throw an error if any of the required environment variables are missing
@@ -85,8 +81,6 @@ const useUpup: (props?: Props) => {
     }
 
     const baseConfigs: BaseConfigs = {
-        canUpload: canUpload,
-        setKeys,
         onChange: (files: File[]) => (setFiles ? setFiles(files) : () => {}),
         multiple: multiple,
     }
@@ -104,7 +98,7 @@ const useUpup: (props?: Props) => {
 
     const oneDriveConfigs: OneDriveConfigs = {
         onedrive_client_id,
-        multiSelect: false,
+        redirectUri: window.location.href,
     }
 
     return {
@@ -112,8 +106,6 @@ const useUpup: (props?: Props) => {
         cloudStorageConfigs,
         googleConfigs,
         oneDriveConfigs,
-        setCanUpload,
-        keys,
     }
 }
 

@@ -15,8 +15,7 @@ const MethodsSelector = ({
                 Drop files here,{' '}
                 <button
                     className="text-[#3782da] hover:underline"
-                    // @ts-ignore
-                    onClick={() => inputRef.current.click()}
+                    onClick={() => inputRef && inputRef.current!.click()}
                 >
                     browse files
                 </button>{' '}
@@ -26,21 +25,24 @@ const MethodsSelector = ({
                 {methods.map(method => (
                     <button
                         key={method.id}
-                        className="flex flex-col items-center justify-center gap-1 text-sm hover:bg-[#e9ecef] active:bg-[#dfe6f1] rounded-md p-2 px-4 transition-all duration-300 mb-4 disabled:opacity-30 disabled:pointer-events-none group relative"
+                        className="flex flex-col items-center justify-center gap-1 text-sm dark:hover:bg-[#282828] hover:bg-[#e9ecef] dark:active:bg-[#333] active:bg-[#dfe6f1] rounded-md p-2 px-4 transition-all duration-300 mb-4 disabled:opacity-30 disabled:pointer-events-none group relative"
                         disabled={
-                            !/internal|GOOGLE_DRIVE|ONE_DRIVE/.test(method.id)
+                            !/internal|GOOGLE_DRIVE|ONE_DRIVE|LINK|CAMERA/.test(
+                                method.id,
+                            )
                         }
                         onClick={() =>
                             method.id === 'internal'
-                                ? // @ts-ignore
-                                  inputRef.current.click()
+                                ? inputRef && inputRef.current!.click()
                                 : setView(method.id)
                         }
                     >
-                        <span className="bg-white p-[6px] rounded-lg text-2xl shadow ">
+                        <span className="bg-white dark:bg-[#323232] p-[6px] rounded-lg text-2xl shadow">
                             {method.icon}
                         </span>
-                        <span className="text-[#525252]">{method.name}</span>
+                        <span className="text-[#525252] dark:text-[#777]">
+                            {method.name}
+                        </span>
                         <span className="group-disabled:block hidden absolute -bottom-2 opacity-50">
                             (soon)
                         </span>
