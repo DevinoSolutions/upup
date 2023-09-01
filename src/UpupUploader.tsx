@@ -262,6 +262,7 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
                     setFiles={setFiles}
                     isAddingMore={isAddingMore}
                     setIsAddingMore={setIsAddingMore}
+                    multiple={multiple}
                     // handleUpload={handleUpload}
                 />
                 <div className="p-2 h-full">
