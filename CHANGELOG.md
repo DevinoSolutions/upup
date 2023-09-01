@@ -1,5 +1,11 @@
 # @bassem97/upup
 
+## 2.2.7
+
+### Patch Changes
+
+-   d7c330e: disable muiltiple imgaes and various tweaks
+
 ## 2.2.6
 
 ### Patch Changes
