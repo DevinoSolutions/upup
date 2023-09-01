@@ -22,6 +22,8 @@ const Template: Story<UpupUploaderProps> = args => {
         UploadAdapter.INTERNAL,
         UploadAdapter.GOOGLE_DRIVE,
         UploadAdapter.ONE_DRIVE,
+        UploadAdapter.LINK,
+        UploadAdapter.CAMERA,
     ]
     return (
         <UpupUploader
