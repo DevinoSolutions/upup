@@ -78,7 +78,7 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
         const {
             cloudStorageConfigs,
             baseConfigs,
-            uploadAdapters = ['INTERNAL'],
+            uploadAdapters = ['INTERNAL', 'LINK'],
             googleConfigs,
             oneDriveConfigs,
         } = props
