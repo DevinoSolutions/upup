@@ -39,7 +39,7 @@ import { putObject } from 'lib/putObject'
 import { Method } from 'types/Method'
 
 const methods: Method[] = [
-    { id: 'internal', name: 'My Device', icon: <MyDeviceIcon /> },
+    { id: 'INTERNAL', name: 'My Device', icon: <MyDeviceIcon /> },
     { id: 'GOOGLE_DRIVE', name: 'Google Drive', icon: <GoogleDriveIcon /> },
     { id: 'ONE_DRIVE', name: 'OneDrive', icon: <OneDriveIcon /> },
     { id: 'BOX', name: 'Box', icon: <BoxIcon /> },
@@ -55,7 +55,6 @@ export interface UpupUploaderProps {
     uploadAdapters: UPLOAD_ADAPTER[]
     googleConfigs?: GoogleConfigs | undefined
     oneDriveConfigs?: OneDriveConfigs | undefined
-    disabled?: UPLOAD_ADAPTER[] | undefined
 }
 
 export type UploadFilesRef = {
@@ -67,7 +66,7 @@ export type UploadFilesRef = {
  * @param cloudStorageConfigs cloud provider configurations
  * @param baseConfigs base configurations
  * @param toBeCompressed whether the user want to compress the file before uploading it or not. Default value is false
- * @param uploadAdapters whether the user want to upload files from internal storage or Google drive or both
+ * @param uploadAdapters the methods you want to enable for the user to upload the files. Default value is ['INTERNAL']
  * @param googleConfigs google configurations
  * @param oneDriveConfigs one drive configurations
  * @param ref referrer to the component instance to access its method uploadFiles from the parent component
@@ -79,7 +78,7 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
         const {
             cloudStorageConfigs,
             baseConfigs,
-            uploadAdapters,
+            uploadAdapters = ['INTERNAL', 'LINK'],
             googleConfigs,
             oneDriveConfigs,
         } = props
@@ -264,6 +263,7 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
                     setFiles={setFiles}
                     isAddingMore={isAddingMore}
                     setIsAddingMore={setIsAddingMore}
+                    multiple={multiple}
                     // handleUpload={handleUpload}
                 />
                 <div className="p-2 h-full">
@@ -273,12 +273,7 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
                             setView={setView}
                             inputRef={inputRef}
                             methods={methods.filter(method => {
-                                if (props.disabled) {
-                                    return !props.disabled.includes(
-                                        method.id as UPLOAD_ADAPTER,
-                                    )
-                                }
-                                return true
+                                return uploadAdapters.includes(method.id as any)
                             })}
                         />
                         <p className="text-xs text-[#9d9d9d] mb-4">

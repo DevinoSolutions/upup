@@ -2,17 +2,20 @@ import React from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { TbEdit, TbX } from 'react-icons/tb'
 import { bytesToSize } from 'lib/bytesToSize'
+import FileIcon from 'components/FileIcon'
 
 const Preview = ({
     files,
     setFiles,
     isAddingMore,
-    setIsAddingMore, // handleUpload,
+    setIsAddingMore,
+    multiple, // handleUpload,
 }: {
     files: File[]
     setFiles: (files: File[]) => void
     isAddingMore: boolean
     setIsAddingMore: (isAddingMore: boolean) => void
+    multiple?: boolean
     // handleUpload: () => void
 }) => {
     /**
@@ -41,8 +44,14 @@ const Preview = ({
                             {files.length} file{files.length > 1 ? 's' : ''}{' '}
                             selected
                         </p>
+
                         <button
-                            className="hover:bg-[#e9ecef] hover:text-[#1f1f1f] active:bg-[#dfe6f1] rounded-md p-2 px-4 transition-all duration-300"
+                            className={
+                                'hover:bg-[#e9ecef] hover:text-[#1f1f1f] active:bg-[#dfe6f1] rounded-md p-2 px-4 transition-all duration-300 ' +
+                                (multiple
+                                    ? ''
+                                    : 'opacity-0 pointer-events-none')
+                            }
                             onClick={() => setIsAddingMore(!isAddingMore)}
                         >
                             {isAddingMore ? 'Show Previews' : 'Add more'}
@@ -56,18 +65,37 @@ const Preview = ({
                             pointerEvents: isAddingMore ? 'none' : 'all',
                         }}
                         exit={{ scaleY: '0%' }}
-                        className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 p-4 border-b bg-[#f4f4f4] dark:bg-[#1f1f1f] dark:text-[#fafafa] origin-bottom gap-4 overflow-y-scroll origin-top pointer-events-auto"
+                        className={
+                            'grid p-4 border-b bg-[#f4f4f4] dark:bg-[#1f1f1f] dark:text-[#fafafa] origin-bottom gap-4 overflow-y-scroll pointer-events-auto ' +
+                            (multiple
+                                ? 'grid-cols-1 sm:grid-cols-2 md:grid-cols-4'
+                                : 'grid-cols-1 grid-rows-1')
+                        }
                     >
                         {files.map((file, i) => (
                             <div
                                 key={i}
                                 className="flex flex-col items-start h-full w-full relative dark:bg-[#1f1f1f] dark:text-[#fafafa]"
                             >
-                                <img
-                                    src={URL.createObjectURL(file)}
-                                    alt=""
-                                    className="h-40 w-full rounded-md object-cover shadow"
-                                />
+                                {file.type.startsWith('image/') ? (
+                                    <img
+                                        src={URL.createObjectURL(file)}
+                                        alt=""
+                                        className={
+                                            'w-full rounded-md object-cover shadow ' +
+                                            (multiple ? 'h-40' : ' h-full')
+                                        }
+                                    />
+                                ) : (
+                                    <div
+                                        className={
+                                            'w-full rounded-md object-cover shadow text-[#6b7280] ' +
+                                            (multiple ? 'h-40' : 'h-[90%]')
+                                        }
+                                    >
+                                        <FileIcon name={file.name} />
+                                    </div>
+                                )}
                                 <div className="flex items-center justify-between w-full">
                                     <div>
                                         <p className="font-medium text-xs mt-1">
