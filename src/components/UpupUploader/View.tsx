@@ -1,7 +1,9 @@
+import type { Method } from 'types/Method'
+
 import React from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
+
 import FileBrowser from './FileBrowser'
-import { Method } from 'types/Method'
 
 const View = ({
     view,
