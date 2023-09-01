@@ -1,7 +1,8 @@
 import React from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { TbEdit, TbX } from 'react-icons/tb'
+import { TbEdit, TbFileUnknown, TbX } from 'react-icons/tb'
 import { bytesToSize } from 'lib/bytesToSize'
+import FileIcon from 'components/FileIcon'
 
 const Preview = ({
     files,
@@ -76,14 +77,25 @@ const Preview = ({
                                 key={i}
                                 className="flex flex-col items-start h-full w-full relative dark:bg-[#1f1f1f] dark:text-[#fafafa]"
                             >
-                                <img
-                                    src={URL.createObjectURL(file)}
-                                    alt=""
-                                    className={
-                                        'w-full rounded-md object-cover shadow' +
-                                        (multiple ? 'h-40' : ' h-full')
-                                    }
-                                />
+                                {file.type.startsWith('image/') ? (
+                                    <img
+                                        src={URL.createObjectURL(file)}
+                                        alt=""
+                                        className={
+                                            'w-full rounded-md object-cover shadow' +
+                                            (multiple ? 'h-40' : ' h-full')
+                                        }
+                                    />
+                                ) : (
+                                    <div
+                                        className={
+                                            'w-full rounded-md object-cover shadow text-[#6b7280] ' +
+                                            (multiple ? 'h-40' : 'h-[90%]')
+                                        }
+                                    >
+                                        <FileIcon name={file.name} />
+                                    </div>
+                                )}
                                 <div className="flex items-center justify-between w-full">
                                     <div>
                                         <p className="font-medium text-xs mt-1">
