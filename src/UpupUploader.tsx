@@ -117,6 +117,7 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
          */
         useImperativeHandle(ref, () => ({
             async uploadFiles() {
+                if (files.length === 0) return null
                 return new Promise(async (resolve, reject) => {
                     /**
                      * Upload the file to the cloud storage
