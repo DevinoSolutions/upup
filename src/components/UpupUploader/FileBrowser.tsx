@@ -31,7 +31,7 @@ const FileBrowser = ({
         }
     }
 
-    useGoogleDrive()
+    const { files, handleSignin, handleSignout, user } = useGoogleDrive()
 
     return (
         <div className="h-full w-full grid grid-rows-[auto,auto,1fr,auto] bg-white">
@@ -54,10 +54,16 @@ const FileBrowser = ({
                     ))}
                 </div>
                 <div className="flex gap-2 items-center">
-                    <h1>bechir@unotes.com</h1>
+                    <h1>{user?.name}</h1>
                     <i className="h-[3px] w-[3px] rounded-full bg-[#ddd] -mb-1" />
-                    <button className="text-[#2275d7] hover:underline">
-                        Log out
+                    <button
+                        className="text-[#2275d7] hover:underline"
+                        onClick={() => {
+                            if (user) handleSignout()
+                            else handleSignin()
+                        }}
+                    >
+                        {user ? 'Sign out' : 'Sign in'}
                     </button>
                 </div>
             </div>

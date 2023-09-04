@@ -1,6 +1,12 @@
 import { useEffect, useState } from 'react'
 import useLoadGAPI from './useLoadGAPI'
 
+declare global {
+    interface Window {
+        google?: any
+    }
+}
+
 const google_client_id = process.env.GOOGLE_CLIENT_PICKER_ID
 const google_app_id = process.env.GOOGLE_APP_ID
 const google_api_key = process.env.GOOGLE_API_KEY
@@ -9,13 +15,19 @@ const useGoogleDrive = () => {
     const [user, setUser] = useState<any>(null)
     const [files, setFiles] = useState<any>(null)
 
-    const { tokenClient, gisLoaded } = useLoadGAPI({
-        google_client_id,
-    })
-
-    let accessToken: string
+    const { gdriveApiLoaded, gisLoaded } = useLoadGAPI()
 
     const logFiles = async () => {
+        const access_token = await gapi.auth.getToken()
+
+        // // authenticate the user
+        // gapi.client.drive({
+        //     version: 'v3',
+        //     auth: access_token,
+        // })
+
+        console.log(gapi.client.drive)
+
         // @ts-ignore
         const response = await gapi.client.drive.files.list({
             fields: 'files(id, name, mimeType, size, thumbnailLink, parents, fileExtension)',
@@ -31,38 +43,42 @@ const useGoogleDrive = () => {
         }
     }
 
+    const handleCredentialResponse = async (response: any) => {
+        if (response.credential) {
+            const credential = response.credential
+            gapi.auth.setToken(credential)
+
+            logFiles()
+        }
+    }
+
+    const handleSignin = async () => {
+        const google = await window.google
+        await google.accounts.id.prompt()
+    }
+
+    const handleSignout = async () => {
+        const google = await window.google
+        google.accounts.id.disableAutoSelect()
+        google.accounts.id.revoke()
+        setUser(null)
+    }
+
     useEffect(() => {
         const onGisLoaded = async () => {
-            // Request an access token
-            // tokenClient.callback = async (response: any) => {
-            //     if (response.error !== undefined) throw response
+            const google = await window.google
 
-            //     if (response.access_token) {
-            //         accessToken = response.access_token
-            //         logFiles()
-            //     }
-            // }
+            await google.accounts.id.initialize({
+                api_key: google_api_key,
+                client_id: google_client_id,
+                callback: handleCredentialResponse,
+                scope: 'profile email https://www.googleapis.com/auth/drive.readonly',
+            })
 
-            // if (!accessToken) {
-            //     // Prompt the user to select a Google Account and ask for consent to share their data
-            //     // when establishing a new session.
-            //     tokenClient.requestAccessToken()
-            // }
-
-            const auth2 = gapi.auth2.getAuthInstance()
-
-            auth2
-                .grantOfflineAccess({
-                    prompt: 'select_account',
-                })
-                .then((res: any) => {
-                    console.log('res', res)
-                })
+            google.accounts.id.prompt()
         }
 
-        if (gisLoaded) {
-            onGisLoaded()
-        }
+        if (gisLoaded) onGisLoaded()
     }, [gisLoaded])
 
     useEffect(() => {
@@ -70,7 +86,7 @@ const useGoogleDrive = () => {
         console.log('files', files)
     }, [user, files])
 
-    return { user, files }
+    return { user, files, handleSignin, handleSignout }
 }
 
 export default useGoogleDrive
