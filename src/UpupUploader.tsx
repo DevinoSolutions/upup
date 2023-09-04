@@ -231,6 +231,7 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
                         <DropZone
                             setFiles={setFiles}
                             setIsDragging={setIsDragging}
+                            multiple={multiple}
                         />
                     )}
                 </AnimatePresence>

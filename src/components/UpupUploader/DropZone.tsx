@@ -5,9 +5,11 @@ import { TbUpload } from 'react-icons/tb'
 export default function DropZone({
     setFiles,
     setIsDragging,
+    multiple,
 }: {
     setFiles: React.Dispatch<React.SetStateAction<File[]>>
     setIsDragging: React.Dispatch<React.SetStateAction<boolean>>
+    multiple?: boolean
 }) {
     return (
         <motion.div
@@ -32,7 +34,12 @@ export default function DropZone({
                 className="w-full h-full absolute top-0 opacity-0"
                 multiple
                 onChange={e => {
-                    setFiles(prev => [...prev, ...Array.from(e.target.files!)])
+                    setFiles(prev =>
+                        multiple
+                            ? [...prev, ...Array.from(e.target.files!)]
+                            : // only one file
+                              [e.target.files![0]],
+                    )
                     setIsDragging(false)
                 }}
                 onDrop={e => {
