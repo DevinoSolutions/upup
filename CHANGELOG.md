@@ -1,5 +1,11 @@
 # @bassem97/upup
 
+## 2.2.8
+
+### Patch Changes
+
+-   2326ce8: block uploading multiple files using dropzone
+
 ## 2.2.7
 
 ### Patch Changes
