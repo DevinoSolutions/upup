@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import useLoadGAPI from './useLoadGAPI'
 
 declare global {
@@ -8,20 +8,19 @@ declare global {
     }
 }
 
-const google_client_id = process.env.GOOGLE_CLIENT_PICKER_ID
+const google_client_id = process.env.GOOGLE_CLIENT_ID
+const google_api_key = process.env.GOOGLE_API_KEY
 
 const useGoogleDrive = () => {
     const [user, setUser] = useState<any>(null)
     const [files, setFiles] = useState<any>(null)
     const [access_token, setAccessToken] = useState<any>(null)
 
-    const ref = useRef<any>(null)
-
     const { gisLoaded } = useLoadGAPI()
 
     const getFiles = async () => {
         const response = await fetch(
-            'https://www.googleapis.com/drive/v3/files',
+            `https://www.googleapis.com/drive/v3/files?fields=files(fileExtension,id,mimeType,name,parents,size,thumbnailLink)&key=${google_api_key}`,
             {
                 headers: {
                     Authorization: `Bearer ${access_token.access_token}`,
@@ -76,7 +75,7 @@ const useGoogleDrive = () => {
             google.accounts.oauth2
                 .initTokenClient({
                     client_id: google_client_id,
-                    scope: 'https://www.googleapis.com/auth/drive.readonly',
+                    scope: 'https://www.googleapis.com/auth/drive',
                     ux_mode: 'popup',
                     callback(tokenResponse: { error: any; access_token: any }) {
                         if (tokenResponse && !tokenResponse.error) {
