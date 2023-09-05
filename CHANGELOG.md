@@ -1,5 +1,11 @@
 # @bassem97/upup
 
+## 2.2.9
+
+### Patch Changes
+
+-   5a47d7b: Add file limit
+
 ## 2.2.8
 
 ### Patch Changes
