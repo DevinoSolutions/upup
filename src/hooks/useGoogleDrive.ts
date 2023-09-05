@@ -53,17 +53,17 @@ const useGoogleDrive = () => {
     const organizeFiles = () => {
         if (!files) return
         const organizedFiles: any = files.filter(
-            (f: { parent: any }) => !f.parent,
+            (f: { parents: any }) =>
+                files.findIndex((ff: { id: any }) => ff.id === f.parents[0]) ===
+                -1,
         )
 
         for (let i = 0; i < organizedFiles.length; i++) {
             const file = organizedFiles[i]
-            const children = files.filter(
-                (f: { parent: any }) => f.parent === file.id,
+            const children = files.filter((f: { parents: string[] }) =>
+                f.parents.includes(file.id),
             )
-            if (children.length) {
-                file.children = children
-            }
+            if (children.length) file.children = children
         }
         setFiles(organizedFiles)
     }
