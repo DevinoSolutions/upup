@@ -27,39 +27,37 @@ const useGoogleDrive = () => {
     })
 
     const logFiles = async () => {
-        // console.log('access_token', access_token)
-        // // @ts-ignore
-        // const response = await gapi.client.drive.files.list({
-        //     fields: 'files(id, name, mimeType, size, thumbnailLink, parents, fileExtension)',
-        //     headers: {
-        //         Authorization: `Bearer ${credential}`,
-        //     },
-        // })
-        // const files = response.result.files
-        // if (files && files.length > 0) {
-        //     console.log('Files:')
-        //     files.forEach((file: any) => {
-        //         console.log(file)
-        //     })
-        // } else {
-        //     console.log('No files found.')
-        // }
+        console.log('access_token', access_token)
+        // @ts-ignore
+        const response = await gapi.client.drive.files.list({
+            fields: 'files(id, name, mimeType, size, thumbnailLink, parents, fileExtension)',
+            headers: {
+                Authorization: `Bearer ${access_token.access_token}`,
+            },
+        })
+        const files = response.result.files
+        if (files && files.length > 0) {
+            console.log('Files:')
+            files.forEach((file: any) => {
+                console.log(file)
+            })
+        } else {
+            console.log('No files found.')
+        }
     }
 
-    // const handleCredentialResponse = async (response: any) => {
-    //     if (response.credential) {
-    //         const credential = response.credential
-    //         const decoded = jwt_decode(credential)
-
-    //         setUser(decoded)
-    //         logFiles()
-    //     }
-    // }
-
-    // const handleSignin = async () => {
-    //     const google = await window.google
-    //     await google.accounts.id.prompt()
-    // }
+    const getUserName = async () => {
+        const response = await fetch(
+            'https://www.googleapis.com/oauth2/v3/userinfo',
+            {
+                headers: {
+                    Authorization: `Bearer ${access_token.access_token}`,
+                },
+            },
+        )
+        const data = await response.json()
+        setUser(data)
+    }
 
     const handleSignout = async () => {
         const google = await window.google
@@ -109,7 +107,11 @@ const useGoogleDrive = () => {
         console.log('user', user)
         console.log('files', files)
         console.log('access_token', access_token)
-    }, [user, files, access_token])
+
+        if (access_token) {
+            getUserName()
+        }
+    }, [access_token])
 
     return { user, files, handleSignout }
 }
