@@ -46,25 +46,20 @@ const useGoogleDrive = () => {
         // }
     }
 
-    const handleCredentialResponse = async (response: any) => {
-        if (response.credential) {
-            const credential = response.credential
-            const decoded = jwt_decode(credential)
+    // const handleCredentialResponse = async (response: any) => {
+    //     if (response.credential) {
+    //         const credential = response.credential
+    //         const decoded = jwt_decode(credential)
 
-            setUser(decoded)
-            logFiles()
-        }
-    }
+    //         setUser(decoded)
+    //         logFiles()
+    //     }
+    // }
 
-    const handleSignin = async () => {
-        // const google = await window.google
-        // await google.accounts.id.prompt()
-        const tokenClient = await window.tokenClient
-        tokenClient.requestAccessToken({
-            prompt: 'none',
-            ux_mode: 'redirect',
-        })
-    }
+    // const handleSignin = async () => {
+    //     const google = await window.google
+    //     await google.accounts.id.prompt()
+    // }
 
     const handleSignout = async () => {
         const google = await window.google
@@ -76,27 +71,36 @@ const useGoogleDrive = () => {
         const onGisLoaded = async () => {
             const google = await window.google
 
-            await google.accounts.id.initialize({
-                api_key: google_api_key,
-                client_id: google_client_id,
-                callback: handleCredentialResponse,
-                scope: SCOPES,
-            })
+            google.accounts.oauth2
+                .initTokenClient({
+                    client_id: google_client_id,
+                    scope: 'https://www.googleapis.com/auth/drive.readonly',
+                    ux_mode: 'popup',
+                    callback(tokenResponse: { error: any; access_token: any }) {
+                        if (tokenResponse && !tokenResponse.error) {
+                            localStorage.setItem(
+                                'token',
+                                JSON.stringify({
+                                    ...tokenResponse,
+                                    expires_in:
+                                        Date.now() +
+                                        // @ts-ignore
+                                        (tokenResponse.expires_in - 20) * 1000,
+                                }),
+                            )
+                            return setAccessToken(tokenResponse)
+                        }
 
-            const tokenClient = await google.accounts.oauth2.initTokenClient({
-                client_id: google_client_id,
-                scope: SCOPES,
-                callbsck: (tokenResponse: any) => {
-                    console.log('tokenResponse', tokenResponse)
-                    setAccessToken(tokenResponse.access_token)
-                },
-                ux_mode: 'redirect',
-            })
-
-            // await google.accounts.id.prompt()
-
-            window.tokenClient = tokenClient
+                        console.log('tokenResponse', tokenResponse)
+                    },
+                })
+                .requestAccessToken({})
         }
+        const storedTokenStr = localStorage.getItem('token')
+        const storedToken = storedTokenStr ? JSON.parse(storedTokenStr) : null
+
+        if (storedToken && storedToken.expires_in > Date.now())
+            return setAccessToken(storedToken)
 
         if (gisLoaded) onGisLoaded()
     }, [gisLoaded])
@@ -107,7 +111,7 @@ const useGoogleDrive = () => {
         console.log('access_token', access_token)
     }, [user, files, access_token])
 
-    return { user, files, handleSignin, handleSignout }
+    return { user, files, handleSignout }
 }
 
 export default useGoogleDrive
