@@ -12,7 +12,7 @@ const space_region = process.env.SPACE_REGION
 const document_space = process.env.SPACE_DOCUMENTS
 const image_space = process.env.SPACE_IMAGES
 const onedrive_client_id = process.env.ONEDRIVE_CLIENT_ID
-const google_client_id = process.env.GOOGLE_CLIENT_PICKER_ID
+const google_client_id = process.env.GOOGLE_CLIENT_ID
 const google_app_id = process.env.GOOGLE_APP_ID
 const google_api_key = process.env.GOOGLE_API_KEY
 
