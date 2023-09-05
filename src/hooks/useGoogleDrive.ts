@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import useLoadGAPI from './useLoadGAPI'
 
 declare global {
@@ -14,6 +14,8 @@ const useGoogleDrive = () => {
     const [user, setUser] = useState<any>(null)
     const [files, setFiles] = useState<any>(null)
     const [access_token, setAccessToken] = useState<any>(null)
+
+    const ref = useRef<any>(null)
 
     const { gisLoaded } = useLoadGAPI()
 
@@ -47,6 +49,24 @@ const useGoogleDrive = () => {
         const google = await window.google
         google.accounts.id.revoke()
         setUser(null)
+    }
+
+    const organizeFiles = () => {
+        if (!files) return
+        const organizedFiles: any = files.filter(
+            (f: { parent: any }) => !f.parent,
+        )
+
+        for (let i = 0; i < organizedFiles.length; i++) {
+            const file = organizedFiles[i]
+            const children = files.filter(
+                (f: { parent: any }) => f.parent === file.id,
+            )
+            if (children.length) {
+                file.children = children
+            }
+        }
+        setFiles(organizedFiles)
     }
 
     useEffect(() => {
@@ -93,6 +113,14 @@ const useGoogleDrive = () => {
             getFiles()
         }
     }, [access_token])
+
+    useEffect(() => {
+        organizeFiles()
+    }, [files?.length, files?.map((f: { parent: any }) => f.parent).join(',')])
+
+    useEffect(() => {
+        console.log('files', files)
+    }, [files])
 
     return { user, files, handleSignout }
 }
