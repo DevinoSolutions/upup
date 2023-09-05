@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import useLoadGAPI from './useLoadGAPI'
-import jwt_decode from 'jwt-decode'
 
 declare global {
     interface Window {
@@ -10,40 +9,25 @@ declare global {
 }
 
 const google_client_id = process.env.GOOGLE_CLIENT_PICKER_ID
-const google_app_id = process.env.GOOGLE_APP_ID
-const google_api_key = process.env.GOOGLE_API_KEY
-
-const SCOPES = `https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/drive.metadata.readonly https://www.googleapis.com/auth/drive.readonly`
 
 const useGoogleDrive = () => {
     const [user, setUser] = useState<any>(null)
     const [files, setFiles] = useState<any>(null)
     const [access_token, setAccessToken] = useState<any>(null)
 
-    const { gdriveApiLoaded, gisLoaded } = useLoadGAPI({
-        google_client_id,
-        google_app_id,
-        google_api_key,
-    })
+    const { gisLoaded } = useLoadGAPI()
 
-    const logFiles = async () => {
-        console.log('access_token', access_token)
-        // @ts-ignore
-        const response = await gapi.client.drive.files.list({
-            fields: 'files(id, name, mimeType, size, thumbnailLink, parents, fileExtension)',
-            headers: {
-                Authorization: `Bearer ${access_token.access_token}`,
+    const getFiles = async () => {
+        const response = await fetch(
+            'https://www.googleapis.com/drive/v3/files',
+            {
+                headers: {
+                    Authorization: `Bearer ${access_token.access_token}`,
+                },
             },
-        })
-        const files = response.result.files
-        if (files && files.length > 0) {
-            console.log('Files:')
-            files.forEach((file: any) => {
-                console.log(file)
-            })
-        } else {
-            console.log('No files found.')
-        }
+        )
+        const data = await response.json()
+        setFiles(data?.files)
     }
 
     const getUserName = async () => {
@@ -104,12 +88,9 @@ const useGoogleDrive = () => {
     }, [gisLoaded])
 
     useEffect(() => {
-        console.log('user', user)
-        console.log('files', files)
-        console.log('access_token', access_token)
-
         if (access_token) {
             getUserName()
+            getFiles()
         }
     }, [access_token])
 
