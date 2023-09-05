@@ -14,6 +14,7 @@ const google_api_key = process.env.GOOGLE_API_KEY
 const useGoogleDrive = () => {
     const [user, setUser] = useState<any>(null)
     const [files, setFiles] = useState<any>(null)
+    const [rawFiles, setRawFiles] = useState<any>(null)
     const [access_token, setAccessToken] = useState<any>(null)
 
     const { gisLoaded } = useLoadGAPI()
@@ -28,7 +29,7 @@ const useGoogleDrive = () => {
             },
         )
         const data = await response.json()
-        setFiles(data?.files)
+        setRawFiles(data?.files)
     }
 
     const getUserName = async () => {
@@ -51,21 +52,26 @@ const useGoogleDrive = () => {
     }
 
     const organizeFiles = () => {
-        if (!files) return
-        const organizedFiles: any = files.filter(
+        if (!rawFiles) return
+        const organizedFiles: any = rawFiles.filter(
             (f: { parents: any }) =>
-                files.findIndex((ff: { id: any }) => ff.id === f.parents[0]) ===
-                -1,
+                rawFiles.findIndex(
+                    (ff: { id: any }) => ff.id === f.parents[0],
+                ) === -1,
         )
 
         for (let i = 0; i < organizedFiles.length; i++) {
             const file = organizedFiles[i]
-            const children = files.filter((f: { parents: string[] }) =>
+            const children = rawFiles.filter((f: { parents: string[] }) =>
                 f.parents.includes(file.id),
             )
             if (children.length) file.children = children
         }
-        setFiles(organizedFiles)
+        setFiles({
+            id: 'root-drive',
+            name: 'Drive',
+            children: organizedFiles,
+        })
     }
 
     useEffect(() => {
@@ -115,7 +121,7 @@ const useGoogleDrive = () => {
 
     useEffect(() => {
         organizeFiles()
-    }, [files?.length, files?.map((f: { parent: any }) => f.parent).join(',')])
+    }, [rawFiles])
 
     useEffect(() => {
         console.log('files', files)
