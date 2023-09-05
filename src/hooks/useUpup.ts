@@ -24,6 +24,7 @@ interface Props {
     isDocument?: boolean
     multiple?: boolean
     setFiles?: Dispatch<SetStateAction<File[]>>
+    limit?: number
 }
 
 /**
@@ -41,7 +42,7 @@ const useUpup: (props?: Props) => {
         multiple: false,
     },
 ) => {
-    const { isDocument, setFiles, multiple } = props
+    const { isDocument, setFiles, multiple, limit } = props
 
     /**
      * Throw an error if any of the required environment variables are missing
@@ -84,6 +85,7 @@ const useUpup: (props?: Props) => {
         onChange: (files: File[]) => (setFiles ? setFiles(files) : () => {}),
         multiple,
         isDocument,
+        limit,
     }
 
     const cloudStorageConfigs: CloudStorageConfigs = {
