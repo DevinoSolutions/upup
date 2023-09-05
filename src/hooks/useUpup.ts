@@ -55,7 +55,7 @@ const useUpup: (props?: Props) => {
             SPACE_DOCUMENTS: !!document_space,
             SPACE_IMAGES: !!image_space,
             ONEDRIVE_CLIENT_ID: !!onedrive_client_id,
-            GOOGLE_CLIENT_PICKER_ID: !!google_client_id,
+            GOOGLE_CLIENT_ID: !!google_client_id,
             GOOGLE_APP_ID: !!google_app_id,
             GOOGLE_API_KEY: !!google_api_key,
         }
