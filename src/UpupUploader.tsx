@@ -4,6 +4,7 @@ import React, {
     forwardRef,
     LegacyRef,
     RefAttributes,
+    useEffect,
     useImperativeHandle,
     useState,
 } from 'react'
@@ -88,6 +89,7 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
             onChange,
             multiple = false,
             isDocument = false,
+            limit,
         } = baseConfigs
 
         const [files, setFiles] = useState<File[]>([])
@@ -218,6 +220,17 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
                 <CameraUploader setFiles={setFiles} setView={setView} />
             ),
         }
+
+        useEffect(() => {
+            if (!limit) return
+
+            const difference = files.length - limit
+
+            if (difference <= 0) return
+
+            const newFiles = files.slice(difference)
+            setFiles([...newFiles])
+        }, [limit, files])
 
         return (
             <div

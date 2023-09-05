@@ -3,4 +3,5 @@ export type BaseConfigs = {
     multiple?: boolean
     onChange?: (files: File[]) => void
     isDocument?: boolean
+    limit?: number
 }

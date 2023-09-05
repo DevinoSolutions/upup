@@ -17,7 +17,7 @@ export default meta
 
 const Template: Story<UpupUploaderProps> = args => {
     const { baseConfigs, cloudStorageConfigs, googleConfigs, oneDriveConfigs } =
-        useUpup({ isDocument: false, multiple: true })
+        useUpup({ isDocument: false, multiple: true, limit: 5 })
     const uploadAdapters: UPLOAD_ADAPTER[] = [
         UploadAdapter.INTERNAL,
         UploadAdapter.GOOGLE_DRIVE,
