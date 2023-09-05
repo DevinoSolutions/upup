@@ -31,7 +31,7 @@ const FileBrowser = ({
         }
     }
 
-    const { files, handleSignin, handleSignout, user } = useGoogleDrive()
+    const { files, handleSignout, user } = useGoogleDrive()
 
     return (
         <div className="h-full w-full grid grid-rows-[auto,auto,1fr,auto] bg-white">
@@ -60,7 +60,6 @@ const FileBrowser = ({
                         className="text-[#2275d7] hover:underline"
                         onClick={() => {
                             if (user) handleSignout()
-                            else handleSignin()
                         }}
                     >
                         {user ? 'Sign out' : 'Sign in'}
