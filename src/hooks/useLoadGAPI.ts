@@ -1,11 +1,21 @@
 import load from 'load-script'
 import { useEffect, useState } from 'react'
 
+type useLoadGAPIProps = {
+    google_client_id: string
+    google_app_id: string
+    google_api_key: string
+}
+
 /**
  * This hook loads the Google API and the Google Identity Services API
  *
  */
-const useLoadGAPI = () => {
+const useLoadGAPI = ({
+    google_client_id,
+    google_app_id,
+    google_api_key,
+}: useLoadGAPIProps) => {
     const [gisLoaded, setGisLoaded] = useState<boolean>(false)
     const [gdriveApiLoaded, setGdriveApiLoaded] = useState<boolean>(false)
 
