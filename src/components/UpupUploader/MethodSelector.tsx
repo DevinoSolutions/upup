@@ -20,6 +20,7 @@ const MethodsSelector = ({
                 <button
                     className="text-[#3782da] hover:underline"
                     onClick={() => inputRef && inputRef.current!.click()}
+                    type="button"
                 >
                     browse {isDocument ? 'files' : 'images'}
                 </button>{' '}
@@ -40,6 +41,7 @@ const MethodsSelector = ({
                                 ? inputRef && inputRef.current!.click()
                                 : setView(method.id)
                         }
+                        type="button"
                     >
                         <span className="bg-white dark:bg-[#323232] p-[6px] rounded-lg text-2xl shadow">
                             {method.icon}

@@ -36,7 +36,10 @@ export default function UrlUploader({
                 value={url}
                 onChange={e => setUrl(e.target.value)}
             />
-            <button className="bg-blue-500 text-white p-2 w-full mt-2 rounded-md hover:bg-blue-600 active:bg-blue-700 transition-all duration-300">
+            <button
+                className="bg-blue-500 text-white p-2 w-full mt-2 rounded-md hover:bg-blue-600 active:bg-blue-700 transition-all duration-300"
+                type="button"
+            >
                 {loading ? 'Loading...' : 'Upload'}
             </button>
         </form>

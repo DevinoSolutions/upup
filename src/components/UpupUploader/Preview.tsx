@@ -37,6 +37,7 @@ const Preview = ({
                         <button
                             className="hover:bg-[#e9ecef] hover:text-[#1f1f1f] active:bg-[#dfe6f1] rounded-md p-2 px-4 transition-all duration-300"
                             onClick={() => setFiles([])}
+                            type="button"
                         >
                             Cancel
                         </button>
@@ -53,6 +54,7 @@ const Preview = ({
                                     : 'opacity-0 pointer-events-none')
                             }
                             onClick={() => setIsAddingMore(!isAddingMore)}
+                            type="button"
                         >
                             {isAddingMore ? 'Show Previews' : 'Add more'}
                         </button>
@@ -105,13 +107,14 @@ const Preview = ({
                                             {bytesToSize(file.size)}
                                         </p>
                                     </div>
-                                    <button>
+                                    <button type="button">
                                         <TbEdit />
                                     </button>
                                 </div>
                                 <button
                                     className="bg-black rounded-full absolute -top-1 -right-1"
                                     onClick={() => removeFile(i)}
+                                    type="button"
                                 >
                                     <TbX className="h-4 w-4 text-white" />
                                 </button>
