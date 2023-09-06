@@ -1,6 +1,6 @@
 import React from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { TbEdit, TbX } from 'react-icons/tb'
+import { TbX } from 'react-icons/tb'
 import { bytesToSize } from 'lib/bytesToSize'
 import FileIcon from 'components/FileIcon'
 
