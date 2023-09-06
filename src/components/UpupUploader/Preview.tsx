@@ -70,7 +70,7 @@ const Preview = ({
                         className={
                             'grid p-4 border-b bg-[#f4f4f4] dark:bg-[#1f1f1f] dark:text-[#fafafa] origin-bottom gap-4 overflow-y-scroll pointer-events-auto ' +
                             (multiple
-                                ? 'grid-cols-1 sm:grid-cols-2 md:grid-cols-4'
+                                ? 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl-grid-cols-4'
                                 : 'grid-cols-1 grid-rows-1')
                         }
                     >
