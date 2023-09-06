@@ -107,9 +107,9 @@ const Preview = ({
                                             {bytesToSize(file.size)}
                                         </p>
                                     </div>
-                                    <button type="button">
+                                    {/* <button type="button">
                                         <TbEdit />
-                                    </button>
+                                    </button> */}
                                 </div>
                                 <button
                                     className="bg-black rounded-full absolute -top-1 -right-1"
