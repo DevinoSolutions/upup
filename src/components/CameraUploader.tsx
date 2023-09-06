@@ -45,6 +45,7 @@ export default function CameraUploader({
                         <button
                             onClick={() => setImgSrc('')}
                             className="bg-[#272727] rounded-full absolute -top-2 -right-2 text-xl text-[#f5f5f5] p-1 z-10"
+                            type="button"
                         >
                             <TbX />
                         </button>
@@ -61,6 +62,7 @@ export default function CameraUploader({
                 <button
                     className="bg-blue-500 text-white p-2 w-full mt-2 rounded-md hover:bg-blue-600 active:bg-blue-700 transition-all duration-300"
                     onClick={capture}
+                    type="button"
                 >
                     Capture photo
                 </button>
@@ -71,6 +73,7 @@ export default function CameraUploader({
                         setView('internal')
                     }}
                     disabled={!image}
+                    type="button"
                 >
                     Upload
                 </button>

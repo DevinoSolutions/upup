@@ -26,13 +26,17 @@ const View = ({
                         <button
                             className="hover:bg-[#e9ecef] active:bg-[#dfe6f1] rounded-md p-2 px-4 transition-all duration-300 dark:group-hover:text-[#1f1f1f]"
                             onClick={() => setView('internal')}
+                            type="button"
                         >
                             Cancel
                         </button>
                         <p className="text-[#333] dark:text-[#fafafa]">
                             Import from {methods.find(x => x.id === view)!.name}
                         </p>
-                        <button className="hover:bg-[#e9ecef] active:bg-[#dfe6f1] rounded-md p-2 px-4 transition-all duration-300 opacity-0">
+                        <button
+                            className="hover:bg-[#e9ecef] active:bg-[#dfe6f1] rounded-md p-2 px-4 transition-all duration-300 opacity-0"
+                            type="button"
+                        >
                             Cancel
                         </button>
                     </div>
