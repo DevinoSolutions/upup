@@ -1,4 +1,3 @@
-import React from 'react'
 import {
     TbFileText,
     TbFileUnknown,
@@ -6,8 +5,9 @@ import {
     TbPdf,
     TbVideo,
 } from 'react-icons/tb'
+import { SVGProps } from 'react'
 
-type IconType = (props: React.SVGProps<SVGSVGElement>) => JSX.Element
+type IconType = (props: SVGProps<SVGSVGElement>) => JSX.Element
 
 const fileTypes: { [key: string]: IconType } = {
     mp4: TbVideo,

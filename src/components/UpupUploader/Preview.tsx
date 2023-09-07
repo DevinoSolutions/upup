@@ -1,4 +1,3 @@
-import React from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { TbX } from 'react-icons/tb'
 import { bytesToSize } from 'lib/bytesToSize'

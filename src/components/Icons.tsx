@@ -1,5 +1,3 @@
-import React from 'react'
-
 const MyDeviceIcon = () => (
     <svg
         aria-hidden="true"
