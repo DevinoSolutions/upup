@@ -17,11 +17,11 @@ const google_app_id = process.env.GOOGLE_APP_ID
 const google_api_key = process.env.GOOGLE_API_KEY
 
 /**
- * determines whether the user is uploading a document or an images
- * @param isDocument
+ * specify the type of file to accept
+ * @param accept
  */
 interface Props {
-    isDocument?: boolean
+    accept?: string
     multiple?: boolean
     setFiles?: Dispatch<SetStateAction<File[]>>
     limit?: number
@@ -37,12 +37,12 @@ const useUpup: (props?: Props) => {
     oneDriveConfigs: OneDriveConfigs
 } = (
     props: Props = {
-        isDocument: false,
+        accept: '*',
         setFiles: () => {},
         multiple: false,
     },
 ) => {
-    const { isDocument, setFiles, multiple, limit } = props
+    const { accept, setFiles, multiple, limit } = props
 
     /**
      * Throw an error if any of the required environment variables are missing
@@ -84,12 +84,12 @@ const useUpup: (props?: Props) => {
     const baseConfigs: BaseConfigs = {
         onChange: (files: File[]) => (setFiles ? setFiles(files) : () => {}),
         multiple,
-        isDocument,
+        accept,
         limit,
     }
 
     const cloudStorageConfigs: CloudStorageConfigs = {
-        bucket: isDocument ? document_space : image_space,
+        bucket: accept !== 'image/*' ? document_space : image_space,
         s3Configs,
     }
 
