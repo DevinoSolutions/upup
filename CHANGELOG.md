@@ -1,5 +1,15 @@
 # @bassem97/upup
 
+## 2.2.12
+
+### Patch Changes
+
+-   99579dd: fix edit button & remove React imports
+-   f9acf42: All good
+-   b4dad02: Add babel runtime automatic
+-   68a3b8e: remove last React import
+-   f9acf42: add babel config to tsdx configs
+
 ## 2.2.11
 
 ### Patch Changes
