@@ -17,6 +17,7 @@ module.exports = {
                     autoprefixer(),
                     cssnano({ preset: 'default' }),
                 ],
+
                 minimize: true,
                 inject: { insertAt: 'top' },
                 // only write out CSS for the first bundle (avoids pointless extra files):
