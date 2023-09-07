@@ -90,6 +90,7 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
             multiple = false,
             accept = '*',
             limit,
+            onFileClick,
         } = baseConfigs
 
         const [files, setFiles] = useState<File[]>([])
@@ -278,6 +279,7 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
                     isAddingMore={isAddingMore}
                     setIsAddingMore={setIsAddingMore}
                     multiple={multiple}
+                    onFileClick={onFileClick}
                     // handleUpload={handleUpload}
                 />
                 <div className="p-2 h-full">

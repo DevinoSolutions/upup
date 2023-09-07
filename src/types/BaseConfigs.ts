@@ -4,4 +4,5 @@ export type BaseConfigs = {
     onChange?: (files: File[]) => void
     accept?: string
     limit?: number
+    onFileClick?: (file: File) => void
 }
