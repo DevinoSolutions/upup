@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion'
-import React, { useCallback, useRef, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import { TbX } from 'react-icons/tb'
 import Webcam from 'react-webcam'
 import useUrl from '../hooks/useUrl'

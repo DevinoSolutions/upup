@@ -1,4 +1,5 @@
 import type { Method } from 'types/Method'
+import { MutableRefObject } from 'react'
 
 const MethodsSelector = ({
     setView,
@@ -7,7 +8,7 @@ const MethodsSelector = ({
     isDocument,
 }: {
     setView: (view: string) => void
-    inputRef?: React.MutableRefObject<HTMLInputElement | null>
+    inputRef?: MutableRefObject<HTMLInputElement | null>
     methods: Method[]
     isDocument: boolean
 }) => {
