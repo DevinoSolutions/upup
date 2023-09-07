@@ -88,7 +88,7 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
             toBeCompressed = false,
             onChange,
             multiple = false,
-            isDocument = false,
+            accept = '*',
             limit,
         } = baseConfigs
 
@@ -250,7 +250,7 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
                 </AnimatePresence>
                 <input
                     type="file"
-                    accept={isDocument ? 'application/pdf' : 'image/*'}
+                    accept={accept}
                     className="absolute w-0 h-0"
                     ref={inputRef}
                     multiple={multiple}
@@ -283,7 +283,6 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
                 <div className="p-2 h-full">
                     <div className="border-[#dfdfdf] border-dashed h-full w-full grid grid-rows-[1fr,auto] place-items-center border rounded-md transition-all">
                         <MethodsSelector
-                            isDocument={isDocument}
                             setView={setView}
                             inputRef={inputRef}
                             methods={methods.filter(method => {
