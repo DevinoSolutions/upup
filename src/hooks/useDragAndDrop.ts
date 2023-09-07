@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react'
+import { MouseEvent, useRef, useState } from 'react'
 
 const useDragAndDrop = () => {
     const [isDragging, setIsDragging] = useState(false)
@@ -8,9 +8,7 @@ const useDragAndDrop = () => {
      * Define the event handler for drag enter
      * @param e the event
      */
-    const handleDragEnter = (
-        e: React.MouseEvent<HTMLDivElement, DragEvent>,
-    ) => {
+    const handleDragEnter = (e: MouseEvent<HTMLDivElement, DragEvent>) => {
         // Prevent default behavior
         e.preventDefault()
         // Check if the mouse is entering the div or its children
@@ -26,9 +24,7 @@ const useDragAndDrop = () => {
      * Define the event handler for drag leave
      * @param e the event
      */
-    const handleDragLeave = (
-        e: React.MouseEvent<HTMLDivElement, DragEvent>,
-    ) => {
+    const handleDragLeave = (e: MouseEvent<HTMLDivElement, DragEvent>) => {
         // Prevent default behavior
         e.preventDefault()
         // Check if the mouse is leaving the div or its children

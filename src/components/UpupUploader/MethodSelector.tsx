@@ -1,7 +1,5 @@
 import type { Method } from 'types/Method'
 
-import React from 'react'
-
 const MethodsSelector = ({
     setView,
     inputRef,

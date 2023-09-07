@@ -1,4 +1,4 @@
-import React, { FC } from 'react'
+import { Dispatch, FC, SetStateAction } from 'react'
 import useLoadGAPI from 'hooks/useLoadGAPI'
 import { BaseConfigs } from 'types/BaseConfigs'
 import { GoogleConfigs } from 'types/GoogleConfigs'
@@ -38,8 +38,8 @@ const GoogleDriveLogo = styled.img`
 export interface Props {
     baseConfigs: BaseConfigs
     googleConfigs: GoogleConfigs
-    setFiles: React.Dispatch<React.SetStateAction<File[]>>
-    setView: React.Dispatch<React.SetStateAction<string>>
+    setFiles: Dispatch<SetStateAction<File[]>>
+    setView: Dispatch<SetStateAction<string>>
 }
 
 /**

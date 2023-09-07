@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { Dispatch, SetStateAction } from 'react'
 import { motion } from 'framer-motion'
 import { TbUpload } from 'react-icons/tb'
 
@@ -7,8 +7,8 @@ export default function DropZone({
     setIsDragging,
     multiple,
 }: {
-    setFiles: React.Dispatch<React.SetStateAction<File[]>>
-    setIsDragging: React.Dispatch<React.SetStateAction<boolean>>
+    setFiles: Dispatch<SetStateAction<File[]>>
+    setIsDragging: Dispatch<SetStateAction<boolean>>
     multiple?: boolean
 }) {
     return (
