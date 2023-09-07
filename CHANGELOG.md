@@ -1,5 +1,12 @@
 # @bassem97/upup
 
+## 2.2.11
+
+### Patch Changes
+
+-   c7294a8: fix edit button & remove React imports
+-   7a021fd: remove last React import
+
 ## 2.2.10
 
 ### Patch Changes
