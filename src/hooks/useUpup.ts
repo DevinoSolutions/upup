@@ -25,6 +25,7 @@ interface Props {
     multiple?: boolean
     setFiles?: Dispatch<SetStateAction<File[]>>
     limit?: number
+    onFileClick?: (file: File) => void
 }
 
 /**
@@ -42,7 +43,7 @@ const useUpup: (props?: Props) => {
         multiple: false,
     },
 ) => {
-    const { accept, setFiles, multiple, limit } = props
+    const { accept, setFiles, multiple, limit, onFileClick } = props
 
     /**
      * Throw an error if any of the required environment variables are missing
@@ -86,6 +87,7 @@ const useUpup: (props?: Props) => {
         multiple,
         accept,
         limit,
+        onFileClick,
     }
 
     const cloudStorageConfigs: CloudStorageConfigs = {
