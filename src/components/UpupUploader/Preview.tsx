@@ -9,12 +9,14 @@ const Preview = ({
     isAddingMore,
     setIsAddingMore,
     multiple, // handleUpload,
+    onFileClick,
 }: {
     files: File[]
     setFiles: (files: File[]) => void
     isAddingMore: boolean
     setIsAddingMore: (isAddingMore: boolean) => void
     multiple?: boolean
+    onFileClick?: (file: File) => void
     // handleUpload: () => void
 }) => {
     /**
@@ -77,6 +79,7 @@ const Preview = ({
                             <div
                                 key={i}
                                 className="flex flex-col items-start h-full w-full relative dark:bg-[#1f1f1f] dark:text-[#fafafa]"
+                                onClick={() => onFileClick?.(file)}
                             >
                                 {file.type.startsWith('image/') ? (
                                     <img
