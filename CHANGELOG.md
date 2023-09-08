@@ -1,5 +1,11 @@
 # @bassem97/upup
 
+## 2.2.14
+
+### Patch Changes
+
+-   7f57591: Mini upup tweak
+
 ## 2.2.13
 
 ### Patch Changes
