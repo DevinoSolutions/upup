@@ -1,5 +1,11 @@
 # @bassem97/upup
 
+## 2.2.13
+
+### Patch Changes
+
+-   ea096cb: Add mini upup & fix bugs
+
 ## 2.2.12
 
 ### Patch Changes
