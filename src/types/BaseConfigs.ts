@@ -5,4 +5,5 @@ export type BaseConfigs = {
     accept?: string
     limit?: number
     onFileClick?: (file: File) => void
+    mini?: boolean
 }
