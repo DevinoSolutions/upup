@@ -255,7 +255,7 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
                     className="absolute w-0 h-0"
                     ref={inputRef}
                     multiple={multiple}
-                    onChange={e =>
+                    onChange={e => {
                         setFiles(files =>
                             isAddingMore
                                 ? [
@@ -264,7 +264,10 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
                                   ]
                                 : [...Array.from(e.target.files as FileList)],
                         )
-                    }
+
+                        // clear the input value
+                        e.target.value = ''
+                    }}
                 />
 
                 <View
@@ -273,6 +276,7 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
                     methods={methods}
                     components={components}
                 />
+
                 <Preview
                     files={files}
                     setFiles={setFiles}
