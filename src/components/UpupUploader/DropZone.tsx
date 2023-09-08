@@ -41,6 +41,9 @@ export default function DropZone({
                               [e.target.files![0]],
                     )
                     setIsDragging(false)
+
+                    // reset input
+                    e.target.value = ''
                 }}
                 onDrop={e => {
                     e.preventDefault()
