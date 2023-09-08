@@ -11,7 +11,7 @@ const MethodsSelector = ({
     methods: Method[]
 }) => {
     return (
-        <div className="w-full h-full flex flex-col items-center justify-center gap-6 ">
+        <div className="w-full h-full flex flex-col items-center justify-center gap-6">
             <h1 className="md:text-2xl text-center dark:text-white">
                 Drop your files here,{' '}
                 <button
@@ -26,6 +26,7 @@ const MethodsSelector = ({
             <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 grid-rows-2">
                 {methods.map(method => (
                     <button
+                        type="button"
                         key={method.id}
                         className="flex flex-col items-center justify-center gap-1 text-sm dark:hover:bg-[#282828] hover:bg-[#e9ecef] dark:active:bg-[#333] active:bg-[#dfe6f1] rounded-md p-2 px-4 transition-all duration-300 mb-4 disabled:opacity-30 disabled:pointer-events-none group relative"
                         disabled={
@@ -33,12 +34,14 @@ const MethodsSelector = ({
                                 method.id,
                             )
                         }
+                        onKeyDown={e => {
+                            if (e.key === 'Enter') e.preventDefault()
+                        }}
                         onClick={() =>
                             method.id === 'INTERNAL'
                                 ? inputRef && inputRef.current!.click()
                                 : setView(method.id)
                         }
-                        type="button"
                     >
                         <span className="bg-white dark:bg-[#323232] p-[6px] rounded-lg text-2xl shadow">
                             {method.icon}
