@@ -91,6 +91,7 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
             accept = '*',
             limit,
             onFileClick,
+            mini = false,
         } = baseConfigs
 
         const [files, setFiles] = useState<File[]>([])
