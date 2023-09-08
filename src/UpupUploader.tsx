@@ -11,6 +11,7 @@ import {
     UnsplashIcon,
 } from 'components/Icons'
 import OneDriveUploader from 'components/OneDriveUploader'
+import UpupMini from 'components/UpupMini'
 import DropZone from 'components/UpupUploader/DropZone'
 import MethodsSelector from 'components/UpupUploader/MethodSelector'
 import Preview from 'components/UpupUploader/Preview'
@@ -25,9 +26,9 @@ import { putObject } from 'lib/putObject'
 import {
     FC,
     ForwardedRef,
-    forwardRef,
     LegacyRef,
     RefAttributes,
+    forwardRef,
     useEffect,
     useImperativeHandle,
     useState,
@@ -234,7 +235,9 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
             setFiles([...newFiles])
         }, [limit, files])
 
-        return (
+        return mini ? (
+            <UpupMini files={files} setFiles={setFiles} />
+        ) : (
             <div
                 className="w-full max-w-[min(98svh,46rem)] bg-[#f4f4f4] h-[min(98svh,35rem)] rounded-md border flex flex-col relative overflow-hidden select-none dark:bg-[#1f1f1f]"
                 onDragEnter={handleDragEnter}
