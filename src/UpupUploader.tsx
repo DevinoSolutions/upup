@@ -1,21 +1,5 @@
-import {
-    FC,
-    ForwardedRef,
-    forwardRef,
-    LegacyRef,
-    RefAttributes,
-    useEffect,
-    useImperativeHandle,
-    useState,
-} from 'react'
-import { OneDriveConfigs } from 'types/OneDriveConfigs'
+import CameraUploader from 'components/CameraUploader'
 import { GoogleDriveUploader } from 'components/GoogleDriveUploader'
-import OneDriveUploader from 'components/OneDriveUploader'
-import { CloudStorageConfigs } from 'types/CloudStorageConfigs'
-import { BaseConfigs } from 'types/BaseConfigs'
-import { GoogleConfigs } from 'types/GoogleConfigs'
-import { getClient } from 'lib/getClient'
-import { UPLOAD_ADAPTER, UploadAdapter } from 'types/UploadAdapter'
 import {
     BoxIcon,
     CameraIcon,
@@ -26,18 +10,34 @@ import {
     OneDriveIcon,
     UnsplashIcon,
 } from 'components/Icons'
-import View from 'components/UpupUploader/View'
+import OneDriveUploader from 'components/OneDriveUploader'
+import DropZone from 'components/UpupUploader/DropZone'
 import MethodsSelector from 'components/UpupUploader/MethodSelector'
 import Preview from 'components/UpupUploader/Preview'
-import DropZone from 'components/UpupUploader/DropZone'
-import { AnimatePresence } from 'framer-motion'
+import View from 'components/UpupUploader/View'
 import UrlUploader from 'components/UrlUploader'
-import CameraUploader from 'components/CameraUploader'
-import useDragAndDrop from 'hooks/useDragAndDrop'
+import { AnimatePresence } from 'framer-motion'
 import useAddMore from 'hooks/useAddMore'
+import useDragAndDrop from 'hooks/useDragAndDrop'
 import { compressFile } from 'lib/compressFile'
+import { getClient } from 'lib/getClient'
 import { putObject } from 'lib/putObject'
+import {
+    FC,
+    ForwardedRef,
+    forwardRef,
+    LegacyRef,
+    RefAttributes,
+    useEffect,
+    useImperativeHandle,
+    useState,
+} from 'react'
+import { BaseConfigs } from 'types/BaseConfigs'
+import { CloudStorageConfigs } from 'types/CloudStorageConfigs'
+import { GoogleConfigs } from 'types/GoogleConfigs'
 import { Method } from 'types/Method'
+import { OneDriveConfigs } from 'types/OneDriveConfigs'
+import { UPLOAD_ADAPTER, UploadAdapter } from 'types/UploadAdapter'
 
 const methods: Method[] = [
     { id: 'INTERNAL', name: 'My Device', icon: <MyDeviceIcon /> },
