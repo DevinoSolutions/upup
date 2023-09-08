@@ -1,21 +1,16 @@
-import { Meta, Story } from '@storybook/react'
+import { Meta } from '@storybook/react'
 import { UPLOAD_ADAPTER, UploadAdapter, UpupUploader } from '../src'
 import useUpup from '../src/hooks/useUpup'
-import { UpupUploaderProps } from '../src/UpupUploader'
 import React from 'react'
 
-const meta: Meta = {
-    title: 'Upload files',
+const meta: Meta<typeof UpupUploader> = {
+    title: 'Uploader',
     component: UpupUploader,
-    argTypes: {},
-    parameters: {
-        controls: { expanded: true },
-    },
 }
 
 export default meta
 
-const Template: Story<UpupUploaderProps> = args => {
+const Uploader = args => {
     const { baseConfigs, cloudStorageConfigs, googleConfigs, oneDriveConfigs } =
         useUpup({
             accept: '*',
@@ -24,6 +19,7 @@ const Template: Story<UpupUploaderProps> = args => {
             onFileClick: file => {
                 console.log(file)
             },
+            ...args,
         })
     const uploadAdapters: UPLOAD_ADAPTER[] = [
         UploadAdapter.INTERNAL,
@@ -32,6 +28,7 @@ const Template: Story<UpupUploaderProps> = args => {
         UploadAdapter.LINK,
         UploadAdapter.CAMERA,
     ]
+
     return (
         <UpupUploader
             {...args}
@@ -44,8 +41,5 @@ const Template: Story<UpupUploaderProps> = args => {
     )
 }
 
-// By passing using the Args format for exported stories, you can control the props for a component for reuse in a test
-// https://storybook.js.org/docs/react/workflows/unit-testing
-export const Default = Template.bind({})
-
-Default.args = {}
+export const Default = () => Uploader({})
+export const Mini = () => Uploader({ mini: true })
