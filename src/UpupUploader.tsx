@@ -20,6 +20,7 @@ import UrlUploader from 'components/UrlUploader'
 import { AnimatePresence } from 'framer-motion'
 import useAddMore from 'hooks/useAddMore'
 import useDragAndDrop from 'hooks/useDragAndDrop'
+import checkFileType from 'lib/checkFileType'
 import { compressFile } from 'lib/compressFile'
 import { getClient } from 'lib/getClient'
 import { putObject } from 'lib/putObject'
@@ -250,6 +251,7 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
                             setFiles={setFiles}
                             setIsDragging={setIsDragging}
                             multiple={multiple}
+                            accept={accept}
                         />
                     )}
                 </AnimatePresence>
@@ -260,13 +262,14 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
                     ref={inputRef}
                     multiple={multiple}
                     onChange={e => {
+                        const acceptedFiles = Array.from(
+                            e.target.files as FileList,
+                        ).filter(file => checkFileType(file, accept))
+
                         setFiles(files =>
                             isAddingMore
-                                ? [
-                                      ...files,
-                                      ...Array.from(e.target.files as FileList),
-                                  ]
-                                : [...Array.from(e.target.files as FileList)],
+                                ? [...files, ...acceptedFiles]
+                                : [...acceptedFiles],
                         )
 
                         // clear the input value
