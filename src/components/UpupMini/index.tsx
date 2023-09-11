@@ -6,6 +6,7 @@ import useDragAndDrop from 'hooks/useDragAndDrop'
 
 import MiniDropZone from './MiniDropZone'
 import MiniPreview from './MiniPreview'
+import checkFileType from 'lib/checkFileType'
 
 export default function UpupMini({
     files,
@@ -45,7 +46,11 @@ export default function UpupMini({
                 className="absolute w-0 h-0"
                 ref={inputRef}
                 onChange={e => {
-                    setFiles(() => [...Array.from(e.target.files as FileList)])
+                    const acceptedFile = Array.from(
+                        e.target.files as FileList,
+                    ).filter(file => checkFileType(file, 'image/*'))
+
+                    setFiles(() => [...acceptedFile])
                     e.target.value = ''
                 }}
             />
