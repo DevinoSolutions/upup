@@ -27,9 +27,9 @@ import { putObject } from 'lib/putObject'
 import {
     FC,
     ForwardedRef,
+    forwardRef,
     LegacyRef,
     RefAttributes,
-    forwardRef,
     useEffect,
     useImperativeHandle,
     useState,
@@ -40,6 +40,7 @@ import { GoogleConfigs } from 'types/GoogleConfigs'
 import { Method } from 'types/Method'
 import { OneDriveConfigs } from 'types/OneDriveConfigs'
 import { UPLOAD_ADAPTER, UploadAdapter } from 'types/UploadAdapter'
+import { v4 as uuidv4 } from 'uuid'
 
 const methods: Method[] = [
     { id: 'INTERNAL', name: 'My Device', icon: <MyDeviceIcon /> },
@@ -154,10 +155,11 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
                     if (filesToUpload) {
                         try {
                             filesToUpload.map(async file => {
+                                const fileExtension = file.name.split('.').pop()
                                 /**
-                                 * assign a unique name for the file, usually has a timestamp prefix
+                                 * assign a unique name for the file contain timestamp and random string with extension from the original file
                                  */
-                                const key = `${Date.now()}__${file.name}`
+                                const key = `${Date.now()}__${uuidv4()}.${fileExtension}`
 
                                 /**
                                  * Upload the file to the cloud storage
