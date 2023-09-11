@@ -1,5 +1,11 @@
 # @bassem97/upup
 
+## 2.2.15
+
+### Patch Changes
+
+-   2a931fe: Various bug fixing
+
 ## 2.2.14
 
 ### Patch Changes
