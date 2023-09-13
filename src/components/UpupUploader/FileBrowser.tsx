@@ -10,7 +10,7 @@ const FileBrowser = ({
     setFiles: React.Dispatch<React.SetStateAction<File[]>>
     setView: (view: string) => void
 }) => {
-    const { files, handleSignout, user } = useGoogleDrive()
+    const { files, handleSignout, user, downloadFile } = useGoogleDrive()
 
     const [path, setPath] = useState<any[]>([])
     const [selectedFiles, setSelectedFiles] = useState<any[]>([])
@@ -22,10 +22,25 @@ const FileBrowser = ({
     const handleClick = (file: any) => {
         if (file.children) setPath(p => [...p, file])
         else {
-            if (selectedFiles.includes(file.id))
-                setSelectedFiles(prev => prev.filter(id => id !== file.id))
-            else setSelectedFiles(prev => [...prev, file.id])
+            if (selectedFiles.includes(file))
+                setSelectedFiles(prev => prev.filter(f => f.id !== file.id))
+            else setSelectedFiles(prev => [...prev, file])
         }
+    }
+
+    const handleSubmit = async () => {
+        const downloadFiles = async (files: any[]) => {
+            const promises = files.map(async file => {
+                const data = await downloadFile(file.id)
+                return new File([data], data.name, { type: data.mimeType })
+            })
+            return await Promise.all(promises)
+        }
+
+        const downloadedFiles = await downloadFiles(selectedFiles)
+
+        setFiles(prev => [...prev, ...downloadedFiles])
+        setView('internal')
     }
 
     return (
@@ -90,7 +105,7 @@ const FileBrowser = ({
                                             opacity: 0,
                                             y: -10,
                                             backgroundColor:
-                                                selectedFiles.includes(file.id)
+                                                selectedFiles.includes(file)
                                                     ? '#e9ecef99'
                                                     : '#e9ecef00',
                                         }}
@@ -98,7 +113,7 @@ const FileBrowser = ({
                                             opacity: 1,
                                             y: 0,
                                             backgroundColor:
-                                                selectedFiles.includes(file.id)
+                                                selectedFiles.includes(file)
                                                     ? '#e9ecef99'
                                                     : '#e9ecef00',
                                         }}
@@ -161,10 +176,7 @@ const FileBrowser = ({
                     >
                         <button
                             className="bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white font-medium rounded-md p-3 px-5 transition-all duration-300"
-                            onClick={() => {
-                                setFiles(prev => [...prev, ...selectedFiles])
-                                setView('internal')
-                            }}
+                            onClick={handleSubmit}
                         >
                             Add {selectedFiles.length} files
                         </button>

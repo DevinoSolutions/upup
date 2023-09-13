@@ -19,7 +19,7 @@ const useGoogleDrive = () => {
 
     const { gisLoaded } = useLoadGAPI()
 
-    const getFiles = async () => {
+    const getFilesList = async () => {
         const response = await fetch(
             `https://www.googleapis.com/drive/v3/files?fields=files(fileExtension,id,mimeType,name,parents,size,thumbnailLink)&key=${google_api_key}`,
             {
@@ -30,6 +30,20 @@ const useGoogleDrive = () => {
         )
         const data = await response.json()
         setRawFiles(data?.files)
+    }
+
+    const downloadFile = async (fileId: string) => {
+        const response = await fetch(
+            `https://www.googleapis.com/drive/v3/files/${fileId}?key=${google_api_key}`,
+            {
+                headers: {
+                    Authorization: `Bearer ${access_token.access_token}`,
+                    Accept: 'application/json',
+                },
+            },
+        )
+        const data = await response.json()
+        return data
     }
 
     const getUserName = async () => {
@@ -134,7 +148,7 @@ const useGoogleDrive = () => {
     useEffect(() => {
         if (access_token) {
             getUserName()
-            getFiles()
+            getFilesList()
         }
     }, [access_token])
 
@@ -142,7 +156,7 @@ const useGoogleDrive = () => {
         organizeFiles()
     }, [rawFiles])
 
-    return { user, files, handleSignout }
+    return { user, files, handleSignout, downloadFile }
 }
 
 export default useGoogleDrive
