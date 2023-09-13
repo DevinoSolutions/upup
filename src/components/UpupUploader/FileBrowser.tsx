@@ -21,10 +21,6 @@ const FileBrowser = ({
     const [path, setPath] = useState<any[]>([])
     const [selectedFiles, setSelectedFiles] = useState<any[]>([])
 
-    useEffect(() => {
-        if (files) setPath([files])
-    }, [files])
-
     const handleClick = (file: any) => {
         if (file.children) setPath(p => [...p, file])
         else {
@@ -53,6 +49,10 @@ const FileBrowser = ({
         setFiles(prev => [...prev, ...downloadedFiles])
         setView('internal')
     }
+
+    useEffect(() => {
+        if (files) setPath([files])
+    }, [files])
 
     return (
         <div className="h-full w-full grid grid-rows-[auto,auto,1fr,auto] bg-white">
