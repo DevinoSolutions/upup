@@ -2,6 +2,14 @@ import { useEffect, useState } from 'react'
 import useLoadGAPI from './useLoadGAPI'
 import type { GoogleConfigs } from 'types/GoogleConfigs'
 
+const fetchDrive = async (url: string, accessToken: string) => {
+    return await fetch(url, {
+        headers: {
+            Authorization: `Bearer ${accessToken}`,
+        },
+    })
+}
+
 const useGoogleDrive = (googleConfigs: GoogleConfigs) => {
     const { google_client_id, google_api_key } = googleConfigs
 
@@ -12,46 +20,50 @@ const useGoogleDrive = (googleConfigs: GoogleConfigs) => {
 
     const { gisLoaded } = useLoadGAPI()
 
+    /**
+     * @description Get the list of files from Google Drive
+     * @returns {Promise<void>}
+     *
+     */
     const getFilesList = async () => {
-        const response = await fetch(
+        const response = await fetchDrive(
             `https://www.googleapis.com/drive/v3/files?fields=files(fileExtension,id,mimeType,name,parents,size,thumbnailLink)&key=${google_api_key}`,
-            {
-                headers: {
-                    Authorization: `Bearer ${access_token.access_token}`,
-                },
-            },
+            access_token.access_token,
         )
         const data = await response.json()
         setRawFiles(data?.files)
     }
 
+    /**
+     * @description Download a file from Google Drive
+     * @param {string} fileId
+     * @returns {Promise<Blob>}
+     */
     const downloadFile = async (fileId: string) => {
-        const response = await fetch(
+        const response = await fetchDrive(
             `https://www.googleapis.com/drive/v3/files/${fileId}?key=${google_api_key}`,
-            {
-                headers: {
-                    Authorization: `Bearer ${access_token.access_token}`,
-                    Accept: 'application/json',
-                },
-            },
+            access_token.access_token,
         )
-        const data = await response.blob()
-        return data
+        return await response.blob()
     }
 
+    /**
+     * @description Get the user's name from Google Drive
+     * @returns {Promise<void>}
+     */
     const getUserName = async () => {
-        const response = await fetch(
-            'https://www.googleapis.com/oauth2/v3/userinfo',
-            {
-                headers: {
-                    Authorization: `Bearer ${access_token.access_token}`,
-                },
-            },
+        const response = await fetchDrive(
+            'https://www.googleapis.com/oauth2/v3/userinfo?key=${google_api_key}',
+            access_token.access_token,
         )
         const data = await response.json()
         setUser(data)
     }
 
+    /**
+     * @description Sign out of Google Drive and remove access token from local storage
+     * @returns {Promise<void>}
+     */
     const handleSignout = async () => {
         const google = await window.google
         google.accounts.id.revoke()
@@ -59,6 +71,10 @@ const useGoogleDrive = (googleConfigs: GoogleConfigs) => {
         setUser(null)
     }
 
+    /**
+     * @description Organize the files into a tree structure
+     * @returns {void}
+     */
     const organizeFiles = () => {
         if (!rawFiles) return
         const organizedFiles: any = rawFiles.filter(
@@ -76,7 +92,11 @@ const useGoogleDrive = (googleConfigs: GoogleConfigs) => {
             if (children.length) file.children = children
         }
 
-        // recurse through children
+        /**
+         * @description Recursively add children to the tree structure
+         * @param {any} file
+         * @returns {void}
+         */
         const recurse = (file: any) => {
             if (!file.children) return
             for (let i = 0; i < file.children.length; i++) {
@@ -102,6 +122,10 @@ const useGoogleDrive = (googleConfigs: GoogleConfigs) => {
     }
 
     useEffect(() => {
+        /**
+         * @description Initialize the Google Drive API
+         * @returns {Promise<void>}
+         */
         const onGisLoaded = async () => {
             const google = await window.google
 
