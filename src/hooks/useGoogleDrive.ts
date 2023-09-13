@@ -2,13 +2,6 @@ import { useEffect, useState } from 'react'
 import useLoadGAPI from './useLoadGAPI'
 import type { GoogleConfigs } from 'types/GoogleConfigs'
 
-declare global {
-    interface Window {
-        google?: any
-        tokenClient?: any
-    }
-}
-
 const useGoogleDrive = (googleConfigs: GoogleConfigs) => {
     const { google_client_id, google_api_key } = googleConfigs
 
