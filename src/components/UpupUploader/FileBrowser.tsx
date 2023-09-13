@@ -110,7 +110,7 @@ const FileBrowser = ({
                         path[path.length - 1]?.children?.map(
                             (file: any, i: number) => {
                                 const isFolder = !!file.children
-                                const isFileSelected =
+                                const isFileSelected: boolean =
                                     selectedFiles.includes(file)
 
                                 return (
