@@ -132,7 +132,7 @@ const useGoogleDrive = (googleConfigs: GoogleConfigs) => {
             google.accounts.oauth2
                 .initTokenClient({
                     client_id: google_client_id,
-                    scope: 'https://www.googleapis.com/auth/drive',
+                    scope: 'https://www.googleapis.com/auth/drive.readonly https://www.googleapis.com/auth/userinfo.profile',
                     ux_mode: 'popup',
                     callback(tokenResponse: {
                         error: unknown
