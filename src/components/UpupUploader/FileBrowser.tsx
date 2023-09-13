@@ -32,7 +32,12 @@ const FileBrowser = ({
         const downloadFiles = async (files: any[]) => {
             const promises = files.map(async file => {
                 const data = await downloadFile(file.id)
-                return new File([data], data.name, { type: data.mimeType })
+                const downloadedFile = new File([data], file.name, {
+                    type: file.mimeType,
+                }) as File & { thumbnailLink: string }
+
+                downloadedFile['thumbnailLink'] = file.thumbnailLink
+                return downloadedFile
             })
             return await Promise.all(promises)
         }
@@ -138,7 +143,6 @@ const FileBrowser = ({
                                         }
                                         onClick={() => handleClick(file)}
                                     >
-                                        {/* // TODO: CLEAN THIS MESS */}
                                         <div className="flex items-center gap-2">
                                             <i className="text-lg">
                                                 {isFolder ? (

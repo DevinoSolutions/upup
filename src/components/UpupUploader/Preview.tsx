@@ -77,9 +77,13 @@ const Preview = ({
                                 key={i}
                                 className="flex flex-col items-start h-full w-full relative dark:bg-[#1f1f1f] dark:text-[#fafafa]"
                             >
-                                {file.type.startsWith('image/') ? (
+                                {(file as any).thumbnailLink ||
+                                file.type.startsWith('image/') ? (
                                     <img
-                                        src={URL.createObjectURL(file)}
+                                        src={
+                                            (file as any).thumbnailLink ||
+                                            URL.createObjectURL(file)
+                                        }
                                         alt=""
                                         className={
                                             'w-full rounded-md object-cover shadow ' +
