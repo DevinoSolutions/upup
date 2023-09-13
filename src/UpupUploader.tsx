@@ -95,9 +95,11 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
             limit,
             onFileClick,
             mini = false,
+            onFilesChange,
         } = baseConfigs
 
         const [files, setFiles] = useState<File[]>([])
+        const [mutatedFiles, setMutatedFiles] = useState<File[]>([])
         const [view, setView] = useState('internal')
 
         const {
@@ -124,6 +126,7 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
         useImperativeHandle(ref, () => ({
             async uploadFiles() {
                 if (files.length === 0) return null
+                const filesList = mutatedFiles.length > 0 ? mutatedFiles : files
                 return new Promise(async (resolve, reject) => {
                     /**
                      * Upload the file to the cloud storage
@@ -136,7 +139,7 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
                      */
                     if (toBeCompressed)
                         filesToUpload = await Promise.all(
-                            files.map(async file => {
+                            filesList.map(async file => {
                                 /**
                                  * Compress the file
                                  */
@@ -146,7 +149,7 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
                                 })
                             }),
                         )
-                    else filesToUpload = files
+                    else filesToUpload = filesList
 
                     /**
                      * Loop through the files array and upload the files
@@ -238,6 +241,14 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
             setFiles([...newFiles])
         }, [limit, files])
 
+        useEffect(() => {
+            if (!onFilesChange || files.length === 0) return
+            const mutateFiles = async () => {
+                setMutatedFiles(await onFilesChange(files))
+            }
+            mutateFiles()
+        }, [files])
+
         return mini ? (
             <UpupMini files={files} setFiles={setFiles} />
         ) : (
@@ -287,7 +298,7 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
                 />
 
                 <Preview
-                    files={files}
+                    files={mutatedFiles.length > 0 ? mutatedFiles : files}
                     setFiles={setFiles}
                     isAddingMore={isAddingMore}
                     setIsAddingMore={setIsAddingMore}

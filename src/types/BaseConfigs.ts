@@ -6,4 +6,5 @@ export type BaseConfigs = {
     limit?: number
     onFileClick?: (file: File) => void
     mini?: boolean
+    onFilesChange?: (files: File[]) => Promise<File[]>
 }
