@@ -1,8 +1,9 @@
 import type { GoogleConfigs } from 'types/GoogleConfigs'
 
-import { AnimatePresence, motion } from 'framer-motion'
+import { useEffect, useState } from 'react'
 import useGoogleDrive from 'hooks/useGoogleDrive'
-import React, { useEffect, useState } from 'react'
+
+import { AnimatePresence, motion } from 'framer-motion'
 import { TbFileUnknown, TbFolder, TbSearch } from 'react-icons/tb'
 
 const FileBrowser = ({
