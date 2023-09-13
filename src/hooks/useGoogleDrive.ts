@@ -110,7 +110,11 @@ const useGoogleDrive = (googleConfigs: GoogleConfigs) => {
                     client_id: google_client_id,
                     scope: 'https://www.googleapis.com/auth/drive',
                     ux_mode: 'popup',
-                    callback(tokenResponse: { error: any; access_token: any }) {
+                    callback(tokenResponse: {
+                        error: unknown
+                        access_token: string
+                        expires_in: number
+                    }) {
                         if (tokenResponse && !tokenResponse.error) {
                             localStorage.setItem(
                                 'token',
@@ -118,11 +122,12 @@ const useGoogleDrive = (googleConfigs: GoogleConfigs) => {
                                     ...tokenResponse,
                                     expires_in:
                                         Date.now() +
-                                        // @ts-ignore
                                         (tokenResponse.expires_in - 20) * 1000,
                                 }),
                             )
                             return setAccessToken(tokenResponse)
+                        } else {
+                            console.error('Error: ', tokenResponse.error)
                         }
                     },
                 })
