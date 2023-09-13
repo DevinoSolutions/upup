@@ -110,6 +110,8 @@ const FileBrowser = ({
                         path[path.length - 1]?.children?.map(
                             (file: any, i: number) => {
                                 const isFolder = !!file.children
+                                const isFileSelected =
+                                    selectedFiles.includes(file)
 
                                 return (
                                     <motion.li
@@ -117,18 +119,16 @@ const FileBrowser = ({
                                         initial={{
                                             opacity: 0,
                                             y: -10,
-                                            backgroundColor:
-                                                selectedFiles.includes(file)
-                                                    ? '#e9ecef99'
-                                                    : '#e9ecef00',
+                                            backgroundColor: isFileSelected
+                                                ? '#e9ecef99'
+                                                : '#e9ecef00',
                                         }}
                                         animate={{
                                             opacity: 1,
                                             y: 0,
-                                            backgroundColor:
-                                                selectedFiles.includes(file)
-                                                    ? '#e9ecef99'
-                                                    : '#e9ecef00',
+                                            backgroundColor: isFileSelected
+                                                ? '#e9ecef99'
+                                                : '#e9ecef00',
                                         }}
                                         whileHover={{
                                             backgroundColor: '#e9ecef',
