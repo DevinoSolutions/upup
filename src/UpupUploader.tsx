@@ -8,7 +8,7 @@ import React, {
     useState,
 } from 'react'
 import { OneDriveConfigs } from 'types/OneDriveConfigs'
-import { GoogleDriveUploader } from 'components/GoogleDriveUploader'
+import GoogleDriveUploader from 'components/GoogleDriveUploader'
 import OneDriveUploader from 'components/OneDriveUploader'
 import { CloudStorageConfigs } from 'types/CloudStorageConfigs'
 import { BaseConfigs } from 'types/BaseConfigs'
@@ -196,10 +196,9 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
         const components = {
             [UploadAdapter.GOOGLE_DRIVE]: (
                 <GoogleDriveUploader
-                    googleConfigs={googleConfigs as GoogleConfigs}
-                    baseConfigs={baseConfigs}
                     setFiles={setFiles}
                     setView={setView}
+                    googleConfigs={googleConfigs!}
                 />
             ),
             [UploadAdapter.ONE_DRIVE]: (
@@ -256,7 +255,6 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
                     setView={setView}
                     methods={methods}
                     components={components}
-                    setFiles={setFiles}
                 />
                 <Preview
                     files={files}

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import useLoadGAPI from './useLoadGAPI'
+import type { GoogleConfigs } from 'types/GoogleConfigs'
 
 declare global {
     interface Window {
@@ -8,10 +9,9 @@ declare global {
     }
 }
 
-const google_client_id = process.env.GOOGLE_CLIENT_ID
-const google_api_key = process.env.GOOGLE_API_KEY
+const useGoogleDrive = (googleConfigs: GoogleConfigs) => {
+    const { google_client_id, google_api_key } = googleConfigs
 
-const useGoogleDrive = () => {
     const [user, setUser] = useState<any>(null)
     const [files, setFiles] = useState<any>(null)
     const [rawFiles, setRawFiles] = useState<any>(null)

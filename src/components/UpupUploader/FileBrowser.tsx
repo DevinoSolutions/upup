@@ -1,3 +1,5 @@
+import type { GoogleConfigs } from 'types/GoogleConfigs'
+
 import { AnimatePresence, motion } from 'framer-motion'
 import useGoogleDrive from 'hooks/useGoogleDrive'
 import React, { useEffect, useState } from 'react'
@@ -6,11 +8,14 @@ import { TbFileUnknown, TbFolder, TbSearch } from 'react-icons/tb'
 const FileBrowser = ({
     setFiles,
     setView,
+    googleConfigs,
 }: {
     setFiles: React.Dispatch<React.SetStateAction<File[]>>
     setView: (view: string) => void
+    googleConfigs: GoogleConfigs
 }) => {
-    const { files, handleSignout, user, downloadFile } = useGoogleDrive()
+    const { files, handleSignout, user, downloadFile } =
+        useGoogleDrive(googleConfigs)
 
     const [path, setPath] = useState<any[]>([])
     const [selectedFiles, setSelectedFiles] = useState<any[]>([])
