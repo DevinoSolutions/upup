@@ -84,7 +84,10 @@ const FileBrowser = ({
                     <button
                         className="text-[#2275d7] hover:underline"
                         onClick={() => {
-                            if (user) handleSignout()
+                            if (user) {
+                                handleSignout()
+                                setView('internal')
+                            }
                         }}
                     >
                         {user ? 'Sign out' : 'Sign in'}
