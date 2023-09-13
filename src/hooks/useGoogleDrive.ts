@@ -53,7 +53,7 @@ const useGoogleDrive = (googleConfigs: GoogleConfigs) => {
      */
     const getUserName = async () => {
         const response = await fetchDrive(
-            'https://www.googleapis.com/oauth2/v3/userinfo?key=${google_api_key}',
+            `https://www.googleapis.com/oauth2/v3/userinfo`,
             access_token.access_token,
         )
         const data = await response.json()
