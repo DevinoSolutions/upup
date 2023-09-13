@@ -142,10 +142,6 @@ const useGoogleDrive = () => {
         organizeFiles()
     }, [rawFiles])
 
-    useEffect(() => {
-        console.log('files', files)
-    }, [files])
-
     return { user, files, handleSignout }
 }
 
