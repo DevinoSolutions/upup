@@ -80,7 +80,7 @@ const FileBrowser = ({
                         ))}
                 </div>
                 <div className="flex gap-2 items-center">
-                    <h1>{user?.name}</h1>
+                    <h1>{user ? user.name : ''}</h1>
                     <i className="h-[3px] w-[3px] rounded-full bg-[#ddd] -mb-1" />
                     <button
                         className="text-[#2275d7] hover:underline"
@@ -114,38 +114,48 @@ const FileBrowser = ({
                                 const isFileSelected: boolean =
                                     selectedFiles.includes(file)
 
+                                console.log(
+                                    handleClick,
+                                    TbFolder,
+                                    TbFileUnknown,
+                                    i,
+                                    file,
+                                    isFolder,
+                                    isFileSelected,
+                                )
+
                                 return (
-                                    <motion.li
+                                    <motion.div
                                         key={file.id}
-                                        initial={{
-                                            opacity: 0,
-                                            y: -10,
-                                            backgroundColor: isFileSelected
-                                                ? '#e9ecef99'
-                                                : '#e9ecef00',
-                                        }}
-                                        animate={{
-                                            opacity: 1,
-                                            y: 0,
-                                            backgroundColor: isFileSelected
-                                                ? '#e9ecef99'
-                                                : '#e9ecef00',
-                                        }}
-                                        whileHover={{
-                                            backgroundColor: '#e9ecef',
-                                        }}
-                                        whileTap={{
-                                            backgroundColor: '#dfe6f1',
-                                        }}
-                                        exit={{ opacity: 0, y: 10 }}
-                                        transition={{
-                                            duration: 0.2,
-                                            delay: i * 0.05,
-                                            backgroundColor: {
-                                                duration: 0.2,
-                                                delay: 0,
-                                            },
-                                        }}
+                                        // initial={{
+                                        //     opacity: 0,
+                                        //     y: -10,
+                                        //     backgroundColor: isFileSelected
+                                        //         ? '#e9ecef99'
+                                        //         : '#e9ecef00',
+                                        // }}
+                                        // animate={{
+                                        //     opacity: 1,
+                                        //     y: 0,
+                                        //     backgroundColor: isFileSelected
+                                        //         ? '#e9ecef99'
+                                        //         : '#e9ecef00',
+                                        // }}
+                                        // whileHover={{
+                                        //     backgroundColor: '#e9ecef',
+                                        // }}
+                                        // whileTap={{
+                                        //     backgroundColor: '#dfe6f1',
+                                        // }}
+                                        // exit={{ opacity: 0, y: 10 }}
+                                        // transition={{
+                                        //     duration: 0.2,
+                                        //     delay: i * 0.05,
+                                        //     backgroundColor: {
+                                        //         duration: 0.2,
+                                        //         delay: 0,
+                                        //     },
+                                        // }}
                                         className={
                                             'flex items-center justify-between gap-2 mb-1 cursor-pointer rounded-md py-2 p-1 ' +
                                             (isFolder ? ' font-medium' : '')
@@ -171,7 +181,7 @@ const FileBrowser = ({
                                                 {file.name}
                                             </h1>
                                         </div>
-                                    </motion.li>
+                                    </motion.div>
                                 )
                             },
                         )}

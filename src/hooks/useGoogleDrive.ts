@@ -31,7 +31,12 @@ const useGoogleDrive = (googleConfigs: GoogleConfigs) => {
             access_token.access_token,
         )
         const data = await response.json()
-        setRawFiles(data?.files)
+        if (data.error) {
+            console.error(data.error)
+            return
+        }
+
+        setRawFiles(data.files)
     }
 
     /**
