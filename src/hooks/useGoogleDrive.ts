@@ -62,6 +62,7 @@ const useGoogleDrive = (googleConfigs: GoogleConfigs) => {
     const handleSignout = async () => {
         const google = await window.google
         google.accounts.id.revoke()
+        localStorage.removeItem('token')
         setUser(null)
     }
 
