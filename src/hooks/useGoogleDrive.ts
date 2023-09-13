@@ -124,8 +124,6 @@ const useGoogleDrive = (googleConfigs: GoogleConfigs) => {
                             )
                             return setAccessToken(tokenResponse)
                         }
-
-                        console.log('tokenResponse', tokenResponse)
                     },
                 })
                 .requestAccessToken({})
