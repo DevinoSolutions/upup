@@ -12,7 +12,7 @@ const space_region = process.env.SPACE_REGION
 const document_space = process.env.SPACE_DOCUMENTS
 const image_space = process.env.SPACE_IMAGES
 const onedrive_client_id = process.env.ONEDRIVE_CLIENT_ID
-const google_client_id = process.env.GOOGLE_CLIENT_PICKER_ID
+const google_client_id = process.env.GOOGLE_CLIENT_ID
 const google_app_id = process.env.GOOGLE_APP_ID
 const google_api_key = process.env.GOOGLE_API_KEY
 
@@ -59,7 +59,7 @@ const useUpup: (props?: Props) => {
             SPACE_DOCUMENTS: !!document_space,
             SPACE_IMAGES: !!image_space,
             ONEDRIVE_CLIENT_ID: !!onedrive_client_id,
-            GOOGLE_CLIENT_PICKER_ID: !!google_client_id,
+            GOOGLE_CLIENT_ID: !!google_client_id,
             GOOGLE_APP_ID: !!google_app_id,
             GOOGLE_API_KEY: !!google_api_key,
         }
