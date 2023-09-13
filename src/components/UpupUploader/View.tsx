@@ -1,6 +1,5 @@
 import type { Method } from 'types/Method'
 
-import React from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 
 const View = ({
