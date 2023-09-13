@@ -1,20 +1,5 @@
-import React, {
-    FC,
-    ForwardedRef,
-    forwardRef,
-    LegacyRef,
-    RefAttributes,
-    useImperativeHandle,
-    useState,
-} from 'react'
-import { OneDriveConfigs } from 'types/OneDriveConfigs'
+import CameraUploader from 'components/CameraUploader'
 import GoogleDriveUploader from 'components/GoogleDriveUploader'
-import OneDriveUploader from 'components/OneDriveUploader'
-import { CloudStorageConfigs } from 'types/CloudStorageConfigs'
-import { BaseConfigs } from 'types/BaseConfigs'
-import { GoogleConfigs } from 'types/GoogleConfigs'
-import { getClient } from 'lib/getClient'
-import { UPLOAD_ADAPTER, UploadAdapter } from 'types/UploadAdapter'
 import {
     BoxIcon,
     CameraIcon,
@@ -25,18 +10,37 @@ import {
     OneDriveIcon,
     UnsplashIcon,
 } from 'components/Icons'
-import View from 'components/UpupUploader/View'
+import OneDriveUploader from 'components/OneDriveUploader'
+import UpupMini from 'components/UpupMini'
+import DropZone from 'components/UpupUploader/DropZone'
 import MethodsSelector from 'components/UpupUploader/MethodSelector'
 import Preview from 'components/UpupUploader/Preview'
-import DropZone from 'components/UpupUploader/DropZone'
-import { AnimatePresence } from 'framer-motion'
+import View from 'components/UpupUploader/View'
 import UrlUploader from 'components/UrlUploader'
-import CameraUploader from 'components/CameraUploader'
-import useDragAndDrop from 'hooks/useDragAndDrop'
+import { AnimatePresence } from 'framer-motion'
 import useAddMore from 'hooks/useAddMore'
+import useDragAndDrop from 'hooks/useDragAndDrop'
+import checkFileType from 'lib/checkFileType'
 import { compressFile } from 'lib/compressFile'
+import { getClient } from 'lib/getClient'
 import { putObject } from 'lib/putObject'
+import {
+    FC,
+    ForwardedRef,
+    forwardRef,
+    LegacyRef,
+    RefAttributes,
+    useEffect,
+    useImperativeHandle,
+    useState,
+} from 'react'
+import { BaseConfigs } from 'types/BaseConfigs'
+import { CloudStorageConfigs } from 'types/CloudStorageConfigs'
+import { GoogleConfigs } from 'types/GoogleConfigs'
 import { Method } from 'types/Method'
+import { OneDriveConfigs } from 'types/OneDriveConfigs'
+import { UPLOAD_ADAPTER, UploadAdapter } from 'types/UploadAdapter'
+import { v4 as uuidv4 } from 'uuid'
 
 const methods: Method[] = [
     { id: 'INTERNAL', name: 'My Device', icon: <MyDeviceIcon /> },
@@ -87,7 +91,10 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
             toBeCompressed = false,
             onChange,
             multiple = false,
-            isDocument = false,
+            accept = '*',
+            limit,
+            onFileClick,
+            mini = false,
         } = baseConfigs
 
         const [files, setFiles] = useState<File[]>([])
@@ -116,6 +123,7 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
          */
         useImperativeHandle(ref, () => ({
             async uploadFiles() {
+                if (files.length === 0) return null
                 return new Promise(async (resolve, reject) => {
                     /**
                      * Upload the file to the cloud storage
@@ -147,10 +155,11 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
                     if (filesToUpload) {
                         try {
                             filesToUpload.map(async file => {
+                                const fileExtension = file.name.split('.').pop()
                                 /**
-                                 * assign a unique name for the file, usually has a timestamp prefix
+                                 * assign a unique name for the file contain timestamp and random string with extension from the original file
                                  */
-                                const key = `${Date.now()}__${file.name}`
+                                const key = `${Date.now()}__${uuidv4()}.${fileExtension}`
 
                                 /**
                                  * Upload the file to the cloud storage
@@ -217,7 +226,20 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
             ),
         }
 
-        return (
+        useEffect(() => {
+            if (!limit) return
+
+            const difference = files.length - limit
+
+            if (difference <= 0) return
+
+            const newFiles = files.slice(difference)
+            setFiles([...newFiles])
+        }, [limit, files])
+
+        return mini ? (
+            <UpupMini files={files} setFiles={setFiles} />
+        ) : (
             <div
                 className="w-full max-w-[min(98svh,46rem)] bg-[#f4f4f4] h-[min(98svh,35rem)] rounded-md border flex flex-col relative overflow-hidden select-none dark:bg-[#1f1f1f]"
                 onDragEnter={handleDragEnter}
@@ -229,25 +251,31 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
                         <DropZone
                             setFiles={setFiles}
                             setIsDragging={setIsDragging}
+                            multiple={multiple}
+                            accept={accept}
                         />
                     )}
                 </AnimatePresence>
                 <input
                     type="file"
-                    accept={isDocument ? 'application/pdf' : 'image/*'}
+                    accept={accept}
                     className="absolute w-0 h-0"
                     ref={inputRef}
                     multiple={multiple}
-                    onChange={e =>
+                    onChange={e => {
+                        const acceptedFiles = Array.from(
+                            e.target.files as FileList,
+                        ).filter(file => checkFileType(file, accept))
+
                         setFiles(files =>
                             isAddingMore
-                                ? [
-                                      ...files,
-                                      ...Array.from(e.target.files as FileList),
-                                  ]
-                                : [...Array.from(e.target.files as FileList)],
+                                ? [...files, ...acceptedFiles]
+                                : [...acceptedFiles],
                         )
-                    }
+
+                        // clear the input value
+                        e.target.value = ''
+                    }}
                 />
 
                 <View
@@ -256,18 +284,19 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
                     methods={methods}
                     components={components}
                 />
+
                 <Preview
                     files={files}
                     setFiles={setFiles}
                     isAddingMore={isAddingMore}
                     setIsAddingMore={setIsAddingMore}
                     multiple={multiple}
+                    onFileClick={onFileClick}
                     // handleUpload={handleUpload}
                 />
                 <div className="p-2 h-full">
                     <div className="border-[#dfdfdf] border-dashed h-full w-full grid grid-rows-[1fr,auto] place-items-center border rounded-md transition-all">
                         <MethodsSelector
-                            isDocument={isDocument}
                             setView={setView}
                             inputRef={inputRef}
                             methods={methods.filter(method => {

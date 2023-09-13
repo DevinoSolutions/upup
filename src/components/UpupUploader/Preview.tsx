@@ -1,6 +1,5 @@
-import React from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { TbEdit, TbX } from 'react-icons/tb'
+import { TbX } from 'react-icons/tb'
 import { bytesToSize } from 'lib/bytesToSize'
 import FileIcon from 'components/FileIcon'
 
@@ -10,12 +9,14 @@ const Preview = ({
     isAddingMore,
     setIsAddingMore,
     multiple, // handleUpload,
+    onFileClick,
 }: {
     files: File[]
     setFiles: (files: File[]) => void
     isAddingMore: boolean
     setIsAddingMore: (isAddingMore: boolean) => void
     multiple?: boolean
+    onFileClick?: (file: File) => void
     // handleUpload: () => void
 }) => {
     /**
@@ -37,6 +38,7 @@ const Preview = ({
                         <button
                             className="hover:bg-[#e9ecef] hover:text-[#1f1f1f] active:bg-[#dfe6f1] rounded-md p-2 px-4 transition-all duration-300"
                             onClick={() => setFiles([])}
+                            type="button"
                         >
                             Cancel
                         </button>
@@ -53,6 +55,7 @@ const Preview = ({
                                     : 'opacity-0 pointer-events-none')
                             }
                             onClick={() => setIsAddingMore(!isAddingMore)}
+                            type="button"
                         >
                             {isAddingMore ? 'Show Previews' : 'Add more'}
                         </button>
@@ -68,7 +71,7 @@ const Preview = ({
                         className={
                             'grid p-4 border-b bg-[#f4f4f4] dark:bg-[#1f1f1f] dark:text-[#fafafa] origin-bottom gap-4 overflow-y-scroll pointer-events-auto ' +
                             (multiple
-                                ? 'grid-cols-1 sm:grid-cols-2 md:grid-cols-4'
+                                ? 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl-grid-cols-4'
                                 : 'grid-cols-1 grid-rows-1')
                         }
                     >
@@ -76,6 +79,9 @@ const Preview = ({
                             <div
                                 key={i}
                                 className="flex flex-col items-start h-full w-full relative dark:bg-[#1f1f1f] dark:text-[#fafafa]"
+                                onClick={() => {
+                                    if (onFileClick) onFileClick(file)
+                                }}
                             >
                                 {(file as any).thumbnailLink ||
                                 file.type.startsWith('image/') ? (
@@ -109,13 +115,14 @@ const Preview = ({
                                             {bytesToSize(file.size)}
                                         </p>
                                     </div>
-                                    <button>
+                                    {/* <button type="button">
                                         <TbEdit />
-                                    </button>
+                                    </button> */}
                                 </div>
                                 <button
                                     className="bg-black rounded-full absolute -top-1 -right-1"
                                     onClick={() => removeFile(i)}
+                                    type="button"
                                 >
                                     <TbX className="h-4 w-4 text-white" />
                                 </button>

@@ -1,13 +1,18 @@
-import React from 'react'
+import { Dispatch, SetStateAction } from 'react'
 import { motion } from 'framer-motion'
 import { TbUpload } from 'react-icons/tb'
+import checkFileType from 'lib/checkFileType'
 
 export default function DropZone({
     setFiles,
     setIsDragging,
+    multiple,
+    accept = '*',
 }: {
-    setFiles: React.Dispatch<React.SetStateAction<File[]>>
-    setIsDragging: React.Dispatch<React.SetStateAction<boolean>>
+    setFiles: Dispatch<SetStateAction<File[]>>
+    setIsDragging: Dispatch<SetStateAction<boolean>>
+    multiple?: boolean
+    accept?: string
 }) {
     return (
         <motion.div
@@ -29,18 +34,38 @@ export default function DropZone({
             </div>
             <input
                 type="file"
+                accept={accept}
                 className="w-full h-full absolute top-0 opacity-0"
                 multiple
                 onChange={e => {
-                    setFiles(prev => [...prev, ...Array.from(e.target.files!)])
+                    const acceptedFiles = Array.from(
+                        e.target.files as FileList,
+                    ).filter(file => checkFileType(file, accept))
+
+                    setFiles(prev =>
+                        multiple
+                            ? [...prev, ...acceptedFiles]
+                            : // only one file
+                              [acceptedFiles[0]],
+                    )
+
                     setIsDragging(false)
+
+                    // reset input
+                    e.target.value = ''
                 }}
                 onDrop={e => {
                     e.preventDefault()
-                    setFiles(prev => [
-                        ...prev,
-                        ...Array.from(e.dataTransfer.files),
-                    ])
+                    setFiles(prev => {
+                        const acceptedFiles = Array.from(
+                            e.dataTransfer.files,
+                        ).filter(file => checkFileType(file, accept))
+
+                        return multiple
+                            ? [...prev, ...acceptedFiles]
+                            : // only one file
+                              [acceptedFiles[0]]
+                    })
                     setIsDragging(false)
                 }}
             />

@@ -1,5 +1,64 @@
 # @bassem97/upup
 
+## 2.2.15
+
+### Patch Changes
+
+-   2a931fe: Various bug fixing
+
+## 2.2.14
+
+### Patch Changes
+
+-   7f57591: Mini upup tweak
+
+## 2.2.13
+
+### Patch Changes
+
+-   ea096cb: Add mini upup & fix bugs
+
+## 2.2.12
+
+### Patch Changes
+
+-   99579dd: fix edit button & remove React imports
+-   f9acf42: All good
+-   b4dad02: Add babel runtime automatic
+-   68a3b8e: remove last React import
+-   f9acf42: add babel config to tsdx configs
+
+## 2.2.11
+
+### Patch Changes
+
+-   c7294a8: fix edit button & remove React imports
+-   7a021fd: remove last React import
+
+## 2.2.10
+
+### Patch Changes
+
+-   c9b7da6: fix edit button & remove React imports
+
+## 2.2.9
+
+### Patch Changes
+
+-   5a47d7b: Add file limit
+
+## 2.2.8
+
+### Patch Changes
+
+-   2326ce8: block uploading multiple files using dropzone
+
+## 2.2.7
+
+### Patch Changes
+
+-   d7c330e: disable muiltiple imgaes and various tweaks
+
 ## 2.2.6
 
 ### Patch Changes
