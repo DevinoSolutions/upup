@@ -36,7 +36,12 @@ const FileBrowser = ({
                         path.map((p, i) => (
                             <p
                                 key={p.id}
-                                className="cursor-pointer group flex gap-1 truncate"
+                                className={
+                                    'cursor-pointer group flex gap-1 truncate ' +
+                                    (i === path.length - 1
+                                        ? 'pointer-events-none'
+                                        : '')
+                                }
                                 onClick={() =>
                                     setPath(prev => prev.slice(0, i + 1))
                                 }
