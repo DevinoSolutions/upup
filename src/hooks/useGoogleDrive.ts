@@ -67,6 +67,25 @@ const useGoogleDrive = () => {
             )
             if (children.length) file.children = children
         }
+
+        // recurse through children
+        const recurse = (file: any) => {
+            if (!file.children) return
+            for (let i = 0; i < file.children.length; i++) {
+                const child = file.children[i]
+                const children = rawFiles.filter((f: { parents: string[] }) =>
+                    f.parents.includes(child.id),
+                )
+                if (children.length) child.children = children
+                recurse(child)
+            }
+        }
+
+        for (let i = 0; i < organizedFiles.length; i++) {
+            const file = organizedFiles[i]
+            recurse(file)
+        }
+
         setFiles({
             id: 'root-drive',
             name: 'Drive',
