@@ -4,89 +4,130 @@ import useLoadGAPI from './useLoadGAPI'
 declare global {
     interface Window {
         google?: any
+        tokenClient?: any
     }
 }
 
-const google_client_id = process.env.GOOGLE_CLIENT_PICKER_ID
-const google_app_id = process.env.GOOGLE_APP_ID
+const google_client_id = process.env.GOOGLE_CLIENT_ID
 const google_api_key = process.env.GOOGLE_API_KEY
 
 const useGoogleDrive = () => {
     const [user, setUser] = useState<any>(null)
     const [files, setFiles] = useState<any>(null)
+    const [rawFiles, setRawFiles] = useState<any>(null)
+    const [access_token, setAccessToken] = useState<any>(null)
 
-    const { gdriveApiLoaded, gisLoaded } = useLoadGAPI()
+    const { gisLoaded } = useLoadGAPI()
 
-    const logFiles = async () => {
-        const access_token = await gapi.auth.getToken()
-
-        // // authenticate the user
-        // gapi.client.drive({
-        //     version: 'v3',
-        //     auth: access_token,
-        // })
-
-        console.log(gapi.client.drive)
-
-        // @ts-ignore
-        const response = await gapi.client.drive.files.list({
-            fields: 'files(id, name, mimeType, size, thumbnailLink, parents, fileExtension)',
-        })
-        const files = response.result.files
-        if (files && files.length > 0) {
-            console.log('Files:')
-            files.forEach((file: any) => {
-                console.log(file)
-            })
-        } else {
-            console.log('No files found.')
-        }
+    const getFiles = async () => {
+        const response = await fetch(
+            `https://www.googleapis.com/drive/v3/files?fields=files(fileExtension,id,mimeType,name,parents,size,thumbnailLink)&key=${google_api_key}`,
+            {
+                headers: {
+                    Authorization: `Bearer ${access_token.access_token}`,
+                },
+            },
+        )
+        const data = await response.json()
+        setRawFiles(data?.files)
     }
 
-    const handleCredentialResponse = async (response: any) => {
-        if (response.credential) {
-            const credential = response.credential
-            gapi.auth.setToken(credential)
-
-            logFiles()
-        }
-    }
-
-    const handleSignin = async () => {
-        const google = await window.google
-        await google.accounts.id.prompt()
+    const getUserName = async () => {
+        const response = await fetch(
+            'https://www.googleapis.com/oauth2/v3/userinfo',
+            {
+                headers: {
+                    Authorization: `Bearer ${access_token.access_token}`,
+                },
+            },
+        )
+        const data = await response.json()
+        setUser(data)
     }
 
     const handleSignout = async () => {
         const google = await window.google
-        google.accounts.id.disableAutoSelect()
         google.accounts.id.revoke()
         setUser(null)
+    }
+
+    const organizeFiles = () => {
+        if (!rawFiles) return
+        const organizedFiles: any = rawFiles.filter(
+            (f: { parents: any }) =>
+                rawFiles.findIndex(
+                    (ff: { id: any }) => ff.id === f.parents[0],
+                ) === -1,
+        )
+
+        for (let i = 0; i < organizedFiles.length; i++) {
+            const file = organizedFiles[i]
+            const children = rawFiles.filter((f: { parents: string[] }) =>
+                f.parents.includes(file.id),
+            )
+            if (children.length) file.children = children
+        }
+        setFiles({
+            id: 'root-drive',
+            name: 'Drive',
+            children: organizedFiles,
+        })
     }
 
     useEffect(() => {
         const onGisLoaded = async () => {
             const google = await window.google
 
-            await google.accounts.id.initialize({
-                api_key: google_api_key,
-                client_id: google_client_id,
-                callback: handleCredentialResponse,
-                scope: 'profile email https://www.googleapis.com/auth/drive.readonly',
-            })
+            google.accounts.oauth2
+                .initTokenClient({
+                    client_id: google_client_id,
+                    scope: 'https://www.googleapis.com/auth/drive',
+                    ux_mode: 'popup',
+                    callback(tokenResponse: { error: any; access_token: any }) {
+                        if (tokenResponse && !tokenResponse.error) {
+                            localStorage.setItem(
+                                'token',
+                                JSON.stringify({
+                                    ...tokenResponse,
+                                    expires_in:
+                                        Date.now() +
+                                        // @ts-ignore
+                                        (tokenResponse.expires_in - 20) * 1000,
+                                }),
+                            )
+                            return setAccessToken(tokenResponse)
+                        }
 
-            google.accounts.id.prompt()
+                        console.log('tokenResponse', tokenResponse)
+                    },
+                })
+                .requestAccessToken({})
         }
+        const storedTokenStr = localStorage.getItem('token')
+        const storedToken = storedTokenStr ? JSON.parse(storedTokenStr) : null
+
+        if (storedToken && storedToken.expires_in > Date.now())
+            return setAccessToken(storedToken)
 
         if (gisLoaded) onGisLoaded()
     }, [gisLoaded])
 
     useEffect(() => {
-        console.log('user', user)
-        console.log('files', files)
-    }, [user, files])
+        if (access_token) {
+            getUserName()
+            getFiles()
+        }
+    }, [access_token])
 
-    return { user, files, handleSignin, handleSignout }
+    useEffect(() => {
+        organizeFiles()
+    }, [rawFiles])
+
+    useEffect(() => {
+        console.log('files', files)
+    }, [files])
+
+    return { user, files, handleSignout }
 }
 
 export default useGoogleDrive
