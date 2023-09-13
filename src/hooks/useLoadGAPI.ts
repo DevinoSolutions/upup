@@ -7,24 +7,8 @@ import { useEffect, useState } from 'react'
  */
 const useLoadGAPI = () => {
     const [gisLoaded, setGisLoaded] = useState<boolean>(false)
-    const [gdriveApiLoaded, setGdriveApiLoaded] = useState<boolean>(false)
 
     useEffect(() => {
-        /**
-         * Load the Google Drive API
-         */
-        load('https://apis.google.com/js/api.js', (err, _script) => {
-            if (err) {
-                console.log('Error loading GAPI', err)
-            } else {
-                gapi.load('client', () => {
-                    gapi.client.load('drive', 'v3', () => {
-                        setGdriveApiLoaded(true)
-                    })
-                })
-            }
-        })
-
         /**
          *  Load the Google Identity Services API
          */
@@ -37,7 +21,7 @@ const useLoadGAPI = () => {
     /**
      * Return the gdriveApiLoaded and gisLoaded
      */
-    return { gdriveApiLoaded, gisLoaded }
+    return { gisLoaded }
 }
 
 export default useLoadGAPI
