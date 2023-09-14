@@ -24,7 +24,6 @@ declare module 'google' {
         thumbnailLink?: string
         parents?: string[]
         children?: File[]
-        isFolder: boolean
     }
 
     type Token = {

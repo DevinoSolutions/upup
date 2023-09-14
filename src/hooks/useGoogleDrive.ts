@@ -1,15 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import useLoadGAPI from './useLoadGAPI'
 import type { GoogleConfigs } from 'types/GoogleConfigs'
 import { File, Root, Token, User } from 'google'
-
-const fetchDrive = async (url: string, accessToken: string) => {
-    return await fetch(url, {
-        headers: {
-            Authorization: `Bearer ${accessToken}`,
-        },
-    })
-}
 
 const useGoogleDrive = (googleConfigs: GoogleConfigs) => {
     const { google_client_id, google_api_key } = googleConfigs
@@ -19,7 +11,16 @@ const useGoogleDrive = (googleConfigs: GoogleConfigs) => {
     const [rawFiles, setRawFiles] = useState<File[]>()
     const [token, setToken] = useState<Token>()
 
-    console.log('access_token', token)
+    const fetchDrive = useCallback(
+        async (url: string) => {
+            return await fetch(url, {
+                headers: {
+                    Authorization: `Bearer ${token?.access_token}`,
+                },
+            })
+        },
+        [token],
+    )
 
     const { gisLoaded } = useLoadGAPI()
 
@@ -28,19 +29,17 @@ const useGoogleDrive = (googleConfigs: GoogleConfigs) => {
      * @returns {Promise<void>}
      *
      */
-    const getFilesList = async () => {
+    const getFilesList = useCallback(async () => {
         const response = await fetchDrive(
             `https://www.googleapis.com/drive/v3/files?fields=files(fileExtension,id,mimeType,name,parents,size,thumbnailLink)&key=${google_api_key}`,
-            token?.access_token!,
         )
         const data = await response.json()
         if (data.error) {
             console.error(data.error)
             return
         }
-
         setRawFiles(data.files)
-    }
+    }, [fetchDrive, google_api_key])
 
     /**
      * @description Download a file from Google Drive
@@ -50,7 +49,6 @@ const useGoogleDrive = (googleConfigs: GoogleConfigs) => {
     const downloadFile = async (fileId: string) => {
         const response = await fetchDrive(
             `https://www.googleapis.com/drive/v3/files/${fileId}?key=${google_api_key}`,
-            token?.access_token!,
         )
         return await response.blob()
     }
@@ -62,7 +60,6 @@ const useGoogleDrive = (googleConfigs: GoogleConfigs) => {
     const getUserName = async () => {
         const response = await fetchDrive(
             `https://www.googleapis.com/oauth2/v3/userinfo`,
-            token?.access_token!,
         )
         const data = await response.json()
         setUser(data)
@@ -83,22 +80,30 @@ const useGoogleDrive = (googleConfigs: GoogleConfigs) => {
      * @description Organize the files into a tree structure
      * @returns {void}
      */
-    const organizeFiles = () => {
+    const organizeFiles = useCallback(() => {
         if (!rawFiles) return
+
+        // Create a set for easy lookup of file IDs
+        const fileIds = new Set(rawFiles.map(f => f.id))
+
+        // Filter files to find ones that have no parents within rawFiles
         const organizedFiles: File[] = rawFiles.filter(
-            f =>
-                rawFiles.findIndex(
-                    ff => f.parents && ff.id === f.parents[0],
-                ) === -1,
+            f => !(f.parents && fileIds.has(f.parents[0])),
         )
 
-        for (let i = 0; i < organizedFiles.length; i++) {
-            const file = organizedFiles[i]
-            const children = rawFiles.filter(
-                f => f.parents && f.parents.includes(file.id),
-            )
-            if (children.length) file.children = children
-        }
+        // Create a mapping of parent IDs to their direct children
+        const parentIdToChildrenMap: { [key: string]: File[] } = {}
+
+        rawFiles.forEach(file => {
+            if (file.parents) {
+                file.parents.forEach(parentId => {
+                    if (!parentIdToChildrenMap[parentId]) {
+                        parentIdToChildrenMap[parentId] = []
+                    }
+                    parentIdToChildrenMap[parentId].push(file)
+                })
+            }
+        })
 
         /**
          * @description Recursively add children to the tree structure
@@ -106,80 +111,77 @@ const useGoogleDrive = (googleConfigs: GoogleConfigs) => {
          * @returns {void}
          */
         const recurse = (file: File) => {
-            if (!file.children) return
-            for (let i = 0; i < file.children.length; i++) {
-                const child = file.children[i]
-                const children = rawFiles.filter(
-                    f => f.parents?.includes(child.id),
-                )
-                if (children.length) child.children = children
-                recurse(child)
+            const children = parentIdToChildrenMap[file.id]
+            if (children && children.length) {
+                file.children = children
+                children.forEach(recurse) // recursive call for each child
             }
         }
 
-        for (let i = 0; i < organizedFiles.length; i++) {
-            const file = organizedFiles[i]
-            recurse(file)
-        }
+        // Assign children for each top-level file in organizedFiles and build the tree recursively
+        organizedFiles.forEach(recurse)
 
         setGoogleFiles({
             id: 'root-drive',
             name: 'Drive',
             children: organizedFiles,
         })
-    }
+    }, [rawFiles])
 
     useEffect(() => {
         /**
          * @description Initialize the Google Drive API
          * @returns {Promise<void>}
          */
-        const onGisLoaded = async () => {
-            const google = await window.google
-
-            google.accounts.oauth2
-                .initTokenClient({
-                    client_id: google_client_id,
-                    scope: 'https://www.googleapis.com/auth/drive.readonly https://www.googleapis.com/auth/userinfo.profile',
-                    ux_mode: 'popup',
-                    callback(tokenResponse: Token) {
-                        if (tokenResponse && !tokenResponse.error) {
-                            localStorage.setItem(
-                                'token',
-                                JSON.stringify({
-                                    ...tokenResponse,
-                                    expires_in:
-                                        Date.now() +
-                                        (tokenResponse.expires_in - 20) * 1000,
-                                }),
-                            )
-                            return setToken(tokenResponse)
-                        } else {
-                            console.error('Error: ', tokenResponse.error)
-                        }
-                    },
-                })
-                .requestAccessToken({})
-        }
         const storedTokenStr = localStorage.getItem('token')
         const storedToken = storedTokenStr ? JSON.parse(storedTokenStr) : null
 
         if (storedToken && storedToken.expires_in > Date.now())
             return setToken(storedToken)
 
-        if (gisLoaded) onGisLoaded()
+        if (gisLoaded) {
+            ;(async () => {
+                const google = await window.google
+                google.accounts.oauth2
+                    .initTokenClient({
+                        client_id: google_client_id,
+                        scope: 'https://www.googleapis.com/auth/drive.readonly https://www.googleapis.com/auth/userinfo.profile',
+                        ux_mode: 'popup',
+                        callback(tokenResponse: Token) {
+                            if (tokenResponse && !tokenResponse.error) {
+                                localStorage.setItem(
+                                    'token',
+                                    JSON.stringify({
+                                        ...tokenResponse,
+                                        expires_in:
+                                            Date.now() +
+                                            (tokenResponse.expires_in - 20) *
+                                                1000,
+                                    }),
+                                )
+                                return setToken(tokenResponse)
+                            } else {
+                                console.error('Error: ', tokenResponse.error)
+                            }
+                        },
+                    })
+                    .requestAccessToken({})
+            })()
+        }
     }, [gisLoaded])
 
     useEffect(() => {
         if (token) {
-            void getUserName()
-            void getFilesList()
+            ;(async () => {
+                await getUserName()
+                await getFilesList()
+            })()
         }
-    }, [token])
+    }, [token, getUserName, getFilesList])
 
     useEffect(() => {
         organizeFiles()
-    }, [rawFiles])
+    }, [organizeFiles])
 
     return { user, googleFiles, handleSignout, downloadFile }
 }
