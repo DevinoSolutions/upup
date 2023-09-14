@@ -1,5 +1,11 @@
 # @bassem97/upup
 
+## 2.2.17
+
+### Patch Changes
+
+-   84f3337: Add file upload size limit
+
 ## 2.2.16
 
 ### Patch Changes
