@@ -170,6 +170,9 @@ const useGoogleDrive = (googleConfigs: GoogleConfigs) => {
         }
     }, [gisLoaded])
 
+    /**
+     *  @description Get the user's name and files list when the token is set
+     */
     useEffect(() => {
         if (token) {
             ;(async () => {
@@ -179,6 +182,9 @@ const useGoogleDrive = (googleConfigs: GoogleConfigs) => {
         }
     }, [token, getUserName, getFilesList])
 
+    /**
+     * @description Organize the files into a tree structure when the raw files are set
+     */
     useEffect(() => {
         organizeFiles()
     }, [organizeFiles])
