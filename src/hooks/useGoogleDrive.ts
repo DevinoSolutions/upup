@@ -107,8 +107,9 @@ const useGoogleDrive = (googleConfigs: GoogleConfigs) => {
             if (!file.children) return
             for (let i = 0; i < file.children.length; i++) {
                 const child = file.children[i]
-                const children = rawFiles.filter((f: { parents: string[] }) =>
-                    f.parents.includes(child.id),
+                const children = rawFiles.filter(
+                    (f: { parents: string[] | undefined }) =>
+                        f.parents && f.parents.includes(child.id),
                 )
                 if (children.length) child.children = children
                 recurse(child)
