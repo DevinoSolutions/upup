@@ -58,6 +58,7 @@ export interface UpupUploaderProps {
     baseConfigs: BaseConfigs
     uploadAdapters: UPLOAD_ADAPTER[]
     googleConfigs?: GoogleConfigs | undefined
+    maxFilesSize?: number | undefined
     oneDriveConfigs?: OneDriveConfigs | undefined
 }
 
@@ -84,6 +85,7 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
             baseConfigs,
             uploadAdapters = ['INTERNAL', 'LINK'],
             googleConfigs,
+            maxFilesSize,
             oneDriveConfigs,
         } = props
         const { bucket, s3Configs } = cloudStorageConfigs
@@ -123,8 +125,26 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
          */
         useImperativeHandle(ref, () => ({
             async uploadFiles() {
-                if (files.length === 0) return null
+                if (files.length === 0) {
+                    return null
+                }
                 return new Promise(async (resolve, reject) => {
+                    /**
+                     * Check if the total size of files is less than the maximum size
+                     */
+                    const filesSize = maxFilesSize
+                        ? files.reduce((acc, file) => acc + file.size, 0)
+                        : 0
+                    if (maxFilesSize && filesSize > maxFilesSize) {
+                        reject(
+                            new Error(
+                                'The total size of files must be less than ' +
+                                    maxFilesSize / 1024 / 1024 +
+                                    'MB',
+                            ),
+                        )
+                    }
+
                     /**
                      * Upload the file to the cloud storage
                      */
