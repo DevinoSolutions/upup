@@ -1,24 +1,26 @@
-import type { GoogleConfigs } from 'types/GoogleConfigs'
-
-import { useEffect, useState } from 'react'
-import useGoogleDrive from 'hooks/useGoogleDrive'
+import { Dispatch, SetStateAction, useEffect, useState } from 'react'
 
 import { AnimatePresence, motion } from 'framer-motion'
 import { TbSearch } from 'react-icons/tb'
 import ListItem from './ListItem'
 
-const FileBrowser = ({
-    setFiles,
-    setView,
-    googleConfigs,
-}: {
-    setFiles: React.Dispatch<React.SetStateAction<File[]>>
+type Props = {
+    googleFiles: any[]
+    handleSignout: () => void
+    user: any
+    downloadFile: (fileId: string) => Promise<any>
+    setFiles: Dispatch<SetStateAction<File[]>>
     setView: (view: string) => void
-    googleConfigs: GoogleConfigs
-}) => {
-    const { files, handleSignout, user, downloadFile } =
-        useGoogleDrive(googleConfigs)
+}
 
+const FileBrowser = ({
+    handleSignout,
+    user,
+    googleFiles,
+    setFiles,
+    downloadFile,
+    setView,
+}: Props) => {
     const [path, setPath] = useState<any[]>([])
     const [selectedFiles, setSelectedFiles] = useState<any[]>([])
 
@@ -52,8 +54,8 @@ const FileBrowser = ({
     }
 
     useEffect(() => {
-        if (files) setPath([files])
-    }, [files])
+        if (googleFiles) setPath([googleFiles])
+    }, [googleFiles])
 
     return (
         <div className="h-full w-full grid grid-rows-[auto,auto,1fr,auto] bg-white">
