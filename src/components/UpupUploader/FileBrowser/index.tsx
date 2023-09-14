@@ -59,7 +59,7 @@ const FileBrowser = ({
     }, [googleFiles])
 
     return (
-        <div className="h-full w-full grid grid-rows-[auto,auto,1fr,auto] bg-white">
+        <div className="w-full grid grid-rows-[auto,auto,1fr,auto] bg-white h-[min(98svh,32rem)]">
             <div className="h-12 bg-[#fafafa] text-[#333] border-b flex justify-between items-center p-2 text-xs font-medium dark:bg-[#1f1f1f] dark:text-[#fafafa]">
                 <div className="h p-2 px-4 flex gap-1">
                     {path &&
@@ -109,7 +109,7 @@ const FileBrowser = ({
                 <TbSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-[#939393]" />
             </div>
 
-            <div className="bg-white h-full overflow-y-scroll pt-2">
+            <div className="bg-white h-full overflow-y-scroll pt-2 overflow-scroll">
                 <ul className="p-2">
                     {path &&
                         path[path.length - 1]?.children?.map(
