@@ -83,9 +83,9 @@ const useGoogleDrive = (googleConfigs: GoogleConfigs) => {
     const organizeFiles = () => {
         if (!rawFiles) return
         const organizedFiles: any = rawFiles.filter(
-            (f: { parents: any }) =>
+            (f: { parents: string[] | undefined }) =>
                 rawFiles.findIndex(
-                    (ff: { id: any }) => ff.id === f.parents[0],
+                    (ff: { id: any }) => f.parents && ff.id === f.parents[0],
                 ) === -1,
         )
 
