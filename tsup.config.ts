@@ -9,5 +9,6 @@ export default defineConfig((options: Options) => ({
     minify: true,
     clean: true,
     external: ['react', 'react-dom', 'react/jsx-runtime'],
+    inject: ['./react-import.js'],
     ...options,
 }))

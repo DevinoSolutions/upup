@@ -42,7 +42,7 @@
         "ci": "pnpm run prettier-check && pnpm run build",
         "release": "pnpm run prettier-check && pnpm run build && changeset publish",
         "bunbundle": "bun build ./src/index.tsx --outdir ./dist",
-        "tsup": "tsup --inject ./react-import.js"
+        "tsup": "tsup"
     },
     "peerDependencies": {
         "react-is": "^18.2.0",
