@@ -80,6 +80,7 @@ const useGoogleDrive = (googleConfigs: GoogleConfigs) => {
      * @description Organize the files into a tree structure
      * @returns {void}
      */
+    // TODO: Refactor this
     const organizeFiles = () => {
         if (!rawFiles) return
         const organizedFiles: any = rawFiles.filter(
