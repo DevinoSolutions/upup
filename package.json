@@ -40,7 +40,9 @@
         "storybook": "storybook dev -p 6006",
         "build-storybook": "storybook build",
         "ci": "pnpm run prettier-check && pnpm run build",
-        "release": "pnpm run prettier-check && pnpm run build && changeset publish"
+        "release": "pnpm run prettier-check && pnpm run build && changeset publish",
+        "bunbundle": "bun build ./src/index.tsx --outdir ./dist",
+        "tsup": "tsup --inject ./react-import.js"
     },
     "peerDependencies": {
         "react-is": "^18.2.0",
@@ -90,6 +92,7 @@
         "tailwindcss": "^3.3.3",
         "tsdx": "^0.14.1",
         "tslib": "^2.5.0",
+        "tsup": "^7.2.0",
         "typescript": "^5.0.4",
         "webpack": "5.88.2",
         "zod": "^3.21.4"
