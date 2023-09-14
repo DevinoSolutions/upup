@@ -180,7 +180,7 @@ const useGoogleDrive = (googleConfigs: GoogleConfigs) => {
                 await getFilesList()
             })()
         }
-    }, [token, getUserName, getFilesList])
+    }, [token])
 
     /**
      * @description Organize the files into a tree structure when the raw files are set
