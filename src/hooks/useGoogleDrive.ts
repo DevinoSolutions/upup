@@ -14,7 +14,7 @@ const useGoogleDrive = (googleConfigs: GoogleConfigs) => {
     const { google_client_id, google_api_key } = googleConfigs
 
     const [user, setUser] = useState<any>(null)
-    const [files, setFiles] = useState<any>(null)
+    const [googleFiles, setGoogleFiles] = useState<any>(null)
     const [rawFiles, setRawFiles] = useState<any>(null)
     const [access_token, setAccessToken] = useState<any>(null)
 
@@ -119,7 +119,7 @@ const useGoogleDrive = (googleConfigs: GoogleConfigs) => {
             recurse(file)
         }
 
-        setFiles({
+        setGoogleFiles({
             id: 'root-drive',
             name: 'Drive',
             children: organizedFiles,
@@ -182,7 +182,7 @@ const useGoogleDrive = (googleConfigs: GoogleConfigs) => {
         organizeFiles()
     }, [rawFiles])
 
-    return { user, files, handleSignout, downloadFile }
+    return { user, googleFiles, handleSignout, downloadFile }
 }
 
 export default useGoogleDrive
