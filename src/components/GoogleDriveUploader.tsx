@@ -11,13 +11,13 @@ type Props = {
 }
 
 const GoogleDriveUploader = ({ setFiles, setView, googleConfigs }: Props) => {
-    const { googleFiles, handleSignout, user, downloadFile } =
+    const { googleFiles, handleSignOut, user, downloadFile } =
         useGoogleDrive(googleConfigs)
 
     return (
         <FileBrowser
             googleFiles={googleFiles}
-            handleSignout={handleSignout}
+            handleSignOut={handleSignOut}
             user={user}
             downloadFile={downloadFile}
             setFiles={setFiles}

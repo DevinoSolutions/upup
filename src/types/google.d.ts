@@ -12,10 +12,10 @@ declare module 'google' {
     type Root = {
         id: string
         name: string
-        children: File[]
+        children: GoogleFile[]
     }
 
-    type File = {
+    type GoogleFile = {
         id: string
         name: string
         mimeType: string
@@ -23,7 +23,7 @@ declare module 'google' {
         size?: number
         thumbnailLink?: string
         parents?: string[]
-        children?: File[]
+        children?: GoogleFile[]
     }
 
     type Token = {

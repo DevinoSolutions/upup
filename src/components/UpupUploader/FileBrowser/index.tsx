@@ -3,54 +3,60 @@ import { Dispatch, SetStateAction, useEffect, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { TbSearch } from 'react-icons/tb'
 import ListItem from './ListItem'
-import { Root, User } from 'google'
+import { GoogleFile, Root, User } from 'google'
 
 type Props = {
     googleFiles: Root | undefined
-    handleSignout: () => void
+    handleSignOut: () => void
     user: User | undefined
-    downloadFile: (fileId: string) => Promise<any>
+    downloadFile: (fileId: string) => Promise<Blob>
     setFiles: Dispatch<SetStateAction<File[]>>
     setView: (view: string) => void
 }
 
 const FileBrowser = ({
-    handleSignout,
+    handleSignOut,
     user,
     googleFiles,
     setFiles,
     downloadFile,
     setView,
 }: Props) => {
-    const [path, setPath] = useState<any[]>([])
-    const [selectedFiles, setSelectedFiles] = useState<any[]>([])
+    const [path, setPath] = useState<Root[]>([])
+    const [selectedFiles, setSelectedFiles] = useState<GoogleFile[]>([])
 
-    const handleClick = (file: any) => {
-        if (file.children) setPath(p => [...p, file])
-        else {
-            if (selectedFiles.includes(file))
-                setSelectedFiles(prev => prev.filter(f => f.id !== file.id))
-            else setSelectedFiles(prev => [...prev, file])
+    const handleClick = (file: GoogleFile | Root) => {
+        if ('children' in file) {
+            setPath(prevPath => [...prevPath, file as Root])
+        } else {
+            setSelectedFiles(prevFiles =>
+                prevFiles.includes(file)
+                    ? prevFiles.filter(f => f.id !== file.id)
+                    : [...prevFiles, file],
+            )
         }
     }
 
+    const downloadFiles = async (files: GoogleFile[]) => {
+        const promises = files.map(async file => {
+            const data = await downloadFile(file.id)
+            const downloadedFile = new File([data], file.name, {
+                type: file.mimeType,
+            }) as unknown as GoogleFile
+
+            downloadedFile['thumbnailLink'] = file.thumbnailLink
+            return downloadedFile
+        })
+
+        return await Promise.all(promises)
+    }
+
     const handleSubmit = async () => {
-        const downloadFiles = async (files: any[]) => {
-            const promises = files.map(async file => {
-                const data = await downloadFile(file.id)
-                const downloadedFile = new File([data], file.name, {
-                    type: file.mimeType,
-                }) as File & { thumbnailLink: string }
-
-                downloadedFile['thumbnailLink'] = file.thumbnailLink
-                return downloadedFile
-            })
-            return await Promise.all(promises)
-        }
-
         const downloadedFiles = await downloadFiles(selectedFiles)
-
-        setFiles(prev => [...prev, ...downloadedFiles])
+        setFiles(prevFiles => [
+            ...prevFiles,
+            ...(downloadedFiles as unknown as File[]),
+        ])
         setView('internal')
     }
 
@@ -90,7 +96,7 @@ const FileBrowser = ({
                         className="text-[#2275d7] hover:underline"
                         onClick={() => {
                             if (user) {
-                                handleSignout()
+                                handleSignOut()
                                 setView('internal')
                             }
                         }}
@@ -112,19 +118,17 @@ const FileBrowser = ({
             <div className="bg-white h-full overflow-y-scroll pt-2 overflow-scroll">
                 <ul className="p-2">
                     {path &&
-                        path[path.length - 1]?.children?.map(
-                            (file: any, i: number) => {
-                                return (
-                                    <ListItem
-                                        key={file.id}
-                                        file={file}
-                                        handleClick={handleClick}
-                                        i={i}
-                                        selectedFiles={selectedFiles}
-                                    />
-                                )
-                            },
-                        )}
+                        path[path.length - 1]?.children?.map((file, index) => {
+                            return (
+                                <ListItem
+                                    key={file.id}
+                                    file={file}
+                                    handleClick={handleClick}
+                                    index={index}
+                                    selectedFiles={selectedFiles}
+                                />
+                            )
+                        })}
                 </ul>
             </div>
 

@@ -1,14 +1,14 @@
 import { useCallback, useEffect, useState } from 'react'
 import useLoadGAPI from './useLoadGAPI'
 import type { GoogleConfigs } from 'types/GoogleConfigs'
-import { File, Root, Token, User } from 'google'
+import { GoogleFile, Root, Token, User } from 'google'
 
 const useGoogleDrive = (googleConfigs: GoogleConfigs) => {
     const { google_client_id, google_api_key } = googleConfigs
 
     const [user, setUser] = useState<User>()
     const [googleFiles, setGoogleFiles] = useState<Root>()
-    const [rawFiles, setRawFiles] = useState<File[]>()
+    const [rawFiles, setRawFiles] = useState<GoogleFile[]>()
     const [token, setToken] = useState<Token>()
 
     const fetchDrive = useCallback(
@@ -87,12 +87,12 @@ const useGoogleDrive = (googleConfigs: GoogleConfigs) => {
         const fileIds = new Set(rawFiles.map(f => f.id))
 
         // Filter files to find ones that have no parents within rawFiles
-        const organizedFiles: File[] = rawFiles.filter(
+        const organizedFiles: GoogleFile[] = rawFiles.filter(
             f => !(f.parents && fileIds.has(f.parents[0])),
         )
 
         // Create a mapping of parent IDs to their direct children
-        const parentIdToChildrenMap: { [key: string]: File[] } = {}
+        const parentIdToChildrenMap: { [key: string]: GoogleFile[] } = {}
 
         rawFiles.forEach(file => {
             if (file.parents) {
@@ -107,10 +107,10 @@ const useGoogleDrive = (googleConfigs: GoogleConfigs) => {
 
         /**
          * @description Recursively add children to the tree structure
-         * @param {File} file
+         * @param {GoogleFile} file
          * @returns {void}
          */
-        const recurse = (file: File) => {
+        const recurse = (file: GoogleFile) => {
             const children = parentIdToChildrenMap[file.id]
             if (children && children.length) {
                 file.children = children
@@ -189,7 +189,7 @@ const useGoogleDrive = (googleConfigs: GoogleConfigs) => {
         organizeFiles()
     }, [organizeFiles])
 
-    return { user, googleFiles, handleSignout, downloadFile }
+    return { user, googleFiles, handleSignOut: handleSignout, downloadFile }
 }
 
 export default useGoogleDrive
