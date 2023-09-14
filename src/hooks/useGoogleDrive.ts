@@ -91,8 +91,9 @@ const useGoogleDrive = (googleConfigs: GoogleConfigs) => {
 
         for (let i = 0; i < organizedFiles.length; i++) {
             const file = organizedFiles[i]
-            const children = rawFiles.filter((f: { parents: string[] }) =>
-                f.parents.includes(file.id),
+            const children = rawFiles.filter(
+                (f: { parents: string[] | undefined }) =>
+                    f.parents && f.parents.includes(file.id),
             )
             if (children.length) file.children = children
         }
