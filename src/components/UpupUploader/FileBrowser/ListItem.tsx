@@ -15,6 +15,9 @@ export default function ListItem({
     const isFolder = !!file.children
     const isFileSelected: boolean = selectedFiles.includes(file)
 
+    if (isFolder && file.children.length === 0) return null
+    if (!isFolder && !file.thumbnailLink) return null
+
     return (
         <motion.div
             key={file.id}
