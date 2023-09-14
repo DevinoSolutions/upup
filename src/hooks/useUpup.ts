@@ -27,6 +27,7 @@ interface Props {
     limit?: number
     onFileClick?: (file: File) => void
     mini?: boolean
+    onFilesChange?: (files: File[]) => Promise<File[]>
 }
 
 /**
@@ -45,7 +46,15 @@ const useUpup: (props?: Props) => {
         mini: false,
     },
 ) => {
-    const { accept, setFiles, multiple, limit, onFileClick, mini } = props
+    const {
+        accept,
+        setFiles,
+        multiple,
+        limit,
+        onFileClick,
+        mini,
+        onFilesChange,
+    } = props
 
     /**
      * Throw an error if any of the required environment variables are missing
@@ -91,6 +100,7 @@ const useUpup: (props?: Props) => {
         limit,
         onFileClick,
         mini,
+        onFilesChange,
     }
 
     const cloudStorageConfigs: CloudStorageConfigs = {
