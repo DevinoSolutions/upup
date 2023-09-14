@@ -3,11 +3,12 @@ import { Dispatch, SetStateAction, useEffect, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { TbSearch } from 'react-icons/tb'
 import ListItem from './ListItem'
+import { Root, User } from 'google'
 
 type Props = {
-    googleFiles: any[]
+    googleFiles: Root | undefined
     handleSignout: () => void
-    user: any
+    user: User | undefined
     downloadFile: (fileId: string) => Promise<any>
     setFiles: Dispatch<SetStateAction<File[]>>
     setView: (view: string) => void
