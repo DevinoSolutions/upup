@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import useLoadGAPI from './useLoadGAPI'
 import type { GoogleConfigs } from 'types/GoogleConfigs'
+import { File, Root, Token, User } from 'google'
 
 const fetchDrive = async (url: string, accessToken: string) => {
     return await fetch(url, {
@@ -13,10 +14,12 @@ const fetchDrive = async (url: string, accessToken: string) => {
 const useGoogleDrive = (googleConfigs: GoogleConfigs) => {
     const { google_client_id, google_api_key } = googleConfigs
 
-    const [user, setUser] = useState<any>(null)
-    const [googleFiles, setGoogleFiles] = useState<any>(null)
-    const [rawFiles, setRawFiles] = useState<any>(null)
-    const [access_token, setAccessToken] = useState<any>(null)
+    const [user, setUser] = useState<User>()
+    const [googleFiles, setGoogleFiles] = useState<Root>()
+    const [rawFiles, setRawFiles] = useState<File[]>()
+    const [token, setToken] = useState<Token>()
+
+    console.log('access_token', token)
 
     const { gisLoaded } = useLoadGAPI()
 
@@ -28,7 +31,7 @@ const useGoogleDrive = (googleConfigs: GoogleConfigs) => {
     const getFilesList = async () => {
         const response = await fetchDrive(
             `https://www.googleapis.com/drive/v3/files?fields=files(fileExtension,id,mimeType,name,parents,size,thumbnailLink)&key=${google_api_key}`,
-            access_token.access_token,
+            token?.access_token!,
         )
         const data = await response.json()
         if (data.error) {
@@ -47,7 +50,7 @@ const useGoogleDrive = (googleConfigs: GoogleConfigs) => {
     const downloadFile = async (fileId: string) => {
         const response = await fetchDrive(
             `https://www.googleapis.com/drive/v3/files/${fileId}?key=${google_api_key}`,
-            access_token.access_token,
+            token?.access_token!,
         )
         return await response.blob()
     }
@@ -59,7 +62,7 @@ const useGoogleDrive = (googleConfigs: GoogleConfigs) => {
     const getUserName = async () => {
         const response = await fetchDrive(
             `https://www.googleapis.com/oauth2/v3/userinfo`,
-            access_token.access_token,
+            token?.access_token!,
         )
         const data = await response.json()
         setUser(data)
@@ -73,7 +76,7 @@ const useGoogleDrive = (googleConfigs: GoogleConfigs) => {
         const google = await window.google
         google.accounts.id.revoke()
         localStorage.removeItem('token')
-        setUser(null)
+        setUser(undefined)
     }
 
     /**
@@ -82,33 +85,32 @@ const useGoogleDrive = (googleConfigs: GoogleConfigs) => {
      */
     const organizeFiles = () => {
         if (!rawFiles) return
-        const organizedFiles: any = rawFiles.filter(
-            (f: { parents: string[] | undefined }) =>
+        const organizedFiles: File[] = rawFiles.filter(
+            f =>
                 rawFiles.findIndex(
-                    (ff: { id: any }) => f.parents && ff.id === f.parents[0],
+                    ff => f.parents && ff.id === f.parents[0],
                 ) === -1,
         )
 
         for (let i = 0; i < organizedFiles.length; i++) {
             const file = organizedFiles[i]
             const children = rawFiles.filter(
-                (f: { parents: string[] | undefined }) =>
-                    f.parents && f.parents.includes(file.id),
+                f => f.parents && f.parents.includes(file.id),
             )
             if (children.length) file.children = children
         }
 
         /**
          * @description Recursively add children to the tree structure
-         * @param {any} file
+         * @param {File} file
          * @returns {void}
          */
-        const recurse = (file: any) => {
+        const recurse = (file: File) => {
             if (!file.children) return
             for (let i = 0; i < file.children.length; i++) {
                 const child = file.children[i]
-                const children = rawFiles.filter((f: { parents: string[] }) =>
-                    f.parents.includes(child.id),
+                const children = rawFiles.filter(
+                    f => f.parents?.includes(child.id),
                 )
                 if (children.length) child.children = children
                 recurse(child)
@@ -140,11 +142,7 @@ const useGoogleDrive = (googleConfigs: GoogleConfigs) => {
                     client_id: google_client_id,
                     scope: 'https://www.googleapis.com/auth/drive.readonly https://www.googleapis.com/auth/userinfo.profile',
                     ux_mode: 'popup',
-                    callback(tokenResponse: {
-                        error: unknown
-                        access_token: string
-                        expires_in: number
-                    }) {
+                    callback(tokenResponse: Token) {
                         if (tokenResponse && !tokenResponse.error) {
                             localStorage.setItem(
                                 'token',
@@ -155,7 +153,7 @@ const useGoogleDrive = (googleConfigs: GoogleConfigs) => {
                                         (tokenResponse.expires_in - 20) * 1000,
                                 }),
                             )
-                            return setAccessToken(tokenResponse)
+                            return setToken(tokenResponse)
                         } else {
                             console.error('Error: ', tokenResponse.error)
                         }
@@ -167,17 +165,17 @@ const useGoogleDrive = (googleConfigs: GoogleConfigs) => {
         const storedToken = storedTokenStr ? JSON.parse(storedTokenStr) : null
 
         if (storedToken && storedToken.expires_in > Date.now())
-            return setAccessToken(storedToken)
+            return setToken(storedToken)
 
         if (gisLoaded) onGisLoaded()
     }, [gisLoaded])
 
     useEffect(() => {
-        if (access_token) {
-            getUserName()
-            getFilesList()
+        if (token) {
+            void getUserName()
+            void getFilesList()
         }
-    }, [access_token])
+    }, [token])
 
     useEffect(() => {
         organizeFiles()
