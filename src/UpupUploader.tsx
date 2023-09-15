@@ -316,7 +316,11 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
                 />
 
                 <Preview
-                    files={mutatedFiles.length > 0 ? mutatedFiles : files}
+                    files={
+                        mutatedFiles && mutatedFiles.length > 0
+                            ? mutatedFiles
+                            : files
+                    }
                     setFiles={setFiles}
                     isAddingMore={isAddingMore}
                     setIsAddingMore={setIsAddingMore}
