@@ -1,5 +1,5 @@
 export default function checkFileType(file: File, acceptedFiles: string) {
-    if (file && acceptedFiles) {
+    if (file && acceptedFiles && acceptedFiles !== '*') {
         const acceptedFilesArray = Array.isArray(acceptedFiles)
             ? acceptedFiles
             : acceptedFiles.split(',')
