@@ -1,4 +1,4 @@
-import { motion } from 'framer-motion'
+import { motion, Target } from 'framer-motion'
 import { TbFileUnknown, TbFolder } from 'react-icons/tb'
 import { GoogleFile } from 'google'
 
@@ -35,26 +35,35 @@ const ListItem = ({ file, handleClick, index, selectedFiles }: Props) => {
         <TbFileUnknown />
     )
 
+    const initial: Target = {
+        opacity: 0,
+        y: 10,
+        ...(isFileSelected && { backgroundColor: backgroundColors.selected }),
+        ...(!isFileSelected && { backgroundColor: backgroundColors.default }),
+    }
+
+    const animate: Target = {
+        opacity: 1,
+        y: 0,
+        ...(isFileSelected && { backgroundColor: backgroundColors.selected }),
+        ...(!isFileSelected && { backgroundColor: backgroundColors.default }),
+    }
+
+    // const whileHover: Target = {
+    //     backgroundColor: backgroundColors.default,
+    // }
+    // const whileTap: Target = {
+    //     backgroundColor: backgroundColors.tap,
+    // }
+
     return (
         <motion.div
             key={file.id}
-            initial={{
-                opacity: 0,
-                y: -10,
-                backgroundColor: isFileSelected
-                    ? backgroundColors.selected
-                    : backgroundColors.default,
-            }}
-            animate={{
-                opacity: 1,
-                y: 0,
-                backgroundColor: isFileSelected
-                    ? backgroundColors.selected
-                    : backgroundColors.default,
-            }}
-            whileHover={{ backgroundColor: backgroundColors.hover }}
-            whileTap={{ backgroundColor: backgroundColors.tap }}
-            exit={{ opacity: 0, y: 10 }}
+            initial={initial}
+            animate={animate}
+            whileHover={animate}
+            whileTap={animate}
+            exit={animate}
             transition={{
                 duration: 0.2,
                 delay: index * 0.05,

@@ -14,6 +14,7 @@ const useGoogleDrive = (googleConfigs: GoogleConfigs) => {
     const fetchDrive = useCallback(
         async (url: string) => {
             return await fetch(url, {
+                method: 'GET',
                 headers: {
                     Authorization: `Bearer ${token?.access_token}`,
                 },
