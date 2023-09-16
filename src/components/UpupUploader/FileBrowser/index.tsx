@@ -65,7 +65,7 @@ const FileBrowser = ({
     }, [googleFiles])
 
     return (
-        <div className="w-full grid grid-rows-[auto,auto,1fr,auto] bg-white h-[min(98svh,32rem)]">
+        <div className="w-full grid grid-rows-[auto,auto,1fr,auto] bg-white h-[min(98svh,32rem)] ">
             <div className="h-12 bg-[#fafafa] text-[#333] border-b flex justify-between items-center p-2 text-xs font-medium dark:bg-[#1f1f1f] dark:text-[#fafafa]">
                 <div className="h p-2 px-4 flex gap-1">
                     {path &&
@@ -106,16 +106,16 @@ const FileBrowser = ({
                 </div>
             </div>
 
-            <div className="bg-white p-2 relative">
+            <div className="bg-white p-2 relative  dark:bg-[#1f1f1f] dark:text-[#fafafa]">
                 <input
                     type="search"
-                    className="w-full h-8 bg-[#eaeaea] rounded-md text-xs px-2 pl-8 outline-none focus:bg-[#cfcfcf] transition-all duration-300"
+                    className="w-full h-8 bg-[#eaeaea] rounded-md text-xs px-2 pl-8 outline-none focus:bg-[#cfcfcf] transition-all duration-300 dark:bg-[#2f2f2f] dark:text-[#fafafa]"
                     placeholder="Search"
                 />
                 <TbSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-[#939393]" />
             </div>
 
-            <div className="bg-white h-full overflow-y-scroll pt-2 overflow-scroll">
+            <div className="bg-white h-full overflow-y-scroll pt-2 overflow-scroll dark:bg-[#1f1f1f] dark:text-[#fafafa]">
                 <ul className="p-2">
                     {path &&
                         path[path.length - 1]?.children?.map((file, index) => {
@@ -139,7 +139,7 @@ const FileBrowser = ({
                         animate={{ y: '0%', height: 'auto' }}
                         exit={{ y: '100%', height: 0 }}
                         transition={{ duration: 0.2 }}
-                        className="border-t bg-white flex items-center justify-start gap-4 p-4 py-2 origin-bottom"
+                        className="border-t bg-white flex items-center justify-start gap-4 p-4 py-2 origin-bottom dark:bg-[#1f1f1f] dark:text-[#fafafa]"
                     >
                         <button
                             className="bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white font-medium rounded-md p-3 px-5 transition-all duration-300"
