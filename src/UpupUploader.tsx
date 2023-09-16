@@ -1,5 +1,5 @@
 import CameraUploader from 'components/CameraUploader'
-import { GoogleDriveUploader } from 'components/GoogleDriveUploader'
+import GoogleDriveUploader from 'components/GoogleDriveUploader'
 import {
     BoxIcon,
     CameraIcon,
@@ -226,10 +226,9 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
         const components = {
             [UploadAdapter.GOOGLE_DRIVE]: (
                 <GoogleDriveUploader
-                    googleConfigs={googleConfigs as GoogleConfigs}
-                    baseConfigs={baseConfigs}
                     setFiles={setFiles}
                     setView={setView}
+                    googleConfigs={googleConfigs as GoogleConfigs}
                 />
             ),
             [UploadAdapter.ONE_DRIVE]: (

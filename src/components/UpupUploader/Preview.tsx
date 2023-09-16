@@ -2,6 +2,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { TbX } from 'react-icons/tb'
 import { bytesToSize } from 'lib/bytesToSize'
 import FileIcon from 'components/FileIcon'
+import { GoogleFile } from 'google'
 
 const Preview = ({
     files,
@@ -83,9 +84,15 @@ const Preview = ({
                                     if (onFileClick) onFileClick(file)
                                 }}
                             >
-                                {file.type.startsWith('image/') ? (
+                                {(file as unknown as GoogleFile)
+                                    .thumbnailLink ||
+                                file.type.startsWith('image/') ? (
                                     <img
-                                        src={URL.createObjectURL(file)}
+                                        src={
+                                            (file as unknown as GoogleFile)
+                                                .thumbnailLink ||
+                                            URL.createObjectURL(file)
+                                        }
                                         alt=""
                                         className={
                                             'w-full rounded-md object-cover shadow ' +
