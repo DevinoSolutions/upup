@@ -101,7 +101,7 @@ const FileBrowser = ({
                             }
                         }}
                     >
-                        {user ? 'Sign out' : 'Sign in'}
+                        {user ? 'Log out' : 'Log in'}
                     </button>
                 </div>
             </div>
