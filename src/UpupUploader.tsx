@@ -49,7 +49,7 @@ const methods: Method[] = [
         id: 'ONE_DRIVE',
         name: 'OneDrive',
         icon: <OneDriveIcon />,
-        disabled: true,
+        // disabled: true,
     },
     { id: 'BOX', name: 'Box', icon: <BoxIcon />, disabled: true },
     { id: 'LINK', name: 'Link', icon: <LinkIcon /> },
