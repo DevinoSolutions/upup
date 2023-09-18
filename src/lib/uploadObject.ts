@@ -64,16 +64,4 @@ const uploadObject = async ({
     }
 }
 
-// await client.putObject(
-//     {
-//         Bucket: bucket,
-//         Key: `${key}`,
-//         Body: file,
-//         ACL: 'public-read',
-//     },
-//     (err: any, _data: any) => {
-//         if (err) console.log(err, err.stack)
-//     },
-// )
-
 export default uploadObject
