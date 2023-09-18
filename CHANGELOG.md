@@ -1,5 +1,11 @@
 # @bassem97/upup
 
+## 2.2.18
+
+### Patch Changes
+
+-   a721abd: Mutliple upload is stable !
+
 ## 2.2.17
 
 ### Patch Changes
