@@ -1,15 +1,17 @@
-import { S3 } from '@aws-sdk/client-s3'
+import { S3Client } from '@aws-sdk/client-s3'
 import { S3Configs } from '../types/S3Configs'
-let client: S3 | null = null
+
+let client: S3Client | null = null
 
 /**
  * Get S3 client
  * @param configs S3 configs (region, endpoint...etc)
+ * @returns S3 client
  */
-export function getClient(configs: S3Configs) {
+const getClient = (configs: S3Configs): S3Client => {
     if (client) return client
     const { region, endpoint, credentials } = configs
-    client = new S3({
+    client = new S3Client({
         region,
         endpoint,
         credentials,
@@ -17,3 +19,5 @@ export function getClient(configs: S3Configs) {
 
     return client
 }
+
+export default getClient
