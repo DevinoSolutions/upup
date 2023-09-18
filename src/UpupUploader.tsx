@@ -23,7 +23,6 @@ import useDragAndDrop from 'hooks/useDragAndDrop'
 import checkFileType from 'lib/checkFileType'
 import { compressFile } from 'lib/compressFile'
 import { getClient } from 'lib/getClient'
-import { putObject } from 'lib/putObject'
 import {
     FC,
     ForwardedRef,
@@ -41,6 +40,7 @@ import { Method } from 'types/Method'
 import { OneDriveConfigs } from 'types/OneDriveConfigs'
 import { UPLOAD_ADAPTER, UploadAdapter } from 'types/UploadAdapter'
 import { v4 as uuidv4 } from 'uuid'
+import uploadObject from './lib/uploadObject'
 
 const methods: Method[] = [
     { id: 'INTERNAL', name: 'My Device', icon: <MyDeviceIcon /> },
@@ -128,7 +128,11 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
         useImperativeHandle(ref, () => ({
             async uploadFiles() {
                 if (files.length === 0) return null
-                const filesList = mutatedFiles.length > 0 ? mutatedFiles : files
+                console.log(files)
+                const filesList =
+                    mutatedFiles && mutatedFiles.length > 0
+                        ? mutatedFiles
+                        : files
                 return new Promise(async (resolve, reject) => {
                     /**
                      * Check if the total size of files is less than the maximum size
@@ -185,13 +189,14 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
                                 /**
                                  * Upload the file to the cloud storage
                                  */
-                                await putObject({
+                                await uploadObject({
                                     client,
                                     bucket,
                                     key,
                                     file,
                                 })
-                                    .then(() => {
+                                    .then(data => {
+                                        console.log('data', data)
                                         keys.push(key)
                                     })
                                     .catch(err => {
