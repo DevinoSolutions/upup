@@ -2,7 +2,7 @@ import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3'
 import { S3Configs } from '../types/S3Configs'
 
 export type S3ClientWithSend = S3Client & {
-    send: (command: PutObjectCommand) => Promise<unknown>
+    send: (command: PutObjectCommand) => Promise<any>
 }
 
 let client: S3ClientWithSend | null = null
