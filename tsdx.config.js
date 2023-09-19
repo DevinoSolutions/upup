@@ -2,6 +2,7 @@ const postcss = require('rollup-plugin-postcss')
 const autoprefixer = require('autoprefixer')
 const tailwindcss = require('tailwindcss')
 const cssnano = require('cssnano')
+const replace = require('@rollup/plugin-replace')
 
 module.exports = {
     rollup(config, options) {
@@ -23,6 +24,13 @@ module.exports = {
                 // only write out CSS for the first bundle (avoids pointless extra files):
                 extract: !!options.writeMeta,
             }),
+        )
+        config.plugins = config.plugins.map(p =>
+            p.name === 'replace'
+                ? replace({
+                      preventAssignment: true,
+                  })
+                : p,
         )
         return config
     },
