@@ -41,6 +41,7 @@ import { UPLOAD_ADAPTER, UploadAdapter } from 'types/UploadAdapter'
 import { v4 as uuidv4 } from 'uuid'
 import uploadObject from './lib/uploadObject'
 import getClient from './lib/getClient'
+import MetaVersion from './components/MetaVersion'
 
 const methods: Method[] = [
     { id: 'INTERNAL', name: 'My Device', icon: <MyDeviceIcon /> },
@@ -360,9 +361,7 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
                                 return uploadAdapters.includes(method.id as any)
                             })}
                         />
-                        <p className="text-xs text-[#9d9d9d] mb-4">
-                            Powered by uNotes
-                        </p>
+                        <MetaVersion />
                     </div>
                 </div>
             </div>
