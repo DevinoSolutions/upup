@@ -1,12 +1,13 @@
 import type { Dispatch, LegacyRef, SetStateAction } from 'react'
+import { useRef } from 'react'
 
 import { AnimatePresence } from 'framer-motion'
-import { useRef } from 'react'
 import useDragAndDrop from 'hooks/useDragAndDrop'
 
 import MiniDropZone from './MiniDropZone'
 import MiniPreview from './MiniPreview'
 import checkFileType from 'lib/checkFileType'
+import MetaVersion from '../MetaVersion'
 
 export default function UpupMini({
     files,
@@ -70,9 +71,7 @@ export default function UpupMini({
                             Click to browse
                         </button>
                     </h1>
-                    <p className="text-xs text-[#9d9d9d] mb-4">
-                        Powered by uNotes
-                    </p>
+                    <MetaVersion />
                 </div>
             </div>
         </div>

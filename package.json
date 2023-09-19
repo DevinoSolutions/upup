@@ -29,7 +29,8 @@
     ],
     "scripts": {
         "start": "tsdx watch",
-        "build": "tsdx build",
+        "prebuild": "node -p \"'export const LIB_VERSION = ' + JSON.stringify(require('./package.json').version) + ';'\" > src/version.ts",
+        "build": "pnpm run prebuild && tsdx build",
         "test": "tsdx test --passWithNoTests",
         "lint": "tsdx lint",
         "prepare": "tsdx build",
