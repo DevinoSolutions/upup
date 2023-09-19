@@ -11,20 +11,12 @@ const useGoogleDrive = (googleConfigs: GoogleConfigs) => {
     const [rawFiles, setRawFiles] = useState<GoogleFile[]>()
     const [token, setToken] = useState<Token>()
 
-    type Params = {
-        url: string
-        type?: 'json' | 'blob'
-    }
     const fetchDrive = useCallback(
-        async ({ url, type }: Params) => {
+        async (url: string) => {
             return await fetch(url, {
                 method: 'GET',
                 headers: {
                     Authorization: `Bearer ${token?.access_token}`,
-                    'Content-Type':
-                        type === 'json'
-                            ? 'application/json'
-                            : 'application/pdf',
                 },
             })
         },
@@ -39,10 +31,9 @@ const useGoogleDrive = (googleConfigs: GoogleConfigs) => {
      *
      */
     const getFilesList = useCallback(async () => {
-        const response = await fetchDrive({
-            url: `https://www.googleapis.com/drive/v3/files?fields=files(fileExtension,id,mimeType,name,parents,size,thumbnailLink)&key=${google_api_key}`,
-            type: 'json',
-        })
+        const response = await fetchDrive(
+            `https://www.googleapis.com/drive/v3/files?fields=files(fileExtension,id,mimeType,name,parents,size,thumbnailLink)&key=${google_api_key}`,
+        )
         const data = await response.json()
         if (data.error) {
             console.error(data.error)
@@ -58,21 +49,14 @@ const useGoogleDrive = (googleConfigs: GoogleConfigs) => {
      */
     const downloadFile = async (fileId: string) => {
         const response = await fetch(
-            `https://www.googleapis.com/drive/v3/files/${fileId}?key=${google_api_key}`,
+            `https://www.googleapis.com/drive/v3/files/${fileId}?key=${google_api_key}&alt=media`,
             {
                 headers: {
                     Authorization: `Bearer ${token?.access_token}`,
                 },
             },
         )
-        const buffer = await response.arrayBuffer()
-        console.log(buffer)
-        const blob = new Blob([buffer], {
-            type: response.headers.get('content-type') || undefined,
-        })
-
-        console.log(blob)
-        return blob
+        return await response.blob()
     }
 
     /**
@@ -80,10 +64,9 @@ const useGoogleDrive = (googleConfigs: GoogleConfigs) => {
      * @returns {Promise<void>}
      */
     const getUserName = async () => {
-        const response = await fetchDrive({
-            url: `https://www.googleapis.com/oauth2/v3/userinfo`,
-            type: 'json',
-        })
+        const response = await fetchDrive(
+            `https://www.googleapis.com/oauth2/v3/userinfo`,
+        )
         const data = await response.json()
         setUser(data)
     }
@@ -92,7 +75,7 @@ const useGoogleDrive = (googleConfigs: GoogleConfigs) => {
      * @description Sign out of Google Drive and remove access token from local storage
      * @returns {Promise<void>}
      */
-    const handleSignout = async () => {
+    const handleSignOut = async () => {
         const google = await window.google
         google.accounts.id.revoke()
         localStorage.removeItem('token')
@@ -212,7 +195,7 @@ const useGoogleDrive = (googleConfigs: GoogleConfigs) => {
         organizeFiles()
     }, [organizeFiles])
 
-    return { user, googleFiles, handleSignOut: handleSignout, downloadFile }
+    return { user, googleFiles, handleSignOut, downloadFile }
 }
 
 export default useGoogleDrive
