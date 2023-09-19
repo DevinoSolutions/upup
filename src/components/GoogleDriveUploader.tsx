@@ -1,6 +1,6 @@
 import type { GoogleConfigs } from 'types/GoogleConfigs'
 
-import React, { Dispatch, SetStateAction } from 'react'
+import { Dispatch, SetStateAction } from 'react'
 import FileBrowser from './UpupUploader/FileBrowser'
 import useGoogleDrive from '../hooks/useGoogleDrive'
 
