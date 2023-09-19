@@ -1,7 +1,12 @@
 import { Meta } from '@storybook/react'
-import { UPLOAD_ADAPTER, UploadAdapter, UpupUploader } from '../src'
+import {
+    UPLOAD_ADAPTER,
+    UploadAdapter,
+    UploadFilesRef,
+    UpupUploader,
+} from '../src'
 import useUpup from '../src/hooks/useUpup'
-import React from 'react'
+import { useRef } from 'react'
 
 const meta: Meta<typeof UpupUploader> = {
     title: 'Uploader',
@@ -16,8 +21,8 @@ const Uploader = args => {
             accept: '*',
             multiple: true,
             limit: 5,
-            onFileClick: file => console.log(file),
-            onFilesChange: files => console.log(files),
+            onFileClick: file => void 0,
+            onFilesChange: files => void 0,
             ...args,
         })
     const uploadAdapters: UPLOAD_ADAPTER[] = [
@@ -28,15 +33,26 @@ const Uploader = args => {
         UploadAdapter.CAMERA,
     ]
 
+    const upupRef = useRef<UploadFilesRef>()
+
+    const handleUpload = async () => {
+        await upupRef.current
+            ?.uploadFiles()
+            .then(data => console.log('data', data))
+    }
     return (
-        <UpupUploader
-            {...args}
-            baseConfigs={baseConfigs}
-            uploadAdapters={uploadAdapters}
-            cloudStorageConfigs={cloudStorageConfigs}
-            googleConfigs={googleConfigs}
-            oneDriveConfigs={oneDriveConfigs}
-        />
+        <>
+            <UpupUploader
+                {...args}
+                baseConfigs={baseConfigs}
+                uploadAdapters={uploadAdapters}
+                cloudStorageConfigs={cloudStorageConfigs}
+                googleConfigs={googleConfigs}
+                oneDriveConfigs={oneDriveConfigs}
+                ref={upupRef}
+            />
+            <button onClick={handleUpload}>Upload</button>
+        </>
     )
 }
 

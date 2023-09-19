@@ -22,8 +22,6 @@ import useAddMore from 'hooks/useAddMore'
 import useDragAndDrop from 'hooks/useDragAndDrop'
 import checkFileType from 'lib/checkFileType'
 import { compressFile } from 'lib/compressFile'
-import { getClient } from 'lib/getClient'
-import { putObject } from 'lib/putObject'
 import {
     FC,
     ForwardedRef,
@@ -41,6 +39,8 @@ import { Method } from 'types/Method'
 import { OneDriveConfigs } from 'types/OneDriveConfigs'
 import { UPLOAD_ADAPTER, UploadAdapter } from 'types/UploadAdapter'
 import { v4 as uuidv4 } from 'uuid'
+import uploadObject from './lib/uploadObject'
+import getClient from './lib/getClient'
 
 const methods: Method[] = [
     { id: 'INTERNAL', name: 'My Device', icon: <MyDeviceIcon /> },
@@ -128,7 +128,10 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
         useImperativeHandle(ref, () => ({
             async uploadFiles() {
                 if (files.length === 0) return null
-                const filesList = mutatedFiles.length > 0 ? mutatedFiles : files
+                const filesList =
+                    mutatedFiles && mutatedFiles.length > 0
+                        ? mutatedFiles
+                        : files
                 return new Promise(async (resolve, reject) => {
                     /**
                      * Check if the total size of files is less than the maximum size
@@ -185,20 +188,31 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
                                 /**
                                  * Upload the file to the cloud storage
                                  */
-                                await putObject({
+                                await uploadObject({
                                     client,
                                     bucket,
                                     key,
                                     file,
                                 })
-                                    .then(() => {
-                                        keys.push(key)
+                                    .then(data => {
+                                        console.log(data)
+                                        if (data.httpStatusCode === 200) {
+                                            keys.push(key)
+                                        } else
+                                            throw new Error(
+                                                'Something went wrong',
+                                            )
                                     })
                                     .catch(err => {
                                         throw new Error(err.message)
                                     })
+                                    .finally(() => {
+                                        if (
+                                            keys.length === filesToUpload.length
+                                        )
+                                            resolve(keys) // return the keys to the parent component
+                                    })
                             })
-                            resolve(keys) // return the keys to the parent component
                         } catch (error) {
                             if (error instanceof Error) {
                                 // ✅ TypeScript knows err is Error
