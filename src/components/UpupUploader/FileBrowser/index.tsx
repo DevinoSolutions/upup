@@ -12,6 +12,7 @@ type Props = {
     downloadFile: (fileId: string) => Promise<Blob>
     setFiles: Dispatch<SetStateAction<File[]>>
     setView: (view: string) => void
+    accept?: string
 }
 
 const FileBrowser = ({
@@ -21,6 +22,7 @@ const FileBrowser = ({
     setFiles,
     downloadFile,
     setView,
+    accept,
 }: Props) => {
     const [path, setPath] = useState<Root[]>([])
     const [selectedFiles, setSelectedFiles] = useState<GoogleFile[]>([])
@@ -126,6 +128,7 @@ const FileBrowser = ({
                                     handleClick={handleClick}
                                     index={index}
                                     selectedFiles={selectedFiles}
+                                    accept={accept}
                                 />
                             )
                         })}
