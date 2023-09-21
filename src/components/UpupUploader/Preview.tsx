@@ -3,6 +3,7 @@ import { TbX } from 'react-icons/tb'
 import { bytesToSize } from 'lib/bytesToSize'
 import FileIcon from 'components/FileIcon'
 import { GoogleFile } from 'google'
+import { Dispatch } from 'react'
 
 const Preview = ({
     files,
@@ -13,7 +14,7 @@ const Preview = ({
     onFileClick,
 }: {
     files: File[]
-    setFiles: (files: File[] | ((files: File[]) => File[])) => void
+    setFiles: Dispatch<React.SetStateAction<File[]>>
     isAddingMore: boolean
     setIsAddingMore: (isAddingMore: boolean) => void
     multiple?: boolean
