@@ -13,7 +13,7 @@ const Preview = ({
     onFileClick,
 }: {
     files: File[]
-    setFiles: (files: File[]) => void
+    setFiles: (files: File[] | ((files: File[]) => File[])) => void
     isAddingMore: boolean
     setIsAddingMore: (isAddingMore: boolean) => void
     multiple?: boolean
@@ -24,7 +24,7 @@ const Preview = ({
      * Remove file from files array
      */
     const removeFile = (index: number) =>
-        setFiles([...files.filter((_, i) => i !== index)])
+        setFiles(files => [...files.filter((_, i) => i !== index)])
 
     return (
         <AnimatePresence>
