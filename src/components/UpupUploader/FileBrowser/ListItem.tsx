@@ -7,11 +7,23 @@ type Props = {
     handleClick: (file: GoogleFile) => void
     index: number
     selectedFiles: GoogleFile[]
+    accept?: string
 }
 
-const ListItem = ({ file, handleClick, index, selectedFiles }: Props) => {
+const ListItem = ({
+    file,
+    handleClick,
+    index,
+    selectedFiles,
+    accept,
+}: Props) => {
     const isFolder = !!file.children
     const isFileSelected = selectedFiles.includes(file)
+    const isFileAccepted =
+        accept &&
+        accept !== '*' &&
+        file.fileExtension &&
+        accept.includes(file.fileExtension)
 
     const backgroundColors = {
         default: '#e9ecef00',
@@ -19,6 +31,7 @@ const ListItem = ({ file, handleClick, index, selectedFiles }: Props) => {
         hover: '#3a3a3a',
     }
 
+    if (accept && !isFolder && !isFileAccepted) return null
     if (isFolder && !file.children?.length) return null
     if (!isFolder && !file.thumbnailLink) return null
 

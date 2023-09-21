@@ -18,7 +18,7 @@ export default meta
 const Uploader = args => {
     const { baseConfigs, cloudStorageConfigs, googleConfigs, oneDriveConfigs } =
         useUpup({
-            accept: '*',
+            accept: 'pdf,docx,doc,png,jpg',
             multiple: true,
             limit: 5,
             onFileClick: file => void 0,

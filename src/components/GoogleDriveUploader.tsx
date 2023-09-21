@@ -8,9 +8,15 @@ type Props = {
     googleConfigs: GoogleConfigs
     setFiles: Dispatch<SetStateAction<File[]>>
     setView: (view: string) => void
+    accept?: string
 }
 
-const GoogleDriveUploader = ({ setFiles, setView, googleConfigs }: Props) => {
+const GoogleDriveUploader = ({
+    setFiles,
+    setView,
+    googleConfigs,
+    accept,
+}: Props) => {
     const { googleFiles, handleSignOut, user, downloadFile } =
         useGoogleDrive(googleConfigs)
 
@@ -22,6 +28,7 @@ const GoogleDriveUploader = ({ setFiles, setView, googleConfigs }: Props) => {
             downloadFile={downloadFile}
             setFiles={setFiles}
             setView={setView}
+            accept={accept || '*'}
         />
     )
 }

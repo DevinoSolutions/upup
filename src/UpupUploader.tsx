@@ -254,6 +254,7 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
                     setFiles={setFiles}
                     setView={setView}
                     googleConfigs={googleConfigs as GoogleConfigs}
+                    accept={accept}
                 />
             ),
             [UploadAdapter.ONE_DRIVE]: (
