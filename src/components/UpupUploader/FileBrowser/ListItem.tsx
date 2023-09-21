@@ -47,37 +47,34 @@ const ListItem = ({
         <TbFileUnknown />
     )
 
-    const backgroundColor = {
-        ...(isFileSelected && { backgroundColor: backgroundColors.selected }),
-        ...(!isFileSelected && { backgroundColor: backgroundColors.default }),
-    }
-    const initial: Target = {
-        opacity: 0,
-        y: 10,
-        ...backgroundColor,
-    }
-
-    const animate: Target = {
-        opacity: 1,
-        y: 0,
-        ...backgroundColor,
-    }
-
-    const exit: Target = { opacity: 0, y: 10 }
-
-    const transition: TransitionDefinition = {
-        duration: 0.2,
-        delay: index * 0.05,
-        backgroundColor: { duration: 0.2, delay: 0 },
+    const variants = {
+        initial: {
+            opacity: 0,
+            y: 10,
+            backgroundColor: isFileSelected ? '#bab4b499' : '#e9ecef00',
+        },
+        animate: {
+            opacity: 1,
+            y: 0,
+            backgroundColor: isFileSelected ? '#bab4b499' : '#e9ecef00',
+        },
+        hover: { backgroundColor: isFileSelected ? '#eaeaea' : '#bab4b499' },
+        exit: { opacity: 0, y: 10 },
     }
 
     return (
         <motion.div
             key={file.id}
-            initial={initial}
-            animate={animate}
-            exit={exit}
-            transition={transition}
+            variants={variants}
+            initial={'initial'}
+            animate={'animate'}
+            whileHover={'hover'}
+            exit={'exit'}
+            transition={{
+                duration: 0.2,
+                delay: index * 0.05,
+                backgroundColor: { delay: 0 },
+            }}
             className={`flex items-center justify-between gap-2 mb-1 cursor-pointer rounded-md py-2 p-1 ${
                 isFolder ? 'font-medium' : ''
             }`}
