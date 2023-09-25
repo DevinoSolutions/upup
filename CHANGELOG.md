@@ -1,5 +1,11 @@
 # @bassem97/upup
 
+## 2.2.20
+
+### Patch Changes
+
+-   798fe44: Fix bug when removing file not working
+
 ## 2.2.19
 
 ### Patch Changes
