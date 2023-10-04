@@ -285,10 +285,10 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
         }, [limit, files])
 
         useEffect(() => {
-            if (!onFilesChange || files.length === 0) return
-            const mutateFiles = async () => {
-                setMutatedFiles(await onFilesChange(files))
-            }
+            if (!onFilesChange || files.length === 0) return setMutatedFiles([])
+            const mutateFiles = async () =>
+                setMutatedFiles(await onFilesChange([...files]))
+
             mutateFiles()
         }, [files])
 
