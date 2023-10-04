@@ -25,7 +25,10 @@ const Uploader = args => {
             multiple: true,
             limit: 5,
             onFileClick: file => void 0,
-            onFilesChange: files => void 0,
+            onFilesChange: files => {
+                console.log('files', files)
+                return files
+            },
             ...args,
         })
     const uploadAdapters: UPLOAD_ADAPTER[] = [
