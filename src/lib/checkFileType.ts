@@ -5,8 +5,10 @@ export default function checkFileType(file: File, acceptedFiles: string) {
             : acceptedFiles.split(',')
         const { name: fileName, type: mimeType } = file
         const baseMimeType = mimeType.replace(/\/.*$/, '')
+        const extension = mimeType.split('/')[1]
 
         return (
+            acceptedFilesArray.includes(extension) ||
             acceptedFilesArray.includes(mimeType) ||
             acceptedFilesArray.includes(`${baseMimeType}/*`) ||
             acceptedFilesArray.some(
