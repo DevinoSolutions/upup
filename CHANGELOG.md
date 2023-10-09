@@ -1,5 +1,11 @@
 # @bassem97/upup
 
+## 2.2.21
+
+### Patch Changes
+
+-   f89d4ed: fix remove file bug
+
 ## 2.2.20
 
 ### Patch Changes
