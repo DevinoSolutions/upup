@@ -1,5 +1,12 @@
 # @bassem97/upup
 
+## 2.2.23
+
+### Patch Changes
+
+-   cee9ef5: fix return bug
+-   c3b1658: remove unnecessary deps
+
 ## 2.2.22
 
 ### Patch Changes
