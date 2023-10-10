@@ -41,26 +41,25 @@ const uploadObject = async ({
     /**
      *  Define a function that uploads your object using SDK's PutObjectCommand object and catches any errors.
      */
-    try {
-        const data = await client.send(new PutObjectCommand(params))
-        if (data.$metadata.httpStatusCode === 200) {
-            return {
-                httpStatusCode: data.$metadata.httpStatusCode,
-                message:
-                    'Successfully uploaded object: ' +
-                    params.Bucket +
-                    '/' +
-                    params.Key,
-                key,
-            }
-        }
-    } catch (err) {
-        console.error('Error', err)
-    }
 
-    return {
-        httpStatusCode: 500,
-        message: 'Error uploading object: ' + params.Bucket + '/' + params.Key,
+    const data = await client.send(new PutObjectCommand(params))
+
+    if (data.$metadata.httpStatusCode === 200) {
+        return {
+            httpStatusCode: data.$metadata.httpStatusCode,
+            message:
+                'Successfully uploaded object: ' +
+                params.Bucket +
+                '/' +
+                params.Key,
+            key,
+        }
+    } else {
+        return {
+            httpStatusCode: data.$metadata.httpStatusCode || 500,
+            message:
+                'Error uploading object: ' + params.Bucket + '/' + params.Key,
+        }
     }
 }
 
