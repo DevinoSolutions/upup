@@ -43,10 +43,6 @@
         "ci": "pnpm run prettier-check && pnpm run build",
         "release": "pnpm run prettier-check && pnpm run build && changeset publish"
     },
-    "peerDependencies": {
-        "react-is": "^18.2.0",
-        "styled-components": "^6.0.6"
-    },
     "size-limit": [
         {
             "path": "dist/upup.cjs.production.min.js",
