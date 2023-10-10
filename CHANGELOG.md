@@ -1,5 +1,11 @@
 # @bassem97/upup
 
+## 2.2.22
+
+### Patch Changes
+
+-   836924e: fix return bug
+
 ## 2.2.21
 
 ### Patch Changes
