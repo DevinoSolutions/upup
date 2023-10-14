@@ -56,6 +56,18 @@ const useUpup: (props?: Props) => {
         onFilesChange,
     } = props
 
+    // const handler = new XhrHttpHandler({})
+    //
+    // handler.on(XhrHttpHandler.EVENTS.UPLOAD_PROGRESS, (xhr: ProgressEvent) => {
+    //     const progress = Math.round((xhr.loaded / xhr.total) * 100)
+    //     console.log(
+    //         progress === 100
+    //             ? '%cUPLOAD COMPLETE'
+    //             : `%cUpload Progress : ${progress}%`,
+    //         `color: ${progress === 100 ? '#00ff00' : '#ff9600'}`,
+    //     )
+    // })
+
     /**
      * Throw an error if any of the required environment variables are missing
      */
