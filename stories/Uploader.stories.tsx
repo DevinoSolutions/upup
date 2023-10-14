@@ -9,7 +9,6 @@ import useUpup from '../src/hooks/useUpup'
 import { useRef } from 'react'
 // import react only on this file to avoid error
 // we get an error because we're not exporting UpupUploader as default
-import React from 'react'
 
 const meta: Meta<typeof UpupUploader> = {
     title: 'Uploader',

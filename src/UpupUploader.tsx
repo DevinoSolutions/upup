@@ -42,6 +42,7 @@ import { v4 as uuidv4 } from 'uuid'
 import uploadObject from './lib/uploadObject'
 import getClient from './lib/getClient'
 import MetaVersion from './components/MetaVersion'
+import { XhrHttpHandler } from '@aws-sdk/xhr-http-handler'
 
 const methods: Method[] = [
     { id: 'INTERNAL', name: 'My Device', icon: <MyDeviceIcon /> },
@@ -131,6 +132,21 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
         /**
          * Get the client instance
          */
+        const handler = new XhrHttpHandler({})
+
+        handler.on(
+            XhrHttpHandler.EVENTS.UPLOAD_PROGRESS,
+            (xhr: ProgressEvent) => {
+                const progress = Math.round((xhr.loaded / xhr.total) * 100)
+                console.log(
+                    progress === 100
+                        ? '%cUPLOAD COMPLETE'
+                        : `%cUpload Progress : ${progress}%`,
+                    `color: ${progress === 100 ? '#00ff00' : '#ff9600'}`,
+                )
+            },
+        )
+        s3Configs.requestHandler = handler
         const client = getClient(s3Configs)
 
         /**

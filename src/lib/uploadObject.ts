@@ -43,7 +43,6 @@ const uploadObject = async ({
      */
 
     const data = await client.send(new PutObjectCommand(params))
-    console.log('upload response', data)
     if (data.$metadata.httpStatusCode === 200) {
         return {
             httpStatusCode: data.$metadata.httpStatusCode,
