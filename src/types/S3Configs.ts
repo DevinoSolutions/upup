@@ -5,4 +5,5 @@ export type S3Configs = {
         accessKeyId: string
         secretAccessKey: string
     }
+    requestHandler?: any
 }
