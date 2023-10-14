@@ -133,8 +133,7 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
          * Get the client instance
          */
         const handler = new XhrHttpHandler({})
-
-        handler.on(
+        ;(handler as any).on(
             XhrHttpHandler.EVENTS.UPLOAD_PROGRESS,
             (xhr: ProgressEvent) => {
                 const progress = Math.round((xhr.loaded / xhr.total) * 100)
