@@ -145,18 +145,6 @@ const Preview = ({
                             </Box>
                         </motion.div>
                     )}
-                    {progress === 100 && (
-                        <motion.div
-                            initial={{ scaleY: '0%' }}
-                            animate={{ scaleY: '100%' }}
-                            exit={{ scaleY: '0%' }}
-                            className="flex justify-start items-center p-3 border-b bg-[#fafafa] text-white origin-bottom pointer-events-auto"
-                        >
-                            <Box sx={{ width: '100%' }}>
-                                <LinearProgressBar value={progress} />
-                            </Box>
-                        </motion.div>
-                    )}
                 </motion.div>
             )}
         </AnimatePresence>
