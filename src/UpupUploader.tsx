@@ -115,6 +115,7 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
         const [files, setFiles] = useState<File[]>([])
         const [mutatedFiles, setMutatedFiles] = useState<File[]>([])
         const [view, setView] = useState('internal')
+        const [progress, setProgress] = useState(0)
 
         const {
             isDragging,
@@ -137,6 +138,7 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
             XhrHttpHandler.EVENTS.UPLOAD_PROGRESS,
             (xhr: ProgressEvent) => {
                 const progress = Math.round((xhr.loaded / xhr.total) * 100)
+                setProgress(progress)
                 console.log(
                     progress === 100
                         ? '%cUPLOAD COMPLETE'
@@ -366,7 +368,7 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
                     setIsAddingMore={setIsAddingMore}
                     multiple={multiple}
                     onFileClick={onFileClick}
-                    // handleUpload={handleUpload}
+                    progress={progress}
                 />
                 <div className="p-2 h-full">
                     <div className="border-[#dfdfdf] border-dashed h-full w-full grid grid-rows-[1fr,auto] place-items-center border rounded-md transition-all">
