@@ -15,6 +15,7 @@ const onedrive_client_id = process.env.ONEDRIVE_CLIENT_ID
 const google_client_id = process.env.GOOGLE_CLIENT_ID
 const google_app_id = process.env.GOOGLE_APP_ID
 const google_api_key = process.env.GOOGLE_API_KEY
+const endpoint = process.env.ENDPOINT_UPUP
 
 /**
  * specify the type of file to accept
@@ -71,6 +72,7 @@ const useUpup: (props?: Props) => {
             GOOGLE_CLIENT_ID: !!google_client_id,
             GOOGLE_APP_ID: !!google_app_id,
             GOOGLE_API_KEY: !!google_api_key,
+						ENDPOINT_UPUP: !!endpoint,
         }
 
         const missingEnvVars = Object.entries(requiredEnvVars)
@@ -101,6 +103,7 @@ const useUpup: (props?: Props) => {
         onFileClick,
         mini,
         onFilesChange,
+				endpoint,
     }
 
     const cloudStorageConfigs: CloudStorageConfigs = {

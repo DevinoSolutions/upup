@@ -45,7 +45,9 @@
     },
     "peerDependencies": {
         "react-is": "^18.2.0",
-        "styled-components": "^6.0.6"
+        "styled-components": "^6.0.6",
+        "multer": "1.4.5-lts.1",
+        "next": "13.5.3"
     },
     "size-limit": [
         {

@@ -33,14 +33,12 @@ import {
     useState,
 } from 'react'
 import { BaseConfigs } from 'types/BaseConfigs'
-import { CloudStorageConfigs } from 'types/CloudStorageConfigs'
 import { GoogleConfigs } from 'types/GoogleConfigs'
 import { Method } from 'types/Method'
 import { OneDriveConfigs } from 'types/OneDriveConfigs'
 import { UPLOAD_ADAPTER, UploadAdapter } from 'types/UploadAdapter'
 import { v4 as uuidv4 } from 'uuid'
 import uploadObject from './lib/uploadObject'
-import getClient from './lib/getClient'
 import MetaVersion from './components/MetaVersion'
 
 const methods: Method[] = [
@@ -65,7 +63,6 @@ const methods: Method[] = [
 ]
 
 export interface UpupUploaderProps {
-    cloudStorageConfigs: CloudStorageConfigs
     baseConfigs: BaseConfigs
     uploadAdapters: UPLOAD_ADAPTER[]
     googleConfigs?: GoogleConfigs | undefined
@@ -92,14 +89,13 @@ export type UploadFilesRef = {
 export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
     forwardRef((props: UpupUploaderProps, ref: ForwardedRef<any>) => {
         const {
-            cloudStorageConfigs,
             baseConfigs,
             uploadAdapters = ['INTERNAL', 'LINK'],
             googleConfigs,
             maxFilesSize,
             oneDriveConfigs,
         } = props
-        const { bucket, s3Configs } = cloudStorageConfigs
+
         const {
             toBeCompressed = false,
             onChange,
@@ -109,6 +105,7 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
             onFileClick,
             mini = false,
             onFilesChange,
+						endpoint,
         } = baseConfigs
 
         const [files, setFiles] = useState<File[]>([])
@@ -128,10 +125,6 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
             onChange,
         )
 
-        /**
-         * Get the client instance
-         */
-        const client = getClient(s3Configs)
 
         /**
          * Expose the handleUpload function to the parent component
@@ -199,12 +192,7 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
                                 /**
                                  * Upload the file to the cloud storage
                                  */
-                                await uploadObject({
-                                    client,
-                                    bucket,
-                                    key,
-                                    file,
-                                })
+                                await uploadObject({ key, file, endpoint })
                                     .then(data => {
                                         console.log(data)
                                         if (data.httpStatusCode === 200) {

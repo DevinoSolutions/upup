@@ -63,6 +63,7 @@ const onedrive_client_id = process.env.ONEDRIVE_CLIENT_ID
 const google_client_id = process.env.GOOGLE_CLIENT_ID
 const google_app_id = process.env.GOOGLE_APP_ID
 const google_api_key = process.env.GOOGLE_API_KEY
+const endpoint = process.env.ENDPOINT_UPUP
 ```
 
 ### 3 - Create 2 states one for key (which will be the final link of you file. ex: 'https://example-documents.nyc3.cdn.digitaloceanspaces.com/file.pdf') and another for canUpload ( which will be changed after uploading file and submitting )
@@ -87,6 +88,7 @@ const s3Configs: S3Configs = {
 const baseConfigs: BaseConfigs = {
     canUpload: canUpload,
     setKey: setKey,
+    endpoint: endpoint
 }
 
 const cloudStorageConfigs: CloudStorageConfigs = {

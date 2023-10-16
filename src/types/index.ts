@@ -11,6 +11,7 @@ const envVariables = z.object({
     GOOGLE_CLIENT_ID: z.string() || z.undefined(),
     GOOGLE_APP_ID: z.string() || z.undefined(),
     GOOGLE_API_KEY: z.string() || z.undefined(),
+		ENDPOINT_UPUP: z.string() || z.undefined(),
 })
 
 envVariables.parse(process.env)
