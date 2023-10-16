@@ -143,7 +143,7 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
             XhrHttpHandler.EVENTS.UPLOAD_PROGRESS,
             (xhr: ProgressEvent) => {
                 const percentage = Math.round((xhr.loaded / xhr.total) * 100)
-              // FIXME: This setProgress setting the value only in storybook but not in the app
+                // FIXME: This setProgress setting the value only in storybook but not in the app
                 setProgress(percentage)
                 console.log(
                     progress === 100
