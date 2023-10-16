@@ -4,7 +4,6 @@ import { bytesToSize } from 'lib/bytesToSize'
 import FileIcon from 'components/FileIcon'
 import { GoogleFile } from 'google'
 import { Dispatch } from 'react'
-import LinearProgressBar from '../LinearProgressBar'
 import Box from '@mui/material/Box'
 
 type Props = {
@@ -133,7 +132,7 @@ const Preview = ({
                             </div>
                         ))}
                     </motion.div>
-                    {progress > 0 && (
+                    {progress == 0 && (
                         <motion.div
                             initial={{ scaleY: '0%' }}
                             animate={{ scaleY: '100%' }}
@@ -141,7 +140,7 @@ const Preview = ({
                             className="flex justify-start items-center p-3 border-b bg-[#fafafa] text-white origin-bottom pointer-events-auto"
                         >
                             <Box sx={{ width: '100%' }}>
-                                <LinearProgressBar value={progress} />
+                                <b>{progress}</b>
                             </Box>
                         </motion.div>
                     )}

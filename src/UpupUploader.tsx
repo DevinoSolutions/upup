@@ -130,6 +130,11 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
             onChange,
         )
 
+        useEffect(() => {
+            // FIXME: This log is showing the proper progress in storybook but not in the app
+            progress > 0 && console.log('Progress', progress)
+        }, [progress])
+
         /**
          * Get the client instance
          */
@@ -137,12 +142,13 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
         ;(handler as any).on(
             XhrHttpHandler.EVENTS.UPLOAD_PROGRESS,
             (xhr: ProgressEvent) => {
-                const progress = Math.round((xhr.loaded / xhr.total) * 100)
-                setProgress(progress)
+                const percentage = Math.round((xhr.loaded / xhr.total) * 100)
+              // FIXME: This setProgress setting the value only in storybook but not in the app
+                setProgress(percentage)
                 console.log(
                     progress === 100
                         ? '%cUPLOAD COMPLETE'
-                        : `%cUpload Progress : ${progress}%`,
+                        : `%cUpload Progress : ${percentage}%`,
                     `color: ${progress === 100 ? '#00ff00' : '#ff9600'}`,
                 )
             },
