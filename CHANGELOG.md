@@ -1,5 +1,11 @@
 # @bassem97/upup
 
+## 2.2.24
+
+### Patch Changes
+
+-   997b6b3: Add progress logs
+
 ## 2.2.23
 
 ### Patch Changes
