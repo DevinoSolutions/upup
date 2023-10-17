@@ -2,6 +2,7 @@ type props = {
     key: string
     file: File
     endpoint: string
+    accept: string
 }
 
 type UploadObjectResponse = {
@@ -21,9 +22,11 @@ const uploadObject = async ({
     key,
     file,
     endpoint,
+    accept,
 }: props): Promise<UploadObjectResponse> => {
     const formData = new FormData()
     formData.append('files', file, key)
+    formData.append('accept', accept)
 
     /**
      *  Define a function that uploads your object using SDK's PutObjectCommand object and catches any errors.

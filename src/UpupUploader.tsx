@@ -76,7 +76,6 @@ export type UploadFilesRef = {
 
 /**
  *
- * @param cloudStorageConfigs cloud provider configurations
  * @param baseConfigs base configurations
  * @param toBeCompressed whether the user want to compress the file before uploading it or not. Default value is false
  * @param uploadAdapters the methods you want to enable for the user to upload the files. Default value is ['INTERNAL']
@@ -105,7 +104,7 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
             onFileClick,
             mini = false,
             onFilesChange,
-						endpoint,
+            endpoint,
         } = baseConfigs
 
         const [files, setFiles] = useState<File[]>([])
@@ -124,7 +123,6 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
             files,
             onChange,
         )
-
 
         /**
          * Expose the handleUpload function to the parent component
@@ -192,7 +190,12 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
                                 /**
                                  * Upload the file to the cloud storage
                                  */
-                                await uploadObject({ key, file, endpoint })
+                                await uploadObject({
+                                    key,
+                                    file,
+                                    endpoint,
+                                    accept,
+                                })
                                     .then(data => {
                                         console.log(data)
                                         if (data.httpStatusCode === 200) {

@@ -1,8 +1,7 @@
 import { S3 } from '@aws-sdk/client-s3'
 import nextConnect from 'next-connect'
-import multer from 'multer'
-import type { S3Configs } from 'types/S3Configs'
 import type { NextApiRequest, NextApiResponse } from 'next'
+import { S3Configs } from 'types/S3Configs'
 
 interface ExtendedNextApiRequest extends NextApiRequest {
     files: {
@@ -19,6 +18,7 @@ interface ExtendedNextApiRequest extends NextApiRequest {
 export function UploadEndpoint(
     s3configs: S3Configs,
     bucket: (accepts?: string) => string,
+    multer: (options?: any) => any,
 ) {
     const handler = nextConnect<ExtendedNextApiRequest, NextApiResponse>({
         onError(error, _req, res) {
@@ -37,10 +37,9 @@ export function UploadEndpoint(
 
     handler.post(async (req, res) => {
         const client = new S3(s3configs)
-
         const { files, accepts } = req
         const image = files[0]
-        const key = image.filename
+        const key = image.originalname
 
         client.putObject(
             {
@@ -60,7 +59,10 @@ export function UploadEndpoint(
             },
         )
 
-        res.status(200).json({ response: 'Image uploaded successfully.', key })
+        res.status(200).json({
+            response: 'Image uploaded successfully. 2',
+            key,
+        })
     })
 
     const config = {

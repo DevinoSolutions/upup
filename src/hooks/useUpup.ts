@@ -1,16 +1,8 @@
 import { Dispatch, SetStateAction, useEffect } from 'react'
-import { CloudStorageConfigs } from '../types/CloudStorageConfigs'
 import { GoogleConfigs } from '../types/GoogleConfigs'
 import { BaseConfigs } from '../types/BaseConfigs'
 import { OneDriveConfigs } from '../types/OneDriveConfigs'
-import { S3Configs } from '../types/S3Configs'
 
-const space_secret = process.env.SPACE_SECRET
-const space_key = process.env.SPACE_KEY
-const space_endpoint = process.env.SPACE_ENDPOINT
-const space_region = process.env.SPACE_REGION
-const document_space = process.env.SPACE_DOCUMENTS
-const image_space = process.env.SPACE_IMAGES
 const onedrive_client_id = process.env.ONEDRIVE_CLIENT_ID
 const google_client_id = process.env.GOOGLE_CLIENT_ID
 const google_app_id = process.env.GOOGLE_APP_ID
@@ -35,7 +27,6 @@ interface Props {
  * @param props
  */
 const useUpup: (props?: Props) => {
-    cloudStorageConfigs: CloudStorageConfigs
     googleConfigs: GoogleConfigs
     baseConfigs: BaseConfigs
     oneDriveConfigs: OneDriveConfigs
@@ -62,17 +53,11 @@ const useUpup: (props?: Props) => {
      */
     useEffect(() => {
         const requiredEnvVars = {
-            SPACE_SECRET: !!space_secret,
-            SPACE_KEY: !!space_key,
-            SPACE_ENDPOINT: !!space_endpoint,
-            SPACE_REGION: !!space_region,
-            SPACE_DOCUMENTS: !!document_space,
-            SPACE_IMAGES: !!image_space,
             ONEDRIVE_CLIENT_ID: !!onedrive_client_id,
             GOOGLE_CLIENT_ID: !!google_client_id,
             GOOGLE_APP_ID: !!google_app_id,
             GOOGLE_API_KEY: !!google_api_key,
-						ENDPOINT_UPUP: !!endpoint,
+            ENDPOINT_UPUP: !!endpoint,
         }
 
         const missingEnvVars = Object.entries(requiredEnvVars)
@@ -86,15 +71,6 @@ const useUpup: (props?: Props) => {
         }
     }, [])
 
-    const s3Configs: S3Configs = {
-        region: space_region,
-        endpoint: space_endpoint,
-        credentials: {
-            accessKeyId: space_key,
-            secretAccessKey: space_secret,
-        },
-    }
-
     const baseConfigs: BaseConfigs = {
         onChange: (files: File[]) => (setFiles ? setFiles(files) : () => {}),
         multiple,
@@ -103,12 +79,7 @@ const useUpup: (props?: Props) => {
         onFileClick,
         mini,
         onFilesChange,
-				endpoint,
-    }
-
-    const cloudStorageConfigs: CloudStorageConfigs = {
-        bucket: accept !== 'image/*' ? document_space : image_space,
-        s3Configs,
+        endpoint,
     }
 
     const googleConfigs: GoogleConfigs = {
@@ -124,7 +95,6 @@ const useUpup: (props?: Props) => {
 
     return {
         baseConfigs,
-        cloudStorageConfigs,
         googleConfigs,
         oneDriveConfigs,
     }
