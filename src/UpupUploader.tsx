@@ -151,6 +151,12 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
                 const percentage = Math.round((xhr.loaded / xhr.total) * 100)
                 // FIXME: This setProgress setting the value only in storybook but not in the app
                 setProgress(percentage)
+                console.log(
+                    progress === 100
+                        ? '%cUPLOAD COMPLETE'
+                        : `%cUpload Progress : ${percentage}%`,
+                    `color: ${progress === 100 ? '#00ff00' : '#ff9600'}`,
+                )
             },
         )
         s3Configs.requestHandler = handler
