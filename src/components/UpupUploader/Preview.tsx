@@ -4,6 +4,18 @@ import { bytesToSize } from 'lib/bytesToSize'
 import FileIcon from 'components/FileIcon'
 import { GoogleFile } from 'google'
 import { Dispatch } from 'react'
+import Box from '@mui/material/Box'
+import LinearProgressBar from '../LinearProgressBar'
+
+type Props = {
+    files: File[]
+    setFiles: Dispatch<React.SetStateAction<File[]>>
+    isAddingMore: boolean
+    setIsAddingMore: (isAddingMore: boolean) => void
+    multiple?: boolean
+    onFileClick?: (file: File) => void
+    progress: number
+}
 
 const Preview = ({
     files,
@@ -12,15 +24,8 @@ const Preview = ({
     setIsAddingMore,
     multiple, // handleUpload,
     onFileClick,
-}: {
-    files: File[]
-    setFiles: Dispatch<React.SetStateAction<File[]>>
-    isAddingMore: boolean
-    setIsAddingMore: (isAddingMore: boolean) => void
-    multiple?: boolean
-    onFileClick?: (file: File) => void
-    // handleUpload: () => void
-}) => {
+    progress,
+}: Props) => {
     /**
      * Remove file from files array
      */
@@ -52,9 +57,7 @@ const Preview = ({
                         <button
                             className={
                                 'hover:bg-[#e9ecef] hover:text-[#1f1f1f] active:bg-[#dfe6f1] rounded-md p-2 px-4 transition-all duration-300 ' +
-                                (multiple
-                                    ? ''
-                                    : 'opacity-0 pointer-events-none')
+                                (!multiple && 'opacity-0 pointer-events-none')
                             }
                             onClick={() => setIsAddingMore(!isAddingMore)}
                             type="button"
@@ -119,9 +122,6 @@ const Preview = ({
                                             {bytesToSize(file.size)}
                                         </p>
                                     </div>
-                                    {/* <button type="button">
-                                        <TbEdit />
-                                    </button> */}
                                 </div>
                                 <button
                                     className="bg-black rounded-full absolute -top-1 -right-1"
@@ -133,21 +133,18 @@ const Preview = ({
                             </div>
                         ))}
                     </motion.div>
-                    {/*FIXME : KEEP THIS BUTTON ONE DAY WE GONNA NEED IT*/}
-                    {/*<motion.div*/}
-                    {/*    initial={{ scaleY: '0%' }}*/}
-                    {/*    animate={{ scaleY: '100%' }}*/}
-                    {/*    exit={{ scaleY: '0%' }}*/}
-                    {/*    className="flex justify-start items-center p-3 border-b bg-[#fafafa] text-white origin-bottom pointer-events-auto"*/}
-                    {/*>*/}
-                    {/*    <button*/}
-                    {/*        className="bg-green-500 hover:bg-green-600 active:bg-green-700 rounded-md p-3 px-6 transition-all duration-300"*/}
-                    {/*        onClick={handleUpload}*/}
-                    {/*    >*/}
-                    {/*        Upload {files.length} file*/}
-                    {/*        {files.length > 1 ? 's' : ''}*/}
-                    {/*    </button>*/}
-                    {/*</motion.div>*/}
+                    {progress > 0 && (
+                        <motion.div
+                            initial={{ scaleY: '0%' }}
+                            animate={{ scaleY: '100%' }}
+                            exit={{ scaleY: '0%' }}
+                            className="flex justify-start items-center p-3 border-b bg-[#fafafa] text-white origin-bottom pointer-events-auto"
+                        >
+                            <Box sx={{ width: '100%' }}>
+                                <LinearProgressBar value={progress} />
+                            </Box>
+                        </motion.div>
+                    )}
                 </motion.div>
             )}
         </AnimatePresence>

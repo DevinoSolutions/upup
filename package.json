@@ -28,7 +28,7 @@
         "decompress"
     ],
     "scripts": {
-        "start": "tsdx watch",
+        "start": "pnpm run prebuild && tsdx watch",
         "prebuild": "node -p \"'export const LIB_VERSION = ' + JSON.stringify(require('./package.json').version) + ';'\" > src/version.ts",
         "build": "pnpm run prebuild && tsdx build",
         "test": "tsdx test --passWithNoTests",
@@ -95,6 +95,8 @@
     "dependencies": {
         "@aws-sdk/client-s3": "^3.271.0",
         "@aws-sdk/xhr-http-handler": "^3.271.0",
+        "@emotion/styled": "^11.11.0",
+        "@mui/material": "^5.14.13",
         "@types/gapi": "^0.0.44",
         "babel-plugin-module-resolver": "^5.0.0",
         "framer-motion": "^10.15.2",
@@ -104,5 +106,8 @@
         "react-icons": "^4.10.1",
         "react-webcam": "^7.1.1",
         "uuid": "^9.0.0"
+    },
+    "peerDependencies": {
+        "@emotion/react": "^11.11.1"
     }
 }

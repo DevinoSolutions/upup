@@ -115,6 +115,7 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
         const [files, setFiles] = useState<File[]>([])
         const [mutatedFiles, setMutatedFiles] = useState<File[]>([])
         const [view, setView] = useState('internal')
+        const [progress, setProgress] = useState(0)
 
         const {
             isDragging,
@@ -129,6 +130,17 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
             onChange,
         )
 
+        useEffect(() => {
+            // FIXME: This log is showing the proper progress in storybook but not in the app
+            progress > 0 &&
+                console.log(
+                    progress === 100
+                        ? '%cUPLOAD COMPLETE'
+                        : `%cUpload Progress : ${progress}%`,
+                    `color: ${progress === 100 ? '#00ff00' : '#ff9600'}`,
+                )
+        }, [progress])
+
         /**
          * Get the client instance
          */
@@ -136,13 +148,9 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
         ;(handler as any).on(
             XhrHttpHandler.EVENTS.UPLOAD_PROGRESS,
             (xhr: ProgressEvent) => {
-                const progress = Math.round((xhr.loaded / xhr.total) * 100)
-                console.log(
-                    progress === 100
-                        ? '%cUPLOAD COMPLETE'
-                        : `%cUpload Progress : ${progress}%`,
-                    `color: ${progress === 100 ? '#00ff00' : '#ff9600'}`,
-                )
+                const percentage = Math.round((xhr.loaded / xhr.total) * 100)
+                // FIXME: This setProgress setting the value only in storybook but not in the app
+                setProgress(percentage)
             },
         )
         s3Configs.requestHandler = handler
@@ -366,7 +374,7 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
                     setIsAddingMore={setIsAddingMore}
                     multiple={multiple}
                     onFileClick={onFileClick}
-                    // handleUpload={handleUpload}
+                    progress={progress}
                 />
                 <div className="p-2 h-full">
                     <div className="border-[#dfdfdf] border-dashed h-full w-full grid grid-rows-[1fr,auto] place-items-center border rounded-md transition-all">
