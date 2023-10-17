@@ -132,7 +132,7 @@ const Preview = ({
                             </div>
                         ))}
                     </motion.div>
-                    {progress == 0 && (
+                    {progress > 0 && (
                         <motion.div
                             initial={{ scaleY: '0%' }}
                             animate={{ scaleY: '100%' }}
