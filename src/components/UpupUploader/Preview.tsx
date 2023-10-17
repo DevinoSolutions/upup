@@ -5,6 +5,7 @@ import FileIcon from 'components/FileIcon'
 import { GoogleFile } from 'google'
 import { Dispatch } from 'react'
 import Box from '@mui/material/Box'
+import LinearProgressBar from '../LinearProgressBar'
 
 type Props = {
     files: File[]
@@ -140,7 +141,7 @@ const Preview = ({
                             className="flex justify-start items-center p-3 border-b bg-[#fafafa] text-white origin-bottom pointer-events-auto"
                         >
                             <Box sx={{ width: '100%' }}>
-                                <b>{progress}</b>
+                                <LinearProgressBar value={progress} />
                             </Box>
                         </motion.div>
                     )}
