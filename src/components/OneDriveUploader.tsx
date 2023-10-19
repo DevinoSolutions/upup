@@ -51,7 +51,7 @@ interface Props {
  * @param setFilesFromParent return the files to the parent component
  * @constructor
  */
-export const OneDriveUploader: FC<Props> = ({
+const OneDriveUploader: FC<Props> = ({
     baseConfigs: { multiple: multiSelect },
     oneDriveConfigs,
     setFiles,
@@ -148,3 +148,5 @@ export const OneDriveUploader: FC<Props> = ({
         </div>
     )
 }
+
+export default OneDriveUploader

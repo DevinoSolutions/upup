@@ -5,7 +5,7 @@ type Props = {
     setFiles: (files: any) => void
     setView: (view: string) => void
 }
-export const UrlUploader: FC<Props> = ({ setFiles, setView }: Props) => {
+const UrlUploader: FC<Props> = ({ setFiles, setView }: Props) => {
     const [url, setUrl] = useState('')
     const { image, setTrigger, error, loading } = useUrl(url)
 
@@ -43,3 +43,5 @@ export const UrlUploader: FC<Props> = ({ setFiles, setView }: Props) => {
         </form>
     )
 }
+
+export default UrlUploader

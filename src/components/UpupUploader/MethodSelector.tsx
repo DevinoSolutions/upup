@@ -1,15 +1,13 @@
-import type { Method } from 'types/Method'
-import { MutableRefObject } from 'react'
+import type { Method } from 'types'
+import { FC, MutableRefObject } from 'react'
 
-const MethodsSelector = ({
-    setView,
-    inputRef,
-    methods,
-}: {
+type Props = {
     setView: (view: string) => void
     inputRef?: MutableRefObject<HTMLInputElement | null>
     methods: Method[]
-}) => {
+}
+
+const MethodsSelector: FC<Props> = ({ setView, inputRef, methods }: Props) => {
     return (
         <div className="w-full h-full flex flex-col items-center justify-center gap-6">
             <h1 className="md:text-2xl text-center dark:text-white">

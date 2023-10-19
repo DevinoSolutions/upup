@@ -10,7 +10,7 @@ type Props = {
     accept?: string
 }
 
-export const DropZone: FC<Props> = ({
+const DropZone: FC<Props> = ({
     setFiles,
     setIsDragging,
     multiple,
@@ -74,3 +74,5 @@ export const DropZone: FC<Props> = ({
         </motion.div>
     )
 }
+
+export default DropZone

@@ -1,14 +1,14 @@
 import { AnimatePresence, motion } from 'framer-motion'
 import { TbX } from 'react-icons/tb'
-import { FileIcon } from 'components/FileIcon'
+import { FC } from 'react'
+import FileIcon from '../FileIcon'
 
-const MiniPreview = ({
-    files,
-    setFiles,
-}: {
+type Props = {
     files: File[]
     setFiles: (files: File[]) => void
-}) => {
+}
+
+const MiniPreview: FC<Props> = ({ files, setFiles }: Props) => {
     /**
      * Remove file from files array
      */

@@ -35,6 +35,12 @@ const checkFileType = (name: string) => {
     return <Component className="h-full w-full" />
 }
 
-export function FileIcon({ name }: { name: string }) {
+type Props = {
+    name: string
+}
+
+const FileIcon = ({ name }: Props) => {
     return checkFileType(name)
 }
+
+export default FileIcon
