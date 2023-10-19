@@ -2,12 +2,11 @@ import type { Dispatch, FC, LegacyRef, SetStateAction } from 'react'
 import { useRef } from 'react'
 
 import { AnimatePresence } from 'framer-motion'
-
-import MiniDropZone from 'components/UpupMini/MiniDropZone'
-import MiniPreview from 'components/UpupMini/MiniPreview'
 import { checkFileType } from 'lib'
 import { useDragAndDrop } from 'hooks'
-import { MetaVersion } from 'components/MetaVersion'
+import { default as MiniDropZone } from './MiniDropZone'
+import { default as MiniPreview } from './MiniPreview'
+import MetaVersion from '../MetaVersion'
 
 type Props = {
     files: File[]
@@ -76,3 +75,6 @@ export const UpupMini: FC<Props> = ({ files, setFiles }: Props) => {
         </div>
     )
 }
+
+export { default as MiniPreview } from './MiniPreview'
+export { default as MiniDropZone } from './MiniDropZone'

@@ -1,18 +1,16 @@
 import type { Method } from 'types/Method'
 
 import { AnimatePresence, motion } from 'framer-motion'
+import { FC } from 'react'
 
-const View = ({
-    view,
-    setView,
-    methods,
-    components,
-}: {
+type Props = {
     view: string
     setView: (view: string) => void
     methods: Method[]
     components: any
-}) => {
+}
+
+const View: FC<Props> = ({ view, setView, methods, components }: Props) => {
     return (
         <AnimatePresence>
             {view !== 'internal' && (

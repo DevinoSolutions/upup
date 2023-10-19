@@ -1,15 +1,15 @@
+import { Dispatch, FC, SetStateAction } from 'react'
+import { bytesToSize } from 'lib'
+import { GoogleFile } from 'google'
+import { default as FileIcon } from 'components/FileIcon'
+import { default as LinearProgressBar } from 'components/LinearProgressBar'
 import { AnimatePresence, motion } from 'framer-motion'
 import { TbX } from 'react-icons/tb'
-import { bytesToSize } from 'lib/bytesToSize'
-import FileIcon from 'components/FileIcon'
-import { GoogleFile } from 'google'
-import { Dispatch } from 'react'
 import Box from '@mui/material/Box'
-import LinearProgressBar from '../LinearProgressBar'
 
 type Props = {
     files: File[]
-    setFiles: Dispatch<React.SetStateAction<File[]>>
+    setFiles: Dispatch<SetStateAction<File[]>>
     isAddingMore: boolean
     setIsAddingMore: (isAddingMore: boolean) => void
     multiple?: boolean
@@ -17,7 +17,7 @@ type Props = {
     progress: number
 }
 
-const Preview = ({
+const Preview: FC<Props> = ({
     files,
     setFiles,
     isAddingMore,

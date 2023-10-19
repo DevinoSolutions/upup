@@ -1,14 +1,13 @@
-import { Dispatch, SetStateAction } from 'react'
+import { Dispatch, FC, SetStateAction } from 'react'
 import { motion } from 'framer-motion'
 import { TbUpload } from 'react-icons/tb'
 
-export default function MiniDropZone({
-    setFiles,
-    setIsDragging,
-}: {
+type Props = {
     setFiles: Dispatch<SetStateAction<File[]>>
     setIsDragging: Dispatch<SetStateAction<boolean>>
-}) {
+}
+
+const MiniDropZone: FC<Props> = ({ setFiles, setIsDragging }: Props) => {
     return (
         <motion.div
             initial={{ opacity: 0 }}
@@ -44,3 +43,5 @@ export default function MiniDropZone({
         </motion.div>
     )
 }
+
+export default MiniDropZone

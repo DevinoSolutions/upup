@@ -5,9 +5,7 @@ import LinearProgress, {
 import Box from '@mui/material/Box'
 import { Typography } from '@mui/material'
 
-export const LinearProgressBar = (
-    props: LinearProgressProps & { value: number },
-) => {
+const LinearProgressBar = (props: LinearProgressProps & { value: number }) => {
     return (
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <Box sx={{ width: '100%', mr: 1 }}>
@@ -22,3 +20,5 @@ export const LinearProgressBar = (
         </Box>
     )
 }
+
+export default LinearProgressBar

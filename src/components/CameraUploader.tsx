@@ -10,7 +10,7 @@ type Props = {
     setView: (view: string) => void
 }
 
-export const CameraUploader: FC<Props> = ({ setFiles, setView }: Props) => {
+const CameraUploader: FC<Props> = ({ setFiles, setView }: Props) => {
     const webcamRef = useRef(null) as any
     const [imgSrc, setImgSrc] = useState('')
     const [url, setUrl] = useState('')
@@ -81,3 +81,5 @@ export const CameraUploader: FC<Props> = ({ setFiles, setView }: Props) => {
         </div>
     )
 }
+
+export default CameraUploader

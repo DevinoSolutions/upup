@@ -1,6 +1,6 @@
-export { FileIcon } from './FileIcon'
-export { CameraUploader } from './CameraUploader'
-export { GoogleDriveUploader } from './GoogleDriveUploader'
+export { default as FileIcon } from './FileIcon'
+export { default as CameraUploader } from './CameraUploader'
+export { default as GoogleDriveUploader } from './GoogleDriveUploader'
 export {
     MyDeviceIcon,
     BoxIcon,
@@ -15,9 +15,9 @@ export {
     AudioIcon,
     ScreenCastIcon,
 } from './Icons'
-export { LinearProgressBar } from './LinearProgressBar'
-export { MetaVersion } from './MetaVersion'
-export { OneDriveUploader } from './OneDriveUploader'
-export { UrlUploader } from './UrlUploader'
-export { UpupMini } from './UpupMini'
-export {} from './UpupUploader'
+export { default as LinearProgressBar } from './LinearProgressBar'
+export { default as MetaVersion } from './MetaVersion'
+export { default as OneDriveUploader } from './OneDriveUploader'
+export { default as UrlUploader } from './UrlUploader'
+export { MiniDropZone, MiniPreview, UpupMini } from './UpupMini'
+export { DropZone, Preview, View, MethodsSelector } from './UpupUploader'

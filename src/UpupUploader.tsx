@@ -21,27 +21,26 @@ import {
 import { checkFileType, compressFile, getClient, uploadObject } from 'lib'
 import { useAddMore, useDragAndDrop } from 'hooks'
 
-import CameraUploader from 'components/CameraUploader'
-import GoogleDriveUploader from 'components/GoogleDriveUploader'
 import {
     BoxIcon,
     CameraIcon,
+    CameraUploader,
     DropBoxIcon,
+    DropZone,
     GoogleDriveIcon,
+    GoogleDriveUploader,
     LinkIcon,
+    MetaVersion,
+    MethodsSelector,
     MyDeviceIcon,
     OneDriveIcon,
+    OneDriveUploader,
+    Preview,
     UnsplashIcon,
-} from 'components/Icons'
-
-import OneDriveUploader from 'components/OneDriveUploader'
-import UpupMini from 'components/UpupMini'
-import DropZone from 'components/UpupUploader/DropZone'
-import MethodsSelector from 'components/UpupUploader/MethodSelector'
-import Preview from 'components/UpupUploader/Preview'
-import View from 'components/UpupUploader/View'
-import UrlUploader from 'components/UrlUploader'
-import MetaVersion from 'components/MetaVersion'
+    UpupMini,
+    UrlUploader,
+    View,
+} from 'components'
 
 import { v4 as uuidv4 } from 'uuid'
 import { XhrHttpHandler } from '@aws-sdk/xhr-http-handler'
