@@ -5,8 +5,8 @@ import {
     UploadFilesRef,
     UpupUploader,
 } from '../src'
-import useUpup from '../src/hooks/useUpup'
 import { useRef } from 'react'
+import { useUpup } from '../src/hooks'
 // import react only on this file to avoid error
 // we get an error because we're not exporting UpupUploader as default
 
