@@ -1,5 +1,5 @@
 import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3'
-import { S3Configs } from '../types/S3Configs'
+import { S3Configs } from 'types'
 
 export type S3ClientWithSend = S3Client & {
     send: (command: PutObjectCommand) => Promise<any>

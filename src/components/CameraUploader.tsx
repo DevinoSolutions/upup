@@ -1,16 +1,16 @@
-import { motion } from 'framer-motion'
-import { useCallback, useRef, useState } from 'react'
-import { TbX } from 'react-icons/tb'
-import Webcam from 'react-webcam'
+import { FC, useCallback, useRef, useState } from 'react'
 import { useUrl } from 'hooks'
 
-export default function CameraUploader({
-    setFiles,
-    setView,
-}: {
+import { motion } from 'framer-motion'
+import { TbX } from 'react-icons/tb'
+import Webcam from 'react-webcam'
+
+type Props = {
     setFiles: (files: any) => void
     setView: (view: string) => void
-}) {
+}
+
+export const CameraUploader: FC<Props> = ({ setFiles, setView }: Props) => {
     const webcamRef = useRef(null) as any
     const [imgSrc, setImgSrc] = useState('')
     const [url, setUrl] = useState('')

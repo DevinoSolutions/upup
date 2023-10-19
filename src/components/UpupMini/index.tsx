@@ -1,4 +1,4 @@
-import type { Dispatch, LegacyRef, SetStateAction } from 'react'
+import type { Dispatch, FC, LegacyRef, SetStateAction } from 'react'
 import { useRef } from 'react'
 
 import { AnimatePresence } from 'framer-motion'
@@ -6,16 +6,15 @@ import { AnimatePresence } from 'framer-motion'
 import MiniDropZone from 'components/UpupMini/MiniDropZone'
 import MiniPreview from 'components/UpupMini/MiniPreview'
 import { checkFileType } from 'lib'
-import MetaVersion from 'components/MetaVersion'
 import { useDragAndDrop } from 'hooks'
+import { MetaVersion } from 'components/MetaVersion'
 
-export default function UpupMini({
-    files,
-    setFiles,
-}: {
+type Props = {
     files: File[]
     setFiles: Dispatch<SetStateAction<File[]>>
-}) {
+}
+
+export const UpupMini: FC<Props> = ({ files, setFiles }: Props) => {
     const {
         isDragging,
         setIsDragging,

@@ -19,12 +19,12 @@ export type OneDriveValue = {
     '@data.context': string
 }
 
-export type OneDriveFile = {
+type OneDriveFile = {
     mimeType: string
     hashes: Hashes
 }
 
-export type Hashes = {
+type Hashes = {
     quickXorHash: string
     sha1Hash: string
     sha256Hash: string

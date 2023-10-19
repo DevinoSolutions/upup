@@ -11,7 +11,7 @@ type Props = {
     accept?: string
 }
 
-const GoogleDriveUploader = ({
+export const GoogleDriveUploader = ({
     setFiles,
     setView,
     googleConfigs,
@@ -32,5 +32,3 @@ const GoogleDriveUploader = ({
         />
     )
 }
-
-export default GoogleDriveUploader

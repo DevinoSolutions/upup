@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { BaseConfigs } from '../types/BaseConfigs'
+import { BaseConfigs } from 'types'
 
 type onChangeType = BaseConfigs['onChange']
 

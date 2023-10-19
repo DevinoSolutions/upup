@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from 'framer-motion'
 import { TbX } from 'react-icons/tb'
-import FileIcon from 'components/FileIcon'
+import { FileIcon } from 'components/FileIcon'
 
 const MiniPreview = ({
     files,
