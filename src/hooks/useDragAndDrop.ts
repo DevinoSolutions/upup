@@ -1,6 +1,6 @@
 import { MouseEvent, useRef, useState } from 'react'
 
-const useDragAndDrop = () => {
+export const useDragAndDrop = () => {
     const [isDragging, setIsDragging] = useState(false)
     const containerRef = useRef<Node>(null)
 
@@ -47,5 +47,3 @@ const useDragAndDrop = () => {
         containerRef,
     }
 }
-
-export default useDragAndDrop

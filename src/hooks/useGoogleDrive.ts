@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useState } from 'react'
-import useLoadGAPI from './useLoadGAPI'
 import type { GoogleConfigs } from 'types/GoogleConfigs'
 import { GoogleFile, Root, Token, User } from 'google'
+import { useLoadGAPI } from './useLoadGAPI'
 
-const useGoogleDrive = (googleConfigs: GoogleConfigs) => {
+export const useGoogleDrive = (googleConfigs: GoogleConfigs) => {
     const { google_client_id, google_api_key } = googleConfigs
 
     const [user, setUser] = useState<User>()
@@ -197,5 +197,3 @@ const useGoogleDrive = (googleConfigs: GoogleConfigs) => {
 
     return { user, googleFiles, handleSignOut, downloadFile }
 }
-
-export default useGoogleDrive

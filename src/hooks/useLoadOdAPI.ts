@@ -1,7 +1,7 @@
 import load from 'load-script'
 import { useEffect, useState } from 'react'
 
-const useLoadOdAPI = () => {
+export const useLoadOdAPI = () => {
     const [isLoaded, setIsLoaded] = useState<boolean>(false)
 
     useEffect(() => {
@@ -19,5 +19,3 @@ const useLoadOdAPI = () => {
 
     return { isLoaded }
 }
-
-export default useLoadOdAPI

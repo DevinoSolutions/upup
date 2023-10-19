@@ -2,12 +2,12 @@ import type { Dispatch, LegacyRef, SetStateAction } from 'react'
 import { useRef } from 'react'
 
 import { AnimatePresence } from 'framer-motion'
-import useDragAndDrop from 'hooks/useDragAndDrop'
 
-import MiniDropZone from './MiniDropZone'
-import MiniPreview from './MiniPreview'
+import MiniDropZone from 'components/UpupMini/MiniDropZone'
+import MiniPreview from 'components/UpupMini/MiniPreview'
 import { checkFileType } from 'lib'
-import MetaVersion from '../MetaVersion'
+import MetaVersion from 'components/MetaVersion'
+import { useDragAndDrop } from 'hooks'
 
 export default function UpupMini({
     files,
