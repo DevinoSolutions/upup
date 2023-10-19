@@ -6,7 +6,7 @@ import useDragAndDrop from 'hooks/useDragAndDrop'
 
 import MiniDropZone from './MiniDropZone'
 import MiniPreview from './MiniPreview'
-import checkFileType from 'lib/checkFileType'
+import { checkFileType } from 'lib'
 import MetaVersion from '../MetaVersion'
 
 export default function UpupMini({

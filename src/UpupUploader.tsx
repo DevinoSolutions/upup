@@ -1,3 +1,14 @@
+import {
+    FC,
+    ForwardedRef,
+    forwardRef,
+    LegacyRef,
+    RefAttributes,
+    useCallback,
+    useEffect,
+    useImperativeHandle,
+    useState,
+} from 'react'
 import CameraUploader from 'components/CameraUploader'
 import GoogleDriveUploader from 'components/GoogleDriveUploader'
 import {
@@ -10,6 +21,7 @@ import {
     OneDriveIcon,
     UnsplashIcon,
 } from 'components/Icons'
+
 import OneDriveUploader from 'components/OneDriveUploader'
 import UpupMini from 'components/UpupMini'
 import DropZone from 'components/UpupUploader/DropZone'
@@ -17,32 +29,23 @@ import MethodsSelector from 'components/UpupUploader/MethodSelector'
 import Preview from 'components/UpupUploader/Preview'
 import View from 'components/UpupUploader/View'
 import UrlUploader from 'components/UrlUploader'
-import { AnimatePresence } from 'framer-motion'
+import MetaVersion from 'components/MetaVersion'
+
 import useAddMore from 'hooks/useAddMore'
 import useDragAndDrop from 'hooks/useDragAndDrop'
-import checkFileType from 'lib/checkFileType'
-import { compressFile } from 'lib/compressFile'
-import {
-    FC,
-    ForwardedRef,
-    forwardRef,
-    LegacyRef,
-    RefAttributes,
-    useEffect,
-    useImperativeHandle,
-    useState,
-} from 'react'
+
+import { checkFileType, compressFile, getClient, uploadObject } from 'lib'
+
 import { BaseConfigs } from 'types/BaseConfigs'
 import { CloudStorageConfigs } from 'types/CloudStorageConfigs'
 import { GoogleConfigs } from 'types/GoogleConfigs'
 import { Method } from 'types/Method'
 import { OneDriveConfigs } from 'types/OneDriveConfigs'
 import { UPLOAD_ADAPTER, UploadAdapter } from 'types/UploadAdapter'
+
 import { v4 as uuidv4 } from 'uuid'
-import uploadObject from './lib/uploadObject'
-import getClient from './lib/getClient'
-import MetaVersion from './components/MetaVersion'
 import { XhrHttpHandler } from '@aws-sdk/xhr-http-handler'
+import { AnimatePresence } from 'framer-motion'
 
 const methods: Method[] = [
     { id: 'INTERNAL', name: 'My Device', icon: <MyDeviceIcon /> },
@@ -75,7 +78,7 @@ export interface UpupUploaderProps {
 }
 
 export type UploadFilesRef = {
-    uploadFiles: () => Promise<string[] | []>
+    uploadFiles: () => Promise<string[] | null>
 }
 
 /**
@@ -90,8 +93,10 @@ export type UploadFilesRef = {
  * @constructor
  */
 
-export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
-    forwardRef((props: UpupUploaderProps, ref: ForwardedRef<any>) => {
+export const UpupUploader: FC<
+    UpupUploaderProps & RefAttributes<UploadFilesRef>
+> = forwardRef(
+    (props: UpupUploaderProps, ref: ForwardedRef<UploadFilesRef>) => {
         const {
             cloudStorageConfigs,
             baseConfigs,
@@ -130,35 +135,37 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
             onChange,
         )
 
-        useEffect(() => {
-            // FIXME: This log is showing the proper progress in storybook but not in the app
-            progress > 0 &&
-                console.log(
-                    progress === 100
-                        ? '%cUPLOAD COMPLETE'
-                        : `%cUpload Progress : ${progress}%`,
-                    `color: ${progress === 100 ? '#00ff00' : '#ff9600'}`,
-                )
-        }, [progress])
-
         /**
          * Get the client instance
          */
         const handler = new XhrHttpHandler({})
-        ;(handler as any).on(
-            XhrHttpHandler.EVENTS.UPLOAD_PROGRESS,
-            (xhr: ProgressEvent) => {
-                const percentage = Math.round((xhr.loaded / xhr.total) * 100)
-                // FIXME: This setProgress setting the value only in storybook but not in the app
-                setProgress(percentage)
-                console.log(
-                    progress === 100
-                        ? '%cUPLOAD COMPLETE'
-                        : `%cUpload Progress : ${percentage}%`,
-                    `color: ${progress === 100 ? '#00ff00' : '#ff9600'}`,
+        const handleUploadProgress = useCallback((xhr: ProgressEvent) => {
+            const percentage = Math.round((xhr.loaded / xhr.total) * 100)
+            // FIXME: this setProgress is not working as expected
+            setProgress(percentage)
+            console.log(
+                percentage === 100
+                    ? '%cUPLOAD COMPLETE'
+                    : `%cUpload Progress : ${percentage}%`,
+                `color: ${percentage === 100 ? '#00ff00' : '#ff9600'}`,
+            )
+        }, [])
+
+        useEffect(() => {
+            ;(handler as any).on(
+                XhrHttpHandler.EVENTS.UPLOAD_PROGRESS,
+                handleUploadProgress,
+            )
+
+            // Cleanup: remove the event listener when the component is unmounted
+            return () => {
+                ;(handler as any).off(
+                    XhrHttpHandler.EVENTS.UPLOAD_PROGRESS,
+                    handleUploadProgress,
                 )
-            },
-        )
+            }
+        }, [handleUploadProgress])
+
         s3Configs.requestHandler = handler
         const client = getClient(s3Configs)
 
@@ -396,4 +403,5 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
                 </div>
             </div>
         )
-    })
+    },
+)

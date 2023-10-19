@@ -12,12 +12,10 @@ let client: S3ClientWithSend | null = null
  * @param configs S3 configs (region, endpoint...etc)
  * @returns S3 client
  */
-const getClient = (configs: S3Configs): S3ClientWithSend => {
+export const getClient = (configs: S3Configs): S3ClientWithSend => {
     if (client) return client
 
     client = new S3Client(configs) as S3ClientWithSend
 
     return client
 }
-
-export default getClient

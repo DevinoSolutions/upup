@@ -1,4 +1,4 @@
-export default function checkFileType(file: File, acceptedFiles: string) {
+export function checkFileType(file: File, acceptedFiles: string) {
     if (file && acceptedFiles && acceptedFiles !== '*') {
         const acceptedFilesArray = Array.isArray(acceptedFiles)
             ? acceptedFiles
