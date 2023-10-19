@@ -134,13 +134,9 @@ export const UpupUploader: FC<
             onChange,
         )
 
-        /**
-         * Get the client instance
-         */
-        const handler = new XhrHttpHandler({})
         const handleUploadProgress = useCallback((xhr: ProgressEvent) => {
             const percentage = Math.round((xhr.loaded / xhr.total) * 100)
-            // FIXME: this setProgress is not working as expected
+            // FIXME: this setProgress is not working in the production only in storybook
             setProgress(percentage)
             console.log(
                 percentage === 100
@@ -149,23 +145,13 @@ export const UpupUploader: FC<
                 `color: ${percentage === 100 ? '#00ff00' : '#ff9600'}`,
             )
         }, [])
-
-        useEffect(() => {
-            ;(handler as any).on(
-                XhrHttpHandler.EVENTS.UPLOAD_PROGRESS,
-                handleUploadProgress,
-            )
-
-            // Cleanup: remove the event listener when the component is unmounted
-            return () => {
-                ;(handler as any).off(
-                    XhrHttpHandler.EVENTS.UPLOAD_PROGRESS,
-                    handleUploadProgress,
-                )
-            }
-        }, [handleUploadProgress])
+        const handler = new XhrHttpHandler({}) as any
+        handler.on(XhrHttpHandler.EVENTS.UPLOAD_PROGRESS, handleUploadProgress)
 
         s3Configs.requestHandler = handler
+        /**
+         * Get the client instance
+         */
         const client = getClient(s3Configs)
 
         /**
