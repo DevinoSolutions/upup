@@ -22,7 +22,7 @@ type UploadObjectResponse = {
  * @param key the final file name, usually it has timestamp prefix
  * @param file file to upload
  */
-const uploadObject = async ({
+export const uploadObject = async ({
     client,
     bucket,
     key,
@@ -61,5 +61,3 @@ const uploadObject = async ({
         }
     }
 }
-
-export default uploadObject

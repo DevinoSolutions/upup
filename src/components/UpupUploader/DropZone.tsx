@@ -1,7 +1,7 @@
 import { Dispatch, SetStateAction } from 'react'
 import { motion } from 'framer-motion'
 import { TbUpload } from 'react-icons/tb'
-import checkFileType from 'lib/checkFileType'
+import { checkFileType } from 'lib'
 
 export default function DropZone({
     setFiles,
