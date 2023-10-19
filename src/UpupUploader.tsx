@@ -31,9 +31,6 @@ import View from 'components/UpupUploader/View'
 import UrlUploader from 'components/UrlUploader'
 import MetaVersion from 'components/MetaVersion'
 
-import useAddMore from 'hooks/useAddMore'
-import useDragAndDrop from 'hooks/useDragAndDrop'
-
 import { checkFileType, compressFile, getClient, uploadObject } from 'lib'
 
 import { BaseConfigs } from 'types/BaseConfigs'
@@ -46,6 +43,7 @@ import { UPLOAD_ADAPTER, UploadAdapter } from 'types/UploadAdapter'
 import { v4 as uuidv4 } from 'uuid'
 import { XhrHttpHandler } from '@aws-sdk/xhr-http-handler'
 import { AnimatePresence } from 'framer-motion'
+import { useAddMore, useDragAndDrop } from './hooks'
 
 const methods: Method[] = [
     { id: 'INTERNAL', name: 'My Device', icon: <MyDeviceIcon /> },

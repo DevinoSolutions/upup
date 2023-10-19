@@ -3,7 +3,7 @@ import { BaseConfigs } from '../types/BaseConfigs'
 
 type onChangeType = BaseConfigs['onChange']
 
-const useAddMore = (files: File[], onChange?: onChangeType) => {
+export const useAddMore = (files: File[], onChange?: onChangeType) => {
     const [isAddingMore, setIsAddingMore] = useState(false)
     const inputRef = useRef<HTMLInputElement>(null)
 
@@ -14,5 +14,3 @@ const useAddMore = (files: File[], onChange?: onChangeType) => {
 
     return { isAddingMore, setIsAddingMore, inputRef }
 }
-
-export default useAddMore

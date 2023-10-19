@@ -1,9 +1,9 @@
 import { Dispatch, SetStateAction, useEffect } from 'react'
-import { CloudStorageConfigs } from '../types/CloudStorageConfigs'
-import { GoogleConfigs } from '../types/GoogleConfigs'
-import { BaseConfigs } from '../types/BaseConfigs'
-import { OneDriveConfigs } from '../types/OneDriveConfigs'
-import { S3Configs } from '../types/S3Configs'
+import { CloudStorageConfigs } from 'types/CloudStorageConfigs'
+import { GoogleConfigs } from 'types/GoogleConfigs'
+import { BaseConfigs } from 'types/BaseConfigs'
+import { OneDriveConfigs } from 'types/OneDriveConfigs'
+import { S3Configs } from 'types/S3Configs'
 
 const space_secret = process.env.SPACE_SECRET
 const space_key = process.env.SPACE_KEY
@@ -33,7 +33,7 @@ interface Props {
 /**
  * @param props
  */
-const useUpup: (props?: Props) => {
+export const useUpup: (props?: Props) => {
     cloudStorageConfigs: CloudStorageConfigs
     googleConfigs: GoogleConfigs
     baseConfigs: BaseConfigs
@@ -138,5 +138,3 @@ const useUpup: (props?: Props) => {
         oneDriveConfigs,
     }
 }
-
-export default useUpup
