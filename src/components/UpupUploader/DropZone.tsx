@@ -1,19 +1,21 @@
-import { Dispatch, SetStateAction } from 'react'
+import { Dispatch, FC, SetStateAction } from 'react'
 import { motion } from 'framer-motion'
 import { TbUpload } from 'react-icons/tb'
 import { checkFileType } from 'lib'
 
-export default function DropZone({
-    setFiles,
-    setIsDragging,
-    multiple,
-    accept = '*',
-}: {
+type Props = {
     setFiles: Dispatch<SetStateAction<File[]>>
     setIsDragging: Dispatch<SetStateAction<boolean>>
     multiple?: boolean
     accept?: string
-}) {
+}
+
+export const DropZone: FC<Props> = ({
+    setFiles,
+    setIsDragging,
+    multiple,
+    accept = '*',
+}: Props) => {
     return (
         <motion.div
             initial={{ opacity: 0 }}

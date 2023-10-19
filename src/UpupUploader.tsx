@@ -9,6 +9,18 @@ import {
     useImperativeHandle,
     useState,
 } from 'react'
+import {
+    BaseConfigs,
+    CloudStorageConfigs,
+    GoogleConfigs,
+    Method,
+    OneDriveConfigs,
+    UPLOAD_ADAPTER,
+    UploadAdapter,
+} from 'types'
+import { checkFileType, compressFile, getClient, uploadObject } from 'lib'
+import { useAddMore, useDragAndDrop } from 'hooks'
+
 import CameraUploader from 'components/CameraUploader'
 import GoogleDriveUploader from 'components/GoogleDriveUploader'
 import {
@@ -31,19 +43,9 @@ import View from 'components/UpupUploader/View'
 import UrlUploader from 'components/UrlUploader'
 import MetaVersion from 'components/MetaVersion'
 
-import { checkFileType, compressFile, getClient, uploadObject } from 'lib'
-
-import { BaseConfigs } from 'types/BaseConfigs'
-import { CloudStorageConfigs } from 'types/CloudStorageConfigs'
-import { GoogleConfigs } from 'types/GoogleConfigs'
-import { Method } from 'types/Method'
-import { OneDriveConfigs } from 'types/OneDriveConfigs'
-import { UPLOAD_ADAPTER, UploadAdapter } from 'types/UploadAdapter'
-
 import { v4 as uuidv4 } from 'uuid'
 import { XhrHttpHandler } from '@aws-sdk/xhr-http-handler'
 import { AnimatePresence } from 'framer-motion'
-import { useAddMore, useDragAndDrop } from './hooks'
 
 const methods: Method[] = [
     { id: 'INTERNAL', name: 'My Device', icon: <MyDeviceIcon /> },
