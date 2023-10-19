@@ -1,5 +1,11 @@
 # @bassem97/upup
 
+## 2.2.25
+
+### Patch Changes
+
+-   33506db: Optimize imports & tweak progress handler
+
 ## 2.2.24
 
 ### Patch Changes
