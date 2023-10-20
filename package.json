@@ -102,13 +102,13 @@
         "babel-plugin-module-resolver": "^5.0.0",
         "framer-motion": "^10.15.2",
         "load-script": "^2.0.0",
-        "react": "^18.2.0",
-        "react-dom": "^18.2.0",
         "react-icons": "^4.10.1",
         "react-webcam": "^7.1.1",
         "uuid": "^9.0.0"
     },
     "peerDependencies": {
-        "@emotion/react": "^11.11.1"
+        "@emotion/react": "^11.11.1",
+        "react": "^18.2.0",
+        "react-dom": "^18.2.0"
     }
 }
