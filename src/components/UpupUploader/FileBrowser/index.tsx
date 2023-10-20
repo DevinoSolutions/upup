@@ -1,9 +1,9 @@
 import { Dispatch, SetStateAction, useEffect, useState } from 'react'
+import type { GoogleFile, Root, User } from 'google'
+import ListItem from './ListItem'
 
 import { AnimatePresence, motion } from 'framer-motion'
 import { TbSearch } from 'react-icons/tb'
-import ListItem from './ListItem'
-import { GoogleFile, Root, User } from 'google'
 
 type Props = {
     googleFiles: Root | undefined

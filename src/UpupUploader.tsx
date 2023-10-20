@@ -13,59 +13,31 @@ import {
     BaseConfigs,
     CloudStorageConfigs,
     GoogleConfigs,
-    Method,
+    METHODS,
     OneDriveConfigs,
     UPLOAD_ADAPTER,
     UploadAdapter,
 } from 'types'
+import {
+    CameraUploader,
+    GoogleDriveUploader,
+    MetaVersion,
+    OneDriveUploader,
+    UrlUploader,
+} from 'components'
+import {
+    DropZone,
+    MethodsSelector,
+    Preview,
+    View,
+} from 'components/UpupUploader'
+import { UpupMini } from 'components/UpupMini'
 import { checkFileType, compressFile, getClient, uploadObject } from 'lib'
 import { useAddMore, useDragAndDrop } from 'hooks'
-
-import {
-    BoxIcon,
-    CameraIcon,
-    CameraUploader,
-    DropBoxIcon,
-    DropZone,
-    GoogleDriveIcon,
-    GoogleDriveUploader,
-    LinkIcon,
-    MetaVersion,
-    MethodsSelector,
-    MyDeviceIcon,
-    OneDriveIcon,
-    OneDriveUploader,
-    Preview,
-    UnsplashIcon,
-    UpupMini,
-    UrlUploader,
-    View,
-} from 'components'
 
 import { v4 as uuidv4 } from 'uuid'
 import { XhrHttpHandler } from '@aws-sdk/xhr-http-handler'
 import { AnimatePresence } from 'framer-motion'
-
-const methods: Method[] = [
-    { id: 'INTERNAL', name: 'My Device', icon: <MyDeviceIcon /> },
-    { id: 'GOOGLE_DRIVE', name: 'Google Drive', icon: <GoogleDriveIcon /> },
-    {
-        id: 'ONE_DRIVE',
-        name: 'OneDrive',
-        icon: <OneDriveIcon />,
-        disabled: true,
-    },
-    { id: 'BOX', name: 'Box', icon: <BoxIcon />, disabled: true },
-    { id: 'LINK', name: 'Link', icon: <LinkIcon /> },
-    { id: 'CAMERA', name: 'Camera', icon: <CameraIcon /> },
-    { id: 'DROPBOX', name: 'Dropbox', icon: <DropBoxIcon />, disabled: true },
-    {
-        id: 'UNSPLASH',
-        name: 'Unsplash',
-        icon: <UnsplashIcon />,
-        disabled: true,
-    },
-]
 
 export interface UpupUploaderProps {
     cloudStorageConfigs: CloudStorageConfigs
@@ -357,7 +329,7 @@ export const UpupUploader: FC<
                 <View
                     view={view}
                     setView={setView}
-                    methods={methods}
+                    methods={METHODS}
                     components={components}
                 />
 
@@ -379,7 +351,7 @@ export const UpupUploader: FC<
                         <MethodsSelector
                             setView={setView}
                             inputRef={inputRef}
-                            methods={methods.filter(method => {
+                            methods={METHODS.filter(method => {
                                 return uploadAdapters.includes(method.id as any)
                             })}
                         />
