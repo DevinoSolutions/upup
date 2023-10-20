@@ -3,6 +3,7 @@ const autoprefixer = require('autoprefixer')
 const tailwindcss = require('tailwindcss')
 const cssnano = require('cssnano')
 const replace = require('@rollup/plugin-replace')
+const analyze = require('rollup-plugin-analyzer')
 
 module.exports = {
     rollup(config, options) {
@@ -25,6 +26,7 @@ module.exports = {
                 extract: !!options.writeMeta,
             }),
         )
+        config.plugins.push(analyze({ summaryOnly: true }))
         config.plugins = config.plugins.map(p =>
             p.name === 'replace'
                 ? replace({

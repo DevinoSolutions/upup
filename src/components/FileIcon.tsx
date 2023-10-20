@@ -1,3 +1,4 @@
+import { SVGProps } from 'react'
 import {
     TbFileText,
     TbFileUnknown,
@@ -5,7 +6,6 @@ import {
     TbPdf,
     TbVideo,
 } from 'react-icons/tb'
-import { SVGProps } from 'react'
 
 type IconType = (props: SVGProps<SVGSVGElement>) => JSX.Element
 

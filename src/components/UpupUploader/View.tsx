@@ -1,7 +1,7 @@
-import type { Method } from 'types/Method'
+import { FC } from 'react'
+import type { Method } from 'types'
 
 import { AnimatePresence, motion } from 'framer-motion'
-import { FC } from 'react'
 
 type Props = {
     view: string

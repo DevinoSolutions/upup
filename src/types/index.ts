@@ -2,6 +2,7 @@ export type { BaseConfigs } from './BaseConfigs'
 export type { CloudStorageConfigs } from './CloudStorageConfigs'
 export type { GoogleConfigs } from './GoogleConfigs'
 export type { Method } from './Method'
+export { METHODS } from './Method'
 export type {
     OneDriveConfigs,
     OneDriveValue,
