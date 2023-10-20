@@ -1,5 +1,11 @@
 # @bassem97/upup
 
+## 2.2.26
+
+### Patch Changes
+
+-   9f0f1e8: Fix security vulnerability & import optimizaton done
+
 ## 2.2.25
 
 ### Patch Changes
