@@ -56,7 +56,7 @@
     "devDependencies": {
         "@aws-sdk/client-s3": "^3.271.0",
         "@babel/core": "^7.22.10",
-        "@babel/preset-env": "^7.22.10",
+        "@babel/preset-env": "^7.23.2",
         "@babel/preset-react": "^7.22.5",
         "@babel/preset-typescript": "^7.22.5",
         "@changesets/cli": "^2.26.2",
@@ -82,6 +82,7 @@
         "postcss": "^8.4.28",
         "prettier": "3.0.0",
         "remark-gfm": "^3.0.1",
+        "rollup-plugin-analyzer": "^4.0.0",
         "rollup-plugin-postcss": "^4.0.2",
         "size-limit": "^8.2.6",
         "storybook": "^7.3.0",
