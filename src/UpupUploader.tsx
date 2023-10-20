@@ -64,10 +64,9 @@ export type UploadFilesRef = {
  * @constructor
  */
 
-export const UpupUploader: FC<
-    UpupUploaderProps & RefAttributes<UploadFilesRef>
-> = forwardRef(
-    (props: UpupUploaderProps, ref: ForwardedRef<UploadFilesRef>) => {
+// FIXME: replace any with the correct type for the ref later on
+export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
+    forwardRef((props: UpupUploaderProps, ref: ForwardedRef<any>) => {
         const {
             cloudStorageConfigs,
             baseConfigs,
@@ -360,5 +359,4 @@ export const UpupUploader: FC<
                 </div>
             </div>
         )
-    },
-)
+    })
