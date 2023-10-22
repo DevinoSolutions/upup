@@ -1,5 +1,11 @@
 # @bassem97/upup
 
+## 2.2.28
+
+### Patch Changes
+
+-   6f8e7b9: Tweak progress bar
+
 ## 2.2.27
 
 ### Patch Changes
