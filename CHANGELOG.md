@@ -1,5 +1,11 @@
 # @bassem97/upup
 
+## 2.2.27
+
+### Patch Changes
+
+-   b127cca: Progress bar darkmode
+
 ## 2.2.26
 
 ### Patch Changes

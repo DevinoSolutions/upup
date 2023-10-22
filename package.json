@@ -2,7 +2,7 @@
     "name": "@bassem97/upup",
     "author": "Bassem Jadoui",
     "license": "MIT",
-    "version": "2.2.26",
+    "version": "2.2.27",
     "readme": "README.md",
     "main": "dist/index.js",
     "module": "dist/upup.esm.js",
