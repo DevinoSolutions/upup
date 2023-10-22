@@ -137,7 +137,7 @@ const Preview: FC<Props> = ({
                             initial={{ scaleY: '0%' }}
                             animate={{ scaleY: '100%' }}
                             exit={{ scaleY: '0%' }}
-                            className="flex justify-start items-center p-3 border-b bg-[#fafafa] text-white origin-bottom pointer-events-auto"
+                            className="flex justify-start items-center p-3 border-b bg-white text-white origin-bottom pointer-events-auto dark:bg-[#1f1f1f] dark:text-white"
                         >
                             <Box sx={{ width: '100%' }}>
                                 <LinearProgressBar value={progress} />
