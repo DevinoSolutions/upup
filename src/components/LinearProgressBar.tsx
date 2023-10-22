@@ -5,7 +5,9 @@ import LinearProgress, {
 import Box from '@mui/material/Box'
 import { Typography } from '@mui/material'
 
-const LinearProgressBar = (props: LinearProgressProps & { value: number }) => {
+type Props = LinearProgressProps & { value: number }
+
+const LinearProgressBar = (props: Props) => {
     return (
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <Box sx={{ width: '100%', mr: 1 }}>
