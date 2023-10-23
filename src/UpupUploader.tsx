@@ -105,16 +105,18 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
             onChange,
         )
 
+        useEffect(() => {
+            progress > 0 &&
+                console.log(
+                    progress === 100
+                        ? '%cUPLOAD COMPLETE'
+                        : `%cUpload Progress : ${progress}%`,
+                    `color: ${progress === 100 ? '#00ff00' : '#ff9600'}`,
+                )
+        }, [progress])
+
         const handleUploadProgress = useCallback((xhr: ProgressEvent) => {
-            const percentage = Math.round((xhr.loaded / xhr.total) * 100)
-            // FIXME: this setProgress is not working in the production only in storybook
-            setProgress(percentage)
-            console.log(
-                percentage === 100
-                    ? '%cUPLOAD COMPLETE'
-                    : `%cUpload Progress : ${percentage}%`,
-                `color: ${percentage === 100 ? '#00ff00' : '#ff9600'}`,
-            )
+            setProgress(Math.round((xhr.loaded / xhr.total) * 100))
         }, [])
         const handler = new XhrHttpHandler({}) as any
         handler.on(XhrHttpHandler.EVENTS.UPLOAD_PROGRESS, handleUploadProgress)
