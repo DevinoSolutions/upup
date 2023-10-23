@@ -91,6 +91,7 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
         const [mutatedFiles, setMutatedFiles] = useState<File[]>([])
         const [view, setView] = useState('internal')
         const [progress, setProgress] = useState(0)
+        const [handler] = useState(new XhrHttpHandler({}) as any)
 
         const {
             isDragging,
@@ -106,22 +107,44 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
         )
 
         useEffect(() => {
-            progress > 0 &&
+            if (progress > 0) {
                 console.log(
                     progress === 100
                         ? '%cUPLOAD COMPLETE'
                         : `%cUpload Progress : ${progress}%`,
                     `color: ${progress === 100 ? '#00ff00' : '#ff9600'}`,
                 )
-        }, [progress])
+            }
+            if (progress === 100) {
+                handler.off(
+                    XhrHttpHandler.EVENTS.UPLOAD_PROGRESS,
+                    handleUploadProgress,
+                )
+            }
+        }, [progress, files])
 
         const handleUploadProgress = useCallback((xhr: ProgressEvent) => {
             setProgress(Math.round((xhr.loaded / xhr.total) * 100))
         }, [])
-        const handler = new XhrHttpHandler({}) as any
-        handler.on(XhrHttpHandler.EVENTS.UPLOAD_PROGRESS, handleUploadProgress)
+
+        useEffect(() => {
+            handler.on(
+                XhrHttpHandler.EVENTS.UPLOAD_PROGRESS,
+                handleUploadProgress,
+            )
+
+            // Cleanup function to remove the event listener when component unmounts
+            return () => {
+                handler.off(
+                    XhrHttpHandler.EVENTS.UPLOAD_PROGRESS,
+                    handleUploadProgress,
+                )
+                setProgress(0)
+            }
+        }, [files])
 
         s3Configs.requestHandler = handler
+
         /**
          * Get the client instance
          */
