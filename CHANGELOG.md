@@ -1,5 +1,11 @@
 # @bassem97/upup
 
+## 2.2.29
+
+### Patch Changes
+
+-   8efd14b: Optimize progress code
+
 ## 2.2.28
 
 ### Patch Changes
