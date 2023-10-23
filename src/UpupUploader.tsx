@@ -4,7 +4,6 @@ import {
     forwardRef,
     LegacyRef,
     RefAttributes,
-    useCallback,
     useEffect,
     useImperativeHandle,
     useState,
@@ -36,8 +35,8 @@ import { checkFileType, compressFile, getClient, uploadObject } from 'lib'
 import { useAddMore, useDragAndDrop } from 'hooks'
 
 import { v4 as uuidv4 } from 'uuid'
-import { XhrHttpHandler } from '@aws-sdk/xhr-http-handler'
 import { AnimatePresence } from 'framer-motion'
+import useProgress from './hooks/useProgress'
 
 export interface UpupUploaderProps {
     cloudStorageConfigs: CloudStorageConfigs
@@ -90,8 +89,6 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
         const [files, setFiles] = useState<File[]>([])
         const [mutatedFiles, setMutatedFiles] = useState<File[]>([])
         const [view, setView] = useState('internal')
-        const [progress, setProgress] = useState(0)
-        const [handler] = useState(new XhrHttpHandler({}) as any)
 
         const {
             isDragging,
@@ -106,42 +103,7 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
             onChange,
         )
 
-        useEffect(() => {
-            if (progress > 0) {
-                console.log(
-                    progress === 100
-                        ? '%cUPLOAD COMPLETE'
-                        : `%cUpload Progress : ${progress}%`,
-                    `color: ${progress === 100 ? '#00ff00' : '#ff9600'}`,
-                )
-            }
-            if (progress === 100) {
-                handler.off(
-                    XhrHttpHandler.EVENTS.UPLOAD_PROGRESS,
-                    handleUploadProgress,
-                )
-            }
-        }, [progress, files])
-
-        const handleUploadProgress = useCallback((xhr: ProgressEvent) => {
-            setProgress(Math.round((xhr.loaded / xhr.total) * 100))
-        }, [])
-
-        useEffect(() => {
-            handler.on(
-                XhrHttpHandler.EVENTS.UPLOAD_PROGRESS,
-                handleUploadProgress,
-            )
-
-            // Cleanup function to remove the event listener when component unmounts
-            return () => {
-                handler.off(
-                    XhrHttpHandler.EVENTS.UPLOAD_PROGRESS,
-                    handleUploadProgress,
-                )
-                setProgress(0)
-            }
-        }, [files])
+        const { handler, progress } = useProgress(files)
 
         s3Configs.requestHandler = handler
 
