@@ -1,6 +1,5 @@
 export { useUrl } from './useUrl'
 export { useUpup } from './useUpup'
-export { useLoadOdAPI } from './useLoadOdAPI'
 export { useLoadGAPI } from './useLoadGAPI'
 export { useGoogleDrive } from './useGoogleDrive'
 export { useDragAndDrop } from './useDragAndDrop'

@@ -96,6 +96,8 @@
     "dependencies": {
         "@aws-sdk/client-s3": "^3.271.0",
         "@aws-sdk/xhr-http-handler": "^3.271.0",
+        "@azure/msal-browser": "^3.3.0",
+        "@azure/msal-react": "^2.0.5",
         "@emotion/styled": "^11.11.0",
         "@mui/material": "^5.14.13",
         "@types/gapi": "^0.0.44",
@@ -108,7 +110,7 @@
     },
     "peerDependencies": {
         "@emotion/react": "^11.11.1",
-        "react": "^18.2.0",
+        "react": "18.2.0",
         "react-dom": "^18.2.0"
     }
 }
