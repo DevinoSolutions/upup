@@ -6,38 +6,8 @@ import {
     OneDriveResponse,
     OneDriveValue,
 } from 'types'
-import styled from 'styled-components'
+import useOneDrive from '../hooks/useOneDrive'
 
-const OneDriveButton = styled.button`
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: #ffffff;
-    color: #4a5568;
-    padding: 0.5rem 1rem;
-    border-radius: 0.375rem;
-    box-shadow: 0 2px 3px rgba(0, 0, 0, 0.1);
-    transition:
-        background-color 0.3s ease-in-out,
-        color 0.3s ease-in-out;
-
-    &:hover {
-        background-color: #f0f4f8;
-        color: #2d3748;
-    }
-
-    img {
-        width: 1.25rem;
-        height: 1.25rem;
-        margin-right: 0.5rem;
-        fill: currentColor;
-    }
-`
-const OneDriveLogo = styled.img`
-    width: 20px;
-    height: 20px;
-    margin-right: 8px;
-`
 interface Props {
     baseConfigs: BaseConfigs
     oneDriveConfigs: OneDriveConfigs
@@ -59,6 +29,8 @@ const OneDriveUploader: FC<Props> = ({
 }: Props) => {
     const { isLoaded } = useLoadOdAPI()
     const { onedrive_client_id: clientId, redirectUri } = oneDriveConfigs
+    const { token } = useOneDrive(oneDriveConfigs)
+    console.log(token)
 
     /**
      * Process the response from the one drive
@@ -137,13 +109,13 @@ const OneDriveUploader: FC<Props> = ({
         <div>
             {isLoaded && (
                 // one drive button with logo and text
-                <OneDriveButton onClick={openPicker}>
-                    <OneDriveLogo
+                <button onClick={openPicker}>
+                    <img
                         src="https://static2.sharepointonline.com/files/fabric/assets/brand-icons/product/svg/onedrive_32x1.svg"
                         alt="One Drive Logo"
                     />
                     One Drive
-                </OneDriveButton>
+                </button>
             )}
         </div>
     )
