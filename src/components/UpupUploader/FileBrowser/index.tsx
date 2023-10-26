@@ -4,7 +4,7 @@ import ListItem from './ListItem'
 
 import { AnimatePresence, motion } from 'framer-motion'
 import { TbSearch } from 'react-icons/tb'
-import ButtonSpinner from 'components/ButtonSpinner';
+import ButtonSpinner from 'components/ButtonSpinner'
 
 type Props = {
     googleFiles: Root | undefined
@@ -27,7 +27,7 @@ const FileBrowser = ({
 }: Props) => {
     const [path, setPath] = useState<Root[]>([])
     const [selectedFiles, setSelectedFiles] = useState<GoogleFile[]>([])
-    const [showLoader, setLoader] = useState(false);
+    const [showLoader, setLoader] = useState(false)
 
     const handleClick = (file: GoogleFile | Root) => {
         if ('children' in file) {
@@ -56,14 +56,14 @@ const FileBrowser = ({
     }
 
     const handleSubmit = async () => {
-        setLoader(true);
+        setLoader(true)
         const downloadedFiles = await downloadFiles(selectedFiles)
         setFiles(prevFiles => [
             ...prevFiles,
             ...(downloadedFiles as unknown as File[]),
         ])
         setView('internal')
-        setLoader(false);
+        setLoader(false)
     }
 
     useEffect(() => {
@@ -148,13 +148,15 @@ const FileBrowser = ({
                         transition={{ duration: 0.2 }}
                         className="border-t bg-white flex items-center justify-start gap-4 p-4 py-2 origin-bottom dark:bg-[#1f1f1f] dark:text-[#fafafa]"
                     >
-                        {!showLoader && (<button
-                            className="bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white font-medium rounded-md p-3 w-32 transition-all duration-300"
-                            onClick={handleSubmit}
-                        >
-                            Add {selectedFiles.length} files
-                        </button>)}
-                        {showLoader &&  <ButtonSpinner/>}
+                        {!showLoader && (
+                            <button
+                                className="bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white font-medium rounded-md p-3 w-32 transition-all duration-300"
+                                onClick={handleSubmit}
+                            >
+                                Add {selectedFiles.length} files
+                            </button>
+                        )}
+                        {showLoader && <ButtonSpinner />}
                         <button
                             className="hover:underline"
                             onClick={() => setSelectedFiles([])}
