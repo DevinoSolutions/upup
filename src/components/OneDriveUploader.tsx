@@ -1,4 +1,4 @@
-import { Dispatch, FC, SetStateAction, useEffect } from 'react'
+import { Dispatch, FC, SetStateAction } from 'react'
 import { BaseConfigs, OneDriveConfigs } from 'types'
 import useOneDriveAuth from '../hooks/useOneDriveAuth'
 
@@ -16,12 +16,9 @@ interface Props {
  * @constructor
  */
 const OneDriveUploader: FC<Props> = ({ oneDriveConfigs }: Props) => {
-    const { handleSignIn } = useOneDriveAuth(oneDriveConfigs.onedrive_client_id)
+    const { token } = useOneDriveAuth(oneDriveConfigs.onedrive_client_id)
 
-    useEffect(() => {
-        ;(async () => await handleSignIn())()
-    }, [])
-
+    console.log(token)
     return (
         <></>
         // <FileBrowser

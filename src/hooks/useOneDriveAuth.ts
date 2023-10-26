@@ -3,8 +3,10 @@ import {
     PopupRequest,
     PublicClientApplication,
 } from '@azure/msal-browser'
+import { useEffect, useState } from 'react'
 
 function useOneDriveAuth(clientId: string) {
+    const [token, setToken] = useState<any>()
     const pca = new PublicClientApplication({
         auth: {
             clientId: clientId,
@@ -15,6 +17,21 @@ function useOneDriveAuth(clientId: string) {
             storeAuthStateInCookie: false,
         },
     })
+
+    useEffect(() => {
+        /**
+         * @description Initialize the one Drive API
+         * @returns {Promise<void>}
+         */
+        const storedTokenStr = localStorage.getItem('token')
+        const storedToken = storedTokenStr ? JSON.parse(storedTokenStr) : null
+
+        if (storedToken && storedToken.expires_in > Date.now()) {
+            return setToken(storedToken)
+        } else {
+            ;(async () => await handleSignIn())()
+        }
+    }, [])
 
     const signIn = async (): Promise<AuthenticationResult | null> => {
         await pca.initialize()
@@ -30,7 +47,7 @@ function useOneDriveAuth(clientId: string) {
         }
     }
 
-    const acquireToken = async (): Promise<string | null> => {
+    const acquireToken = async () => {
         try {
             const accounts = pca.getAllAccounts()
             if (!accounts || accounts.length === 0) {
@@ -43,24 +60,27 @@ function useOneDriveAuth(clientId: string) {
                 account: accounts[0],
             }
             const response = await pca.acquireTokenSilent(silentRequest)
-            return response.accessToken
+            if (response.accessToken) {
+                const storeToken = {
+                    accessToken: response.accessToken,
+                    expires_in:
+                        Date.now() +
+                        (response.expiresOn?.getTime()! - 20) * 1000,
+                }
+                localStorage.setItem('token', JSON.stringify(storeToken))
+                setToken(storeToken)
+            }
         } catch (error) {
             console.error('Error during token acquisition:', error)
-            return null
         }
     }
 
     const handleSignIn = async () => {
         const result = await signIn()
-        if (result) {
-            const token = await acquireToken()
-            console.log('Token:', token)
-        }
+        result && (await acquireToken())
     }
 
-    return {
-        handleSignIn,
-    }
+    return { token }
 }
 
 export default useOneDriveAuth
