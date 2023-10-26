@@ -1,6 +1,6 @@
-import { Dispatch, FC, SetStateAction } from 'react'
+import { Dispatch, FC, SetStateAction, useEffect } from 'react'
 import { BaseConfigs, OneDriveConfigs } from 'types'
-import useOneDrive from '../hooks/useOneDrive'
+import useOneDriveAuth from '../hooks/useOneDriveAuth'
 
 interface Props {
     baseConfigs: BaseConfigs
@@ -15,18 +15,12 @@ interface Props {
  * @param setFilesFromParent return the files to the parent component
  * @constructor
  */
-const OneDriveUploader: FC<Props> = ({
-    baseConfigs: { multiple: multiSelect },
-    oneDriveConfigs,
-    setFiles,
-    setView,
-}: Props) => {
-    // const { oneDriveFiles, handleSignOut, user, downloadFile } =
-    const { token } = useOneDrive(oneDriveConfigs)
-    setFiles([])
-    setView('oneDrive')
-    token && console.log(token)
-    multiSelect && console.log(multiSelect)
+const OneDriveUploader: FC<Props> = ({ oneDriveConfigs }: Props) => {
+    const { handleSignIn } = useOneDriveAuth(oneDriveConfigs.onedrive_client_id)
+
+    useEffect(() => {
+        ;(async () => await handleSignIn())()
+    }, [])
 
     return (
         <></>
