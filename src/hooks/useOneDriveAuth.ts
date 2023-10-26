@@ -58,7 +58,10 @@ function useOneDriveAuth(clientId: string) {
         if (token) {
             ;(async () => {
                 const profile = await fetchProfileInfo(token.access_token)
-                setUser(profile)
+                setUser(() => ({
+                    displayName: profile.displayName,
+                    mail: profile.mail,
+                }))
             })()
         }
     }, [token])
