@@ -3,16 +3,28 @@ import {
     PopupRequest,
     PublicClientApplication,
 } from '@azure/msal-browser'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { MicrosoftToken, MicrosoftUser } from 'microsoft'
 
-function useOneDriveAuth(clientId: string) {
-    const [token, setToken] = useState<MicrosoftToken>()
-    const [user, setUser] = useState<MicrosoftUser>()
+const GRAPH_API_ENDPOINT = 'https://graph.microsoft.com/v1.0/me'
+const TOKEN_STORAGE_KEY = 'onedrive_token'
+const GRAPH_API_FILES_ENDPOINT =
+    'https://graph.microsoft.com/v1.0/me/drive/root/children'
+
+interface AuthProps {
+    token: MicrosoftToken | undefined
+    user: MicrosoftUser | undefined
+    fileList: any[] | undefined
+}
+
+function useOneDriveAuth(clientId: string): AuthProps {
+    const [token, setToken] = useState<MicrosoftToken | undefined>()
+    const [user, setUser] = useState<MicrosoftUser | undefined>()
+    const [fileList, setFileList] = useState<any[]>([])
 
     const pca = new PublicClientApplication({
         auth: {
-            clientId: clientId,
+            clientId,
             redirectUri: window.location.origin,
         },
         cache: {
@@ -21,10 +33,30 @@ function useOneDriveAuth(clientId: string) {
         },
     })
 
-    const fetchProfileInfo = async (token: string) => {
-        const response = await fetch('https://graph.microsoft.com/v1.0/me', {
+    const getStoredToken = (): MicrosoftToken | null => {
+        const storedTokenStr = localStorage.getItem(TOKEN_STORAGE_KEY)
+        return storedTokenStr ? JSON.parse(storedTokenStr) : null
+    }
+
+    const fetchFileList = useCallback(async (accessToken: string) => {
+        const response = await fetch(GRAPH_API_FILES_ENDPOINT, {
             headers: {
-                Authorization: `Bearer ${token}`,
+                Authorization: `Bearer ${accessToken}`,
+            },
+        })
+
+        if (!response.ok) {
+            throw new Error('Failed to fetch file list')
+        }
+
+        const data = await response.json()
+        return data.value // The list of files is usually inside the "value" property of the response
+    }, [])
+
+    const fetchProfileInfo = useCallback(async (accessToken: string) => {
+        const response = await fetch(GRAPH_API_ENDPOINT, {
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
             },
         })
 
@@ -32,39 +64,20 @@ function useOneDriveAuth(clientId: string) {
             throw new Error('Failed to fetch profile info')
         }
 
-        return await response.json()
-    }
+        return response.json()
+    }, [])
 
-    const handleSignIn = async () => {
+    const handleSignIn = useCallback(async () => {
         const result = await signIn()
         result && (await acquireToken())
-    }
-
-    useEffect(() => {
-        /**
-         * @description Initialize the one Drive API
-         * @returns {Promise<void>}
-         */
-        const storedTokenStr = localStorage.getItem('onedrive_token')
-        const storedToken = storedTokenStr ? JSON.parse(storedTokenStr) : null
-        if (storedToken && storedToken.expires_in > Date.now())
-            return setToken(storedToken)
-        else {
-            ;(async () => await handleSignIn())()
-        }
     }, [])
 
     useEffect(() => {
-        if (token) {
-            ;(async () => {
-                const profile = await fetchProfileInfo(token.access_token)
-                setUser(() => ({
-                    displayName: profile.displayName,
-                    mail: profile.mail,
-                }))
-            })()
-        }
-    }, [token])
+        const storedToken = getStoredToken()
+        if (storedToken && storedToken.expires_in > Date.now())
+            setToken(storedToken)
+        else handleSignIn()
+    }, [handleSignIn])
 
     const signIn = async (): Promise<AuthenticationResult | null> => {
         await pca.initialize()
@@ -84,9 +97,7 @@ function useOneDriveAuth(clientId: string) {
         try {
             const accounts = pca.getAllAccounts()
             if (!accounts || accounts.length === 0) {
-                throw new Error(
-                    'No accounts available. Make sure to authenticate first.',
-                )
+                throw new Error('No accounts available. Authenticate first.')
             }
             const silentRequest: PopupRequest = {
                 scopes: ['user.read', 'Files.ReadWrite.All'],
@@ -99,7 +110,7 @@ function useOneDriveAuth(clientId: string) {
                     expires_in: response.expiresOn!.getTime(),
                 }
                 localStorage.setItem(
-                    'onedrive_token',
+                    TOKEN_STORAGE_KEY,
                     JSON.stringify(storeToken),
                 )
                 setToken(storeToken)
@@ -109,7 +120,28 @@ function useOneDriveAuth(clientId: string) {
         }
     }
 
-    return { token, user }
+    useEffect(() => {
+        if (token) {
+            ;(async () => {
+                const profile = await fetchProfileInfo(token.access_token)
+                setUser({
+                    displayName: profile.displayName,
+                    mail: profile.mail,
+                })
+            })()
+        }
+    }, [token, fetchProfileInfo])
+
+    useEffect(() => {
+        if (token) {
+            ;(async () => {
+                const files = await fetchFileList(token.access_token)
+                setFileList(files)
+            })()
+        }
+    }, [token, fetchFileList])
+
+    return { token, user, fileList }
 }
 
 export default useOneDriveAuth

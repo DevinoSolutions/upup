@@ -16,9 +16,11 @@ interface Props {
  * @constructor
  */
 const OneDriveUploader: FC<Props> = ({ oneDriveConfigs }: Props) => {
-    const { token, user } = useOneDriveAuth(oneDriveConfigs.onedrive_client_id)
+    const { token, user, fileList } = useOneDriveAuth(
+        oneDriveConfigs.onedrive_client_id,
+    )
 
-    console.log(token, user)
+    console.log(fileList)
 
     // /**
     //  *  @description Get the user's name and files list when the token is set
