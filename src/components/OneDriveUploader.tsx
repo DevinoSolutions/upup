@@ -21,19 +21,22 @@ const OneDriveUploader: FC<Props> = ({
     setFiles,
     setView,
 }: Props) => {
-    const { user, fileList, signOut } = useOneDrive(
+    const { user, oneDriveFiles, downloadFile, signOut } = useOneDrive(
         oneDriveConfigs.onedrive_client_id,
     )
 
-    console.log(user, fileList)
+    console.log('User: ', user)
+    console.log('OneDriveFiles: ', oneDriveFiles)
 
     return (
         // <></>
         <FileBrowser
+            driveFiles={oneDriveFiles}
             handleSignOut={signOut}
             user={user}
             setFiles={setFiles}
             setView={setView}
+            downloadFile={downloadFile}
         />
     )
 }

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { MicrosoftUser, OneDriveFile } from 'microsoft'
+import { MicrosoftUser, OneDriveFile, OneDriveRoot } from 'microsoft'
 import usePCAInstance from './usePCAInstance'
 import UseOneDriveAuth from './useOneDriveAuth'
 
@@ -9,7 +9,7 @@ const GRAPH_API_FILES_ENDPOINT =
 
 interface AuthProps {
     user: MicrosoftUser | undefined
-    fileList: OneDriveFile[] | undefined
+    oneDriveFiles: OneDriveRoot | undefined
     signOut: () => void
     downloadFile: (fileId: string) => Promise<Blob>
 }
@@ -18,12 +18,12 @@ function useOneDrive(clientId: string): AuthProps {
     const [user, setUser] = useState<MicrosoftUser | undefined>()
     const [rawFiles, setRawFiles] = useState<OneDriveFile[]>()
 
-    const [fileList, setFileList] = useState<OneDriveFile[]>([])
+    const [oneDriveFiles, setOneDriveFiles] = useState<OneDriveRoot>()
     const { msalInstance } = usePCAInstance(clientId)
     const { token, signOut } = UseOneDriveAuth({
         msalInstance,
         setUser,
-        setFileList,
+        setOneDriveFiles,
     })
 
     console.log(rawFiles)
@@ -78,6 +78,22 @@ function useOneDrive(clientId: string): AuthProps {
          * @param {OneDriveFile} file
          * @returns {void}
          */
+        const recurse = (file: OneDriveFile) => {
+            const child = children[file.id]
+            if (child && child.length) {
+                file.children = child
+                child.forEach(recurse) // recursive call for each child
+            }
+        }
+
+        // Assign children for each top-level file in organizedFiles and build the tree recursively
+        organizedFiles.forEach(recurse)
+
+        setOneDriveFiles({
+            id: 'root',
+            name: 'OneDrive',
+            children: organizedFiles,
+        })
     }, [rawFiles])
 
     const downloadFile = async (fileId: string) => {
@@ -122,7 +138,14 @@ function useOneDrive(clientId: string): AuthProps {
         }
     }, [token, fetchProfileInfo, fetchFileList])
 
-    return { user, fileList: rawFiles, signOut, downloadFile }
+    /**
+     * @description Organize the files into a tree structure when the raw files are set
+     */
+    useEffect(() => {
+        organizeFiles()
+    }, [organizeFiles])
+
+    return { user, oneDriveFiles, signOut, downloadFile }
 }
 
 export default useOneDrive

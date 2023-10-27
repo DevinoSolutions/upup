@@ -4,10 +4,10 @@ import ListItem from './ListItem'
 
 import { AnimatePresence, motion } from 'framer-motion'
 import { TbSearch } from 'react-icons/tb'
-import { MicrosoftUser } from 'microsoft'
+import { MicrosoftUser, OneDriveRoot } from 'microsoft'
 
 type Props = {
-    googleFiles?: Root | undefined
+    driveFiles?: Root | OneDriveRoot | undefined
     handleSignOut: () => void
     user: User | MicrosoftUser | undefined
     downloadFile?: (fileId: string) => Promise<Blob>
@@ -19,7 +19,7 @@ type Props = {
 const FileBrowser = ({
     handleSignOut,
     user,
-    googleFiles,
+    driveFiles,
     setFiles,
     downloadFile,
     setView,
@@ -64,8 +64,8 @@ const FileBrowser = ({
     }
 
     useEffect(() => {
-        if (googleFiles) setPath([googleFiles])
-    }, [googleFiles])
+        if (driveFiles) setPath([driveFiles])
+    }, [driveFiles])
 
     return (
         <div className="w-full grid grid-rows-[auto,auto,1fr,auto] bg-white h-[min(98svh,32rem)] ">

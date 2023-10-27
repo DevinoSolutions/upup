@@ -21,7 +21,7 @@ const GoogleDriveUploader = ({
 
     return (
         <FileBrowser
-            googleFiles={googleFiles}
+            driveFiles={googleFiles}
             handleSignOut={handleSignOut}
             user={user}
             downloadFile={downloadFile}

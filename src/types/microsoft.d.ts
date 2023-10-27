@@ -32,5 +32,12 @@ declare module 'microsoft' {
             id: string
             path: string
         }
+        children?: OneDriveFile[]
+    }
+
+    type OneDriveRoot = {
+        id: string
+        name: string
+        children: OneDriveFile[]
     }
 }

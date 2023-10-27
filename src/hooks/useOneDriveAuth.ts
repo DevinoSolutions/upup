@@ -10,7 +10,7 @@ import {
     useEffect,
     useState,
 } from 'react'
-import { MicrosoftToken, MicrosoftUser } from 'microsoft'
+import { MicrosoftToken, MicrosoftUser, OneDriveRoot } from 'microsoft'
 
 const TOKEN_STORAGE_KEY =
     '00000000-0000-0000-0078-f20226514725.9188040d-6c67-4c5b-b112-36a304b66dad-login.windows.net-accesstoken-6a5dfe6b-7b41-4f43-a4f3-5c6e434056e1-9188040d-6c67-4c5b-b112-36a304b66dad-user.read files.readwrite.all files.read.all openid profile--'
@@ -18,10 +18,14 @@ const TOKEN_STORAGE_KEY =
 type Props = {
     msalInstance: PublicClientApplication
     setUser: Dispatch<SetStateAction<MicrosoftUser | undefined>>
-    setFileList: Dispatch<SetStateAction<any[]>>
+    setOneDriveFiles: Dispatch<SetStateAction<OneDriveRoot | undefined>>
 }
 
-const useOneDriveAuth = ({ msalInstance, setUser, setFileList }: Props) => {
+const useOneDriveAuth = ({
+    msalInstance,
+    setUser,
+    setOneDriveFiles,
+}: Props) => {
     const [token, setToken] = useState<MicrosoftToken | undefined>()
 
     const getStoredToken = (): MicrosoftToken | null => {
@@ -65,9 +69,9 @@ const useOneDriveAuth = ({ msalInstance, setUser, setFileList }: Props) => {
     const handleSignOut = useCallback(() => {
         setToken(undefined)
         setUser(undefined)
-        setFileList([])
+        setOneDriveFiles(undefined)
         sessionStorage.removeItem(TOKEN_STORAGE_KEY)
-    }, [setUser, setFileList])
+    }, [setUser, setOneDriveFiles])
 
     useEffect(() => {
         const storedToken = getStoredToken()
