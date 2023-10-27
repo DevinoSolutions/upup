@@ -9,7 +9,7 @@ import { MicrosoftToken } from 'microsoft'
 const TOKEN_STORAGE_KEY = 'onedrive_token'
 
 const UseOneDriveSignIn = (msalInstance: PublicClientApplication) => {
-    const [token, setToken] = useState<MicrosoftToken | undefined>()
+    const [token, setToken] = useState<MicrosoftToken>()
 
     const getStoredToken = (): MicrosoftToken | null => {
         const storedTokenStr = localStorage.getItem(TOKEN_STORAGE_KEY)
@@ -46,7 +46,7 @@ const UseOneDriveSignIn = (msalInstance: PublicClientApplication) => {
                 const storeToken = {
                     access_token: response.accessToken,
                     expires_in: response.expiresOn!.getTime(),
-                }
+                } as MicrosoftToken
                 localStorage.setItem(
                     TOKEN_STORAGE_KEY,
                     JSON.stringify(storeToken),
@@ -71,7 +71,7 @@ const UseOneDriveSignIn = (msalInstance: PublicClientApplication) => {
         else handleSignIn()
     }, [handleSignIn])
 
-    return { handleSignIn, token }
+    return { token }
 }
 
 export default UseOneDriveSignIn
