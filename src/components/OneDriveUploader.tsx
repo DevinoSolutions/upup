@@ -1,6 +1,6 @@
 import { Dispatch, FC, SetStateAction } from 'react'
 import { BaseConfigs, OneDriveConfigs } from 'types'
-import useOneDriveAuth from '../hooks/useOneDriveAuth'
+import useOneDrive from '../hooks/useOneDrive'
 
 interface Props {
     baseConfigs: BaseConfigs
@@ -16,7 +16,7 @@ interface Props {
  * @constructor
  */
 const OneDriveUploader: FC<Props> = ({ oneDriveConfigs }: Props) => {
-    const { user, fileList } = useOneDriveAuth(
+    const { user, fileList, signOut } = useOneDrive(
         oneDriveConfigs.onedrive_client_id,
     )
 
@@ -34,7 +34,9 @@ const OneDriveUploader: FC<Props> = ({ oneDriveConfigs }: Props) => {
     //     }
     // }, [token])
     return (
-        <></>
+        <>
+            <button onClick={signOut}>Sign Out</button>
+        </>
         // <FileBrowser
         //     googleFiles={googleFiles}
         //     handleSignOut={handleSignOut}

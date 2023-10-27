@@ -9,13 +9,11 @@ const usePCAInstance = (clientId: string) => {
         auth: {
             clientId,
             redirectUri: window.location.origin,
+            authority: 'https://login.microsoftonline.com/common',
         },
         cache: {
             cacheLocation: 'sessionStorage',
             storeAuthStateInCookie: false,
-        },
-        system: {
-            allowNativeBroker: true,
         },
     })
 

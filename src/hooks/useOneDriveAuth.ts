@@ -1,75 +1,78 @@
-import { useCallback, useEffect, useState } from 'react'
+import {
+    AuthenticationResult,
+    PopupRequest,
+    PublicClientApplication,
+} from '@azure/msal-browser'
+import {
+    Dispatch,
+    SetStateAction,
+    useCallback,
+    useEffect,
+    useState,
+} from 'react'
 import { MicrosoftToken, MicrosoftUser } from 'microsoft'
-import usePCAInstance from './usePCAInstance'
-import useOnedriveSignIn from './useOneDriveSignIn'
 
-const GRAPH_API_ENDPOINT = 'https://graph.microsoft.com/v1.0/me'
-const GRAPH_API_FILES_ENDPOINT =
-    'https://graph.microsoft.com/v1.0/me/drive/root/children'
+const TOKEN_STORAGE_KEY =
+    '00000000-0000-0000-0078-f20226514725.9188040d-6c67-4c5b-b112-36a304b66dad-login.windows.net-accesstoken-6a5dfe6b-7b41-4f43-a4f3-5c6e434056e1-9188040d-6c67-4c5b-b112-36a304b66dad-user.read files.read.all openid profile files.readwrite.all--'
 
-interface AuthProps {
-    token: MicrosoftToken | undefined
-    user: MicrosoftUser | undefined
-    fileList: any[] | undefined
+type Props = {
+    msalInstance: PublicClientApplication
+    setUser: Dispatch<SetStateAction<MicrosoftUser | undefined>>
+    setFileList: Dispatch<SetStateAction<any[]>>
 }
 
-function useOneDriveAuth(clientId: string): AuthProps {
-    const [user, setUser] = useState<MicrosoftUser | undefined>()
-    const [fileList, setFileList] = useState<any[]>([])
-    const { msalInstance } = usePCAInstance(clientId)
-    const { token } = useOnedriveSignIn(msalInstance)
+const useOneDriveAuth = ({ msalInstance, setUser, setFileList }: Props) => {
+    const [token, setToken] = useState<MicrosoftToken | undefined>()
 
-    const fetchFileList = useCallback(async (accessToken: string) => {
-        const response = await fetch(GRAPH_API_FILES_ENDPOINT, {
-            headers: {
-                Authorization: `Bearer ${accessToken}`,
-            },
-        })
+    const getStoredToken = (): MicrosoftToken | null => {
+        const storedTokenObject = sessionStorage.getItem(TOKEN_STORAGE_KEY)
+        if (!storedTokenObject) return null
 
-        if (!response.ok) {
-            throw new Error('Failed to fetch file list')
+        const storedToken = JSON.parse(storedTokenObject)
+        return {
+            expiresOn: storedToken.expiresOn * 1000,
+            secret: storedToken.secret,
         }
+    }
 
-        const data = await response.json()
-        return data.value // The list of files is usually inside the "value" property of the response
-    }, [])
+    const signIn =
+        useCallback(async (): Promise<AuthenticationResult | null> => {
+            try {
+                const loginRequest: PopupRequest = {
+                    scopes: ['user.read', 'Files.Read.All'],
+                    prompt: 'select_account',
+                }
+                return await msalInstance.loginPopup(loginRequest)
+            } catch (error) {
+                console.error('Error during signIn:', error)
+                return null
+            }
+        }, [msalInstance])
 
-    const fetchProfileInfo = useCallback(async (accessToken: string) => {
-        const response = await fetch(GRAPH_API_ENDPOINT, {
-            headers: {
-                Authorization: `Bearer ${accessToken}`,
-            },
-        })
-
-        if (!response.ok) {
-            throw new Error('Failed to fetch profile info')
+    const handleSignIn = useCallback(async () => {
+        if (msalInstance) {
+            await msalInstance.initialize()
+            await signIn()
+            const storedToken = getStoredToken()
+            storedToken && setToken(storedToken)
         }
+    }, [msalInstance, signIn])
 
-        return response.json()
-    }, [])
+    const handleSignOut = useCallback(() => {
+        setToken(undefined)
+        setUser(undefined)
+        setFileList([])
+        sessionStorage.removeItem(TOKEN_STORAGE_KEY)
+    }, [setUser, setFileList])
 
     useEffect(() => {
-        if (token) {
-            ;(async () => {
-                const profile = await fetchProfileInfo(token.access_token)
-                setUser({
-                    displayName: profile.displayName,
-                    mail: profile.mail,
-                })
-            })()
-        }
-    }, [token, fetchProfileInfo])
+        const storedToken = getStoredToken()
+        if (storedToken && storedToken.expiresOn > Date.now())
+            setToken(storedToken)
+        else handleSignIn()
+    }, [handleSignIn])
 
-    useEffect(() => {
-        if (token) {
-            ;(async () => {
-                const files = await fetchFileList(token.access_token)
-                setFileList(files)
-            })()
-        }
-    }, [token, fetchFileList])
-
-    return { user, fileList }
+    return { token, signOut: handleSignOut }
 }
 
 export default useOneDriveAuth

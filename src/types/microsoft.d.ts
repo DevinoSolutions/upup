@@ -5,7 +5,7 @@ declare module 'microsoft' {
     }
 
     type MicrosoftToken = {
-        access_token: string
-        expires_in: number
+        secret: string
+        expiresOn: number
     }
 }
