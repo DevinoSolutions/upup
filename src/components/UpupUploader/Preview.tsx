@@ -14,6 +14,7 @@ type Props = {
     multiple?: boolean
     onFileClick?: (file: File) => void
     progress: number
+    limit?: number
 }
 
 const Preview: FC<Props> = ({
@@ -24,6 +25,7 @@ const Preview: FC<Props> = ({
     multiple, // handleUpload,
     onFileClick,
     progress,
+    limit,
 }: Props) => {
     /**
      * Remove file from files array
@@ -61,7 +63,11 @@ const Preview: FC<Props> = ({
                             onClick={() => setIsAddingMore(!isAddingMore)}
                             type="button"
                         >
-                            {isAddingMore ? 'Show Previews' : 'Add more'}
+                            {isAddingMore
+                                ? 'Show Previews'
+                                : !limit || files.length < limit
+                                ? 'Add more'
+                                : ''}
                         </button>
                     </motion.div>
                     <motion.div

@@ -7,13 +7,19 @@ import { useDragAndDrop } from 'hooks'
 import { default as MiniDropZone } from './MiniDropZone'
 import { default as MiniPreview } from './MiniPreview'
 import MetaVersion from '../MetaVersion'
+import { BaseConfigs } from 'types'
 
 type Props = {
     files: File[]
     setFiles: Dispatch<SetStateAction<File[]>>
+    maxFileSize: BaseConfigs['maxFileSize']
 }
 
-export const UpupMini: FC<Props> = ({ files, setFiles }: Props) => {
+export const UpupMini: FC<Props> = ({
+    files,
+    setFiles,
+    maxFileSize,
+}: Props) => {
     const {
         isDragging,
         setIsDragging,
@@ -69,7 +75,7 @@ export const UpupMini: FC<Props> = ({ files, setFiles }: Props) => {
                             Click to browse
                         </button>
                     </h1>
-                    <MetaVersion />
+                    <MetaVersion limit={1} maxFileSize={maxFileSize} />
                 </div>
             </div>
         </div>

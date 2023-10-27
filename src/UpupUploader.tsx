@@ -31,7 +31,13 @@ import {
     View,
 } from 'components/UpupUploader'
 import { UpupMini } from 'components/UpupMini'
-import { checkFileType, compressFile, getClient, uploadObject } from 'lib'
+import {
+    checkFileSize,
+    checkFileType,
+    compressFile,
+    getClient,
+    uploadObject,
+} from 'lib'
 import { useAddMore, useDragAndDrop } from 'hooks'
 
 import { v4 as uuidv4 } from 'uuid'
@@ -84,6 +90,8 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
             onFileClick,
             mini = false,
             onFilesChange,
+            maxFileSize = { size: 20, unit: 'MB' },
+            customMessage = 'Docs and Images',
         } = baseConfigs
 
         const [files, setFiles] = useState<File[]>([])
@@ -253,15 +261,15 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
         }
 
         useEffect(() => {
-            if (!limit) return
-
-            const difference = files.length - limit
-
-            if (difference <= 0) return
-
-            const newFiles = files.slice(difference)
-            setFiles([...newFiles])
-        }, [limit, files])
+            const newFiles = files.filter(file =>
+                checkFileSize(file, maxFileSize),
+            )
+            if (limit && newFiles.length > limit)
+                setFiles(newFiles.slice(0, limit))
+            // if files didn't change, no need to update the state
+            else if (files.length === newFiles.length) return
+            else setFiles([...newFiles])
+        }, [limit, files, maxFileSize])
 
         useEffect(() => {
             if (!onFilesChange || files.length === 0) return setMutatedFiles([])
@@ -272,7 +280,11 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
         }, [files])
 
         return mini ? (
-            <UpupMini files={files} setFiles={setFiles} />
+            <UpupMini
+                files={files}
+                setFiles={setFiles}
+                maxFileSize={maxFileSize}
+            />
         ) : (
             <div
                 className="w-full max-w-[min(98svh,46rem)] bg-[#f4f4f4] h-[min(98svh,35rem)] rounded-md border flex flex-col relative overflow-hidden select-none dark:bg-[#1f1f1f]"
@@ -331,6 +343,7 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
                     multiple={multiple}
                     onFileClick={onFileClick}
                     progress={progress}
+                    limit={limit}
                 />
                 <div className="p-2 h-full">
                     <div className="border-[#dfdfdf] border-dashed h-full w-full grid grid-rows-[1fr,auto] place-items-center border rounded-md transition-all">
@@ -341,7 +354,11 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
                                 return uploadAdapters.includes(method.id as any)
                             })}
                         />
-                        <MetaVersion />
+                        <MetaVersion
+                            customMessage={customMessage}
+                            maxFileSize={maxFileSize}
+                            limit={limit}
+                        />
                     </div>
                 </div>
             </div>
