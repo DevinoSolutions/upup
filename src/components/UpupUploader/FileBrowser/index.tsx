@@ -72,23 +72,23 @@ const FileBrowser = ({
 
     return (
         <div className="w-full grid grid-rows-[auto,auto,1fr,auto] bg-white h-[min(98svh,32rem)] ">
-            <div className="h-12 bg-[#fafafa] text-[#333] border-b flex justify-between items-center p-2 text-xs font-medium dark:bg-[#1f1f1f] dark:text-[#fafafa]">
+            <div className="h-12 bg-[#fafafa] text-[#333] border-b grid grid-cols-[minmax(0,1fr),auto] p-2 text-xs font-medium dark:bg-[#1f1f1f] dark:text-[#fafafa]">
                 <div className="h p-2 px-4 flex gap-1">
                     {path &&
                         path.map((p, i) => (
                             <p
                                 key={p.id}
-                                className={
-                                    'cursor-pointer group flex gap-1 truncate ' +
-                                    (i === path.length - 1
-                                        ? 'pointer-events-none'
-                                        : '')
-                                }
+                                className="cursor-pointer group flex gap-1 truncate shrink-0"
+                                style={{
+                                    maxWidth: 100 / path.length + '%',
+                                    pointerEvents:
+                                        i === path.length - 1 ? 'none' : 'auto',
+                                }}
                                 onClick={() =>
                                     setPath(prev => prev.slice(0, i + 1))
                                 }
                             >
-                                <span className="group-hover:underline">
+                                <span className="group-hover:underline truncate">
                                     {p.name}
                                 </span>
                                 {i !== path.length - 1 && ' > '}
