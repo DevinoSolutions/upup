@@ -4,12 +4,13 @@ import ListItem from './ListItem'
 
 import { AnimatePresence, motion } from 'framer-motion'
 import { TbSearch } from 'react-icons/tb'
+import { MicrosoftUser } from 'microsoft'
 
 type Props = {
-    googleFiles: Root | undefined
+    googleFiles?: Root | undefined
     handleSignOut: () => void
-    user: User | undefined
-    downloadFile: (fileId: string) => Promise<Blob>
+    user: User | MicrosoftUser | undefined
+    downloadFile?: (fileId: string) => Promise<Blob>
     setFiles: Dispatch<SetStateAction<File[]>>
     setView: (view: string) => void
     accept?: string

@@ -1,6 +1,7 @@
 import { Dispatch, FC, SetStateAction } from 'react'
 import { BaseConfigs, OneDriveConfigs } from 'types'
 import useOneDrive from '../hooks/useOneDrive'
+import FileBrowser from './UpupUploader/FileBrowser'
 
 interface Props {
     baseConfigs: BaseConfigs
@@ -15,37 +16,25 @@ interface Props {
  * @param setFilesFromParent return the files to the parent component
  * @constructor
  */
-const OneDriveUploader: FC<Props> = ({ oneDriveConfigs }: Props) => {
+const OneDriveUploader: FC<Props> = ({
+    oneDriveConfigs,
+    setFiles,
+    setView,
+}: Props) => {
     const { user, fileList, signOut } = useOneDrive(
         oneDriveConfigs.onedrive_client_id,
     )
 
-    console.log(fileList)
+    console.log(user, fileList)
 
-    // /**
-    //  *  @description Get the user's name and files list when the token is set
-    //  */
-    // useEffect(() => {
-    //     if (token) {
-    //         ;(async () => {
-    //             // await getUserName()
-    //             // await getFilesList()
-    //         })()
-    //     }
-    // }, [token])
     return (
-        <>
-            <button onClick={signOut}>Sign Out</button>
-        </>
-        // <FileBrowser
-        //     googleFiles={googleFiles}
-        //     handleSignOut={handleSignOut}
-        //     user={user}
-        //     downloadFile={downloadFile}
-        //     setFiles={setFiles}
-        //     setView={setView}
-        //     accept={accept || '*'}
-        // />
+        // <></>
+        <FileBrowser
+            handleSignOut={signOut}
+            user={user}
+            setFiles={setFiles}
+            setView={setView}
+        />
     )
 }
 

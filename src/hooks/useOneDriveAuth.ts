@@ -13,7 +13,7 @@ import {
 import { MicrosoftToken, MicrosoftUser } from 'microsoft'
 
 const TOKEN_STORAGE_KEY =
-    '00000000-0000-0000-0078-f20226514725.9188040d-6c67-4c5b-b112-36a304b66dad-login.windows.net-accesstoken-6a5dfe6b-7b41-4f43-a4f3-5c6e434056e1-9188040d-6c67-4c5b-b112-36a304b66dad-user.read files.read.all openid profile files.readwrite.all--'
+    '00000000-0000-0000-0078-f20226514725.9188040d-6c67-4c5b-b112-36a304b66dad-login.windows.net-accesstoken-6a5dfe6b-7b41-4f43-a4f3-5c6e434056e1-9188040d-6c67-4c5b-b112-36a304b66dad-user.read files.readwrite.all files.read.all openid profile--'
 
 type Props = {
     msalInstance: PublicClientApplication
@@ -39,7 +39,11 @@ const useOneDriveAuth = ({ msalInstance, setUser, setFileList }: Props) => {
         useCallback(async (): Promise<AuthenticationResult | null> => {
             try {
                 const loginRequest: PopupRequest = {
-                    scopes: ['user.read', 'Files.Read.All'],
+                    scopes: [
+                        'user.read',
+                        'Files.ReadWrite.All',
+                        'Files.Read.All',
+                    ],
                     prompt: 'select_account',
                 }
                 return await msalInstance.loginPopup(loginRequest)
