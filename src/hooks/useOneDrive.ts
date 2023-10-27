@@ -28,43 +28,65 @@ function useOneDrive(clientId: string): AuthProps {
 
     console.log(rawFiles)
 
-    const organizeFiles = useCallback((rawFiles: OneDriveFile[]) => {
-        // Create a set for easy lookup of file IDs
-        const fileIds = new Set(rawFiles.map(f => f.id))
-
-        // Filter files to find ones that have no parents within rawFiles
-        const organizedFiles: OneDriveFile[] = rawFiles.filter(
-            f => !(f.parentReference && fileIds.has(f.parentReference.id)),
-        )
-
-        // Create a mapping of parent IDs to their direct children
-        const children: { [key: string]: OneDriveFile[] } = {}
-
-        rawFiles.forEach(f => {
-            if (f.parentReference) {
-                const parentId = f.parentReference.id
-                if (children[parentId]) children[parentId].push(f)
-                else children[parentId] = [f]
-            }
+    const fetchChildren = async (folderId: string, accessToken: string) => {
+        const endpoint = `https://graph.microsoft.com/v1.0/me/drive/items/${folderId}/children`
+        const response = await fetch(endpoint, {
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+            },
         })
 
-        const recurse = (file: OneDriveFile) => {
-            const child = children[file.id]
-            if (child && child.length) {
-                file.children = child
-                child.forEach(recurse) // recursive call for each child
-            }
+        if (!response.ok) {
+            throw new Error('Failed to fetch children')
         }
 
-        // Assign children for each top-level file in organizedFiles and build the tree recursively
-        organizedFiles.forEach(recurse)
+        return response.json()
+    }
 
-        setOneDriveFiles({
-            id: 'root',
-            name: 'OneDrive',
-            children: organizedFiles,
-        })
-    }, [])
+    const recurse = async (file: OneDriveFile, accessToken: string) => {
+        if (file.folder && file.folder.childCount > 0) {
+            const childrenData = await fetchChildren(file.id, accessToken)
+            file.children = childrenData.value
+            await Promise.all(
+                file.children.map(child => recurse(child, accessToken)),
+            )
+        }
+    }
+
+    const organizeFiles = useCallback(
+        async (rawFiles: OneDriveFile[], accessToken: string) => {
+            // Create a set for easy lookup of file IDs
+            const fileIds = new Set(rawFiles.map(f => f.id))
+
+            // Filter files to find ones that have no parents within rawFiles
+            const organizedFiles: OneDriveFile[] = rawFiles.filter(
+                f => !(f.parentReference && fileIds.has(f.parentReference.id)),
+            )
+
+            // Create a mapping of parent IDs to their direct children
+            const children: { [key: string]: OneDriveFile[] } = {}
+
+            rawFiles.forEach(f => {
+                if (f.parentReference) {
+                    const parentId = f.parentReference.id
+                    if (children[parentId]) children[parentId].push(f)
+                    else children[parentId] = [f]
+                }
+            })
+
+            // Assign children for each top-level file in organizedFiles and build the tree recursively
+            await Promise.all(
+                organizedFiles.map(file => recurse(file, accessToken)),
+            )
+
+            setOneDriveFiles({
+                id: 'root',
+                name: 'OneDrive',
+                children: organizedFiles,
+            })
+        },
+        [],
+    )
 
     const downloadFile = async (fileId: string) => {
         const endpoint = `https://graph.microsoft.com/v1.0/me/drive/items/${fileId}/content`
@@ -114,7 +136,7 @@ function useOneDrive(clientId: string): AuthProps {
 
             const data = await response.json()
             setRawFiles(data.value)
-            organizeFiles(data.value) // invoke organizeFiles here
+            await organizeFiles(data.value, accessToken) // invoke organizeFiles here
         },
         [clientId, organizeFiles], // add organizeFiles to the dependency array
     )
@@ -136,8 +158,12 @@ function useOneDrive(clientId: string): AuthProps {
      * @description Organize the files into a tree structure when the raw files are set
      */
     useEffect(() => {
-        organizeFiles(rawFiles || [])
-    }, [organizeFiles, rawFiles])
+        if (rawFiles) {
+            ;(async () => {
+                await organizeFiles(rawFiles, token?.secret || '')
+            })()
+        }
+    }, [organizeFiles, rawFiles, token])
 
     return { user, oneDriveFiles, signOut, downloadFile }
 }
