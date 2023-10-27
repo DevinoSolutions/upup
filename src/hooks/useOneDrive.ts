@@ -36,9 +36,7 @@ function useOneDrive(clientId: string): AuthProps {
             },
         })
 
-        if (!response.ok) {
-            throw new Error('Failed to fetch children')
-        }
+        if (!response.ok) throw new Error('Failed to fetch children')
 
         return response.json()
     }
@@ -48,7 +46,7 @@ function useOneDrive(clientId: string): AuthProps {
             const childrenData = await fetchChildren(file.id, accessToken)
             file.children = childrenData.value
             await Promise.all(
-                file.children.map(child => recurse(child, accessToken)),
+                file.children!.map(child => recurse(child, accessToken)),
             )
         }
     }
@@ -165,7 +163,37 @@ function useOneDrive(clientId: string): AuthProps {
         }
     }, [organizeFiles, rawFiles, token])
 
-    return { user, oneDriveFiles, signOut, downloadFile }
+    const mapToOneDriveFile = (file: OneDriveFile): any => {
+        const isFolder = file.folder !== undefined
+        return {
+            id: file.id,
+            name: file.name,
+            mimeType: isFolder
+                ? 'application/vnd.google-apps.folder'
+                : file.file?.mimeType,
+            // ...other properties you need
+            children: file.children ? file.children.map(mapToOneDriveFile) : [],
+        }
+    }
+
+    const mapToOneDriveRoot = (oneDriveRoot: OneDriveRoot) => {
+        return {
+            id: oneDriveRoot.id,
+            name: oneDriveRoot.name,
+            children: oneDriveRoot.children
+                ? oneDriveRoot.children.map(mapToOneDriveFile)
+                : [],
+        }
+    }
+
+    return {
+        user,
+        oneDriveFiles: oneDriveFiles
+            ? mapToOneDriveRoot(oneDriveFiles)
+            : undefined,
+        signOut,
+        downloadFile,
+    }
 }
 
 export default useOneDrive
