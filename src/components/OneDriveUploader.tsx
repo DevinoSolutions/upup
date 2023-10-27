@@ -1,7 +1,7 @@
 import { Dispatch, FC, SetStateAction } from 'react'
 import { BaseConfigs, OneDriveConfigs } from 'types'
 import useOneDrive from '../hooks/useOneDrive'
-import FileBrowser from './UpupUploader/FileBrowser'
+import FileBrowser from './UpupUploader/FileBrowser/BrowserOD'
 
 interface Props {
     baseConfigs: BaseConfigs
@@ -24,9 +24,6 @@ const OneDriveUploader: FC<Props> = ({
     const { user, oneDriveFiles, downloadFile, signOut } = useOneDrive(
         oneDriveConfigs.onedrive_client_id,
     )
-
-    !!user && console.log('User: ', user)
-    !!oneDriveFiles && console.log('OneDriveFiles: ', oneDriveFiles)
 
     return (
         <FileBrowser

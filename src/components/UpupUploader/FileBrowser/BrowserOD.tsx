@@ -1,15 +1,15 @@
 import { Dispatch, SetStateAction, useEffect, useState } from 'react'
-import type { GoogleFile, Root, User } from 'google'
-import ListItem from './ListItem'
+import ListItem from './LiOD'
 
 import { AnimatePresence, motion } from 'framer-motion'
 import { TbSearch } from 'react-icons/tb'
 import ButtonSpinner from 'components/ButtonSpinner'
+import { MicrosoftUser, OneDriveFile, OneDriveRoot } from 'microsoft'
 
 type Props = {
-    driveFiles?: Root | undefined
+    driveFiles?: OneDriveRoot | undefined
     handleSignOut: () => void
-    user: User | undefined
+    user: MicrosoftUser | undefined
     downloadFile?: (fileId: string) => Promise<Blob>
     setFiles: Dispatch<SetStateAction<File[]>>
     setView: (view: string) => void
@@ -25,13 +25,13 @@ const FileBrowser = ({
     setView,
     accept,
 }: Props) => {
-    const [path, setPath] = useState<Root[]>([])
-    const [selectedFiles, setSelectedFiles] = useState<GoogleFile[]>([])
+    const [path, setPath] = useState<OneDriveRoot[]>([])
+    const [selectedFiles, setSelectedFiles] = useState<OneDriveFile[]>([])
     const [showLoader, setLoader] = useState(false)
 
-    const handleClick = (file: GoogleFile | Root) => {
-        if ('children' in file) {
-            setPath(prevPath => [...prevPath, file as Root])
+    const handleClick = (file: OneDriveFile | OneDriveRoot) => {
+        if (file.children!.length) {
+            setPath(prevPath => [...prevPath, file as OneDriveRoot])
         } else {
             setSelectedFiles(prevFiles =>
                 prevFiles.includes(file)
@@ -41,12 +41,12 @@ const FileBrowser = ({
         }
     }
 
-    const downloadFiles = async (files: GoogleFile[]) => {
+    const downloadFiles = async (files: OneDriveFile[]) => {
         const promises = files.map(async file => {
             const data = await downloadFile(file.id)
             const downloadedFile = new File([data], file.name, {
                 type: file.mimeType,
-            }) as unknown as GoogleFile
+            }) as unknown as OneDriveFile
 
             downloadedFile['thumbnailLink'] = file.thumbnailLink
             return downloadedFile
@@ -65,6 +65,8 @@ const FileBrowser = ({
         setView('internal')
         setLoader(false)
     }
+
+    console.log('df: ', driveFiles)
 
     useEffect(() => {
         if (driveFiles) setPath([driveFiles])
