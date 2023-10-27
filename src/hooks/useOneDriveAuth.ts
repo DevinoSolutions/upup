@@ -1,10 +1,7 @@
-import {
-    AuthenticationResult,
-    PopupRequest,
-    PublicClientApplication,
-} from '@azure/msal-browser'
+import { AuthenticationResult, PopupRequest } from '@azure/msal-browser'
 import { useCallback, useEffect, useState } from 'react'
 import { MicrosoftToken, MicrosoftUser } from 'microsoft'
+import usePCAInstance from './usePCAInstance'
 
 const GRAPH_API_ENDPOINT = 'https://graph.microsoft.com/v1.0/me'
 const TOKEN_STORAGE_KEY = 'onedrive_token'
@@ -21,17 +18,7 @@ function useOneDriveAuth(clientId: string): AuthProps {
     const [token, setToken] = useState<MicrosoftToken | undefined>()
     const [user, setUser] = useState<MicrosoftUser | undefined>()
     const [fileList, setFileList] = useState<any[]>([])
-
-    const pca = new PublicClientApplication({
-        auth: {
-            clientId,
-            redirectUri: window.location.origin,
-        },
-        cache: {
-            cacheLocation: 'sessionStorage',
-            storeAuthStateInCookie: false,
-        },
-    })
+    const { msalInstance } = usePCAInstance(clientId)
 
     const getStoredToken = (): MicrosoftToken | null => {
         const storedTokenStr = localStorage.getItem(TOKEN_STORAGE_KEY)
@@ -68,6 +55,7 @@ function useOneDriveAuth(clientId: string): AuthProps {
     }, [])
 
     const handleSignIn = useCallback(async () => {
+        msalInstance && (await msalInstance.initialize())
         const result = await signIn()
         result && (await acquireToken())
     }, [])
@@ -80,13 +68,12 @@ function useOneDriveAuth(clientId: string): AuthProps {
     }, [handleSignIn])
 
     const signIn = async (): Promise<AuthenticationResult | null> => {
-        await pca.initialize()
         try {
             const loginRequest: PopupRequest = {
                 scopes: ['user.read', 'Files.ReadWrite.All'],
                 prompt: 'select_account',
             }
-            return await pca.loginPopup(loginRequest)
+            return await msalInstance.loginPopup(loginRequest)
         } catch (error) {
             console.error('Error during signIn:', error)
             return null
@@ -95,7 +82,7 @@ function useOneDriveAuth(clientId: string): AuthProps {
 
     const acquireToken = async () => {
         try {
-            const accounts = pca.getAllAccounts()
+            const accounts = msalInstance.getAllAccounts()
             if (!accounts || accounts.length === 0) {
                 throw new Error('No accounts available. Authenticate first.')
             }
@@ -103,7 +90,9 @@ function useOneDriveAuth(clientId: string): AuthProps {
                 scopes: ['user.read', 'Files.ReadWrite.All'],
                 account: accounts[0],
             }
-            const response = await pca.acquireTokenSilent(silentRequest)
+            const response = await msalInstance.acquireTokenSilent(
+                silentRequest,
+            )
             if (response.accessToken) {
                 const storeToken = {
                     access_token: response.accessToken,
