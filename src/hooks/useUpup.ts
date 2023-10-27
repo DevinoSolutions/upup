@@ -17,17 +17,17 @@ const google_app_id = process.env.GOOGLE_APP_ID
 const google_api_key = process.env.GOOGLE_API_KEY
 
 /**
- * specify the type of file to accept
- * @param accept
+ * @param props
+ * @returns
+ * @description
+ * This hook is used to set up the configs for the Upup component.
+ * It also checks if the required environment variables are present.
+ * If any of the required environment variables are missing, it throws an error.
+ *
  */
-interface Props {
-    accept?: string
-    multiple?: boolean
+
+type Props = BaseConfigs & {
     setFiles?: Dispatch<SetStateAction<File[]>>
-    limit?: number
-    onFileClick?: (file: File) => void
-    mini?: boolean
-    onFilesChange?: (files: File[]) => Promise<File[]>
 }
 
 /**
@@ -46,27 +46,7 @@ export const useUpup: (props?: Props) => {
         mini: false,
     },
 ) => {
-    const {
-        accept,
-        setFiles,
-        multiple,
-        limit,
-        onFileClick,
-        mini,
-        onFilesChange,
-    } = props
-
-    // const handler = new XhrHttpHandler({})
-    //
-    // handler.on(XhrHttpHandler.EVENTS.UPLOAD_PROGRESS, (xhr: ProgressEvent) => {
-    //     const progress = Math.round((xhr.loaded / xhr.total) * 100)
-    //     console.log(
-    //         progress === 100
-    //             ? '%cUPLOAD COMPLETE'
-    //             : `%cUpload Progress : ${progress}%`,
-    //         `color: ${progress === 100 ? '#00ff00' : '#ff9600'}`,
-    //     )
-    // })
+    const { accept, setFiles } = props
 
     /**
      * Throw an error if any of the required environment variables are missing
@@ -106,13 +86,8 @@ export const useUpup: (props?: Props) => {
     }
 
     const baseConfigs: BaseConfigs = {
+        ...props,
         onChange: (files: File[]) => (setFiles ? setFiles(files) : () => {}),
-        multiple,
-        accept,
-        limit,
-        onFileClick,
-        mini,
-        onFilesChange,
     }
 
     const cloudStorageConfigs: CloudStorageConfigs = {
