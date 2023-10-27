@@ -91,7 +91,7 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
             mini = false,
             onFilesChange,
             maxFileSize = { size: 20, unit: 'MB' },
-            customMessage,
+            customMessage = 'Docs and Images',
         } = baseConfigs
 
         const [files, setFiles] = useState<File[]>([])
