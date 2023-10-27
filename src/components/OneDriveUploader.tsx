@@ -25,11 +25,10 @@ const OneDriveUploader: FC<Props> = ({
         oneDriveConfigs.onedrive_client_id,
     )
 
-    console.log('User: ', user)
-    console.log('OneDriveFiles: ', oneDriveFiles)
+    !!user && console.log('User: ', user)
+    !!oneDriveFiles && console.log('OneDriveFiles: ', oneDriveFiles)
 
     return (
-        // <></>
         <FileBrowser
             driveFiles={oneDriveFiles}
             handleSignOut={signOut}
