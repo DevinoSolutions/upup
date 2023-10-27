@@ -5,6 +5,7 @@ import ListItem from './ListItem'
 import { AnimatePresence, motion } from 'framer-motion'
 import { TbSearch } from 'react-icons/tb'
 import { MicrosoftUser, OneDriveRoot } from 'microsoft'
+import ButtonSpinner from 'components/ButtonSpinner'
 
 type Props = {
     driveFiles?: Root | OneDriveRoot | undefined
@@ -27,6 +28,7 @@ const FileBrowser = ({
 }: Props) => {
     const [path, setPath] = useState<Root[]>([])
     const [selectedFiles, setSelectedFiles] = useState<GoogleFile[]>([])
+    const [showLoader, setLoader] = useState(false)
 
     const handleClick = (file: GoogleFile | Root) => {
         if ('children' in file) {
@@ -55,12 +57,14 @@ const FileBrowser = ({
     }
 
     const handleSubmit = async () => {
+        setLoader(true)
         const downloadedFiles = await downloadFiles(selectedFiles)
         setFiles(prevFiles => [
             ...prevFiles,
             ...(downloadedFiles as unknown as File[]),
         ])
         setView('internal')
+        setLoader(false)
     }
 
     useEffect(() => {
@@ -69,23 +73,23 @@ const FileBrowser = ({
 
     return (
         <div className="w-full grid grid-rows-[auto,auto,1fr,auto] bg-white h-[min(98svh,32rem)] ">
-            <div className="h-12 bg-[#fafafa] text-[#333] border-b flex justify-between items-center p-2 text-xs font-medium dark:bg-[#1f1f1f] dark:text-[#fafafa]">
+            <div className="h-12 bg-[#fafafa] text-[#333] border-b grid grid-cols-[minmax(0,1fr),auto] p-2 text-xs font-medium dark:bg-[#1f1f1f] dark:text-[#fafafa]">
                 <div className="h p-2 px-4 flex gap-1">
                     {path &&
                         path.map((p, i) => (
                             <p
                                 key={p.id}
-                                className={
-                                    'cursor-pointer group flex gap-1 truncate ' +
-                                    (i === path.length - 1
-                                        ? 'pointer-events-none'
-                                        : '')
-                                }
+                                className="cursor-pointer group flex gap-1 truncate shrink-0"
+                                style={{
+                                    maxWidth: 100 / path.length + '%',
+                                    pointerEvents:
+                                        i === path.length - 1 ? 'none' : 'auto',
+                                }}
                                 onClick={() =>
                                     setPath(prev => prev.slice(0, i + 1))
                                 }
                             >
-                                <span className="group-hover:underline">
+                                <span className="group-hover:underline truncate">
                                     {p.name}
                                 </span>
                                 {i !== path.length - 1 && ' > '}
@@ -145,12 +149,15 @@ const FileBrowser = ({
                         transition={{ duration: 0.2 }}
                         className="border-t bg-white flex items-center justify-start gap-4 p-4 py-2 origin-bottom dark:bg-[#1f1f1f] dark:text-[#fafafa]"
                     >
-                        <button
-                            className="bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white font-medium rounded-md p-3 px-5 transition-all duration-300"
-                            onClick={handleSubmit}
-                        >
-                            Add {selectedFiles.length} files
-                        </button>
+                        {!showLoader && (
+                            <button
+                                className="bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white font-medium rounded-md p-3 w-32 transition-all duration-300"
+                                onClick={handleSubmit}
+                            >
+                                Add {selectedFiles.length} files
+                            </button>
+                        )}
+                        {showLoader && <ButtonSpinner />}
                         <button
                             className="hover:underline"
                             onClick={() => setSelectedFiles([])}
