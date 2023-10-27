@@ -343,6 +343,7 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
                     multiple={multiple}
                     onFileClick={onFileClick}
                     progress={progress}
+                    limit={limit}
                 />
                 <div className="p-2 h-full">
                     <div className="border-[#dfdfdf] border-dashed h-full w-full grid grid-rows-[1fr,auto] place-items-center border rounded-md transition-all">
