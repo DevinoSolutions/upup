@@ -11,4 +11,5 @@ export type BaseConfigs = {
         size: number
         unit?: 'B' | 'KB' | 'MB' | 'GB' | 'TB' | 'PB' | 'EB' | 'ZB' | 'YB'
     }
+    customMessage?: string
 }
