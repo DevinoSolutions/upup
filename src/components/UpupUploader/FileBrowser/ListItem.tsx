@@ -1,6 +1,6 @@
-import { motion, Target } from 'framer-motion'
+import { AnimationProps, motion, Target } from 'framer-motion'
+import { GoogleFile } from 'google'
 import { TbFileUnknown, TbFolder } from 'react-icons/tb'
-import { GoogleFile, TransitionDefinition } from 'google'
 
 type Props = {
     file: GoogleFile
@@ -8,6 +8,12 @@ type Props = {
     index: number
     selectedFiles: GoogleFile[]
     accept?: string
+}
+
+const backgroundColors = {
+    default: '#e9ecef00',
+    selected: '#bab4b499',
+    hover: '#eaeaea',
 }
 
 const ListItem = ({
@@ -22,12 +28,6 @@ const ListItem = ({
     const isFileAccepted =
         file.fileExtension &&
         (!accept || accept === '*' || accept.includes(file.fileExtension))
-
-    const backgroundColors = {
-        default: '#e9ecef00',
-        selected: '#bab4b499',
-        hover: '#3a3a3a',
-    }
 
     if (accept && !isFolder && !isFileAccepted) return null
     if (isFolder && !file.children?.length) return null
@@ -62,12 +62,27 @@ const ListItem = ({
         ...backgroundColor,
     }
 
+    const backgroundColorHover = {
+        ...(isFileSelected && {
+            backgroundColor: backgroundColors.selected,
+        }),
+        ...(!isFileSelected && {
+            backgroundColor: backgroundColors.hover,
+        }),
+    }
+
+    const hover: Target = {
+        opacity: 1,
+        y: 0,
+        ...backgroundColorHover,
+    }
+
     const exit: Target = { opacity: 0, y: 10 }
 
-    const transition: TransitionDefinition = {
+    const transition: AnimationProps['transition'] = {
         duration: 0.2,
         delay: index * 0.05,
-        backgroundColor: { duration: 0.2, delay: 0 },
+        backgroundColor: { delay: 0 },
     }
 
     return (
@@ -75,6 +90,7 @@ const ListItem = ({
             key={file.id}
             initial={initial}
             animate={animate}
+            whileHover={hover}
             exit={exit}
             transition={transition}
             className={`flex items-center justify-between gap-2 mb-1 cursor-pointer rounded-md py-2 p-1 ${

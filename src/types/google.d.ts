@@ -38,13 +38,4 @@ declare module 'google' {
     type HoverDefinition = TargetAndTransition & {
         backgroundColor: string
     }
-
-    type TransitionDefinition = {
-        duration: number
-        delay: number
-        backgroundColor: {
-            duration: number
-            delay: number
-        }
-    }
 }
