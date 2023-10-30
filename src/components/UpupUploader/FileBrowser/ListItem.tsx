@@ -20,10 +20,8 @@ const ListItem = ({
     const isFolder = !!file.children
     const isFileSelected = selectedFiles.includes(file)
     const isFileAccepted =
-        accept &&
-        accept !== '*' &&
         file.fileExtension &&
-        accept.includes(file.fileExtension)
+        (!accept || accept === '*' || accept.includes(file.fileExtension))
 
     const backgroundColors = {
         default: '#e9ecef00',
@@ -51,6 +49,7 @@ const ListItem = ({
         ...(isFileSelected && { backgroundColor: backgroundColors.selected }),
         ...(!isFileSelected && { backgroundColor: backgroundColors.default }),
     }
+
     const initial: Target = {
         opacity: 0,
         y: 10,
