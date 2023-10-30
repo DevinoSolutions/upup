@@ -1,5 +1,6 @@
 import { AnimationProps, HoverHandlers, motion } from 'framer-motion'
 import { GoogleFile } from 'google'
+import { handleImgError } from 'lib/handleImgError'
 import { TbFileUnknown, TbFolder } from 'react-icons/tb'
 
 type Props = {
@@ -40,6 +41,7 @@ const ListItem = ({
             src={file.thumbnailLink}
             alt={file.name}
             className="w-5 h-5 rounded-md"
+            onError={handleImgError}
         />
     ) : (
         <TbFileUnknown />
