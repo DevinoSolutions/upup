@@ -41,9 +41,16 @@ const Uploader = args => {
     const upupRef = useRef<UploadFilesRef>()
 
     const handleUpload = async () => {
-        await upupRef.current
-            ?.uploadFiles()
-            .then(data => console.log('data', data))
+        try {
+            const data = await upupRef.current?.uploadFiles()
+            if (data !== null) {
+                console.log('Upload successful:', data)
+            } else {
+                console.log('Upload returned null.')
+            }
+        } catch (error) {
+            console.error('Error uploading files:', error)
+        }
     }
     return (
         <>

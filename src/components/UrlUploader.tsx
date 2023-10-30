@@ -11,7 +11,7 @@ const UrlUploader: FC<Props> = ({ setFiles, setView }: Props) => {
 
     useEffect(() => {
         if (image) {
-            setFiles((prev: any) => [...prev, image])
+            setFiles((files: File[]) => [...files, image])
             setView('internal')
         }
     }, [image])
@@ -36,7 +36,7 @@ const UrlUploader: FC<Props> = ({ setFiles, setView }: Props) => {
             />
             <button
                 className="bg-blue-500 text-white p-2 w-full mt-2 rounded-md hover:bg-blue-600 active:bg-blue-700 transition-all duration-300"
-                type="button"
+                type="submit"
             >
                 {loading ? 'Loading...' : 'Upload'}
             </button>
