@@ -1,4 +1,4 @@
-import { AnimationProps, motion, Target } from 'framer-motion'
+import { AnimationProps, HoverHandlers, motion } from 'framer-motion'
 import { GoogleFile } from 'google'
 import { TbFileUnknown, TbFolder } from 'react-icons/tb'
 
@@ -50,16 +50,25 @@ const ListItem = ({
         ...(!isFileSelected && { backgroundColor: backgroundColors.default }),
     }
 
-    const initial: Target = {
+    const transition: AnimationProps['transition'] = {
+        type: 'spring',
+        damping: 10,
+        stiffness: 100,
+        opacity: { delay: index * 0.05 },
+        y: { delay: index * 0.05 },
+    }
+
+    const initial: AnimationProps['initial'] = {
         opacity: 0,
         y: 10,
         ...backgroundColor,
     }
 
-    const animate: Target = {
+    const animate: AnimationProps['animate'] = {
         opacity: 1,
         y: 0,
         ...backgroundColor,
+        transition,
     }
 
     const backgroundColorHover = {
@@ -71,19 +80,14 @@ const ListItem = ({
         }),
     }
 
-    const hover: Target = {
+    const hover: HoverHandlers['whileHover'] = {
         opacity: 1,
         y: 0,
         ...backgroundColorHover,
+        transition,
     }
 
-    const exit: Target = { opacity: 0, y: 10 }
-
-    const transition: AnimationProps['transition'] = {
-        duration: 0.2,
-        delay: index * 0.05,
-        backgroundColor: { delay: 0 },
-    }
+    const exit: AnimationProps['exit'] = { opacity: 0, y: 10, transition }
 
     return (
         <motion.div
@@ -92,7 +96,6 @@ const ListItem = ({
             animate={animate}
             whileHover={hover}
             exit={exit}
-            transition={transition}
             className={`flex items-center justify-between gap-2 mb-1 cursor-pointer rounded-md py-2 p-1 ${
                 isFolder ? 'font-medium' : ''
             }`}
