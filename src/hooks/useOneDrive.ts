@@ -57,7 +57,7 @@ function useOneDrive(clientId: string): AuthProps {
     })
 
     const fetchWithAuth = useCallback(
-        async (endpoint: string) => {
+        async (endpoint: string, isBlob: boolean = false) => {
             if (!token) throw new Error('Authentication token is missing.')
             const response = await fetch(endpoint, {
                 headers: {
@@ -65,9 +65,7 @@ function useOneDrive(clientId: string): AuthProps {
                 },
             })
             if (!response.ok) throw new Error(response.statusText)
-            return endpoint.endsWith('/content')
-                ? response.blob()
-                : response.json()
+            return isBlob ? response.blob() : response.json()
         },
         [token],
     )
@@ -78,7 +76,6 @@ function useOneDrive(clientId: string): AuthProps {
                 const childrenData = await fetchWithAuth(
                     `${GRAPH_API_ENDPOINT}/drive/items/${file.id}/children`,
                 )
-
                 file.children = childrenData.value
                 await Promise.all(file.children!.map(child => recurse(child)))
             }
@@ -106,36 +103,32 @@ function useOneDrive(clientId: string): AuthProps {
         const data = await fetchWithAuth(GRAPH_API_FILES_ENDPOINT)
         setRawFiles(data.value)
         await organizeFiles(data.value)
-    }, [fetchWithAuth])
+    }, [token])
 
     const downloadFile = useCallback(
         async (fileId: string) => {
-            const response = await fetchWithAuth(
+            return await fetchWithAuth(
                 `${GRAPH_API_ENDPOINT}/drive/items/${fileId}/content`,
+                true,
             )
-
-            if (!response) {
-                throw new Error('Failed to download file')
-            }
-
-            return response
         },
-        [token], // add organizeFiles to the dependency array
+        [token],
     )
 
     useEffect(() => {
         if (token) {
-            fetchWithAuth(GRAPH_API_ENDPOINT)
-                .then(profile =>
-                    setUser({ name: profile.displayName, mail: profile.mail }),
-                )
-                .catch(error => console.error('Profile fetch error:', error))
-
-            fetchFileList().catch(error =>
-                console.error('File list fetch error:', error),
-            )
+            const initialize = async () => {
+                try {
+                    const profile = await fetchWithAuth(GRAPH_API_ENDPOINT)
+                    setUser({ name: profile.displayName, mail: profile.mail })
+                    await fetchFileList()
+                } catch (error) {
+                    console.error('Error fetching profile or file list:', error)
+                }
+            }
+            void initialize()
         }
-    }, [token, fetchWithAuth, fetchFileList])
+    }, [token, fetchFileList])
 
     useEffect(() => {
         if (rawFiles.length > 0) {
