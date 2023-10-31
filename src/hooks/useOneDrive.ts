@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { MicrosoftUser, OneDriveFile, OneDriveRoot } from 'microsoft'
 import usePCAInstance from './usePCAInstance'
 import UseOneDriveAuth from './useOneDriveAuth'
+import { GoogleFile } from 'google'
 
 const GRAPH_API_ENDPOINT = 'https://graph.microsoft.com/v1.0/me'
 const GRAPH_API_FILES_ENDPOINT =
@@ -140,14 +141,30 @@ function useOneDrive(clientId: string): AuthProps {
         [organizeFiles, token],
     )
 
-    const mapToOneDriveFile = (file: OneDriveFile): any => {
+    // const fetchThumbnails = useCallback(
+    //     async (fileId: string) => {
+    //         const endpoint = `https://graph.microsoft.com/v1.0/me/drive/items/${fileId}/thumbnails`
+    //         const response = await fetch(endpoint, {
+    //             headers: {
+    //                 Authorization: `Bearer ${token?.secret}`,
+    //             },
+    //         })
+    //
+    //         if (!response.ok) throw new Error('Failed to fetch thumbnails')
+    //
+    //         return response.json()
+    //     },
+    //     [organizeFiles, token],
+    // )
+
+    const mapToOneDriveFile = (file: OneDriveFile): GoogleFile => {
         const isFolder = file.folder !== undefined
         return {
             id: file.id,
             name: file.name,
             mimeType: isFolder
                 ? 'application/vnd.google-apps.folder'
-                : file.file?.mimeType,
+                : file.file!.mimeType,
             // ...other properties you need
             children: file.children ? file.children.map(mapToOneDriveFile) : [],
         }

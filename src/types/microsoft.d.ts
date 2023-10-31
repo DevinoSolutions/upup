@@ -15,7 +15,11 @@ declare module 'microsoft' {
         parentReference?: {
             id: string
         }
-        thumbnailLink?: string
+        thumbnails?: {
+            large: string
+            medium: string
+            small: string
+        }
         file?: {
             mimeType: string
         }

@@ -48,7 +48,8 @@ const FileBrowser = ({
                 type: file.file?.mimeType,
             }) as unknown as OneDriveFile
 
-            downloadedFile['thumbnailLink'] = file.thumbnailLink
+            // FIX ME: Fix thumbnails
+            // downloadedFile['thumbnailLink'] = file.thumbnailLink
             return downloadedFile
         })
 
