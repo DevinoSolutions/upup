@@ -10,7 +10,7 @@ type Props = {
     driveFiles?: OneDriveRoot | undefined
     handleSignOut: () => void
     user: MicrosoftUser | undefined
-    downloadFile?: (fileId: string) => Promise<Blob>
+    downloadFile: (fileId: string) => Promise<Blob>
     setFiles: Dispatch<SetStateAction<File[]>>
     setView: (view: string) => void
     accept?: string
@@ -45,7 +45,7 @@ const FileBrowser = ({
         const promises = files.map(async file => {
             const data = await downloadFile(file.id)
             const downloadedFile = new File([data], file.name, {
-                type: file.mimeType,
+                type: file.file?.mimeType,
             }) as unknown as OneDriveFile
 
             downloadedFile['thumbnailLink'] = file.thumbnailLink
@@ -65,8 +65,6 @@ const FileBrowser = ({
         setView('internal')
         setLoader(false)
     }
-
-    console.log('df: ', driveFiles)
 
     useEffect(() => {
         if (driveFiles) setPath([driveFiles])

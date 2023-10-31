@@ -10,7 +10,7 @@ type Props = {
     driveFiles?: Root | undefined
     handleSignOut: () => void
     user: User | undefined
-    downloadFile?: (fileId: string) => Promise<Blob>
+    downloadFile: (fileId: string) => Promise<Blob>
     setFiles: Dispatch<SetStateAction<File[]>>
     setView: (view: string) => void
     accept?: string

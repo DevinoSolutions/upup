@@ -12,27 +12,17 @@ declare module 'microsoft' {
     type OneDriveFile = {
         id: string
         name: string
-        size: number
-        webUrl: string
-        lastModifiedDateTime: string
-        file: {
-            mimeType: string
-            hashes: {
-                quickXorHash: string
-                sha1Hash: string
-                sha256Hash: string
-            }
+        parentReference?: {
+            id: string
         }
+        thumbnailLink?: string
+        file?: {
+            mimeType: string
+        }
+        children?: OneDriveFile[]
         folder?: {
             childCount: number
         }
-        parentReference: {
-            driveId: string
-            driveType: string
-            id: string
-            path: string
-        }
-        children?: OneDriveFile[]
     }
 
     type OneDriveRoot = {

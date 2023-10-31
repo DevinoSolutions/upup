@@ -21,23 +21,23 @@ type Props = {
     setOneDriveFiles: Dispatch<SetStateAction<OneDriveRoot | undefined>>
 }
 
+const getStoredToken = (): MicrosoftToken | null => {
+    const storedTokenObject = sessionStorage.getItem(TOKEN_STORAGE_KEY)
+    if (!storedTokenObject) return null
+
+    const storedToken = JSON.parse(storedTokenObject)
+    return {
+        expiresOn: storedToken.expiresOn * 1000,
+        secret: storedToken.secret,
+    }
+}
+
 const useOneDriveAuth = ({
     msalInstance,
     setUser,
     setOneDriveFiles,
 }: Props) => {
-    const [token, setToken] = useState<MicrosoftToken | undefined>()
-
-    const getStoredToken = (): MicrosoftToken | null => {
-        const storedTokenObject = sessionStorage.getItem(TOKEN_STORAGE_KEY)
-        if (!storedTokenObject) return null
-
-        const storedToken = JSON.parse(storedTokenObject)
-        return {
-            expiresOn: storedToken.expiresOn * 1000,
-            secret: storedToken.secret,
-        }
-    }
+    const [token, setToken] = useState<MicrosoftToken | null>(getStoredToken())
 
     const signIn =
         useCallback(async (): Promise<AuthenticationResult | null> => {
@@ -67,7 +67,7 @@ const useOneDriveAuth = ({
     }, [msalInstance, signIn])
 
     const handleSignOut = useCallback(() => {
-        setToken(undefined)
+        setToken(null)
         setUser(undefined)
         setOneDriveFiles(undefined)
         sessionStorage.removeItem(TOKEN_STORAGE_KEY)
