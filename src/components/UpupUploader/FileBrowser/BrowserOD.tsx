@@ -10,7 +10,7 @@ type Props = {
     driveFiles?: OneDriveRoot | undefined
     handleSignOut: () => void
     user: MicrosoftUser | undefined
-    downloadFile: (fileId: string) => Promise<Blob>
+    downloadFile: (url: string) => Promise<Blob>
     setFiles: Dispatch<SetStateAction<File[]>>
     setView: (view: string) => void
     accept?: string
@@ -43,7 +43,10 @@ const FileBrowser = ({
 
     const downloadFiles = async (files: OneDriveFile[]) => {
         const promises = files.map(async file => {
-            const data = await downloadFile(file.id)
+            console.log(file)
+            const data = await downloadFile(
+                file['@microsoft.graph.downloadUrl']!,
+            )
             const downloadedFile = new File([data], file.name, {
                 type: file.file?.mimeType,
             }) as unknown as OneDriveFile

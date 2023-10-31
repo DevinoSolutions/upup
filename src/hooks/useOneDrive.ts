@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { MicrosoftUser, OneDriveFile, OneDriveRoot } from 'microsoft'
 import usePCAInstance from './usePCAInstance'
-import { GoogleFile } from 'google'
 import useOneDriveAuth from './useOneDriveAuth'
 
 /**
@@ -9,15 +8,18 @@ import useOneDriveAuth from './useOneDriveAuth'
  * @param file The OneDrive file to map.
  * @returns The mapped Google file.
  */
-const mapToOneDriveFile = (file: OneDriveFile): GoogleFile => {
+const mapToOneDriveFile = (file: OneDriveFile): OneDriveFile => {
     const isFolder = file.folder !== undefined
     return {
         id: file.id,
         name: file.name,
-        mimeType: isFolder
-            ? 'application/vnd.google-apps.folder'
-            : file.file!.mimeType,
+        file: {
+            mimeType: isFolder
+                ? 'application/vnd.google-apps.folder'
+                : file.file!.mimeType,
+        },
         children: file.children ? file.children.map(mapToOneDriveFile) : [],
+        '@microsoft.graph.downloadUrl': file['@microsoft.graph.downloadUrl']!,
     }
 }
 
@@ -57,7 +59,7 @@ function useOneDrive(clientId: string): AuthProps {
     })
 
     const fetchWithAuth = useCallback(
-        async (endpoint: string, isBlob: boolean = false) => {
+        async (endpoint: string) => {
             if (!token) throw new Error('Authentication token is missing.')
             const response = await fetch(endpoint, {
                 headers: {
@@ -65,7 +67,7 @@ function useOneDrive(clientId: string): AuthProps {
                 },
             })
             if (!response.ok) throw new Error(response.statusText)
-            return isBlob ? response.blob() : response.json()
+            return response.json()
         },
         [token],
     )
@@ -105,15 +107,11 @@ function useOneDrive(clientId: string): AuthProps {
         await organizeFiles(data.value)
     }, [token])
 
-    const downloadFile = useCallback(
-        async (fileId: string) => {
-            return await fetchWithAuth(
-                `${GRAPH_API_ENDPOINT}/drive/items/${fileId}/content`,
-                true,
-            )
-        },
-        [token],
-    )
+    const downloadFile = useCallback(async (url: string) => {
+        const response = await fetch(url)
+        if (!response.ok) throw new Error(response.statusText)
+        return response.blob()
+    }, [])
 
     useEffect(() => {
         if (token) {

@@ -27,6 +27,7 @@ declare module 'microsoft' {
         folder?: {
             childCount: number
         }
+        '@microsoft.graph.downloadUrl'?: string
     }
 
     type OneDriveRoot = {
