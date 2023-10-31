@@ -4,9 +4,38 @@ import usePCAInstance from './usePCAInstance'
 import UseOneDriveAuth from './useOneDriveAuth'
 import { GoogleFile } from 'google'
 
+/**
+ * @description Map to OneDrive file
+ * @param file
+ */
+const mapToOneDriveFile = (file: OneDriveFile): GoogleFile => {
+    const isFolder = file.folder !== undefined
+    return {
+        id: file.id,
+        name: file.name,
+        mimeType: isFolder
+            ? 'application/vnd.google-apps.folder'
+            : file.file!.mimeType,
+        // ...other properties you need
+        children: file.children ? file.children.map(mapToOneDriveFile) : [],
+    }
+}
+
+/**
+ * @description Map to OneDrive root
+ * @param oneDriveRoot
+ */
+const mapToOneDriveRoot = (oneDriveRoot: OneDriveRoot) => {
+    return {
+        id: oneDriveRoot.id,
+        name: oneDriveRoot.name,
+        children: oneDriveRoot.children
+            ? oneDriveRoot.children.map(mapToOneDriveFile)
+            : [],
+    }
+}
 const GRAPH_API_ENDPOINT = 'https://graph.microsoft.com/v1.0/me'
-const GRAPH_API_FILES_ENDPOINT =
-    'https://graph.microsoft.com/v1.0/me/drive/root/children'
+const GRAPH_API_FILES_ENDPOINT = `${GRAPH_API_ENDPOINT}/drive/root/children`
 
 interface AuthProps {
     user: MicrosoftUser | undefined
@@ -141,55 +170,18 @@ function useOneDrive(clientId: string): AuthProps {
         [organizeFiles, token],
     )
 
-    // const fetchThumbnails = useCallback(
-    //     async (fileId: string) => {
-    //         const endpoint = `https://graph.microsoft.com/v1.0/me/drive/items/${fileId}/thumbnails`
-    //         const response = await fetch(endpoint, {
-    //             headers: {
-    //                 Authorization: `Bearer ${token?.secret}`,
-    //             },
-    //         })
-    //
-    //         if (!response.ok) throw new Error('Failed to fetch thumbnails')
-    //
-    //         return response.json()
-    //     },
-    //     [organizeFiles, token],
-    // )
-
-    const mapToOneDriveFile = (file: OneDriveFile): GoogleFile => {
-        const isFolder = file.folder !== undefined
-        return {
-            id: file.id,
-            name: file.name,
-            mimeType: isFolder
-                ? 'application/vnd.google-apps.folder'
-                : file.file!.mimeType,
-            // ...other properties you need
-            children: file.children ? file.children.map(mapToOneDriveFile) : [],
-        }
-    }
-
-    const mapToOneDriveRoot = (oneDriveRoot: OneDriveRoot) => {
-        return {
-            id: oneDriveRoot.id,
-            name: oneDriveRoot.name,
-            children: oneDriveRoot.children
-                ? oneDriveRoot.children.map(mapToOneDriveFile)
-                : [],
-        }
-    }
-
     useEffect(() => {
         if (token) {
-            ;(async () => {
-                const profile = await fetchProfileInfo()
-                setUser({
-                    name: profile.displayName,
-                    mail: profile.mail,
+            fetchProfileInfo()
+                .then(profile => {
+                    setUser({
+                        name: profile.displayName,
+                        mail: profile.mail,
+                    })
                 })
-                await fetchFileList()
-            })()
+                .catch(error => console.error(error.message))
+
+            fetchFileList().catch(error => console.error(error.message))
         }
     }, [token, fetchProfileInfo, fetchFileList])
 
