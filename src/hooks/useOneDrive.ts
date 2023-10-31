@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from 'react'
 import { MicrosoftUser, OneDriveFile, OneDriveRoot } from 'microsoft'
 import usePCAInstance from './usePCAInstance'
-import UseOneDriveAuth from './useOneDriveAuth'
 import { GoogleFile } from 'google'
+import useOneDriveAuth from './useOneDriveAuth'
 
 /**
  * Maps OneDrive file to GoogleFile format.
@@ -46,153 +46,104 @@ interface AuthProps {
 
 function useOneDrive(clientId: string): AuthProps {
     const [user, setUser] = useState<MicrosoftUser | undefined>()
-    const [rawFiles, setRawFiles] = useState<OneDriveFile[]>()
-
+    const [rawFiles, setRawFiles] = useState<OneDriveFile[]>([])
     const [oneDriveFiles, setOneDriveFiles] = useState<OneDriveRoot>()
+
     const { msalInstance } = usePCAInstance(clientId)
-    const { token, signOut } = UseOneDriveAuth({
+    const { token, signOut } = useOneDriveAuth({
         msalInstance,
         setUser,
         setOneDriveFiles,
     })
 
-    const recurse = async (file: OneDriveFile) => {
-        if (file.folder && file.folder.childCount > 0) {
-            const childrenData = await fetchChildren(file.id)
-            file.children = childrenData.value
-            await Promise.all(file.children!.map(child => recurse(child)))
-        }
-    }
+    const fetchWithAuth = useCallback(
+        async (endpoint: string) => {
+            if (!token) throw new Error('Authentication token is missing.')
+            const response = await fetch(endpoint, {
+                headers: {
+                    Authorization: `Bearer ${token.secret}`,
+                },
+            })
+            if (!response.ok) throw new Error(response.statusText)
+            return endpoint.endsWith('/content')
+                ? response.blob()
+                : response.json()
+        },
+        [token],
+    )
+
+    const recurse = useCallback(
+        async (file: OneDriveFile) => {
+            if (file.folder && file.folder.childCount > 0) {
+                const childrenData = await fetchWithAuth(
+                    `${GRAPH_API_ENDPOINT}/drive/items/${file.id}/children`,
+                )
+
+                file.children = childrenData.value
+                await Promise.all(file.children!.map(child => recurse(child)))
+            }
+        },
+        [fetchWithAuth],
+    )
 
     const organizeFiles = useCallback(
-        async (rawFiles: OneDriveFile[]) => {
-            // Create a set for easy lookup of file IDs
-            const fileIds = new Set(rawFiles.map(f => f.id))
-
-            // Filter files to find ones that have no parents within rawFiles
-            const organizedFiles: OneDriveFile[] = rawFiles.filter(
-                f => !(f.parentReference && fileIds.has(f.parentReference.id)),
+        async (files: OneDriveFile[]) => {
+            const fileIds = new Set(files.map(f => f.id))
+            const organizedFiles = files.filter(
+                f => !f.parentReference || !fileIds.has(f.parentReference.id),
             )
-
-            // Create a mapping of parent IDs to their direct children
-            const children: { [key: string]: OneDriveFile[] } = {}
-
-            rawFiles.forEach(f => {
-                if (f.parentReference) {
-                    const parentId = f.parentReference.id
-                    if (children[parentId]) children[parentId].push(f)
-                    else children[parentId] = [f]
-                }
-            })
-
-            // Assign children for each top-level file in organizedFiles and build the tree recursively
-            await Promise.all(organizedFiles.map(file => recurse(file)))
-
+            await Promise.all(organizedFiles.map(recurse))
             setOneDriveFiles({
                 id: 'root',
                 name: 'OneDrive',
                 children: organizedFiles,
             })
         },
-        [token],
+        [recurse],
     )
+
+    const fetchFileList = useCallback(async () => {
+        const data = await fetchWithAuth(GRAPH_API_FILES_ENDPOINT)
+        setRawFiles(data.value)
+        await organizeFiles(data.value)
+    }, [fetchWithAuth])
 
     const downloadFile = useCallback(
         async (fileId: string) => {
-            const endpoint = `https://graph.microsoft.com/v1.0/me/drive/items/${fileId}/content`
-            const response = await fetch(endpoint, {
-                headers: {
-                    Authorization: `Bearer ${token?.secret}`,
-                },
-            })
+            const response = await fetchWithAuth(
+                `${GRAPH_API_ENDPOINT}/drive/items/${fileId}/content`,
+            )
 
-            if (!response.ok) {
+            if (!response) {
                 throw new Error('Failed to download file')
             }
 
-            return await response.blob()
+            return response
         },
-        [token],
+        [token], // add organizeFiles to the dependency array
     )
 
-    const fetchProfileInfo = useCallback(async () => {
-        const response = await fetch(GRAPH_API_ENDPOINT, {
-            headers: {
-                Authorization: `Bearer ${token?.secret}`,
-            },
-        })
-
-        if (!response.ok) {
-            throw new Error('Failed to fetch profile info')
-        }
-
-        return response.json()
-    }, [token])
-
-    const fetchChildren = useCallback(
-        async (folderId: string) => {
-            const endpoint = `https://graph.microsoft.com/v1.0/me/drive/items/${folderId}/children`
-            const response = await fetch(endpoint, {
-                headers: {
-                    Authorization: `Bearer ${token?.secret}`,
-                },
-            })
-
-            if (!response.ok) throw new Error('Failed to fetch children')
-
-            return response.json()
-        },
-        [token],
-    )
-
-    /**
-     * @description Fetch the list of files from the OneDrive API
-     * @param {string} accessToken
-     * @returns {Promise<void>}
-     */
-    const fetchFileList = useCallback(
-        async () => {
-            console.log(token)
-            const response = await fetch(GRAPH_API_FILES_ENDPOINT, {
-                headers: {
-                    Authorization: `Bearer ${token?.secret}`,
-                },
-            })
-
-            if (!response.ok) {
-                throw new Error('Failed to fetch file list')
-            }
-
-            const data = await response.json()
-            setRawFiles(data.value)
-            await organizeFiles(data.value) // invoke organizeFiles here
-        },
-        [fetchChildren, token], // add organizeFiles to the dependency array
-    )
-
-    // Effect to fetch user profile and file list
     useEffect(() => {
         if (token) {
-            fetchProfileInfo()
-                .then(profile => {
-                    setUser({
-                        name: profile.displayName,
-                        mail: profile.mail,
-                    })
-                })
-                .catch(console.error)
-            fetchFileList().catch(console.error)
-        }
-    }, [fetchProfileInfo, fetchFileList, token])
+            fetchWithAuth(GRAPH_API_ENDPOINT)
+                .then(profile =>
+                    setUser({ name: profile.displayName, mail: profile.mail }),
+                )
+                .catch(error => console.error('Profile fetch error:', error))
 
-    /**
-     * @description Organize the files into a tree structure when the raw files are set
-     */
-    useEffect(() => {
-        if (rawFiles) {
-            organizeFiles(rawFiles).catch(console.error)
+            fetchFileList().catch(error =>
+                console.error('File list fetch error:', error),
+            )
         }
-    }, [organizeFiles, rawFiles])
+    }, [token, fetchWithAuth, fetchFileList])
+
+    useEffect(() => {
+        if (rawFiles.length > 0) {
+            organizeFiles(rawFiles).catch(error =>
+                console.error('File organization error:', error),
+            )
+        }
+    }, [rawFiles, organizeFiles])
 
     return {
         user,
