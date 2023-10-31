@@ -5,8 +5,9 @@ import UseOneDriveAuth from './useOneDriveAuth'
 import { GoogleFile } from 'google'
 
 /**
- * @description Map to OneDrive file
- * @param file
+ * Maps OneDrive file to GoogleFile format.
+ * @param file The OneDrive file to map.
+ * @returns The mapped Google file.
  */
 const mapToOneDriveFile = (file: OneDriveFile): GoogleFile => {
     const isFolder = file.folder !== undefined
@@ -16,7 +17,6 @@ const mapToOneDriveFile = (file: OneDriveFile): GoogleFile => {
         mimeType: isFolder
             ? 'application/vnd.google-apps.folder'
             : file.file!.mimeType,
-        // ...other properties you need
         children: file.children ? file.children.map(mapToOneDriveFile) : [],
     }
 }
@@ -129,6 +129,22 @@ function useOneDrive(clientId: string): AuthProps {
         return response.json()
     }, [token])
 
+    const fetchChildren = useCallback(
+        async (folderId: string) => {
+            const endpoint = `https://graph.microsoft.com/v1.0/me/drive/items/${folderId}/children`
+            const response = await fetch(endpoint, {
+                headers: {
+                    Authorization: `Bearer ${token?.secret}`,
+                },
+            })
+
+            if (!response.ok) throw new Error('Failed to fetch children')
+
+            return response.json()
+        },
+        [token],
+    )
+
     /**
      * @description Fetch the list of files from the OneDrive API
      * @param {string} accessToken
@@ -151,25 +167,10 @@ function useOneDrive(clientId: string): AuthProps {
             setRawFiles(data.value)
             await organizeFiles(data.value) // invoke organizeFiles here
         },
-        [clientId, organizeFiles, token], // add organizeFiles to the dependency array
+        [fetchChildren, token], // add organizeFiles to the dependency array
     )
 
-    const fetchChildren = useCallback(
-        async (folderId: string) => {
-            const endpoint = `https://graph.microsoft.com/v1.0/me/drive/items/${folderId}/children`
-            const response = await fetch(endpoint, {
-                headers: {
-                    Authorization: `Bearer ${token?.secret}`,
-                },
-            })
-
-            if (!response.ok) throw new Error('Failed to fetch children')
-
-            return response.json()
-        },
-        [organizeFiles, token],
-    )
-
+    // Effect to fetch user profile and file list
     useEffect(() => {
         if (token) {
             fetchProfileInfo()
@@ -179,22 +180,19 @@ function useOneDrive(clientId: string): AuthProps {
                         mail: profile.mail,
                     })
                 })
-                .catch(error => console.error(error.message))
-
-            fetchFileList().catch(error => console.error(error.message))
+                .catch(console.error)
+            fetchFileList().catch(console.error)
         }
-    }, [token, fetchProfileInfo, fetchFileList])
+    }, [fetchProfileInfo, fetchFileList, token])
 
     /**
      * @description Organize the files into a tree structure when the raw files are set
      */
     useEffect(() => {
         if (rawFiles) {
-            ;(async () => {
-                await organizeFiles(rawFiles)
-            })()
+            organizeFiles(rawFiles).catch(console.error)
         }
-    }, [organizeFiles, rawFiles, token, fetchFileList])
+    }, [organizeFiles, rawFiles])
 
     return {
         user,
