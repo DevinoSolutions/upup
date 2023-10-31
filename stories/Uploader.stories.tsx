@@ -43,11 +43,7 @@ const Uploader = args => {
     const handleUpload = async () => {
         try {
             const data = await upupRef.current?.uploadFiles()
-            if (data !== null) {
-                console.log('Upload successful')
-            } else {
-                console.log('Upload returned null.')
-            }
+            console.log(`Upload ${data ? 'successful' : 'returned null.'} `)
         } catch (error) {
             console.error('Error uploading files:', error)
         }
