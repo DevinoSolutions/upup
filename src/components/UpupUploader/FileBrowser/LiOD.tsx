@@ -3,6 +3,11 @@ import { TransitionDefinition } from 'google'
 import { OneDriveFile } from 'microsoft'
 import { TbFileUnknown, TbFolder } from 'react-icons/tb'
 
+const backgroundColors = {
+    default: '#e9ecef00',
+    selected: '#bab4b499',
+    hover: '#3a3a3a',
+}
 type Props = {
     file: OneDriveFile
     handleClick: (file: OneDriveFile) => void
@@ -18,20 +23,27 @@ const ListItem = ({
     selectedFiles,
     accept,
 }: Props) => {
+    console.log('inside ListItem.tsx', file)
     const isFolder = file.children!.length
     const isFileSelected = selectedFiles.includes(file)
     const isFileAccepted =
         accept && accept !== '*' && accept.includes(file.name.split('.').pop()!)
 
-    const backgroundColors = {
-        default: '#e9ecef00',
-        selected: '#bab4b499',
-        hover: '#3a3a3a',
-    }
-
     if (accept && !isFolder && !isFileAccepted) return null
 
-    const icon = isFolder ? <TbFolder /> : <TbFileUnknown />
+    const icon = isFolder ? (
+        <TbFolder />
+    ) : file.thumbnails ? (
+        // change this shit please xD
+        <img
+            width={file.thumbnails.small.width}
+            height={file.thumbnails.small.height}
+            src={file.thumbnails.small.url}
+            alt={file.name}
+        />
+    ) : (
+        <TbFileUnknown />
+    )
 
     const backgroundColor = {
         ...(isFileSelected && { backgroundColor: backgroundColors.selected }),

@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useState } from 'react'
-import { MicrosoftUser, OneDriveFile, OneDriveRoot } from 'microsoft'
-import usePCAInstance from './usePCAInstance'
-import useOneDriveAuth from './useOneDriveAuth'
+import { useCallback, useEffect, useState } from "react";
+import { MicrosoftUser, OneDriveFile, OneDriveRoot, Thumbnails } from "microsoft";
+import usePCAInstance from "./usePCAInstance";
+import useOneDriveAuth from "./useOneDriveAuth";
 
 const GRAPH_API_ENDPOINT = 'https://graph.microsoft.com/v1.0/me'
 const GRAPH_API_FILES_ENDPOINT = `${GRAPH_API_ENDPOINT}/drive/root/children`
@@ -32,6 +32,14 @@ function useOneDrive(clientId: string): AuthProps {
      */
     const mapToOneDriveFile = (file: OneDriveFile): OneDriveFile => {
         const isFolder = file.folder !== undefined
+        if (!isFolder) {
+            fetchWithAuth(
+                `${GRAPH_API_ENDPOINT}/drive/items/${file.id}/thumbnails`,
+            ).then(
+                thumbnails =>
+                    (file.thumbnails = thumbnails.value[0] as Thumbnails),
+            )
+        }
         return {
             id: file.id,
             name: file.name,
@@ -43,6 +51,7 @@ function useOneDrive(clientId: string): AuthProps {
             children: file.children ? file.children.map(mapToOneDriveFile) : [],
             '@microsoft.graph.downloadUrl':
                 file['@microsoft.graph.downloadUrl']!,
+            thumbnails: file.thumbnails,
         }
     }
 

@@ -15,17 +15,19 @@ declare module 'microsoft' {
         url: string
     }
 
+    type Thumbnails = {
+        large: ThumbnailSize
+        medium: ThumbnailSize
+        small: ThumbnailSize
+    }
+
     type OneDriveFile = {
         id: string
         name: string
         parentReference?: {
             id: string
         }
-        thumbnails?: {
-            large: ThumbnailSize
-            medium: ThumbnailSize
-            small: ThumbnailSize
-        }
+        thumbnails?: Thumbnails
         file?: {
             mimeType: string
         }

@@ -28,7 +28,6 @@ const FileBrowser = ({
     const [path, setPath] = useState<OneDriveRoot[]>([])
     const [selectedFiles, setSelectedFiles] = useState<OneDriveFile[]>([])
     const [showLoader, setLoader] = useState(false)
-
     const handleClick = (file: OneDriveFile | OneDriveRoot) => {
         if (file.children!.length) {
             setPath(prevPath => [...prevPath, file as OneDriveRoot])
@@ -43,7 +42,6 @@ const FileBrowser = ({
 
     const downloadFiles = async (files: OneDriveFile[]) => {
         const promises = files.map(async file => {
-            console.log(file)
             const data = await downloadFile(
                 file['@microsoft.graph.downloadUrl']!,
             )
@@ -51,8 +49,6 @@ const FileBrowser = ({
                 type: file.file?.mimeType,
             }) as unknown as OneDriveFile
 
-            // FIX ME: Fix thumbnails
-            // downloadedFile['thumbnailLink'] = file.thumbnails.large.url
             return downloadedFile
         })
 
