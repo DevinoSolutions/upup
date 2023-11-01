@@ -1,5 +1,4 @@
-import { motion, Target } from 'framer-motion'
-import { TransitionDefinition } from 'google'
+import { AnimationProps, HoverHandlers, motion } from 'framer-motion'
 import { handleImgError } from 'lib/handleImgError'
 import { OneDriveFile } from 'microsoft'
 import { TbFile, TbFolder } from 'react-icons/tb'
@@ -7,8 +6,9 @@ import { TbFile, TbFolder } from 'react-icons/tb'
 const backgroundColors = {
     default: '#e9ecef00',
     selected: '#bab4b499',
-    hover: '#3a3a3a',
+    hover: '#eaeaea',
 }
+
 type Props = {
     file: OneDriveFile
     handleClick: (file: OneDriveFile) => void
@@ -48,31 +48,52 @@ const ListItem = ({
         ...(isFileSelected && { backgroundColor: backgroundColors.selected }),
         ...(!isFileSelected && { backgroundColor: backgroundColors.default }),
     }
-    const initial: Target = {
+
+    const transition: AnimationProps['transition'] = {
+        type: 'spring',
+        damping: 10,
+        stiffness: 100,
+        opacity: { delay: index * 0.05 },
+        y: { delay: index * 0.05 },
+    }
+
+    const initial: AnimationProps['initial'] = {
         opacity: 0,
         y: 10,
         ...backgroundColor,
     }
 
-    const animate: Target = {
+    const animate: AnimationProps['animate'] = {
         opacity: 1,
         y: 0,
         ...backgroundColor,
+        transition,
     }
 
-    const exit: Target = { opacity: 0, y: 10 }
-
-    const transition: TransitionDefinition = {
-        duration: 0.2,
-        delay: index * 0.05,
-        backgroundColor: { duration: 0.2, delay: 0 },
+    const backgroundColorHover = {
+        ...(isFileSelected && {
+            backgroundColor: backgroundColors.selected,
+        }),
+        ...(!isFileSelected && {
+            backgroundColor: backgroundColors.hover,
+        }),
     }
+
+    const hover: HoverHandlers['whileHover'] = {
+        opacity: 1,
+        y: 0,
+        ...backgroundColorHover,
+        transition,
+    }
+
+    const exit: AnimationProps['exit'] = { opacity: 0, y: 10, transition }
 
     return (
         <motion.div
             key={file.id}
             initial={initial}
             animate={animate}
+            whileHover={hover}
             exit={exit}
             transition={transition}
             className={`flex items-center justify-between gap-2 mb-1 cursor-pointer rounded-md py-2 p-1 ${
