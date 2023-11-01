@@ -1,5 +1,11 @@
 # @bassem97/upup
 
+## 2.3.0
+
+### Minor Changes
+
+-   3bb6e87: Introduce the new microsoft onedrive integration
+
 ## 2.2.31
 
 ### Patch Changes
