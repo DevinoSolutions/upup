@@ -25,6 +25,8 @@ const OneDriveUploader: FC<Props> = ({
         oneDriveConfigs.onedrive_client_id,
     )
 
+    if (!oneDriveFiles) return <div>One Sec..</div>
+
     return (
         <FileBrowser
             driveFiles={oneDriveFiles}
