@@ -1,5 +1,4 @@
 declare module 'google' {
-    import { TargetAndTransition } from 'framer-motion'
     type User = {
         family_name: string
         given_name: string
@@ -35,7 +34,12 @@ declare module 'google' {
         error?: unknown
     }
 
-    type HoverDefinition = TargetAndTransition & {
-        backgroundColor: string
+    type TransitionDefinition = {
+        duration: number
+        delay: number
+        backgroundColor: {
+            duration: number
+            delay: number
+        }
     }
 }
