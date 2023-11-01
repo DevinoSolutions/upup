@@ -16,3 +16,4 @@ storybook-static
 
 # public folder temp files
 public
+/stories/Uploader.stories.js
