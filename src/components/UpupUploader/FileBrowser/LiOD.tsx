@@ -1,7 +1,8 @@
 import { motion, Target } from 'framer-motion'
 import { TransitionDefinition } from 'google'
+import { handleImgError } from 'lib/handleImgError'
 import { OneDriveFile } from 'microsoft'
-import { TbFileUnknown, TbFolder } from 'react-icons/tb'
+import { TbFile, TbFolder } from 'react-icons/tb'
 
 const backgroundColors = {
     default: '#e9ecef00',
@@ -23,7 +24,6 @@ const ListItem = ({
     selectedFiles,
     accept,
 }: Props) => {
-    console.log('inside ListItem.tsx', file)
     const isFolder = file.children!.length
     const isFileSelected = selectedFiles.includes(file)
     const isFileAccepted =
@@ -34,15 +34,14 @@ const ListItem = ({
     const icon = isFolder ? (
         <TbFolder />
     ) : file.thumbnails ? (
-        // change this shit please xD
         <img
-            width={file.thumbnails.small.width}
-            height={file.thumbnails.small.height}
             src={file.thumbnails.small.url}
             alt={file.name}
+            className="w-5 h-5 rounded-md"
+            onError={handleImgError}
         />
     ) : (
-        <TbFileUnknown />
+        <TbFile />
     )
 
     const backgroundColor = {
