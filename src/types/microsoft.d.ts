@@ -9,6 +9,12 @@ declare module 'microsoft' {
         expiresOn: number
     }
 
+    type ThumbnailSize = {
+        width: number
+        height: number
+        url: string
+    }
+
     type OneDriveFile = {
         id: string
         name: string
@@ -16,9 +22,9 @@ declare module 'microsoft' {
             id: string
         }
         thumbnails?: {
-            large: string
-            medium: string
-            small: string
+            large: ThumbnailSize
+            medium: ThumbnailSize
+            small: ThumbnailSize
         }
         file?: {
             mimeType: string

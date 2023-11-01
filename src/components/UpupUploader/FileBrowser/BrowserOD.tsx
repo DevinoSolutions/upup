@@ -52,7 +52,7 @@ const FileBrowser = ({
             }) as unknown as OneDriveFile
 
             // FIX ME: Fix thumbnails
-            // downloadedFile['thumbnailLink'] = file.thumbnailLink
+            // downloadedFile['thumbnailLink'] = file.thumbnails.large.url
             return downloadedFile
         })
 

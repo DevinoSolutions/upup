@@ -3,39 +3,6 @@ import { MicrosoftUser, OneDriveFile, OneDriveRoot } from 'microsoft'
 import usePCAInstance from './usePCAInstance'
 import useOneDriveAuth from './useOneDriveAuth'
 
-/**
- * Maps OneDrive file to GoogleFile format.
- * @param file The OneDrive file to map.
- * @returns The mapped Google file.
- */
-const mapToOneDriveFile = (file: OneDriveFile): OneDriveFile => {
-    const isFolder = file.folder !== undefined
-    return {
-        id: file.id,
-        name: file.name,
-        file: {
-            mimeType: isFolder
-                ? 'application/vnd.google-apps.folder'
-                : file.file!.mimeType,
-        },
-        children: file.children ? file.children.map(mapToOneDriveFile) : [],
-        '@microsoft.graph.downloadUrl': file['@microsoft.graph.downloadUrl']!,
-    }
-}
-
-/**
- * @description Map to OneDrive root
- * @param oneDriveRoot
- */
-const mapToOneDriveRoot = (oneDriveRoot: OneDriveRoot) => {
-    return {
-        id: oneDriveRoot.id,
-        name: oneDriveRoot.name,
-        children: oneDriveRoot.children
-            ? oneDriveRoot.children.map(mapToOneDriveFile)
-            : [],
-    }
-}
 const GRAPH_API_ENDPOINT = 'https://graph.microsoft.com/v1.0/me'
 const GRAPH_API_FILES_ENDPOINT = `${GRAPH_API_ENDPOINT}/drive/root/children`
 
@@ -57,6 +24,41 @@ function useOneDrive(clientId: string): AuthProps {
         setUser,
         setOneDriveFiles,
     })
+
+    /**
+     * Maps OneDrive file to GoogleFile format.
+     * @param file The OneDrive file to map.
+     * @returns The mapped Google file.
+     */
+    const mapToOneDriveFile = (file: OneDriveFile): OneDriveFile => {
+        const isFolder = file.folder !== undefined
+        return {
+            id: file.id,
+            name: file.name,
+            file: {
+                mimeType: isFolder
+                    ? 'application/vnd.google-apps.folder'
+                    : file.file!.mimeType,
+            },
+            children: file.children ? file.children.map(mapToOneDriveFile) : [],
+            '@microsoft.graph.downloadUrl':
+                file['@microsoft.graph.downloadUrl']!,
+        }
+    }
+
+    /**
+     * @description Map to OneDrive root
+     * @param oneDriveRoot
+     */
+    const mapToOneDriveRoot = (oneDriveRoot: OneDriveRoot) => {
+        return {
+            id: oneDriveRoot.id,
+            name: oneDriveRoot.name,
+            children: oneDriveRoot.children
+                ? oneDriveRoot.children.map(mapToOneDriveFile)
+                : [],
+        }
+    }
 
     const fetchWithAuth = useCallback(
         async (endpoint: string) => {
