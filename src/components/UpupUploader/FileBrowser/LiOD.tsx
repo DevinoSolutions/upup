@@ -37,7 +37,7 @@ const ListItem = ({
         <img
             src={file.thumbnails.small.url}
             alt={file.name}
-            className="w-5 h-5 rounded-md"
+            className="w-5 h-5 rounded-md border"
             onError={handleImgError}
         />
     ) : (
