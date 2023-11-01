@@ -1,10 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import {
-    MicrosoftUser,
-    OneDriveFile,
-    OneDriveRoot,
-    Thumbnails,
-} from 'microsoft'
+import { MicrosoftUser, OneDriveFile, OneDriveRoot } from 'microsoft'
 import usePCAInstance from './usePCAInstance'
 import useOneDriveAuth from './useOneDriveAuth'
 
@@ -22,6 +17,7 @@ function useOneDrive(clientId: string): AuthProps {
     const [user, setUser] = useState<MicrosoftUser | undefined>()
     const [rawFiles, setRawFiles] = useState<OneDriveFile[]>([])
     const [oneDriveFiles, setOneDriveFiles] = useState<OneDriveRoot>()
+    const [oneDriveRoot, setOneDriveRoot] = useState<OneDriveRoot>()
 
     const { msalInstance } = usePCAInstance(clientId)
     const { token, signOut } = useOneDriveAuth({
@@ -35,15 +31,20 @@ function useOneDrive(clientId: string): AuthProps {
      * @param file The OneDrive file to map.
      * @returns The mapped Google file.
      */
-    const mapToOneDriveFile = (file: OneDriveFile): OneDriveFile => {
+    const mapToOneDriveFile = async (
+        file: OneDriveFile,
+    ): Promise<OneDriveFile> => {
         const isFolder = file.folder !== undefined
+        let thumbnails = undefined
         if (!isFolder) {
-            fetchWithAuth(
-                `${GRAPH_API_ENDPOINT}/drive/items/${file.id}/thumbnails`,
-            ).then(
-                thumbnails =>
-                    (file.thumbnails = thumbnails.value[0] as Thumbnails),
-            )
+            try {
+                const thumbnailResponse = await fetchWithAuth(
+                    `${GRAPH_API_ENDPOINT}/drive/items/${file.id}/thumbnails`,
+                )
+                thumbnails = thumbnailResponse.value[0] // Assuming there's always at least one thumbnail.
+            } catch (error) {
+                console.error('Error fetching thumbnails:', error)
+            }
         }
         return {
             id: file.id,
@@ -53,10 +54,12 @@ function useOneDrive(clientId: string): AuthProps {
                     ? 'application/vnd.google-apps.folder'
                     : file.file!.mimeType,
             },
-            children: file.children ? file.children.map(mapToOneDriveFile) : [],
+            children: file.children
+                ? await Promise.all(file.children.map(mapToOneDriveFile))
+                : [],
             '@microsoft.graph.downloadUrl':
                 file['@microsoft.graph.downloadUrl']!,
-            thumbnails: file.thumbnails,
+            thumbnails: thumbnails,
         }
     }
 
@@ -64,13 +67,14 @@ function useOneDrive(clientId: string): AuthProps {
      * @description Map to OneDrive root
      * @param oneDriveRoot
      */
-    const mapToOneDriveRoot = (oneDriveRoot: OneDriveRoot) => {
+    const mapToOneDriveRoot = async (oneDriveRoot: OneDriveRoot) => {
+        const children = oneDriveRoot.children
+            ? await Promise.all(oneDriveRoot.children.map(mapToOneDriveFile))
+            : []
         return {
             id: oneDriveRoot.id,
             name: oneDriveRoot.name,
-            children: oneDriveRoot.children
-                ? oneDriveRoot.children.map(mapToOneDriveFile)
-                : [],
+            children: children,
         }
     }
 
@@ -152,14 +156,18 @@ function useOneDrive(clientId: string): AuthProps {
         }
     }, [rawFiles, organizeFiles])
 
-    return {
-        user,
-        oneDriveFiles: oneDriveFiles
-            ? mapToOneDriveRoot(oneDriveFiles)
-            : undefined,
-        signOut,
-        downloadFile,
-    }
+    useEffect(() => {
+        const mapFiles = async () => {
+            if (!oneDriveFiles) return
+            const oneDriveData = await mapToOneDriveRoot(oneDriveFiles)
+            setOneDriveRoot(oneDriveData)
+        }
+        mapFiles().catch(error =>
+            console.error('Error mapping OneDrive files:', error),
+        )
+    }, [oneDriveFiles])
+
+    return { user, oneDriveFiles: oneDriveRoot, signOut, downloadFile }
 }
 
 export default useOneDrive
