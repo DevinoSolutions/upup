@@ -49,6 +49,9 @@ const FileBrowser = ({
                 type: file.file?.mimeType,
             }) as unknown as OneDriveFile
 
+            // @ts-ignore - Fix this by refactoring how file browser works
+            downloadedFile['thumbnailLink'] = file.thumbnails?.large?.url
+
             return downloadedFile
         })
 
