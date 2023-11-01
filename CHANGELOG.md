@@ -1,5 +1,17 @@
 # @bassem97/upup
 
+## 2.2.31
+
+### Patch Changes
+
+-   4f562fd: Fix link upload & various tweaks
+
+## 2.2.30
+
+### Patch Changes
+
+-   62d829d: Various upup tweak
+
 ## 2.2.29
 
 ### Patch Changes
