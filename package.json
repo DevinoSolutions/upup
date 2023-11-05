@@ -105,8 +105,7 @@
         "load-script": "^2.0.0",
         "react-icons": "^4.10.1",
         "react-webcam": "^7.1.1",
-        "uuid": "^9.0.0",
-        "fast-xml-parser": "^4.3.2"
+        "uuid": "^9.0.0"
     },
     "peerDependencies": {
         "@emotion/react": "^11.11.1",
@@ -115,7 +114,9 @@
     },
     "pnpm": {
         "overrides": {
-            "fast-xml-parser": "^4.3.2"
+            "fast-xml-parser": "^4.3.2",
+            "prismjs": "^1.29.0",
+            "node-fetch": "^3.3.2"
         }
     }
 }
