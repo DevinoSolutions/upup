@@ -105,11 +105,17 @@
         "load-script": "^2.0.0",
         "react-icons": "^4.10.1",
         "react-webcam": "^7.1.1",
-        "uuid": "^9.0.0"
+        "uuid": "^9.0.0",
+        "fast-xml-parser": "^4.3.2"
     },
     "peerDependencies": {
         "@emotion/react": "^11.11.1",
         "react": "18.2.0",
         "react-dom": "18.2.0"
+    },
+    "pnpm": {
+        "overrides": {
+            "fast-xml-parser": "^4.3.2"
+        }
     }
 }
