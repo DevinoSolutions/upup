@@ -1,5 +1,11 @@
 # @bassem97/upup
 
+## 2.3.1
+
+### Patch Changes
+
+-   07a1fb4: Fix camera uploader & Storybook issue
+
 ## 2.3.0
 
 ### Minor Changes
