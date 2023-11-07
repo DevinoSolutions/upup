@@ -10,6 +10,8 @@ export const useUrl = (url: string) => {
     const [loading, setLoading] = useState<boolean>(false)
     const [trigger, setTrigger] = useState<boolean>(false)
 
+    const clearImage = () => setImage(null)
+
     useEffect(() => {
         if (!trigger) return
         setLoading(true)
@@ -20,5 +22,5 @@ export const useUrl = (url: string) => {
             .finally(() => setLoading(false))
     }, [trigger])
 
-    return { image, error, loading, setTrigger }
+    return { image, error, loading, setTrigger, clearImage }
 }
