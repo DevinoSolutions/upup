@@ -37,6 +37,7 @@ const CameraUploader: FC<Props> = ({ setFiles, setView }: Props) => {
                     audio={false}
                     ref={webcamRef}
                     screenshotFormat="image/jpeg"
+                    videoConstraints={{ facingMode: 'environment' }}
                     className="max-h-[24rem] h-max rounded-xl"
                 />
 
