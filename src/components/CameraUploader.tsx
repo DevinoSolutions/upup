@@ -2,7 +2,7 @@ import { FC, useCallback, useRef, useState } from 'react'
 import { useUrl } from 'hooks'
 
 import { motion } from 'framer-motion'
-import { TbX } from 'react-icons/tb'
+import { TbCameraRotate, TbCapture, TbX } from 'react-icons/tb'
 import Webcam from 'react-webcam'
 
 type Props = {
@@ -14,6 +14,9 @@ const CameraUploader: FC<Props> = ({ setFiles, setView }: Props) => {
     const webcamRef = useRef(null) as any
     const [imgSrc, setImgSrc] = useState('')
     const [url, setUrl] = useState('')
+    const [cameraSide, setCameraSide] = useState<'environment' | 'user'>(
+        'environment',
+    )
 
     const { image, setTrigger, clearImage } = useUrl(url)
 
@@ -37,7 +40,7 @@ const CameraUploader: FC<Props> = ({ setFiles, setView }: Props) => {
                     audio={false}
                     ref={webcamRef}
                     screenshotFormat="image/jpeg"
-                    videoConstraints={{ facingMode: 'environment' }}
+                    videoConstraints={{ facingMode: cameraSide }}
                     className="max-h-[24rem] h-max rounded-xl"
                 />
 
@@ -66,13 +69,31 @@ const CameraUploader: FC<Props> = ({ setFiles, setView }: Props) => {
             </div>
             <div className="flex gap-4">
                 {!image ? (
-                    <button
-                        className="bg-blue-500 text-white p-2 w-full mt-2 rounded-md hover:bg-blue-600 active:bg-blue-700 transition-all duration-300"
-                        onClick={capture}
-                        type="button"
-                    >
-                        Capture photo
-                    </button>
+                    <>
+                        <button
+                            className="bg-blue-500 text-white p-2 flex flex-col justify-center items-center  mt-2 rounded-md hover:bg-blue-600 active:bg-blue-700 transition-all duration-300 w-1/3"
+                            onClick={capture}
+                            type="button"
+                        >
+                            <TbCapture />
+                            Capture
+                        </button>
+                        <button
+                            className="bg-gray-500 text-white p-2  items-center mt-2 rounded-md hover:bg-gray-600 active:bg-blue-700 transition-all duration-300  w-1/3"
+                            onClick={() => {
+                                setCameraSide(prevState =>
+                                    prevState === 'environment'
+                                        ? 'user'
+                                        : 'environment',
+                                )
+                            }}
+                            type="button"
+                        >
+                            <TbCameraRotate />
+                            switch to{' '}
+                            {cameraSide === 'environment' ? 'front' : 'back'}
+                        </button>
+                    </>
                 ) : (
                     <button
                         className="bg-blue-500 text-white p-2 w-full mt-2 rounded-md hover:bg-blue-600 active:bg-blue-700 transition-all duration-300"
