@@ -71,7 +71,7 @@ const CameraUploader: FC<Props> = ({ setFiles, setView }: Props) => {
                 {!image ? (
                     <>
                         <button
-                            className="bg-blue-500 text-white p-2 flex flex-col justify-center items-center  mt-2 rounded-md hover:bg-blue-600 active:bg-blue-700 transition-all duration-300 w-1/3"
+                            className="bg-blue-500 text-white p-2 flex flex-col items-center  justify-center  mt-2 rounded-md hover:bg-blue-600 active:bg-blue-700 transition-all duration-300 w-1/3"
                             onClick={capture}
                             type="button"
                         >
@@ -79,7 +79,7 @@ const CameraUploader: FC<Props> = ({ setFiles, setView }: Props) => {
                             Capture
                         </button>
                         <button
-                            className="bg-gray-500 text-white p-2  items-center mt-2 rounded-md hover:bg-gray-600 active:bg-blue-700 transition-all duration-300  w-1/3"
+                            className="bg-gray-500 text-white p-2 flex flex-col items-center mt-2 rounded-md hover:bg-gray-600 active:bg-blue-700 transition-all duration-300  w-1/3"
                             onClick={() => {
                                 setCameraSide(prevState =>
                                     prevState === 'environment'
