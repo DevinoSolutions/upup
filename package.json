@@ -12,6 +12,7 @@
         "type": "git",
         "url": "git+https://github.com/uNotesOfficial/upup.git"
     },
+    "packageManager": "pnpm@8.10.5",
     "keywords": [
         "react",
         "typescript",
@@ -104,7 +105,9 @@
         "load-script": "^2.0.0",
         "react-icons": "^4.11.0",
         "react-webcam": "^7.2.0",
-        "uuid": "^9.0.1"
+        "uuid": "^9.0.1",
+        "prettier-plugin-tailwindcss": "^0.5.7",
+        "prettier-plugin-organize-imports": "^3.2.4"
     },
     "peerDependencies": {
         "@emotion/react": "^11.11.1",
