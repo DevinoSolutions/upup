@@ -5,28 +5,71 @@ on:
     branches: [master]
 
 jobs:
-  build:
-    name: Prettier check, Install dependencies and Build project
-
+  Prettier-check:
+    name: Prettier Check
     runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v3
+        id: cache-primes
+        with:
+          node-version-file: '.nvmrc'
+
+      - name: Setup PNPM environment
+        if: steps.cache-primes.outputs.cache-hit != 'true'
+        run: |
+          npm install -g pnpm@latest
+          pnpm config set store-dir ~/.pnpm-store
+
+      - name: Cache PNPM dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.pnpm-store
+          key: ${{ runner.os }}-pnpm-v3-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-v3-
+
+      - name: Install dependencies
+        if: steps.cache-primes.outputs.cache-hit != 'true'
+        run: pnpm install --frozen-lockfile
+
+      - name: Prettier Check
+        run: pnpm run prettier-check
+
+
+  Build:
+    name: Prettier check, Install dependencies and Build project
+    runs-on: ubuntu-latest
+    needs: [ Prettier-check ]
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
 
-      - uses: pnpm/action-setup@v2
-        with:
-          version: latest
-
       - uses: actions/setup-node@v3
+        id: cache-primes
         with:
-          node-version: 16.x
-          cache: 'pnpm'
+          node-version-file: '.nvmrc'
 
-      - name : Prettier check
-        run: npx prettier --check src/*.*
+      - name: Setup PNPM environment
+        if: steps.cache-primes.outputs.cache-hit != 'true'
+        run: |
+          npm install -g pnpm@latest
+          pnpm config set store-dir ~/.pnpm-store
+
+      - name: Cache PNPM dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.pnpm-store
+          key: ${{ runner.os }}-pnpm-v3-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-v3-
 
       - name: Install dependencies
+        if: steps.cache-primes.outputs.cache-hit != 'true'
         run: pnpm install --frozen-lockfile
 
-      - name: Run CI
-        run: pnpm run ci
+      - name: Build
+        run: pnpm run build
