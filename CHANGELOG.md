@@ -4,6 +4,12 @@
 
 ### Patch Changes
 
+-   8e08140: Code enhancement
+
+## 2.3.3
+
+### Patch Changes
+
 -   141f635: Add front/rear camera switcher
 
 ## 2.3.2
