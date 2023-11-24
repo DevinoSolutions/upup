@@ -27,12 +27,12 @@ const UrlUploader: FC<Props> = ({ setFiles, setView }: Props) => {
             <input
                 type="url"
                 placeholder="Enter image url"
-                className="border-2 border-gray-300 p-2 w-full rounded-md bg-transparent outline-none"
+                className="w-full rounded-md border-2 border-gray-300 bg-transparent p-2 outline-none"
                 value={url}
                 onChange={e => setUrl(e.target.value)}
             />
             <button
-                className="bg-blue-500 text-white p-2 w-full mt-2 rounded-md hover:bg-blue-600 active:bg-blue-700 transition-all duration-300"
+                className="mt-2 w-full rounded-md bg-blue-500 p-2 text-white transition-all duration-300 hover:bg-blue-600 active:bg-blue-700"
                 type="button"
                 onClick={() => {
                     if (loading || url === '') return

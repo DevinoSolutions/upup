@@ -71,14 +71,14 @@ const FileBrowser = ({
     }, [driveFiles])
 
     return (
-        <div className="w-full grid grid-rows-[auto,auto,1fr,auto] bg-white h-[min(98svh,32rem)] ">
-            <div className="h-12 bg-[#fafafa] text-[#333] border-b grid grid-cols-[minmax(0,1fr),auto] p-2 text-xs font-medium dark:bg-[#1f1f1f] dark:text-[#fafafa]">
-                <div className="h p-2 px-4 flex gap-1">
+        <div className="grid h-[min(98svh,32rem)] w-full grid-rows-[auto,auto,1fr,auto] bg-white ">
+            <div className="grid h-12 grid-cols-[minmax(0,1fr),auto] border-b bg-[#fafafa] p-2 text-xs font-medium text-[#333] dark:bg-[#1f1f1f] dark:text-[#fafafa]">
+                <div className="h flex gap-1 p-2 px-4">
                     {path &&
                         path.map((p, i) => (
                             <p
                                 key={p.id}
-                                className="cursor-pointer group flex gap-1 truncate shrink-0"
+                                className="group flex shrink-0 cursor-pointer gap-1 truncate"
                                 style={{
                                     maxWidth: 100 / path.length + '%',
                                     pointerEvents:
@@ -88,16 +88,16 @@ const FileBrowser = ({
                                     setPath(prev => prev.slice(0, i + 1))
                                 }
                             >
-                                <span className="group-hover:underline truncate">
+                                <span className="truncate group-hover:underline">
                                     {p.name}
                                 </span>
                                 {i !== path.length - 1 && ' > '}
                             </p>
                         ))}
                 </div>
-                <div className="flex gap-2 items-center">
+                <div className="flex items-center gap-2">
                     <h1>{user ? user.name : ''}</h1>
-                    <i className="h-[3px] w-[3px] rounded-full bg-[#ddd] -mb-1" />
+                    <i className="-mb-1 h-[3px] w-[3px] rounded-full bg-[#ddd]" />
                     <button
                         className="text-[#2275d7] hover:underline"
                         onClick={() => {
@@ -112,16 +112,16 @@ const FileBrowser = ({
                 </div>
             </div>
 
-            <div className="bg-white p-2 relative  dark:bg-[#1f1f1f] dark:text-[#fafafa]">
+            <div className="relative bg-white p-2  dark:bg-[#1f1f1f] dark:text-[#fafafa]">
                 <input
                     type="search"
-                    className="w-full h-8 bg-[#eaeaea] rounded-md text-xs px-2 pl-8 outline-none focus:bg-[#cfcfcf] transition-all duration-300 dark:bg-[#2f2f2f] dark:text-[#fafafa]"
+                    className="h-8 w-full rounded-md bg-[#eaeaea] px-2 pl-8 text-xs outline-none transition-all duration-300 focus:bg-[#cfcfcf] dark:bg-[#2f2f2f] dark:text-[#fafafa]"
                     placeholder="Search"
                 />
                 <TbSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-[#939393]" />
             </div>
 
-            <div className="bg-white h-full overflow-y-scroll pt-2 overflow-scroll dark:bg-[#1f1f1f] dark:text-[#fafafa]">
+            <div className="h-full overflow-scroll overflow-y-scroll bg-white pt-2 dark:bg-[#1f1f1f] dark:text-[#fafafa]">
                 <ul className="p-2">
                     {path &&
                         path[path.length - 1]?.children?.map((file, index) => {
@@ -146,11 +146,11 @@ const FileBrowser = ({
                         animate={{ y: '0%', height: 'auto' }}
                         exit={{ y: '100%', height: 0 }}
                         transition={{ duration: 0.2 }}
-                        className="border-t bg-white flex items-center justify-start gap-4 p-4 py-2 origin-bottom dark:bg-[#1f1f1f] dark:text-[#fafafa]"
+                        className="flex origin-bottom items-center justify-start gap-4 border-t bg-white p-4 py-2 dark:bg-[#1f1f1f] dark:text-[#fafafa]"
                     >
                         {!showLoader && (
                             <button
-                                className="bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white font-medium rounded-md p-3 w-32 transition-all duration-300"
+                                className="w-32 rounded-md bg-blue-500 p-3 font-medium text-white transition-all duration-300 hover:bg-blue-600 active:bg-blue-700"
                                 onClick={handleSubmit}
                             >
                                 Add {selectedFiles.length} files

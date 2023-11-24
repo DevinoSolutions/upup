@@ -18,32 +18,32 @@ const MiniPreview: FC<Props> = ({ files, setFiles }: Props) => {
     return (
         <AnimatePresence>
             {files.length > 0 && (
-                <motion.div className="h-full w-full grid grid-rows-[1fr,auto] text-sm font-medium absolute z-10">
+                <motion.div className="absolute z-10 grid h-full w-full grid-rows-[1fr,auto] text-sm font-medium">
                     <motion.div
                         initial={{ scaleY: '0%' }}
                         animate={{ scaleY: '100%', opacity: 1 }}
                         exit={{ scaleY: '0%' }}
-                        className="grid p-1 border-b bg-[#f4f4f4] dark:bg-[#1f1f1f] dark:text-[#fafafa] origin-bottom gap-4 grid-cols-1 grid-rows-1"
+                        className="grid origin-bottom grid-cols-1 grid-rows-1 gap-4 border-b bg-[#f4f4f4] p-1 dark:bg-[#1f1f1f] dark:text-[#fafafa]"
                     >
                         {files.map((file, i) => (
                             <div
                                 key={'filePreview#' + i}
-                                className="flex flex-col items-start h-full w-full relative dark:bg-[#1f1f1f] dark:text-[#fafafa]"
+                                className="relative flex h-full w-full flex-col items-start dark:bg-[#1f1f1f] dark:text-[#fafafa]"
                             >
                                 {file.type.startsWith('image/') ? (
                                     <img
                                         src={URL.createObjectURL(file)}
                                         alt=""
-                                        className="w-full rounded-md object-cover shadow h-full absolute"
+                                        className="absolute h-full w-full rounded-md object-cover shadow"
                                     />
                                 ) : (
-                                    <div className="w-full rounded-md object-cover shadow text-[#6b7280] h-[90%]">
+                                    <div className="h-[90%] w-full rounded-md object-cover text-[#6b7280] shadow">
                                         <FileIcon name={file.name} />
                                     </div>
                                 )}
 
                                 <button
-                                    className="bg-black rounded-full absolute -top-1 -right-1"
+                                    className="absolute -right-1 -top-1 rounded-full bg-black"
                                     onClick={() => removeFile(i)}
                                     type="button"
                                 >

@@ -40,7 +40,7 @@ const ListItem = ({
         <img
             src={file.thumbnailLink}
             alt={file.name}
-            className="w-5 h-5 rounded-md"
+            className="h-5 w-5 rounded-md"
             onError={handleImgError}
         />
     ) : (
@@ -98,7 +98,7 @@ const ListItem = ({
             animate={animate}
             whileHover={hover}
             exit={exit}
-            className={`flex items-center justify-between gap-2 mb-1 cursor-pointer rounded-md py-2 p-1 ${
+            className={`mb-1 flex cursor-pointer items-center justify-between gap-2 rounded-md p-1 py-2 ${
                 isFolder ? 'font-medium' : ''
             }`}
             onClick={() => handleClick(file)}
