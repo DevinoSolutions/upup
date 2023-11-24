@@ -1,7 +1,7 @@
-import { Dispatch, FC, SetStateAction } from 'react'
 import { motion } from 'framer-motion'
-import { TbUpload } from 'react-icons/tb'
 import { checkFileType } from 'lib'
+import { Dispatch, FC, SetStateAction } from 'react'
+import { TbUpload } from 'react-icons/tb'
 
 type Props = {
     setFiles: Dispatch<SetStateAction<File[]>>
@@ -21,15 +21,15 @@ const DropZone: FC<Props> = ({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="h-full w-full bg-gray-300 absolute z-40 bg-opacity-50 p-2 text-blue-600 dark:bg-[#1f1f1f] dark:bg-opacity-70 backdrop-blur-sm rounded-md"
+            className="absolute z-40 h-full w-full rounded-md bg-gray-300 bg-opacity-50 p-2 text-blue-600 backdrop-blur-sm dark:bg-[#1f1f1f] dark:bg-opacity-70"
             onDragOver={e => {
                 e.preventDefault()
                 setIsDragging(true)
                 e.dataTransfer.dropEffect = 'copy'
             }}
         >
-            <div className="border h-full w-full border-dashed border-current rounded-md flex items-center justify-center text-4xl flex-col gap-2">
-                <i className="border-2 border-current p-3 rounded-full">
+            <div className="flex h-full w-full flex-col items-center justify-center gap-2 rounded-md border border-dashed border-current text-4xl">
+                <i className="rounded-full border-2 border-current p-3">
                     <TbUpload />
                 </i>
                 <p className="text-xl">Drop your files here</p>
@@ -37,7 +37,7 @@ const DropZone: FC<Props> = ({
             <input
                 type="file"
                 accept={accept}
-                className="w-full h-full absolute top-0 opacity-0"
+                className="absolute top-0 h-full w-full opacity-0"
                 multiple
                 onChange={e => {
                     const acceptedFiles = Array.from(

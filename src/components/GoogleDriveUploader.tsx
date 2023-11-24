@@ -1,7 +1,7 @@
-import { Dispatch, SetStateAction } from 'react'
-import type { GoogleConfigs } from 'types'
 import FileBrowser from 'components/UpupUploader/FileBrowser'
 import { useGoogleDrive } from 'hooks'
+import { Dispatch, SetStateAction } from 'react'
+import type { GoogleConfigs } from 'types'
 
 type Props = {
     googleConfigs: GoogleConfigs

@@ -1,13 +1,13 @@
 const ButtonSpinner = () => {
     return (
         <button
-            className="bg-blue-500 text-white font-medium rounded-md p-3 w-32 transition-all duration-300"
+            className="w-32 rounded-md bg-blue-500 p-3 font-medium text-white transition-all duration-300"
             disabled
         >
             <svg
                 aria-hidden="true"
                 role="status"
-                className="inline mr-0.5 w-3.5 h-3.5 text-white animate-spin"
+                className="mr-0.5 inline h-3.5 w-3.5 animate-spin text-white"
                 viewBox="0 0 100 100"
                 fill="none"
                 xmlns="http://www.w3.org/2000/svg"

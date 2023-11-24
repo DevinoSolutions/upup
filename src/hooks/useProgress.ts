@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useState } from 'react'
 import { XhrHttpHandler } from '@aws-sdk/xhr-http-handler'
+import { useCallback, useEffect, useState } from 'react'
 
 const useProgress = (files: File[]) => {
     const [progress, setProgress] = useState(0)

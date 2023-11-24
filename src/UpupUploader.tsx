@@ -1,9 +1,31 @@
 import {
+    CameraUploader,
+    GoogleDriveUploader,
+    MetaVersion,
+    OneDriveUploader,
+    UrlUploader,
+} from 'components'
+import { UpupMini } from 'components/UpupMini'
+import {
+    DropZone,
+    MethodsSelector,
+    Preview,
+    View,
+} from 'components/UpupUploader'
+import { useAddMore, useDragAndDrop } from 'hooks'
+import {
+    checkFileSize,
+    checkFileType,
+    compressFile,
+    getClient,
+    uploadObject,
+} from 'lib'
+import {
     FC,
     ForwardedRef,
-    forwardRef,
     LegacyRef,
     RefAttributes,
+    forwardRef,
     useEffect,
     useImperativeHandle,
     useState,
@@ -17,31 +39,9 @@ import {
     UPLOAD_ADAPTER,
     UploadAdapter,
 } from 'types'
-import {
-    CameraUploader,
-    GoogleDriveUploader,
-    MetaVersion,
-    OneDriveUploader,
-    UrlUploader,
-} from 'components'
-import {
-    DropZone,
-    MethodsSelector,
-    Preview,
-    View,
-} from 'components/UpupUploader'
-import { UpupMini } from 'components/UpupMini'
-import {
-    checkFileSize,
-    checkFileType,
-    compressFile,
-    getClient,
-    uploadObject,
-} from 'lib'
-import { useAddMore, useDragAndDrop } from 'hooks'
 
-import { v4 as uuidv4 } from 'uuid'
 import { AnimatePresence } from 'framer-motion'
+import { v4 as uuidv4 } from 'uuid'
 import useProgress from './hooks/useProgress'
 
 export interface UpupUploaderProps {
@@ -287,7 +287,7 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
             />
         ) : (
             <div
-                className="w-full max-w-[min(98svh,46rem)] bg-[#f4f4f4] h-[min(98svh,35rem)] rounded-md border flex flex-col relative overflow-hidden select-none dark:bg-[#1f1f1f]"
+                className="relative flex h-[min(98svh,35rem)] w-full max-w-[min(98svh,46rem)] select-none flex-col overflow-hidden rounded-md border bg-[#f4f4f4] dark:bg-[#1f1f1f]"
                 onDragEnter={handleDragEnter}
                 onDragLeave={handleDragLeave}
                 ref={containerRef as LegacyRef<HTMLDivElement>}
@@ -305,7 +305,7 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
                 <input
                     type="file"
                     accept={accept}
-                    className="absolute w-0 h-0"
+                    className="absolute h-0 w-0"
                     ref={inputRef}
                     multiple={multiple}
                     onChange={e => {
@@ -345,8 +345,8 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
                     progress={progress}
                     limit={limit}
                 />
-                <div className="p-2 h-full">
-                    <div className="border-[#dfdfdf] border-dashed h-full w-full grid grid-rows-[1fr,auto] place-items-center border rounded-md transition-all">
+                <div className="h-full p-2">
+                    <div className="grid h-full w-full grid-rows-[1fr,auto] place-items-center rounded-md border border-dashed border-[#dfdfdf] transition-all">
                         <MethodsSelector
                             setView={setView}
                             inputRef={inputRef}

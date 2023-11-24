@@ -1,5 +1,5 @@
-import { FC, useCallback, useRef, useState } from 'react'
 import { useUrl } from 'hooks'
+import { FC, useCallback, useRef, useState } from 'react'
 
 import { motion } from 'framer-motion'
 import { TbCameraRotate, TbCapture, TbX } from 'react-icons/tb'
@@ -28,12 +28,12 @@ const CameraUploader: FC<Props> = ({ setFiles, setView }: Props) => {
     }, [webcamRef])
 
     return (
-        <div className="grid grid-rows-[1fr,auto] w-[94%] justify-center">
+        <div className="grid w-[94%] grid-rows-[1fr,auto] justify-center">
             <div className="relative">
                 {imgSrc ? (
                     <img
                         src={imgSrc}
-                        className="rounded-xl border-2 border-[#272727] absolute"
+                        className="absolute rounded-xl border-2 border-[#272727]"
                     />
                 ) : null}
                 <Webcam
@@ -41,7 +41,7 @@ const CameraUploader: FC<Props> = ({ setFiles, setView }: Props) => {
                     ref={webcamRef}
                     screenshotFormat="image/jpeg"
                     videoConstraints={{ facingMode: cameraSide }}
-                    className="max-h-[24rem] h-max rounded-xl"
+                    className="h-max max-h-[24rem] rounded-xl"
                 />
 
                 {imgSrc && (
@@ -53,7 +53,7 @@ const CameraUploader: FC<Props> = ({ setFiles, setView }: Props) => {
                                 setTrigger(false)
                                 clearImage()
                             }}
-                            className="bg-[#272727] rounded-full absolute -top-2 -right-2 text-xl text-[#f5f5f5] p-1 z-10"
+                            className="absolute -right-2 -top-2 z-10 rounded-full bg-[#272727] p-1 text-xl text-[#f5f5f5]"
                             type="button"
                         >
                             <TbX />
@@ -62,7 +62,7 @@ const CameraUploader: FC<Props> = ({ setFiles, setView }: Props) => {
                             initial={{ opacity: 1 }}
                             animate={{ opacity: 0 }}
                             transition={{ duration: 0.5 }}
-                            className="absolute inset-0 bg-white rounded-xl"
+                            className="absolute inset-0 rounded-xl bg-white"
                         />
                     </>
                 )}
@@ -71,7 +71,7 @@ const CameraUploader: FC<Props> = ({ setFiles, setView }: Props) => {
                 {!image ? (
                     <>
                         <button
-                            className="bg-blue-500 text-white p-2 flex flex-col items-center  justify-center  mt-2 rounded-md hover:bg-blue-600 active:bg-blue-700 transition-all duration-300 w-1/3"
+                            className=" mt-2 flex w-1/3 flex-col items-center  justify-center rounded-md  bg-blue-500 p-2 text-white transition-all duration-300 hover:bg-blue-600 active:bg-blue-700"
                             onClick={capture}
                             type="button"
                         >
@@ -79,7 +79,7 @@ const CameraUploader: FC<Props> = ({ setFiles, setView }: Props) => {
                             Capture
                         </button>
                         <button
-                            className="bg-gray-500 text-white p-2 flex flex-col items-center mt-2 rounded-md hover:bg-gray-600 active:bg-blue-700 transition-all duration-300  w-1/3"
+                            className="mt-2 flex w-1/3 flex-col items-center rounded-md bg-gray-500 p-2 text-white transition-all duration-300 hover:bg-gray-600  active:bg-blue-700"
                             onClick={() => {
                                 setCameraSide(prevState =>
                                     prevState === 'environment'
@@ -96,7 +96,7 @@ const CameraUploader: FC<Props> = ({ setFiles, setView }: Props) => {
                     </>
                 ) : (
                     <button
-                        className="bg-blue-500 text-white p-2 w-full mt-2 rounded-md hover:bg-blue-600 active:bg-blue-700 transition-all duration-300"
+                        className="mt-2 w-full rounded-md bg-blue-500 p-2 text-white transition-all duration-300 hover:bg-blue-600 active:bg-blue-700"
                         onClick={() => {
                             setFiles((files: File[]) => [...files, image])
                             setView('internal')

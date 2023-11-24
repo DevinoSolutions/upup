@@ -1,7 +1,6 @@
-// Replace your-framework with the framework you are using (e.g., react-webpack5, vue3-vite)
-import type { StorybookConfig } from '@storybook/react-webpack5'
-
-const config: StorybookConfig = {
+'use strict'
+Object.defineProperty(exports, '__esModule', { value: true })
+var config = {
     framework: '@storybook/react-webpack5',
     stories: ['../**/*.mdx', '../**/*.stories.@(js|jsx|mjs|ts|tsx)'],
     addons: [
@@ -28,5 +27,4 @@ const config: StorybookConfig = {
         },
     ],
 }
-
-export default config
+exports.default = config

@@ -2,12 +2,12 @@ import type { Dispatch, FC, LegacyRef, SetStateAction } from 'react'
 import { useRef } from 'react'
 
 import { AnimatePresence } from 'framer-motion'
-import { checkFileType } from 'lib'
 import { useDragAndDrop } from 'hooks'
+import { checkFileType } from 'lib'
+import { BaseConfigs } from 'types'
+import MetaVersion from '../MetaVersion'
 import { default as MiniDropZone } from './MiniDropZone'
 import { default as MiniPreview } from './MiniPreview'
-import MetaVersion from '../MetaVersion'
-import { BaseConfigs } from 'types'
 
 type Props = {
     files: File[]
@@ -32,7 +32,7 @@ export const UpupMini: FC<Props> = ({
 
     return (
         <div
-            className="w-full max-w-[min(98svh,12rem)] bg-[#f4f4f4] h-[min(98svh,12rem)] rounded-md border flex flex-col relative overflow-hidden select-none dark:bg-[#1f1f1f]"
+            className="relative flex h-[min(98svh,12rem)] w-full max-w-[min(98svh,12rem)] select-none flex-col overflow-hidden rounded-md border bg-[#f4f4f4] dark:bg-[#1f1f1f]"
             onDragEnter={handleDragEnter}
             onDragLeave={handleDragLeave}
             ref={containerRef as LegacyRef<HTMLDivElement>}
@@ -48,7 +48,7 @@ export const UpupMini: FC<Props> = ({
             <input
                 type="file"
                 accept="image/*"
-                className="absolute w-0 h-0"
+                className="absolute h-0 w-0"
                 ref={inputRef}
                 onChange={e => {
                     const acceptedFile = Array.from(
@@ -61,8 +61,8 @@ export const UpupMini: FC<Props> = ({
             />
 
             <MiniPreview files={files} setFiles={setFiles} />
-            <div className="p-2 h-full">
-                <div className="border-[#dfdfdf] border-dashed h-full w-full grid grid-rows-[1fr,auto] place-items-center border rounded-md transition-all">
+            <div className="h-full p-2">
+                <div className="grid h-full w-full grid-rows-[1fr,auto] place-items-center rounded-md border border-dashed border-[#dfdfdf] transition-all">
                     <h1 className="text-center dark:text-white">
                         Drop your files here or{' '}
                         <button
@@ -82,5 +82,5 @@ export const UpupMini: FC<Props> = ({
     )
 }
 
-export { default as MiniPreview } from './MiniPreview'
 export { default as MiniDropZone } from './MiniDropZone'
+export { default as MiniPreview } from './MiniPreview'

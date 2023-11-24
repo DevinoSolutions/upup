@@ -1,10 +1,10 @@
-import { Dispatch, FC, SetStateAction } from 'react'
-import { bytesToSize } from 'lib'
-import { GoogleFile } from 'google'
+import Box from '@mui/material/Box'
 import { FileIcon, LinearProgressBar } from 'components'
 import { AnimatePresence, motion } from 'framer-motion'
+import { GoogleFile } from 'google'
+import { bytesToSize } from 'lib'
+import { Dispatch, FC, SetStateAction } from 'react'
 import { TbX } from 'react-icons/tb'
-import Box from '@mui/material/Box'
 
 type Props = {
     files: File[]
@@ -36,15 +36,15 @@ const Preview: FC<Props> = ({
     return (
         <AnimatePresence>
             {files.length > 0 && (
-                <motion.div className="h-full w-full grid grid-rows-[auto,1fr,auto] text-sm font-medium absolute z-10 pointer-events-none">
+                <motion.div className="pointer-events-none absolute z-10 grid h-full w-full grid-rows-[auto,1fr,auto] text-sm font-medium">
                     <motion.div
                         initial={{ scaleY: '0%' }}
                         animate={{ scaleY: '100%' }}
                         exit={{ scaleY: '0%' }}
-                        className="flex justify-between items-center p-2 border-b bg-[#fafafa] text-[#1b5dab] dark:bg-[#1f1f1f] dark:text-[#fafafa] origin-top pointer-events-auto"
+                        className="pointer-events-auto flex origin-top items-center justify-between border-b bg-[#fafafa] p-2 text-[#1b5dab] dark:bg-[#1f1f1f] dark:text-[#fafafa]"
                     >
                         <button
-                            className="hover:bg-[#e9ecef] hover:text-[#1f1f1f] active:bg-[#dfe6f1] rounded-md p-2 px-4 transition-all duration-300"
+                            className="rounded-md p-2 px-4 transition-all duration-300 hover:bg-[#e9ecef] hover:text-[#1f1f1f] active:bg-[#dfe6f1]"
                             onClick={() => setFiles([])}
                             type="button"
                         >
@@ -57,8 +57,8 @@ const Preview: FC<Props> = ({
 
                         <button
                             className={
-                                'hover:bg-[#e9ecef] hover:text-[#1f1f1f] active:bg-[#dfe6f1] rounded-md p-2 px-4 transition-all duration-300 ' +
-                                (!multiple && 'opacity-0 pointer-events-none')
+                                'rounded-md p-2 px-4 transition-all duration-300 hover:bg-[#e9ecef] hover:text-[#1f1f1f] active:bg-[#dfe6f1] ' +
+                                (!multiple && 'pointer-events-none opacity-0')
                             }
                             onClick={() => setIsAddingMore(!isAddingMore)}
                             type="button"
@@ -79,16 +79,16 @@ const Preview: FC<Props> = ({
                         }}
                         exit={{ scaleY: '0%' }}
                         className={
-                            'grid p-4 border-b bg-[#f4f4f4] dark:bg-[#1f1f1f] dark:text-[#fafafa] origin-bottom gap-4 overflow-y-scroll pointer-events-auto ' +
+                            'pointer-events-auto grid origin-bottom gap-4 overflow-y-scroll border-b bg-[#f4f4f4] p-4 dark:bg-[#1f1f1f] dark:text-[#fafafa] ' +
                             (multiple
-                                ? 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl-grid-cols-4'
+                                ? 'xl-grid-cols-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3'
                                 : 'grid-cols-1 grid-rows-1')
                         }
                     >
                         {files.map((file, i) => (
                             <div
                                 key={i}
-                                className="flex flex-col items-start h-full w-full relative dark:bg-[#1f1f1f] dark:text-[#fafafa]"
+                                className="relative flex h-full w-full flex-col items-start dark:bg-[#1f1f1f] dark:text-[#fafafa]"
                                 onClick={() => {
                                     if (onFileClick) onFileClick(file)
                                 }}
@@ -111,25 +111,25 @@ const Preview: FC<Props> = ({
                                 ) : (
                                     <div
                                         className={
-                                            'w-full rounded-md object-cover shadow text-[#6b7280] ' +
+                                            'w-full rounded-md object-cover text-[#6b7280] shadow ' +
                                             (multiple ? 'h-40' : 'h-[90%]')
                                         }
                                     >
                                         <FileIcon name={file.name} />
                                     </div>
                                 )}
-                                <div className="flex items-center justify-between w-full">
+                                <div className="flex w-full items-center justify-between">
                                     <div>
-                                        <p className="font-medium text-xs mt-1">
+                                        <p className="mt-1 text-xs font-medium">
                                             {file.name}
                                         </p>
-                                        <p className="font-medium text-[10px] text-gray-500">
+                                        <p className="text-[10px] font-medium text-gray-500">
                                             {bytesToSize(file.size)}
                                         </p>
                                     </div>
                                 </div>
                                 <button
-                                    className="bg-black rounded-full absolute -top-1 -right-1"
+                                    className="absolute -right-1 -top-1 rounded-full bg-black"
                                     onClick={() => removeFile(i)}
                                     type="button"
                                 >
@@ -143,7 +143,7 @@ const Preview: FC<Props> = ({
                             initial={{ scaleY: '0%' }}
                             animate={{ scaleY: '100%' }}
                             exit={{ scaleY: '0%' }}
-                            className="flex justify-start items-center p-3 border-b bg-white text-white origin-bottom pointer-events-auto dark:bg-[#1f1f1f] dark:text-white"
+                            className="pointer-events-auto flex origin-bottom items-center justify-start border-b bg-white p-3 text-white dark:bg-[#1f1f1f] dark:text-white"
                         >
                             <Box sx={{ width: '100%' }}>
                                 <LinearProgressBar value={progress} />

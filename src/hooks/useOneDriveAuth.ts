@@ -3,6 +3,7 @@ import {
     PopupRequest,
     PublicClientApplication,
 } from '@azure/msal-browser'
+import { MicrosoftToken, MicrosoftUser, OneDriveRoot } from 'microsoft'
 import {
     Dispatch,
     SetStateAction,
@@ -10,7 +11,6 @@ import {
     useEffect,
     useState,
 } from 'react'
-import { MicrosoftToken, MicrosoftUser, OneDriveRoot } from 'microsoft'
 
 const TOKEN_STORAGE_KEY =
     '00000000-0000-0000-0078-f20226514725.9188040d-6c67-4c5b-b112-36a304b66dad-login.windows.net-accesstoken-6a5dfe6b-7b41-4f43-a4f3-5c6e434056e1-9188040d-6c67-4c5b-b112-36a304b66dad-user.read files.readwrite.all files.read.all openid profile--'
