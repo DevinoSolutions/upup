@@ -1,5 +1,5 @@
-import { Dispatch, FC, SetStateAction } from 'react'
 import { motion } from 'framer-motion'
+import { Dispatch, FC, SetStateAction } from 'react'
 import { TbUpload } from 'react-icons/tb'
 
 type Props = {

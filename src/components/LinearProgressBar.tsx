@@ -2,8 +2,8 @@ import LinearProgress, {
     LinearProgressProps,
 } from '@mui/material/LinearProgress'
 
-import Box from '@mui/material/Box'
 import { Typography } from '@mui/material'
+import Box from '@mui/material/Box'
 
 type Props = LinearProgressProps & { value: number }
 

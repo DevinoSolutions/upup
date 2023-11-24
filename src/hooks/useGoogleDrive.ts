@@ -1,6 +1,6 @@
+import { GoogleFile, Root, Token, User } from 'google'
 import { useCallback, useEffect, useState } from 'react'
 import type { GoogleConfigs } from 'types/GoogleConfigs'
-import { GoogleFile, Root, Token, User } from 'google'
 import { useLoadGAPI } from './useLoadGAPI'
 
 export const useGoogleDrive = (googleConfigs: GoogleConfigs) => {

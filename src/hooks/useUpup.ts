@@ -1,7 +1,7 @@
 import { Dispatch, SetStateAction, useEffect } from 'react'
+import { BaseConfigs } from 'types/BaseConfigs'
 import { CloudStorageConfigs } from 'types/CloudStorageConfigs'
 import { GoogleConfigs } from 'types/GoogleConfigs'
-import { BaseConfigs } from 'types/BaseConfigs'
 import { OneDriveConfigs } from 'types/OneDriveConfigs'
 import { S3Configs } from 'types/S3Configs'
 

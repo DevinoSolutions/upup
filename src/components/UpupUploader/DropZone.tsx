@@ -1,7 +1,7 @@
-import { Dispatch, FC, SetStateAction } from 'react'
 import { motion } from 'framer-motion'
-import { TbUpload } from 'react-icons/tb'
 import { checkFileType } from 'lib'
+import { Dispatch, FC, SetStateAction } from 'react'
+import { TbUpload } from 'react-icons/tb'
 
 type Props = {
     setFiles: Dispatch<SetStateAction<File[]>>

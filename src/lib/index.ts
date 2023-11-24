@@ -1,5 +1,5 @@
-export { bytesToSize, checkFileSize, sizeToBytes } from './sizeUtils'
 export { checkFileType } from './checkFileType'
 export { compressFile } from './compressFile'
-export { getClient, S3ClientWithSend } from './getClient'
+export { S3ClientWithSend, getClient } from './getClient'
+export { bytesToSize, checkFileSize, sizeToBytes } from './sizeUtils'
 export { uploadObject } from './uploadObject'

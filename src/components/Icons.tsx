@@ -246,16 +246,16 @@ const ScreenCastIcon = () => (
 )
 
 export {
-    MyDeviceIcon,
+    AudioIcon,
     BoxIcon,
+    CameraIcon,
     DropBoxIcon,
     FacebookIcon,
     GoogleDriveIcon,
     InstagramIcon,
-    OneDriveIcon,
-    UnsplashIcon,
     LinkIcon,
-    CameraIcon,
-    AudioIcon,
+    MyDeviceIcon,
+    OneDriveIcon,
     ScreenCastIcon,
+    UnsplashIcon,
 }

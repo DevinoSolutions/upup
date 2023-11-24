@@ -1,9 +1,31 @@
 import {
+    CameraUploader,
+    GoogleDriveUploader,
+    MetaVersion,
+    OneDriveUploader,
+    UrlUploader,
+} from 'components'
+import { UpupMini } from 'components/UpupMini'
+import {
+    DropZone,
+    MethodsSelector,
+    Preview,
+    View,
+} from 'components/UpupUploader'
+import { useAddMore, useDragAndDrop } from 'hooks'
+import {
+    checkFileSize,
+    checkFileType,
+    compressFile,
+    getClient,
+    uploadObject,
+} from 'lib'
+import {
     FC,
     ForwardedRef,
-    forwardRef,
     LegacyRef,
     RefAttributes,
+    forwardRef,
     useEffect,
     useImperativeHandle,
     useState,
@@ -17,31 +39,9 @@ import {
     UPLOAD_ADAPTER,
     UploadAdapter,
 } from 'types'
-import {
-    CameraUploader,
-    GoogleDriveUploader,
-    MetaVersion,
-    OneDriveUploader,
-    UrlUploader,
-} from 'components'
-import {
-    DropZone,
-    MethodsSelector,
-    Preview,
-    View,
-} from 'components/UpupUploader'
-import { UpupMini } from 'components/UpupMini'
-import {
-    checkFileSize,
-    checkFileType,
-    compressFile,
-    getClient,
-    uploadObject,
-} from 'lib'
-import { useAddMore, useDragAndDrop } from 'hooks'
 
-import { v4 as uuidv4 } from 'uuid'
 import { AnimatePresence } from 'framer-motion'
+import { v4 as uuidv4 } from 'uuid'
 import useProgress from './hooks/useProgress'
 
 export interface UpupUploaderProps {
