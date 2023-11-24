@@ -41,7 +41,7 @@ jobs:
 
 
   Build:
-    name: Prettier check, Install dependencies and Build project
+    name: Build project
     runs-on: ubuntu-latest
     needs: [ Prettier-check ]
     steps:
