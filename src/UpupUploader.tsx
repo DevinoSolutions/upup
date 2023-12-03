@@ -24,7 +24,7 @@ import {
     FC,
     ForwardedRef,
     LegacyRef,
-    ReactNode,
+    ReactElement,
     RefAttributes,
     forwardRef,
     useEffect,
@@ -52,7 +52,7 @@ export interface UpupUploaderProps {
     googleConfigs?: GoogleConfigs | undefined
     maxFilesSize?: number | undefined
     oneDriveConfigs?: OneDriveConfigs | undefined
-    loader?: ReactNode
+    loader?: ReactElement | null
 }
 
 export type UploadFilesRef = {

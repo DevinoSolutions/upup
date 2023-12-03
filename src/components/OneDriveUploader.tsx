@@ -1,4 +1,4 @@
-import { Dispatch, FC, ReactNode, SetStateAction } from 'react'
+import { Dispatch, FC, ReactElement, SetStateAction } from 'react'
 import { BaseConfigs, OneDriveConfigs } from 'types'
 import useOneDrive from '../hooks/useOneDrive'
 import FileBrowser from './UpupUploader/FileBrowser/BrowserOD'
@@ -8,7 +8,7 @@ interface Props {
     oneDriveConfigs: OneDriveConfigs
     setFiles: Dispatch<SetStateAction<File[]>>
     setView: Dispatch<SetStateAction<string>>
-    loader?: ReactNode
+    loader?: ReactElement | null
 }
 
 /**
@@ -27,7 +27,7 @@ const OneDriveUploader: FC<Props> = ({
         oneDriveConfigs.onedrive_client_id,
     )
 
-    if (!oneDriveFiles) return loader
+    if (!oneDriveFiles) return loader || <div>Loading...</div>
 
     return (
         <FileBrowser
