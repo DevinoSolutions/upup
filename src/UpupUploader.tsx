@@ -24,6 +24,7 @@ import {
     FC,
     ForwardedRef,
     LegacyRef,
+    ReactNode,
     RefAttributes,
     forwardRef,
     useEffect,
@@ -51,6 +52,7 @@ export interface UpupUploaderProps {
     googleConfigs?: GoogleConfigs | undefined
     maxFilesSize?: number | undefined
     oneDriveConfigs?: OneDriveConfigs | undefined
+    loader?: ReactNode
 }
 
 export type UploadFilesRef = {
@@ -79,6 +81,7 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
             googleConfigs,
             maxFilesSize,
             oneDriveConfigs,
+            loader,
         } = props
         const { bucket, s3Configs } = cloudStorageConfigs
         const {
@@ -250,6 +253,7 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
                     baseConfigs={baseConfigs}
                     setFiles={setFiles}
                     setView={setView}
+                    loader={loader}
                 />
             ),
             [UploadAdapter.LINK]: (
