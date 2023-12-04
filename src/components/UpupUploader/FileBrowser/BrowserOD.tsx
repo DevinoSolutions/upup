@@ -125,7 +125,7 @@ const FileBrowser = ({
             </div>
 
             <div className="h-full overflow-scroll overflow-y-scroll bg-white pt-2 dark:bg-[#1f1f1f] dark:text-[#fafafa]">
-                 {path && path.at(-1)?.children.length ? (
+                {path && path.at(-1)?.children.length ? (
                     <ul className="p-2">
                         {path.at(-1)?.children?.map((file, index) => {
                             return (
@@ -141,7 +141,7 @@ const FileBrowser = ({
                         })}
                     </ul>
                 ) : (
-                    <div className="flex flex-col items-center justify-center h-full">
+                    <div className="flex h-full flex-col items-center justify-center">
                         <h1 className="text-sm">No files found</h1>
                     </div>
                 )}
