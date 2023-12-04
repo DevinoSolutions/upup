@@ -122,9 +122,9 @@ const FileBrowser = ({
             </div>
 
             <div className="h-full overflow-scroll overflow-y-scroll bg-white pt-2 dark:bg-[#1f1f1f] dark:text-[#fafafa]">
-                <ul className="p-2">
-                    {path &&
-                        path[path.length - 1]?.children?.map((file, index) => {
+                {path && path.at(-1)?.children.length ? (
+                    <ul className="p-2">
+                        {path.at(-1)?.children?.map((file, index) => {
                             return (
                                 <ListItem
                                     key={file.id}
@@ -136,7 +136,12 @@ const FileBrowser = ({
                                 />
                             )
                         })}
-                </ul>
+                    </ul>
+                ) : (
+                    <div className="flex flex-col items-center justify-center h-full">
+                        <h1 className="text-sm">No files found</h1>
+                    </div>
+                )}
             </div>
 
             <AnimatePresence>
