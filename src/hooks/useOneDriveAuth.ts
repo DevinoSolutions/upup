@@ -12,8 +12,7 @@ import {
     useState,
 } from 'react'
 
-const TOKEN_STORAGE_KEY =
-    '00000000-0000-0000-0078-f20226514725.9188040d-6c67-4c5b-b112-36a304b66dad-login.windows.net-accesstoken-6a5dfe6b-7b41-4f43-a4f3-5c6e434056e1-9188040d-6c67-4c5b-b112-36a304b66dad-user.read files.readwrite.all files.read.all openid profile--'
+const TOKEN_STORAGE_KEY = 'oneDriveToken'
 
 type Props = {
     msalInstance: PublicClientApplication
@@ -22,7 +21,8 @@ type Props = {
 }
 
 const getStoredToken = (): MicrosoftToken | null => {
-    const storedTokenObject = sessionStorage.getItem(TOKEN_STORAGE_KEY)
+    let storedTokenObject = localStorage.getItem(TOKEN_STORAGE_KEY)
+
     if (!storedTokenObject) return null
 
     const storedToken = JSON.parse(storedTokenObject)
@@ -60,9 +60,21 @@ const useOneDriveAuth = ({
     const handleSignIn = useCallback(async () => {
         if (msalInstance) {
             await msalInstance.initialize()
-            await signIn()
-            const storedToken = getStoredToken()
-            storedToken && setToken(storedToken)
+            await signIn().then(
+                async (response: AuthenticationResult | null) => {
+                    if (response) {
+                        const token: MicrosoftToken = {
+                            secret: response.accessToken,
+                            expiresOn: response.expiresOn!.getTime(),
+                        }
+                        setToken(token)
+                        localStorage.setItem(
+                            TOKEN_STORAGE_KEY,
+                            JSON.stringify(token),
+                        )
+                    }
+                },
+            )
         }
     }, [msalInstance, signIn])
 
@@ -70,7 +82,7 @@ const useOneDriveAuth = ({
         setToken(null)
         setUser(undefined)
         setOneDriveFiles(undefined)
-        sessionStorage.removeItem(TOKEN_STORAGE_KEY)
+        localStorage.removeItem(TOKEN_STORAGE_KEY)
     }, [setUser, setOneDriveFiles])
 
     useEffect(() => {
