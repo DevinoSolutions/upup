@@ -1,5 +1,11 @@
 # @bassem97/upup
 
+## 2.3.5
+
+### Patch Changes
+
+-   1924a9e: Fix oneDrive issue & add loader as prop
+
 ## 2.3.4
 
 ### Patch Changes
