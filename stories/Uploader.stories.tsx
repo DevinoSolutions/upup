@@ -1,3 +1,4 @@
+import { CircularProgress } from '@mui/material'
 import { Meta } from '@storybook/react'
 import { useRef } from 'react'
 import {
@@ -48,6 +49,9 @@ const Uploader = args => {
             console.error('Error uploading files:', error)
         }
     }
+
+    const loader = <CircularProgress size={100} />
+
     return (
         <>
             <UpupUploader
@@ -57,6 +61,7 @@ const Uploader = args => {
                 cloudStorageConfigs={cloudStorageConfigs}
                 googleConfigs={googleConfigs}
                 oneDriveConfigs={oneDriveConfigs}
+                loader={loader}
                 ref={upupRef}
             />
             <button onClick={handleUpload}>Upload</button>
