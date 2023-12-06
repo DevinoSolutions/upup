@@ -67,7 +67,7 @@ const FileBrowser = ({
     }
 
     useEffect(() => {
-        if (driveFiles) setPath([driveFiles])
+        setPath(() => (driveFiles ? [driveFiles] : []))
     }, [driveFiles])
 
     return (
