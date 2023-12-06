@@ -1,5 +1,11 @@
 # @bassem97/upup
 
+## 2.3.6
+
+### Patch Changes
+
+-   e67719a: Fix switch google account & show message when empty folder opened
+
 ## 2.3.5
 
 ### Patch Changes
