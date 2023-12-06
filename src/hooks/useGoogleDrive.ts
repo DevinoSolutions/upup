@@ -75,11 +75,12 @@ export const useGoogleDrive = (googleConfigs: GoogleConfigs) => {
      * @description Sign out of Google Drive and remove access token from local storage
      * @returns {Promise<void>}
      */
-    const handleSignOut = async () => {
-        const google = await window.google
-        google.accounts.id.revoke()
+    const handleSignOut = (): void => {
+        // const google = await window.google
+        // google.accounts.id.revoke()
         localStorage.removeItem('token')
         setUser(undefined)
+        setGoogleFiles(undefined)
     }
 
     /**
