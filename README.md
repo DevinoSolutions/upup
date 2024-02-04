@@ -3,7 +3,7 @@
 <br/>
 
 <div align="center">
-   An open-sourcem, free-to-use NPM component that easily handles your file upload needs with seamless Google Drive and OneDrive integration.
+   An open-source, free-to-use NPM component that easily handles your file upload needs with seamless Google Drive and OneDrive integration.
    
 </div>
 <br/>
