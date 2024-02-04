@@ -1,16 +1,12 @@
-<h1 align="center">
-   Upup
-</h1>
+![upup_logo_dark](https://github.com/DevinoSolutions/upup/assets/43147238/b5477db9-cb23-43c7-8c12-518beb31af53)
 
 <br/>
 
 <div align="center">
-  Easily handle your file upload needs. Easily integrate our API into your application to upload files to the cloud.
-
-Goodbye to nasty configs, painful APIs and hello to a simple, easy to use, file uploader.
-
+   An open-sourcem, free-to-use NPM component that easily handles your file upload needs with seamless Google Drive and OneDrive integration.
+   
 </div>
-
+<br/>
 <p align="center">
   <a href="https://github.com/uNotesOfficial/upup">
     <img src="https://img.shields.io/badge/gzipped-206kb-4ba0f6" />
