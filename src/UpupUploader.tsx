@@ -42,6 +42,7 @@ import {
 } from 'types'
 
 import { AnimatePresence } from 'framer-motion'
+import { useThemeStore } from 'lib/theme'
 import { v4 as uuidv4 } from 'uuid'
 import useProgress from './hooks/useProgress'
 
@@ -95,7 +96,14 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
             onFilesChange,
             maxFileSize = { size: 20, unit: 'MB' },
             customMessage = 'Docs and Images',
+            theme,
         } = baseConfigs
+
+        const { theme: themeState, setTheme } = useThemeStore()
+
+        useEffect(() => {
+            if (theme) setTheme(theme)
+        }, [theme])
 
         const [files, setFiles] = useState<File[]>([])
         const [mutatedFiles, setMutatedFiles] = useState<File[]>([])
@@ -283,6 +291,8 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
             mutateFiles()
         }, [files])
 
+        console.log(themeState)
+
         return mini ? (
             <UpupMini
                 files={files}
@@ -291,7 +301,7 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
             />
         ) : (
             <div
-                className="relative flex h-[min(98svh,35rem)] w-full max-w-[min(98svh,46rem)] select-none flex-col overflow-hidden rounded-md border bg-[#f4f4f4] dark:bg-[#1f1f1f]"
+                className={themeState?.container}
                 onDragEnter={handleDragEnter}
                 onDragLeave={handleDragLeave}
                 ref={containerRef as LegacyRef<HTMLDivElement>}
