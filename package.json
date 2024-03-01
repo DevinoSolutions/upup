@@ -109,12 +109,11 @@
         "load-script": "^2.0.0",
         "react-icons": "^4.12.0",
         "react-webcam": "^7.2.0",
-        "uuid": "^9.0.1"
+        "uuid": "^9.0.1",
+        "zustand": "^4.5.1"
     },
     "peerDependencies": {
-        "@emotion/react": "^11.11.1",
-        "react": "18.2.0",
-        "react-dom": "18.2.0"
+        "@emotion/react": "^11.11.1"
     },
     "pnpm": {
         "overrides": {
@@ -124,7 +123,9 @@
             "jsdom": "22.1.0",
             "node-notifier": "10.0.1",
             "highlight.js": "11.9.0",
-            "node-fetch": "2.6.7"
+            "node-fetch": "2.6.7",
+            "react": "18.2.0",
+            "react-dom": "18.2.0"
         }
     }
 }
