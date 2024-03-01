@@ -1,3 +1,5 @@
+import { Theme } from './theme'
+
 export type BaseConfigs = {
     toBeCompressed?: boolean
     multiple?: boolean
@@ -12,4 +14,5 @@ export type BaseConfigs = {
         unit?: 'B' | 'KB' | 'MB' | 'GB' | 'TB' | 'PB' | 'EB' | 'ZB' | 'YB'
     }
     customMessage?: string
+    theme?: Theme
 }
