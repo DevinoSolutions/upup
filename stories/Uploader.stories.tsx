@@ -29,6 +29,10 @@ const Uploader = args => {
                 console.log('files', files)
                 return files
             },
+            theme: {
+                container:
+                    'container relative flex h-[min(98svh,35rem)] w-full max-w-[min(98svh,46rem)] select-none flex-col overflow-hidden rounded-md border bg-[#f4f4f4] dark:bg-[#1f1f1f]',
+            },
             ...args,
         })
     const uploadAdapters: UPLOAD_ADAPTER[] = [
