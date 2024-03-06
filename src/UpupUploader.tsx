@@ -57,7 +57,7 @@ export interface UpupUploaderProps {
 
 export type UploadFilesRef = {
     uploadFiles: () => Promise<string[] | null>
-    dynamicUploadFiles: (files:  File[]) => Promise<string[] | null>
+    dynamicUploadFiles: (files: File[]) => Promise<string[] | null>
 }
 
 /**
@@ -129,8 +129,8 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
          */
         useImperativeHandle(ref, () => ({
             async dynamicUploadFiles(dynamicFiles: File[]) {
-                if(dynamicFiles.length === 0) return null
-                return await this.proceedUpload(dynamicFiles);
+                if (dynamicFiles.length === 0) return null
+                return await this.proceedUpload(dynamicFiles)
             },
             async uploadFiles() {
                 if (files.length === 0) return null
@@ -138,7 +138,7 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
                     mutatedFiles && mutatedFiles.length > 0
                         ? mutatedFiles
                         : files
-                return await this.proceedUpload(filesList);
+                return await this.proceedUpload(filesList)
             },
 
             async proceedUpload(filesList: File[]) {
@@ -153,8 +153,8 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
                         reject(
                             new Error(
                                 'The total size of files must be less than ' +
-                                maxFilesSize / 1024 / 1024 +
-                                'MB',
+                                    maxFilesSize / 1024 / 1024 +
+                                    'MB',
                             ),
                         )
                     }

@@ -19,7 +19,6 @@ const meta: Meta<typeof UpupUploader> = {
 export default meta
 
 const Uploader = args => {
-
     const [files, setFiles] = useState<File[]>([])
     const { baseConfigs, cloudStorageConfigs, googleConfigs, oneDriveConfigs } =
         useUpup({
@@ -55,7 +54,7 @@ const Uploader = args => {
     const handleDynamicUpload = async () => {
         try {
             const testFiles: any[] = []
-            testFiles.push(files[0]);
+            testFiles.push(files[0])
             const data = await upupRef.current?.dynamicUploadFiles(testFiles)
             console.log(`Upload ${data ? 'successful' : 'returned null.'} `)
         } catch (error) {
@@ -77,8 +76,15 @@ const Uploader = args => {
                 loader={loader}
                 ref={upupRef}
             />
-            <button className="border-2 border-red-100" onClick={handleUpload}>Upload</button>
-            <button className="ml-3 border-2 border-red-100" onClick={handleDynamicUpload}>Dynamic Upload</button>
+            <button className="border-2 border-red-100" onClick={handleUpload}>
+                Upload
+            </button>
+            <button
+                className="ml-3 border-2 border-red-100"
+                onClick={handleDynamicUpload}
+            >
+                Dynamic Upload
+            </button>
         </>
     )
 }
