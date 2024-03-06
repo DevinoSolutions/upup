@@ -57,6 +57,7 @@ export interface UpupUploaderProps {
 
 export type UploadFilesRef = {
     uploadFiles: () => Promise<string[] | null>
+    dynamicUploadFiles: (files: File[]) => Promise<string[] | null>
 }
 
 /**
@@ -127,12 +128,20 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
          * Expose the handleUpload function to the parent component
          */
         useImperativeHandle(ref, () => ({
+            async dynamicUploadFiles(dynamicFiles: File[]) {
+                if (dynamicFiles.length === 0) return null
+                return await this.proceedUpload(dynamicFiles)
+            },
             async uploadFiles() {
                 if (files.length === 0) return null
                 const filesList =
                     mutatedFiles && mutatedFiles.length > 0
                         ? mutatedFiles
                         : files
+                return await this.proceedUpload(filesList)
+            },
+
+            async proceedUpload(filesList: File[]) {
                 return new Promise(async (resolve, reject) => {
                     /**
                      * Check if the total size of files is less than the maximum size
@@ -149,13 +158,11 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
                             ),
                         )
                     }
-
                     /**
                      * Upload the file to the cloud storage
                      */
                     let filesToUpload: File[]
                     let keys: string[] = []
-
                     /**
                      * Compress the file before uploading it to the cloud storage
                      */
@@ -172,11 +179,9 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
                             }),
                         )
                     else filesToUpload = filesList
-
                     /**
                      * Loop through the files array and upload the files
                      */
-
                     if (filesToUpload) {
                         try {
                             filesToUpload.map(async file => {
