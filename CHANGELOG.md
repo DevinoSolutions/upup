@@ -1,11 +1,5 @@
 # @bassem97/upup
 
-## 2.4.0
-
-### Minor Changes
-
--   d7951a5: Add dynamic uploads
-
 ## 2.3.6
 
 ### Patch Changes
