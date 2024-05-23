@@ -1,47 +1,44 @@
-import { XhrHttpHandler } from '@aws-sdk/xhr-http-handler'
-import { useCallback, useEffect, useState } from 'react'
+/* eslint-disable react-hooks/exhaustive-deps */
+import { useEffect, useState } from 'react';
 
-const useProgress = (files: File[]) => {
-    const [progress, setProgress] = useState(0)
-    const [handler] = useState(new XhrHttpHandler({}) as any)
+import { XhrHttpHandler } from '@aws-sdk/xhr-http-handler';
+
+// add interface
+interface ProgressHook {
+    progress: number;
+    handler: XhrHttpHandler;
+}
+
+const useProgress = (files: File[]): ProgressHook => {
+    // handler can be a const because we do nt need to change it betwenn two render calls
+    const handler = new XhrHttpHandler({});
+
+    const [progress, setProgress] = useState<number>(0);
     useEffect(() => {
-        if (progress > 0) {
-            console.log(
-                progress === 100
-                    ? '%cUPLOAD COMPLETE'
-                    : `%cUpload Progress : ${progress}%`,
-                `color: ${progress === 100 ? '#00ff00' : '#ff9600'}`,
-            )
-        }
-        if (progress === 100) {
-            handler.off(
-                XhrHttpHandler.EVENTS.UPLOAD_PROGRESS,
-                handleUploadProgress,
-            )
-        }
-    }, [progress, files])
+        const handleUploadProgress = (xhr: ProgressEvent) => {
+            if (xhr.lengthComputable) {
+                const newProgress = Math.round((xhr.loaded / xhr.total) * 100);
+                setProgress(newProgress);
 
-    const handleUploadProgress = useCallback((xhr: ProgressEvent) => {
-        setProgress(Math.round((xhr.loaded / xhr.total) * 100))
-    }, [])
+                if (newProgress === 100) {
+                    handler.off(XhrHttpHandler.EVENTS.UPLOAD_PROGRESS, handleUploadProgress);
+                }
+            }
+        };
 
-    useEffect(() => {
-        handler.on(XhrHttpHandler.EVENTS.UPLOAD_PROGRESS, handleUploadProgress)
+        handler.on(XhrHttpHandler.EVENTS.UPLOAD_PROGRESS, handleUploadProgress);
 
-        // Cleanup function to remove the event listener when component unmounts
+        // Cleanup event listener on unmount or when `files` change
         return () => {
-            handler.off(
-                XhrHttpHandler.EVENTS.UPLOAD_PROGRESS,
-                handleUploadProgress,
-            )
-            setProgress(0)
-        }
-    }, [files])
+            handler.off(XhrHttpHandler.EVENTS.UPLOAD_PROGRESS, handleUploadProgress);
+            setProgress(0);
+        };
+    }, [files, handler]);
 
     return {
         progress,
         handler,
-    }
-}
+    };
+};
 
-export default useProgress
+export default useProgress;
