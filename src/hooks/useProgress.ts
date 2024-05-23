@@ -33,7 +33,7 @@ const useProgress = (files: File[]): ProgressHook => {
             handler.off(XhrHttpHandler.EVENTS.UPLOAD_PROGRESS, handleUploadProgress);
             setProgress(0);
         };
-    }, [files, handler]);
+    }, [files]);
 
     return {
         progress,
