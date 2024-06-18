@@ -3129,6 +3129,7 @@ packages:
   /@humanwhocodes/config-array@0.11.13:
     resolution: {integrity: sha512-JSBDMiDKSzQVngfRjOdFXgFfklaXI4K9nLF49Auh21lmBWRLIK3+xTErTWD4KU54pb6coM6ESE7Awz/FNU3zgQ==}
     engines: {node: '>=10.10.0'}
+    deprecated: Use @eslint/config-array instead
     dependencies:
       '@humanwhocodes/object-schema': 2.0.1
       debug: 4.3.4
@@ -3144,6 +3145,7 @@ packages:
 
   /@humanwhocodes/object-schema@2.0.1:
     resolution: {integrity: sha512-dvuCeX5fC9dXgJn9t+X5atfmgQAzUOWqS1254Gh0m6i8wKd10ebXkfNKiRK+1GWi/yTvvLDHpoxLr0xxxeslWw==}
+    deprecated: Use @eslint/object-schema instead
     dev: true
 
   /@hypnosphi/create-react-context@0.3.1(prop-types@15.8.1)(react@18.2.0):
@@ -15083,7 +15085,7 @@ packages:
       progress: 2.0.3
       proxy-from-env: 1.1.0
       rimraf: 2.7.1
-      ws: 6.2.2
+      ws: 6.2.3
     transitivePeerDependencies:
       - bufferutil
       - supports-color
@@ -18144,8 +18146,8 @@ packages:
       mkdirp: 0.5.6
     dev: true
 
-  /ws@6.2.2:
-    resolution: {integrity: sha512-zmhltoSR8u1cnDsD43TX59mzoMZsLKqUweyYBAIvTngR3shc0W6aOZylZmq/7hqyVxPdi+5Ud2QInblgyE72fw==}
+  /ws@6.2.3:
+    resolution: {integrity: sha512-jmTjYU0j60B+vHey6TfR3Z7RD61z/hmxBS3VMSGIrroOWXQEneK1zNuotOUrGyBHQj0yrpsLHPWtigEFd13ndA==}
     peerDependencies:
       bufferutil: ^4.0.1
       utf-8-validate: ^5.0.2
