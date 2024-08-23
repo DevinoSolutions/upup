@@ -55,6 +55,7 @@ const space_endpoint = process.env.SPACE_ENDPOINT
 const space_region = process.env.SPACE_REGION
 const document_space = process.env.SPACE_DOCUMENTS
 const image_space = process.env.SPACE_IMAGES
+const acl = process.env.SPACE_ACL
 const onedrive_client_id = process.env.ONEDRIVE_CLIENT_ID
 const google_client_id = process.env.GOOGLE_CLIENT_ID
 const google_app_id = process.env.GOOGLE_APP_ID
@@ -78,6 +79,7 @@ const s3Configs: S3Configs = {
         accessKeyId: space_key,
         secretAccessKey: space_secret,
     },
+    acl: acl, // Optional: The default value is 'public-read'
 }
 
 const baseConfigs: BaseConfigs = {

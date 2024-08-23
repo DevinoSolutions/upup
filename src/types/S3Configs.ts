@@ -6,4 +6,5 @@ export type S3Configs = {
         secretAccessKey: string
     }
     requestHandler?: any
+    acl?: string
 }
