@@ -7,7 +7,14 @@ type props = {
     bucket: string
     key: string
     file: File
-    acl?: 'public-read' | 'private' | 'authenticated-read' | 'aws-exec-read' | 'bucket-owner-full-control' | 'bucket-owner-read' | 'public-read-write'
+    acl?:
+        | 'public-read'
+        | 'private'
+        | 'authenticated-read'
+        | 'aws-exec-read'
+        | 'bucket-owner-full-control'
+        | 'bucket-owner-read'
+        | 'public-read-write'
 }
 
 type UploadObjectResponse = {
@@ -28,7 +35,7 @@ export const uploadObject = async ({
     bucket,
     key,
     file,
-    acl = 'public-read'
+    acl = 'public-read',
 }: props): Promise<UploadObjectResponse> => {
     /**
      *   Define the parameters for the object you want to upload.

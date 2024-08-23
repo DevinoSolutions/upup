@@ -6,5 +6,12 @@ export type S3Configs = {
         secretAccessKey: string
     }
     requestHandler?: any
-    acl?: 'public-read' | 'private' | 'authenticated-read' | 'aws-exec-read' | 'bucket-owner-full-control' | 'bucket-owner-read' | 'public-read-write'
+    acl?:
+        | 'public-read'
+        | 'private'
+        | 'authenticated-read'
+        | 'aws-exec-read'
+        | 'bucket-owner-full-control'
+        | 'bucket-owner-read'
+        | 'public-read-write'
 }

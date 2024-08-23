@@ -199,7 +199,7 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
                                     bucket,
                                     key,
                                     file,
-                                    acl: s3Configs.acl
+                                    acl: s3Configs.acl,
                                 })
                                     .then(data => {
                                         console.log(data)
