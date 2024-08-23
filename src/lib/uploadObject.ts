@@ -6,8 +6,8 @@ type props = {
     client: S3ClientWithSend
     bucket: string
     key: string
-    file: File,
-    acl?: 'public-read' | 'private' | 'authenticated-read' | 'aws-exec-read' | 'bucket-owner-full-control' | 'bucket-owner-read' | 'public-read-write';
+    file: File
+    acl?: 'public-read' | 'private' | 'authenticated-read' | 'aws-exec-read' | 'bucket-owner-full-control' | 'bucket-owner-read' | 'public-read-write'
 }
 
 type UploadObjectResponse = {
