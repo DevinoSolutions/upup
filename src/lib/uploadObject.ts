@@ -7,7 +7,7 @@ type props = {
     bucket: string
     key: string
     file: File,
-    acl?: string
+    acl?: 'public-read' | 'private' | 'authenticated-read' | 'aws-exec-read' | 'bucket-owner-full-control' | 'bucket-owner-read' | 'public-read-write';
 }
 
 type UploadObjectResponse = {
