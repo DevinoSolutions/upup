@@ -3,8 +3,8 @@
 <br/>
 
 <div align="center">
-   An open-source, free-to-use NPM component that easily handles your file upload needs with seamless Google Drive and OneDrive integration.
-   
+   <p>An open-source, free-to-use NPM component that easily handles your file upload needs with seamless Google Drive and OneDrive integration.</p>
+   <p>🎮 Join our Discord, where we can provide quick support: <a href="https://discord.gg/ny5WUE9ayc">Discord Invite Link</a></p>
 </div>
 <br/>
 <p align="center">
@@ -31,7 +31,7 @@ yarn add @bassem97/upup
 
 ## Usage
 
-### 1 - Inside you component or App.tsx import UpupUploader and the types you need :
+### 1 - Inside you component or App.tsx import UpupUploader and the types you need:
 
 ```javascript
 // imports
@@ -46,7 +46,7 @@ import {
 } from '@bassem97/upup'
 ```
 
-### 2 - Set your configurations keys from your .env file ( ex: .env.local ) :
+### 2 - Set your configurations keys from your .env file (ex: `.env.local`):
 
 ```javascript
 const space_secret = process.env.SPACE_SECRET
@@ -68,7 +68,7 @@ const [key, setKey] = useState('')
 const [canUpload, setCanUpload] = useState(false)
 ```
 
-### 4 - initialize the configs from the provider you want to use ( ex: DigitalOceanSpaces, GoogleDriveUploader, OneDriveUploader, S3 )
+### 4 - initialize the configs from the provider you want to use (ex: DigitalOceanSpaces, GoogleDriveUploader, OneDriveUploader, S3)
 
 ```javascript
 const s3Configs: S3Configs = {
@@ -102,7 +102,7 @@ const oneDriveConfigs: OneDriveConfigs = {
 }
 ```
 
-### 4 - Render the UpupUploader component and pass the configs and the adapter you want to use :
+### 4 - Render the UpupUploader component and pass the configs and the adapter you want to use:
 
 ```javascript
 return (
@@ -123,7 +123,7 @@ return (
 )
 ```
 
-### 5 - You can also use the UpupUploader component with the default configs and adapter :
+### 5 - You can also use the UpupUploader component with the default configs and adapter:
 
 ```javascript
 return (
