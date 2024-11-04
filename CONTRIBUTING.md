@@ -2,11 +2,11 @@
 
 We love your input! We want to make contributing to Upup as easy and transparent as possible, whether it's:
 
-- Reporting a bug
-- Discussing the current state of the code
-- Submitting a fix
-- Proposing new features
-- Becoming a maintainer
+-   Reporting a bug
+-   Discussing the current state of the code
+-   Submitting a fix
+-   Proposing new features
+-   Becoming a maintainer
 
 ## Development Process
 
@@ -36,11 +36,11 @@ We use GitHub issues to track public bugs.
 
 **Great Bug Reports** tend to have:
 
-- A quick summary and/or background
-- Steps to reproduce
-- What you expected would happen
-- What actually happens
-- Notes (possibly including why you think this might be happening)
+-   A quick summary and/or background
+-   Steps to reproduce
+-   What you expected would happen
+-   What actually happens
+-   Notes (possibly including why you think this might be happening)
 
 ## License
 

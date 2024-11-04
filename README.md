@@ -1,6 +1,6 @@
 # Upup
 
-![upup_logo_dark](https://github.com/DevinoSolutions/upup/assets/43147238/b5477db9-cb23-43c7-8c12-518beb31af53)  
+![upup_logo_dark](https://github.com/DevinoSolutions/upup/assets/43147238/b5477db9-cb23-43c7-8c12-518beb31af53)
 
 An open-source, free-to-use NPM component that easily handles your file upload needs with seamless DigitalOcean Spaces, Amazon S3, Google Drive and OneDrive integration.
 🎮 Join our Discord, where we can provide quick support: [Discord Invite Link](https://discord.gg/ny5WUE9ayc)
