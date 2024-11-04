@@ -1,19 +1,13 @@
-![upup_logo_dark](https://github.com/DevinoSolutions/upup/assets/43147238/b5477db9-cb23-43c7-8c12-518beb31af53)
+# Upup
 
-<br/>
+![upup_logo_dark](https://github.com/DevinoSolutions/upup/assets/43147238/b5477db9-cb23-43c7-8c12-518beb31af53)  
 
-<div align="center">
-   <p>An open-source, free-to-use NPM component that easily handles your file upload needs with seamless Google Drive and OneDrive integration.</p>
-   <p>🎮 Join our Discord, where we can provide quick support: <a href="https://discord.gg/ny5WUE9ayc">Discord Invite Link</a></p>
-</div>
-<br/>
-<p align="center">
-  <a href="https://github.com/uNotesOfficial/upup">
-    <img src="https://img.shields.io/badge/gzipped-206kb-4ba0f6" />
-  </a>
+An open-source, free-to-use NPM component that easily handles your file upload needs with seamless DigitalOcean Spaces, Amazon S3, Google Drive and OneDrive integration.
+🎮 Join our Discord, where we can provide quick support: [Discord Invite Link](https://discord.gg/ny5WUE9ayc)
 
-<hr/>
-<br />
+![Static Badge](https://img.shields.io/badge/gzipped-206kb-4ba0f6)
+
+---
 
 ## Installation
 
@@ -31,7 +25,7 @@ yarn add @bassem97/upup
 
 ## Usage
 
-### 1 - Inside you component or App.tsx import UpupUploader and the types you need:
+### 1 - Inside you component or App.tsx import UpupUploader and the types you need
 
 ```javascript
 // imports
@@ -46,7 +40,7 @@ import {
 } from '@bassem97/upup'
 ```
 
-### 2 - Set your configurations keys from your .env file (ex: `.env.local`):
+### 2 - Set your configurations keys from your .env file (ex: `.env.local`)
 
 ```javascript
 const space_secret = process.env.SPACE_SECRET
@@ -61,7 +55,7 @@ const google_app_id = process.env.GOOGLE_APP_ID
 const google_api_key = process.env.GOOGLE_API_KEY
 ```
 
-### 3 - Create 2 states one for key (which will be the final link of you file. ex: 'https://example-documents.nyc3.cdn.digitaloceanspaces.com/file.pdf') and another for canUpload ( which will be changed after uploading file and submitting )
+### 3 - Create 2 states one for key (which will be the final link of you file. ex: <https://example-documents.nyc3.cdn.digitaloceanspaces.com/file.pdf>) and another for canUpload ( which will be changed after uploading file and submitting )
 
 ```javascript
 const [key, setKey] = useState('')
@@ -102,7 +96,7 @@ const oneDriveConfigs: OneDriveConfigs = {
 }
 ```
 
-### 4 - Render the UpupUploader component and pass the configs and the adapter you want to use:
+### 4 - Render the UpupUploader component and pass the configs and the adapter you want to use
 
 ```javascript
 return (
@@ -123,7 +117,7 @@ return (
 )
 ```
 
-### 5 - You can also use the UpupUploader component with the default configs and adapter:
+### 5 - You can also use the UpupUploader component with the default configs and adapter
 
 ```javascript
 return (
@@ -140,6 +134,18 @@ return (
 
 ## All done! 🎉
 
-### Contributions
+### Contributing
 
-Contributions to this project are welcome! Feel free to submit issues or pull requests on the [GitHub repository](https://github.com/uNotesOfficial/upup.git).
+Please read our [Contributing Guidelines](CONTRIBUTING.md) before submitting pull requests. All contributions fall under our [Code of Conduct](CODE_OF_CONDUCT.md).
+
+### Security
+
+For security concerns, please review our [Security Policy](SECURITY.md).
+
+### License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+---
+
+Made with ❤️ by [Devino](https://devino.ca/)
