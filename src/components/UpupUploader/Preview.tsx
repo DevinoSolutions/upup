@@ -12,6 +12,7 @@ type Props = {
     onFileClick?: (file: FileWithId) => void
     progress: number
     limit?: number
+    handleFileRemove: (file: FileWithId) => void
 } & FileHandlerProps
 
 const Preview: FC<Props> = ({
@@ -23,6 +24,7 @@ const Preview: FC<Props> = ({
     onFileClick,
     progress,
     limit,
+    handleFileRemove,
 }: Props) => {
     return (
         <AnimatePresence>
@@ -84,6 +86,7 @@ const Preview: FC<Props> = ({
                                 index={files.indexOf(file)}
                                 onClick={() => onFileClick?.(file)}
                                 multiple
+                                handleFileRemove={handleFileRemove}
                             />
                         ))}
                     </motion.div>

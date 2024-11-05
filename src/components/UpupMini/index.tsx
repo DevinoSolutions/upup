@@ -8,18 +8,21 @@ import { BaseConfigs } from 'types'
 import MetaVersion from '../MetaVersion'
 import { default as MiniDropZone } from './MiniDropZone'
 import { default as MiniPreview } from './MiniPreview'
+import { FileWithId } from 'types/file'
 
 type Props = {
     files: File[]
     setFiles: Dispatch<SetStateAction<File[]>>
     maxFileSize: BaseConfigs['maxFileSize']
+    handleFileRemove: (file: FileWithId) => void
 }
 
 export const UpupMini: FC<Props> = ({
     files,
     setFiles,
     maxFileSize,
-}: Props) => {
+    handleFileRemove,
+}) => {
     const {
         isDragging,
         setIsDragging,
@@ -60,7 +63,11 @@ export const UpupMini: FC<Props> = ({
                 }}
             />
 
-            <MiniPreview files={files} setFiles={setFiles} />
+            <MiniPreview
+                files={files}
+                setFiles={setFiles}
+                handleFileRemove={handleFileRemove}
+            />
             <div className="h-full p-2">
                 <div className="grid h-full w-full grid-rows-[1fr,auto] place-items-center rounded-md border border-dashed border-[#dfdfdf] transition-all">
                     <h1 className="text-center dark:text-white">

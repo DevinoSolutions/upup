@@ -135,6 +135,70 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
         const client = getClient(s3Configs)
 
         /**
+         * Check if file type is accepted
+         * @param file File to check
+         * @throws Error if file type is not accepted
+         */
+        const validateFileType = (file: File) => {
+            if (!checkFileType(file, accept)) {
+                const error = new Error(`File type ${file.type} not accepted`)
+                baseConfigs?.onUploadFail?.(file, error)
+                throw error
+            }
+        }
+
+        /**
+         * Check if file size is within limits
+         * @param files Array of files to check
+         * @throws Error if total file size exceeds limit
+         */
+        const validateFileSize = (files: File[]) => {
+            if (maxFilesSize) {
+                const totalSize = files.reduce(
+                    (acc, file) => acc + file.size,
+                    0,
+                )
+                if (totalSize > maxFilesSize) {
+                    const error = new Error(
+                        `Total file size must be less than ${
+                            maxFilesSize / 1024 / 1024
+                        }MB`,
+                    )
+                    files.forEach(
+                        file => baseConfigs?.onUploadFail?.(file, error),
+                    )
+                    throw error
+                }
+            }
+        }
+
+        /**
+         * Compress files if compression is enabled
+         * @param files Array of files to compress
+         * @returns Promise<File[]> Compressed files
+         */
+        const compressFiles = async (files: File[]): Promise<File[]> => {
+            if (!toBeCompressed) return files
+
+            try {
+                return await Promise.all(
+                    files.map(async file => {
+                        const compressed = await compressFile({
+                            element: file,
+                            element_name: file.name,
+                        })
+                        return compressed
+                    }),
+                )
+            } catch (error) {
+                files.forEach(
+                    file => baseConfigs?.onUploadFail?.(file, error as Error),
+                )
+                throw error
+            }
+        }
+
+        /**
          * Expose the handleUpload function to the parent component
          */
         useImperativeHandle(ref, () => ({
@@ -153,91 +217,57 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
 
             async proceedUpload(filesList: File[]) {
                 return new Promise(async (resolve, reject) => {
-                    /**
-                     * Check if the total size of files is less than the maximum size
-                     */
-                    const filesSize = maxFilesSize
-                        ? files.reduce((acc, file) => acc + file.size, 0)
-                        : 0
-                    if (maxFilesSize && filesSize > maxFilesSize) {
-                        reject(
-                            new Error(
-                                'The total size of files must be less than ' +
-                                    maxFilesSize / 1024 / 1024 +
-                                    'MB',
-                            ),
-                        )
-                    }
-                    /**
-                     * Upload the file to the cloud storage
-                     */
-                    let filesToUpload: File[]
-                    let keys: string[] = []
-                    /**
-                     * Compress the file before uploading it to the cloud storage
-                     */
-                    if (toBeCompressed)
-                        filesToUpload = await Promise.all(
-                            filesList.map(async file => {
-                                /**
-                                 * Compress the file
-                                 */
-                                return await compressFile({
-                                    element: file,
-                                    element_name: file.name,
-                                })
-                            }),
-                        )
-                    else filesToUpload = filesList
-                    /**
-                     * Loop through the files array and upload the files
-                     */
-                    if (filesToUpload) {
-                        try {
-                            filesToUpload.map(async file => {
+                    try {
+                        // Validate all files first
+                        filesList.forEach(validateFileType)
+                        validateFileSize(filesList)
+
+                        // Notify upload start
+                        filesList.forEach(file => {
+                            baseConfigs?.onUpload?.(file)
+                        })
+
+                        // Compress files if needed
+                        const processedFiles = await compressFiles(filesList)
+
+                        const uploadPromises = processedFiles.map(
+                            async file => {
                                 const fileExtension = file.name.split('.').pop()
-                                /**
-                                 * assign a unique name for the file contain timestamp and random string with extension from the original file
-                                 */
                                 const key = `${Date.now()}__${uuidv4()}.${fileExtension}`
 
-                                /**
-                                 * Upload the file to the cloud storage
-                                 */
-                                await uploadObject({
-                                    client,
-                                    bucket,
-                                    key,
-                                    file,
-                                })
-                                    .then(data => {
-                                        console.log(data)
-                                        if (data.httpStatusCode === 200) {
-                                            keys.push(key)
-                                        } else
-                                            throw new Error(
-                                                'Something went wrong',
-                                            )
+                                try {
+                                    const result = await uploadObject({
+                                        client,
+                                        bucket,
+                                        key,
+                                        file,
                                     })
-                                    .catch(err => {
-                                        throw new Error(err.message)
-                                    })
-                                    .finally(() => {
-                                        if (
-                                            keys.length === filesToUpload.length
+
+                                    if (result.httpStatusCode === 200) {
+                                        baseConfigs?.onCompletedUpload?.(
+                                            file,
+                                            key,
                                         )
-                                            resolve(keys) // return the keys to the parent component
-                                    })
-                            })
-                        } catch (error) {
-                            if (error instanceof Error) {
-                                // ✅ TypeScript knows err is Error
-                                reject(new Error(error.message))
-                            } else {
-                                reject(new Error('Something went wrong'))
-                            }
-                        }
-                    } else reject(undefined)
+                                        return key
+                                    } else {
+                                        throw new Error('Upload failed')
+                                    }
+                                } catch (error) {
+                                    baseConfigs?.onUploadFail?.(
+                                        file,
+                                        error as Error,
+                                    )
+                                    throw error
+                                }
+                            },
+                        )
+
+                        const keys = await Promise.all(uploadPromises)
+                        baseConfigs?.onAllCompleted?.(keys)
+                        resolve(keys)
+                    } catch (error) {
+                        reject(error)
+                    }
                 })
             },
         }))
@@ -298,23 +328,70 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
             mutateFiles()
         }, [files])
 
-        // Modify the input onChange handler
+        // Modify the input onChange handler to include validation
         const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-            const acceptedFiles = Array.from(e.target.files || [])
-                .filter(file => checkFileType(file, accept))
-                .map(createFileWithId)
-            setFiles(files =>
-                isAddingMore ? [...files, ...acceptedFiles] : acceptedFiles,
-            )
-            e.target.value = ''
+            try {
+                const newFiles = Array.from(e.target.files || [])
+                newFiles.forEach(validateFileType)
+                validateFileSize(newFiles)
+
+                const acceptedFiles = newFiles.map(createFileWithId)
+                setFiles(files =>
+                    isAddingMore ? [...files, ...acceptedFiles] : acceptedFiles,
+                )
+            } catch (error) {
+                console.error(error)
+                // Don't set files if validation fails
+            } finally {
+                e.target.value = ''
+            }
         }
 
-        // Modify the DropZone props
-        const handleDropzoneFiles = (newFiles: File[]) => {
-            const filesWithIds = newFiles.map(createFileWithId)
-            setFiles(files =>
-                isAddingMore ? [...files, ...filesWithIds] : [...filesWithIds],
-            )
+        // Modify the DropZone handler to include validation and maintain existing files
+        const handleDropzoneFiles: Dispatch<
+            SetStateAction<File[]>
+        > = filesOrUpdater => {
+            if (typeof filesOrUpdater === 'function') {
+                setFiles(prevFiles => {
+                    try {
+                        const updatedFiles = filesOrUpdater(prevFiles)
+                        const newFiles = updatedFiles.slice(prevFiles.length)
+
+                        // Validate only new files
+                        newFiles.forEach(validateFileType)
+                        validateFileSize([...prevFiles, ...newFiles])
+
+                        const filesWithIds = newFiles.map(createFileWithId)
+                        return [...prevFiles, ...filesWithIds]
+                    } catch (error) {
+                        console.error(error)
+                        return prevFiles
+                    }
+                })
+            } else {
+                try {
+                    filesOrUpdater.forEach(validateFileType)
+                    setFiles(prevFiles => {
+                        try {
+                            validateFileSize([...prevFiles, ...filesOrUpdater])
+                            const filesWithIds =
+                                filesOrUpdater.map(createFileWithId)
+                            return [...prevFiles, ...filesWithIds]
+                        } catch (error) {
+                            console.error(error)
+                            return prevFiles
+                        }
+                    })
+                } catch (error) {
+                    console.error(error)
+                }
+            }
+        }
+
+        // Add file removal handler
+        const handleFileRemove = (file: FileWithId) => {
+            setFiles(prev => prev.filter(f => f !== file))
+            baseConfigs?.onFileRemove?.(file)
         }
 
         return mini ? (
@@ -322,6 +399,7 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
                 files={files}
                 setFiles={setFiles}
                 maxFileSize={maxFileSize}
+                handleFileRemove={handleFileRemove}
             />
         ) : (
             <div
@@ -333,14 +411,11 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
                 <AnimatePresence>
                     {isDragging && (
                         <DropZone
-                            setFiles={
-                                handleDropzoneFiles as Dispatch<
-                                    SetStateAction<File[]>
-                                >
-                            }
+                            setFiles={handleDropzoneFiles}
                             setIsDragging={setIsDragging}
                             multiple={multiple}
                             accept={accept}
+                            baseConfigs={baseConfigs}
                         />
                     )}
                 </AnimatePresence>
@@ -373,6 +448,7 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
                     onFileClick={onFileClick}
                     progress={progress}
                     limit={limit}
+                    handleFileRemove={handleFileRemove}
                 />
                 <div className="h-full p-2">
                     <div className="grid h-full w-full grid-rows-[1fr,auto] place-items-center rounded-md border border-dashed border-[#dfdfdf] transition-all">
@@ -382,6 +458,7 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
                             methods={METHODS.filter(method => {
                                 return uploadAdapters.includes(method.id as any)
                             })}
+                            baseConfigs={baseConfigs}
                         />
                         <MetaVersion
                             customMessage={customMessage}
