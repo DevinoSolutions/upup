@@ -1,10 +1,8 @@
 import Box from '@mui/material/Box'
-import { FileIcon, LinearProgressBar } from 'components'
+import { LinearProgressBar } from 'components'
+import PreviewComponent from 'components/UpupMini/PreviewComponent'
 import { AnimatePresence, motion } from 'framer-motion'
-import { bytesToSize } from 'lib'
-import { Dispatch, FC, SetStateAction } from 'react'
-import FileViewer from 'react-file-viewer'
-import { TbX } from 'react-icons/tb'
+import { Dispatch, FC, SetStateAction, memo } from 'react'
 
 type Props = {
     files: File[]
@@ -27,12 +25,6 @@ const Preview: FC<Props> = ({
     progress,
     limit,
 }: Props) => {
-    /**
-     * Remove file from files array
-     */
-    const removeFile = (index: number) =>
-        setFiles(files => [...files.filter((_, i) => i !== index)])
-
     return (
         <AnimatePresence>
             {files.length > 0 && (
@@ -86,53 +78,14 @@ const Preview: FC<Props> = ({
                         }
                     >
                         {files.map((file, i) => (
-                            <div
-                                key={i}
-                                className="relative flex h-full w-full flex-col items-start dark:bg-[#1f1f1f] dark:text-[#fafafa]"
-                                onClick={() => {
-                                    if (onFileClick) onFileClick(file)
-                                }}
-                            >
-                                <div
-                                    className={
-                                        'w-full rounded-md object-cover shadow ' +
-                                        (multiple ? 'h-40' : 'h-[90%]')
-                                    }
-                                >
-                                    <FileViewer
-                                        fileType={file.name
-                                            .split('.')
-                                            .pop()
-                                            ?.toLowerCase()}
-                                        filePath={URL.createObjectURL(file)}
-                                        onError={e => {
-                                            console.log(
-                                                'error in file-viewer:',
-                                                e,
-                                            )
-                                            // Fallback to FileIcon if preview fails
-                                            return <FileIcon name={file.name} />
-                                        }}
-                                    />
-                                </div>
-                                <div className="flex w-full items-center justify-between">
-                                    <div>
-                                        <p className="mt-1 text-xs font-medium">
-                                            {file.name}
-                                        </p>
-                                        <p className="text-[10px] font-medium text-gray-500">
-                                            {bytesToSize(file.size)}
-                                        </p>
-                                    </div>
-                                </div>
-                                <button
-                                    className="absolute -right-1 -top-1 rounded-full bg-black"
-                                    onClick={() => removeFile(i)}
-                                    type="button"
-                                >
-                                    <TbX className="h-4 w-4 text-white" />
-                                </button>
-                            </div>
+                            <PreviewComponent
+                                key={`${file.name}-${i}`} // More specific key
+                                setFiles={setFiles}
+                                file={file}
+                                index={i}
+                                onClick={() => onFileClick?.(file)}
+                                multiple
+                            />
                         ))}
                     </motion.div>
                     {progress > 0 && (
@@ -153,4 +106,4 @@ const Preview: FC<Props> = ({
     )
 }
 
-export default Preview
+export default memo(Preview)
