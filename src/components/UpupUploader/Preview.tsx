@@ -1,19 +1,18 @@
 import Box from '@mui/material/Box'
 import { LinearProgressBar } from 'components'
-import PreviewComponent from 'components/UpupMini/PreviewComponent'
+import PreviewComponent from 'components/UpupUploader/PreviewComponent'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Dispatch, FC, SetStateAction, memo } from 'react'
+import { FC, memo } from 'react'
+import { FileHandlerProps, FileWithId } from 'types/file'
 
 type Props = {
-    files: File[]
-    setFiles: Dispatch<SetStateAction<File[]>>
     isAddingMore: boolean
     setIsAddingMore: (isAddingMore: boolean) => void
     multiple?: boolean
-    onFileClick?: (file: File) => void
+    onFileClick?: (file: FileWithId) => void
     progress: number
     limit?: number
-}
+} & FileHandlerProps
 
 const Preview: FC<Props> = ({
     files,
@@ -77,12 +76,12 @@ const Preview: FC<Props> = ({
                                 : 'grid-cols-1 grid-rows-1')
                         }
                     >
-                        {files.map((file, i) => (
+                        {files.map(file => (
                             <PreviewComponent
-                                key={`${file.name}-${i}`} // More specific key
+                                key={file.id || `${file.name}-${Date.now()}`}
                                 setFiles={setFiles}
                                 file={file}
-                                index={i}
+                                index={files.indexOf(file)}
                                 onClick={() => onFileClick?.(file)}
                                 multiple
                             />

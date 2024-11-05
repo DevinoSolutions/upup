@@ -1,13 +1,9 @@
 import { AnimatePresence, motion } from 'framer-motion'
-import { Dispatch, FC, SetStateAction } from 'react'
-import PreviewComponent from './PreviewComponent'
+import { FC } from 'react'
+import PreviewComponent from '../UpupUploader/PreviewComponent'
+import { FileHandlerProps } from 'types/file'
 
-type Props = {
-    files: File[]
-    setFiles: Dispatch<SetStateAction<File[]>>
-}
-
-const MiniPreview: FC<Props> = ({ files, setFiles }: Props) => {
+const MiniPreview: FC<FileHandlerProps> = ({ files, setFiles }) => {
     return (
         <AnimatePresence>
             {files.length > 0 && (
@@ -20,10 +16,10 @@ const MiniPreview: FC<Props> = ({ files, setFiles }: Props) => {
                     >
                         {files.map((file, i) => (
                             <PreviewComponent
-                                key={`${file.name}-${i}`} // More specific key
+                                key={`${file.id || file.name}-${i}`}
                                 setFiles={setFiles}
                                 file={file}
-                                index={i}
+                                index={files.indexOf(file)}
                                 mini
                             />
                         ))}

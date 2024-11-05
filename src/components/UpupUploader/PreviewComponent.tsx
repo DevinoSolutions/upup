@@ -1,55 +1,75 @@
 import { FileIcon } from 'components'
+import DocxPreview from 'components/DocxPreview'
 import { bytesToSize } from 'lib'
 import {
-    Dispatch,
     HTMLAttributes,
-    SetStateAction,
     forwardRef,
     memo,
-    useCallback,
     useEffect,
     useMemo,
     useRef,
 } from 'react'
 import FileViewer from 'react-file-viewer'
 import { TbX } from 'react-icons/tb'
+import { FileHandlerProps, FileWithId } from 'types/file'
 
-function getFilePreviewComponent({ name, type }: File, objectUrl: string) {
-    const extension = name.split('.').pop()?.toLowerCase()
-    if (type.startsWith('image/'))
+function getFilePreviewComponent(
+    file: File & { id?: string },
+    objectUrl: string,
+) {
+    const extension = file.name.split('.').pop()?.toLowerCase()
+    const key = `container-${file.id || file.name}-${file.size}-${
+        file.lastModified
+    }`
+
+    if (file.type.startsWith('image/')) {
         return (
             <img
                 src={objectUrl}
-                alt={name}
+                alt={file.name}
                 className="absolute h-full w-full rounded-md object-cover shadow"
             />
         )
+    }
+
+    if (extension === 'docx') {
+        return (
+            <div
+                className="h-full w-full"
+                style={{ minHeight: '150px' }}
+                id={`container-${key}`}
+            >
+                <DocxPreview
+                    key={`docx-${key}`}
+                    file={file}
+                    objectUrl={objectUrl}
+                />
+            </div>
+        )
+    }
 
     return (
         <div className="h-full w-full">
             <FileViewer
+                key={`viewer-${key}`}
                 fileType={extension}
                 filePath={objectUrl}
                 onError={(e: Error) => {
-                    console.log('error in file-viewer:', e)
-                    return (
-                        <FileIcon
-                            extension={name.split('.').pop()?.toLowerCase()}
-                        />
-                    )
+                    console.error('error in file-viewer:', e)
+                    return <FileIcon extension={extension} />
                 }}
-                unsupportedComponent={FileIcon}
-                errorComponent={FileIcon}
+                unsupportedComponent={() => <FileIcon extension={extension} />}
+                errorComponent={() => <FileIcon extension={extension} />}
             />
         </div>
     )
 }
 
 type Props = {
-    setFiles: Dispatch<SetStateAction<File[]>>
+    setFiles: FileHandlerProps['setFiles']
     multiple?: boolean
     mini?: boolean
-    file: File
+    file: FileWithId
     index: number
 } & HTMLAttributes<HTMLDivElement>
 
@@ -77,13 +97,12 @@ export default memo(
         }, [])
 
         // Create object URL for a file
-        const getObjectUrl = useCallback((f: File) => {
-            const url = URL.createObjectURL(f)
+        const objectUrl = useMemo(() => {
+            const url = URL.createObjectURL(file)
             objectUrls.current.push(url)
             return url
-        }, [])
+        }, [file])
 
-        const objectUrl = useMemo(() => getObjectUrl(file), [file])
         /**
          * Remove file from files array
          */
