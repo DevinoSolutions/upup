@@ -44,9 +44,9 @@ import {
 } from 'types'
 
 import { AnimatePresence } from 'framer-motion'
+import { FileWithId } from 'types/file'
 import { v4 as uuidv4 } from 'uuid'
 import useProgress from './hooks/useProgress'
-import { FileWithId } from 'types/file'
 
 export interface UpupUploaderProps {
     cloudStorageConfigs: CloudStorageConfigs

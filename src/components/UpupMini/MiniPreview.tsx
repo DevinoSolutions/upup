@@ -1,7 +1,7 @@
 import { AnimatePresence, motion } from 'framer-motion'
 import { FC } from 'react'
-import PreviewComponent from '../UpupUploader/PreviewComponent'
 import { FileHandlerProps } from 'types/file'
+import PreviewComponent from '../UpupUploader/PreviewComponent'
 
 const MiniPreview: FC<FileHandlerProps> = ({ files, setFiles }) => {
     return (
