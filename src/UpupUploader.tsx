@@ -400,6 +400,7 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
                 setFiles={setFiles}
                 maxFileSize={maxFileSize}
                 handleFileRemove={handleFileRemove}
+                baseConfigs={baseConfigs}
             />
         ) : (
             <div

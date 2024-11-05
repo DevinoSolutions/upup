@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion'
-import { BaseConfigs } from 'types'
 import { Dispatch, FC, SetStateAction } from 'react'
 import { TbUpload } from 'react-icons/tb'
+import { BaseConfigs } from 'types'
 
 type Props = {
     setFiles: Dispatch<SetStateAction<File[]>>
@@ -42,16 +42,21 @@ const DropZone: FC<Props> = ({
             onDrop={e => {
                 e.preventDefault()
                 const files = Array.from(e.dataTransfer.files)
-                setFiles(prev => [...prev, ...files])
+                setFiles(prev => (multiple ? [...prev, ...files] : [files[0]]))
                 setIsDragging(false)
                 baseConfigs?.onDrop?.(files)
             }}
         >
-            <div className="flex h-full w-full flex-col items-center justify-center gap-2 rounded-md border border-dashed border-current text-4xl">
+            <div
+                className={`flex h-full w-full flex-col items-center justify-center gap-2 rounded-md border border-dashed border-current
+                    ${!multiple ? 'text-center text-xl' : 'text-4xl'}`}
+            >
                 <i className="rounded-full border-2 border-current p-3">
                     <TbUpload />
                 </i>
-                <p className="text-xl">Drop your files here</p>
+                <p className={`${!multiple ? 'text-xl' : 'text-lg'}`}>
+                    Drop your files here
+                </p>
             </div>
             <input
                 type="file"
@@ -59,10 +64,11 @@ const DropZone: FC<Props> = ({
                 className="absolute top-0 h-full w-full opacity-0"
                 multiple={multiple}
                 onChange={e => {
-                    setFiles(prev => [
-                        ...prev,
-                        ...Array.from(e.target.files || []),
-                    ])
+                    setFiles(prev =>
+                        multiple
+                            ? [...prev, ...Array.from(e.target.files || [])]
+                            : [e.target.files![0]],
+                    )
                     setIsDragging(false)
                     e.target.value = '' // Reset input
                 }}

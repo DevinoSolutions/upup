@@ -51,7 +51,7 @@ export default memo(
         return (
             <div
                 ref={ref}
-                className="relative flex h-fit w-full flex-col items-start dark:bg-[#1f1f1f] dark:text-[#fafafa]"
+                className="relative flex h-full max-h-fit w-full flex-col items-start dark:bg-[#1f1f1f] dark:text-[#fafafa]"
                 {...restProps}
             >
                 <div
