@@ -1,9 +1,9 @@
 import Box from '@mui/material/Box'
 import { FileIcon, LinearProgressBar } from 'components'
 import { AnimatePresence, motion } from 'framer-motion'
-import { GoogleFile } from 'google'
 import { bytesToSize } from 'lib'
 import { Dispatch, FC, SetStateAction } from 'react'
+import FileViewer from 'react-file-viewer'
 import { TbX } from 'react-icons/tb'
 
 type Props = {
@@ -93,31 +93,28 @@ const Preview: FC<Props> = ({
                                     if (onFileClick) onFileClick(file)
                                 }}
                             >
-                                {(file as unknown as GoogleFile)
-                                    .thumbnailLink ||
-                                file.type.startsWith('image/') ? (
-                                    <img
-                                        src={
-                                            (file as unknown as GoogleFile)
-                                                .thumbnailLink ||
-                                            URL.createObjectURL(file)
-                                        }
-                                        alt=""
-                                        className={
-                                            'w-full rounded-md object-cover shadow ' +
-                                            (multiple ? 'h-40' : ' h-full')
-                                        }
+                                <div
+                                    className={
+                                        'w-full rounded-md object-cover shadow ' +
+                                        (multiple ? 'h-40' : 'h-[90%]')
+                                    }
+                                >
+                                    <FileViewer
+                                        fileType={file.name
+                                            .split('.')
+                                            .pop()
+                                            ?.toLowerCase()}
+                                        filePath={URL.createObjectURL(file)}
+                                        onError={e => {
+                                            console.log(
+                                                'error in file-viewer:',
+                                                e,
+                                            )
+                                            // Fallback to FileIcon if preview fails
+                                            return <FileIcon name={file.name} />
+                                        }}
                                     />
-                                ) : (
-                                    <div
-                                        className={
-                                            'w-full rounded-md object-cover text-[#6b7280] shadow ' +
-                                            (multiple ? 'h-40' : 'h-[90%]')
-                                        }
-                                    >
-                                        <FileIcon name={file.name} />
-                                    </div>
-                                )}
+                                </div>
                                 <div className="flex w-full items-center justify-between">
                                     <div>
                                         <p className="mt-1 text-xs font-medium">
