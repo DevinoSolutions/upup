@@ -1,6 +1,6 @@
 import { CircularProgress } from '@mui/material'
 import { Meta } from '@storybook/react'
-import { useRef, useState } from 'react'
+import React, { useRef, useState } from 'react'
 import {
     UPLOAD_ADAPTER,
     UploadAdapter,
@@ -20,19 +20,18 @@ export default meta
 
 const Uploader = args => {
     const [files, setFiles] = useState<File[]>([])
-    const { baseConfigs, cloudStorageConfigs, googleConfigs, oneDriveConfigs } =
-        useUpup({
-            setFiles: setFiles,
-            accept: '*',
-            multiple: true,
-            limit: 5,
-            onFileClick: file => void 0,
-            onFilesChange: files => {
-                console.log('files', files)
-                return files
-            },
-            ...args,
-        })
+    const { baseConfigs } = useUpup({
+        setFiles: setFiles,
+        accept: '*',
+        multiple: true,
+        limit: 5,
+        onFileClick: file => void 0,
+        onFilesChange: files => {
+            console.log('files', files)
+            return files
+        },
+        ...args,
+    })
     const uploadAdapters: UPLOAD_ADAPTER[] = [
         UploadAdapter.INTERNAL,
         UploadAdapter.GOOGLE_DRIVE,
@@ -70,9 +69,6 @@ const Uploader = args => {
                 {...args}
                 baseConfigs={baseConfigs}
                 uploadAdapters={uploadAdapters}
-                cloudStorageConfigs={cloudStorageConfigs}
-                googleConfigs={googleConfigs}
-                oneDriveConfigs={oneDriveConfigs}
                 loader={loader}
                 ref={upupRef}
             />

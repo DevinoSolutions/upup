@@ -33,7 +33,6 @@ import {
 } from 'react'
 import {
     BaseConfigs,
-    CloudStorageConfigs,
     GoogleConfigs,
     METHODS,
     OneDriveConfigs,
@@ -44,15 +43,14 @@ import {
 import { AnimatePresence } from 'framer-motion'
 import { v4 as uuidv4 } from 'uuid'
 import useProgress from './hooks/useProgress'
+import { getPresignedUrl } from 'lib/getPresignedUrl'
 
 export interface UpupUploaderProps {
-    cloudStorageConfigs: CloudStorageConfigs
     baseConfigs: BaseConfigs
-    uploadAdapters: UPLOAD_ADAPTER[]
-    googleConfigs?: GoogleConfigs | undefined
-    maxFilesSize?: number | undefined
-    oneDriveConfigs?: OneDriveConfigs | undefined
-    loader?: ReactElement | null
+    uploadAdapters?: UPLOAD_ADAPTER[]
+    presignedUrlEndpoint: string
+    maxFilesSize?: number
+    loader?: ReactElement
 }
 
 export type UploadFilesRef = {
@@ -62,12 +60,11 @@ export type UploadFilesRef = {
 
 /**
  *
- * @param cloudStorageConfigs cloud provider configurations
  * @param baseConfigs base configurations
- * @param toBeCompressed whether the user want to compress the file before uploading it or not. Default value is false
  * @param uploadAdapters the methods you want to enable for the user to upload the files. Default value is ['INTERNAL']
- * @param googleConfigs google configurations
- * @param oneDriveConfigs one drive configurations
+ * @param presignedUrlEndpoint pre-signed URL endpoint
+ * @param maxFilesSize max files size
+ * @param loader loader
  * @param ref referrer to the component instance to access its method uploadFiles from the parent component
  * @constructor
  */
@@ -76,15 +73,13 @@ export type UploadFilesRef = {
 export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
     forwardRef((props: UpupUploaderProps, ref: ForwardedRef<any>) => {
         const {
-            cloudStorageConfigs,
             baseConfigs,
             uploadAdapters = ['INTERNAL', 'LINK'],
-            googleConfigs,
+            presignedUrlEndpoint,
             maxFilesSize,
-            oneDriveConfigs,
             loader,
         } = props
-        const { bucket, s3Configs } = cloudStorageConfigs
+
         const {
             toBeCompressed = false,
             onChange,
@@ -117,13 +112,6 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
 
         const { handler, progress } = useProgress(files)
 
-        s3Configs.requestHandler = handler
-
-        /**
-         * Get the client instance
-         */
-        const client = getClient(s3Configs)
-
         /**
          * Expose the handleUpload function to the parent component
          */
@@ -143,91 +131,68 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
 
             async proceedUpload(filesList: File[]) {
                 return new Promise(async (resolve, reject) => {
-                    /**
-                     * Check if the total size of files is less than the maximum size
-                     */
-                    const filesSize = maxFilesSize
-                        ? files.reduce((acc, file) => acc + file.size, 0)
-                        : 0
-                    if (maxFilesSize && filesSize > maxFilesSize) {
-                        reject(
-                            new Error(
-                                'The total size of files must be less than ' +
-                                    maxFilesSize / 1024 / 1024 +
-                                    'MB',
-                            ),
-                        )
-                    }
-                    /**
-                     * Upload the file to the cloud storage
-                     */
-                    let filesToUpload: File[]
-                    let keys: string[] = []
-                    /**
-                     * Compress the file before uploading it to the cloud storage
-                     */
-                    if (toBeCompressed)
-                        filesToUpload = await Promise.all(
-                            filesList.map(async file => {
-                                /**
-                                 * Compress the file
-                                 */
-                                return await compressFile({
-                                    element: file,
-                                    element_name: file.name,
-                                })
-                            }),
-                        )
-                    else filesToUpload = filesList
-                    /**
-                     * Loop through the files array and upload the files
-                     */
-                    if (filesToUpload) {
-                        try {
-                            filesToUpload.map(async file => {
-                                const fileExtension = file.name.split('.').pop()
-                                /**
-                                 * assign a unique name for the file contain timestamp and random string with extension from the original file
-                                 */
-                                const key = `${Date.now()}__${uuidv4()}.${fileExtension}`
-
-                                /**
-                                 * Upload the file to the cloud storage
-                                 */
-                                await uploadObject({
-                                    client,
-                                    bucket,
-                                    key,
-                                    file,
-                                })
-                                    .then(data => {
-                                        console.log(data)
-                                        if (data.httpStatusCode === 200) {
-                                            keys.push(key)
-                                        } else
-                                            throw new Error(
-                                                'Something went wrong',
-                                            )
-                                    })
-                                    .catch(err => {
-                                        throw new Error(err.message)
-                                    })
-                                    .finally(() => {
-                                        if (
-                                            keys.length === filesToUpload.length
-                                        )
-                                            resolve(keys) // return the keys to the parent component
-                                    })
-                            })
-                        } catch (error) {
-                            if (error instanceof Error) {
-                                // ✅ TypeScript knows err is Error
-                                reject(new Error(error.message))
-                            } else {
-                                reject(new Error('Something went wrong'))
-                            }
+                    try {
+                        // Validate all files first
+                        filesList.forEach(file => checkFileType(file, accept))
+                        if (maxFilesSize) {
+                            const totalSize = filesList.reduce(
+                                (acc, file) => acc + file.size,
+                                0,
+                            )
+                            if (totalSize > maxFilesSize)
+                                throw new Error(
+                                    `Total file size must be less than ${
+                                        maxFilesSize / 1024 / 1024
+                                    } MB`,
+                                )
                         }
-                    } else reject(undefined)
+
+                        // Compress files if needed
+                        const processedFiles = toBeCompressed
+                            ? await Promise.all(
+                                  filesList.map(file =>
+                                      compressFile({
+                                          element: file,
+                                          element_name: file.name,
+                                      }),
+                                  ),
+                              )
+                            : filesList
+
+                        const keys: string[] = []
+
+                        for (const file of processedFiles) {
+                            if (!presignedUrlEndpoint)
+                                throw new Error(
+                                    'Pre-signed URL endpoint is required',
+                                )
+
+                            // Get pre-signed URL for each file
+                            const presignedData = await getPresignedUrl(
+                                presignedUrlEndpoint,
+                                {
+                                    fileName: file.name,
+                                    fileType: file.type,
+                                    fileSize: file.size,
+                                },
+                            )
+
+                            // Upload file using pre-signed URL
+                            const result = await uploadObject({
+                                presignedUrl: presignedData.uploadUrl,
+                                fields: presignedData.fields,
+                                file,
+                            })
+
+                            if (result.httpStatusCode === 200)
+                                keys.push(presignedData.key)
+                            else throw new Error('Upload failed')
+                        }
+
+                        resolve(keys)
+                    } catch (error) {
+                        reject(error)
+                    }
                 })
             },
         }))
@@ -248,13 +213,13 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
                 <GoogleDriveUploader
                     setFiles={setFiles}
                     setView={setView}
-                    googleConfigs={googleConfigs as GoogleConfigs}
+                    googleConfigs={baseConfigs as GoogleConfigs}
                     accept={accept}
                 />
             ),
             [UploadAdapter.ONE_DRIVE]: (
                 <OneDriveUploader
-                    oneDriveConfigs={oneDriveConfigs as OneDriveConfigs}
+                    oneDriveConfigs={baseConfigs as OneDriveConfigs}
                     baseConfigs={baseConfigs}
                     setFiles={setFiles}
                     setView={setView}
