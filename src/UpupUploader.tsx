@@ -103,7 +103,7 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
             onChange,
         )
 
-        const { handler, progress } = useProgress(files)
+        const { progress } = useProgress(files)
 
         /**
          * Expose the handleUpload function to the parent component

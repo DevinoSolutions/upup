@@ -13,7 +13,7 @@ export const useUpup = (
         mini: false,
     },
 ) => {
-    const { accept, setFiles } = props
+    const { setFiles } = props
 
     const baseConfigs: BaseConfigs = {
         ...props,
