@@ -10,4 +10,4 @@ export type PreSignedUrlRequest = {
     fileName: string
     fileType: string
     fileSize: number
-} 
+}

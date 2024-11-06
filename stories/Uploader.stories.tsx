@@ -1,6 +1,6 @@
 import { CircularProgress } from '@mui/material'
 import { Meta } from '@storybook/react'
-import React, { useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import {
     UPLOAD_ADAPTER,
     UploadAdapter,
@@ -69,6 +69,7 @@ const Uploader = args => {
                 {...args}
                 baseConfigs={baseConfigs}
                 uploadAdapters={uploadAdapters}
+                presignedUrlEndpoint="http://localhost:3001/presigned-url"
                 loader={loader}
                 ref={upupRef}
             />

@@ -13,13 +13,7 @@ import {
     View,
 } from 'components/UpupUploader'
 import { useAddMore, useDragAndDrop } from 'hooks'
-import {
-    checkFileSize,
-    checkFileType,
-    compressFile,
-    getClient,
-    uploadObject,
-} from 'lib'
+import { checkFileSize, checkFileType, compressFile, uploadObject } from 'lib'
 import {
     FC,
     ForwardedRef,
@@ -41,9 +35,8 @@ import {
 } from 'types'
 
 import { AnimatePresence } from 'framer-motion'
-import { v4 as uuidv4 } from 'uuid'
-import useProgress from './hooks/useProgress'
 import { getPresignedUrl } from 'lib/getPresignedUrl'
+import useProgress from './hooks/useProgress'
 
 export interface UpupUploaderProps {
     baseConfigs: BaseConfigs

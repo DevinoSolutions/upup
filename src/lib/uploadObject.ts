@@ -32,6 +32,11 @@ export const uploadObject = async ({
         const response = await fetch(presignedUrl, {
             method: 'PUT',
             body: fields ? formData : file,
+            headers: {
+                'Content-Type': file.type,
+            },
+            mode: 'cors',
+            credentials: 'include',
         })
 
         if (!response.ok)
