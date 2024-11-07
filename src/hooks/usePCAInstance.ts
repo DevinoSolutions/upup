@@ -1,23 +1,52 @@
 import { PublicClientApplication } from '@azure/msal-browser'
-
-let msalInstance: PublicClientApplication | null = null
+import { useEffect, useState } from 'react'
 
 const usePCAInstance = (clientId: string) => {
-    if (msalInstance) return { msalInstance }
+    const [msalInstance, setMsalInstance] =
+        useState<PublicClientApplication | null>(null)
+    const [isInitializing, setIsInitializing] = useState(true)
 
-    msalInstance = new PublicClientApplication({
-        auth: {
-            clientId,
-            redirectUri: window.location.origin,
-            authority: 'https://login.microsoftonline.com/common',
-        },
-        cache: {
-            cacheLocation: 'sessionStorage',
-            storeAuthStateInCookie: false,
-        },
-    })
+    useEffect(() => {
+        const initializeMsal = async () => {
+            try {
+                const instance = new PublicClientApplication({
+                    auth: {
+                        clientId,
+                        authority: 'https://login.microsoftonline.com/common',
+                        redirectUri: window.location.origin,
+                        postLogoutRedirectUri: window.location.origin,
+                        navigateToLoginRequestUrl: false,
+                    },
+                    cache: {
+                        cacheLocation: 'sessionStorage',
+                        storeAuthStateInCookie: true,
+                    },
+                    system: {
+                        allowRedirectInIframe: true,
+                        windowHashTimeout: 60000,
+                        iframeHashTimeout: 6000,
+                        loadFrameTimeout: 6000,
+                    },
+                })
 
-    return { msalInstance }
+                await instance.initialize()
+                setMsalInstance(instance)
+            } catch (error) {
+                console.error('Failed to initialize MSAL:', error)
+            } finally {
+                setIsInitializing(false)
+            }
+        }
+
+        if (!msalInstance) {
+            initializeMsal()
+        }
+    }, [clientId])
+
+    return {
+        msalInstance,
+        isInitializing,
+    }
 }
 
 export default usePCAInstance

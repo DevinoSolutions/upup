@@ -1,173 +1,142 @@
-import { MicrosoftUser, OneDriveFile, OneDriveRoot } from 'microsoft'
+import { InteractionType } from '@azure/msal-browser'
+import { Client } from '@microsoft/microsoft-graph-client'
+import { AuthCodeMSALBrowserAuthenticationProvider } from '@microsoft/microsoft-graph-client/authProviders/authCodeMsalBrowser'
+import { MicrosoftUser, OneDriveRoot } from 'microsoft'
 import { useCallback, useEffect, useState } from 'react'
 import useOneDriveAuth from './useOneDriveAuth'
 import usePCAInstance from './usePCAInstance'
-
-const GRAPH_API_ENDPOINT = 'https://graph.microsoft.com/v1.0/me'
-const GRAPH_API_FILES_ENDPOINT = `${GRAPH_API_ENDPOINT}/drive/root/children`
 
 interface AuthProps {
     user: MicrosoftUser | undefined
     oneDriveFiles: OneDriveRoot | undefined
     signOut: () => void
     downloadFile: (fileId: string) => Promise<Blob>
+    graphClient: Client | null
 }
 
 function useOneDrive(clientId: string): AuthProps {
     const [user, setUser] = useState<MicrosoftUser | undefined>()
-    const [rawFiles, setRawFiles] = useState<OneDriveFile[]>([])
-    const [oneDriveFiles, setOneDriveFiles] = useState<OneDriveRoot>()
-    const [oneDriveRoot, setOneDriveRoot] = useState<OneDriveRoot>()
-
+    const [oneDriveFiles, setOneDriveFiles] = useState<
+        OneDriveRoot | undefined
+    >()
+    const [graphClient, setGraphClient] = useState<Client | null>(null)
     const { msalInstance } = usePCAInstance(clientId)
-    const { token, signOut } = useOneDriveAuth({
-        msalInstance,
-        setUser,
-        setOneDriveFiles,
-    })
+    const { token, signOut, isInitialized, isAuthenticating } = useOneDriveAuth(
+        {
+            msalInstance,
+            setUser,
+            setOneDriveFiles,
+        },
+    )
 
-    /**
-     * Maps OneDrive file to GoogleFile format.
-     * @param file The OneDrive file to map.
-     * @returns The mapped Google file.
-     */
-    const mapToOneDriveFile = async (
-        file: OneDriveFile,
-    ): Promise<OneDriveFile> => {
-        const isFolder = file.folder !== undefined
-        let thumbnails = undefined
-        if (!isFolder) {
-            try {
-                const thumbnailResponse = await fetchWithAuth(
-                    `${GRAPH_API_ENDPOINT}/drive/items/${file.id}/thumbnails`,
-                )
-                thumbnails = thumbnailResponse.value[0] // Assuming there's always at least one thumbnail.
-            } catch (error) {
-                console.error('Error fetching thumbnails:', error)
+    // Initialize Graph client when we have both msalInstance and token
+    useEffect(() => {
+        const isReady = token && isInitialized && !isAuthenticating
+        if (!isReady || !msalInstance) {
+            setGraphClient(null)
+            return
+        }
+
+        try {
+            const accounts = msalInstance.getAllAccounts()
+            if (accounts.length === 0) {
+                console.error('No accounts found')
+                return
             }
-        }
-        return {
-            id: file.id,
-            name: file.name,
-            file: {
-                mimeType: isFolder
-                    ? 'application/vnd.google-apps.folder'
-                    : file.file!.mimeType,
-            },
-            children: file.children
-                ? await Promise.all(file.children.map(mapToOneDriveFile))
-                : [],
-            '@microsoft.graph.downloadUrl':
-                file['@microsoft.graph.downloadUrl']!,
-            thumbnails: thumbnails,
-        }
-    }
 
-    /**
-     * @description Map to OneDrive root
-     * @param oneDriveRoot
-     */
-    const mapToOneDriveRoot = async (oneDriveRoot: OneDriveRoot) => {
-        const children = oneDriveRoot.children
-            ? await Promise.all(oneDriveRoot.children.map(mapToOneDriveFile))
-            : []
-        return {
-            id: oneDriveRoot.id,
-            name: oneDriveRoot.name,
-            children: children,
-        }
-    }
-
-    const fetchWithAuth = useCallback(
-        async (endpoint: string) => {
-            if (!token) throw new Error('Authentication token is missing.')
-            const response = await fetch(endpoint, {
-                headers: {
-                    Authorization: `Bearer ${token.secret}`,
+            const authProvider = new AuthCodeMSALBrowserAuthenticationProvider(
+                msalInstance,
+                {
+                    account: accounts[0],
+                    scopes: [
+                        'user.read',
+                        'files.read.all',
+                        'files.readwrite.all',
+                    ],
+                    interactionType: InteractionType.Popup,
                 },
-            })
-            if (!response.ok) throw new Error(response.statusText)
-            return response.json()
-        },
-        [token],
-    )
-
-    const recurse = useCallback(
-        async (file: OneDriveFile) => {
-            if (file.folder && file.folder.childCount > 0) {
-                const childrenData = await fetchWithAuth(
-                    `${GRAPH_API_ENDPOINT}/drive/items/${file.id}/children`,
-                )
-                file.children = childrenData.value
-                await Promise.all(file.children!.map(child => recurse(child)))
-            }
-        },
-        [fetchWithAuth],
-    )
-
-    const organizeFiles = useCallback(
-        async (files: OneDriveFile[]) => {
-            const fileIds = new Set(files.map(f => f.id))
-            const organizedFiles = files.filter(
-                f => !f.parentReference || !fileIds.has(f.parentReference.id),
             )
-            await Promise.all(organizedFiles.map(recurse))
-            setOneDriveFiles({
-                id: 'root',
-                name: 'OneDrive',
-                children: organizedFiles,
+
+            const client = Client.initWithMiddleware({
+                authProvider,
             })
-        },
-        [recurse],
-    )
 
-    const fetchFileList = useCallback(async () => {
-        const data = await fetchWithAuth(GRAPH_API_FILES_ENDPOINT)
-        setRawFiles(data.value)
-        await organizeFiles(data.value)
-    }, [token])
+            setGraphClient(client)
+        } catch (error) {
+            console.error('Error initializing Graph client:', error)
+            setGraphClient(null)
+        }
+    }, [msalInstance, token, isInitialized, isAuthenticating])
 
-    const downloadFile = useCallback(async (url: string) => {
-        const response = await fetch(url)
-        if (!response.ok) throw new Error(response.statusText)
-        return response.blob()
-    }, [])
-
+    // Fetch user profile and files when Graph client is ready
     useEffect(() => {
-        if (token) {
-            const initialize = async () => {
-                try {
-                    const profile = await fetchWithAuth(GRAPH_API_ENDPOINT)
-                    setUser({ name: profile.displayName, mail: profile.mail })
-                    await fetchFileList()
-                } catch (error) {
-                    console.error('Error fetching profile or file list:', error)
+        if (!graphClient) return
+
+        const initialize = async () => {
+            try {
+                const profile = await graphClient.api('/me').get()
+                setUser({ name: profile.displayName, mail: profile.mail })
+
+                const filesResponse = await graphClient
+                    .api('/me/drive/root/children')
+                    .select(
+                        'id,name,folder,file,thumbnails,@microsoft.graph.downloadUrl',
+                    )
+                    .expand('thumbnails')
+                    .get()
+
+                const files = filesResponse.value.map((item: any) => ({
+                    id: item.id,
+                    name: item.name,
+                    isFolder: !!item.folder,
+                    children: item.folder ? [] : undefined,
+                    thumbnails: item.thumbnails?.[0] || null,
+                    '@microsoft.graph.downloadUrl':
+                        item['@microsoft.graph.downloadUrl'],
+                    file: item.file,
+                }))
+
+                setOneDriveFiles({
+                    id: 'root',
+                    name: 'OneDrive',
+                    isFolder: true,
+                    children: files,
+                })
+            } catch (error) {
+                console.error('Error fetching profile or file list:', error)
+            }
+        }
+
+        initialize()
+    }, [graphClient])
+
+    const downloadFile = useCallback(
+        async (downloadUrl: string): Promise<Blob> => {
+            if (!graphClient) {
+                throw new Error('Graph client not initialized')
+            }
+
+            try {
+                const response = await fetch(downloadUrl)
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`)
                 }
+                return await response.blob()
+            } catch (error) {
+                console.error('Error downloading file:', error)
+                throw error
             }
-            void initialize()
-        }
-    }, [token, fetchFileList])
+        },
+        [graphClient],
+    )
 
-    useEffect(() => {
-        if (rawFiles.length > 0) {
-            organizeFiles(rawFiles).catch(error =>
-                console.error('File organization error:', error),
-            )
-        }
-    }, [rawFiles, organizeFiles])
-
-    useEffect(() => {
-        const mapFiles = async () => {
-            if (!oneDriveFiles) return
-            const oneDriveData = await mapToOneDriveRoot(oneDriveFiles)
-            setOneDriveRoot(oneDriveData)
-        }
-        mapFiles().catch(error =>
-            console.error('Error mapping OneDrive files:', error),
-        )
-    }, [oneDriveFiles])
-
-    return { user, oneDriveFiles: oneDriveRoot, signOut, downloadFile }
+    return {
+        user,
+        oneDriveFiles,
+        signOut,
+        downloadFile,
+        graphClient,
+    }
 }
 
 export default useOneDrive
