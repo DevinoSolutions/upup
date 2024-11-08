@@ -1,6 +1,5 @@
 import {
     AuthenticationResult,
-    InteractionRequiredAuthError,
     PopupRequest,
     PublicClientApplication,
 } from '@azure/msal-browser'
@@ -34,7 +33,6 @@ const getStoredToken = (): MicrosoftToken | null => {
         }
         return storedToken
     } catch (error) {
-        console.error('Error reading stored token:', error)
         localStorage.removeItem(TOKEN_STORAGE_KEY)
         return null
     }
@@ -48,6 +46,7 @@ export default function useOneDriveAuth({
     const [token, setToken] = useState<MicrosoftToken | null>(null)
     const [isInitialized, setIsInitialized] = useState(false)
     const [isAuthenticating, setIsAuthenticating] = useState(false)
+    const [isAuthInProgress, setIsAuthInProgress] = useState(false)
 
     // Initialize MSAL
     useEffect(() => {
@@ -64,7 +63,6 @@ export default function useOneDriveAuth({
                     setToken(storedToken)
                 }
             } catch (error) {
-                console.error('Failed to initialize MSAL:', error)
                 setIsInitialized(false)
             }
         }
@@ -74,7 +72,13 @@ export default function useOneDriveAuth({
 
     const signIn =
         useCallback(async (): Promise<AuthenticationResult | null> => {
-            if (!msalInstance || !isInitialized || isAuthenticating) return null
+            if (
+                !msalInstance ||
+                !isInitialized ||
+                isAuthenticating ||
+                isAuthInProgress
+            )
+                return null
 
             const loginRequest: PopupRequest = {
                 scopes: ['user.read', 'Files.ReadWrite.All', 'Files.Read.All'],
@@ -82,43 +86,42 @@ export default function useOneDriveAuth({
             }
 
             try {
+                setIsAuthInProgress(true)
                 setIsAuthenticating(true)
-                const accounts = msalInstance.getAllAccounts()
 
+                const accounts = msalInstance.getAllAccounts()
                 if (accounts.length > 0) {
-                    try {
-                        return await msalInstance.acquireTokenSilent({
-                            ...loginRequest,
-                            account: accounts[0],
-                        })
-                    } catch (silentError) {
-                        if (
-                            silentError instanceof InteractionRequiredAuthError
-                        ) {
-                            return await msalInstance.acquireTokenPopup(
-                                loginRequest,
-                            )
-                        }
-                        throw silentError
-                    }
-                } else {
-                    return await msalInstance.loginPopup(loginRequest)
+                    return await msalInstance.acquireTokenSilent({
+                        ...loginRequest,
+                        account: accounts[0],
+                    })
                 }
+
+                // If silent token acquisition fails, try interactive login
+                const loginResponse =
+                    await msalInstance.loginPopup(loginRequest)
+
+                if (loginResponse) {
+                    return await msalInstance.acquireTokenSilent({
+                        ...loginRequest,
+                        account: loginResponse.account,
+                    })
+                }
+
+                return null
             } catch (error) {
-                console.error('Authentication error:', error)
                 return null
             } finally {
                 setIsAuthenticating(false)
+                setIsAuthInProgress(false)
             }
-        }, [msalInstance, isInitialized, isAuthenticating])
+        }, [msalInstance, isInitialized, isAuthenticating, isAuthInProgress])
 
     const handleSignIn = useCallback(async () => {
-        if (!isInitialized || isAuthenticating) return
+        if (!isInitialized || isAuthenticating || isAuthInProgress) return
 
         try {
-            await msalInstance?.handleRedirectPromise()
             const response = await signIn()
-
             if (response) {
                 const newToken: MicrosoftToken = {
                     secret: response.accessToken,
@@ -129,33 +132,93 @@ export default function useOneDriveAuth({
                     TOKEN_STORAGE_KEY,
                     JSON.stringify(newToken),
                 )
+                sessionStorage.setItem('isAuthenticated', 'true')
             }
         } catch (error) {
-            console.error('Sign in error:', error)
-            handleSignOut()
+            setToken(null)
+            localStorage.removeItem(TOKEN_STORAGE_KEY)
+            sessionStorage.removeItem('isAuthenticated')
         }
-    }, [msalInstance, signIn, isInitialized, isAuthenticating])
+    }, [signIn, isInitialized, isAuthenticating, isAuthInProgress])
 
-    const handleSignOut = useCallback(() => {
-        if (!msalInstance || !isInitialized) return
+    const handleSignOut = useCallback(async () => {
+        if (!msalInstance || !isInitialized || isAuthInProgress) return
 
         try {
-            msalInstance.logoutPopup()
+            setIsAuthInProgress(true)
+            const accounts = msalInstance.getAllAccounts()
+
+            if (accounts.length > 0) {
+                // Wait for the logout to complete
+                await msalInstance.logoutPopup({
+                    account: accounts[0],
+                    postLogoutRedirectUri: window.location.origin,
+                    onRedirectNavigate: () => false,
+                })
+            }
+
+            // Clear all local state
             setToken(null)
             setUser(undefined)
             setOneDriveFiles(undefined)
             localStorage.removeItem(TOKEN_STORAGE_KEY)
+
+            // Clear MSAL cache
+            msalInstance.clearCache()
+
+            // Set logout flag in session storage
+            sessionStorage.setItem('recentLogout', 'true')
+
+            // Clear remaining session storage
+            sessionStorage.removeItem('isAuthenticated')
         } catch (error) {
-            console.error('Logout error:', error)
+        } finally {
+            setIsAuthInProgress(false)
+            // Clear the logout flag after a short delay
+            setTimeout(() => {
+                sessionStorage.removeItem('recentLogout')
+            }, 1000) // Adjust timeout as needed
         }
-    }, [msalInstance, isInitialized, setUser, setOneDriveFiles])
+    }, [
+        msalInstance,
+        isInitialized,
+        isAuthInProgress,
+        setUser,
+        setOneDriveFiles,
+    ])
 
-    // Auto-login if no token is present
+    // Modify the auto-login effect
     useEffect(() => {
-        if (!isInitialized || isAuthenticating || token) return
+        if (!isInitialized || isAuthenticating || isAuthInProgress || token)
+            return
 
-        handleSignIn()
-    }, [isInitialized, token, handleSignIn, isAuthenticating])
+        let autoLoginTimeout: NodeJS.Timeout
+
+        const autoLogin = async () => {
+            // Check for recent logout or existing authentication
+            const hasRecentlyLoggedOut = sessionStorage.getItem('recentLogout')
+            const isAuthenticated = sessionStorage.getItem('isAuthenticated')
+
+            if (hasRecentlyLoggedOut || isAuthenticated) {
+                return
+            }
+
+            const accounts = msalInstance?.getAllAccounts() || []
+            if (accounts.length === 0) {
+                autoLoginTimeout = setTimeout(() => {
+                    handleSignIn()
+                }, 1000)
+            }
+        }
+
+        autoLogin()
+
+        return () => {
+            if (autoLoginTimeout) {
+                clearTimeout(autoLoginTimeout)
+            }
+        }
+    }, [isInitialized, isAuthenticating, isAuthInProgress, token, handleSignIn])
 
     return {
         token,
