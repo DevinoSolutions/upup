@@ -1,8 +1,6 @@
 import { Dispatch, SetStateAction, useEffect } from 'react'
 import { BaseConfigs } from 'types/BaseConfigs'
 import { CloudStorageConfigs } from 'types/CloudStorageConfigs'
-import { GoogleConfigs } from 'types/GoogleConfigs'
-import { OneDriveConfigs } from 'types/OneDriveConfigs'
 import { S3Configs } from 'types/S3Configs'
 
 const space_secret = process.env.SPACE_SECRET
@@ -11,10 +9,6 @@ const space_endpoint = process.env.SPACE_ENDPOINT
 const space_region = process.env.SPACE_REGION
 const document_space = process.env.SPACE_DOCUMENTS
 const image_space = process.env.SPACE_IMAGES
-const onedrive_client_id = process.env.ONEDRIVE_CLIENT_ID
-const google_client_id = process.env.GOOGLE_CLIENT_ID
-const google_app_id = process.env.GOOGLE_APP_ID
-const google_api_key = process.env.GOOGLE_API_KEY
 
 /**
  * @param props
@@ -35,9 +29,7 @@ type Props = BaseConfigs & {
  */
 export const useUpup: (props?: Props) => {
     cloudStorageConfigs: CloudStorageConfigs
-    googleConfigs: GoogleConfigs
     baseConfigs: BaseConfigs
-    oneDriveConfigs: OneDriveConfigs
 } = (
     props: Props = {
         accept: '*',
@@ -59,10 +51,6 @@ export const useUpup: (props?: Props) => {
             SPACE_REGION: !!space_region,
             SPACE_DOCUMENTS: !!document_space,
             SPACE_IMAGES: !!image_space,
-            ONEDRIVE_CLIENT_ID: !!onedrive_client_id,
-            GOOGLE_CLIENT_ID: !!google_client_id,
-            GOOGLE_APP_ID: !!google_app_id,
-            GOOGLE_API_KEY: !!google_api_key,
         }
 
         const missingEnvVars = Object.entries(requiredEnvVars)
@@ -95,21 +83,8 @@ export const useUpup: (props?: Props) => {
         s3Configs,
     }
 
-    const googleConfigs: GoogleConfigs = {
-        google_api_key,
-        google_app_id,
-        google_client_id,
-    }
-
-    const oneDriveConfigs: OneDriveConfigs = {
-        onedrive_client_id,
-        redirectUri: window.location.href,
-    }
-
     return {
         baseConfigs,
         cloudStorageConfigs,
-        googleConfigs,
-        oneDriveConfigs,
     }
 }

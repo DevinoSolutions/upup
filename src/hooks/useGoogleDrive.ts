@@ -1,13 +1,31 @@
-import { GoogleFile, Root, Token, User } from 'google'
+import { AdapterConfig } from 'context/config-context'
 import { useCallback, useEffect, useState } from 'react'
-import type { GoogleConfigs } from 'types/GoogleConfigs'
+import { GoogleDriveRoot, GoogleFile } from 'types'
 import { useLoadGAPI } from './useLoadGAPI'
 
-export const useGoogleDrive = (googleConfigs: GoogleConfigs) => {
-    const { google_client_id, google_api_key } = googleConfigs
+type Token = {
+    access_token: string
+    expires_in: number
+    scope: string
+    token_type: string
+    error?: unknown
+}
 
-    const [user, setUser] = useState<User>()
-    const [googleFiles, setGoogleFiles] = useState<Root>()
+export type GoogleUser = {
+    family_name: string
+    given_name: string
+    locale: string
+    name: string
+    picture: string
+    sub: string
+    token: Token
+}
+
+export const useGoogleDrive = (googleConfigs: AdapterConfig) => {
+    const { clientId: google_client_id, apiKey: google_api_key } = googleConfigs
+
+    const [user, setUser] = useState<GoogleUser>()
+    const [googleFiles, setGoogleFiles] = useState<GoogleDriveRoot>()
     const [rawFiles, setRawFiles] = useState<GoogleFile[]>()
     const [token, setToken] = useState<Token>()
 
@@ -168,7 +186,7 @@ export const useGoogleDrive = (googleConfigs: GoogleConfigs) => {
                                 )
                                 return setToken(tokenResponse)
                             } else {
-                                console.error('Error: ', tokenResponse.error)
+                                console.error('Error: ', tokenResponse?.error)
                             }
                         },
                     })

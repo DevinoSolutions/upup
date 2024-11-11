@@ -1,37 +1,34 @@
-import type { GoogleFile, Root, User } from 'google'
-import { Dispatch, SetStateAction, useEffect, useState } from 'react'
+import BrowserPath from 'components/BrowserPath'
+import ButtonSpinner from 'components/ButtonSpinner'
+import { useConfigContext } from 'context/config-context'
+import { AnimatePresence, motion } from 'framer-motion'
+import { GoogleUser } from 'hooks/useGoogleDrive'
+import { useEffect, useState } from 'react'
+import { TbSearch } from 'react-icons/tb'
+import { Adapter, GoogleDriveRoot, GoogleFile } from 'types'
 import ListItem from './ListItem'
 
-import ButtonSpinner from 'components/ButtonSpinner'
-import { AnimatePresence, motion } from 'framer-motion'
-import { TbSearch } from 'react-icons/tb'
-
 type Props = {
-    driveFiles?: Root | undefined
+    driveFiles?: GoogleDriveRoot
     handleSignOut: () => void
-    user: User | undefined
+    user: GoogleUser | undefined
     downloadFile: (fileId: string) => Promise<Blob>
-    setFiles: Dispatch<SetStateAction<File[]>>
-    setView: (view: string) => void
-    accept?: string
 }
 
 const FileBrowser = ({
     handleSignOut,
     user,
     driveFiles,
-    setFiles,
     downloadFile,
-    setView,
-    accept,
 }: Props) => {
-    const [path, setPath] = useState<Root[]>([])
+    const { setFiles, setActiveAdapter } = useConfigContext()
+    const [path, setPath] = useState<GoogleDriveRoot[]>([])
     const [selectedFiles, setSelectedFiles] = useState<GoogleFile[]>([])
     const [showLoader, setLoader] = useState(false)
 
-    const handleClick = (file: GoogleFile | Root) => {
+    const handleClick = (file: GoogleFile | GoogleDriveRoot) => {
         if ('children' in file) {
-            setPath(prevPath => [...prevPath, file as Root])
+            setPath(prevPath => [...prevPath, file as GoogleDriveRoot])
         } else {
             setSelectedFiles(prevFiles =>
                 prevFiles.includes(file)
@@ -62,7 +59,7 @@ const FileBrowser = ({
             ...prevFiles,
             ...(downloadedFiles as unknown as File[]),
         ])
-        setView('internal')
+        setActiveAdapter(Adapter.INTERNAL)
         setLoader(false)
     }
 
@@ -73,28 +70,7 @@ const FileBrowser = ({
     return (
         <div className="grid h-[min(98svh,32rem)] w-full grid-rows-[auto,auto,1fr,auto] bg-white ">
             <div className="grid h-12 grid-cols-[minmax(0,1fr),auto] border-b bg-[#fafafa] p-2 text-xs font-medium text-[#333] dark:bg-[#1f1f1f] dark:text-[#fafafa]">
-                <div className="h flex gap-1 p-2 px-4">
-                    {path &&
-                        path.map((p, i) => (
-                            <p
-                                key={p.id}
-                                className="group flex shrink-0 cursor-pointer gap-1 truncate"
-                                style={{
-                                    maxWidth: 100 / path.length + '%',
-                                    pointerEvents:
-                                        i === path.length - 1 ? 'none' : 'auto',
-                                }}
-                                onClick={() =>
-                                    setPath(prev => prev.slice(0, i + 1))
-                                }
-                            >
-                                <span className="truncate group-hover:underline">
-                                    {p.name}
-                                </span>
-                                {i !== path.length - 1 && ' > '}
-                            </p>
-                        ))}
-                </div>
+                <BrowserPath path={path} setPath={setPath} />
                 <div className="flex items-center gap-2">
                     <h1>{user ? user.name : ''}</h1>
                     <i className="-mb-1 h-[3px] w-[3px] rounded-full bg-[#ddd]" />
@@ -103,7 +79,7 @@ const FileBrowser = ({
                         onClick={() => {
                             if (user) {
                                 handleSignOut()
-                                setView('internal')
+                                setActiveAdapter(Adapter.INTERNAL)
                             }
                         }}
                     >
@@ -132,7 +108,6 @@ const FileBrowser = ({
                                     handleClick={handleClick}
                                     index={index}
                                     selectedFiles={selectedFiles}
-                                    accept={accept}
                                 />
                             )
                         })}

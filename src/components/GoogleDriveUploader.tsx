@@ -1,23 +1,13 @@
 import FileBrowser from 'components/UpupUploader/FileBrowser'
+import { useConfigContext } from 'context/config-context'
 import { useGoogleDrive } from 'hooks'
-import { Dispatch, SetStateAction } from 'react'
-import type { GoogleConfigs } from 'types'
+import { memo } from 'react'
 
-type Props = {
-    googleConfigs: GoogleConfigs
-    setFiles: Dispatch<SetStateAction<File[]>>
-    setView: (view: string) => void
-    accept?: string
-}
-
-const GoogleDriveUploader = ({
-    setFiles,
-    setView,
-    googleConfigs,
-    accept,
-}: Props) => {
-    const { googleFiles, handleSignOut, user, downloadFile } =
-        useGoogleDrive(googleConfigs)
+export default memo(function GoogleDriveUploader() {
+    const { adaptersConfigs } = useConfigContext()
+    const { googleFiles, handleSignOut, user, downloadFile } = useGoogleDrive(
+        adaptersConfigs?.googleDrive!,
+    )
 
     return (
         <FileBrowser
@@ -25,11 +15,6 @@ const GoogleDriveUploader = ({
             handleSignOut={handleSignOut}
             user={user}
             downloadFile={downloadFile}
-            setFiles={setFiles}
-            setView={setView}
-            accept={accept || '*'}
         />
     )
-}
-
-export default GoogleDriveUploader
+})

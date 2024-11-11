@@ -2,19 +2,8 @@
 Object.defineProperty(exports, '__esModule', { value: true })
 var config = {
     framework: '@storybook/react-webpack5',
-    stories: ['../**/*.mdx', '../**/*.stories.@(js|jsx|mjs|ts|tsx)'],
+    stories: ['../**/*.stories.@(js|jsx|mjs|ts|tsx)'],
     addons: [
-        // Other addons go here
-        // {
-        //     name: '@storybook/addon-docs',
-        //     options: {
-        //         mdxPluginOptions: {
-        //             mdxCompileOptions: {
-        //                 remarkPlugins: [remarkGfm],
-        //             },
-        //         },
-        //     },
-        // },
         {
             name: '@storybook/addon-styling',
             options: {

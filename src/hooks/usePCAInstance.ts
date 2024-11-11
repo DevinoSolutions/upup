@@ -1,9 +1,8 @@
 import { PublicClientApplication } from '@azure/msal-browser'
 import { useEffect, useState } from 'react'
 
-const usePCAInstance = (clientId: string) => {
-    const [msalInstance, setMsalInstance] =
-        useState<PublicClientApplication | null>(null)
+export default function usePCAInstance(clientId: string) {
+    const [msalInstance, setMsalInstance] = useState<PublicClientApplication>()
     const [isInitializing, setIsInitializing] = useState(true)
 
     useEffect(() => {
@@ -36,20 +35,14 @@ const usePCAInstance = (clientId: string) => {
                     },
                 })
 
-                if (mounted) {
-                    setMsalInstance(instance)
-                }
+                if (mounted) setMsalInstance(instance)
             } catch (error) {
             } finally {
-                if (mounted) {
-                    setIsInitializing(false)
-                }
+                if (mounted) setIsInitializing(false)
             }
         }
 
-        if (!msalInstance) {
-            initializeMsal()
-        }
+        if (!msalInstance) initializeMsal()
 
         return () => {
             mounted = false
@@ -61,5 +54,3 @@ const usePCAInstance = (clientId: string) => {
         isInitializing,
     }
 }
-
-export default usePCAInstance

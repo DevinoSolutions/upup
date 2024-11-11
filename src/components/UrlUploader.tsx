@@ -1,18 +1,17 @@
+import { useConfigContext } from 'context/config-context'
 import { useUrl } from 'hooks'
-import { FC, useEffect, useState } from 'react'
+import { memo, useEffect, useState } from 'react'
+import { Adapter } from 'types'
 
-type Props = {
-    setFiles: (files: any) => void
-    setView: (view: string) => void
-}
-const UrlUploader: FC<Props> = ({ setFiles, setView }: Props) => {
+export default memo(function UrlUploader() {
+    const { setFiles, setActiveAdapter } = useConfigContext()
     const [url, setUrl] = useState('')
     const { image, setTrigger, error, loading } = useUrl(url)
 
     useEffect(() => {
         if (image) {
-            setFiles((files: File[]) => [...files, image])
-            setView('internal')
+            setFiles(prevFiles => [...prevFiles, image] as File[])
+            setActiveAdapter(Adapter.INTERNAL)
         }
     }, [image])
 
@@ -43,6 +42,4 @@ const UrlUploader: FC<Props> = ({ setFiles, setView }: Props) => {
             </button>
         </form>
     )
-}
-
-export default UrlUploader
+})
