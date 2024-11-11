@@ -9,7 +9,6 @@ const envVariables = z.object({
     SPACE_IMAGES: z.string() || z.undefined(),
     ONEDRIVE_CLIENT_ID: z.string() || z.undefined(),
     GOOGLE_CLIENT_ID: z.string() || z.undefined(),
-    GOOGLE_APP_ID: z.string() || z.undefined(),
     GOOGLE_API_KEY: z.string() || z.undefined(),
 })
 

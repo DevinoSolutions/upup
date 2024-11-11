@@ -1,14 +1,14 @@
+import { useConfigContext } from 'context/config-context'
 import { AnimationProps, HoverHandlers, motion } from 'framer-motion'
-import { GoogleFile } from 'google'
-import { handleImgError } from 'lib/handleImgError'
 import { TbFileUnknown, TbFolder } from 'react-icons/tb'
+import { GoogleFile } from 'types'
+import { handleImgError } from 'utils'
 
 type Props = {
     file: GoogleFile
     handleClick: (file: GoogleFile) => void
     index: number
     selectedFiles: GoogleFile[]
-    accept?: string
 }
 
 const backgroundColors = {
@@ -17,13 +17,8 @@ const backgroundColors = {
     hover: '#eaeaea',
 }
 
-const ListItem = ({
-    file,
-    handleClick,
-    index,
-    selectedFiles,
-    accept,
-}: Props) => {
+const ListItem = ({ file, handleClick, index, selectedFiles }: Props) => {
+    const { accept } = useConfigContext()
     const isFolder = !!file.children
     const isFileSelected = selectedFiles.includes(file)
     const isFileAccepted =

@@ -1,8 +1,3 @@
-export type OneDriveConfigs = {
-    onedrive_client_id: string
-    redirectUri?: string
-}
-
 export type OneDriveResponse = {
     accessToken: string
     apiEndpoint: string

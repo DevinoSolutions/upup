@@ -1,16 +1,14 @@
 import { useUrl } from 'hooks'
-import { FC, useCallback, useRef, useState } from 'react'
+import { memo, useCallback, useRef, useState } from 'react'
 
+import { useConfigContext } from 'context/config-context'
 import { motion } from 'framer-motion'
 import { TbCameraRotate, TbCapture, TbX } from 'react-icons/tb'
 import Webcam from 'react-webcam'
+import { Adapter } from 'types'
 
-type Props = {
-    setFiles: (files: any) => void
-    setView: (view: string) => void
-}
-
-const CameraUploader: FC<Props> = ({ setFiles, setView }: Props) => {
+export default memo(function CameraUploader() {
+    const { setActiveAdapter, setFiles } = useConfigContext()
     const webcamRef = useRef(null) as any
     const [imgSrc, setImgSrc] = useState('')
     const [url, setUrl] = useState('')
@@ -98,8 +96,10 @@ const CameraUploader: FC<Props> = ({ setFiles, setView }: Props) => {
                     <button
                         className="mt-2 w-full rounded-md bg-blue-500 p-2 text-white transition-all duration-300 hover:bg-blue-600 active:bg-blue-700"
                         onClick={() => {
-                            setFiles((files: File[]) => [...files, image])
-                            setView('internal')
+                            setFiles(
+                                prevFiles => [...prevFiles, image] as File[],
+                            )
+                            setActiveAdapter(Adapter.INTERNAL)
                         }}
                         type="button"
                     >
@@ -109,6 +109,4 @@ const CameraUploader: FC<Props> = ({ setFiles, setView }: Props) => {
             </div>
         </div>
     )
-}
-
-export default CameraUploader
+})
