@@ -39,11 +39,13 @@ import { getPresignedUrl } from 'lib/getPresignedUrl'
 import useProgress from './hooks/useProgress'
 
 export interface UpupUploaderProps {
-    baseConfigs: BaseConfigs
-    uploadAdapters?: UPLOAD_ADAPTER[]
     presignedUrlEndpoint: string
-    maxFilesSize?: number
-    loader?: ReactElement
+    baseConfigs: BaseConfigs
+    uploadAdapters: UPLOAD_ADAPTER[]
+    googleConfigs?: GoogleConfigs | undefined
+    maxFilesSize?: number | undefined
+    oneDriveConfigs?: OneDriveConfigs | undefined
+    loader?: ReactElement | null
 }
 
 export type UploadFilesRef = {
@@ -53,10 +55,12 @@ export type UploadFilesRef = {
 
 /**
  *
+ * @param presignedUrlEndpoint pre-signed URL endpoint
  * @param baseConfigs base configurations
  * @param uploadAdapters the methods you want to enable for the user to upload the files. Default value is ['INTERNAL']
- * @param presignedUrlEndpoint pre-signed URL endpoint
+ * @param googleConfigs google configurations
  * @param maxFilesSize max files size
+ * @param oneDriveConfigs one drive configurations
  * @param loader loader
  * @param ref referrer to the component instance to access its method uploadFiles from the parent component
  * @constructor
@@ -66,10 +70,12 @@ export type UploadFilesRef = {
 export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
     forwardRef((props: UpupUploaderProps, ref: ForwardedRef<any>) => {
         const {
+            presignedUrlEndpoint,
             baseConfigs,
             uploadAdapters = ['INTERNAL', 'LINK'],
-            presignedUrlEndpoint,
+            googleConfigs,
             maxFilesSize,
+            oneDriveConfigs,
             loader,
         } = props
 
@@ -206,13 +212,13 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
                 <GoogleDriveUploader
                     setFiles={setFiles}
                     setView={setView}
-                    googleConfigs={baseConfigs as GoogleConfigs}
+                    googleConfigs={googleConfigs as GoogleConfigs}
                     accept={accept}
                 />
             ),
             [UploadAdapter.ONE_DRIVE]: (
                 <OneDriveUploader
-                    oneDriveConfigs={baseConfigs as OneDriveConfigs}
+                    oneDriveConfigs={oneDriveConfigs as OneDriveConfigs}
                     baseConfigs={baseConfigs}
                     setFiles={setFiles}
                     setView={setView}

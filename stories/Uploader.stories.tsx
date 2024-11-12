@@ -20,7 +20,7 @@ export default meta
 
 const Uploader = args => {
     const [files, setFiles] = useState<File[]>([])
-    const { baseConfigs } = useUpup({
+    const { baseConfigs, googleConfigs, oneDriveConfigs } = useUpup({
         setFiles: setFiles,
         accept: '*',
         multiple: true,
@@ -70,6 +70,8 @@ const Uploader = args => {
                 baseConfigs={baseConfigs}
                 uploadAdapters={uploadAdapters}
                 presignedUrlEndpoint="http://localhost:3001/presigned-url"
+                googleConfigs={googleConfigs}
+                oneDriveConfigs={oneDriveConfigs}
                 loader={loader}
                 ref={upupRef}
             />
