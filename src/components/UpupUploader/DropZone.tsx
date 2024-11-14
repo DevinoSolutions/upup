@@ -66,7 +66,7 @@ const DropZone: FC<Props> = ({
                         return multiple
                             ? [...prev, ...acceptedFiles]
                             : // only one file
-                              [acceptedFiles[0]]
+                              [acceptedFiles[0]].filter(Boolean)
                     })
                     setIsDragging(false)
                 }}

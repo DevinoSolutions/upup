@@ -56,20 +56,22 @@
     ],
     "devDependencies": {
         "@babel/core": "^7.23.3",
+        "@babel/plugin-proposal-optional-chaining": "^7.21.0",
         "@babel/preset-env": "^7.23.3",
         "@babel/preset-react": "^7.23.3",
         "@babel/preset-typescript": "^7.23.3",
         "@changesets/cli": "^2.26.2",
         "@rollup/plugin-replace": "^5.0.5",
         "@size-limit/preset-small-lib": "^10.0.3",
-        "@storybook/addon-essentials": "^7.5.3",
-        "@storybook/addon-info": "^5.3.21",
-        "@storybook/addon-links": "^7.5.3",
-        "@storybook/addon-mdx-gfm": "^7.5.3",
+        "@storybook/addon-docs": "^7.6.20",
+        "@storybook/addon-essentials": "^7.6.20",
+        "@storybook/addon-interactions": "^7.6.20",
+        "@storybook/addon-links": "^7.6.20",
         "@storybook/addon-styling": "^1.3.7",
-        "@storybook/addons": "^7.5.3",
-        "@storybook/react": "^7.5.3",
-        "@storybook/react-webpack5": "^7.5.3",
+        "@storybook/blocks": "^7.6.20",
+        "@storybook/react": "^7.6.20",
+        "@storybook/react-webpack5": "^7.6.20",
+        "@storybook/testing-library": "^0.2.2",
         "@types/node": "^20.10.0",
         "@types/pako": "^2.0.3",
         "@types/react": "^18.2.39",
@@ -79,12 +81,17 @@
         "@typescript-eslint/parser": "^6.13.0",
         "autoprefixer": "^10.4.16",
         "babel-loader": "^9.1.3",
+        "highlight.js": "10.7.3",
         "husky": "^8.0.3",
+        "lowlight": "1.20.0",
         "pako": "^2.1.0",
         "postcss": "^8.4.31",
         "prettier": "3.0.3",
         "prettier-plugin-organize-imports": "^3.2.4",
         "prettier-plugin-tailwindcss": "^0.5.7",
+        "react": "^18.2.0",
+        "react-dom": "^18.2.0",
+        "react-syntax-highlighter": "15.4.5",
         "remark-gfm": "^4.0.0",
         "rollup-plugin-analyzer": "^4.0.0",
         "rollup-plugin-postcss": "^4.0.2",
@@ -98,9 +105,13 @@
         "zod": "^3.22.4"
     },
     "dependencies": {
+        "@aws-sdk/client-s3": "^3.689.0",
+        "@aws-sdk/s3-request-presigner": "^3.689.0",
         "@aws-sdk/xhr-http-handler": "^3.451.0",
         "@azure/msal-browser": "^3.5.0",
+        "@azure/storage-blob": "^12.25.0",
         "@emotion/styled": "^11.11.0",
+        "@google-cloud/storage": "^7.14.0",
         "@mui/material": "^5.14.18",
         "@types/gapi": "^0.0.47",
         "babel-plugin-module-resolver": "^5.0.0",
@@ -112,8 +123,8 @@
     },
     "peerDependencies": {
         "@emotion/react": "^11.11.1",
-        "react": "18.2.0",
-        "react-dom": "18.2.0"
+        "react": "^18.2.0",
+        "react-dom": "^18.2.0"
     },
     "pnpm": {
         "overrides": {
@@ -122,8 +133,13 @@
             "tough-cookie": "^4.1.3",
             "jsdom": "22.1.0",
             "node-notifier": "10.0.1",
-            "highlight.js": "11.9.0",
-            "node-fetch": "2.6.7"
+            "node-fetch": "2.6.7",
+            "@emotion/react": "^11.11.1",
+            "@emotion/styled": "^11.11.0"
         }
+    },
+    "resolutions": {
+        "react": "^18.2.0",
+        "react-dom": "^18.2.0"
     }
 }

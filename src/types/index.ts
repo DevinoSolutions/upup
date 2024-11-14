@@ -7,4 +7,5 @@ export type {
     OneDriveResponse,
     OneDriveValue,
 } from './OneDriveConfigs'
-export { UPLOAD_ADAPTER, UploadAdapter } from './UploadAdapter'
+export { UploadAdapter } from './UploadAdapter'
+export type { UPLOAD_ADAPTER } from './UploadAdapter'

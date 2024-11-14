@@ -13,7 +13,7 @@ import {
     View,
 } from 'components/UpupUploader'
 import { useAddMore, useDragAndDrop } from 'hooks'
-import { checkFileSize, checkFileType, compressFile, uploadObject } from 'lib'
+import { checkFileSize, checkFileType, compressFile, sizeToBytes } from 'lib'
 import {
     FC,
     ForwardedRef,
@@ -35,31 +35,30 @@ import {
 } from 'types'
 
 import { AnimatePresence } from 'framer-motion'
-import { getPresignedUrl } from 'lib/getPresignedUrl'
+import { AWSSDK } from 'lib/storage/providers/aws'
+import { StorageConfig } from 'types/StorageSDK'
 import useProgress from './hooks/useProgress'
 
 export interface UpupUploaderProps {
-    presignedUrlEndpoint: string
+    storageConfig: StorageConfig
     baseConfigs: BaseConfigs
     uploadAdapters: UPLOAD_ADAPTER[]
-    googleConfigs?: GoogleConfigs | undefined
-    maxFilesSize?: number | undefined
-    oneDriveConfigs?: OneDriveConfigs | undefined
+    googleConfigs?: GoogleConfigs
+    oneDriveConfigs?: OneDriveConfigs
     loader?: ReactElement | null
 }
 
-export type UploadFilesRef = {
+export interface UploadFilesRef {
     uploadFiles: () => Promise<string[] | null>
     dynamicUploadFiles: (files: File[]) => Promise<string[] | null>
 }
 
 /**
  *
- * @param presignedUrlEndpoint pre-signed URL endpoint
+ * @param storageConfig storage configuration
  * @param baseConfigs base configurations
  * @param uploadAdapters the methods you want to enable for the user to upload the files. Default value is ['INTERNAL']
  * @param googleConfigs google configurations
- * @param maxFilesSize max files size
  * @param oneDriveConfigs one drive configurations
  * @param loader loader
  * @param ref referrer to the component instance to access its method uploadFiles from the parent component
@@ -67,14 +66,15 @@ export type UploadFilesRef = {
  */
 
 // FIXME: replace any with the correct type for the ref later on
-export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
-    forwardRef((props: UpupUploaderProps, ref: ForwardedRef<any>) => {
+export const UpupUploader: FC<
+    UpupUploaderProps & RefAttributes<UploadFilesRef>
+> = forwardRef(
+    (props: UpupUploaderProps, ref: ForwardedRef<UploadFilesRef>) => {
         const {
-            presignedUrlEndpoint,
+            storageConfig,
             baseConfigs,
             uploadAdapters = ['INTERNAL', 'LINK'],
             googleConfigs,
-            maxFilesSize,
             oneDriveConfigs,
             loader,
         } = props
@@ -114,39 +114,16 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
         /**
          * Expose the handleUpload function to the parent component
          */
-        useImperativeHandle(ref, () => ({
-            async dynamicUploadFiles(dynamicFiles: File[]) {
-                if (dynamicFiles.length === 0) return null
-                return await this.proceedUpload(dynamicFiles)
-            },
-            async uploadFiles() {
-                if (files.length === 0) return null
-                const filesList =
-                    mutatedFiles && mutatedFiles.length > 0
-                        ? mutatedFiles
-                        : files
-                return await this.proceedUpload(filesList)
-            },
-
-            async proceedUpload(filesList: File[]) {
+        useImperativeHandle(ref, () => {
+            const proceedUpload = async (
+                filesList: File[],
+            ): Promise<string[]> => {
                 return new Promise(async (resolve, reject) => {
                     try {
-                        // Validate all files first
+                        // Validate files
                         filesList.forEach(file => checkFileType(file, accept))
-                        if (maxFilesSize) {
-                            const totalSize = filesList.reduce(
-                                (acc, file) => acc + file.size,
-                                0,
-                            )
-                            if (totalSize > maxFilesSize)
-                                throw new Error(
-                                    `Total file size must be less than ${
-                                        maxFilesSize / 1024 / 1024
-                                    } MB`,
-                                )
-                        }
 
-                        // Compress files if needed
+                        // Process files (compression if needed)
                         const processedFiles = toBeCompressed
                             ? await Promise.all(
                                   filesList.map(file =>
@@ -158,43 +135,56 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
                               )
                             : filesList
 
-                        const keys: string[] = []
+                        // Initialize SDK
+                        const sdk = new AWSSDK({
+                            ...storageConfig,
+                            constraints: {
+                                multiple,
+                                accept,
+                                maxFileSize: sizeToBytes(
+                                    maxFileSize.size,
+                                    maxFileSize.unit,
+                                ),
+                            },
+                        })
 
-                        for (const file of processedFiles) {
-                            if (!presignedUrlEndpoint)
-                                throw new Error(
-                                    'Pre-signed URL endpoint is required',
-                                )
+                        // Upload files
+                        const uploadResults = await Promise.all(
+                            processedFiles.map(file =>
+                                sdk.upload(file, {
+                                    onProgress: console.log,
+                                }),
+                            ),
+                        )
 
-                            // Get pre-signed URL for each file
-                            const presignedData = await getPresignedUrl(
-                                presignedUrlEndpoint,
-                                {
-                                    fileName: file.name,
-                                    fileType: file.type,
-                                    fileSize: file.size,
-                                },
-                            )
-
-                            // Upload file using pre-signed URL
-                            const result = await uploadObject({
-                                presignedUrl: presignedData.uploadUrl,
-                                fields: presignedData.fields,
-                                file,
-                            })
-
-                            if (result.httpStatusCode === 200)
-                                keys.push(presignedData.key)
-                            else throw new Error('Upload failed')
-                        }
-
+                        // Extract keys from results
+                        const keys = uploadResults.map(result => result.key)
                         resolve(keys)
                     } catch (error) {
                         reject(error)
                     }
                 })
-            },
-        }))
+            }
+
+            const returnValue: UploadFilesRef = {
+                async dynamicUploadFiles(
+                    dynamicFiles: File[],
+                ): Promise<string[] | null> {
+                    if (dynamicFiles.length === 0) return null
+                    return await proceedUpload(dynamicFiles)
+                },
+                async uploadFiles(): Promise<string[] | null> {
+                    if (files.length === 0) return null
+                    const filesList =
+                        mutatedFiles && mutatedFiles.length > 0
+                            ? mutatedFiles
+                            : files
+                    return await proceedUpload(filesList)
+                },
+            }
+
+            return returnValue
+        })
 
         /**
          * Check if the user selected at least one upload adapter
@@ -286,11 +276,12 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
                             e.target.files as FileList,
                         ).filter(file => checkFileType(file, accept))
 
-                        setFiles(files =>
-                            isAddingMore
+                        const newFiles = multiple
+                            ? isAddingMore
                                 ? [...files, ...acceptedFiles]
-                                : [...acceptedFiles],
-                        )
+                                : acceptedFiles
+                            : [acceptedFiles[0]].filter(Boolean)
+                        setFiles(newFiles)
 
                         // clear the input value
                         e.target.value = ''
@@ -336,4 +327,5 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
                 </div>
             </div>
         )
-    })
+    },
+)

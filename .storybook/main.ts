@@ -1,32 +1,81 @@
-// Replace your-framework with the framework you are using (e.g., react-webpack5, vue3-vite)
-import type { StorybookConfig } from '@storybook/react-webpack5'
-
-const config: StorybookConfig = {
-    framework: '@storybook/react-webpack5',
-    stories: ['../**/*.mdx', '../**/*.stories.@(js|jsx|mjs|ts|tsx)'],
+/** @type { import('@storybook/react-webpack5').StorybookConfig } */
+const config = {
+    framework: {
+        name: '@storybook/react-webpack5',
+        options: {},
+    },
+    stories: ['../stories/**/*.stories.@(js|jsx|ts|tsx)'],
     addons: [
-        // Other addons go here
-        // {
-        //     name: '@storybook/addon-docs',
-        //     options: {
-        //         mdxPluginOptions: {
-        //             mdxCompileOptions: {
-        //                 remarkPlugins: [remarkGfm],
-        //             },
-        //         },
-        //     },
-        // },
+        '@storybook/addon-links',
+        '@storybook/addon-essentials',
+        '@storybook/addon-interactions',
+        '@storybook/addon-docs',
         {
             name: '@storybook/addon-styling',
             options: {
-                // Check out https://github.com/storybookjs/addon-styling/blob/main/docs/api.md
-                // For more details on this addon's options.
                 postCss: {
                     implementation: require.resolve('postcss'),
                 },
             },
         },
     ],
+    docs: {
+        autodocs: true,
+        defaultName: 'Documentation',
+    },
+    core: {
+        builder: '@storybook/builder-webpack5',
+    },
+    webpackFinal: async config => {
+        // Remove default rules for .md files
+        config.module.rules = config.module.rules.filter(
+            rule => !rule.test?.test?.('.md'),
+        )
+
+        return {
+            ...config,
+            resolve: {
+                ...config.resolve,
+                fallback: {
+                    ...config.resolve?.fallback,
+                    'highlight.js/lib/core': require.resolve(
+                        'highlight.js/lib/core',
+                    ),
+                    'highlight.js/lib/languages/c-like': false,
+                    'highlight.js/lib/languages/sql_more': false,
+                },
+                alias: {
+                    ...config.resolve?.alias,
+                    'lowlight/lib/core': require.resolve('lowlight'),
+                    'react-syntax-highlighter/dist/esm/light': require.resolve(
+                        'react-syntax-highlighter/dist/cjs/light',
+                    ),
+                    'react-syntax-highlighter/dist/esm/light-async':
+                        require.resolve(
+                            'react-syntax-highlighter/dist/cjs/light-async',
+                        ),
+                    '@emotion/react': require.resolve('@emotion/react'),
+                    '@emotion/styled': require.resolve('@emotion/styled'),
+                },
+            },
+            module: {
+                ...config.module,
+                rules: [
+                    ...config.module.rules,
+                    {
+                        test: /\.md$/,
+                        type: 'javascript/auto',
+                    },
+                    {
+                        test: /\.m?js$/,
+                        resolve: {
+                            fullySpecified: false,
+                        },
+                    },
+                ],
+            },
+        }
+    },
 }
 
 export default config
