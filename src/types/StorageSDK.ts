@@ -1,8 +1,4 @@
-import { AWSCredentials } from './AWSSDK'
-import { AzureCredentials } from './AzureSDK'
-import { GCSCredentials } from './GCSSDK'
-
-export type Provider = 'aws'
+export type Provider = 'aws' | 'azure'
 // export type Provider = 'aws' | 'azure' | 'gcp' | 'backblaze'
 
 export interface StorageConfig {
@@ -36,28 +32,10 @@ export interface StorageSDK {
     validateConfig(): boolean
 }
 
-export interface CredentialsManager {
-    getCredentials():
-        | Promise<AWSCredentials>
-        | Promise<AzureCredentials>
-        | Promise<GCSCredentials>
-    shouldRefresh(): boolean
-    refresh(): Promise<void>
-}
-
-export interface RetryConfig {
-    maxRetries: number
-    delayMs: number
-    backoffMultiplier: number
-}
-
 export enum UploadErrorType {
-    FILE_TOO_LARGE = 'FILE_TOO_LARGE',
-    CREDENTIALS_ERROR = 'CREDENTIALS_ERROR',
-    NETWORK_ERROR = 'NETWORK_ERROR',
+    UNKNOWN_ERROR = 'UNKNOWN_ERROR',
     PERMISSION_ERROR = 'PERMISSION_ERROR',
     EXPIRED_URL = 'EXPIRED_URL',
-    UNKNOWN_ERROR = 'UNKNOWN_ERROR',
 }
 
 export class UploadError extends Error {

@@ -36,7 +36,8 @@ import {
 
 import { AnimatePresence } from 'framer-motion'
 import { AWSSDK } from 'lib/storage/providers/aws'
-import { StorageConfig } from 'types/StorageSDK'
+import { AzureSDK } from 'lib/storage/providers/azure'
+import { StorageConfig, StorageSDK } from 'types/StorageSDK'
 import useProgress from './hooks/useProgress'
 
 export interface UpupUploaderProps {
@@ -136,17 +137,31 @@ export const UpupUploader: FC<
                             : filesList
 
                         // Initialize SDK
-                        const sdk = new AWSSDK({
-                            ...storageConfig,
-                            constraints: {
-                                multiple,
-                                accept,
-                                maxFileSize: sizeToBytes(
-                                    maxFileSize.size,
-                                    maxFileSize.unit,
-                                ),
-                            },
-                        })
+                        let sdk: StorageSDK
+                        if (storageConfig.provider === 'aws')
+                            sdk = new AWSSDK({
+                                ...storageConfig,
+                                constraints: {
+                                    multiple,
+                                    accept,
+                                    maxFileSize: sizeToBytes(
+                                        maxFileSize.size,
+                                        maxFileSize.unit,
+                                    ),
+                                },
+                            })
+                        else if (storageConfig.provider === 'azure')
+                            sdk = new AzureSDK({
+                                ...storageConfig,
+                                constraints: {
+                                    multiple,
+                                    accept,
+                                    maxFileSize: sizeToBytes(
+                                        maxFileSize.size,
+                                        maxFileSize.unit,
+                                    ),
+                                },
+                            })
 
                         // Upload files
                         const uploadResults = await Promise.all(

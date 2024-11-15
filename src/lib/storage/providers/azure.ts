@@ -8,9 +8,10 @@ import {
     UploadResult,
 } from '../../../types/StorageSDK'
 
-interface AWSUploadResponse extends UploadResult {
-    eTag?: string
-    versionId?: string
+interface AzureUploadResponse extends UploadResult {
+    contentMD5?: string
+    lastModified?: string
+    sasUrl?: string
 }
 
 type UploadConfig = StorageConfig & {
@@ -21,7 +22,7 @@ type UploadConfig = StorageConfig & {
     }
 }
 
-export class AWSSDK implements StorageSDK {
+export class AzureSDK implements StorageSDK {
     private config: UploadConfig
     private uploadCount = 0
 
@@ -31,10 +32,22 @@ export class AWSSDK implements StorageSDK {
         this.uploadCount = 0
     }
 
+    validateConfig(): boolean {
+        const required = ['region', 'bucket', 'tokenEndpoint'] as const
+        const missing = required.filter(key => !this.config[key])
+
+        if (missing.length > 0)
+            throw new Error(
+                `Missing required configuration: ${missing.join(', ')}`,
+            )
+
+        return true
+    }
+
     async upload(
         file: File,
         options?: UploadOptions,
-    ): Promise<AWSUploadResponse> {
+    ): Promise<AzureUploadResponse> {
         try {
             console.log('Uploading file:', file.name, this.config.constraints)
             // Check if multiple files are allowed
@@ -63,15 +76,11 @@ export class AWSSDK implements StorageSDK {
                 key: presignedData.key,
                 location: presignedData.publicUrl,
                 httpStatus: uploadResponse.status,
-                eTag: uploadResponse.headers.get('ETag') || '',
+                sasUrl: presignedData.uploadUrl,
             }
         } catch (error) {
             console.error('Upload error:', error)
-            throw new UploadError(
-                UploadErrorType.UNKNOWN_ERROR,
-                `Upload failed: ${(error as Error).message}`,
-                true,
-            )
+            throw this.handleError(error)
         }
     }
 
@@ -84,7 +93,7 @@ export class AWSSDK implements StorageSDK {
                 constraints: this.config.constraints,
             }
 
-            console.log('Requesting presigned URL:', {
+            console.log('Requesting Azure SAS URL:', {
                 ...requestBody,
                 fileSize: `${(file.size / (1024 * 1024)).toFixed(2)}MB`,
             })
@@ -97,7 +106,7 @@ export class AWSSDK implements StorageSDK {
 
             if (!response.ok) {
                 const errorData = await response.json()
-                console.error('Presigned URL request failed:', {
+                console.error('SAS URL request failed:', {
                     status: response.status,
                     error: errorData,
                 })
@@ -105,7 +114,7 @@ export class AWSSDK implements StorageSDK {
             }
 
             const data = await response.json()
-            console.log('Received presigned URL data:', {
+            console.log('Received Azure SAS URL data:', {
                 key: data.key,
                 requestId: data.requestId,
                 expiresIn: data.expiresIn,
@@ -113,7 +122,7 @@ export class AWSSDK implements StorageSDK {
 
             return data
         } catch (error) {
-            console.error('Error getting presigned URL:', error)
+            console.error('Error getting Azure SAS URL:', error)
             throw error
         }
     }
@@ -138,14 +147,14 @@ export class AWSSDK implements StorageSDK {
 
             xhr.addEventListener('load', () => {
                 const isValidStatus = xhr.status >= 200 && xhr.status < 300
-
-                // xhr.getResponseHeader('x-amz-meta-original-size') === file.size.toString()
                 if (isValidStatus) {
                     resolve(
                         new Response(xhr.response, {
                             status: xhr.status,
+                            statusText: xhr.statusText,
                             headers: new Headers({
-                                ETag: xhr.getResponseHeader('ETag') || '',
+                                'Content-Type': file.type,
+                                'x-ms-blob-type': 'BlockBlob',
                             }),
                         }),
                     )
@@ -163,24 +172,36 @@ export class AWSSDK implements StorageSDK {
             )
 
             xhr.open('PUT', url)
+            xhr.setRequestHeader('x-ms-blob-type', 'BlockBlob')
             xhr.setRequestHeader('Content-Type', file.type)
-            // xhr.setRequestHeader(
-            //     'x-amz-meta-original-size',
-            //     file.size.toString(),
-            // )
+            xhr.setRequestHeader('x-ms-version', '2024-11-04')
             xhr.send(file)
         })
     }
 
-    validateConfig(): boolean {
-        const required = ['region', 'bucket', 'tokenEndpoint'] as const
-        const missing = required.filter(key => !this.config[key])
+    private handleError(error: unknown): never {
+        if (error instanceof UploadError) throw error
 
-        if (missing.length > 0)
-            throw new Error(
-                `Missing required configuration: ${missing.join(', ')}`,
+        const err = error as Error
+        if (err.message?.includes('unauthorized')) {
+            throw new UploadError(
+                UploadErrorType.PERMISSION_ERROR,
+                'Unauthorized access to Azure Storage',
+                false,
             )
+        }
+        if (err.message?.includes('expired')) {
+            throw new UploadError(
+                UploadErrorType.EXPIRED_URL,
+                'Azure SAS token has expired',
+                true,
+            )
+        }
 
-        return true
+        throw new UploadError(
+            UploadErrorType.UNKNOWN_ERROR,
+            `Upload failed: ${err.message}`,
+            true,
+        )
     }
 }

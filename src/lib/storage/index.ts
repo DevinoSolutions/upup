@@ -5,8 +5,8 @@ const SDKMap: Record<
     () => Promise<{ default: new (config: StorageConfig) => StorageSDK }>
 > = {
     aws: () => import('./providers/aws').then(m => ({ default: m.AWSSDK })),
-    // azure: () =>
-    //     import('./providers/azure').then(m => ({ default: m.AzureSDK })),
+    azure: () =>
+        import('./providers/azure').then(m => ({ default: m.AzureSDK })),
     // gcp: () => import('./providers/gcs').then(m => ({ default: m.GCSSDK })),
     // backblaze: () =>
     //     import('./providers/backblaze').then(m => ({
