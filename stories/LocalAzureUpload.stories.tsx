@@ -22,7 +22,7 @@ type Story = StoryObj<typeof UpupUploader>
 
 const LocalUploader = () => {
     const [files, setFiles] = useState<File[]>([])
-    const upupRef = useRef<UploadFilesRef>()
+    const upupRef = useRef<UploadFilesRef>(null)
 
     const handleUpload = async () => {
         try {
@@ -30,11 +30,6 @@ const LocalUploader = () => {
             console.log(`Upload ${data ? 'successful' : 'returned null'}`)
             if (data) {
                 console.log('Uploaded file keys:', data)
-                // Azure specific: data will include SAS URLs for the uploaded blobs
-                console.log(
-                    'Azure SAS URLs:',
-                    data.map(result => result.sasUrl),
-                )
             }
         } catch (error) {
             console.error('Error uploading files:', error)
@@ -47,11 +42,8 @@ const LocalUploader = () => {
                 ref={upupRef}
                 storageConfig={{
                     provider: 'azure',
-                    region: 'northcentralus', // Azure region
-                    bucket: 'your-container-name', // Azure container name
                     tokenEndpoint:
                         'http://localhost:3001/api/storage/azure/upload-url',
-                    expiresIn: 3600, // 1 hour token expiration
                 }}
                 baseConfigs={{
                     multiple: true,

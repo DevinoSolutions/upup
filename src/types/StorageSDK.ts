@@ -3,10 +3,7 @@ export type Provider = 'aws' | 'azure'
 
 export interface StorageConfig {
     provider: Provider
-    region: string
-    bucket: string
     tokenEndpoint: string
-    expiresIn?: number // in seconds, default 3600 (1 hour)
 }
 
 export interface UploadProgress {

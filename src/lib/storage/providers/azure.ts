@@ -33,7 +33,7 @@ export class AzureSDK implements StorageSDK {
     }
 
     validateConfig(): boolean {
-        const required = ['region', 'bucket', 'tokenEndpoint'] as const
+        const required = ['tokenEndpoint'] as const
         const missing = required.filter(key => !this.config[key])
 
         if (missing.length > 0)

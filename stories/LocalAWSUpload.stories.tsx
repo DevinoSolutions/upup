@@ -22,7 +22,7 @@ type Story = StoryObj<typeof UpupUploader>
 
 const LocalUploader = () => {
     const [files, setFiles] = useState<File[]>([])
-    const upupRef = useRef<UploadFilesRef>()
+    const upupRef = useRef<UploadFilesRef>(null)
 
     const handleUpload = async () => {
         try {
@@ -42,8 +42,6 @@ const LocalUploader = () => {
                 ref={upupRef}
                 storageConfig={{
                     provider: 'aws',
-                    region: 'eu-central-1',
-                    bucket: 'test-bucket-051124',
                     tokenEndpoint:
                         'http://localhost:3001/api/storage/aws/upload-url',
                 }}
