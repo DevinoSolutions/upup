@@ -39,6 +39,7 @@ import { AWSSDK } from 'lib/storage/providers/aws'
 import { AzureSDK } from 'lib/storage/providers/azure'
 import { StorageConfig, StorageSDK } from 'types/StorageSDK'
 import useProgress from './hooks/useProgress'
+import { DigitalOceanSDK } from 'lib/storage/providers/digitalocean'
 
 export interface UpupUploaderProps {
     storageConfig: StorageConfig
@@ -152,6 +153,18 @@ export const UpupUploader: FC<
                             })
                         else if (storageConfig.provider === 'azure')
                             sdk = new AzureSDK({
+                                ...storageConfig,
+                                constraints: {
+                                    multiple,
+                                    accept,
+                                    maxFileSize: sizeToBytes(
+                                        maxFileSize.size,
+                                        maxFileSize.unit,
+                                    ),
+                                },
+                            })
+                        else if (storageConfig.provider === 'digitalocean')
+                            sdk = new DigitalOceanSDK({
                                 ...storageConfig,
                                 constraints: {
                                     multiple,

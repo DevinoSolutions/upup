@@ -7,11 +7,10 @@ const SDKMap: Record<
     aws: () => import('./providers/aws').then(m => ({ default: m.AWSSDK })),
     azure: () =>
         import('./providers/azure').then(m => ({ default: m.AzureSDK })),
-    // gcp: () => import('./providers/gcs').then(m => ({ default: m.GCSSDK })),
-    // backblaze: () =>
-    //     import('./providers/backblaze').then(m => ({
-    //         default: m.BackblazeSDK,
-    //     })),
+    digitalocean: () =>
+        import('./providers/digitalocean').then(m => ({
+            default: m.DigitalOceanSDK,
+        })),
 }
 
 export async function createStorageSDK(

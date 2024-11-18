@@ -1,4 +1,4 @@
-export type Provider = 'aws' | 'azure'
+export type Provider = 'aws' | 'azure' | 'digitalocean'
 // export type Provider = 'aws' | 'azure' | 'gcp' | 'backblaze'
 
 export interface StorageConfig {
