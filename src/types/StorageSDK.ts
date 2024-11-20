@@ -1,8 +1,8 @@
 export enum Provider {
     AWS = 'aws',
     Azure = 'azure',
-    BackBlaze = 'back_blaze',
-    DigitalOcean = 'digital_ocean',
+    BackBlaze = 'backblaze',
+    DigitalOcean = 'digitalocean',
 }
 
 export interface StorageConfig {
@@ -20,6 +20,14 @@ export interface UploadOptions {
     path?: string
     onProgress?: (progress: UploadProgress) => void
     metadata?: Record<string, string>
+}
+
+export type PresignedUrlResponse = {
+    key: string
+    publicUrl: string
+    uploadUrl: string
+    previewUrl: string
+    expiresIn: number
 }
 
 export interface UploadResult {

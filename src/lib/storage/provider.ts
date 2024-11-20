@@ -1,4 +1,6 @@
 import {
+    PresignedUrlResponse,
+    Provider,
     StorageConfig,
     StorageSDK,
     UploadError,
@@ -6,7 +8,7 @@ import {
     UploadOptions,
     UploadProgress,
     UploadResult,
-} from '../../../types/StorageSDK'
+} from '../../types/StorageSDK'
 
 type UploadConfig = StorageConfig & {
     constraints?: {
@@ -16,7 +18,7 @@ type UploadConfig = StorageConfig & {
     }
 }
 
-export class S3SDK implements StorageSDK {
+export class ProviderSDK implements StorageSDK {
     private config: UploadConfig
     private uploadCount = 0
 
@@ -56,7 +58,7 @@ export class S3SDK implements StorageSDK {
 
             return {
                 key: presignedData.key,
-                location: presignedData.publicUrl,
+                location: presignedData.previewUrl,
                 httpStatus: uploadResponse.status,
             }
         } catch (error) {
@@ -65,12 +67,13 @@ export class S3SDK implements StorageSDK {
         }
     }
 
-    private async getPresignedUrl(file: File) {
+    private async getPresignedUrl(file: File): Promise<PresignedUrlResponse> {
         try {
             const requestBody = {
                 name: file.name,
                 type: file.type,
                 size: file.size,
+                provider: this.config.provider,
                 ...this.config.constraints,
             }
 
@@ -151,6 +154,8 @@ export class S3SDK implements StorageSDK {
             )
 
             xhr.open('PUT', url)
+            if (this.config.provider === Provider.Azure)
+                xhr.setRequestHeader('x-ms-blob-type', 'BlockBlob')
             xhr.send(file)
         })
     }
@@ -173,7 +178,7 @@ export class S3SDK implements StorageSDK {
         const err = error as Error
         if (err.message.includes('unauthorized'))
             throw new UploadError(
-                'Unauthorized access to S3 Provider',
+                'Unauthorized access to Provider',
                 UploadErrorType.PERMISSION_ERROR,
             )
 

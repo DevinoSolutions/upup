@@ -35,9 +35,8 @@ import {
 } from 'types'
 
 import { AnimatePresence } from 'framer-motion'
-import { S3SDK } from 'lib/storage/providers/s3'
-import { AzureSDK } from 'lib/storage/providers/azure'
-import { Provider, StorageConfig, StorageSDK } from 'types/StorageSDK'
+import { ProviderSDK } from 'lib/storage/provider'
+import { StorageConfig } from 'types/StorageSDK'
 import useProgress from './hooks/useProgress'
 
 export interface UpupUploaderProps {
@@ -148,14 +147,7 @@ export const UpupUploader: FC<
                             },
                         }
                         // Initialize SDK
-                        let sdk: StorageSDK
-                        switch (storageConfig.provider) {
-                            case Provider.Azure:
-                                sdk = new AzureSDK(config)
-                                break
-                            default:
-                                sdk = new S3SDK(config)
-                        }
+                        let sdk = new ProviderSDK(config)
 
                         // Upload files
                         const uploadResults = await Promise.all(
