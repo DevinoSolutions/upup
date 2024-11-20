@@ -4,13 +4,14 @@ const SDKMap: Record<
     Provider,
     () => Promise<{ default: new (config: StorageConfig) => StorageSDK }>
 > = {
-    aws: () => import('./providers/aws').then(m => ({ default: m.AWSSDK })),
-    azure: () =>
+    [Provider.AWS]: () =>
+        import('./providers/s3').then(m => ({ default: m.S3SDK })),
+    [Provider.Azure]: () =>
         import('./providers/azure').then(m => ({ default: m.AzureSDK })),
-    digitalocean: () =>
-        import('./providers/digitalocean').then(m => ({
-            default: m.DigitalOceanSDK,
-        })),
+    [Provider.BackBlaze]: () =>
+        import('./providers/s3').then(m => ({ default: m.S3SDK })),
+    [Provider.DigitalOcean]: () =>
+        import('./providers/s3').then(m => ({ default: m.S3SDK })),
 }
 
 export async function createStorageSDK(

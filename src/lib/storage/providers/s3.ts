@@ -8,10 +8,6 @@ import {
     UploadResult,
 } from '../../../types/StorageSDK'
 
-interface DigitalOceanUploadResponse extends UploadResult {
-    eTag?: string
-}
-
 type UploadConfig = StorageConfig & {
     constraints?: {
         multiple: boolean
@@ -20,7 +16,7 @@ type UploadConfig = StorageConfig & {
     }
 }
 
-export class DigitalOceanSDK implements StorageSDK {
+export class S3SDK implements StorageSDK {
     private config: UploadConfig
     private uploadCount = 0
 
@@ -32,33 +28,36 @@ export class DigitalOceanSDK implements StorageSDK {
 
     async upload(
         file: File,
-        options?: UploadOptions,
-    ): Promise<DigitalOceanUploadResponse> {
+        options = {} as UploadOptions,
+    ): Promise<UploadResult> {
         try {
-            if (!this.config.constraints?.multiple && this.uploadCount > 0) {
+            console.log('Uploading file:', file.name, this.config.constraints)
+            // Check if multiple files are allowed
+            if (!this.config.constraints?.multiple && this.uploadCount > 0)
                 throw new Error('Multiple file uploads are not allowed')
-            }
 
+            // Get presigned URL from backend
             const presignedData = await this.getPresignedUrl(file)
+
+            // Increment upload count
             this.uploadCount++
 
+            // Upload using presigned URL
             const uploadResponse = await this.uploadWithProgress(
                 presignedData.uploadUrl,
                 file,
-                options?.onProgress,
+                options.onProgress,
             )
 
-            if (!uploadResponse.ok) {
+            if (!uploadResponse.ok)
                 throw new Error(
                     `Upload failed with status ${uploadResponse.status}`,
                 )
-            }
 
             return {
                 key: presignedData.key,
                 location: presignedData.publicUrl,
                 httpStatus: uploadResponse.status,
-                eTag: uploadResponse.headers.get('ETag') || '',
             }
         } catch (error) {
             console.error('Upload error:', error)
@@ -69,11 +68,16 @@ export class DigitalOceanSDK implements StorageSDK {
     private async getPresignedUrl(file: File) {
         try {
             const requestBody = {
-                fileName: file.name,
-                fileType: file.type,
-                fileSize: file.size,
-                constraints: this.config.constraints,
+                name: file.name,
+                type: file.type,
+                size: file.size,
+                ...this.config.constraints,
             }
+
+            console.log('Requesting presigned URL:', {
+                ...requestBody,
+                fileSize: `${(file.size / (1024 * 1024)).toFixed(2)}MB`,
+            })
 
             const response = await fetch(this.config.tokenEndpoint, {
                 method: 'POST',
@@ -83,12 +87,22 @@ export class DigitalOceanSDK implements StorageSDK {
 
             if (!response.ok) {
                 const errorData = await response.json()
+                console.error('Presigned URL request failed:', {
+                    status: response.status,
+                    error: errorData,
+                })
                 throw new Error(errorData.details || 'Failed to get upload URL')
             }
 
-            return await response.json()
+            const data = await response.json()
+            console.log('Received presigned URL data:', data, {
+                key: data.key,
+                expiresIn: data.expiresIn,
+            })
+
+            return data
         } catch (error) {
-            console.error('Error getting DigitalOcean presigned URL:', error)
+            console.error('Error getting presigned URL:', error)
             throw error
         }
     }
@@ -113,6 +127,7 @@ export class DigitalOceanSDK implements StorageSDK {
 
             xhr.addEventListener('load', () => {
                 const isValidStatus = xhr.status >= 200 && xhr.status < 300
+
                 if (isValidStatus) {
                     resolve(
                         new Response(xhr.response, {
@@ -136,7 +151,6 @@ export class DigitalOceanSDK implements StorageSDK {
             )
 
             xhr.open('PUT', url)
-            xhr.setRequestHeader('Content-Type', file.type)
             xhr.send(file)
         })
     }
@@ -145,11 +159,10 @@ export class DigitalOceanSDK implements StorageSDK {
         const required = ['tokenEndpoint'] as const
         const missing = required.filter(key => !this.config[key])
 
-        if (missing.length > 0) {
+        if (missing.length > 0)
             throw new Error(
                 `Missing required configuration: ${missing.join(', ')}`,
             )
-        }
 
         return true
     }
@@ -158,24 +171,22 @@ export class DigitalOceanSDK implements StorageSDK {
         if (error instanceof UploadError) throw error
 
         const err = error as Error
-        if (err.message?.includes('unauthorized')) {
+        if (err.message.includes('unauthorized'))
             throw new UploadError(
+                'Unauthorized access to S3 Provider',
                 UploadErrorType.PERMISSION_ERROR,
-                'Unauthorized access to DigitalOcean Space',
-                false,
             )
-        }
-        if (err.message?.includes('expired')) {
+
+        if (err.message.includes('expired'))
             throw new UploadError(
-                UploadErrorType.EXPIRED_URL,
                 'Presigned URL has expired',
+                UploadErrorType.EXPIRED_URL,
                 true,
             )
-        }
 
         throw new UploadError(
-            UploadErrorType.UNKNOWN_ERROR,
             `Upload failed: ${err.message}`,
+            UploadErrorType.UNKNOWN_UPLOAD_ERROR,
             true,
         )
     }

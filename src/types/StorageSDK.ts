@@ -1,5 +1,9 @@
-export type Provider = 'aws' | 'azure' | 'digitalocean'
-// export type Provider = 'aws' | 'azure' | 'gcp' | 'backblaze'
+export enum Provider {
+    AWS = 'aws',
+    Azure = 'azure',
+    BackBlaze = 'back_blaze',
+    DigitalOcean = 'digital_ocean',
+}
 
 export interface StorageConfig {
     provider: Provider
@@ -30,18 +34,26 @@ export interface StorageSDK {
 }
 
 export enum UploadErrorType {
-    UNKNOWN_ERROR = 'UNKNOWN_ERROR',
     PERMISSION_ERROR = 'PERMISSION_ERROR',
     EXPIRED_URL = 'EXPIRED_URL',
+
+    FILE_VALIDATION_ERROR = 'FILE_VALIDATION_ERROR',
+    PRESIGNED_URL_ERROR = 'PRESIGNED_URL_ERROR',
+
+    UNKNOWN_UPLOAD_ERROR = 'UNKNOWN_UPLOAD_ERROR',
 }
 
 export class UploadError extends Error {
+    private DEFAULT_ERROR_STATUS_CODE = 500
+
     constructor(
-        public type: UploadErrorType,
         message: string,
-        public retryable: boolean,
+        public type = UploadErrorType.UNKNOWN_UPLOAD_ERROR,
+        public retryable = false,
+        public status?: number,
     ) {
         super(message)
         this.name = 'UploadError'
+        this.status = status || this.DEFAULT_ERROR_STATUS_CODE
     }
 }

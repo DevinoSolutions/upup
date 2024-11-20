@@ -35,11 +35,10 @@ import {
 } from 'types'
 
 import { AnimatePresence } from 'framer-motion'
-import { AWSSDK } from 'lib/storage/providers/aws'
+import { S3SDK } from 'lib/storage/providers/s3'
 import { AzureSDK } from 'lib/storage/providers/azure'
-import { StorageConfig, StorageSDK } from 'types/StorageSDK'
+import { Provider, StorageConfig, StorageSDK } from 'types/StorageSDK'
 import useProgress from './hooks/useProgress'
-import { DigitalOceanSDK } from 'lib/storage/providers/digitalocean'
 
 export interface UpupUploaderProps {
     storageConfig: StorageConfig
@@ -137,44 +136,26 @@ export const UpupUploader: FC<
                               )
                             : filesList
 
+                        const config = {
+                            ...storageConfig,
+                            constraints: {
+                                multiple,
+                                accept,
+                                maxFileSize: sizeToBytes(
+                                    maxFileSize.size,
+                                    maxFileSize.unit,
+                                ),
+                            },
+                        }
                         // Initialize SDK
                         let sdk: StorageSDK
-                        if (storageConfig.provider === 'aws')
-                            sdk = new AWSSDK({
-                                ...storageConfig,
-                                constraints: {
-                                    multiple,
-                                    accept,
-                                    maxFileSize: sizeToBytes(
-                                        maxFileSize.size,
-                                        maxFileSize.unit,
-                                    ),
-                                },
-                            })
-                        else if (storageConfig.provider === 'azure')
-                            sdk = new AzureSDK({
-                                ...storageConfig,
-                                constraints: {
-                                    multiple,
-                                    accept,
-                                    maxFileSize: sizeToBytes(
-                                        maxFileSize.size,
-                                        maxFileSize.unit,
-                                    ),
-                                },
-                            })
-                        else if (storageConfig.provider === 'digitalocean')
-                            sdk = new DigitalOceanSDK({
-                                ...storageConfig,
-                                constraints: {
-                                    multiple,
-                                    accept,
-                                    maxFileSize: sizeToBytes(
-                                        maxFileSize.size,
-                                        maxFileSize.unit,
-                                    ),
-                                },
-                            })
+                        switch (storageConfig.provider) {
+                            case Provider.Azure:
+                                sdk = new AzureSDK(config)
+                                break
+                            default:
+                                sdk = new S3SDK(config)
+                        }
 
                         // Upload files
                         const uploadResults = await Promise.all(

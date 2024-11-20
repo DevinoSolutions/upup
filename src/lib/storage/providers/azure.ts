@@ -183,24 +183,22 @@ export class AzureSDK implements StorageSDK {
         if (error instanceof UploadError) throw error
 
         const err = error as Error
-        if (err.message?.includes('unauthorized')) {
+        if (err.message.includes('unauthorized'))
             throw new UploadError(
+                'Unauthorized access to Azure Provider',
                 UploadErrorType.PERMISSION_ERROR,
-                'Unauthorized access to Azure Storage',
-                false,
             )
-        }
-        if (err.message?.includes('expired')) {
+
+        if (err.message.includes('expired'))
             throw new UploadError(
+                'Presigned URL has expired',
                 UploadErrorType.EXPIRED_URL,
-                'Azure SAS token has expired',
                 true,
             )
-        }
 
         throw new UploadError(
-            UploadErrorType.UNKNOWN_ERROR,
             `Upload failed: ${err.message}`,
+            UploadErrorType.UNKNOWN_UPLOAD_ERROR,
             true,
         )
     }
