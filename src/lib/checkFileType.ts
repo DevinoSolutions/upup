@@ -1,20 +1,14 @@
-export function checkFileType(file: File, acceptedFiles: string) {
-    if (file && acceptedFiles && acceptedFiles !== '*') {
-        const acceptedFilesArray = Array.isArray(acceptedFiles)
-            ? acceptedFiles
-            : acceptedFiles.split(',')
-        const { name: fileName, type: mimeType } = file
-        const baseMimeType = mimeType.replace(/\/.*$/, '')
-        const extension = mimeType.split('/')[1]
+export function checkFileType(accept: string, fileType: string) {
+    const acceptedTypes = accept.split(',').map(t => t.trim())
+    const isValidType =
+        acceptedTypes.includes('*') ||
+        acceptedTypes.some(type => {
+            if (type.includes('/*')) {
+                const [mainType] = type.split('/')
+                return fileType.startsWith(mainType)
+            }
+            return type === fileType
+        })
 
-        return (
-            acceptedFilesArray.includes(extension) ||
-            acceptedFilesArray.includes(mimeType) ||
-            acceptedFilesArray.includes(`${baseMimeType}/*`) ||
-            acceptedFilesArray.some(
-                type => type.startsWith('.') && fileName.endsWith(type),
-            )
-        )
-    }
-    return true
+    return isValidType
 }

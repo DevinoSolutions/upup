@@ -5,38 +5,11 @@ export enum Provider {
     DigitalOcean = 'digitalocean',
 }
 
-export interface StorageConfig {
-    provider: Provider
-    tokenEndpoint: string
-}
-
-export interface UploadProgress {
-    loaded: number
-    total: number
-    percentage: number
-}
-
-export interface UploadOptions {
-    path?: string
-    onProgress?: (progress: UploadProgress) => void
-    metadata?: Record<string, string>
-}
-
 export type PresignedUrlResponse = {
     key: string
     publicUrl: string
     uploadUrl: string
     expiresIn: number
-}
-
-export interface UploadResult {
-    key: string
-    httpStatus: number
-}
-
-export interface StorageSDK {
-    upload(file: File, options?: UploadOptions): Promise<UploadResult>
-    validateConfig(): boolean
 }
 
 export enum UploadErrorType {
@@ -45,6 +18,10 @@ export enum UploadErrorType {
 
     FILE_VALIDATION_ERROR = 'FILE_VALIDATION_ERROR',
     PRESIGNED_URL_ERROR = 'PRESIGNED_URL_ERROR',
+
+    SIGNED_URL_ERROR = 'SIGNED_URL_ERROR',
+    CORS_CONFIG_ERROR = 'CORS_CONFIG_ERROR',
+    TEMPORARY_CREDENTIALS_ERROR = 'TEMPORARY_CREDENTIALS_ERROR',
 
     UNKNOWN_UPLOAD_ERROR = 'UNKNOWN_UPLOAD_ERROR',
 }

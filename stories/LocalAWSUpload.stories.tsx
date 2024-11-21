@@ -1,7 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react'
 import { useRef, useState } from 'react'
-import { UpupUploader } from '../src'
-import { UploadFilesRef } from '../src/UpupUploader'
+import { UpupUploader, UploadFilesRef } from '../src/UpupUploader'
 
 const meta = {
     title: 'Cloud Storage/Local to AWS Upload',
@@ -14,7 +13,6 @@ const meta = {
             },
         },
     },
-    tags: ['autodocs'],
 } satisfies Meta<typeof UpupUploader>
 
 export default meta

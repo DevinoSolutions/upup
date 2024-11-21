@@ -1,7 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react'
 import { useRef, useState } from 'react'
-import { UpupUploader } from '../src'
-import { UploadFilesRef } from '../src/UpupUploader'
+import { UpupUploader, UploadFilesRef } from '../src'
 
 const meta = {
     title: 'Cloud Storage/Local to Azure Upload',
@@ -14,7 +13,6 @@ const meta = {
             },
         },
     },
-    tags: ['autodocs'],
 } satisfies Meta<typeof UpupUploader>
 
 export default meta
@@ -68,104 +66,4 @@ const LocalUploader = () => {
 
 export const Default: Story = {
     render: () => <LocalUploader />,
-}
-
-// Add an example with specific file type restrictions
-export const RestrictedFileTypes: Story = {
-    render: () => {
-        const Component = () => {
-            const [files, setFiles] = useState<File[]>([])
-            const upupRef = useRef<UploadFilesRef>()
-
-            return (
-                <div className="flex flex-col gap-4">
-                    <UpupUploader
-                        ref={upupRef}
-                        storageConfig={{
-                            provider: 'azure',
-                            region: 'northcentralus',
-                            bucket: 'your-container-name',
-                            tokenEndpoint:
-                                'http://localhost:3001/api/storage/azure/upload-url',
-                        }}
-                        baseConfigs={{
-                            multiple: true,
-                            // Only allow images and PDFs
-                            accept: 'image/*,application/pdf',
-                            maxFileSize: { size: 10, unit: 'MB' },
-                            onChange: files => {
-                                setFiles(files)
-                                console.log('Files selected:', files)
-                            },
-                        }}
-                        uploadAdapters={['INTERNAL']}
-                    />
-                    <button
-                        className="rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
-                        onClick={() => upupRef.current?.uploadFiles()}
-                    >
-                        Upload Images/PDFs to Azure
-                    </button>
-                </div>
-            )
-        }
-        return <Component />
-    },
-}
-
-// Add an example with metadata
-export const WithMetadata: Story = {
-    render: () => {
-        const Component = () => {
-            const [files, setFiles] = useState<File[]>([])
-            const upupRef = useRef<UploadFilesRef>()
-
-            const handleUpload = async () => {
-                try {
-                    const data = await upupRef.current?.uploadFiles({
-                        metadata: {
-                            uploadedBy: 'storybook-demo',
-                            department: 'engineering',
-                            environment: 'development',
-                        },
-                    })
-                    console.log('Upload result:', data)
-                } catch (error) {
-                    console.error('Error uploading files:', error)
-                }
-            }
-
-            return (
-                <div className="flex flex-col gap-4">
-                    <UpupUploader
-                        ref={upupRef}
-                        storageConfig={{
-                            provider: 'azure',
-                            region: 'northcentralus',
-                            bucket: 'your-container-name',
-                            tokenEndpoint:
-                                'http://localhost:3001/api/storage/azure/upload-url',
-                        }}
-                        baseConfigs={{
-                            multiple: true,
-                            accept: '*',
-                            maxFileSize: { size: 50, unit: 'MB' },
-                            onChange: files => {
-                                setFiles(files)
-                                console.log('Files selected:', files)
-                            },
-                        }}
-                        uploadAdapters={['INTERNAL']}
-                    />
-                    <button
-                        className="rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
-                        onClick={handleUpload}
-                    >
-                        Upload with Metadata
-                    </button>
-                </div>
-            )
-        }
-        return <Component />
-    },
 }

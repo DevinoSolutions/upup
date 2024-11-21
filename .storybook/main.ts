@@ -19,10 +19,6 @@ const config = {
             },
         },
     ],
-    docs: {
-        autodocs: true,
-        defaultName: 'Documentation',
-    },
     core: {
         builder: '@storybook/builder-webpack5',
     },

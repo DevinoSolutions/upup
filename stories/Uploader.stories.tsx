@@ -7,7 +7,7 @@ import {
     UploadFilesRef,
     UpupUploader,
 } from '../src'
-import { useUpup } from '../src/hooks'
+import { useUpup } from '../src/frontend/hooks'
 // import react only on this file to avoid error
 // we get an error because we're not exporting UpupUploader as default
 

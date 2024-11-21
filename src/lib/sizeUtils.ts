@@ -21,7 +21,7 @@ export const sizeToBytes = (
     return size * Math.pow(1024, i)
 }
 
-import { BaseConfigs } from 'types'
+import { BaseConfigs } from 'frontend/types'
 
 /**
  * @param file

@@ -1,8 +1,11 @@
 // Author: Bassem JADOUI 31/05/2023
-import './tailwind.css'
+import 'frontend/tailwind.css'
 
-export { BaseConfigs } from 'types/BaseConfigs'
-export { GoogleConfigs } from 'types/GoogleConfigs'
-export { OneDriveConfigs } from 'types/OneDriveConfigs'
-export { UPLOAD_ADAPTER, UploadAdapter } from 'types/UploadAdapter'
-export { UploadFilesRef, UpupUploader } from './UpupUploader'
+export { default as s3GeneratePresignedUrl } from 'backend/utils/aws/s3/s3-generate-presigned-url'
+export { default as s3GenerateSignedUrl } from 'backend/utils/aws/s3/s3-generate-signed-url'
+export { default as azureGenerateSasUrl } from 'backend/utils/azure/azure-generate-sas-url'
+export { BaseConfigs } from 'frontend/types/BaseConfigs'
+export { GoogleConfigs } from 'frontend/types/GoogleConfigs'
+export { OneDriveConfigs } from 'frontend/types/OneDriveConfigs'
+export { UPLOAD_ADAPTER, UploadAdapter } from 'frontend/types/UploadAdapter'
+export { UploadFilesRef, UpupUploader } from 'UpupUploader'

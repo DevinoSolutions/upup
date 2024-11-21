@@ -4,15 +4,23 @@ import {
     MetaVersion,
     OneDriveUploader,
     UrlUploader,
-} from 'components'
-import { UpupMini } from 'components/UpupMini'
+} from 'frontend/components'
+import { UpupMini } from 'frontend/components/UpupMini'
 import {
     DropZone,
     MethodsSelector,
     Preview,
     View,
-} from 'components/UpupUploader'
-import { useAddMore, useDragAndDrop } from 'hooks'
+} from 'frontend/components/UpupUploader'
+import { useAddMore, useDragAndDrop } from 'frontend/hooks'
+import {
+    BaseConfigs,
+    GoogleConfigs,
+    METHODS,
+    OneDriveConfigs,
+    UPLOAD_ADAPTER,
+    UploadAdapter,
+} from 'frontend/types'
 import { checkFileSize, checkFileType, compressFile, sizeToBytes } from 'lib'
 import {
     FC,
@@ -25,19 +33,11 @@ import {
     useImperativeHandle,
     useState,
 } from 'react'
-import {
-    BaseConfigs,
-    GoogleConfigs,
-    METHODS,
-    OneDriveConfigs,
-    UPLOAD_ADAPTER,
-    UploadAdapter,
-} from 'types'
 
 import { AnimatePresence } from 'framer-motion'
+import { StorageConfig } from 'frontend/types/StorageSDK'
 import { ProviderSDK } from 'lib/storage/provider'
-import { StorageConfig } from 'types/StorageSDK'
-import useProgress from './hooks/useProgress'
+import useProgress from './frontend/hooks/useProgress'
 
 export interface UpupUploaderProps {
     storageConfig: StorageConfig
@@ -121,7 +121,9 @@ export const UpupUploader: FC<
                 return new Promise(async (resolve, reject) => {
                     try {
                         // Validate files
-                        filesList.forEach(file => checkFileType(file, accept))
+                        filesList.forEach(file =>
+                            checkFileType(accept, file.type),
+                        )
 
                         // Process files (compression if needed)
                         const processedFiles = toBeCompressed
@@ -275,7 +277,7 @@ export const UpupUploader: FC<
                     onChange={e => {
                         const acceptedFiles = Array.from(
                             e.target.files as FileList,
-                        ).filter(file => checkFileType(file, accept))
+                        ).filter(file => checkFileType(accept, file.type))
 
                         const newFiles = multiple
                             ? isAddingMore

@@ -1,14 +1,16 @@
 import {
-    PresignedUrlResponse,
-    Provider,
     StorageConfig,
     StorageSDK,
-    UploadError,
-    UploadErrorType,
     UploadOptions,
     UploadProgress,
     UploadResult,
-} from '../../types/StorageSDK'
+} from 'frontend/types/StorageSDK'
+import {
+    PresignedUrlResponse,
+    Provider,
+    UploadError,
+    UploadErrorType,
+} from 'types/StorageSDK'
 
 type UploadConfig = StorageConfig & {
     constraints?: {

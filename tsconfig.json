@@ -39,10 +39,10 @@
         "paths": {
             // allow absolute imports from src/ and types/
             "@/*": ["src/*"],
-            "#components/*": ["src/components/*"],
-            "#types/*": ["src/types/*"],
+            "#components/*": ["src/frontend/components/*"],
+            "#types/*": ["src/frontend/types/*"],
             "#lib/*": ["src/lib/*"],
-            "#hooks/*": ["src/hooks/*"]
+            "#hooks/*": ["src/frontend/hooks/*"]
         }
     }
 }
