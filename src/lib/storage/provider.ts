@@ -58,7 +58,6 @@ export class ProviderSDK implements StorageSDK {
 
             return {
                 key: presignedData.key,
-                location: presignedData.previewUrl,
                 httpStatus: uploadResponse.status,
             }
         } catch (error) {
@@ -135,9 +134,14 @@ export class ProviderSDK implements StorageSDK {
                     resolve(
                         new Response(xhr.response, {
                             status: xhr.status,
-                            headers: new Headers({
-                                ETag: xhr.getResponseHeader('ETag') || '',
-                            }),
+                            headers:
+                                this.config.provider !== Provider.Azure
+                                    ? new Headers({
+                                          ETag:
+                                              xhr.getResponseHeader('ETag') ||
+                                              '',
+                                      })
+                                    : undefined,
                         }),
                     )
                 } else {

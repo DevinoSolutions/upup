@@ -26,13 +26,11 @@ export type PresignedUrlResponse = {
     key: string
     publicUrl: string
     uploadUrl: string
-    previewUrl: string
     expiresIn: number
 }
 
 export interface UploadResult {
     key: string
-    location: string
     httpStatus: number
 }
 
