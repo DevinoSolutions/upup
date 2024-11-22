@@ -1,3 +1,4 @@
+import React from 'react'
 import {
     BoxIcon,
     CameraIcon,
@@ -8,7 +9,6 @@ import {
     OneDriveIcon,
     UnsplashIcon,
 } from '../components'
-import React from 'react'
 
 export type Method = {
     id: string

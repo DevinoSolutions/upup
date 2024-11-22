@@ -1,10 +1,10 @@
 import Box from '@mui/material/Box'
 import { AnimatePresence, motion } from 'framer-motion'
-import { FileIcon, LinearProgressBar } from '../'
-import { bytesToSize } from '../../lib'
 import { GoogleFile } from 'google'
 import React, { Dispatch, FC, SetStateAction } from 'react'
 import { TbX } from 'react-icons/tb'
+import { FileIcon, LinearProgressBar } from '../'
+import { bytesToSize } from '../../lib'
 
 type Props = {
     files: File[]

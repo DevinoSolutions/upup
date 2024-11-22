@@ -1,3 +1,14 @@
+import React, {
+    FC,
+    ForwardedRef,
+    LegacyRef,
+    ReactElement,
+    RefAttributes,
+    forwardRef,
+    useEffect,
+    useImperativeHandle,
+    useState,
+} from 'react'
 import {
     CameraUploader,
     GoogleDriveUploader,
@@ -22,23 +33,12 @@ import {
     UPLOAD_ADAPTER,
     UploadAdapter,
 } from './types'
-import React, {
-    FC,
-    ForwardedRef,
-    LegacyRef,
-    ReactElement,
-    RefAttributes,
-    forwardRef,
-    useEffect,
-    useImperativeHandle,
-    useState,
-} from 'react'
 
 import { AnimatePresence } from 'framer-motion'
-import { ProviderSDK } from './lib/storage/provider'
-import { StorageConfig } from './types/StorageSDK'
 import checkFileType from '../shared/lib/checkFileType'
 import useProgress from './hooks/useProgress'
+import { ProviderSDK } from './lib/storage/provider'
+import { StorageConfig } from './types/StorageSDK'
 
 export interface UpupUploaderProps {
     storageConfig: StorageConfig

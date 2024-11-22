@@ -1,10 +1,10 @@
 import { S3ClientConfig } from '@aws-sdk/client-s3'
-import awsGenerateSignatureHeaders from '../aws-generate-signature-headers'
 import {
     Provider,
     UploadError,
     UploadErrorType,
 } from '../../../../shared/types/StorageSDK'
+import awsGenerateSignatureHeaders from '../aws-generate-signature-headers'
 
 export default async function s3UpdateCORS(
     origin: string,

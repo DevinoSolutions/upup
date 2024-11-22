@@ -1,5 +1,5 @@
-import type { Method } from '../../types'
 import React, { FC } from 'react'
+import type { Method } from '../../types'
 
 import { AnimatePresence, motion } from 'framer-motion'
 
