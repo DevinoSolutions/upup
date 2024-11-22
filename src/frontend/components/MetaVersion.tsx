@@ -1,7 +1,7 @@
 import React from 'react'
-import { LIB_VERSION } from 'version'
+import { LIB_VERSION } from '../../version'
 
-import type { BaseConfigs } from 'frontend/types'
+import type { BaseConfigs } from '../types'
 
 const MetaVersion = ({
     customMessage,

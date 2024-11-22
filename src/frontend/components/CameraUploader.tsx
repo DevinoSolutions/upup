@@ -1,4 +1,4 @@
-import { useUrl } from 'frontend/hooks'
+import { useUrl } from '../hooks'
 import React, { FC, useCallback, useRef, useState } from 'react'
 
 import { motion } from 'framer-motion'

@@ -1,9 +1,9 @@
-import ListItem from 'frontend/components/UpupUploader/FileBrowser/ListItem'
+import ListItem from '../../UpupUploader/FileBrowser/ListItem'
 import type { GoogleFile, Root, User } from 'google'
 import React, { Dispatch, SetStateAction, useEffect, useState } from 'react'
 
 import { AnimatePresence, motion } from 'framer-motion'
-import ButtonSpinner from 'frontend/components/ButtonSpinner'
+import ButtonSpinner from '../../ButtonSpinner'
 import { TbSearch } from 'react-icons/tb'
 
 type Props = {

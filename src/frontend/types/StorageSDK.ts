@@ -1,4 +1,4 @@
-import { Provider } from 'shared/types/StorageSDK'
+import { Provider } from '../../shared/types/StorageSDK'
 
 export interface StorageConfig {
     provider: Provider

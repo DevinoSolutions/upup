@@ -1,4 +1,4 @@
-export { default as DropZone } from 'frontend/components/UpupUploader/DropZone'
-export { default as MethodsSelector } from 'frontend/components/UpupUploader/MethodSelector'
-export { default as Preview } from 'frontend/components/UpupUploader/Preview'
-export { default as View } from 'frontend/components/UpupUploader/View'
+export { default as DropZone } from './DropZone'
+export { default as MethodsSelector } from './MethodSelector'
+export { default as Preview } from './Preview'
+export { default as View } from './View'

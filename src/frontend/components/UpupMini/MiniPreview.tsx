@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from 'framer-motion'
-import FileIcon from 'frontend/components/FileIcon'
+import FileIcon from '../FileIcon'
 import React, { FC } from 'react'
 import { TbX } from 'react-icons/tb'
 

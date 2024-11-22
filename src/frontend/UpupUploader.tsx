@@ -4,16 +4,16 @@ import {
     MetaVersion,
     OneDriveUploader,
     UrlUploader,
-} from 'frontend/components'
-import { UpupMini } from 'frontend/components/UpupMini'
+} from './components'
+import { UpupMini } from './components/UpupMini'
 import {
     DropZone,
     MethodsSelector,
     Preview,
     View,
-} from 'frontend/components/UpupUploader'
-import { useAddMore, useDragAndDrop } from 'frontend/hooks'
-import { checkFileSize, compressFile, sizeToBytes } from 'frontend/lib'
+} from './components/UpupUploader'
+import { useAddMore, useDragAndDrop } from './hooks'
+import { checkFileSize, compressFile, sizeToBytes } from './lib'
 import {
     BaseConfigs,
     GoogleConfigs,
@@ -21,7 +21,7 @@ import {
     OneDriveConfigs,
     UPLOAD_ADAPTER,
     UploadAdapter,
-} from 'frontend/types'
+} from './types'
 import React, {
     FC,
     ForwardedRef,
@@ -35,9 +35,9 @@ import React, {
 } from 'react'
 
 import { AnimatePresence } from 'framer-motion'
-import { ProviderSDK } from 'frontend/lib/storage/provider'
-import { StorageConfig } from 'frontend/types/StorageSDK'
-import checkFileType from 'shared/lib/checkFileType'
+import { ProviderSDK } from './lib/storage/provider'
+import { StorageConfig } from './types/StorageSDK'
+import checkFileType from '../shared/lib/checkFileType'
 import useProgress from './hooks/useProgress'
 
 export interface UpupUploaderProps {

@@ -1,8 +1,8 @@
-import ListItem from 'frontend/components/UpupUploader/FileBrowser/LiOD'
+import ListItem from '../../UpupUploader/FileBrowser/LiOD'
 import React, { Dispatch, SetStateAction, useEffect, useState } from 'react'
 
 import { AnimatePresence, motion } from 'framer-motion'
-import ButtonSpinner from 'frontend/components/ButtonSpinner'
+import ButtonSpinner from '../../ButtonSpinner'
 import { MicrosoftUser, OneDriveFile, OneDriveRoot } from 'microsoft'
 import { TbSearch } from 'react-icons/tb'
 

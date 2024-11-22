@@ -4,13 +4,13 @@ import {
     UploadOptions,
     UploadProgress,
     UploadResult,
-} from 'frontend/types/StorageSDK'
+} from '../../types/StorageSDK'
 import {
     PresignedUrlResponse,
     Provider,
     UploadError,
     UploadErrorType,
-} from 'shared/types/StorageSDK'
+} from '../../../shared/types/StorageSDK'
 
 type UploadConfig = StorageConfig & {
     constraints?: {

@@ -1,7 +1,7 @@
-import FileBrowser from 'frontend/components/UpupUploader/FileBrowser/BrowserOD'
-import useOneDrive from 'frontend/hooks/useOneDrive'
-import { BaseConfigs, OneDriveConfigs } from 'frontend/types'
 import React, { Dispatch, FC, ReactElement, SetStateAction } from 'react'
+import useOneDrive from '../hooks/useOneDrive'
+import { BaseConfigs, OneDriveConfigs } from '../types'
+import FileBrowser from './UpupUploader/FileBrowser/BrowserOD'
 
 interface Props {
     baseConfigs: BaseConfigs

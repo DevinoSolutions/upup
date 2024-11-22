@@ -1,7 +1,7 @@
-import { BaseConfigs } from 'frontend/types/BaseConfigs'
-import { GoogleConfigs } from 'frontend/types/GoogleConfigs'
-import { OneDriveConfigs } from 'frontend/types/OneDriveConfigs'
 import { Dispatch, SetStateAction, useEffect } from 'react'
+import { BaseConfigs } from '../types/BaseConfigs'
+import { GoogleConfigs } from '../types/GoogleConfigs'
+import { OneDriveConfigs } from '../types/OneDriveConfigs'
 
 const onedrive_client_id = process.env.ONEDRIVE_CLIENT_ID
 const google_client_id = process.env.GOOGLE_CLIENT_ID

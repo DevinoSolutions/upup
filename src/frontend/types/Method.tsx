@@ -7,7 +7,7 @@ import {
     MyDeviceIcon,
     OneDriveIcon,
     UnsplashIcon,
-} from 'frontend/components'
+} from '../components'
 import React from 'react'
 
 export type Method = {

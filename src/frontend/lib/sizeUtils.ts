@@ -1,3 +1,5 @@
+import { BaseConfigs } from '../types'
+
 /**
  * @param bytes assign keyword depend on size
  */
@@ -20,8 +22,6 @@ export const sizeToBytes = (
     const i = sizes.indexOf(unit)
     return size * Math.pow(1024, i)
 }
-
-import { BaseConfigs } from 'frontend/types'
 
 /**
  * @param file

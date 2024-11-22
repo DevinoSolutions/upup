@@ -1,7 +1,7 @@
-import useOneDriveAuth from 'frontend/hooks/useOneDriveAuth'
-import usePCAInstance from 'frontend/hooks/usePCAInstance'
 import { MicrosoftUser, OneDriveFile, OneDriveRoot } from 'microsoft'
 import { useCallback, useEffect, useState } from 'react'
+import useOneDriveAuth from './useOneDriveAuth'
+import usePCAInstance from './usePCAInstance'
 
 const GRAPH_API_ENDPOINT = 'https://graph.microsoft.com/v1.0/me'
 const GRAPH_API_FILES_ENDPOINT = `${GRAPH_API_ENDPOINT}/drive/root/children`

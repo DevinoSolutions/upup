@@ -1,5 +1,5 @@
-import type { Method } from 'frontend/types'
 import React, { FC, MutableRefObject } from 'react'
+import type { Method } from '../../types'
 
 type Props = {
     setView: (view: string) => void

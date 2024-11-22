@@ -2,12 +2,12 @@ import type { Dispatch, FC, LegacyRef, SetStateAction } from 'react'
 import React, { useRef } from 'react'
 
 import { AnimatePresence } from 'framer-motion'
-import MetaVersion from 'frontend/components/MetaVersion'
-import { default as MiniDropZone } from 'frontend/components/UpupMini/MiniDropZone'
-import { default as MiniPreview } from 'frontend/components/UpupMini/MiniPreview'
-import { useDragAndDrop } from 'frontend/hooks'
-import { BaseConfigs } from 'frontend/types'
-import checkFileType from 'shared/lib/checkFileType'
+import MetaVersion from '../../components/MetaVersion'
+import { default as MiniDropZone } from './MiniDropZone'
+import { default as MiniPreview } from './MiniPreview'
+import { useDragAndDrop } from '../../hooks'
+import { BaseConfigs } from '../../types'
+import checkFileType from '../../../shared/lib/checkFileType'
 
 type Props = {
     files: File[]

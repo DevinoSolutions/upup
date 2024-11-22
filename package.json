@@ -6,13 +6,28 @@
     "readme": "README.md",
     "main": "dist/index.js",
     "module": "dist/upup.esm.js",
-    "types": "dist/index.d.ts",
-    "typings": "dist/index.d.ts",
+    "types": "./dist/index.browser.d.ts",
+    "typings": "./dist/index.browser.d.ts",
     "exports": {
         ".": {
-            "browser": "./dist/upup.esm.js",
-            "node": "./dist/upup.node.js",
-            "default": "./dist/upup.esm.js"
+            "types": "./dist/index.browser.d.ts",
+            "browser": "./dist/browser.esm.js",
+            "import": "./dist/browser.esm.js",
+            "require": "./dist/browser.cjs.development.js"
+        },
+        "./server": {
+            "types": "./dist/index.node.d.ts",
+            "default": "./dist/node.node.js"
+        },
+        "./shared": {
+            "types": "./dist/shared/types/StorageSDK.d.ts"
+        }
+    },
+    "typesVersions": {
+        "*": {
+            "*": [
+                "./dist/index.d.ts"
+            ]
         }
     },
     "browser": "./dist/upup.esm.js",
@@ -39,9 +54,9 @@
     "scripts": {
         "start": "pnpm run prebuild && tsdx watch",
         "prebuild": "node -p \"'export const LIB_VERSION = ' + JSON.stringify(require('./package.json').version) + ';'\" > src/version.ts",
-        "build:browser": "tsdx build --entry ./src/index.browser.ts --tsconfig ./tsconfig.browser.json --format esm,cjs",
-        "build:node": "tsdx build --entry ./src/index.node.ts --tsconfig ./tsconfig.node.json --format cjs",
-        "build": "pnpm run build:browser && pnpm run build:node",
+        "build:browser": "tsdx build --entry ./src/index.browser.ts --tsconfig ./tsconfig.browser.json --format esm,cjs --name browser",
+        "build:node": "tsdx build --entry ./src/index.node.ts --tsconfig ./tsconfig.node.json --format cjs --name node",
+        "build": "node scripts/build.js",
         "test": "tsdx test --passWithNoTests",
         "lint": "tsdx lint",
         "prepare": "tsdx build",
@@ -71,6 +86,7 @@
         "@babel/preset-react": "^7.23.3",
         "@babel/preset-typescript": "^7.23.3",
         "@changesets/cli": "^2.26.2",
+        "@rollup/plugin-alias": "^5.1.1",
         "@rollup/plugin-node-resolve": "^15.3.0",
         "@rollup/plugin-replace": "^5.0.5",
         "@size-limit/preset-small-lib": "^10.0.3",
@@ -95,7 +111,6 @@
         "highlight.js": "10.7.3",
         "husky": "^8.0.3",
         "lowlight": "1.20.0",
-        "pako": "^2.1.0",
         "postcss": "^8.4.31",
         "prettier": "3.0.3",
         "prettier-plugin-organize-imports": "^3.2.4",
@@ -129,6 +144,7 @@
         "babel-plugin-module-resolver": "^5.0.0",
         "framer-motion": "^10.16.5",
         "load-script": "^2.0.0",
+        "pako": "^2.1.0",
         "react-icons": "^4.12.0",
         "react-webcam": "^7.2.0",
         "uuid": "^9.0.1"

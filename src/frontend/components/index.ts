@@ -1,6 +1,6 @@
-export { default as CameraUploader } from 'frontend/components/CameraUploader'
-export { default as FileIcon } from 'frontend/components/FileIcon'
-export { default as GoogleDriveUploader } from 'frontend/components/GoogleDriveUploader'
+export { default as CameraUploader } from './CameraUploader'
+export { default as FileIcon } from './FileIcon'
+export { default as GoogleDriveUploader } from './GoogleDriveUploader'
 export {
     AudioIcon,
     BoxIcon,
