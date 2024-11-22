@@ -22,7 +22,7 @@ import {
     UPLOAD_ADAPTER,
     UploadAdapter,
 } from 'frontend/types'
-import {
+import React, {
     FC,
     ForwardedRef,
     LegacyRef,

@@ -1,0 +1,10 @@
+{
+    "extends": "./tsconfig.json",
+    "compilerOptions": {
+        "lib": ["dom", "esnext"],
+        "module": "esnext",
+        "jsx": "react",
+        "types": ["react"]
+    },
+    "include": ["src/frontend", "src/shared"]
+}

@@ -1,5 +1,5 @@
 import { useUrl } from 'frontend/hooks'
-import { FC, useEffect, useState } from 'react'
+import React, { FC, useEffect, useState } from 'react'
 
 type Props = {
     setFiles: (files: any) => void

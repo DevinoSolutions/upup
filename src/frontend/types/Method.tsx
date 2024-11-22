@@ -8,6 +8,7 @@ import {
     OneDriveIcon,
     UnsplashIcon,
 } from 'frontend/components'
+import React from 'react'
 
 export type Method = {
     id: string

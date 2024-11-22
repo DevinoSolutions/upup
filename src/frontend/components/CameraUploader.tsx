@@ -1,5 +1,5 @@
 import { useUrl } from 'frontend/hooks'
-import { FC, useCallback, useRef, useState } from 'react'
+import React, { FC, useCallback, useRef, useState } from 'react'
 
 import { motion } from 'framer-motion'
 import { TbCameraRotate, TbCapture, TbX } from 'react-icons/tb'

@@ -1,6 +1,6 @@
 import ListItem from 'frontend/components/UpupUploader/FileBrowser/ListItem'
 import type { GoogleFile, Root, User } from 'google'
-import { Dispatch, SetStateAction, useEffect, useState } from 'react'
+import React, { Dispatch, SetStateAction, useEffect, useState } from 'react'
 
 import { AnimatePresence, motion } from 'framer-motion'
 import ButtonSpinner from 'frontend/components/ButtonSpinner'

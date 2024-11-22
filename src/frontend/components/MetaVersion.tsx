@@ -1,3 +1,4 @@
+import React from 'react'
 import { LIB_VERSION } from 'version'
 
 import type { BaseConfigs } from 'frontend/types'

@@ -1,6 +1,7 @@
 import { AnimationProps, HoverHandlers, motion } from 'framer-motion'
 import { handleImgError } from 'frontend/lib/handleImgError'
 import { OneDriveFile } from 'microsoft'
+import React from 'react'
 import { TbFile, TbFolder } from 'react-icons/tb'
 
 const backgroundColors = {

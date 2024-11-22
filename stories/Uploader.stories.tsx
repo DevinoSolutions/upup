@@ -1,6 +1,6 @@
 import { CircularProgress } from '@mui/material'
 import { Meta } from '@storybook/react'
-import { useRef, useState } from 'react'
+import React, { useRef, useState } from 'react'
 import {
     UPLOAD_ADAPTER,
     UploadAdapter,

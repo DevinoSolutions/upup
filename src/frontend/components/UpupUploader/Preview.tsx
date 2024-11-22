@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { FileIcon, LinearProgressBar } from 'frontend/components'
 import { bytesToSize } from 'frontend/lib'
 import { GoogleFile } from 'google'
-import { Dispatch, FC, SetStateAction } from 'react'
+import React, { Dispatch, FC, SetStateAction } from 'react'
 import { TbX } from 'react-icons/tb'
 
 type Props = {

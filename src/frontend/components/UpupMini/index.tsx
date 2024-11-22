@@ -1,5 +1,5 @@
 import type { Dispatch, FC, LegacyRef, SetStateAction } from 'react'
-import { useRef } from 'react'
+import React, { useRef } from 'react'
 
 import { AnimatePresence } from 'framer-motion'
 import MetaVersion from 'frontend/components/MetaVersion'

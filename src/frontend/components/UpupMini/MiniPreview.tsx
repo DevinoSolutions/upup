@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from 'framer-motion'
 import FileIcon from 'frontend/components/FileIcon'
-import { FC } from 'react'
+import React, { FC } from 'react'
 import { TbX } from 'react-icons/tb'
 
 type Props = {

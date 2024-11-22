@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion'
-import { Dispatch, FC, SetStateAction } from 'react'
+import React, { Dispatch, FC, SetStateAction } from 'react'
 import { TbUpload } from 'react-icons/tb'
 import checkFileType from 'shared/lib/checkFileType'
 

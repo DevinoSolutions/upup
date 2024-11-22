@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react'
-import { useRef } from 'react'
-import { UploadFilesRef, UpupUploader } from '../src/UpupUploader'
+import React, { useRef } from 'react'
+import { UploadFilesRef, UpupUploader } from '../src/frontend/UpupUploader'
 
 const meta = {
     title: 'Cloud Storage/Local to AWS Upload',
