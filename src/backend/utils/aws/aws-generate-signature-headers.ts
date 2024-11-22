@@ -42,7 +42,7 @@ export default function awsGenerateSignatureHeaders(
     const service = 's3'
     const hostMap = {
         [Provider.AWS]: `${bucketName}.s3.${region}.amazonaws.com`,
-        [Provider.BackBlaze]: (endpoint as string)?.split('https://')[1],
+        [Provider.BackBlaze]: (endpoint as string).split('https://')[1],
         [Provider.DigitalOcean]: `${bucketName}.${region}.digitaloceanspaces.com`,
         [Provider.Azure]: ``,
     }

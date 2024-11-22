@@ -63,8 +63,9 @@ export default async function s3GeneratePresignedUrl({
     } catch (error) {
         if (error instanceof UploadError) throw error
 
-        const message = (error as _Error)?.Message || (error as Error).message
-        const errorType = ((error as _Error)?.Code ||
+        const message =
+            ((error as _Error) || {}).Message || (error as Error).message
+        const errorType = (((error as _Error) || {}).Code ||
             UploadErrorType.PRESIGNED_URL_ERROR) as UploadErrorType
 
         throw new UploadError(message, errorType, false, 500)

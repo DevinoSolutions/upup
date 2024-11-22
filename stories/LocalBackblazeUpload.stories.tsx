@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react'
-import { useRef, useState } from 'react'
-import { UpupUploader, UploadFilesRef } from '../src'
+import { useRef } from 'react'
+import { UploadFilesRef, UpupUploader } from '../src'
 
 const meta = {
     title: 'Cloud Storage/Local to Backblaze Upload',
@@ -20,7 +20,6 @@ export default meta
 type Story = StoryObj<typeof UpupUploader>
 
 const LocalUploader = () => {
-    const [files, setFiles] = useState<File[]>([])
     const upupRef = useRef<UploadFilesRef>(null)
 
     const handleUpload = async () => {
@@ -48,8 +47,7 @@ const LocalUploader = () => {
                     multiple: true,
                     accept: '*',
                     maxFileSize: { size: 100, unit: 'MB' },
-                    onChange: files => {
-                        setFiles(files)
+                    onChange: (files: File[]) => {
                         console.log('Files selected:', files)
                     },
                 }}
