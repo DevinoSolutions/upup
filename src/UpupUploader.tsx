@@ -66,7 +66,7 @@ export type UploadFilesRef = {
 // Add this helper function at the top level
 const createFileWithId = (file: File) => {
     return Object.assign(file, {
-        id: `${file.name}-${file.size}-${file.lastModified}-${Math.random()}`,
+        id: `${file.name}-${file.size}-${file.lastModified}-${uuidv4()}`,
     })
 }
 
