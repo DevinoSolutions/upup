@@ -1,5 +1,4 @@
-import { PutObjectCommand } from '@aws-sdk/client-s3'
-import { PutObjectRequest } from '@aws-sdk/client-s3/dist-types/models/models_0'
+import { PutObjectCommand, PutObjectRequest } from '@aws-sdk/client-s3'
 import { S3ClientWithSend } from './getClient'
 
 type props = {

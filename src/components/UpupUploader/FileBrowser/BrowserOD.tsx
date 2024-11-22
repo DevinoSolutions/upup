@@ -162,7 +162,6 @@ const FileBrowser = ({
     ) => {
         const response = await fetch(url, {
             method: 'GET',
-            headers: { Accept: 'application/json' },
         })
 
         if (!response.ok) {
