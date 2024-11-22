@@ -1,6 +1,6 @@
 import { AnimationProps, HoverHandlers, motion } from 'framer-motion'
+import { handleImgError } from 'frontend/lib/handleImgError'
 import { GoogleFile } from 'google'
-import { handleImgError } from 'lib/handleImgError'
 import { TbFileUnknown, TbFolder } from 'react-icons/tb'
 
 type Props = {

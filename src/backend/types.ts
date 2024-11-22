@@ -1,5 +1,5 @@
 import { S3ClientConfig } from '@aws-sdk/client-s3'
-import { Provider } from 'types/StorageSDK'
+import { Provider } from 'shared/types/StorageSDK'
 
 export interface FileParams {
     name: string

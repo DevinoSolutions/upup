@@ -13,6 +13,7 @@ import {
     View,
 } from 'frontend/components/UpupUploader'
 import { useAddMore, useDragAndDrop } from 'frontend/hooks'
+import { checkFileSize, compressFile, sizeToBytes } from 'frontend/lib'
 import {
     BaseConfigs,
     GoogleConfigs,
@@ -21,7 +22,6 @@ import {
     UPLOAD_ADAPTER,
     UploadAdapter,
 } from 'frontend/types'
-import { checkFileSize, checkFileType, compressFile, sizeToBytes } from 'lib'
 import {
     FC,
     ForwardedRef,
@@ -35,9 +35,10 @@ import {
 } from 'react'
 
 import { AnimatePresence } from 'framer-motion'
+import { ProviderSDK } from 'frontend/lib/storage/provider'
 import { StorageConfig } from 'frontend/types/StorageSDK'
-import { ProviderSDK } from 'lib/storage/provider'
-import useProgress from './frontend/hooks/useProgress'
+import checkFileType from 'shared/lib/checkFileType'
+import useProgress from './hooks/useProgress'
 
 export interface UpupUploaderProps {
     storageConfig: StorageConfig

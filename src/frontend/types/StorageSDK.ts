@@ -1,8 +1,13 @@
-import { Provider } from 'types/StorageSDK'
+import { Provider } from 'shared/types/StorageSDK'
 
 export interface StorageConfig {
     provider: Provider
     tokenEndpoint: string
+    constraints?: {
+        multiple: boolean
+        accept: string
+        maxFileSize?: number
+    }
 }
 
 export interface UploadProgress {

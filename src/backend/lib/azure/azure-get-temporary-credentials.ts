@@ -1,5 +1,5 @@
 import { BlobServiceClient } from '@azure/storage-blob'
-import { UploadError, UploadErrorType } from 'types/StorageSDK'
+import { UploadError, UploadErrorType } from 'shared/types/StorageSDK'
 
 export default async function azureGetTemporaryCredentials(
     blobServiceClient: BlobServiceClient,

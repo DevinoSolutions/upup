@@ -10,7 +10,7 @@ import {
     Provider,
     UploadError,
     UploadErrorType,
-} from 'types/StorageSDK'
+} from 'shared/types/StorageSDK'
 
 type UploadConfig = StorageConfig & {
     constraints?: {

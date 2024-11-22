@@ -7,7 +7,7 @@ import { default as MiniDropZone } from 'frontend/components/UpupMini/MiniDropZo
 import { default as MiniPreview } from 'frontend/components/UpupMini/MiniPreview'
 import { useDragAndDrop } from 'frontend/hooks'
 import { BaseConfigs } from 'frontend/types'
-import { checkFileType } from 'lib'
+import checkFileType from 'shared/lib/checkFileType'
 
 type Props = {
     files: File[]

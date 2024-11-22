@@ -41,7 +41,7 @@
             "@/*": ["src/*"],
             "#components/*": ["src/frontend/components/*"],
             "#types/*": ["src/frontend/types/*"],
-            "#lib/*": ["src/lib/*"],
+            "#lib/*": ["src/shared/lib/*"],
             "#hooks/*": ["src/frontend/hooks/*"]
         }
     }

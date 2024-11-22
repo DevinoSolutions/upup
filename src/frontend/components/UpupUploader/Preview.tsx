@@ -1,8 +1,8 @@
 import Box from '@mui/material/Box'
 import { AnimatePresence, motion } from 'framer-motion'
 import { FileIcon, LinearProgressBar } from 'frontend/components'
+import { bytesToSize } from 'frontend/lib'
 import { GoogleFile } from 'google'
-import { bytesToSize } from 'lib'
 import { Dispatch, FC, SetStateAction } from 'react'
 import { TbX } from 'react-icons/tb'
 

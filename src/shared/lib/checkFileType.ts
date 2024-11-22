@@ -1,4 +1,4 @@
-export function checkFileType(accept: string, fileType: string) {
+export default function checkFileType(accept: string, fileType: string) {
     const acceptedTypes = accept.split(',').map(t => t.trim())
     const isValidType =
         acceptedTypes.includes('*') ||

@@ -1,5 +1,5 @@
 import { AnimationProps, HoverHandlers, motion } from 'framer-motion'
-import { handleImgError } from 'lib/handleImgError'
+import { handleImgError } from 'frontend/lib/handleImgError'
 import { OneDriveFile } from 'microsoft'
 import { TbFile, TbFolder } from 'react-icons/tb'
 
