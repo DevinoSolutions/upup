@@ -80,19 +80,19 @@ export const UpupUploader: FC<
         } = props
 
         const {
-            toBeCompressed = false,
-            onChange,
+            shouldCompress = false,
+            onFilesSelected,
             multiple = false,
             accept = '*',
             limit,
             onFileClick,
             mini = false,
-            onFilesChange,
+            onPrepareFiles,
             maxFileSize = { size: 20, unit: 'MB' },
             customMessage = 'Docs and Images',
         } = baseConfigs
 
-        const [files, setFiles] = useState<File[]>([])
+        const [selectedFiles, setSelectedFiles] = useState<File[]>([])
         const [mutatedFiles, setMutatedFiles] = useState<File[]>([])
         const [view, setView] = useState('internal')
 
@@ -105,11 +105,11 @@ export const UpupUploader: FC<
         } = useDragAndDrop()
 
         const { isAddingMore, setIsAddingMore, inputRef } = useAddMore(
-            files,
-            onChange,
+            selectedFiles,
+            onFilesSelected,
         )
 
-        const { progress } = useProgress(files)
+        const { progress } = useProgress(selectedFiles)
 
         /**
          * Expose the handleUpload function to the parent component
@@ -124,7 +124,7 @@ export const UpupUploader: FC<
                         filesList.forEach(file => checkFileType(file, accept))
 
                         // Process files (compression if needed)
-                        const processedFiles = toBeCompressed
+                        const processedFiles = shouldCompress
                             ? await Promise.all(
                                   filesList.map(file =>
                                       compressFile({
@@ -159,8 +159,10 @@ export const UpupUploader: FC<
                         )
 
                         // Extract keys from results
-                        const keys = uploadResults.map(result => result.key)
-                        resolve(keys)
+                        const uploadedFileKeys = uploadResults.map(
+                            result => result.key,
+                        )
+                        resolve(uploadedFileKeys)
                     } catch (error) {
                         reject(error)
                     }
@@ -175,11 +177,11 @@ export const UpupUploader: FC<
                     return await proceedUpload(dynamicFiles)
                 },
                 async uploadFiles(): Promise<string[] | null> {
-                    if (files.length === 0) return null
+                    if (selectedFiles.length === 0) return null
                     const filesList =
                         mutatedFiles && mutatedFiles.length > 0
                             ? mutatedFiles
-                            : files
+                            : selectedFiles
                     return await proceedUpload(filesList)
                 },
             }
@@ -201,7 +203,7 @@ export const UpupUploader: FC<
         const components = {
             [UploadAdapter.GOOGLE_DRIVE]: (
                 <GoogleDriveUploader
-                    setFiles={setFiles}
+                    setFiles={setSelectedFiles}
                     setView={setView}
                     googleConfigs={googleConfigs as GoogleConfigs}
                     accept={accept}
@@ -211,42 +213,43 @@ export const UpupUploader: FC<
                 <OneDriveUploader
                     oneDriveConfigs={oneDriveConfigs as OneDriveConfigs}
                     baseConfigs={baseConfigs}
-                    setFiles={setFiles}
+                    setFiles={setSelectedFiles}
                     setView={setView}
                     loader={loader}
                 />
             ),
             [UploadAdapter.LINK]: (
-                <UrlUploader setFiles={setFiles} setView={setView} />
+                <UrlUploader setFiles={setSelectedFiles} setView={setView} />
             ),
             [UploadAdapter.CAMERA]: (
-                <CameraUploader setFiles={setFiles} setView={setView} />
+                <CameraUploader setFiles={setSelectedFiles} setView={setView} />
             ),
         }
 
         useEffect(() => {
-            const newFiles = files.filter(file =>
+            const newFiles = selectedFiles.filter(file =>
                 checkFileSize(file, maxFileSize),
             )
             if (limit && newFiles.length > limit)
-                setFiles(newFiles.slice(0, limit))
+                setSelectedFiles(newFiles.slice(0, limit))
             // if files didn't change, no need to update the state
-            else if (files.length === newFiles.length) return
-            else setFiles([...newFiles])
-        }, [limit, files, maxFileSize])
+            else if (selectedFiles.length === newFiles.length) return
+            else setSelectedFiles([...newFiles])
+        }, [limit, selectedFiles, maxFileSize])
 
         useEffect(() => {
-            if (!onFilesChange || files.length === 0) return setMutatedFiles([])
+            if (!onPrepareFiles || selectedFiles.length === 0)
+                return setMutatedFiles([])
             const mutateFiles = async () =>
-                setMutatedFiles(await onFilesChange([...files]))
+                setMutatedFiles(await onPrepareFiles([...selectedFiles]))
 
             mutateFiles()
-        }, [files])
+        }, [selectedFiles])
 
         return mini ? (
             <UpupMini
-                files={files}
-                setFiles={setFiles}
+                files={selectedFiles}
+                setFiles={setSelectedFiles}
                 maxFileSize={maxFileSize}
             />
         ) : (
@@ -259,7 +262,7 @@ export const UpupUploader: FC<
                 <AnimatePresence>
                     {isDragging && (
                         <DropZone
-                            setFiles={setFiles}
+                            setFiles={setSelectedFiles}
                             setIsDragging={setIsDragging}
                             multiple={multiple}
                             accept={accept}
@@ -279,10 +282,10 @@ export const UpupUploader: FC<
 
                         const newFiles = multiple
                             ? isAddingMore
-                                ? [...files, ...acceptedFiles]
+                                ? [...selectedFiles, ...acceptedFiles]
                                 : acceptedFiles
                             : [acceptedFiles[0]].filter(Boolean)
-                        setFiles(newFiles)
+                        setSelectedFiles(newFiles)
 
                         // clear the input value
                         e.target.value = ''
@@ -300,9 +303,9 @@ export const UpupUploader: FC<
                     files={
                         mutatedFiles && mutatedFiles.length > 0
                             ? mutatedFiles
-                            : files
+                            : selectedFiles
                     }
-                    setFiles={setFiles}
+                    setFiles={setSelectedFiles}
                     isAddingMore={isAddingMore}
                     setIsAddingMore={setIsAddingMore}
                     multiple={multiple}

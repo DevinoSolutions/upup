@@ -21,7 +21,7 @@ export default meta
 type Story = StoryObj<typeof UpupUploader>
 
 const LocalUploader = () => {
-    const [files, setFiles] = useState<File[]>([])
+    const [selectedFiles, setSelectedFiles] = useState<File[]>([])
     const upupRef = useRef<UploadFilesRef>(null)
 
     const handleUpload = async () => {
@@ -32,7 +32,7 @@ const LocalUploader = () => {
                 console.log('Uploaded file keys:', data)
             }
         } catch (error) {
-            console.error('Error uploading files:', error)
+            console.error('Error uploading selected files:', error)
         }
     }
 
@@ -49,8 +49,8 @@ const LocalUploader = () => {
                     multiple: true,
                     accept: '*',
                     maxFileSize: { size: 100, unit: 'MB' },
-                    onChange: files => {
-                        setFiles(files)
+                    onFilesSelected: files => {
+                        setSelectedFiles(files)
                         console.log('Files selected:', files)
                     },
                 }}

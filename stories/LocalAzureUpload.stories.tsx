@@ -21,7 +21,7 @@ export default meta
 type Story = StoryObj<typeof UpupUploader>
 
 const LocalUploader = () => {
-    const [files, setFiles] = useState<File[]>([])
+    const [selectedFiles, setSelectedFiles] = useState<File[]>([])
     const upupRef = useRef<UploadFilesRef>(null)
 
     const handleUpload = async () => {
@@ -32,7 +32,7 @@ const LocalUploader = () => {
                 console.log('Uploaded file keys:', data)
             }
         } catch (error) {
-            console.error('Error uploading files:', error)
+            console.error('Error uploading selected files:', error)
         }
     }
 
@@ -49,8 +49,8 @@ const LocalUploader = () => {
                     multiple: true,
                     accept: '*',
                     maxFileSize: { size: 100, unit: 'MB' },
-                    onChange: files => {
-                        setFiles(files)
+                    onFilesSelected: files => {
+                        setSelectedFiles(files)
                         console.log('Files selected:', files)
                     },
                 }}
@@ -74,8 +74,8 @@ export const Default: Story = {
 export const RestrictedFileTypes: Story = {
     render: () => {
         const Component = () => {
-            const [files, setFiles] = useState<File[]>([])
-            const upupRef = useRef<UploadFilesRef>()
+            const [selectedFiles, setSelectedFiles] = useState<File[]>([])
+            const upupRef = useRef<UploadFilesRef>(null)
 
             return (
                 <div className="flex flex-col gap-4">
@@ -93,8 +93,8 @@ export const RestrictedFileTypes: Story = {
                             // Only allow images and PDFs
                             accept: 'image/*,application/pdf',
                             maxFileSize: { size: 10, unit: 'MB' },
-                            onChange: files => {
-                                setFiles(files)
+                            onFilesSelected: files => {
+                                setSelectedFiles(files)
                                 console.log('Files selected:', files)
                             },
                         }}
@@ -117,8 +117,8 @@ export const RestrictedFileTypes: Story = {
 export const WithMetadata: Story = {
     render: () => {
         const Component = () => {
-            const [files, setFiles] = useState<File[]>([])
-            const upupRef = useRef<UploadFilesRef>()
+            const [selectedFiles, setSelectedFiles] = useState<File[]>([])
+            const upupRef = useRef<UploadFilesRef>(null)
 
             const handleUpload = async () => {
                 try {
@@ -131,7 +131,7 @@ export const WithMetadata: Story = {
                     })
                     console.log('Upload result:', data)
                 } catch (error) {
-                    console.error('Error uploading files:', error)
+                    console.error('Error uploading selected files:', error)
                 }
             }
 
@@ -150,8 +150,8 @@ export const WithMetadata: Story = {
                             multiple: true,
                             accept: '*',
                             maxFileSize: { size: 50, unit: 'MB' },
-                            onChange: files => {
-                                setFiles(files)
+                            onFilesSelected: files => {
+                                setSelectedFiles(files)
                                 console.log('Files selected:', files)
                             },
                         }}

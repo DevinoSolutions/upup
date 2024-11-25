@@ -19,14 +19,14 @@ const meta: Meta<typeof UpupUploader> = {
 export default meta
 
 const Uploader = args => {
-    const [files, setFiles] = useState<File[]>([])
+    const [selectedFiles, setSelectedFiles] = useState<File[]>([])
     const { baseConfigs, googleConfigs, oneDriveConfigs } = useUpup({
-        setFiles: setFiles,
+        setSelectedFiles,
         accept: '*',
         multiple: true,
         limit: 5,
         onFileClick: file => void 0,
-        onFilesChange: files => {
+        onPrepareFiles: files => {
             console.log('files', files)
             return files
         },
@@ -47,17 +47,17 @@ const Uploader = args => {
             const data = await upupRef.current?.uploadFiles()
             console.log(`Upload ${data ? 'successful' : 'returned null.'} `)
         } catch (error) {
-            console.error('Error uploading files:', error)
+            console.error('Error uploading selected files:', error)
         }
     }
     const handleDynamicUpload = async () => {
         try {
             const testFiles: any[] = []
-            testFiles.push(files[0])
+            testFiles.push(selectedFiles[0])
             const data = await upupRef.current?.dynamicUploadFiles(testFiles)
             console.log(`Upload ${data ? 'successful' : 'returned null.'} `)
         } catch (error) {
-            console.error('Error uploading files:', error)
+            console.error('Error uploading selected files:', error)
         }
     }
 

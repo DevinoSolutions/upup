@@ -25,7 +25,7 @@ const google_api_key = process.env.GOOGLE_API_KEY
  */
 
 type Props = BaseConfigs & {
-    setFiles?: Dispatch<SetStateAction<File[]>>
+    setSelectedFiles?: Dispatch<SetStateAction<File[]>>
 }
 
 /**
@@ -38,12 +38,12 @@ export const useUpup: (props?: Props) => {
 } = (
     props: Props = {
         accept: '*',
-        setFiles: () => {},
+        setSelectedFiles: () => {},
         multiple: false,
         mini: false,
     },
 ) => {
-    const { setFiles } = props
+    const { setSelectedFiles } = props
 
     /**
      * Throw an error if any of the required environment variables are missing
@@ -75,7 +75,8 @@ export const useUpup: (props?: Props) => {
 
     const baseConfigs: BaseConfigs = {
         ...props,
-        onChange: (files: File[]) => (setFiles ? setFiles(files) : () => {}),
+        onFilesSelected: (files: File[]) =>
+            setSelectedFiles ? setSelectedFiles(files) : () => {},
     }
 
     const googleConfigs: GoogleConfigs = {

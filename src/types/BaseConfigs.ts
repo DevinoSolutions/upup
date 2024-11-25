@@ -1,12 +1,12 @@
 export type BaseConfigs = {
-    toBeCompressed?: boolean
+    shouldCompress?: boolean
     multiple?: boolean
-    onChange?: (files: File[]) => void
+    onFilesSelected?: (files: File[]) => void
     accept?: string
     limit?: number
     onFileClick?: (file: File) => void
     mini?: boolean
-    onFilesChange?: (files: File[]) => Promise<File[]>
+    onPrepareFiles?: (files: File[]) => Promise<File[]>
     maxFileSize?: {
         size: number
         unit?: 'B' | 'KB' | 'MB' | 'GB' | 'TB' | 'PB' | 'EB' | 'ZB' | 'YB'
