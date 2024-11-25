@@ -30,21 +30,21 @@ const DropZone: FC<Props> = ({
                 e.dataTransfer.dropEffect = 'copy'
 
                 const files = Array.from(e.dataTransfer.files)
-                baseConfigs?.onDragOver?.(files)
+                baseConfigs?.onFileDragOver?.(files)
             }}
             onDragLeave={e => {
                 e.preventDefault()
                 setIsDragging(false)
 
                 const files = Array.from(e.dataTransfer.files)
-                baseConfigs?.onDragLeave?.(files)
+                baseConfigs?.onFileDragLeave?.(files)
             }}
             onDrop={e => {
                 e.preventDefault()
                 const files = Array.from(e.dataTransfer.files)
                 setFiles(prev => (multiple ? [...prev, ...files] : [files[0]]))
                 setIsDragging(false)
-                baseConfigs?.onDrop?.(files)
+                baseConfigs?.onFileDrop?.(files)
             }}
         >
             <div

@@ -15,7 +15,7 @@ const MethodsSelector: FC<Props> = ({
     baseConfigs,
 }: Props) => {
     const handleMethodClick = (methodId: string) => {
-        baseConfigs?.onClick?.(methodId)
+        baseConfigs?.onIntegrationClick?.(methodId)
         if (methodId === 'INTERNAL') inputRef && inputRef?.current?.click()
         else setView(methodId)
     }

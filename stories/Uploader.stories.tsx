@@ -29,23 +29,23 @@ const Uploader = args => {
             console.log('Files changed:', files)
             return files
         },
-        onClick: (integrationType: string) => {
+        onIntegrationClick: (integrationType: string) => {
             setUploadStatus(`Selected integration: ${integrationType}`)
             console.log('Integration clicked:', integrationType)
         },
-        onUpload: (file: File) => {
+        onFileUploadStart: (file: File) => {
             setUploadStatus(`Starting upload: ${file.name}`)
             console.log('Upload started:', file)
         },
-        onCompletedUpload: (file: File, key: string) => {
+        onFileUploadComplete: (file: File, key: string) => {
             setUploadStatus(`Completed upload: ${file.name}`)
             console.log('Upload completed:', { file, key })
         },
-        onAllCompleted: (keys: string[]) => {
+        onAllUploadsComplete: (keys: string[]) => {
             setUploadStatus('All uploads completed!')
             console.log('All uploads completed:', keys)
         },
-        onUploadFail: (file: File, error: Error) => {
+        onFileUploadFail: (file: File, error: Error) => {
             setUploadStatus(`Upload failed: ${file.name} - ${error.message}`)
             console.error('Upload failed:', { file, error })
         },
@@ -53,7 +53,7 @@ const Uploader = args => {
             setUploadStatus(`File progress - ${file.name}: ${progress}%`)
             console.log('File progress:', { file, progress })
         },
-        onTotalProgress: (
+        onTotalUploadProgress: (
             progress: number,
             completed: number,
             total: number,
@@ -71,17 +71,17 @@ const Uploader = args => {
             setUploadStatus(`Removed file: ${file.name}`)
             console.log('File removed:', file)
         },
-        onDragOver: (files: File[]) => {
+        onFileDragOver: (files: File[]) => {
             const fileNames = files.map(file => file.name).join(', ')
             setUploadStatus(`Hovering over dropzone: ${fileNames}`)
             console.log('Hovering over dropzone', files)
         },
-        onDragLeave: (files: File[]) => {
+        onFileDragLeave: (files: File[]) => {
             const fileNames = files.map(file => file.name).join(', ')
             setUploadStatus(`Left drop zone: ${fileNames}`)
             console.log('Left drop zone', files)
         },
-        onDrop: (files: File[]) => {
+        onFileDrop: (files: File[]) => {
             const fileNames = files.map(file => file.name).join(', ')
             setUploadStatus(`Dropped files: ${fileNames}`)
             console.log('Dropped files', files)

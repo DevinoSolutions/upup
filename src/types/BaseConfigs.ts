@@ -12,19 +12,19 @@ export type BaseConfigs = {
         unit?: 'B' | 'KB' | 'MB' | 'GB' | 'TB' | 'PB' | 'EB' | 'ZB' | 'YB'
     }
     customMessage?: string
-    onClick?: (integrationType: string) => void
-    onUpload?: (file: File) => void
-    onCompletedUpload?: (file: File, key: string) => void
-    onAllCompleted?: (keys: string[]) => void
-    onUploadFail?: (file: File, error: Error) => void
+    onIntegrationClick?: (integrationType: string) => void
+    onFileUploadStart?: (file: File) => void
+    onFileUploadComplete?: (file: File, key: string) => void
+    onAllUploadsComplete?: (keys: string[]) => void
+    onFileUploadFail?: (file: File, error: Error) => void
     onFileProgress?: (file: File, progress: number) => void
-    onTotalProgress?: (
+    onTotalUploadProgress?: (
         progress: number,
         completedFiles: number,
         totalFiles: number,
     ) => void
     onFileRemove?: (file: File) => void
-    onDragOver?: (files: File[]) => void
-    onDragLeave?: (files: File[]) => void
-    onDrop?: (files: File[]) => void
+    onFileDragOver?: (files: File[]) => void
+    onFileDragLeave?: (files: File[]) => void
+    onFileDrop?: (files: File[]) => void
 }

@@ -26,7 +26,7 @@ const useProgress = (files: File[], baseConfigs?: BaseConfigs) => {
                     const totalProgress = Math.round(
                         (newCompleted / files.length) * 100,
                     )
-                    baseConfigs?.onTotalProgress?.(
+                    baseConfigs?.onTotalUploadProgress?.(
                         totalProgress,
                         newCompleted,
                         files.length,

@@ -142,7 +142,7 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
         const validateFileType = (file: File) => {
             if (!checkFileType(file, accept)) {
                 const error = new Error(`File type ${file.type} not accepted`)
-                baseConfigs?.onUploadFail?.(file, error)
+                baseConfigs?.onFileUploadFail?.(file, error)
                 throw error
             }
         }
@@ -165,7 +165,7 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
                         }MB`,
                     )
                     files.forEach(
-                        file => baseConfigs?.onUploadFail?.(file, error),
+                        file => baseConfigs?.onFileUploadFail?.(file, error),
                     )
                     throw error
                 }
@@ -192,7 +192,8 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
                 )
             } catch (error) {
                 files.forEach(
-                    file => baseConfigs?.onUploadFail?.(file, error as Error),
+                    file =>
+                        baseConfigs?.onFileUploadFail?.(file, error as Error),
                 )
                 throw error
             }
@@ -224,7 +225,7 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
 
                         // Notify upload start
                         filesList.forEach(file => {
-                            baseConfigs?.onUpload?.(file)
+                            baseConfigs?.onFileUploadStart?.(file)
                         })
 
                         // Compress files if needed
@@ -244,7 +245,7 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
                                     })
 
                                     if (result.httpStatusCode === 200) {
-                                        baseConfigs?.onCompletedUpload?.(
+                                        baseConfigs?.onFileUploadComplete?.(
                                             file,
                                             key,
                                         )
@@ -253,7 +254,7 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
                                         throw new Error('Upload failed')
                                     }
                                 } catch (error) {
-                                    baseConfigs?.onUploadFail?.(
+                                    baseConfigs?.onFileUploadFail?.(
                                         file,
                                         error as Error,
                                     )
@@ -263,7 +264,7 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
                         )
 
                         const keys = await Promise.all(uploadPromises)
-                        baseConfigs?.onAllCompleted?.(keys)
+                        baseConfigs?.onAllUploadsComplete?.(keys)
                         resolve(keys)
                     } catch (error) {
                         reject(error)
