@@ -149,14 +149,18 @@ export class ProviderSDK implements StorageSDK {
                 } else {
                     reject(
                         new Error(
-                            `Upload failed with status ${xhr.status}: ${xhr.responseText}`,
+                            `Upload failed - Status: ${xhr.status} (${xhr.statusText}). Details: ${xhr.responseText}`,
                         ),
                     )
                 }
             })
 
             xhr.addEventListener('error', () =>
-                reject(new Error('Network error during upload')),
+                reject(
+                    new Error(
+                        `Network error during upload - Status: ${xhr.status} (${xhr.statusText})`,
+                    ),
+                ),
             )
 
             xhr.open('PUT', url)
@@ -167,36 +171,108 @@ export class ProviderSDK implements StorageSDK {
     }
 
     validateConfig(): boolean {
-        const required = ['tokenEndpoint'] as const
+        const required = ['tokenEndpoint', 'provider'] as const
         const missing = required.filter(key => !this.config[key])
 
         if (missing.length > 0)
             throw new Error(
                 `Missing required configuration: ${missing.join(', ')}`,
             )
+        if (!Object.values(Provider).includes(this.config.provider))
+            throw new Error(`Invalid provider: ${this.config.provider}`)
 
         return true
     }
 
     private handleError(error: unknown): never {
+        // If it's already a structured UploadError, rethrow
         if (error instanceof UploadError) throw error
 
-        const err = error as Error
-        if (err.message.includes('unauthorized'))
-            throw new UploadError(
-                'Unauthorized access to Provider',
-                UploadErrorType.PERMISSION_ERROR,
-            )
+        // If it's an error from the backend with a specific error code
+        if (error instanceof Error && 'code' in error) {
+            const errorCode = (error as any).code
+            switch (errorCode) {
+                // Permission and Authentication Errors
+                case 'UNAUTHORIZED':
+                case 'FORBIDDEN':
+                case 'AUTHENTICATION_FAILED':
+                    throw new UploadError(
+                        'Unauthorized access to Provider',
+                        UploadErrorType.PERMISSION_ERROR,
+                    )
 
-        if (err.message.includes('expired'))
-            throw new UploadError(
-                'Presigned URL has expired',
-                UploadErrorType.EXPIRED_URL,
-                true,
-            )
+                // URL and Credential Related Errors
+                case 'URL_EXPIRED':
+                case 'PRESIGNED_URL_INVALID':
+                    throw new UploadError(
+                        'Presigned URL has expired or is invalid',
+                        UploadErrorType.EXPIRED_URL,
+                        true,
+                    )
 
+                case 'TEMPORARY_CREDENTIALS_INVALID':
+                    throw new UploadError(
+                        'Temporary credentials are no longer valid',
+                        UploadErrorType.TEMPORARY_CREDENTIALS_ERROR,
+                        true,
+                    )
+
+                // CORS and Configuration Errors
+                case 'CORS_MISCONFIGURED':
+                case 'ORIGIN_NOT_ALLOWED':
+                    throw new UploadError(
+                        'CORS configuration prevents file upload',
+                        UploadErrorType.CORS_CONFIG_ERROR,
+                    )
+
+                // File Validation Errors
+                case 'FILE_TOO_LARGE':
+                    throw new UploadError(
+                        'File exceeds maximum size limit',
+                        UploadErrorType.FILE_VALIDATION_ERROR,
+                    )
+
+                case 'INVALID_FILE_TYPE':
+                    throw new UploadError(
+                        'File type is not allowed',
+                        UploadErrorType.FILE_VALIDATION_ERROR,
+                    )
+
+                // Network and Infrastructure Errors
+                case 'NETWORK_ERROR':
+                case 'CONNECTION_TIMEOUT':
+                    throw new UploadError(
+                        'Network error during upload',
+                        UploadErrorType.UNKNOWN_UPLOAD_ERROR,
+                        true,
+                    )
+
+                case 'STORAGE_QUOTA_EXCEEDED':
+                    throw new UploadError(
+                        'Storage quota has been exceeded',
+                        UploadErrorType.PERMISSION_ERROR,
+                    )
+
+                case 'SIGNED_URL_GENERATION_FAILED':
+                    throw new UploadError(
+                        'Failed to generate signed upload URL',
+                        UploadErrorType.SIGNED_URL_ERROR,
+                        true,
+                    )
+
+                // Catch-all for any unhandled specific error codes
+                default:
+                    throw new UploadError(
+                        `Upload failed with specific error code: ${errorCode}`,
+                        UploadErrorType.UNKNOWN_UPLOAD_ERROR,
+                        true,
+                    )
+            }
+        }
+
+        // Fallback for errors without specific codes
         throw new UploadError(
-            `Upload failed: ${err.message}`,
+            `Upload failed: ${(error as Error).message}`,
             UploadErrorType.UNKNOWN_UPLOAD_ERROR,
             true,
         )

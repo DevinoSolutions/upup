@@ -5,6 +5,9 @@ const path = require('path')
 const distDir = path.join(__dirname, '../dist')
 const tempDir = path.join(__dirname, '../dist-temp')
 
+// Delete temp directory if it already exists
+if (fs.existsSync(tempDir)) fs.rmSync(tempDir, { recursive: true })
+
 // Run browser build
 execSync('pnpm run build:browser', { stdio: 'inherit' })
 

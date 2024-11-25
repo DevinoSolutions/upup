@@ -30,11 +30,8 @@ export const uploadObject = async ({
         formData.append('file', file)
 
         const response = await fetch(presignedUrl, {
-            method: 'PUT',
-            body: fields ? formData : file,
-            headers: {
-                'Content-Type': file.type,
-            },
+            method: 'POST',
+            body: formData,
             mode: 'cors',
             credentials: 'include',
         })
