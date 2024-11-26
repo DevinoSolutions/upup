@@ -33,7 +33,6 @@ export class ProviderSDK implements StorageSDK {
         options = {} as UploadOptions,
     ): Promise<UploadResult> {
         try {
-            console.log('Uploading file:', file.name, this.config.constraints)
             // Check if multiple files are allowed
             if (!this.config.constraints?.multiple && this.uploadCount > 0)
                 throw new Error('Multiple file uploads are not allowed')
@@ -76,11 +75,6 @@ export class ProviderSDK implements StorageSDK {
                 ...this.config.constraints,
             }
 
-            console.log('Requesting presigned URL:', {
-                ...requestBody,
-                fileSize: `${(file.size / (1024 * 1024)).toFixed(2)}MB`,
-            })
-
             const response = await fetch(this.config.tokenEndpoint, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -97,10 +91,6 @@ export class ProviderSDK implements StorageSDK {
             }
 
             const data = await response.json()
-            console.log('Received presigned URL data:', data, {
-                key: data.key,
-                expiresIn: data.expiresIn,
-            })
 
             return data
         } catch (error) {

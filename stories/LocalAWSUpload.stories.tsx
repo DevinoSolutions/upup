@@ -27,10 +27,6 @@ const LocalUploader = () => {
     const handleUpload = async () => {
         try {
             const data = await upupRef.current?.uploadFiles()
-            console.log(`Upload ${data ? 'successful' : 'returned null'}`)
-            if (data) {
-                console.log('Uploaded file keys:', data)
-            }
         } catch (error) {
             console.error('Error uploading selected files:', error)
         }
@@ -51,7 +47,6 @@ const LocalUploader = () => {
                     maxFileSize: { size: 100, unit: 'MB' },
                     onFilesSelected: files => {
                         setSelectedFiles(files)
-                        console.log('Files selected:', files)
                     },
                 }}
                 uploadAdapters={['INTERNAL']}

@@ -153,7 +153,7 @@ export const UpupUploader: FC<
                         const uploadResults = await Promise.all(
                             processedFiles.map(file =>
                                 sdk.upload(file, {
-                                    onProgress: console.log,
+                                    onProgress: () => {},
                                 }),
                             ),
                         )

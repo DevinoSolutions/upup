@@ -26,10 +26,7 @@ const Uploader = args => {
         multiple: true,
         limit: 5,
         onFileClick: file => void 0,
-        onPrepareFiles: files => {
-            console.log('files', files)
-            return files
-        },
+        onPrepareFiles: files => files,
         ...args,
     })
     const uploadAdapters: UPLOAD_ADAPTER[] = [
@@ -45,7 +42,6 @@ const Uploader = args => {
     const handleUpload = async () => {
         try {
             const data = await upupRef.current?.uploadFiles()
-            console.log(`Upload ${data ? 'successful' : 'returned null.'} `)
         } catch (error) {
             console.error('Error uploading selected files:', error)
         }
@@ -55,7 +51,6 @@ const Uploader = args => {
             const testFiles: any[] = []
             testFiles.push(selectedFiles[0])
             const data = await upupRef.current?.dynamicUploadFiles(testFiles)
-            console.log(`Upload ${data ? 'successful' : 'returned null.'} `)
         } catch (error) {
             console.error('Error uploading selected files:', error)
         }

@@ -27,10 +27,6 @@ const LocalUploader = () => {
     const handleUpload = async () => {
         try {
             const data = await upupRef.current?.uploadFiles()
-            console.log(`Upload ${data ? 'successful' : 'returned null'}`)
-            if (data) {
-                console.log('Uploaded file keys:', data)
-            }
         } catch (error) {
             console.error('Error uploading selected files:', error)
         }
@@ -51,7 +47,6 @@ const LocalUploader = () => {
                     maxFileSize: { size: 100, unit: 'MB' },
                     onFilesSelected: files => {
                         setSelectedFiles(files)
-                        console.log('Files selected:', files)
                     },
                 }}
                 uploadAdapters={['INTERNAL']}
@@ -95,7 +90,6 @@ export const RestrictedFileTypes: Story = {
                             maxFileSize: { size: 10, unit: 'MB' },
                             onFilesSelected: files => {
                                 setSelectedFiles(files)
-                                console.log('Files selected:', files)
                             },
                         }}
                         uploadAdapters={['INTERNAL']}
@@ -129,7 +123,6 @@ export const WithMetadata: Story = {
                             environment: 'development',
                         },
                     })
-                    console.log('Upload result:', data)
                 } catch (error) {
                     console.error('Error uploading selected files:', error)
                 }
@@ -152,7 +145,6 @@ export const WithMetadata: Story = {
                             maxFileSize: { size: 50, unit: 'MB' },
                             onFilesSelected: files => {
                                 setSelectedFiles(files)
-                                console.log('Files selected:', files)
                             },
                         }}
                         uploadAdapters={['INTERNAL']}
