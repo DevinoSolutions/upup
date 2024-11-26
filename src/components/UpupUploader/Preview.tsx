@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { FC, memo, useCallback } from 'react'
 import { BaseConfigs } from 'types'
 import { FileHandlerProps, FileWithId } from 'types/file'
+import { v4 as uuidv4 } from 'uuid'
 
 type Props = {
     isAddingMore: boolean
@@ -90,7 +91,7 @@ const Preview: FC<Props> = ({
                     >
                         {files.map(file => (
                             <PreviewComponent
-                                key={file.id || `${file.name}-${Date.now()}`}
+                                key={file.id || `${file.name}-${uuidv4()}`}
                                 setFiles={setFiles}
                                 file={file}
                                 index={files.indexOf(file)}

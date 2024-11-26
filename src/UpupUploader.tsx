@@ -67,7 +67,7 @@ export type UploadFilesRef = {
 // Add this helper function at the top level
 const createFileWithId = (file: File) => {
     return Object.assign(file, {
-        id: `${file.name}-${file.size}-${file.lastModified}-${Math.random()}`,
+        id: `${file.name}-${file.size}-${file.lastModified}-${uuidv4()}`,
     })
 }
 
@@ -243,7 +243,7 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
                         const uploadPromises = processedFiles.map(
                             async file => {
                                 const fileExtension = file.name.split('.').pop()
-                                const key = `${Date.now()}__${uuidv4()}.${fileExtension}`
+                                const key = `${uuidv4()}.${fileExtension}`
 
                                 try {
                                     const result = await uploadObject({
