@@ -29,6 +29,7 @@ import {
     RefAttributes,
     SetStateAction,
     forwardRef,
+    useCallback,
     useEffect,
     useImperativeHandle,
     useState,
@@ -140,7 +141,7 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
          * @throws Error if file type is not accepted
          */
         const validateFileType = (file: File) => {
-            if (!checkFileType(file, accept)) {
+            if (!checkFileType(file, accept, baseConfigs?.onFileTypeMismatch)) {
                 const error = new Error(`File type ${file.type} not accepted`)
                 baseConfigs?.onFileUploadFail?.(file, error)
                 throw error
@@ -199,6 +200,14 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
             }
         }
 
+        const handleUploadCancel = useCallback(() => {
+            if (progress > 0 && progress < 100) {
+                // Cancel the ongoing upload
+                handler.abort()
+                baseConfigs?.onCancelUpload?.(files)
+            }
+        }, [progress, files, handler, baseConfigs])
+
         /**
          * Expose the handleUpload function to the parent component
          */
@@ -215,7 +224,7 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
                         : files
                 return await this.proceedUpload(filesList)
             },
-
+            cancelUpload: handleUploadCancel,
             async proceedUpload(filesList: File[]) {
                 return new Promise(async (resolve, reject) => {
                     try {
@@ -451,6 +460,7 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
                     progress={progress}
                     limit={limit}
                     handleFileRemove={handleFileRemove}
+                    onCancelUpload={baseConfigs.onCancelUpload}
                 />
                 <div className="h-full p-2">
                     <div className="grid h-full w-full grid-rows-[1fr,auto] place-items-center rounded-md border border-dashed border-[#dfdfdf] transition-all">

@@ -5,7 +5,23 @@ import { BaseConfigs } from 'types'
 const useProgress = (files: File[], baseConfigs?: BaseConfigs) => {
     const [progress, setProgress] = useState(0)
     const [completedFiles, setCompletedFiles] = useState(0)
-    const [handler] = useState(new XhrHttpHandler({}) as any)
+    const [handler] = useState(() => {
+        const h = new XhrHttpHandler({}) as any
+
+        // Add abort event listener to the handler
+        h.on('abort', () => {
+            setProgress(0)
+            setCompletedFiles(0)
+            files.forEach(file => {
+                baseConfigs?.onFileUploadFail?.(
+                    file,
+                    new Error('Upload cancelled'),
+                )
+            })
+        })
+
+        return h
+    })
 
     const handleUploadProgress = useCallback(
         (xhr: ProgressEvent) => {
@@ -46,10 +62,11 @@ const useProgress = (files: File[], baseConfigs?: BaseConfigs) => {
                 XhrHttpHandler.EVENTS.UPLOAD_PROGRESS,
                 handleUploadProgress,
             )
+            handler.off('abort') // Clean up abort listener
             setProgress(0)
             setCompletedFiles(0)
         }
-    }, [files, handleUploadProgress])
+    }, [files, handleUploadProgress, handler])
 
     return {
         progress,

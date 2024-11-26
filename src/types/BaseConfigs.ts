@@ -27,4 +27,6 @@ export type BaseConfigs = {
     onFileDragOver?: (files: File[]) => void
     onFileDragLeave?: (files: File[]) => void
     onFileDrop?: (files: File[]) => void
+    onFileTypeMismatch?: (file: File, acceptedTypes: string) => void
+    onCancelUpload?: (files: File[]) => void
 }
