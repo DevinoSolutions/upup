@@ -63,10 +63,12 @@ const DropZone: FC<Props> = ({
                             e.dataTransfer.files,
                         ).filter(file => checkFileType(file, accept))
 
-                        return multiple
-                            ? [...prev, ...acceptedFiles]
-                            : // only one file
-                              [acceptedFiles[0]].filter(Boolean)
+                        if (multiple) return [...prev, ...acceptedFiles]
+
+                        // For single file mode, take the first valid file if it exists
+                        return acceptedFiles.length > 0
+                            ? [acceptedFiles[0]]
+                            : []
                     })
                     setIsDragging(false)
                 }}
