@@ -53,6 +53,9 @@ importers:
       load-script:
         specifier: ^2.0.0
         version: 2.0.0
+      pako:
+        specifier: ^2.1.0
+        version: 2.1.0
       react-icons:
         specifier: ^4.12.0
         version: 4.12.0(react@18.2.0)
@@ -144,9 +147,6 @@ importers:
       husky:
         specifier: ^8.0.3
         version: 8.0.3
-      pako:
-        specifier: ^2.1.0
-        version: 2.1.0
       postcss:
         specifier: ^8.4.31
         version: 8.4.49

@@ -12,6 +12,7 @@ const usePCAInstance = (clientId: string) => {
         const initializeMsal = async () => {
             if (!clientId) {
                 setIsInitializing(false)
+                console.error('Client ID is required...')
                 return
             }
 

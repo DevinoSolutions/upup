@@ -12,30 +12,10 @@ import {
     useState,
 } from 'react'
 
-const TOKEN_STORAGE_KEY = 'oneDriveToken'
-
 type Props = {
     msalInstance: PublicClientApplication | null
     setUser: Dispatch<SetStateAction<MicrosoftUser | undefined>>
     setOneDriveFiles: Dispatch<SetStateAction<OneDriveRoot | undefined>>
-}
-
-const getStoredToken = (): MicrosoftToken | null => {
-    try {
-        const storedTokenObject = localStorage.getItem(TOKEN_STORAGE_KEY)
-        if (!storedTokenObject) return null
-
-        const storedToken = JSON.parse(storedTokenObject)
-        // Check if token is expired
-        if (storedToken.expiresOn < Date.now()) {
-            localStorage.removeItem(TOKEN_STORAGE_KEY)
-            return null
-        }
-        return storedToken
-    } catch (error) {
-        localStorage.removeItem(TOKEN_STORAGE_KEY)
-        return null
-    }
 }
 
 export default function useOneDriveAuth({
@@ -58,11 +38,32 @@ export default function useOneDriveAuth({
                 setIsInitialized(true)
 
                 // Check for existing token after initialization
-                const storedToken = getStoredToken()
-                if (storedToken) {
-                    setToken(storedToken)
+                const accounts = msalInstance.getAllAccounts()
+                if (accounts.length > 0) {
+                    try {
+                        const silentRequest = {
+                            scopes: [
+                                'user.read',
+                                'Files.ReadWrite.All',
+                                'Files.Read.All',
+                            ],
+                            account: accounts[0],
+                        }
+                        const response =
+                            await msalInstance.acquireTokenSilent(silentRequest)
+                        if (response) {
+                            setToken({
+                                secret: response.accessToken,
+                                expiresOn: response.expiresOn!.getTime(),
+                            })
+                        }
+                    } catch (error) {
+                        // Silent token acquisition failed, user will need to sign in again
+                        console.debug('Silent token acquisition failed:', error)
+                    }
                 }
             } catch (error) {
+                console.error('MSAL initialization failed:', error)
                 setIsInitialized(false)
             }
         }
@@ -91,10 +92,18 @@ export default function useOneDriveAuth({
 
                 const accounts = msalInstance.getAllAccounts()
                 if (accounts.length > 0) {
-                    return await msalInstance.acquireTokenSilent({
-                        ...loginRequest,
-                        account: accounts[0],
-                    })
+                    try {
+                        // Attempt silent token acquisition first
+                        return await msalInstance.acquireTokenSilent({
+                            ...loginRequest,
+                            account: accounts[0],
+                        })
+                    } catch (error) {
+                        // Silent token acquisition failed, fall through to interactive login
+                        console.debug(
+                            'Silent token acquisition failed, proceeding with interactive login',
+                        )
+                    }
                 }
 
                 // If silent token acquisition fails, try interactive login
@@ -110,6 +119,7 @@ export default function useOneDriveAuth({
 
                 return null
             } catch (error) {
+                console.error('Sign-in failed:', error)
                 return null
             } finally {
                 setIsAuthenticating(false)
@@ -128,15 +138,11 @@ export default function useOneDriveAuth({
                     expiresOn: response.expiresOn!.getTime(),
                 }
                 setToken(newToken)
-                localStorage.setItem(
-                    TOKEN_STORAGE_KEY,
-                    JSON.stringify(newToken),
-                )
                 sessionStorage.setItem('isAuthenticated', 'true')
             }
         } catch (error) {
+            console.error('Handle sign-in failed:', error)
             setToken(null)
-            localStorage.removeItem(TOKEN_STORAGE_KEY)
             sessionStorage.removeItem('isAuthenticated')
         }
     }, [signIn, isInitialized, isAuthenticating, isAuthInProgress])
@@ -153,7 +159,6 @@ export default function useOneDriveAuth({
                 await msalInstance.logoutPopup({
                     account: accounts[0],
                     postLogoutRedirectUri: window.location.origin,
-                    onRedirectNavigate: () => false,
                 })
             }
 
@@ -161,7 +166,6 @@ export default function useOneDriveAuth({
             setToken(null)
             setUser(undefined)
             setOneDriveFiles(undefined)
-            localStorage.removeItem(TOKEN_STORAGE_KEY)
 
             // Clear MSAL cache
             msalInstance.clearCache()
@@ -172,6 +176,7 @@ export default function useOneDriveAuth({
             // Clear remaining session storage
             sessionStorage.removeItem('isAuthenticated')
         } catch (error) {
+            console.error('Sign-out failed:', error)
         } finally {
             setIsAuthInProgress(false)
             // Clear the logout flag after a short delay
@@ -218,7 +223,14 @@ export default function useOneDriveAuth({
                 clearTimeout(autoLoginTimeout)
             }
         }
-    }, [isInitialized, isAuthenticating, isAuthInProgress, token, handleSignIn])
+    }, [
+        isInitialized,
+        isAuthenticating,
+        isAuthInProgress,
+        token,
+        handleSignIn,
+        msalInstance,
+    ])
 
     return {
         token,
