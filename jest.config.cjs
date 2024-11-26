@@ -26,9 +26,14 @@ module.exports = {
     moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
     collectCoverageFrom: [
         'src/**/*.{ts,tsx}',
-        '!src/**/*.stories.{ts,tsx}',
         '!src/**/*.d.ts',
         '!src/version.ts',
+    ],
+    coverageReporters: [
+        'json-summary', // Creates coverage-summary.json used by CI
+        'text', // Console output
+        'lcov', // Detailed HTML report
+        'clover', // Additional machine-readable format
     ],
     coverageThreshold: {
         global: {

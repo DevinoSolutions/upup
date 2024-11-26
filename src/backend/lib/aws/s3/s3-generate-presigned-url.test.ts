@@ -9,7 +9,24 @@ import s3GeneratePresignedUrl from './s3-generate-presigned-url'
 import s3UpdateCORS from './s3-update-cors'
 
 // Mock external dependencies
-jest.mock('@aws-sdk/client-s3')
+jest.mock('@aws-sdk/client-s3', () => ({
+    S3Client: jest.fn().mockImplementation(config => {
+        // Validate required config parameters
+        if (
+            !config.credentials?.accessKeyId ||
+            !config.credentials?.secretAccessKey
+        ) {
+            throw new Error('Missing required credentials')
+        }
+        if (!config.region) {
+            throw new Error('Missing required region')
+        }
+        return {
+            config,
+        }
+    }),
+    PutObjectCommand: jest.fn(),
+}))
 jest.mock('@aws-sdk/s3-request-presigner')
 jest.mock('./s3-update-cors')
 
@@ -153,5 +170,68 @@ describe('s3GeneratePresignedUrl', () => {
 
         // Verify key format: uploads/timestamp-filename
         expect(result.key).toMatch(/^uploads\/\d+-test\.jpg$/)
+    })
+
+    it('should throw error when s3ClientConfig is missing required credentials', async () => {
+        const invalidConfig = {
+            region: 'us-east-1',
+            // Missing credentials
+        }
+
+        await expect(
+            s3GeneratePresignedUrl({
+                fileParams: mockFileParams,
+                bucketName: mockBucketName,
+                s3ClientConfig: invalidConfig,
+                origin: mockOrigin,
+                provider: mockProvider,
+            }),
+        ).rejects.toThrow(UploadError)
+
+        expect(S3Client).toHaveBeenCalledWith(invalidConfig)
+    })
+
+    it('should throw error when region is missing from s3ClientConfig', async () => {
+        const invalidConfig = {
+            credentials: {
+                accessKeyId: 'test-key',
+                secretAccessKey: 'test-secret',
+            },
+            // Missing region
+        }
+
+        await expect(
+            s3GeneratePresignedUrl({
+                fileParams: mockFileParams,
+                bucketName: mockBucketName,
+                s3ClientConfig: invalidConfig,
+                origin: mockOrigin,
+                provider: mockProvider,
+            }),
+        ).rejects.toThrow(UploadError)
+
+        expect(S3Client).toHaveBeenCalledWith(invalidConfig)
+    })
+
+    it('should throw error when credentials are incomplete', async () => {
+        const invalidConfig = {
+            region: 'us-east-1',
+            credentials: {
+                accessKeyId: 'test-key',
+                // Missing secretAccessKey
+            },
+        }
+
+        await expect(
+            s3GeneratePresignedUrl({
+                fileParams: mockFileParams,
+                bucketName: mockBucketName,
+                s3ClientConfig: invalidConfig as any,
+                origin: mockOrigin,
+                provider: mockProvider,
+            }),
+        ).rejects.toThrow(UploadError)
+
+        expect(S3Client).toHaveBeenCalledWith(invalidConfig)
     })
 })

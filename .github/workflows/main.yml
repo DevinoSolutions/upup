@@ -40,7 +40,7 @@ jobs:
         run: pnpm run prettier-check
 
   Test:
-    name: Run Tests
+    name: Run Tests and Coverage
     runs-on: ubuntu-latest
     needs: [Prettier-check]
     steps:
@@ -70,16 +70,52 @@ jobs:
         if: steps.cache-primes.outputs.cache-hit != 'true'
         run: pnpm install --frozen-lockfile
 
-      - name: Run Tests
-        run: pnpm run test:ci
+      - name: Run Tests with Coverage
+        run: pnpm run test:coverage
 
-      - name: Upload coverage
-        uses: codecov/codecov-action@v3
+      - name: Check Coverage Thresholds
+        run: |
+          COVERAGE_OUTPUT=$(cat coverage/coverage-summary.json)
+          
+          STATEMENTS_PCT=$(echo $COVERAGE_OUTPUT | jq -r '.total.statements.pct')
+          BRANCHES_PCT=$(echo $COVERAGE_OUTPUT | jq -r '.total.branches.pct')
+          FUNCTIONS_PCT=$(echo $COVERAGE_OUTPUT | jq -r '.total.functions.pct')
+          LINES_PCT=$(echo $COVERAGE_OUTPUT | jq -r '.total.lines.pct')
+          
+          THRESHOLD=70
+          
+          if (( $(echo "$STATEMENTS_PCT < $THRESHOLD" | bc -l) )); then
+            echo "❌ Statement coverage ($STATEMENTS_PCT%) is below threshold ($THRESHOLD%)"
+            exit 1
+          fi
+          
+          if (( $(echo "$BRANCHES_PCT < $THRESHOLD" | bc -l) )); then
+            echo "❌ Branch coverage ($BRANCHES_PCT%) is below threshold ($THRESHOLD%)"
+            exit 1
+          fi
+          
+          if (( $(echo "$FUNCTIONS_PCT < $THRESHOLD" | bc -l) )); then
+            echo "❌ Function coverage ($FUNCTIONS_PCT%) is below threshold ($THRESHOLD%)"
+            exit 1
+          fi
+          
+          if (( $(echo "$LINES_PCT < $THRESHOLD" | bc -l) )); then
+            echo "❌ Line coverage ($LINES_PCT%) is below threshold ($THRESHOLD%)"
+            exit 1
+          fi
+          
+          echo "✅ All coverage thresholds met!"
+          echo "Statements: $STATEMENTS_PCT%"
+          echo "Branches: $BRANCHES_PCT%"
+          echo "Functions: $FUNCTIONS_PCT%"
+          echo "Lines: $LINES_PCT%"
+
+      - name: Archive code coverage results
+        uses: actions/upload-artifact@v3
         with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./coverage/lcov.info
-          fail_ci_if_error: true
-          verbose: true
+          name: code-coverage-report
+          path: coverage/
+          retention-days: 30
 
   Build:
     name: Build project
