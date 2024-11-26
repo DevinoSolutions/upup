@@ -72,7 +72,6 @@ const FileBrowser = ({
             fetchFolderContents()
         } else {
             try {
-                console.log('Fetching file info for:', file.name)
                 const fileInfo = await graphClient
                     .api(`/me/drive/items/${file.id}`)
                     .select(
@@ -80,12 +79,7 @@ const FileBrowser = ({
                     )
                     .get()
 
-                console.log('File info received:', fileInfo)
-
                 if (!fileInfo['@microsoft.graph.downloadUrl']) {
-                    console.log(
-                        'Download URL not found, creating sharing link...',
-                    )
                     const permission = await graphClient
                         .api(`/me/drive/items/${file.id}/createLink`)
                         .post({
@@ -97,7 +91,6 @@ const FileBrowser = ({
                     const shareUrl = permission.link.webUrl
                     const downloadUrl = shareUrl.replace('redir?', 'download?')
                     fileInfo['@microsoft.graph.downloadUrl'] = downloadUrl
-                    console.log('Download URL created:', downloadUrl)
                 }
 
                 const updatedFile: OneDriveFile = {
@@ -108,13 +101,10 @@ const FileBrowser = ({
                     file: fileInfo.file,
                 }
 
-                console.log('Updated file object:', updatedFile)
-
                 setSelectedFiles(prevFiles => {
                     const newFiles = prevFiles.includes(file)
                         ? prevFiles.filter(f => f.id !== file.id)
                         : [...prevFiles, updatedFile]
-                    console.log('Updated selected files:', newFiles)
                     return newFiles
                 })
             } catch (error) {
@@ -138,7 +128,6 @@ const FileBrowser = ({
         }
 
         // Fallback to creating a sharing link
-        console.log('No direct download URL, creating sharing link...')
         const permission = await graphClient
             .api(`/me/drive/items/${file.id}/createLink`)
             .post({
@@ -176,15 +165,11 @@ const FileBrowser = ({
 
     const downloadFiles = async (files: OneDriveFile[]) => {
         const promises = files.map(async (file, index) => {
-            console.log('Processing file:', file)
-
             try {
                 const downloadUrl = await getDownloadUrl(file, graphClient!)
                 if (!downloadUrl) {
                     throw new Error('Could not get download URL')
                 }
-
-                console.log('Got download URL:', downloadUrl)
 
                 const downloadedFile = await downloadFile(
                     downloadUrl,
@@ -206,7 +191,6 @@ const FileBrowser = ({
                 setDownloadProgress(
                     Math.round(((index + 1) / files.length) * 100),
                 )
-                console.log('File downloaded successfully:', file.name)
 
                 return downloadedFile
             } catch (error) {
@@ -234,11 +218,6 @@ const FileBrowser = ({
         setDownloadProgress(0)
 
         try {
-            console.log(
-                'Starting file download process with files:',
-                selectedFiles,
-            )
-
             // Process one file at a time
             const downloadedFiles: File[] = []
 
@@ -253,15 +232,9 @@ const FileBrowser = ({
                 )
                 setDownloadProgress(progress)
 
-                console.log(
-                    `Downloaded ${i + 1} of ${selectedFiles.length} files`,
-                )
-
                 // Add a small delay between files
                 await new Promise(resolve => setTimeout(resolve, 500))
             }
-
-            console.log('All files downloaded successfully:', downloadedFiles)
 
             // Update the files state
             setFiles(prevFiles => [...prevFiles, ...downloadedFiles])
@@ -270,8 +243,6 @@ const FileBrowser = ({
             setSelectedFiles([])
             setDownloadProgress(0)
             setView('internal')
-
-            console.log(`Successfully added ${downloadedFiles.length} files`)
         } catch (error) {
             console.error('Error processing files:', error)
             alert(`Error downloading files: ${(error as Error).message}`)

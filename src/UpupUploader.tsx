@@ -201,7 +201,6 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
                                     file,
                                 })
                                     .then(data => {
-                                        console.log(data)
                                         if (data.httpStatusCode === 200) {
                                             keys.push(key)
                                         } else
