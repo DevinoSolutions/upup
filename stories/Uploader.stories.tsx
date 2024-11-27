@@ -115,7 +115,6 @@ const Uploader = args => {
             setUploadStatus(
                 data ? 'Upload successful!' : 'Upload returned null',
             )
-            console.log(`Upload ${data ? 'successful' : 'returned null.'} `)
         } catch (error) {
             setUploadStatus(`Upload error: ${error.message}`)
             console.error('Error uploading files:', error)
@@ -133,7 +132,6 @@ const Uploader = args => {
                     ? 'Dynamic upload successful!'
                     : 'Dynamic upload returned null',
             )
-            console.log(`Upload ${data ? 'successful' : 'returned null.'} `)
         } catch (error) {
             setUploadStatus(`Dynamic upload error: ${error.message}`)
             console.error('Error uploading files:', error)

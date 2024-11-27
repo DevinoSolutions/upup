@@ -44,7 +44,8 @@ export default memo(
 
         const objectUrl = useMemo(() => {
             const url = URL.createObjectURL(file)
-            objectUrls.current.push(url)
+            if (!objectUrls.current.includes(url)) objectUrls.current.push(url)
+            
             return url
         }, [file])
 
