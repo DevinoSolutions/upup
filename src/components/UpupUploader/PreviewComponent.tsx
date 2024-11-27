@@ -17,11 +17,20 @@ type Props = {
     mini?: boolean
     file: FileWithId
     index: number
+    handleFileRemove: (file: FileWithId) => void
 } & HTMLAttributes<HTMLDivElement>
 
 export default memo(
     forwardRef<HTMLDivElement, Props>(function PreviewComponent(
-        { setFiles, multiple, mini, file, index, ...restProps }: Props,
+        {
+            setFiles,
+            multiple,
+            mini,
+            file,
+            index,
+            handleFileRemove,
+            ...restProps
+        }: Props,
         ref,
     ) {
         const objectUrls = useRef<string[]>([])
@@ -40,13 +49,10 @@ export default memo(
             return url
         }, [file])
 
-        const removeFile = () =>
-            setFiles(prev => [...prev.filter((_, i) => i !== index)])
-
         return (
             <div
                 ref={ref}
-                className="relative flex h-full w-full flex-col items-start dark:bg-[#1f1f1f] dark:text-[#fafafa]"
+                className="relative flex h-full max-h-fit w-full flex-col items-start dark:bg-[#1f1f1f] dark:text-[#fafafa]"
                 {...restProps}
             >
                 <div
@@ -76,7 +82,7 @@ export default memo(
                 )}
                 <button
                     className="absolute -right-1 -top-1 z-10 rounded-full bg-black p-0.5"
-                    onClick={removeFile}
+                    onClick={() => handleFileRemove(file)}
                     type="button"
                 >
                     <TbX className="h-4 w-4 text-white" />

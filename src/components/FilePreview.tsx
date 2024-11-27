@@ -62,6 +62,7 @@ const FilePreview: FC<PreviewProps> = ({ file, objectUrl }) => {
                             filePath={objectUrl}
                             onError={(e: Error) => {
                                 console.error('Error in file preview:', e)
+                                return <FileIcon extension={extension} />
                             }}
                             errorComponent={() => (
                                 <FileIcon extension={extension} />

@@ -3,7 +3,9 @@ import { FC } from 'react'
 import { FileHandlerProps } from 'types/file'
 import PreviewComponent from '../UpupUploader/PreviewComponent'
 
-const MiniPreview: FC<FileHandlerProps> = ({ files, setFiles }) => {
+const MiniPreview: FC<
+    FileHandlerProps & { handleFileRemove: (file: File) => void }
+> = ({ files, setFiles, handleFileRemove }) => {
     return (
         <AnimatePresence>
             {files.length > 0 && (
@@ -20,6 +22,7 @@ const MiniPreview: FC<FileHandlerProps> = ({ files, setFiles }) => {
                                 setFiles={setFiles}
                                 file={file}
                                 index={files.indexOf(file)}
+                                handleFileRemove={handleFileRemove}
                                 mini
                             />
                         ))}

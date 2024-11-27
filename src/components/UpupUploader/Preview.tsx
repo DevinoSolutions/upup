@@ -2,7 +2,8 @@ import Box from '@mui/material/Box'
 import { LinearProgressBar } from 'components'
 import PreviewComponent from 'components/UpupUploader/PreviewComponent'
 import { AnimatePresence, motion } from 'framer-motion'
-import { FC, memo } from 'react'
+import { FC, memo, useCallback } from 'react'
+import { BaseConfigs } from 'types'
 import { FileHandlerProps, FileWithId } from 'types/file'
 import { v4 as uuidv4 } from 'uuid'
 
@@ -13,6 +14,8 @@ type Props = {
     onFileClick?: (file: FileWithId) => void
     progress: number
     limit?: number
+    handleFileRemove: (file: FileWithId) => void
+    onCancelUpload: BaseConfigs['onCancelUpload']
 } & FileHandlerProps
 
 const Preview: FC<Props> = ({
@@ -24,7 +27,16 @@ const Preview: FC<Props> = ({
     onFileClick,
     progress,
     limit,
+    handleFileRemove,
+    onCancelUpload,
 }: Props) => {
+    const handleCancel = useCallback(() => {
+        if (files.length > 0) {
+            onCancelUpload?.(files)
+            setFiles([])
+        }
+    }, [files, setFiles, onCancelUpload])
+
     return (
         <AnimatePresence>
             {files.length > 0 && (
@@ -37,7 +49,7 @@ const Preview: FC<Props> = ({
                     >
                         <button
                             className="rounded-md p-2 px-4 transition-all duration-300 hover:bg-[#e9ecef] hover:text-[#1f1f1f] active:bg-[#dfe6f1]"
-                            onClick={() => setFiles([])}
+                            onClick={handleCancel}
                             type="button"
                         >
                             Cancel
@@ -85,6 +97,7 @@ const Preview: FC<Props> = ({
                                 index={files.indexOf(file)}
                                 onClick={() => onFileClick?.(file)}
                                 multiple
+                                handleFileRemove={handleFileRemove}
                             />
                         ))}
                     </motion.div>
