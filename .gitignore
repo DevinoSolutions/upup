@@ -4,7 +4,7 @@ node_modules
 .cache
 dist
 .idea
-
+.vscode
 
 # storybook
 storybook-static
@@ -17,3 +17,5 @@ storybook-static
 # public folder temp files
 public
 /stories/Uploader.stories.js
+
+.vscode

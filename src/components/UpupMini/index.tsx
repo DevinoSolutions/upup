@@ -1,25 +1,30 @@
 import type { Dispatch, FC, LegacyRef, SetStateAction } from 'react'
 import { useRef } from 'react'
 
+import { DropZone } from 'components/UpupUploader'
 import { AnimatePresence } from 'framer-motion'
 import { useDragAndDrop } from 'hooks'
 import { checkFileType } from 'lib'
 import { BaseConfigs } from 'types'
+import { FileWithId } from 'types/file'
 import MetaVersion from '../MetaVersion'
-import { default as MiniDropZone } from './MiniDropZone'
 import { default as MiniPreview } from './MiniPreview'
 
 type Props = {
     files: File[]
     setFiles: Dispatch<SetStateAction<File[]>>
     maxFileSize: BaseConfigs['maxFileSize']
+    handleFileRemove: (file: FileWithId) => void
+    baseConfigs?: BaseConfigs
 }
 
 export const UpupMini: FC<Props> = ({
     files,
     setFiles,
     maxFileSize,
-}: Props) => {
+    handleFileRemove,
+    baseConfigs,
+}) => {
     const {
         isDragging,
         setIsDragging,
@@ -39,9 +44,12 @@ export const UpupMini: FC<Props> = ({
         >
             <AnimatePresence>
                 {isDragging && (
-                    <MiniDropZone
+                    <DropZone
                         setFiles={setFiles}
                         setIsDragging={setIsDragging}
+                        accept="image/*"
+                        multiple={false}
+                        baseConfigs={baseConfigs}
                     />
                 )}
             </AnimatePresence>
@@ -60,7 +68,11 @@ export const UpupMini: FC<Props> = ({
                 }}
             />
 
-            <MiniPreview files={files} setFiles={setFiles} />
+            <MiniPreview
+                files={files}
+                setFiles={setFiles}
+                handleFileRemove={handleFileRemove}
+            />
             <div className="h-full p-2">
                 <div className="grid h-full w-full grid-rows-[1fr,auto] place-items-center rounded-md border border-dashed border-[#dfdfdf] transition-all">
                     <h1 className="text-center dark:text-white">
@@ -82,5 +94,4 @@ export const UpupMini: FC<Props> = ({
     )
 }
 
-export { default as MiniDropZone } from './MiniDropZone'
 export { default as MiniPreview } from './MiniPreview'
