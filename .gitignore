@@ -19,4 +19,5 @@ storybook-static
 public
 /stories/Uploader.stories.js
 
+# Tests
 coverage
