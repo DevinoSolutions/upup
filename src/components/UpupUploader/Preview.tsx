@@ -1,21 +1,19 @@
 import Box from '@mui/material/Box'
-import { FileIcon, LinearProgressBar } from 'components'
+import { LinearProgressBar } from 'components'
+import PreviewComponent from 'components/UpupUploader/PreviewComponent'
 import { AnimatePresence, motion } from 'framer-motion'
-import { GoogleFile } from 'google'
-import { bytesToSize } from 'lib'
-import { Dispatch, FC, SetStateAction } from 'react'
-import { TbX } from 'react-icons/tb'
+import { FC, memo } from 'react'
+import { FileHandlerProps, FileWithId } from 'types/file'
+import { v4 as uuidv4 } from 'uuid'
 
 type Props = {
-    files: File[]
-    setFiles: Dispatch<SetStateAction<File[]>>
     isAddingMore: boolean
     setIsAddingMore: (isAddingMore: boolean) => void
     multiple?: boolean
-    onFileClick?: (file: File) => void
+    onFileClick?: (file: FileWithId) => void
     progress: number
     limit?: number
-}
+} & FileHandlerProps
 
 const Preview: FC<Props> = ({
     files,
@@ -27,12 +25,6 @@ const Preview: FC<Props> = ({
     progress,
     limit,
 }: Props) => {
-    /**
-     * Remove file from files array
-     */
-    const removeFile = (index: number) =>
-        setFiles(files => [...files.filter((_, i) => i !== index)])
-
     return (
         <AnimatePresence>
             {files.length > 0 && (
@@ -85,57 +77,15 @@ const Preview: FC<Props> = ({
                                 : 'grid-cols-1 grid-rows-1')
                         }
                     >
-                        {files.map((file, i) => (
-                            <div
-                                key={i}
-                                className="relative flex h-full w-full flex-col items-start dark:bg-[#1f1f1f] dark:text-[#fafafa]"
-                                onClick={() => {
-                                    if (onFileClick) onFileClick(file)
-                                }}
-                            >
-                                {(file as unknown as GoogleFile)
-                                    .thumbnailLink ||
-                                file.type.startsWith('image/') ? (
-                                    <img
-                                        src={
-                                            (file as unknown as GoogleFile)
-                                                .thumbnailLink ||
-                                            URL.createObjectURL(file)
-                                        }
-                                        alt=""
-                                        className={
-                                            'w-full rounded-md object-cover shadow ' +
-                                            (multiple ? 'h-40' : ' h-full')
-                                        }
-                                    />
-                                ) : (
-                                    <div
-                                        className={
-                                            'w-full rounded-md object-cover text-[#6b7280] shadow ' +
-                                            (multiple ? 'h-40' : 'h-[90%]')
-                                        }
-                                    >
-                                        <FileIcon name={file.name} />
-                                    </div>
-                                )}
-                                <div className="flex w-full items-center justify-between">
-                                    <div>
-                                        <p className="mt-1 text-xs font-medium">
-                                            {file.name}
-                                        </p>
-                                        <p className="text-[10px] font-medium text-gray-500">
-                                            {bytesToSize(file.size)}
-                                        </p>
-                                    </div>
-                                </div>
-                                <button
-                                    className="absolute -right-1 -top-1 rounded-full bg-black"
-                                    onClick={() => removeFile(i)}
-                                    type="button"
-                                >
-                                    <TbX className="h-4 w-4 text-white" />
-                                </button>
-                            </div>
+                        {files.map(file => (
+                            <PreviewComponent
+                                key={file.id || `${file.name}-${uuidv4()}`}
+                                setFiles={setFiles}
+                                file={file}
+                                index={files.indexOf(file)}
+                                onClick={() => onFileClick?.(file)}
+                                multiple
+                            />
                         ))}
                     </motion.div>
                     {progress > 0 && (
@@ -156,4 +106,4 @@ const Preview: FC<Props> = ({
     )
 }
 
-export default Preview
+export default memo(Preview)

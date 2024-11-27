@@ -21,11 +21,13 @@ import {
     uploadObject,
 } from 'lib'
 import {
+    Dispatch,
     FC,
     ForwardedRef,
     LegacyRef,
     ReactElement,
     RefAttributes,
+    SetStateAction,
     forwardRef,
     useEffect,
     useImperativeHandle,
@@ -42,6 +44,7 @@ import {
 } from 'types'
 
 import { AnimatePresence } from 'framer-motion'
+import { FileWithId } from 'types/file'
 import { v4 as uuidv4 } from 'uuid'
 import useProgress from './hooks/useProgress'
 
@@ -58,6 +61,13 @@ export interface UpupUploaderProps {
 export type UploadFilesRef = {
     uploadFiles: () => Promise<string[] | null>
     dynamicUploadFiles: (files: File[]) => Promise<string[] | null>
+}
+
+// Add this helper function at the top level
+const createFileWithId = (file: File) => {
+    return Object.assign(file, {
+        id: `${file.name}-${file.size}-${file.lastModified}-${uuidv4()}`,
+    })
 }
 
 /**
@@ -98,8 +108,8 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
             customMessage = 'Docs and Images',
         } = baseConfigs
 
-        const [files, setFiles] = useState<File[]>([])
-        const [mutatedFiles, setMutatedFiles] = useState<File[]>([])
+        const [files, setFiles] = useState<FileWithId[]>([])
+        const [mutatedFiles, setMutatedFiles] = useState<FileWithId[]>([])
         const [view, setView] = useState('internal')
 
         const {
@@ -201,7 +211,6 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
                                     file,
                                 })
                                     .then(data => {
-                                        console.log(data)
                                         if (data.httpStatusCode === 200) {
                                             keys.push(key)
                                         } else
@@ -288,6 +297,25 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
             mutateFiles()
         }, [files])
 
+        // Modify the input onChange handler
+        const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+            const acceptedFiles = Array.from(e.target.files || [])
+                .filter(file => checkFileType(file, accept))
+                .map(createFileWithId)
+            setFiles(files =>
+                isAddingMore ? [...files, ...acceptedFiles] : acceptedFiles,
+            )
+            e.target.value = ''
+        }
+
+        // Modify the DropZone props
+        const handleDropzoneFiles = (newFiles: File[]) => {
+            const filesWithIds = newFiles.map(createFileWithId)
+            setFiles(files =>
+                isAddingMore ? [...files, ...filesWithIds] : [...filesWithIds],
+            )
+        }
+
         return mini ? (
             <UpupMini
                 files={files}
@@ -304,7 +332,11 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
                 <AnimatePresence>
                     {isDragging && (
                         <DropZone
-                            setFiles={setFiles}
+                            setFiles={
+                                handleDropzoneFiles as Dispatch<
+                                    SetStateAction<File[]>
+                                >
+                            }
                             setIsDragging={setIsDragging}
                             multiple={multiple}
                             accept={accept}
@@ -317,20 +349,7 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
                     className="absolute h-0 w-0"
                     ref={inputRef}
                     multiple={multiple}
-                    onChange={e => {
-                        const acceptedFiles = Array.from(
-                            e.target.files as FileList,
-                        ).filter(file => checkFileType(file, accept))
-
-                        setFiles(files =>
-                            isAddingMore
-                                ? [...files, ...acceptedFiles]
-                                : [...acceptedFiles],
-                        )
-
-                        // clear the input value
-                        e.target.value = ''
-                    }}
+                    onChange={handleFileChange}
                 />
 
                 <View

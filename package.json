@@ -85,6 +85,8 @@
         "prettier": "3.0.3",
         "prettier-plugin-organize-imports": "^3.2.4",
         "prettier-plugin-tailwindcss": "^0.5.7",
+        "react": "18.2.0",
+        "react-dom": "18.2.0",
         "remark-gfm": "^4.0.0",
         "rollup-plugin-analyzer": "^4.0.0",
         "rollup-plugin-postcss": "^4.0.2",
@@ -107,6 +109,7 @@
         "babel-plugin-module-resolver": "^5.0.0",
         "framer-motion": "^10.16.5",
         "load-script": "^2.0.0",
+        "react-file-viewer": "^1.2.1",
         "react-icons": "^4.12.0",
         "react-webcam": "^7.2.0",
         "uuid": "^9.0.1"
