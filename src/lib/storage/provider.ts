@@ -6,7 +6,6 @@ import {
     UploadError,
     UploadErrorType,
     UploadOptions,
-    UploadProgress,
     UploadResult,
 } from '../../types/StorageSDK'
 
@@ -37,6 +36,7 @@ export class ProviderSDK implements StorageSDK {
             if (!this.config.constraints?.multiple && this.uploadCount > 0)
                 throw new Error('Multiple file uploads are not allowed')
 
+            options.onFileUploadStart?.(file)
             // Get presigned URL from backend
             const presignedData = await this.getPresignedUrl(file)
 
@@ -47,7 +47,7 @@ export class ProviderSDK implements StorageSDK {
             const uploadResponse = await this.uploadWithProgress(
                 presignedData.uploadUrl,
                 file,
-                options.onProgress,
+                options,
             )
 
             if (!uploadResponse.ok)
@@ -55,12 +55,16 @@ export class ProviderSDK implements StorageSDK {
                     `Upload failed with status ${uploadResponse.status}`,
                 )
 
+            options.onFileUploadComplete?.(file, presignedData.key)
+
             return {
                 key: presignedData.key,
                 httpStatus: uploadResponse.status,
             }
         } catch (error) {
             console.error('Upload error:', error)
+
+            options.onFileUploadFail?.(file, error as Error)
             throw this.handleError(error)
         }
     }
@@ -102,18 +106,21 @@ export class ProviderSDK implements StorageSDK {
     private async uploadWithProgress(
         url: string,
         file: File,
-        onProgress?: (progress: UploadProgress) => void,
+        { onFileUploadProgress, onTotalUploadProgress }: UploadOptions,
     ): Promise<Response> {
         return new Promise((resolve, reject) => {
             const xhr = new XMLHttpRequest()
 
             xhr.upload.addEventListener('progress', event => {
-                if (event.lengthComputable && onProgress) {
-                    onProgress({
+                if (event.lengthComputable && onFileUploadProgress) {
+                    onFileUploadProgress(file, {
                         loaded: event.loaded,
                         total: event.total,
                         percentage: (event.loaded / event.total) * 100,
                     })
+                }
+                if (event.lengthComputable && onTotalUploadProgress) {
+                    onTotalUploadProgress(this.uploadCount)
                 }
             })
 

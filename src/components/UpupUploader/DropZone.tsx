@@ -2,12 +2,14 @@ import { motion } from 'framer-motion'
 import { checkFileType } from 'lib'
 import { Dispatch, FC, SetStateAction } from 'react'
 import { TbUpload } from 'react-icons/tb'
+import { BaseConfigs } from 'types'
 
 type Props = {
     setFiles: Dispatch<SetStateAction<File[]>>
     setIsDragging: Dispatch<SetStateAction<boolean>>
     multiple?: boolean
     accept?: string
+    baseConfigs?: BaseConfigs
 }
 
 const DropZone: FC<Props> = ({
@@ -15,6 +17,7 @@ const DropZone: FC<Props> = ({
     setIsDragging,
     multiple,
     accept = '*',
+    baseConfigs,
 }: Props) => {
     return (
         <motion.div
@@ -26,24 +29,53 @@ const DropZone: FC<Props> = ({
                 e.preventDefault()
                 setIsDragging(true)
                 e.dataTransfer.dropEffect = 'copy'
+
+                const files = Array.from(e.dataTransfer.files)
+                baseConfigs?.onFileDragOver?.(files)
+            }}
+            onDragLeave={e => {
+                e.preventDefault()
+                setIsDragging(false)
+
+                const files = Array.from(e.dataTransfer.files)
+                baseConfigs?.onFileDragLeave?.(files)
+            }}
+            onDrop={e => {
+                e.preventDefault()
+                setFiles(prev => {
+                    const acceptedFiles = Array.from(
+                        e.dataTransfer.files,
+                    ).filter(file => checkFileType(file, accept))
+
+                    baseConfigs?.onFileDrop?.(acceptedFiles)
+                    if (multiple) return [...prev, ...acceptedFiles]
+
+                    // For single file mode, take the first valid file if it exists
+                    return acceptedFiles.length > 0 ? [acceptedFiles[0]] : []
+                })
+                setIsDragging(false)
             }}
         >
-            <div className="flex h-full w-full flex-col items-center justify-center gap-2 rounded-md border border-dashed border-current text-4xl">
+            <div
+                className={`flex h-full w-full flex-col items-center justify-center gap-2 rounded-md border border-dashed border-current
+                    ${!multiple ? 'text-center text-xl' : 'text-4xl'}`}
+            >
                 <i className="rounded-full border-2 border-current p-3">
                     <TbUpload />
                 </i>
-                <p className="text-xl">Drop your files here</p>
+                <p className={`${!multiple ? 'text-xl' : 'text-lg'}`}>
+                    Drop your files here
+                </p>
             </div>
             <input
                 type="file"
                 accept={accept}
                 className="absolute top-0 h-full w-full opacity-0"
-                multiple
+                multiple={multiple}
                 onChange={e => {
                     const acceptedFiles = Array.from(
                         e.target.files as FileList,
                     ).filter(file => checkFileType(file, accept))
-
                     setFiles(prev =>
                         multiple
                             ? [...prev, ...acceptedFiles]
@@ -55,22 +87,6 @@ const DropZone: FC<Props> = ({
 
                     // reset input
                     e.target.value = ''
-                }}
-                onDrop={e => {
-                    e.preventDefault()
-                    setFiles(prev => {
-                        const acceptedFiles = Array.from(
-                            e.dataTransfer.files,
-                        ).filter(file => checkFileType(file, accept))
-
-                        if (multiple) return [...prev, ...acceptedFiles]
-
-                        // For single file mode, take the first valid file if it exists
-                        return acceptedFiles.length > 0
-                            ? [acceptedFiles[0]]
-                            : []
-                    })
-                    setIsDragging(false)
                 }}
             />
         </motion.div>

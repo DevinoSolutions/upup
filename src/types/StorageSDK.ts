@@ -1,3 +1,5 @@
+import { BaseConfigs } from './BaseConfigs'
+
 export enum Provider {
     AWS = 'aws',
     Azure = 'azure',
@@ -16,10 +18,17 @@ export interface UploadProgress {
     percentage: number
 }
 
-export interface UploadOptions {
+export type UploadOptions = Pick<
+    BaseConfigs,
+    | 'onFileUploadStart'
+    | 'onFileUploadProgress'
+    | 'onFileUploadComplete'
+    | 'onFileUploadFail'
+    | 'onTotalUploadProgress'
+> & {
     path?: string
-    onProgress?: (progress: UploadProgress) => void
     metadata?: Record<string, string>
+    onTotalUploadProgress(completedFiles: number): void
 }
 
 export type PresignedUrlResponse = {

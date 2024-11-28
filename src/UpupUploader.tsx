@@ -15,11 +15,13 @@ import {
 import { useAddMore, useDragAndDrop } from 'hooks'
 import { checkFileSize, checkFileType, compressFile, sizeToBytes } from 'lib'
 import {
+    Dispatch,
     FC,
     ForwardedRef,
     LegacyRef,
     ReactElement,
     RefAttributes,
+    SetStateAction,
     forwardRef,
     useEffect,
     useImperativeHandle,
@@ -37,20 +39,28 @@ import {
 import { AnimatePresence } from 'framer-motion'
 import { ProviderSDK } from 'lib/storage/provider'
 import { StorageConfig } from 'types/StorageSDK'
-import useProgress from './hooks/useProgress'
+import { FileWithId } from 'types/file'
+import { v4 as uuidv4 } from 'uuid'
 
 export interface UpupUploaderProps {
     storageConfig: StorageConfig
     baseConfigs: BaseConfigs
     uploadAdapters: UPLOAD_ADAPTER[]
-    googleConfigs?: GoogleConfigs
-    oneDriveConfigs?: OneDriveConfigs
+    googleConfigs?: GoogleConfigs | undefined
+    oneDriveConfigs?: OneDriveConfigs | undefined
     loader?: ReactElement | null
 }
 
-export interface UploadFilesRef {
+export type UploadFilesRef = {
     uploadFiles: () => Promise<string[] | null>
     dynamicUploadFiles: (files: File[]) => Promise<string[] | null>
+}
+
+// Add this helper function at the top level
+const createFileWithId = (file: File) => {
+    return Object.assign(file, {
+        id: `${file.name}-${file.size}-${file.lastModified}-${uuidv4()}`,
+    })
 }
 
 /**
@@ -78,7 +88,6 @@ export const UpupUploader: FC<
             oneDriveConfigs,
             loader,
         } = props
-
         const {
             shouldCompress = false,
             onFilesSelected,
@@ -93,7 +102,7 @@ export const UpupUploader: FC<
         } = baseConfigs
 
         const [selectedFiles, setSelectedFiles] = useState<File[]>([])
-        const [mutatedFiles, setMutatedFiles] = useState<File[]>([])
+        const [mutatedFiles, setMutatedFiles] = useState<FileWithId[]>([])
         const [view, setView] = useState('internal')
 
         const {
@@ -109,11 +118,81 @@ export const UpupUploader: FC<
             onFilesSelected,
         )
 
-        const { progress } = useProgress(selectedFiles)
+        const [progress, setProgress] = useState(0)
+
+        /**
+         * Check if file type is accepted
+         * @param file File to check
+         * @throws Error if file type is not accepted
+         */
+        const validateFileType = (file: File) => {
+            if (!checkFileType(file, accept, baseConfigs?.onFileTypeMismatch)) {
+                const error = new Error(`File type ${file.type} not accepted`)
+                baseConfigs?.onFileUploadFail?.(file, error)
+                throw error
+            }
+        }
+
+        /**
+         * Check if file size is within limits
+         * @param files Array of files to check
+         * @throws Error if total file size exceeds limit
+         */
+        const validateFileSize = (files: File[]) => {
+            if (maxFileSize) {
+                const maxFilesSize = sizeToBytes(
+                    maxFileSize.size,
+                    maxFileSize.unit,
+                )
+                const totalSize = files.reduce(
+                    (acc, file) => acc + file.size,
+                    0,
+                )
+                if (totalSize > maxFilesSize) {
+                    const error = new Error(
+                        `Total file size must be less than ${
+                            maxFilesSize / 1024 / 1024
+                        }MB`,
+                    )
+                    files.forEach(
+                        file => baseConfigs?.onFileUploadFail?.(file, error),
+                    )
+                    throw error
+                }
+            }
+        }
+
+        /**
+         * Compress files if compression is enabled
+         * @param files Array of files to compress
+         * @returns Promise<File[]> Compressed files
+         */
+        const compressFiles = async (files: File[]): Promise<File[]> => {
+            if (!shouldCompress) return files
+
+            try {
+                return await Promise.all(
+                    files.map(async file => {
+                        const compressed = await compressFile({
+                            element: file,
+                            element_name: file.name,
+                        })
+                        return compressed
+                    }),
+                )
+            } catch (error) {
+                files.forEach(
+                    file =>
+                        baseConfigs?.onFileUploadFail?.(file, error as Error),
+                )
+                throw error
+            }
+        }
 
         /**
          * Expose the handleUpload function to the parent component
          */
+
         useImperativeHandle(ref, () => {
             const proceedUpload = async (
                 filesList: File[],
@@ -121,18 +200,12 @@ export const UpupUploader: FC<
                 return new Promise(async (resolve, reject) => {
                     try {
                         // Validate files
-                        filesList.forEach(file => checkFileType(file, accept))
+                        filesList.forEach(validateFileType)
+                        validateFileSize(filesList)
 
                         // Process files (compression if needed)
                         const processedFiles = shouldCompress
-                            ? await Promise.all(
-                                  filesList.map(file =>
-                                      compressFile({
-                                          element: file,
-                                          element_name: file.name,
-                                      }),
-                                  ),
-                              )
+                            ? await compressFiles(filesList)
                             : filesList
 
                         const config = {
@@ -153,7 +226,26 @@ export const UpupUploader: FC<
                         const uploadResults = await Promise.all(
                             processedFiles.map(file =>
                                 sdk.upload(file, {
-                                    onProgress: () => {},
+                                    onFileUploadStart:
+                                        baseConfigs?.onFileUploadStart,
+                                    onFileUploadProgress: (file, progress) => {
+                                        setProgress(progress.loaded)
+                                        baseConfigs?.onFileUploadProgress?.(
+                                            file,
+                                            progress,
+                                        )
+                                    },
+                                    onFileUploadComplete:
+                                        baseConfigs?.onFileUploadComplete,
+                                    onFileUploadFail:
+                                        baseConfigs?.onFileUploadFail,
+                                    onTotalUploadProgress: (
+                                        completedFiles: number,
+                                    ) =>
+                                        baseConfigs?.onTotalUploadProgress?.(
+                                            completedFiles,
+                                            processedFiles.length,
+                                        ),
                                 }),
                             ),
                         )
@@ -162,6 +254,7 @@ export const UpupUploader: FC<
                         const uploadedFileKeys = uploadResults.map(
                             result => result.key,
                         )
+                        baseConfigs?.onAllUploadsComplete?.(uploadedFileKeys)
                         resolve(uploadedFileKeys)
                     } catch (error) {
                         reject(error)
@@ -246,11 +339,84 @@ export const UpupUploader: FC<
             mutateFiles()
         }, [selectedFiles])
 
+        // Modify the input onChange handler to include validation
+        const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+            try {
+                let acceptedFiles = Array.from(e.target.files || []).filter(
+                    file => checkFileType(file, accept),
+                )
+                validateFileSize(acceptedFiles)
+
+                acceptedFiles = acceptedFiles.map(createFileWithId)
+
+                const newFiles = multiple
+                    ? isAddingMore
+                        ? [...selectedFiles, ...acceptedFiles]
+                        : acceptedFiles
+                    : [acceptedFiles[0]].filter(Boolean)
+                setSelectedFiles(newFiles)
+            } catch (error) {
+                console.error(error)
+                // Don't set files if validation fails
+            } finally {
+                e.target.value = ''
+            }
+        }
+
+        // Modify the DropZone handler to include validation and maintain existing files
+        const handleDropzoneFiles: Dispatch<
+            SetStateAction<File[]>
+        > = filesOrUpdater => {
+            if (typeof filesOrUpdater === 'function') {
+                setSelectedFiles(prevFiles => {
+                    try {
+                        const updatedFiles = filesOrUpdater(prevFiles)
+                        const newFiles = updatedFiles.slice(prevFiles.length)
+
+                        // Validate only new files
+                        newFiles.forEach(validateFileType)
+                        validateFileSize([...prevFiles, ...newFiles])
+
+                        const filesWithIds = newFiles.map(createFileWithId)
+                        return [...prevFiles, ...filesWithIds]
+                    } catch (error) {
+                        console.error(error)
+                        return prevFiles
+                    }
+                })
+            } else {
+                try {
+                    filesOrUpdater.forEach(validateFileType)
+                    setSelectedFiles(prevFiles => {
+                        try {
+                            validateFileSize([...prevFiles, ...filesOrUpdater])
+                            const filesWithIds =
+                                filesOrUpdater.map(createFileWithId)
+                            return [...prevFiles, ...filesWithIds]
+                        } catch (error) {
+                            console.error(error)
+                            return prevFiles
+                        }
+                    })
+                } catch (error) {
+                    console.error(error)
+                }
+            }
+        }
+
+        // Add file removal handler
+        const handleFileRemove = (file: FileWithId) => {
+            setSelectedFiles(prev => prev.filter(f => f !== file))
+            baseConfigs?.onFileRemove?.(file)
+        }
+
         return mini ? (
             <UpupMini
                 files={selectedFiles}
                 setFiles={setSelectedFiles}
                 maxFileSize={maxFileSize}
+                handleFileRemove={handleFileRemove}
+                baseConfigs={baseConfigs}
             />
         ) : (
             <div
@@ -262,10 +428,11 @@ export const UpupUploader: FC<
                 <AnimatePresence>
                     {isDragging && (
                         <DropZone
-                            setFiles={setSelectedFiles}
+                            setFiles={handleDropzoneFiles}
                             setIsDragging={setIsDragging}
                             multiple={multiple}
                             accept={accept}
+                            baseConfigs={baseConfigs}
                         />
                     )}
                 </AnimatePresence>
@@ -275,21 +442,7 @@ export const UpupUploader: FC<
                     className="absolute h-0 w-0"
                     ref={inputRef}
                     multiple={multiple}
-                    onChange={e => {
-                        const acceptedFiles = Array.from(
-                            e.target.files as FileList,
-                        ).filter(file => checkFileType(file, accept))
-
-                        const newFiles = multiple
-                            ? isAddingMore
-                                ? [...selectedFiles, ...acceptedFiles]
-                                : acceptedFiles
-                            : [acceptedFiles[0]].filter(Boolean)
-                        setSelectedFiles(newFiles)
-
-                        // clear the input value
-                        e.target.value = ''
-                    }}
+                    onChange={handleFileChange}
                 />
 
                 <View
@@ -312,6 +465,8 @@ export const UpupUploader: FC<
                     onFileClick={onFileClick}
                     progress={progress}
                     limit={limit}
+                    handleFileRemove={handleFileRemove}
+                    onCancelUpload={baseConfigs.onCancelUpload}
                 />
                 <div className="h-full p-2">
                     <div className="grid h-full w-full grid-rows-[1fr,auto] place-items-center rounded-md border border-dashed border-[#dfdfdf] transition-all">
@@ -321,6 +476,7 @@ export const UpupUploader: FC<
                             methods={METHODS.filter(method => {
                                 return uploadAdapters.includes(method.id as any)
                             })}
+                            baseConfigs={baseConfigs}
                         />
                         <MetaVersion
                             customMessage={customMessage}
