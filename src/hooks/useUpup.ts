@@ -1,9 +1,7 @@
 import { Dispatch, SetStateAction, useEffect } from 'react'
 import { BaseConfigs } from 'types/BaseConfigs'
-import { CloudStorageConfigs } from 'types/CloudStorageConfigs'
 import { GoogleConfigs } from 'types/GoogleConfigs'
 import { OneDriveConfigs } from 'types/OneDriveConfigs'
-import { S3Configs } from 'types/S3Configs'
 
 const space_secret = process.env.SPACE_SECRET
 const space_key = process.env.SPACE_KEY
@@ -27,26 +25,25 @@ const google_api_key = process.env.GOOGLE_API_KEY
  */
 
 type Props = BaseConfigs & {
-    setFiles?: Dispatch<SetStateAction<File[]>>
+    setSelectedFiles?: Dispatch<SetStateAction<File[]>>
 }
 
 /**
  * @param props
  */
 export const useUpup: (props?: Props) => {
-    cloudStorageConfigs: CloudStorageConfigs
     googleConfigs: GoogleConfigs
     baseConfigs: BaseConfigs
     oneDriveConfigs: OneDriveConfigs
 } = (
     props: Props = {
         accept: '*',
-        setFiles: () => {},
+        setSelectedFiles: () => {},
         multiple: false,
         mini: false,
     },
 ) => {
-    const { accept, setFiles } = props
+    const { setSelectedFiles } = props
 
     /**
      * Throw an error if any of the required environment variables are missing
@@ -76,23 +73,10 @@ export const useUpup: (props?: Props) => {
         }
     }, [])
 
-    const s3Configs: S3Configs = {
-        region: space_region,
-        endpoint: space_endpoint,
-        credentials: {
-            accessKeyId: space_key,
-            secretAccessKey: space_secret,
-        },
-    }
-
     const baseConfigs: BaseConfigs = {
         ...props,
-        onChange: (files: File[]) => (setFiles ? setFiles(files) : () => {}),
-    }
-
-    const cloudStorageConfigs: CloudStorageConfigs = {
-        bucket: accept !== 'image/*' ? document_space : image_space,
-        s3Configs,
+        onFilesSelected: (files: File[]) =>
+            setSelectedFiles ? setSelectedFiles(files) : () => {},
     }
 
     const googleConfigs: GoogleConfigs = {
@@ -108,7 +92,6 @@ export const useUpup: (props?: Props) => {
 
     return {
         baseConfigs,
-        cloudStorageConfigs,
         googleConfigs,
         oneDriveConfigs,
     }

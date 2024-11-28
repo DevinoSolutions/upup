@@ -17,17 +17,13 @@ const meta: Meta<typeof UpupUploader> = {
 export default meta
 
 const Uploader = args => {
-    const [files, setFiles] = useState<File[]>([])
+    const [selectedFiles, setSelectedFiles] = useState<File[]>([])
     const [uploadStatus, setUploadStatus] = useState<string>('')
 
     // Configure all the event handlers
     const eventHandlers = {
         onFileClick: file => {
             console.log('File clicked:', file)
-        },
-        onFilesChange: files => {
-            console.log('Files changed:', files)
-            return files
         },
         onIntegrationClick: (integrationType: string) => {
             setUploadStatus(`Selected integration: ${integrationType}`)
@@ -49,9 +45,16 @@ const Uploader = args => {
             setUploadStatus(`Upload failed: ${file.name} - ${error.message}`)
             console.error('Upload failed:', { file, error })
         },
-        onFileProgress: (file: File, progress: number) => {
-            setUploadStatus(`File progress - ${file.name}: ${progress}%`)
-            console.log('File progress:', { file, progress })
+        onFileUploadProgress: (
+            file: File,
+            {
+                loaded,
+                total,
+                percentage,
+            }: { loaded: number; total: number; percentage: number },
+        ) => {
+            setUploadStatus(`File progress - ${file.name}: ${percentage}%`)
+            console.log('File progress:', { file, percentage })
         },
         onTotalUploadProgress: (
             progress: number,
@@ -86,17 +89,29 @@ const Uploader = args => {
             setUploadStatus(`Dropped files: ${fileNames}`)
             console.log('Dropped files', files)
         },
+        onFileTypeMismatch: (file: File, acceptedTypes: string) => {
+            setUploadStatus(
+                `File type: ${file.type} is not amongst accepted types: ${acceptedTypes}`,
+            )
+            console.log(
+                `File type: ${file.type} is not amongst accepted types: ${acceptedTypes}`,
+            )
+        },
+        onCancelUpload: (files: File[]) => {
+            const fileNames = files.map(file => file.name).join(', ')
+            setUploadStatus(`Cancelled uploading files: ${fileNames}`)
+            console.log('Cancelled uploading files', files)
+        },
     }
 
-    const { baseConfigs, cloudStorageConfigs, googleConfigs, oneDriveConfigs } =
-        useUpup({
-            setFiles: setFiles,
-            accept: '*',
-            multiple: true,
-            limit: 5,
-            ...eventHandlers, // Add all our new event handlers
-            ...args,
-        })
+    const { baseConfigs, googleConfigs, oneDriveConfigs } = useUpup({
+        setSelectedFiles,
+        accept: '*',
+        multiple: true,
+        limit: 5,
+        ...eventHandlers, // Add all our new event handlers
+        ...args,
+    })
 
     const uploadAdapters: UPLOAD_ADAPTER[] = [
         UploadAdapter.INTERNAL,
@@ -117,7 +132,7 @@ const Uploader = args => {
             )
         } catch (error) {
             setUploadStatus(`Upload error: ${error.message}`)
-            console.error('Error uploading files:', error)
+            console.error('Error uploading selected files:', error)
         }
     }
 
@@ -125,7 +140,7 @@ const Uploader = args => {
         try {
             setUploadStatus('Starting dynamic upload...')
             const testFiles: any[] = []
-            testFiles.push(files[0])
+            testFiles.push(selectedFiles[0])
             const data = await upupRef.current?.dynamicUploadFiles(testFiles)
             setUploadStatus(
                 data
@@ -134,7 +149,7 @@ const Uploader = args => {
             )
         } catch (error) {
             setUploadStatus(`Dynamic upload error: ${error.message}`)
-            console.error('Error uploading files:', error)
+            console.error('Error uploading selected files:', error)
         }
     }
 
@@ -154,7 +169,7 @@ const Uploader = args => {
                 {...args}
                 baseConfigs={baseConfigs}
                 uploadAdapters={uploadAdapters}
-                cloudStorageConfigs={cloudStorageConfigs}
+                presignedUrlEndpoint="http://localhost:3001/presigned-url"
                 googleConfigs={googleConfigs}
                 oneDriveConfigs={oneDriveConfigs}
                 loader={loader}

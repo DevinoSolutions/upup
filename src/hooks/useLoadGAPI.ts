@@ -13,8 +13,7 @@ export const useLoadGAPI = () => {
          *  Load the Google Identity Services API
          */
         load('https://accounts.google.com/gsi/client', async (err, _script) => {
-            if (err) console.error('Error loading GAPI', err)
-            else setGisLoaded(true)
+            if (!err) setGisLoaded(true)
         })
     }, [gisLoaded])
 

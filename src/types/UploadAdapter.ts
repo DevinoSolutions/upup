@@ -9,6 +9,4 @@ export const UploadAdapter = {
     UNSPLASH: 'UNSPLASH',
 } as const
 
-type ObjectValues<T> = T[keyof T]
-
-export type UPLOAD_ADAPTER = ObjectValues<typeof UploadAdapter>
+export type UPLOAD_ADAPTER = (typeof UploadAdapter)[keyof typeof UploadAdapter]

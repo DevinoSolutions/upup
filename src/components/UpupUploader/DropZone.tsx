@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion'
+import { checkFileType } from 'lib'
 import { Dispatch, FC, SetStateAction } from 'react'
 import { TbUpload } from 'react-icons/tb'
 import { BaseConfigs } from 'types'
@@ -41,10 +42,18 @@ const DropZone: FC<Props> = ({
             }}
             onDrop={e => {
                 e.preventDefault()
-                const files = Array.from(e.dataTransfer.files)
-                setFiles(prev => (multiple ? [...prev, ...files] : [files[0]]))
+                setFiles(prev => {
+                    const acceptedFiles = Array.from(
+                        e.dataTransfer.files,
+                    ).filter(file => checkFileType(file, accept))
+
+                    baseConfigs?.onFileDrop?.(acceptedFiles)
+                    if (multiple) return [...prev, ...acceptedFiles]
+
+                    // For single file mode, take the first valid file if it exists
+                    return acceptedFiles.length > 0 ? [acceptedFiles[0]] : []
+                })
                 setIsDragging(false)
-                baseConfigs?.onFileDrop?.(files)
             }}
         >
             <div
@@ -64,13 +73,20 @@ const DropZone: FC<Props> = ({
                 className="absolute top-0 h-full w-full opacity-0"
                 multiple={multiple}
                 onChange={e => {
+                    const acceptedFiles = Array.from(
+                        e.target.files as FileList,
+                    ).filter(file => checkFileType(file, accept))
                     setFiles(prev =>
                         multiple
-                            ? [...prev, ...Array.from(e.target.files || [])]
-                            : [e.target.files![0]],
+                            ? [...prev, ...acceptedFiles]
+                            : // only one file
+                              [acceptedFiles[0]],
                     )
+
                     setIsDragging(false)
-                    e.target.value = '' // Reset input
+
+                    // reset input
+                    e.target.value = ''
                 }}
             />
         </motion.div>

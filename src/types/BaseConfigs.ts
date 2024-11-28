@@ -1,28 +1,31 @@
 export type BaseConfigs = {
-    toBeCompressed?: boolean
+    shouldCompress?: boolean
     multiple?: boolean
-    onChange?: (files: File[]) => void
     accept?: string
     limit?: number
-    onFileClick?: (file: File) => void
     mini?: boolean
-    onFilesChange?: (files: File[]) => Promise<File[]>
     maxFileSize?: {
         size: number
         unit?: 'B' | 'KB' | 'MB' | 'GB' | 'TB' | 'PB' | 'EB' | 'ZB' | 'YB'
     }
     customMessage?: string
+    onFilesSelected?: (files: File[]) => void
+    onPrepareFiles?: (files: File[]) => Promise<File[]>
+    onFileClick?: (file: File) => void
     onIntegrationClick?: (integrationType: string) => void
     onFileUploadStart?: (file: File) => void
     onFileUploadComplete?: (file: File, key: string) => void
     onAllUploadsComplete?: (keys: string[]) => void
     onFileUploadFail?: (file: File, error: Error) => void
-    onFileProgress?: (file: File, progress: number) => void
-    onTotalUploadProgress?: (
-        progress: number,
-        completedFiles: number,
-        totalFiles: number,
+    onFileUploadProgress?: (
+        file: File,
+        {
+            loaded,
+            total,
+            percentage,
+        }: { loaded: number; total: number; percentage: number },
     ) => void
+    onTotalUploadProgress?: (completedFiles: number, totalFiles: number) => void
     onFileRemove?: (file: File) => void
     onFileDragOver?: (files: File[]) => void
     onFileDragLeave?: (files: File[]) => void

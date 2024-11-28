@@ -13,13 +13,7 @@ import {
     View,
 } from 'components/UpupUploader'
 import { useAddMore, useDragAndDrop } from 'hooks'
-import {
-    checkFileSize,
-    checkFileType,
-    compressFile,
-    getClient,
-    uploadObject,
-} from 'lib'
+import { checkFileSize, checkFileType, compressFile, sizeToBytes } from 'lib'
 import {
     Dispatch,
     FC,
@@ -29,14 +23,12 @@ import {
     RefAttributes,
     SetStateAction,
     forwardRef,
-    useCallback,
     useEffect,
     useImperativeHandle,
     useState,
 } from 'react'
 import {
     BaseConfigs,
-    CloudStorageConfigs,
     GoogleConfigs,
     METHODS,
     OneDriveConfigs,
@@ -45,16 +37,16 @@ import {
 } from 'types'
 
 import { AnimatePresence } from 'framer-motion'
+import { ProviderSDK } from 'lib/storage/provider'
+import { StorageConfig } from 'types/StorageSDK'
 import { FileWithId } from 'types/file'
 import { v4 as uuidv4 } from 'uuid'
-import useProgress from './hooks/useProgress'
 
 export interface UpupUploaderProps {
-    cloudStorageConfigs: CloudStorageConfigs
+    storageConfig: StorageConfig
     baseConfigs: BaseConfigs
     uploadAdapters: UPLOAD_ADAPTER[]
     googleConfigs?: GoogleConfigs | undefined
-    maxFilesSize?: number | undefined
     oneDriveConfigs?: OneDriveConfigs | undefined
     loader?: ReactElement | null
 }
@@ -73,43 +65,43 @@ const createFileWithId = (file: File) => {
 
 /**
  *
- * @param cloudStorageConfigs cloud provider configurations
+ * @param storageConfig storage configuration
  * @param baseConfigs base configurations
- * @param toBeCompressed whether the user want to compress the file before uploading it or not. Default value is false
  * @param uploadAdapters the methods you want to enable for the user to upload the files. Default value is ['INTERNAL']
  * @param googleConfigs google configurations
  * @param oneDriveConfigs one drive configurations
+ * @param loader loader
  * @param ref referrer to the component instance to access its method uploadFiles from the parent component
  * @constructor
  */
 
 // FIXME: replace any with the correct type for the ref later on
-export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
-    forwardRef((props: UpupUploaderProps, ref: ForwardedRef<any>) => {
+export const UpupUploader: FC<
+    UpupUploaderProps & RefAttributes<UploadFilesRef>
+> = forwardRef(
+    (props: UpupUploaderProps, ref: ForwardedRef<UploadFilesRef>) => {
         const {
-            cloudStorageConfigs,
+            storageConfig,
             baseConfigs,
             uploadAdapters = ['INTERNAL', 'LINK'],
             googleConfigs,
-            maxFilesSize,
             oneDriveConfigs,
             loader,
         } = props
-        const { bucket, s3Configs } = cloudStorageConfigs
         const {
-            toBeCompressed = false,
-            onChange,
+            shouldCompress = false,
+            onFilesSelected,
             multiple = false,
             accept = '*',
             limit,
             onFileClick,
             mini = false,
-            onFilesChange,
+            onPrepareFiles,
             maxFileSize = { size: 20, unit: 'MB' },
             customMessage = 'Docs and Images',
         } = baseConfigs
 
-        const [files, setFiles] = useState<FileWithId[]>([])
+        const [selectedFiles, setSelectedFiles] = useState<File[]>([])
         const [mutatedFiles, setMutatedFiles] = useState<FileWithId[]>([])
         const [view, setView] = useState('internal')
 
@@ -122,18 +114,11 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
         } = useDragAndDrop()
 
         const { isAddingMore, setIsAddingMore, inputRef } = useAddMore(
-            files,
-            onChange,
+            selectedFiles,
+            onFilesSelected,
         )
 
-        const { handler, progress } = useProgress(files)
-
-        s3Configs.requestHandler = handler
-
-        /**
-         * Get the client instance
-         */
-        const client = getClient(s3Configs)
+        const [progress, setProgress] = useState(0)
 
         /**
          * Check if file type is accepted
@@ -154,7 +139,11 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
          * @throws Error if total file size exceeds limit
          */
         const validateFileSize = (files: File[]) => {
-            if (maxFilesSize) {
+            if (maxFileSize) {
+                const maxFilesSize = sizeToBytes(
+                    maxFileSize.size,
+                    maxFileSize.unit,
+                )
                 const totalSize = files.reduce(
                     (acc, file) => acc + file.size,
                     0,
@@ -179,7 +168,7 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
          * @returns Promise<File[]> Compressed files
          */
         const compressFiles = async (files: File[]): Promise<File[]> => {
-            if (!toBeCompressed) return files
+            if (!shouldCompress) return files
 
             try {
                 return await Promise.all(
@@ -200,87 +189,98 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
             }
         }
 
-        const handleUploadCancel = useCallback(() => {
-            if (progress > 0 && progress < 100) {
-                // Cancel the ongoing upload
-                handler.abort()
-                baseConfigs?.onCancelUpload?.(files)
-            }
-        }, [progress, files, handler, baseConfigs])
-
         /**
          * Expose the handleUpload function to the parent component
          */
-        useImperativeHandle(ref, () => ({
-            async dynamicUploadFiles(dynamicFiles: File[]) {
-                if (dynamicFiles.length === 0) return null
-                return await this.proceedUpload(dynamicFiles)
-            },
-            async uploadFiles() {
-                if (files.length === 0) return null
-                const filesList =
-                    mutatedFiles && mutatedFiles.length > 0
-                        ? mutatedFiles
-                        : files
-                return await this.proceedUpload(filesList)
-            },
-            cancelUpload: handleUploadCancel,
-            async proceedUpload(filesList: File[]) {
+
+        useImperativeHandle(ref, () => {
+            const proceedUpload = async (
+                filesList: File[],
+            ): Promise<string[]> => {
                 return new Promise(async (resolve, reject) => {
                     try {
-                        // Validate all files first
+                        // Validate files
                         filesList.forEach(validateFileType)
                         validateFileSize(filesList)
 
-                        // Notify upload start
-                        filesList.forEach(file => {
-                            baseConfigs?.onFileUploadStart?.(file)
-                        })
+                        // Process files (compression if needed)
+                        const processedFiles = shouldCompress
+                            ? await compressFiles(filesList)
+                            : filesList
 
-                        // Compress files if needed
-                        const processedFiles = await compressFiles(filesList)
-
-                        const uploadPromises = processedFiles.map(
-                            async file => {
-                                const fileExtension = file.name.split('.').pop()
-                                const key = `${uuidv4()}.${fileExtension}`
-
-                                try {
-                                    const result = await uploadObject({
-                                        client,
-                                        bucket,
-                                        key,
-                                        file,
-                                    })
-
-                                    if (result.httpStatusCode === 200) {
-                                        baseConfigs?.onFileUploadComplete?.(
-                                            file,
-                                            key,
-                                        )
-                                        return key
-                                    } else {
-                                        throw new Error('Upload failed')
-                                    }
-                                } catch (error) {
-                                    baseConfigs?.onFileUploadFail?.(
-                                        file,
-                                        error as Error,
-                                    )
-                                    throw error
-                                }
+                        const config = {
+                            ...storageConfig,
+                            constraints: {
+                                multiple,
+                                accept,
+                                maxFileSize: sizeToBytes(
+                                    maxFileSize.size,
+                                    maxFileSize.unit,
+                                ),
                             },
+                        }
+                        // Initialize SDK
+                        let sdk = new ProviderSDK(config)
+
+                        // Upload files
+                        const uploadResults = await Promise.all(
+                            processedFiles.map(file =>
+                                sdk.upload(file, {
+                                    onFileUploadStart:
+                                        baseConfigs?.onFileUploadStart,
+                                    onFileUploadProgress: (file, progress) => {
+                                        setProgress(progress.loaded)
+                                        baseConfigs?.onFileUploadProgress?.(
+                                            file,
+                                            progress,
+                                        )
+                                    },
+                                    onFileUploadComplete:
+                                        baseConfigs?.onFileUploadComplete,
+                                    onFileUploadFail:
+                                        baseConfigs?.onFileUploadFail,
+                                    onTotalUploadProgress: (
+                                        completedFiles: number,
+                                    ) =>
+                                        baseConfigs?.onTotalUploadProgress?.(
+                                            completedFiles,
+                                            processedFiles.length,
+                                        ),
+                                }),
+                            ),
                         )
 
-                        const keys = await Promise.all(uploadPromises)
-                        baseConfigs?.onAllUploadsComplete?.(keys)
-                        resolve(keys)
+                        // Extract keys from results
+                        const uploadedFileKeys = uploadResults.map(
+                            result => result.key,
+                        )
+                        baseConfigs?.onAllUploadsComplete?.(uploadedFileKeys)
+                        resolve(uploadedFileKeys)
                     } catch (error) {
                         reject(error)
                     }
                 })
-            },
-        }))
+            }
+
+            const returnValue: UploadFilesRef = {
+                async dynamicUploadFiles(
+                    dynamicFiles: File[],
+                ): Promise<string[] | null> {
+                    if (dynamicFiles.length === 0) return null
+                    return await proceedUpload(dynamicFiles)
+                },
+                async uploadFiles(): Promise<string[] | null> {
+                    if (selectedFiles.length === 0) return null
+                    const filesList =
+                        mutatedFiles && mutatedFiles.length > 0
+                            ? mutatedFiles
+                            : selectedFiles
+                    return await proceedUpload(filesList)
+                },
+            }
+
+            return returnValue
+        })
 
         /**
          * Check if the user selected at least one upload adapter
@@ -296,7 +296,7 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
         const components = {
             [UploadAdapter.GOOGLE_DRIVE]: (
                 <GoogleDriveUploader
-                    setFiles={setFiles}
+                    setFiles={setSelectedFiles}
                     setView={setView}
                     googleConfigs={googleConfigs as GoogleConfigs}
                     accept={accept}
@@ -306,49 +306,55 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
                 <OneDriveUploader
                     oneDriveConfigs={oneDriveConfigs as OneDriveConfigs}
                     baseConfigs={baseConfigs}
-                    setFiles={setFiles}
+                    setFiles={setSelectedFiles}
                     setView={setView}
                     loader={loader}
                 />
             ),
             [UploadAdapter.LINK]: (
-                <UrlUploader setFiles={setFiles} setView={setView} />
+                <UrlUploader setFiles={setSelectedFiles} setView={setView} />
             ),
             [UploadAdapter.CAMERA]: (
-                <CameraUploader setFiles={setFiles} setView={setView} />
+                <CameraUploader setFiles={setSelectedFiles} setView={setView} />
             ),
         }
 
         useEffect(() => {
-            const newFiles = files.filter(file =>
+            const newFiles = selectedFiles.filter(file =>
                 checkFileSize(file, maxFileSize),
             )
             if (limit && newFiles.length > limit)
-                setFiles(newFiles.slice(0, limit))
+                setSelectedFiles(newFiles.slice(0, limit))
             // if files didn't change, no need to update the state
-            else if (files.length === newFiles.length) return
-            else setFiles([...newFiles])
-        }, [limit, files, maxFileSize])
+            else if (selectedFiles.length === newFiles.length) return
+            else setSelectedFiles([...newFiles])
+        }, [limit, selectedFiles, maxFileSize])
 
         useEffect(() => {
-            if (!onFilesChange || files.length === 0) return setMutatedFiles([])
+            if (!onPrepareFiles || selectedFiles.length === 0)
+                return setMutatedFiles([])
             const mutateFiles = async () =>
-                setMutatedFiles(await onFilesChange([...files]))
+                setMutatedFiles(await onPrepareFiles([...selectedFiles]))
 
             mutateFiles()
-        }, [files])
+        }, [selectedFiles])
 
         // Modify the input onChange handler to include validation
         const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
             try {
-                const newFiles = Array.from(e.target.files || [])
-                newFiles.forEach(validateFileType)
-                validateFileSize(newFiles)
-
-                const acceptedFiles = newFiles.map(createFileWithId)
-                setFiles(files =>
-                    isAddingMore ? [...files, ...acceptedFiles] : acceptedFiles,
+                let acceptedFiles = Array.from(e.target.files || []).filter(
+                    file => checkFileType(file, accept),
                 )
+                validateFileSize(acceptedFiles)
+
+                acceptedFiles = acceptedFiles.map(createFileWithId)
+
+                const newFiles = multiple
+                    ? isAddingMore
+                        ? [...selectedFiles, ...acceptedFiles]
+                        : acceptedFiles
+                    : [acceptedFiles[0]].filter(Boolean)
+                setSelectedFiles(newFiles)
             } catch (error) {
                 console.error(error)
                 // Don't set files if validation fails
@@ -362,7 +368,7 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
             SetStateAction<File[]>
         > = filesOrUpdater => {
             if (typeof filesOrUpdater === 'function') {
-                setFiles(prevFiles => {
+                setSelectedFiles(prevFiles => {
                     try {
                         const updatedFiles = filesOrUpdater(prevFiles)
                         const newFiles = updatedFiles.slice(prevFiles.length)
@@ -381,7 +387,7 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
             } else {
                 try {
                     filesOrUpdater.forEach(validateFileType)
-                    setFiles(prevFiles => {
+                    setSelectedFiles(prevFiles => {
                         try {
                             validateFileSize([...prevFiles, ...filesOrUpdater])
                             const filesWithIds =
@@ -400,14 +406,14 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
 
         // Add file removal handler
         const handleFileRemove = (file: FileWithId) => {
-            setFiles(prev => prev.filter(f => f !== file))
+            setSelectedFiles(prev => prev.filter(f => f !== file))
             baseConfigs?.onFileRemove?.(file)
         }
 
         return mini ? (
             <UpupMini
-                files={files}
-                setFiles={setFiles}
+                files={selectedFiles}
+                setFiles={setSelectedFiles}
                 maxFileSize={maxFileSize}
                 handleFileRemove={handleFileRemove}
                 baseConfigs={baseConfigs}
@@ -450,9 +456,9 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
                     files={
                         mutatedFiles && mutatedFiles.length > 0
                             ? mutatedFiles
-                            : files
+                            : selectedFiles
                     }
-                    setFiles={setFiles}
+                    setFiles={setSelectedFiles}
                     isAddingMore={isAddingMore}
                     setIsAddingMore={setIsAddingMore}
                     multiple={multiple}
@@ -481,4 +487,5 @@ export const UpupUploader: FC<UpupUploaderProps & RefAttributes<any>> =
                 </div>
             </div>
         )
-    })
+    },
+)
