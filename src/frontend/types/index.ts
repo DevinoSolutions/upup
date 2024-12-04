@@ -1,4 +1,4 @@
-export type { BaseConfigs } from './BaseConfigs'
+export type { BaseConfigs } from '../../shared/types/BaseConfigs'
 export type { GoogleConfigs } from './GoogleConfigs'
 export { METHODS } from './Method'
 export type { Method } from './Method'

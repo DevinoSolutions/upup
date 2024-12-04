@@ -25,10 +25,12 @@ const ListItem = ({
     selectedFiles,
     accept,
 }: Props) => {
-    const isFolder = file.children!.length
+    const isFolder = file.isFolder
     const isFileSelected = selectedFiles.includes(file)
     const isFileAccepted =
-        accept && accept !== '*' && accept.includes(file.name.split('.').pop()!)
+        accept && accept !== '*' && !isFolder
+            ? accept.includes(file.name.split('.').pop()!)
+            : true
 
     if (accept && !isFolder && !isFileAccepted) return null
 

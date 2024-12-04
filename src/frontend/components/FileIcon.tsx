@@ -27,20 +27,13 @@ const fileTypes: { [key: string]: IconType } = {
     rtf: TbFileText,
 }
 
-const checkFileType = (name: string) => {
-    // Get file extension
-    const extension = name.split('.').pop()!.toLowerCase()
+type Props = {
+    extension?: string
+}
 
+const FileIcon = ({ extension = '' }: Props) => {
     const Component = fileTypes[extension] || TbFileUnknown
     return <Component className="h-full w-full" />
-}
-
-type Props = {
-    name: string
-}
-
-const FileIcon = ({ name }: Props) => {
-    return checkFileType(name)
 }
 
 export default FileIcon

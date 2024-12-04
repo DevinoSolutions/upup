@@ -23,9 +23,8 @@ const OneDriveUploader: FC<Props> = ({
     setView,
     loader,
 }: Props) => {
-    const { user, oneDriveFiles, downloadFile, signOut } = useOneDrive(
-        oneDriveConfigs.onedrive_client_id,
-    )
+    const { user, oneDriveFiles, downloadFile, signOut, graphClient } =
+        useOneDrive(oneDriveConfigs.onedrive_client_id)
 
     if (!oneDriveFiles) return loader || <div>Loading...</div>
 
@@ -37,6 +36,7 @@ const OneDriveUploader: FC<Props> = ({
             setFiles={setFiles}
             setView={setView}
             downloadFile={downloadFile}
+            graphClient={graphClient}
         />
     )
 }

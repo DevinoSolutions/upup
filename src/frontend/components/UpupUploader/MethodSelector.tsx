@@ -1,13 +1,25 @@
 import React, { FC, MutableRefObject } from 'react'
-import type { Method } from '../../types'
+import type { BaseConfigs, Method } from '../../types'
 
 type Props = {
     setView: (view: string) => void
     inputRef?: MutableRefObject<HTMLInputElement | null>
     methods: Method[]
+    baseConfigs?: BaseConfigs
 }
 
-const MethodsSelector: FC<Props> = ({ setView, inputRef, methods }: Props) => {
+const MethodsSelector: FC<Props> = ({
+    setView,
+    inputRef,
+    methods,
+    baseConfigs,
+}: Props) => {
+    const handleMethodClick = (methodId: string) => {
+        baseConfigs?.onIntegrationClick?.(methodId)
+        if (methodId === 'INTERNAL') inputRef && inputRef?.current?.click()
+        else setView(methodId)
+    }
+
     return (
         <div className="flex h-full w-full flex-col items-center justify-center gap-6">
             <h1 className="text-center dark:text-white md:text-2xl">
@@ -31,11 +43,7 @@ const MethodsSelector: FC<Props> = ({ setView, inputRef, methods }: Props) => {
                         onKeyDown={e => {
                             if (e.key === 'Enter') e.preventDefault()
                         }}
-                        onClick={() =>
-                            method.id === 'INTERNAL'
-                                ? inputRef && inputRef.current!.click()
-                                : setView(method.id)
-                        }
+                        onClick={() => handleMethodClick(method.id)}
                     >
                         <span className="rounded-lg bg-white p-[6px] text-2xl shadow dark:bg-[#323232]">
                             {method.icon}
