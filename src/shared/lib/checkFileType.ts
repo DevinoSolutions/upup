@@ -5,19 +5,33 @@ export default function checkFileType(
     file: File,
     onFileTypeMismatch?: BaseConfigs['onFileTypeMismatch'],
 ) {
-    const fileType = file.type
-    const acceptedTypes = accept.split(',').map(t => t.trim())
-    const isValidType =
-        acceptedTypes.includes('*') ||
-        acceptedTypes.some(type => {
-            if (type.includes('/*')) {
-                const [mainType] = type.split('/')
-                return fileType.startsWith(mainType)
-            }
-            return type === fileType
-        })
+    try {
+        const fileType = file.type
 
-    if (!isValidType && onFileTypeMismatch) onFileTypeMismatch(file, accept)
+        // Return false for invalid inputs
+        if (!accept || !fileType) throw new Error('Invalid inputs')
 
-    return isValidType
+        // Validate fileType has proper MIME format (type/subtype)
+        const [type, subtype] = fileType.split('/')
+        if (!type || !subtype)
+            throw new Error('Invalid MIME format (type/subtype)')
+
+        const acceptedTypes = accept.split(',').map(t => t.trim())
+        const isValidType =
+            acceptedTypes.includes('*') ||
+            acceptedTypes.some(type => {
+                if (type.includes('/*')) {
+                    const [mainType] = type.split('/')
+                    return fileType.startsWith(mainType)
+                }
+                return type.toLowerCase() === fileType.toLowerCase()
+            })
+
+        if (!isValidType) throw new Error('Invalid type')
+
+        return isValidType
+    } catch (error) {
+        onFileTypeMismatch?.(file, accept)
+        return false
+    }
 }
