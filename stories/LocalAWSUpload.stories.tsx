@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react'
-import { useRef, useState } from 'react'
-import { UpupUploader } from '../src'
-import { UploadFilesRef } from '../src/UpupUploader'
+import React, { useRef } from 'react'
+import { UploadFilesRef, UpupUploader } from '../src/frontend/UpupUploader'
+import { Provider } from '../src/shared/types/StorageSDK'
 
 const meta = {
     title: 'Cloud Storage/Local to AWS Upload',
@@ -14,19 +14,17 @@ const meta = {
             },
         },
     },
-    tags: ['autodocs'],
 } satisfies Meta<typeof UpupUploader>
 
 export default meta
 type Story = StoryObj<typeof UpupUploader>
 
 const LocalUploader = () => {
-    const [selectedFiles, setSelectedFiles] = useState<File[]>([])
     const upupRef = useRef<UploadFilesRef>(null)
 
     const handleUpload = async () => {
         try {
-            const data = await upupRef.current?.uploadFiles()
+            await upupRef.current?.uploadFiles()
         } catch (error) {
             console.error('Error uploading selected files:', error)
         }
@@ -37,7 +35,7 @@ const LocalUploader = () => {
             <UpupUploader
                 ref={upupRef}
                 storageConfig={{
-                    provider: 'aws',
+                    provider: Provider.AWS,
                     tokenEndpoint:
                         'http://localhost:3001/api/storage/aws/upload-url',
                 }}
@@ -45,9 +43,6 @@ const LocalUploader = () => {
                     multiple: true,
                     accept: '*',
                     maxFileSize: { size: 100, unit: 'MB' },
-                    onFilesSelected: files => {
-                        setSelectedFiles(files)
-                    },
                 }}
                 uploadAdapters={['INTERNAL']}
             />

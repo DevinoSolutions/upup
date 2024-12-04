@@ -1,13 +1,13 @@
 import { CircularProgress } from '@mui/material'
 import { Meta } from '@storybook/react'
-import { useRef, useState } from 'react'
+import React, { useRef, useState } from 'react'
+import { UploadFilesRef, UpupUploader } from '../src/frontend/UpupUploader'
 import {
     UPLOAD_ADAPTER,
     UploadAdapter,
-    UploadFilesRef,
-    UpupUploader,
-} from '../src'
-import { useUpup } from '../src/hooks'
+} from '../src/frontend/types/UploadAdapter'
+// import react only on this file to avoid error
+// we get an error because we're not exporting UpupUploader as default
 
 const meta: Meta<typeof UpupUploader> = {
     title: 'Uploader',
@@ -104,15 +104,16 @@ const Uploader = args => {
         },
     }
 
-    const { baseConfigs, googleConfigs, oneDriveConfigs } = useUpup({
-        setSelectedFiles,
+    const baseConfigs = {
         accept: '*',
         multiple: true,
         limit: 5,
+        mini: false,
+        onFilesSelected: (files: File[]) =>
+            setSelectedFiles ? setSelectedFiles(files) : () => {},
         ...eventHandlers, // Add all our new event handlers
         ...args,
-    })
-
+    }
     const uploadAdapters: UPLOAD_ADAPTER[] = [
         UploadAdapter.INTERNAL,
         UploadAdapter.GOOGLE_DRIVE,
@@ -135,7 +136,6 @@ const Uploader = args => {
             console.error('Error uploading selected files:', error)
         }
     }
-
     const handleDynamicUpload = async () => {
         try {
             setUploadStatus('Starting dynamic upload...')
@@ -170,8 +170,15 @@ const Uploader = args => {
                 baseConfigs={baseConfigs}
                 uploadAdapters={uploadAdapters}
                 presignedUrlEndpoint="http://localhost:3001/presigned-url"
-                googleConfigs={googleConfigs}
-                oneDriveConfigs={oneDriveConfigs}
+                googleConfigs={{
+                    google_api_key: process.env.GOOGLE_API_KEY,
+                    google_app_id: process.env.GOOGLE_APP_ID,
+                    google_client_id: process.env.GOOGLE_CLIENT_ID,
+                }}
+                oneDriveConfigs={{
+                    onedrive_client_id: process.env.ONEDRIVE_CLIENT_ID,
+                    redirectUri: window.location.href,
+                }}
                 loader={loader}
                 ref={upupRef}
             />

@@ -1,39 +1,87 @@
-const postcss = require('rollup-plugin-postcss')
+const { resolve } = require('path')
 const autoprefixer = require('autoprefixer')
 const tailwindcss = require('tailwindcss')
-const cssnano = require('cssnano')
+const postcss = require('rollup-plugin-postcss')
 const replace = require('@rollup/plugin-replace')
 const analyze = require('rollup-plugin-analyzer')
+const commonjs = require('@rollup/plugin-commonjs')
+const { nodeResolve } = require('@rollup/plugin-node-resolve')
+
+const GRAPH_CLIENT_DEPS = [
+    '@microsoft/microsoft-graph-client',
+    '@microsoft/microsoft-graph-client/authProviders/authCodeMsalBrowser',
+]
+
+const MUI_PEER_DEPS = [
+    '@emotion/react',
+    '@emotion/styled',
+    '@mui/material',
+    '@mui/system',
+    '@mui/utils',
+    'react-is',
+]
+
+const AWS_SDK_DEPS = [
+    '@aws-sdk/core',
+    '@aws-sdk/client-s3',
+    '@aws-sdk/s3-request-presigner',
+    '@aws-sdk/xhr-http-handler',
+    '@smithy/core',
+    '@smithy/signature-v4',
+]
+
+const AZURE_DEPS = [
+    '@azure/core-lro',
+    '@azure/core-util',
+    '@azure/storage-blob',
+    '@azure/identity',
+    '@azure/msal-browser',
+]
 
 module.exports = {
     rollup(config, options) {
-        config.plugins.push(
-            postcss({
-                plugins: [
-                    tailwindcss({
-                        content: ['./src/**/*.{tsx,ts,css}'],
-                        darkMode: 'class', // or 'media' or 'class'
-                        theme: { extend: {} },
-                        plugins: [],
-                    }),
-                    autoprefixer(),
-                    cssnano({ preset: 'default' }),
-                ],
+        const isNode = options.format === 'cjs'
 
-                minimize: true,
-                inject: { insertAt: 'top' },
-                // only write out CSS for the first bundle (avoids pointless extra files):
-                extract: !!options.writeMeta,
+        config.plugins = [
+            nodeResolve({
+                extensions: ['.js', '.jsx', '.ts', '.tsx'],
             }),
-        )
-        config.plugins.push(analyze({ summaryOnly: true }))
-        config.plugins = config.plugins.map(p =>
-            p.name === 'replace'
-                ? replace({
-                      preventAssignment: true,
-                  })
-                : p,
-        )
+            commonjs({
+                requireReturnsDefault: 'auto',
+            }),
+            replace({
+                preventAssignment: true,
+                'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
+                'process.env.TARGET': JSON.stringify(
+                    isNode ? 'node' : 'browser',
+                ),
+            }),
+            ...config.plugins,
+            postcss({
+                plugins: [tailwindcss, autoprefixer],
+                inject: !isNode && { insertAt: 'top' },
+                extract: !isNode && !!options.writeMeta,
+            }),
+            analyze({ summaryOnly: true }),
+        ]
+
+        if (isNode) {
+            config.output.file = config.output.file.replace(
+                '.cjs.production.min.js',
+                '.node.js',
+            )
+            config.external = [
+                ...(Array.isArray(config.external) ? config.external : []),
+                'react',
+                'react-dom',
+                'react/jsx-runtime',
+                ...MUI_PEER_DEPS,
+                ...AWS_SDK_DEPS,
+                ...AZURE_DEPS,
+                ...GRAPH_CLIENT_DEPS,
+            ]
+        }
+
         return config
     },
 }

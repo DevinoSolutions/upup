@@ -1,40 +1,33 @@
 {
-    "sourceType": "unambiguous",
     "presets": [
         [
             "@babel/preset-env",
             {
+                "modules": false,
                 "targets": {
-                    "chrome": 100
+                    "node": "14",
+                    "browsers": ">0.25%, not ie 11, not op_mini all"
                 }
             }
         ],
-        "@babel/preset-typescript",
-        ["@babel/preset-react", { "runtime": "automatic" }]
+        "@babel/preset-react",
+        "@babel/preset-typescript"
     ],
-    "plugins": [
-        ["@babel/plugin-proposal-optional-chaining", { "loose": false }],
-        [
-            "module-resolver",
-            {
-                "extensions": [".ts", ".tsx"],
-                "root": "./src",
-                "alias": {
-                    "#components": "./src/components",
-                    "#types": ["./src/types"],
-                    "#hooks": ["./src/hooks"],
-                    "#lib": ["./src/lib"]
-                }
-            }
-        ],
-        [
-            "@emotion",
-            {
-                "sourceMap": true,
-                "autoLabel": "dev-only",
-                "labelFormat": "[local]",
-                "cssPropOptimization": true
-            }
-        ]
-    ]
+    "env": {
+        "node": {
+            "plugins": [
+                [
+                    "babel-plugin-transform-import-ignore",
+                    {
+                        "patterns": [
+                            "*.css",
+                            "react",
+                            "react-dom",
+                            "framer-motion"
+                        ]
+                    }
+                ]
+            ]
+        }
+    }
 }

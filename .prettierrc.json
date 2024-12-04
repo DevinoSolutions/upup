@@ -7,5 +7,8 @@
     "plugins": [
         "prettier-plugin-organize-imports",
         "prettier-plugin-tailwindcss"
-    ]
+    ],
+    "importOrder": ["^react$", "^[^.]", "^\\."],
+    "importOrderSeparation": true,
+    "importOrderSortSpecifiers": true
 }
