@@ -6,7 +6,6 @@ dist
 .idea
 .vscode
 
-
 # storybook
 storybook-static
 

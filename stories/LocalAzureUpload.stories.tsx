@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react'
 import React, { useRef } from 'react'
-import { UploadFilesRef, UpupUploader } from '../src'
+import { UploadFilesRef, UpupUploader } from '../src/frontend/UpupUploader'
+import { Provider } from '../src/shared/types/StorageSDK'
 
 const meta = {
     title: 'Cloud Storage/Local to Azure Upload',
@@ -23,13 +24,9 @@ const LocalUploader = () => {
 
     const handleUpload = async () => {
         try {
-            const data = await upupRef.current?.uploadFiles()
-            console.log(`Upload ${data ? 'successful' : 'returned null'}`)
-            if (data) {
-                console.log('Uploaded file keys:', data)
-            }
+            await upupRef.current?.uploadFiles()
         } catch (error) {
-            console.error('Error uploading files:', error)
+            console.error('Error uploading selected files:', error)
         }
     }
 
@@ -38,7 +35,7 @@ const LocalUploader = () => {
             <UpupUploader
                 ref={upupRef}
                 storageConfig={{
-                    provider: 'azure',
+                    provider: Provider.Azure,
                     tokenEndpoint:
                         'http://localhost:3001/api/storage/azure/upload-url',
                 }}
@@ -46,9 +43,6 @@ const LocalUploader = () => {
                     multiple: true,
                     accept: '*',
                     maxFileSize: { size: 100, unit: 'MB' },
-                    onChange: (files: File[]) => {
-                        console.log('Files selected:', files)
-                    },
                 }}
                 uploadAdapters={['INTERNAL']}
             />

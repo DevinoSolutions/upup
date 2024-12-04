@@ -24,23 +24,23 @@ declare module 'microsoft' {
     type OneDriveFile = {
         id: string
         name: string
-        parentReference?: {
-            id: string
-        }
-        thumbnails?: Thumbnails
+        isFolder: boolean
+        children?: OneDriveFile[]
+        thumbnails?: {
+            small: { url: string }
+            medium: { url: string }
+            large: { url: string }
+        } | null
+        '@microsoft.graph.downloadUrl'?: string
         file?: {
             mimeType: string
         }
-        children?: OneDriveFile[]
-        folder?: {
-            childCount: number
-        }
-        '@microsoft.graph.downloadUrl'?: string
     }
 
     type OneDriveRoot = {
         id: string
         name: string
+        isFolder: boolean
         children: OneDriveFile[]
     }
 }

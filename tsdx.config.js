@@ -7,6 +7,11 @@ const analyze = require('rollup-plugin-analyzer')
 const commonjs = require('@rollup/plugin-commonjs')
 const { nodeResolve } = require('@rollup/plugin-node-resolve')
 
+const GRAPH_CLIENT_DEPS = [
+    '@microsoft/microsoft-graph-client',
+    '@microsoft/microsoft-graph-client/authProviders/authCodeMsalBrowser',
+]
+
 const MUI_PEER_DEPS = [
     '@emotion/react',
     '@emotion/styled',
@@ -73,6 +78,7 @@ module.exports = {
                 ...MUI_PEER_DEPS,
                 ...AWS_SDK_DEPS,
                 ...AZURE_DEPS,
+                ...GRAPH_CLIENT_DEPS,
             ]
         }
 

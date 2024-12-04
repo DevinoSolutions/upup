@@ -1,4 +1,5 @@
 import { Provider } from '../../shared/types/StorageSDK'
+import { BaseConfigs } from './'
 
 export interface StorageConfig {
     provider: Provider
@@ -16,10 +17,17 @@ export interface UploadProgress {
     percentage: number
 }
 
-export interface UploadOptions {
+export type UploadOptions = Pick<
+    BaseConfigs,
+    | 'onFileUploadStart'
+    | 'onFileUploadProgress'
+    | 'onFileUploadComplete'
+    | 'onFileUploadFail'
+    | 'onTotalUploadProgress'
+> & {
     path?: string
-    onProgress?: (progress: UploadProgress) => void
     metadata?: Record<string, string>
+    onTotalUploadProgress(completedFiles: number): void
 }
 
 export interface UploadResult {

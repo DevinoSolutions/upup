@@ -33,7 +33,7 @@
     "browser": "./dist/upup.esm.js",
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/uNotesOfficial/upup.git"
+        "url": "git+https://github.com/DevinoSolutions/upup.git"
     },
     "packageManager": "pnpm@8.10.5",
     "keywords": [
@@ -139,14 +139,17 @@
         "@azure/storage-blob": "^12.25.0",
         "@emotion/styled": "^11.11.0",
         "@google-cloud/storage": "^7.14.0",
+        "@microsoft/microsoft-graph-client": "^3.0.7",
         "@mui/material": "^5.14.18",
         "@types/gapi": "^0.0.47",
         "babel-plugin-module-resolver": "^5.0.0",
         "framer-motion": "^10.16.5",
         "load-script": "^2.0.0",
         "pako": "^2.1.0",
+        "react-file-viewer": "^1.2.1",
         "react-icons": "^4.12.0",
         "react-webcam": "^7.2.0",
+        "use-debounce": "^10.0.4",
         "uuid": "^9.0.1"
     },
     "peerDependencies": {
