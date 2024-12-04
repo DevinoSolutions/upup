@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react'
 import * as React from 'react'
+import MetaVersion from '../../frontend/components/MetaVersion'
 import { LIB_VERSION } from '../../version'
-import MetaVersion from './MetaVersion'
 
 describe('MetaVersion', () => {
     it('renders basic version info', () => {

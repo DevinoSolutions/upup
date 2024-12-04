@@ -1,4 +1,4 @@
-import checkFileType from './checkFileType'
+import checkFileType from '../../shared/lib/checkFileType'
 
 const JPEGImage = {
     type: 'image/jpeg',

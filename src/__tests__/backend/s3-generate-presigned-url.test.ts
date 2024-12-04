@@ -1,12 +1,12 @@
 import { S3Client } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
+import s3GeneratePresignedUrl from '../../backend/lib/aws/s3/s3-generate-presigned-url'
+import s3UpdateCORS from '../../backend/lib/aws/s3/s3-update-cors'
 import {
     Provider,
     UploadError,
     UploadErrorType,
-} from '../../../../shared/types/StorageSDK'
-import s3GeneratePresignedUrl from './s3-generate-presigned-url'
-import s3UpdateCORS from './s3-update-cors'
+} from '../../shared/types/StorageSDK'
 
 // Mock external dependencies
 jest.mock('@aws-sdk/client-s3', () => ({
@@ -28,7 +28,7 @@ jest.mock('@aws-sdk/client-s3', () => ({
     PutObjectCommand: jest.fn(),
 }))
 jest.mock('@aws-sdk/s3-request-presigner')
-jest.mock('./s3-update-cors')
+jest.mock('../../backend/lib/aws/s3/s3-update-cors')
 
 describe('s3GeneratePresignedUrl', () => {
     // Test data setup
