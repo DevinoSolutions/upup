@@ -1,6 +1,6 @@
 import { S3ClientConfig } from '@aws-sdk/client-s3'
 import { createHash, createHmac } from 'crypto'
-import { Provider } from '../../../shared/types/StorageSDK'
+import { UpupProvider } from '../../../shared/types/StorageSDK'
 
 function hmac(key: string | Buffer, message: string) {
     return createHmac('sha256', key).update(message).digest()
@@ -37,14 +37,14 @@ export default function awsGenerateSignatureHeaders(
     }: S3ClientConfig & {
         credentials?: any
     },
-    provider: Provider,
+    provider: UpupProvider,
 ) {
     const service = 's3'
     const hostMap = {
-        [Provider.AWS]: `${bucketName}.s3.${region}.amazonaws.com`,
-        [Provider.BackBlaze]: (endpoint as string).split('https://')[1],
-        [Provider.DigitalOcean]: `${bucketName}.${region}.digitaloceanspaces.com`,
-        [Provider.Azure]: ``,
+        [UpupProvider.AWS]: `${bucketName}.s3.${region}.amazonaws.com`,
+        [UpupProvider.BackBlaze]: (endpoint as string).split('https://')[1],
+        [UpupProvider.DigitalOcean]: `${bucketName}.${region}.digitaloceanspaces.com`,
+        [UpupProvider.Azure]: ``,
     }
     const host = hostMap[provider]
 
@@ -60,18 +60,18 @@ export default function awsGenerateSignatureHeaders(
     const method = 'PUT'
 
     const canonicalUriMap = {
-        [Provider.AWS]: '/',
-        [Provider.BackBlaze]: `/${bucketName}/`,
-        [Provider.DigitalOcean]: `/`,
-        [Provider.Azure]: ``,
+        [UpupProvider.AWS]: '/',
+        [UpupProvider.BackBlaze]: `/${bucketName}/`,
+        [UpupProvider.DigitalOcean]: `/`,
+        [UpupProvider.Azure]: ``,
     }
     const canonicalUri = canonicalUriMap[provider]
 
     const canonicalQueryStringMap = {
-        [Provider.AWS]: 'cors=',
-        [Provider.BackBlaze]: 'cors=null',
-        [Provider.DigitalOcean]: 'cors=',
-        [Provider.Azure]: ``,
+        [UpupProvider.AWS]: 'cors=',
+        [UpupProvider.BackBlaze]: 'cors=null',
+        [UpupProvider.DigitalOcean]: 'cors=',
+        [UpupProvider.Azure]: ``,
     }
     const canonicalQueryString = canonicalQueryStringMap[provider]
 

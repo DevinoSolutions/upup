@@ -1,8 +1,8 @@
 import { S3ClientConfig } from '@aws-sdk/client-s3'
 import {
-    Provider,
     UploadError,
     UploadErrorType,
+    UpupProvider,
 } from '../../../../shared/types/StorageSDK'
 import awsGenerateSignatureHeaders from '../aws-generate-signature-headers'
 
@@ -10,13 +10,13 @@ export default async function s3UpdateCORS(
     origin: string,
     bucketName: string,
     config: S3ClientConfig,
-    provider: Provider,
+    provider: UpupProvider,
 ) {
     const urlMap = {
-        [Provider.AWS]: `https://${bucketName}.s3.${config.region}.amazonaws.com/?cors`,
-        [Provider.BackBlaze]: `${config.endpoint}/${bucketName}/?cors=null`,
-        [Provider.DigitalOcean]: `https://${bucketName}.${config.region}.digitaloceanspaces.com/?cors`,
-        [Provider.Azure]: ``,
+        [UpupProvider.AWS]: `https://${bucketName}.s3.${config.region}.amazonaws.com/?cors`,
+        [UpupProvider.BackBlaze]: `${config.endpoint}/${bucketName}/?cors=null`,
+        [UpupProvider.DigitalOcean]: `https://${bucketName}.${config.region}.digitaloceanspaces.com/?cors`,
+        [UpupProvider.Azure]: ``,
     }
     const url = urlMap[provider]
 

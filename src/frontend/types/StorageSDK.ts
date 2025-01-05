@@ -1,8 +1,8 @@
-import { Provider } from '../../shared/types/StorageSDK'
+import { UpupProvider } from '../../shared/types/StorageSDK'
 import { BaseConfigs } from './'
 
 export interface StorageConfig {
-    provider: Provider
+    provider: UpupProvider
     tokenEndpoint: string
     constraints?: {
         multiple: boolean

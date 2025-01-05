@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react'
 import React, { useRef } from 'react'
 import { UploadFilesRef, UpupUploader } from '../src/frontend/UpupUploader'
-import { Provider } from '../src/shared/types/StorageSDK'
+import { UpupProvider } from '../src/shared/types/StorageSDK'
 
 const meta = {
     title: 'Cloud Storage/Local to Backblaze Upload',
@@ -36,7 +36,7 @@ const LocalUploader = () => {
             <UpupUploader
                 ref={upupRef}
                 storageConfig={{
-                    provider: Provider.BackBlaze,
+                    provider: UpupProvider.BackBlaze,
                     tokenEndpoint:
                         'http://localhost:3001/api/storage/backblaze/upload-url',
                 }}

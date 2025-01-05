@@ -1,4 +1,4 @@
-export enum Provider {
+export enum UpupProvider {
     AWS = 'aws',
     Azure = 'azure',
     BackBlaze = 'backblaze',
