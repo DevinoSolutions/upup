@@ -1,5 +1,6 @@
 import React, {
     HTMLAttributes,
+    MouseEventHandler,
     forwardRef,
     memo,
     useEffect,
@@ -45,6 +46,11 @@ export default memo(
             }
         }, [file])
 
+        const onHandleFileRemove: MouseEventHandler<HTMLButtonElement> = e => {
+            e.stopPropagation()
+            handleFileRemove(file)
+        }
+
         if (!objectUrl) return null
 
         return (
@@ -80,7 +86,7 @@ export default memo(
                 )}
                 <button
                     className="absolute -right-1 -top-1 z-10 rounded-full bg-black p-0.5"
-                    onClick={() => handleFileRemove(file)}
+                    onClick={onHandleFileRemove}
                     type="button"
                 >
                     <TbX className="h-4 w-4 text-white" />
