@@ -7,6 +7,7 @@ import {
 } from '../../../../shared/types/StorageSDK'
 import { S3PresignedUrlParams } from '../../../types'
 import fileValidateParams from '../../files/file-validate-params'
+import s3GenerateSignedUrl from './s3-generate-signed-url'
 import s3UpdateCORS from './s3-update-cors'
 
 const DEFAULT_EXPIRES_IN = 3600
@@ -52,7 +53,7 @@ export default async function s3GeneratePresignedUrl({
         })
 
         // Generate public URL (if bucket is public)
-        const publicUrl = uploadUrl.split(Key)[0] + Key
+        const publicUrl = await s3GenerateSignedUrl(s3ClientConfig, Key, Bucket)
 
         return {
             key: Key,

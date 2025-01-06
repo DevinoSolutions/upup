@@ -27,6 +27,23 @@ function calculateMD5(content: string) {
     return createHash('md5').update(content).digest('base64')
 }
 
+function getHost(
+    bucketName: string,
+    provider: UpupProvider,
+    { endpoint, region }: Pick<S3ClientConfig, 'endpoint' | 'region'>,
+) {
+    switch (provider) {
+        case UpupProvider.AWS:
+            return `${bucketName}.s3.${region}.amazonaws.com`
+        case UpupProvider.BackBlaze:
+            return (endpoint as string).split('https://')[1]
+        case UpupProvider.DigitalOcean:
+            return `${bucketName}.${region}.digitaloceanspaces.com`
+        default:
+            return ''
+    }
+}
+
 export default function awsGenerateSignatureHeaders(
     corsConfig: string,
     bucketName: string,
@@ -40,13 +57,7 @@ export default function awsGenerateSignatureHeaders(
     provider: UpupProvider,
 ) {
     const service = 's3'
-    const hostMap = {
-        [UpupProvider.AWS]: `${bucketName}.s3.${region}.amazonaws.com`,
-        [UpupProvider.BackBlaze]: (endpoint as string).split('https://')[1],
-        [UpupProvider.DigitalOcean]: `${bucketName}.${region}.digitaloceanspaces.com`,
-        [UpupProvider.Azure]: ``,
-    }
-    const host = hostMap[provider]
+    const host = getHost(bucketName, provider, { endpoint, region })
 
     // Calculate Content-MD5
     const contentMD5 = calculateMD5(corsConfig)
