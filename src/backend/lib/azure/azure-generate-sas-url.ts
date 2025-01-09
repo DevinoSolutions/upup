@@ -13,6 +13,7 @@ import {
 import { AzureSasUrlParams } from '../../types'
 import fileValidateParams from '../files/file-validate-params'
 import azureGetTemporaryCredentials from './azure-get-temporary-credentials'
+import { v4 as uuid } from 'uuid'
 
 export default async function azureGenerateSasUrl({
     fileParams,
@@ -42,7 +43,7 @@ export default async function azureGenerateSasUrl({
             await azureGetTemporaryCredentials(blobServiceClient)
 
         const { name: fileName, type: contentType } = fileParams
-        const blobName = `uploads/${Date.now()}-${fileName}`
+        const blobName = `${uuid()}-${fileName}`
 
         // Get container client
         const containerClient =
