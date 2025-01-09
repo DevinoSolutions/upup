@@ -1,11 +1,16 @@
-import React, { Dispatch, SetStateAction, useEffect, useState } from 'react'
+import React, {
+    Dispatch,
+    ReactElement,
+    SetStateAction,
+    useEffect,
+    useState,
+} from 'react'
 import ListItem from '../../UpupUploader/FileBrowser/LiOD'
 
 import { Client } from '@microsoft/microsoft-graph-client'
 import { AnimatePresence, motion } from 'framer-motion'
 import { MicrosoftUser, OneDriveFile, OneDriveRoot } from 'microsoft'
 import { TbSearch } from 'react-icons/tb'
-import { useDebouncedCallback } from 'use-debounce'
 import ButtonSpinner from '../../ButtonSpinner'
 
 type Props = {
@@ -17,6 +22,7 @@ type Props = {
     setView: (view: string) => void
     accept?: string
     graphClient: Client | null
+    loader?: ReactElement | null
 }
 
 const FileBrowser = ({
@@ -27,94 +33,95 @@ const FileBrowser = ({
     setView,
     accept,
     graphClient,
+    loader,
 }: Props) => {
+    const [isClickLoading, setIsClickLoading] = useState<boolean | undefined>()
     const [path, setPath] = useState<OneDriveRoot[]>([])
     const [selectedFiles, setSelectedFiles] = useState<OneDriveFile[]>([])
     const [showLoader, setLoader] = useState(false)
     const [downloadProgress, setDownloadProgress] = useState<number>(0)
 
-    const handleClick = useDebouncedCallback(async (file: OneDriveFile) => {
+    const fetchFolderContents = async (file: OneDriveFile) => {
+        try {
+            const response = await graphClient
+                ?.api(`/me/drive/items/${file.id}/children`)
+                .select(
+                    'id,name,folder,file,thumbnails,@microsoft.graph.downloadUrl',
+                )
+                .expand('thumbnails')
+                .get()
+
+            const files = response.value.map((item: any) => ({
+                id: item.id,
+                name: item.name,
+                isFolder: !!item.folder,
+                children: item.folder ? [] : undefined,
+                thumbnails: item.thumbnails?.[0] || null,
+                '@microsoft.graph.downloadUrl':
+                    item['@microsoft.graph.downloadUrl'],
+                file: item.file,
+            }))
+
+            setPath(prevPath => [...prevPath, { ...file, children: files }])
+        } catch (error) {
+            console.error('Error fetching folder contents:', error)
+        }
+    }
+
+    const fetchFile = async (file: OneDriveFile) => {
+        try {
+            const fileInfo = await graphClient
+                ?.api(`/me/drive/items/${file.id}`)
+                .select('id,name,file,thumbnails,@microsoft.graph.downloadUrl')
+                .get()
+
+            if (!fileInfo['@microsoft.graph.downloadUrl']) {
+                const permission = await graphClient
+                    ?.api(`/me/drive/items/${file.id}/createLink`)
+                    .post({
+                        type: 'view',
+                        scope: 'anonymous',
+                    })
+
+                // Convert the sharing URL to a direct download URL
+                const shareUrl = permission.link.webUrl
+                const downloadUrl = shareUrl.replace('redir?', 'download?')
+                fileInfo['@microsoft.graph.downloadUrl'] = downloadUrl
+            }
+
+            const updatedFile: OneDriveFile = {
+                ...file,
+                '@microsoft.graph.downloadUrl':
+                    fileInfo['@microsoft.graph.downloadUrl'],
+                thumbnails: fileInfo.thumbnails?.[0] || null,
+                file: fileInfo.file,
+            }
+
+            setSelectedFiles(prevFiles => {
+                const newFiles = prevFiles.filter(f => f.id === file.id).length
+                    ? prevFiles.filter(f => f.id !== file.id)
+                    : [...prevFiles, updatedFile]
+                return newFiles
+            })
+        } catch (error) {
+            console.error(
+                `Error fetching file information for ${file.name}:`,
+                error,
+            )
+        }
+    }
+
+    const handleClick = async (file: OneDriveFile) => {
+        setIsClickLoading(true)
         if (!graphClient) {
             console.error('Graph client not initialized')
             return
         }
 
-        if (file.isFolder) {
-            const fetchFolderContents = async () => {
-                try {
-                    const response = await graphClient
-                        .api(`/me/drive/items/${file.id}/children`)
-                        .select(
-                            'id,name,folder,file,thumbnails,@microsoft.graph.downloadUrl',
-                        )
-                        .expand('thumbnails')
-                        .get()
-
-                    const files = response.value.map((item: any) => ({
-                        id: item.id,
-                        name: item.name,
-                        isFolder: !!item.folder,
-                        children: item.folder ? [] : undefined,
-                        thumbnails: item.thumbnails?.[0] || null,
-                        '@microsoft.graph.downloadUrl':
-                            item['@microsoft.graph.downloadUrl'],
-                        file: item.file,
-                    }))
-
-                    setPath(prevPath => [
-                        ...prevPath,
-                        { ...file, children: files },
-                    ])
-                } catch (error) {
-                    console.error('Error fetching folder contents:', error)
-                }
-            }
-            fetchFolderContents()
-        } else {
-            try {
-                const fileInfo = await graphClient
-                    .api(`/me/drive/items/${file.id}`)
-                    .select(
-                        'id,name,file,thumbnails,@microsoft.graph.downloadUrl',
-                    )
-                    .get()
-
-                if (!fileInfo['@microsoft.graph.downloadUrl']) {
-                    const permission = await graphClient
-                        .api(`/me/drive/items/${file.id}/createLink`)
-                        .post({
-                            type: 'view',
-                            scope: 'anonymous',
-                        })
-
-                    // Convert the sharing URL to a direct download URL
-                    const shareUrl = permission.link.webUrl
-                    const downloadUrl = shareUrl.replace('redir?', 'download?')
-                    fileInfo['@microsoft.graph.downloadUrl'] = downloadUrl
-                }
-
-                const updatedFile: OneDriveFile = {
-                    ...file,
-                    '@microsoft.graph.downloadUrl':
-                        fileInfo['@microsoft.graph.downloadUrl'],
-                    thumbnails: fileInfo.thumbnails?.[0] || null,
-                    file: fileInfo.file,
-                }
-
-                setSelectedFiles(prevFiles => {
-                    const newFiles = prevFiles.includes(file)
-                        ? prevFiles.filter(f => f.id !== file.id)
-                        : [...prevFiles, updatedFile]
-                    return newFiles
-                })
-            } catch (error) {
-                console.error(
-                    `Error fetching file information for ${file.name}:`,
-                    error,
-                )
-            }
-        }
-    }, 500)
+        if (file.isFolder) await fetchFolderContents(file)
+        else fetchFile(file)
+        setIsClickLoading(false)
+    }
 
     const getDownloadUrl = async (file: OneDriveFile, graphClient: Client) => {
         // First try to get direct download URL
@@ -255,6 +262,8 @@ const FileBrowser = ({
     useEffect(() => {
         if (driveFiles) setPath([driveFiles])
     }, [driveFiles])
+
+    if (isClickLoading) return loader || <div>Loading...</div>
 
     return (
         <div className="grid h-[min(98svh,32rem)] w-full grid-rows-[auto,auto,1fr,auto] bg-white ">

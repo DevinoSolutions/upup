@@ -72,6 +72,18 @@ const createFileWithId = (file: File) => {
     })
 }
 
+function getUniqueFilesByName(files: File[]) {
+    const uniqueFiles = new Map()
+
+    files.forEach(file => {
+        if (!uniqueFiles.has(file.name)) {
+            uniqueFiles.set(file.name, file)
+        }
+    })
+
+    return Array.from(uniqueFiles.values())
+}
+
 /**
  *
  * @param storageConfig storage configuration
@@ -359,7 +371,7 @@ export const UpupUploader: FC<
         }
 
         useEffect(() => {
-            const newFiles = selectedFiles.filter(file =>
+            const newFiles = getUniqueFilesByName(selectedFiles).filter(file =>
                 checkFileSize(file, maxFileSize),
             )
             if (limit && newFiles.length > limit)

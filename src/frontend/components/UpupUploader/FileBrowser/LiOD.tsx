@@ -1,7 +1,7 @@
-import { AnimationProps, HoverHandlers, motion } from 'framer-motion'
+import { AnimationProps, motion } from 'framer-motion'
 import { OneDriveFile } from 'microsoft'
 import React from 'react'
-import { TbFile, TbFolder } from 'react-icons/tb'
+import { TbFile } from 'react-icons/tb'
 import { handleImgError } from '../../../lib/handleImgError'
 
 const backgroundColors = {
@@ -18,25 +18,10 @@ type Props = {
     accept?: string
 }
 
-const ListItem = ({
-    file,
-    handleClick,
-    index,
-    selectedFiles,
-    accept,
-}: Props) => {
-    const isFolder = file.isFolder
-    const isFileSelected = selectedFiles.includes(file)
-    const isFileAccepted =
-        accept && accept !== '*' && !isFolder
-            ? accept.includes(file.name.split('.').pop()!)
-            : true
+function getIcon(isFolder: boolean, file: Props['file']) {
+    if (isFolder) return isFolder
 
-    if (accept && !isFolder && !isFileAccepted) return null
-
-    const icon = isFolder ? (
-        <TbFolder />
-    ) : file.thumbnails ? (
+    return file.thumbnails ? (
         <img
             src={file.thumbnails.small.url}
             alt={file.name}
@@ -46,11 +31,27 @@ const ListItem = ({
     ) : (
         <TbFile />
     )
+}
 
-    const backgroundColor = {
-        ...(isFileSelected && { backgroundColor: backgroundColors.selected }),
-        ...(!isFileSelected && { backgroundColor: backgroundColors.default }),
-    }
+const ListItem = ({
+    file,
+    handleClick,
+    index,
+    selectedFiles,
+    accept,
+}: Props) => {
+    const isFolder = file.isFolder
+    const isFileSelected = selectedFiles.filter(f => f.id === file.id).length
+    const isFileAccepted =
+        accept && accept !== '*' && !isFolder
+            ? accept.includes(file.name.split('.').pop()!)
+            : true
+
+    const icon = getIcon(isFolder, file)
+
+    const backgroundColor = isFileSelected
+        ? backgroundColors.selected
+        : backgroundColors.default
 
     const transition: AnimationProps['transition'] = {
         type: 'spring',
@@ -60,44 +61,29 @@ const ListItem = ({
         y: { delay: index * 0.05 },
     }
 
-    const initial: AnimationProps['initial'] = {
-        opacity: 0,
-        y: 10,
-        ...backgroundColor,
-    }
-
-    const animate: AnimationProps['animate'] = {
-        opacity: 1,
-        y: 0,
-        ...backgroundColor,
-        transition,
-    }
-
-    const backgroundColorHover = {
-        ...(isFileSelected && {
-            backgroundColor: backgroundColors.selected,
-        }),
-        ...(!isFileSelected && {
-            backgroundColor: backgroundColors.hover,
-        }),
-    }
-
-    const hover: HoverHandlers['whileHover'] = {
-        opacity: 1,
-        y: 0,
-        ...backgroundColorHover,
-        transition,
-    }
-
-    const exit: AnimationProps['exit'] = { opacity: 0, y: 10, transition }
+    if (accept && !isFolder && !isFileAccepted) return null
 
     return (
         <motion.div
             key={file.id}
-            initial={initial}
-            animate={animate}
-            whileHover={hover}
-            exit={exit}
+            initial={{
+                opacity: 0,
+                y: 10,
+                backgroundColor,
+            }}
+            animate={{
+                opacity: 1,
+                y: 0,
+                backgroundColor,
+                transition,
+            }}
+            whileHover={{
+                opacity: 1,
+                y: 0,
+                backgroundColor,
+                transition,
+            }}
+            exit={{ opacity: 0, y: 10, transition }}
             transition={transition}
             className={`mb-1 flex cursor-pointer items-center justify-between gap-2 rounded-md p-1 py-2 ${
                 isFolder ? 'font-medium' : ''
