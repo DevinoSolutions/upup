@@ -25,6 +25,10 @@ import {
     TbFileTypeZip,
 } from 'react-icons/tb'
 
+type Props = {
+    extension?: string
+} & SVGAttributes<SVGSVGElement>
+
 type IconType = (props: SVGProps<SVGSVGElement>) => JSX.Element
 
 const fileTypes: { [key: string]: IconType } = {
@@ -51,10 +55,6 @@ const fileTypes: { [key: string]: IconType } = {
     xml: TbFileTypeXml,
     zip: TbFileTypeZip,
 }
-
-type Props = {
-    extension?: string
-} & SVGAttributes<SVGSVGElement>
 
 export default forwardRef<SVGSVGElement, Props>(function FileIcon(
     { extension = '', className },

@@ -1,9 +1,9 @@
-import { BaseConfigs } from '../types/BaseConfigs'
+import { UpupUploaderProps } from '../types'
 
 export default function checkFileType(
     accept: string,
     file: File,
-    onFileTypeMismatch?: BaseConfigs['onFileTypeMismatch'],
+    onFileTypeMismatch?: UpupUploaderProps['onFileTypeMismatch'],
 ) {
     const fileType = file.type
     const acceptedTypes = accept.split(',').map(t => t.trim())

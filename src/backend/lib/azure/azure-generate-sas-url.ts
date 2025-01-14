@@ -5,15 +5,15 @@ import {
     SASProtocol,
     generateBlobSASQueryParameters,
 } from '@azure/storage-blob'
+import { v4 as uuid } from 'uuid'
 import {
     PresignedUrlResponse,
     UploadError,
     UploadErrorType,
-} from '../../../shared/types/StorageSDK'
+} from '../../../shared/types'
 import { AzureSasUrlParams } from '../../types'
 import fileValidateParams from '../files/file-validate-params'
 import azureGetTemporaryCredentials from './azure-get-temporary-credentials'
-import { v4 as uuid } from 'uuid'
 
 export default async function azureGenerateSasUrl({
     fileParams,

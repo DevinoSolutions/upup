@@ -1,15 +1,15 @@
 import { PutObjectCommand, S3Client, _Error } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
+import { v4 as uuid } from 'uuid'
 import {
     PresignedUrlResponse,
     UploadError,
     UploadErrorType,
-} from '../../../../shared/types/StorageSDK'
+} from '../../../../shared/types'
 import { S3PresignedUrlParams } from '../../../types'
 import fileValidateParams from '../../files/file-validate-params'
 import s3GenerateSignedUrl from './s3-generate-signed-url'
 import s3UpdateCORS from './s3-update-cors'
-import { v4 as uuid } from 'uuid'
 
 const DEFAULT_EXPIRES_IN = 3600
 

@@ -1,9 +1,6 @@
 import { GetObjectCommand, S3Client, S3ClientConfig } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
-import {
-    UploadError,
-    UploadErrorType,
-} from '../../../../shared/types/StorageSDK'
+import { UploadError, UploadErrorType } from '../../../../shared/types'
 
 const DEFAULT_URL_VALID_TIME = 3600 * 24 * 3 // 3 days
 

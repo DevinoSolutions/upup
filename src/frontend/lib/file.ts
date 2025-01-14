@@ -1,4 +1,6 @@
-import { BaseConfigs } from '../types'
+import pako from 'pako'
+import { v4 as uuid } from 'uuid'
+import { UpupUploaderProps } from '../../shared/types'
 
 /**
  * @param bytes assign keyword depend on size
@@ -29,10 +31,34 @@ export const sizeToBytes = (
  */
 export function checkFileSize(
     file: File,
-    maxFileSize: BaseConfigs['maxFileSize'],
+    maxFileSize: UpupUploaderProps['maxFileSize'],
 ) {
     const maxBytes = sizeToBytes(maxFileSize!.size, maxFileSize!.unit)
     if (file.size <= maxBytes) return true
     console.warn('too big!! (what she..)', file.size + ' > ' + maxBytes)
     return false
+}
+
+export const fileAppendId = (file: File) =>
+    Object.assign(file, {
+        id: uuid(),
+    })
+
+export function getUniqueFilesByName(files: File[]) {
+    const uniqueFiles = new Map()
+
+    files.forEach(file => {
+        if (!uniqueFiles.has(file.name)) {
+            uniqueFiles.set(file.name, file)
+        }
+    })
+
+    return Array.from(uniqueFiles.values())
+}
+
+export async function compressFile(file: File) {
+    const buffer: ArrayBuffer = await file.arrayBuffer()
+    return new File([pako.gzip(buffer)], file.name + '.gz', {
+        type: 'application/octet-stream',
+    })
 }

@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react'
  * This hook loads the Google API and the Google Identity Services API
  *
  */
-export const useLoadGAPI = () => {
+export default function useLoadGAPI() {
     const [gisLoaded, setGisLoaded] = useState<boolean>(false)
 
     useEffect(() => {
