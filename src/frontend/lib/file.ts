@@ -35,7 +35,6 @@ export function checkFileSize(
 ) {
     const maxBytes = sizeToBytes(maxFileSize!.size, maxFileSize!.unit)
     if (file.size <= maxBytes) return true
-    console.warn('too big!! (what she..)', file.size + ' > ' + maxBytes)
     return false
 }
 

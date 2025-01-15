@@ -1,3 +1,41 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+    * {
+        @apply transition-all duration-300;
+    }
+}
+
+@layer components {
+    .shadow-wrapper {
+        box-shadow:
+            0px 4px 50px 0px rgba(0, 0, 0, 0.08),
+            0px 4px 6px 0px rgba(0, 0, 0, 0.05);
+    }
+
+    .preview-scroll {
+        /* width */
+        &::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        /* Track */
+        &::-webkit-scrollbar-track {
+            background: #eaeaea;
+            border-radius: 10px;
+        }
+
+        /* Handle */
+        &::-webkit-scrollbar-thumb {
+            background: #c5cafb;
+            border-radius: 10px;
+        }
+
+        /* Handle on hover */
+        &::-webkit-scrollbar-thumb:hover {
+            background: #c5cafb;
+        }
+    }
+}

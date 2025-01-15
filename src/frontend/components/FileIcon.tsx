@@ -57,9 +57,9 @@ const fileTypes: { [key: string]: IconType } = {
 }
 
 export default forwardRef<SVGSVGElement, Props>(function FileIcon(
-    { extension = '', className },
+    { extension = '', ...props },
     ref,
 ) {
     const Component = fileTypes[extension] || TbFile
-    return <Component ref={ref} className={'h-full w-full' + className} />
+    return <Component ref={ref} {...props} />
 })

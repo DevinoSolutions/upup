@@ -5,5 +5,4 @@ export {
     OneDriveConfigs,
     UploadAdapter,
     UpupProvider,
-    UpupUploaderRef,
 } from './shared/types'

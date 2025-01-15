@@ -1,35 +1,18 @@
 import { AnimatePresence, motion } from 'framer-motion'
-import React, { ChangeEventHandler } from 'react'
+import React from 'react'
 import { UploadAdapter } from '../../shared/types'
 import { useRootContext } from '../context/RootContext'
 import { uploadAdapterObject } from '../lib/constants'
 
 export default function UploadAdapterView() {
     const {
-        inputRef,
-        setFiles,
         view,
         setView,
-        props: { accept, multiple, mini },
+        props: { mini },
     } = useRootContext()
     const UploadComponent = uploadAdapterObject[view].Component
 
-    const handleInputFileChange: ChangeEventHandler<HTMLInputElement> = e => {
-        setFiles(Array.from(e.currentTarget.files || []))
-        e.currentTarget.value = ''
-    }
-
-    if (!UploadComponent || mini)
-        return (
-            <input
-                type="file"
-                accept={accept}
-                className="absolute h-0 w-0"
-                ref={inputRef}
-                multiple={mini ? false : multiple}
-                onChange={handleInputFileChange}
-            />
-        )
+    if (!UploadComponent || mini) return null
 
     return (
         <AnimatePresence>

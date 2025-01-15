@@ -9,7 +9,9 @@ import React, {
 import { TbX } from 'react-icons/tb'
 import { useRootContext } from '../context/RootContext'
 import { bytesToSize } from '../lib/file'
+import FileIcon from './FileIcon'
 import FilePreview from './FilePreview'
+import ShouldRender from './shared/ShouldRender'
 
 type Props = {
     file: File
@@ -22,10 +24,16 @@ export default memo(
         ref,
     ) {
         const {
-            props: { multiple, mini },
             handleFileRemove,
+            upload: { filesProgressMap },
         } = useRootContext()
         const [objectUrl, setObjectUrl] = useState<string>('')
+        const extension = file.name.split('.').pop()?.toLowerCase()
+
+        const onHandleFileRemove: MouseEventHandler<HTMLButtonElement> = e => {
+            e.stopPropagation()
+            handleFileRemove(file)
+        }
 
         useEffect(() => {
             // Create the object URL when the file changes
@@ -37,52 +45,64 @@ export default memo(
                 if (url) URL.revokeObjectURL(url)
             }
         }, [file])
-
-        const onHandleFileRemove: MouseEventHandler<HTMLButtonElement> = e => {
-            e.stopPropagation()
-            handleFileRemove(file)
-        }
+        const progress = Math.floor(
+            (filesProgressMap[file.name]?.loaded /
+                filesProgressMap[file.name]?.total) *
+                100,
+        )
 
         if (!objectUrl) return null
 
         return (
             <div
                 ref={ref}
-                className="relative flex h-full max-h-fit w-full flex-col items-start dark:bg-[#1f1f1f] dark:text-[#fafafa]"
+                className="flex flex-col gap-2 rounded-xl border border-[#E7E7E7] p-4 lg:gap-[10px]"
                 {...restProps}
             >
-                <div
-                    className={
-                        'relative w-full cursor-pointer rounded-md object-cover shadow hover:bg-[#e9ecef] hover:text-[#1f1f1f] hover:shadow-xl active:bg-[#dfe6f1] ' +
-                        (multiple ? 'h-40' : 'h-[90%]')
-                    }
-                >
-                    <FilePreview file={file} objectUrl={objectUrl} />
-                </div>
-                {!mini && (
-                    <div className="relative mt-1 w-full">
-                        <div className="w-full pr-6">
-                            <div className="w-full overflow-hidden">
-                                <p
-                                    className="overflow-hidden text-ellipsis whitespace-nowrap text-xs font-medium"
-                                    title={file.name}
-                                >
-                                    {file.name}
-                                </p>
-                                <p className="text-[10px] font-medium text-gray-500">
-                                    {bytesToSize(file.size)}
-                                </p>
-                            </div>
+                <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                        <div className="aspect-square h-full flex-shrink-0">
+                            <FileIcon
+                                extension={extension}
+                                className="text-3xl text-blue-600"
+                            />
+                        </div>
+                        <div>
+                            <p className="text-xs font-semibold text-[#0B0B0B]">
+                                {file.name}
+                            </p>
+                            <p className="text-xs text-[#6D6D6D]">
+                                {bytesToSize(file.size)}
+                            </p>
+                            <FilePreview file={file} objectUrl={objectUrl} />
                         </div>
                     </div>
-                )}
-                <button
-                    className="absolute -right-1 -top-1 z-10 rounded-full bg-black p-0.5"
-                    onClick={onHandleFileRemove}
-                    type="button"
-                >
-                    <TbX className="h-4 w-4 text-white" />
-                </button>
+                    <button
+                        className="rounded-full border border-[#858585] bg-gray-300 p-0.5"
+                        onClick={onHandleFileRemove}
+                        type="button"
+                        disabled={!!progress}
+                    >
+                        <TbX className="h-4 w-4 text-[#858585]" />
+                    </button>
+                </div>
+                <ShouldRender if={!!progress}>
+                    <div className="flex items-center justify-between gap-[12px]">
+                        <div className="h-[6px] flex-1 rounded-[4px] bg-[#F5F5F5]">
+                            <div
+                                className="h-full rounded-[4px]"
+                                style={{
+                                    width: progress + '%',
+                                    background:
+                                        progress == 100 ? '#8EA5E7' : '#C5CAFB',
+                                }}
+                            />
+                        </div>
+                        <span className="text-xs text-[#353535]">
+                            {progress}%
+                        </span>
+                    </div>
+                </ShouldRender>
             </div>
         )
     }),

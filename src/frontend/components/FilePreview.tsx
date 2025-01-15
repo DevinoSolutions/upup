@@ -31,32 +31,15 @@ export default function FilePreview({
     )
 
     // Show a simple thumbnail by default
-    if (!showPreview) {
+    if (!showPreview)
         return (
-            <div className="relative h-full w-full cursor-pointer bg-white dark:bg-gray-800">
-                <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 p-4">
-                    <FileIcon
-                        extension={extension}
-                        className="h-12 w-12 text-blue-600"
-                    />
-                    <div className="w-full px-2">
-                        <p
-                            className="overflow-hidden text-ellipsis whitespace-nowrap text-center text-sm text-gray-600 dark:text-gray-300"
-                            title={file.name}
-                        >
-                            {file.name}
-                        </p>
-                    </div>
-                    <span
-                        className="text-xs text-gray-500"
-                        onClick={handleShowPreview}
-                    >
-                        Click to preview
-                    </span>
-                </div>
-            </div>
+            <button
+                className="cursor-pointer text-xs text-blue-600"
+                onClick={handleShowPreview}
+            >
+                Click to preview
+            </button>
         )
-    }
 
     // Show full preview in a portal when clicked
     return createPortal(

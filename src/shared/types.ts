@@ -32,11 +32,6 @@ export type MaxFileSizeObject = {
     unit: 'B' | 'KB' | 'MB' | 'GB' | 'TB' | 'PB' | 'EB' | 'ZB' | 'YB'
 }
 
-export type UpupUploaderRef = {
-    uploadFiles: () => Promise<string[]>
-    dynamicUploadFiles: (files: File[]) => Promise<string[]>
-}
-
 export type UpupUploaderProps = {
     loader?: any
 
@@ -52,7 +47,6 @@ export type UpupUploaderProps = {
     limit?: number
     mini?: boolean
     maxFileSize?: MaxFileSizeObject
-    customMessage?: string
 
     // Event Handlers
     onFilesSelected?: (files: File[]) => void
