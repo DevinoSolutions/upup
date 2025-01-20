@@ -2,12 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-    * {
-        @apply transition-all duration-300;
-    }
-}
-
 @layer components {
     .shadow-wrapper {
         box-shadow:

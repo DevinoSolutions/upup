@@ -1,10 +1,9 @@
 import React, { FormEventHandler, useState } from 'react'
-import { UploadAdapter } from '../../shared/types'
 import { useRootContext } from '../context/RootContext'
 import useFetchFileByUrl from '../hooks/useFetchFileByUrl'
 
 export default function UrlUploader() {
-    const { setFiles, setView } = useRootContext()
+    const { setFiles, setActiveAdapter } = useRootContext()
     const [url, setUrl] = useState('')
     const { error, loading, fetchImage } = useFetchFileByUrl()
 
@@ -14,7 +13,7 @@ export default function UrlUploader() {
         if (file) {
             setFiles([file])
             setUrl('')
-            setView(UploadAdapter.INTERNAL)
+            setActiveAdapter(undefined)
         }
     }
 

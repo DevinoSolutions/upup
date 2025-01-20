@@ -1,4 +1,3 @@
-import { motion } from 'framer-motion'
 import React from 'react'
 import { TbCameraRotate, TbCapture, TbX } from 'react-icons/tb'
 import Webcam from 'react-webcam'
@@ -18,23 +17,13 @@ export default function CameraUploader() {
     } = useCameraUploader()
 
     return (
-        <div className="grid w-[94%] grid-rows-[1fr,auto] justify-center">
-            <div className="relative">
+        <div className="flex h-full w-full flex-col justify-center overflow-auto px-3 py-2">
+            <div className="relative flex-1 pt-10">
                 <ShouldRender if={!!url}>
                     <img
                         src={url}
-                        className="absolute rounded-xl border-2 border-[#272727]"
+                        className="aspect-video rounded-xl border-2 border-[#272727]"
                     />
-                </ShouldRender>
-                <Webcam
-                    audio={false}
-                    ref={webcamRef}
-                    screenshotFormat="image/jpeg"
-                    videoConstraints={{ facingMode }}
-                    className="h-max max-h-[24rem] rounded-xl"
-                />
-
-                <ShouldRender if={!!url}>
                     <button
                         onClick={clearUrl}
                         className="absolute -right-2 -top-2 z-10 rounded-full bg-[#272727] p-1 text-xl text-[#f5f5f5]"
@@ -42,11 +31,15 @@ export default function CameraUploader() {
                     >
                         <TbX />
                     </button>
-                    <motion.div
-                        initial={{ opacity: 1 }}
-                        animate={{ opacity: 0 }}
-                        transition={{ duration: 0.5 }}
-                        className="absolute inset-0 rounded-xl bg-white"
+                </ShouldRender>
+
+                <ShouldRender if={!url}>
+                    <Webcam
+                        audio={false}
+                        ref={webcamRef}
+                        screenshotFormat="image/jpeg"
+                        videoConstraints={{ facingMode }}
+                        className="aspect-video rounded-xl"
                     />
                 </ShouldRender>
             </div>
@@ -79,7 +72,7 @@ export default function CameraUploader() {
                         onClick={handleFetchImage}
                         type="button"
                     >
-                        Upload
+                        Add Image
                     </button>
                 </ShouldRender>
             </div>

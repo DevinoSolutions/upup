@@ -2,7 +2,6 @@ import { Root, User } from 'google'
 import { MicrosoftUser, OneDriveRoot } from 'microsoft'
 import React, { Dispatch, SetStateAction } from 'react'
 import { TbSearch } from 'react-icons/tb'
-import { UploadAdapter } from '../../../shared/types'
 import { useRootContext } from '../../context/RootContext'
 import ShouldRender from './ShouldRender'
 
@@ -21,7 +20,7 @@ export default function DriveBrowserHeader({
     user,
     handleSignOut,
 }: Props) {
-    const { setView } = useRootContext()
+    const { setActiveAdapter } = useRootContext()
 
     return (
         <>
@@ -62,7 +61,7 @@ export default function DriveBrowserHeader({
                         onClick={() => {
                             if (user) {
                                 handleSignOut()
-                                setView(UploadAdapter.INTERNAL)
+                                setActiveAdapter(undefined)
                             }
                         }}
                     >

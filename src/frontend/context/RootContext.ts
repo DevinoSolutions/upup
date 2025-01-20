@@ -28,11 +28,14 @@ type UploadProps = {
 
 interface IRootContext {
     inputRef: RefObject<HTMLInputElement>
-    view: UploadAdapter
-    setView: Dispatch<SetStateAction<UploadAdapter>>
+    activeAdapter?: UploadAdapter
+    setActiveAdapter: Dispatch<SetStateAction<UploadAdapter | undefined>>
 
     files: File[]
     setFiles: (newFiles: File[], reset?: boolean) => void
+
+    isAddingMore: boolean
+    setIsAddingMore: Dispatch<SetStateAction<boolean>>
 
     handleFileRemove: (file: FileWithId) => void
 

@@ -69,6 +69,9 @@ importers:
       react-webcam:
         specifier: ^7.2.0
         version: 7.2.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      truncate:
+        specifier: ^3.0.0
+        version: 3.0.0
       use-debounce:
         specifier: ^10.0.4
         version: 10.0.4(react@18.3.1)
@@ -8217,6 +8220,9 @@ packages:
   trough@2.2.0:
     resolution: {integrity: sha512-tmMpK00BjZiUyVyvrBK7knerNgmgvcV/KLVyuma/SC+TQN167GrMRciANTz09+k3zW8L8t60jWO1GpfkZdjTaw==}
 
+  truncate@3.0.0:
+    resolution: {integrity: sha512-C+0Xojw7wZPl6MDq5UjMTuxZvBPK04mtdFet7k+GSZPINcvLZFCXg+15kWIL4wAqDB7CksIsKiRLbQ1wa7rKdw==}
+
   ts-api-utils@1.4.3:
     resolution: {integrity: sha512-i3eMG77UTMD0hZhgRS562pv83RC6ukSAC2GMNWc+9dieh/+jDM5u5YG+NHX6VNDRHQcHwmsTHctP9LhbC3WxVw==}
     engines: {node: '>=16'}
@@ -10767,7 +10773,10 @@ snapshots:
       jest-runner: 25.5.4
       jest-runtime: 25.5.4
     transitivePeerDependencies:
+      - bufferutil
+      - canvas
       - supports-color
+      - utf-8-validate
 
   '@jest/transform@25.5.1':
     dependencies:
@@ -19040,6 +19049,8 @@ snapshots:
       punycode: 2.3.1
 
   trough@2.2.0: {}
+
+  truncate@3.0.0: {}
 
   ts-api-utils@1.4.3(typescript@5.7.2):
     dependencies:

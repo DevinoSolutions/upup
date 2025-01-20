@@ -3,7 +3,6 @@ import { GoogleFile, Root, User } from 'google'
 import { MicrosoftUser, OneDriveFile, OneDriveRoot } from 'microsoft'
 import React, { Dispatch, SetStateAction, useEffect } from 'react'
 import { useRootContext } from '../../context/RootContext'
-import ButtonSpinner from '../ButtonSpinner'
 import DriveBrowserHeader from './DriveBrowserHeader'
 import DriveBrowserItem from './DriveBrowserItem'
 import ShouldRender from './ShouldRender'
@@ -50,7 +49,7 @@ export default function DriveBrowser({
 
     return (
         <ShouldRender if={true} isLoading={isClickLoading || !driveFiles}>
-            <div className="grid h-[min(98svh,32rem)] w-full grid-rows-[auto,auto,1fr,auto] bg-white ">
+            <div className="grid h-full w-full grid-rows-[auto,1fr,auto] overflow-auto bg-white ">
                 <DriveBrowserHeader path={path} setPath={setPath} {...rest} />
 
                 <div className="h-full overflow-scroll overflow-y-scroll bg-white pt-2 dark:bg-[#1f1f1f] dark:text-[#fafafa]">
@@ -84,41 +83,35 @@ export default function DriveBrowser({
                     </ShouldRender>
                 </div>
 
-                <AnimatePresence>
-                    <ShouldRender if={selectedFiles.length > 0}>
+                <ShouldRender if={selectedFiles.length > 0}>
+                    <AnimatePresence>
                         <motion.div
                             initial={{ y: '100%', height: 0 }}
                             animate={{ y: '0%', height: 'auto' }}
                             exit={{ y: '100%', height: 0 }}
                             transition={{ duration: 0.2 }}
-                            className="flex origin-bottom items-center justify-start gap-4 border-t bg-white p-4 py-2 dark:bg-[#1f1f1f] dark:text-[#fafafa]"
+                            className="flex origin-bottom items-center justify-start gap-4 border-t border-[#e0e0e0] bg-[#fafafa] px-3 py-2 dark:bg-[#1f1f1f] dark:text-[#fafafa]"
                         >
-                            <ShouldRender if={!showLoader}>
-                                <button
-                                    className="w-32 rounded-md bg-blue-500 p-3 font-medium text-white transition-all duration-300 hover:bg-blue-600 active:bg-blue-700"
-                                    onClick={handleSubmit}
-                                >
-                                    Add {selectedFiles.length} files
-                                </button>
-                            </ShouldRender>
-                            <ShouldRender if={!!showLoader}>
-                                <div className="flex items-center gap-4">
-                                    <ButtonSpinner />
-                                    <span className="text-sm">
-                                        Downloading... {downloadProgress}%
-                                    </span>
-                                </div>
-                            </ShouldRender>
                             <button
-                                className="hover:underline"
+                                className={`rounded-md bg-blue-500 px-3 py-2 text-sm font-medium text-white transition-all duration-300 hover:bg-blue-600 active:bg-blue-700 ${
+                                    showLoader ? 'animate-pulse' : ''
+                                }`}
+                                onClick={handleSubmit}
+                                disabled={showLoader}
+                            >
+                                Add {selectedFiles.length} file
+                                {selectedFiles.length > 1 ? 's' : ''}
+                            </button>
+                            <button
+                                className="ml-auto text-sm hover:underline"
                                 onClick={handleCancelDownload}
                                 disabled={showLoader}
                             >
                                 Cancel
                             </button>
                         </motion.div>
-                    </ShouldRender>
-                </AnimatePresence>
+                    </AnimatePresence>
+                </ShouldRender>
             </div>
         </ShouldRender>
     )

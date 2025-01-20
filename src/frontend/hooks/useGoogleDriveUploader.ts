@@ -1,6 +1,5 @@
 import { GoogleFile, Root, Token } from 'google'
 import { useState } from 'react'
-import { UploadAdapter } from '../../shared/types'
 import { useRootContext } from '../context/RootContext'
 
 function handleSelectedFilesUpdate(prevFiles: GoogleFile[], file: GoogleFile) {
@@ -13,7 +12,7 @@ export default function useGoogleDriveUploader(token?: Token) {
     const {
         props: { onError },
         googleDriveConfigs,
-        setView,
+        setActiveAdapter,
         setFiles,
     } = useRootContext()
     const [path, setPath] = useState<Root[]>([])
@@ -84,7 +83,7 @@ export default function useGoogleDriveUploader(token?: Token) {
 
             // Clear selection and return to internal view
             setSelectedFiles([])
-            setView(UploadAdapter.INTERNAL)
+            setActiveAdapter(undefined)
         } catch (error) {
             onError('Error processing files:' + error)
         } finally {

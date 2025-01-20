@@ -51,8 +51,9 @@ export default function useRootProvider({
     driveConfigs,
 }: UpupUploaderProps) {
     const inputRef = useRef<HTMLInputElement>(null)
+    const [isAddingMore, setIsAddingMore] = useState(false)
     const [selectedFiles, setSelectedFiles] = useState<File[]>([])
-    const [view, setView] = useState(UploadAdapter.INTERNAL)
+    const [activeAdapter, setActiveAdapter] = useState<UploadAdapter>()
     const limit = mini ? 1 : propLimit
     const multiple = mini ? false : limit > 1
     const [isUploading, setIsUploading] = useState(false)
@@ -182,6 +183,8 @@ export default function useRootProvider({
                       )
                     : [filesWithIds[0]],
             )
+
+        setIsAddingMore(false)
     }
 
     const handleFileRemove = (file: FileWithId) => {
@@ -191,8 +194,10 @@ export default function useRootProvider({
 
     return {
         inputRef,
-        view,
-        setView,
+        activeAdapter,
+        setActiveAdapter,
+        isAddingMore,
+        setIsAddingMore,
         files: selectedFiles,
         setFiles: handleSetSelectedFiles,
         handleFileRemove,
