@@ -54,6 +54,12 @@ export default async function s3GeneratePresignedUrl({
             Key,
             ContentType,
             ContentLength,
+            // Enable multipart upload support
+            ChecksumAlgorithm: 'SHA256',
+            // Add custom metadata to track upload status
+            Metadata: {
+                'x-amz-resume-enabled': 'true',
+            },
         })
 
         // Generate presigned URL
@@ -63,7 +69,12 @@ export default async function s3GeneratePresignedUrl({
         })
 
         // Generate public URL (if bucket is public)
-        const publicUrl = await s3GenerateSignedUrl(s3ClientConfig, Key, Bucket)
+        const publicUrl = await s3GenerateSignedUrl(
+            s3ClientConfig,
+            Key,
+            Bucket,
+            expiresIn,
+        )
 
         return {
             key: Key,

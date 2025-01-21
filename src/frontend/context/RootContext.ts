@@ -8,25 +8,35 @@ import {
 } from 'react'
 import {
     GoogleDriveConfigs,
-    MaxFileSizeObject,
     OneDriveConfigs,
     UploadAdapter,
     UpupUploaderProps,
 } from '../../shared/types'
-import { FilesProgressMap } from '../hooks/useRootProvider'
+import { UploadState } from '../lib/storage/provider'
 
 interface FileWithId extends File {
     id?: string
 }
 
-type UploadProps = {
-    isUploading: boolean
-    totalProgress: number
-    filesProgressMap: FilesProgressMap
-    proceedUpload: () => Promise<string[] | undefined>
+export interface FileUploadState {
+    status: UploadState
+    progress: number
+    error?: string
+    retryCount: number
 }
 
-interface IRootContext {
+type UploadProps = {
+    filesStates: Record<string, FileUploadState>
+    startAllUploads: () => Promise<void>
+    pauseUpload: (fileName: string) => void
+    pauseAllUploads: () => void
+    resumeUpload: (file: File) => void
+    resumeAllUploads: () => Promise<void>
+    retryFailedUpload: (file: File) => void
+    retryAllFailedUploads: () => Promise<void>
+}
+
+export interface IRootContext {
     inputRef: RefObject<HTMLInputElement>
     activeAdapter?: UploadAdapter
     setActiveAdapter: Dispatch<SetStateAction<UploadAdapter | undefined>>
@@ -38,6 +48,7 @@ interface IRootContext {
     setIsAddingMore: Dispatch<SetStateAction<boolean>>
 
     handleFileRemove: (file: FileWithId) => void
+    handleReset: () => void
 
     oneDriveConfigs?: OneDriveConfigs
     googleDriveConfigs?: GoogleDriveConfigs
@@ -45,41 +56,20 @@ interface IRootContext {
     upload: UploadProps
     props: ContextProps
 }
-type ContextProps = Pick<
-    UpupUploaderProps,
-    'provider' | 'tokenEndpoint' | 'onPrepareFiles'
-> & {
-    loader: ReactElement
-
-    onError: (errorMessage: string) => void
-    onIntegrationClick: (integrationType: string) => void
-    onFileClick: (file: File) => void
-    onCancelUpload: (files: File[]) => void
-    onFileDragOver: (files: File[]) => void
-    onFileDragLeave: (files: File[]) => void
-    onFileDrop: (files: File[]) => void
-    onFileTypeMismatch: (file: File, acceptedTypes: string) => void
-    onFileUploadStart: (file: File) => void
-    onFileUploadProgress: (
-        file: File,
-        {
-            loaded,
-            total,
-            percentage,
-        }: { loaded: number; total: number; percentage: number },
-    ) => void
-    onFilesUploadProgress: (completedFiles: number, totalFiles: number) => void
-    onFileUploadComplete: (file: File, key: string) => void
-    onFilesUploadComplete: (keys: string[]) => void
-    uploadAdapters: UploadAdapter[]
-
-    shouldCompress: boolean
-    accept: string
-    maxFileSize: MaxFileSizeObject
-    limit: number
-    multiple: boolean
-    mini: boolean
-}
+type ContextProps = Required<
+    Omit<
+        UpupUploaderProps,
+        | 'loader'
+        | 'driveConfigs'
+        | 'onFilesSelected'
+        | 'onPrepareFiles'
+        | 'onFileRemove'
+    >
+> &
+    Pick<UpupUploaderProps, 'onPrepareFiles'> & {
+        loader: ReactElement
+        multiple: boolean
+    }
 
 const RootContext = createContext<IRootContext>({
     props: {},

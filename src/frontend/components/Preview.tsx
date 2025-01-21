@@ -1,8 +1,9 @@
 import { AnimatePresence, motion } from 'framer-motion'
-import React, { Dispatch, memo, SetStateAction, useState } from 'react'
+import React, { Dispatch, memo, SetStateAction } from 'react'
 import { TbPlus } from 'react-icons/tb'
 import { v4 as uuidv4 } from 'uuid'
 import { useRootContext } from '../context/RootContext'
+import { UploadState } from '../lib/storage/provider'
 import PreviewComponent from './PreviewComponent'
 import ShouldRender from './shared/ShouldRender'
 
@@ -11,26 +12,36 @@ type Props = {
 }
 
 export default memo(function Preview({ onAddMore }: Props) {
-    const [isUploadDone, setIsUploadDone] = useState(false)
     const {
         files,
-        setFiles,
-        upload: { proceedUpload, isUploading },
+        handleReset,
+        upload: {
+            startAllUploads,
+            pauseAllUploads,
+            filesStates,
+            resumeAllUploads,
+        },
     } = useRootContext()
 
-    const handleClearFiles = () => setFiles([], true)
     const handleAddMore = () => onAddMore(true)
-    const handleUpload = async () => {
-        await proceedUpload()
-        setIsUploadDone(true)
-    }
+
+    const showUploadAllButton = !Object.keys(filesStates).length
+    const showPauseAllButton = Object.values(filesStates).some(
+        item => item?.status === UploadState.UPLOADING,
+    )
+    const showResumeAllButton = Object.values(filesStates).some(
+        item => item?.status === UploadState.PAUSED,
+    )
+    const showDoneButton = Object.values(filesStates).every(
+        item => item?.status === UploadState.COMPLETED,
+    )
 
     return (
         <div className="flex h-full flex-col rounded-lg shadow">
             <div className="grid grid-cols-4 items-center justify-between rounded-t-lg border-b border-[#e0e0e0] bg-[#fafafa] px-3 py-2 max-md:grid-rows-2">
                 <button
                     className="max-md p-1 text-left text-sm text-blue-600 max-md:col-start-1 max-md:col-end-3 max-md:row-start-2"
-                    onClick={handleClearFiles}
+                    onClick={handleReset}
                 >
                     Cancel
                 </button>
@@ -58,19 +69,34 @@ export default memo(function Preview({ onAddMore }: Props) {
                 </motion.div>
             </AnimatePresence>
             <div className="rounded-b-lg border-t border-[#e0e0e0] bg-[#fafafa] px-3 py-2">
-                <ShouldRender if={!isUploadDone}>
+                <ShouldRender if={showUploadAllButton}>
                     <button
                         className="ml-auto rounded-lg bg-blue-500 px-3 py-2 text-sm font-medium text-white disabled:animate-pulse"
-                        onClick={handleUpload}
-                        disabled={isUploading}
+                        onClick={startAllUploads}
                     >
                         Upload {files.length} file{files.length > 1 ? 's' : ''}
                     </button>
                 </ShouldRender>
-                <ShouldRender if={!!isUploadDone}>
+                <ShouldRender if={showPauseAllButton}>
                     <button
                         className="ml-auto rounded-lg bg-blue-500 px-3 py-2 text-sm font-medium text-white disabled:animate-pulse"
-                        onClick={handleClearFiles}
+                        onClick={pauseAllUploads}
+                    >
+                        Pause All Uploads
+                    </button>
+                </ShouldRender>
+                <ShouldRender if={showResumeAllButton}>
+                    <button
+                        className="ml-auto rounded-lg bg-blue-500 px-3 py-2 text-sm font-medium text-white disabled:animate-pulse"
+                        onClick={resumeAllUploads}
+                    >
+                        Resume All Uploads
+                    </button>
+                </ShouldRender>
+                <ShouldRender if={showDoneButton}>
+                    <button
+                        className="ml-auto rounded-lg bg-blue-500 px-3 py-2 text-sm font-medium text-white disabled:animate-pulse"
+                        onClick={handleReset}
                     >
                         Done
                     </button>

@@ -27,9 +27,15 @@ export enum UpupProvider {
     DigitalOcean = 'digitalocean',
 }
 
-export type MaxFileSizeObject = {
+type MaxFileSizeObject = {
     size: number
     unit: 'B' | 'KB' | 'MB' | 'GB' | 'TB' | 'PB' | 'EB' | 'ZB' | 'YB'
+}
+
+export type FileProgressObject = {
+    loaded: number
+    total: number
+    percentage: number
 }
 
 export type UpupUploaderProps = {
@@ -54,15 +60,16 @@ export type UpupUploaderProps = {
     onFileClick?: (file: File) => void
     onIntegrationClick?: (integrationType: string) => void
     onFileUploadStart?: (file: File) => void
-    onFileUploadComplete?: (file: File, key: string) => void
-    onFilesUploadComplete?: (keys: string[]) => void
+    onFileUploadComplete?: (
+        file: File,
+        fileData: Omit<PresignedUrlResponse, 'uploadUrl'>,
+    ) => void
+    onFilesUploadComplete?: (
+        results: Array<Omit<PresignedUrlResponse, 'uploadUrl'> | undefined>,
+    ) => void
     onFileUploadProgress?: (
         file: File,
-        {
-            loaded,
-            total,
-            percentage,
-        }: { loaded: number; total: number; percentage: number },
+        { loaded, total, percentage }: FileProgressObject,
     ) => void
     onFilesUploadProgress?: (completedFiles: number, totalFiles: number) => void
     onFileRemove?: (file: File) => void
@@ -71,7 +78,7 @@ export type UpupUploaderProps = {
     onFileDrop?: (files: File[]) => void
     onFileTypeMismatch?: (file: File, acceptedTypes: string) => void
     onCancelUpload?: (files: File[]) => void
-    onError?: (errorMessage: string) => void
+    onError?: (error: string, file?: File) => void
 }
 
 export type PresignedUrlResponse = {
@@ -92,6 +99,7 @@ export enum UploadErrorType {
     CORS_CONFIG_ERROR = 'CORS_CONFIG_ERROR',
     TEMPORARY_CREDENTIALS_ERROR = 'TEMPORARY_CREDENTIALS_ERROR',
 
+    UPLOAD_PAUSED = 'UPLOAD_PAUSED',
     UNKNOWN_UPLOAD_ERROR = 'UNKNOWN_UPLOAD_ERROR',
 }
 

@@ -61,7 +61,7 @@ export default function FilePreview({
                             fileType={extension}
                             filePath={objectUrl}
                             onError={(e: Error) => {
-                                onError('Error in file preview:' + e)
+                                onError('Error in file preview:' + e, file)
                                 return (
                                     <FileIcon
                                         key={uuidv4()}

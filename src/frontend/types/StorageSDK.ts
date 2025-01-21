@@ -1,4 +1,4 @@
-import { UpupUploaderProps } from '../../shared/types'
+import { PresignedUrlResponse, UpupUploaderProps } from '../../shared/types'
 
 export interface UploadProgress {
     loaded: number
@@ -12,19 +12,35 @@ export type UploadOptions = Pick<
     | 'onFileUploadProgress'
     | 'onFileUploadComplete'
     | 'onError'
-    | 'onFilesUploadProgress'
 > & {
     path?: string
     metadata?: Record<string, string>
-    onFilesUploadProgress(completedFiles: number): void
+    onFilesUploadProgress?: (completedFiles: number) => void
 }
 
-export interface UploadResult {
-    key: string
-    httpStatus: number
+export type UploadOptionsWithSignal = UploadOptions & {
+    signal?: AbortController['signal']
 }
 
 export interface StorageSDK {
-    upload(file: File, options?: UploadOptions): Promise<UploadResult>
     validateConfig(): boolean
+    upload(
+        file: File,
+        options?: UploadOptions,
+    ): Promise<Omit<PresignedUrlResponse, 'uploadUrl'> | undefined>
+    uploadAll(
+        files: File[],
+        options?: UploadOptions,
+    ): Promise<Array<Omit<PresignedUrlResponse, 'uploadUrl'> | undefined>>
+    isPaused(fileName: string): boolean
+    pauseUpload(fileName: string): void
+    pauseAllUploads(): void
+    resumeUpload(
+        file: File,
+    ): Promise<Array<Omit<PresignedUrlResponse, 'uploadUrl'> | undefined>>
+    resumeAllUploads(): Promise<
+        Array<Omit<PresignedUrlResponse, 'uploadUrl'> | undefined>
+    >
+    retryFailedUpload: (file: File) => Promise<void>
+    retryAllFailedUploads: () => Promise<void[]>
 }

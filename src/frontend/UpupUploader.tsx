@@ -63,9 +63,11 @@ export default function UpupUploader(props: UpupUploaderProps) {
                     setIsDragging={setIsDragging}
                 />
 
-                <div className="flex items-center justify-between gap-1">
+                <div className="flex items-center justify-between gap-1 max-sm:flex-col">
                     <p className="text-xs leading-5 text-[#6D6D6D] sm:text-sm">
-                        {supportText}
+                        {supportText} with a{' '}
+                        {providerValues.props.maxFileSize.size}{' '}
+                        {providerValues.props.maxFileSize.unit} limit
                     </p>
                     <div className="flex items-center gap-[5px]">
                         <span className="text-xs leading-5 text-[#6D6D6D] sm:text-sm">

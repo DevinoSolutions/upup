@@ -1,6 +1,11 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import checkFileType from '../../shared/lib/checkFileType'
-import { UploadAdapter, UpupUploaderProps } from '../../shared/types'
+import {
+    FileProgressObject,
+    UploadAdapter,
+    UpupUploaderProps,
+} from '../../shared/types'
+import { FileUploadState, IRootContext } from '../context/RootContext'
 import {
     checkFileSize,
     compressFile,
@@ -8,19 +13,19 @@ import {
     getUniqueFilesByName,
     sizeToBytes,
 } from '../lib/file'
-import { ProviderSDK } from '../lib/storage/provider'
+import { ProviderSDK, UploadState } from '../lib/storage/provider'
 
 interface FileWithId extends File {
     id?: string
 }
 
-type FileProgress = {
-    id: string
-    loaded: number
-    total: number
-}
-
-export type FilesProgressMap = Record<string, FileProgress>
+const compressFiles = async (files: File[]) =>
+    Promise.all(
+        files.map(async file => {
+            const compressed = await compressFile(file)
+            return compressed
+        }),
+    )
 
 export default function useRootProvider({
     accept = '*',
@@ -49,118 +54,17 @@ export default function useRootProvider({
     provider,
     tokenEndpoint,
     driveConfigs,
-}: UpupUploaderProps) {
+}: UpupUploaderProps): IRootContext {
     const inputRef = useRef<HTMLInputElement>(null)
     const [isAddingMore, setIsAddingMore] = useState(false)
     const [selectedFiles, setSelectedFiles] = useState<File[]>([])
     const [activeAdapter, setActiveAdapter] = useState<UploadAdapter>()
     const limit = mini ? 1 : propLimit
     const multiple = mini ? false : limit > 1
-    const [isUploading, setIsUploading] = useState(false)
-    const [filesProgressMap, setFilesProgressMap] = useState<FilesProgressMap>(
-        {} as FilesProgressMap,
-    )
-    const totalProgress = useMemo(() => {
-        const filesProgressMapValues = Object.values(filesProgressMap)
-        if (!filesProgressMapValues.length) return 0
-
-        const loadedValues = filesProgressMapValues.reduce(
-            (a, b) => a + (b.loaded / b.total) * 100,
-            0,
-        )
-        return loadedValues / filesProgressMapValues.length
-    }, [filesProgressMap])
-    const compressFiles = async (files: File[]): Promise<File[]> => {
-        try {
-            return await Promise.all(
-                files.map(async file => {
-                    const compressed = await compressFile(file)
-                    return compressed
-                }),
-            )
-        } catch (error) {
-            files.forEach(file => onError(`Error compressing ${file.name}`))
-            throw error
-        }
-    }
-
-    const proceedUpload = async () => {
-        if (!selectedFiles.length) return
-        setIsUploading(true)
-
-        try {
-            const compressedFiles = shouldCompress
-                ? await compressFiles(selectedFiles)
-                : selectedFiles
-
-            const processedFiles = onPrepareFiles
-                ? await onPrepareFiles(compressedFiles)
-                : compressedFiles
-
-            // Initialize SDK
-            let sdk = new ProviderSDK({
-                provider,
-                tokenEndpoint,
-                constraints: {
-                    multiple,
-                    accept,
-                    maxFileSize: sizeToBytes(
-                        maxFileSize.size,
-                        maxFileSize.unit,
-                    ),
-                },
-            })
-
-            // Upload files
-            const uploadResults = await Promise.all(
-                processedFiles.map(file =>
-                    sdk.upload(file, {
-                        onFileUploadStart,
-                        onFileUploadProgress: (file, progress) => {
-                            setFilesProgressMap(prev => ({
-                                ...prev,
-                                [file.name]: {
-                                    ...prev[file.name],
-                                    loaded: progress.loaded,
-                                },
-                            }))
-                            onFileUploadProgress(file, progress)
-                        },
-                        onFileUploadComplete,
-                        onError,
-                        onFilesUploadProgress: (completedFiles: number) =>
-                            onFilesUploadProgress(
-                                completedFiles,
-                                processedFiles.length,
-                            ),
-                    }),
-                ),
-            )
-
-            // Extract keys from results
-            const uploadedFileKeys = uploadResults.map(result => result.key)
-            onFilesUploadComplete(uploadedFileKeys)
-            return uploadedFileKeys
-        } catch (error) {
-            onError((error as Error).message)
-            return
-        } finally {
-            setIsUploading(false)
-        }
-    }
-
-    useEffect(() => {
-        setFilesProgressMap(
-            selectedFiles.reduce((a, b) => {
-                a[b.name] = {
-                    id: b.name,
-                    loaded: 0,
-                    total: b.size,
-                }
-                return a
-            }, {} as FilesProgressMap),
-        )
-    }, [selectedFiles.length])
+    const [filesStates, setFilesStates] = useState<
+        Record<string, FileUploadState>
+    >({})
+    const sdkRef = useRef<ProviderSDK>()
 
     const handleSetSelectedFiles = (newFiles: File[], reset = false) => {
         onFilesSelected(newFiles)
@@ -192,6 +96,145 @@ export default function useRootProvider({
         onFileRemove(file)
     }
 
+    const updateFileState = (
+        fileName: string,
+        update: Partial<FileUploadState>,
+    ) =>
+        setFilesStates(prev => ({
+            ...prev,
+            [fileName]: {
+                ...prev[fileName],
+                ...update,
+            },
+        }))
+
+    const updateAllFilesState = (update: Partial<FileUploadState>) => {
+        const newFilesStates = { ...filesStates }
+        for (let key in newFilesStates)
+            newFilesStates[key] = { ...newFilesStates[key], ...update }
+
+        setFilesStates(newFilesStates)
+    }
+
+    const handleUploadProgress = (file: File, progress: FileProgressObject) => {
+        updateFileState(file.name, {
+            progress: progress.loaded,
+        })
+        onFileUploadProgress(file, progress)
+    }
+
+    const startAllUploads = async () => {
+        if (!selectedFiles.length || !sdkRef.current) return
+
+        const compressedFiles = shouldCompress
+            ? await compressFiles(selectedFiles)
+            : selectedFiles
+
+        const preparedFiles = onPrepareFiles
+            ? await onPrepareFiles(compressedFiles)
+            : compressedFiles
+
+        const results = await sdkRef.current.uploadAll(preparedFiles, {
+            onFileUploadStart: file => {
+                updateFileState(file.name, {
+                    status: UploadState.UPLOADING,
+                    progress: 0,
+                })
+                onFileUploadStart(file)
+            },
+            onFileUploadProgress: handleUploadProgress,
+            onFileUploadComplete: (file, fileData) => {
+                updateFileState(file.name, {
+                    status: UploadState.COMPLETED,
+                    progress: 100,
+                })
+                onFileUploadComplete(file, fileData)
+            },
+            onError: (error: string, file?: File) => {
+                onError(error)
+                updateFileState(file!.name, {
+                    error: error,
+                    status: UploadState.FAILED,
+                })
+            },
+            onFilesUploadProgress: (completedFiles: number) =>
+                onFilesUploadProgress(completedFiles, preparedFiles.length),
+        })
+
+        onFilesUploadComplete(results)
+    }
+
+    const pauseUpload = (fileName: string) => {
+        if (!sdkRef.current) return
+        sdkRef.current.pauseUpload(fileName)
+        updateFileState(fileName, { status: UploadState.PAUSED })
+    }
+
+    const pauseAllUploads = () => {
+        if (!sdkRef.current) return
+        sdkRef.current.pauseAllUploads()
+        updateAllFilesState({ status: UploadState.PAUSED })
+    }
+
+    const resumeUpload = async (file: File) => {
+        if (!sdkRef.current) return
+        updateFileState(file.name, { status: UploadState.UPLOADING })
+        await sdkRef.current.resumeUpload(file)
+    }
+
+    const resumeAllUploads = async () => {
+        if (!sdkRef.current) return
+        updateAllFilesState({ status: UploadState.UPLOADING })
+        await sdkRef.current.resumeAllUploads()
+    }
+
+    const retryFailedUpload = async (file: File) => {
+        if (!sdkRef.current) return
+        updateFileState(file.name, {
+            status: UploadState.UPLOADING,
+            error: undefined,
+            retryCount: (filesStates[file.name]?.retryCount || 0) + 1,
+        })
+        await sdkRef.current.retryFailedUpload(file)
+    }
+
+    const retryAllFailedUploads = async () => {
+        if (!sdkRef.current) return
+
+        const newFilesStates = { ...filesStates }
+        for (let key in newFilesStates)
+            newFilesStates[key] = {
+                ...newFilesStates[key],
+                status: UploadState.UPLOADING,
+                error: undefined,
+                retryCount: (newFilesStates[key]?.retryCount || 0) + 1,
+            }
+        setFilesStates(newFilesStates)
+
+        await sdkRef.current.retryAllFailedUploads()
+    }
+
+    const handleReset = () => {
+        setSelectedFiles([])
+        setFilesStates({})
+    }
+
+    useEffect(() => {
+        sdkRef.current = new ProviderSDK({
+            provider,
+            tokenEndpoint,
+            constraints: {
+                multiple,
+                accept,
+                maxFileSize: sizeToBytes(maxFileSize.size, maxFileSize.unit),
+            },
+        })
+
+        return () => {
+            sdkRef.current?.dispose()
+        }
+    }, [provider, tokenEndpoint])
+
     return {
         inputRef,
         activeAdapter,
@@ -201,9 +244,19 @@ export default function useRootProvider({
         files: selectedFiles,
         setFiles: handleSetSelectedFiles,
         handleFileRemove,
+        handleReset,
         oneDriveConfigs: driveConfigs?.oneDrive,
         googleDriveConfigs: driveConfigs?.googleDrive,
-        upload: { totalProgress, filesProgressMap, proceedUpload, isUploading },
+        upload: {
+            filesStates,
+            startAllUploads,
+            pauseUpload,
+            pauseAllUploads,
+            resumeUpload,
+            resumeAllUploads,
+            retryFailedUpload,
+            retryAllFailedUploads,
+        },
         props: {
             mini,
             loader,

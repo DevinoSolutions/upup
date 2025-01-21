@@ -9,6 +9,7 @@ import { TbX } from 'react-icons/tb'
 import truncate from 'truncate'
 import { useRootContext } from '../context/RootContext'
 import { bytesToSize } from '../lib/file'
+import { UploadState } from '../lib/storage/provider'
 import FileIcon from './FileIcon'
 import FilePreview from './FilePreview'
 import ShouldRender from './shared/ShouldRender'
@@ -25,7 +26,7 @@ export default memo(function PreviewComponent({
 }: Props) {
     const {
         handleFileRemove,
-        upload: { filesProgressMap },
+        upload: { filesStates, pauseUpload, resumeUpload, retryFailedUpload },
         props: { onFileClick },
     } = useRootContext()
     const [objectUrl, setObjectUrl] = useState<string>('')
@@ -46,13 +47,10 @@ export default memo(function PreviewComponent({
             if (url) URL.revokeObjectURL(url)
         }
     }, [file])
-    const progress = Math.floor(
-        (filesProgressMap[file.name]?.loaded /
-            filesProgressMap[file.name]?.total) *
-            100,
-    )
+    const fileState = filesStates[file.name]
+    const progress = Math.floor((fileState?.progress / file.size) * 100)
 
-    if (!objectUrl) return null
+    const handleRetry = () => retryFailedUpload(file)
 
     return (
         <div
@@ -75,18 +73,40 @@ export default memo(function PreviewComponent({
                 >
                     <TbX className="h-4 w-4 text-[#858585]" />
                 </button>
-                <ShouldRender if={!!progress}>
-                    <div className="absolute bottom-0 left-0 right-0 h-[6px] flex-1 rounded bg-[#F5F5F5]">
-                        <div
-                            className="h-full rounded-[4px]"
-                            style={{
-                                width: progress + '%',
-                                background:
-                                    progress == 100 ? '#8EA5E7' : '#C5CAFB',
-                            }}
-                        />
-                    </div>
-                </ShouldRender>
+                <div className="absolute bottom-0 left-0 right-0">
+                    <ShouldRender if={fileState?.status === UploadState.FAILED}>
+                        <button
+                            className="w-full rounded bg-red-100 px-2 py-1 text-xs text-red-600"
+                            onClick={handleRetry}
+                        >
+                            Retry Upload
+                        </button>
+                    </ShouldRender>
+                    <ShouldRender
+                        if={fileState?.status === UploadState.UPLOADING}
+                    >
+                        <div className="h-1 bg-gray-200">
+                            <div
+                                className="h-full bg-blue-500 transition-all"
+                                style={{ width: `${progress}%` }}
+                            />
+                        </div>
+                        <button
+                            className="mt-1 w-full rounded bg-gray-100 px-2 py-1 text-xs"
+                            onClick={() => pauseUpload(file.name)}
+                        >
+                            Pause
+                        </button>
+                    </ShouldRender>
+                    <ShouldRender if={fileState?.status === UploadState.PAUSED}>
+                        <button
+                            className="mt-1 w-full rounded bg-gray-100 px-2 py-1 text-xs"
+                            onClick={() => resumeUpload(file)}
+                        >
+                            Resume
+                        </button>
+                    </ShouldRender>
+                </div>
             </div>
             <div className="flex flex-col items-start justify-between">
                 <p className="flex-1 text-xs text-[#0B0B0B]">
