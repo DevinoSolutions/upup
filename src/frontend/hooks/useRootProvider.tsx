@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
+import { toast } from 'sonner'
 import checkFileType from '../../shared/lib/checkFileType'
 import { UploadAdapter, UpupUploaderProps } from '../../shared/types'
 import {
@@ -166,12 +167,18 @@ export default function useRootProvider({
         onFilesSelected(newFiles)
         if (reset) return setSelectedFiles([])
 
-        const validFilesByType = newFiles.filter(file =>
-            checkFileType(accept, file, onFileTypeMismatch),
-        )
-        const validFilesBySize = validFilesByType.filter(file =>
-            checkFileSize(file, maxFileSize),
-        )
+        let validFilesByType = [] as File[]
+        for (let file of newFiles) {
+            if (checkFileType(accept, file, onFileTypeMismatch))
+                validFilesByType.push(file)
+            else toast.error(`${file.name} has an invalid type!`)
+        }
+
+        let validFilesBySize = [] as File[]
+        for (let file of validFilesByType) {
+            if (checkFileSize(file, maxFileSize)) validFilesBySize.push(file)
+            else toast.error(`${file.name} has an invalid type!`)
+        }
 
         const filesWithIds = validFilesBySize.map(fileAppendId)
         if (filesWithIds.length)

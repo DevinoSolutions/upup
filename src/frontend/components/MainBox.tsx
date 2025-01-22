@@ -1,4 +1,5 @@
 import React, { Dispatch, SetStateAction, useEffect, useState } from 'react'
+import { Toaster } from 'sonner'
 import { useRootContext } from '../context/RootContext'
 import AdapterSelector from './AdapterSelector'
 import AdapterView from './AdapterView'
@@ -42,6 +43,17 @@ export default function MainBox({ isDragging, setIsDragging }: Props) {
             <ShouldRender if={boxState === BoxState.AdapterView}>
                 <AdapterView />
             </ShouldRender>
+
+            <Toaster
+                duration={1500}
+                key="upupToaster"
+                pauseWhenPageIsHidden
+                position="bottom-center"
+                className="absolute bottom-4"
+                richColors
+                expand
+                closeButton
+            />
         </div>
     )
 }
