@@ -3,7 +3,11 @@ import { useRootContext } from '../context/RootContext'
 import useFetchFileByUrl from '../hooks/useFetchFileByUrl'
 
 export default function UrlUploader() {
-    const { setFiles, setActiveAdapter } = useRootContext()
+    const {
+        setFiles,
+        setActiveAdapter,
+        props: { loader },
+    } = useRootContext()
     const [url, setUrl] = useState('')
     const { error, loading, fetchImage } = useFetchFileByUrl()
 
@@ -31,7 +35,7 @@ export default function UrlUploader() {
                 className="mt-2 w-full rounded-md bg-blue-500 p-2 text-white transition-all duration-300 hover:bg-blue-600 active:bg-blue-700"
                 type="submit"
             >
-                {loading ? 'Loading...' : 'Upload'}
+                {loading ? <>{loader}</> : 'Upload'}
             </button>
         </form>
     )

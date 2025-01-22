@@ -3,6 +3,7 @@ import React, { ChangeEventHandler, Dispatch, SetStateAction } from 'react'
 import { UploadAdapter } from '../../shared/types'
 import { useRootContext } from '../context/RootContext'
 import { uploadAdapterObject } from '../lib/constants'
+import MainBoxHeader from './shared/MainBoxHeader'
 import ShouldRender from './shared/ShouldRender'
 
 type Props = {
@@ -26,6 +27,8 @@ export default function AdapterSelector({ isDragging, setIsDragging }: Props) {
             onFileDragOver,
             onFileDrop,
         },
+        isAddingMore,
+        setIsAddingMore,
     } = useRootContext()
     const chosenAdapters = Object.values(uploadAdapterObject).filter(item =>
         uploadAdapters.includes(item.id),
@@ -48,7 +51,7 @@ export default function AdapterSelector({ isDragging, setIsDragging }: Props) {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className={`flex h-full flex-col items-center justify-center gap-10 rounded-lg border border-[#1849D6] p-[30px] dark:border-[#30C5F7] lg:gap-14 ${
+                className={`relative flex h-full flex-col items-center justify-center gap-10 rounded-lg border border-[#1849D6] p-[30px] dark:border-[#30C5F7] lg:gap-14 ${
                     isDragging
                         ? 'bg-[#E7ECFC] backdrop-blur-sm dark:bg-[#045671]'
                         : 'border-dashed'
@@ -79,6 +82,11 @@ export default function AdapterSelector({ isDragging, setIsDragging }: Props) {
                     setIsDragging(false)
                 }}
             >
+                <ShouldRender if={isAddingMore}>
+                    <MainBoxHeader
+                        handleCancel={() => setIsAddingMore(false)}
+                    />
+                </ShouldRender>
                 <ShouldRender if={!mini}>
                     <div className="flex flex-wrap items-center justify-center gap-[26px] lg:gap-[30px]">
                         {chosenAdapters.map(({ Icon, id, name }) => (

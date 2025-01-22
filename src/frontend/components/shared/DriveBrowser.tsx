@@ -1,8 +1,15 @@
 import { AnimatePresence, motion } from 'framer-motion'
 import { GoogleFile, Root, User } from 'google'
 import { MicrosoftUser, OneDriveFile, OneDriveRoot } from 'microsoft'
-import React, { Dispatch, SetStateAction, useEffect } from 'react'
+import React, {
+    Dispatch,
+    SetStateAction,
+    useEffect,
+    useMemo,
+    useState,
+} from 'react'
 import { useRootContext } from '../../context/RootContext'
+import { searchDriveFiles } from '../../lib/file'
 import DriveBrowserHeader from './DriveBrowserHeader'
 import DriveBrowserItem from './DriveBrowserItem'
 import ShouldRender from './ShouldRender'
@@ -26,6 +33,17 @@ type Props = {
     handleCancelDownload: () => void
 }
 
+function filterItems(item: OneDriveFile | GoogleFile, accept: string) {
+    const isFolder = Boolean(
+        (item as OneDriveFile).isFolder || (item as GoogleFile).children,
+    )
+    const isFileAccepted =
+        accept && accept !== '*' && !isFolder
+            ? accept.includes(item.name.split('.').pop()!)
+            : true
+    return isFolder ? item : isFileAccepted
+}
+
 export default function DriveBrowser({
     isClickLoading = false,
     driveFiles,
@@ -42,6 +60,14 @@ export default function DriveBrowser({
     const {
         props: { accept },
     } = useRootContext()
+    const [searchTerm, setSearchTerm] = useState('')
+    const items = (path[path.length - 1]?.children as Array<any>).filter(item =>
+        filterItems(item, accept),
+    )
+    const displayedItems = useMemo(
+        () => searchDriveFiles<any>(items, searchTerm) || [],
+        [searchTerm, items],
+    )
 
     useEffect(() => {
         if (driveFiles) setPath([driveFiles as any])
@@ -49,16 +75,22 @@ export default function DriveBrowser({
 
     return (
         <ShouldRender if={true} isLoading={isClickLoading || !driveFiles}>
-            <div className="grid h-full w-full grid-rows-[auto,1fr,auto] overflow-auto bg-white ">
-                <DriveBrowserHeader path={path} setPath={setPath} {...rest} />
-
-                <div className="h-full overflow-scroll overflow-y-scroll bg-white pt-2 dark:bg-[#1f1f1f] dark:text-[#fafafa]">
-                    <ShouldRender if={!!path}>
-                        {path[path.length - 1]?.children.length ? (
+            <div
+                className={`grid h-full w-full grid-rows-[auto,1fr,auto] overflow-auto bg-white`}
+            >
+                <DriveBrowserHeader
+                    showSearch={!!items?.length}
+                    path={path}
+                    setPath={setPath}
+                    searchTerm={searchTerm}
+                    onSearch={setSearchTerm}
+                    {...rest}
+                />
+                <ShouldRender if={!!path}>
+                    <div className="h-full overflow-scroll overflow-y-scroll bg-[#f4f4f4] pt-2 dark:bg-[#1f1f1f] dark:text-[#fafafa]">
+                        <ShouldRender if={!!displayedItems.length}>
                             <ul className="p-2">
-                                {(
-                                    path[path.length - 1].children as Array<any>
-                                ).map((file, index) => {
+                                {displayedItems.map((file, index) => {
                                     return (
                                         <DriveBrowserItem
                                             key={file.id}
@@ -70,20 +102,22 @@ export default function DriveBrowser({
                                             }
                                             index={index}
                                             selectedFiles={selectedFiles}
-                                            accept={accept}
                                         />
                                     )
                                 })}
                             </ul>
-                        ) : (
+                        </ShouldRender>
+                        <ShouldRender if={!displayedItems.length}>
                             <div className="flex h-full flex-col items-center justify-center">
-                                <h1 className="text-sm">No files found</h1>
+                                <p className="text-xs opacity-70">
+                                    No accepted files found
+                                </p>
                             </div>
-                        )}
-                    </ShouldRender>
-                </div>
+                        </ShouldRender>
+                    </div>
+                </ShouldRender>
 
-                <ShouldRender if={selectedFiles.length > 0}>
+                <ShouldRender if={!!selectedFiles.length}>
                     <AnimatePresence>
                         <motion.div
                             initial={{ y: '100%', height: 0 }}
@@ -103,7 +137,7 @@ export default function DriveBrowser({
                                 {selectedFiles.length > 1 ? 's' : ''}
                             </button>
                             <button
-                                className="ml-auto text-sm hover:underline"
+                                className="ml-auto rounded-md p-1 text-sm text-[#1b5dab] transition-all duration-300 dark:text-[#fafafa]"
                                 onClick={handleCancelDownload}
                                 disabled={showLoader}
                             >

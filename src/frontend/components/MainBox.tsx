@@ -17,8 +17,7 @@ enum BoxState {
 }
 
 export default function MainBox({ isDragging, setIsDragging }: Props) {
-    const { files, activeAdapter, isAddingMore, setIsAddingMore } =
-        useRootContext()
+    const { files, activeAdapter, isAddingMore } = useRootContext()
     const [boxState, setBoxState] = useState(BoxState.AdapterSelector)
 
     useEffect(() => {
@@ -38,7 +37,7 @@ export default function MainBox({ isDragging, setIsDragging }: Props) {
                 />
             </ShouldRender>
             <ShouldRender if={boxState === BoxState.Preview}>
-                <Preview onAddMore={setIsAddingMore} />
+                <Preview />
             </ShouldRender>
             <ShouldRender if={boxState === BoxState.AdapterView}>
                 <AdapterView />

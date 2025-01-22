@@ -11,26 +11,6 @@ type DriveBrowserItemProps = {
         | ((file: GoogleFile | Root) => void)
     selectedFiles: OneDriveFile[] | GoogleFile[]
     index: number
-    accept?: string
-}
-
-const getIsNull = ({
-    accept,
-    isFolder,
-    isFileAccepted,
-}: Pick<DriveBrowserItemProps, 'accept'> & {
-    isFolder: boolean
-    isFileAccepted: boolean
-}) => {
-    const condition1 = accept && !isFolder && !isFileAccepted
-    // const condition2 = isFolder && !file.children?.length
-    // const condition3 =
-    //     !isFolder &&
-    //     (!(file as GoogleFile).thumbnailLink ||
-    //         !(file as OneDriveFile).thumbnails?.large)
-
-    // return condition1 || condition2 || condition3
-    return condition1
 }
 
 const backgroundColors = {
@@ -44,7 +24,6 @@ export default function DriveBrowserItem({
     selectedFiles,
     handleClick,
     index,
-    accept,
 }: DriveBrowserItemProps) {
     const isFolder = Boolean(
         (file as OneDriveFile).isFolder || (file as GoogleFile).children,
@@ -52,10 +31,6 @@ export default function DriveBrowserItem({
     const isFileSelected = (selectedFiles as Array<any>).filter(
         f => f.id === file.id,
     ).length
-    const isFileAccepted =
-        accept && accept !== '*' && !isFolder
-            ? accept.includes(file.name.split('.').pop()!)
-            : true
 
     const backgroundColor = isFileSelected
         ? backgroundColors.selected
@@ -72,9 +47,6 @@ export default function DriveBrowserItem({
         opacity: { delay: index * 0.05 },
         y: { delay: index * 0.05 },
     }
-
-    const isNull = getIsNull({ accept, isFolder, isFileAccepted })
-    if (isNull) return null
 
     return (
         <motion.div

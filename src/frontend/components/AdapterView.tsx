@@ -11,8 +11,9 @@ export default function AdapterView() {
     } = useRootContext()
     const UploadComponent =
         activeAdapter && uploadAdapterObject[activeAdapter].Component
+    const Icon = activeAdapter && uploadAdapterObject[activeAdapter].Icon
 
-    if (!UploadComponent || mini || !activeAdapter) return null
+    if (!UploadComponent || mini || !activeAdapter || !Icon) return null
 
     return (
         <AnimatePresence>
@@ -23,9 +24,7 @@ export default function AdapterView() {
                 className="grid h-full w-full grid-rows-[auto,1fr]"
             >
                 <div className="flex items-center justify-between border-b border-[#e0e0e0] bg-[#fafafa] px-3 py-2 text-sm font-medium text-[#1b5dab] dark:bg-[#1f1f1f] dark:text-[#fafafa]">
-                    <p className="text-[#333] dark:text-[#fafafa]">
-                        Import from {uploadAdapterObject[activeAdapter].name}
-                    </p>
+                    <Icon />
                     <button
                         className="rounded-md p-1 transition-all duration-300"
                         onClick={() => setActiveAdapter(undefined)}

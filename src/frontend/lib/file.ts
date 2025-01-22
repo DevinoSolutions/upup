@@ -61,3 +61,44 @@ export async function compressFile(file: File) {
         type: 'application/octet-stream',
     })
 }
+
+export function searchDriveFiles<
+    T extends {
+        name: string
+    },
+>(
+    files: T[],
+    searchTerm: string,
+    options: {
+        caseSensitive?: boolean
+        exactMatch?: boolean
+        maxResults?: number
+    } = {},
+): T[] {
+    const {
+        caseSensitive = false,
+        exactMatch = false,
+        maxResults = 100,
+    } = options
+
+    if (!searchTerm) return files?.slice(0, maxResults)
+
+    let searchString = searchTerm
+    let fileNames: string[]
+
+    if (!caseSensitive) {
+        searchString = searchTerm.toLowerCase()
+        fileNames = files.map(file => file.name.toLowerCase())
+    } else {
+        fileNames = files.map(file => file.name)
+    }
+
+    return files
+        .filter((_file, index) => {
+            // Check if file name matches search term
+            return exactMatch
+                ? fileNames[index] === searchString
+                : fileNames[index].includes(searchString)
+        })
+        .slice(0, maxResults)
+}
