@@ -1,15 +1,4 @@
-import { Provider } from '../../shared/types/StorageSDK'
-import { BaseConfigs } from './'
-
-export interface StorageConfig {
-    provider: Provider
-    tokenEndpoint: string
-    constraints?: {
-        multiple: boolean
-        accept: string
-        maxFileSize?: number
-    }
-}
+import { ProviderUploadResponse, UpupUploaderProps } from '../../shared/types'
 
 export interface UploadProgress {
     loaded: number
@@ -18,24 +7,36 @@ export interface UploadProgress {
 }
 
 export type UploadOptions = Pick<
-    BaseConfigs,
+    UpupUploaderProps,
     | 'onFileUploadStart'
     | 'onFileUploadProgress'
     | 'onFileUploadComplete'
-    | 'onFileUploadFail'
-    | 'onTotalUploadProgress'
+    | 'onError'
 > & {
     path?: string
     metadata?: Record<string, string>
-    onTotalUploadProgress(completedFiles: number): void
+    onFilesUploadProgress?: (completedFiles: number) => void
 }
 
-export interface UploadResult {
-    key: string
-    httpStatus: number
+export type UploadOptionsWithSignal = UploadOptions & {
+    signal?: AbortController['signal']
 }
 
 export interface StorageSDK {
-    upload(file: File, options?: UploadOptions): Promise<UploadResult>
     validateConfig(): boolean
+    upload(
+        file: File,
+        options?: UploadOptions,
+    ): Promise<ProviderUploadResponse | undefined>
+    uploadAll(
+        files: File[],
+        options?: UploadOptions,
+    ): Promise<Array<ProviderUploadResponse | undefined>>
+    isPaused(fileName: string): boolean
+    pauseUpload(fileName: string): void
+    pauseAllUploads(): void
+    resumeUpload(file: File): Promise<Array<ProviderUploadResponse | undefined>>
+    resumeAllUploads(): Promise<Array<ProviderUploadResponse | undefined>>
+    retryFailedUpload: (file: File) => Promise<void>
+    retryAllFailedUploads: () => Promise<void[]>
 }

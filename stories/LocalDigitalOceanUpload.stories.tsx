@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react'
-import React, { useRef } from 'react'
-import { UploadFilesRef, UpupUploader } from '../src/frontend/UpupUploader'
-import { Provider } from '../src/shared/types/StorageSDK'
+import React from 'react'
+import UpupUploader from '../src/frontend/UpupUploader'
+import { UpupProvider } from '../src/shared/types'
 
 const meta = {
     title: 'Cloud Storage/Local to DigitalOcean Upload',
@@ -20,42 +20,14 @@ const meta = {
 export default meta
 type Story = StoryObj<typeof UpupUploader>
 
-const LocalUploader = () => {
-    const upupRef = useRef<UploadFilesRef>(null)
-
-    const handleUpload = async () => {
-        try {
-            await upupRef.current?.uploadFiles()
-        } catch (error) {
-            console.error('Error uploading selected files:', error)
-        }
-    }
-
-    return (
-        <div className="flex flex-col gap-4">
-            <UpupUploader
-                ref={upupRef}
-                storageConfig={{
-                    provider: Provider.DigitalOcean,
-                    tokenEndpoint:
-                        'http://localhost:3001/api/storage/digitalocean/upload-url',
-                }}
-                baseConfigs={{
-                    multiple: true,
-                    accept: '*',
-                    maxFileSize: { size: 100, unit: 'MB' },
-                }}
-                uploadAdapters={['INTERNAL']}
-            />
-            <button
-                className="rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
-                onClick={handleUpload}
-            >
-                Upload to DigitalOcean
-            </button>
-        </div>
-    )
-}
+const LocalUploader = () => (
+    <UpupUploader
+        provider={UpupProvider.DigitalOcean}
+        tokenEndpoint="http://localhost:3001/api/storage/digitalocean/upload-url"
+        accept="*"
+        maxFileSize={{ size: 10, unit: 'MB' }}
+    />
+)
 
 export const Default: Story = {
     render: () => <LocalUploader />,

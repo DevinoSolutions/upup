@@ -1,6 +1,6 @@
 import React from 'react'
 
-const MyDeviceIcon = () => (
+export const MyDeviceIcon = () => (
     <svg
         aria-hidden="true"
         focusable="false"
@@ -17,7 +17,7 @@ const MyDeviceIcon = () => (
     </svg>
 )
 
-const BoxIcon = () => (
+export const BoxIcon = () => (
     <svg
         className="text-[#0061d5]"
         aria-hidden="true"
@@ -33,7 +33,7 @@ const BoxIcon = () => (
     </svg>
 )
 
-const DropBoxIcon = () => (
+export const DropBoxIcon = () => (
     <svg
         className="text-[#0061fe]"
         aria-hidden="true"
@@ -50,7 +50,7 @@ const DropBoxIcon = () => (
     </svg>
 )
 
-const FacebookIcon = () => (
+export const FacebookIcon = () => (
     <svg
         aria-hidden="true"
         focusable="false"
@@ -71,7 +71,7 @@ const FacebookIcon = () => (
     </svg>
 )
 
-const GoogleDriveIcon = () => (
+export const GoogleDriveIcon = () => (
     <svg
         aria-hidden="true"
         focusable="false"
@@ -108,7 +108,7 @@ const GoogleDriveIcon = () => (
     </svg>
 )
 
-const InstagramIcon = () => (
+export const InstagramIcon = () => (
     <svg
         aria-hidden="true"
         focusable="false"
@@ -138,7 +138,7 @@ const InstagramIcon = () => (
     </svg>
 )
 
-const OneDriveIcon = () => (
+export const OneDriveIcon = () => (
     <svg
         aria-hidden="true"
         focusable="false"
@@ -167,7 +167,7 @@ const OneDriveIcon = () => (
     </svg>
 )
 
-const UnsplashIcon = () => (
+export const UnsplashIcon = () => (
     <svg
         className="text-[#111]"
         viewBox="0 0 32 32"
@@ -182,7 +182,7 @@ const UnsplashIcon = () => (
     </svg>
 )
 
-const LinkIcon = () => (
+export const LinkIcon = () => (
     <svg
         aria-hidden="true"
         focusable="false"
@@ -198,7 +198,7 @@ const LinkIcon = () => (
     </svg>
 )
 
-const CameraIcon = () => (
+export const CameraIcon = () => (
     <svg
         aria-hidden="true"
         focusable="false"
@@ -214,7 +214,7 @@ const CameraIcon = () => (
     </svg>
 )
 
-const AudioIcon = () => (
+export const AudioIcon = () => (
     <svg
         className="text-[#8030a3]"
         aria-hidden="true"
@@ -231,7 +231,7 @@ const AudioIcon = () => (
     </svg>
 )
 
-const ScreenCastIcon = () => (
+export const ScreenCastIcon = () => (
     <svg
         className="text-[#2c3e50]"
         aria-hidden="true"
@@ -247,17 +247,20 @@ const ScreenCastIcon = () => (
     </svg>
 )
 
-export {
-    AudioIcon,
-    BoxIcon,
-    CameraIcon,
-    DropBoxIcon,
-    FacebookIcon,
-    GoogleDriveIcon,
-    InstagramIcon,
-    LinkIcon,
-    MyDeviceIcon,
-    OneDriveIcon,
-    ScreenCastIcon,
-    UnsplashIcon,
-}
+export const Close = () => (
+    <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="22"
+        height="22"
+        viewBox="0 0 22 22"
+        fill="none"
+    >
+        <g id="close">
+            <path
+                id="Vector"
+                d="M16.775 5.23408C16.4175 4.87658 15.84 4.87658 15.4825 5.23408L11 9.70741L6.51753 5.22491C6.16003 4.86741 5.58253 4.86741 5.22503 5.22491C4.86753 5.58241 4.86753 6.15991 5.22503 6.51741L9.70753 10.9999L5.22503 15.4824C4.86753 15.8399 4.86753 16.4174 5.22503 16.7749C5.58253 17.1324 6.16003 17.1324 6.51753 16.7749L11 12.2924L15.4825 16.7749C15.84 17.1324 16.4175 17.1324 16.775 16.7749C17.1325 16.4174 17.1325 15.8399 16.775 15.4824L12.2925 10.9999L16.775 6.51741C17.1234 6.16908 17.1234 5.58241 16.775 5.23408Z"
+                fill="#1849D6"
+            />
+        </g>
+    </svg>
+)

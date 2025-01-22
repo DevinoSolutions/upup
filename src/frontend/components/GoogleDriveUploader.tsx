@@ -1,35 +1,26 @@
-import React, { Dispatch, SetStateAction } from 'react'
-import { useGoogleDrive } from '../hooks'
-import type { GoogleConfigs } from '../types'
-import FileBrowser from './UpupUploader/FileBrowser'
+import React from 'react'
+import { useRootContext } from '../context/RootContext'
+import useGoogleDrive from '../hooks/useGoogleDrive'
 
-type Props = {
-    googleConfigs: GoogleConfigs
-    setFiles: Dispatch<SetStateAction<File[]>>
-    setView: (view: string) => void
-    accept?: string
-}
+import useGoogleDriveUploader from '../hooks/useGoogleDriveUploader'
+import DriveBrowser from './shared/DriveBrowser'
 
-const GoogleDriveUploader = ({
-    setFiles,
-    setView,
-    googleConfigs,
-    accept,
-}: Props) => {
-    const { googleFiles, handleSignOut, user, downloadFile } =
-        useGoogleDrive(googleConfigs)
+export default function GoogleDriveUploader() {
+    const { googleDriveConfigs } = useRootContext()
+    const {
+        user,
+        googleFiles: driveFiles,
+        handleSignOut,
+        token,
+    } = useGoogleDrive(googleDriveConfigs)
+    const props = useGoogleDriveUploader(token)
 
     return (
-        <FileBrowser
-            driveFiles={googleFiles}
-            handleSignOut={handleSignOut}
+        <DriveBrowser
+            driveFiles={driveFiles}
             user={user}
-            downloadFile={downloadFile}
-            setFiles={setFiles}
-            setView={setView}
-            accept={accept || '*'}
+            handleSignOut={handleSignOut}
+            {...props}
         />
     )
 }
-
-export default GoogleDriveUploader

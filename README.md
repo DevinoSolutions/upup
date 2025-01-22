@@ -32,7 +32,7 @@ yarn add @bassem97/upup
 import {
     BaseConfigs,
     CloudStorageConfigs,
-    GoogleConfigs,
+    GoogleDriveConfigs,
     OneDriveConfigs,
     Is3Configs,
     UploadAdapter,
@@ -84,7 +84,7 @@ const cloudStorageConfigs: CloudStorageConfigs = {
     s3Configs,
 }
 
-const googleConfigs: GoogleConfigs = {
+const googleConfigs: GoogleDriveConfigs = {
     google_api_key,
     google_app_id,
     google_client_id,

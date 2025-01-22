@@ -50,8 +50,6 @@ const config = {
                         require.resolve(
                             'react-syntax-highlighter/dist/cjs/light-async',
                         ),
-                    '@emotion/react': require.resolve('@emotion/react'),
-                    '@emotion/styled': require.resolve('@emotion/styled'),
                 },
             },
             module: {
