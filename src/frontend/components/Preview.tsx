@@ -12,6 +12,7 @@ export default memo(function Preview() {
         files,
         setFiles,
         upload: { proceedUpload, isUploading },
+        props: { mini },
     } = useRootContext()
 
     const handleClearFiles = () => setFiles([], true)
@@ -21,12 +22,26 @@ export default memo(function Preview() {
     }
 
     return (
-        <div className="relative flex h-full flex-col rounded-lg pt-11 shadow">
+        <div
+            className={`relative flex h-full flex-col rounded-lg ${
+                mini ? '' : 'pt-11'
+            } shadow`}
+        >
             <MainBoxHeader handleCancel={handleClearFiles} />
 
             <AnimatePresence>
-                <motion.div className="preview-scroll flex-1 overflow-y-auto bg-[#f4f4f4] p-3 dark:bg-[#1f1f1f]">
-                    <div className="flex gap-4 max-md:flex-col md:flex-wrap md:gap-y-6 md:after:flex-shrink-0 md:after:flex-grow md:after:basis-80 md:after:content-['']">
+                <motion.div
+                    className={`preview-scroll flex-1 ${
+                        files.length > 1 ? 'overflow-y-auto' : 'overflow-hidden'
+                    }  bg-[#f4f4f4] p-3 dark:bg-[#1f1f1f]`}
+                >
+                    <div
+                        className={`flex gap-4 max-md:flex-col md:flex-wrap md:gap-y-6 ${
+                            files.length > 1
+                                ? "md:after:flex-shrink-0 md:after:flex-grow md:after:basis-80 md:after:content-['']"
+                                : ''
+                        } `}
+                    >
                         {files.map(file => (
                             <PreviewComponent
                                 key={uuidv4()}

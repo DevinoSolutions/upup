@@ -20,7 +20,7 @@ const meta = {
 export default meta
 type Story = StoryObj<typeof UpupUploader>
 
-const LocalUploader = () => (
+const BackblazeUploader = () => (
     <UpupUploader
         provider={UpupProvider.BackBlaze}
         tokenEndpoint="http://localhost:3001/api/storage/backblaze/upload-url"
@@ -30,5 +30,5 @@ const LocalUploader = () => (
 )
 
 export const Default: Story = {
-    render: () => <LocalUploader />,
+    render: () => <BackblazeUploader />,
 }

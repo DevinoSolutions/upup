@@ -19,7 +19,7 @@ const meta = {
 export default meta
 type Story = StoryObj<typeof UpupUploader>
 
-const LocalUploader = () => (
+const AzureUploader = () => (
     <UpupUploader
         provider={UpupProvider.Azure}
         tokenEndpoint="http://localhost:3001/api/storage/azure/upload-url"
@@ -29,5 +29,5 @@ const LocalUploader = () => (
 )
 
 export const Default: Story = {
-    render: () => <LocalUploader />,
+    render: () => <AzureUploader />,
 }

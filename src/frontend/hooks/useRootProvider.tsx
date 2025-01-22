@@ -55,7 +55,7 @@ export default function useRootProvider({
     const [isAddingMore, setIsAddingMore] = useState(false)
     const [selectedFiles, setSelectedFiles] = useState<File[]>([])
     const [activeAdapter, setActiveAdapter] = useState<UploadAdapter>()
-    const limit = mini ? 1 : propLimit
+    const limit = mini ? 1 : Math.max(propLimit, 1)
     const multiple = mini ? false : limit > 1
     const [isUploading, setIsUploading] = useState(false)
     const [filesProgressMap, setFilesProgressMap] = useState<FilesProgressMap>(

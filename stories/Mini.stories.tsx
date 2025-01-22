@@ -4,13 +4,13 @@ import UpupUploader from '../src/frontend/UpupUploader'
 import { UploadAdapter, UpupProvider } from '../src/shared/types'
 
 const meta = {
-    title: 'Cloud Storage/Local to AWS Upload',
+    title: 'Mini Uploader',
     component: UpupUploader,
     parameters: {
         layout: 'centered',
         docs: {
             description: {
-                component: 'Upload local files directly to AWS S3 storage.',
+                component: 'Mini uploader',
             },
         },
     },
@@ -19,7 +19,7 @@ const meta = {
 export default meta
 type Story = StoryObj<typeof UpupUploader>
 
-const LocalUploader = () => (
+const MiniUploader = () => (
     <UpupUploader
         provider={UpupProvider.AWS}
         tokenEndpoint="http://localhost:3000/api/upload"
@@ -42,9 +42,10 @@ const LocalUploader = () => (
                 onedrive_client_id: process.env.ONEDRIVE_CLIENT_ID!,
             },
         }}
+        mini
     />
 )
 
 export const Default: Story = {
-    render: () => <LocalUploader />,
+    render: () => <MiniUploader />,
 }

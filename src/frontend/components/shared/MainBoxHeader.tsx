@@ -8,7 +8,14 @@ type Props = {
 }
 
 export default function MainBoxHeader({ handleCancel }: Props) {
-    const { files, setIsAddingMore, isAddingMore } = useRootContext()
+    const {
+        files,
+        setIsAddingMore,
+        isAddingMore,
+        props: { mini, limit },
+    } = useRootContext()
+
+    if (mini) return null
 
     return (
         <div className="absolute left-0 right-0 top-0 grid grid-cols-4 items-center justify-between rounded-t-lg border-b border-[#e0e0e0] bg-[#fafafa] px-3 py-2 max-md:grid-rows-2">
@@ -24,7 +31,7 @@ export default function MainBoxHeader({ handleCancel }: Props) {
                     {files.length} file{files.length > 1 ? 's' : ''} selected
                 </ShouldRender>
             </span>
-            <ShouldRender if={!isAddingMore}>
+            <ShouldRender if={!isAddingMore || limit > 1}>
                 <button
                     className="flex items-center justify-end gap-1 p-1 text-sm text-blue-600 max-md:col-start-3 max-md:col-end-5"
                     onClick={() => setIsAddingMore(true)}

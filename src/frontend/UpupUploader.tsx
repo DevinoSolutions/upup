@@ -1,6 +1,7 @@
 import React from 'react'
 import { UpupUploaderProps } from '../shared/types'
 import MainBox from './components/MainBox'
+import ShouldRender from './components/shared/ShouldRender'
 import RootContext from './context/RootContext'
 import useDragAndDrop from './hooks/useDragAndDrop'
 import useRootProvider from './hooks/useRootProvider'
@@ -9,8 +10,8 @@ const getDivClassName = (mini: boolean) => {
     let className =
         'flex flex-col gap-3 shadow-wrapper select-none overflow-hidden rounded-2xl bg-white dark:bg-[#232323] py-4 px-5 '
     className += mini
-        ? 'h-[397px] w-full max-w-[280px]'
-        : 'h-[480px] w-full max-w-[600px]'
+        ? 'h-[397px] w-[clamp(100%,100%,280px)]'
+        : 'h-[480px] w-[clamp(100%,100%,600px)]'
 
     return className
 }
@@ -51,19 +52,22 @@ export default function UpupUploader(props: UpupUploaderProps) {
                 onDragLeave={handleDragLeave}
                 ref={containerRef}
             >
-                <div className="flex items-center justify-between gap-8">
+                <ShouldRender if={providerValues.props.limit > 1}>
                     <p className="text-xs leading-5 text-[#6D6D6D] sm:text-sm">
                         Add your documents here, you can upload up to{' '}
-                        {providerValues.props.limit} file
-                        {providerValues.props.limit > 1 ? 's' : ''} max
+                        {providerValues.props.limit} files max
                     </p>
-                </div>
+                </ShouldRender>
                 <MainBox
                     isDragging={isDragging}
                     setIsDragging={setIsDragging}
                 />
 
-                <div className="flex items-center justify-between gap-1">
+                <div
+                    className={`flex items-center justify-between gap-1 ${
+                        providerValues.props.mini ? 'flex-col' : ''
+                    }`}
+                >
                     <p className="text-xs leading-5 text-[#6D6D6D] sm:text-sm">
                         {supportText}
                     </p>

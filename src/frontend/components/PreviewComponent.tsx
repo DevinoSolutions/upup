@@ -26,7 +26,7 @@ export default memo(function PreviewComponent({
     const {
         handleFileRemove,
         upload: { filesProgressMap },
-        props: { onFileClick },
+        props: { onFileClick, mini },
     } = useRootContext()
     const [objectUrl, setObjectUrl] = useState<string>('')
     const extension = file.name.split('.').pop()?.toLowerCase()
@@ -60,7 +60,9 @@ export default memo(function PreviewComponent({
             {...restProps}
         >
             <div
-                className="flex cursor-pointer items-center justify-center rounded bg-white md:relative md:aspect-video md:shadow-md"
+                className={`flex cursor-pointer items-center justify-center rounded bg-white md:relative ${
+                    mini ? 'aspect-square' : 'md:aspect-video'
+                } md:shadow-md`}
                 onClick={() => onFileClick(file)}
             >
                 <FileIcon

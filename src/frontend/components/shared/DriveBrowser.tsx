@@ -61,8 +61,8 @@ export default function DriveBrowser({
         props: { accept },
     } = useRootContext()
     const [searchTerm, setSearchTerm] = useState('')
-    const items = (path[path.length - 1]?.children as Array<any>).filter(item =>
-        filterItems(item, accept),
+    const items = (path[path.length - 1]?.children as Array<any>)?.filter(
+        item => filterItems(item, accept),
     )
     const displayedItems = useMemo(
         () => searchDriveFiles<any>(items, searchTerm) || [],
@@ -134,7 +134,9 @@ export default function DriveBrowser({
                                 disabled={showLoader}
                             >
                                 Add {selectedFiles.length} file
-                                {selectedFiles.length > 1 ? 's' : ''}
+                                <ShouldRender if={selectedFiles.length > 1}>
+                                    s
+                                </ShouldRender>
                             </button>
                             <button
                                 className="ml-auto rounded-md p-1 text-sm text-[#1b5dab] transition-all duration-300 dark:text-[#fafafa]"
