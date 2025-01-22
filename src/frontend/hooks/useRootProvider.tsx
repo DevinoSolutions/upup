@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
-import checkFileType from '../../shared/lib/checkFileType'
+import { fileCheckType } from '../../shared/lib/file'
 import {
     FileProgressObject,
     UploadAdapter,
@@ -71,7 +71,7 @@ export default function useRootProvider({
         if (reset) return setSelectedFiles([])
 
         const validFilesByType = newFiles.filter(file =>
-            checkFileType(accept, file, onFileTypeMismatch),
+            fileCheckType(accept, file, onFileTypeMismatch),
         )
         const validFilesBySize = validFilesByType.filter(file =>
             checkFileSize(file, maxFileSize),

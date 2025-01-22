@@ -30,7 +30,6 @@ export default function FilePreview({
         [],
     )
 
-    // Show a simple thumbnail by default
     if (!showPreview)
         return (
             <button

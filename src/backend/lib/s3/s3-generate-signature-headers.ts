@@ -1,6 +1,7 @@
 import { S3ClientConfig } from '@aws-sdk/client-s3'
 import { createHash, createHmac } from 'crypto'
 import { UpupProvider } from '../../../shared/types'
+import { S3PresignedUrlParams } from '../../types'
 
 function hmac(key: string | Buffer, message: string) {
     return createHmac('sha256', key).update(message).digest()
@@ -44,18 +45,21 @@ function getHost(
     }
 }
 
-export default function awsGenerateSignatureHeaders(
-    corsConfig: string,
-    bucketName: string,
-    {
+export default function awsGenerateSignatureHeaders({
+    provider,
+    bucketName,
+    corsConfig,
+    s3ClientConfig: {
         region,
         credentials: { accessKeyId, secretAccessKey },
         endpoint,
-    }: S3ClientConfig & {
-        credentials?: any
     },
-    provider: UpupProvider,
-) {
+}: Pick<S3PresignedUrlParams, 'bucketName' | 'provider'> & {
+    corsConfig: string
+    s3ClientConfig: S3ClientConfig & {
+        credentials?: any
+    }
+}) {
     const service = 's3'
     const host = getHost(bucketName, provider, { endpoint, region })
 

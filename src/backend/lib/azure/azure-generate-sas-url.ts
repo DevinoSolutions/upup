@@ -12,7 +12,7 @@ import {
     UploadErrorType,
 } from '../../../shared/types'
 import { AzureSasUrlParams } from '../../types'
-import fileValidateParams from '../files/file-validate-params'
+import { fileValidateParams } from '../file'
 import azureGetTemporaryCredentials from './azure-get-temporary-credentials'
 
 export default async function azureGenerateSasUrl({
@@ -57,7 +57,7 @@ export default async function azureGenerateSasUrl({
             {
                 containerName,
                 blobName,
-                permissions: BlobSASPermissions.parse('racw'),
+                permissions: BlobSASPermissions.parse('racwt'),
                 startsOn: new Date(),
                 expiresOn: new Date(Date.now() + expiresIn * 1000),
                 protocol: SASProtocol.Https,

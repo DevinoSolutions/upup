@@ -62,10 +62,10 @@ export type UpupUploaderProps = {
     onFileUploadStart?: (file: File) => void
     onFileUploadComplete?: (
         file: File,
-        fileData: Omit<PresignedUrlResponse, 'uploadUrl'>,
+        fileData: ProviderUploadResponse,
     ) => void
     onFilesUploadComplete?: (
-        results: Array<Omit<PresignedUrlResponse, 'uploadUrl'> | undefined>,
+        results: Array<ProviderUploadResponse | undefined>,
     ) => void
     onFileUploadProgress?: (
         file: File,
@@ -81,11 +81,15 @@ export type UpupUploaderProps = {
     onError?: (error: string, file?: File) => void
 }
 
+export type ProviderUploadResponse = Omit<PresignedUrlResponse, 'uploadUrl'>
+
 export type PresignedUrlResponse = {
     key: string
-    publicUrl: string
     uploadUrl: string
     expiresIn: number
+    publicUrl?: string
+    uploadId?: string
+    isMultipart?: boolean
 }
 
 export enum UploadErrorType {
@@ -99,7 +103,8 @@ export enum UploadErrorType {
     CORS_CONFIG_ERROR = 'CORS_CONFIG_ERROR',
     TEMPORARY_CREDENTIALS_ERROR = 'TEMPORARY_CREDENTIALS_ERROR',
 
-    UPLOAD_PAUSED = 'UPLOAD_PAUSED',
+    UPLOAD_PAUSED_ERROR = 'UPLOAD_PAUSED_ERROR',
+    MULTIPART_UPLOAD_ID_ERROR = 'MULTIPART_UPLOAD_ID_ERROR',
     UNKNOWN_UPLOAD_ERROR = 'UNKNOWN_UPLOAD_ERROR',
 }
 

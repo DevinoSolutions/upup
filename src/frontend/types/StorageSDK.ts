@@ -1,4 +1,4 @@
-import { PresignedUrlResponse, UpupUploaderProps } from '../../shared/types'
+import { ProviderUploadResponse, UpupUploaderProps } from '../../shared/types'
 
 export interface UploadProgress {
     loaded: number
@@ -27,20 +27,16 @@ export interface StorageSDK {
     upload(
         file: File,
         options?: UploadOptions,
-    ): Promise<Omit<PresignedUrlResponse, 'uploadUrl'> | undefined>
+    ): Promise<ProviderUploadResponse | undefined>
     uploadAll(
         files: File[],
         options?: UploadOptions,
-    ): Promise<Array<Omit<PresignedUrlResponse, 'uploadUrl'> | undefined>>
+    ): Promise<Array<ProviderUploadResponse | undefined>>
     isPaused(fileName: string): boolean
     pauseUpload(fileName: string): void
     pauseAllUploads(): void
-    resumeUpload(
-        file: File,
-    ): Promise<Array<Omit<PresignedUrlResponse, 'uploadUrl'> | undefined>>
-    resumeAllUploads(): Promise<
-        Array<Omit<PresignedUrlResponse, 'uploadUrl'> | undefined>
-    >
+    resumeUpload(file: File): Promise<Array<ProviderUploadResponse | undefined>>
+    resumeAllUploads(): Promise<Array<ProviderUploadResponse | undefined>>
     retryFailedUpload: (file: File) => Promise<void>
     retryAllFailedUploads: () => Promise<void[]>
 }

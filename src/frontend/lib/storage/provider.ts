@@ -268,7 +268,7 @@ export class ProviderSDK implements StorageSDK {
         if (error instanceof Error && error.message === 'AbortError')
             return new UploadError(
                 'Upload paused',
-                UploadErrorType.UPLOAD_PAUSED,
+                UploadErrorType.UPLOAD_PAUSED_ERROR,
                 true,
             )
 
@@ -376,7 +376,7 @@ export class ProviderSDK implements StorageSDK {
     }
 
     pauseAllUploads() {
-        // Abort all active uploads
+        // Pause(abort) all active uploads
         for (const [fileName] of this.activeUploads) this.pauseUpload(fileName)
     }
 
@@ -421,7 +421,7 @@ export class ProviderSDK implements StorageSDK {
     retryAllFailedUploads() {
         const failedFiles: File[] = []
 
-        // Collect all paused files
+        // Collect all failed files
         for (const [_fileName, { file, status }] of this.activeUploads) {
             if (status === UploadState.FAILED) failedFiles.push(file)
         }
