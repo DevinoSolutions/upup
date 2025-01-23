@@ -3,7 +3,7 @@ import { Toaster } from 'sonner'
 import { useRootContext } from '../context/RootContext'
 import AdapterSelector from './AdapterSelector'
 import AdapterView from './AdapterView'
-import Preview from './Preview'
+import FileList from './FileList'
 import ShouldRender from './shared/ShouldRender'
 
 type Props = {
@@ -43,7 +43,7 @@ export default function MainBox({ isDragging, setIsDragging }: Props) {
                 />
             </ShouldRender>
             <ShouldRender if={boxState === BoxState.Preview}>
-                <Preview />
+                <FileList />
             </ShouldRender>
             <ShouldRender if={boxState === BoxState.AdapterView}>
                 <AdapterView />

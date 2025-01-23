@@ -1,4 +1,4 @@
-import React, { forwardRef, SVGAttributes, SVGProps } from 'react'
+import React, { forwardRef, memo, SVGAttributes, SVGProps } from 'react'
 import {
     TbFile,
     TbFileTypeBmp,
@@ -56,10 +56,12 @@ const fileTypes: { [key: string]: IconType } = {
     zip: TbFileTypeZip,
 }
 
-export default forwardRef<SVGSVGElement, Props>(function FileIcon(
-    { extension = '', ...props },
-    ref,
-) {
-    const Component = fileTypes[extension] || TbFile
-    return <Component ref={ref} {...props} />
-})
+export default memo(
+    forwardRef<SVGSVGElement, Props>(function FileIcon(
+        { extension = '', ...props },
+        ref,
+    ) {
+        const IconComponent = fileTypes[extension] || TbFile
+        return <IconComponent ref={ref} {...props} />
+    }),
+)

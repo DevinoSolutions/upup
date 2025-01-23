@@ -19,8 +19,15 @@ interface FileWithId extends File {
     id?: string
 }
 
+export enum UploadStatus {
+    PENDING = 'PENDING',
+    ONGOING = 'ONGOING',
+    SUCCESSFUL = 'SUCCESSFUL',
+    FAILED = 'FAILED',
+}
+
 type UploadProps = {
-    isUploading: boolean
+    uploadStatus: UploadStatus
     totalProgress: number
     filesProgressMap: FilesProgressMap
     proceedUpload: () => Promise<string[] | undefined>

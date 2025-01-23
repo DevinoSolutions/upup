@@ -72,6 +72,7 @@ export type UpupUploaderProps = {
     onFileTypeMismatch?: (file: File, acceptedTypes: string) => void
     onCancelUpload?: (files: File[]) => void
     onError?: (errorMessage: string) => void
+    onWarn?: (warningMessage: string) => void
 }
 
 export type PresignedUrlResponse = {

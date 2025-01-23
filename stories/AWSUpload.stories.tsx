@@ -24,7 +24,6 @@ const AWSUploader = () => (
         provider={UpupProvider.AWS}
         tokenEndpoint="http://localhost:3000/api/upload"
         limit={4}
-        accept="application/pdf"
         uploadAdapters={[
             UploadAdapter.INTERNAL,
             UploadAdapter.ONE_DRIVE,

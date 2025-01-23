@@ -1,26 +1,21 @@
 import { AnimatePresence, motion } from 'framer-motion'
-import React, { memo, useState } from 'react'
+import React, { memo } from 'react'
 import { v4 as uuidv4 } from 'uuid'
-import { useRootContext } from '../context/RootContext'
-import PreviewComponent from './PreviewComponent'
+import { UploadStatus, useRootContext } from '../context/RootContext'
+import FileItem from './FileItem'
 import MainBoxHeader from './shared/MainBoxHeader'
 import ProgressBar from './shared/ProgressBar'
 import ShouldRender from './shared/ShouldRender'
 
-export default memo(function Preview() {
-    const [isUploadDone, setIsUploadDone] = useState(false)
+export default memo(function FileList() {
     const {
         files,
         setFiles,
-        upload: { proceedUpload, isUploading, totalProgress },
+        upload: { proceedUpload, uploadStatus, totalProgress },
         props: { mini },
     } = useRootContext()
 
     const handleClearFiles = () => setFiles([], true)
-    const handleUpload = async () => {
-        await proceedUpload()
-        setIsUploadDone(true)
-    }
 
     return (
         <div
@@ -38,26 +33,22 @@ export default memo(function Preview() {
                         } `}
                     >
                         {files.map(file => (
-                            <PreviewComponent
-                                key={uuidv4()}
-                                file={file}
-                                index={files.indexOf(file)}
-                            />
+                            <FileItem key={uuidv4()} file={file} />
                         ))}
                     </div>
                 </motion.div>
             </AnimatePresence>
             <div className="flex items-center gap-3 rounded-b-lg border-t border-[#e0e0e0] bg-[#fafafa] px-3 py-2">
-                <ShouldRender if={!isUploadDone}>
+                <ShouldRender if={uploadStatus !== UploadStatus.SUCCESSFUL}>
                     <button
                         className="ml-auto rounded-lg bg-blue-500 px-3 py-2 text-sm font-medium text-white disabled:animate-pulse"
-                        onClick={handleUpload}
-                        disabled={isUploading}
+                        onClick={proceedUpload}
+                        disabled={uploadStatus === UploadStatus.ONGOING}
                     >
                         Upload {files.length} file{files.length > 1 ? 's' : ''}
                     </button>
                 </ShouldRender>
-                <ShouldRender if={!!isUploadDone}>
+                <ShouldRender if={uploadStatus === UploadStatus.SUCCESSFUL}>
                     <button
                         className="ml-auto rounded-lg bg-blue-500 px-3 py-2 text-sm font-medium text-white disabled:animate-pulse"
                         onClick={handleClearFiles}
@@ -67,6 +58,7 @@ export default memo(function Preview() {
                 </ShouldRender>
                 <ProgressBar
                     className="flex-1"
+                    progressBarClassName="rounded"
                     progress={totalProgress}
                     showValue
                 />

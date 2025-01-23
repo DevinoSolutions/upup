@@ -1,6 +1,6 @@
 import React from 'react'
 import { TbPlus } from 'react-icons/tb'
-import { useRootContext } from '../../context/RootContext'
+import { UploadStatus, useRootContext } from '../../context/RootContext'
 import ShouldRender from './ShouldRender'
 
 type Props = {
@@ -13,7 +13,10 @@ export default function MainBoxHeader({ handleCancel }: Props) {
         setIsAddingMore,
         isAddingMore,
         props: { mini, limit },
+        upload: { uploadStatus },
     } = useRootContext()
+    const isUploading = uploadStatus === UploadStatus.ONGOING
+    const isLimitReached = limit === files.length
 
     if (mini) return null
 
@@ -22,6 +25,7 @@ export default function MainBoxHeader({ handleCancel }: Props) {
             <button
                 className="max-md p-1 text-left text-sm text-blue-600 max-md:col-start-1 max-md:col-end-3 max-md:row-start-2"
                 onClick={handleCancel}
+                disabled={isUploading}
             >
                 Cancel
             </button>
@@ -31,10 +35,11 @@ export default function MainBoxHeader({ handleCancel }: Props) {
                     {files.length} file{files.length > 1 ? 's' : ''} selected
                 </ShouldRender>
             </span>
-            <ShouldRender if={!isAddingMore && limit > 1}>
+            <ShouldRender if={!isAddingMore && limit > 1 && !isLimitReached}>
                 <button
                     className="flex items-center justify-end gap-1 p-1 text-sm text-blue-600 max-md:col-start-3 max-md:col-end-5"
                     onClick={() => setIsAddingMore(true)}
+                    disabled={isUploading}
                 >
                     <TbPlus /> Add More
                 </button>

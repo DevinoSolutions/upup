@@ -4,6 +4,7 @@ import ShouldRender from './ShouldRender'
 type Props = {
     progress: number
     showValue?: boolean
+    progressBarClassName?: string
 } & HTMLAttributes<HTMLDivElement>
 
 export default forwardRef<HTMLDivElement, Props>(function ProgressBar(
@@ -17,7 +18,9 @@ export default forwardRef<HTMLDivElement, Props>(function ProgressBar(
                 className={className + ' flex items-center gap-2'}
                 {...rest}
             >
-                <div className="h-[6px] flex-1 rounded bg-[#F5F5F5]">
+                <div
+                    className={`h-[6px] flex-1 bg-[#F5F5F5] ${rest.progressBarClassName}`}
+                >
                     <div
                         className="h-full rounded-[4px]"
                         style={{

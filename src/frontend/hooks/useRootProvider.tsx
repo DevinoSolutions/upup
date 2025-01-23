@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import checkFileType from '../../shared/lib/checkFileType'
 import { UploadAdapter, UpupUploaderProps } from '../../shared/types'
+import { UploadStatus } from '../context/RootContext'
 import {
     checkFileSize,
     compressFile,
@@ -32,6 +33,7 @@ export default function useRootProvider({
     shouldCompress = false,
     uploadAdapters = [UploadAdapter.INTERNAL, UploadAdapter.LINK],
     onError = toast.error,
+    onWarn = toast.warning,
     onIntegrationClick = () => {},
     onFileClick = () => {},
     onCancelUpload = () => {},
@@ -57,7 +59,7 @@ export default function useRootProvider({
     const [activeAdapter, setActiveAdapter] = useState<UploadAdapter>()
     const limit = mini ? 1 : Math.max(propLimit, 1)
     const multiple = mini ? false : limit > 1
-    const [isUploading, setIsUploading] = useState(false)
+    const [uploadStatus, setUploadStatus] = useState(UploadStatus.PENDING)
     const [filesProgressMap, setFilesProgressMap] = useState<FilesProgressMap>(
         {} as FilesProgressMap,
     )
@@ -69,7 +71,7 @@ export default function useRootProvider({
             (a, b) => a + (b.loaded / b.total) * 100,
             0,
         )
-        return loadedValues / filesProgressMapValues.length
+        return Math.round(loadedValues / filesProgressMapValues.length)
     }, [filesProgressMap])
     const compressFiles = async (files: File[]): Promise<File[]> => {
         try {
@@ -87,7 +89,7 @@ export default function useRootProvider({
 
     const proceedUpload = async () => {
         if (!selectedFiles.length) return
-        setIsUploading(true)
+        setUploadStatus(UploadStatus.ONGOING)
 
         try {
             const compressedFiles = shouldCompress
@@ -141,12 +143,13 @@ export default function useRootProvider({
             // Extract keys from results
             const uploadedFileKeys = uploadResults.map(result => result.key)
             onFilesUploadComplete(uploadedFileKeys)
+
+            setUploadStatus(UploadStatus.SUCCESSFUL)
             return uploadedFileKeys
         } catch (error) {
             onError((error as Error).message)
+            setUploadStatus(UploadStatus.FAILED)
             return
-        } finally {
-            setIsUploading(false)
         }
     }
 
@@ -169,9 +172,11 @@ export default function useRootProvider({
 
         let validFilesByType = [] as File[]
         for (let file of newFiles) {
-            if (checkFileType(accept, file, onFileTypeMismatch))
-                validFilesByType.push(file)
-            else onError(`${file.name} has an invalid type!`)
+            if (checkFileType(accept, file)) validFilesByType.push(file)
+            else {
+                onError(`${file.name} has an invalid type!`)
+                onFileTypeMismatch(file, accept)
+            }
         }
 
         let validFilesBySize = [] as File[]
@@ -184,10 +189,10 @@ export default function useRootProvider({
         if (filesWithIds.length)
             setSelectedFiles(prev =>
                 multiple
-                    ? getUniqueFilesByName([...prev, ...filesWithIds]).slice(
-                          0,
-                          limit,
-                      )
+                    ? getUniqueFilesByName({
+                          files: [...prev, ...filesWithIds],
+                          onWarn,
+                      }).slice(0, limit)
                     : [filesWithIds[0]],
             )
 
@@ -210,7 +215,12 @@ export default function useRootProvider({
         handleFileRemove,
         oneDriveConfigs: driveConfigs?.oneDrive,
         googleDriveConfigs: driveConfigs?.googleDrive,
-        upload: { totalProgress, filesProgressMap, proceedUpload, isUploading },
+        upload: {
+            totalProgress,
+            filesProgressMap,
+            proceedUpload,
+            uploadStatus,
+        },
         props: {
             mini,
             loader,

@@ -43,13 +43,15 @@ export const fileAppendId = (file: File) =>
         id: uuid(),
     })
 
-export function getUniqueFilesByName(files: File[]) {
+export function getUniqueFilesByName({
+    files,
+    onWarn,
+}: Required<Pick<UpupUploaderProps, 'onWarn'>> & { files: File[] }) {
     const uniqueFiles = new Map()
 
     files.forEach(file => {
-        if (!uniqueFiles.has(file.name)) {
-            uniqueFiles.set(file.name, file)
-        }
+        if (!uniqueFiles.has(file.name)) uniqueFiles.set(file.name, file)
+        else onWarn(`${file.name} has previously been selected for upload`)
     })
 
     return Array.from(uniqueFiles.values())
