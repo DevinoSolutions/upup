@@ -87,7 +87,7 @@ export default function DriveBrowser({
                     {...rest}
                 />
                 <ShouldRender if={!!path}>
-                    <div className="h-full overflow-scroll overflow-y-scroll bg-[#f4f4f4] pt-2 dark:bg-[#1f1f1f] dark:text-[#fafafa]">
+                    <div className="h-full overflow-y-scroll bg-[#f4f4f4] pt-2 dark:bg-[#1f1f1f] dark:text-[#fafafa]">
                         <ShouldRender if={!!displayedItems.length}>
                             <ul className="p-2">
                                 {displayedItems.map((file, index) => {

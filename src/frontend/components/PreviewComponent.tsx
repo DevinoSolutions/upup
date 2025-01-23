@@ -11,7 +11,7 @@ import { useRootContext } from '../context/RootContext'
 import { bytesToSize } from '../lib/file'
 import FileIcon from './FileIcon'
 import FilePreview from './FilePreview'
-import ShouldRender from './shared/ShouldRender'
+import ProgressBar from './shared/ProgressBar'
 
 type Props = {
     file: File
@@ -26,7 +26,8 @@ export default memo(function PreviewComponent({
     const {
         handleFileRemove,
         upload: { filesProgressMap },
-        props: { onFileClick, mini },
+        props: { onFileClick },
+        files,
     } = useRootContext()
     const [objectUrl, setObjectUrl] = useState<string>('')
     const extension = file.name.split('.').pop()?.toLowerCase()
@@ -52,16 +53,16 @@ export default memo(function PreviewComponent({
             100,
     )
 
-    if (!objectUrl) return null
-
     return (
         <div
-            className="flex flex-1 gap-2 max-md:relative max-md:rounded max-md:bg-white max-md:p-2 max-md:shadow md:basis-32 md:flex-col"
+            className={`flex flex-1 gap-2 max-md:relative max-md:rounded max-md:bg-white max-md:p-2 max-md:shadow md:basis-32 ${
+                files.length > 1 ? 'md:flex-col' : 'flex-col'
+            }`}
             {...restProps}
         >
             <div
                 className={`flex cursor-pointer items-center justify-center rounded bg-white md:relative ${
-                    mini ? 'aspect-square' : 'md:aspect-video'
+                    files.length > 1 ? '' : 'flex-1'
                 } md:shadow-md`}
                 onClick={() => onFileClick(file)}
             >
@@ -77,22 +78,14 @@ export default memo(function PreviewComponent({
                 >
                     <TbX className="h-4 w-4 text-[#858585]" />
                 </button>
-                <ShouldRender if={!!progress}>
-                    <div className="absolute bottom-0 left-0 right-0 h-[6px] flex-1 rounded bg-[#F5F5F5]">
-                        <div
-                            className="h-full rounded-[4px]"
-                            style={{
-                                width: progress + '%',
-                                background:
-                                    progress == 100 ? '#8EA5E7' : '#C5CAFB',
-                            }}
-                        />
-                    </div>
-                </ShouldRender>
+                <ProgressBar
+                    className="absolute bottom-0 left-0 right-0"
+                    progress={progress}
+                />
             </div>
             <div className="flex flex-col items-start justify-between">
                 <p className="flex-1 text-xs text-[#0B0B0B]">
-                    {truncate(file.name, 30)}
+                    {truncate(file.name, 20)}
                 </p>
                 <p className="text-xs text-[#6D6D6D]">
                     {bytesToSize(file.size)}

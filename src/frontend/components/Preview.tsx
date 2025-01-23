@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from 'uuid'
 import { useRootContext } from '../context/RootContext'
 import PreviewComponent from './PreviewComponent'
 import MainBoxHeader from './shared/MainBoxHeader'
+import ProgressBar from './shared/ProgressBar'
 import ShouldRender from './shared/ShouldRender'
 
 export default memo(function Preview() {
@@ -11,7 +12,7 @@ export default memo(function Preview() {
     const {
         files,
         setFiles,
-        upload: { proceedUpload, isUploading },
+        upload: { proceedUpload, isUploading, totalProgress },
         props: { mini },
     } = useRootContext()
 
@@ -24,22 +25,16 @@ export default memo(function Preview() {
     return (
         <div
             className={`relative flex h-full flex-col rounded-lg ${
-                mini ? '' : 'pt-11'
+                mini ? '' : 'pt-[72px] md:pt-11'
             } shadow`}
         >
             <MainBoxHeader handleCancel={handleClearFiles} />
 
             <AnimatePresence>
-                <motion.div
-                    className={`preview-scroll flex-1 ${
-                        files.length > 1 ? 'overflow-y-auto' : 'overflow-hidden'
-                    }  bg-[#f4f4f4] p-3 dark:bg-[#1f1f1f]`}
-                >
+                <motion.div className="preview-scroll flex flex-1 flex-col overflow-y-auto bg-[#f4f4f4] p-3 dark:bg-[#1f1f1f]">
                     <div
-                        className={`flex gap-4 max-md:flex-col md:flex-wrap md:gap-y-6 ${
-                            files.length > 1
-                                ? "md:after:flex-shrink-0 md:after:flex-grow md:after:basis-80 md:after:content-['']"
-                                : ''
+                        className={`flex gap-4 max-md:flex-col md:grid md:gap-y-6 ${
+                            files.length > 1 ? 'sm:grid-cols-3' : 'flex-1'
                         } `}
                     >
                         {files.map(file => (
@@ -52,7 +47,7 @@ export default memo(function Preview() {
                     </div>
                 </motion.div>
             </AnimatePresence>
-            <div className="rounded-b-lg border-t border-[#e0e0e0] bg-[#fafafa] px-3 py-2">
+            <div className="flex items-center gap-3 rounded-b-lg border-t border-[#e0e0e0] bg-[#fafafa] px-3 py-2">
                 <ShouldRender if={!isUploadDone}>
                     <button
                         className="ml-auto rounded-lg bg-blue-500 px-3 py-2 text-sm font-medium text-white disabled:animate-pulse"
@@ -70,6 +65,11 @@ export default memo(function Preview() {
                         Done
                     </button>
                 </ShouldRender>
+                <ProgressBar
+                    className="flex-1"
+                    progress={totalProgress}
+                    showValue
+                />
             </div>
         </div>
     )

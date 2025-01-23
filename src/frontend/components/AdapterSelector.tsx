@@ -38,7 +38,7 @@ export default function AdapterSelector({ isDragging, setIsDragging }: Props) {
                     isDragging
                         ? 'bg-[#E7ECFC] backdrop-blur-sm dark:bg-[#045671]'
                         : 'border-dashed'
-                }`}
+                } ${isAddingMore ? 'max-md:pt-[72px]' : ''}`}
                 onDragOver={e => {
                     e.preventDefault()
                     setIsDragging(true)
@@ -97,7 +97,7 @@ export default function AdapterSelector({ isDragging, setIsDragging }: Props) {
                     accept={accept}
                     className="hidden"
                     ref={inputRef}
-                    multiple={mini ? false : multiple}
+                    multiple={multiple}
                     onChange={handleInputFileChange}
                 />
                 <div className="flex flex-col items-center gap-1 text-center sm:gap-2 sm:px-[30px]">

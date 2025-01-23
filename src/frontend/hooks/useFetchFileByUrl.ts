@@ -1,8 +1,11 @@
 import { useCallback, useState } from 'react'
 import { v4 as uuid } from 'uuid'
+import { useRootContext } from '../context/RootContext'
 
 export default function useFetchFileByUrl() {
-    const [error, setError] = useState('')
+    const {
+        props: { onError },
+    } = useRootContext()
     const [loading, setLoading] = useState(false)
 
     const fetchImage = useCallback(
@@ -19,7 +22,7 @@ export default function useFetchFileByUrl() {
                 })
                 return file
             } catch (error) {
-                setError((error as Error).message)
+                onError((error as Error).message)
                 return
             } finally {
                 setLoading(false)
@@ -28,5 +31,5 @@ export default function useFetchFileByUrl() {
         [loading],
     )
 
-    return { error, loading, fetchImage }
+    return { loading, fetchImage }
 }

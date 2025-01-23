@@ -8,10 +8,8 @@ import useRootProvider from './hooks/useRootProvider'
 
 const getDivClassName = (mini: boolean) => {
     let className =
-        'flex flex-col gap-3 shadow-wrapper select-none overflow-hidden rounded-2xl bg-white dark:bg-[#232323] py-4 px-5 '
-    className += mini
-        ? 'h-[397px] w-[clamp(100%,100%,280px)]'
-        : 'h-[480px] w-[clamp(100%,100%,600px)]'
+        'flex flex-col gap-3 shadow-wrapper select-none overflow-hidden rounded-2xl bg-white dark:bg-[#232323] py-4 px-5 w-full '
+    className += mini ? 'h-[397px] max-w-[280px]' : 'h-[480px] max-w-[600px]'
 
     return className
 }

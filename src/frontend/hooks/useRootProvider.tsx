@@ -31,7 +31,7 @@ export default function useRootProvider({
     loader = <p>loading...</p>,
     shouldCompress = false,
     uploadAdapters = [UploadAdapter.INTERNAL, UploadAdapter.LINK],
-    onError = console.error,
+    onError = toast.error,
     onIntegrationClick = () => {},
     onFileClick = () => {},
     onCancelUpload = () => {},
@@ -171,13 +171,13 @@ export default function useRootProvider({
         for (let file of newFiles) {
             if (checkFileType(accept, file, onFileTypeMismatch))
                 validFilesByType.push(file)
-            else toast.error(`${file.name} has an invalid type!`)
+            else onError(`${file.name} has an invalid type!`)
         }
 
         let validFilesBySize = [] as File[]
         for (let file of validFilesByType) {
             if (checkFileSize(file, maxFileSize)) validFilesBySize.push(file)
-            else toast.error(`${file.name} has an invalid type!`)
+            else onError(`${file.name} has an invalid type!`)
         }
 
         const filesWithIds = validFilesBySize.map(fileAppendId)

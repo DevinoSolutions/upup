@@ -18,7 +18,12 @@ enum BoxState {
 }
 
 export default function MainBox({ isDragging, setIsDragging }: Props) {
-    const { files, activeAdapter, isAddingMore } = useRootContext()
+    const {
+        files,
+        activeAdapter,
+        isAddingMore,
+        props: { mini },
+    } = useRootContext()
     const [boxState, setBoxState] = useState(BoxState.AdapterSelector)
 
     useEffect(() => {
@@ -45,13 +50,21 @@ export default function MainBox({ isDragging, setIsDragging }: Props) {
             </ShouldRender>
 
             <Toaster
-                duration={1500}
-                key="upupToaster"
+                duration={2500}
                 pauseWhenPageIsHidden
-                position="bottom-center"
-                className="absolute bottom-4"
+                className={`absolute left-[calc((100%-280px)/2)] mx-auto w-[280px] ${
+                    mini ? '' : 'left-[calc((100%-600px)/2)] sm:w-[600px]'
+                }`}
+                toastOptions={{
+                    classNames: {
+                        toast: `px-3 py-2 w-[200px] mx-auto left-[calc((100%-200px)/2)] ${
+                            mini
+                                ? ''
+                                : 'sm:w-[400px] left-[calc((100%-400px)/2)]'
+                        }`,
+                    },
+                }}
                 richColors
-                expand
                 closeButton
             />
         </div>
