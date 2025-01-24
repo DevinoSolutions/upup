@@ -1,5 +1,4 @@
 import React from 'react'
-import { TbPlus } from 'react-icons/tb'
 import { UploadStatus, useRootContext } from '../../context/RootContext'
 import { cn } from '../../lib/tailwind'
 import ShouldRender from './ShouldRender'
@@ -13,7 +12,13 @@ export default function MainBoxHeader({ handleCancel }: Props) {
         files,
         setIsAddingMore,
         isAddingMore,
-        props: { mini, limit, dark },
+        props: {
+            mini,
+            limit,
+            dark,
+            classNames,
+            icons: { AddMoreIcon },
+        },
         upload: { uploadStatus },
     } = useRootContext()
     const isUploading = uploadStatus === UploadStatus.ONGOING
@@ -37,6 +42,7 @@ export default function MainBoxHeader({ handleCancel }: Props) {
                     {
                         'text-[#30C5F7] dark:text-[#30C5F7]': dark,
                     },
+                    classNames.containerCancelButton,
                 )}
                 onClick={handleCancel}
                 disabled={isUploading}
@@ -60,11 +66,12 @@ export default function MainBoxHeader({ handleCancel }: Props) {
                         {
                             'text-[#30C5F7] dark:text-[#30C5F7]': dark,
                         },
+                        classNames.addMoreButton,
                     )}
                     onClick={() => setIsAddingMore(true)}
                     disabled={isUploading}
                 >
-                    <TbPlus /> Add More
+                    <AddMoreIcon /> Add More
                 </button>
             </ShouldRender>
         </div>

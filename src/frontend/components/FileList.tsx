@@ -13,7 +13,7 @@ export default memo(function FileList() {
         files,
         setFiles,
         upload: { proceedUpload, uploadStatus, totalProgress },
-        props: { mini, dark },
+        props: { mini, dark, classNames },
     } = useRootContext()
 
     const handleClearFiles = () => setFiles([], true)
@@ -31,14 +31,19 @@ export default memo(function FileList() {
                     className={cn(
                         'preview-scroll flex flex-1 flex-col overflow-y-auto bg-[#f4f4f4] p-3',
                         { 'bg-[#1f1f1f] dark:bg-[#1f1f1f]': dark },
+                        classNames.fileListContainer,
                     )}
                 >
                     <div
                         className={cn(
                             'flex gap-4 max-md:flex-col md:grid md:gap-y-6',
                             {
-                                'sm:grid-cols-3': files.length > 1,
-                                'flex-1': files.length === 1,
+                                ['sm:grid-cols-3' +
+                                classNames.fileListContainerInnerMultiple]:
+                                    files.length > 1,
+                                ['flex-1' +
+                                classNames.fileListContainerInnerSingle]:
+                                    files.length === 1,
                             },
                         )}
                     >
@@ -64,6 +69,7 @@ export default memo(function FileList() {
                             {
                                 'bg-[#30C5F7] dark:bg-[#30C5F7]': dark,
                             },
+                            classNames.uploadButton,
                         )}
                         onClick={proceedUpload}
                         disabled={uploadStatus === UploadStatus.ONGOING}
@@ -78,6 +84,7 @@ export default memo(function FileList() {
                             {
                                 'bg-[#30C5F7] dark:bg-[#30C5F7]': dark,
                             },
+                            classNames.doneButton,
                         )}
                         onClick={handleClearFiles}
                     >

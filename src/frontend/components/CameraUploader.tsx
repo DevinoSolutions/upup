@@ -1,5 +1,4 @@
 import React from 'react'
-import { TbCameraRotate, TbCapture, TbX } from 'react-icons/tb'
 import Webcam from 'react-webcam'
 import useCameraUploader from '../hooks/useCameraUploader'
 import { cn } from '../lib/tailwind'
@@ -15,7 +14,11 @@ export default function CameraUploader() {
         url,
         webcamRef,
         facingMode,
-        dark,
+        props: {
+            dark,
+            classNames,
+            icons: { CameraCaptureIcon, CameraDeleteIcon, CameraRotateIcon },
+        },
     } = useCameraUploader()
 
     return (
@@ -28,10 +31,13 @@ export default function CameraUploader() {
                     />
                     <button
                         onClick={clearUrl}
-                        className="absolute -right-2 -top-2 z-10 rounded-full bg-[#272727] p-1 text-xl text-[#f5f5f5]"
+                        className={cn(
+                            'absolute -right-2 -top-2 z-10 rounded-full bg-[#272727] p-1 text-xl text-[#f5f5f5]',
+                            classNames.cameraDeleteButton,
+                        )}
                         type="button"
                     >
-                        <TbX />
+                        <CameraDeleteIcon />
                     </button>
                 </ShouldRender>
 
@@ -53,22 +59,26 @@ export default function CameraUploader() {
                             {
                                 'bg-[#59D1F9] dark:bg-[#59D1F9]': dark,
                             },
+                            classNames.cameraCaptureButton,
                         )}
                         onClick={capture}
                         type="button"
                     >
                         <span>
-                            <TbCapture />
+                            <CameraCaptureIcon />
                         </span>
                         <span>Capture</span>
                     </button>
                     <button
-                        className="mt-2 flex w-1/3 flex-col items-center rounded-md bg-gray-500 p-2 text-white transition-all duration-300 hover:bg-gray-600"
+                        className={cn(
+                            'mt-2 flex w-1/3 flex-col items-center rounded-md bg-gray-500 p-2 text-white transition-all duration-300 hover:bg-gray-600',
+                            classNames.cameraRotateButton,
+                        )}
                         onClick={handleCameraSwitch}
                         type="button"
                     >
                         <span>
-                            <TbCameraRotate />
+                            <CameraRotateIcon />
                         </span>
                         <span>switch to {newCameraSide}</span>
                     </button>
@@ -80,6 +90,7 @@ export default function CameraUploader() {
                             {
                                 'bg-[#59D1F9] dark:bg-[#59D1F9]': dark,
                             },
+                            classNames.cameraAddButton,
                         )}
                         onClick={handleFetchImage}
                         type="button"

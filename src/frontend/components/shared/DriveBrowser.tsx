@@ -59,7 +59,7 @@ export default function DriveBrowser({
     ...rest
 }: Props) {
     const {
-        props: { accept, dark },
+        props: { accept, dark, classNames },
     } = useRootContext()
     const [searchTerm, setSearchTerm] = useState('')
     const items = (path[path.length - 1]?.children as Array<any>)?.filter(
@@ -146,6 +146,7 @@ export default function DriveBrowser({
                                         'animate-pulse': showLoader,
                                         'bg-[#30C5F7] dark:bg-[#30C5F7]': dark,
                                     },
+                                    classNames.driveAddFilesButton,
                                 )}
                                 onClick={handleSubmit}
                                 disabled={showLoader}
@@ -162,6 +163,7 @@ export default function DriveBrowser({
                                         'text-[#30C5F7] dark:text-[#30C5F7]':
                                             dark,
                                     },
+                                    classNames.driveCancelFilesButton,
                                 )}
                                 onClick={handleCancelDownload}
                                 disabled={showLoader}

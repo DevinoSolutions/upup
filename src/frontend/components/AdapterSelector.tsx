@@ -12,22 +12,25 @@ type Props = {
 
 export default function AdapterSelector({ isDragging, setIsDragging }: Props) {
     const {
-        onFileDragOver,
-        onFileDragLeave,
-        onFileDrop,
+        props: {
+            onFileDragOver,
+            onFileDragLeave,
+            onFileDrop,
+            mini,
+            accept,
+            multiple,
+            limit,
+            maxFileSize,
+            dark,
+            classNames,
+        },
         setFiles,
         isAddingMore,
         setIsAddingMore,
-        mini,
         chosenAdapters,
         handleAdapterClick,
-        accept,
         inputRef,
-        multiple,
         handleInputFileChange,
-        limit,
-        maxFileSize,
-        dark,
     } = useAdapterSelector()
 
     return (
@@ -79,12 +82,20 @@ export default function AdapterSelector({ isDragging, setIsDragging }: Props) {
                     />
                 </ShouldRender>
                 <ShouldRender if={!mini}>
-                    <div className="flex w-full flex-col justify-center gap-0 sm:flex-row sm:flex-wrap sm:items-center sm:gap-[26px] sm:px-[30px] md:gap-[30px]">
+                    <div
+                        className={cn(
+                            'flex w-full flex-col justify-center gap-0 sm:flex-row sm:flex-wrap sm:items-center sm:gap-[26px] sm:px-[30px] md:gap-[30px]',
+                            classNames.adapterList,
+                        )}
+                    >
                         {chosenAdapters.map(({ Icon, id, name }) => (
                             <button
                                 type="button"
                                 key={id}
-                                className="group flex items-center gap-[6px] max-sm:border-b max-sm:border-gray-200 max-sm:px-2 max-sm:py-1 sm:flex-col sm:justify-center sm:rounded-lg"
+                                className={cn(
+                                    'group flex items-center gap-[6px] max-sm:border-b max-sm:border-gray-200 max-sm:px-2 max-sm:py-1 sm:flex-col sm:justify-center sm:rounded-lg',
+                                    classNames.adapterButton,
+                                )}
                                 onKeyDown={e => {
                                     if (e.key === 'Enter') e.preventDefault()
                                 }}
@@ -97,15 +108,20 @@ export default function AdapterSelector({ isDragging, setIsDragging }: Props) {
                                             'bg-[#323232] dark:bg-[#323232]':
                                                 dark,
                                         },
+                                        classNames.adapterButtonIcon,
                                     )}
                                 >
                                     <Icon />
                                 </span>
                                 <span
-                                    className={cn('text-xs text-[#242634]', {
-                                        'text-[#6D6D6D] dark:text-[#6D6D6D]':
-                                            dark,
-                                    })}
+                                    className={cn(
+                                        'text-xs text-[#242634]',
+                                        {
+                                            'text-[#6D6D6D] dark:text-[#6D6D6D]':
+                                                dark,
+                                        },
+                                        classNames.adapterButtonText,
+                                    )}
                                 >
                                     {name}
                                 </span>

@@ -12,6 +12,8 @@ import {
     OneDriveConfigs,
     UploadAdapter,
     UpupUploaderProps,
+    UpupUploaderPropsClassNames,
+    UpupUploaderPropsIcons,
 } from '../../shared/types'
 import { FilesProgressMap } from '../hooks/useRootProvider'
 
@@ -33,7 +35,7 @@ type UploadProps = {
     proceedUpload: () => Promise<string[] | undefined>
 }
 
-interface IRootContext {
+export interface IRootContext {
     inputRef: RefObject<HTMLInputElement>
     activeAdapter?: UploadAdapter
     setActiveAdapter: Dispatch<SetStateAction<UploadAdapter | undefined>>
@@ -87,6 +89,17 @@ type ContextProps = Pick<
     multiple: boolean
     mini: boolean
     dark: boolean
+    classNames: UpupUploaderPropsClassNames
+    icons: Required<
+        Pick<
+            UpupUploaderPropsIcons,
+            | 'AddMoreIcon'
+            | 'FileDeleteIcon'
+            | 'CameraDeleteIcon'
+            | 'CameraCaptureIcon'
+            | 'CameraRotateIcon'
+        >
+    >
 }
 
 const RootContext = createContext<IRootContext>({

@@ -1,8 +1,9 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
+import { TbCameraRotate, TbCapture, TbPlus, TbTrash, TbX } from 'react-icons/tb'
 import { toast } from 'sonner'
 import checkFileType from '../../shared/lib/checkFileType'
 import { UploadAdapter, UpupUploaderProps } from '../../shared/types'
-import { UploadStatus } from '../context/RootContext'
+import { IRootContext, UploadStatus } from '../context/RootContext'
 import {
     checkFileSize,
     compressFile,
@@ -36,6 +37,8 @@ export default function useRootProvider({
     uploadAdapters = [UploadAdapter.INTERNAL, UploadAdapter.LINK],
     onError = toast.error,
     onWarn = toast.warning,
+    icons = {},
+    classNames = {},
     onIntegrationClick = () => {},
     onFileClick = () => {},
     onCancelUpload = () => {},
@@ -54,7 +57,7 @@ export default function useRootProvider({
     provider,
     tokenEndpoint,
     driveConfigs,
-}: UpupUploaderProps) {
+}: UpupUploaderProps): IRootContext {
     const inputRef = useRef<HTMLInputElement>(null)
     const [isAddingMore, setIsAddingMore] = useState(false)
     const [selectedFiles, setSelectedFiles] = useState<File[]>([])
@@ -240,6 +243,14 @@ export default function useRootProvider({
             maxFileSize,
             limit,
             multiple,
+            icons: {
+                AddMoreIcon: icons.AddMoreIcon || TbPlus,
+                FileDeleteIcon: icons.FileDeleteIcon || TbTrash,
+                CameraCaptureIcon: icons.CameraCaptureIcon || TbCapture,
+                CameraRotateIcon: icons.CameraRotateIcon || TbCameraRotate,
+                CameraDeleteIcon: icons.CameraDeleteIcon || TbX,
+            },
+            classNames,
 
             shouldCompress,
             provider,

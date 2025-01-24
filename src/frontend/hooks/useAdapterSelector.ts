@@ -8,27 +8,15 @@ export default function useAdapterSelector() {
         inputRef,
         setActiveAdapter,
         setFiles,
-        props: {
-            accept,
-            multiple,
-            onIntegrationClick,
-            uploadAdapters,
-            mini,
-            maxFileSize,
-            onFileDragLeave,
-            onFileDragOver,
-            onFileDrop,
-            limit,
-            dark,
-        },
+        props,
         isAddingMore,
         setIsAddingMore,
     } = useRootContext()
     const chosenAdapters = Object.values(uploadAdapterObject).filter(item =>
-        uploadAdapters.includes(item.id),
+        props.uploadAdapters.includes(item.id),
     )
     const handleAdapterClick = (adapterId: UploadAdapter) => {
-        onIntegrationClick(adapterId)
+        props.onIntegrationClick(adapterId)
 
         if (adapterId === UploadAdapter.INTERNAL) inputRef.current?.click()
         else setActiveAdapter(adapterId)
@@ -40,21 +28,13 @@ export default function useAdapterSelector() {
     }
 
     return {
-        onFileDragOver,
-        onFileDragLeave,
-        onFileDrop,
         setFiles,
         isAddingMore,
         setIsAddingMore,
-        mini,
         chosenAdapters,
         handleAdapterClick,
-        accept,
         inputRef,
-        multiple,
         handleInputFileChange,
-        limit,
-        maxFileSize,
-        dark,
+        props,
     }
 }

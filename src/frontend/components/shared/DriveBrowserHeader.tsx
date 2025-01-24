@@ -29,7 +29,7 @@ export default function DriveBrowserHeader({
 }: Props) {
     const {
         setActiveAdapter,
-        props: { dark },
+        props: { dark, classNames },
     } = useRootContext()
 
     if (!user) return null
@@ -100,9 +100,13 @@ export default function DriveBrowserHeader({
                     </div>
 
                     <button
-                        className={cn('text-blue-600 hover:underline', {
-                            'text-[#30C5F7] dark:text-[#30C5F7]': dark,
-                        })}
+                        className={cn(
+                            'text-blue-600 hover:underline',
+                            {
+                                'text-[#30C5F7] dark:text-[#30C5F7]': dark,
+                            },
+                            classNames.driveLogoutButton,
+                        )}
                         onClick={() => {
                             handleSignOut()
                             setActiveAdapter(undefined)

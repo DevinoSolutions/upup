@@ -20,7 +20,7 @@ type Props = {
 export default memo(function FileItem({ file }: Props) {
     const {
         files,
-        props: { dark },
+        props: { dark, classNames },
     } = useRootContext()
     const [objectUrl, setObjectUrl] = useState<string>('')
     const [showPreviewPortal, setShowPreviewPortal] = useState(false)
@@ -52,9 +52,11 @@ export default memo(function FileItem({ file }: Props) {
             className={cn(
                 'flex flex-1 gap-2 max-md:relative max-md:rounded max-md:border max-md:border-[#6D6D6D] max-md:bg-white md:basis-32',
                 {
-                    'md:flex-col': files.length > 1,
-                    'flex-col': files.length === 1,
                     'max-md:bg-[#1F1F1F] max-md:dark:bg-[#1F1F1F]': dark,
+                    ['md:flex-col' + classNames.fileItemMultiple]:
+                        files.length > 1,
+                    ['flex-col' + classNames.fileItemSingle]:
+                        files.length === 1,
                 },
             )}
         >
@@ -64,22 +66,40 @@ export default memo(function FileItem({ file }: Props) {
                 previewIsUnsupported={previewIsUnsupported}
                 setPreviewIsUnsupported={setPreviewIsUnsupported}
             />
-            <div className="flex flex-col items-start justify-between max-md:p-2 max-md:pt-0">
+            <div
+                className={cn(
+                    'flex flex-col items-start justify-between max-md:p-2 max-md:pt-0',
+                    classNames.fileInfo,
+                )}
+            >
                 <p
-                    className={cn('flex-1 text-xs text-[#0B0B0B]', {
-                        'text-white dark:text-white': dark,
-                    })}
+                    className={cn(
+                        'flex-1 text-xs text-[#0B0B0B]',
+                        {
+                            'text-white dark:text-white': dark,
+                        },
+                        classNames.fileName,
+                    )}
                 >
                     {truncate(file.name, 20)}
                 </p>
-                <p className="text-xs text-[#6D6D6D]">
+                <p
+                    className={cn(
+                        'text-xs text-[#6D6D6D]',
+                        classNames.fileSize,
+                    )}
+                >
                     {bytesToSize(file.size)}
                 </p>
                 <ShouldRender if={!previewIsUnsupported}>
                     <button
-                        className={cn('text-xs text-blue-600', {
-                            'text-[#59D1F9] dark:text-[#59D1F9]': dark,
-                        })}
+                        className={cn(
+                            'text-xs text-blue-600',
+                            {
+                                'text-[#59D1F9] dark:text-[#59D1F9]': dark,
+                            },
+                            classNames.filePreviewButton,
+                        )}
                         onClick={handleShowPreviewPortal}
                     >
                         Click to preview

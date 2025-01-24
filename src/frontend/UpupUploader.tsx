@@ -41,10 +41,14 @@ export default function UpupUploader(props: UpupUploaderProps) {
                 className={cn(
                     'shadow-wrapper flex w-full select-none flex-col gap-3 overflow-hidden rounded-2xl bg-white px-5 py-4',
                     {
-                        'h-[480px] max-w-[600px]': !providerValues.props.mini,
-                        'h-[397px] max-w-[280px]': providerValues.props.mini,
                         'bg-[#232323] dark:bg-[#232323]':
                             providerValues.props.dark,
+                        ['h-[480px] max-w-[600px]' +
+                        providerValues.props.classNames.containerFull]:
+                            !providerValues.props.mini,
+                        ['h-[397px] max-w-[280px]' +
+                        providerValues.props.classNames.containerMini]:
+                            providerValues.props.mini,
                     },
                 )}
                 onDragEnter={handleDragEnter}

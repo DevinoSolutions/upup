@@ -1,3 +1,5 @@
+import { FC } from 'react'
+
 export enum UploadAdapter {
     INTERNAL = 'INTERNAL',
     GOOGLE_DRIVE = 'GOOGLE_DRIVE',
@@ -30,6 +32,62 @@ export enum UpupProvider {
 export type MaxFileSizeObject = {
     size: number
     unit: 'B' | 'KB' | 'MB' | 'GB' | 'TB' | 'PB' | 'EB' | 'ZB' | 'YB'
+}
+
+export type UpupUploaderPropsClassNames = {
+    containerMini?: string
+    containerFull?: string
+    containerCancelButton?: string
+    addMoreButton?: string
+
+    adapterList?: string
+    adapterButton?: string
+    adapterButtonIcon?: string
+    adapterButtonText?: string
+    adapterCancelButton?: string
+
+    driveAddFilesButton?: string
+    driveCancelFilesButton?: string
+    driveLogoutButton?: string
+
+    urlFetchButton?: string
+
+    cameraDeleteButton?: string
+    cameraCaptureButton?: string
+    cameraRotateButton?: string
+    cameraAddButton?: string
+
+    fileListContainer?: string
+    fileListContainerInnerSingle?: string
+    fileListContainerInnerMultiple?: string
+
+    fileItemSingle?: string
+    fileItemMultiple?: string
+    fileThumbnailSingle?: string
+    fileThumbnailMultiple?: string
+    fileInfo?: string
+    fileName?: string
+    fileSize?: string
+    filePreviewButton?: string
+    fileDeleteButton?: string
+
+    uploadButton?: string
+    doneButton?: string
+
+    progressBarContainer?: string
+    progressBar?: string
+    progressBarInner?: string
+    progressBarText?: string
+}
+
+export type UpupUploaderPropsIcons = {
+    AddMoreIcon?: FC<{ className?: string }>
+
+    FileDeleteIcon?: FC<{ className?: string }>
+
+    CameraDeleteIcon?: FC<{ className?: string }>
+    CameraCaptureIcon?: FC<{ className?: string }>
+    CameraRotateIcon?: FC<{ className?: string }>
 }
 
 export type UpupUploaderProps = {
@@ -74,6 +132,8 @@ export type UpupUploaderProps = {
     onError?: (errorMessage: string) => void
     onWarn?: (warningMessage: string) => void
     dark?: boolean
+    classNames?: UpupUploaderPropsClassNames
+    icons?: UpupUploaderPropsIcons
 }
 
 export type PresignedUrlResponse = {

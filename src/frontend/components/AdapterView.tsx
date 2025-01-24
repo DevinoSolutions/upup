@@ -8,7 +8,7 @@ export default function AdapterView() {
     const {
         activeAdapter,
         setActiveAdapter,
-        props: { mini, dark },
+        props: { mini, dark, classNames },
     } = useRootContext()
     const UploadComponent =
         activeAdapter && uploadAdapterObject[activeAdapter].Component
@@ -40,6 +40,7 @@ export default function AdapterView() {
                             {
                                 'text-[#30C5F7] dark:text-[#30C5F7]': dark,
                             },
+                            classNames.adapterCancelButton,
                         )}
                         onClick={() => setActiveAdapter(undefined)}
                         type="button"
