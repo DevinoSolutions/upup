@@ -1,8 +1,9 @@
 import React, { Dispatch, MouseEventHandler, SetStateAction, memo } from 'react'
 import FileViewer from 'react-file-viewer'
-import { TbX } from 'react-icons/tb'
+import { TbTrash } from 'react-icons/tb'
 import { v4 as uuidv4 } from 'uuid'
 import { useRootContext } from '../context/RootContext'
+import { cn } from '../lib/tailwind'
 import FileIcon from './FileIcon'
 import FilePreviewUnsupported from './FilePreviewUnsupported'
 import ProgressBar from './shared/ProgressBar'
@@ -24,7 +25,7 @@ export default memo(function FilePreview({
     const {
         handleFileRemove,
         upload: { filesProgressMap },
-        props: { onFileClick, onError },
+        props: { onFileClick, onError, dark },
         files,
     } = useRootContext()
     const extension = file.type.split('/')[1]
@@ -42,9 +43,14 @@ export default memo(function FilePreview({
 
     return (
         <div
-            className={`flex cursor-pointer items-center justify-center rounded bg-white bg-contain bg-center bg-no-repeat md:relative ${
-                files.length > 1 ? 'aspect-square max-sm:w-14' : 'flex-1'
-            } md:shadow-md`}
+            className={cn(
+                'flex cursor-pointer items-center justify-center rounded bg-white bg-contain bg-center bg-no-repeat md:relative md:shadow-md',
+                {
+                    'aspect-square max-sm:w-14': files.length > 1,
+                    'flex-1': files.length === 1,
+                    'bg-[#232323] dark:bg-[#232323]': dark,
+                },
+            )}
             onClick={() => onFileClick(file)}
             style={
                 isImage
@@ -56,18 +62,10 @@ export default memo(function FilePreview({
         >
             <ShouldRender if={!isImage}>
                 <ShouldRender if={previewIsUnsupported}>
-                    <FileIcon
-                        key={uuidv4()}
-                        extension={extension}
-                        className="text-4xl text-blue-600 md:text-7xl"
-                    />
+                    <FileIcon extension={extension} />
                 </ShouldRender>
                 <ShouldRender if={!previewIsUnsupported}>
-                    <FileIcon
-                        key={uuidv4()}
-                        extension={extension}
-                        className="text-4xl text-blue-600 sm:hidden md:text-7xl"
-                    />
+                    <FileIcon extension={extension} className="sm:hidden" />
                     <div className="relative h-full w-full max-sm:hidden">
                         <div className="absolute inset-0">
                             <FileViewer
@@ -99,12 +97,12 @@ export default memo(function FilePreview({
                 </ShouldRender>
             </ShouldRender>
             <button
-                className="z-1 absolute -right-2 -top-2 rounded-full border border-[#858585] bg-[#f4f4f4] p-0.5 max-md:scale-90"
+                className="z-1 absolute -right-[10px] -top-[10px] rounded-full max-md:scale-90"
                 onClick={onHandleFileRemove}
                 type="button"
                 disabled={!!progress}
             >
-                <TbX className="h-4 w-4 text-[#858585]" />
+                <TbTrash className="text-2xl text-red-500" />
             </button>
             <ProgressBar
                 className="absolute bottom-0 left-0 right-0"

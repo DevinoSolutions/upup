@@ -19,6 +19,7 @@ export default function useAdapterSelector() {
             onFileDragOver,
             onFileDrop,
             limit,
+            dark,
         },
         isAddingMore,
         setIsAddingMore,
@@ -54,5 +55,6 @@ export default function useAdapterSelector() {
         handleInputFileChange,
         limit,
         maxFileSize,
+        dark,
     }
 }

@@ -1,6 +1,7 @@
 import React, { Dispatch, SetStateAction, useEffect, useState } from 'react'
 import { Toaster } from 'sonner'
 import { useRootContext } from '../context/RootContext'
+import { cn } from '../lib/tailwind'
 import AdapterSelector from './AdapterSelector'
 import AdapterView from './AdapterView'
 import FileList from './FileList'
@@ -22,7 +23,7 @@ export default function MainBox({ isDragging, setIsDragging }: Props) {
         files,
         activeAdapter,
         isAddingMore,
-        props: { mini },
+        props: { mini, dark },
     } = useRootContext()
     const [boxState, setBoxState] = useState(BoxState.AdapterSelector)
 
@@ -52,9 +53,12 @@ export default function MainBox({ isDragging, setIsDragging }: Props) {
             <Toaster
                 duration={2500}
                 pauseWhenPageIsHidden
-                className={`absolute left-[calc((100%-280px)/2)] mx-auto w-[280px] ${
-                    mini ? '' : 'left-[calc((100%-600px)/2)] sm:w-[600px]'
-                }`}
+                className={cn(
+                    'absolute left-[calc((100%-280px)/2)] mx-auto w-[280px]',
+                    {
+                        'left-[calc((100%-600px)/2)] sm:w-[600px]': !mini,
+                    },
+                )}
                 toastOptions={{
                     classNames: {
                         toast: `px-3 py-2 w-[200px] mx-auto left-[calc((100%-200px)/2)] ${
@@ -66,6 +70,7 @@ export default function MainBox({ isDragging, setIsDragging }: Props) {
                 }}
                 richColors
                 closeButton
+                theme={dark ? 'dark' : 'light'}
             />
         </div>
     )

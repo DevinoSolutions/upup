@@ -11,6 +11,7 @@ import {
     sizeToBytes,
 } from '../lib/file'
 import { ProviderSDK } from '../lib/storage/provider'
+import { cn } from '../lib/tailwind'
 
 interface FileWithId extends File {
     id?: string
@@ -27,9 +28,10 @@ export type FilesProgressMap = Record<string, FileProgress>
 export default function useRootProvider({
     accept = '*',
     mini = false,
+    dark = false,
     limit: propLimit = 1,
     maxFileSize = { size: 10, unit: 'MB' },
-    loader = <p>loading...</p>,
+    loader = <p className={cn({ 'text-[#6D6D6D]': dark })}>loading...</p>,
     shouldCompress = false,
     uploadAdapters = [UploadAdapter.INTERNAL, UploadAdapter.LINK],
     onError = toast.error,
@@ -223,6 +225,7 @@ export default function useRootProvider({
         },
         props: {
             mini,
+            dark,
             loader,
             onError,
             onIntegrationClick,

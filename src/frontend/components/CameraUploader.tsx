@@ -2,6 +2,7 @@ import React from 'react'
 import { TbCameraRotate, TbCapture, TbX } from 'react-icons/tb'
 import Webcam from 'react-webcam'
 import useCameraUploader from '../hooks/useCameraUploader'
+import { cn } from '../lib/tailwind'
 import ShouldRender from './shared/ShouldRender'
 
 export default function CameraUploader() {
@@ -14,15 +15,16 @@ export default function CameraUploader() {
         url,
         webcamRef,
         facingMode,
+        dark,
     } = useCameraUploader()
 
     return (
         <div className="flex h-full w-full flex-col justify-center overflow-auto px-3 py-2">
             <div className="relative flex-1 pt-10">
                 <ShouldRender if={!!url}>
-                    <img
-                        src={url}
-                        className="aspect-video rounded-xl border-2 border-[#272727]"
+                    <div
+                        className="aspect-video bg-contain bg-center bg-no-repeat"
+                        style={{ backgroundImage: `url(${url})` }}
                     />
                     <button
                         onClick={clearUrl}
@@ -46,7 +48,12 @@ export default function CameraUploader() {
             <div className="flex gap-4">
                 <ShouldRender if={!url}>
                     <button
-                        className="mt-2 flex w-1/3 flex-col items-center  justify-center rounded-md  bg-blue-500 p-2 text-white transition-all duration-300 hover:bg-blue-600 active:bg-blue-700"
+                        className={cn(
+                            'mt-2 flex w-1/3 flex-col items-center  justify-center rounded-md  bg-blue-600 p-2 text-white transition-all duration-300',
+                            {
+                                'bg-[#59D1F9] dark:bg-[#59D1F9]': dark,
+                            },
+                        )}
                         onClick={capture}
                         type="button"
                     >
@@ -56,7 +63,7 @@ export default function CameraUploader() {
                         <span>Capture</span>
                     </button>
                     <button
-                        className="mt-2 flex w-1/3 flex-col items-center rounded-md bg-gray-500 p-2 text-white transition-all duration-300 hover:bg-gray-600  active:bg-blue-700"
+                        className="mt-2 flex w-1/3 flex-col items-center rounded-md bg-gray-500 p-2 text-white transition-all duration-300 hover:bg-gray-600"
                         onClick={handleCameraSwitch}
                         type="button"
                     >
@@ -68,7 +75,12 @@ export default function CameraUploader() {
                 </ShouldRender>
                 <ShouldRender if={!!url}>
                     <button
-                        className="mt-2 w-full rounded-md bg-blue-500 p-2 text-white transition-all duration-300 hover:bg-blue-600 active:bg-blue-700"
+                        className={cn(
+                            'mt-2 w-full rounded-md bg-blue-600 p-2 text-white transition-all duration-300',
+                            {
+                                'bg-[#59D1F9] dark:bg-[#59D1F9]': dark,
+                            },
+                        )}
                         onClick={handleFetchImage}
                         type="button"
                     >

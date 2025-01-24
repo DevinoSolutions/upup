@@ -1,4 +1,5 @@
 import React, { forwardRef, HTMLAttributes } from 'react'
+import { cn } from '../../lib/tailwind'
 import ShouldRender from './ShouldRender'
 
 type Props = {
@@ -15,11 +16,14 @@ export default forwardRef<HTMLDivElement, Props>(function ProgressBar(
         <ShouldRender if={!!progress}>
             <div
                 ref={ref}
-                className={className + ' flex items-center gap-2'}
+                className={cn('flex items-center gap-2', className)}
                 {...rest}
             >
                 <div
-                    className={`h-[6px] flex-1 bg-[#F5F5F5] ${rest.progressBarClassName}`}
+                    className={cn(
+                        'h-[6px] flex-1 bg-[#F5F5F5]',
+                        rest.progressBarClassName,
+                    )}
                 >
                     <div
                         className="h-full rounded-[4px]"

@@ -3,6 +3,7 @@ import { MicrosoftUser, OneDriveRoot } from 'microsoft'
 import React, { Dispatch, SetStateAction } from 'react'
 import { TbSearch, TbUser } from 'react-icons/tb'
 import { useRootContext } from '../../context/RootContext'
+import { cn } from '../../lib/tailwind'
 import ShouldRender from './ShouldRender'
 
 type Props = {
@@ -26,19 +27,36 @@ export default function DriveBrowserHeader({
     onSearch,
     searchTerm,
 }: Props) {
-    const { setActiveAdapter } = useRootContext()
+    const {
+        setActiveAdapter,
+        props: { dark },
+    } = useRootContext()
 
     if (!user) return null
 
     return (
         <div>
-            <div className="grid grid-cols-[1fr,auto] border-b bg-[#fafafa] px-3 py-2 text-xs font-medium text-[#333] dark:bg-[#1f1f1f] dark:text-[#fafafa]">
+            <div
+                className={cn(
+                    'grid grid-cols-[1fr,auto] border-b border-[#e0e0e0] bg-[#fafafa] px-3 py-2 text-xs font-medium text-[#333]',
+                    {
+                        'border-[#6D6D6D] bg-[#1f1f1f] text-[#fafafa] dark:border-[#6D6D6D] dark:bg-[#1f1f1f] dark:text-[#fafafa]':
+                            dark,
+                    },
+                )}
+            >
                 <ShouldRender if={!!path}>
                     <div className="flex items-center gap-1">
                         {(path as Array<any>).map((p, i) => (
                             <p
                                 key={p.id}
-                                className="group flex shrink-0 cursor-pointer gap-1 truncate"
+                                className={cn(
+                                    'group flex shrink-0 cursor-pointer gap-1 truncate',
+                                    {
+                                        'text-[#6D6D6D] dark:text-[#6D6D6D]':
+                                            dark,
+                                    },
+                                )}
                                 style={{
                                     maxWidth: 100 / path.length + '%',
                                     pointerEvents:
@@ -62,7 +80,14 @@ export default function DriveBrowserHeader({
                     </div>
                 </ShouldRender>
                 <div className="flex items-center gap-2">
-                    <div className="relative flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-[#f4f4f4]">
+                    <div
+                        className={cn(
+                            'relative flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-[#f4f4f4]',
+                            {
+                                'bg-[#6D6D6D] dark:bg-[#6D6D6D]': dark,
+                            },
+                        )}
+                    >
                         <ShouldRender if={!!user.picture}>
                             <img
                                 src={user.picture}
@@ -75,7 +100,9 @@ export default function DriveBrowserHeader({
                     </div>
 
                     <button
-                        className="text-[#2275d7] hover:underline"
+                        className={cn('text-blue-600 hover:underline', {
+                            'text-[#30C5F7] dark:text-[#30C5F7]': dark,
+                        })}
                         onClick={() => {
                             handleSignOut()
                             setActiveAdapter(undefined)
@@ -87,10 +114,21 @@ export default function DriveBrowserHeader({
             </div>
 
             <ShouldRender if={showSearch}>
-                <div className="relative h-fit bg-[#f4f4f4] px-3 py-2 dark:bg-[#1f1f1f] dark:text-[#fafafa]">
+                <div
+                    className={cn('relative h-fit bg-[#f4f4f4] px-3 py-2', {
+                        'bg-[#1f1f1f] text-[#fafafa] dark:bg-[#1f1f1f] dark:text-[#fafafa]':
+                            dark,
+                    })}
+                >
                     <input
                         type="search"
-                        className="h-fit w-full rounded-md bg-[#eaeaea] px-3 py-2 pl-8 text-xs outline-none transition-all duration-300 dark:bg-[#2f2f2f] dark:text-[#fafafa]"
+                        className={cn(
+                            'h-fit w-full rounded-md bg-[#eaeaea] px-3 py-2 pl-8 text-xs outline-none transition-all duration-300',
+                            {
+                                'bg-[#2f2f2f] text-[#6D6D6D] dark:bg-[#2f2f2f] dark:text-[#6D6D6D]':
+                                    dark,
+                            },
+                        )}
                         placeholder="Search"
                         value={searchTerm}
                         onChange={e => onSearch(e.currentTarget.value)}

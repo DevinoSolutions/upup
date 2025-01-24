@@ -66,6 +66,7 @@ module.exports = {
                 'react',
                 'react-dom',
                 'react/jsx-runtime',
+                'tailwind-merge',
                 ...AWS_SDK_DEPS,
                 ...AZURE_DEPS,
                 ...GRAPH_CLIENT_DEPS,

@@ -86,6 +86,7 @@ type ContextProps = Pick<
     limit: number
     multiple: boolean
     mini: boolean
+    dark: boolean
 }
 
 const RootContext = createContext<IRootContext>({

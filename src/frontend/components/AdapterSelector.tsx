@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from 'framer-motion'
 import React, { Dispatch, SetStateAction } from 'react'
 import useAdapterSelector from '../hooks/useAdapterSelector'
+import { cn } from '../lib/tailwind'
 import MainBoxHeader from './shared/MainBoxHeader'
 import ShouldRender from './shared/ShouldRender'
 
@@ -26,6 +27,7 @@ export default function AdapterSelector({ isDragging, setIsDragging }: Props) {
         handleInputFileChange,
         limit,
         maxFileSize,
+        dark,
     } = useAdapterSelector()
 
     return (
@@ -34,11 +36,17 @@ export default function AdapterSelector({ isDragging, setIsDragging }: Props) {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className={`relative flex h-full flex-col-reverse items-center justify-center gap-3 rounded-lg border border-[#1849D6] dark:border-[#30C5F7] sm:flex-col sm:gap-10 md:gap-14 ${
-                    isDragging
-                        ? 'bg-[#E7ECFC] backdrop-blur-sm dark:bg-[#045671]'
-                        : 'border-dashed'
-                } ${isAddingMore ? 'max-md:pt-[72px]' : ''}`}
+                className={cn(
+                    'relative flex h-full flex-col-reverse items-center justify-center gap-3 rounded-lg border border-[#1849D6] sm:flex-col sm:gap-10 md:gap-14',
+                    {
+                        'max-md:pt-[72px]': isAddingMore,
+                        'border-[#30C5F7] dark:border-[#30C5F7]': dark,
+                        'border-dashed': !isDragging,
+                        'bg-[#E7ECFC] backdrop-blur-sm': isDragging && !dark,
+                        'bg-[#045671] backdrop-blur-sm dark:bg-[#045671]':
+                            isDragging && dark,
+                    },
+                )}
                 onDragOver={e => {
                     e.preventDefault()
                     setIsDragging(true)
@@ -82,10 +90,23 @@ export default function AdapterSelector({ isDragging, setIsDragging }: Props) {
                                 }}
                                 onClick={() => handleAdapterClick(id)}
                             >
-                                <span className="rounded-lg bg-white p-1 text-2xl font-semibold shadow group-hover:scale-90 dark:bg-[#323232] max-sm:scale-75 sm:p-[6px] sm:group-hover:scale-110">
+                                <span
+                                    className={cn(
+                                        'rounded-lg bg-white p-1 text-2xl font-semibold shadow group-hover:scale-90 max-sm:scale-75 sm:p-[6px] sm:group-hover:scale-110',
+                                        {
+                                            'bg-[#323232] dark:bg-[#323232]':
+                                                dark,
+                                        },
+                                    )}
+                                >
                                     <Icon />
                                 </span>
-                                <span className=" text-xs text-[#242634] dark:text-[#6D6D6D]">
+                                <span
+                                    className={cn('text-xs text-[#242634]', {
+                                        'text-[#6D6D6D] dark:text-[#6D6D6D]':
+                                            dark,
+                                    })}
+                                >
                                     {name}
                                 </span>
                             </button>
@@ -102,12 +123,19 @@ export default function AdapterSelector({ isDragging, setIsDragging }: Props) {
                 />
                 <div className="flex flex-col items-center gap-1 text-center sm:gap-2 sm:px-[30px]">
                     <div className="flex items-center gap-1">
-                        <span className="text-xs text-[#0B0B0B] dark:text-white sm:text-sm">
+                        <span
+                            className={cn('text-xs text-[#0B0B0B] sm:text-sm', {
+                                'text-white dark:text-white': dark,
+                            })}
+                        >
                             Drag your file
                             {limit > 1 ? 's' : ''} or
                         </span>
                         <span
-                            className="cursor-pointer text-xs font-semibold text-[#0E2ADD] dark:text-[#59D1F9] sm:text-sm"
+                            className={cn(
+                                'cursor-pointer text-xs font-semibold text-[#0E2ADD] sm:text-sm',
+                                { 'text-[#59D1F9] dark:text-[#59D1F9]': dark },
+                            )}
                             onClick={() => inputRef.current?.click()}
                         >
                             browse

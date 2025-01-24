@@ -7,6 +7,8 @@ import React, {
 import { createPortal } from 'react-dom'
 import FileViewer from 'react-file-viewer'
 import { v4 as uuidv4 } from 'uuid'
+import { useRootContext } from '../context/RootContext'
+import { cn } from '../lib/tailwind'
 
 export default memo(
     forwardRef<
@@ -20,6 +22,9 @@ export default memo(
         { onClick, onHidePortal, objectUrl, file, ...restProps },
         ref,
     ) {
+        const {
+            props: { dark },
+        } = useRootContext()
         const fileName = file.name
         const isImage = file.type.startsWith('image/')
         const extension = file.type.split('/')[1]
@@ -33,7 +38,9 @@ export default memo(
             >
                 <div className="relative h-[90vh] w-[90vw] p-4">
                     <div
-                        className="absolute inset-0 m-4 bg-white dark:bg-black"
+                        className={cn('absolute inset-0 m-4 bg-white', {
+                            'bg-black dark:bg-black': dark,
+                        })}
                         onClick={onClick}
                     >
                         {isImage ? (

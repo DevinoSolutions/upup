@@ -10,6 +10,7 @@ import React, {
 } from 'react'
 import { useRootContext } from '../../context/RootContext'
 import { searchDriveFiles } from '../../lib/file'
+import { cn } from '../../lib/tailwind'
 import DriveBrowserHeader from './DriveBrowserHeader'
 import DriveBrowserItem from './DriveBrowserItem'
 import ShouldRender from './ShouldRender'
@@ -58,7 +59,7 @@ export default function DriveBrowser({
     ...rest
 }: Props) {
     const {
-        props: { accept },
+        props: { accept, dark },
     } = useRootContext()
     const [searchTerm, setSearchTerm] = useState('')
     const items = (path[path.length - 1]?.children as Array<any>)?.filter(
@@ -75,9 +76,7 @@ export default function DriveBrowser({
 
     return (
         <ShouldRender if={true} isLoading={isClickLoading || !driveFiles}>
-            <div
-                className={`grid h-full w-full grid-rows-[auto,1fr,auto] overflow-auto bg-white`}
-            >
+            <div className="grid h-full w-full grid-rows-[auto,1fr,auto] overflow-auto bg-white">
                 <DriveBrowserHeader
                     showSearch={!!items?.length}
                     path={path}
@@ -87,7 +86,15 @@ export default function DriveBrowser({
                     {...rest}
                 />
                 <ShouldRender if={!!path}>
-                    <div className="h-full overflow-y-scroll bg-[#f4f4f4] pt-2 dark:bg-[#1f1f1f] dark:text-[#fafafa]">
+                    <div
+                        className={cn(
+                            'h-full overflow-y-scroll bg-[#f4f4f4] pt-2',
+                            {
+                                'bg-[#1f1f1f] text-[#fafafa] dark:bg-[#1f1f1f] dark:text-[#fafafa]':
+                                    dark,
+                            },
+                        )}
+                    >
                         <ShouldRender if={!!displayedItems.length}>
                             <ul className="p-2">
                                 {displayedItems.map((file, index) => {
@@ -124,12 +131,22 @@ export default function DriveBrowser({
                             animate={{ y: '0%', height: 'auto' }}
                             exit={{ y: '100%', height: 0 }}
                             transition={{ duration: 0.2 }}
-                            className="flex origin-bottom items-center justify-start gap-4 border-t border-[#e0e0e0] bg-[#fafafa] px-3 py-2 dark:bg-[#1f1f1f] dark:text-[#fafafa]"
+                            className={cn(
+                                'flex origin-bottom items-center justify-start gap-4 border-t border-[#e0e0e0] bg-[#fafafa] px-3 py-2',
+                                {
+                                    'border-[#6D6D6D] bg-[#1f1f1f] text-[#fafafa] dark:border-[#6D6D6D] dark:bg-[#1f1f1f] dark:text-[#fafafa]':
+                                        dark,
+                                },
+                            )}
                         >
                             <button
-                                className={`rounded-md bg-blue-500 px-3 py-2 text-sm font-medium text-white transition-all duration-300 hover:bg-blue-600 active:bg-blue-700 ${
-                                    showLoader ? 'animate-pulse' : ''
-                                }`}
+                                className={cn(
+                                    'rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white transition-all duration-300',
+                                    {
+                                        'animate-pulse': showLoader,
+                                        'bg-[#30C5F7] dark:bg-[#30C5F7]': dark,
+                                    },
+                                )}
                                 onClick={handleSubmit}
                                 disabled={showLoader}
                             >
@@ -139,7 +156,13 @@ export default function DriveBrowser({
                                 </ShouldRender>
                             </button>
                             <button
-                                className="ml-auto rounded-md p-1 text-sm text-[#1b5dab] transition-all duration-300 dark:text-[#fafafa]"
+                                className={cn(
+                                    'ml-auto rounded-md p-1 text-sm text-blue-600 transition-all duration-300',
+                                    {
+                                        'text-[#30C5F7] dark:text-[#30C5F7]':
+                                            dark,
+                                    },
+                                )}
                                 onClick={handleCancelDownload}
                                 disabled={showLoader}
                             >

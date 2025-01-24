@@ -5,14 +5,7 @@ import ShouldRender from './components/shared/ShouldRender'
 import RootContext from './context/RootContext'
 import useDragAndDrop from './hooks/useDragAndDrop'
 import useRootProvider from './hooks/useRootProvider'
-
-const getDivClassName = (mini: boolean) => {
-    let className =
-        'flex flex-col gap-3 shadow-wrapper select-none overflow-hidden rounded-2xl bg-white dark:bg-[#232323] py-4 px-5 w-full '
-    className += mini ? 'h-[397px] max-w-[280px]' : 'h-[480px] max-w-[600px]'
-
-    return className
-}
+import { cn } from './lib/tailwind'
 
 /**
  *
@@ -45,7 +38,15 @@ export default function UpupUploader(props: UpupUploaderProps) {
     return (
         <RootContext.Provider value={providerValues}>
             <div
-                className={getDivClassName(providerValues.props.mini)}
+                className={cn(
+                    'shadow-wrapper flex w-full select-none flex-col gap-3 overflow-hidden rounded-2xl bg-white px-5 py-4',
+                    {
+                        'h-[480px] max-w-[600px]': !providerValues.props.mini,
+                        'h-[397px] max-w-[280px]': providerValues.props.mini,
+                        'bg-[#232323] dark:bg-[#232323]':
+                            providerValues.props.dark,
+                    },
+                )}
                 onDragEnter={handleDragEnter}
                 onDragLeave={handleDragLeave}
                 ref={containerRef}
@@ -62,9 +63,9 @@ export default function UpupUploader(props: UpupUploaderProps) {
                 />
 
                 <div
-                    className={`flex items-center justify-between gap-1 ${
-                        providerValues.props.mini ? 'flex-col' : ''
-                    }`}
+                    className={cn('flex items-center justify-between gap-1', {
+                        'flex-col': providerValues.props.mini,
+                    })}
                 >
                     <p className="text-xs leading-5 text-[#6D6D6D] sm:text-sm">
                         {supportText}
@@ -73,18 +74,20 @@ export default function UpupUploader(props: UpupUploaderProps) {
                         <span className="text-xs leading-5 text-[#6D6D6D] sm:text-sm">
                             Powered by{' '}
                         </span>
-                        <img
-                            src="https://i.ibb.co/HGBrgp7/logo-dark.png"
-                            className="hidden dark:visible"
-                            width={61}
-                            height={13}
-                        />
-                        <img
-                            src="https://i.ibb.co/7S5q81d/logo-white.png"
-                            className="dark:hidden"
-                            width={61}
-                            height={13}
-                        />
+                        <ShouldRender if={providerValues.props.dark}>
+                            <img
+                                src="https://i.ibb.co/HGBrgp7/logo-dark.png"
+                                width={61}
+                                height={13}
+                            />
+                        </ShouldRender>
+                        <ShouldRender if={!providerValues.props.dark}>
+                            <img
+                                src="https://i.ibb.co/7S5q81d/logo-white.png"
+                                width={61}
+                                height={13}
+                            />
+                        </ShouldRender>
                     </div>
                 </div>
             </div>

@@ -73,6 +73,7 @@ export type UpupUploaderProps = {
     onCancelUpload?: (files: File[]) => void
     onError?: (errorMessage: string) => void
     onWarn?: (warningMessage: string) => void
+    dark?: boolean
 }
 
 export type PresignedUrlResponse = {
