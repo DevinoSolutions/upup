@@ -63,9 +63,12 @@ export default function UpupUploader(props: UpupUploaderProps) {
                 />
 
                 <div
-                    className={cn('flex items-center justify-between gap-1', {
-                        'flex-col': providerValues.props.mini,
-                    })}
+                    className={cn(
+                        'flex items-center justify-between gap-1 max-sm:flex-col',
+                        {
+                            'flex-col': providerValues.props.mini,
+                        },
+                    )}
                 >
                     <p className="text-xs leading-5 text-[#6D6D6D] sm:text-sm">
                         {supportText}
