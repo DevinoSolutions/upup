@@ -30,6 +30,7 @@ export enum UploadStatus {
 
 type UploadProps = {
     uploadStatus: UploadStatus
+    setUploadStatus: Dispatch<SetStateAction<UploadStatus>>
     totalProgress: number
     filesProgressMap: FilesProgressMap
     proceedUpload: () => Promise<string[] | undefined>

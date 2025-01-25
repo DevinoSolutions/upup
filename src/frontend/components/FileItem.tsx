@@ -52,11 +52,13 @@ export default memo(function FileItem({ file }: Props) {
             className={cn(
                 'flex flex-1 gap-2 max-md:relative max-md:rounded max-md:border max-md:border-[#6D6D6D] max-md:bg-white md:basis-32',
                 {
+                    'md:flex-col': files.length > 1,
+                    'flex-col': files.length === 1,
                     'max-md:bg-[#1F1F1F] max-md:dark:bg-[#1F1F1F]': dark,
-                    ['md:flex-col' + classNames.fileItemMultiple]:
-                        files.length > 1,
-                    ['flex-col' + classNames.fileItemSingle]:
-                        files.length === 1,
+                    [classNames.fileItemMultiple!]:
+                        classNames.fileItemMultiple && files.length > 1,
+                    [classNames.fileItemSingle!]:
+                        classNames.fileItemSingle && files.length === 1,
                 },
             )}
         >

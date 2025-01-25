@@ -12,11 +12,14 @@ export default memo(function FileList() {
     const {
         files,
         setFiles,
-        upload: { proceedUpload, uploadStatus, totalProgress },
+        upload: { proceedUpload, uploadStatus, setUploadStatus, totalProgress },
         props: { mini, dark, classNames },
     } = useRootContext()
 
-    const handleClearFiles = () => setFiles([], true)
+    const handleClearFiles = () => {
+        setFiles([], true)
+        setUploadStatus(UploadStatus.PENDING)
+    }
 
     return (
         <div
@@ -38,11 +41,13 @@ export default memo(function FileList() {
                         className={cn(
                             'flex gap-4 max-md:flex-col md:grid md:gap-y-6',
                             {
-                                ['sm:grid-cols-3' +
-                                classNames.fileListContainerInnerMultiple]:
+                                'sm:grid-cols-3': files.length > 1,
+                                'flex-1': files.length === 1,
+                                [classNames.fileListContainerInnerMultiple!]:
+                                    classNames.fileListContainerInnerMultiple &&
                                     files.length > 1,
-                                ['flex-1' +
-                                classNames.fileListContainerInnerSingle]:
+                                [classNames.fileListContainerInnerSingle!]:
+                                    classNames.fileListContainerInnerSingle &&
                                     files.length === 1,
                             },
                         )}
@@ -84,7 +89,7 @@ export default memo(function FileList() {
                             {
                                 'bg-[#30C5F7] dark:bg-[#30C5F7]': dark,
                             },
-                            classNames.doneButton,
+                            classNames.uploadDoneButton,
                         )}
                         onClick={handleClearFiles}
                     >

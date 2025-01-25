@@ -19,7 +19,12 @@ import { cn } from './lib/tailwind'
  * @constructor
  */
 export default function UpupUploader(props: UpupUploaderProps) {
-    const providerValues = useRootProvider(props)
+    const providerValues = useRootProvider({
+        ...props,
+        loader: props.loader || (
+            <p className={cn({ 'text-[#6D6D6D]': props.dark })}>loading...</p>
+        ),
+    })
     const supportText =
         providerValues.props.accept === '*'
             ? 'Supports all files'
@@ -43,11 +48,13 @@ export default function UpupUploader(props: UpupUploaderProps) {
                     {
                         'bg-[#232323] dark:bg-[#232323]':
                             providerValues.props.dark,
-                        ['h-[480px] max-w-[600px]' +
-                        providerValues.props.classNames.containerFull]:
+                        'h-[480px] max-w-[600px]': !providerValues.props.mini,
+                        'h-[397px] max-w-[280px]': providerValues.props.mini,
+                        [providerValues.props.classNames.containerFull!]:
+                            providerValues.props.classNames.containerFull &&
                             !providerValues.props.mini,
-                        ['h-[397px] max-w-[280px]' +
-                        providerValues.props.classNames.containerMini]:
+                        [providerValues.props.classNames.containerMini!]:
+                            providerValues.props.classNames.containerMini &&
                             providerValues.props.mini,
                     },
                 )}

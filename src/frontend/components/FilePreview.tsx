@@ -52,10 +52,12 @@ export default memo(function FilePreview({
                 'flex cursor-pointer items-center justify-center rounded bg-white bg-contain bg-center bg-no-repeat md:relative md:shadow-md',
                 {
                     'bg-[#232323] dark:bg-[#232323]': dark,
-                    ['aspect-square max-sm:w-14' +
-                    classNames.fileThumbnailMultiple]: files.length > 1,
-                    ['flex-1' + classNames.fileThumbnailSingle]:
-                        files.length === 1,
+                    'aspect-square max-sm:w-14': files.length > 1,
+                    'flex-1': files.length === 1,
+                    [classNames.fileThumbnailMultiple!]:
+                        classNames.fileThumbnailMultiple && files.length > 1,
+                    [classNames.fileThumbnailSingle!]:
+                        classNames.fileThumbnailSingle && files.length === 1,
                 },
             )}
             onClick={() => onFileClick(file)}
@@ -80,7 +82,10 @@ export default memo(function FilePreview({
                                 fileType={extension}
                                 filePath={objectUrl}
                                 onError={(e: Error) =>
-                                    onError('Error in file preview:' + e)
+                                    onError(
+                                        '[FilePreview] Error in file preview:' +
+                                            e,
+                                    )
                                 }
                                 errorComponent={() => (
                                     <FilePreviewUnsupported

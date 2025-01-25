@@ -35,14 +35,13 @@ export default forwardRef<HTMLDivElement, Props>(function ProgressBar(
                     )}
                 >
                     <div
-                        className={cn(
-                            'h-full rounded-[4px]',
-                            classNames.progressBarInner,
-                        )}
                         style={{
                             width: progress + '%',
-                            background: progress == 100 ? '#8EA5E7' : '#C5CAFB',
                         }}
+                        className={cn(
+                            'h-full rounded-[4px] bg-[#8EA5E7]',
+                            classNames.progressBarInner,
+                        )}
                     />
                 </div>
                 <ShouldRender if={!!showValue}>

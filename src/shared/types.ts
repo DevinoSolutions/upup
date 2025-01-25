@@ -72,7 +72,7 @@ export type UpupUploaderPropsClassNames = {
     fileDeleteButton?: string
 
     uploadButton?: string
-    doneButton?: string
+    uploadDoneButton?: string
 
     progressBarContainer?: string
     progressBar?: string
