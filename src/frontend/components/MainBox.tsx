@@ -39,7 +39,7 @@ export default function MainBox({ isDragging, setIsDragging }: Props) {
                 className={cn(
                     'absolute left-[calc((100%-280px)/2)] mx-auto w-[280px]',
                     {
-                        'left-[calc((100%-600px)/2)] sm:w-[600px]': !mini,
+                        '@cs/main:w-[600px] left-[calc((100%-600px)/2)]': !mini,
                     },
                 )}
                 toastOptions={{
@@ -47,7 +47,7 @@ export default function MainBox({ isDragging, setIsDragging }: Props) {
                         toast: `px-3 py-2 w-[200px] mx-auto left-[calc((100%-200px)/2)] ${
                             mini
                                 ? ''
-                                : 'sm:w-[400px] left-[calc((100%-400px)/2)]'
+                                : '@cs/main:w-[400px] left-[calc((100%-400px)/2)]'
                         }`,
                     },
                 }}

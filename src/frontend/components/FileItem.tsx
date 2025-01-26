@@ -38,11 +38,12 @@ export default memo(function FileItem({ file }: Props) {
     return (
         <div
             className={cn(
-                'flex flex-1 gap-2 max-md:relative max-md:rounded max-md:border max-md:border-[#6D6D6D] max-md:bg-white md:basis-32',
+                '@cs/main:static @cs/main:rounded-none @cs/main:border-none @cs/main:bg-transparent @cs/main:basis-32 relative flex flex-1 gap-2 rounded border border-[#6D6D6D] bg-white',
                 {
-                    'md:flex-col': files.size > 1,
+                    '@cs/main:flex-col': files.size > 1,
                     'flex-col': files.size === 1,
-                    'max-md:bg-[#1F1F1F] max-md:dark:bg-[#1F1F1F]': dark,
+                    '@cs/main:bg-transparent @cs/main:dark:bg-transparent bg-[#1F1F1F] dark:bg-[#1F1F1F]':
+                        dark,
                     [classNames.fileItemMultiple!]:
                         classNames.fileItemMultiple && files.size > 1,
                     [classNames.fileItemSingle!]:
@@ -61,7 +62,7 @@ export default memo(function FileItem({ file }: Props) {
             />
             <div
                 className={cn(
-                    'flex flex-col items-start justify-between max-md:p-2 max-md:pt-0',
+                    '@cs/main:p-0 flex flex-col items-start justify-between p-2 pt-0',
                     classNames.fileInfo,
                 )}
             >

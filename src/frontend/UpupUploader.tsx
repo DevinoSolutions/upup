@@ -43,65 +43,71 @@ export default function UpupUploader(props: UpupUploaderProps) {
     return (
         <RootContext.Provider value={providerValues}>
             <div
-                className={cn(
-                    'shadow-wrapper flex w-full select-none flex-col gap-3 overflow-hidden rounded-2xl bg-white px-5 py-4',
-                    {
-                        'bg-[#232323] dark:bg-[#232323]':
-                            providerValues.props.dark,
-                        'h-[480px] max-w-[600px]': !providerValues.props.mini,
-                        'h-[397px] max-w-[280px]': providerValues.props.mini,
-                        [providerValues.props.classNames.containerFull!]:
-                            providerValues.props.classNames.containerFull &&
-                            !providerValues.props.mini,
-                        [providerValues.props.classNames.containerMini!]:
-                            providerValues.props.classNames.containerMini &&
-                            providerValues.props.mini,
-                    },
-                )}
-                onDragEnter={handleDragEnter}
-                onDragLeave={handleDragLeave}
-                ref={containerRef}
+                className={cn('@container/main w-dvw', {
+                    'h-[480px] max-w-[600px]': !providerValues.props.mini,
+                    'h-[397px] max-w-[280px]': providerValues.props.mini,
+                })}
             >
-                <ShouldRender if={providerValues.props.limit > 1}>
-                    <p className="text-xs leading-5 text-[#6D6D6D] sm:text-sm">
-                        Add your documents here, you can upload up to{' '}
-                        {providerValues.props.limit} files max
-                    </p>
-                </ShouldRender>
-                <MainBox
-                    isDragging={isDragging}
-                    setIsDragging={setIsDragging}
-                />
-
                 <div
                     className={cn(
-                        'flex items-center justify-between gap-1 max-sm:flex-col',
+                        'shadow-wrapper flex h-full w-full select-none flex-col gap-3 overflow-hidden rounded-2xl bg-white px-5 py-4',
                         {
-                            'flex-col': providerValues.props.mini,
+                            'bg-[#232323] dark:bg-[#232323]':
+                                providerValues.props.dark,
+
+                            [providerValues.props.classNames.containerFull!]:
+                                providerValues.props.classNames.containerFull &&
+                                !providerValues.props.mini,
+                            [providerValues.props.classNames.containerMini!]:
+                                providerValues.props.classNames.containerMini &&
+                                providerValues.props.mini,
                         },
                     )}
+                    onDragEnter={handleDragEnter}
+                    onDragLeave={handleDragLeave}
+                    ref={containerRef}
                 >
-                    <p className="text-xs leading-5 text-[#6D6D6D] sm:text-sm">
-                        {supportText}
-                    </p>
-                    <div className="flex items-center gap-[5px]">
-                        <span className="text-xs leading-5 text-[#6D6D6D] sm:text-sm">
-                            Powered by{' '}
-                        </span>
-                        <ShouldRender if={providerValues.props.dark}>
-                            <img
-                                src="https://i.ibb.co/HGBrgp7/logo-dark.png"
-                                width={61}
-                                height={13}
-                            />
-                        </ShouldRender>
-                        <ShouldRender if={!providerValues.props.dark}>
-                            <img
-                                src="https://i.ibb.co/7S5q81d/logo-white.png"
-                                width={61}
-                                height={13}
-                            />
-                        </ShouldRender>
+                    <ShouldRender if={providerValues.props.limit > 1}>
+                        <p className="@cs/main:text-sm text-xs leading-5 text-[#6D6D6D]">
+                            Add your documents here, you can upload up to{' '}
+                            {providerValues.props.limit} files max
+                        </p>
+                    </ShouldRender>
+                    <MainBox
+                        isDragging={isDragging}
+                        setIsDragging={setIsDragging}
+                    />
+
+                    <div
+                        className={cn(
+                            '@cs/main:flex-row flex flex-col items-center justify-between gap-1',
+                            {
+                                'flex-col': providerValues.props.mini,
+                            },
+                        )}
+                    >
+                        <p className="@cs/main:text-sm text-xs leading-5 text-[#6D6D6D]">
+                            {supportText}
+                        </p>
+                        <div className="flex items-center gap-[5px]">
+                            <span className="@cs/main:text-sm text-xs leading-5 text-[#6D6D6D]">
+                                Powered by{' '}
+                            </span>
+                            <ShouldRender if={providerValues.props.dark}>
+                                <img
+                                    src="https://i.ibb.co/HGBrgp7/logo-dark.png"
+                                    width={61}
+                                    height={13}
+                                />
+                            </ShouldRender>
+                            <ShouldRender if={!providerValues.props.dark}>
+                                <img
+                                    src="https://i.ibb.co/7S5q81d/logo-white.png"
+                                    width={61}
+                                    height={13}
+                                />
+                            </ShouldRender>
+                        </div>
                     </div>
                 </div>
             </div>

@@ -101,6 +101,7 @@
         "@storybook/react": "^7.6.20",
         "@storybook/react-webpack5": "^7.6.20",
         "@storybook/testing-library": "^0.2.2",
+        "@tailwindcss/container-queries": "^0.1.1",
         "@types/node": "^20.10.0",
         "@types/pako": "^2.0.3",
         "@types/react": "^18.2.39",

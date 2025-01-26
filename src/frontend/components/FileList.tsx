@@ -20,7 +20,7 @@ export default memo(function FileList() {
     return (
         <div
             className={cn('relative flex h-full flex-col rounded-lg shadow', {
-                'pt-[72px] md:pt-11': !mini,
+                '@cs/main:pt-11 pt-[72px]': !mini,
                 hidden: isAddingMore || activeAdapter || !files.size,
             })}
         >
@@ -36,9 +36,9 @@ export default memo(function FileList() {
                 >
                     <div
                         className={cn(
-                            'flex gap-4 max-md:flex-col md:grid md:gap-y-6',
+                            '@cs/main:grid @cs/main:gap-y-6 flex flex-col gap-4',
                             {
-                                'sm:grid-cols-3': files.size > 1,
+                                '@cs/main:grid-cols-3': files.size > 1,
                                 'flex-1': files.size === 1,
                                 [classNames.fileListContainerInnerMultiple!]:
                                     classNames.fileListContainerInnerMultiple &&

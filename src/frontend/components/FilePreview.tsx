@@ -71,10 +71,10 @@ export default memo(
             <div
                 ref={ref}
                 className={cn(
-                    'flex cursor-pointer items-center justify-center rounded bg-white bg-contain bg-center bg-no-repeat md:relative md:shadow-md',
+                    'shadow-right @cs/main:relative @cs/main:rounded-r @cs/main:shadow-md flex cursor-pointer items-center justify-center rounded-l bg-white bg-contain bg-center bg-no-repeat',
                     {
                         'bg-[#232323] dark:bg-[#232323]': dark,
-                        'aspect-square max-sm:w-14': files.size > 1,
+                        '@cs/main:w-full aspect-square w-14': files.size > 1,
                         'flex-1': files.size === 1,
                         [classNames.fileThumbnailMultiple!]:
                             classNames.fileThumbnailMultiple && files.size > 1,
@@ -104,7 +104,7 @@ export default memo(
                 </ShouldRender>
                 <button
                     className={cn(
-                        'z-1 absolute -right-[10px] -top-[10px] rounded-full max-md:scale-90',
+                        'z-1 @cs/main:scale-100 absolute -right-[10px] -top-[10px] scale-90 rounded-full',
                         classNames.fileDeleteButton,
                     )}
                     onClick={onHandleFileRemove}

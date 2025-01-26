@@ -39,13 +39,13 @@ export default memo(
                 <ShouldRender if={!previewIsUnsupported}>
                     <FileIcon
                         extension={extension}
-                        className={cn('md:hidden', {
+                        className={cn('@cs/main:hidden', {
                             hidden: !showIcon,
                         })}
                     />
                     <div
                         className={cn('relative h-full w-full ', {
-                            'max-md:hidden': showIcon,
+                            '@cs/main:block hidden': showIcon,
                         })}
                     >
                         <div className="absolute inset-0">

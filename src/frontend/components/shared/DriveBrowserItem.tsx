@@ -59,7 +59,7 @@ export default function DriveBrowserItem({
             exit={{ opacity: 0, y: 10, transition }}
             transition={transition}
             className={cn(
-                'mb-1 flex cursor-pointer items-center justify-between gap-2 rounded-md p-1 py-2 hover:bg-[#bab4b499]',
+                'group mb-1 flex cursor-pointer items-center justify-between gap-2 rounded-md p-1 py-2 hover:bg-[#bab4b499]',
                 {
                     'font-medium': isFolder,
                     'bg-[#bab4b499]': isFileSelected,
@@ -81,12 +81,9 @@ export default function DriveBrowserItem({
                 <DriveBrowserIcon file={file} />
                 <h1
                     className={cn(
-                        'text-wrap break-all text-xs hover:text-[#e0e0e0]',
+                        'text-wrap break-all text-xs',
                         {
-                            'text-[#6D6D6D] dark:text-[#6D6D6D]':
-                                dark && !isFileSelected,
-                            'text-[#e0e0e0] dark:text-[#e0e0e0]':
-                                dark && isFileSelected,
+                            'text-[#e0e0e0] dark:text-[#e0e0e0]': dark,
                         },
                         classNames.driveItemInnerText,
                     )}

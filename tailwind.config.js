@@ -3,7 +3,11 @@ module.exports = {
     content: ['./src/**/*.{tsx,ts,css}'],
     darkMode: 'class', // or 'media' or 'class'
     theme: {
-        extend: {},
+        extend: {
+            containers: {
+                cs: '475px',
+            },
+        },
     },
-    plugins: [],
+    plugins: [require('@tailwindcss/container-queries')],
 }
