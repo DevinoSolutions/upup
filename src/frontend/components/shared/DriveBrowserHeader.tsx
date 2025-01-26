@@ -38,7 +38,7 @@ export default function DriveBrowserHeader({
         <div>
             <div
                 className={cn(
-                    'grid grid-cols-[1fr,auto] bg-black/[0.025] px-3 py-2 text-xs font-medium text-[#333]',
+                    'shadow-bottom grid grid-cols-[1fr,auto] bg-black/[0.025] px-3 py-2 text-xs font-medium text-[#333]',
                     {
                         'bg-white/5 text-[#FAFAFA] dark:bg-white/5 dark:text-[#FAFAFA]':
                             dark,

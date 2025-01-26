@@ -29,7 +29,7 @@ export default function MainBoxHeader({ handleCancel }: Props) {
     return (
         <div
             className={cn(
-                'absolute left-0 right-0 top-0 z-10 grid grid-cols-4 grid-rows-2 items-center justify-between rounded-t-lg bg-black/[0.025] px-3 py-2 @cs/main:grid-rows-1',
+                'shadow-bottom absolute left-0 right-0 top-0 z-10 grid grid-cols-4 grid-rows-2 items-center justify-between rounded-t-lg bg-black/[0.025] px-3 py-2 @cs/main:grid-rows-1',
                 {
                     'bg-white/5 dark:bg-white/5': dark,
                 },

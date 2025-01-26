@@ -36,15 +36,15 @@
 
 @layer utilities {
     .shadow-top {
-        box-shadow: 0 -1px 0 0 rgba(127, 127, 127, 0.5);
+        box-shadow: 0 -1px 0 0 rgba(128, 128, 128, 0.35);
     }
     .shadow-right {
-        box-shadow: 1px 0 0 0 rgba(127, 127, 127, 0.5);
+        box-shadow: 1px 0 0 0 rgba(128, 128, 128, 0.35);
     }
     .shadow-bottom {
-        box-shadow: 0 1px 0 0 rgba(127, 127, 127, 0.5);
+        box-shadow: 0 1px 0 0 rgba(128, 128, 128, 0.35);
     }
     .shadow-left {
-        box-shadow: -1px 0 0 0 rgba(127, 127, 127, 0.5);
+        box-shadow: -1px 0 0 0 rgba(128, 128, 128, 0.35);
     }
 }

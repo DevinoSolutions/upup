@@ -57,7 +57,7 @@ export default memo(function FileList() {
             </AnimatePresence>
             <div
                 className={cn(
-                    'flex items-center gap-3 rounded-b-lg bg-black/[0.025] px-3 py-2',
+                    'shadow-top flex items-center gap-3 rounded-b-lg bg-black/[0.025] px-3 py-2',
                     {
                         'bg-white/5 dark:bg-white/5': dark,
                     },

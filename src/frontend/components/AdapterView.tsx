@@ -26,7 +26,7 @@ export default function AdapterView() {
             >
                 <div
                     className={cn(
-                        'flex items-center justify-between bg-black/[0.025] px-3 py-2 text-sm font-medium text-[#1b5dab]',
+                        'shadow-bottom flex items-center justify-between bg-black/[0.025] px-3 py-2 text-sm font-medium text-[#1b5dab]',
                         {
                             'bg-white/5 text-[#FAFAFA] dark:bg-white/5 dark:text-[#FAFAFA]':
                                 dark,
