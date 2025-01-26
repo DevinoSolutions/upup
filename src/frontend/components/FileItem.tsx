@@ -38,7 +38,7 @@ export default memo(function FileItem({ file }: Props) {
     return (
         <div
             className={cn(
-                '@cs/main:static @cs/main:rounded-none @cs/main:border-none @cs/main:bg-transparent @cs/main:basis-32 relative flex flex-1 gap-2 rounded border border-[#6D6D6D] bg-white',
+                '@cs/main:static @cs/main:basis-32 @cs/main:rounded-none @cs/main:border-none @cs/main:bg-transparent relative flex flex-1 gap-2 rounded border border-[#6D6D6D] bg-white',
                 {
                     '@cs/main:flex-col': files.size > 1,
                     'flex-col': files.size === 1,

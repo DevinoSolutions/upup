@@ -38,7 +38,7 @@ export default function MainBoxHeader({ handleCancel }: Props) {
         >
             <button
                 className={cn(
-                    'max-md @cs/main:row-start-1 @cs/main:col-end-2 col-start-1 col-end-3 row-start-2 p-1 text-left text-sm text-blue-600',
+                    'max-md @cs/main:col-end-2 @cs/main:row-start-1 col-start-1 col-end-3 row-start-2 p-1 text-left text-sm text-blue-600',
                     {
                         'text-[#30C5F7] dark:text-[#30C5F7]': dark,
                     },

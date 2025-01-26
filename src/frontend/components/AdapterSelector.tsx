@@ -93,7 +93,7 @@ export default function AdapterSelector({ isDragging, setIsDragging }: Props) {
                                 type="button"
                                 key={id}
                                 className={cn(
-                                    '@cs/main:border-none @cs/main:p-0 @cs/main:flex-col @cs/main:justify-center @cs/main:rounded-lg group flex items-center gap-[6px] border-b border-gray-200 px-2 py-1',
+                                    '@cs/main:flex-col @cs/main:justify-center @cs/main:rounded-lg @cs/main:border-none @cs/main:p-0 group flex items-center gap-[6px] border-b border-gray-200 px-2 py-1',
                                     {
                                         'border-[#6D6D6D] dark:border-[#6D6D6D]':
                                             dark,
@@ -107,7 +107,7 @@ export default function AdapterSelector({ isDragging, setIsDragging }: Props) {
                             >
                                 <span
                                     className={cn(
-                                        '@cs/main:scale-100 @cs/main:p-[6px] @cs/main:group-hover:scale-110 @cs/main:shadow scale-75 rounded-lg bg-white p-0 text-2xl font-semibold group-hover:scale-90',
+                                        '@cs/main:scale-100 @cs/main:p-[6px] @cs/main:shadow @cs/main:group-hover:scale-110 scale-75 rounded-lg bg-white p-0 text-2xl font-semibold group-hover:scale-90',
                                         {
                                             'bg-[#323232] dark:bg-[#323232]':
                                                 dark,
