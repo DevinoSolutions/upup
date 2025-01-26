@@ -34,12 +34,12 @@ export default function MainBox({ isDragging, setIsDragging }: Props) {
             <FileList />
 
             <Toaster
-                duration={2500}
+                duration={3500}
                 pauseWhenPageIsHidden
                 className={cn(
                     'absolute left-[calc((100%-280px)/2)] mx-auto w-[280px]',
                     {
-                        '@cs/main:w-[600px] left-[calc((100%-600px)/2)]': !mini,
+                        'left-[calc((100%-600px)/2)] @cs/main:w-[600px]': !mini,
                     },
                 )}
                 toastOptions={{

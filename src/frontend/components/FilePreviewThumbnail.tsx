@@ -45,7 +45,7 @@ export default memo(
                     />
                     <div
                         className={cn('relative h-full w-full ', {
-                            '@cs/main:block hidden': showIcon,
+                            'hidden @cs/main:block': showIcon,
                         })}
                     >
                         <div className="absolute inset-0">

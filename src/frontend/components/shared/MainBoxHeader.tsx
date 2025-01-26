@@ -29,7 +29,7 @@ export default function MainBoxHeader({ handleCancel }: Props) {
     return (
         <div
             className={cn(
-                '@cs/main:grid-rows-1 absolute left-0 right-0 top-0 z-10 grid grid-cols-4 grid-rows-2 items-center justify-between rounded-t-lg bg-black/[0.025] px-3 py-2',
+                'absolute left-0 right-0 top-0 z-10 grid grid-cols-4 grid-rows-2 items-center justify-between rounded-t-lg bg-black/[0.025] px-3 py-2 @cs/main:grid-rows-1',
                 {
                     'bg-white/5 dark:bg-white/5': dark,
                 },
@@ -38,7 +38,7 @@ export default function MainBoxHeader({ handleCancel }: Props) {
         >
             <button
                 className={cn(
-                    'max-md @cs/main:col-end-2 @cs/main:row-start-1 col-start-1 col-end-3 row-start-2 p-1 text-left text-sm text-blue-600',
+                    'max-md col-start-1 col-end-3 row-start-2 p-1 text-left text-sm text-blue-600 @cs/main:col-end-2 @cs/main:row-start-1',
                     {
                         'text-[#30C5F7] dark:text-[#30C5F7]': dark,
                     },
@@ -51,7 +51,7 @@ export default function MainBoxHeader({ handleCancel }: Props) {
             </button>
             <span
                 className={
-                    '@cs/main:col-span-2 col-span-4 text-center text-sm text-[#6D6D6D]'
+                    'col-span-4 text-center text-sm text-[#6D6D6D] @cs/main:col-span-2'
                 }
             >
                 <ShouldRender if={isAddingMore}>Adding more files</ShouldRender>
@@ -62,7 +62,7 @@ export default function MainBoxHeader({ handleCancel }: Props) {
             <ShouldRender if={!isAddingMore && limit > 1 && !isLimitReached}>
                 <button
                     className={cn(
-                        '@cs/main:col-start-4 col-start-3 col-end-5 flex items-center justify-end gap-1 p-1 text-sm text-blue-600',
+                        'col-start-3 col-end-5 flex items-center justify-end gap-1 p-1 text-sm text-blue-600 @cs/main:col-start-4',
                         {
                             'text-[#30C5F7] dark:text-[#30C5F7]': dark,
                         },

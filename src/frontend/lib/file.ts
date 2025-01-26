@@ -39,8 +39,8 @@ export function checkFileSize(
 
 export const fileAppendParams = (file: File) => {
     Object.assign(file, {
-        id: btoa(file.name),
-        url: URL.createObjectURL(file),
+        id: (file as any).id || btoa(file.name),
+        url: (file as any).url || URL.createObjectURL(file),
     })
 
     return file as FileWithParams

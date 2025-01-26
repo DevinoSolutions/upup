@@ -43,7 +43,7 @@ export default function UpupUploader(props: UpupUploaderProps) {
     return (
         <RootContext.Provider value={providerValues}>
             <div
-                className={cn('@container/main w-dvw', {
+                className={cn('w-dvw @container/main', {
                     'h-[480px] max-w-[600px]': !providerValues.props.mini,
                     'h-[397px] max-w-[280px]': providerValues.props.mini,
                 })}
@@ -68,7 +68,7 @@ export default function UpupUploader(props: UpupUploaderProps) {
                     ref={containerRef}
                 >
                     <ShouldRender if={providerValues.props.limit > 1}>
-                        <p className="@cs/main:text-sm text-xs leading-5 text-[#6D6D6D]">
+                        <p className="text-xs leading-5 text-[#6D6D6D] @cs/main:text-sm">
                             Add your documents here, you can upload up to{' '}
                             {providerValues.props.limit} files max
                         </p>
@@ -80,17 +80,17 @@ export default function UpupUploader(props: UpupUploaderProps) {
 
                     <div
                         className={cn(
-                            '@cs/main:flex-row flex flex-col items-center justify-between gap-1',
+                            'flex flex-col items-center justify-between gap-1 @cs/main:flex-row',
                             {
                                 'flex-col': providerValues.props.mini,
                             },
                         )}
                     >
-                        <p className="@cs/main:text-sm text-xs leading-5 text-[#6D6D6D]">
+                        <p className="text-xs leading-5 text-[#6D6D6D] @cs/main:text-sm">
                             {supportText}
                         </p>
                         <div className="flex items-center gap-[5px]">
-                            <span className="@cs/main:text-sm text-xs leading-5 text-[#6D6D6D]">
+                            <span className="text-xs leading-5 text-[#6D6D6D] @cs/main:text-sm">
                                 Powered by{' '}
                             </span>
                             <ShouldRender if={providerValues.props.dark}>

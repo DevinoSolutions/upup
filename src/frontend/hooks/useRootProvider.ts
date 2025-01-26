@@ -82,12 +82,11 @@ export default function useRootProvider({
         return Math.round(loadedValues / filesProgressMapValues.length)
     }, [filesProgressMap])
 
-    const handleSetSelectedFiles = (newFiles: File[], reset = false) => {
+    const handleSetSelectedFiles = (newFiles: File[]) => {
         onFilesSelected(newFiles)
 
-        if (reset) return setSelectedFilesMap(new Map())
-
         const newFilesMap = new Map(selectedFilesMap)
+        const newFilesMapArray = Array.from(newFilesMap.values())
         for (const file of newFiles) {
             const i = newFiles.indexOf(file)
 
@@ -96,7 +95,7 @@ export default function useRootProvider({
                 onWarn('Allowed limit has been surpassed!')
                 break
             }
-            const fileWithId = fileAppendParams(file)
+            const fileWithParams = fileAppendParams(file)
 
             if (!checkFileType(accept, file)) {
                 onError(`${file.name} has an unsupported type!`)
@@ -105,9 +104,17 @@ export default function useRootProvider({
                 onError(
                     `${file.name} is larger than ${maxFileSize.size} ${maxFileSize.unit}!`,
                 )
-            else if (newFilesMap.has(fileWithId.id))
+            else if (newFilesMap.has(fileWithParams.id))
                 onWarn(`${file.name} has previously been selected`)
-            else newFilesMap.set(fileWithId.id, fileWithId)
+            else if (
+                newFilesMapArray.find(item => (file as any).url === item.url)
+            )
+                onWarn(
+                    `A file with this url: ${
+                        (file as any).url
+                    } has previously been selected`,
+                )
+            else newFilesMap.set(fileWithParams.id, fileWithParams)
         }
 
         setSelectedFilesMap(newFilesMap)

@@ -61,7 +61,7 @@ export interface IRootContext {
     setActiveAdapter: Dispatch<SetStateAction<UploadAdapter | undefined>>
 
     files: Map<string, FileWithParams>
-    setFiles: (newFiles: File[], reset?: boolean) => void
+    setFiles: (newFiles: File[]) => void
 
     isAddingMore: boolean
     setIsAddingMore: Dispatch<SetStateAction<boolean>>
