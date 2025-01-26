@@ -29,29 +29,45 @@ export enum UpupProvider {
     DigitalOcean = 'digitalocean',
 }
 
-export type MaxFileSizeObject = {
+type MaxFileSizeObject = {
     size: number
     unit: 'B' | 'KB' | 'MB' | 'GB' | 'TB' | 'PB' | 'EB' | 'ZB' | 'YB'
 }
 
-export type UpupUploaderPropsClassNames = {
+type UpupUploaderPropsClassNames = {
     containerMini?: string
     containerFull?: string
+    containerHeader?: string
     containerCancelButton?: string
-    addMoreButton?: string
+    containerAddMoreButton?: string
 
     adapterList?: string
     adapterButton?: string
     adapterButtonIcon?: string
     adapterButtonText?: string
-    adapterCancelButton?: string
 
+    adapterViewHeader?: string
+    adapterViewCancelButton?: string
+    adapterView?: string
+    adapterDriveLoading?: string
+
+    driveHeader?: string
+    driveLogoutButton?: string
+    driveSearchContainer?: string
+    driveSearchInput?: string
+    driveBody?: string
+    driveItemContainerDefault?: string
+    driveItemContainerSelected?: string
+    driveItemContainerInner?: string
+    driveItemInnerText?: string
+    driveFooter?: string
     driveAddFilesButton?: string
     driveCancelFilesButton?: string
-    driveLogoutButton?: string
 
+    urlInput?: string
     urlFetchButton?: string
 
+    cameraPreviewContainer?: string
     cameraDeleteButton?: string
     cameraCaptureButton?: string
     cameraRotateButton?: string
@@ -60,7 +76,9 @@ export type UpupUploaderPropsClassNames = {
     fileListContainer?: string
     fileListContainerInnerSingle?: string
     fileListContainerInnerMultiple?: string
+    fileListFooter?: string
 
+    filePreviewPortal?: string
     fileItemSingle?: string
     fileItemMultiple?: string
     fileThumbnailSingle?: string
@@ -81,7 +99,7 @@ export type UpupUploaderPropsClassNames = {
 }
 
 export type UpupUploaderPropsIcons = {
-    AddMoreIcon?: FC<{ className?: string }>
+    ContainerAddMoreIcon?: FC<{ className?: string }>
 
     FileDeleteIcon?: FC<{ className?: string }>
 
@@ -108,14 +126,14 @@ export type UpupUploaderProps = {
 
     // Event Handlers
     onFilesSelected?: (files: File[]) => void
-    onPrepareFiles?: (files: File[]) => Promise<File[]>
-    onFileClick?: (file: File) => void
+    onPrepareFiles?: (files: FileWithParams[]) => Promise<FileWithParams[]>
+    onFileClick?: (file: FileWithParams) => void
     onIntegrationClick?: (integrationType: string) => void
-    onFileUploadStart?: (file: File) => void
-    onFileUploadComplete?: (file: File, key: string) => void
+    onFileUploadStart?: (file: FileWithParams) => void
+    onFileUploadComplete?: (file: FileWithParams, key: string) => void
     onFilesUploadComplete?: (keys: string[]) => void
     onFileUploadProgress?: (
-        file: File,
+        file: FileWithParams,
         {
             loaded,
             total,
@@ -123,12 +141,12 @@ export type UpupUploaderProps = {
         }: { loaded: number; total: number; percentage: number },
     ) => void
     onFilesUploadProgress?: (completedFiles: number, totalFiles: number) => void
-    onFileRemove?: (file: File) => void
-    onFileDragOver?: (files: File[]) => void
-    onFileDragLeave?: (files: File[]) => void
-    onFileDrop?: (files: File[]) => void
+    onFileRemove?: (file: FileWithParams) => void
+    onFilesDragOver?: (files: File[]) => void
+    onFilesDragLeave?: (files: File[]) => void
+    onFilesDrop?: (files: File[]) => void
     onFileTypeMismatch?: (file: File, acceptedTypes: string) => void
-    onCancelUpload?: (files: File[]) => void
+    onCancelUpload?: (files: FileWithParams[]) => void
     onError?: (errorMessage: string) => void
     onWarn?: (warningMessage: string) => void
     dark?: boolean
@@ -171,3 +189,5 @@ export class UploadError extends Error {
         this.status = status || this.DEFAULT_ERROR_STATUS_CODE
     }
 }
+
+export type FileWithParams = File & { id: string; url: string }

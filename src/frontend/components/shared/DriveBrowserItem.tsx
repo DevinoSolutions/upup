@@ -15,12 +15,6 @@ type DriveBrowserItemProps = {
     index: number
 }
 
-const backgroundColors = {
-    default: '#e9ecef00',
-    selected: '#bab4b499',
-    hover: '#eaeaea',
-}
-
 export default function DriveBrowserItem({
     file,
     selectedFiles,
@@ -28,7 +22,7 @@ export default function DriveBrowserItem({
     index,
 }: DriveBrowserItemProps) {
     const {
-        props: { dark },
+        props: { dark, classNames },
     } = useRootContext()
     const isFolder = Boolean(
         (file as OneDriveFile).isFolder || (file as GoogleFile).children,
@@ -36,14 +30,6 @@ export default function DriveBrowserItem({
     const isFileSelected = (selectedFiles as Array<any>).filter(
         f => f.id === file.id,
     ).length
-
-    const backgroundColor = isFileSelected
-        ? backgroundColors.selected
-        : backgroundColors.default
-
-    const backgroundColorHover = isFileSelected
-        ? backgroundColors.selected
-        : backgroundColors.hover
 
     const transition: AnimationProps['transition'] = {
         type: 'spring',
@@ -59,39 +45,51 @@ export default function DriveBrowserItem({
             initial={{
                 opacity: 0,
                 y: 10,
-                backgroundColor,
             }}
             animate={{
                 opacity: 1,
                 y: 0,
-                backgroundColor,
                 transition,
             }}
             whileHover={{
                 opacity: 1,
                 y: 0,
-                backgroundColor: backgroundColorHover,
                 transition,
             }}
             exit={{ opacity: 0, y: 10, transition }}
             transition={transition}
             className={cn(
-                'mb-1 flex cursor-pointer items-center justify-between gap-2 rounded-md p-1 py-2',
+                'mb-1 flex cursor-pointer items-center justify-between gap-2 rounded-md p-1 py-2 hover:bg-[#bab4b499]',
                 {
                     'font-medium': isFolder,
+                    'bg-[#bab4b499]': isFileSelected,
+                    'bg-[#e9ecef00]': !isFileSelected,
+                    [classNames.driveItemContainerDefault!]:
+                        !isFileSelected && classNames.driveItemContainerDefault,
+                    [classNames.driveItemContainerSelected!]:
+                        isFileSelected && classNames.driveItemContainerSelected,
                 },
             )}
             onClick={() => handleClick(file as any)}
         >
-            <div className="flex items-center gap-2">
+            <div
+                className={cn(
+                    'flex items-center gap-2',
+                    classNames.driveItemContainerInner,
+                )}
+            >
                 <DriveBrowserIcon file={file} />
                 <h1
-                    className={cn('text-wrap break-all text-xs', {
-                        'text-[#6D6D6D] dark:text-[#6D6D6D]':
-                            dark && !isFileSelected,
-                        'text-[#e0e0e0] dark:text-[#e0e0e0]':
-                            dark && isFileSelected,
-                    })}
+                    className={cn(
+                        'text-wrap break-all text-xs hover:text-[#e0e0e0]',
+                        {
+                            'text-[#6D6D6D] dark:text-[#6D6D6D]':
+                                dark && !isFileSelected,
+                            'text-[#e0e0e0] dark:text-[#e0e0e0]':
+                                dark && isFileSelected,
+                        },
+                        classNames.driveItemInnerText,
+                    )}
                 >
                     {file.name}
                 </h1>

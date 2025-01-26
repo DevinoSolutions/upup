@@ -10,7 +10,7 @@ type Props = {
 } & HTMLAttributes<HTMLDivElement>
 
 export default forwardRef<HTMLDivElement, Props>(function ProgressBar(
-    { progress, className, showValue = false, ...rest },
+    { progress, className, progressBarClassName, showValue = false, ...rest },
     ref,
 ) {
     const {
@@ -30,7 +30,7 @@ export default forwardRef<HTMLDivElement, Props>(function ProgressBar(
                 <div
                     className={cn(
                         'h-[6px] flex-1 bg-[#F5F5F5]',
-                        rest.progressBarClassName,
+                        progressBarClassName,
                         classNames.progressBar,
                     )}
                 >
@@ -40,6 +40,7 @@ export default forwardRef<HTMLDivElement, Props>(function ProgressBar(
                         }}
                         className={cn(
                             'h-full rounded-[4px] bg-[#8EA5E7]',
+                            progressBarClassName,
                             classNames.progressBarInner,
                         )}
                     />

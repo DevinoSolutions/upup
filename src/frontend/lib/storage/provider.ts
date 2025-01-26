@@ -1,4 +1,5 @@
 import {
+    FileWithParams,
     PresignedUrlResponse,
     UploadError,
     UploadErrorType,
@@ -26,7 +27,7 @@ export class ProviderSDK implements StorageSDK {
     }
 
     async upload(
-        file: File,
+        file: FileWithParams,
         options = {} as UploadOptions,
     ): Promise<UploadResult> {
         try {
@@ -65,38 +66,36 @@ export class ProviderSDK implements StorageSDK {
         }
     }
 
-    private async getPresignedUrl(file: File): Promise<PresignedUrlResponse> {
-        try {
-            const requestBody = {
-                name: file.name,
-                type: file.type,
-                size: file.size,
-                provider: this.config.provider,
-                ...this.config.constraints,
-            }
-
-            const response = await fetch(this.config.tokenEndpoint, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(requestBody),
-            })
-
-            if (!response.ok) {
-                const errorData = await response.json()
-                throw new Error(errorData.details || 'Failed to get upload URL')
-            }
-
-            const data = await response.json()
-
-            return data
-        } catch (error) {
-            throw error
+    private async getPresignedUrl(
+        file: FileWithParams,
+    ): Promise<PresignedUrlResponse> {
+        const requestBody = {
+            name: file.name,
+            type: file.type,
+            size: file.size,
+            provider: this.config.provider,
+            ...this.config.constraints,
         }
+
+        const response = await fetch(this.config.tokenEndpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(requestBody),
+        })
+
+        if (!response.ok) {
+            const errorData = await response.json()
+            throw new Error(errorData.details || 'Failed to get upload URL')
+        }
+
+        const data = await response.json()
+
+        return data
     }
 
     private async uploadWithProgress(
         url: string,
-        file: File,
+        file: FileWithParams,
         { onFileUploadProgress, onFilesUploadProgress }: UploadOptions,
     ): Promise<Response> {
         return new Promise((resolve, reject) => {

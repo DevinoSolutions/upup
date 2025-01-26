@@ -45,19 +45,19 @@ export default function useGoogleDrive(
             return
         }
         setRawFiles(data.files)
-    }, [fetchDrive, google_api_key])
+    }, [fetchDrive, google_api_key, onError])
 
     /**
      * @description Get the user's name from Google Drive
      * @returns {Promise<void>}
      */
-    const getUserName = async () => {
+    const getUserName = useCallback(async () => {
         const response = await fetchDrive(
             `https://www.googleapis.com/oauth2/v3/userinfo`,
         )
         const data = await response.json()
         setUser(data)
-    }
+    }, [fetchDrive])
 
     const handleSignOut = async () => {
         // const google = await window.google
@@ -159,7 +159,7 @@ export default function useGoogleDrive(
                     .requestAccessToken({})
             })()
         }
-    }, [gisLoaded])
+    }, [gisLoaded, google_client_id, onError])
 
     /**
      *  @description Get the user's name and files list when the token is set
@@ -171,7 +171,7 @@ export default function useGoogleDrive(
                 await getFilesList()
             })()
         }
-    }, [token])
+    }, [getFilesList, getUserName, token])
 
     /**
      * @description Organize the files into a tree structure when the raw files are set

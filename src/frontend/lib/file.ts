@@ -1,6 +1,5 @@
 import pako from 'pako'
-import { v4 as uuid } from 'uuid'
-import { UpupUploaderProps } from '../../shared/types'
+import { FileWithParams, UpupUploaderProps } from '../../shared/types'
 
 /**
  * @param bytes assign keyword depend on size
@@ -38,30 +37,22 @@ export function checkFileSize(
     return false
 }
 
-export const fileAppendId = (file: File) =>
+export const fileAppendParams = (file: File) => {
     Object.assign(file, {
-        id: uuid(),
+        id: btoa(file.name),
+        url: URL.createObjectURL(file),
     })
 
-export function getUniqueFilesByName({
-    files,
-    onWarn,
-}: Required<Pick<UpupUploaderProps, 'onWarn'>> & { files: File[] }) {
-    const uniqueFiles = new Map()
-
-    files.forEach(file => {
-        if (!uniqueFiles.has(file.name)) uniqueFiles.set(file.name, file)
-        else onWarn(`${file.name} has previously been selected for upload`)
-    })
-
-    return Array.from(uniqueFiles.values())
+    return file as FileWithParams
 }
 
-export async function compressFile(file: File) {
-    const buffer: ArrayBuffer = await file.arrayBuffer()
-    return new File([pako.gzip(buffer)], file.name + '.gz', {
-        type: 'application/octet-stream',
-    })
+export async function compressFile(file: FileWithParams) {
+    const buffer = await file.arrayBuffer()
+    return fileAppendParams(
+        new File([pako.gzip(buffer)], file.name + '.gz', {
+            type: 'application/octet-stream',
+        }),
+    )
 }
 
 export function searchDriveFiles<
@@ -103,4 +94,14 @@ export function searchDriveFiles<
                 : fileNames[index].includes(searchString)
         })
         .slice(0, maxResults)
+}
+
+export function fileGetIsImage(fileType: string) {
+    return fileType.startsWith('image/')
+}
+
+export function fileGetExtension(fileType: string, fileName: string) {
+    const split = fileType.split('/')[1]
+
+    return split.includes('.') ? fileName.split('.').at(-1) : split
 }

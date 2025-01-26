@@ -17,23 +17,23 @@ export default function MainBoxHeader({ handleCancel }: Props) {
             limit,
             dark,
             classNames,
-            icons: { AddMoreIcon },
+            icons: { ContainerAddMoreIcon },
         },
         upload: { uploadStatus },
     } = useRootContext()
     const isUploading = uploadStatus === UploadStatus.ONGOING
-    const isLimitReached = limit === files.length
+    const isLimitReached = limit === files.size
 
     if (mini) return null
 
     return (
         <div
             className={cn(
-                'absolute left-0 right-0 top-0 z-10 grid grid-cols-4 items-center justify-between rounded-t-lg border-b border-[#e0e0e0] bg-[#fafafa] px-3 py-2 max-md:grid-rows-2',
+                'absolute left-0 right-0 top-0 z-10 grid grid-cols-4 items-center justify-between rounded-t-lg bg-black/[0.025] px-3 py-2 max-md:grid-rows-2',
                 {
-                    'border-[#6D6D6D] bg-[#1F1F1F] dark:border-[#6D6D6D] dark:bg-[#1F1F1F]':
-                        dark,
+                    'bg-white/5 dark:bg-white/5': dark,
                 },
+                classNames.containerHeader,
             )}
         >
             <button
@@ -56,7 +56,7 @@ export default function MainBoxHeader({ handleCancel }: Props) {
             >
                 <ShouldRender if={isAddingMore}>Adding more files</ShouldRender>
                 <ShouldRender if={!isAddingMore}>
-                    {files.length} file{files.length > 1 ? 's' : ''} selected
+                    {files.size} file{files.size > 1 ? 's' : ''} selected
                 </ShouldRender>
             </span>
             <ShouldRender if={!isAddingMore && limit > 1 && !isLimitReached}>
@@ -66,12 +66,12 @@ export default function MainBoxHeader({ handleCancel }: Props) {
                         {
                             'text-[#30C5F7] dark:text-[#30C5F7]': dark,
                         },
-                        classNames.addMoreButton,
+                        classNames.containerAddMoreButton,
                     )}
                     onClick={() => setIsAddingMore(true)}
                     disabled={isUploading}
                 >
-                    <AddMoreIcon /> Add More
+                    <ContainerAddMoreIcon /> Add More
                 </button>
             </ShouldRender>
         </div>

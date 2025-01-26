@@ -28,7 +28,7 @@ export default function useFetchFileByUrl() {
                 setLoading(false)
             }
         },
-        [loading],
+        [loading, onError],
     )
 
     return { loading, fetchImage }

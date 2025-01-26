@@ -49,17 +49,15 @@ export const Default: Story = {
                 onedrive_client_id: process.env.ONEDRIVE_CLIENT_ID!,
             },
         },
+        limit: 10,
     },
     parameters: {
         controls: {
             sort: 'requiredFirst',
             include: [
-                // 'loader',
-                // 'maxFileSize',
+                'maxFileSize',
                 'driveConfigs',
                 'uploadAdapters',
-                'provider',
-                'tokenEndpoint',
                 'shouldCompress',
                 'accept',
                 'limit',

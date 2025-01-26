@@ -13,9 +13,9 @@ type Props = {
 export default function AdapterSelector({ isDragging, setIsDragging }: Props) {
     const {
         props: {
-            onFileDragOver,
-            onFileDragLeave,
-            onFileDrop,
+            onFilesDragOver,
+            onFilesDragLeave,
+            onFilesDrop,
             mini,
             accept,
             multiple,
@@ -56,21 +56,21 @@ export default function AdapterSelector({ isDragging, setIsDragging }: Props) {
                     e.dataTransfer.dropEffect = 'copy'
 
                     const files = Array.from(e.dataTransfer.files)
-                    onFileDragOver(files)
+                    onFilesDragOver(files)
                 }}
                 onDragLeave={e => {
                     e.preventDefault()
                     setIsDragging(false)
 
                     const files = Array.from(e.dataTransfer.files)
-                    onFileDragLeave(files)
+                    onFilesDragLeave(files)
                 }}
                 onDrop={e => {
                     e.preventDefault()
 
                     const droppedFiles = Array.from(e.dataTransfer.files)
 
-                    onFileDrop(droppedFiles)
+                    onFilesDrop(droppedFiles)
                     setFiles(droppedFiles)
 
                     setIsDragging(false)
@@ -94,6 +94,10 @@ export default function AdapterSelector({ isDragging, setIsDragging }: Props) {
                                 key={id}
                                 className={cn(
                                     'group flex items-center gap-[6px] max-sm:border-b max-sm:border-gray-200 max-sm:px-2 max-sm:py-1 sm:flex-col sm:justify-center sm:rounded-lg',
+                                    {
+                                        'max-sm:border-[#6D6D6D] dark:max-sm:border-[#6D6D6D]':
+                                            dark,
+                                    },
                                     classNames.adapterButton,
                                 )}
                                 onKeyDown={e => {

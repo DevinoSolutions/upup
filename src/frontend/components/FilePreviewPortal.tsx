@@ -3,57 +3,72 @@ import React, {
     HTMLAttributes,
     memo,
     MouseEventHandler,
+    useMemo,
 } from 'react'
 import { createPortal } from 'react-dom'
 import FileViewer from 'react-file-viewer'
-import { v4 as uuidv4 } from 'uuid'
 import { useRootContext } from '../context/RootContext'
+import { fileGetExtension, fileGetIsImage } from '../lib/file'
 import { cn } from '../lib/tailwind'
 
 export default memo(
     forwardRef<
         HTMLDivElement,
         HTMLAttributes<HTMLDivElement> & {
-            onHidePortal: MouseEventHandler<HTMLDivElement>
-            objectUrl: string
-            file: File
+            onStopPropagation: MouseEventHandler<HTMLDivElement>
+            fileUrl: string
+            fileName: string
+            fileId: string
+            fileType: string
         }
     >(function FilePreviewPortal(
-        { onClick, onHidePortal, objectUrl, file, ...restProps },
+        {
+            onStopPropagation,
+            fileUrl,
+            fileName,
+            fileId,
+            fileType,
+            ...restProps
+        },
         ref,
     ) {
         const {
-            props: { dark },
+            props: { dark, classNames },
         } = useRootContext()
-        const fileName = file.name
-        const isImage = file.type.startsWith('image/')
-        const extension = file.type.split('/')[1]
+        const isImage = useMemo(() => fileGetIsImage(fileType), [fileType])
+        const extension = useMemo(
+            () => fileGetExtension(fileType, fileName),
+            [fileType, fileName],
+        )
 
         return createPortal(
             <div
                 className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
-                onClick={onHidePortal}
                 ref={ref}
                 {...restProps}
             >
                 <div className="relative h-[90vh] w-[90vw] p-4">
                     <div
-                        className={cn('absolute inset-0 m-4 bg-white', {
-                            'bg-black dark:bg-black': dark,
-                        })}
-                        onClick={onClick}
+                        className={cn(
+                            'absolute inset-0 m-4 bg-white',
+                            {
+                                'bg-[#232323] dark:bg-[#232323]': dark,
+                            },
+                            classNames.filePreviewPortal,
+                        )}
+                        onClick={onStopPropagation}
                     >
                         {isImage ? (
                             <img
-                                src={objectUrl}
+                                src={fileUrl}
                                 alt={fileName}
                                 className="h-full w-full rounded object-contain"
                             />
                         ) : (
                             <FileViewer
-                                key={uuidv4()}
+                                key={fileId}
                                 fileType={extension}
-                                filePath={objectUrl}
+                                filePath={fileUrl}
                             />
                         )}
                     </div>

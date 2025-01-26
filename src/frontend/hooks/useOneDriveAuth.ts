@@ -71,7 +71,7 @@ export default function useOneDriveAuth({
         }
 
         initialize()
-    }, [msalInstance])
+    }, [isInitialized, msalInstance, onError])
 
     const signIn =
         useCallback(async (): Promise<AuthenticationResult | null> => {
@@ -102,7 +102,8 @@ export default function useOneDriveAuth({
                         })
                     } catch (error) {
                         onError(
-                            'Silent token acquisition failed, proceeding with interactive login',
+                            'Silent token acquisition failed, proceeding with interactive login' +
+                                error,
                         ) // Silent token acquisition failed, fall through to interactive login
                     }
                 }
@@ -125,7 +126,13 @@ export default function useOneDriveAuth({
                 setIsAuthenticating(false)
                 setIsAuthInProgress(false)
             }
-        }, [msalInstance, isInitialized, isAuthenticating, isAuthInProgress])
+        }, [
+            msalInstance,
+            isInitialized,
+            isAuthenticating,
+            isAuthInProgress,
+            onError,
+        ])
 
     const handleSignIn = useCallback(async () => {
         if (!isInitialized || isAuthenticating || isAuthInProgress) return
@@ -145,7 +152,7 @@ export default function useOneDriveAuth({
             setToken(undefined)
             sessionStorage.removeItem('isAuthenticated')
         }
-    }, [signIn, isInitialized, isAuthenticating, isAuthInProgress])
+    }, [isInitialized, isAuthenticating, isAuthInProgress, signIn, onError])
 
     const handleSignOut = useCallback(async () => {
         if (!msalInstance || !isInitialized || isAuthInProgress) return
@@ -188,6 +195,7 @@ export default function useOneDriveAuth({
         isAuthInProgress,
         setUser,
         setOneDriveFiles,
+        onError,
     ])
 
     // Modify the auto-login effect

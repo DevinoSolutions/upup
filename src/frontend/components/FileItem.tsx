@@ -1,11 +1,6 @@
-import React, {
-    MouseEventHandler,
-    memo,
-    useCallback,
-    useEffect,
-    useState,
-} from 'react'
+import React, { MouseEventHandler, memo, useCallback, useState } from 'react'
 import truncate from 'truncate'
+import { FileWithParams } from '../../shared/types'
 import { useRootContext } from '../context/RootContext'
 import { bytesToSize } from '../lib/file'
 import { cn } from '../lib/tailwind'
@@ -14,59 +9,55 @@ import FilePreviewPortal from './FilePreviewPortal'
 import ShouldRender from './shared/ShouldRender'
 
 type Props = {
-    file: File
+    file: FileWithParams
 }
 
 export default memo(function FileItem({ file }: Props) {
     const {
         files,
-        props: { dark, classNames },
+        props: { dark, classNames, onFileClick },
     } = useRootContext()
-    const [objectUrl, setObjectUrl] = useState<string>('')
     const [showPreviewPortal, setShowPreviewPortal] = useState(false)
     const [previewIsUnsupported, setPreviewIsUnsupported] = useState(false)
 
-    const stopPropagation: MouseEventHandler<HTMLElement> = useCallback(e => {
-        e.stopPropagation()
-    }, [])
-
+    const handleStopPropagation: MouseEventHandler<HTMLElement> = useCallback(
+        e => {
+            e.stopPropagation()
+        },
+        [],
+    )
     const handleShowPreviewPortal: MouseEventHandler<HTMLSpanElement> =
-        useCallback(e => {
-            stopPropagation(e)
-            setShowPreviewPortal(true)
-        }, [])
-
-    useEffect(() => {
-        // Create the object URL when the file changes
-        const url = URL.createObjectURL(file)
-        setObjectUrl(url)
-
-        // Clean up the object URL when the component unmounts or when the file changes
-        return () => {
-            if (url) URL.revokeObjectURL(url)
-        }
-    }, [file])
+        useCallback(
+            e => {
+                handleStopPropagation(e)
+                setShowPreviewPortal(true)
+            },
+            [handleStopPropagation],
+        )
 
     return (
         <div
             className={cn(
                 'flex flex-1 gap-2 max-md:relative max-md:rounded max-md:border max-md:border-[#6D6D6D] max-md:bg-white md:basis-32',
                 {
-                    'md:flex-col': files.length > 1,
-                    'flex-col': files.length === 1,
+                    'md:flex-col': files.size > 1,
+                    'flex-col': files.size === 1,
                     'max-md:bg-[#1F1F1F] max-md:dark:bg-[#1F1F1F]': dark,
                     [classNames.fileItemMultiple!]:
-                        classNames.fileItemMultiple && files.length > 1,
+                        classNames.fileItemMultiple && files.size > 1,
                     [classNames.fileItemSingle!]:
-                        classNames.fileItemSingle && files.length === 1,
+                        classNames.fileItemSingle && files.size === 1,
                 },
             )}
         >
             <FilePreview
-                file={file}
-                objectUrl={objectUrl}
+                fileName={file.name}
+                fileType={file.type}
+                fileId={file.id}
+                fileUrl={file.url}
                 previewIsUnsupported={previewIsUnsupported}
                 setPreviewIsUnsupported={setPreviewIsUnsupported}
+                onClick={() => onFileClick(file)}
             />
             <div
                 className={cn(
@@ -108,10 +99,12 @@ export default memo(function FileItem({ file }: Props) {
                     </button>
                     <ShouldRender if={showPreviewPortal}>
                         <FilePreviewPortal
-                            onClick={stopPropagation}
-                            onHidePortal={() => setShowPreviewPortal(false)}
-                            file={file}
-                            objectUrl={objectUrl}
+                            onStopPropagation={handleStopPropagation}
+                            onClick={() => setShowPreviewPortal(false)}
+                            fileType={file.type}
+                            fileId={file.id}
+                            fileUrl={file.url}
+                            fileName={file.name}
                         />
                     </ShouldRender>
                 </ShouldRender>

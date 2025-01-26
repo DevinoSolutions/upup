@@ -26,11 +26,12 @@ export default function AdapterView() {
             >
                 <div
                     className={cn(
-                        'flex items-center justify-between border-b border-[#e0e0e0] bg-[#fafafa] px-3 py-2 text-sm font-medium text-[#1b5dab]',
+                        'flex items-center justify-between bg-black/[0.025] px-3 py-2 text-sm font-medium text-[#1b5dab]',
                         {
-                            'border-[#6D6D6D] bg-[#1f1f1f] text-[#fafafa] dark:border-[#6D6D6D] dark:bg-[#1f1f1f] dark:text-[#fafafa]':
+                            'bg-white/5 text-[#FAFAFA] dark:bg-white/5 dark:text-[#FAFAFA]':
                                 dark,
                         },
+                        classNames.adapterViewHeader,
                     )}
                 >
                     <Icon />
@@ -40,7 +41,7 @@ export default function AdapterView() {
                             {
                                 'text-[#30C5F7] dark:text-[#30C5F7]': dark,
                             },
-                            classNames.adapterCancelButton,
+                            classNames.adapterViewCancelButton,
                         )}
                         onClick={() => setActiveAdapter(undefined)}
                         type="button"
@@ -48,18 +49,7 @@ export default function AdapterView() {
                         Cancel
                     </button>
                 </div>
-
-                <div
-                    className={cn(
-                        'flex items-center justify-center overflow-hidden bg-[#f5f5f5]',
-                        {
-                            'bg-[#1f1f1f] text-[#fafafa] dark:bg-[#1f1f1f] dark:text-[#fafafa]':
-                                dark,
-                        },
-                    )}
-                >
-                    <UploadComponent />
-                </div>
+                <UploadComponent />
             </motion.div>
         </AnimatePresence>
     )

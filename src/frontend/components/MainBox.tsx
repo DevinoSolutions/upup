@@ -1,4 +1,4 @@
-import React, { Dispatch, SetStateAction, useEffect, useState } from 'react'
+import React, { Dispatch, SetStateAction } from 'react'
 import { Toaster } from 'sonner'
 import { useRootContext } from '../context/RootContext'
 import { cn } from '../lib/tailwind'
@@ -12,12 +12,6 @@ type Props = {
     setIsDragging: Dispatch<SetStateAction<boolean>>
 }
 
-enum BoxState {
-    AdapterSelector = 'adapter_selector',
-    AdapterView = 'adapter_view',
-    Preview = 'preview',
-}
-
 export default function MainBox({ isDragging, setIsDragging }: Props) {
     const {
         files,
@@ -25,30 +19,19 @@ export default function MainBox({ isDragging, setIsDragging }: Props) {
         isAddingMore,
         props: { mini, dark },
     } = useRootContext()
-    const [boxState, setBoxState] = useState(BoxState.AdapterSelector)
-
-    useEffect(() => {
-        if (activeAdapter) setBoxState(BoxState.AdapterView)
-        else {
-            if (!isAddingMore && files.length) setBoxState(BoxState.Preview)
-            else setBoxState(BoxState.AdapterSelector)
-        }
-    }, [files.length, isAddingMore, activeAdapter])
 
     return (
         <div className="relative flex-1 overflow-hidden">
-            <ShouldRender if={boxState === BoxState.AdapterSelector}>
+            <ShouldRender if={!!activeAdapter}>
+                <AdapterView />
+            </ShouldRender>
+            <ShouldRender if={!activeAdapter && (isAddingMore || !files.size)}>
                 <AdapterSelector
                     isDragging={isDragging}
                     setIsDragging={setIsDragging}
                 />
             </ShouldRender>
-            <ShouldRender if={boxState === BoxState.Preview}>
-                <FileList />
-            </ShouldRender>
-            <ShouldRender if={boxState === BoxState.AdapterView}>
-                <AdapterView />
-            </ShouldRender>
+            <FileList />
 
             <Toaster
                 duration={2500}

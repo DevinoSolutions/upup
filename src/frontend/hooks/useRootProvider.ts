@@ -1,21 +1,20 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { TbCameraRotate, TbCapture, TbPlus, TbTrash, TbX } from 'react-icons/tb'
+import { ReactElement, useCallback, useMemo, useRef, useState } from 'react'
+import { TbCameraRotate, TbCapture, TbPlus, TbTrash } from 'react-icons/tb'
 import { toast } from 'sonner'
 import checkFileType from '../../shared/lib/checkFileType'
-import { UploadAdapter, UpupUploaderProps } from '../../shared/types'
+import {
+    FileWithParams,
+    UploadAdapter,
+    UpupUploaderProps,
+} from '../../shared/types'
 import { IRootContext, UploadStatus } from '../context/RootContext'
 import {
     checkFileSize,
     compressFile,
-    fileAppendId,
-    getUniqueFilesByName,
+    fileAppendParams,
     sizeToBytes,
 } from '../lib/file'
 import { ProviderSDK } from '../lib/storage/provider'
-
-interface FileWithId extends File {
-    id?: string
-}
 
 type FileProgress = {
     id: string
@@ -40,11 +39,10 @@ export default function useRootProvider({
     classNames = {},
     onIntegrationClick = () => {},
     onFileClick = () => {},
-    onCancelUpload = () => {},
     onFileRemove = () => {},
-    onFileDragOver = () => {},
-    onFileDragLeave = () => {},
-    onFileDrop = () => {},
+    onFilesDragOver = () => {},
+    onFilesDragLeave = () => {},
+    onFilesDrop = () => {},
     onFileTypeMismatch = () => {},
     onFileUploadStart = () => {},
     onFileUploadProgress = () => {},
@@ -59,14 +57,20 @@ export default function useRootProvider({
 }: UpupUploaderProps): IRootContext {
     const inputRef = useRef<HTMLInputElement>(null)
     const [isAddingMore, setIsAddingMore] = useState(false)
-    const [selectedFiles, setSelectedFiles] = useState<File[]>([])
+    const [selectedFilesMap, setSelectedFilesMap] = useState<
+        Map<string, FileWithParams>
+    >(new Map())
     const [activeAdapter, setActiveAdapter] = useState<UploadAdapter>()
-    const limit = mini ? 1 : Math.max(propLimit, 1)
-    const multiple = mini ? false : limit > 1
     const [uploadStatus, setUploadStatus] = useState(UploadStatus.PENDING)
     const [filesProgressMap, setFilesProgressMap] = useState<FilesProgressMap>(
         {} as FilesProgressMap,
     )
+
+    const limit = useMemo(
+        () => (mini ? 1 : Math.max(propLimit, 1)),
+        [mini, propLimit],
+    )
+    const multiple = useMemo(() => (mini ? false : limit > 1), [limit, mini])
     const totalProgress = useMemo(() => {
         const filesProgressMapValues = Object.values(filesProgressMap)
         if (!filesProgressMapValues.length) return 0
@@ -77,35 +81,101 @@ export default function useRootProvider({
         )
         return Math.round(loadedValues / filesProgressMapValues.length)
     }, [filesProgressMap])
-    const compressFiles = async (files: File[]): Promise<File[]> => {
-        try {
-            return await Promise.all(
-                files.map(async file => {
-                    const compressed = await compressFile(file)
-                    return compressed
-                }),
-            )
-        } catch (error) {
-            files.forEach(file => onError(`Error compressing ${file.name}`))
-            throw error
+
+    const handleSetSelectedFiles = (newFiles: File[], reset = false) => {
+        onFilesSelected(newFiles)
+
+        if (reset) return setSelectedFilesMap(new Map())
+
+        const newFilesMap = new Map(selectedFilesMap)
+        for (const file of newFiles) {
+            const i = newFiles.indexOf(file)
+
+            // Check if files length has surpassed the limit
+            if (selectedFilesMap.size + i >= limit) {
+                onWarn('Allowed limit has been surpassed!')
+                break
+            }
+            const fileWithId = fileAppendParams(file)
+
+            if (!checkFileType(accept, file)) {
+                onError(`${file.name} has an unsupported type!`)
+                onFileTypeMismatch(file, accept)
+            } else if (!checkFileSize(file, maxFileSize))
+                onError(
+                    `${file.name} is larger than ${maxFileSize.size} ${maxFileSize.unit}!`,
+                )
+            else if (newFilesMap.has(fileWithId.id))
+                onWarn(`${file.name} has previously been selected`)
+            else newFilesMap.set(fileWithId.id, fileWithId)
         }
+
+        setSelectedFilesMap(newFilesMap)
+        setIsAddingMore(false)
     }
 
+    const handleFileRemove = useCallback(
+        (fileId: string) => {
+            const selectedFilesMapCopy = new Map(selectedFilesMap)
+            selectedFilesMapCopy.delete(fileId)
+
+            setSelectedFilesMap(selectedFilesMapCopy)
+
+            const file = selectedFilesMap.get(fileId)!
+            onFileRemove(file)
+        },
+        [onFileRemove, selectedFilesMap],
+    )
+
+    const compressFiles = useCallback(
+        async (files: FileWithParams[]) => {
+            try {
+                return await Promise.all(
+                    files.map(async file => {
+                        const compressed = await compressFile(file)
+                        return compressed
+                    }),
+                )
+            } catch (error) {
+                files.forEach(file => onError(`Error compressing ${file.name}`))
+                throw error
+            }
+        },
+        [onError],
+    )
+
+    const handlePrepareFiles = useCallback(
+        async (files: FileWithParams[]) => {
+            const progressMap = files.reduce((a, b) => {
+                a[b.id] = {
+                    id: b.id,
+                    loaded: 0,
+                    total: b.size,
+                }
+
+                return a
+            }, {} as FilesProgressMap)
+            setFilesProgressMap(progressMap)
+
+            return onPrepareFiles ? await onPrepareFiles(files) : files
+        },
+        [onPrepareFiles],
+    )
+
     const proceedUpload = async () => {
-        if (!selectedFiles.length) return
+        if (!selectedFilesMap.size) return
         setUploadStatus(UploadStatus.ONGOING)
+        const selectedFiles = Array.from(selectedFilesMap.values())
 
         try {
             const compressedFiles = shouldCompress
                 ? await compressFiles(selectedFiles)
                 : selectedFiles
 
-            const processedFiles = onPrepareFiles
-                ? await onPrepareFiles(compressedFiles)
-                : compressedFiles
+            const processedFiles = await handlePrepareFiles(compressedFiles)
 
             // Initialize SDK
-            let sdk = new ProviderSDK({
+            const sdk = new ProviderSDK({
                 provider,
                 tokenEndpoint,
                 constraints: {
@@ -126,8 +196,8 @@ export default function useRootProvider({
                         onFileUploadProgress: (file, progress) => {
                             setFilesProgressMap(prev => ({
                                 ...prev,
-                                [file.name]: {
-                                    ...prev[file.name],
+                                [file.id]: {
+                                    ...prev[file.id],
                                     loaded: progress.loaded,
                                 },
                             }))
@@ -153,60 +223,18 @@ export default function useRootProvider({
         } catch (error) {
             onError((error as Error).message)
             setUploadStatus(UploadStatus.FAILED)
+
+            // Reset progress map
+            setFilesProgressMap({})
             return
         }
     }
 
-    useEffect(() => {
-        setFilesProgressMap(
-            selectedFiles.reduce((a, b) => {
-                a[b.name] = {
-                    id: b.name,
-                    loaded: 0,
-                    total: b.size,
-                }
-                return a
-            }, {} as FilesProgressMap),
-        )
-    }, [selectedFiles.length])
-
-    const handleSetSelectedFiles = (newFiles: File[], reset = false) => {
-        onFilesSelected(newFiles)
-        if (reset) return setSelectedFiles([])
-
-        let validFilesByType = [] as File[]
-        for (let file of newFiles) {
-            if (checkFileType(accept, file)) validFilesByType.push(file)
-            else {
-                onError(`${file.name} has an invalid type!`)
-                onFileTypeMismatch(file, accept)
-            }
-        }
-
-        let validFilesBySize = [] as File[]
-        for (let file of validFilesByType) {
-            if (checkFileSize(file, maxFileSize)) validFilesBySize.push(file)
-            else onError(`${file.name} has an invalid type!`)
-        }
-
-        const filesWithIds = validFilesBySize.map(fileAppendId)
-        if (filesWithIds.length)
-            setSelectedFiles(prev =>
-                multiple
-                    ? getUniqueFilesByName({
-                          files: [...prev, ...filesWithIds],
-                          onWarn,
-                      }).slice(0, limit)
-                    : [filesWithIds[0]],
-            )
-
-        setIsAddingMore(false)
-    }
-
-    const handleFileRemove = (file: FileWithId) => {
-        setSelectedFiles(prev => prev.filter(f => f.name !== file.name))
-        onFileRemove(file)
-    }
+    const handleDone = useCallback(() => {
+        setUploadStatus(UploadStatus.PENDING)
+        setSelectedFilesMap(new Map())
+        setFilesProgressMap({})
+    }, [])
 
     return {
         inputRef,
@@ -214,8 +242,9 @@ export default function useRootProvider({
         setActiveAdapter,
         isAddingMore,
         setIsAddingMore,
-        files: selectedFiles,
+        files: selectedFilesMap,
         setFiles: handleSetSelectedFiles,
+        handleDone,
         handleFileRemove,
         oneDriveConfigs: driveConfigs?.oneDrive,
         googleDriveConfigs: driveConfigs?.googleDrive,
@@ -229,38 +258,26 @@ export default function useRootProvider({
         props: {
             mini,
             dark,
-            loader,
+            loader: loader as unknown as ReactElement,
             onError,
             onIntegrationClick,
             onFileClick,
-            onCancelUpload,
-            onFileDragOver,
-            onFileDragLeave,
-            onFileDrop,
-            onFileTypeMismatch,
+            onFilesDragOver,
+            onFilesDragLeave,
+            onFilesDrop,
             uploadAdapters,
             accept,
             maxFileSize,
             limit,
             multiple,
             icons: {
-                AddMoreIcon: icons.AddMoreIcon || TbPlus,
+                ContainerAddMoreIcon: icons.ContainerAddMoreIcon || TbPlus,
                 FileDeleteIcon: icons.FileDeleteIcon || TbTrash,
                 CameraCaptureIcon: icons.CameraCaptureIcon || TbCapture,
                 CameraRotateIcon: icons.CameraRotateIcon || TbCameraRotate,
-                CameraDeleteIcon: icons.CameraDeleteIcon || TbX,
+                CameraDeleteIcon: icons.CameraDeleteIcon || TbTrash,
             },
             classNames,
-
-            shouldCompress,
-            provider,
-            tokenEndpoint,
-            onFileUploadStart,
-            onFileUploadProgress,
-            onFilesUploadProgress,
-            onFileUploadComplete,
-            onFilesUploadComplete,
-            onPrepareFiles,
         },
     }
 }

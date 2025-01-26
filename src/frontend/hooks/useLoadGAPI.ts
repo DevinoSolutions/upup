@@ -12,7 +12,7 @@ export default function useLoadGAPI() {
         /**
          *  Load the Google Identity Services API
          */
-        load('https://accounts.google.com/gsi/client', async (err, _script) => {
+        load('https://accounts.google.com/gsi/client', async err => {
             if (!err) setGisLoaded(true)
         })
     }, [gisLoaded])
