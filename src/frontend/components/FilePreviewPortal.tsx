@@ -47,7 +47,7 @@ export default memo(
 
         return createPortal(
             <div
-                className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+                className="fixed inset-0 z-[2147483647] flex items-center justify-center bg-black/40"
                 ref={ref}
                 {...restProps}
             >
