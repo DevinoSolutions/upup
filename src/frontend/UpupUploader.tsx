@@ -43,7 +43,7 @@ export default function UpupUploader(props: UpupUploaderProps) {
     return (
         <RootContext.Provider value={providerValues}>
             <div
-                className={cn('w-dvw @container/main', {
+                className={cn('w-full @container/main', {
                     'h-[480px] max-w-[600px]': !providerValues.props.mini,
                     'h-[397px] max-w-[280px]': providerValues.props.mini,
                 })}

@@ -4,6 +4,7 @@ import { FileWithParams } from '../../shared/types'
 import { useRootContext } from '../context/RootContext'
 import { bytesToSize } from '../lib/file'
 import { cn } from '../lib/tailwind'
+import { FilePreviewStatus } from '../types/file'
 import FilePreview from './FilePreview'
 import FilePreviewPortal from './FilePreviewPortal'
 import ShouldRender from './shared/ShouldRender'
@@ -18,7 +19,9 @@ export default memo(function FileItem({ file }: Props) {
         props: { dark, classNames, onFileClick },
     } = useRootContext()
     const [showPreviewPortal, setShowPreviewPortal] = useState(false)
-    const [previewIsUnsupported, setPreviewIsUnsupported] = useState(false)
+    const [previewStatus, setPreviewStatus] = useState(
+        FilePreviewStatus.SupportedByFileViewer,
+    )
 
     const handleStopPropagation: MouseEventHandler<HTMLElement> = useCallback(
         e => {
@@ -56,8 +59,8 @@ export default memo(function FileItem({ file }: Props) {
                 fileType={file.type}
                 fileId={file.id}
                 fileUrl={file.url}
-                previewIsUnsupported={previewIsUnsupported}
-                setPreviewIsUnsupported={setPreviewIsUnsupported}
+                previewStatus={previewStatus}
+                setPreviewStatus={setPreviewStatus}
                 onClick={() => onFileClick(file)}
             />
             <div
@@ -85,7 +88,9 @@ export default memo(function FileItem({ file }: Props) {
                 >
                     {bytesToSize(file.size)}
                 </p>
-                <ShouldRender if={!previewIsUnsupported}>
+                <ShouldRender
+                    if={previewStatus !== FilePreviewStatus.Unsupported}
+                >
                     <button
                         className={cn(
                             'text-xs text-blue-600',
@@ -106,6 +111,7 @@ export default memo(function FileItem({ file }: Props) {
                             fileId={file.id}
                             fileUrl={file.url}
                             fileName={file.name}
+                            previewStatus={previewStatus}
                         />
                     </ShouldRender>
                 </ShouldRender>

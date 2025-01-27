@@ -11,6 +11,7 @@ import React, {
 import { useRootContext } from '../context/RootContext'
 import { fileGetIsImage } from '../lib/file'
 import { cn } from '../lib/tailwind'
+import { FilePreviewStatus } from '../types/file'
 import FilePreviewThumbnail from './FilePreviewThumbnail'
 import ProgressBar from './shared/ProgressBar'
 import ShouldRender from './shared/ShouldRender'
@@ -20,8 +21,8 @@ type Props = {
     fileType: string
     fileId: string
     fileUrl: string
-    previewIsUnsupported: boolean
-    setPreviewIsUnsupported: Dispatch<SetStateAction<boolean>>
+    previewStatus: FilePreviewStatus
+    setPreviewStatus: Dispatch<SetStateAction<FilePreviewStatus>>
 } & HTMLAttributes<HTMLDivElement>
 
 export default memo(
@@ -31,8 +32,8 @@ export default memo(
             fileId,
             fileName,
             fileUrl,
-            previewIsUnsupported,
-            setPreviewIsUnsupported,
+            previewStatus,
+            setPreviewStatus,
             ...restProps
         },
         ref,
@@ -93,8 +94,8 @@ export default memo(
             >
                 <ShouldRender if={!isImage}>
                     <FilePreviewThumbnail
-                        previewIsUnsupported={previewIsUnsupported}
-                        setPreviewIsUnsupported={setPreviewIsUnsupported}
+                        previewStatus={previewStatus}
+                        setPreviewStatus={setPreviewStatus}
                         fileType={fileType}
                         fileName={fileName}
                         fileUrl={fileUrl}

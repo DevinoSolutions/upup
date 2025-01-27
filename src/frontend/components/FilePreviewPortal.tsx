@@ -10,6 +10,8 @@ import FileViewer from 'react-file-viewer'
 import { useRootContext } from '../context/RootContext'
 import { fileGetExtension, fileGetIsImage } from '../lib/file'
 import { cn } from '../lib/tailwind'
+import { FilePreviewStatus } from '../types/file'
+import ShouldRender from './shared/ShouldRender'
 
 export default memo(
     forwardRef<
@@ -20,6 +22,7 @@ export default memo(
             fileName: string
             fileId: string
             fileType: string
+            previewStatus: FilePreviewStatus
         }
     >(function FilePreviewPortal(
         {
@@ -28,6 +31,7 @@ export default memo(
             fileName,
             fileId,
             fileType,
+            previewStatus,
             ...restProps
         },
         ref,
@@ -58,19 +62,39 @@ export default memo(
                         )}
                         onClick={onStopPropagation}
                     >
-                        {isImage ? (
+                        <ShouldRender if={isImage}>
                             <img
                                 src={fileUrl}
                                 alt={fileName}
                                 className="h-full w-full rounded object-contain"
                             />
-                        ) : (
+                        </ShouldRender>
+                        <ShouldRender
+                            if={
+                                previewStatus ===
+                                FilePreviewStatus.SupportedByFileViewer
+                            }
+                        >
                             <FileViewer
                                 key={fileId}
                                 fileType={extension}
                                 filePath={fileUrl}
                             />
-                        )}
+                        </ShouldRender>
+                        <ShouldRender
+                            if={
+                                previewStatus ===
+                                FilePreviewStatus.SupportedByHTMLObject
+                            }
+                        >
+                            <object
+                                data={fileUrl}
+                                width="100%"
+                                height="100%"
+                                name={fileName}
+                                type={fileType}
+                            />
+                        </ShouldRender>
                     </div>
                 </div>
             </div>,

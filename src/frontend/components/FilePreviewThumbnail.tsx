@@ -2,13 +2,15 @@ import React, { Dispatch, SetStateAction, memo, useMemo } from 'react'
 import FileViewer from 'react-file-viewer'
 import { fileGetExtension } from '../lib/file'
 import { cn } from '../lib/tailwind'
+import { FilePreviewStatus } from '../types/file'
+import ErrorBoundary from './ErrorBoundary'
 import FileIcon from './FileIcon'
-import FilePreviewUnsupported from './FilePreviewUnsupported'
+import FileViewerUnsupported from './FileViewerUnsupported'
 import ShouldRender from './shared/ShouldRender'
 
 type Props = {
-    previewIsUnsupported: boolean
-    setPreviewIsUnsupported: Dispatch<SetStateAction<boolean>>
+    previewStatus: FilePreviewStatus
+    setPreviewStatus: Dispatch<SetStateAction<FilePreviewStatus>>
     fileType: string
     fileName: string
     fileUrl: string
@@ -18,8 +20,8 @@ type Props = {
 
 export default memo(
     function FilePreviewThumbnail({
-        previewIsUnsupported,
-        setPreviewIsUnsupported,
+        previewStatus,
+        setPreviewStatus,
         fileUrl,
         fileName,
         fileType,
@@ -33,10 +35,27 @@ export default memo(
 
         return (
             <>
-                <ShouldRender if={previewIsUnsupported}>
+                <ShouldRender
+                    if={previewStatus === FilePreviewStatus.Unsupported}
+                >
                     <FileIcon extension={extension} />
+                    <object
+                        data={fileUrl}
+                        width="100%"
+                        height="100%"
+                        name={fileName}
+                        type={fileType}
+                        className="opacity-0"
+                        onLoad={() =>
+                            setPreviewStatus(
+                                FilePreviewStatus.SupportedByHTMLObject,
+                            )
+                        }
+                    />
                 </ShouldRender>
-                <ShouldRender if={!previewIsUnsupported}>
+                <ShouldRender
+                    if={previewStatus !== FilePreviewStatus.Unsupported}
+                >
                     <FileIcon
                         extension={extension}
                         className={cn('@cs/main:hidden', {
@@ -48,29 +67,61 @@ export default memo(
                             'hidden @cs/main:block': showIcon,
                         })}
                     >
-                        <div className="absolute inset-0">
-                            <FileViewer
-                                key={fileId}
-                                fileType={extension}
-                                filePath={fileUrl}
-                                errorComponent={() => (
-                                    <FilePreviewUnsupported
-                                        onPreviewIsUnsupported={
-                                            setPreviewIsUnsupported
-                                        }
-                                        previewIsUnsupported
+                        <ShouldRender
+                            if={
+                                previewStatus ===
+                                FilePreviewStatus.SupportedByFileViewer
+                            }
+                        >
+                            <div className="absolute inset-0">
+                                <ErrorBoundary
+                                    fallback={
+                                        <FileViewerUnsupported
+                                            onSetPreviewStatus={
+                                                setPreviewStatus
+                                            }
+                                            previewStatus={previewStatus}
+                                        />
+                                    }
+                                >
+                                    <FileViewer
+                                        key={fileId}
+                                        fileType={extension}
+                                        filePath={fileUrl}
+                                        errorComponent={() => (
+                                            <FileViewerUnsupported
+                                                onSetPreviewStatus={
+                                                    setPreviewStatus
+                                                }
+                                                previewStatus={previewStatus}
+                                            />
+                                        )}
+                                        unsupportedComponent={() => (
+                                            <FileViewerUnsupported
+                                                onSetPreviewStatus={
+                                                    setPreviewStatus
+                                                }
+                                                previewStatus={previewStatus}
+                                            />
+                                        )}
                                     />
-                                )}
-                                unsupportedComponent={() => (
-                                    <FilePreviewUnsupported
-                                        onPreviewIsUnsupported={
-                                            setPreviewIsUnsupported
-                                        }
-                                        previewIsUnsupported
-                                    />
-                                )}
+                                </ErrorBoundary>
+                            </div>
+                        </ShouldRender>
+                        <ShouldRender
+                            if={
+                                previewStatus ===
+                                FilePreviewStatus.SupportedByHTMLObject
+                            }
+                        >
+                            <object
+                                data={fileUrl}
+                                width="100%"
+                                height="100%"
+                                name={fileName}
+                                type={fileType}
                             />
-                        </div>
+                        </ShouldRender>
                     </div>
                 </ShouldRender>
             </>
@@ -78,7 +129,7 @@ export default memo(
     },
     // Custom comparison function for props
     (prev, next) =>
-        prev.previewIsUnsupported === next.previewIsUnsupported &&
+        prev.previewStatus === next.previewStatus &&
         prev.fileType === next.fileType &&
         prev.fileUrl === next.fileUrl &&
         prev.showIcon === next.showIcon,
