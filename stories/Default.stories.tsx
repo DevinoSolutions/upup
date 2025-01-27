@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react'
+import React from 'react'
 import UpupUploader from '../src/frontend/UpupUploader'
 import { UploadAdapter } from '../src/shared/types'
 
@@ -35,6 +36,17 @@ const meta = {
             ],
         },
     },
+    render: args => (
+        <div
+            style={{
+                width: '100dvw',
+                display: 'flex',
+                justifyContent: 'center',
+            }}
+        >
+            <UpupUploader {...args} />
+        </div>
+    ),
 } satisfies Meta<typeof UpupUploader>
 
 export const Default: Story = {

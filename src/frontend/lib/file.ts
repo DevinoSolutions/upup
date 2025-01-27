@@ -104,7 +104,7 @@ export function fileGetExtension(fileType: string, fileName: string) {
     const typeSplit = fileType.split('/')
     const nameSplit = fileName.split('.')
 
-    return typeSplit[1].includes('.')
+    return typeSplit[1]?.includes('.')
         ? nameSplit[nameSplit.length - 1]
         : typeSplit[1]
 }

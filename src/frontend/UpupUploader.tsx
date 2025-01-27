@@ -89,7 +89,7 @@ export default function UpupUploader(props: UpupUploaderProps) {
                         <p className="text-xs leading-5 text-[#6D6D6D] @cs/main:text-sm">
                             {supportText}
                         </p>
-                        <div className="flex items-center gap-[5px]">
+                        <div className="z-[2147483647] flex items-center gap-[5px]">
                             <span className="text-xs leading-5 text-[#6D6D6D] @cs/main:text-sm">
                                 Powered by{' '}
                             </span>

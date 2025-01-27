@@ -38,20 +38,19 @@ export default memo(
                 <ShouldRender
                     if={previewStatus === FilePreviewStatus.Unsupported}
                 >
-                    <FileIcon extension={extension} />
                     <object
                         data={fileUrl}
-                        width="100%"
-                        height="100%"
+                        width="0%"
+                        height="0%"
                         name={fileName}
                         type={fileType}
-                        className="opacity-0"
                         onLoad={() =>
                             setPreviewStatus(
                                 FilePreviewStatus.SupportedByHTMLObject,
                             )
                         }
                     />
+                    <FileIcon extension={extension} />
                 </ShouldRender>
                 <ShouldRender
                     if={previewStatus !== FilePreviewStatus.Unsupported}
