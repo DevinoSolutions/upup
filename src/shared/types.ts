@@ -41,7 +41,7 @@ type UpupUploaderPropsClassNames = {
     containerCancelButton?: string
     containerAddMoreButton?: string
 
-    adapterList?: string
+    adapterButtonList?: string
     adapterButton?: string
     adapterButtonIcon?: string
     adapterButtonText?: string
@@ -49,7 +49,7 @@ type UpupUploaderPropsClassNames = {
     adapterViewHeader?: string
     adapterViewCancelButton?: string
     adapterView?: string
-    adapterDriveLoading?: string
+    driveLoading?: string
 
     driveHeader?: string
     driveLogoutButton?: string
@@ -106,11 +106,11 @@ export type UpupUploaderPropsIcons = {
     CameraDeleteIcon?: FC<{ className?: string }>
     CameraCaptureIcon?: FC<{ className?: string }>
     CameraRotateIcon?: FC<{ className?: string }>
+
+    LoaderIcon?: FC<{ className?: string }>
 }
 
 export type UpupUploaderProps = {
-    loader?: any
-
     uploadAdapters?: UploadAdapter[]
     driveConfigs?: {
         googleDrive?: GoogleDriveConfigs
@@ -146,7 +146,7 @@ export type UpupUploaderProps = {
     onFilesDragLeave?: (files: File[]) => void
     onFilesDrop?: (files: File[]) => void
     onFileTypeMismatch?: (file: File, acceptedTypes: string) => void
-    onCancelUpload?: (files: FileWithParams[]) => void
+    // onCancelUpload?: (files: FileWithParams[]) => void
     onError?: (errorMessage: string) => void
     onWarn?: (warningMessage: string) => void
     dark?: boolean

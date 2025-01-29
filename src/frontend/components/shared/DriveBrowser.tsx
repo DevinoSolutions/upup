@@ -81,8 +81,8 @@ export default function DriveBrowser({
                 'bg-white/10 text-[#FAFAFA] dark:bg-white/10 dark:text-[#FAFAFA]':
                     isLoading && dark,
                 [classNames.adapterView!]: !isLoading && classNames.adapterView,
-                [classNames.adapterDriveLoading!]:
-                    isLoading && classNames.adapterDriveLoading,
+                [classNames.driveLoading!]:
+                    isLoading && classNames.driveLoading,
             })}
         >
             <ShouldRender if={true} isLoading={isLoading}>

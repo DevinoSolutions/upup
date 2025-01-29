@@ -1,7 +1,6 @@
 import {
     createContext,
     Dispatch,
-    ReactElement,
     RefObject,
     SetStateAction,
     useContext,
@@ -51,7 +50,6 @@ type ContextProps = Required<
     >
 > & {
     multiple: boolean
-    loader: ReactElement
     icons: Required<UpupUploaderPropsIcons>
 }
 

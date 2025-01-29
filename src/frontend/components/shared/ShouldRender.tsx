@@ -7,10 +7,12 @@ export default function ShouldRender({
     isLoading = false,
 }: PropsWithChildren<{ if: boolean; isLoading?: boolean }>) {
     const {
-        props: { loader },
+        props: {
+            icons: { LoaderIcon },
+        },
     } = useRootContext()
 
-    if (isLoading) return loader
+    if (isLoading) return <LoaderIcon />
     if (!condition) return null
 
     return <>{children}</>

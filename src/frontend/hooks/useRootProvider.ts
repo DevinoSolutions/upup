@@ -1,5 +1,11 @@
-import { ReactElement, useCallback, useMemo, useRef, useState } from 'react'
-import { TbCameraRotate, TbCapture, TbPlus, TbTrash } from 'react-icons/tb'
+import { useCallback, useMemo, useRef, useState } from 'react'
+import {
+    TbCameraRotate,
+    TbCapture,
+    TbLoader,
+    TbPlus,
+    TbTrash,
+} from 'react-icons/tb'
 import { toast } from 'sonner'
 import checkFileType from '../../shared/lib/checkFileType'
 import {
@@ -30,7 +36,6 @@ export default function useRootProvider({
     dark = false,
     limit: propLimit = 1,
     maxFileSize = { size: 10, unit: 'MB' },
-    loader = 'loading',
     shouldCompress = false,
     uploadAdapters = [UploadAdapter.INTERNAL, UploadAdapter.LINK],
     onError = toast.error,
@@ -265,7 +270,6 @@ export default function useRootProvider({
         props: {
             mini,
             dark,
-            loader: loader as unknown as ReactElement,
             onError,
             onIntegrationClick,
             onFileClick,
@@ -283,6 +287,7 @@ export default function useRootProvider({
                 CameraCaptureIcon: icons.CameraCaptureIcon || TbCapture,
                 CameraRotateIcon: icons.CameraRotateIcon || TbCameraRotate,
                 CameraDeleteIcon: icons.CameraDeleteIcon || TbTrash,
+                LoaderIcon: icons.LoaderIcon || TbLoader,
             },
             classNames,
         },

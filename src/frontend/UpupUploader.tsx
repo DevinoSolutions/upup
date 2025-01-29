@@ -1,4 +1,5 @@
 import React from 'react'
+import { TbLoader } from 'react-icons/tb'
 import { UpupUploaderProps } from '../shared/types'
 import MainBox from './components/MainBox'
 import ShouldRender from './components/shared/ShouldRender'
@@ -7,23 +8,19 @@ import useDragAndDrop from './hooks/useDragAndDrop'
 import useRootProvider from './hooks/useRootProvider'
 import { cn } from './lib/tailwind'
 
-/**
- *
- * @param storageConfig storage configuration
- * @param baseConfigs base configurations
- * @param uploadAdapters the methods you want to enable for the user to upload the files. Default value is ['INTERNAL']
- * @param googleConfigs google configurations
- * @param oneDriveConfigs one drive configurations
- * @param loader loader
- * @param ref referrer to the component instance to access its method uploadFiles from the parent component
- * @constructor
- */
 export default function UpupUploader(props: UpupUploaderProps) {
     const providerValues = useRootProvider({
         ...props,
-        loader: props.loader || (
-            <p className={cn({ 'text-[#6D6D6D]': props.dark })}>loading...</p>
-        ),
+        icons: {
+            ...props.icons,
+            LoaderIcon: () => (
+                <TbLoader
+                    className={cn('animate-spin text-3xl', {
+                        'text-[#6D6D6D]': 'dark' in props,
+                    })}
+                />
+            ),
+        },
     })
     const supportText =
         providerValues.props.accept === '*'

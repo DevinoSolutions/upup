@@ -85,7 +85,7 @@ export default function AdapterSelector({ isDragging, setIsDragging }: Props) {
                     <div
                         className={cn(
                             'flex w-full flex-col justify-center gap-1 @cs/main:flex-row @cs/main:flex-wrap @cs/main:items-center @cs/main:gap-[30px] @cs/main:px-[30px]',
-                            classNames.adapterList,
+                            classNames.adapterButtonList,
                         )}
                     >
                         {chosenAdapters.map(({ Icon, id, name }) => (

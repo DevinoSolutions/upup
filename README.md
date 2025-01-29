@@ -1,8 +1,7 @@
-# Upup
+# upup
 
-![upup_logo_dark](https://github.com/DevinoSolutions/upup/assets/43147238/b5477db9-cb23-43c7-8c12-518beb31af53)
+Upup is an open-source, free-to-use **Full-stack library** that easily handles your file upload needs with seamless DigitalOcean Spaces, Amazon S3, Backblaze, Microsoft Azure Blob Storage, Google Drive, and OneDrive integrations.
 
-An open-source, free-to-use **React component library** that easily handles your file upload needs with seamless DigitalOcean Spaces, Amazon S3, Google Drive, and OneDrive integration.
 🎮 Join our Discord, where we can provide quick support: [Discord Invite Link](https://discord.gg/ny5WUE9ayc)
 
 ![Static Badge](https://img.shields.io/badge/gzipped-206kb-4ba0f6)
@@ -11,136 +10,172 @@ An open-source, free-to-use **React component library** that easily handles your
 
 ## Installation
 
-Install via NPM:
+Install upup with your favourite package manager
 
-```shell
+### npm
+
+```bash
 npm install @bassem97/upup
 ```
 
-Or via YARN:
+### yarn
 
-```shell
+```bash
 yarn add @bassem97/upup
+```
+
+### pnpm
+
+```bash
+pnpm add @bassem97/upup
+```
+
+### bun
+
+```bash
+bun install @bassem97/upup
+```
+
+## Logic Diagram
+
+This logic diagram explains how the client and server parts of the upup package works
+
+```mermaid
+sequenceDiagram
+    participant Client as Client (UpupUploader)
+    participant Server as Node.js Server
+    participant Cloud as Cloud Storage (S3/Azure/etc)
+
+    Client->>Server: POST to tokenEndpoint with file metadata
+    Note right of Server: Uses s3GeneratePresignedUrl/azureGenerateSasUrl<br/>(src/index.node.ts:1-4)
+    Server-->>Client: Returns presigned URL + upload key
+
+    Client->>Cloud: PUT/POST file directly using presigned URL
+    Cloud-->>Client: Upload confirmation
+
+    loop Progress Updates
+        Client->>Client: Track upload progress<br/>(useRootProvider.ts:199-222)
+        Client-->>Client: Update filesProgressMap<br/>(src/frontend/hooks/useRootProvider.ts:203-210)
+    end
+
+    Client->>Server: Finalize upload (optional)
+    Server-->>Client: Confirm storage metadata
+
+    Note over Client,Cloud: Handles multiple adapters<br/>(Google Drive, OneDrive etc)<br/>via separate flows (useOneDriveUploader.ts:1-132)
 ```
 
 ## Usage
 
-### 1 - Inside you component or App.tsx import UpupUploader and the types you need
+The example below shows a minimal configuration for AWS S3 upload, using the [UpupUploader](https://upup-landing-page.vercel.app/docs/category/upupuploader) client component and the [`s3GeneratePresignedUrl`](https://upup-landing-page.vercel.app/docs/api-reference/s3-generate-presigned-url) utility. For full code examples check these [docs](https://upup-landing-page.vercel.app/docs/code-examples)
 
-```javascript
-// imports
-import {
-    BaseConfigs,
-    CloudStorageConfigs,
-    GoogleDriveConfigs,
-    OneDriveConfigs,
-    Is3Configs,
-    UploadAdapter,
-    UpupUploader,
-} from '@bassem97/upup'
-```
+### Client Side
 
-### 2 - Set your configurations keys from your .env file (ex: `.env.local`)
+```tsx
+import { UpupUploader, UpupProvider } from '@bassem97/upup'
 
-```javascript
-const space_secret = process.env.SPACE_SECRET
-const space_key = process.env.SPACE_KEY
-const space_endpoint = process.env.SPACE_ENDPOINT
-const space_region = process.env.SPACE_REGION
-const document_space = process.env.SPACE_DOCUMENTS
-const image_space = process.env.SPACE_IMAGES
-const onedrive_client_id = process.env.ONEDRIVE_CLIENT_ID
-const google_client_id = process.env.GOOGLE_CLIENT_ID
-const google_app_id = process.env.GOOGLE_APP_ID
-const google_api_key = process.env.GOOGLE_API_KEY
-```
-
-### 3 - Create 2 states one for key (which will be the final link of you file. ex: <https://example-documents.nyc3.cdn.digitaloceanspaces.com/file.pdf>) and another for canUpload ( which will be changed after uploading file and submitting )
-
-```javascript
-const [key, setKey] = useState('')
-const [canUpload, setCanUpload] = useState(false)
-```
-
-### 4 - initialize the configs from the provider you want to use (ex: DigitalOceanSpaces, GoogleDriveUploader, OneDriveUploader, S3)
-
-```javascript
-const s3Configs: S3Configs = {
-    region: space_region,
-    endpoint: space_endpoint,
-    credentials: {
-        accessKeyId: space_key,
-        secretAccessKey: space_secret,
-    },
-}
-
-const baseConfigs: BaseConfigs = {
-    canUpload: canUpload,
-    setKey: setKey,
-}
-
-const cloudStorageConfigs: CloudStorageConfigs = {
-    bucket: document_space,
-    s3Configs,
-}
-
-const googleConfigs: GoogleDriveConfigs = {
-    google_api_key,
-    google_app_id,
-    google_client_id,
-}
-
-const oneDriveConfigs: OneDriveConfigs = {
-    onedrive_client_id,
-    multiSelect: false,
-}
-```
-
-### 4 - Render the UpupUploader component and pass the configs and the adapter you want to use
-
-```javascript
-return (
-    <div>
+export default function Uploader() {
+    return (
         <UpupUploader
-            baseConfigs={baseConfigs}
-            cloudStorageConfigs={cloudStorageConfigs}
-            googleConfigs={googleConfigs}
-            oneDriveConfigs={oneDriveConfigs}
-            uploadAdapters={[
-                UploadAdapter.INTERNAL,
-                UploadAdapter.GOOGLE_DRIVE,
-                UploadAdapter.ONE_DRIVE,
-            ]}
+            provider={UpupProvider.AWS} // assuming we are uploading to AWS
+            tokenEndpoint="http://<path_to_your_server>/api/upload-token" // Path to your server route that calls our exported upload utilities
         />
-        <button onClick={() => setCanUpload(true)}> upload </button>
-    </div>
-)
+    )
+}
 ```
 
-### 5 - You can also use the UpupUploader component with the default configs and adapter
+:::note
 
-```javascript
-return (
-    <div>
-        <UpupUploader
-            baseConfigs={baseConfigs}
-            cloudStorageConfigs={cloudStorageConfigs}
-            uploadAdapters={[UploadAdapter.internal]}
-        />
-        <button onClick={() => setCanUpload(true)}> upload </button>
-    </div>
-)
+The [`UpupUploader`](https://upup-landing-page.vercel.app/docs/category/upupuploader) must be placed in a client component.
+
+:::
+
+Then use it in your application:
+
+```tsx
+import Uploader from '<path_to_your_uploader_component>'
+
+export default function App() {
+    return <Uploader />
+}
 ```
+
+:::info
+
+[`provider`](https://upup-landing-page.vercel.app/docs/api-reference/upupuploader/required-props#provider) and [`tokenEndpoint`](https://upup-landing-page.vercel.app/docs/api-reference/upupuploader/required-props#tokenendpoint) are the only required props for the UpupUploader component. For a full list of component props, check out these [docs](https://upup-landing-page.vercel.app/docs/category/upupuploader).
+
+:::
+
+### Server Side
+
+```ts
+import { s3GeneratePresignedUrl } from '@bassem97/upup/server'
+
+app.post('/api/upload-token', async (req, res) => {
+    try {
+        const { provider, ...fileParams } = req.body // The request body sent from the `UpupUploader` client component
+        const origin = req.headers['origin'] // The origin of your client application
+
+        // Generate presigned URL
+        const presignedData = await s3GeneratePresignedUrl({
+            origin: origin as string,
+            provider,
+            fileParams,
+            bucketName: process.env.AWS_BUCKET_NAME as string,
+            s3ClientConfig: {
+                region: process.env.AWS_REGION as string,
+                credentials: {
+                    accessKeyId: process.env.AWS_ACCESS_KEY_ID as string,
+                    secretAccessKey: process.env
+                        .AWS_SECRET_ACCESS_KEY as string,
+                },
+            },
+        })
+
+        return res.status(200).json({
+            data: presignedData,
+            message: 'Upload successful!',
+            error: false,
+        })
+    } catch (error) {
+        return res.status(500).json({
+            message: (error as Error).message,
+            error: true,
+        })
+    }
+})
+```
+
+Once again, the example shown above is the minimal required configuration for AWS S3 upload. For uploading to other services see these [docs](https://upup-landing-page.vercel.app/docs/code-examples)
+
+### Important Note
+
+It is important to note that while it is possible to:
+
+-   Implement your own custom logic on the client and use the server utilities provided by this component on the server OR
+-   Use the `UpupUploader` React component on the client and implement your own custom server logic to handle uploads,
+
+For best performance and minimal overhead, we advise that you use both the [`UpupUploader`](https://upup-landing-page.vercel.app/docs/category/upupuploader) React component together with the server utilities, like [`s3GeneratePresignedUrl`](https://upup-landing-page.vercel.app/docs/api-reference/s3-generate-presigned-url)
+
+The full list of exported server utility functions include:
+
+-   [`s3GeneratePresignedUrl`](https://upup-landing-page.vercel.app/docs/api-reference/s3-generate-presigned-url): for S3-compatible Uploads: like AWS, Digital Ocean, Backblaze
+-   [`azureGenerateSasUrl`](https://upup-landing-page.vercel.app/docs/api-reference/azure-generate-sas-url): for Azure Blob Uploads only
+
+:::info
+
+For a full list of values sent by the React component to the server, check out these [docs](https://upup-landing-page.vercel.app/docs/api-reference/upupuploader/required-props#tokenendpoint).
+
+:::
 
 ## All done! 🎉
 
 ### Contributing
 
-Please read our [Contributing Guidelines](CONTRIBUTING.md) before submitting pull requests. All contributions fall under our [Code of Conduct](CODE_OF_CONDUCT.md).
+Please read our [Contributing Guidelines](CONTRIBUTING) before submitting pull requests. All contributions fall under our [Code of Conduct](CODE_OF_CONDUCT).
 
 ### Security
 
-For security concerns, please review our [Security Policy](SECURITY.md).
+For security concerns, please review our [Security Policy](SECURITY).
 
 ### License
 

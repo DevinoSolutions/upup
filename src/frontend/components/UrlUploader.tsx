@@ -7,7 +7,11 @@ export default function UrlUploader() {
     const {
         setFiles,
         setActiveAdapter,
-        props: { loader, dark, classNames },
+        props: {
+            icons: { LoaderIcon },
+            dark,
+            classNames,
+        },
     } = useRootContext()
     const [url, setUrl] = useState('')
     const { loading, fetchImage } = useFetchFileByUrl()
@@ -64,7 +68,7 @@ export default function UrlUploader() {
                     type="submit"
                     disabled={!url}
                 >
-                    {loading ? <>{loader}</> : 'Fetch'}
+                    {loading ? <LoaderIcon /> : 'Fetch'}
                 </button>
             </form>
         </div>
