@@ -3,6 +3,9 @@
     "author": "Bassem Jadoui",
     "license": "MIT",
     "version": "2.4.0",
+    "publishConfig": {
+        "access": "public"
+    },
     "readme": "README.md",
     "main": "dist/index.js",
     "module": "dist/upup.esm.js",
@@ -59,7 +62,7 @@
         "test": "tsdx test --passWithNoTests",
         "lint": "eslint src/",
         "lint:fix": "eslint src/ --fix",
-        "prepare": "tsdx build",
+        "prepare": "pnpm build",
         "size": "size-limit",
         "prettier-check": "prettier --check .",
         "prettier-write": "prettier --write .",
@@ -104,8 +107,8 @@
         "@tailwindcss/container-queries": "^0.1.1",
         "@types/node": "^20.10.0",
         "@types/pako": "^2.0.3",
-        "@types/react": "^18.2.39",
-        "@types/react-dom": "^18.2.17",
+        "@types/react": ">=16.8.0",
+        "@types/react-dom": ">=16.8.0",
         "@types/uuid": "^9.0.7",
         "@typescript-eslint/eslint-plugin": "^6.13.0",
         "@typescript-eslint/parser": "^6.13.0",
@@ -124,8 +127,8 @@
         "prettier": "3.0.3",
         "prettier-plugin-organize-imports": "^3.2.4",
         "prettier-plugin-tailwindcss": "^0.5.7",
-        "react": "^18.2.0",
-        "react-dom": "^18.2.0",
+        "react": "^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0",
+        "react-dom": "^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0",
         "react-syntax-highlighter": "15.4.5",
         "remark-gfm": "^4.0.0",
         "rollup-plugin-analyzer": "^4.0.0",
@@ -164,10 +167,6 @@
         "use-debounce": "^10.0.4",
         "uuid": "^9.0.1"
     },
-    "peerDependencies": {
-        "react": "^18.2.0",
-        "react-dom": "^18.2.0"
-    },
     "pnpm": {
         "overrides": {
             "fast-xml-parser": "^4.3.2",
@@ -181,8 +180,6 @@
         }
     },
     "resolutions": {
-        "react": "^18.2.0",
-        "react-dom": "^18.2.0",
         "rollup": "^2.68.0"
     }
 }

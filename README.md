@@ -40,29 +40,7 @@ bun install @bassem97/upup
 
 This logic diagram explains how the client and server parts of the upup package works
 
-```mermaid
-sequenceDiagram
-    participant Client as Client (UpupUploader)
-    participant Server as Node.js Server
-    participant Cloud as Cloud Storage (S3/Azure/etc)
-
-    Client->>Server: POST to tokenEndpoint with file metadata
-    Note right of Server: Uses s3GeneratePresignedUrl/azureGenerateSasUrl<br/>(src/index.node.ts:1-4)
-    Server-->>Client: Returns presigned URL + upload key
-
-    Client->>Cloud: PUT/POST file directly using presigned URL
-    Cloud-->>Client: Upload confirmation
-
-    loop Progress Updates
-        Client->>Client: Track upload progress<br/>(useRootProvider.ts:199-222)
-        Client-->>Client: Update filesProgressMap<br/>(src/frontend/hooks/useRootProvider.ts:203-210)
-    end
-
-    Client->>Server: Finalize upload (optional)
-    Server-->>Client: Confirm storage metadata
-
-    Note over Client,Cloud: Handles multiple adapters<br/>(Google Drive, OneDrive etc)<br/>via separate flows (useOneDriveUploader.ts:1-132)
-```
+![logic diagram](https://i.ibb.co/8gzsPXqp/Screenshot-2025-01-30-at-14-10-24.png)
 
 ## Usage
 
@@ -83,11 +61,7 @@ export default function Uploader() {
 }
 ```
 
-:::note
-
-The [`UpupUploader`](https://upup-landing-page.vercel.app/docs/category/upupuploader) must be placed in a client component.
-
-:::
+> The [`UpupUploader`](https://upup-landing-page.vercel.app/docs/category/upupuploader) must be placed in a client component.
 
 Then use it in your application:
 
@@ -99,11 +73,7 @@ export default function App() {
 }
 ```
 
-:::info
-
-[`provider`](https://upup-landing-page.vercel.app/docs/api-reference/upupuploader/required-props#provider) and [`tokenEndpoint`](https://upup-landing-page.vercel.app/docs/api-reference/upupuploader/required-props#tokenendpoint) are the only required props for the UpupUploader component. For a full list of component props, check out these [docs](https://upup-landing-page.vercel.app/docs/category/upupuploader).
-
-:::
+> [`provider`](https://upup-landing-page.vercel.app/docs/api-reference/upupuploader/required-props#provider) and [`tokenEndpoint`](https://upup-landing-page.vercel.app/docs/api-reference/upupuploader/required-props#tokenendpoint) are the only required props for the UpupUploader component. For a full list of component props, check out these [docs](https://upup-landing-page.vercel.app/docs/category/upupuploader).
 
 ### Server Side
 
@@ -151,21 +121,17 @@ Once again, the example shown above is the minimal required configuration for AW
 
 It is important to note that while it is possible to:
 
--   Implement your own custom logic on the client and use the server utilities provided by this component on the server OR
--   Use the `UpupUploader` React component on the client and implement your own custom server logic to handle uploads,
+- Implement your own custom logic on the client and use the server utilities provided by this component on the server OR
+- Use the `UpupUploader` React component on the client and implement your own custom server logic to handle uploads,
 
 For best performance and minimal overhead, we advise that you use both the [`UpupUploader`](https://upup-landing-page.vercel.app/docs/category/upupuploader) React component together with the server utilities, like [`s3GeneratePresignedUrl`](https://upup-landing-page.vercel.app/docs/api-reference/s3-generate-presigned-url)
 
 The full list of exported server utility functions include:
 
--   [`s3GeneratePresignedUrl`](https://upup-landing-page.vercel.app/docs/api-reference/s3-generate-presigned-url): for S3-compatible Uploads: like AWS, Digital Ocean, Backblaze
--   [`azureGenerateSasUrl`](https://upup-landing-page.vercel.app/docs/api-reference/azure-generate-sas-url): for Azure Blob Uploads only
+- [`s3GeneratePresignedUrl`](https://upup-landing-page.vercel.app/docs/api-reference/s3-generate-presigned-url): for S3-compatible Uploads: like AWS, Digital Ocean, Backblaze
+- [`azureGenerateSasUrl`](https://upup-landing-page.vercel.app/docs/api-reference/azure-generate-sas-url): for Azure Blob Uploads only
 
-:::info
-
-For a full list of values sent by the React component to the server, check out these [docs](https://upup-landing-page.vercel.app/docs/api-reference/upupuploader/required-props#tokenendpoint).
-
-:::
+> For a full list of values sent by the React component to the server, check out these [docs](https://upup-landing-page.vercel.app/docs/api-reference/upupuploader/required-props#tokenendpoint).
 
 ## All done! 🎉
 
