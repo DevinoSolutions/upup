@@ -3,7 +3,7 @@ import Webcam from 'react-webcam'
 import { useRootContext } from '../context/RootContext'
 import useFetchFileByUrl from './useFetchFileByUrl'
 
-enum FacingMode {
+export enum FacingMode {
     Environment = 'environment',
     User = 'user',
 }

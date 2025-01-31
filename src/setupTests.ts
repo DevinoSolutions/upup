@@ -3,6 +3,7 @@ import 'jest-canvas-mock'
 
 // Declare global window with google property
 declare global {
+    // eslint-disable-next-line no-var
     var google: any // Use var instead of redefining window
 }
 
@@ -29,9 +30,4 @@ jest.mock('framer-motion', () => ({
         }),
     },
     AnimatePresence: jest.fn().mockImplementation(({ children }) => children),
-}))
-
-// Mock version
-jest.mock('./version.ts', () => ({
-    LIB_VERSION: '2.4.0',
 }))

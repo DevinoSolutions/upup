@@ -2,11 +2,7 @@ import { S3Client } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 import s3GeneratePresignedUrl from '../../backend/lib/aws/s3/s3-generate-presigned-url'
 import s3UpdateCORS from '../../backend/lib/aws/s3/s3-update-cors'
-import {
-    Provider,
-    UploadError,
-    UploadErrorType,
-} from '../../shared/types/StorageSDK'
+import { UploadError, UploadErrorType, UpupProvider } from '../../shared/types'
 
 // Mock external dependencies
 jest.mock('@aws-sdk/client-s3', () => ({
@@ -15,47 +11,46 @@ jest.mock('@aws-sdk/client-s3', () => ({
         if (
             !config.credentials?.accessKeyId ||
             !config.credentials?.secretAccessKey
-        ) {
+        )
             throw new Error('Missing required credentials')
-        }
-        if (!config.region) {
-            throw new Error('Missing required region')
-        }
+        if (!config.region) throw new Error('Missing required region')
+
         return {
             config,
         }
     }),
     PutObjectCommand: jest.fn(),
+    GetObjectCommand: jest.fn(),
 }))
 jest.mock('@aws-sdk/s3-request-presigner')
 jest.mock('../../backend/lib/aws/s3/s3-update-cors')
 
 describe('s3GeneratePresignedUrl', () => {
-    // Test data setup
-    const mockFileParams = {
-        name: 'test.jpg',
-        type: 'image/jpeg',
-        size: 1024,
-    }
-
-    const mockBucketName = 'test-bucket'
-    const mockS3Config = {
-        region: 'us-east-1',
-        credentials: {
-            accessKeyId: 'test-key',
-            secretAccessKey: 'test-secret',
+    // Common test parameters
+    const baseParams = {
+        fileParams: {
+            name: 'test.jpg',
+            type: 'image/jpeg',
+            size: 1024,
         },
+        bucketName: 'test-bucket',
+        s3ClientConfig: {
+            region: 'us-east-1',
+            credentials: {
+                accessKeyId: 'test-key',
+                secretAccessKey: 'test-secret',
+            },
+        },
+        origin: 'http://localhost:3000',
+        provider: UpupProvider.AWS,
     }
 
-    const mockOrigin = 'http://localhost:3000'
-    const mockExpiresIn = 3600
-    const mockProvider = Provider.AWS
+    // Helper function to call the S3 function with defaults
+    const callPresignedUrlFunction = (overrides?: Record<string, any>) =>
+        s3GeneratePresignedUrl({ ...baseParams, ...overrides })
 
     beforeEach(() => {
-        // Clear all mocks before each test
         jest.clearAllMocks()
-
-        // Setup default mock implementations
         ;(getSignedUrl as jest.Mock).mockResolvedValue(
             'https://test-presigned-url.com',
         )
@@ -63,175 +58,106 @@ describe('s3GeneratePresignedUrl', () => {
     })
 
     it('should generate a presigned URL successfully', async () => {
-        const result = await s3GeneratePresignedUrl({
-            fileParams: mockFileParams,
-            bucketName: mockBucketName,
-            s3ClientConfig: mockS3Config,
-            origin: mockOrigin,
-            expiresIn: mockExpiresIn,
-            provider: mockProvider,
-        })
+        const result = await callPresignedUrlFunction({ expiresIn: 3600 })
 
-        // Verify the response structure
         expect(result).toEqual({
-            key: expect.stringContaining('uploads/'),
+            key: expect.stringContaining('-test.jpg'),
             publicUrl: expect.stringContaining('https://'),
             uploadUrl: 'https://test-presigned-url.com',
-            expiresIn: mockExpiresIn,
+            expiresIn: 3600,
         })
 
-        // Verify S3Client was initialized correctly
-        expect(S3Client).toHaveBeenCalledWith(mockS3Config)
-
-        // Verify CORS was updated
+        expect(S3Client).toHaveBeenCalledWith(baseParams.s3ClientConfig)
         expect(s3UpdateCORS).toHaveBeenCalledWith(
-            mockOrigin,
-            mockBucketName,
-            mockS3Config,
-            mockProvider,
+            baseParams.origin,
+            baseParams.bucketName,
+            baseParams.s3ClientConfig,
+            baseParams.provider,
         )
     })
 
     it('should use default expiresIn when not provided', async () => {
-        const result = await s3GeneratePresignedUrl({
-            fileParams: mockFileParams,
-            bucketName: mockBucketName,
-            s3ClientConfig: mockS3Config,
-            origin: mockOrigin,
-            provider: mockProvider,
-        })
-
-        expect(result.expiresIn).toBe(3600) // Default value
+        const result = await callPresignedUrlFunction()
+        expect(result.expiresIn).toBe(3600)
     })
 
     it('should handle file validation errors', async () => {
-        const invalidFileParams = {
-            name: '', // Invalid empty name
-            type: 'image/jpeg',
-            size: 1024,
-        }
-
         await expect(
-            s3GeneratePresignedUrl({
-                fileParams: invalidFileParams,
-                bucketName: mockBucketName,
-                s3ClientConfig: mockS3Config,
-                origin: mockOrigin,
-                provider: mockProvider,
+            callPresignedUrlFunction({
+                fileParams: { ...baseParams.fileParams, name: '' },
             }),
         ).rejects.toThrow(UploadError)
     })
 
     it('should handle CORS configuration errors', async () => {
-        // Mock CORS update to fail
         ;(s3UpdateCORS as jest.Mock).mockRejectedValue(
             new UploadError(
                 'CORS update failed',
                 UploadErrorType.CORS_CONFIG_ERROR,
             ),
         )
-
-        await expect(
-            s3GeneratePresignedUrl({
-                fileParams: mockFileParams,
-                bucketName: mockBucketName,
-                s3ClientConfig: mockS3Config,
-                origin: mockOrigin,
-                provider: mockProvider,
-            }),
-        ).rejects.toThrow(UploadError)
+        await expect(callPresignedUrlFunction()).rejects.toThrow(UploadError)
     })
 
     it('should handle presigned URL generation errors', async () => {
-        // Mock getSignedUrl to fail
         ;(getSignedUrl as jest.Mock).mockRejectedValue(
             new Error('Failed to generate URL'),
         )
-
-        await expect(
-            s3GeneratePresignedUrl({
-                fileParams: mockFileParams,
-                bucketName: mockBucketName,
-                s3ClientConfig: mockS3Config,
-                origin: mockOrigin,
-                provider: mockProvider,
-            }),
-        ).rejects.toThrow(UploadError)
+        await expect(callPresignedUrlFunction()).rejects.toThrow(UploadError)
     })
 
     it('should generate correct key format', async () => {
-        const result = await s3GeneratePresignedUrl({
-            fileParams: mockFileParams,
-            bucketName: mockBucketName,
-            s3ClientConfig: mockS3Config,
-            origin: mockOrigin,
-            provider: mockProvider,
-        })
-
-        // Verify key format: uploads/timestamp-filename
-        expect(result.key).toMatch(/^uploads\/\d+-test\.jpg$/)
+        const result = await callPresignedUrlFunction()
+        expect(result.key).toMatch(/^[0-9a-f-]+-test\.jpg$/)
     })
 
-    it('should throw error when s3ClientConfig is missing required credentials', async () => {
-        const invalidConfig = {
-            region: 'us-east-1',
-            // Missing credentials
-        }
-
-        await expect(
-            s3GeneratePresignedUrl({
-                fileParams: mockFileParams,
-                bucketName: mockBucketName,
-                s3ClientConfig: invalidConfig,
-                origin: mockOrigin,
-                provider: mockProvider,
-            }),
-        ).rejects.toThrow(UploadError)
-
-        expect(S3Client).toHaveBeenCalledWith(invalidConfig)
-    })
-
-    it('should throw error when region is missing from s3ClientConfig', async () => {
-        const invalidConfig = {
-            credentials: {
-                accessKeyId: 'test-key',
-                secretAccessKey: 'test-secret',
+    describe('S3 client configuration validation', () => {
+        const testCases = [
+            {
+                description: 'missing region',
+                config: {
+                    credentials: {
+                        accessKeyId: 'test-key',
+                        secretAccessKey: 'test-secret',
+                    },
+                },
+                expectedError: 'Missing required region',
             },
-            // Missing region
-        }
-
-        await expect(
-            s3GeneratePresignedUrl({
-                fileParams: mockFileParams,
-                bucketName: mockBucketName,
-                s3ClientConfig: invalidConfig,
-                origin: mockOrigin,
-                provider: mockProvider,
-            }),
-        ).rejects.toThrow(UploadError)
-
-        expect(S3Client).toHaveBeenCalledWith(invalidConfig)
-    })
-
-    it('should throw error when credentials are incomplete', async () => {
-        const invalidConfig = {
-            region: 'us-east-1',
-            credentials: {
-                accessKeyId: 'test-key',
-                // Missing secretAccessKey
+            {
+                description: 'incomplete credentials (missing secretAccessKey)',
+                config: {
+                    region: 'us-east-1',
+                    credentials: {
+                        accessKeyId: 'test-key',
+                    },
+                },
+                expectedError: 'Missing required credentials',
             },
-        }
+            {
+                description: 'missing credentials entirely',
+                config: {
+                    region: 'us-east-1',
+                },
+                expectedError: 'Missing required credentials',
+            },
+        ]
 
-        await expect(
-            s3GeneratePresignedUrl({
-                fileParams: mockFileParams,
-                bucketName: mockBucketName,
-                s3ClientConfig: invalidConfig as any,
-                origin: mockOrigin,
-                provider: mockProvider,
-            }),
-        ).rejects.toThrow(UploadError)
+        test.each(testCases)(
+            'should throw error when $description',
+            async ({ config, expectedError }) => {
+                await expect(
+                    callPresignedUrlFunction({
+                        s3ClientConfig: config as any,
+                    }),
+                ).rejects.toThrow(
+                    new UploadError(
+                        expectedError,
+                        UploadErrorType.SIGNED_URL_ERROR,
+                    ),
+                )
 
-        expect(S3Client).toHaveBeenCalledWith(invalidConfig)
+                expect(S3Client).toHaveBeenCalledWith(config)
+            },
+        )
     })
 })

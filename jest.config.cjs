@@ -24,11 +24,7 @@ module.exports = {
         '<rootDir>/src/**/*.{spec,test}.{ts,tsx}',
     ],
     moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
-    collectCoverageFrom: [
-        'src/**/*.{ts,tsx}',
-        '!src/**/*.d.ts',
-        '!src/version.ts',
-    ],
+    collectCoverageFrom: ['src/**/*.{ts,tsx}', '!src/**/*.d.ts'],
     coverageReporters: [
         'json-summary', // Creates coverage-summary.json used by CI
         'text', // Console output
