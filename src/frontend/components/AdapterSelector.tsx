@@ -1,76 +1,152 @@
-import React from 'react'
-import { UploadAdapter } from '../../shared/types'
-import { useRootContext } from '../context/RootContext'
-import { uploadAdapterObject } from '../lib/constants'
+import { AnimatePresence, motion } from 'framer-motion'
+import React, { Dispatch, SetStateAction } from 'react'
+import useAdapterSelector from '../hooks/useAdapterSelector'
+import { cn } from '../lib/tailwind'
+import MainBoxHeader from './shared/MainBoxHeader'
 import ShouldRender from './shared/ShouldRender'
 
-const getH1ClassName = (mini: boolean) => {
-    let className = 'text-center dark:text-white '
-    className += !mini ? 'md:text-2xl' : ''
-
-    return className
+type Props = {
+    isDragging: boolean
+    setIsDragging: Dispatch<SetStateAction<boolean>>
 }
 
-export default function AdapterSelector() {
+export default function AdapterSelector({ isDragging, setIsDragging }: Props) {
     const {
+        onFileDragOver,
+        onFileDragLeave,
+        onFileDrop,
+        setFiles,
+        isAddingMore,
+        setIsAddingMore,
+        mini,
+        chosenAdapters,
+        handleAdapterClick,
+        accept,
         inputRef,
-        setView,
-        props: { onIntegrationClick, uploadAdapters, mini },
-    } = useRootContext()
-    const chosenAdapters = Object.values(uploadAdapterObject).filter(item =>
-        uploadAdapters.includes(item.id),
-    )
-    const handleAdapterClick = (adapterId: UploadAdapter) => {
-        onIntegrationClick(adapterId)
-        if (adapterId === UploadAdapter.INTERNAL)
-            inputRef && inputRef?.current?.click()
-        else setView(adapterId)
-    }
+        multiple,
+        handleInputFileChange,
+        limit,
+        maxFileSize,
+        dark,
+    } = useAdapterSelector()
 
     return (
-        <div
-            className={
-                !mini
-                    ? 'flex h-full w-full flex-col items-center justify-center gap-6'
-                    : ''
-            }
-        >
-            <h1 className={getH1ClassName(mini)}>
-                Drop your files here or{' '}
-                <button
-                    className="text-[#3782da] hover:underline"
-                    onClick={() => inputRef && inputRef.current!.click()}
-                    type="button"
-                >
-                    Click to browse
-                </button>{' '}
-                {!mini && <span>or import from:</span>}
-            </h1>
-            <ShouldRender if={!mini}>
-                <div className="grid grid-cols-3 grid-rows-2 sm:grid-cols-4 md:grid-cols-6">
-                    {chosenAdapters.map(({ Icon, id, name }) => (
-                        <button
-                            type="button"
-                            key={id}
-                            className="group relative mb-4 flex flex-col items-center justify-center gap-1 rounded-md p-2 px-4 text-sm transition-all duration-300 hover:bg-[#e9ecef] active:bg-[#dfe6f1] disabled:pointer-events-none disabled:opacity-30 dark:hover:bg-[#282828] dark:active:bg-[#333]"
-                            onKeyDown={e => {
-                                if (e.key === 'Enter') e.preventDefault()
-                            }}
-                            onClick={() => handleAdapterClick(id)}
+        <AnimatePresence>
+            <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className={cn(
+                    'relative flex h-full flex-col-reverse items-center justify-center gap-3 rounded-lg border border-[#1849D6] sm:flex-col sm:gap-10 md:gap-14',
+                    {
+                        'max-md:pt-[72px]': isAddingMore,
+                        'border-[#30C5F7] dark:border-[#30C5F7]': dark,
+                        'border-dashed': !isDragging,
+                        'bg-[#E7ECFC] backdrop-blur-sm': isDragging && !dark,
+                        'bg-[#045671] backdrop-blur-sm dark:bg-[#045671]':
+                            isDragging && dark,
+                    },
+                )}
+                onDragOver={e => {
+                    e.preventDefault()
+                    setIsDragging(true)
+                    e.dataTransfer.dropEffect = 'copy'
+
+                    const files = Array.from(e.dataTransfer.files)
+                    onFileDragOver(files)
+                }}
+                onDragLeave={e => {
+                    e.preventDefault()
+                    setIsDragging(false)
+
+                    const files = Array.from(e.dataTransfer.files)
+                    onFileDragLeave(files)
+                }}
+                onDrop={e => {
+                    e.preventDefault()
+
+                    const droppedFiles = Array.from(e.dataTransfer.files)
+
+                    onFileDrop(droppedFiles)
+                    setFiles(droppedFiles)
+
+                    setIsDragging(false)
+                }}
+            >
+                <ShouldRender if={isAddingMore}>
+                    <MainBoxHeader
+                        handleCancel={() => setIsAddingMore(false)}
+                    />
+                </ShouldRender>
+                <ShouldRender if={!mini}>
+                    <div className="flex w-full flex-col justify-center gap-0 sm:flex-row sm:flex-wrap sm:items-center sm:gap-[26px] sm:px-[30px] md:gap-[30px]">
+                        {chosenAdapters.map(({ Icon, id, name }) => (
+                            <button
+                                type="button"
+                                key={id}
+                                className="group flex items-center gap-[6px] max-sm:border-b max-sm:border-gray-200 max-sm:px-2 max-sm:py-1 sm:flex-col sm:justify-center sm:rounded-lg"
+                                onKeyDown={e => {
+                                    if (e.key === 'Enter') e.preventDefault()
+                                }}
+                                onClick={() => handleAdapterClick(id)}
+                            >
+                                <span
+                                    className={cn(
+                                        'rounded-lg bg-white p-1 text-2xl font-semibold shadow group-hover:scale-90 max-sm:scale-75 sm:p-[6px] sm:group-hover:scale-110',
+                                        {
+                                            'bg-[#323232] dark:bg-[#323232]':
+                                                dark,
+                                        },
+                                    )}
+                                >
+                                    <Icon />
+                                </span>
+                                <span
+                                    className={cn('text-xs text-[#242634]', {
+                                        'text-[#6D6D6D] dark:text-[#6D6D6D]':
+                                            dark,
+                                    })}
+                                >
+                                    {name}
+                                </span>
+                            </button>
+                        ))}
+                    </div>
+                </ShouldRender>
+                <input
+                    type="file"
+                    accept={accept}
+                    className="hidden"
+                    ref={inputRef}
+                    multiple={multiple}
+                    onChange={handleInputFileChange}
+                />
+                <div className="flex flex-col items-center gap-1 text-center sm:gap-2 sm:px-[30px]">
+                    <div className="flex items-center gap-1">
+                        <span
+                            className={cn('text-xs text-[#0B0B0B] sm:text-sm', {
+                                'text-white dark:text-white': dark,
+                            })}
                         >
-                            <span className="rounded-lg bg-white p-[6px] text-2xl shadow dark:bg-[#323232]">
-                                <Icon />
-                            </span>
-                            <span className="text-[#525252] dark:text-[#777]">
-                                {name}
-                            </span>
-                            <span className="absolute -bottom-2 hidden opacity-50 group-disabled:block">
-                                (soon)
-                            </span>
-                        </button>
-                    ))}
+                            Drag your file
+                            {limit > 1 ? 's' : ''} or
+                        </span>
+                        <span
+                            className={cn(
+                                'cursor-pointer text-xs font-semibold text-[#0E2ADD] sm:text-sm',
+                                { 'text-[#59D1F9] dark:text-[#59D1F9]': dark },
+                            )}
+                            onClick={() => inputRef.current?.click()}
+                        >
+                            browse
+                        </span>
+                    </div>
+                    <p className="text-xs text-[#6D6D6D] sm:text-sm">
+                        Max {maxFileSize.size} {maxFileSize.unit} file
+                        {limit > 1 ? 's are ' : ' is '} allowed
+                    </p>
                 </div>
-            </ShouldRender>
-        </div>
+            </motion.div>
+        </AnimatePresence>
     )
 }

@@ -1,22 +1,11 @@
-import React, { forwardRef } from 'react'
-import { UpupUploaderProps, UpupUploaderRef } from '../shared/types'
-import AdapterSelector from './components/AdapterSelector'
-import DropZone from './components/DropZone'
-import MetaVersion from './components/MetaVersion'
-import Preview from './components/Preview'
-import UploadAdapterView from './components/UploadAdapterView'
-import { RootProvider } from './context/RootContext'
+import React from 'react'
+import { UpupUploaderProps } from '../shared/types'
+import MainBox from './components/MainBox'
+import ShouldRender from './components/shared/ShouldRender'
+import RootContext from './context/RootContext'
 import useDragAndDrop from './hooks/useDragAndDrop'
-
-const getDivClassName = (mini: boolean) => {
-    let className =
-        'relative flex w-full  select-none flex-col overflow-hidden rounded-md border bg-[#f4f4f4] dark:bg-[#1f1f1f] '
-    className += mini
-        ? 'h-[min(98svh,12rem)] max-w-[min(98svh,12rem)]'
-        : 'h-[min(98svh,35rem)] max-w-[min(98svh,46rem)]'
-
-    return className
-}
+import useRootProvider from './hooks/useRootProvider'
+import { cn } from './lib/tailwind'
 
 /**
  *
@@ -29,40 +18,82 @@ const getDivClassName = (mini: boolean) => {
  * @param ref referrer to the component instance to access its method uploadFiles from the parent component
  * @constructor
  */
-export default forwardRef<UpupUploaderRef, UpupUploaderProps>(
-    function UpupUploader(props, ref) {
-        const { mini = false } = props
+export default function UpupUploader(props: UpupUploaderProps) {
+    const providerValues = useRootProvider(props)
+    const supportText =
+        providerValues.props.accept === '*'
+            ? 'Supports all files'
+            : `Only supports ${providerValues.props.accept
+                  .split(',')
+                  .map(item => `.${item.split('/')[1]}`)
+                  .join(', ')} `
+    const {
+        isDragging,
+        setIsDragging,
+        handleDragEnter,
+        handleDragLeave,
+        containerRef,
+    } = useDragAndDrop()
 
-        const {
-            isDragging,
-            setIsDragging,
-            handleDragEnter,
-            handleDragLeave,
-            containerRef,
-        } = useDragAndDrop()
+    return (
+        <RootContext.Provider value={providerValues}>
+            <div
+                className={cn(
+                    'shadow-wrapper flex w-full select-none flex-col gap-3 overflow-hidden rounded-2xl bg-white px-5 py-4',
+                    {
+                        'h-[480px] max-w-[600px]': !providerValues.props.mini,
+                        'h-[397px] max-w-[280px]': providerValues.props.mini,
+                        'bg-[#232323] dark:bg-[#232323]':
+                            providerValues.props.dark,
+                    },
+                )}
+                onDragEnter={handleDragEnter}
+                onDragLeave={handleDragLeave}
+                ref={containerRef}
+            >
+                <ShouldRender if={providerValues.props.limit > 1}>
+                    <p className="text-xs leading-5 text-[#6D6D6D] sm:text-sm">
+                        Add your documents here, you can upload up to{' '}
+                        {providerValues.props.limit} files max
+                    </p>
+                </ShouldRender>
+                <MainBox
+                    isDragging={isDragging}
+                    setIsDragging={setIsDragging}
+                />
 
-        return (
-            <RootProvider {...props}>
                 <div
-                    className={getDivClassName(mini)}
-                    onDragEnter={handleDragEnter}
-                    onDragLeave={handleDragLeave}
-                    ref={containerRef}
+                    className={cn(
+                        'flex items-center justify-between gap-1 max-sm:flex-col',
+                        {
+                            'flex-col': providerValues.props.mini,
+                        },
+                    )}
                 >
-                    <DropZone
-                        isDragging={isDragging}
-                        setIsDragging={setIsDragging}
-                    />
-                    <UploadAdapterView />
-                    <Preview ref={ref} />
-                    <div className="h-full p-2">
-                        <div className="grid h-full w-full grid-rows-[1fr,auto] place-items-center rounded-md border border-dashed border-[#dfdfdf] transition-all">
-                            <AdapterSelector />
-                            <MetaVersion />
-                        </div>
+                    <p className="text-xs leading-5 text-[#6D6D6D] sm:text-sm">
+                        {supportText}
+                    </p>
+                    <div className="flex items-center gap-[5px]">
+                        <span className="text-xs leading-5 text-[#6D6D6D] sm:text-sm">
+                            Powered by{' '}
+                        </span>
+                        <ShouldRender if={providerValues.props.dark}>
+                            <img
+                                src="https://i.ibb.co/HGBrgp7/logo-dark.png"
+                                width={61}
+                                height={13}
+                            />
+                        </ShouldRender>
+                        <ShouldRender if={!providerValues.props.dark}>
+                            <img
+                                src="https://i.ibb.co/7S5q81d/logo-white.png"
+                                width={61}
+                                height={13}
+                            />
+                        </ShouldRender>
                     </div>
                 </div>
-            </RootProvider>
-        )
-    },
-)
+            </div>
+        </RootContext.Provider>
+    )
+}

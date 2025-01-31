@@ -1,9 +1,9 @@
 import { Root, User } from 'google'
 import { MicrosoftUser, OneDriveRoot } from 'microsoft'
 import React, { Dispatch, SetStateAction } from 'react'
-import { TbSearch } from 'react-icons/tb'
-import { UploadAdapter } from '../../../shared/types'
+import { TbSearch, TbUser } from 'react-icons/tb'
 import { useRootContext } from '../../context/RootContext'
+import { cn } from '../../lib/tailwind'
 import ShouldRender from './ShouldRender'
 
 type Props = {
@@ -11,8 +11,11 @@ type Props = {
     setPath:
         | Dispatch<SetStateAction<Array<Root>>>
         | Dispatch<SetStateAction<Array<OneDriveRoot>>>
-    user?: MicrosoftUser | User
     handleSignOut: () => Promise<void>
+    showSearch: boolean
+    searchTerm: string
+    onSearch: Dispatch<SetStateAction<string>>
+    user?: MicrosoftUser | User
 }
 
 export default function DriveBrowserHeader({
@@ -20,18 +23,40 @@ export default function DriveBrowserHeader({
     setPath,
     user,
     handleSignOut,
+    showSearch,
+    onSearch,
+    searchTerm,
 }: Props) {
-    const { setView } = useRootContext()
+    const {
+        setActiveAdapter,
+        props: { dark },
+    } = useRootContext()
+
+    if (!user) return null
 
     return (
-        <>
-            <div className="grid h-12 grid-cols-[minmax(0,1fr),auto] border-b bg-[#fafafa] p-2 text-xs font-medium text-[#333] dark:bg-[#1f1f1f] dark:text-[#fafafa]">
-                <div className="flex gap-1 p-2 px-4">
-                    <ShouldRender if={!!path}>
+        <div>
+            <div
+                className={cn(
+                    'grid grid-cols-[1fr,auto] border-b border-[#e0e0e0] bg-[#fafafa] px-3 py-2 text-xs font-medium text-[#333]',
+                    {
+                        'border-[#6D6D6D] bg-[#1f1f1f] text-[#fafafa] dark:border-[#6D6D6D] dark:bg-[#1f1f1f] dark:text-[#fafafa]':
+                            dark,
+                    },
+                )}
+            >
+                <ShouldRender if={!!path}>
+                    <div className="flex items-center gap-1">
                         {(path as Array<any>).map((p, i) => (
                             <p
                                 key={p.id}
-                                className="group flex shrink-0 cursor-pointer gap-1 truncate"
+                                className={cn(
+                                    'group flex shrink-0 cursor-pointer gap-1 truncate',
+                                    {
+                                        'text-[#6D6D6D] dark:text-[#6D6D6D]':
+                                            dark,
+                                    },
+                                )}
                                 style={{
                                     maxWidth: 100 / path.length + '%',
                                     pointerEvents:
@@ -52,34 +77,65 @@ export default function DriveBrowserHeader({
                                 </ShouldRender>
                             </p>
                         ))}
-                    </ShouldRender>
-                </div>
+                    </div>
+                </ShouldRender>
                 <div className="flex items-center gap-2">
-                    <ShouldRender if={!!user}>{user?.name}</ShouldRender>
-                    <i className="-mb-1 h-[3px] w-[3px] rounded-full bg-[#ddd]" />
+                    <div
+                        className={cn(
+                            'relative flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-[#f4f4f4]',
+                            {
+                                'bg-[#6D6D6D] dark:bg-[#6D6D6D]': dark,
+                            },
+                        )}
+                    >
+                        <ShouldRender if={!!user.picture}>
+                            <img
+                                src={user.picture}
+                                className="bg-center object-cover"
+                            />
+                        </ShouldRender>
+                        <ShouldRender if={!user.picture}>
+                            <TbUser className="text-xl" />
+                        </ShouldRender>
+                    </div>
+
                     <button
-                        className="text-[#2275d7] hover:underline"
+                        className={cn('text-blue-600 hover:underline', {
+                            'text-[#30C5F7] dark:text-[#30C5F7]': dark,
+                        })}
                         onClick={() => {
-                            if (user) {
-                                handleSignOut()
-                                setView(UploadAdapter.INTERNAL)
-                            }
+                            handleSignOut()
+                            setActiveAdapter(undefined)
                         }}
                     >
-                        <ShouldRender if={!!user}>Log out</ShouldRender>
-                        <ShouldRender if={!user}>Log in</ShouldRender>
+                        Log out
                     </button>
                 </div>
             </div>
 
-            <div className="relative bg-white p-2  dark:bg-[#1f1f1f] dark:text-[#fafafa]">
-                <input
-                    type="search"
-                    className="h-8 w-full rounded-md bg-[#eaeaea] px-2 pl-8 text-xs outline-none transition-all duration-300 focus:bg-[#cfcfcf] dark:bg-[#2f2f2f] dark:text-[#fafafa]"
-                    placeholder="Search"
-                />
-                <TbSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-[#939393]" />
-            </div>
-        </>
+            <ShouldRender if={showSearch}>
+                <div
+                    className={cn('relative h-fit bg-[#f4f4f4] px-3 py-2', {
+                        'bg-[#1f1f1f] text-[#fafafa] dark:bg-[#1f1f1f] dark:text-[#fafafa]':
+                            dark,
+                    })}
+                >
+                    <input
+                        type="search"
+                        className={cn(
+                            'h-fit w-full rounded-md bg-[#eaeaea] px-3 py-2 pl-8 text-xs outline-none transition-all duration-300',
+                            {
+                                'bg-[#2f2f2f] text-[#6D6D6D] dark:bg-[#2f2f2f] dark:text-[#6D6D6D]':
+                                    dark,
+                            },
+                        )}
+                        placeholder="Search"
+                        value={searchTerm}
+                        onChange={e => onSearch(e.currentTarget.value)}
+                    />
+                    <TbSearch className="absolute left-5 top-1/2 -translate-y-1/2 text-[#939393]" />
+                </div>
+            </ShouldRender>
+        </div>
     )
 }

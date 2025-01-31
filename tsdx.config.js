@@ -12,15 +12,6 @@ const GRAPH_CLIENT_DEPS = [
     '@microsoft/microsoft-graph-client/authProviders/authCodeMsalBrowser',
 ]
 
-const MUI_PEER_DEPS = [
-    '@emotion/react',
-    '@emotion/styled',
-    '@mui/material',
-    '@mui/system',
-    '@mui/utils',
-    'react-is',
-]
-
 const AWS_SDK_DEPS = [
     '@aws-sdk/core',
     '@aws-sdk/client-s3',
@@ -75,7 +66,7 @@ module.exports = {
                 'react',
                 'react-dom',
                 'react/jsx-runtime',
-                ...MUI_PEER_DEPS,
+                'tailwind-merge',
                 ...AWS_SDK_DEPS,
                 ...AZURE_DEPS,
                 ...GRAPH_CLIENT_DEPS,

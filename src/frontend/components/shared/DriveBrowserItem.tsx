@@ -2,6 +2,8 @@ import { AnimationProps, motion } from 'framer-motion'
 import { GoogleFile, Root } from 'google'
 import { OneDriveFile } from 'microsoft'
 import React from 'react'
+import { useRootContext } from '../../context/RootContext'
+import { cn } from '../../lib/tailwind'
 import DriveBrowserIcon from './DriveBrowserIcon'
 
 type DriveBrowserItemProps = {
@@ -11,26 +13,6 @@ type DriveBrowserItemProps = {
         | ((file: GoogleFile | Root) => void)
     selectedFiles: OneDriveFile[] | GoogleFile[]
     index: number
-    accept?: string
-}
-
-const getIsNull = ({
-    accept,
-    isFolder,
-    isFileAccepted,
-}: Pick<DriveBrowserItemProps, 'accept'> & {
-    isFolder: boolean
-    isFileAccepted: boolean
-}) => {
-    const condition1 = accept && !isFolder && !isFileAccepted
-    // const condition2 = isFolder && !file.children?.length
-    // const condition3 =
-    //     !isFolder &&
-    //     (!(file as GoogleFile).thumbnailLink ||
-    //         !(file as OneDriveFile).thumbnails?.large)
-
-    // return condition1 || condition2 || condition3
-    return condition1
 }
 
 const backgroundColors = {
@@ -44,18 +26,16 @@ export default function DriveBrowserItem({
     selectedFiles,
     handleClick,
     index,
-    accept,
 }: DriveBrowserItemProps) {
+    const {
+        props: { dark },
+    } = useRootContext()
     const isFolder = Boolean(
         (file as OneDriveFile).isFolder || (file as GoogleFile).children,
     )
     const isFileSelected = (selectedFiles as Array<any>).filter(
         f => f.id === file.id,
     ).length
-    const isFileAccepted =
-        accept && accept !== '*' && !isFolder
-            ? accept.includes(file.name.split('.').pop()!)
-            : true
 
     const backgroundColor = isFileSelected
         ? backgroundColors.selected
@@ -72,9 +52,6 @@ export default function DriveBrowserItem({
         opacity: { delay: index * 0.05 },
         y: { delay: index * 0.05 },
     }
-
-    const isNull = getIsNull({ accept, isFolder, isFileAccepted })
-    if (isNull) return null
 
     return (
         <motion.div
@@ -98,16 +75,26 @@ export default function DriveBrowserItem({
             }}
             exit={{ opacity: 0, y: 10, transition }}
             transition={transition}
-            className={`mb-1 flex cursor-pointer items-center justify-between gap-2 rounded-md p-1 py-2 ${
-                isFolder ? 'font-medium' : ''
-            }`}
+            className={cn(
+                'mb-1 flex cursor-pointer items-center justify-between gap-2 rounded-md p-1 py-2',
+                {
+                    'font-medium': isFolder,
+                },
+            )}
             onClick={() => handleClick(file as any)}
         >
             <div className="flex items-center gap-2">
-                <i className="text-lg">
-                    <DriveBrowserIcon file={file} />
-                </i>
-                <h1 className="text-xs">{file.name}</h1>
+                <DriveBrowserIcon file={file} />
+                <h1
+                    className={cn('text-wrap break-all text-xs', {
+                        'text-[#6D6D6D] dark:text-[#6D6D6D]':
+                            dark && !isFileSelected,
+                        'text-[#e0e0e0] dark:text-[#e0e0e0]':
+                            dark && isFileSelected,
+                    })}
+                >
+                    {file.name}
+                </h1>
             </div>
         </motion.div>
     )

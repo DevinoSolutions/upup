@@ -35,7 +35,6 @@ export function checkFileSize(
 ) {
     const maxBytes = sizeToBytes(maxFileSize!.size, maxFileSize!.unit)
     if (file.size <= maxBytes) return true
-    console.warn('too big!! (what she..)', file.size + ' > ' + maxBytes)
     return false
 }
 
@@ -44,13 +43,15 @@ export const fileAppendId = (file: File) =>
         id: uuid(),
     })
 
-export function getUniqueFilesByName(files: File[]) {
+export function getUniqueFilesByName({
+    files,
+    onWarn,
+}: Required<Pick<UpupUploaderProps, 'onWarn'>> & { files: File[] }) {
     const uniqueFiles = new Map()
 
     files.forEach(file => {
-        if (!uniqueFiles.has(file.name)) {
-            uniqueFiles.set(file.name, file)
-        }
+        if (!uniqueFiles.has(file.name)) uniqueFiles.set(file.name, file)
+        else onWarn(`${file.name} has previously been selected for upload`)
     })
 
     return Array.from(uniqueFiles.values())
@@ -61,4 +62,45 @@ export async function compressFile(file: File) {
     return new File([pako.gzip(buffer)], file.name + '.gz', {
         type: 'application/octet-stream',
     })
+}
+
+export function searchDriveFiles<
+    T extends {
+        name: string
+    },
+>(
+    files: T[],
+    searchTerm: string,
+    options: {
+        caseSensitive?: boolean
+        exactMatch?: boolean
+        maxResults?: number
+    } = {},
+): T[] {
+    const {
+        caseSensitive = false,
+        exactMatch = false,
+        maxResults = 100,
+    } = options
+
+    if (!searchTerm) return files?.slice(0, maxResults)
+
+    let searchString = searchTerm
+    let fileNames: string[]
+
+    if (!caseSensitive) {
+        searchString = searchTerm.toLowerCase()
+        fileNames = files.map(file => file.name.toLowerCase())
+    } else {
+        fileNames = files.map(file => file.name)
+    }
+
+    return files
+        .filter((_file, index) => {
+            // Check if file name matches search term
+            return exactMatch
+                ? fileNames[index] === searchString
+                : fileNames[index].includes(searchString)
+        })
+        .slice(0, maxResults)
 }

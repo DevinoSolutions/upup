@@ -1,10 +1,4 @@
-import { UpupUploaderProps } from '../types'
-
-export default function checkFileType(
-    accept: string,
-    file: File,
-    onFileTypeMismatch?: UpupUploaderProps['onFileTypeMismatch'],
-) {
+export default function checkFileType(accept: string, file: File) {
     const fileType = file.type
     const acceptedTypes = accept.split(',').map(t => t.trim())
     const isValidType =
@@ -16,8 +10,6 @@ export default function checkFileType(
             }
             return type === fileType
         })
-
-    if (!isValidType && onFileTypeMismatch) onFileTypeMismatch(file, accept)
 
     return isValidType
 }

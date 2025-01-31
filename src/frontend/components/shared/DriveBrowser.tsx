@@ -1,9 +1,16 @@
 import { AnimatePresence, motion } from 'framer-motion'
 import { GoogleFile, Root, User } from 'google'
 import { MicrosoftUser, OneDriveFile, OneDriveRoot } from 'microsoft'
-import React, { Dispatch, SetStateAction, useEffect } from 'react'
+import React, {
+    Dispatch,
+    SetStateAction,
+    useEffect,
+    useMemo,
+    useState,
+} from 'react'
 import { useRootContext } from '../../context/RootContext'
-import ButtonSpinner from '../ButtonSpinner'
+import { searchDriveFiles } from '../../lib/file'
+import { cn } from '../../lib/tailwind'
 import DriveBrowserHeader from './DriveBrowserHeader'
 import DriveBrowserItem from './DriveBrowserItem'
 import ShouldRender from './ShouldRender'
@@ -27,6 +34,17 @@ type Props = {
     handleCancelDownload: () => void
 }
 
+function filterItems(item: OneDriveFile | GoogleFile, accept: string) {
+    const isFolder = Boolean(
+        (item as OneDriveFile).isFolder || (item as GoogleFile).children,
+    )
+    const isFileAccepted =
+        accept && accept !== '*' && !isFolder
+            ? accept.includes(item.name.split('.').pop()!)
+            : true
+    return isFolder ? item : isFileAccepted
+}
+
 export default function DriveBrowser({
     isClickLoading = false,
     driveFiles,
@@ -41,8 +59,16 @@ export default function DriveBrowser({
     ...rest
 }: Props) {
     const {
-        props: { accept },
+        props: { accept, dark },
     } = useRootContext()
+    const [searchTerm, setSearchTerm] = useState('')
+    const items = (path[path.length - 1]?.children as Array<any>)?.filter(
+        item => filterItems(item, accept),
+    )
+    const displayedItems = useMemo(
+        () => searchDriveFiles<any>(items, searchTerm) || [],
+        [searchTerm, items],
+    )
 
     useEffect(() => {
         if (driveFiles) setPath([driveFiles as any])
@@ -50,16 +76,28 @@ export default function DriveBrowser({
 
     return (
         <ShouldRender if={true} isLoading={isClickLoading || !driveFiles}>
-            <div className="grid h-[min(98svh,32rem)] w-full grid-rows-[auto,auto,1fr,auto] bg-white ">
-                <DriveBrowserHeader path={path} setPath={setPath} {...rest} />
-
-                <div className="h-full overflow-scroll overflow-y-scroll bg-white pt-2 dark:bg-[#1f1f1f] dark:text-[#fafafa]">
-                    <ShouldRender if={!!path}>
-                        {path[path.length - 1]?.children.length ? (
+            <div className="grid h-full w-full grid-rows-[auto,1fr,auto] overflow-auto bg-white">
+                <DriveBrowserHeader
+                    showSearch={!!items?.length}
+                    path={path}
+                    setPath={setPath}
+                    searchTerm={searchTerm}
+                    onSearch={setSearchTerm}
+                    {...rest}
+                />
+                <ShouldRender if={!!path}>
+                    <div
+                        className={cn(
+                            'h-full overflow-y-scroll bg-[#f4f4f4] pt-2',
+                            {
+                                'bg-[#1f1f1f] text-[#fafafa] dark:bg-[#1f1f1f] dark:text-[#fafafa]':
+                                    dark,
+                            },
+                        )}
+                    >
+                        <ShouldRender if={!!displayedItems.length}>
                             <ul className="p-2">
-                                {(
-                                    path[path.length - 1].children as Array<any>
-                                ).map((file, index) => {
+                                {displayedItems.map((file, index) => {
                                     return (
                                         <DriveBrowserItem
                                             key={file.id}
@@ -71,54 +109,68 @@ export default function DriveBrowser({
                                             }
                                             index={index}
                                             selectedFiles={selectedFiles}
-                                            accept={accept}
                                         />
                                     )
                                 })}
                             </ul>
-                        ) : (
+                        </ShouldRender>
+                        <ShouldRender if={!displayedItems.length}>
                             <div className="flex h-full flex-col items-center justify-center">
-                                <h1 className="text-sm">No files found</h1>
+                                <p className="text-xs opacity-70">
+                                    No accepted files found
+                                </p>
                             </div>
-                        )}
-                    </ShouldRender>
-                </div>
+                        </ShouldRender>
+                    </div>
+                </ShouldRender>
 
-                <AnimatePresence>
-                    <ShouldRender if={selectedFiles.length > 0}>
+                <ShouldRender if={!!selectedFiles.length}>
+                    <AnimatePresence>
                         <motion.div
                             initial={{ y: '100%', height: 0 }}
                             animate={{ y: '0%', height: 'auto' }}
                             exit={{ y: '100%', height: 0 }}
                             transition={{ duration: 0.2 }}
-                            className="flex origin-bottom items-center justify-start gap-4 border-t bg-white p-4 py-2 dark:bg-[#1f1f1f] dark:text-[#fafafa]"
+                            className={cn(
+                                'flex origin-bottom items-center justify-start gap-4 border-t border-[#e0e0e0] bg-[#fafafa] px-3 py-2',
+                                {
+                                    'border-[#6D6D6D] bg-[#1f1f1f] text-[#fafafa] dark:border-[#6D6D6D] dark:bg-[#1f1f1f] dark:text-[#fafafa]':
+                                        dark,
+                                },
+                            )}
                         >
-                            <ShouldRender if={!showLoader}>
-                                <button
-                                    className="w-32 rounded-md bg-blue-500 p-3 font-medium text-white transition-all duration-300 hover:bg-blue-600 active:bg-blue-700"
-                                    onClick={handleSubmit}
-                                >
-                                    Add {selectedFiles.length} files
-                                </button>
-                            </ShouldRender>
-                            <ShouldRender if={!!showLoader}>
-                                <div className="flex items-center gap-4">
-                                    <ButtonSpinner />
-                                    <span className="text-sm">
-                                        Downloading... {downloadProgress}%
-                                    </span>
-                                </div>
-                            </ShouldRender>
                             <button
-                                className="hover:underline"
+                                className={cn(
+                                    'rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white transition-all duration-300',
+                                    {
+                                        'animate-pulse': showLoader,
+                                        'bg-[#30C5F7] dark:bg-[#30C5F7]': dark,
+                                    },
+                                )}
+                                onClick={handleSubmit}
+                                disabled={showLoader}
+                            >
+                                Add {selectedFiles.length} file
+                                <ShouldRender if={selectedFiles.length > 1}>
+                                    s
+                                </ShouldRender>
+                            </button>
+                            <button
+                                className={cn(
+                                    'ml-auto rounded-md p-1 text-sm text-blue-600 transition-all duration-300',
+                                    {
+                                        'text-[#30C5F7] dark:text-[#30C5F7]':
+                                            dark,
+                                    },
+                                )}
                                 onClick={handleCancelDownload}
                                 disabled={showLoader}
                             >
                                 Cancel
                             </button>
                         </motion.div>
-                    </ShouldRender>
-                </AnimatePresence>
+                    </AnimatePresence>
+                </ShouldRender>
             </div>
         </ShouldRender>
     )

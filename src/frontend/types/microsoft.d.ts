@@ -2,6 +2,7 @@ declare module 'microsoft' {
     type MicrosoftUser = {
         name: string
         mail: string
+        picture?: string
     }
 
     type MicrosoftToken = {

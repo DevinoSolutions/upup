@@ -1,7 +1,6 @@
 import { Client } from '@microsoft/microsoft-graph-client'
 import { OneDriveFile, OneDriveRoot } from 'microsoft'
 import { useState } from 'react'
-import { UploadAdapter } from '../../shared/types'
 import { useRootContext } from '../context/RootContext'
 
 const formatFileItem = (item: any) => ({
@@ -44,7 +43,7 @@ const getDownloadUrl = async (file: OneDriveFile, graphClient: Client) => {
 export default function useOneDriveUploader(graphClient?: Client) {
     const {
         setFiles,
-        setView,
+        setActiveAdapter,
         props: { onError },
     } = useRootContext()
     const [isClickLoading, setIsClickLoading] = useState<boolean>()
@@ -148,7 +147,7 @@ export default function useOneDriveUploader(graphClient?: Client) {
 
             // Clear selection and return to internal view
             setSelectedFiles([])
-            setView(UploadAdapter.INTERNAL)
+            setActiveAdapter(undefined)
         } catch (error) {
             onError('Error processing files:' + error)
         } finally {
