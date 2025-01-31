@@ -16,10 +16,12 @@ export default function useFetchFileByUrl() {
                 setLoading(true)
                 const response = await fetch(url)
                 const blob = await response.blob()
+                const extension = blob.type.split('/')[1]
 
-                const file = new File([blob], `${uuid()}.${blob.type}`, {
+                const file = new File([blob], `${uuid()}.${extension}`, {
                     type: blob.type,
                 })
+
                 return file
             } catch (error) {
                 onError((error as Error).message)
@@ -28,7 +30,7 @@ export default function useFetchFileByUrl() {
                 setLoading(false)
             }
         },
-        [loading],
+        [loading, onError],
     )
 
     return { loading, fetchImage }

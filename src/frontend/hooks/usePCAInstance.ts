@@ -53,7 +53,7 @@ const usePCAInstance = (clientId: string) => {
         return () => {
             mounted = false
         }
-    }, [clientId])
+    }, [clientId, msalInstance, onError])
 
     return {
         msalInstance,

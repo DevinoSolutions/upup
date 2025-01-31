@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react'
+import React from 'react'
 import UpupUploader from '../src/frontend/UpupUploader'
 import { UploadAdapter } from '../src/shared/types'
 
@@ -35,6 +36,17 @@ const meta = {
             ],
         },
     },
+    render: args => (
+        <div
+            style={{
+                width: '100dvw',
+                display: 'flex',
+                justifyContent: 'center',
+            }}
+        >
+            <UpupUploader {...args} />
+        </div>
+    ),
 } satisfies Meta<typeof UpupUploader>
 
 export const Default: Story = {
@@ -49,17 +61,15 @@ export const Default: Story = {
                 onedrive_client_id: process.env.ONEDRIVE_CLIENT_ID!,
             },
         },
+        limit: 10,
     },
     parameters: {
         controls: {
             sort: 'requiredFirst',
             include: [
-                // 'loader',
-                // 'maxFileSize',
+                'maxFileSize',
                 'driveConfigs',
                 'uploadAdapters',
-                'provider',
-                'tokenEndpoint',
                 'shouldCompress',
                 'accept',
                 'limit',

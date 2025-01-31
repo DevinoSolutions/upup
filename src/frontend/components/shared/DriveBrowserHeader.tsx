@@ -29,7 +29,7 @@ export default function DriveBrowserHeader({
 }: Props) {
     const {
         setActiveAdapter,
-        props: { dark },
+        props: { dark, classNames },
     } = useRootContext()
 
     if (!user) return null
@@ -38,11 +38,12 @@ export default function DriveBrowserHeader({
         <div>
             <div
                 className={cn(
-                    'grid grid-cols-[1fr,auto] border-b border-[#e0e0e0] bg-[#fafafa] px-3 py-2 text-xs font-medium text-[#333]',
+                    'shadow-bottom grid grid-cols-[1fr,auto] bg-black/[0.025] px-3 py-2 text-xs font-medium text-[#333]',
                     {
-                        'border-[#6D6D6D] bg-[#1f1f1f] text-[#fafafa] dark:border-[#6D6D6D] dark:bg-[#1f1f1f] dark:text-[#fafafa]':
+                        'bg-white/5 text-[#FAFAFA] dark:bg-white/5 dark:text-[#FAFAFA]':
                             dark,
                     },
+                    classNames.driveHeader,
                 )}
             >
                 <ShouldRender if={!!path}>
@@ -80,14 +81,7 @@ export default function DriveBrowserHeader({
                     </div>
                 </ShouldRender>
                 <div className="flex items-center gap-2">
-                    <div
-                        className={cn(
-                            'relative flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-[#f4f4f4]',
-                            {
-                                'bg-[#6D6D6D] dark:bg-[#6D6D6D]': dark,
-                            },
-                        )}
-                    >
+                    <div className="relative flex h-8 w-8 items-center justify-center overflow-hidden rounded-full ">
                         <ShouldRender if={!!user.picture}>
                             <img
                                 src={user.picture}
@@ -100,9 +94,13 @@ export default function DriveBrowserHeader({
                     </div>
 
                     <button
-                        className={cn('text-blue-600 hover:underline', {
-                            'text-[#30C5F7] dark:text-[#30C5F7]': dark,
-                        })}
+                        className={cn(
+                            'text-blue-600 hover:underline',
+                            {
+                                'text-[#30C5F7] dark:text-[#30C5F7]': dark,
+                            },
+                            classNames.driveLogoutButton,
+                        )}
                         onClick={() => {
                             handleSignOut()
                             setActiveAdapter(undefined)
@@ -115,19 +113,24 @@ export default function DriveBrowserHeader({
 
             <ShouldRender if={showSearch}>
                 <div
-                    className={cn('relative h-fit bg-[#f4f4f4] px-3 py-2', {
-                        'bg-[#1f1f1f] text-[#fafafa] dark:bg-[#1f1f1f] dark:text-[#fafafa]':
-                            dark,
-                    })}
+                    className={cn(
+                        'relative h-fit bg-black/[0.025] px-3 py-2',
+                        {
+                            'bg-white/5 text-[#fafafa] dark:bg-white/5 dark:text-[#fafafa]':
+                                dark,
+                        },
+                        classNames.driveSearchContainer,
+                    )}
                 >
                     <input
                         type="search"
                         className={cn(
-                            'h-fit w-full rounded-md bg-[#eaeaea] px-3 py-2 pl-8 text-xs outline-none transition-all duration-300',
+                            'h-fit w-full rounded-md bg-black/[0.025] px-3 py-2 pl-8 text-xs outline-none transition-all duration-300',
                             {
-                                'bg-[#2f2f2f] text-[#6D6D6D] dark:bg-[#2f2f2f] dark:text-[#6D6D6D]':
+                                'bg-white/5 text-[#6D6D6D] dark:bg-white/5 dark:text-[#6D6D6D]':
                                     dark,
                             },
+                            classNames.driveSearchInput,
                         )}
                         placeholder="Search"
                         value={searchTerm}

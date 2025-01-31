@@ -1,4 +1,3 @@
-const { resolve } = require('path')
 const autoprefixer = require('autoprefixer')
 const tailwindcss = require('tailwindcss')
 const postcss = require('rollup-plugin-postcss')

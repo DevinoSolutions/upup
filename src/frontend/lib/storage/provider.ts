@@ -1,4 +1,5 @@
 import {
+    FileWithParams,
     PresignedUrlResponse,
     UploadError,
     UploadErrorType,
@@ -26,7 +27,7 @@ export class ProviderSDK implements StorageSDK {
     }
 
     async upload(
-        file: File,
+        file: FileWithParams,
         options = {} as UploadOptions,
     ): Promise<UploadResult> {
         try {
@@ -65,38 +66,36 @@ export class ProviderSDK implements StorageSDK {
         }
     }
 
-    private async getPresignedUrl(file: File): Promise<PresignedUrlResponse> {
-        try {
-            const requestBody = {
-                name: file.name,
-                type: file.type,
-                size: file.size,
-                provider: this.config.provider,
-                ...this.config.constraints,
-            }
-
-            const response = await fetch(this.config.tokenEndpoint, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(requestBody),
-            })
-
-            if (!response.ok) {
-                const errorData = await response.json()
-                throw new Error(errorData.details || 'Failed to get upload URL')
-            }
-
-            const data = await response.json()
-
-            return data
-        } catch (error) {
-            throw error
+    private async getPresignedUrl(
+        file: FileWithParams,
+    ): Promise<PresignedUrlResponse> {
+        const requestBody = {
+            name: file.name,
+            type: file.type,
+            size: file.size,
+            provider: this.config.provider,
+            ...this.config.constraints,
         }
+
+        const response = await fetch(this.config.tokenEndpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(requestBody),
+        })
+
+        if (!response.ok) {
+            const errorData = await response.json()
+            throw new Error(errorData.details || 'Failed to get upload URL')
+        }
+
+        const data = await response.json()
+
+        return data
     }
 
     private async uploadWithProgress(
         url: string,
-        file: File,
+        file: FileWithParams,
         { onFileUploadProgress, onFilesUploadProgress }: UploadOptions,
     ): Promise<Response> {
         return new Promise((resolve, reject) => {
@@ -160,12 +159,57 @@ export class ProviderSDK implements StorageSDK {
         const required = ['tokenEndpoint', 'provider'] as const
         const missing = required.filter(key => !this.config[key])
 
-        if (missing.length > 0)
-            throw new Error(
+        // Validate required fields
+        if (missing.length > 0) {
+            throw new UploadError(
                 `Missing required configuration: ${missing.join(', ')}`,
+                UploadErrorType.FILE_VALIDATION_ERROR,
             )
-        if (!Object.values(UpupProvider).includes(this.config.provider))
-            throw new Error(`Invalid provider: ${this.config.provider}`)
+        }
+
+        // Validate provider enum
+        if (!Object.values(UpupProvider).includes(this.config.provider)) {
+            throw new UploadError(
+                `Invalid provider: ${
+                    this.config.provider
+                }. Valid options: ${Object.values(UpupProvider).join(', ')}`,
+                UploadErrorType.CORS_CONFIG_ERROR,
+            )
+        }
+
+        // Validate tokenEndpoint format
+        try {
+            new URL(this.config.tokenEndpoint)
+        } catch (e) {
+            throw new UploadError(
+                `Invalid tokenEndpoint URL: ${this.config.tokenEndpoint}` + e,
+                UploadErrorType.CORS_CONFIG_ERROR,
+            )
+        }
+
+        // Validate constraints if present
+        if (this.config.constraints) {
+            const { maxFileSize, accept } = this.config.constraints
+
+            if (maxFileSize !== undefined && maxFileSize <= 0) {
+                throw new UploadError(
+                    `maxFileSize must be greater than 0`,
+                    UploadErrorType.FILE_VALIDATION_ERROR,
+                )
+            }
+
+            if (
+                accept &&
+                !/^(\*\/\*|\*|[\w-]+\/[\w+.-]+)(,(\*\/\*|\*|[\w-]+\/[\w+.-]+))*$/.test(
+                    accept,
+                )
+            ) {
+                throw new UploadError(
+                    `Invalid accept format: ${accept}. Use MIME types, */*, or *`,
+                    UploadErrorType.FILE_VALIDATION_ERROR,
+                )
+            }
+        }
 
         return true
     }

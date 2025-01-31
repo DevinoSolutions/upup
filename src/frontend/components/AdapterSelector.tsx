@@ -12,22 +12,25 @@ type Props = {
 
 export default function AdapterSelector({ isDragging, setIsDragging }: Props) {
     const {
-        onFileDragOver,
-        onFileDragLeave,
-        onFileDrop,
+        props: {
+            onFilesDragOver,
+            onFilesDragLeave,
+            onFilesDrop,
+            mini,
+            accept,
+            multiple,
+            limit,
+            maxFileSize,
+            dark,
+            classNames,
+        },
         setFiles,
         isAddingMore,
         setIsAddingMore,
-        mini,
         chosenAdapters,
         handleAdapterClick,
-        accept,
         inputRef,
-        multiple,
         handleInputFileChange,
-        limit,
-        maxFileSize,
-        dark,
     } = useAdapterSelector()
 
     return (
@@ -37,9 +40,9 @@ export default function AdapterSelector({ isDragging, setIsDragging }: Props) {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 className={cn(
-                    'relative flex h-full flex-col-reverse items-center justify-center gap-3 rounded-lg border border-[#1849D6] sm:flex-col sm:gap-10 md:gap-14',
+                    'relative flex h-full flex-col-reverse items-center justify-center gap-3 rounded-lg border border-[#1849D6] @cs/main:flex-col @cs/main:gap-14',
                     {
-                        'max-md:pt-[72px]': isAddingMore,
+                        'pt-[72px] @cs/main:pt-0': isAddingMore,
                         'border-[#30C5F7] dark:border-[#30C5F7]': dark,
                         'border-dashed': !isDragging,
                         'bg-[#E7ECFC] backdrop-blur-sm': isDragging && !dark,
@@ -53,21 +56,21 @@ export default function AdapterSelector({ isDragging, setIsDragging }: Props) {
                     e.dataTransfer.dropEffect = 'copy'
 
                     const files = Array.from(e.dataTransfer.files)
-                    onFileDragOver(files)
+                    onFilesDragOver(files)
                 }}
                 onDragLeave={e => {
                     e.preventDefault()
                     setIsDragging(false)
 
                     const files = Array.from(e.dataTransfer.files)
-                    onFileDragLeave(files)
+                    onFilesDragLeave(files)
                 }}
                 onDrop={e => {
                     e.preventDefault()
 
                     const droppedFiles = Array.from(e.dataTransfer.files)
 
-                    onFileDrop(droppedFiles)
+                    onFilesDrop(droppedFiles)
                     setFiles(droppedFiles)
 
                     setIsDragging(false)
@@ -79,12 +82,24 @@ export default function AdapterSelector({ isDragging, setIsDragging }: Props) {
                     />
                 </ShouldRender>
                 <ShouldRender if={!mini}>
-                    <div className="flex w-full flex-col justify-center gap-0 sm:flex-row sm:flex-wrap sm:items-center sm:gap-[26px] sm:px-[30px] md:gap-[30px]">
+                    <div
+                        className={cn(
+                            'flex w-full flex-col justify-center gap-1 @cs/main:flex-row @cs/main:flex-wrap @cs/main:items-center @cs/main:gap-[30px] @cs/main:px-[30px]',
+                            classNames.adapterButtonList,
+                        )}
+                    >
                         {chosenAdapters.map(({ Icon, id, name }) => (
                             <button
                                 type="button"
                                 key={id}
-                                className="group flex items-center gap-[6px] max-sm:border-b max-sm:border-gray-200 max-sm:px-2 max-sm:py-1 sm:flex-col sm:justify-center sm:rounded-lg"
+                                className={cn(
+                                    'group flex items-center gap-[6px] border-b border-gray-200 px-2 py-1 @cs/main:flex-col @cs/main:justify-center @cs/main:rounded-lg @cs/main:border-none @cs/main:p-0',
+                                    {
+                                        'border-[#6D6D6D] dark:border-[#6D6D6D]':
+                                            dark,
+                                    },
+                                    classNames.adapterButton,
+                                )}
                                 onKeyDown={e => {
                                     if (e.key === 'Enter') e.preventDefault()
                                 }}
@@ -92,20 +107,25 @@ export default function AdapterSelector({ isDragging, setIsDragging }: Props) {
                             >
                                 <span
                                     className={cn(
-                                        'rounded-lg bg-white p-1 text-2xl font-semibold shadow group-hover:scale-90 max-sm:scale-75 sm:p-[6px] sm:group-hover:scale-110',
+                                        'scale-75 rounded-lg bg-white p-0 text-2xl font-semibold group-hover:scale-90 @cs/main:scale-100 @cs/main:p-[6px] @cs/main:shadow @cs/main:group-hover:scale-110',
                                         {
                                             'bg-[#323232] dark:bg-[#323232]':
                                                 dark,
                                         },
+                                        classNames.adapterButtonIcon,
                                     )}
                                 >
                                     <Icon />
                                 </span>
                                 <span
-                                    className={cn('text-xs text-[#242634]', {
-                                        'text-[#6D6D6D] dark:text-[#6D6D6D]':
-                                            dark,
-                                    })}
+                                    className={cn(
+                                        'text-xs text-[#242634]',
+                                        {
+                                            'text-[#6D6D6D] dark:text-[#6D6D6D]':
+                                                dark,
+                                        },
+                                        classNames.adapterButtonText,
+                                    )}
                                 >
                                     {name}
                                 </span>
@@ -121,19 +141,22 @@ export default function AdapterSelector({ isDragging, setIsDragging }: Props) {
                     multiple={multiple}
                     onChange={handleInputFileChange}
                 />
-                <div className="flex flex-col items-center gap-1 text-center sm:gap-2 sm:px-[30px]">
+                <div className="flex flex-col items-center gap-1 text-center @cs/main:gap-2 @cs/main:px-[30px]">
                     <div className="flex items-center gap-1">
                         <span
-                            className={cn('text-xs text-[#0B0B0B] sm:text-sm', {
-                                'text-white dark:text-white': dark,
-                            })}
+                            className={cn(
+                                'text-xs text-[#0B0B0B] @cs/main:text-sm',
+                                {
+                                    'text-white dark:text-white': dark,
+                                },
+                            )}
                         >
                             Drag your file
                             {limit > 1 ? 's' : ''} or
                         </span>
                         <span
                             className={cn(
-                                'cursor-pointer text-xs font-semibold text-[#0E2ADD] sm:text-sm',
+                                'cursor-pointer text-xs font-semibold text-[#0E2ADD] @cs/main:text-sm',
                                 { 'text-[#59D1F9] dark:text-[#59D1F9]': dark },
                             )}
                             onClick={() => inputRef.current?.click()}
@@ -141,7 +164,7 @@ export default function AdapterSelector({ isDragging, setIsDragging }: Props) {
                             browse
                         </span>
                     </div>
-                    <p className="text-xs text-[#6D6D6D] sm:text-sm">
+                    <p className="text-xs text-[#6D6D6D] @cs/main:text-sm">
                         Max {maxFileSize.size} {maxFileSize.unit} file
                         {limit > 1 ? 's are ' : ' is '} allowed
                     </p>

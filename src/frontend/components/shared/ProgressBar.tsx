@@ -1,4 +1,5 @@
 import React, { forwardRef, HTMLAttributes } from 'react'
+import { useRootContext } from '../../context/RootContext'
 import { cn } from '../../lib/tailwind'
 import ShouldRender from './ShouldRender'
 
@@ -9,32 +10,50 @@ type Props = {
 } & HTMLAttributes<HTMLDivElement>
 
 export default forwardRef<HTMLDivElement, Props>(function ProgressBar(
-    { progress, className, showValue = false, ...rest },
+    { progress, className, progressBarClassName, showValue = false, ...rest },
     ref,
 ) {
+    const {
+        props: { classNames },
+    } = useRootContext()
     return (
         <ShouldRender if={!!progress}>
             <div
                 ref={ref}
-                className={cn('flex items-center gap-2', className)}
+                className={cn(
+                    'flex items-center gap-2',
+                    className,
+                    classNames.progressBarContainer,
+                )}
                 {...rest}
             >
                 <div
                     className={cn(
                         'h-[6px] flex-1 bg-[#F5F5F5]',
-                        rest.progressBarClassName,
+                        progressBarClassName,
+                        classNames.progressBar,
                     )}
                 >
                     <div
-                        className="h-full rounded-[4px]"
                         style={{
                             width: progress + '%',
-                            background: progress == 100 ? '#8EA5E7' : '#C5CAFB',
                         }}
+                        className={cn(
+                            'h-full rounded-[4px] bg-[#8EA5E7]',
+                            progressBarClassName,
+                            classNames.progressBarInner,
+                        )}
                     />
                 </div>
                 <ShouldRender if={!!showValue}>
-                    <p className="text-xs font-semibold">{progress}%</p>
+                    <p
+                        className={cn(
+                            'text-xs font-semibold',
+                            classNames.progressBarText,
+                        )}
+                    >
+                        {progress}%
+                    </p>
                 </ShouldRender>
             </div>
         </ShouldRender>

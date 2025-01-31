@@ -57,7 +57,7 @@ export default function useOneDrive(clientId = '') {
             onError(`Error initializing Graph client: ${error}`)
             setGraphClient(undefined)
         }
-    }, [msalInstance, token, isInitialized, isAuthenticating])
+    }, [msalInstance, token, isInitialized, isAuthenticating, onError])
 
     // Fetch user profile and files when Graph client is ready
     useEffect(() => {
@@ -99,7 +99,7 @@ export default function useOneDrive(clientId = '') {
         }
 
         initialize()
-    }, [graphClient])
+    }, [graphClient, onError])
 
     return {
         user,

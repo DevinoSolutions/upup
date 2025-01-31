@@ -1,3 +1,5 @@
+import { FC } from 'react'
+
 export enum UploadAdapter {
     INTERNAL = 'INTERNAL',
     GOOGLE_DRIVE = 'GOOGLE_DRIVE',
@@ -27,14 +29,88 @@ export enum UpupProvider {
     DigitalOcean = 'digitalocean',
 }
 
-export type MaxFileSizeObject = {
+type MaxFileSizeObject = {
     size: number
     unit: 'B' | 'KB' | 'MB' | 'GB' | 'TB' | 'PB' | 'EB' | 'ZB' | 'YB'
 }
 
-export type UpupUploaderProps = {
-    loader?: any
+type UpupUploaderPropsClassNames = {
+    containerMini?: string
+    containerFull?: string
+    containerHeader?: string
+    containerCancelButton?: string
+    containerAddMoreButton?: string
 
+    adapterButtonList?: string
+    adapterButton?: string
+    adapterButtonIcon?: string
+    adapterButtonText?: string
+
+    adapterViewHeader?: string
+    adapterViewCancelButton?: string
+    adapterView?: string
+    driveLoading?: string
+
+    driveHeader?: string
+    driveLogoutButton?: string
+    driveSearchContainer?: string
+    driveSearchInput?: string
+    driveBody?: string
+    driveItemContainerDefault?: string
+    driveItemContainerSelected?: string
+    driveItemContainerInner?: string
+    driveItemInnerText?: string
+    driveFooter?: string
+    driveAddFilesButton?: string
+    driveCancelFilesButton?: string
+
+    urlInput?: string
+    urlFetchButton?: string
+
+    cameraPreviewContainer?: string
+    cameraDeleteButton?: string
+    cameraCaptureButton?: string
+    cameraRotateButton?: string
+    cameraAddButton?: string
+
+    fileListContainer?: string
+    fileListContainerInnerSingle?: string
+    fileListContainerInnerMultiple?: string
+    fileListFooter?: string
+
+    filePreviewPortal?: string
+    fileItemSingle?: string
+    fileItemMultiple?: string
+    fileThumbnailSingle?: string
+    fileThumbnailMultiple?: string
+    fileInfo?: string
+    fileName?: string
+    fileSize?: string
+    filePreviewButton?: string
+    fileDeleteButton?: string
+
+    uploadButton?: string
+    uploadDoneButton?: string
+
+    progressBarContainer?: string
+    progressBar?: string
+    progressBarInner?: string
+    progressBarText?: string
+}
+
+export type UpupUploaderPropsIcons = {
+    ContainerAddMoreIcon?: FC<{ className?: string }>
+
+    FileDeleteIcon?: FC<{ className?: string }>
+
+    CameraDeleteIcon?: FC<{ className?: string }>
+    CameraCaptureIcon?: FC<{ className?: string }>
+    CameraRotateIcon?: FC<{ className?: string }>
+
+    LoaderIcon?: FC<{ className?: string }>
+}
+
+export type UpupUploaderProps = {
     uploadAdapters?: UploadAdapter[]
     driveConfigs?: {
         googleDrive?: GoogleDriveConfigs
@@ -50,14 +126,14 @@ export type UpupUploaderProps = {
 
     // Event Handlers
     onFilesSelected?: (files: File[]) => void
-    onPrepareFiles?: (files: File[]) => Promise<File[]>
-    onFileClick?: (file: File) => void
+    onPrepareFiles?: (files: FileWithParams[]) => Promise<FileWithParams[]>
+    onFileClick?: (file: FileWithParams) => void
     onIntegrationClick?: (integrationType: string) => void
-    onFileUploadStart?: (file: File) => void
-    onFileUploadComplete?: (file: File, key: string) => void
+    onFileUploadStart?: (file: FileWithParams) => void
+    onFileUploadComplete?: (file: FileWithParams, key: string) => void
     onFilesUploadComplete?: (keys: string[]) => void
     onFileUploadProgress?: (
-        file: File,
+        file: FileWithParams,
         {
             loaded,
             total,
@@ -65,15 +141,17 @@ export type UpupUploaderProps = {
         }: { loaded: number; total: number; percentage: number },
     ) => void
     onFilesUploadProgress?: (completedFiles: number, totalFiles: number) => void
-    onFileRemove?: (file: File) => void
-    onFileDragOver?: (files: File[]) => void
-    onFileDragLeave?: (files: File[]) => void
-    onFileDrop?: (files: File[]) => void
+    onFileRemove?: (file: FileWithParams) => void
+    onFilesDragOver?: (files: File[]) => void
+    onFilesDragLeave?: (files: File[]) => void
+    onFilesDrop?: (files: File[]) => void
     onFileTypeMismatch?: (file: File, acceptedTypes: string) => void
-    onCancelUpload?: (files: File[]) => void
+    // onCancelUpload?: (files: FileWithParams[]) => void
     onError?: (errorMessage: string) => void
     onWarn?: (warningMessage: string) => void
     dark?: boolean
+    classNames?: UpupUploaderPropsClassNames
+    icons?: UpupUploaderPropsIcons
 }
 
 export type PresignedUrlResponse = {
@@ -111,3 +189,5 @@ export class UploadError extends Error {
         this.status = status || this.DEFAULT_ERROR_STATUS_CODE
     }
 }
+
+export type FileWithParams = File & { id: string; url: string }
