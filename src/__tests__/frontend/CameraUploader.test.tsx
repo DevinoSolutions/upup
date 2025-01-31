@@ -141,6 +141,7 @@ jest.mock('../../frontend/context/RootContext', () => ({
     useRootContext: () => ({
         props: {
             icons: mockIcons,
+            classNames: { adapterView: '' },
         },
     }),
 }))
