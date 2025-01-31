@@ -1,11 +1,16 @@
 import { GoogleFile, Root, Token, User } from 'google'
 import { useCallback, useEffect, useState } from 'react'
-import type { GoogleConfigs } from '../types/GoogleConfigs'
-import { useLoadGAPI } from './useLoadGAPI'
+import { GoogleDriveConfigs } from '../../shared/types'
+import { useRootContext } from '../context/RootContext'
+import useLoadGAPI from './useLoadGAPI'
 
-export const useGoogleDrive = (googleConfigs: GoogleConfigs) => {
+export default function useGoogleDrive(
+    googleConfigs = {} as GoogleDriveConfigs,
+) {
     const { google_client_id, google_api_key } = googleConfigs
-
+    const {
+        props: { onError },
+    } = useRootContext()
     const [user, setUser] = useState<User>()
     const [googleFiles, setGoogleFiles] = useState<Root>()
     const [rawFiles, setRawFiles] = useState<GoogleFile[]>()
@@ -36,46 +41,25 @@ export const useGoogleDrive = (googleConfigs: GoogleConfigs) => {
         )
         const data = await response.json()
         if (data.error) {
-            console.error(data.error)
+            onError(data.error)
             return
         }
         setRawFiles(data.files)
-    }, [fetchDrive, google_api_key])
-
-    /**
-     * @description Download a file from Google Drive
-     * @param {string} fileId
-     * @returns {Promise<Blob>}
-     */
-    const downloadFile = async (fileId: string) => {
-        const response = await fetch(
-            `https://www.googleapis.com/drive/v3/files/${fileId}?key=${google_api_key}&alt=media`,
-            {
-                headers: {
-                    Authorization: `Bearer ${token?.access_token}`,
-                },
-            },
-        )
-        return await response.blob()
-    }
+    }, [fetchDrive, google_api_key, onError])
 
     /**
      * @description Get the user's name from Google Drive
      * @returns {Promise<void>}
      */
-    const getUserName = async () => {
+    const getUserName = useCallback(async () => {
         const response = await fetchDrive(
             `https://www.googleapis.com/oauth2/v3/userinfo`,
         )
         const data = await response.json()
         setUser(data)
-    }
+    }, [fetchDrive])
 
-    /**
-     * @description Sign out of Google Drive and remove access token from local storage
-     * @returns {Promise<void>}
-     */
-    const handleSignOut = (): void => {
+    const handleSignOut = async () => {
         // const google = await window.google
         // google.accounts.id.revoke()
         localStorage.removeItem('token')
@@ -168,14 +152,14 @@ export const useGoogleDrive = (googleConfigs: GoogleConfigs) => {
                                 )
                                 return setToken(tokenResponse)
                             } else {
-                                console.error('Error: ', tokenResponse?.error)
+                                onError('Error: ' + tokenResponse?.error)
                             }
                         },
                     })
                     .requestAccessToken({})
             })()
         }
-    }, [gisLoaded])
+    }, [gisLoaded, google_client_id, onError])
 
     /**
      *  @description Get the user's name and files list when the token is set
@@ -187,7 +171,7 @@ export const useGoogleDrive = (googleConfigs: GoogleConfigs) => {
                 await getFilesList()
             })()
         }
-    }, [token])
+    }, [getFilesList, getUserName, token])
 
     /**
      * @description Organize the files into a tree structure when the raw files are set
@@ -196,5 +180,5 @@ export const useGoogleDrive = (googleConfigs: GoogleConfigs) => {
         organizeFiles()
     }, [organizeFiles])
 
-    return { user, googleFiles, handleSignOut, downloadFile }
+    return { user, googleFiles, handleSignOut, token }
 }

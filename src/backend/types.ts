@@ -1,5 +1,5 @@
 import { S3ClientConfig } from '@aws-sdk/client-s3'
-import { Provider } from '../shared/types/StorageSDK'
+import { UpupProvider } from '../shared/types'
 
 export interface FileParams {
     name: string
@@ -20,7 +20,7 @@ export type S3PresignedUrlParams = UrlParams & {
     bucketName: string
     s3ClientConfig: S3ClientConfig
     origin: string
-    provider: Provider
+    provider: UpupProvider
 }
 
 export type AzureSasUrlParams = UrlParams & {

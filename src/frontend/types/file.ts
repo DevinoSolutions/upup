@@ -1,15 +1,5 @@
-import { Dispatch, SetStateAction } from 'react'
-
-export interface FileWithId extends File {
-    id?: string
-}
-
-export interface PreviewProps {
-    file: FileWithId
-    objectUrl: string
-}
-
-export interface FileHandlerProps {
-    files: FileWithId[]
-    setFiles: Dispatch<SetStateAction<FileWithId[]>>
+export enum FilePreviewStatus {
+    SupportedByFileViewer = 'supported_by_file_viewer',
+    SupportedByHTMLObject = 'supported_by_html_object',
+    Unsupported = 'unsupported',
 }

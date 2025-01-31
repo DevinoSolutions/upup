@@ -1,39 +1,84 @@
-import React, { SVGProps } from 'react'
+import React, { forwardRef, memo, SVGAttributes, SVGProps } from 'react'
 import {
-    TbFileText,
-    TbFileUnknown,
-    TbMusic,
-    TbPdf,
-    TbVideo,
+    TbFile,
+    TbFileTypeBmp,
+    TbFileTypeCss,
+    TbFileTypeCsv,
+    TbFileTypeDocx,
+    TbFileTypeHtml,
+    TbFileTypeJpg,
+    TbFileTypeJs,
+    TbFileTypeJsx,
+    TbFileTypePdf,
+    TbFileTypePhp,
+    TbFileTypePng,
+    TbFileTypePpt,
+    TbFileTypeRs,
+    TbFileTypeSql,
+    TbFileTypeSvg,
+    TbFileTypeTs,
+    TbFileTypeTsx,
+    TbFileTypeTxt,
+    TbFileTypeVue,
+    TbFileTypeXls,
+    TbFileTypeXml,
+    TbFileTypeZip,
 } from 'react-icons/tb'
+import { useRootContext } from '../context/RootContext'
+import { cn } from '../lib/tailwind'
+
+type Props = {
+    extension?: string
+} & SVGAttributes<SVGElement>
 
 type IconType = (props: SVGProps<SVGSVGElement>) => JSX.Element
 
 const fileTypes: { [key: string]: IconType } = {
-    mp4: TbVideo,
-    avi: TbVideo,
-    webm: TbVideo,
-    mov: TbVideo,
-    mkv: TbVideo,
-    mp3: TbMusic,
-    wav: TbMusic,
-    ogg: TbMusic,
-    flac: TbMusic,
-    pdf: TbPdf,
-    txt: TbFileText,
-    docx: TbFileText,
-    doc: TbFileText,
-    odt: TbFileText,
-    rtf: TbFileText,
+    bmp: TbFileTypeBmp,
+    css: TbFileTypeCss,
+    csv: TbFileTypeCsv,
+    docx: TbFileTypeDocx,
+    html: TbFileTypeHtml,
+    jpg: TbFileTypeJpg,
+    js: TbFileTypeJs,
+    jsx: TbFileTypeJsx,
+    pdf: TbFileTypePdf,
+    png: TbFileTypePng,
+    php: TbFileTypePhp,
+    ppt: TbFileTypePpt,
+    rs: TbFileTypeRs,
+    sql: TbFileTypeSql,
+    svg: TbFileTypeSvg,
+    ts: TbFileTypeTs,
+    tsx: TbFileTypeTsx,
+    txt: TbFileTypeTxt,
+    vue: TbFileTypeVue,
+    xls: TbFileTypeXls,
+    xml: TbFileTypeXml,
+    zip: TbFileTypeZip,
 }
 
-type Props = {
-    extension?: string
-}
-
-const FileIcon = ({ extension = '' }: Props) => {
-    const Component = fileTypes[extension] || TbFileUnknown
-    return <Component className="h-full w-full" />
-}
-
-export default FileIcon
+export default memo(
+    forwardRef<SVGSVGElement, Props>(function FileIcon(
+        { extension = '', className, ...restProps },
+        ref,
+    ) {
+        const {
+            props: { dark },
+        } = useRootContext()
+        const IconComponent = fileTypes[extension] || TbFile
+        return (
+            <IconComponent
+                ref={ref}
+                className={cn(
+                    'text-5xl text-blue-600 @cs/main:text-8xl',
+                    className,
+                    {
+                        'text-[#59D1F9] dark:text-[#59D1F9]': dark,
+                    },
+                )}
+                {...restProps}
+            />
+        )
+    }),
+)

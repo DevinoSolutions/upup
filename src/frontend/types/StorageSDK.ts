@@ -1,15 +1,4 @@
-import { Provider } from '../../shared/types/StorageSDK'
-import { BaseConfigs } from './'
-
-export interface StorageConfig {
-    provider: Provider
-    tokenEndpoint: string
-    constraints?: {
-        multiple: boolean
-        accept: string
-        maxFileSize?: number
-    }
-}
+import { UpupUploaderProps } from '../../shared/types'
 
 export interface UploadProgress {
     loaded: number
@@ -18,16 +7,16 @@ export interface UploadProgress {
 }
 
 export type UploadOptions = Pick<
-    BaseConfigs,
+    UpupUploaderProps,
     | 'onFileUploadStart'
     | 'onFileUploadProgress'
     | 'onFileUploadComplete'
-    | 'onFileUploadFail'
-    | 'onTotalUploadProgress'
+    | 'onError'
+    | 'onFilesUploadProgress'
 > & {
     path?: string
     metadata?: Record<string, string>
-    onTotalUploadProgress(completedFiles: number): void
+    onFilesUploadProgress(completedFiles: number): void
 }
 
 export interface UploadResult {

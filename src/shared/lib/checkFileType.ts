@@ -1,11 +1,4 @@
-import { BaseConfigs } from '../types/BaseConfigs'
-
-export default function checkFileType(
-    accept: string,
-    file: File,
-    onFileTypeMismatch?: BaseConfigs['onFileTypeMismatch'],
-) {
-    try {
+export default function checkFileType(accept: string, file: File) {
         const fileType = file.type
 
         // Return false for invalid inputs
@@ -30,8 +23,4 @@ export default function checkFileType(
         if (!isValidType) throw new Error('Invalid type')
 
         return isValidType
-    } catch (error) {
-        onFileTypeMismatch?.(file, accept)
-        return false
-    }
 }

@@ -2,24 +2,18 @@ import { InteractionType } from '@azure/msal-browser'
 import { Client } from '@microsoft/microsoft-graph-client'
 import { AuthCodeMSALBrowserAuthenticationProvider } from '@microsoft/microsoft-graph-client/authProviders/authCodeMsalBrowser'
 import { MicrosoftUser, OneDriveRoot } from 'microsoft'
-import { useCallback, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
+import { useRootContext } from '../context/RootContext'
 import useOneDriveAuth from './useOneDriveAuth'
 import usePCAInstance from './usePCAInstance'
 
-interface AuthProps {
-    user: MicrosoftUser | undefined
-    oneDriveFiles: OneDriveRoot | undefined
-    signOut: () => void
-    downloadFile: (fileId: string) => Promise<Blob>
-    graphClient: Client | null
-}
-
-function useOneDrive(clientId: string): AuthProps {
-    const [user, setUser] = useState<MicrosoftUser | undefined>()
-    const [oneDriveFiles, setOneDriveFiles] = useState<
-        OneDriveRoot | undefined
-    >()
-    const [graphClient, setGraphClient] = useState<Client | null>(null)
+export default function useOneDrive(clientId = '') {
+    const {
+        props: { onError },
+    } = useRootContext()
+    const [user, setUser] = useState<MicrosoftUser>()
+    const [oneDriveFiles, setOneDriveFiles] = useState<OneDriveRoot>()
+    const [graphClient, setGraphClient] = useState<Client>()
     const { msalInstance } = usePCAInstance(clientId)
     const { token, signOut, isInitialized, isAuthenticating } = useOneDriveAuth(
         {
@@ -33,16 +27,13 @@ function useOneDrive(clientId: string): AuthProps {
     useEffect(() => {
         const isReady = token && isInitialized && !isAuthenticating
         if (!isReady || !msalInstance) {
-            setGraphClient(null)
+            setGraphClient(undefined)
             return
         }
 
         try {
             const accounts = msalInstance.getAllAccounts()
-            if (accounts.length === 0) {
-                console.error('No accounts found')
-                return
-            }
+            if (accounts.length === 0) throw new Error('No accounts found')
 
             const authProvider = new AuthCodeMSALBrowserAuthenticationProvider(
                 msalInstance,
@@ -63,10 +54,10 @@ function useOneDrive(clientId: string): AuthProps {
 
             setGraphClient(client)
         } catch (error) {
-            console.error('Error initializing Graph client:', error)
-            setGraphClient(null)
+            onError(`Error initializing Graph client: ${error}`)
+            setGraphClient(undefined)
         }
-    }, [msalInstance, token, isInitialized, isAuthenticating])
+    }, [msalInstance, token, isInitialized, isAuthenticating, onError])
 
     // Fetch user profile and files when Graph client is ready
     useEffect(() => {
@@ -103,40 +94,17 @@ function useOneDrive(clientId: string): AuthProps {
                     children: files,
                 })
             } catch (error) {
-                console.error('Error fetching profile or file list:', error)
+                onError('Error fetching profile or file list:' + error)
             }
         }
 
         initialize()
-    }, [graphClient])
-
-    const downloadFile = useCallback(
-        async (downloadUrl: string): Promise<Blob> => {
-            if (!graphClient) {
-                throw new Error('Graph client not initialized')
-            }
-
-            try {
-                const response = await fetch(downloadUrl)
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`)
-                }
-                return await response.blob()
-            } catch (error) {
-                console.error('Error downloading file:', error)
-                throw error
-            }
-        },
-        [graphClient],
-    )
+    }, [graphClient, onError])
 
     return {
         user,
         oneDriveFiles,
         signOut,
-        downloadFile,
         graphClient,
     }
 }
-
-export default useOneDrive

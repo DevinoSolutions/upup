@@ -1,6 +1,6 @@
 import { S3ClientConfig } from '@aws-sdk/client-s3'
 import { createHash, createHmac } from 'crypto'
-import { Provider } from '../../../shared/types/StorageSDK'
+import { UpupProvider } from '../../../shared/types'
 
 function hmac(key: string | Buffer, message: string) {
     return createHmac('sha256', key).update(message).digest()
@@ -27,6 +27,23 @@ function calculateMD5(content: string) {
     return createHash('md5').update(content).digest('base64')
 }
 
+function getHost(
+    bucketName: string,
+    provider: UpupProvider,
+    { endpoint, region }: Pick<S3ClientConfig, 'endpoint' | 'region'>,
+) {
+    switch (provider) {
+        case UpupProvider.AWS:
+            return `${bucketName}.s3.${region}.amazonaws.com`
+        case UpupProvider.BackBlaze:
+            return (endpoint as string).split('https://')[1]
+        case UpupProvider.DigitalOcean:
+            return `${bucketName}.${region}.digitaloceanspaces.com`
+        default:
+            return ''
+    }
+}
+
 export default function awsGenerateSignatureHeaders(
     corsConfig: string,
     bucketName: string,
@@ -37,16 +54,10 @@ export default function awsGenerateSignatureHeaders(
     }: S3ClientConfig & {
         credentials?: any
     },
-    provider: Provider,
+    provider: UpupProvider,
 ) {
     const service = 's3'
-    const hostMap = {
-        [Provider.AWS]: `${bucketName}.s3.${region}.amazonaws.com`,
-        [Provider.BackBlaze]: (endpoint as string).split('https://')[1],
-        [Provider.DigitalOcean]: `${bucketName}.${region}.digitaloceanspaces.com`,
-        [Provider.Azure]: ``,
-    }
-    const host = hostMap[provider]
+    const host = getHost(bucketName, provider, { endpoint, region })
 
     // Calculate Content-MD5
     const contentMD5 = calculateMD5(corsConfig)
@@ -60,18 +71,18 @@ export default function awsGenerateSignatureHeaders(
     const method = 'PUT'
 
     const canonicalUriMap = {
-        [Provider.AWS]: '/',
-        [Provider.BackBlaze]: `/${bucketName}/`,
-        [Provider.DigitalOcean]: `/`,
-        [Provider.Azure]: ``,
+        [UpupProvider.AWS]: '/',
+        [UpupProvider.BackBlaze]: `/${bucketName}/`,
+        [UpupProvider.DigitalOcean]: `/`,
+        [UpupProvider.Azure]: ``,
     }
     const canonicalUri = canonicalUriMap[provider]
 
     const canonicalQueryStringMap = {
-        [Provider.AWS]: 'cors=',
-        [Provider.BackBlaze]: 'cors=null',
-        [Provider.DigitalOcean]: 'cors=',
-        [Provider.Azure]: ``,
+        [UpupProvider.AWS]: 'cors=',
+        [UpupProvider.BackBlaze]: 'cors=null',
+        [UpupProvider.DigitalOcean]: 'cors=',
+        [UpupProvider.Azure]: ``,
     }
     const canonicalQueryString = canonicalQueryStringMap[provider]
 

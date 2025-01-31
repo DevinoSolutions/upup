@@ -1,15 +1,26 @@
 import { PutObjectCommand, S3Client, _Error } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
+import { v4 as uuid } from 'uuid'
 import {
     PresignedUrlResponse,
     UploadError,
     UploadErrorType,
-} from '../../../../shared/types/StorageSDK'
+} from '../../../../shared/types'
 import { S3PresignedUrlParams } from '../../../types'
 import fileValidateParams from '../../files/file-validate-params'
+import s3GenerateSignedUrl from './s3-generate-signed-url'
 import s3UpdateCORS from './s3-update-cors'
 
 const DEFAULT_EXPIRES_IN = 3600
+
+function getUploadErrorParams(error: unknown) {
+    const message =
+        ((error as _Error) || {}).Message || (error as Error).message
+    const errorType = (((error as _Error) || {}).Code ||
+        UploadErrorType.PRESIGNED_URL_ERROR) as UploadErrorType
+
+    return { message, errorType }
+}
 
 export default async function s3GeneratePresignedUrl({
     fileParams,
@@ -35,7 +46,7 @@ export default async function s3GeneratePresignedUrl({
         const client = new S3Client(s3ClientConfig)
 
         // Generate unique key for the file
-        const Key = `uploads/${Date.now()}-${fileName}`
+        const Key = `${uuid()}-${fileName}`
 
         // Create PutObject command
         const command = new PutObjectCommand({
@@ -52,7 +63,7 @@ export default async function s3GeneratePresignedUrl({
         })
 
         // Generate public URL (if bucket is public)
-        const publicUrl = uploadUrl.split(Key)[0] + Key
+        const publicUrl = await s3GenerateSignedUrl(s3ClientConfig, Key, Bucket)
 
         return {
             key: Key,
@@ -63,11 +74,7 @@ export default async function s3GeneratePresignedUrl({
     } catch (error) {
         if (error instanceof UploadError) throw error
 
-        const message =
-            ((error as _Error) || {}).Message || (error as Error).message
-        const errorType = (((error as _Error) || {}).Code ||
-            UploadErrorType.PRESIGNED_URL_ERROR) as UploadErrorType
-
+        const { message, errorType } = getUploadErrorParams(error)
         throw new UploadError(message, errorType, false, 500)
     }
 }

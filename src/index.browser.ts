@@ -1,7 +1,8 @@
 import './frontend/tailwind.css'
-export { GoogleConfigs } from './frontend/types/GoogleConfigs'
-export { OneDriveConfigs } from './frontend/types/OneDriveConfigs'
-export { UPLOAD_ADAPTER, UploadAdapter } from './frontend/types/UploadAdapter'
-export { UploadFilesRef, UpupUploader } from './frontend/UpupUploader'
-export { BaseConfigs } from './shared/types/BaseConfigs'
-export { Provider } from './shared/types/StorageSDK'
+export { default as UpupUploader } from './frontend/UpupUploader'
+export {
+    GoogleDriveConfigs,
+    OneDriveConfigs,
+    UploadAdapter,
+    UpupProvider,
+} from './shared/types'

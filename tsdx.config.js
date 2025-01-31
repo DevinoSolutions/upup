@@ -1,4 +1,3 @@
-const { resolve } = require('path')
 const autoprefixer = require('autoprefixer')
 const tailwindcss = require('tailwindcss')
 const postcss = require('rollup-plugin-postcss')
@@ -10,15 +9,6 @@ const { nodeResolve } = require('@rollup/plugin-node-resolve')
 const GRAPH_CLIENT_DEPS = [
     '@microsoft/microsoft-graph-client',
     '@microsoft/microsoft-graph-client/authProviders/authCodeMsalBrowser',
-]
-
-const MUI_PEER_DEPS = [
-    '@emotion/react',
-    '@emotion/styled',
-    '@mui/material',
-    '@mui/system',
-    '@mui/utils',
-    'react-is',
 ]
 
 const AWS_SDK_DEPS = [
@@ -75,7 +65,7 @@ module.exports = {
                 'react',
                 'react-dom',
                 'react/jsx-runtime',
-                ...MUI_PEER_DEPS,
+                'tailwind-merge',
                 ...AWS_SDK_DEPS,
                 ...AZURE_DEPS,
                 ...GRAPH_CLIENT_DEPS,

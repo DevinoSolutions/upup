@@ -1,5 +1,5 @@
 import checkFileType from '../../../shared/lib/checkFileType'
-import { UploadError, UploadErrorType } from '../../../shared/types/StorageSDK'
+import { UploadError, UploadErrorType } from '../../../shared/types'
 import { FileParams } from '../../types'
 
 const DEFAULT_MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB;

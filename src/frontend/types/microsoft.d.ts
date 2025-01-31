@@ -2,23 +2,12 @@ declare module 'microsoft' {
     type MicrosoftUser = {
         name: string
         mail: string
+        picture?: string
     }
 
     type MicrosoftToken = {
         secret: string
         expiresOn: number
-    }
-
-    type ThumbnailSize = {
-        width: number
-        height: number
-        url: string
-    }
-
-    type Thumbnails = {
-        large: ThumbnailSize
-        medium: ThumbnailSize
-        small: ThumbnailSize
     }
 
     type OneDriveFile = {

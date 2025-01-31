@@ -1,9 +1,12 @@
 import { PublicClientApplication } from '@azure/msal-browser'
 import { useEffect, useState } from 'react'
+import { useRootContext } from '../context/RootContext'
 
 const usePCAInstance = (clientId: string) => {
-    const [msalInstance, setMsalInstance] =
-        useState<PublicClientApplication | null>(null)
+    const {
+        props: { onError },
+    } = useRootContext()
+    const [msalInstance, setMsalInstance] = useState<PublicClientApplication>()
     const [isInitializing, setIsInitializing] = useState(true)
 
     useEffect(() => {
@@ -12,7 +15,7 @@ const usePCAInstance = (clientId: string) => {
         const initializeMsal = async () => {
             if (!clientId) {
                 setIsInitializing(false)
-                console.error('Client ID is required...')
+                onError('Client ID is required...')
                 return
             }
 
@@ -37,25 +40,20 @@ const usePCAInstance = (clientId: string) => {
                     },
                 })
 
-                if (mounted) {
-                    setMsalInstance(instance)
-                }
+                if (mounted) setMsalInstance(instance)
             } catch (error) {
+                onError((error as Error).message)
             } finally {
-                if (mounted) {
-                    setIsInitializing(false)
-                }
+                if (mounted) setIsInitializing(false)
             }
         }
 
-        if (!msalInstance) {
-            initializeMsal()
-        }
+        if (!msalInstance) initializeMsal()
 
         return () => {
             mounted = false
         }
-    }, [clientId])
+    }, [clientId, msalInstance, onError])
 
     return {
         msalInstance,
