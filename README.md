@@ -121,15 +121,15 @@ Once again, the example shown above is the minimal required configuration for AW
 
 It is important to note that while it is possible to:
 
-- Implement your own custom logic on the client and use the server utilities provided by this component on the server OR
-- Use the `UpupUploader` React component on the client and implement your own custom server logic to handle uploads,
+-   Implement your own custom logic on the client and use the server utilities provided by this component on the server OR
+-   Use the `UpupUploader` React component on the client and implement your own custom server logic to handle uploads,
 
 For best performance and minimal overhead, we advise that you use both the [`UpupUploader`](https://upup-landing-page.vercel.app/docs/category/upupuploader) React component together with the server utilities, like [`s3GeneratePresignedUrl`](https://upup-landing-page.vercel.app/docs/api-reference/s3-generate-presigned-url)
 
 The full list of exported server utility functions include:
 
-- [`s3GeneratePresignedUrl`](https://upup-landing-page.vercel.app/docs/api-reference/s3-generate-presigned-url): for S3-compatible Uploads: like AWS, Digital Ocean, Backblaze
-- [`azureGenerateSasUrl`](https://upup-landing-page.vercel.app/docs/api-reference/azure-generate-sas-url): for Azure Blob Uploads only
+-   [`s3GeneratePresignedUrl`](https://upup-landing-page.vercel.app/docs/api-reference/s3-generate-presigned-url): for S3-compatible Uploads: like AWS, Digital Ocean, Backblaze
+-   [`azureGenerateSasUrl`](https://upup-landing-page.vercel.app/docs/api-reference/azure-generate-sas-url): for Azure Blob Uploads only
 
 > For a full list of values sent by the React component to the server, check out these [docs](https://upup-landing-page.vercel.app/docs/api-reference/upupuploader/required-props#tokenendpoint).
 
