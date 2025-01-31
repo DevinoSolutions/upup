@@ -3,7 +3,7 @@ import {
     UploadError,
     UploadErrorType,
     UpupProvider,
-} from '../../../../shared/types/StorageSDK'
+} from '../../../../shared/types'
 import awsGenerateSignatureHeaders from '../aws-generate-signature-headers'
 
 export default async function s3UpdateCORS(

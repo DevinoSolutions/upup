@@ -3,15 +3,11 @@ import {
     UploadError,
     UploadErrorType,
     UpupProvider,
-} from '../../../shared/types/StorageSDK'
-import {
-    StorageConfig,
-    StorageSDK,
-    UploadOptions,
-    UploadResult,
-} from '../../types/StorageSDK'
+    UpupUploaderProps,
+} from '../../../shared/types'
+import { StorageSDK, UploadOptions, UploadResult } from '../../types/StorageSDK'
 
-type UploadConfig = StorageConfig & {
+type UploadConfig = Pick<UpupUploaderProps, 'provider' | 'tokenEndpoint'> & {
     constraints?: {
         multiple: boolean
         accept: string
@@ -64,9 +60,7 @@ export class ProviderSDK implements StorageSDK {
                 httpStatus: uploadResponse.status,
             }
         } catch (error) {
-            console.error('Upload error:', error)
-
-            options.onFileUploadFail?.(file, error as Error)
+            options.onError?.('Upload error:' + error)
             throw this.handleError(error)
         }
     }
@@ -89,10 +83,6 @@ export class ProviderSDK implements StorageSDK {
 
             if (!response.ok) {
                 const errorData = await response.json()
-                console.error('Presigned URL request failed:', {
-                    status: response.status,
-                    error: errorData,
-                })
                 throw new Error(errorData.details || 'Failed to get upload URL')
             }
 
@@ -100,7 +90,6 @@ export class ProviderSDK implements StorageSDK {
 
             return data
         } catch (error) {
-            console.error('Error getting presigned URL:', error)
             throw error
         }
     }
@@ -108,7 +97,7 @@ export class ProviderSDK implements StorageSDK {
     private async uploadWithProgress(
         url: string,
         file: File,
-        { onFileUploadProgress, onTotalUploadProgress }: UploadOptions,
+        { onFileUploadProgress, onFilesUploadProgress }: UploadOptions,
     ): Promise<Response> {
         return new Promise((resolve, reject) => {
             const xhr = new XMLHttpRequest()
@@ -121,8 +110,8 @@ export class ProviderSDK implements StorageSDK {
                         percentage: (event.loaded / event.total) * 100,
                     })
                 }
-                if (event.lengthComputable && onTotalUploadProgress) {
-                    onTotalUploadProgress(this.uploadCount)
+                if (event.lengthComputable && onFilesUploadProgress) {
+                    onFilesUploadProgress(this.uploadCount)
                 }
             })
 

@@ -5,7 +5,7 @@ import {
     PresignedUrlResponse,
     UploadError,
     UploadErrorType,
-} from '../../../../shared/types/StorageSDK'
+} from '../../../../shared/types'
 import { S3PresignedUrlParams } from '../../../types'
 import fileValidateParams from '../../files/file-validate-params'
 import s3GenerateSignedUrl from './s3-generate-signed-url'

@@ -1,14 +1,13 @@
+import { Typography } from '@mui/material'
+import Box from '@mui/material/Box'
 import LinearProgress, {
     LinearProgressProps,
 } from '@mui/material/LinearProgress'
 import React from 'react'
 
-import { Typography } from '@mui/material'
-import Box from '@mui/material/Box'
-
 type Props = LinearProgressProps & { value: number }
 
-const LinearProgressBar = (props: Props) => {
+export default function LinearProgressBar(props: Props) {
     return (
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <Box sx={{ width: '100%', mr: 1 }}>
@@ -24,5 +23,3 @@ const LinearProgressBar = (props: Props) => {
         </Box>
     )
 }
-
-export default LinearProgressBar

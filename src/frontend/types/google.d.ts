@@ -33,13 +33,4 @@ declare module 'google' {
         token_type: string
         error?: unknown
     }
-
-    type TransitionDefinition = {
-        duration: number
-        delay: number
-        backgroundColor: {
-            duration: number
-            delay: number
-        }
-    }
 }

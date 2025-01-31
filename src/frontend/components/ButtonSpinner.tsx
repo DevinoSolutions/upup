@@ -1,6 +1,6 @@
 import React from 'react'
 
-const ButtonSpinner = () => {
+export default function ButtonSpinner() {
     return (
         <button
             className="w-32 rounded-md bg-blue-500 p-3 font-medium text-white transition-all duration-300"
@@ -27,5 +27,3 @@ const ButtonSpinner = () => {
         </button>
     )
 }
-
-export default ButtonSpinner

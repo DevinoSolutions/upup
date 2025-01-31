@@ -1,11 +1,20 @@
-import React, { FC, MouseEventHandler, useCallback, useState } from 'react'
+import React, { MouseEventHandler, useCallback, useState } from 'react'
 import { createPortal } from 'react-dom'
 import FileViewer from 'react-file-viewer'
 import { v4 as uuidv4 } from 'uuid'
-import { PreviewProps } from '../types/file'
+import { useRootContext } from '../context/RootContext'
 import FileIcon from './FileIcon'
 
-const FilePreview: FC<PreviewProps> = ({ file, objectUrl }) => {
+export default function FilePreview({
+    file,
+    objectUrl,
+}: {
+    file: File
+    objectUrl: string
+}) {
+    const {
+        props: { onError },
+    } = useRootContext()
     const [showPreview, setShowPreview] = useState(false)
     const extension = file.name.split('.').pop()?.toLowerCase()
 
@@ -69,7 +78,7 @@ const FilePreview: FC<PreviewProps> = ({ file, objectUrl }) => {
                             fileType={extension}
                             filePath={objectUrl}
                             onError={(e: Error) => {
-                                console.error('Error in file preview:', e)
+                                onError('Error in file preview:' + e)
                                 return (
                                     <FileIcon
                                         key={uuidv4()}
@@ -97,5 +106,3 @@ const FilePreview: FC<PreviewProps> = ({ file, objectUrl }) => {
         document.body,
     )
 }
-
-export default FilePreview

@@ -7,32 +7,24 @@ import React, {
     useState,
 } from 'react'
 import { TbX } from 'react-icons/tb'
-import { bytesToSize } from '../../lib'
-import { FileHandlerProps, FileWithId } from '../../types/file'
-import FilePreview from '../FilePreview'
+import { useRootContext } from '../context/RootContext'
+import { bytesToSize } from '../lib/file'
+import FilePreview from './FilePreview'
 
 type Props = {
-    setFiles: FileHandlerProps['setFiles']
-    multiple?: boolean
-    mini?: boolean
-    file: FileWithId
+    file: File
     index: number
-    handleFileRemove: (file: FileWithId) => void
 } & HTMLAttributes<HTMLDivElement>
 
 export default memo(
     forwardRef<HTMLDivElement, Props>(function PreviewComponent(
-        {
-            setFiles,
-            multiple,
-            mini,
-            file,
-            index,
-            handleFileRemove,
-            ...restProps
-        }: Props,
+        { file, index, ...restProps }: Props,
         ref,
     ) {
+        const {
+            props: { multiple, mini },
+            handleFileRemove,
+        } = useRootContext()
         const [objectUrl, setObjectUrl] = useState<string>('')
 
         useEffect(() => {

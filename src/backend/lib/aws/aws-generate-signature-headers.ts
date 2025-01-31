@@ -1,6 +1,6 @@
 import { S3ClientConfig } from '@aws-sdk/client-s3'
 import { createHash, createHmac } from 'crypto'
-import { UpupProvider } from '../../../shared/types/StorageSDK'
+import { UpupProvider } from '../../../shared/types'
 
 function hmac(key: string | Buffer, message: string) {
     return createHmac('sha256', key).update(message).digest()

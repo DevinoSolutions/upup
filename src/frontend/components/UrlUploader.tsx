@@ -1,48 +1,39 @@
-import React, { FC, useEffect, useState } from 'react'
-import { useUrl } from '../hooks'
+import React, { FormEventHandler, useState } from 'react'
+import { UploadAdapter } from '../../shared/types'
+import { useRootContext } from '../context/RootContext'
+import useFetchFileByUrl from '../hooks/useFetchFileByUrl'
 
-type Props = {
-    setFiles: (files: any) => void
-    setView: (view: string) => void
-}
-const UrlUploader: FC<Props> = ({ setFiles, setView }: Props) => {
+export default function UrlUploader() {
+    const { setFiles, setView } = useRootContext()
     const [url, setUrl] = useState('')
-    const { image, setTrigger, error, loading } = useUrl(url)
+    const { error, loading, fetchImage } = useFetchFileByUrl()
 
-    useEffect(() => {
-        if (image) {
-            setFiles((files: File[]) => [...files, image])
-            setView('internal')
+    const handleFormSubmit: FormEventHandler<HTMLFormElement> = async e => {
+        e.preventDefault()
+        const file = await fetchImage(url)
+        if (file) {
+            setFiles([file])
+            setUrl('')
+            setView(UploadAdapter.INTERNAL)
         }
-    }, [image])
+    }
 
     return (
-        <form
-            className=""
-            onSubmit={e => {
-                e.preventDefault()
-            }}
-        >
+        <form onSubmit={handleFormSubmit}>
             {error && <p className="text-red-500">{error}!</p>}
             <input
                 type="url"
                 placeholder="Enter image url"
                 className="w-full rounded-md border-2 border-gray-300 bg-transparent p-2 outline-none"
                 value={url}
-                onChange={e => setUrl(e.target.value)}
+                onChange={e => setUrl(e.currentTarget.value)}
             />
             <button
                 className="mt-2 w-full rounded-md bg-blue-500 p-2 text-white transition-all duration-300 hover:bg-blue-600 active:bg-blue-700"
-                type="button"
-                onClick={() => {
-                    if (loading || url === '') return
-                    setTrigger(true)
-                }}
+                type="submit"
             >
                 {loading ? 'Loading...' : 'Upload'}
             </button>
         </form>
     )
 }
-
-export default UrlUploader
