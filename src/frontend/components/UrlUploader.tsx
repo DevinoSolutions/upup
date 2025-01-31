@@ -19,7 +19,6 @@ export default function UrlUploader() {
     const handleFormSubmit: FormEventHandler<HTMLFormElement> = async e => {
         e.preventDefault()
         const file = await fetchImage(url)
-        console.log({ file })
         if (file) {
             Object.assign(file, {
                 url,

@@ -128,10 +128,8 @@ export default function useRootProvider({
         const newFilesMap = new Map(selectedFilesMap)
         const newFilesMapArray = Array.from(newFilesMap.values())
         for (const file of newFiles) {
-            const i = newFiles.indexOf(file)
-
             // Check if files length has surpassed the limit
-            if (selectedFilesMap.size + i >= limit) {
+            if (newFilesMap.size >= limit) {
                 onWarn('Allowed limit has been surpassed!')
                 break
             }
@@ -154,10 +152,12 @@ export default function useRootProvider({
                         (file as any).url
                     } has previously been selected`,
                 )
-            else newFilesMap.set(fileWithParams.id, fileWithParams)
+            else {
+                newFilesMap.set(fileWithParams.id, fileWithParams)
+                setSelectedFilesMap(newFilesMap)
+            }
         }
 
-        setSelectedFilesMap(newFilesMap)
         setIsAddingMore(false)
     }
 

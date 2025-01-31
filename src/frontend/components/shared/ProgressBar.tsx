@@ -29,7 +29,7 @@ export default forwardRef<HTMLDivElement, Props>(function ProgressBar(
             >
                 <div
                     className={cn(
-                        'h-[6px] flex-1 bg-[#F5F5F5]',
+                        'h-[6px] flex-1 overflow-hidden rounded-[4px] bg-[#F5F5F5]',
                         progressBarClassName,
                         classNames.progressBar,
                     )}
@@ -39,8 +39,7 @@ export default forwardRef<HTMLDivElement, Props>(function ProgressBar(
                             width: progress + '%',
                         }}
                         className={cn(
-                            'h-full rounded-[4px] bg-[#8EA5E7]',
-                            progressBarClassName,
+                            'h-full bg-[#8EA5E7]',
                             classNames.progressBarInner,
                         )}
                     />
