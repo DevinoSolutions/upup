@@ -2,6 +2,7 @@ import React from 'react'
 import Webcam from 'react-webcam'
 import useCameraUploader from '../hooks/useCameraUploader'
 import { cn } from '../lib/tailwind'
+import AdapterViewContainer from './shared/AdapterViewContainer'
 import ShouldRender from './shared/ShouldRender'
 
 export default function CameraUploader() {
@@ -22,16 +23,7 @@ export default function CameraUploader() {
     } = useCameraUploader()
 
     return (
-        <div
-            className={cn(
-                'flex items-center justify-center overflow-hidden bg-black/[0.075]',
-                {
-                    'bg-white/10 text-[#FAFAFA] dark:bg-white/10 dark:text-[#FAFAFA]':
-                        dark,
-                    [classNames.adapterView!]: classNames.adapterView,
-                },
-            )}
-        >
+        <AdapterViewContainer>
             <div className="flex h-full w-full flex-col justify-center overflow-auto px-3 py-2">
                 <div className="flex-1 pt-10">
                     <ShouldRender if={!!url}>
@@ -117,6 +109,6 @@ export default function CameraUploader() {
                     </ShouldRender>
                 </div>
             </div>
-        </div>
+        </AdapterViewContainer>
     )
 }

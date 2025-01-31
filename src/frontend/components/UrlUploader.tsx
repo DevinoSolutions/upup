@@ -2,6 +2,7 @@ import React, { FormEventHandler, useState } from 'react'
 import { useRootContext } from '../context/RootContext'
 import useFetchFileByUrl from '../hooks/useFetchFileByUrl'
 import { cn } from '../lib/tailwind'
+import AdapterViewContainer from './shared/AdapterViewContainer'
 
 export default function UrlUploader() {
     const {
@@ -30,16 +31,7 @@ export default function UrlUploader() {
     }
 
     return (
-        <div
-            className={cn(
-                'flex items-center justify-center overflow-hidden bg-black/[0.075]',
-                {
-                    'bg-white/10 text-[#FAFAFA] dark:bg-white/10 dark:text-[#FAFAFA]':
-                        dark,
-                    [classNames.adapterView!]: classNames.adapterView,
-                },
-            )}
-        >
+        <AdapterViewContainer>
             <form onSubmit={handleFormSubmit} className="px-3 py-2">
                 <input
                     type="url"
@@ -70,6 +62,6 @@ export default function UrlUploader() {
                     {loading ? <LoaderIcon /> : 'Fetch'}
                 </button>
             </form>
-        </div>
+        </AdapterViewContainer>
     )
 }

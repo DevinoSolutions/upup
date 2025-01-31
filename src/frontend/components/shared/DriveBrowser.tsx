@@ -11,6 +11,7 @@ import React, {
 import { useRootContext } from '../../context/RootContext'
 import { searchDriveFiles } from '../../lib/file'
 import { cn } from '../../lib/tailwind'
+import AdapterViewContainer from './AdapterViewContainer'
 import DriveBrowserHeader from './DriveBrowserHeader'
 import DriveBrowserItem from './DriveBrowserItem'
 import ShouldRender from './ShouldRender'
@@ -75,16 +76,7 @@ export default function DriveBrowser({
     }, [driveFiles, setPath])
 
     return (
-        <div
-            className={cn('flex items-center justify-center overflow-hidden', {
-                'bg-black/[0.075]': isLoading,
-                'bg-white/10 text-[#FAFAFA] dark:bg-white/10 dark:text-[#FAFAFA]':
-                    isLoading && dark,
-                [classNames.adapterView!]: !isLoading && classNames.adapterView,
-                [classNames.driveLoading!]:
-                    isLoading && classNames.driveLoading,
-            })}
-        >
+        <AdapterViewContainer isLoading={isLoading}>
             <ShouldRender if={true} isLoading={isLoading}>
                 <div className="grid h-full w-full grid-rows-[auto,1fr,auto] overflow-auto">
                     <DriveBrowserHeader
@@ -188,6 +180,6 @@ export default function DriveBrowser({
                     </ShouldRender>
                 </div>
             </ShouldRender>
-        </div>
+        </AdapterViewContainer>
     )
 }
