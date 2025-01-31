@@ -1,8 +1,8 @@
 import {
     PresignedUrlResponse,
-    Provider,
     UploadError,
     UploadErrorType,
+    UpupProvider,
 } from '../../../shared/types/StorageSDK'
 import {
     StorageConfig,
@@ -134,7 +134,7 @@ export class ProviderSDK implements StorageSDK {
                         new Response(xhr.response, {
                             status: xhr.status,
                             headers:
-                                this.config.provider !== Provider.Azure
+                                this.config.provider !== UpupProvider.Azure
                                     ? new Headers({
                                           ETag:
                                               xhr.getResponseHeader('ETag') ||
@@ -161,7 +161,7 @@ export class ProviderSDK implements StorageSDK {
             )
 
             xhr.open('PUT', url)
-            if (this.config.provider === Provider.Azure)
+            if (this.config.provider === UpupProvider.Azure)
                 xhr.setRequestHeader('x-ms-blob-type', 'BlockBlob')
             xhr.send(file)
         })
@@ -175,7 +175,7 @@ export class ProviderSDK implements StorageSDK {
             throw new Error(
                 `Missing required configuration: ${missing.join(', ')}`,
             )
-        if (!Object.values(Provider).includes(this.config.provider))
+        if (!Object.values(UpupProvider).includes(this.config.provider))
             throw new Error(`Invalid provider: ${this.config.provider}`)
 
         return true

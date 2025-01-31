@@ -1,10 +1,10 @@
 import React, {
     HTMLAttributes,
+    MouseEventHandler,
     forwardRef,
     memo,
     useEffect,
-    useMemo,
-    useRef,
+    useState,
 } from 'react'
 import { TbX } from 'react-icons/tb'
 import { bytesToSize } from '../../lib'
@@ -33,21 +33,25 @@ export default memo(
         }: Props,
         ref,
     ) {
-        const objectUrls = useRef<string[]>([])
+        const [objectUrl, setObjectUrl] = useState<string>('')
 
         useEffect(() => {
-            return () => {
-                objectUrls.current.forEach(url => URL.revokeObjectURL(url))
-                objectUrls.current = []
-            }
-        }, [])
-
-        const objectUrl = useMemo(() => {
+            // Create the object URL when the file changes
             const url = URL.createObjectURL(file)
-            if (!objectUrls.current.includes(url)) objectUrls.current.push(url)
+            setObjectUrl(url)
 
-            return url
+            // Clean up the object URL when the component unmounts or when the file changes
+            return () => {
+                if (url) URL.revokeObjectURL(url)
+            }
         }, [file])
+
+        const onHandleFileRemove: MouseEventHandler<HTMLButtonElement> = e => {
+            e.stopPropagation()
+            handleFileRemove(file)
+        }
+
+        if (!objectUrl) return null
 
         return (
             <div
@@ -82,7 +86,7 @@ export default memo(
                 )}
                 <button
                     className="absolute -right-1 -top-1 z-10 rounded-full bg-black p-0.5"
-                    onClick={() => handleFileRemove(file)}
+                    onClick={onHandleFileRemove}
                     type="button"
                 >
                     <TbX className="h-4 w-4 text-white" />

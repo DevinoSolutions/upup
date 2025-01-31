@@ -37,6 +37,7 @@ const OneDriveUploader: FC<Props> = ({
             setView={setView}
             downloadFile={downloadFile}
             graphClient={graphClient}
+            loader={loader}
         />
     )
 }

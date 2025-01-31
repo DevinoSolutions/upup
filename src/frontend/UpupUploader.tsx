@@ -10,6 +10,7 @@ import React, {
     forwardRef,
     useEffect,
     useImperativeHandle,
+    useMemo,
     useState,
 } from 'react'
 import { v4 as uuidv4 } from 'uuid'
@@ -56,11 +57,31 @@ export interface UploadFilesRef {
     dynamicUploadFiles: (files: File[]) => Promise<string[] | null>
 }
 
+type FileProgress = {
+    id: string
+    loaded: number
+    total: number
+}
+
+type FilesProgressMap = Record<string, FileProgress>
+
 // Add this helper function at the top level
 const createFileWithId = (file: File) => {
     return Object.assign(file, {
         id: `${file.name}-${file.size}-${file.lastModified}-${uuidv4()}`,
     })
+}
+
+function getUniqueFilesByName(files: File[]) {
+    const uniqueFiles = new Map()
+
+    files.forEach(file => {
+        if (!uniqueFiles.has(file.name)) {
+            uniqueFiles.set(file.name, file)
+        }
+    })
+
+    return Array.from(uniqueFiles.values())
 }
 
 /**
@@ -118,7 +139,31 @@ export const UpupUploader: FC<
             onFilesSelected,
         )
 
-        const [progress, setProgress] = useState(0)
+        const [filesProgressMap, setFilesProgressMap] =
+            useState<FilesProgressMap>({} as FilesProgressMap)
+        useEffect(() => {
+            setFilesProgressMap(
+                selectedFiles.reduce((a, b) => {
+                    a[b.name] = {
+                        id: b.name,
+                        loaded: 0,
+                        total: b.size,
+                    }
+                    return a
+                }, {} as FilesProgressMap),
+            )
+        }, [selectedFiles.length])
+
+        const progress = useMemo(() => {
+            const filesProgressMapValues = Object.values(filesProgressMap)
+            if (!filesProgressMapValues.length) return 0
+
+            const loadedValues = filesProgressMapValues.reduce(
+                (a, b) => a + (b.loaded / b.total) * 100,
+                0,
+            )
+            return loadedValues / filesProgressMapValues.length
+        }, [filesProgressMap])
 
         /**
          * Check if file type is accepted
@@ -126,9 +171,9 @@ export const UpupUploader: FC<
          * @throws Error if file type is not accepted
          */
         const validateFileType = (file: File) => {
-            if (!checkFileType(accept, file, baseConfigs?.onFileTypeMismatch)) {
+            if (!checkFileType(accept, file, baseConfigs.onFileTypeMismatch)) {
                 const error = new Error(`File type ${file.type} not accepted`)
-                baseConfigs?.onFileUploadFail?.(file, error)
+                baseConfigs.onFileUploadFail?.(file, error)
                 throw error
             }
         }
@@ -155,7 +200,7 @@ export const UpupUploader: FC<
                         }MB`,
                     )
                     files.forEach(
-                        file => baseConfigs?.onFileUploadFail?.(file, error),
+                        file => baseConfigs.onFileUploadFail?.(file, error),
                     )
                     throw error
                 }
@@ -183,7 +228,7 @@ export const UpupUploader: FC<
             } catch (error) {
                 files.forEach(
                     file =>
-                        baseConfigs?.onFileUploadFail?.(file, error as Error),
+                        baseConfigs.onFileUploadFail?.(file, error as Error),
                 )
                 throw error
             }
@@ -227,22 +272,28 @@ export const UpupUploader: FC<
                             processedFiles.map(file =>
                                 sdk.upload(file, {
                                     onFileUploadStart:
-                                        baseConfigs?.onFileUploadStart,
+                                        baseConfigs.onFileUploadStart,
                                     onFileUploadProgress: (file, progress) => {
-                                        setProgress(progress.loaded)
-                                        baseConfigs?.onFileUploadProgress?.(
+                                        setFilesProgressMap(prev => ({
+                                            ...prev,
+                                            [file.name]: {
+                                                ...prev[file.name],
+                                                loaded: progress.loaded,
+                                            },
+                                        }))
+                                        baseConfigs.onFileUploadProgress?.(
                                             file,
                                             progress,
                                         )
                                     },
                                     onFileUploadComplete:
-                                        baseConfigs?.onFileUploadComplete,
+                                        baseConfigs.onFileUploadComplete,
                                     onFileUploadFail:
-                                        baseConfigs?.onFileUploadFail,
+                                        baseConfigs.onFileUploadFail,
                                     onTotalUploadProgress: (
                                         completedFiles: number,
                                     ) =>
-                                        baseConfigs?.onTotalUploadProgress?.(
+                                        baseConfigs.onTotalUploadProgress?.(
                                             completedFiles,
                                             processedFiles.length,
                                         ),
@@ -254,7 +305,7 @@ export const UpupUploader: FC<
                         const uploadedFileKeys = uploadResults.map(
                             result => result.key,
                         )
-                        baseConfigs?.onAllUploadsComplete?.(uploadedFileKeys)
+                        baseConfigs.onAllUploadsComplete?.(uploadedFileKeys)
                         resolve(uploadedFileKeys)
                     } catch (error) {
                         reject(error)
@@ -320,7 +371,7 @@ export const UpupUploader: FC<
         }
 
         useEffect(() => {
-            const newFiles = selectedFiles.filter(file =>
+            const newFiles = getUniqueFilesByName(selectedFiles).filter(file =>
                 checkFileSize(file, maxFileSize),
             )
             if (limit && newFiles.length > limit)
@@ -412,7 +463,7 @@ export const UpupUploader: FC<
         // Add file removal handler
         const handleFileRemove = (file: FileWithId) => {
             setSelectedFiles(prev => prev.filter(f => f !== file))
-            baseConfigs?.onFileRemove?.(file)
+            baseConfigs.onFileRemove?.(file)
         }
 
         return mini ? (

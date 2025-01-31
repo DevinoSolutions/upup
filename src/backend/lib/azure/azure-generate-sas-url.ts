@@ -5,6 +5,7 @@ import {
     SASProtocol,
     generateBlobSASQueryParameters,
 } from '@azure/storage-blob'
+import { v4 as uuid } from 'uuid'
 import {
     PresignedUrlResponse,
     UploadError,
@@ -42,7 +43,7 @@ export default async function azureGenerateSasUrl({
             await azureGetTemporaryCredentials(blobServiceClient)
 
         const { name: fileName, type: contentType } = fileParams
-        const blobName = `uploads/${Date.now()}-${fileName}`
+        const blobName = `${uuid()}-${fileName}`
 
         // Get container client
         const containerClient =
