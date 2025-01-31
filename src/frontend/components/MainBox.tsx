@@ -1,7 +1,6 @@
 import React, { Dispatch, SetStateAction } from 'react'
-import { Toaster } from 'sonner'
+import { ToastContainer } from 'react-toastify'
 import { useRootContext } from '../context/RootContext'
-import { cn } from '../lib/tailwind'
 import AdapterSelector from './AdapterSelector'
 import AdapterView from './AdapterView'
 import FileList from './FileList'
@@ -17,7 +16,8 @@ export default function MainBox({ isDragging, setIsDragging }: Props) {
         files,
         activeAdapter,
         isAddingMore,
-        props: { mini, dark },
+        toastContainerId,
+        props: { dark },
     } = useRootContext()
 
     return (
@@ -33,28 +33,17 @@ export default function MainBox({ isDragging, setIsDragging }: Props) {
             </ShouldRender>
             <FileList />
 
-            <Toaster
-                duration={3500}
-                pauseWhenPageIsHidden
-                className={cn(
-                    'absolute left-[calc((100%-280px)/2)] mx-auto w-[280px]',
-                    {
-                        'left-[calc((100%-600px)/2)] @cs/main:w-[600px]': !mini,
-                    },
-                )}
-                toastOptions={{
-                    classNames: {
-                        toast: `px-3 py-2 w-[200px] mx-auto left-[calc((100%-200px)/2)] ${
-                            mini
-                                ? ''
-                                : '@cs/main:w-[400px] left-[calc((100%-400px)/2)]'
-                        }`,
-                    },
-                }}
-                richColors
-                closeButton
-                theme={dark ? 'dark' : 'light'}
-            />
+            <ShouldRender if={!!toastContainerId}>
+                <ToastContainer
+                    className="absolute"
+                    limit={3}
+                    theme={dark ? 'dark' : 'light'}
+                    containerId={toastContainerId}
+                    progressClassName="h-0"
+                    hideProgressBar
+                    newestOnTop
+                />
+            </ShouldRender>
         </div>
     )
 }
