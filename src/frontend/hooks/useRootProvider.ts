@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
     TbCameraRotate,
     TbCapture,
@@ -6,7 +6,8 @@ import {
     TbPlus,
     TbTrash,
 } from 'react-icons/tb'
-import { toast } from 'sonner'
+import { toast } from 'react-toastify'
+import { v4 as uuid } from 'uuid'
 import checkFileType from '../../shared/lib/checkFileType'
 import {
     FileWithParams,
@@ -21,6 +22,7 @@ import {
     sizeToBytes,
 } from '../lib/file'
 import { ProviderSDK } from '../lib/storage/provider'
+import { cn } from '../lib/tailwind'
 
 type FileProgress = {
     id: string
@@ -38,8 +40,8 @@ export default function useRootProvider({
     maxFileSize = { size: 10, unit: 'MB' },
     shouldCompress = false,
     uploadAdapters = [UploadAdapter.INTERNAL, UploadAdapter.LINK],
-    onError = toast.error,
-    onWarn = toast.warning,
+    onError: errorHandler,
+    onWarn: warningHandler,
     icons = {},
     classNames = {},
     onIntegrationClick = () => {},
@@ -70,6 +72,7 @@ export default function useRootProvider({
     const [filesProgressMap, setFilesProgressMap] = useState<FilesProgressMap>(
         {} as FilesProgressMap,
     )
+    const [toastContainerId, setToastContainerId] = useState<string>()
 
     const limit = useMemo(
         () => (mini ? 1 : Math.max(propLimit, 1)),
@@ -86,6 +89,38 @@ export default function useRootProvider({
         )
         return Math.round(loadedValues / filesProgressMapValues.length)
     }, [filesProgressMap])
+    const toastClassName = useMemo(
+        () =>
+            cn(
+                'px-4 py-3 w-[200px] text-center mb-0 min-h-fit shadow-lg [&_button]:top-1/2 [&_button]:-translate-y-1/2',
+                {
+                    '@cs/main:w-[400px]': !mini,
+                },
+            ),
+        [mini],
+    )
+
+    const onError = useCallback(
+        (message: string) =>
+            errorHandler
+                ? errorHandler(message)
+                : toast.error(message, {
+                      containerId: toastContainerId,
+                      className: cn(toastClassName, 'text-red-500'),
+                  }),
+        [errorHandler, toastClassName, toastContainerId],
+    )
+
+    const onWarn = useCallback(
+        (message: string) =>
+            warningHandler
+                ? warningHandler(message)
+                : toast.warn(message, {
+                      containerId: toastContainerId,
+                      className: cn(toastClassName, 'text-yellow-500'),
+                  }),
+        [warningHandler, toastContainerId, toastClassName],
+    )
 
     const handleSetSelectedFiles = (newFiles: File[]) => {
         onFilesSelected(newFiles)
@@ -93,10 +128,8 @@ export default function useRootProvider({
         const newFilesMap = new Map(selectedFilesMap)
         const newFilesMapArray = Array.from(newFilesMap.values())
         for (const file of newFiles) {
-            const i = newFiles.indexOf(file)
-
             // Check if files length has surpassed the limit
-            if (selectedFilesMap.size + i >= limit) {
+            if (newFilesMap.size >= limit) {
                 onWarn('Allowed limit has been surpassed!')
                 break
             }
@@ -119,10 +152,12 @@ export default function useRootProvider({
                         (file as any).url
                     } has previously been selected`,
                 )
-            else newFilesMap.set(fileWithParams.id, fileWithParams)
+            else {
+                newFilesMap.set(fileWithParams.id, fileWithParams)
+                setSelectedFilesMap(newFilesMap)
+            }
         }
 
-        setSelectedFilesMap(newFilesMap)
         setIsAddingMore(false)
     }
 
@@ -248,6 +283,11 @@ export default function useRootProvider({
         setFilesProgressMap({})
     }, [])
 
+    useEffect(() => {
+        if (!toastContainerId && (!errorHandler || !warningHandler))
+            setToastContainerId(uuid())
+    }, [errorHandler, warningHandler, toastContainerId])
+
     return {
         inputRef,
         activeAdapter,
@@ -260,6 +300,7 @@ export default function useRootProvider({
         handleFileRemove,
         oneDriveConfigs: driveConfigs?.oneDrive,
         googleDriveConfigs: driveConfigs?.googleDrive,
+        toastContainerId,
         upload: {
             totalProgress,
             filesProgressMap,

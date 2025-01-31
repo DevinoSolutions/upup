@@ -72,7 +72,7 @@ export default memo(
             <div
                 ref={ref}
                 className={cn(
-                    'shadow-right flex cursor-pointer items-center justify-center rounded-l bg-white bg-contain bg-center bg-no-repeat @cs/main:relative @cs/main:rounded-r @cs/main:shadow-md',
+                    'shadow-right flex cursor-pointer items-center justify-center rounded-b-[4px] rounded-l bg-white bg-contain bg-center bg-no-repeat @cs/main:relative @cs/main:rounded-r @cs/main:shadow-md',
                     {
                         'bg-[#232323] dark:bg-[#232323]': dark,
                         'aspect-square w-14 @cs/main:w-full': files.size > 1,

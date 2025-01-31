@@ -135,6 +135,10 @@ The full list of exported server utility functions include:
 
 ## All done! 🎉
 
+### Documentation
+
+Find the full API reference and guides in the [official documentation](https://upup-landing-page.vercel.app/docs).
+
 ### Contributing
 
 Please read our [Contributing Guidelines](CONTRIBUTING) before submitting pull requests. All contributions fall under our [Code of Conduct](CODE_OF_CONDUCT).
