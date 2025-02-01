@@ -37,7 +37,7 @@ const meta = {
         },
     },
     render: (args, ...rest) => {
-        const isDarkTheme = rest[0].globals.theme !== 'light'
+        const isDarkMode = rest[0].globals.theme !== 'light'
         return (
             <div
                 style={{
@@ -46,7 +46,7 @@ const meta = {
                     justifyContent: 'center',
                 }}
             >
-                <UpupUploader {...args} dark={isDarkTheme} />
+                <UpupUploader {...args} dark={isDarkMode} />
             </div>
         )
     },
