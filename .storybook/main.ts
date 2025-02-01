@@ -4,24 +4,50 @@ const config = {
         name: '@storybook/react-webpack5',
         options: {},
     },
+
     stories: ['../stories/**/*.stories.@(js|jsx|ts|tsx)'],
+
     addons: [
         '@storybook/addon-links',
         '@storybook/addon-essentials',
         '@storybook/addon-interactions',
         '@storybook/addon-docs',
         {
-            name: '@storybook/addon-styling',
+            name: '@storybook/addon-styling-webpack',
+
             options: {
-                postCss: {
-                    implementation: require.resolve('postcss'),
-                },
+                rules: [
+                    {
+                        test: /\.css$/,
+                        sideEffects: true,
+                        use: [
+                            require.resolve('style-loader'),
+                            {
+                                loader: require.resolve('css-loader'),
+                                options: {
+                                    importLoaders: 1,
+                                },
+                            },
+                            {
+                                loader: require.resolve('postcss-loader'),
+                                options: {
+                                    implementation: require.resolve('postcss'),
+                                },
+                            },
+                        ],
+                    },
+                ],
             },
         },
+        '@storybook/addon-themes',
+        '@storybook/addon-webpack5-compiler-babel',
+        '@chromatic-com/storybook',
     ],
+
     core: {
         builder: '@storybook/builder-webpack5',
     },
+
     webpackFinal: async config => {
         // Remove default rules for .md files
         config.module.rules = config.module.rules.filter(
@@ -70,6 +96,18 @@ const config = {
             },
         }
     },
+
+    typescript: {
+        reactDocgen: 'react-docgen-typescript',
+    },
+
+    env: config => ({
+        ...config,
+        GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID!,
+        GOOGLE_API_KEY: process.env.GOOGLE_API_KEY!,
+        GOOGLE_APP_ID: process.env.GOOGLE_APP_ID!,
+        ONEDRIVE_CLIENT_ID: process.env.ONEDRIVE_CLIENT_ID!,
+    }),
 }
 
 export default config
