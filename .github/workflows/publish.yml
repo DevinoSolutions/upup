@@ -3,7 +3,6 @@ on:
   push:
     branches:
       - master
-      - feat/fix-publish-pipeline
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
