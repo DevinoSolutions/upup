@@ -1,0 +1,4 @@
+pnpm prettier-check
+pnpm test
+pnpm build
+pnpm build-storybook

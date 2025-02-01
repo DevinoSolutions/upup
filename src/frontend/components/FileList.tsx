@@ -1,9 +1,10 @@
-import { AnimatePresence, motion } from 'framer-motion'
+import { motion } from 'framer-motion'
 import React, { memo } from 'react'
 import { UploadStatus, useRootContext } from '../context/RootContext'
 import { cn } from '../lib/tailwind'
 import FileItem from './FileItem'
 import MainBoxHeader from './shared/MainBoxHeader'
+import MyAnimatePresence from './shared/MyAnimatePresence'
 import ProgressBar from './shared/ProgressBar'
 import ShouldRender from './shared/ShouldRender'
 
@@ -26,7 +27,7 @@ export default memo(function FileList() {
         >
             <MainBoxHeader handleCancel={handleDone} />
 
-            <AnimatePresence>
+            <MyAnimatePresence>
                 <motion.div
                     className={cn(
                         'preview-scroll flex flex-1 flex-col overflow-y-auto bg-black/[0.075] p-3',
@@ -54,7 +55,7 @@ export default memo(function FileList() {
                         ))}
                     </div>
                 </motion.div>
-            </AnimatePresence>
+            </MyAnimatePresence>
             <div
                 className={cn(
                     'shadow-top flex items-center gap-3 rounded-b-lg bg-black/[0.025] px-3 py-2',

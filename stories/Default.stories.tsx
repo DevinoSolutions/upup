@@ -36,17 +36,20 @@ const meta = {
             ],
         },
     },
-    render: args => (
-        <div
-            style={{
-                width: '100dvw',
-                display: 'flex',
-                justifyContent: 'center',
-            }}
-        >
-            <UpupUploader {...args} />
-        </div>
-    ),
+    render: (args, ...rest) => {
+        const isDarkMode = rest[0].globals.theme !== 'light'
+        return (
+            <div
+                style={{
+                    width: '100dvw',
+                    display: 'flex',
+                    justifyContent: 'center',
+                }}
+            >
+                <UpupUploader {...args} dark={isDarkMode} />
+            </div>
+        )
+    },
 } satisfies Meta<typeof UpupUploader>
 
 export const Default: Story = {
@@ -74,7 +77,6 @@ export const Default: Story = {
                 'accept',
                 'limit',
                 'mini',
-                'dark',
             ],
         },
     },

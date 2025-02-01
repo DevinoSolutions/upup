@@ -5,6 +5,7 @@ import React from 'react'
 import { useRootContext } from '../../context/RootContext'
 import { cn } from '../../lib/tailwind'
 import DriveBrowserIcon from './DriveBrowserIcon'
+import MyAnimatePresence from './MyAnimatePresence'
 
 type DriveBrowserItemProps = {
     file: OneDriveFile | GoogleFile
@@ -20,7 +21,7 @@ export default function DriveBrowserItem({
     selectedFiles,
     handleClick,
     index,
-}: DriveBrowserItemProps) {
+}: Readonly<DriveBrowserItemProps>) {
     const {
         props: { dark, classNames },
     } = useRootContext()
@@ -40,57 +41,61 @@ export default function DriveBrowserItem({
     }
 
     return (
-        <motion.div
-            key={file.id}
-            initial={{
-                opacity: 0,
-                y: 10,
-            }}
-            animate={{
-                opacity: 1,
-                y: 0,
-                transition,
-            }}
-            whileHover={{
-                opacity: 1,
-                y: 0,
-                transition,
-            }}
-            exit={{ opacity: 0, y: 10, transition }}
-            transition={transition}
-            className={cn(
-                'group mb-1 flex cursor-pointer items-center justify-between gap-2 rounded-md p-1 py-2 hover:bg-[#bab4b499]',
-                {
-                    'font-medium': isFolder,
-                    'bg-[#bab4b499]': isFileSelected,
-                    'bg-[#e9ecef00]': !isFileSelected,
-                    [classNames.driveItemContainerDefault!]:
-                        !isFileSelected && classNames.driveItemContainerDefault,
-                    [classNames.driveItemContainerSelected!]:
-                        isFileSelected && classNames.driveItemContainerSelected,
-                },
-            )}
-            onClick={() => handleClick(file as any)}
-        >
-            <div
+        <MyAnimatePresence>
+            <motion.div
+                key={file.id}
+                initial={{
+                    opacity: 0,
+                    y: 10,
+                }}
+                animate={{
+                    opacity: 1,
+                    y: 0,
+                    transition,
+                }}
+                whileHover={{
+                    opacity: 1,
+                    y: 0,
+                    transition,
+                }}
+                exit={{ opacity: 0, y: 10, transition }}
+                transition={transition}
                 className={cn(
-                    'flex items-center gap-2',
-                    classNames.driveItemContainerInner,
+                    'group mb-1 flex cursor-pointer items-center justify-between gap-2 rounded-md p-1 py-2 hover:bg-[#bab4b499]',
+                    {
+                        'font-medium': isFolder,
+                        'bg-[#bab4b499]': isFileSelected,
+                        'bg-[#e9ecef00]': !isFileSelected,
+                        [classNames.driveItemContainerDefault!]:
+                            !isFileSelected &&
+                            classNames.driveItemContainerDefault,
+                        [classNames.driveItemContainerSelected!]:
+                            isFileSelected &&
+                            classNames.driveItemContainerSelected,
+                    },
                 )}
+                onClick={() => handleClick(file as any)}
             >
-                <DriveBrowserIcon file={file} />
-                <h1
+                <div
                     className={cn(
-                        'text-wrap break-all text-xs',
-                        {
-                            'text-[#e0e0e0] dark:text-[#e0e0e0]': dark,
-                        },
-                        classNames.driveItemInnerText,
+                        'flex items-center gap-2',
+                        classNames.driveItemContainerInner,
                     )}
                 >
-                    {file.name}
-                </h1>
-            </div>
-        </motion.div>
+                    <DriveBrowserIcon file={file} />
+                    <h1
+                        className={cn(
+                            'text-wrap break-all text-xs',
+                            {
+                                'text-[#e0e0e0] dark:text-[#e0e0e0]': dark,
+                            },
+                            classNames.driveItemInnerText,
+                        )}
+                    >
+                        {file.name}
+                    </h1>
+                </div>
+            </motion.div>
+        </MyAnimatePresence>
     )
 }

@@ -1,8 +1,9 @@
-import { AnimatePresence, motion } from 'framer-motion'
+import { motion } from 'framer-motion'
 import React, { Dispatch, SetStateAction } from 'react'
 import useAdapterSelector from '../hooks/useAdapterSelector'
 import { cn } from '../lib/tailwind'
 import MainBoxHeader from './shared/MainBoxHeader'
+import MyAnimatePresence from './shared/MyAnimatePresence'
 import ShouldRender from './shared/ShouldRender'
 
 type Props = {
@@ -10,7 +11,10 @@ type Props = {
     setIsDragging: Dispatch<SetStateAction<boolean>>
 }
 
-export default function AdapterSelector({ isDragging, setIsDragging }: Props) {
+export default function AdapterSelector({
+    isDragging,
+    setIsDragging,
+}: Readonly<Props>) {
     const {
         props: {
             onFilesDragOver,
@@ -34,8 +38,9 @@ export default function AdapterSelector({ isDragging, setIsDragging }: Props) {
     } = useAdapterSelector()
 
     return (
-        <AnimatePresence>
+        <MyAnimatePresence>
             <motion.div
+                key="adapter-selector"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
@@ -170,6 +175,6 @@ export default function AdapterSelector({ isDragging, setIsDragging }: Props) {
                     </p>
                 </div>
             </motion.div>
-        </AnimatePresence>
+        </MyAnimatePresence>
     )
 }

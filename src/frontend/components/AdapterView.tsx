@@ -1,8 +1,9 @@
-import { AnimatePresence, motion } from 'framer-motion'
+import { motion } from 'framer-motion'
 import React from 'react'
 import { useRootContext } from '../context/RootContext'
 import { uploadAdapterObject } from '../lib/constants'
 import { cn } from '../lib/tailwind'
+import MyAnimatePresence from './shared/MyAnimatePresence'
 
 export default function AdapterView() {
     const {
@@ -17,12 +18,13 @@ export default function AdapterView() {
     if (!UploadComponent || mini || !activeAdapter || !Icon) return null
 
     return (
-        <AnimatePresence>
+        <MyAnimatePresence>
             <motion.div
                 initial={{ y: '-100%' }}
                 animate={{ y: '0%' }}
                 exit={{ y: '-100%' }}
                 className="grid h-full w-full grid-rows-[auto,1fr]"
+                key="adapter-view"
             >
                 <div
                     className={cn(
@@ -51,6 +53,6 @@ export default function AdapterView() {
                 </div>
                 <UploadComponent />
             </motion.div>
-        </AnimatePresence>
+        </MyAnimatePresence>
     )
 }
