@@ -1,4 +1,4 @@
-import React, { forwardRef, memo, SVGAttributes, SVGProps } from 'react'
+import React, { forwardRef, JSX, memo, SVGAttributes, SVGProps } from 'react'
 import {
     TbFile,
     TbFileTypeBmp,
@@ -26,10 +26,6 @@ import {
 } from 'react-icons/tb'
 import { useRootContext } from '../context/RootContext'
 import { cn } from '../lib/tailwind'
-
-type Props = {
-    extension?: string
-} & SVGAttributes<SVGElement>
 
 type IconType = (props: SVGProps<SVGSVGElement>) => JSX.Element
 
@@ -59,10 +55,12 @@ const fileTypes: { [key: string]: IconType } = {
 }
 
 export default memo(
-    forwardRef<SVGSVGElement, Props>(function FileIcon(
-        { extension = '', className, ...restProps },
-        ref,
-    ) {
+    forwardRef<
+        SVGSVGElement,
+        {
+            extension?: string
+        } & SVGAttributes<SVGElement>
+    >(function FileIcon({ extension = '', className, ...restProps }, ref) {
         const {
             props: { dark },
         } = useRootContext()

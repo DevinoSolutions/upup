@@ -1,4 +1,4 @@
-import { AnimatePresence, motion } from 'framer-motion'
+import { motion } from 'framer-motion'
 import { GoogleFile, Root, User } from 'google'
 import { MicrosoftUser, OneDriveFile, OneDriveRoot } from 'microsoft'
 import React, {
@@ -14,6 +14,7 @@ import { cn } from '../../lib/tailwind'
 import AdapterViewContainer from './AdapterViewContainer'
 import DriveBrowserHeader from './DriveBrowserHeader'
 import DriveBrowserItem from './DriveBrowserItem'
+import MyAnimatePresence from './MyAnimatePresence'
 import ShouldRender from './ShouldRender'
 
 type Props = {
@@ -57,7 +58,7 @@ export default function DriveBrowser({
     handleSubmit,
     handleCancelDownload,
     ...rest
-}: Props) {
+}: Readonly<Props>) {
     const {
         props: { accept, dark, classNames },
     } = useRootContext()
@@ -128,8 +129,9 @@ export default function DriveBrowser({
                     </ShouldRender>
 
                     <ShouldRender if={!!selectedFiles.length}>
-                        <AnimatePresence>
+                        <MyAnimatePresence>
                             <motion.div
+                                key="drive-browser"
                                 initial={{ y: '100%', height: 0 }}
                                 animate={{ y: '0%', height: 'auto' }}
                                 exit={{ y: '100%', height: 0 }}
@@ -176,7 +178,7 @@ export default function DriveBrowser({
                                     Cancel
                                 </button>
                             </motion.div>
-                        </AnimatePresence>
+                        </MyAnimatePresence>
                     </ShouldRender>
                 </div>
             </ShouldRender>

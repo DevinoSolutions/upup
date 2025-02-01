@@ -54,7 +54,7 @@ type ContextProps = Required<
 }
 
 export interface IRootContext {
-    inputRef: RefObject<HTMLInputElement>
+    inputRef: RefObject<HTMLInputElement | null>
     activeAdapter?: UploadAdapter
     setActiveAdapter: Dispatch<SetStateAction<UploadAdapter | undefined>>
 
