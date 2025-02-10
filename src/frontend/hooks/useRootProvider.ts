@@ -61,6 +61,7 @@ export default function useRootProvider({
     provider,
     tokenEndpoint,
     driveConfigs,
+    customProps,
 }: UpupUploaderProps): IRootContext {
     const inputRef = useRef<HTMLInputElement>(null)
     const [isAddingMore, setIsAddingMore] = useState(false)
@@ -233,6 +234,7 @@ export default function useRootProvider({
                         maxFileSize.unit,
                     ),
                 },
+                customProps,
             })
 
             // Upload files

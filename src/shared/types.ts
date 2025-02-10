@@ -152,6 +152,8 @@ export type UpupUploaderProps = {
     dark?: boolean
     classNames?: UpupUploaderPropsClassNames
     icons?: UpupUploaderPropsIcons
+
+    customProps?: object
 }
 
 export type PresignedUrlResponse = {

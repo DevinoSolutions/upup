@@ -8,7 +8,10 @@ import {
 } from '../../../shared/types'
 import { StorageSDK, UploadOptions, UploadResult } from '../../types/StorageSDK'
 
-type UploadConfig = Pick<UpupUploaderProps, 'provider' | 'tokenEndpoint'> & {
+type UploadConfig = Pick<
+    UpupUploaderProps,
+    'provider' | 'tokenEndpoint' | 'customProps'
+> & {
     constraints?: {
         multiple: boolean
         accept: string
@@ -74,6 +77,7 @@ export class ProviderSDK implements StorageSDK {
             type: file.type,
             size: file.size,
             provider: this.config.provider,
+            customProps: this.config.customProps,
             ...this.config.constraints,
         }
 
