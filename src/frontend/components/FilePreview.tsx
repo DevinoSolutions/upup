@@ -70,7 +70,7 @@ export default memo(
 
         useEffect(() => {
             if (isImage && !canPreview) setCanPreview(true)
-        }, [isImage, canPreview])
+        }, [isImage, canPreview, setCanPreview])
 
         return (
             <div
