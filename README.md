@@ -49,7 +49,7 @@ The example below shows a minimal configuration for AWS S3 upload, using the [Up
 ### Client Side
 
 ```tsx
-import { UpupUploader, UpupProvider } from '@bassem97/upup'
+import { UpupUploader, UpupProvider } from '@devino.solutions/upup'
 
 export default function Uploader() {
     return (
