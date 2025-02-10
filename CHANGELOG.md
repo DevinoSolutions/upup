@@ -1,4 +1,4 @@
-# @devino.solutions/upup
+# upup-react-file-uploader
 
 ## 1.0.0
 
