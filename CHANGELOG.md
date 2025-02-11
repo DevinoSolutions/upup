@@ -2,6 +2,34 @@
 
 ## 1.0.0
 
-### Major changes
+### 1.0.0 Major changes
 
 -   Initial release
+
+## 1.0.1
+
+### 1.0.1 Major changes
+
+-   Bug fixes
+
+## 1.0.2
+
+### 1.0.2 Major changes
+
+-   Bug fixes
+
+## 1.1.0
+
+### Features
+
+-   Added new `customProps` prop for passing custom provider-specific configurations
+
+### Fixes
+
+-   Resolved file preview rendering issues
+-   Fixed unmet peer dependencies warning
+-   Replaced problematic install command in CI/CD pipelines
+
+### Maintenance
+
+-   Updated build scripts and documentation
