@@ -50,7 +50,7 @@ export default memo(
                         })}
                     />
                     <div
-                        className={cn('relative h-full w-full ', {
+                        className={cn('relative h-full w-full', {
                             'hidden @cs/main:block': showIcon,
                         })}
                     >
@@ -60,6 +60,7 @@ export default memo(
                             height="100%"
                             name={fileName}
                             type={fileType}
+                            className="absolute max-h-full max-w-full"
                         >
                             <p>Loading...</p>
                         </object>

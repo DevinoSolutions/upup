@@ -49,7 +49,7 @@ export default function useOneDriveUploader(graphClient?: Client) {
     const [isClickLoading, setIsClickLoading] = useState<boolean>()
     const [path, setPath] = useState<OneDriveRoot[]>([])
     const [selectedFiles, setSelectedFiles] = useState<OneDriveFile[]>([])
-    const [showLoader, setLoader] = useState(false)
+    const [showLoader, setShowLoader] = useState(false)
     const [downloadProgress, setDownloadProgress] = useState(0)
 
     const fetchFolderContents = async (file: OneDriveFile) => {
@@ -66,7 +66,9 @@ export default function useOneDriveUploader(graphClient?: Client) {
             const files = response.value.map(formatFileItem)
             setPath(prevPath => [...prevPath, { ...file, children: files }])
         } catch (error) {
-            onError('Error fetching folder contents:' + error)
+            onError(
+                'Error fetching folder contents:' + (error as Error)?.message,
+            )
         } finally {
             setIsClickLoading(false)
         }
@@ -123,7 +125,7 @@ export default function useOneDriveUploader(graphClient?: Client) {
 
             const blob = await response.blob()
             return new File([blob], file.name, {
-                type: file.file?.mimeType || 'application/octet-stream',
+                type: file.file?.mimeType ?? 'application/octet-stream',
             })
         } catch (error) {
             onError((error as Error).message)
@@ -134,13 +136,13 @@ export default function useOneDriveUploader(graphClient?: Client) {
     const handleSubmit = async () => {
         if (selectedFiles.length === 0) return
 
-        setLoader(true)
+        setShowLoader(true)
         setDownloadProgress(0)
 
         try {
-            const downloadedFiles = await (
-                await downloadFiles(selectedFiles)
-            ).filter(Boolean)
+            const downloadedFiles = (await downloadFiles(selectedFiles)).filter(
+                Boolean,
+            )
 
             // Update the files state
             setFiles(downloadedFiles as File[])
@@ -149,9 +151,9 @@ export default function useOneDriveUploader(graphClient?: Client) {
             setSelectedFiles([])
             setActiveAdapter(undefined)
         } catch (error) {
-            onError('Error processing files:' + error)
+            onError('Error processing files:' + (error as Error)?.message)
         } finally {
-            setLoader(false)
+            setShowLoader(false)
             setDownloadProgress(0)
         }
     }

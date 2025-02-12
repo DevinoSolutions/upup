@@ -61,11 +61,16 @@ export default function useOneDriveAuth({
                                 expiresOn: response.expiresOn!.getTime(),
                             })
                     } catch (error) {
-                        onError(`Silent token acquisition failed: ${error}`) // Silent token acquisition failed, user will need to sign in again
+                        onError(
+                            `Silent token acquisition failed: ${(error as Error)
+                                ?.message}`,
+                        ) // Silent token acquisition failed, user will need to sign in again
                     }
                 }
             } catch (error) {
-                onError(`MSAL initialization failed: ${error}`)
+                onError(
+                    `MSAL initialization failed: ${(error as Error)?.message}`,
+                )
                 setIsInitialized(false)
             }
         }
@@ -103,7 +108,7 @@ export default function useOneDriveAuth({
                     } catch (error) {
                         onError(
                             'Silent token acquisition failed, proceeding with interactive login' +
-                                error,
+                                (error as Error)?.message,
                         ) // Silent token acquisition failed, fall through to interactive login
                     }
                 }
@@ -120,7 +125,7 @@ export default function useOneDriveAuth({
 
                 return null
             } catch (error) {
-                onError(`Sign-in failed: ${error}`)
+                onError(`Sign-in failed: ${(error as Error)?.message}`)
                 return null
             } finally {
                 setIsAuthenticating(false)
@@ -148,7 +153,7 @@ export default function useOneDriveAuth({
                 sessionStorage.setItem('isAuthenticated', 'true')
             }
         } catch (error) {
-            onError(`Handle sign-in failed: ${error}`)
+            onError(`Handle sign-in failed: ${(error as Error)?.message}`)
             setToken(undefined)
             sessionStorage.removeItem('isAuthenticated')
         }
@@ -183,7 +188,7 @@ export default function useOneDriveAuth({
             // Clear remaining session storage
             sessionStorage.removeItem('isAuthenticated')
         } catch (error) {
-            onError(`Sign-out failed: ${error}`)
+            onError(`Sign-out failed: ${(error as Error)?.message}`)
         } finally {
             setIsAuthInProgress(false)
             // Clear the logout flag after a short delay

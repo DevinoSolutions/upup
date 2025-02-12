@@ -7,6 +7,7 @@ import {
     TbTrash,
 } from 'react-icons/tb'
 import { toast } from 'react-toastify'
+import truncate from 'truncate'
 import { v4 as uuid } from 'uuid'
 import checkFileType from '../../shared/lib/checkFileType'
 import {
@@ -31,6 +32,9 @@ type FileProgress = {
 }
 
 export type FilesProgressMap = Record<string, FileProgress>
+
+const toastClassName =
+    'px-4 pr-6 py-3 text-center !mb-0 min-h-fit shadow-lg [&_button]:top-1/2 [&_button]:-translate-y-1/2'
 
 export default function useRootProvider({
     accept = '*',
@@ -90,26 +94,16 @@ export default function useRootProvider({
         )
         return Math.round(loadedValues / filesProgressMapValues.length)
     }, [filesProgressMap])
-    const toastClassName = useMemo(
-        () =>
-            cn(
-                'px-4 py-3 w-[200px] text-center mb-0 min-h-fit shadow-lg [&_button]:top-1/2 [&_button]:-translate-y-1/2',
-                {
-                    '@cs/main:w-[400px]': !mini,
-                },
-            ),
-        [mini],
-    )
 
     const onError = useCallback(
         (message: string) =>
             errorHandler
                 ? errorHandler(message)
-                : toast.error(message, {
+                : toast.error(truncate(message, 75), {
                       containerId: toastContainerId,
                       className: cn(toastClassName, 'text-red-500'),
                   }),
-        [errorHandler, toastClassName, toastContainerId],
+        [errorHandler, toastContainerId],
     )
 
     const onWarn = useCallback(
@@ -120,7 +114,7 @@ export default function useRootProvider({
                       containerId: toastContainerId,
                       className: cn(toastClassName, 'text-yellow-500'),
                   }),
-        [warningHandler, toastContainerId, toastClassName],
+        [warningHandler, toastContainerId],
     )
 
     const handleSetSelectedFiles = (newFiles: File[]) => {

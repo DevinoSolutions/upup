@@ -29,6 +29,9 @@
 -   Resolved file preview rendering issues
 -   Fixed unmet peer dependencies warning
 -   Replaced problematic install command in CI/CD pipelines
+-   Improved file preview styling layout
+-   Enhanced default warning and error message styling
+-   Minor styling fixes and consistency improvements
 
 ### Maintenance
 

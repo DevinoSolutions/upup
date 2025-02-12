@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react'
 import React from 'react'
 import UpupUploader from '../src/frontend/UpupUploader'
-import { UploadAdapter } from '../src/shared/types'
+import { UploadAdapter, UpupProvider } from '../src/shared/types'
 
 type Story = StoryObj<typeof UpupUploader>
 
@@ -65,6 +65,8 @@ export const Default: Story = {
             },
         },
         limit: 10,
+        provider: UpupProvider.BackBlaze,
+        tokenEndpoint: 'https://localhost:3000/api/upload',
     },
     parameters: {
         controls: {

@@ -1,5 +1,4 @@
 import React, { MouseEventHandler, memo, useCallback, useState } from 'react'
-import truncate from 'truncate'
 import { FileWithParams } from '../../shared/types'
 import { useRootContext } from '../context/RootContext'
 import { bytesToSize } from '../lib/file'
@@ -68,14 +67,14 @@ export default memo(function FileItem({ file }: Props) {
             >
                 <p
                     className={cn(
-                        'flex-1 text-xs text-[#0B0B0B]',
+                        'max-w-full flex-1 truncate text-xs text-[#0B0B0B]',
                         {
                             'text-white dark:text-white': dark,
                         },
                         classNames.fileName,
                     )}
                 >
-                    {truncate(file.name, 20)}
+                    {file.name}
                 </p>
                 <p
                     className={cn(
