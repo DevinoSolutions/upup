@@ -26,7 +26,7 @@ export default function DriveBrowserHeader({
     showSearch,
     onSearch,
     searchTerm,
-}: Props) {
+}: Readonly<Props>) {
     const {
         setActiveAdapter,
         props: { dark, classNames },
@@ -84,6 +84,7 @@ export default function DriveBrowserHeader({
                     <div className="relative flex h-8 w-8 items-center justify-center overflow-hidden rounded-full ">
                         <ShouldRender if={!!user.picture}>
                             <img
+                                alt={user.name}
                                 src={user.picture}
                                 className="bg-center object-cover"
                             />

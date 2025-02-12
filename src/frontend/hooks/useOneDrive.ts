@@ -54,7 +54,9 @@ export default function useOneDrive(clientId = '') {
 
             setGraphClient(client)
         } catch (error) {
-            onError(`Error initializing Graph client: ${error}`)
+            onError(
+                `Error initializing Graph client: ${(error as Error)?.message}`,
+            )
             setGraphClient(undefined)
         }
     }, [msalInstance, token, isInitialized, isAuthenticating, onError])
@@ -94,7 +96,10 @@ export default function useOneDrive(clientId = '') {
                     children: files,
                 })
             } catch (error) {
-                onError('Error fetching profile or file list:' + error)
+                onError(
+                    'Error fetching profile or file list:' +
+                        (error as Error)?.message,
+                )
             }
         }
 

@@ -34,7 +34,7 @@ jobs:
 
       - name: Install dependencies
         if: steps.cache-primes.outputs.cache-hit != 'true'
-        run: pnpm install --frozen-lockfile
+        run: pnpm install
 
       - name: Prettier Check
         run: pnpm run prettier-check
@@ -68,7 +68,7 @@ jobs:
 
       - name: Install dependencies
         if: steps.cache-primes.outputs.cache-hit != 'true'
-        run: pnpm install --frozen-lockfile
+        run: pnpm install
 
       - name: Run Tests with Coverage
         run: pnpm run test:coverage
@@ -146,7 +146,7 @@ jobs:
 
       - name: Install dependencies
         if: steps.cache-primes.outputs.cache-hit != 'true'
-        run: pnpm install --frozen-lockfile
+        run: pnpm install
 
       - name: Build
         run: pnpm run build

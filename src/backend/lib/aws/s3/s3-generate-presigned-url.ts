@@ -15,8 +15,8 @@ const DEFAULT_EXPIRES_IN = 3600
 
 function getUploadErrorParams(error: unknown) {
     const message =
-        ((error as _Error) || {}).Message || (error as Error).message
-    const errorType = (((error as _Error) || {}).Code ||
+        ((error as _Error) ?? {}).Message || (error as Error).message
+    const errorType = (((error as _Error) ?? {}).Code ||
         UploadErrorType.PRESIGNED_URL_ERROR) as UploadErrorType
 
     return { message, errorType }

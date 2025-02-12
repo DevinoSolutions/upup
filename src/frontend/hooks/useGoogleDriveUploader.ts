@@ -17,7 +17,7 @@ export default function useGoogleDriveUploader(token?: Token) {
     } = useRootContext()
     const [path, setPath] = useState<Root[]>([])
     const [selectedFiles, setSelectedFiles] = useState<GoogleFile[]>([])
-    const [showLoader, setLoader] = useState(false)
+    const [showLoader, setShowLoader] = useState(false)
     const [downloadProgress, setDownloadProgress] = useState(0)
 
     const handleClick = (file: GoogleFile | Root) => {
@@ -62,7 +62,7 @@ export default function useGoogleDriveUploader(token?: Token) {
                 type: file.mimeType || 'application/octet-stream',
             })
         } catch (error) {
-            onError((error as Error).message)
+            onError((error as Error)?.message)
             return
         }
     }
@@ -70,13 +70,13 @@ export default function useGoogleDriveUploader(token?: Token) {
     const handleSubmit = async () => {
         if (selectedFiles.length === 0) return
 
-        setLoader(true)
+        setShowLoader(true)
         setDownloadProgress(0)
 
         try {
-            const downloadedFiles = await (
-                await downloadFiles(selectedFiles)
-            ).filter(Boolean)
+            const downloadedFiles = (await downloadFiles(selectedFiles)).filter(
+                Boolean,
+            )
 
             // Update the files state
             setFiles(downloadedFiles as File[])
@@ -85,9 +85,9 @@ export default function useGoogleDriveUploader(token?: Token) {
             setSelectedFiles([])
             setActiveAdapter(undefined)
         } catch (error) {
-            onError('Error processing files:' + error)
+            onError('Error processing files:' + (error as Error)?.message)
         } finally {
-            setLoader(false)
+            setShowLoader(false)
             setDownloadProgress(0)
         }
     }
