@@ -28,7 +28,7 @@ export default async function s3GeneratePresignedUrl({
     expiresIn = DEFAULT_EXPIRES_IN,
     origin,
     provider,
-    enableAutoCorsConfig,
+    enableAutoCorsConfig = false,
 }: S3PresignedUrlParams): Promise<PresignedUrlResponse> {
     const {
         name: fileName,
