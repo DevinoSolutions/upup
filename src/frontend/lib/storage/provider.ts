@@ -17,6 +17,7 @@ type UploadConfig = Pick<
         accept: string
         maxFileSize?: number
     }
+    enableAutoCorsConfig: boolean
 }
 
 export class ProviderSDK implements StorageSDK {
@@ -75,6 +76,7 @@ export class ProviderSDK implements StorageSDK {
             size: file.size,
             provider: this.config.provider,
             customProps: this.config.customProps,
+            enableAutoCorsConfig: this.config.enableAutoCorsConfig,
             ...this.config.constraints,
         }
 

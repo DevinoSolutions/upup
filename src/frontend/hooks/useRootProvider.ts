@@ -66,6 +66,7 @@ export default function useRootProvider({
     tokenEndpoint,
     driveConfigs,
     customProps,
+    enableAutoCorsConfig = false,
 }: UpupUploaderProps): IRootContext {
     const inputRef = useRef<HTMLInputElement>(null)
     const [isAddingMore, setIsAddingMore] = useState(false)
@@ -229,6 +230,7 @@ export default function useRootProvider({
                     ),
                 },
                 customProps,
+                enableAutoCorsConfig,
             })
 
             // Upload files

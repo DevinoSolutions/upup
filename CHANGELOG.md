@@ -23,6 +23,7 @@
 ### Features
 
 -   Added new `customProps` prop for passing custom provider-specific configurations
+-   Added `enableAutoCorsConfig` prop to control automatic CORS configuration for S3 providers
 
 ### Fixes
 
