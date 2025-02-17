@@ -15,25 +15,25 @@ Install upup with your favourite package manager
 ### npm
 
 ```bash
-npm install @devino.solutions/upup
+npm install upup-react-file-uploader
 ```
 
 ### yarn
 
 ```bash
-yarn add @devino.solutions/upup
+yarn add upup-react-file-uploader
 ```
 
 ### pnpm
 
 ```bash
-pnpm add @devino.solutions/upup
+pnpm add upup-react-file-uploader
 ```
 
 ### bun
 
 ```bash
-bun install @devino.solutions/upup
+bun install upup-react-file-uploader
 ```
 
 ## Logic Diagram
@@ -49,7 +49,7 @@ The example below shows a minimal configuration for AWS S3 upload, using the [Up
 ### Client Side
 
 ```tsx
-import { UpupUploader, UpupProvider } from '@bassem97/upup'
+import { UpupUploader, UpupProvider } from 'upup-react-file-uploader'
 
 export default function Uploader() {
     return (
@@ -78,7 +78,7 @@ export default function App() {
 ### Server Side
 
 ```ts
-import { s3GeneratePresignedUrl } from '@devino.solutions/upup/server'
+import { s3GeneratePresignedUrl } from 'upup-react-file-uploader/server'
 
 app.post('/api/upload-token', async (req, res) => {
     try {

@@ -43,6 +43,7 @@ describe('s3GeneratePresignedUrl', () => {
         },
         origin: 'http://localhost:3000',
         provider: UpupProvider.AWS,
+        enableAutoCorsConfig: true,
     }
 
     // Helper function to call the S3 function with defaults
@@ -74,6 +75,7 @@ describe('s3GeneratePresignedUrl', () => {
             baseParams.s3ClientConfig,
             baseParams.provider,
         )
+        expect(result.expiresIn).toBe(3600)
     })
 
     it('should use default expiresIn when not provided', async () => {
@@ -109,6 +111,23 @@ describe('s3GeneratePresignedUrl', () => {
     it('should generate correct key format', async () => {
         const result = await callPresignedUrlFunction()
         expect(result.key).toMatch(/^[0-9a-f-]+-test\.jpg$/)
+    })
+
+    it('should update CORS when enableAutoCorsConfig is true', async () => {
+        await callPresignedUrlFunction({ enableAutoCorsConfig: true })
+
+        expect(s3UpdateCORS).toHaveBeenCalledWith(
+            baseParams.origin,
+            baseParams.bucketName,
+            baseParams.s3ClientConfig,
+            baseParams.provider,
+        )
+    })
+
+    it('should skip CORS update when enableAutoCorsConfig is false', async () => {
+        await callPresignedUrlFunction({ enableAutoCorsConfig: false })
+
+        expect(s3UpdateCORS).not.toHaveBeenCalled()
     })
 
     describe('S3 client configuration validation', () => {

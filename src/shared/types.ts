@@ -111,18 +111,26 @@ export type UpupUploaderPropsIcons = {
 }
 
 export type UpupUploaderProps = {
+    // Required Props
+    provider: UpupProvider
+    tokenEndpoint: string
+
+    // Optional Props
+    enableAutoCorsConfig?: boolean
     uploadAdapters?: UploadAdapter[]
     driveConfigs?: {
         googleDrive?: GoogleDriveConfigs
         oneDrive?: OneDriveConfigs
     }
-    provider: UpupProvider
-    tokenEndpoint: string
     shouldCompress?: boolean
     accept?: string
     limit?: number
     mini?: boolean
     maxFileSize?: MaxFileSizeObject
+    customProps?: object
+    dark?: boolean
+    classNames?: UpupUploaderPropsClassNames
+    icons?: UpupUploaderPropsIcons
 
     // Event Handlers
     onFilesSelected?: (files: File[]) => void
@@ -149,9 +157,6 @@ export type UpupUploaderProps = {
     // onCancelUpload?: (files: FileWithParams[]) => void
     onError?: (errorMessage: string) => void
     onWarn?: (warningMessage: string) => void
-    dark?: boolean
-    classNames?: UpupUploaderPropsClassNames
-    icons?: UpupUploaderPropsIcons
 }
 
 export type PresignedUrlResponse = {
@@ -176,7 +181,7 @@ export enum UploadErrorType {
 }
 
 export class UploadError extends Error {
-    private DEFAULT_ERROR_STATUS_CODE = 500
+    private readonly DEFAULT_ERROR_STATUS_CODE = 500
 
     constructor(
         message: string,
@@ -186,7 +191,7 @@ export class UploadError extends Error {
     ) {
         super(message)
         this.name = 'UploadError'
-        this.status = status || this.DEFAULT_ERROR_STATUS_CODE
+        this.status = status ?? this.DEFAULT_ERROR_STATUS_CODE
     }
 }
 

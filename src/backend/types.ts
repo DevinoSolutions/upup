@@ -21,6 +21,7 @@ export type S3PresignedUrlParams = UrlParams & {
     s3ClientConfig: S3ClientConfig
     origin: string
     provider: UpupProvider
+    enableAutoCorsConfig?: boolean
 }
 
 export type AzureSasUrlParams = UrlParams & {

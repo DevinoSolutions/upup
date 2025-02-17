@@ -14,9 +14,8 @@ import s3UpdateCORS from './s3-update-cors'
 const DEFAULT_EXPIRES_IN = 3600
 
 function getUploadErrorParams(error: unknown) {
-    const message =
-        ((error as _Error) || {}).Message || (error as Error).message
-    const errorType = (((error as _Error) || {}).Code ||
+    const message = (error as _Error)?.Message ?? (error as Error).message
+    const errorType = ((error as _Error)?.Code ??
         UploadErrorType.PRESIGNED_URL_ERROR) as UploadErrorType
 
     return { message, errorType }
@@ -29,6 +28,7 @@ export default async function s3GeneratePresignedUrl({
     expiresIn = DEFAULT_EXPIRES_IN,
     origin,
     provider,
+    enableAutoCorsConfig = false,
 }: S3PresignedUrlParams): Promise<PresignedUrlResponse> {
     const {
         name: fileName,
@@ -39,8 +39,10 @@ export default async function s3GeneratePresignedUrl({
         // Validate file params
         fileValidateParams(fileParams)
 
-        // Configure CORS for request origin
-        await s3UpdateCORS(origin, Bucket, s3ClientConfig, provider)
+        if (enableAutoCorsConfig) {
+            // Configure CORS for request origin
+            await s3UpdateCORS(origin, Bucket, s3ClientConfig, provider)
+        }
 
         // Create S3 client
         const client = new S3Client(s3ClientConfig)

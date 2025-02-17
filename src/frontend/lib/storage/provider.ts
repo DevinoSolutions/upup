@@ -8,16 +8,20 @@ import {
 } from '../../../shared/types'
 import { StorageSDK, UploadOptions, UploadResult } from '../../types/StorageSDK'
 
-type UploadConfig = Pick<UpupUploaderProps, 'provider' | 'tokenEndpoint'> & {
+type UploadConfig = Pick<
+    UpupUploaderProps,
+    'provider' | 'tokenEndpoint' | 'customProps'
+> & {
     constraints?: {
         multiple: boolean
         accept: string
         maxFileSize?: number
     }
+    enableAutoCorsConfig: boolean
 }
 
 export class ProviderSDK implements StorageSDK {
-    private config: UploadConfig
+    private readonly config: UploadConfig
     private uploadCount = 0
 
     constructor(config: UploadConfig) {
@@ -50,9 +54,7 @@ export class ProviderSDK implements StorageSDK {
             )
 
             if (!uploadResponse.ok)
-                throw new Error(
-                    `Upload failed with status ${uploadResponse.status}`,
-                )
+                throw new Error(`status ${uploadResponse.status}`)
 
             options.onFileUploadComplete?.(file, presignedData.key)
 
@@ -61,7 +63,6 @@ export class ProviderSDK implements StorageSDK {
                 httpStatus: uploadResponse.status,
             }
         } catch (error) {
-            options.onError?.('Upload error:' + error)
             throw this.handleError(error)
         }
     }
@@ -74,6 +75,8 @@ export class ProviderSDK implements StorageSDK {
             type: file.type,
             size: file.size,
             provider: this.config.provider,
+            customProps: this.config.customProps,
+            enableAutoCorsConfig: this.config.enableAutoCorsConfig,
             ...this.config.constraints,
         }
 
@@ -125,7 +128,7 @@ export class ProviderSDK implements StorageSDK {
                                 this.config.provider !== UpupProvider.Azure
                                     ? new Headers({
                                           ETag:
-                                              xhr.getResponseHeader('ETag') ||
+                                              xhr.getResponseHeader('ETag') ??
                                               '',
                                       })
                                     : undefined,
@@ -134,7 +137,7 @@ export class ProviderSDK implements StorageSDK {
                 } else {
                     reject(
                         new Error(
-                            `Upload failed - Status: ${xhr.status} (${xhr.statusText}). Details: ${xhr.responseText}`,
+                            `Status: ${xhr.status} (${xhr.statusText}). Details: ${xhr.responseText}`,
                         ),
                     )
                 }
@@ -293,7 +296,7 @@ export class ProviderSDK implements StorageSDK {
                 // Catch-all for any unhandled specific error codes
                 default:
                     throw new UploadError(
-                        `Upload failed with specific error code: ${errorCode}`,
+                        `Upload failed with error code: ${errorCode}`,
                         UploadErrorType.UNKNOWN_UPLOAD_ERROR,
                         true,
                     )

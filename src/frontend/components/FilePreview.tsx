@@ -6,12 +6,12 @@ import React, {
     forwardRef,
     memo,
     useCallback,
+    useEffect,
     useMemo,
 } from 'react'
 import { useRootContext } from '../context/RootContext'
 import { fileGetIsImage } from '../lib/file'
 import { cn } from '../lib/tailwind'
-import { FilePreviewStatus } from '../types/file'
 import FilePreviewThumbnail from './FilePreviewThumbnail'
 import ProgressBar from './shared/ProgressBar'
 import ShouldRender from './shared/ShouldRender'
@@ -21,8 +21,8 @@ type Props = {
     fileType: string
     fileId: string
     fileUrl: string
-    previewStatus: FilePreviewStatus
-    setPreviewStatus: Dispatch<SetStateAction<FilePreviewStatus>>
+    canPreview: boolean
+    setCanPreview: Dispatch<SetStateAction<boolean>>
 } & HTMLAttributes<HTMLDivElement>
 
 export default memo(
@@ -32,8 +32,8 @@ export default memo(
             fileId,
             fileName,
             fileUrl,
-            previewStatus,
-            setPreviewStatus,
+            canPreview,
+            setCanPreview,
             ...restProps
         },
         ref,
@@ -68,6 +68,10 @@ export default memo(
                 [fileId, handleFileRemove],
             )
 
+        useEffect(() => {
+            if (isImage && !canPreview) setCanPreview(true)
+        }, [isImage, canPreview, setCanPreview])
+
         return (
             <div
                 ref={ref}
@@ -94,12 +98,11 @@ export default memo(
             >
                 <ShouldRender if={!isImage}>
                     <FilePreviewThumbnail
-                        previewStatus={previewStatus}
-                        setPreviewStatus={setPreviewStatus}
+                        canPreview={canPreview}
+                        setCanPreview={setCanPreview}
                         fileType={fileType}
                         fileName={fileName}
                         fileUrl={fileUrl}
-                        fileId={fileId}
                         showIcon={files.size > 1}
                     />
                 </ShouldRender>

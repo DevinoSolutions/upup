@@ -1,10 +1,8 @@
 import React, { MouseEventHandler, memo, useCallback, useState } from 'react'
-import truncate from 'truncate'
 import { FileWithParams } from '../../shared/types'
 import { useRootContext } from '../context/RootContext'
 import { bytesToSize } from '../lib/file'
 import { cn } from '../lib/tailwind'
-import { FilePreviewStatus } from '../types/file'
 import FilePreview from './FilePreview'
 import FilePreviewPortal from './FilePreviewPortal'
 import ShouldRender from './shared/ShouldRender'
@@ -19,9 +17,7 @@ export default memo(function FileItem({ file }: Props) {
         props: { dark, classNames, onFileClick },
     } = useRootContext()
     const [showPreviewPortal, setShowPreviewPortal] = useState(false)
-    const [previewStatus, setPreviewStatus] = useState(
-        FilePreviewStatus.SupportedByFileViewer,
-    )
+    const [canPreview, setCanPreview] = useState(false)
 
     const handleStopPropagation: MouseEventHandler<HTMLElement> = useCallback(
         e => {
@@ -59,8 +55,8 @@ export default memo(function FileItem({ file }: Props) {
                 fileType={file.type}
                 fileId={file.id}
                 fileUrl={file.url}
-                previewStatus={previewStatus}
-                setPreviewStatus={setPreviewStatus}
+                canPreview={canPreview}
+                setCanPreview={setCanPreview}
                 onClick={() => onFileClick(file)}
             />
             <div
@@ -71,14 +67,14 @@ export default memo(function FileItem({ file }: Props) {
             >
                 <p
                     className={cn(
-                        'flex-1 text-xs text-[#0B0B0B]',
+                        'max-w-full flex-1 truncate text-xs text-[#0B0B0B]',
                         {
                             'text-white dark:text-white': dark,
                         },
                         classNames.fileName,
                     )}
                 >
-                    {truncate(file.name, 20)}
+                    {file.name}
                 </p>
                 <p
                     className={cn(
@@ -88,9 +84,7 @@ export default memo(function FileItem({ file }: Props) {
                 >
                     {bytesToSize(file.size)}
                 </p>
-                <ShouldRender
-                    if={previewStatus !== FilePreviewStatus.Unsupported}
-                >
+                <ShouldRender if={canPreview}>
                     <button
                         className={cn(
                             'text-xs text-blue-600',
@@ -108,10 +102,8 @@ export default memo(function FileItem({ file }: Props) {
                             onStopPropagation={handleStopPropagation}
                             onClick={() => setShowPreviewPortal(false)}
                             fileType={file.type}
-                            fileId={file.id}
                             fileUrl={file.url}
                             fileName={file.name}
-                            previewStatus={previewStatus}
                         />
                     </ShouldRender>
                 </ShouldRender>
