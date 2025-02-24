@@ -1,4 +1,4 @@
-import { ChangeEventHandler } from 'react'
+import { ChangeEventHandler, useCallback, useMemo } from 'react'
 import { UploadAdapter } from '../../shared/types'
 import { useRootContext } from '../context/RootContext'
 import { uploadAdapterObject } from '../lib/constants'
@@ -8,33 +8,39 @@ export default function useAdapterSelector() {
         inputRef,
         setActiveAdapter,
         setFiles,
-        props,
-        isAddingMore,
-        setIsAddingMore,
+        props: { uploadAdapters, onIntegrationClick },
     } = useRootContext()
-    const chosenAdapters = Object.values(uploadAdapterObject).filter(item =>
-        props.uploadAdapters.includes(item.id),
+
+    const chosenAdapters = useMemo(
+        () =>
+            Object.values(uploadAdapterObject).filter(item =>
+                uploadAdapters.includes(item.id),
+            ),
+        [uploadAdapters],
     )
-    const handleAdapterClick = (adapterId: UploadAdapter) => {
-        props.onIntegrationClick(adapterId)
 
-        if (adapterId === UploadAdapter.INTERNAL) inputRef.current?.click()
-        else setActiveAdapter(adapterId)
-    }
+    const handleAdapterClick = useCallback(
+        (adapterId: UploadAdapter) => {
+            onIntegrationClick(adapterId)
 
-    const handleInputFileChange: ChangeEventHandler<HTMLInputElement> = e => {
-        setFiles(Array.from(e.currentTarget.files || []))
-        e.currentTarget.value = ''
-    }
+            if (adapterId === UploadAdapter.INTERNAL) inputRef.current?.click()
+            else setActiveAdapter(adapterId)
+        },
+        [inputRef, onIntegrationClick, setActiveAdapter],
+    )
+
+    const handleInputFileChange: ChangeEventHandler<HTMLInputElement> =
+        useCallback(
+            e => {
+                setFiles(Array.from(e.currentTarget.files || []))
+                e.currentTarget.value = ''
+            },
+            [setFiles],
+        )
 
     return {
-        setFiles,
-        isAddingMore,
-        setIsAddingMore,
         chosenAdapters,
         handleAdapterClick,
-        inputRef,
         handleInputFileChange,
-        props,
     }
 }

@@ -4,7 +4,6 @@ import DefaultLoaderIcon from './components/DefaultLoaderIcon'
 import MainBox from './components/MainBox'
 import ShouldRender from './components/shared/ShouldRender'
 import RootContext from './context/RootContext'
-import useDragAndDrop from './hooks/useDragAndDrop'
 import useRootProvider from './hooks/useRootProvider'
 import { cn } from './lib/tailwind'
 
@@ -16,13 +15,6 @@ export default function UpupUploader(props: Readonly<UpupUploaderProps>) {
             LoaderIcon: DefaultLoaderIcon,
         },
     })
-    const {
-        isDragging,
-        setIsDragging,
-        handleDragEnter,
-        handleDragLeave,
-        containerRef,
-    } = useDragAndDrop()
 
     return (
         <RootContext.Provider value={providerValues}>
@@ -48,9 +40,6 @@ export default function UpupUploader(props: Readonly<UpupUploaderProps>) {
                                 providerValues.props.mini,
                         },
                     )}
-                    onDragEnter={handleDragEnter}
-                    onDragLeave={handleDragLeave}
-                    ref={containerRef}
                 >
                     <ShouldRender if={providerValues.props.limit > 1}>
                         <p
@@ -61,10 +50,7 @@ export default function UpupUploader(props: Readonly<UpupUploaderProps>) {
                             {providerValues.props.limit} files max
                         </p>
                     </ShouldRender>
-                    <MainBox
-                        isDragging={isDragging}
-                        setIsDragging={setIsDragging}
-                    />
+                    <MainBox />
 
                     <div
                         className={cn(
