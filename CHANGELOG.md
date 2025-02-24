@@ -37,3 +37,22 @@
 ### Maintenance
 
 -   Updated build scripts and documentation
+
+## 1.2.0
+
+### Features
+
+-   Extracted CSS to a separate file that can be imported explicitly to solve styling precedence issues
+-   Added new CSS export path via `upup-react-file-uploader/styles`
+
+### Fixes
+
+-   Fixed CSS precedence issues when host projects use SCSS that loads after package styles
+-   Improved component styling to better handle external style overrides
+-   Changed "cancel" button text to "remove all files" in files preview state
+-   Removed supported file type text from component UI for cleaner interface
+
+### Maintenance
+
+-   Updated build configuration to extract CSS instead of injecting it
+-   Updated documentation to include instructions for proper CSS import ordering
