@@ -1,6 +1,6 @@
 import React from 'react'
-import { TbLoader } from 'react-icons/tb'
 import { UpupUploaderProps } from '../shared/types'
+import DefaultLoaderIcon from './components/DefaultLoaderIcon'
 import MainBox from './components/MainBox'
 import ShouldRender from './components/shared/ShouldRender'
 import RootContext from './context/RootContext'
@@ -8,27 +8,14 @@ import useDragAndDrop from './hooks/useDragAndDrop'
 import useRootProvider from './hooks/useRootProvider'
 import { cn } from './lib/tailwind'
 
-export default function UpupUploader(props: UpupUploaderProps) {
+export default function UpupUploader(props: Readonly<UpupUploaderProps>) {
     const providerValues = useRootProvider({
         ...props,
         icons: {
             ...props.icons,
-            LoaderIcon: () => (
-                <TbLoader
-                    className={cn('animate-spin text-3xl', {
-                        'text-[#6D6D6D]': 'dark' in props,
-                    })}
-                />
-            ),
+            LoaderIcon: DefaultLoaderIcon,
         },
     })
-    const supportText =
-        providerValues.props.accept === '*'
-            ? 'Supports all files'
-            : `Only supports ${providerValues.props.accept
-                  .split(',')
-                  .map(item => `.${item.split('/')[1]}`)
-                  .join(', ')} `
     const {
         isDragging,
         setIsDragging,
@@ -45,7 +32,8 @@ export default function UpupUploader(props: UpupUploaderProps) {
                     'h-[397px] max-w-[280px]': providerValues.props.mini,
                 })}
             >
-                <div
+                <section
+                    aria-labelledby="drop-instructions"
                     className={cn(
                         'shadow-wrapper flex h-full w-full select-none flex-col gap-3 overflow-hidden rounded-2xl bg-white px-5 py-4',
                         {
@@ -65,7 +53,10 @@ export default function UpupUploader(props: UpupUploaderProps) {
                     ref={containerRef}
                 >
                     <ShouldRender if={providerValues.props.limit > 1}>
-                        <p className="text-xs leading-5 text-[#6D6D6D] @cs/main:text-sm">
+                        <p
+                            id="drop-instructions"
+                            className="text-xs leading-5 text-[#6D6D6D] @cs/main:text-sm"
+                        >
                             Add your documents here, you can upload up to{' '}
                             {providerValues.props.limit} files max
                         </p>
@@ -77,15 +68,12 @@ export default function UpupUploader(props: UpupUploaderProps) {
 
                     <div
                         className={cn(
-                            'flex flex-col items-center justify-between gap-1 @cs/main:flex-row',
+                            'flex flex-col items-center justify-end gap-1 @cs/main:flex-row',
                             {
                                 'flex-col': providerValues.props.mini,
                             },
                         )}
                     >
-                        <p className="text-xs leading-5 text-[#6D6D6D] @cs/main:text-sm">
-                            {supportText}
-                        </p>
                         <div className="z-[2147483647] flex items-center gap-[5px]">
                             <span className="text-xs leading-5 text-[#6D6D6D] @cs/main:text-sm">
                                 Powered by{' '}
@@ -95,6 +83,7 @@ export default function UpupUploader(props: UpupUploaderProps) {
                                     src="https://i.ibb.co/HGBrgp7/logo-dark.png"
                                     width={61}
                                     height={13}
+                                    alt="logo-dark"
                                 />
                             </ShouldRender>
                             <ShouldRender if={!providerValues.props.dark}>
@@ -102,11 +91,12 @@ export default function UpupUploader(props: UpupUploaderProps) {
                                     src="https://i.ibb.co/7S5q81d/logo-white.png"
                                     width={61}
                                     height={13}
+                                    alt="logo-light"
                                 />
                             </ShouldRender>
                         </div>
                     </div>
-                </div>
+                </section>
             </div>
         </RootContext.Provider>
     )

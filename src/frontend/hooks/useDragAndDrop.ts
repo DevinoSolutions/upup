@@ -1,10 +1,10 @@
-import { MouseEvent, useRef, useState } from 'react'
+import { DragEventHandler, useRef, useState } from 'react'
 
 export default function useDragAndDrop() {
     const [isDragging, setIsDragging] = useState(false)
     const containerRef = useRef<HTMLDivElement>(null)
 
-    const handleDragEnter = (e: MouseEvent<HTMLDivElement, DragEvent>) => {
+    const handleDragEnter: DragEventHandler<HTMLElement> = e => {
         e.preventDefault()
         if (
             e.currentTarget === containerRef.current ||
@@ -13,7 +13,7 @@ export default function useDragAndDrop() {
             setIsDragging(true)
     }
 
-    const handleDragLeave = (e: MouseEvent<HTMLDivElement, DragEvent>) => {
+    const handleDragLeave: DragEventHandler<HTMLElement> = e => {
         e.preventDefault()
         if (
             e.currentTarget === containerRef.current ||
