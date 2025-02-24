@@ -36,8 +36,9 @@ const meta = {
             ],
         },
     },
-    render: (args, ...rest) => {
-        const isDarkMode = rest[0].globals.theme !== 'light'
+    render: (args, context) => {
+        const isDarkMode = context.globals.theme !== 'light'
+
         return (
             <div
                 style={{
@@ -52,7 +53,7 @@ const meta = {
     },
 } satisfies Meta<typeof UpupUploader>
 
-export const Default: Story = {
+export const UploaderWithButton: Story = {
     args: {
         driveConfigs: {
             googleDrive: {
@@ -67,6 +68,13 @@ export const Default: Story = {
         limit: 10,
         provider: UpupProvider.BackBlaze,
         tokenEndpoint: 'https://localhost:3000/api/upload',
+        uploadAdapters: [
+            UploadAdapter.INTERNAL,
+            UploadAdapter.ONE_DRIVE,
+            UploadAdapter.GOOGLE_DRIVE,
+            UploadAdapter.CAMERA,
+            UploadAdapter.LINK,
+        ],
     },
     parameters: {
         controls: {

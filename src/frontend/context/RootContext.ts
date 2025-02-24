@@ -24,6 +24,7 @@ export enum UploadStatus {
 
 type ContextUpload = {
     uploadStatus: UploadStatus
+    uploadError?: string
     setUploadStatus: Dispatch<SetStateAction<UploadStatus>>
     totalProgress: number
     filesProgressMap: FilesProgressMap
