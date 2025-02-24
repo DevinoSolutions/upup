@@ -49,8 +49,8 @@ module.exports = {
             ...config.plugins,
             postcss({
                 plugins: [tailwindcss, autoprefixer],
-                inject: !isNode && { insertAt: 'top' },
-                extract: !isNode && !!options.writeMeta,
+                inject: false,
+                extract: !isNode && 'upup.css',
             }),
             analyze({ summaryOnly: true }),
         ]

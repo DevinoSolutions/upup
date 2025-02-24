@@ -24,7 +24,8 @@
         },
         "./shared": {
             "types": "./dist/shared/types/StorageSDK.d.ts"
-        }
+        },
+        "./styles": "./dist/upup.css"
     },
     "typesVersions": {
         "*": {
