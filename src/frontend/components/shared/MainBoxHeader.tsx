@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useMemo } from 'react'
 import { UploadStatus, useRootContext } from '../../context/RootContext'
 import { cn } from '../../lib/tailwind'
 import ShouldRender from './ShouldRender'
@@ -7,7 +7,7 @@ type Props = {
     handleCancel(): void
 }
 
-export default function MainBoxHeader({ handleCancel }: Props) {
+export default function MainBoxHeader({ handleCancel }: Readonly<Props>) {
     const {
         files,
         setIsAddingMore,
@@ -23,6 +23,10 @@ export default function MainBoxHeader({ handleCancel }: Props) {
     } = useRootContext()
     const isUploading = uploadStatus === UploadStatus.ONGOING
     const isLimitReached = limit === files.size
+    const cancelText = useMemo(
+        () => (isAddingMore ? 'Cancel' : 'Remove all files'),
+        [isAddingMore],
+    )
 
     if (mini) return null
 
@@ -47,7 +51,7 @@ export default function MainBoxHeader({ handleCancel }: Props) {
                 onClick={handleCancel}
                 disabled={isUploading}
             >
-                Cancel
+                {cancelText}
             </button>
             <span
                 className={
