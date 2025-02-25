@@ -79,6 +79,7 @@ export default function useRootProvider({
         {} as FilesProgressMap,
     )
     const [toastContainerId, setToastContainerId] = useState<string>()
+    const [uploadError, setUploadError] = useState('')
 
     const limit = useMemo(
         () => (mini ? 1 : Math.max(propLimit, 1)),
@@ -97,13 +98,16 @@ export default function useRootProvider({
     }, [filesProgressMap])
 
     const onError = useCallback(
-        (message: string) =>
-            errorHandler
-                ? errorHandler(message)
-                : toast.error(truncate(message, 75), {
-                      containerId: toastContainerId,
-                      className: cn(toastClassName, 'text-red-500'),
-                  }),
+        (message: string) => {
+            setUploadError(message)
+
+            if (errorHandler) errorHandler(message)
+            else
+                toast.error(truncate(message, 75), {
+                    containerId: toastContainerId,
+                    className: cn(toastClassName, 'text-red-500'),
+                })
+        },
         [errorHandler, toastContainerId],
     )
 
@@ -207,7 +211,10 @@ export default function useRootProvider({
 
     const proceedUpload = async () => {
         if (!selectedFilesMap.size) return
+
         setUploadStatus(UploadStatus.ONGOING)
+        setUploadError('')
+
         const selectedFiles = Array.from(selectedFilesMap.values())
 
         try {
@@ -305,6 +312,7 @@ export default function useRootProvider({
             proceedUpload,
             uploadStatus,
             setUploadStatus,
+            uploadError,
         },
         props: {
             mini,

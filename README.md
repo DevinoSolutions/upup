@@ -50,6 +50,7 @@ The example below shows a minimal configuration for AWS S3 upload, using the [Up
 
 ```tsx
 import { UpupUploader, UpupProvider } from 'upup-react-file-uploader'
+import 'upup-react-file-uploader/styles'
 
 export default function Uploader() {
     return (
@@ -61,7 +62,7 @@ export default function Uploader() {
 }
 ```
 
-> The [`UpupUploader`](https://upup-landing-page.vercel.app/docs/category/upupuploader) must be placed in a client component.
+> The [`UpupUploader`](https://upup-landing-page.vercel.app/docs/category/upupuploader) must be placed in a client component. i.e For Next.js add the `use client` directive at the top of the example `Uploader` component.
 
 Then use it in your application:
 
@@ -77,12 +78,20 @@ export default function App() {
 
 ### Server Side
 
+> The example below is the minimal required configuration for **AWS** S3 upload. For uploading to other services see these [docs](https://upup-landing-page.vercel.app/docs/code-examples)
+
+For the upload to work without errors, it is important to:
+
+1. Manually configure CORS using our [credentials guide](https://upup-landing-page.vercel.app/docs/credentials-configuration#server-side-configurations), OR
+2. Enabling `enableAutoCorsConfig` with properly restricted credentials
+
 ```ts
 import { s3GeneratePresignedUrl } from 'upup-react-file-uploader/server'
 
 app.post('/api/upload-token', async (req, res) => {
     try {
-        const { provider, ...fileParams } = req.body // The request body sent from the `UpupUploader` client component
+        const { provider, customProps, enableAutoCorsConfig, ...fileParams } =
+            req.body // The request body sent from the `UpupUploader` client component
         const origin = req.headers['origin'] // The origin of your client application
 
         // Generate presigned URL
@@ -99,6 +108,7 @@ app.post('/api/upload-token', async (req, res) => {
                         .AWS_SECRET_ACCESS_KEY as string,
                 },
             },
+            enableAutoCorsConfig,
         })
 
         return res.status(200).json({
@@ -115,8 +125,6 @@ app.post('/api/upload-token', async (req, res) => {
 })
 ```
 
-Once again, the example shown above is the minimal required configuration for AWS S3 upload. For uploading to other services see these [docs](https://upup-landing-page.vercel.app/docs/code-examples)
-
 ### Important Note
 
 It is important to note that while it is possible to:
@@ -132,6 +140,12 @@ The full list of exported server utility functions include:
 -   [`azureGenerateSasUrl`](https://upup-landing-page.vercel.app/docs/api-reference/azure-generate-sas-url): for Azure Blob Uploads only
 
 > For a full list of values sent by the React component to the server, check out these [docs](https://upup-landing-page.vercel.app/docs/api-reference/upupuploader/required-props#tokenendpoint).
+
+## Advanced Usage
+
+### Programmatic Control
+
+For more advanced use cases, you can control the upload process programmatically using the component's [ref API](https://upup-landing-page.vercel.app/docs/api-reference/upupuploader/ref-api)
 
 ## All done! 🎉
 
