@@ -1,8 +1,9 @@
 import React, { Dispatch, SetStateAction, memo, useMemo } from 'react'
-import { fileGetExtension } from '../lib/file'
+import { fileGetExtension, fileIs3D } from '../lib/file'
 import { cn } from '../lib/tailwind'
 import FileIcon from './FileIcon'
 import ShouldRender from './shared/ShouldRender'
+import { UpupUploaderPropsClassNames } from '../../shared/types'
 
 type Props = {
     canPreview: boolean
@@ -11,21 +12,39 @@ type Props = {
     fileName: string
     fileUrl: string
     showIcon: boolean
+    classNames: UpupUploaderPropsClassNames
 }
 
 export default memo(
     function FilePreviewThumbnail({
-        canPreview,
-        setCanPreview,
-        fileUrl,
-        fileName,
-        fileType,
-        showIcon,
-    }: Props) {
+                                      canPreview,
+                                      setCanPreview,
+                                      fileUrl,
+                                      fileName,
+                                      fileType,
+                                      showIcon,
+                                      classNames,
+                                  }: Props) {
         const extension = useMemo(
             () => fileGetExtension(fileType, fileName),
             [fileType, fileName],
         )
+
+        // New check for 3D
+        const is3D = useMemo(() => {
+            return fileIs3D(extension?.toLowerCase() || '')
+        }, [extension])
+
+        if (is3D) {
+            return (
+                <div className="flex flex-col items-center gap-2">
+                    <FileIcon
+                        extension={extension}
+                        className={classNames.fileIcon}
+                    />
+                </div>
+            )
+        }
 
         return (
             <>
@@ -42,12 +61,14 @@ export default memo(
                     </object>
                     <FileIcon extension={extension} />
                 </ShouldRender>
+
                 <ShouldRender if={canPreview}>
                     <FileIcon
                         extension={extension}
                         className={cn('@cs/main:hidden', {
                             hidden: !showIcon,
-                        })}
+                        }, classNames.fileIcon
+                        )}
                     />
                     <div
                         className={cn('relative h-full w-full', {
@@ -69,7 +90,6 @@ export default memo(
             </>
         )
     },
-    // Custom comparison function for props
     (prev, next) =>
         prev.canPreview === next.canPreview &&
         prev.fileType === next.fileType &&
