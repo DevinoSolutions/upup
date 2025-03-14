@@ -38,6 +38,7 @@ type UpupUploaderPropsClassNames = {
     containerMini?: string
     containerFull?: string
     containerHeader?: string
+    containerHeaderTitle?: string
     containerCancelButton?: string
     containerAddMoreButton?: string
 
