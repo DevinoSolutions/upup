@@ -46,6 +46,8 @@ type UpupUploaderPropsClassNames = {
     adapterButtonIcon?: string
     adapterButtonText?: string
 
+    adapterSelectorContainer?: string
+
     adapterViewHeader?: string
     adapterViewCancelButton?: string
     adapterView?: string
