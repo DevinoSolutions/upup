@@ -35,8 +35,10 @@ type MaxFileSizeObject = {
 }
 
 type UpupUploaderPropsClassNames = {
+    containerMiniWrapper?: string
     containerMini?: string
     containerFull?: string
+    containerFullWrapper?: string
     containerHeader?: string
     containerHeaderTitle?: string
     containerCancelButton?: string

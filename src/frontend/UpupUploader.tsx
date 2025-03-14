@@ -39,10 +39,17 @@ export default forwardRef<UpupUploaderRef, UpupUploaderProps>(
         return (
             <RootContext.Provider value={providerValues}>
                 <div
-                    className={cn('w-full @container/main', {
-                        'h-[480px] max-w-[600px]': !providerValues.props.mini,
-                        'h-[397px] max-w-[280px]': providerValues.props.mini,
-                    })}
+                    className={cn(
+                        'w-full @container/main',
+                        {
+                            'h-[480px] max-w-[600px]': !providerValues.props.mini,
+                            'h-[397px] max-w-[280px]': providerValues.props.mini,
+                        },
+                        providerValues.props.mini
+                            ? providerValues.props.classNames?.containerMiniWrapper
+                            : providerValues.props.classNames?.containerFullWrapper
+
+                    )}
                 >
                     <section
                         aria-labelledby="drop-instructions"
