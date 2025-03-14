@@ -101,10 +101,17 @@ export function fileGetIsImage(fileType: string) {
 }
 
 export function fileGetExtension(fileType: string, fileName: string) {
+    if (!fileType) {
+        return fileName.split('.').pop()?.toLowerCase() || ''
+    }
     const typeSplit = fileType.split('/')
     const nameSplit = fileName.split('.')
-
-    return typeSplit[1]?.includes('.')
-        ? nameSplit[nameSplit.length - 1]
-        : typeSplit[1]
+    const lastNamePart = nameSplit[nameSplit.length - 1]?.toLowerCase() || ''
+    if (!typeSplit[1]) {
+        return lastNamePart
+    }
+    if (typeSplit[1].includes('.')) {
+        return lastNamePart
+    }
+    return typeSplit[1].toLowerCase()
 }
