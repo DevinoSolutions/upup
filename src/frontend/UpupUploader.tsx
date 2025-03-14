@@ -42,13 +42,16 @@ export default forwardRef<UpupUploaderRef, UpupUploaderProps>(
                     className={cn(
                         'w-full @container/main',
                         {
-                            'h-[480px] max-w-[600px]': !providerValues.props.mini,
-                            'h-[397px] max-w-[280px]': providerValues.props.mini,
+                            'h-[480px] max-w-[600px]':
+                                !providerValues.props.mini,
+                            'h-[397px] max-w-[280px]':
+                                providerValues.props.mini,
                         },
                         providerValues.props.mini
-                            ? providerValues.props.classNames?.containerMiniWrapper
-                            : providerValues.props.classNames?.containerFullWrapper
-
+                            ? providerValues.props.classNames
+                                  ?.containerMiniWrapper
+                            : providerValues.props.classNames
+                                  ?.containerFullWrapper,
                     )}
                 >
                     <section
@@ -77,7 +80,8 @@ export default forwardRef<UpupUploaderRef, UpupUploaderProps>(
                                 id="drop-instructions"
                                 className={cn(
                                     'text-xs leading-5 text-[#6D6D6D] @cs/main:text-sm',
-                                    providerValues.props.classNames?.limitInstructions
+                                    providerValues.props.classNames
+                                        ?.limitInstructions,
                                 )}
                             >
                                 Add your documents here, you can upload up to{' '}
