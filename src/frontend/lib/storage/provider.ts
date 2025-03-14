@@ -204,7 +204,7 @@ export class ProviderSDK implements StorageSDK {
             if (
                 accept &&
                 !/^(\*\/\*|\*|[\w-]+\/(?:[\w+.-]+|\*)|\.[\w+.-]+)(,\s*(\*\/\*|\*|[\w-]+\/(?:[\w+.-]+|\*)|\.[\w+.-]+))*$/.test(
-                    accept
+                    accept,
                 )
             ) {
                 throw new UploadError(

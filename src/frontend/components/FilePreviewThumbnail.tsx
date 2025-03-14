@@ -1,9 +1,9 @@
 import React, { Dispatch, SetStateAction, memo, useMemo } from 'react'
+import { UpupUploaderPropsClassNames } from '../../shared/types'
 import { fileGetExtension, fileIs3D } from '../lib/file'
 import { cn } from '../lib/tailwind'
 import FileIcon from './FileIcon'
 import ShouldRender from './shared/ShouldRender'
-import { UpupUploaderPropsClassNames } from '../../shared/types'
 
 type Props = {
     canPreview: boolean
@@ -17,14 +17,14 @@ type Props = {
 
 export default memo(
     function FilePreviewThumbnail({
-                                      canPreview,
-                                      setCanPreview,
-                                      fileUrl,
-                                      fileName,
-                                      fileType,
-                                      showIcon,
-                                      classNames,
-                                  }: Props) {
+        canPreview,
+        setCanPreview,
+        fileUrl,
+        fileName,
+        fileType,
+        showIcon,
+        classNames,
+    }: Props) {
         const extension = useMemo(
             () => fileGetExtension(fileType, fileName),
             [fileType, fileName],
@@ -65,9 +65,12 @@ export default memo(
                 <ShouldRender if={canPreview}>
                     <FileIcon
                         extension={extension}
-                        className={cn('@cs/main:hidden', {
-                            hidden: !showIcon,
-                        }, classNames.fileIcon
+                        className={cn(
+                            '@cs/main:hidden',
+                            {
+                                hidden: !showIcon,
+                            },
+                            classNames.fileIcon,
                         )}
                     />
                     <div
