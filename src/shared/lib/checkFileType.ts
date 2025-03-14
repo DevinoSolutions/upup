@@ -1,20 +1,34 @@
 export default function checkFileType(accept: string, file: File) {
     const fileType = file.type
     // Return false for invalid inputs
-    if (!accept || !fileType) return false
+    if (!accept) return false
     // Validate fileType has proper MIME format (type/subtype)
-    const [type, subtype] = fileType.split('/')
-    if (!type || !subtype) return false
-    const acceptedTypes = accept.split(',').map(t => t.trim())
-    const isValidType =
-        acceptedTypes.includes('*') ||
-        acceptedTypes.some(type => {
-            if (type.includes('/*')) {
-                const [mainType] = type.split('/')
-                return fileType.startsWith(mainType)
+    if (fileType) {
+        const [type, subtype] = fileType.split('/')
+        if (type && subtype) {
+            const acceptedTypes = accept.split(',').map(t => t.trim())
+            const isValidType =
+                acceptedTypes.includes('*') ||
+                acceptedTypes.some(item => {
+                    if (item.includes('/*')) {
+                        const [mainType] = item.split('/')
+                        return fileType.startsWith(mainType)
+                    }
+                    return item.toLowerCase() === fileType.toLowerCase()
+                })
+            if (isValidType) return true
+        }
+    }
+    const fileExt = file.name.split('.').pop()?.toLowerCase() || ''
+    if (fileExt) {
+        const acceptedTypes = accept.split(',').map(t => t.trim().toLowerCase())
+        const isValidExtension = acceptedTypes.some(ext => {
+            if (ext.startsWith('.')) {
+                return ext.slice(1) === fileExt
             }
-            return type.toLowerCase() === fileType.toLowerCase()
+            return false
         })
-    if (!isValidType) return false
-    return isValidType
+        if (isValidExtension) return true
+    }
+    return false
 }
