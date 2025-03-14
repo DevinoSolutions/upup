@@ -115,3 +115,25 @@ export function fileGetExtension(fileType: string, fileName: string) {
     }
     return typeSplit[1].toLowerCase()
 }
+
+export function fileIs3D(ext: string) {
+    const threeDExtensions = [
+        '3ds',
+        '3dm',
+        'blend',
+        'dxf',
+        'dwg',
+        'c4d',
+        'ma',
+        'mb',
+        'ply',
+        'stl',
+        'fbx',
+        'obj',
+        'dae',
+        'gltf',
+        'glb',
+        'm3',
+    ]
+    return threeDExtensions.includes(ext.toLowerCase())
+}
