@@ -101,6 +101,8 @@ type UpupUploaderPropsClassNames = {
     progressBar?: string
     progressBarInner?: string
     progressBarText?: string
+
+    limitInstructions?: string
 }
 
 export type UpupUploaderPropsIcons = {

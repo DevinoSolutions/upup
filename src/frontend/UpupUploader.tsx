@@ -75,7 +75,10 @@ export default forwardRef<UpupUploaderRef, UpupUploaderProps>(
                         <ShouldRender if={providerValues.props.limit > 1}>
                             <p
                                 id="drop-instructions"
-                                className="text-xs leading-5 text-[#6D6D6D] @cs/main:text-sm"
+                                className={cn(
+                                    'text-xs leading-5 text-[#6D6D6D] @cs/main:text-sm',
+                                    providerValues.props.classNames?.limitInstructions
+                                )}
                             >
                                 Add your documents here, you can upload up to{' '}
                                 {providerValues.props.limit} files max
