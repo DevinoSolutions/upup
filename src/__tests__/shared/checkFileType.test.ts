@@ -2,15 +2,22 @@ import checkFileType from '../../shared/lib/checkFileType'
 
 const JPEGImage = {
     type: 'image/jpeg',
+    name: 'test.jpg',
 } as File
+
 const PNGImage = {
     type: 'image/png',
+    name: 'test.png',
 } as File
+
 const GIFImage = {
     type: 'image/gif',
+    name: 'test.gif',
 } as File
+
 const PDFFile = {
     type: 'application/pdf',
+    name: 'test.pdf',
 } as File
 
 describe('checkFileType', () => {
