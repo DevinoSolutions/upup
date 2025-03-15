@@ -2,7 +2,7 @@
     "name": "upup-react-file-uploader",
     "author": "Devino Solutions",
     "license": "MIT",
-    "version": "1.1.0",
+    "version": "1.1.1",
     "publishConfig": {
         "access": "public"
     },
