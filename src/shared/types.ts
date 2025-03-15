@@ -35,9 +35,12 @@ type MaxFileSizeObject = {
 }
 
 type UpupUploaderPropsClassNames = {
+    containerMiniWrapper?: string
     containerMini?: string
     containerFull?: string
+    containerFullWrapper?: string
     containerHeader?: string
+    containerHeaderTitle?: string
     containerCancelButton?: string
     containerAddMoreButton?: string
 
@@ -45,6 +48,8 @@ type UpupUploaderPropsClassNames = {
     adapterButton?: string
     adapterButtonIcon?: string
     adapterButtonText?: string
+
+    adapterSelectorContainer?: string
 
     adapterViewHeader?: string
     adapterViewCancelButton?: string
@@ -96,6 +101,8 @@ type UpupUploaderPropsClassNames = {
     progressBar?: string
     progressBarInner?: string
     progressBarText?: string
+
+    limitInstructions?: string
 }
 
 export type UpupUploaderPropsIcons = {
