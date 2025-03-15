@@ -21,7 +21,9 @@ export default function checkFileType(accept: string, file: File) {
     }
 
     const fileName = file.name ?? ''
-    if (!fileName) { return false }
+    if (!fileName) {
+        return false
+    }
 
     const fileExt = fileName.split('.').pop()?.toLowerCase() || ''
     if (fileExt) {
