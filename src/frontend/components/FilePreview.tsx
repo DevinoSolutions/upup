@@ -104,6 +104,7 @@ export default memo(
                         fileName={fileName}
                         fileUrl={fileUrl}
                         showIcon={files.size > 1}
+                        classNames={classNames}
                     />
                 </ShouldRender>
                 <button

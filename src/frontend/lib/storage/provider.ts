@@ -203,12 +203,12 @@ export class ProviderSDK implements StorageSDK {
 
             if (
                 accept &&
-                !/^(\*\/\*|\*|[\w-]+\/[\w+.-]+)(,(\*\/\*|\*|[\w-]+\/[\w+.-]+))*$/.test(
+                !/^(\*\/\*|\*|[\w-]+\/(?:[\w+.-]+|\*)|\.[\w+.-]+)(,\s*(\*\/\*|\*|[\w-]+\/(?:[\w+.-]+|\*)|\.[\w+.-]+))*$/.test(
                     accept,
                 )
             ) {
                 throw new UploadError(
-                    `Invalid accept format: ${accept}. Use MIME types, */*, or *`,
+                    `Invalid accept format: ${accept}. Use MIME types, */*, * or extensions (like .fbx)`,
                     UploadErrorType.FILE_VALIDATION_ERROR,
                 )
             }
