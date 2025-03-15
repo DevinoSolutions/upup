@@ -19,7 +19,11 @@ export default function checkFileType(accept: string, file: File) {
             if (isValidType) return true
         }
     }
-    const fileExt = file.name.split('.').pop()?.toLowerCase() || ''
+
+    const fileName = file.name ?? ''
+    if (!fileName) { return false }
+
+    const fileExt = fileName.split('.').pop()?.toLowerCase() || ''
     if (fileExt) {
         const acceptedTypes = accept.split(',').map(t => t.trim().toLowerCase())
         const isValidExtension = acceptedTypes.some(ext => {
