@@ -111,11 +111,7 @@ app.post('/api/upload-token', async (req, res) => {
             enableAutoCorsConfig,
         })
 
-        return res.status(200).json({
-            data: presignedData,
-            message: 'Upload successful!',
-            error: false,
-        })
+        return res.status(200).json(presignedData);
     } catch (error) {
         return res.status(500).json({
             message: (error as Error).message,
