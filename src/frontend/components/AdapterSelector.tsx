@@ -22,7 +22,6 @@ export default function AdapterSelector() {
                 {
                     'pt-[72px] @cs/main:pt-0': isAddingMore,
                 },
-                classNames?.adapterSelectorContainer,
             )}
         >
             <ShouldRender if={isAddingMore}>

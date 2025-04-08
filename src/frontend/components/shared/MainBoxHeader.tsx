@@ -54,10 +54,9 @@ export default function MainBoxHeader({ handleCancel }: Readonly<Props>) {
                 {cancelText}
             </button>
             <span
-                className={cn(
-                    'col-span-4 text-center text-sm text-[#6D6D6D] @cs/main:col-span-2',
-                    classNames.containerHeaderTitle,
-                )}
+                className={
+                    'col-span-4 text-center text-sm text-[#6D6D6D] @cs/main:col-span-2'
+                }
             >
                 <ShouldRender if={isAddingMore}>Adding more files</ShouldRender>
                 <ShouldRender if={!isAddingMore}>
