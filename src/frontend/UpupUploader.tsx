@@ -39,20 +39,10 @@ export default forwardRef<UpupUploaderRef, UpupUploaderProps>(
         return (
             <RootContext.Provider value={providerValues}>
                 <div
-                    className={cn(
-                        'w-full @container/main',
-                        {
-                            'h-[480px] max-w-[600px]':
-                                !providerValues.props.mini,
-                            'h-[397px] max-w-[280px]':
-                                providerValues.props.mini,
-                        },
-                        providerValues.props.mini
-                            ? providerValues.props.classNames
-                                  ?.containerMiniWrapper
-                            : providerValues.props.classNames
-                                  ?.containerFullWrapper,
-                    )}
+                    className={cn('w-full @container/main', {
+                        'h-[480px] max-w-[600px]': !providerValues.props.mini,
+                        'h-[397px] max-w-[280px]': providerValues.props.mini,
+                    })}
                 >
                     <section
                         aria-labelledby="drop-instructions"
@@ -78,11 +68,7 @@ export default forwardRef<UpupUploaderRef, UpupUploaderProps>(
                         <ShouldRender if={providerValues.props.limit > 1}>
                             <p
                                 id="drop-instructions"
-                                className={cn(
-                                    'text-xs leading-5 text-[#6D6D6D] @cs/main:text-sm',
-                                    providerValues.props.classNames
-                                        ?.limitInstructions,
-                                )}
+                                className="text-xs leading-5 text-[#6D6D6D] @cs/main:text-sm"
                             >
                                 Add your documents here, you can upload up to{' '}
                                 {providerValues.props.limit} files max
