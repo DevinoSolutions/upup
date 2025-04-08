@@ -34,7 +34,7 @@ type MaxFileSizeObject = {
     unit: 'B' | 'KB' | 'MB' | 'GB' | 'TB' | 'PB' | 'EB' | 'ZB' | 'YB'
 }
 
-type UpupUploaderPropsClassNames = {
+export type UpupUploaderPropsClassNames = {
     containerMiniWrapper?: string
     containerMini?: string
     containerFull?: string
@@ -89,6 +89,7 @@ type UpupUploaderPropsClassNames = {
     fileThumbnailSingle?: string
     fileThumbnailMultiple?: string
     fileInfo?: string
+    fileIcon?: string
     fileName?: string
     fileSize?: string
     filePreviewButton?: string

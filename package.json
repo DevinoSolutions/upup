@@ -2,7 +2,7 @@
     "name": "upup-react-file-uploader",
     "author": "Devino Solutions",
     "license": "MIT",
-    "version": "1.1.1",
+    "version": "1.2.0",
     "publishConfig": {
         "access": "public"
     },
@@ -57,8 +57,8 @@
     ],
     "scripts": {
         "start": "pnpm run prebuild && tsdx watch",
-        "build:browser": "tsdx build --entry ./src/index.browser.ts --tsconfig ./tsconfig.browser.json --format esm,cjs --name browser",
-        "build:node": "tsdx build --entry ./src/index.node.ts --tsconfig ./tsconfig.node.json --format cjs --name node",
+        "build:browser": "tsdx build --no-minify --entry ./src/index.browser.ts --tsconfig ./tsconfig.browser.json --format esm,cjs --name browser",
+        "build:node": "tsdx build --no-minify --entry ./src/index.node.ts --tsconfig ./tsconfig.node.json --format cjs --name node",
         "build": "node scripts/build.js",
         "test": "jest",
         "test:watch": "jest --watch",
@@ -193,7 +193,9 @@
             "jsdom": "22.1.0",
             "node-notifier": "10.0.1",
             "node-fetch": "2.6.7",
-            "rollup": "^3.29.4"
+            "rollup": "^3.29.4",
+            "terser": "^5.39.0",
+            "rollup-plugin-terser": "7.0.2"
         }
     }
 }

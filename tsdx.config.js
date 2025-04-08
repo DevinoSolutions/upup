@@ -5,6 +5,7 @@ const replace = require('@rollup/plugin-replace')
 const analyze = require('rollup-plugin-analyzer')
 const commonjs = require('@rollup/plugin-commonjs')
 const { nodeResolve } = require('@rollup/plugin-node-resolve')
+const { babel } = require('@rollup/plugin-babel')
 
 const GRAPH_CLIENT_DEPS = [
     '@microsoft/microsoft-graph-client',
@@ -45,6 +46,14 @@ module.exports = {
                 'process.env.TARGET': JSON.stringify(
                     isNode ? 'node' : 'browser',
                 ),
+            }),
+            babel({
+                babelHelpers: 'bundled',
+                include: [
+                    'src/**/*',
+                    'node_modules/framer-motion/dist/**/*',
+                    'node_modules/react-toastify/dist/**/*',
+                ],
             }),
             ...config.plugins,
             postcss({
