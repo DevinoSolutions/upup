@@ -12,6 +12,7 @@ overrides:
   node-notifier: 10.0.1
   node-fetch: 2.6.7
   rollup: ^3.29.4
+  terser: ^5.14.2
 
 importers:
 
@@ -7271,11 +7272,6 @@ packages:
         optional: true
       uglify-js:
         optional: true
-
-  terser@4.8.1:
-    resolution: {integrity: sha512-4GnLC0x667eJG0ewJTa6z/yXrbLGv80D9Ru6HIpCQmO+Q4PfEtBFi0ObSckqwL6VyQv/7ENJieXHo2ANmdQwgw==}
-    engines: {node: '>=6.0.0'}
-    hasBin: true
 
   terser@5.38.1:
     resolution: {integrity: sha512-GWANVlPM/ZfYzuPHjq0nxT+EbOEDDN3Jwhwdg1D8TU8oSkktp8w64Uq4auuGLxFSoNTRDncTq2hQHX1Ld9KHkA==}
@@ -16289,7 +16285,7 @@ snapshots:
       rollup: 3.29.5
       rollup-pluginutils: 2.8.2
       serialize-javascript: 4.0.0
-      terser: 4.8.1
+      terser: 5.38.1
 
   rollup-plugin-typescript2@0.27.3(rollup@3.29.5)(typescript@3.9.10):
     dependencies:
@@ -16889,13 +16885,6 @@ snapshots:
       webpack: 5.89.0(esbuild@0.24.2)
     optionalDependencies:
       esbuild: 0.24.2
-
-  terser@4.8.1:
-    dependencies:
-      acorn: 8.14.0
-      commander: 2.20.3
-      source-map: 0.6.1
-      source-map-support: 0.5.21
 
   terser@5.38.1:
     dependencies:
