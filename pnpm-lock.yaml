@@ -13,7 +13,7 @@ overrides:
   node-fetch: 2.6.7
   rollup: ^3.29.4
   terser: ^5.39.0
-  rollup-plugin-terser: ^7.0.2
+  rollup-plugin-terser: 7.0.2
 
 importers:
 
@@ -9924,7 +9924,10 @@ snapshots:
       jest-runner: 25.5.4
       jest-runtime: 25.5.4
     transitivePeerDependencies:
+      - bufferutil
+      - canvas
       - supports-color
+      - utf-8-validate
 
   '@jest/test-sequencer@29.7.0':
     dependencies:
