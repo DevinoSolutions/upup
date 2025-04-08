@@ -101,10 +101,39 @@ export function fileGetIsImage(fileType: string) {
 }
 
 export function fileGetExtension(fileType: string, fileName: string) {
+    if (!fileType) {
+        return fileName.split('.').pop()?.toLowerCase() || ''
+    }
     const typeSplit = fileType.split('/')
     const nameSplit = fileName.split('.')
+    const lastNamePart = nameSplit[nameSplit.length - 1]?.toLowerCase() || ''
+    if (!typeSplit[1]) {
+        return lastNamePart
+    }
+    if (typeSplit[1].includes('.')) {
+        return lastNamePart
+    }
+    return typeSplit[1].toLowerCase()
+}
 
-    return typeSplit[1]?.includes('.')
-        ? nameSplit[nameSplit.length - 1]
-        : typeSplit[1]
+export function fileIs3D(ext: string) {
+    const threeDExtensions = [
+        '3ds',
+        '3dm',
+        'blend',
+        'dxf',
+        'dwg',
+        'c4d',
+        'ma',
+        'mb',
+        'ply',
+        'stl',
+        'fbx',
+        'obj',
+        'dae',
+        'gltf',
+        'glb',
+        'm3',
+    ]
+    return threeDExtensions.includes(ext.toLowerCase())
 }
