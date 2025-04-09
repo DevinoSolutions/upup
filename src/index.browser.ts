@@ -1,5 +1,8 @@
 import './frontend/tailwind.css'
-export { default as UpupUploader } from './frontend/UpupUploader'
+export {
+    default as UpupUploader,
+    UpupUploaderRef,
+} from './frontend/UpupUploader'
 export {
     FileWithProgress,
     GoogleDriveConfigs,

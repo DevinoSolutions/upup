@@ -66,6 +66,7 @@ const meta = {
 
                 setUploadData(data)
                 setFiles(data.files)
+                console.log(data.files)
             }
 
             // Update uploadData only when ref is initialized
