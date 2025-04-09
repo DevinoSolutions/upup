@@ -18,9 +18,9 @@ export default function AdapterSelector() {
     return (
         <div
             className={cn(
-                '@cs/main:flex-col @cs/main:gap-14 upup-relative upup-flex upup-h-full upup-flex-col-reverse upup-items-center upup-justify-center upup-gap-3 upup-rounded-lg',
+                'upup-relative upup-flex upup-h-full upup-flex-col-reverse upup-items-center upup-justify-center upup-gap-3 upup-rounded-lg md:upup-flex-col md:upup-gap-14',
                 {
-                    '@cs/main:pt-0 upup-pt-[72px]': isAddingMore,
+                    'upup-pt-[72px] md:upup-pt-0': isAddingMore,
                 },
             )}
         >
@@ -30,7 +30,7 @@ export default function AdapterSelector() {
             <ShouldRender if={!mini}>
                 <div
                     className={cn(
-                        '@cs/main:flex-row @cs/main:flex-wrap @cs/main:items-center @cs/main:gap-[30px] @cs/main:px-[30px] upup-flex upup-w-full upup-flex-col upup-justify-center upup-gap-1',
+                        'upup-flex upup-w-full upup-flex-col upup-justify-center upup-gap-1 md:upup-flex-row md:upup-flex-wrap md:upup-items-center md:upup-gap-[30px] md:upup-px-[30px]',
                         classNames.adapterButtonList,
                     )}
                 >
@@ -39,7 +39,7 @@ export default function AdapterSelector() {
                             type="button"
                             key={id}
                             className={cn(
-                                '@cs/main:flex-col @cs/main:justify-center @cs/main:rounded-lg @cs/main:border-none @cs/main:p-0 upup-group upup-flex upup-items-center upup-gap-[6px] upup-border-b upup-border-gray-200 upup-px-2 upup-py-1',
+                                'upup-group upup-flex upup-items-center upup-gap-[6px] upup-border-b upup-border-gray-200 upup-px-2 upup-py-1 md:upup-flex-col md:upup-justify-center md:upup-rounded-lg md:upup-border-none md:upup-p-0',
                                 {
                                     'upup-border-[#6D6D6D] dark:upup-border-[#6D6D6D]':
                                         dark,
@@ -53,7 +53,7 @@ export default function AdapterSelector() {
                         >
                             <span
                                 className={cn(
-                                    '@cs/main:scale-100 @cs/main:p-[6px] @cs/main:shadow upup-scale-75 upup-rounded-lg upup-bg-white upup-p-0 upup-text-2xl upup-font-semibold group-hover:upup-scale-90 @cs/main:group-hover:upup-scale-110',
+                                    'upup-scale-75 upup-rounded-lg upup-bg-white upup-p-0 upup-text-2xl upup-font-semibold group-hover:upup-scale-90 md:upup-scale-100 md:upup-p-[6px] md:upup-shadow md:group-hover:upup-scale-110',
                                     {
                                         'upup-bg-[#323232] dark:upup-bg-[#323232]':
                                             dark,
@@ -87,11 +87,11 @@ export default function AdapterSelector() {
                 multiple={multiple}
                 onChange={handleInputFileChange}
             />
-            <div className="@cs/main:gap-2 @cs/main:px-[30px] upup-flex upup-flex-col upup-items-center upup-gap-1 upup-text-center">
+            <div className="upup-flex upup-flex-col upup-items-center upup-gap-1 upup-text-center md:upup-gap-2 md:upup-px-[30px]">
                 <div className="upup-flex upup-items-center upup-gap-1">
                     <span
                         className={cn(
-                            '@cs/main:text-sm upup-text-xs upup-text-[#0B0B0B]',
+                            'upup-text-xs upup-text-[#0B0B0B] md:upup-text-sm',
                             {
                                 'upup-text-white dark:upup-text-white': dark,
                             },
@@ -102,7 +102,7 @@ export default function AdapterSelector() {
                     </span>
                     <button
                         className={cn(
-                            '@cs/main:text-sm upup-cursor-pointer upup-text-xs upup-font-semibold upup-text-[#0E2ADD]',
+                            'upup-cursor-pointer upup-text-xs upup-font-semibold upup-text-[#0E2ADD] md:upup-text-sm',
                             {
                                 'upup-text-[#59D1F9] dark:upup-text-[#59D1F9]':
                                     dark,
@@ -113,7 +113,7 @@ export default function AdapterSelector() {
                         browse
                     </button>
                 </div>
-                <p className="@cs/main:text-sm upup-text-xs upup-text-[#6D6D6D]">
+                <p className="upup-text-center upup-text-xs upup-text-[#6D6D6D] md:upup-text-sm">
                     Max {maxFileSize.size} {maxFileSize.unit} file
                     {limit > 1 ? 's are ' : ' is '} allowed
                 </p>

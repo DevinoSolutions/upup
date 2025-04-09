@@ -33,7 +33,7 @@ export default function MainBoxHeader({ handleCancel }: Readonly<Props>) {
     return (
         <div
             className={cn(
-                'upup-shadow-bottom @cs/main:grid-rows-1 upup-absolute upup-left-0 upup-right-0 upup-top-0 upup-z-10 upup-grid upup-grid-cols-4 upup-grid-rows-2 upup-items-center upup-justify-between upup-rounded-t-lg upup-bg-black/[0.025] upup-px-3 upup-py-2',
+                'upup-shadow-bottom upup-absolute upup-left-0 upup-right-0 upup-top-0 upup-z-10 upup-grid upup-grid-cols-4 upup-grid-rows-2 upup-items-center upup-justify-between upup-rounded-t-lg upup-bg-black/[0.025] upup-px-3 upup-py-2 md:upup-grid-rows-1',
                 {
                     'upup-bg-white/5 dark:upup-bg-white/5': dark,
                 },
@@ -42,7 +42,7 @@ export default function MainBoxHeader({ handleCancel }: Readonly<Props>) {
         >
             <button
                 className={cn(
-                    'upup-max-md @cs/main:col-end-2 @cs/main:row-start-1 upup-col-start-1 upup-col-end-3 upup-row-start-2 upup-p-1 upup-text-left upup-text-sm upup-text-blue-600',
+                    'upup-max-md upup-col-start-1 upup-col-end-3 upup-row-start-2 upup-p-1 upup-text-left upup-text-sm upup-text-blue-600 md:upup-col-end-2 md:upup-row-start-1',
                     {
                         'upup-text-[#30C5F7] dark:upup-text-[#30C5F7]': dark,
                     },
@@ -53,11 +53,7 @@ export default function MainBoxHeader({ handleCancel }: Readonly<Props>) {
             >
                 {cancelText}
             </button>
-            <span
-                className={
-                    '@cs/main:col-span-2 upup-col-span-4 upup-text-center upup-text-sm upup-text-[#6D6D6D]'
-                }
-            >
+            <span className="upup-col-span-4 upup-text-center upup-text-sm upup-text-[#6D6D6D] md:upup-col-span-2">
                 <ShouldRender if={isAddingMore}>Adding more files</ShouldRender>
                 <ShouldRender if={!isAddingMore}>
                     {files.size} file{files.size > 1 ? 's' : ''} selected
@@ -66,7 +62,7 @@ export default function MainBoxHeader({ handleCancel }: Readonly<Props>) {
             <ShouldRender if={!isAddingMore && limit > 1 && !isLimitReached}>
                 <button
                     className={cn(
-                        '@cs/main:col-start-4 upup-col-start-3 upup-col-end-5 upup-flex upup-items-center upup-justify-end upup-gap-1 upup-p-1 upup-text-sm upup-text-blue-600',
+                        'upup-col-start-3 upup-col-end-5 upup-flex upup-items-center upup-justify-end upup-gap-1 upup-p-1 upup-text-sm upup-text-blue-600 md:upup-col-start-4',
                         {
                             'upup-text-[#30C5F7] dark:upup-text-[#30C5F7]':
                                 dark,

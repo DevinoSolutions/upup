@@ -66,7 +66,7 @@ export default memo(
                     <FileIcon
                         extension={extension}
                         className={cn(
-                            '@cs/main:hidden',
+                            'md:upup-hidden',
                             {
                                 hidden: !showIcon,
                             },
@@ -75,7 +75,7 @@ export default memo(
                     />
                     <div
                         className={cn('upup-relative upup-h-full upup-w-full', {
-                            '@cs/main:block upup-hidden': showIcon,
+                            'upup-hidden md:upup-block': showIcon,
                         })}
                     >
                         <object

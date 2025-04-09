@@ -70,7 +70,7 @@ export default forwardRef<UpupUploaderRef, UpupUploaderProps>(
                         <ShouldRender if={providerValues.props.limit > 1}>
                             <p
                                 id="drop-instructions"
-                                className="@cs/main:text-sm upup-text-xs upup-leading-5 upup-text-[#6D6D6D]"
+                                className="upup-text-xs upup-leading-5 upup-text-[#6D6D6D] md:upup-text-sm"
                             >
                                 Add your documents here, you can upload up to{' '}
                                 {providerValues.props.limit} files max
@@ -80,7 +80,7 @@ export default forwardRef<UpupUploaderRef, UpupUploaderProps>(
 
                         <div
                             className={cn(
-                                '@cs/main:flex-row upup-flex upup-w-full upup-flex-col upup-items-center upup-justify-between upup-gap-1',
+                                'upup-flex upup-w-full upup-flex-col upup-items-center upup-justify-between upup-gap-1 md:upup-flex-row',
                                 {
                                     'upup-flex-col': providerValues.props.mini,
                                 },
@@ -115,7 +115,7 @@ export default forwardRef<UpupUploaderRef, UpupUploaderProps>(
                                 rel="noopener noreferrer"
                                 className="upup-flex upup-flex-row upup-items-center upup-justify-end upup-gap-1"
                             >
-                                <span className="@cs/main:text-sm upup-mr-0.5 upup-text-xs upup-leading-5 upup-text-[#6D6D6D]">
+                                <span className="upup-mr-0.5 upup-text-xs upup-leading-5 upup-text-[#6D6D6D] md:upup-text-sm">
                                     Built by{' '}
                                 </span>
                                 <ShouldRender if={providerValues.props.dark}>

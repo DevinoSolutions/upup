@@ -37,11 +37,11 @@ export default memo(function FileItem({ file }: Props) {
     return (
         <div
             className={cn(
-                '@cs/main:static @cs/main:basis-32 @cs/main:rounded-none @cs/main:border-none @cs/main:bg-transparent upup-relative upup-flex upup-flex-1 upup-gap-2 upup-rounded upup-border upup-border-[#6D6D6D] upup-bg-white',
+                'upup-relative upup-flex upup-flex-1 upup-gap-2 upup-rounded upup-border upup-border-[#6D6D6D] upup-bg-white md:upup-static md:upup-basis-32 md:upup-rounded-none md:upup-border-none md:upup-bg-transparent',
                 {
-                    '@cs/main:flex-col': files.size > 1,
+                    'md:upup-flex-col': files.size > 1,
                     'upup-flex-col': files.size === 1,
-                    '@cs/main:bg-transparent upup-bg-[#1F1F1F] dark:upup-bg-[#1F1F1F] @cs/main:dark:upup-bg-transparent':
+                    'upup-bg-[#1F1F1F] dark:upup-bg-[#1F1F1F] md:upup-bg-transparent md:dark:upup-bg-transparent':
                         dark,
                     [classNames.fileItemMultiple!]:
                         classNames.fileItemMultiple && files.size > 1,
@@ -61,7 +61,7 @@ export default memo(function FileItem({ file }: Props) {
             />
             <div
                 className={cn(
-                    '@cs/main:p-0 upup-flex upup-flex-col upup-items-start upup-justify-between upup-p-2 upup-pt-0',
+                    'upup-flex upup-flex-col upup-items-start upup-justify-between upup-p-2 upup-pt-0 md:upup-p-0',
                     classNames.fileInfo,
                 )}
             >

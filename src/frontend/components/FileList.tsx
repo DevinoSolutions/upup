@@ -23,7 +23,7 @@ export default memo(function FileList() {
             className={cn(
                 'upup-relative upup-flex upup-h-full upup-flex-col upup-rounded-lg upup-shadow',
                 {
-                    '@cs/main:pt-11 upup-pt-[72px]': !mini,
+                    'upup-pt-[72px] md:upup-pt-11': !mini,
                     'upup-hidden': isAddingMore || activeAdapter || !files.size,
                 },
             )}
@@ -40,9 +40,9 @@ export default memo(function FileList() {
                 >
                     <div
                         className={cn(
-                            '@cs/main:grid @cs/main:gap-y-6 upup-flex upup-flex-col upup-gap-4',
+                            'upup-flex upup-flex-col upup-gap-4 md:upup-grid md:upup-gap-y-6',
                             {
-                                '@cs/main:grid-cols-3': files.size > 1,
+                                'md:upup-grid-cols-3': files.size > 1,
                                 'upup-flex-1': files.size === 1,
                                 [classNames.fileListContainerInnerMultiple!]:
                                     classNames.fileListContainerInnerMultiple &&

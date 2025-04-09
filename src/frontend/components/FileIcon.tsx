@@ -69,7 +69,7 @@ export default memo(
             <IconComponent
                 ref={ref}
                 className={cn(
-                    '@cs/main:text-8xl upup-text-5xl upup-text-blue-600',
+                    'upup-text-5xl upup-text-blue-600 md:upup-text-8xl',
                     className,
                     {
                         'upup-text-[#59D1F9] dark:upup-text-[#59D1F9]': dark,

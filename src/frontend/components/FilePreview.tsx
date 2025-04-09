@@ -76,10 +76,10 @@ export default memo(
             <div
                 ref={ref}
                 className={cn(
-                    'upup-shadow-right @cs/main:relative @cs/main:rounded-r @cs/main:shadow-md upup-flex upup-cursor-pointer upup-items-center upup-justify-center upup-rounded-b-[4px] upup-rounded-l upup-bg-white upup-bg-contain upup-bg-center upup-bg-no-repeat',
+                    'upup-shadow-right upup-flex upup-cursor-pointer upup-items-center upup-justify-center upup-rounded-b-[4px] upup-rounded-l upup-bg-white upup-bg-contain upup-bg-center upup-bg-no-repeat md:upup-relative md:upup-rounded-r md:upup-shadow-md',
                     {
                         'upup-bg-[#232323] dark:upup-bg-[#232323]': dark,
-                        '@cs/main:w-full upup-aspect-square upup-w-14':
+                        'upup-aspect-square upup-w-14 md:upup-w-full':
                             files.size > 1,
                         'upup-flex-1': files.size === 1,
                         [classNames.fileThumbnailMultiple!]:
@@ -110,7 +110,7 @@ export default memo(
                 </ShouldRender>
                 <button
                     className={cn(
-                        'upup-z-1 @cs/main:scale-100 upup-absolute upup--right-[10px] upup--top-[10px] upup-scale-90 upup-rounded-full',
+                        'upup-z-1 upup-absolute upup--right-[10px] upup--top-[10px] upup-scale-90 upup-rounded-full md:upup-scale-100',
                         classNames.fileDeleteButton,
                     )}
                     onClick={onHandleFileRemove}
