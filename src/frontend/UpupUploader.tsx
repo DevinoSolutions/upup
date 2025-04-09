@@ -26,7 +26,6 @@ export default forwardRef<UpupUploaderRef, UpupUploaderProps>(
                 LoaderIcon: DefaultLoaderIcon,
             },
         })
-
         useImperativeHandle(ref, () => ({
             useUpload: () =>
                 useUpload({
@@ -38,7 +37,7 @@ export default forwardRef<UpupUploaderRef, UpupUploaderProps>(
         return (
             <RootContext.Provider value={providerValues}>
                 <div
-                    className={cn('@container main upup-w-full', {
+                    className={cn('upup-w-full', {
                         'upup-h-[480px] upup-max-w-[600px]':
                             !providerValues.props.mini,
                         'upup-h-[397px] upup-max-w-[280px]':
@@ -48,11 +47,12 @@ export default forwardRef<UpupUploaderRef, UpupUploaderProps>(
                     <section
                         aria-labelledby="drop-instructions"
                         className={cn(
-                            'upup-shadow-wrapper upup-flex upup-h-full upup-w-full upup-select-none upup-flex-col upup-gap-3 upup-overflow-hidden upup-rounded-2xl upup-bg-white upup-px-5 upup-py-4',
+                            `upup-shadow-wrapper ${
+                                providerValues.props.dark
+                                    ? 'upup-bg-[#232323]'
+                                    : 'upup-bg-white'
+                            } upup-flex upup-h-full upup-w-full upup-select-none upup-flex-col upup-gap-3 upup-overflow-hidden upup-rounded-2xl upup-px-5 upup-py-4`,
                             {
-                                'upup-bg-[#232323] dark:upup-bg-[#232323]':
-                                    providerValues.props.dark,
-
                                 [providerValues.props.classNames
                                     .containerFull!]:
                                     providerValues.props.classNames
@@ -70,7 +70,13 @@ export default forwardRef<UpupUploaderRef, UpupUploaderProps>(
                         <ShouldRender if={providerValues.props.limit > 1}>
                             <p
                                 id="drop-instructions"
-                                className="upup-text-xs upup-leading-5 upup-text-[#6D6D6D] md:upup-text-sm"
+                                className={cn(
+                                    'upup-text-xs upup-leading-5 upup-text-[#6D6D6D] md:upup-text-sm',
+                                    {
+                                        'upup-text-gray-300 dark:upup-text-gray-300':
+                                            providerValues.props.dark,
+                                    },
+                                )}
                             >
                                 Add your documents here, you can upload up to{' '}
                                 {providerValues.props.limit} files max
@@ -115,7 +121,15 @@ export default forwardRef<UpupUploaderRef, UpupUploaderProps>(
                                 rel="noopener noreferrer"
                                 className="upup-flex upup-flex-row upup-items-center upup-justify-end upup-gap-1"
                             >
-                                <span className="upup-mr-0.5 upup-text-xs upup-leading-5 upup-text-[#6D6D6D] md:upup-text-sm">
+                                <span
+                                    className={cn(
+                                        'upup-mr-0.5 upup-text-xs upup-leading-5 upup-text-[#6D6D6D] md:upup-text-sm',
+                                        {
+                                            'upup-text-gray-300 dark:upup-text-gray-300':
+                                                providerValues.props.dark,
+                                        },
+                                    )}
+                                >
                                     Built by{' '}
                                 </span>
                                 <ShouldRender if={providerValues.props.dark}>

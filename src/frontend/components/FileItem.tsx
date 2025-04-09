@@ -79,6 +79,9 @@ export default memo(function FileItem({ file }: Props) {
                 <p
                     className={cn(
                         'upup-text-xs upup-text-[#6D6D6D]',
+                        {
+                            'upup-text-gray-300 dark:upup-text-gray-300': dark,
+                        },
                         classNames.fileSize,
                     )}
                 >

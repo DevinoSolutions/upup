@@ -53,7 +53,14 @@ export default function MainBoxHeader({ handleCancel }: Readonly<Props>) {
             >
                 {cancelText}
             </button>
-            <span className="upup-col-span-4 upup-text-center upup-text-sm upup-text-[#6D6D6D] md:upup-col-span-2">
+            <span
+                className={cn(
+                    'upup-col-span-4 upup-text-center upup-text-sm upup-text-[#6D6D6D] md:upup-col-span-2',
+                    {
+                        'upup-text-gray-300 dark:upup-text-gray-300': dark,
+                    },
+                )}
+            >
                 <ShouldRender if={isAddingMore}>Adding more files</ShouldRender>
                 <ShouldRender if={!isAddingMore}>
                     {files.size} file{files.size > 1 ? 's' : ''} selected

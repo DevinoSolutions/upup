@@ -1,6 +1,5 @@
 // tsup.config.ts
 import { defineConfig } from 'tsup'
-import { tailwindInlinePlugin } from './src/esbuild-plugin-tailwind-inline'
 export default defineConfig([
     {
         entry: ['src/index.browser.ts'],
@@ -15,7 +14,6 @@ export default defineConfig([
         minify: true,
         globalName: 'Upup',
         external: ['react', 'react-dom'],
-        esbuildPlugins: [tailwindInlinePlugin()],
     },
     {
         // SERVER / NODE BUILD

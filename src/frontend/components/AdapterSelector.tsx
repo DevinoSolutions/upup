@@ -67,7 +67,7 @@ export default function AdapterSelector() {
                                 className={cn(
                                     'upup-text-xs upup-text-[#242634]',
                                     {
-                                        'upup-text-[#6D6D6D] dark:upup-text-[#6D6D6D]':
+                                        'upup-text-gray-300 dark:upup-text-gray-300':
                                             dark,
                                     },
                                     classNames.adapterButtonText,
@@ -113,7 +113,14 @@ export default function AdapterSelector() {
                         browse
                     </button>
                 </div>
-                <p className="upup-text-center upup-text-xs upup-text-[#6D6D6D] md:upup-text-sm">
+                <p
+                    className={cn(
+                        'upup-text-center upup-text-xs upup-text-[#6D6D6D] md:upup-text-sm',
+                        {
+                            'upup-text-gray-300 dark:upup-text-gray-300': dark,
+                        },
+                    )}
+                >
                     Max {maxFileSize.size} {maxFileSize.unit} file
                     {limit > 1 ? 's are ' : ' is '} allowed
                 </p>
