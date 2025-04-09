@@ -1,4 +1,8 @@
 import React, { forwardRef, useImperativeHandle } from 'react'
+import devinoDark from '../assets/devino-dark.png'
+import devinoLight from '../assets/devino-light.png'
+import logoDark from '../assets/logo-dark.png'
+import logoLight from '../assets/logo-white.png'
 import { FileWithProgress, UpupUploaderProps } from '../shared/types'
 import DefaultLoaderIcon from './components/DefaultLoaderIcon'
 import MainBox from './components/MainBox'
@@ -7,7 +11,6 @@ import RootContext from './context/RootContext'
 import useRootProvider from './hooks/useRootProvider'
 import useUpload from './hooks/useUpload'
 import { cn } from './lib/tailwind'
-
 export type UpupUploaderRef = {
     useUpload(): {
         error?: string
@@ -78,19 +81,21 @@ export default forwardRef<UpupUploaderRef, UpupUploaderProps>(
 
                         <div
                             className={cn(
-                                'flex flex-col items-center justify-end gap-1 @cs/main:flex-row',
+                                'flex w-full flex-col items-center justify-between gap-1 @cs/main:flex-row',
                                 {
                                     'flex-col': providerValues.props.mini,
                                 },
                             )}
                         >
-                            <div className="z-[2147483647] flex items-center gap-[5px]">
-                                <span className="text-xs leading-5 text-[#6D6D6D] @cs/main:text-sm">
-                                    Powered by{' '}
-                                </span>
+                            <a
+                                href={'https://getupup.ca/'}
+                                target={'_blank'}
+                                rel="noopener noreferrer"
+                                className="z-[2147483647] flex items-center gap-[5px]"
+                            >
                                 <ShouldRender if={providerValues.props.dark}>
                                     <img
-                                        src="https://i.ibb.co/HGBrgp7/logo-dark.png"
+                                        src={logoDark}
                                         width={61}
                                         height={13}
                                         alt="logo-dark"
@@ -98,13 +103,39 @@ export default forwardRef<UpupUploaderRef, UpupUploaderProps>(
                                 </ShouldRender>
                                 <ShouldRender if={!providerValues.props.dark}>
                                     <img
-                                        src="https://i.ibb.co/7S5q81d/logo-white.png"
+                                        src={logoLight}
                                         width={61}
                                         height={13}
                                         alt="logo-light"
                                     />
                                 </ShouldRender>
-                            </div>
+                            </a>
+                            <a
+                                href={'https://devino.ca/'}
+                                target={'_blank'}
+                                rel="noopener noreferrer"
+                                className="flex flex-row items-center justify-end gap-1"
+                            >
+                                <span className="mr-0.5 text-xs leading-5 text-[#6D6D6D] @cs/main:text-sm">
+                                    Powered by{' '}
+                                </span>
+                                <ShouldRender if={providerValues.props.dark}>
+                                    <img
+                                        src={devinoDark}
+                                        width={61}
+                                        height={13}
+                                        alt="logo-dark"
+                                    />
+                                </ShouldRender>
+                                <ShouldRender if={!providerValues.props.dark}>
+                                    <img
+                                        src={devinoLight}
+                                        width={61}
+                                        height={13}
+                                        alt="logo-light"
+                                    />
+                                </ShouldRender>
+                            </a>
                         </div>
                     </section>
                 </div>

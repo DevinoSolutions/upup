@@ -2,7 +2,7 @@
     "name": "upup-react-file-uploader",
     "author": "Devino Solutions",
     "license": "MIT",
-    "version": "1.2.1",
+    "version": "1.2.2",
     "publishConfig": {
         "access": "public"
     },
@@ -57,9 +57,10 @@
     ],
     "scripts": {
         "start": "pnpm run prebuild && tsdx watch",
-        "build:node": "tsdx build --no-minify --entry ./src/index.node.ts --tsconfig ./tsconfig.node.json --format cjs --name node",
-        "build:browser": "tsdx build --no-minify --entry ./src/index.browser.ts --tsconfig ./tsconfig.browser.json --format esm,cjs --name browser",
-        "build": "node scripts/build.js",
+        "build:node": "tsdx build --entry ./src/index.node.ts --tsconfig ./tsconfig.node.json --format cjs --name node",
+        "build:browser": "tsdx build --entry ./src/index.browser.ts --tsconfig ./tsconfig.browser.json --format esm,cjs --name browser",
+        "build": "pnpm run prebuild && tsup --config tsup.config.ts",
+        "prebuild": "rimraf dist dist-node && pnpm run lint",
         "test": "jest",
         "test:watch": "jest --watch",
         "test:coverage": "jest --coverage",
@@ -155,8 +156,8 @@
         "style-loader": "^4.0.0",
         "tailwindcss": "^3.3.5",
         "ts-jest": "29.1.1",
-        "tsdx": "^0.14.1",
         "tslib": "^2.6.2",
+        "tsup": "^8.4.0",
         "typescript": "^5.3.2",
         "typescript-eslint": "^8.21.0",
         "webpack": "5.89.0",
@@ -193,9 +194,7 @@
             "jsdom": "22.1.0",
             "node-notifier": "10.0.1",
             "node-fetch": "2.6.7",
-            "rollup": "^3.29.4",
-            "terser": "^5.39.0",
-            "rollup-plugin-terser": "7.0.2"
+            "rollup": "^3.29.4"
         }
     }
 }
