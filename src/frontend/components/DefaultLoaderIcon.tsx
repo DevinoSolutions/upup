@@ -1,6 +1,8 @@
 import React from 'react'
-import { TbLoader } from 'react-icons/tb'
+import { TbLoader } from 'react-icons/tb/index.js'
 
 export default function DefaultLoaderIcon() {
-    return <TbLoader className="animate-spin text-3xl text-[#6D6D6D]" />
+    return (
+        <TbLoader className="upup-animate-spin upup-text-3xl upup-text-[#6D6D6D]" />
+    )
 }

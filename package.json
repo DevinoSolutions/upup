@@ -2,7 +2,7 @@
     "name": "upup-react-file-uploader",
     "author": "Devino Solutions",
     "license": "MIT",
-    "version": "1.2.2",
+    "version": "1.2.3",
     "publishConfig": {
         "access": "public"
     },
@@ -14,13 +14,12 @@
     "exports": {
         ".": {
             "types": "./dist/index.browser.d.ts",
-            "browser": "./dist/browser.esm.js",
-            "import": "./dist/browser.esm.js",
-            "require": "./dist/browser.cjs.development.js"
+            "import": "./dist/index.browser.mjs",
+            "require": "./dist/index.browser.js"
         },
         "./server": {
-            "types": "./dist/index.node.d.ts",
-            "default": "./dist/node.node.js"
+            "types": "./dist-node/index.node.d.ts",
+            "default": "./dist-node/index.node.js"
         },
         "./shared": {
             "types": "./dist/shared/types/StorageSDK.d.ts"
@@ -56,9 +55,7 @@
         "decompress"
     ],
     "scripts": {
-        "start": "pnpm run prebuild && tsdx watch",
-        "build:node": "tsdx build --entry ./src/index.node.ts --tsconfig ./tsconfig.node.json --format cjs --name node",
-        "build:browser": "tsdx build --entry ./src/index.browser.ts --tsconfig ./tsconfig.browser.json --format esm,cjs --name browser",
+        "dev": "tsup --config tsup.config.ts --watch",
         "build": "pnpm run prebuild && tsup --config tsup.config.ts",
         "prebuild": "rimraf dist dist-node && pnpm run lint",
         "test": "jest",
@@ -86,6 +83,10 @@
             "limit": "10 KB"
         }
     ],
+    "peerDependencies": {
+        "react": "^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0",
+        "react-dom": "^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0"
+    },
     "devDependencies": {
         "@babel/core": "^7.23.3",
         "@babel/plugin-proposal-optional-chaining": "^7.21.0",
@@ -124,7 +125,7 @@
         "@types/uuid": "^9.0.7",
         "@typescript-eslint/eslint-plugin": "^8.22.0",
         "@typescript-eslint/parser": "^8.22.0",
-        "autoprefixer": "^10.4.16",
+        "autoprefixer": "^10.4.20",
         "babel-loader": "^9.1.3",
         "css-loader": "^7.1.2",
         "eslint": "^9.19.0",
@@ -140,7 +141,7 @@
         "jest-canvas-mock": "^2.5.2",
         "jest-environment-jsdom": "29.7.0",
         "lowlight": "1.20.0",
-        "postcss": "^8.4.31",
+        "postcss": "^8.5.2",
         "postcss-loader": "^8.1.1",
         "prettier": "3.0.3",
         "prettier-plugin-organize-imports": "^3.2.4",
@@ -154,7 +155,7 @@
         "size-limit": "^10.0.3",
         "storybook": "^8.5.2",
         "style-loader": "^4.0.0",
-        "tailwindcss": "^3.3.5",
+        "tailwindcss": "^3.4.17",
         "ts-jest": "29.1.1",
         "tslib": "^2.6.2",
         "tsup": "^8.4.0",

@@ -18,9 +18,9 @@ export default function AdapterSelector() {
     return (
         <div
             className={cn(
-                'relative flex h-full flex-col-reverse items-center justify-center gap-3 rounded-lg @cs/main:flex-col @cs/main:gap-14',
+                '@cs/main:flex-col @cs/main:gap-14 upup-relative upup-flex upup-h-full upup-flex-col-reverse upup-items-center upup-justify-center upup-gap-3 upup-rounded-lg',
                 {
-                    'pt-[72px] @cs/main:pt-0': isAddingMore,
+                    '@cs/main:pt-0 upup-pt-[72px]': isAddingMore,
                 },
             )}
         >
@@ -30,7 +30,7 @@ export default function AdapterSelector() {
             <ShouldRender if={!mini}>
                 <div
                     className={cn(
-                        'flex w-full flex-col justify-center gap-1 @cs/main:flex-row @cs/main:flex-wrap @cs/main:items-center @cs/main:gap-[30px] @cs/main:px-[30px]',
+                        '@cs/main:flex-row @cs/main:flex-wrap @cs/main:items-center @cs/main:gap-[30px] @cs/main:px-[30px] upup-flex upup-w-full upup-flex-col upup-justify-center upup-gap-1',
                         classNames.adapterButtonList,
                     )}
                 >
@@ -39,9 +39,9 @@ export default function AdapterSelector() {
                             type="button"
                             key={id}
                             className={cn(
-                                'group flex items-center gap-[6px] border-b border-gray-200 px-2 py-1 @cs/main:flex-col @cs/main:justify-center @cs/main:rounded-lg @cs/main:border-none @cs/main:p-0',
+                                '@cs/main:flex-col @cs/main:justify-center @cs/main:rounded-lg @cs/main:border-none @cs/main:p-0 upup-group upup-flex upup-items-center upup-gap-[6px] upup-border-b upup-border-gray-200 upup-px-2 upup-py-1',
                                 {
-                                    'border-[#6D6D6D] dark:border-[#6D6D6D]':
+                                    'upup-border-[#6D6D6D] dark:upup-border-[#6D6D6D]':
                                         dark,
                                 },
                                 classNames.adapterButton,
@@ -53,9 +53,10 @@ export default function AdapterSelector() {
                         >
                             <span
                                 className={cn(
-                                    'scale-75 rounded-lg bg-white p-0 text-2xl font-semibold group-hover:scale-90 @cs/main:scale-100 @cs/main:p-[6px] @cs/main:shadow @cs/main:group-hover:scale-110',
+                                    '@cs/main:scale-100 @cs/main:p-[6px] @cs/main:shadow upup-scale-75 upup-rounded-lg upup-bg-white upup-p-0 upup-text-2xl upup-font-semibold group-hover:upup-scale-90 @cs/main:group-hover:upup-scale-110',
                                     {
-                                        'bg-[#323232] dark:bg-[#323232]': dark,
+                                        'upup-bg-[#323232] dark:upup-bg-[#323232]':
+                                            dark,
                                     },
                                     classNames.adapterButtonIcon,
                                 )}
@@ -64,9 +65,9 @@ export default function AdapterSelector() {
                             </span>
                             <span
                                 className={cn(
-                                    'text-xs text-[#242634]',
+                                    'upup-text-xs upup-text-[#242634]',
                                     {
-                                        'text-[#6D6D6D] dark:text-[#6D6D6D]':
+                                        'upup-text-[#6D6D6D] dark:upup-text-[#6D6D6D]':
                                             dark,
                                     },
                                     classNames.adapterButtonText,
@@ -81,18 +82,18 @@ export default function AdapterSelector() {
             <input
                 type="file"
                 accept={accept}
-                className="hidden"
+                className="upup-hidden"
                 ref={inputRef}
                 multiple={multiple}
                 onChange={handleInputFileChange}
             />
-            <div className="flex flex-col items-center gap-1 text-center @cs/main:gap-2 @cs/main:px-[30px]">
-                <div className="flex items-center gap-1">
+            <div className="@cs/main:gap-2 @cs/main:px-[30px] upup-flex upup-flex-col upup-items-center upup-gap-1 upup-text-center">
+                <div className="upup-flex upup-items-center upup-gap-1">
                     <span
                         className={cn(
-                            'text-xs text-[#0B0B0B] @cs/main:text-sm',
+                            '@cs/main:text-sm upup-text-xs upup-text-[#0B0B0B]',
                             {
-                                'text-white dark:text-white': dark,
+                                'upup-text-white dark:upup-text-white': dark,
                             },
                         )}
                     >
@@ -101,9 +102,10 @@ export default function AdapterSelector() {
                     </span>
                     <button
                         className={cn(
-                            'cursor-pointer text-xs font-semibold text-[#0E2ADD] @cs/main:text-sm',
+                            '@cs/main:text-sm upup-cursor-pointer upup-text-xs upup-font-semibold upup-text-[#0E2ADD]',
                             {
-                                'text-[#59D1F9] dark:text-[#59D1F9]': dark,
+                                'upup-text-[#59D1F9] dark:upup-text-[#59D1F9]':
+                                    dark,
                             },
                         )}
                         onClick={() => inputRef.current?.click()}
@@ -111,7 +113,7 @@ export default function AdapterSelector() {
                         browse
                     </button>
                 </div>
-                <p className="text-xs text-[#6D6D6D] @cs/main:text-sm">
+                <p className="@cs/main:text-sm upup-text-xs upup-text-[#6D6D6D]">
                     Max {maxFileSize.size} {maxFileSize.unit} file
                     {limit > 1 ? 's are ' : ' is '} allowed
                 </p>

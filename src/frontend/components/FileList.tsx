@@ -20,27 +20,30 @@ export default memo(function FileList() {
 
     return (
         <div
-            className={cn('relative flex h-full flex-col rounded-lg shadow', {
-                'pt-[72px] @cs/main:pt-11': !mini,
-                hidden: isAddingMore || activeAdapter || !files.size,
-            })}
+            className={cn(
+                'upup-relative upup-flex upup-h-full upup-flex-col upup-rounded-lg upup-shadow',
+                {
+                    '@cs/main:pt-11 upup-pt-[72px]': !mini,
+                    'upup-hidden': isAddingMore || activeAdapter || !files.size,
+                },
+            )}
         >
             <MainBoxHeader handleCancel={handleDone} />
 
             <MyAnimatePresence>
                 <motion.div
                     className={cn(
-                        'preview-scroll flex flex-1 flex-col overflow-y-auto bg-black/[0.075] p-3',
-                        { 'bg-white/10 dark:bg-white/10': dark },
+                        'upup-preview-scroll upup-flex upup-flex-1 upup-flex-col upup-overflow-y-auto upup-bg-black/[0.075] upup-p-3',
+                        { 'upup-bg-white/10 dark:upup-bg-white/10': dark },
                         classNames.fileListContainer,
                     )}
                 >
                     <div
                         className={cn(
-                            'flex flex-col gap-4 @cs/main:grid @cs/main:gap-y-6',
+                            '@cs/main:grid @cs/main:gap-y-6 upup-flex upup-flex-col upup-gap-4',
                             {
                                 '@cs/main:grid-cols-3': files.size > 1,
-                                'flex-1': files.size === 1,
+                                'upup-flex-1': files.size === 1,
                                 [classNames.fileListContainerInnerMultiple!]:
                                     classNames.fileListContainerInnerMultiple &&
                                     files.size > 1,
@@ -58,9 +61,9 @@ export default memo(function FileList() {
             </MyAnimatePresence>
             <div
                 className={cn(
-                    'shadow-top flex items-center gap-3 rounded-b-lg bg-black/[0.025] px-3 py-2',
+                    'upup-shadow-top upup-flex upup-items-center upup-gap-3 upup-rounded-b-lg upup-bg-black/[0.025] upup-px-3 upup-py-2',
                     {
-                        'bg-white/5 dark:bg-white/5': dark,
+                        'upup-bg-white/5 dark:upup-bg-white/5': dark,
                     },
                     classNames.fileListFooter,
                 )}
@@ -68,9 +71,10 @@ export default memo(function FileList() {
                 <ShouldRender if={uploadStatus !== UploadStatus.SUCCESSFUL}>
                     <button
                         className={cn(
-                            'ml-auto rounded-lg bg-blue-600 px-3 py-2 text-sm font-medium text-white disabled:animate-pulse',
+                            'upup-disabled:animate-pulse upup-ml-auto upup-rounded-lg upup-bg-blue-600 upup-px-3 upup-py-2 upup-text-sm upup-font-medium upup-text-white',
                             {
-                                'bg-[#30C5F7] dark:bg-[#30C5F7]': dark,
+                                'upup-bg-[#30C5F7] dark:upup-bg-[#30C5F7]':
+                                    dark,
                             },
                             classNames.uploadButton,
                         )}
@@ -83,9 +87,10 @@ export default memo(function FileList() {
                 <ShouldRender if={uploadStatus === UploadStatus.SUCCESSFUL}>
                     <button
                         className={cn(
-                            'ml-auto rounded-lg bg-blue-600 px-3 py-2 text-sm font-medium text-white disabled:animate-pulse',
+                            'upup-disabled:animate-pulse upup-ml-auto upup-rounded-lg upup-bg-blue-600 upup-px-3 upup-py-2 upup-text-sm upup-font-medium upup-text-white',
                             {
-                                'bg-[#30C5F7] dark:bg-[#30C5F7]': dark,
+                                'upup-bg-[#30C5F7] dark:upup-bg-[#30C5F7]':
+                                    dark,
                             },
                             classNames.uploadDoneButton,
                         )}
@@ -95,8 +100,8 @@ export default memo(function FileList() {
                     </button>
                 </ShouldRender>
                 <ProgressBar
-                    className="flex-1"
-                    progressBarClassName="rounded"
+                    className="upup-flex-1"
+                    progressBarClassName="upup-rounded"
                     progress={totalProgress}
                     showValue
                 />

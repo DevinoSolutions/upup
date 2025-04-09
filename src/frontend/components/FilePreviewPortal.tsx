@@ -31,16 +31,17 @@ export default memo(
 
         return createPortal(
             <div
-                className="fixed inset-0 z-[2147483647] flex items-center justify-center bg-black/40"
+                className="upup-fixed upup-inset-0 upup-z-[2147483647] upup-flex upup-items-center upup-justify-center upup-bg-black/40"
                 ref={ref}
                 {...restProps}
             >
-                <div className="relative h-[90vh] w-[90vw] p-4">
+                <div className="upup-relative upup-h-[90vh] upup-w-[90vw] upup-p-4">
                     <div
                         className={cn(
-                            'absolute inset-0 m-4 bg-white',
+                            'upup-absolute upup-inset-0 upup-m-4 upup-bg-white',
                             {
-                                'bg-[#232323] dark:bg-[#232323]': dark,
+                                'upup-bg-[#232323] dark:upup-bg-[#232323]':
+                                    dark,
                             },
                             classNames.filePreviewPortal,
                         )}
@@ -50,7 +51,7 @@ export default memo(
                             <img
                                 src={fileUrl}
                                 alt={fileName}
-                                className="h-full w-full rounded object-contain"
+                                className="upup-h-full upup-w-full upup-rounded upup-object-contain"
                             />
                         </ShouldRender>
                         <ShouldRender if={!isImage}>

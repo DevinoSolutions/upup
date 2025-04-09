@@ -13,9 +13,9 @@ export default function AdapterViewContainer({
     return (
         <div
             className={cn(
-                'flex items-center justify-center overflow-hidden bg-black/[0.075]',
+                'upup-flex upup-items-center upup-justify-center upup-overflow-hidden upup-bg-black/[0.075]',
                 {
-                    'bg-white/10 text-[#FAFAFA] dark:bg-white/10 dark:text-[#FAFAFA]':
+                    'upup-bg-white/10 upup-text-[#FAFAFA] dark:upup-bg-white/10 dark:upup-text-[#FAFAFA]':
                         isLoading && dark,
                     [classNames.adapterView!]:
                         !isLoading && classNames.adapterView,

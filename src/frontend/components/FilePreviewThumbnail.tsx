@@ -37,7 +37,7 @@ export default memo(
 
         if (is3D) {
             return (
-                <div className="flex flex-col items-center gap-2">
+                <div className="upup-flex upup-flex-col upup-items-center upup-gap-2">
                     <FileIcon
                         extension={extension}
                         className={classNames.fileIcon}
@@ -74,8 +74,8 @@ export default memo(
                         )}
                     />
                     <div
-                        className={cn('relative h-full w-full', {
-                            'hidden @cs/main:block': showIcon,
+                        className={cn('upup-relative upup-h-full upup-w-full', {
+                            '@cs/main:block upup-hidden': showIcon,
                         })}
                     >
                         <object
@@ -84,7 +84,7 @@ export default memo(
                             height="100%"
                             name={fileName}
                             type={fileType}
-                            className="absolute max-h-full max-w-full"
+                            className="upup-absolute upup-max-h-full upup-max-w-full"
                         >
                             <p>Loading...</p>
                         </object>

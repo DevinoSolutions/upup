@@ -5,7 +5,7 @@ import {
     TbLoader,
     TbPlus,
     TbTrash,
-} from 'react-icons/tb'
+} from 'react-icons/tb/index.js'
 import { toast } from 'react-toastify'
 import truncate from 'truncate'
 import { v4 as uuid } from 'uuid'
@@ -34,7 +34,7 @@ type FileProgress = {
 export type FilesProgressMap = Record<string, FileProgress>
 
 const toastClassName =
-    'px-4 pr-6 py-3 text-center !mb-0 min-h-fit shadow-lg [&_button]:top-1/2 [&_button]:-translate-y-1/2'
+    'upup-px-4 upup-pr-6 upup-py-3 upup-text-center !upup-mb-0 upup-min-h-fit upup-shadow-lg [&_button]:upup-top-1/2 [&_button]:-upup-translate-y-1/2'
 
 export default function useRootProvider({
     accept = '*',
@@ -105,7 +105,7 @@ export default function useRootProvider({
             else
                 toast.error(truncate(message, 75), {
                     containerId: toastContainerId,
-                    className: cn(toastClassName, 'text-red-500'),
+                    className: cn(toastClassName, 'upup-text-red-500'),
                 })
         },
         [errorHandler, toastContainerId],
@@ -117,7 +117,7 @@ export default function useRootProvider({
                 ? warningHandler(message)
                 : toast.warn(message, {
                       containerId: toastContainerId,
-                      className: cn(toastClassName, 'text-yellow-500'),
+                      className: cn(toastClassName, 'upup-text-yellow-500'),
                   }),
         [warningHandler, toastContainerId],
     )

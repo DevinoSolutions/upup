@@ -32,14 +32,14 @@ export default function UrlUploader() {
 
     return (
         <AdapterViewContainer>
-            <form onSubmit={handleFormSubmit} className="px-3 py-2">
+            <form onSubmit={handleFormSubmit} className="upup-px-3 upup-py-2">
                 <input
                     type="url"
                     placeholder="Enter file url"
                     className={cn(
-                        'w-full rounded-md border-2 border-[#e0e0e0] bg-transparent px-3 py-2 outline-none',
+                        'upup-w-full upup-rounded-md upup-border-2 upup-border-[#e0e0e0] upup-bg-transparent upup-px-3 upup-py-2 upup-outline-none',
                         {
-                            'border-[#6D6D6D] text-[#6D6D6D] dark:border-[#6D6D6D] dark:text-[#6D6D6D]':
+                            'upup-border-[#6D6D6D] upup-text-[#6D6D6D] dark:upup-border-[#6D6D6D] dark:upup-text-[#6D6D6D]':
                                 dark,
                         },
                         classNames.urlInput,
@@ -49,9 +49,9 @@ export default function UrlUploader() {
                 />
                 <button
                     className={cn(
-                        'mt-2 w-full rounded-md bg-blue-600 p-2 text-white transition-all duration-300 disabled:bg-[#e0e0e0]',
+                        'upup-disabled:bg-[#e0e0e0] upup-mt-2 upup-w-full upup-rounded-md upup-bg-blue-600 upup-p-2 upup-text-white upup-transition-all upup-duration-300',
                         {
-                            'bg-[#59D1F9] disabled:bg-[#6D6D6D] dark:bg-[#59D1F9] dark:disabled:bg-[#6D6D6D]':
+                            'upup-disabled:bg-[#6D6D6D] dark:upup-disabled:bg-[#6D6D6D] upup-bg-[#59D1F9] dark:upup-bg-[#59D1F9]':
                                 dark,
                         },
                         classNames.urlFetchButton,

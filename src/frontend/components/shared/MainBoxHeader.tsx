@@ -33,18 +33,18 @@ export default function MainBoxHeader({ handleCancel }: Readonly<Props>) {
     return (
         <div
             className={cn(
-                'shadow-bottom absolute left-0 right-0 top-0 z-10 grid grid-cols-4 grid-rows-2 items-center justify-between rounded-t-lg bg-black/[0.025] px-3 py-2 @cs/main:grid-rows-1',
+                'upup-shadow-bottom @cs/main:grid-rows-1 upup-absolute upup-left-0 upup-right-0 upup-top-0 upup-z-10 upup-grid upup-grid-cols-4 upup-grid-rows-2 upup-items-center upup-justify-between upup-rounded-t-lg upup-bg-black/[0.025] upup-px-3 upup-py-2',
                 {
-                    'bg-white/5 dark:bg-white/5': dark,
+                    'upup-bg-white/5 dark:upup-bg-white/5': dark,
                 },
                 classNames.containerHeader,
             )}
         >
             <button
                 className={cn(
-                    'max-md col-start-1 col-end-3 row-start-2 p-1 text-left text-sm text-blue-600 @cs/main:col-end-2 @cs/main:row-start-1',
+                    'upup-max-md @cs/main:col-end-2 @cs/main:row-start-1 upup-col-start-1 upup-col-end-3 upup-row-start-2 upup-p-1 upup-text-left upup-text-sm upup-text-blue-600',
                     {
-                        'text-[#30C5F7] dark:text-[#30C5F7]': dark,
+                        'upup-text-[#30C5F7] dark:upup-text-[#30C5F7]': dark,
                     },
                     classNames.containerCancelButton,
                 )}
@@ -55,7 +55,7 @@ export default function MainBoxHeader({ handleCancel }: Readonly<Props>) {
             </button>
             <span
                 className={
-                    'col-span-4 text-center text-sm text-[#6D6D6D] @cs/main:col-span-2'
+                    '@cs/main:col-span-2 upup-col-span-4 upup-text-center upup-text-sm upup-text-[#6D6D6D]'
                 }
             >
                 <ShouldRender if={isAddingMore}>Adding more files</ShouldRender>
@@ -66,9 +66,10 @@ export default function MainBoxHeader({ handleCancel }: Readonly<Props>) {
             <ShouldRender if={!isAddingMore && limit > 1 && !isLimitReached}>
                 <button
                     className={cn(
-                        'col-start-3 col-end-5 flex items-center justify-end gap-1 p-1 text-sm text-blue-600 @cs/main:col-start-4',
+                        '@cs/main:col-start-4 upup-col-start-3 upup-col-end-5 upup-flex upup-items-center upup-justify-end upup-gap-1 upup-p-1 upup-text-sm upup-text-blue-600',
                         {
-                            'text-[#30C5F7] dark:text-[#30C5F7]': dark,
+                            'upup-text-[#30C5F7] dark:upup-text-[#30C5F7]':
+                                dark,
                         },
                         classNames.containerAddMoreButton,
                     )}

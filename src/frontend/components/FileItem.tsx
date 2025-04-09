@@ -37,11 +37,11 @@ export default memo(function FileItem({ file }: Props) {
     return (
         <div
             className={cn(
-                'relative flex flex-1 gap-2 rounded border border-[#6D6D6D] bg-white @cs/main:static @cs/main:basis-32 @cs/main:rounded-none @cs/main:border-none @cs/main:bg-transparent',
+                '@cs/main:static @cs/main:basis-32 @cs/main:rounded-none @cs/main:border-none @cs/main:bg-transparent upup-relative upup-flex upup-flex-1 upup-gap-2 upup-rounded upup-border upup-border-[#6D6D6D] upup-bg-white',
                 {
                     '@cs/main:flex-col': files.size > 1,
-                    'flex-col': files.size === 1,
-                    'bg-[#1F1F1F] @cs/main:bg-transparent dark:bg-[#1F1F1F] @cs/main:dark:bg-transparent':
+                    'upup-flex-col': files.size === 1,
+                    '@cs/main:bg-transparent upup-bg-[#1F1F1F] dark:upup-bg-[#1F1F1F] @cs/main:dark:upup-bg-transparent':
                         dark,
                     [classNames.fileItemMultiple!]:
                         classNames.fileItemMultiple && files.size > 1,
@@ -61,15 +61,15 @@ export default memo(function FileItem({ file }: Props) {
             />
             <div
                 className={cn(
-                    'flex flex-col items-start justify-between p-2 pt-0 @cs/main:p-0',
+                    '@cs/main:p-0 upup-flex upup-flex-col upup-items-start upup-justify-between upup-p-2 upup-pt-0',
                     classNames.fileInfo,
                 )}
             >
                 <p
                     className={cn(
-                        'max-w-full flex-1 truncate text-xs text-[#0B0B0B]',
+                        'upup-max-w-full upup-flex-1 upup-truncate upup-text-xs upup-text-[#0B0B0B]',
                         {
-                            'text-white dark:text-white': dark,
+                            'upup-text-white dark:upup-text-white': dark,
                         },
                         classNames.fileName,
                     )}
@@ -78,7 +78,7 @@ export default memo(function FileItem({ file }: Props) {
                 </p>
                 <p
                     className={cn(
-                        'text-xs text-[#6D6D6D]',
+                        'upup-text-xs upup-text-[#6D6D6D]',
                         classNames.fileSize,
                     )}
                 >
@@ -87,9 +87,10 @@ export default memo(function FileItem({ file }: Props) {
                 <ShouldRender if={canPreview}>
                     <button
                         className={cn(
-                            'text-xs text-blue-600',
+                            'upup-text-xs upup-text-blue-600',
                             {
-                                'text-[#59D1F9] dark:text-[#59D1F9]': dark,
+                                'upup-text-[#59D1F9] dark:upup-text-[#59D1F9]':
+                                    dark,
                             },
                             classNames.filePreviewButton,
                         )}

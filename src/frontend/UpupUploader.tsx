@@ -1,8 +1,5 @@
 import React, { forwardRef, useImperativeHandle } from 'react'
-import devinoDark from '../assets/devino-dark.png'
-import devinoLight from '../assets/devino-light.png'
-import logoDark from '../assets/logo-dark.png'
-import logoLight from '../assets/logo-white.png'
+import { devinoDark, devinoLight, logoDark, logoLight } from '../assets/logos'
 import { FileWithProgress, UpupUploaderProps } from '../shared/types'
 import DefaultLoaderIcon from './components/DefaultLoaderIcon'
 import MainBox from './components/MainBox'
@@ -20,7 +17,6 @@ export type UpupUploaderRef = {
         upload(): Promise<string[] | undefined>
     }
 }
-
 export default forwardRef<UpupUploaderRef, UpupUploaderProps>(
     function UpupUploader(props, ref) {
         const providerValues = useRootProvider({
@@ -42,17 +38,19 @@ export default forwardRef<UpupUploaderRef, UpupUploaderProps>(
         return (
             <RootContext.Provider value={providerValues}>
                 <div
-                    className={cn('w-full @container/main', {
-                        'h-[480px] max-w-[600px]': !providerValues.props.mini,
-                        'h-[397px] max-w-[280px]': providerValues.props.mini,
+                    className={cn('@container main upup-w-full', {
+                        'upup-h-[480px] upup-max-w-[600px]':
+                            !providerValues.props.mini,
+                        'upup-h-[397px] upup-max-w-[280px]':
+                            providerValues.props.mini,
                     })}
                 >
                     <section
                         aria-labelledby="drop-instructions"
                         className={cn(
-                            'shadow-wrapper flex h-full w-full select-none flex-col gap-3 overflow-hidden rounded-2xl bg-white px-5 py-4',
+                            'upup-shadow-wrapper upup-flex upup-h-full upup-w-full upup-select-none upup-flex-col upup-gap-3 upup-overflow-hidden upup-rounded-2xl upup-bg-white upup-px-5 upup-py-4',
                             {
-                                'bg-[#232323] dark:bg-[#232323]':
+                                'upup-bg-[#232323] dark:upup-bg-[#232323]':
                                     providerValues.props.dark,
 
                                 [providerValues.props.classNames
@@ -60,6 +58,7 @@ export default forwardRef<UpupUploaderRef, UpupUploaderProps>(
                                     providerValues.props.classNames
                                         .containerFull &&
                                     !providerValues.props.mini,
+
                                 [providerValues.props.classNames
                                     .containerMini!]:
                                     providerValues.props.classNames
@@ -71,7 +70,7 @@ export default forwardRef<UpupUploaderRef, UpupUploaderProps>(
                         <ShouldRender if={providerValues.props.limit > 1}>
                             <p
                                 id="drop-instructions"
-                                className="text-xs leading-5 text-[#6D6D6D] @cs/main:text-sm"
+                                className="@cs/main:text-sm upup-text-xs upup-leading-5 upup-text-[#6D6D6D]"
                             >
                                 Add your documents here, you can upload up to{' '}
                                 {providerValues.props.limit} files max
@@ -81,9 +80,9 @@ export default forwardRef<UpupUploaderRef, UpupUploaderProps>(
 
                         <div
                             className={cn(
-                                'flex w-full flex-col items-center justify-between gap-1 @cs/main:flex-row',
+                                '@cs/main:flex-row upup-flex upup-w-full upup-flex-col upup-items-center upup-justify-between upup-gap-1',
                                 {
-                                    'flex-col': providerValues.props.mini,
+                                    'upup-flex-col': providerValues.props.mini,
                                 },
                             )}
                         >
@@ -91,7 +90,7 @@ export default forwardRef<UpupUploaderRef, UpupUploaderProps>(
                                 href={'https://getupup.ca/'}
                                 target={'_blank'}
                                 rel="noopener noreferrer"
-                                className="z-[2147483647] flex items-center gap-[5px]"
+                                className="upup-z-[2147483647] upup-flex upup-items-center upup-gap-[5px]"
                             >
                                 <ShouldRender if={providerValues.props.dark}>
                                     <img
@@ -114,10 +113,10 @@ export default forwardRef<UpupUploaderRef, UpupUploaderProps>(
                                 href={'https://devino.ca/'}
                                 target={'_blank'}
                                 rel="noopener noreferrer"
-                                className="flex flex-row items-center justify-end gap-1"
+                                className="upup-flex upup-flex-row upup-items-center upup-justify-end upup-gap-1"
                             >
-                                <span className="mr-0.5 text-xs leading-5 text-[#6D6D6D] @cs/main:text-sm">
-                                    Powered by{' '}
+                                <span className="@cs/main:text-sm upup-mr-0.5 upup-text-xs upup-leading-5 upup-text-[#6D6D6D]">
+                                    Built by{' '}
                                 </span>
                                 <ShouldRender if={providerValues.props.dark}>
                                     <img

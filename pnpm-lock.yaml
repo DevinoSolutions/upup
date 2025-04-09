@@ -74,9 +74,6 @@ importers:
       truncate:
         specifier: ^3.0.0
         version: 3.0.0
-      upup-react-file-uploader:
-        specifier: file:C:/Users/Khaili/Desktop/Devino/upup-react-file-uploader-1.2.1.tgz
-        version: file:../upup-react-file-uploader-1.2.1.tgz(@emotion/is-prop-valid@1.3.1)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       use-debounce:
         specifier: ^10.0.4
         version: 10.0.4(react@19.0.0)
@@ -196,7 +193,7 @@ importers:
         specifier: ^8.22.0
         version: 8.24.0(eslint@9.20.0(jiti@1.21.7))(typescript@5.7.3)
       autoprefixer:
-        specifier: ^10.4.16
+        specifier: ^10.4.20
         version: 10.4.20(postcss@8.5.2)
       babel-loader:
         specifier: ^9.1.3
@@ -244,7 +241,7 @@ importers:
         specifier: 1.20.0
         version: 1.20.0
       postcss:
-        specifier: ^8.4.31
+        specifier: ^8.5.2
         version: 8.5.2
       postcss-loader:
         specifier: ^8.1.1
@@ -286,7 +283,7 @@ importers:
         specifier: ^4.0.0
         version: 4.0.0(webpack@5.89.0(esbuild@0.25.2))
       tailwindcss:
-        specifier: ^3.3.5
+        specifier: ^3.4.17
         version: 3.4.17
       ts-jest:
         specifier: 29.1.1
@@ -6432,10 +6429,6 @@ packages:
     hasBin: true
     peerDependencies:
       browserslist: '>= 4.21.0'
-
-  upup-react-file-uploader@file:../upup-react-file-uploader-1.2.1.tgz:
-    resolution: {integrity: sha512-3B+4tm28VxiBMCaMvzYB0+MqKaPm6K3z4H8pRbJNloAJsYxB0+0fHPLPXz1vLbx9YRsI0Kpy9rxC8iqJ70vVsw==, tarball: file:../upup-react-file-uploader-1.2.1.tgz}
-    version: 1.2.1
 
   uri-js@4.4.1:
     resolution: {integrity: sha512-7rKUyy33Q1yc98pQ1DAmLtwX109F7TIfWlW1Ydo8Wl1ii1SeHieeh0HHfPeL2fMXK6z0s8ecKs9frCuLJvndBg==}
@@ -14260,39 +14253,6 @@ snapshots:
       browserslist: 4.24.4
       escalade: 3.2.0
       picocolors: 1.1.1
-
-  upup-react-file-uploader@file:../upup-react-file-uploader-1.2.1.tgz(@emotion/is-prop-valid@1.3.1)(react-dom@19.0.0(react@19.0.0))(react@19.0.0):
-    dependencies:
-      '@aws-sdk/client-s3': 3.744.0
-      '@aws-sdk/s3-request-presigner': 3.744.0
-      '@aws-sdk/xhr-http-handler': 3.734.0
-      '@azure/identity': 4.6.0
-      '@azure/msal-browser': 3.28.1
-      '@azure/storage-blob': 12.26.0
-      '@google-cloud/storage': 7.15.0
-      '@microsoft/microsoft-graph-client': 3.0.7(@azure/identity@4.6.0)(@azure/msal-browser@3.28.1)
-      '@types/gapi': 0.0.47
-      babel-plugin-module-resolver: 5.0.2
-      clsx: 2.1.1
-      framer-motion: 12.4.2(@emotion/is-prop-valid@1.3.1)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
-      load-script: 2.0.0
-      pako: 2.1.0
-      react-icons: 4.12.0(react@19.0.0)
-      react-toastify: 11.0.3(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
-      react-webcam: 7.2.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
-      tailwind-merge: 2.6.0
-      truncate: 3.0.0
-      use-debounce: 10.0.4(react@19.0.0)
-      uuid: 9.0.1
-    transitivePeerDependencies:
-      - '@emotion/is-prop-valid'
-      - aws-crt
-      - buffer
-      - encoding
-      - react
-      - react-dom
-      - stream-browserify
-      - supports-color
 
   uri-js@4.4.1:
     dependencies:

@@ -32,7 +32,6 @@ type Props = {
     selectedFiles: OneDriveFile[] | GoogleFile[]
     showLoader: boolean
     handleSubmit: () => Promise<void>
-    downloadProgress: number
     handleCancelDownload: () => void
 }
 
@@ -79,7 +78,7 @@ export default function DriveBrowser({
     return (
         <AdapterViewContainer isLoading={isLoading}>
             <ShouldRender if={true} isLoading={isLoading}>
-                <div className="grid h-full w-full grid-rows-[auto,1fr,auto] overflow-auto">
+                <div className="upup-grid upup-h-full upup-w-full upup-grid-rows-[auto,1fr,auto] upup-overflow-auto">
                     <DriveBrowserHeader
                         showSearch={!!items?.length}
                         path={path}
@@ -91,16 +90,16 @@ export default function DriveBrowser({
                     <ShouldRender if={!!path}>
                         <div
                             className={cn(
-                                'h-full overflow-y-scroll bg-black/[0.075] pt-2',
+                                'upup-h-full upup-overflow-y-scroll upup-bg-black/[0.075] upup-pt-2',
                                 {
-                                    'bg-white/10 text-[#fafafa] dark:bg-white/10 dark:text-[#fafafa]':
+                                    'upup-bg-white/10 upup-text-[#fafafa] dark:upup-bg-white/10 dark:upup-text-[#fafafa]':
                                         dark,
                                 },
                                 classNames.driveBody,
                             )}
                         >
                             <ShouldRender if={!!displayedItems.length}>
-                                <ul className="p-2">
+                                <ul className="upup-p-2">
                                     {displayedItems.map((file, index) => {
                                         return (
                                             <DriveBrowserItem
@@ -119,8 +118,8 @@ export default function DriveBrowser({
                                 </ul>
                             </ShouldRender>
                             <ShouldRender if={!displayedItems.length}>
-                                <div className="flex h-full flex-col items-center justify-center">
-                                    <p className="text-xs opacity-70">
+                                <div className="upup-flex upup-h-full upup-flex-col upup-items-center upup-justify-center">
+                                    <p className="upup-text-xs upup-opacity-70">
                                         No accepted files found
                                     </p>
                                 </div>
@@ -137,9 +136,9 @@ export default function DriveBrowser({
                                 exit={{ y: '100%', height: 0 }}
                                 transition={{ duration: 0.2 }}
                                 className={cn(
-                                    'flex origin-bottom items-center justify-start gap-4 bg-black/[0.025] px-3 py-2',
+                                    'upup-flex upup-origin-bottom upup-items-center upup-justify-start upup-gap-4 upup-bg-black/[0.025] upup-px-3 upup-py-2',
                                     {
-                                        'bg-white/5 text-[#fafafa] dark:bg-white/5 dark:text-[#fafafa]':
+                                        'upup-bg-white/5 upup-text-[#fafafa] dark:upup-bg-white/5 dark:upup-text-[#fafafa]':
                                             dark,
                                     },
                                     classNames.driveFooter,
@@ -147,10 +146,10 @@ export default function DriveBrowser({
                             >
                                 <button
                                     className={cn(
-                                        'rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white transition-all duration-300',
+                                        'upup-rounded-md upup-bg-blue-600 upup-px-3 upup-py-2 upup-text-sm upup-font-medium upup-text-white upup-transition-all upup-duration-300',
                                         {
-                                            'animate-pulse': showLoader,
-                                            'bg-[#30C5F7] dark:bg-[#30C5F7]':
+                                            'upup-animate-pulse': showLoader,
+                                            'upup-bg-[#30C5F7] dark:upup-bg-[#30C5F7]':
                                                 dark,
                                         },
                                         classNames.driveAddFilesButton,
@@ -165,9 +164,9 @@ export default function DriveBrowser({
                                 </button>
                                 <button
                                     className={cn(
-                                        'ml-auto rounded-md p-1 text-sm text-blue-600 transition-all duration-300',
+                                        'upup-ml-auto upup-rounded-md upup-p-1 upup-text-sm upup-text-blue-600 upup-transition-all upup-duration-300',
                                         {
-                                            'text-[#30C5F7] dark:text-[#30C5F7]':
+                                            'upup-text-[#30C5F7] dark:upup-text-[#30C5F7]':
                                                 dark,
                                         },
                                         classNames.driveCancelFilesButton,

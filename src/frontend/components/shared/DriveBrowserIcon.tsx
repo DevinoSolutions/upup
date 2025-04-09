@@ -1,7 +1,7 @@
 import { GoogleFile } from 'google'
 import { OneDriveFile } from 'microsoft'
 import React, { ReactEventHandler } from 'react'
-import { TbFile, TbFolder } from 'react-icons/tb'
+import { TbFile, TbFolder } from 'react-icons/tb/index.js'
 import { useRootContext } from '../../context/RootContext'
 import { cn } from '../../lib/tailwind'
 
@@ -27,20 +27,20 @@ export default function DriveBrowserIcon({
 
     if (isFolder)
         return (
-            <i className="flex-grow text-lg">
+            <i className="upup-flex-grow upup-text-lg">
                 <TbFolder
                     className={cn({
-                        'text-[#6D6D6D] dark:text-[#6D6D6D]': dark,
+                        'upup-text-[#6D6D6D] dark:upup-text-[#6D6D6D]': dark,
                     })}
                 />
             </i>
         )
     if (!src)
         return (
-            <i className="flex-grow text-lg">
+            <i className="upup-flex-grow upup-text-lg">
                 <TbFile
                     className={cn({
-                        'text-[#6D6D6D] dark:text-[#6D6D6D]': dark,
+                        'upup-text-[#6D6D6D] dark:upup-text-[#6D6D6D]': dark,
                     })}
                 />
             </i>
@@ -50,7 +50,7 @@ export default function DriveBrowserIcon({
         <img
             src={src}
             alt={file.name}
-            className="h-5 w-5 flex-grow rounded-md shadow"
+            className="upup-h-5 upup-w-5 upup-flex-grow upup-rounded-md upup-shadow"
             onError={handleImgError}
         />
     )
