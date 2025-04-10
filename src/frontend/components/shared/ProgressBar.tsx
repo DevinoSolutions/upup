@@ -14,7 +14,7 @@ export default forwardRef<HTMLDivElement, Props>(function ProgressBar(
     ref,
 ) {
     const {
-        props: { classNames },
+        props: { classNames, dark },
     } = useRootContext()
     return (
         <ShouldRender if={!!progress}>
@@ -48,6 +48,9 @@ export default forwardRef<HTMLDivElement, Props>(function ProgressBar(
                     <p
                         className={cn(
                             'upup-text-xs upup-font-semibold',
+                            {
+                                'upup-text-white': dark,
+                            },
                             classNames.progressBarText,
                         )}
                     >
