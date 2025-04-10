@@ -10,5 +10,6 @@ pnpm-lock.yaml
 tsconfig.json
 postcss.config.js
 tailwind.config.js
-tsdx.config.js
+tsup.config.ts
 !dist
+!dist-node

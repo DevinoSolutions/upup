@@ -7,7 +7,7 @@ export const MyDeviceIcon = () => (
         width="32"
         height="32"
         viewBox="0 0 32 32"
-        className="text-[#2275d7]"
+        className="upup-text-[#2275d7]"
     >
         <path
             d="M8.45 22.087l-1.305-6.674h17.678l-1.572 6.674H8.45zm4.975-12.412l1.083 1.765a.823.823 0 00.715.386h7.951V13.5H8.587V9.675h4.838zM26.043 13.5h-1.195v-2.598c0-.463-.336-.75-.798-.75h-8.356l-1.082-1.766A.823.823 0 0013.897 8H7.728c-.462 0-.815.256-.815.718V13.5h-.956a.97.97 0 00-.746.37.972.972 0 00-.19.81l1.724 8.565c.095.44.484.755.933.755H24c.44 0 .824-.3.929-.727l2.043-8.568a.972.972 0 00-.176-.825.967.967 0 00-.753-.38z"
@@ -19,7 +19,7 @@ export const MyDeviceIcon = () => (
 
 export const BoxIcon = () => (
     <svg
-        className="text-[#0061d5]"
+        className="upup-text-[#0061d5]"
         aria-hidden="true"
         focusable="false"
         width="32"
@@ -35,7 +35,7 @@ export const BoxIcon = () => (
 
 export const DropBoxIcon = () => (
     <svg
-        className="text-[#0061fe]"
+        className="upup-text-[#0061fe]"
         aria-hidden="true"
         focusable="false"
         width="32"
@@ -169,7 +169,7 @@ export const OneDriveIcon = () => (
 
 export const UnsplashIcon = () => (
     <svg
-        className="text-[#111]"
+        className="upup-text-[#111]"
         viewBox="0 0 32 32"
         height="32"
         width="32"
@@ -216,7 +216,7 @@ export const CameraIcon = () => (
 
 export const AudioIcon = () => (
     <svg
-        className="text-[#8030a3]"
+        className="upup-text-[#8030a3]"
         aria-hidden="true"
         focusable="false"
         width="32px"
@@ -233,7 +233,7 @@ export const AudioIcon = () => (
 
 export const ScreenCastIcon = () => (
     <svg
-        className="text-[#2c3e50]"
+        className="upup-text-[#2c3e50]"
         aria-hidden="true"
         focusable="false"
         width="32"

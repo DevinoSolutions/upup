@@ -47,7 +47,13 @@ const meta = {
                     justifyContent: 'center',
                 }}
             >
-                <UpupUploader {...args} dark={isDarkMode} />
+                <UpupUploader
+                    onFilesSelected={files => {
+                        console.log(files)
+                    }}
+                    {...args}
+                    dark={isDarkMode}
+                />
             </div>
         )
     },

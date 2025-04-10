@@ -5,7 +5,7 @@ import {
     TbLoader,
     TbPlus,
     TbTrash,
-} from 'react-icons/tb'
+} from 'react-icons/tb/index.js'
 import { toast } from 'react-toastify'
 import truncate from 'truncate'
 import { v4 as uuid } from 'uuid'
@@ -34,13 +34,14 @@ type FileProgress = {
 export type FilesProgressMap = Record<string, FileProgress>
 
 const toastClassName =
-    'px-4 pr-6 py-3 text-center !mb-0 min-h-fit shadow-lg [&_button]:top-1/2 [&_button]:-translate-y-1/2'
+    'upup-px-4 upup-pr-6 upup-py-3 upup-text-center !upup-mb-0 upup-min-h-fit upup-shadow-lg [&_button]:upup-top-1/2 [&_button]:-upup-translate-y-1/2'
 
 export default function useRootProvider({
     accept = '*',
     mini = false,
     dark = false,
     limit: propLimit = 1,
+    isProcessing = false,
     maxFileSize = { size: 10, unit: 'MB' },
     shouldCompress = false,
     uploadAdapters = [UploadAdapter.INTERNAL, UploadAdapter.LINK],
@@ -61,6 +62,7 @@ export default function useRootProvider({
     onFileUploadComplete = () => {},
     onFilesUploadComplete = () => {},
     onFilesSelected = () => {},
+    onDoneClicked = () => {},
     onPrepareFiles,
     provider,
     tokenEndpoint,
@@ -105,7 +107,7 @@ export default function useRootProvider({
             else
                 toast.error(truncate(message, 75), {
                     containerId: toastContainerId,
-                    className: cn(toastClassName, 'text-red-500'),
+                    className: cn(toastClassName, 'upup-text-red-500'),
                 })
         },
         [errorHandler, toastContainerId],
@@ -117,16 +119,38 @@ export default function useRootProvider({
                 ? warningHandler(message)
                 : toast.warn(message, {
                       containerId: toastContainerId,
-                      className: cn(toastClassName, 'text-yellow-500'),
+                      className: cn(toastClassName, 'upup-text-yellow-500'),
                   }),
         [warningHandler, toastContainerId],
     )
+    function isFileWithParamsArray(
+        files: File[] | FileWithParams[],
+    ): files is FileWithParams[] {
+        return files.length > 0 && 'id' in files[0]
+    }
+    async function dynamicUpload(files: File[] | FileWithParams[]) {
+        dynamicallyReplaceFiles(files)
+        return await proceedUpload()
+    }
+    function dynamicallyReplaceFiles(files: File[] | FileWithParams[]) {
+        const filesMap = new Map<string, FileWithParams>()
 
+        if (isFileWithParamsArray(files)) {
+            for (const f of files) {
+                filesMap.set(f.id, f)
+            }
+        } else {
+            for (const f of files) {
+                const fileWithParams = fileAppendParams(f)
+                filesMap.set(fileWithParams.id, fileWithParams)
+            }
+        }
+        setSelectedFilesMap(filesMap)
+    }
     const handleSetSelectedFiles = (newFiles: File[]) => {
-        onFilesSelected(newFiles)
-
         const newFilesMap = new Map(selectedFilesMap)
         const newFilesMapArray = Array.from(newFilesMap.values())
+        const newFilesWithParams: FileWithParams[] = []
         for (const file of newFiles) {
             // Check if files length has surpassed the limit
             if (newFilesMap.size >= limit) {
@@ -134,7 +158,7 @@ export default function useRootProvider({
                 break
             }
             const fileWithParams = fileAppendParams(file)
-
+            newFilesWithParams.push(fileWithParams)
             if (!checkFileType(accept, file)) {
                 onError(`${file.name} has an unsupported type!`)
                 onFileTypeMismatch(file, accept)
@@ -157,8 +181,8 @@ export default function useRootProvider({
                 setSelectedFilesMap(newFilesMap)
             }
         }
-
         setIsAddingMore(false)
+        onFilesSelected(newFilesWithParams)
     }
 
     const handleFileRemove = useCallback(
@@ -208,7 +232,6 @@ export default function useRootProvider({
         },
         [onPrepareFiles],
     )
-
     const proceedUpload = async () => {
         if (!selectedFilesMap.size) return
 
@@ -281,13 +304,16 @@ export default function useRootProvider({
             return
         }
     }
-
     const handleDone = useCallback(() => {
+        onDoneClicked()
+        handleCancel()
+    }, [])
+
+    const handleCancel = useCallback(() => {
         setUploadStatus(UploadStatus.PENDING)
         setSelectedFilesMap(new Map())
         setFilesProgressMap({})
     }, [])
-
     useEffect(() => {
         if (!toastContainerId && (!errorHandler || !warningHandler))
             setToastContainerId(uuid())
@@ -301,7 +327,10 @@ export default function useRootProvider({
         setIsAddingMore,
         files: selectedFilesMap,
         setFiles: handleSetSelectedFiles,
+        dynamicUpload,
+        dynamicallyReplaceFiles,
         handleDone,
+        handleCancel,
         handleFileRemove,
         oneDriveConfigs: driveConfigs?.oneDrive,
         googleDriveConfigs: driveConfigs?.googleDrive,
@@ -327,6 +356,7 @@ export default function useRootProvider({
             accept,
             maxFileSize,
             limit,
+            isProcessing,
             multiple,
             icons: {
                 ContainerAddMoreIcon: icons.ContainerAddMoreIcon || TbPlus,

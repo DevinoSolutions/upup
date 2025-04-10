@@ -23,7 +23,7 @@ import {
     TbFileTypeXls,
     TbFileTypeXml,
     TbFileTypeZip,
-} from 'react-icons/tb'
+} from 'react-icons/tb/index.js'
 import { useRootContext } from '../context/RootContext'
 import { cn } from '../lib/tailwind'
 
@@ -69,10 +69,10 @@ export default memo(
             <IconComponent
                 ref={ref}
                 className={cn(
-                    'text-5xl text-blue-600 @cs/main:text-8xl',
+                    'upup-text-5xl upup-text-blue-600 md:upup-text-8xl',
                     className,
                     {
-                        'text-[#59D1F9] dark:text-[#59D1F9]': dark,
+                        'upup-text-[#59D1F9] dark:upup-text-[#59D1F9]': dark,
                     },
                 )}
                 {...restProps}

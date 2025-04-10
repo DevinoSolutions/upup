@@ -37,6 +37,7 @@ type ContextProps = Required<
         | 'uploadAdapters'
         | 'accept'
         | 'limit'
+        | 'isProcessing'
         | 'mini'
         | 'maxFileSize'
         | 'onFileClick'
@@ -61,12 +62,16 @@ export interface IRootContext {
 
     files: Map<string, FileWithParams>
     setFiles: (newFiles: File[]) => void
-
+    dynamicallyReplaceFiles: (files: File[] | FileWithParams[]) => void
+    dynamicUpload: (
+        files: File[] | FileWithParams[],
+    ) => Promise<string[] | undefined>
     isAddingMore: boolean
     setIsAddingMore: Dispatch<SetStateAction<boolean>>
 
     handleFileRemove: (fileId: string) => void
     handleDone: () => void
+    handleCancel: () => void
 
     oneDriveConfigs?: OneDriveConfigs
     googleDriveConfigs?: GoogleDriveConfigs

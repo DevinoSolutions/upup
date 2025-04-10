@@ -23,14 +23,14 @@ export default function AdapterView() {
                 initial={{ y: '-100%' }}
                 animate={{ y: '0%' }}
                 exit={{ y: '-100%' }}
-                className="grid h-full w-full grid-rows-[auto,1fr]"
+                className="upup-grid upup-h-full upup-w-full upup-grid-rows-[auto,1fr]"
                 key="adapter-view"
             >
                 <div
                     className={cn(
-                        'shadow-bottom flex items-center justify-between bg-black/[0.025] px-3 py-2 text-sm font-medium text-[#1b5dab]',
+                        'upup-shadow-bottom upup-flex upup-items-center upup-justify-between upup-bg-black/[0.025] upup-px-3 upup-py-2 upup-text-sm upup-font-medium upup-text-[#1b5dab]',
                         {
-                            'bg-white/5 text-[#FAFAFA] dark:bg-white/5 dark:text-[#FAFAFA]':
+                            'upup-bg-white/5 upup-text-[#FAFAFA] dark:upup-bg-white/5 dark:upup-text-[#FAFAFA]':
                                 dark,
                         },
                         classNames.adapterViewHeader,
@@ -39,9 +39,10 @@ export default function AdapterView() {
                     <Icon />
                     <button
                         className={cn(
-                            'rounded-md p-1 text-blue-600 transition-all duration-300',
+                            'upup-rounded-md upup-p-1 upup-text-blue-600 upup-transition-all upup-duration-300',
                             {
-                                'text-[#30C5F7] dark:text-[#30C5F7]': dark,
+                                'upup-text-[#30C5F7] dark:upup-text-[#30C5F7]':
+                                    dark,
                             },
                             classNames.adapterViewCancelButton,
                         )}

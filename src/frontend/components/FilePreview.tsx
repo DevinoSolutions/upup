@@ -76,11 +76,12 @@ export default memo(
             <div
                 ref={ref}
                 className={cn(
-                    'shadow-right flex cursor-pointer items-center justify-center rounded-b-[4px] rounded-l bg-white bg-contain bg-center bg-no-repeat @cs/main:relative @cs/main:rounded-r @cs/main:shadow-md',
+                    'upup-shadow-right upup-flex upup-cursor-pointer upup-items-center upup-justify-center upup-rounded-b-[4px] upup-rounded-l upup-bg-white upup-bg-contain upup-bg-center upup-bg-no-repeat md:upup-relative md:upup-rounded-r md:upup-shadow-md',
                     {
-                        'bg-[#232323] dark:bg-[#232323]': dark,
-                        'aspect-square w-14 @cs/main:w-full': files.size > 1,
-                        'flex-1': files.size === 1,
+                        'upup-bg-[#232323] dark:upup-bg-[#232323]': dark,
+                        'upup-aspect-square upup-w-14 md:upup-w-full':
+                            files.size > 1,
+                        'upup-flex-1': files.size === 1,
                         [classNames.fileThumbnailMultiple!]:
                             classNames.fileThumbnailMultiple && files.size > 1,
                         [classNames.fileThumbnailSingle!]:
@@ -109,18 +110,18 @@ export default memo(
                 </ShouldRender>
                 <button
                     className={cn(
-                        'z-1 absolute -right-[10px] -top-[10px] scale-90 rounded-full @cs/main:scale-100',
+                        'upup-z-1 upup-absolute upup--right-[10px] upup--top-[10px] upup-scale-90 upup-rounded-full md:upup-scale-100',
                         classNames.fileDeleteButton,
                     )}
                     onClick={onHandleFileRemove}
                     type="button"
                     disabled={!!progress}
                 >
-                    <FileDeleteIcon className="text-2xl text-red-500" />
+                    <FileDeleteIcon className="upup-text-2xl upup-text-red-500" />
                 </button>
                 <ProgressBar
-                    className="absolute bottom-0 left-0 right-0"
-                    progressBarClassName="rounded-t-none"
+                    className="upup-absolute upup-bottom-0 upup-left-0 upup-right-0"
+                    progressBarClassName="upup-rounded-t-none"
                     progress={progress}
                 />
             </div>

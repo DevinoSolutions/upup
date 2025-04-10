@@ -1,7 +1,8 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
+    prefix: 'upup-',
     content: ['./src/**/*.{tsx,ts,css}'],
-    darkMode: 'class', // or 'media' or 'class'
+    darkMode: 'class',
     theme: {
         extend: {
             containers: {
@@ -9,5 +10,6 @@ module.exports = {
             },
         },
     },
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     plugins: [require('@tailwindcss/container-queries')],
 }

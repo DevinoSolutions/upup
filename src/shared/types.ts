@@ -126,6 +126,7 @@ export type UpupUploaderProps = {
     shouldCompress?: boolean
     accept?: string
     limit?: number
+    isProcessing?: boolean
     mini?: boolean
     maxFileSize?: MaxFileSizeObject
     customProps?: object
@@ -134,7 +135,8 @@ export type UpupUploaderProps = {
     icons?: UpupUploaderPropsIcons
 
     // Event Handlers
-    onFilesSelected?: (files: File[]) => void
+    onFilesSelected?: (files: FileWithParams[]) => void
+    onDoneClicked?: () => void
     onPrepareFiles?: (files: FileWithParams[]) => Promise<FileWithParams[]>
     onFileClick?: (file: FileWithParams) => void
     onIntegrationClick?: (integrationType: string) => void

@@ -24,14 +24,15 @@ export default function CameraUploader() {
 
     return (
         <AdapterViewContainer>
-            <div className="flex h-full w-full flex-col justify-center overflow-auto px-3 py-2">
-                <div className="flex-1 pt-10">
+            <div className="upup-flex upup-h-full upup-w-full upup-flex-col upup-justify-center upup-overflow-auto upup-px-3 upup-py-2">
+                <div className="upup-flex-1 upup-pt-10">
                     <ShouldRender if={!!url}>
                         <div
                             className={cn(
-                                'relative aspect-video bg-black/[0.025] bg-contain bg-center bg-no-repeat  shadow-xl',
+                                'upup-relative upup-aspect-video upup-bg-black/[0.025] upup-bg-contain upup-bg-center upup-bg-no-repeat upup-shadow-xl',
                                 {
-                                    'bg-white/5 dark:bg-white/5': dark,
+                                    'upup-bg-white/5 dark:upup-bg-white/5':
+                                        dark,
                                 },
                                 classNames.cameraPreviewContainer,
                             )}
@@ -40,7 +41,7 @@ export default function CameraUploader() {
                             <button
                                 onClick={clearUrl}
                                 className={cn(
-                                    'absolute -right-2 -top-2 z-10 rounded-full bg-[#272727] p-1 text-xl text-[#f5f5f5]',
+                                    'upup-absolute upup--right-2 upup--top-2 upup-z-10 upup-rounded-full upup-bg-[#272727] upup-p-1 upup-text-xl upup-text-[#f5f5f5]',
                                     classNames.cameraDeleteButton,
                                 )}
                                 type="button"
@@ -56,17 +57,18 @@ export default function CameraUploader() {
                             ref={webcamRef}
                             screenshotFormat="image/jpeg"
                             videoConstraints={{ facingMode }}
-                            className="aspect-video rounded-xl"
+                            className="upup-aspect-video upup-rounded-xl"
                         />
                     </ShouldRender>
                 </div>
-                <div className="flex gap-4">
+                <div className="upup-flex upup-gap-4">
                     <ShouldRender if={!url}>
                         <button
                             className={cn(
-                                'mt-2 flex w-1/3 flex-col items-center  justify-center rounded-md  bg-blue-600 p-2 text-white transition-all duration-300',
+                                'upup-mt-2 upup-flex upup-w-1/3 upup-flex-col upup-items-center  upup-justify-center upup-rounded-md  upup-bg-blue-600 upup-p-2 upup-text-white upup-transition-all upup-duration-300',
                                 {
-                                    'bg-[#59D1F9] dark:bg-[#59D1F9]': dark,
+                                    'upup-bg-[#59D1F9] dark:upup-bg-[#59D1F9]':
+                                        dark,
                                 },
                                 classNames.cameraCaptureButton,
                             )}
@@ -80,7 +82,7 @@ export default function CameraUploader() {
                         </button>
                         <button
                             className={cn(
-                                'mt-2 flex w-1/3 flex-col items-center rounded-md bg-gray-500 p-2 text-white transition-all duration-300 hover:bg-gray-600',
+                                'upup-mt-2 upup-flex upup-w-1/3 upup-flex-col upup-items-center upup-rounded-md upup-bg-gray-500 upup-p-2 upup-text-white upup-transition-all upup-duration-300 hover:upup-bg-gray-600',
                                 classNames.cameraRotateButton,
                             )}
                             onClick={handleCameraSwitch}
@@ -95,9 +97,10 @@ export default function CameraUploader() {
                     <ShouldRender if={!!url}>
                         <button
                             className={cn(
-                                'mt-2 w-full rounded-md bg-blue-600 p-2 text-white transition-all duration-300',
+                                'upup-mt-2 upup-w-full upup-rounded-md upup-bg-blue-600 upup-p-2 upup-text-white upup-transition-all upup-duration-300',
                                 {
-                                    'bg-[#59D1F9] dark:bg-[#59D1F9]': dark,
+                                    'upup-bg-[#59D1F9] dark:upup-bg-[#59D1F9]':
+                                        dark,
                                 },
                                 classNames.cameraAddButton,
                             )}

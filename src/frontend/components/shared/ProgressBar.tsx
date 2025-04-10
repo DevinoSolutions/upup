@@ -14,14 +14,14 @@ export default forwardRef<HTMLDivElement, Props>(function ProgressBar(
     ref,
 ) {
     const {
-        props: { classNames },
+        props: { classNames, dark },
     } = useRootContext()
     return (
         <ShouldRender if={!!progress}>
             <div
                 ref={ref}
                 className={cn(
-                    'flex items-center gap-2',
+                    'upup-flex upup-items-center upup-gap-2',
                     className,
                     classNames.progressBarContainer,
                 )}
@@ -29,7 +29,7 @@ export default forwardRef<HTMLDivElement, Props>(function ProgressBar(
             >
                 <div
                     className={cn(
-                        'h-[6px] flex-1 overflow-hidden rounded-[4px] bg-[#F5F5F5]',
+                        'upup-h-[6px] upup-flex-1 upup-overflow-hidden upup-rounded-[4px] upup-bg-[#F5F5F5]',
                         progressBarClassName,
                         classNames.progressBar,
                     )}
@@ -39,7 +39,7 @@ export default forwardRef<HTMLDivElement, Props>(function ProgressBar(
                             width: progress + '%',
                         }}
                         className={cn(
-                            'h-full bg-[#8EA5E7]',
+                            'upup-h-full upup-bg-[#8EA5E7]',
                             classNames.progressBarInner,
                         )}
                     />
@@ -47,7 +47,10 @@ export default forwardRef<HTMLDivElement, Props>(function ProgressBar(
                 <ShouldRender if={!!showValue}>
                     <p
                         className={cn(
-                            'text-xs font-semibold',
+                            'upup-text-xs upup-font-semibold',
+                            {
+                                'upup-text-white': dark,
+                            },
                             classNames.progressBarText,
                         )}
                     >

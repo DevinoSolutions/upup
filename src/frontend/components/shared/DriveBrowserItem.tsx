@@ -61,11 +61,11 @@ export default function DriveBrowserItem({
                 exit={{ opacity: 0, y: 10, transition }}
                 transition={transition}
                 className={cn(
-                    'group mb-1 flex cursor-pointer items-center justify-between gap-2 rounded-md p-1 py-2 hover:bg-[#bab4b499]',
+                    'upup-hover:bg-[#bab4b499] upup-group upup-mb-1 upup-flex upup-cursor-pointer upup-items-center upup-justify-between upup-gap-2 upup-rounded-md upup-p-1 upup-py-2',
                     {
-                        'font-medium': isFolder,
-                        'bg-[#bab4b499]': isFileSelected,
-                        'bg-[#e9ecef00]': !isFileSelected,
+                        'upup-font-medium': isFolder,
+                        'upup-bg-[#bab4b499]': isFileSelected,
+                        'upup-bg-[#e9ecef00]': !isFileSelected,
                         [classNames.driveItemContainerDefault!]:
                             !isFileSelected &&
                             classNames.driveItemContainerDefault,
@@ -78,16 +78,17 @@ export default function DriveBrowserItem({
             >
                 <div
                     className={cn(
-                        'flex items-center gap-2',
+                        'upup-flex upup-items-center upup-gap-2',
                         classNames.driveItemContainerInner,
                     )}
                 >
                     <DriveBrowserIcon file={file} />
                     <h1
                         className={cn(
-                            'text-wrap break-all text-xs',
+                            'upup-text-wrap upup-break-all upup-text-xs',
                             {
-                                'text-[#e0e0e0] dark:text-[#e0e0e0]': dark,
+                                'upup-text-[#e0e0e0] dark:upup-text-[#e0e0e0]':
+                                    dark,
                             },
                             classNames.driveItemInnerText,
                         )}

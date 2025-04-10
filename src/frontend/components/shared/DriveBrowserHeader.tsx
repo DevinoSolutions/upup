@@ -1,7 +1,7 @@
 import { Root, User } from 'google'
 import { MicrosoftUser, OneDriveRoot } from 'microsoft'
 import React, { Dispatch, SetStateAction } from 'react'
-import { TbSearch, TbUser } from 'react-icons/tb'
+import { TbSearch, TbUser } from 'react-icons/tb/index.js'
 import { useRootContext } from '../../context/RootContext'
 import { cn } from '../../lib/tailwind'
 import ShouldRender from './ShouldRender'
@@ -38,23 +38,23 @@ export default function DriveBrowserHeader({
         <div>
             <div
                 className={cn(
-                    'shadow-bottom grid grid-cols-[1fr,auto] bg-black/[0.025] px-3 py-2 text-xs font-medium text-[#333]',
+                    'upup-shadow-bottom upup-grid upup-grid-cols-[1fr,auto] upup-bg-black/[0.025] upup-px-3 upup-py-2 upup-text-xs upup-font-medium upup-text-[#333]',
                     {
-                        'bg-white/5 text-[#FAFAFA] dark:bg-white/5 dark:text-[#FAFAFA]':
+                        'upup-bg-white/5 upup-text-[#FAFAFA] dark:upup-bg-white/5 dark:upup-text-[#FAFAFA]':
                             dark,
                     },
                     classNames.driveHeader,
                 )}
             >
                 <ShouldRender if={!!path}>
-                    <div className="flex items-center gap-1">
+                    <div className="upup-flex upup-items-center upup-gap-1">
                         {(path as Array<any>).map((p, i) => (
                             <p
                                 key={p.id}
                                 className={cn(
-                                    'group flex shrink-0 cursor-pointer gap-1 truncate',
+                                    'upup-group upup-flex upup-shrink-0 upup-cursor-pointer upup-gap-1 upup-truncate',
                                     {
-                                        'text-[#6D6D6D] dark:text-[#6D6D6D]':
+                                        'upup-text-[#6D6D6D] dark:upup-text-[#6D6D6D]':
                                             dark,
                                     },
                                 )}
@@ -69,7 +69,7 @@ export default function DriveBrowserHeader({
                                     )
                                 }
                             >
-                                <span className="truncate group-hover:underline">
+                                <span className="upup-group-hover:upup-underline upup-truncate">
                                     {p.name}
                                 </span>
                                 <ShouldRender if={i !== path.length - 1}>
@@ -80,25 +80,26 @@ export default function DriveBrowserHeader({
                         ))}
                     </div>
                 </ShouldRender>
-                <div className="flex items-center gap-2">
-                    <div className="relative flex h-8 w-8 items-center justify-center overflow-hidden rounded-full ">
+                <div className="upup-flex upup-items-center upup-gap-2">
+                    <div className="upup-relative upup-flex upup-h-8 upup-w-8 upup-items-center upup-justify-center upup-overflow-hidden upup-rounded-full">
                         <ShouldRender if={!!user.picture}>
                             <img
                                 alt={user.name}
                                 src={user.picture}
-                                className="bg-center object-cover"
+                                className="upup-bg-center upup-object-cover"
                             />
                         </ShouldRender>
                         <ShouldRender if={!user.picture}>
-                            <TbUser className="text-xl" />
+                            <TbUser className="upup-text-xl" />
                         </ShouldRender>
                     </div>
 
                     <button
                         className={cn(
-                            'text-blue-600 hover:underline',
+                            'upup-hover:upup-underline upup-text-blue-600',
                             {
-                                'text-[#30C5F7] dark:text-[#30C5F7]': dark,
+                                'upup-text-[#30C5F7] dark:upup-text-[#30C5F7]':
+                                    dark,
                             },
                             classNames.driveLogoutButton,
                         )}
@@ -115,9 +116,9 @@ export default function DriveBrowserHeader({
             <ShouldRender if={showSearch}>
                 <div
                     className={cn(
-                        'relative h-fit bg-black/[0.025] px-3 py-2',
+                        'upup-relative upup-h-fit upup-bg-black/[0.025] upup-px-3 upup-py-2',
                         {
-                            'bg-white/5 text-[#fafafa] dark:bg-white/5 dark:text-[#fafafa]':
+                            'upup-bg-white/5 upup-text-[#fafafa] dark:upup-bg-white/5 dark:upup-text-[#fafafa]':
                                 dark,
                         },
                         classNames.driveSearchContainer,
@@ -126,9 +127,9 @@ export default function DriveBrowserHeader({
                     <input
                         type="search"
                         className={cn(
-                            'h-fit w-full rounded-md bg-black/[0.025] px-3 py-2 pl-8 text-xs outline-none transition-all duration-300',
+                            'upup-h-fit upup-w-full upup-rounded-md upup-bg-black/[0.025] upup-px-3 upup-py-2 upup-pl-8 upup-text-xs upup-outline-none upup-transition-all upup-duration-300',
                             {
-                                'bg-white/5 text-[#6D6D6D] dark:bg-white/5 dark:text-[#6D6D6D]':
+                                'upup-bg-white/5 upup-text-[#6D6D6D] dark:upup-bg-white/5 dark:upup-text-[#6D6D6D]':
                                     dark,
                             },
                             classNames.driveSearchInput,
@@ -137,7 +138,7 @@ export default function DriveBrowserHeader({
                         value={searchTerm}
                         onChange={e => onSearch(e.currentTarget.value)}
                     />
-                    <TbSearch className="absolute left-5 top-1/2 -translate-y-1/2 text-[#939393]" />
+                    <TbSearch className="upup-absolute upup-left-5 upup-top-1/2 upup--translate-y-1/2 upup-text-[#939393]" />
                 </div>
             </ShouldRender>
         </div>

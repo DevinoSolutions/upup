@@ -3,13 +3,13 @@
 @tailwind utilities;
 
 @layer components {
-    .shadow-wrapper {
+    .upup-shadow-wrapper {
         box-shadow:
             0px 4px 50px 0px rgba(0, 0, 0, 0.08),
             0px 4px 6px 0px rgba(0, 0, 0, 0.05);
     }
 
-    .preview-scroll {
+    .upup-preview-scroll {
         /* width */
         &::-webkit-scrollbar {
             width: 6px;
@@ -35,16 +35,16 @@
 }
 
 @layer utilities {
-    .shadow-top {
+    .upup-shadow-top {
         box-shadow: 0 -1px 0 0 rgba(128, 128, 128, 0.35);
     }
-    .shadow-right {
+    .upup-shadow-right {
         box-shadow: 1px 0 0 0 rgba(128, 128, 128, 0.35);
     }
-    .shadow-bottom {
+    .upup-shadow-bottom {
         box-shadow: 0 1px 0 0 rgba(128, 128, 128, 0.35);
     }
-    .shadow-left {
+    .upup-shadow-left {
         box-shadow: -1px 0 0 0 rgba(128, 128, 128, 0.35);
     }
 }
