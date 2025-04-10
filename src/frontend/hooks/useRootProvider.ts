@@ -304,14 +304,16 @@ export default function useRootProvider({
             return
         }
     }
-
     const handleDone = useCallback(() => {
         onDoneClicked()
+        handleCancel()
+    }, [])
+
+    const handleCancel = useCallback(() => {
         setUploadStatus(UploadStatus.PENDING)
         setSelectedFilesMap(new Map())
         setFilesProgressMap({})
     }, [])
-
     useEffect(() => {
         if (!toastContainerId && (!errorHandler || !warningHandler))
             setToastContainerId(uuid())
@@ -328,6 +330,7 @@ export default function useRootProvider({
         dynamicUpload,
         dynamicallyReplaceFiles,
         handleDone,
+        handleCancel,
         handleFileRemove,
         oneDriveConfigs: driveConfigs?.oneDrive,
         googleDriveConfigs: driveConfigs?.googleDrive,

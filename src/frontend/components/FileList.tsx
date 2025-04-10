@@ -16,6 +16,7 @@ export default memo(function FileList() {
         upload: { proceedUpload, uploadStatus, totalProgress },
         props: { mini, dark, classNames },
         handleDone,
+        handleCancel,
     } = useRootContext()
 
     return (
@@ -28,7 +29,7 @@ export default memo(function FileList() {
                 },
             )}
         >
-            <MainBoxHeader handleCancel={handleDone} />
+            <MainBoxHeader handleCancel={handleCancel} />
 
             <MyAnimatePresence>
                 <motion.div

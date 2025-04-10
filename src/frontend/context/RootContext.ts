@@ -71,6 +71,7 @@ export interface IRootContext {
 
     handleFileRemove: (fileId: string) => void
     handleDone: () => void
+    handleCancel: () => void
 
     oneDriveConfigs?: OneDriveConfigs
     googleDriveConfigs?: GoogleDriveConfigs
