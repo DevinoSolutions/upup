@@ -54,6 +54,8 @@ const meta = {
                 progress: 0,
                 upload: async () => [],
                 error: undefined,
+                setFiles(newFiles: File[]) {},
+                dynamicallyReplaceFiles(files: File[]) {},
             })
 
             // Track files directly instead of through a derived value

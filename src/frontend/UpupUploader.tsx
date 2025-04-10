@@ -1,4 +1,5 @@
 import React, { forwardRef, useImperativeHandle } from 'react'
+import { TbLoader } from 'react-icons/tb/index.js'
 import { devinoDark, devinoLight, logoDark, logoLight } from '../assets/logos'
 import { FileWithProgress, UpupUploaderProps } from '../shared/types'
 import DefaultLoaderIcon from './components/DefaultLoaderIcon'
@@ -8,6 +9,7 @@ import RootContext from './context/RootContext'
 import useRootProvider from './hooks/useRootProvider'
 import useUpload from './hooks/useUpload'
 import { cn } from './lib/tailwind'
+
 export type UpupUploaderRef = {
     useUpload(): {
         error?: string
@@ -15,8 +17,11 @@ export type UpupUploaderRef = {
         loading: boolean
         progress: number
         upload(): Promise<string[] | undefined>
+        setFiles(newFiles: File[]): void
+        dynamicallyReplaceFiles(files: File[]): void
     }
 }
+
 export default forwardRef<UpupUploaderRef, UpupUploaderProps>(
     function UpupUploader(props, ref) {
         const providerValues = useRootProvider({
@@ -26,12 +31,15 @@ export default forwardRef<UpupUploaderRef, UpupUploaderProps>(
                 LoaderIcon: DefaultLoaderIcon,
             },
         })
+        const uploadApi = useUpload({
+            upload: providerValues.upload,
+            files: providerValues.files,
+            setFiles: providerValues.setFiles,
+            dynamicallyReplaceFiles: providerValues.dynamicallyReplaceFiles,
+        })
+
         useImperativeHandle(ref, () => ({
-            useUpload: () =>
-                useUpload({
-                    upload: providerValues.upload,
-                    files: providerValues.files,
-                }),
+            useUpload: () => uploadApi,
         }))
 
         return (
@@ -47,7 +55,7 @@ export default forwardRef<UpupUploaderRef, UpupUploaderProps>(
                     <section
                         aria-labelledby="drop-instructions"
                         className={cn(
-                            `upup-shadow-wrapper ${
+                            `upup-shadow-wrapper upup-relative ${
                                 providerValues.props.dark
                                     ? 'upup-bg-[#232323]'
                                     : 'upup-bg-white'
@@ -67,6 +75,17 @@ export default forwardRef<UpupUploaderRef, UpupUploaderProps>(
                             },
                         )}
                     >
+                        <ShouldRender if={providerValues.props.isProcessing}>
+                            <TbLoader
+                                className={cn(
+                                    'upup-absolute upup-right-5 upup-animate-spin upup-text-xs upup-text-xs upup-leading-5 upup-text-[#0E2ADD] md:upup-text-xl',
+                                    {
+                                        'upup-text-[#59D1F9] dark:upup-text-[#59D1F9]':
+                                            providerValues.props.dark,
+                                    },
+                                )}
+                            />
+                        </ShouldRender>
                         <ShouldRender if={providerValues.props.limit > 1}>
                             <p
                                 id="drop-instructions"

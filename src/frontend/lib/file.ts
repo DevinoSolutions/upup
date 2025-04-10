@@ -1,4 +1,5 @@
 import pako from 'pako'
+import { b64EncodeUnicode } from '../../shared/lib/encoder'
 import { FileWithParams, UpupUploaderProps } from '../../shared/types'
 
 /**
@@ -39,7 +40,7 @@ export function checkFileSize(
 
 export const fileAppendParams = (file: File) => {
     Object.assign(file, {
-        id: (file as any).id || btoa(file.name),
+        id: (file as any).id || b64EncodeUnicode(file.name),
         url: (file as any).url || URL.createObjectURL(file),
     })
 

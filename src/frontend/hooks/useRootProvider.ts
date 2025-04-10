@@ -41,6 +41,7 @@ export default function useRootProvider({
     mini = false,
     dark = false,
     limit: propLimit = 1,
+    isProcessing = false,
     maxFileSize = { size: 10, unit: 'MB' },
     shouldCompress = false,
     uploadAdapters = [UploadAdapter.INTERNAL, UploadAdapter.LINK],
@@ -122,6 +123,14 @@ export default function useRootProvider({
         [warningHandler, toastContainerId],
     )
 
+    const dynamicallyReplaceFiles = (files: File[]) => {
+        const filesMap = new Map()
+        for (const file of files) {
+            const fileWithParams = fileAppendParams(file)
+            filesMap.set(fileWithParams.id, fileWithParams)
+        }
+        setSelectedFilesMap(filesMap)
+    }
     const handleSetSelectedFiles = (newFiles: File[]) => {
         onFilesSelected(newFiles)
 
@@ -301,6 +310,7 @@ export default function useRootProvider({
         setIsAddingMore,
         files: selectedFilesMap,
         setFiles: handleSetSelectedFiles,
+        dynamicallyReplaceFiles,
         handleDone,
         handleFileRemove,
         oneDriveConfigs: driveConfigs?.oneDrive,
@@ -327,6 +337,7 @@ export default function useRootProvider({
             accept,
             maxFileSize,
             limit,
+            isProcessing,
             multiple,
             icons: {
                 ContainerAddMoreIcon: icons.ContainerAddMoreIcon || TbPlus,

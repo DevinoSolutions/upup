@@ -3,7 +3,12 @@ import { IRootContext, UploadStatus } from '../context/RootContext'
 export default function useUpload({
     upload,
     files,
-}: Pick<IRootContext, 'upload' | 'files'>) {
+    setFiles,
+    dynamicallyReplaceFiles,
+}: Pick<
+    IRootContext,
+    'upload' | 'files' | 'setFiles' | 'dynamicallyReplaceFiles'
+>) {
     const {
         proceedUpload,
         filesProgressMap,
@@ -28,5 +33,7 @@ export default function useUpload({
         loading: uploadStatus === UploadStatus.ONGOING,
         error: uploadError,
         progress: totalProgress,
+        setFiles,
+        dynamicallyReplaceFiles,
     }
 }

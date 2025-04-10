@@ -37,6 +37,7 @@ type ContextProps = Required<
         | 'uploadAdapters'
         | 'accept'
         | 'limit'
+        | 'isProcessing'
         | 'mini'
         | 'maxFileSize'
         | 'onFileClick'
@@ -61,7 +62,7 @@ export interface IRootContext {
 
     files: Map<string, FileWithParams>
     setFiles: (newFiles: File[]) => void
-
+    dynamicallyReplaceFiles: (files: File[]) => void
     isAddingMore: boolean
     setIsAddingMore: Dispatch<SetStateAction<boolean>>
 
