@@ -136,6 +136,7 @@ export type UpupUploaderProps = {
 
     // Event Handlers
     onFilesSelected?: (files: FileWithParams[]) => void
+    onDoneClicked?: () => void
     onPrepareFiles?: (files: FileWithParams[]) => Promise<FileWithParams[]>
     onFileClick?: (file: FileWithParams) => void
     onIntegrationClick?: (integrationType: string) => void

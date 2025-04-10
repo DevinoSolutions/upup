@@ -62,6 +62,7 @@ export default function useRootProvider({
     onFileUploadComplete = () => {},
     onFilesUploadComplete = () => {},
     onFilesSelected = () => {},
+    onDoneClicked = () => {},
     onPrepareFiles,
     provider,
     tokenEndpoint,
@@ -305,6 +306,7 @@ export default function useRootProvider({
     }
 
     const handleDone = useCallback(() => {
+        onDoneClicked()
         setUploadStatus(UploadStatus.PENDING)
         setSelectedFilesMap(new Map())
         setFilesProgressMap({})
