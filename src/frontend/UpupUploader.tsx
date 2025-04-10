@@ -1,7 +1,7 @@
 import React, { forwardRef, useImperativeHandle } from 'react'
 import { TbLoader } from 'react-icons/tb/index.js'
 import { devinoDark, devinoLight, logoDark, logoLight } from '../assets/logos'
-import { FileWithProgress, UpupUploaderProps } from '../shared/types'
+import { FileWithParams, UpupUploaderProps } from '../shared/types'
 import DefaultLoaderIcon from './components/DefaultLoaderIcon'
 import MainBox from './components/MainBox'
 import ShouldRender from './components/shared/ShouldRender'
@@ -13,12 +13,15 @@ import { cn } from './lib/tailwind'
 export type UpupUploaderRef = {
     useUpload(): {
         error?: string
-        files: Array<FileWithProgress>
+        files: FileWithParams[]
         loading: boolean
         progress: number
         upload(): Promise<string[] | undefined>
+        dynamicUpload(
+            files: File[] | FileWithParams[],
+        ): Promise<string[] | undefined>
         setFiles(newFiles: File[]): void
-        dynamicallyReplaceFiles(files: File[]): void
+        dynamicallyReplaceFiles(files: File[] | FileWithParams[]): void
     }
 }
 
@@ -35,6 +38,7 @@ export default forwardRef<UpupUploaderRef, UpupUploaderProps>(
             upload: providerValues.upload,
             files: providerValues.files,
             setFiles: providerValues.setFiles,
+            dynamicUpload: providerValues.dynamicUpload,
             dynamicallyReplaceFiles: providerValues.dynamicallyReplaceFiles,
         })
 

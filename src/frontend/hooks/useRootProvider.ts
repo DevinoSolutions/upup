@@ -122,12 +122,27 @@ export default function useRootProvider({
                   }),
         [warningHandler, toastContainerId],
     )
+    function isFileWithParamsArray(
+        files: File[] | FileWithParams[],
+    ): files is FileWithParams[] {
+        return files.length > 0 && 'id' in files[0]
+    }
+    async function dynamicUpload(files: File[] | FileWithParams[]) {
+        dynamicallyReplaceFiles(files)
+        return await proceedUpload()
+    }
+    function dynamicallyReplaceFiles(files: File[] | FileWithParams[]) {
+        const filesMap = new Map<string, FileWithParams>()
 
-    const dynamicallyReplaceFiles = (files: File[]) => {
-        const filesMap = new Map()
-        for (const file of files) {
-            const fileWithParams = fileAppendParams(file)
-            filesMap.set(fileWithParams.id, fileWithParams)
+        if (isFileWithParamsArray(files)) {
+            for (const f of files) {
+                filesMap.set(f.id, f)
+            }
+        } else {
+            for (const f of files) {
+                const fileWithParams = fileAppendParams(f)
+                filesMap.set(fileWithParams.id, fileWithParams)
+            }
         }
         setSelectedFilesMap(filesMap)
     }
@@ -216,7 +231,6 @@ export default function useRootProvider({
         },
         [onPrepareFiles],
     )
-
     const proceedUpload = async () => {
         if (!selectedFilesMap.size) return
 
@@ -309,6 +323,7 @@ export default function useRootProvider({
         setIsAddingMore,
         files: selectedFilesMap,
         setFiles: handleSetSelectedFiles,
+        dynamicUpload,
         dynamicallyReplaceFiles,
         handleDone,
         handleFileRemove,

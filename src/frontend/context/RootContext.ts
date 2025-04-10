@@ -62,7 +62,10 @@ export interface IRootContext {
 
     files: Map<string, FileWithParams>
     setFiles: (newFiles: File[]) => void
-    dynamicallyReplaceFiles: (files: File[]) => void
+    dynamicallyReplaceFiles: (files: File[] | FileWithParams[]) => void
+    dynamicUpload: (
+        files: File[] | FileWithParams[],
+    ) => Promise<string[] | undefined>
     isAddingMore: boolean
     setIsAddingMore: Dispatch<SetStateAction<boolean>>
 

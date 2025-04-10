@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react'
 import React, { useEffect, useRef, useState } from 'react'
 import UpupUploader, { UpupUploaderRef } from '../src/frontend/UpupUploader'
 import {
+    FileWithParams,
     FileWithProgress,
     UploadAdapter,
     UpupProvider,
@@ -53,9 +54,12 @@ const meta = {
                 loading: false,
                 progress: 0,
                 upload: async () => [],
+                dynamicUpload(
+                    files: File[] | FileWithParams[],
+                ): Promise<string[] | undefined> {},
                 error: undefined,
                 setFiles(newFiles: File[]) {},
-                dynamicallyReplaceFiles(files: File[]) {},
+                dynamicallyReplaceFiles(files: File[] | FileWithParams[]) {},
             })
 
             // Track files directly instead of through a derived value
@@ -121,6 +125,7 @@ const meta = {
                         onFilesSelected={() => {
                             // Use setTimeout to ensure we get the updated state after React has processed the file selection
                             setTimeout(refreshUploadData, 0)
+                            console.log(ref?.current?.useUpload()?.files)
                         }}
                         onError={() => {
                             // Use setTimeout to ensure we get the updated state after React has processed the error
