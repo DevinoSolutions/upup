@@ -132,10 +132,9 @@ export default function useRootProvider({
         setSelectedFilesMap(filesMap)
     }
     const handleSetSelectedFiles = (newFiles: File[]) => {
-        onFilesSelected(newFiles)
-
         const newFilesMap = new Map(selectedFilesMap)
         const newFilesMapArray = Array.from(newFilesMap.values())
+        const newFilesWithParams: FileWithParams[] = []
         for (const file of newFiles) {
             // Check if files length has surpassed the limit
             if (newFilesMap.size >= limit) {
@@ -143,7 +142,7 @@ export default function useRootProvider({
                 break
             }
             const fileWithParams = fileAppendParams(file)
-
+            newFilesWithParams.push(fileWithParams)
             if (!checkFileType(accept, file)) {
                 onError(`${file.name} has an unsupported type!`)
                 onFileTypeMismatch(file, accept)
@@ -166,8 +165,8 @@ export default function useRootProvider({
                 setSelectedFilesMap(newFilesMap)
             }
         }
-
         setIsAddingMore(false)
+        onFilesSelected(newFilesWithParams)
     }
 
     const handleFileRemove = useCallback(

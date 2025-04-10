@@ -4,6 +4,7 @@ export {
     UpupUploaderRef,
 } from './frontend/UpupUploader'
 export {
+    FileWithParams,
     FileWithProgress,
     GoogleDriveConfigs,
     OneDriveConfigs,

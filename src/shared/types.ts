@@ -135,7 +135,7 @@ export type UpupUploaderProps = {
     icons?: UpupUploaderPropsIcons
 
     // Event Handlers
-    onFilesSelected?: (files: File[]) => void
+    onFilesSelected?: (files: FileWithParams[]) => void
     onPrepareFiles?: (files: FileWithParams[]) => Promise<FileWithParams[]>
     onFileClick?: (file: FileWithParams) => void
     onIntegrationClick?: (integrationType: string) => void
