@@ -42,6 +42,7 @@ export default function useRootProvider({
     dark = false,
     limit: propLimit = 1,
     isProcessing = false,
+    allowPreview = true,
     maxFileSize = { size: 10, unit: 'MB' },
     shouldCompress = false,
     uploadAdapters = [UploadAdapter.INTERNAL, UploadAdapter.LINK],
@@ -357,6 +358,7 @@ export default function useRootProvider({
             maxFileSize,
             limit,
             isProcessing,
+            allowPreview,
             multiple,
             icons: {
                 ContainerAddMoreIcon: icons.ContainerAddMoreIcon || TbPlus,

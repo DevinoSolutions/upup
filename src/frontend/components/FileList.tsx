@@ -14,7 +14,7 @@ export default memo(function FileList() {
         activeAdapter,
         files,
         upload: { proceedUpload, uploadStatus, totalProgress },
-        props: { mini, dark, classNames },
+        props: { mini, dark, classNames, allowPreview },
         handleDone,
         handleCancel,
     } = useRootContext()
@@ -41,10 +41,13 @@ export default memo(function FileList() {
                 >
                     <div
                         className={cn(
-                            'upup-flex upup-flex-col upup-gap-4 md:upup-grid md:upup-gap-y-6',
+                            // Always-on classes
+                            'upup-flex upup-flex-col upup-gap-4',
                             {
-                                'md:upup-grid-cols-3': files.size > 1,
-                                'upup-flex-1': files.size === 1,
+                                'md:upup-grid md:upup-gap-y-6': allowPreview,
+                                'md:upup-grid-cols-3':
+                                    allowPreview && files.size > 1,
+                                'upup-flex-1': files.size === 1 && allowPreview,
                                 [classNames.fileListContainerInnerMultiple!]:
                                     classNames.fileListContainerInnerMultiple &&
                                     files.size > 1,
