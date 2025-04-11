@@ -289,13 +289,11 @@ export default function useRootProvider({
                     }),
                 ),
             )
-
-            // Extract keys from results
-            const uploadedFileKeys = uploadResults.map(result => result.key)
-            onFilesUploadComplete(uploadedFileKeys)
+            const finalFiles = uploadResults.map(result => result.file)
+            onFilesUploadComplete(finalFiles)
 
             setUploadStatus(UploadStatus.SUCCESSFUL)
-            return uploadedFileKeys
+            return uploadResults.map(result => result.key)
         } catch (error) {
             onError((error as Error).message)
             setUploadStatus(UploadStatus.FAILED)

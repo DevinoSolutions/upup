@@ -15,6 +15,7 @@ export default function MainBoxHeader({ handleCancel }: Readonly<Props>) {
         props: {
             mini,
             limit,
+            isProcessing,
             dark,
             classNames,
             icons: { ContainerAddMoreIcon },
@@ -49,7 +50,7 @@ export default function MainBoxHeader({ handleCancel }: Readonly<Props>) {
                     classNames.containerCancelButton,
                 )}
                 onClick={handleCancel}
-                disabled={isUploading}
+                disabled={isUploading || isProcessing}
             >
                 {cancelText}
             </button>
@@ -77,7 +78,7 @@ export default function MainBoxHeader({ handleCancel }: Readonly<Props>) {
                         classNames.containerAddMoreButton,
                     )}
                     onClick={() => setIsAddingMore(true)}
-                    disabled={isUploading}
+                    disabled={isUploading || isProcessing}
                 >
                     <ContainerAddMoreIcon /> Add More
                 </button>

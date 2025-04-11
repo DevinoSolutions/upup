@@ -14,7 +14,7 @@ export default memo(function FileList() {
         activeAdapter,
         files,
         upload: { proceedUpload, uploadStatus, totalProgress },
-        props: { mini, dark, classNames, allowPreview },
+        props: { mini, dark, classNames, allowPreview, isProcessing },
         handleDone,
         handleCancel,
     } = useRootContext()
@@ -83,7 +83,10 @@ export default memo(function FileList() {
                             classNames.uploadButton,
                         )}
                         onClick={proceedUpload}
-                        disabled={uploadStatus === UploadStatus.ONGOING}
+                        disabled={
+                            uploadStatus === UploadStatus.ONGOING ||
+                            isProcessing
+                        }
                     >
                         Upload {files.size} file{files.size > 1 ? 's' : ''}
                     </button>
