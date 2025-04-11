@@ -56,7 +56,7 @@ const meta = {
                 upload: async () => [],
                 dynamicUpload(
                     files: File[] | FileWithParams[],
-                ): Promise<string[] | undefined> {},
+                ): Promise<FileWithParams[] | undefined> {},
                 error: undefined,
                 setFiles(newFiles: File[]) {},
                 dynamicallyReplaceFiles(files: File[] | FileWithParams[]) {},

@@ -293,12 +293,10 @@ export default function useRootProvider({
             onFilesUploadComplete(finalFiles)
 
             setUploadStatus(UploadStatus.SUCCESSFUL)
-            return uploadResults.map(result => result.key)
+            return finalFiles
         } catch (error) {
             onError((error as Error).message)
             setUploadStatus(UploadStatus.FAILED)
-
-            // Reset progress map
             setFilesProgressMap({})
             return
         }

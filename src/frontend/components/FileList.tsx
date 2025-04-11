@@ -42,7 +42,10 @@ export default memo(function FileList() {
                     <div
                         className={cn(
                             // Always-on classes
-                            'upup-flex upup-flex-col upup-gap-4',
+                            ` ${
+                                isProcessing &&
+                                'upup-pointer-events-none upup-opacity-75'
+                            }  upup-flex upup-flex-col upup-gap-4`,
                             {
                                 'md:upup-grid md:upup-gap-y-6': allowPreview,
                                 'md:upup-grid-cols-3':
