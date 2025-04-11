@@ -16,6 +16,7 @@ export type UploadOptions = Pick<
 > & {
     path?: string
     metadata?: Record<string, string>
+    sendEvent: boolean
     onFilesUploadProgress(completedFiles: number): void
 }
 

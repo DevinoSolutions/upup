@@ -55,8 +55,8 @@ export class ProviderSDK implements StorageSDK {
 
             if (!uploadResponse.ok)
                 throw new Error(`status ${uploadResponse.status}`)
-
-            options.onFileUploadComplete?.(file, presignedData.key)
+            if (options.sendEvent)
+                options.onFileUploadComplete?.(file, presignedData.key)
             file.key = presignedData.key
             return {
                 key: presignedData.key,

@@ -131,7 +131,7 @@ export default function useRootProvider({
     }
     async function dynamicUpload(files: File[] | FileWithParams[]) {
         dynamicallyReplaceFiles(files)
-        return await proceedUpload()
+        return await proceedUpload(false)
     }
     function dynamicallyReplaceFiles(files: File[] | FileWithParams[]) {
         const filesMap = new Map<string, FileWithParams>()
@@ -233,7 +233,7 @@ export default function useRootProvider({
         },
         [onPrepareFiles],
     )
-    const proceedUpload = async () => {
+    const proceedUpload = async (sendEvent: boolean = true) => {
         if (!selectedFilesMap.size) return
 
         setUploadStatus(UploadStatus.ONGOING)
@@ -280,6 +280,7 @@ export default function useRootProvider({
                             onFileUploadProgress(file, progress)
                         },
                         onFileUploadComplete,
+                        sendEvent,
                         onError,
                         onFilesUploadProgress: (completedFiles: number) =>
                             onFilesUploadProgress(
@@ -290,7 +291,7 @@ export default function useRootProvider({
                 ),
             )
             const finalFiles = uploadResults.map(result => result.file)
-            onFilesUploadComplete(finalFiles)
+            if (sendEvent) onFilesUploadComplete(finalFiles)
 
             setUploadStatus(UploadStatus.SUCCESSFUL)
             return finalFiles
