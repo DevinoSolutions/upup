@@ -68,13 +68,9 @@ export default memo(
         return (
             <IconComponent
                 ref={ref}
-                className={cn(
-                    'upup-text-5xl upup-text-blue-600 md:upup-text-8xl',
-                    className,
-                    {
-                        'upup-text-[#59D1F9] dark:upup-text-[#59D1F9]': dark,
-                    },
-                )}
+                className={cn('upup-text-5xl upup-text-blue-600', className, {
+                    'upup-text-[#59D1F9] dark:upup-text-[#59D1F9]': dark,
+                })}
                 {...restProps}
             />
         )

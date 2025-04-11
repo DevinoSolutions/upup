@@ -13,6 +13,7 @@ type Props = {
     fileUrl: string
     showIcon: boolean
     classNames: UpupUploaderPropsClassNames
+    allowPreview: boolean
 }
 
 export default memo(
@@ -24,13 +25,13 @@ export default memo(
         fileType,
         showIcon,
         classNames,
+        allowPreview,
     }: Props) {
         const extension = useMemo(
             () => fileGetExtension(fileType, fileName),
             [fileType, fileName],
         )
 
-        // New check for 3D
         const is3D = useMemo(() => {
             return fileIs3D(extension?.toLowerCase() || '')
         }, [extension])
@@ -66,17 +67,18 @@ export default memo(
                     <FileIcon
                         extension={extension}
                         className={cn(
-                            'md:upup-hidden',
                             {
-                                hidden: !showIcon,
+                                'md:upup-hidden': allowPreview,
                             },
                             classNames.fileIcon,
                         )}
                     />
                     <div
-                        className={cn('upup-relative upup-h-full upup-w-full', {
-                            'upup-hidden md:upup-block': showIcon,
-                        })}
+                        className={cn(
+                            `upup-relative upup-hidden upup-h-full upup-w-full ${
+                                allowPreview && 'md:upup-block'
+                            }`,
+                        )}
                     >
                         <object
                             data={fileUrl}
@@ -84,7 +86,7 @@ export default memo(
                             height="100%"
                             name={fileName}
                             type={fileType}
-                            className="upup-absolute upup-max-h-full upup-max-w-full"
+                            className="upup-absolute upup-h-full upup-w-full"
                         >
                             <p>Loading...</p>
                         </object>

@@ -38,6 +38,7 @@ type ContextProps = Required<
         | 'accept'
         | 'limit'
         | 'isProcessing'
+        | 'allowPreview'
         | 'mini'
         | 'maxFileSize'
         | 'onFileClick'
@@ -78,7 +79,6 @@ export interface IRootContext {
 
     upload: ContextUpload
     props: ContextProps
-
     toastContainerId?: string
 }
 

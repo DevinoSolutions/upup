@@ -14,7 +14,7 @@ type Props = {
 export default memo(function FileItem({ file }: Props) {
     const {
         files,
-        props: { dark, classNames, onFileClick },
+        props: { dark, classNames, onFileClick, allowPreview },
     } = useRootContext()
     const [showPreviewPortal, setShowPreviewPortal] = useState(false)
     const [canPreview, setCanPreview] = useState(false)
@@ -37,12 +37,16 @@ export default memo(function FileItem({ file }: Props) {
     return (
         <div
             className={cn(
-                'upup-relative upup-flex upup-flex-1 upup-gap-2 upup-rounded upup-border upup-border-[#6D6D6D] upup-bg-white md:upup-static md:upup-basis-32 md:upup-rounded-none md:upup-border-none md:upup-bg-transparent',
+                `upup-relative upup-flex upup-flex-1 upup-gap-2 upup-rounded upup-border upup-border-[#6D6D6D] ${
+                    dark ? 'upup-bg-[#2e2e2e] ' : 'upup-bg-white'
+                } `,
                 {
-                    'md:upup-flex-col': files.size > 1,
-                    'upup-flex-col': files.size === 1,
-                    'upup-bg-[#1F1F1F] dark:upup-bg-[#1F1F1F] md:upup-bg-transparent md:dark:upup-bg-transparent':
-                        dark,
+                    'md:upup-static md:upup-basis-32 md:upup-rounded-none md:upup-border-none md:upup-bg-transparent':
+                        allowPreview,
+                    'md:upup-flex-col': allowPreview && files.size > 1,
+                    'upup-flex-col': files.size === 1 && allowPreview,
+                    'md:upup-bg-transparent md:dark:upup-bg-transparent':
+                        allowPreview && dark,
                     [classNames.fileItemMultiple!]:
                         classNames.fileItemMultiple && files.size > 1,
                     [classNames.fileItemSingle!]:
@@ -61,13 +65,18 @@ export default memo(function FileItem({ file }: Props) {
             />
             <div
                 className={cn(
-                    'upup-flex upup-flex-col upup-items-start upup-justify-between upup-p-2 upup-pt-0 md:upup-p-0',
+                    'upup-flex upup-flex-col upup-items-start upup-justify-between upup-p-2 upup-pt-0',
+                    {
+                        'md:upup-p-0': allowPreview,
+                    },
                     classNames.fileInfo,
                 )}
             >
                 <p
                     className={cn(
-                        'upup-max-w-full upup-flex-1 upup-truncate upup-text-xs upup-text-[#0B0B0B]',
+                        `  ${
+                            !allowPreview ? 'md:upup-mt-2' : 'md:upup-mt-0'
+                        } upup-mt-2   upup-max-w-full upup-flex-1 upup-truncate upup-text-xs upup-text-[#0B0B0B]`,
                         {
                             'upup-text-white dark:upup-text-white': dark,
                         },

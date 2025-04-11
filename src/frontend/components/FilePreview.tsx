@@ -45,6 +45,7 @@ export default memo(
                 dark,
                 classNames,
                 icons: { FileDeleteIcon },
+                allowPreview,
             },
             files,
         } = useRootContext()
@@ -76,12 +77,15 @@ export default memo(
             <div
                 ref={ref}
                 className={cn(
-                    'upup-shadow-right upup-flex upup-cursor-pointer upup-items-center upup-justify-center upup-rounded-b-[4px] upup-rounded-l upup-bg-white upup-bg-contain upup-bg-center upup-bg-no-repeat md:upup-relative md:upup-rounded-r md:upup-shadow-md',
+                    'upup-shadow-right upup-flex upup-cursor-pointer upup-items-center upup-justify-center upup-rounded-b-[4px] upup-rounded-l upup-bg-white upup-bg-contain upup-bg-center upup-bg-no-repeat',
                     {
+                        'upup-max-h-16': !allowPreview,
+                        'md:upup-relative md:upup-rounded-r md:upup-shadow-md':
+                            allowPreview,
                         'upup-bg-[#232323] dark:upup-bg-[#232323]': dark,
-                        'upup-aspect-square upup-w-14 md:upup-w-full':
-                            files.size > 1,
-                        'upup-flex-1': files.size === 1,
+                        'upup-aspect-square upup-w-14': files.size > 1,
+                        'md:upup-w-full': allowPreview && files.size > 1,
+                        'upup-flex-1': files.size === 1 && allowPreview,
                         [classNames.fileThumbnailMultiple!]:
                             classNames.fileThumbnailMultiple && files.size > 1,
                         [classNames.fileThumbnailSingle!]:
@@ -104,13 +108,17 @@ export default memo(
                         fileType={fileType}
                         fileName={fileName}
                         fileUrl={fileUrl}
+                        allowPreview={allowPreview}
                         showIcon={files.size > 1}
                         classNames={classNames}
                     />
                 </ShouldRender>
                 <button
                     className={cn(
-                        'upup-z-1 upup-absolute upup--right-[10px] upup--top-[10px] upup-scale-90 upup-rounded-full md:upup-scale-100',
+                        'upup-z-1 upup-absolute upup--right-[10px] upup--top-[10px] upup-scale-90 upup-rounded-full',
+                        {
+                            'md:upup-scale-100': allowPreview,
+                        },
                         classNames.fileDeleteButton,
                     )}
                     onClick={onHandleFileRemove}

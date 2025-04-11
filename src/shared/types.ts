@@ -126,6 +126,7 @@ export type UpupUploaderProps = {
     shouldCompress?: boolean
     accept?: string
     limit?: number
+    allowPreview?: boolean
     isProcessing?: boolean
     mini?: boolean
     maxFileSize?: MaxFileSizeObject
