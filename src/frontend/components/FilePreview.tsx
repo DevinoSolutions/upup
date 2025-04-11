@@ -109,7 +109,6 @@ export default memo(
                         fileName={fileName}
                         fileUrl={fileUrl}
                         allowPreview={allowPreview}
-                        showIcon={files.size > 1}
                         classNames={classNames}
                     />
                 </ShouldRender>

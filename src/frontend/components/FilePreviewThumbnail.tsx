@@ -11,7 +11,6 @@ type Props = {
     fileType: string
     fileName: string
     fileUrl: string
-    showIcon: boolean
     classNames: UpupUploaderPropsClassNames
     allowPreview: boolean
 }
@@ -23,7 +22,6 @@ export default memo(
         fileUrl,
         fileName,
         fileType,
-        showIcon,
         classNames,
         allowPreview,
     }: Props) {
@@ -98,6 +96,5 @@ export default memo(
     (prev, next) =>
         prev.canPreview === next.canPreview &&
         prev.fileType === next.fileType &&
-        prev.fileUrl === next.fileUrl &&
-        prev.showIcon === next.showIcon,
+        prev.fileUrl === next.fileUrl,
 )
