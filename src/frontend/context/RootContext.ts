@@ -28,7 +28,7 @@ type ContextUpload = {
     setUploadStatus: Dispatch<SetStateAction<UploadStatus>>
     totalProgress: number
     filesProgressMap: FilesProgressMap
-    proceedUpload: () => Promise<string[] | undefined>
+    proceedUpload: () => Promise<FileWithParams[] | undefined>
 }
 
 type ContextProps = Required<
@@ -66,7 +66,7 @@ export interface IRootContext {
     dynamicallyReplaceFiles: (files: File[] | FileWithParams[]) => void
     dynamicUpload: (
         files: File[] | FileWithParams[],
-    ) => Promise<string[] | undefined>
+    ) => Promise<FileWithParams[] | undefined>
     isAddingMore: boolean
     setIsAddingMore: Dispatch<SetStateAction<boolean>>
 

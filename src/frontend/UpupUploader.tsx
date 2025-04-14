@@ -16,10 +16,10 @@ export type UpupUploaderRef = {
         files: FileWithParams[]
         loading: boolean
         progress: number
-        upload(): Promise<string[] | undefined>
+        upload(): Promise<FileWithParams[] | undefined>
         dynamicUpload(
             files: File[] | FileWithParams[],
-        ): Promise<string[] | undefined>
+        ): Promise<FileWithParams[] | undefined>
         setFiles(newFiles: File[]): void
         dynamicallyReplaceFiles(files: File[] | FileWithParams[]): void
     }

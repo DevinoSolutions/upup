@@ -7,7 +7,7 @@ export default function useMainBox() {
         activeAdapter,
         isAddingMore,
         upload: { uploadStatus },
-        props: { onFilesDragOver, onFilesDragLeave, onFilesDrop },
+        props: { onFilesDragOver, onFilesDragLeave, onFilesDrop, isProcessing },
         setFiles,
     } = useRootContext()
     const [isDragging, setIsDragging] = useState(false)
@@ -26,7 +26,7 @@ export default function useMainBox() {
 
     const handleDragOver: DragEventHandler<HTMLDivElement> = useCallback(
         e => {
-            if (disableDragAction) return
+            if (disableDragAction || isProcessing) return
             e.preventDefault()
 
             setIsDragging(true)
@@ -35,12 +35,12 @@ export default function useMainBox() {
             const files = Array.from(e.dataTransfer.files)
             onFilesDragOver(files)
         },
-        [disableDragAction, onFilesDragOver],
+        [disableDragAction, onFilesDragOver, isProcessing],
     )
 
     const handleDragLeave: DragEventHandler<HTMLDivElement> = useCallback(
         e => {
-            if (disableDragAction) return
+            if (disableDragAction || isProcessing) return
             e.preventDefault()
 
             setIsDragging(false)
@@ -48,12 +48,12 @@ export default function useMainBox() {
             const files = Array.from(e.dataTransfer.files)
             onFilesDragLeave(files)
         },
-        [disableDragAction, onFilesDragLeave],
+        [disableDragAction, onFilesDragLeave, isProcessing],
     )
 
     const handleDrop: DragEventHandler<HTMLDivElement> = useCallback(
         e => {
-            if (disableDragAction) return
+            if (disableDragAction || isProcessing) return
             e.preventDefault()
 
             const droppedFiles = Array.from(e.dataTransfer.files)
@@ -63,7 +63,7 @@ export default function useMainBox() {
 
             setIsDragging(false)
         },
-        [disableDragAction, onFilesDrop, setFiles],
+        [disableDragAction, onFilesDrop, setFiles, isProcessing],
     )
 
     return {

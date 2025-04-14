@@ -48,6 +48,7 @@ const meta = {
                 }}
             >
                 <UpupUploader
+                    allowPreview={false}
                     onFilesSelected={files => {
                         console.log(files)
                     }}

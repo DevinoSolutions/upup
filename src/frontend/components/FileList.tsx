@@ -14,7 +14,7 @@ export default memo(function FileList() {
         activeAdapter,
         files,
         upload: { proceedUpload, uploadStatus, totalProgress },
-        props: { mini, dark, classNames, allowPreview },
+        props: { mini, dark, classNames, allowPreview, isProcessing },
         handleDone,
         handleCancel,
     } = useRootContext()
@@ -42,7 +42,10 @@ export default memo(function FileList() {
                     <div
                         className={cn(
                             // Always-on classes
-                            'upup-flex upup-flex-col upup-gap-4',
+                            ` ${
+                                isProcessing &&
+                                'upup-pointer-events-none upup-opacity-75'
+                            }  upup-flex upup-flex-col upup-gap-4`,
                             {
                                 'md:upup-grid md:upup-gap-y-6': allowPreview,
                                 'md:upup-grid-cols-3':
@@ -82,8 +85,13 @@ export default memo(function FileList() {
                             },
                             classNames.uploadButton,
                         )}
-                        onClick={proceedUpload}
-                        disabled={uploadStatus === UploadStatus.ONGOING}
+                        onClick={() => {
+                            proceedUpload()
+                        }}
+                        disabled={
+                            uploadStatus === UploadStatus.ONGOING ||
+                            isProcessing
+                        }
                     >
                         Upload {files.size} file{files.size > 1 ? 's' : ''}
                     </button>

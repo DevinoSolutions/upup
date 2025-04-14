@@ -1,4 +1,4 @@
-import { UpupUploaderProps } from '../../shared/types'
+import { FileWithParams, UpupUploaderProps } from '../../shared/types'
 
 export interface UploadProgress {
     loaded: number
@@ -16,11 +16,13 @@ export type UploadOptions = Pick<
 > & {
     path?: string
     metadata?: Record<string, string>
+    sendEvent: boolean
     onFilesUploadProgress(completedFiles: number): void
 }
 
 export interface UploadResult {
     key: string
+    file: FileWithParams
     httpStatus: number
 }
 

@@ -143,7 +143,7 @@ export type UpupUploaderProps = {
     onIntegrationClick?: (integrationType: string) => void
     onFileUploadStart?: (file: FileWithParams) => void
     onFileUploadComplete?: (file: FileWithParams, key: string) => void
-    onFilesUploadComplete?: (keys: string[]) => void
+    onFilesUploadComplete?: (fileWithParams: FileWithParams[]) => void
     onFileUploadProgress?: (
         file: FileWithParams,
         {
@@ -199,6 +199,15 @@ export class UploadError extends Error {
     }
 }
 
-export type FileWithParams = File & { id: string; url: string }
+export type FileWithParams = File & {
+    id: string
+    url: string
+    key?: string
+    fileHash?: string | undefined
+    thumbnail?: {
+        file: File
+        key?: string
+    }
+}
 
 export type FileWithProgress = FileWithParams & { progress: number }
