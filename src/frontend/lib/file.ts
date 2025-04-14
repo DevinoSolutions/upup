@@ -57,6 +57,7 @@ export async function compressFile(oldFile: FileWithParams) {
     const newFileWithParams = fileAppendParams(compressed)
     newFileWithParams.id = oldFile.id
     newFileWithParams.thumbnail = oldFile.thumbnail
+    newFileWithParams.fileHash = oldFile.fileHash
     newFileWithParams.key = oldFile.key
 
     return newFileWithParams
