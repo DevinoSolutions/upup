@@ -203,6 +203,7 @@ export type FileWithParams = File & {
     id: string
     url: string
     key?: string
+    fileHash?: string | undefined
     thumbnail?: {
         file: File
         key?: string
