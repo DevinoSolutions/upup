@@ -85,7 +85,9 @@ export default memo(function FileList() {
                             },
                             classNames.uploadButton,
                         )}
-                        onClick={proceedUpload}
+                        onClick={() => {
+                            proceedUpload()
+                        }}
                         disabled={
                             uploadStatus === UploadStatus.ONGOING ||
                             isProcessing

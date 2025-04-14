@@ -199,6 +199,14 @@ export class UploadError extends Error {
     }
 }
 
-export type FileWithParams = File & { id: string; url: string; key?: string }
+export type FileWithParams = File & {
+    id: string
+    url: string
+    key?: string
+    thumbnail?: {
+        file: File
+        key?: string
+    }
+}
 
 export type FileWithProgress = FileWithParams & { progress: number }

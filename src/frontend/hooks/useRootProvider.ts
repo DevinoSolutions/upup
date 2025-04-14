@@ -130,12 +130,13 @@ export default function useRootProvider({
         return files.length > 0 && 'id' in files[0]
     }
     async function dynamicUpload(files: File[] | FileWithParams[]) {
-        dynamicallyReplaceFiles(files)
-        return await proceedUpload(false)
+        const filesToUpload = isFileWithParamsArray(files)
+            ? files
+            : files.map(file => fileAppendParams(file))
+        return await proceedUpload(filesToUpload)
     }
     function dynamicallyReplaceFiles(files: File[] | FileWithParams[]) {
         const filesMap = new Map<string, FileWithParams>()
-
         if (isFileWithParamsArray(files)) {
             for (const f of files) {
                 filesMap.set(f.id, f)
@@ -203,9 +204,8 @@ export default function useRootProvider({
         async (files: FileWithParams[]) => {
             try {
                 return await Promise.all(
-                    files.map(async file => {
-                        const compressed = await compressFile(file)
-                        return compressed
+                    files.map(async oldFile => {
+                        return await compressFile(oldFile)
                     }),
                 )
             } catch (error) {
@@ -224,7 +224,6 @@ export default function useRootProvider({
                     loaded: 0,
                     total: b.size,
                 }
-
                 return a
             }, {} as FilesProgressMap)
             setFilesProgressMap(progressMap)
@@ -233,75 +232,95 @@ export default function useRootProvider({
         },
         [onPrepareFiles],
     )
-    const proceedUpload = async (sendEvent: boolean = true) => {
-        if (!selectedFilesMap.size) return
+    const proceedUpload = useCallback(
+        async (dynamicFiles: FileWithParams[] | undefined = undefined) => {
+            if (!selectedFilesMap.size && !dynamicFiles) return
+            setUploadStatus(UploadStatus.ONGOING)
+            setUploadError('')
+            const sendEvent = !dynamicFiles
+            const selectedFiles = dynamicFiles
+                ? dynamicFiles
+                : Array.from(selectedFilesMap.values())
+            try {
+                const compressedFiles = shouldCompress
+                    ? await compressFiles(selectedFiles)
+                    : selectedFiles
+                const processedFiles = await handlePrepareFiles(compressedFiles)
+                // Initialize SDK
+                const sdk = new ProviderSDK({
+                    provider,
+                    tokenEndpoint,
+                    constraints: {
+                        multiple,
+                        accept,
+                        maxFileSize: sizeToBytes(
+                            maxFileSize.size,
+                            maxFileSize.unit,
+                        ),
+                    },
+                    customProps,
+                    enableAutoCorsConfig,
+                })
 
-        setUploadStatus(UploadStatus.ONGOING)
-        setUploadError('')
-
-        const selectedFiles = Array.from(selectedFilesMap.values())
-
-        try {
-            const compressedFiles = shouldCompress
-                ? await compressFiles(selectedFiles)
-                : selectedFiles
-
-            const processedFiles = await handlePrepareFiles(compressedFiles)
-
-            // Initialize SDK
-            const sdk = new ProviderSDK({
-                provider,
-                tokenEndpoint,
-                constraints: {
-                    multiple,
-                    accept,
-                    maxFileSize: sizeToBytes(
-                        maxFileSize.size,
-                        maxFileSize.unit,
+                // Upload files
+                const uploadResults = await Promise.all(
+                    processedFiles.map(file =>
+                        sdk.upload(file, {
+                            onFileUploadStart,
+                            onFileUploadProgress: (file, progress) => {
+                                setFilesProgressMap(prev => ({
+                                    ...prev,
+                                    [file.id]: {
+                                        ...prev[file.id],
+                                        loaded: progress.loaded,
+                                    },
+                                }))
+                                onFileUploadProgress(file, progress)
+                            },
+                            onFileUploadComplete,
+                            sendEvent,
+                            onError,
+                            onFilesUploadProgress: (completedFiles: number) =>
+                                onFilesUploadProgress(
+                                    completedFiles,
+                                    processedFiles.length,
+                                ),
+                        }),
                     ),
-                },
-                customProps,
-                enableAutoCorsConfig,
-            })
+                )
+                const finalFiles = uploadResults.map(result => result.file)
+                if (sendEvent) onFilesUploadComplete(finalFiles)
 
-            // Upload files
-            const uploadResults = await Promise.all(
-                processedFiles.map(file =>
-                    sdk.upload(file, {
-                        onFileUploadStart,
-                        onFileUploadProgress: (file, progress) => {
-                            setFilesProgressMap(prev => ({
-                                ...prev,
-                                [file.id]: {
-                                    ...prev[file.id],
-                                    loaded: progress.loaded,
-                                },
-                            }))
-                            onFileUploadProgress(file, progress)
-                        },
-                        onFileUploadComplete,
-                        sendEvent,
-                        onError,
-                        onFilesUploadProgress: (completedFiles: number) =>
-                            onFilesUploadProgress(
-                                completedFiles,
-                                processedFiles.length,
-                            ),
-                    }),
-                ),
-            )
-            const finalFiles = uploadResults.map(result => result.file)
-            if (sendEvent) onFilesUploadComplete(finalFiles)
-
-            setUploadStatus(UploadStatus.SUCCESSFUL)
-            return finalFiles
-        } catch (error) {
-            onError((error as Error).message)
-            setUploadStatus(UploadStatus.FAILED)
-            setFilesProgressMap({})
-            return
-        }
-    }
+                setUploadStatus(UploadStatus.SUCCESSFUL)
+                return finalFiles
+            } catch (error) {
+                onError((error as Error).message)
+                setUploadStatus(UploadStatus.FAILED)
+                setFilesProgressMap({})
+                return
+            }
+        },
+        [
+            selectedFilesMap,
+            shouldCompress,
+            compressFiles,
+            handlePrepareFiles,
+            provider,
+            tokenEndpoint,
+            multiple,
+            accept,
+            maxFileSize.size,
+            maxFileSize.unit,
+            customProps,
+            enableAutoCorsConfig,
+            onFilesUploadComplete,
+            onFileUploadStart,
+            onFileUploadComplete,
+            onError,
+            onFileUploadProgress,
+            onFilesUploadProgress,
+        ],
+    )
     const handleDone = useCallback(() => {
         onDoneClicked()
         handleCancel()

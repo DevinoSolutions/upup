@@ -35,7 +35,6 @@ export class ProviderSDK implements StorageSDK {
         options = {} as UploadOptions,
     ): Promise<UploadResult> {
         try {
-            // Check if multiple files are allowed
             if (!this.config.constraints?.multiple && this.uploadCount > 0)
                 throw new Error('Multiple file uploads are not allowed')
 
@@ -55,9 +54,26 @@ export class ProviderSDK implements StorageSDK {
 
             if (!uploadResponse.ok)
                 throw new Error(`status ${uploadResponse.status}`)
-            if (options.sendEvent)
+            if (options.sendEvent) {
                 options.onFileUploadComplete?.(file, presignedData.key)
+            }
             file.key = presignedData.key
+            if (file.thumbnail?.file) {
+                const thumbnailPresignedData = await this.getPresignedUrl(
+                    file.thumbnail.file,
+                    true,
+                )
+                const thumbnailUploadResponse = await this.uploadWithProgress(
+                    thumbnailPresignedData.uploadUrl,
+                    file.thumbnail.file,
+                    options,
+                    true,
+                )
+                if (!thumbnailUploadResponse.ok) {
+                    throw new Error(`status ${thumbnailUploadResponse.status}`)
+                }
+                file.thumbnail.key = thumbnailPresignedData.key
+            }
             return {
                 key: presignedData.key,
                 file,
@@ -69,12 +85,14 @@ export class ProviderSDK implements StorageSDK {
     }
 
     private async getPresignedUrl(
-        file: FileWithParams,
+        file: FileWithParams | File,
+        isThumbnail?: boolean,
     ): Promise<PresignedUrlResponse> {
         const requestBody = {
             name: file.name,
             type: file.type,
             size: file.size,
+            isThumbnail: isThumbnail,
             provider: this.config.provider,
             customProps: this.config.customProps,
             enableAutoCorsConfig: this.config.enableAutoCorsConfig,
@@ -99,21 +117,30 @@ export class ProviderSDK implements StorageSDK {
 
     private async uploadWithProgress(
         url: string,
-        file: FileWithParams,
+        file: FileWithParams | File,
         { onFileUploadProgress, onFilesUploadProgress }: UploadOptions,
+        isThumbnail?: boolean,
     ): Promise<Response> {
         return new Promise((resolve, reject) => {
             const xhr = new XMLHttpRequest()
 
             xhr.upload.addEventListener('progress', event => {
-                if (event.lengthComputable && onFileUploadProgress) {
-                    onFileUploadProgress(file, {
+                if (
+                    event.lengthComputable &&
+                    onFileUploadProgress &&
+                    !isThumbnail
+                ) {
+                    onFileUploadProgress(file as FileWithParams, {
                         loaded: event.loaded,
                         total: event.total,
                         percentage: (event.loaded / event.total) * 100,
                     })
                 }
-                if (event.lengthComputable && onFilesUploadProgress) {
+                if (
+                    event.lengthComputable &&
+                    onFilesUploadProgress &&
+                    !isThumbnail
+                ) {
                     onFilesUploadProgress(this.uploadCount)
                 }
             })

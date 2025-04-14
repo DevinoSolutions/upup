@@ -47,13 +47,19 @@ export const fileAppendParams = (file: File) => {
     return file as FileWithParams
 }
 
-export async function compressFile(file: FileWithParams) {
-    const buffer = await file.arrayBuffer()
-    return fileAppendParams(
-        new File([pako.gzip(buffer)], file.name + '.gz', {
-            type: 'application/octet-stream',
-        }),
-    )
+export async function compressFile(oldFile: FileWithParams) {
+    const buffer = await oldFile.arrayBuffer()
+
+    const compressed = new File([pako.gzip(buffer)], oldFile.name + '.gz', {
+        type: 'application/octet-stream',
+        lastModified: oldFile.lastModified,
+    })
+    const newFileWithParams = fileAppendParams(compressed)
+    newFileWithParams.id = oldFile.id
+    newFileWithParams.thumbnail = oldFile.thumbnail
+    newFileWithParams.key = oldFile.key
+
+    return newFileWithParams
 }
 
 export function searchDriveFiles<
