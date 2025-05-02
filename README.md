@@ -1,6 +1,6 @@
 # Upup – React File Uploads Made Easy ☁️
 
-[![CI](https://github.com/DevinoSolutions/upup/actions/workflows/main.yml/badge.svg?branch=master)](https://github.com/DevinoSolutions/upup/actions/workflows/main.yml)
+[![CI](https://github.com/DevinoSolutions/upup/actions/workflows/publish.yml/badge.svg?branch=master)](https://github.com/DevinoSolutions/upup/actions/workflows/publish.yml)
 [![npm version](https://img.shields.io/npm/v/upup-react-file-uploader)](https://www.npmjs.com/package/upup-react-file-uploader)
 [![npm downloads](https://img.shields.io/npm/dw/upup-react-file-uploader)](https://www.npmjs.com/package/upup-react-file-uploader)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
