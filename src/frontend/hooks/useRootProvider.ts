@@ -351,6 +351,7 @@ export default function useRootProvider({
         handleFileRemove,
         oneDriveConfigs: driveConfigs?.oneDrive,
         googleDriveConfigs: driveConfigs?.googleDrive,
+        dropboxConfigs: driveConfigs?.dropbox,
         toastContainerId,
         upload: {
             totalProgress,
