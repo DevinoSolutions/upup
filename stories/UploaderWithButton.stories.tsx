@@ -77,11 +77,6 @@ export const UploaderWithButton: Story = {
             },
             dropbox: {
                 dropbox_client_id: process.env.DROPBOX_CLIENT_ID!,
-                // Use window.location.origin for dynamic redirect URI
-                redirectUri:
-                    typeof window !== 'undefined'
-                        ? window.location.origin
-                        : 'http://localhost:6006',
             },
         },
         limit: 10,
