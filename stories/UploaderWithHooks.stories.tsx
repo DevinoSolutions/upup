@@ -95,6 +95,9 @@ export const UploaderWithHook: Story = {
             oneDrive: {
                 onedrive_client_id: process.env.ONEDRIVE_CLIENT_ID!,
             },
+            dropbox: {
+                dropbox_client_id: process.env.DROPBOX_CLIENT_ID!,
+            },
         },
         limit: 10,
         provider: UpupProvider.BackBlaze,
@@ -103,6 +106,7 @@ export const UploaderWithHook: Story = {
             UploadAdapter.INTERNAL,
             UploadAdapter.ONE_DRIVE,
             UploadAdapter.GOOGLE_DRIVE,
+            UploadAdapter.DROPBOX,
             UploadAdapter.CAMERA,
             UploadAdapter.LINK,
         ],
