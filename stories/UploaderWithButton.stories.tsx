@@ -31,6 +31,7 @@ const meta = {
                 UploadAdapter.INTERNAL,
                 UploadAdapter.ONE_DRIVE,
                 UploadAdapter.GOOGLE_DRIVE,
+                UploadAdapter.DROPBOX,
                 UploadAdapter.CAMERA,
                 UploadAdapter.LINK,
             ],
@@ -52,6 +53,9 @@ const meta = {
                     onFilesSelected={files => {
                         console.log(files)
                     }}
+                    onError={error => {
+                        console.error('UpupUploader Error:', error)
+                    }}
                     {...args}
                     dark={isDarkMode}
                 />
@@ -71,6 +75,9 @@ export const UploaderWithButton: Story = {
             oneDrive: {
                 onedrive_client_id: process.env.ONEDRIVE_CLIENT_ID!,
             },
+            dropbox: {
+                dropbox_client_id: process.env.DROPBOX_CLIENT_ID!,
+            },
         },
         limit: 10,
         provider: UpupProvider.BackBlaze,
@@ -79,6 +86,7 @@ export const UploaderWithButton: Story = {
             UploadAdapter.INTERNAL,
             UploadAdapter.ONE_DRIVE,
             UploadAdapter.GOOGLE_DRIVE,
+            UploadAdapter.DROPBOX,
             UploadAdapter.CAMERA,
             UploadAdapter.LINK,
         ],
