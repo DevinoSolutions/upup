@@ -6,6 +6,7 @@ import {
     useContext,
 } from 'react'
 import {
+    DropboxConfigs,
     FileWithParams,
     GoogleDriveConfigs,
     OneDriveConfigs,
@@ -76,7 +77,7 @@ export interface IRootContext {
 
     oneDriveConfigs?: OneDriveConfigs
     googleDriveConfigs?: GoogleDriveConfigs
-
+    dropboxConfigs?: DropboxConfigs
     upload: ContextUpload
     props: ContextProps
     toastContainerId?: string
