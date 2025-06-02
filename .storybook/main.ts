@@ -107,6 +107,7 @@ const config = {
         GOOGLE_API_KEY: process.env.GOOGLE_API_KEY!,
         GOOGLE_APP_ID: process.env.GOOGLE_APP_ID!,
         ONEDRIVE_CLIENT_ID: process.env.ONEDRIVE_CLIENT_ID!,
+        DROPBOX_CLIENT_ID: process.env.DROPBOX_CLIENT_ID!,
     }),
 }
 
