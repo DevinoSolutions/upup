@@ -101,6 +101,7 @@ export default function AdapterSelector() {
                         {limit > 1 ? 's' : ''} or
                     </span>
                     <button
+                        type="button"
                         className={cn(
                             'upup-cursor-pointer upup-text-xs upup-font-semibold upup-text-[#0E2ADD] md:upup-text-sm',
                             {

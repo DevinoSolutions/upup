@@ -17,6 +17,7 @@ export type UpupUploaderRef = {
         loading: boolean
         progress: number
         upload(): Promise<FileWithParams[] | undefined>
+        resetState(): void
         dynamicUpload(
             files: File[] | FileWithParams[],
         ): Promise<FileWithParams[] | undefined>
@@ -39,6 +40,7 @@ export default forwardRef<UpupUploaderRef, UpupUploaderProps>(
             files: providerValues.files,
             setFiles: providerValues.setFiles,
             dynamicUpload: providerValues.dynamicUpload,
+            resetState: providerValues.resetState,
             dynamicallyReplaceFiles: providerValues.dynamicallyReplaceFiles,
         })
 
@@ -48,7 +50,7 @@ export default forwardRef<UpupUploaderRef, UpupUploaderProps>(
 
         return (
             <RootContext.Provider value={providerValues}>
-                <div className="upup-scope">
+                <div className="upup-scope upup-h-full upup-w-full">
                     <div
                         className={cn('upup-w-full', {
                             'upup-h-[480px] upup-max-w-[600px]':

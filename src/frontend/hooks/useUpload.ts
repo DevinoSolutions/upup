@@ -6,12 +6,14 @@ export default function useUpload({
     setFiles,
     dynamicallyReplaceFiles,
     dynamicUpload,
+    resetState,
 }: Pick<
     IRootContext,
     | 'upload'
     | 'files'
     | 'setFiles'
     | 'dynamicallyReplaceFiles'
+    | 'resetState'
     | 'dynamicUpload'
 >) {
     const { proceedUpload, uploadStatus, uploadError, totalProgress } =
@@ -28,5 +30,6 @@ export default function useUpload({
         setFiles,
         dynamicallyReplaceFiles,
         dynamicUpload,
+        resetState,
     }
 }
