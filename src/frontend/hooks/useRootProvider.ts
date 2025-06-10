@@ -81,7 +81,7 @@ export default function useRootProvider({
     const [filesProgressMap, setFilesProgressMap] = useState<FilesProgressMap>(
         {} as FilesProgressMap,
     )
-    const [toastContainerId, setToastContainerId] = useState<string>()
+    const [toastContainerId, setToastContainerId] = useState<string>('')
     const [uploadError, setUploadError] = useState('')
 
     const limit = useMemo(
@@ -128,6 +128,10 @@ export default function useRootProvider({
         files: File[] | FileWithParams[],
     ): files is FileWithParams[] {
         return files.length > 0 && 'id' in files[0]
+    }
+    async function resetState() {
+        setIsAddingMore(false)
+        handleDone()
     }
     async function dynamicUpload(files: File[] | FileWithParams[]) {
         const filesToUpload = isFileWithParamsArray(files)
@@ -181,10 +185,10 @@ export default function useRootProvider({
             else {
                 newFilesMap.set(fileWithParams.id, fileWithParams)
                 setSelectedFilesMap(newFilesMap)
+                onFilesSelected(newFilesWithParams)
             }
         }
         setIsAddingMore(false)
-        onFilesSelected(newFilesWithParams)
     }
 
     const handleFileRemove = useCallback(
@@ -332,7 +336,7 @@ export default function useRootProvider({
         setFilesProgressMap({})
     }, [])
     useEffect(() => {
-        if (!toastContainerId && (!errorHandler || !warningHandler))
+        if (!toastContainerId.length && (!errorHandler || !warningHandler))
             setToastContainerId(uuid())
     }, [errorHandler, warningHandler, toastContainerId])
 
@@ -345,6 +349,7 @@ export default function useRootProvider({
         files: selectedFilesMap,
         setFiles: handleSetSelectedFiles,
         dynamicUpload,
+        resetState,
         dynamicallyReplaceFiles,
         handleDone,
         handleCancel,

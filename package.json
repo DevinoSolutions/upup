@@ -56,7 +56,7 @@
     ],
     "scripts": {
         "dev": "tsup --config tsup.config.ts --watch",
-        "build:css": "npx tailwindcss -c tailwind.config.js -i ./src/frontend/tailwind.css -o ./dist/tailwind-prefixed.css",
+        "build:css": "postcss src/frontend/tailwind.css -o ./dist/tailwind-prefixed.css",
         "build": "pnpm run prebuild && tsup --config tsup.config.ts && pnpm run build:css",
         "prebuild": "rimraf dist dist-node && pnpm run lint",
         "test": "jest",
@@ -143,7 +143,9 @@
         "jest-environment-jsdom": "29.7.0",
         "lowlight": "1.20.0",
         "postcss": "^8.5.2",
+        "postcss-cli": "^11.0.1",
         "postcss-loader": "^8.1.1",
+        "postcss-prefix-selector": "^2.1.1",
         "prettier": "3.0.3",
         "prettier-plugin-organize-imports": "^3.2.4",
         "prettier-plugin-tailwindcss": "^0.5.7",
