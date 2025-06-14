@@ -22,3 +22,5 @@ public
 
 # Tests
 coverage
+
+*.tgz

@@ -1,3 +1,5 @@
+'use client'
+
 import React, { forwardRef, useImperativeHandle } from 'react'
 import { TbLoader } from 'react-icons/tb/index.js'
 import { devinoDark, devinoLight, logoDark, logoLight } from '../assets/logos'
@@ -125,7 +127,7 @@ export default forwardRef<UpupUploaderRef, UpupUploaderProps>(
                                     href={'https://getupup.ca/'}
                                     target={'_blank'}
                                     rel="noopener noreferrer"
-                                    className="upup-z-[2147483647] upup-flex upup-items-center upup-gap-[5px]"
+                                    className="upup-flex upup-items-center upup-gap-[5px]"
                                 >
                                     <ShouldRender
                                         if={providerValues.props.dark}

@@ -80,7 +80,6 @@ export interface IRootContext {
 
     upload: ContextUpload
     props: ContextProps
-    toastContainerId: string
 }
 
 const RootContext = createContext<IRootContext>({
