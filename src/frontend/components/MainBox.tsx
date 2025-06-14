@@ -1,7 +1,7 @@
+'use client'
+
 import { motion } from 'framer-motion'
 import React from 'react'
-import { ToastContainer } from 'react-toastify'
-import 'react-toastify/dist/ReactToastify.css'
 import { useRootContext } from '../context/RootContext'
 import useMainBox from '../hooks/useMainBox'
 import { cn } from '../lib/tailwind'
@@ -15,7 +15,6 @@ export default function MainBox() {
         files,
         activeAdapter,
         isAddingMore,
-        toastContainerId,
         props: { dark },
     } = useRootContext()
     const {
@@ -32,7 +31,7 @@ export default function MainBox() {
             <motion.div
                 key="adapter-selector"
                 className={cn(
-                    'upup-relative upup-flex-1 upup-overflow-hidden upup-rounded-lg [&_.Toastify]:upup-absolute [&_.Toastify]:upup-bottom-0 [&_.Toastify]:upup-left-0 [&_.Toastify]:upup-right-0 [&_.Toastify__toast-container]:upup-relative',
+                    'upup-relative upup-flex-1 upup-overflow-hidden upup-rounded-lg',
                     {
                         'upup-border upup-border-[#1849D6]': absoluteHasBorder,
                         'upup-border-[#30C5F7] dark:upup-border-[#30C5F7]':
@@ -60,20 +59,6 @@ export default function MainBox() {
                     <AdapterSelector />
                 </ShouldRender>
                 <FileList />
-
-                <ShouldRender if={true}>
-                    <ToastContainer
-                        position="bottom-center"
-                        className="!upup-relative !upup-bottom-2 !upup-left-1/2 !upup-w-[320px] !upup-max-w-[90%] !-upup-translate-x-1/2"
-                        limit={2}
-                        theme={dark ? 'dark' : 'light'}
-                        containerId={`upup-toast-container-${toastContainerId}`}
-                        progressClassName="upup-h-0"
-                        hideProgressBar
-                        newestOnTop
-                        stacked
-                    />
-                </ShouldRender>
             </motion.div>
         </MyAnimatePresence>
     )

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useMemo, useRef, useState } from 'react'
 import {
     TbCameraRotate,
     TbCapture,
@@ -6,9 +6,6 @@ import {
     TbPlus,
     TbTrash,
 } from 'react-icons/tb/index.js'
-import { toast } from 'react-toastify'
-import truncate from 'truncate'
-import { v4 as uuid } from 'uuid'
 import checkFileType from '../../shared/lib/checkFileType'
 import {
     FileWithParams,
@@ -23,7 +20,6 @@ import {
     sizeToBytes,
 } from '../lib/file'
 import { ProviderSDK } from '../lib/storage/provider'
-import { cn } from '../lib/tailwind'
 
 type FileProgress = {
     id: string
@@ -32,9 +28,6 @@ type FileProgress = {
 }
 
 export type FilesProgressMap = Record<string, FileProgress>
-
-const toastClassName =
-    'upup-px-4 upup-pr-6 upup-py-3 upup-text-center !upup-mb-0 upup-min-h-fit upup-shadow-lg [&_button]:upup-top-1/2 [&_button]:-upup-translate-y-1/2'
 
 export default function useRootProvider({
     accept = '*',
@@ -81,7 +74,6 @@ export default function useRootProvider({
     const [filesProgressMap, setFilesProgressMap] = useState<FilesProgressMap>(
         {} as FilesProgressMap,
     )
-    const [toastContainerId, setToastContainerId] = useState<string>('')
     const [uploadError, setUploadError] = useState('')
 
     const limit = useMemo(
@@ -105,24 +97,15 @@ export default function useRootProvider({
             setUploadError(message)
 
             if (errorHandler) errorHandler(message)
-            else
-                toast.error(truncate(message, 75), {
-                    containerId: toastContainerId,
-                    className: cn(toastClassName, 'upup-text-red-500'),
-                })
         },
-        [errorHandler, toastContainerId],
+        [errorHandler],
     )
 
     const onWarn = useCallback(
-        (message: string) =>
-            warningHandler
-                ? warningHandler(message)
-                : toast.warn(message, {
-                      containerId: toastContainerId,
-                      className: cn(toastClassName, 'upup-text-yellow-500'),
-                  }),
-        [warningHandler, toastContainerId],
+        (message: string) => {
+            if (warningHandler) warningHandler(message)
+        },
+        [warningHandler],
     )
     function isFileWithParamsArray(
         files: File[] | FileWithParams[],
@@ -335,10 +318,6 @@ export default function useRootProvider({
         setSelectedFilesMap(new Map())
         setFilesProgressMap({})
     }, [])
-    useEffect(() => {
-        if (!toastContainerId.length && (!errorHandler || !warningHandler))
-            setToastContainerId(uuid())
-    }, [errorHandler, warningHandler, toastContainerId])
 
     return {
         inputRef,
@@ -356,7 +335,6 @@ export default function useRootProvider({
         handleFileRemove,
         oneDriveConfigs: driveConfigs?.oneDrive,
         googleDriveConfigs: driveConfigs?.googleDrive,
-        toastContainerId,
         upload: {
             totalProgress,
             filesProgressMap,

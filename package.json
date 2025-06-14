@@ -11,10 +11,6 @@
     "module": "dist/upup.esm.js",
     "types": "./dist/index.browser.d.ts",
     "typings": "./dist/index.browser.d.ts",
-    "sideEffects": [
-        "./dist/tailwind-prefixed.css",
-        "./dist/**/ReactToastify.css"
-    ],
     "exports": {
         ".": {
             "types": "./dist/index.browser.d.ts",
@@ -187,7 +183,6 @@
         "load-script": "^2.0.0",
         "pako": "^2.1.0",
         "react-icons": "^4.12.0",
-        "react-toastify": "^11.0.5",
         "react-webcam": "^7.2.0",
         "tailwind-merge": "^2.6.0",
         "truncate": "^3.0.0",
