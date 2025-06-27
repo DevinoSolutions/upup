@@ -65,6 +65,7 @@ export interface IRootContext {
     files: Map<string, FileWithParams>
     setFiles: (newFiles: File[]) => void
     dynamicallyReplaceFiles: (files: File[] | FileWithParams[]) => void
+    resetState: () => void
     dynamicUpload: (
         files: File[] | FileWithParams[],
     ) => Promise<FileWithParams[] | undefined>
@@ -80,7 +81,6 @@ export interface IRootContext {
     dropboxConfigs?: DropboxConfigs
     upload: ContextUpload
     props: ContextProps
-    toastContainerId?: string
 }
 
 const RootContext = createContext<IRootContext>({

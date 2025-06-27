@@ -20,7 +20,7 @@ export default function AdapterSelector() {
             className={cn(
                 'upup-relative upup-flex upup-h-full upup-flex-col-reverse upup-items-center upup-justify-center upup-gap-3 upup-rounded-lg md:upup-flex-col md:upup-gap-14',
                 {
-                    'upup-pt-[72px] md:upup-pt-0': isAddingMore,
+                    'md:upup-pt-0': isAddingMore,
                 },
             )}
         >
@@ -101,6 +101,7 @@ export default function AdapterSelector() {
                         {limit > 1 ? 's' : ''} or
                     </span>
                     <button
+                        type="button"
                         className={cn(
                             'upup-cursor-pointer upup-text-xs upup-font-semibold upup-text-[#0E2ADD] md:upup-text-sm',
                             {

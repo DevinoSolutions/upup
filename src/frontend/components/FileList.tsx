@@ -14,7 +14,7 @@ export default memo(function FileList() {
         activeAdapter,
         files,
         upload: { proceedUpload, uploadStatus, totalProgress },
-        props: { mini, dark, classNames, allowPreview, isProcessing },
+        props: { dark, classNames, allowPreview, isProcessing },
         handleDone,
         handleCancel,
     } = useRootContext()
@@ -24,7 +24,6 @@ export default memo(function FileList() {
             className={cn(
                 'upup-relative upup-flex upup-h-full upup-flex-col upup-rounded-lg upup-shadow',
                 {
-                    'upup-pt-[72px] md:upup-pt-11': !mini,
                     'upup-hidden': isAddingMore || activeAdapter || !files.size,
                 },
             )}

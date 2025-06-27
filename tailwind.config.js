@@ -2,6 +2,7 @@
 module.exports = {
     prefix: 'upup-',
     content: ['./src/**/*.{tsx,ts,css}', './stories/**/*.{tsx,ts,jsx,js}'],
+    important: '.upup-scope',
     darkMode: 'class',
     theme: {
         extend: {
