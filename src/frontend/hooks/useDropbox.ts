@@ -3,9 +3,6 @@ import { useCallback, useEffect, useState } from 'react'
 import { useRootContext } from '../context/RootContext'
 import { useDropboxAuth } from './useDropboxAuth'
 
-/**
- * Helper function to format API response items
- */
 const formatFileItem = (entry: any): DropboxFile => ({
     id: entry.id,
     name: entry.name,
@@ -47,10 +44,6 @@ export function useDropbox() {
             body: object | null = {},
             isRetry = false,
         ) => {
-            if (!token) {
-                throw new Error('Not authenticated with Dropbox')
-            }
-
             try {
                 const headers: Record<string, string> = {
                     Authorization: `Bearer ${token}`,

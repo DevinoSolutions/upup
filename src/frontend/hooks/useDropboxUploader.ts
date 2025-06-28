@@ -1,5 +1,5 @@
 import { DropboxFile, DropboxRoot } from 'dropbox'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useState } from 'react'
 import { useRootContext } from '../context/RootContext'
 
 /**
@@ -59,31 +59,9 @@ export default function useDropboxUploader(token?: string) {
     const [showLoader, setShowLoader] = useState(false)
     const [downloadProgress, setDownloadProgress] = useState(0)
     const [isClickLoading, setIsClickLoading] = useState<boolean>(false)
-    const [isValidToken, setIsValidToken] = useState<boolean>(false)
 
-    // Validate token on mount and when token changes
-    useEffect(() => {
-        if (!token) {
-            setIsValidToken(false)
-            return
-        }
-
-        // Simple validation check - set valid if token exists and has some length
-        setIsValidToken(typeof token === 'string' && token.length > 0)
-    }, [token])
-
-    /**
-     * @description Fetch contents of a folder
-     * @param {DropboxFile} file - The folder to fetch contents from
-     * @returns {Promise<void>}
-     */
     const fetchFolderContents = useCallback(
         async (file: DropboxFile) => {
-            if (!isValidToken) {
-                onError('Not authenticated with Dropbox')
-                return
-            }
-
             setIsClickLoading(true)
             try {
                 const response = await fetch(
@@ -120,7 +98,7 @@ export default function useDropboxUploader(token?: string) {
                 setIsClickLoading(false)
             }
         },
-        [token, onError, isValidToken],
+        [token, onError],
     )
 
     /**
@@ -130,11 +108,6 @@ export default function useDropboxUploader(token?: string) {
      */
     const handleClick = useCallback(
         async (file: DropboxFile) => {
-            if (!isValidToken) {
-                onError('Not authenticated with Dropbox')
-                return
-            }
-
             if (file.isFolder) {
                 await fetchFolderContents(file)
             } else {
@@ -146,25 +119,28 @@ export default function useDropboxUploader(token?: string) {
                 })
             }
         },
-        [fetchFolderContents, onError, isValidToken],
+        [token, fetchFolderContents, onError],
     )
+    const downloadFiles = useCallback(
+        async (files: DropboxFile[], token?: string) => {
+            if (!token) {
+                onError('No access token provided for Dropbox download')
+                return
+            }
+            const promises = files.map(async (file, index) => {
+                const downloadedFile = await downloadFile(file, token)
 
-    /**
-     * @description Download multiple files
-     * @param {DropboxFile[]} files - The files to download
-     * @returns {Promise<File[]>} - The downloaded files
-     */
-    const downloadFiles = useCallback(async (files: DropboxFile[]) => {
-        const promises = files.map(async (file, index) => {
-            const downloadedFile = await downloadFile(file)
+                setDownloadProgress(
+                    Math.round(((index + 1) / files.length) * 100),
+                )
 
-            setDownloadProgress(Math.round(((index + 1) / files.length) * 100))
+                return downloadedFile
+            })
 
-            return downloadedFile
-        })
-
-        return await Promise.all(promises)
-    }, [])
+            return await Promise.all(promises)
+        },
+        [],
+    )
 
     /**
      * @description Download a single file
@@ -172,12 +148,7 @@ export default function useDropboxUploader(token?: string) {
      * @returns {Promise<File|undefined>} - The downloaded file or undefined if error
      */
     const downloadFile = useCallback(
-        async (file: DropboxFile) => {
-            if (!isValidToken) {
-                onError('Not authenticated with Dropbox')
-                return
-            }
-
+        async (file: DropboxFile, token: string) => {
             try {
                 const url = await getDownloadUrl(file, token as string)
                 if (!url) throw new Error('Could not get download URL')
@@ -201,7 +172,7 @@ export default function useDropboxUploader(token?: string) {
                 return
             }
         },
-        [onError, token, isValidToken],
+        [onError],
     )
 
     /**
@@ -211,18 +182,13 @@ export default function useDropboxUploader(token?: string) {
     const handleSubmit = useCallback(async () => {
         if (selectedFiles.length === 0) return
 
-        if (!isValidToken) {
-            onError('Not authenticated with Dropbox')
-            return
-        }
-
         setShowLoader(true)
         setDownloadProgress(0)
 
         try {
-            const downloadedFiles = (await downloadFiles(selectedFiles)).filter(
-                Boolean,
-            )
+            const downloadedFiles = (
+                await downloadFiles(selectedFiles, token)
+            )?.filter(Boolean)
 
             setFiles(downloadedFiles as File[])
 
@@ -240,7 +206,7 @@ export default function useDropboxUploader(token?: string) {
         selectedFiles,
         setActiveAdapter,
         setFiles,
-        isValidToken,
+        token,
     ])
 
     /**

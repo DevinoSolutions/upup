@@ -30,7 +30,7 @@ export default function DropboxUploader() {
     return (
         <DriveBrowser
             driveFiles={driveFiles as any}
-            user={user as any}
+            user={user}
             handleSignOut={handleSignOut}
             {...(props as any)}
         />

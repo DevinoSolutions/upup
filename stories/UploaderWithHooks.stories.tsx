@@ -97,6 +97,7 @@ export const UploaderWithHook: Story = {
             },
             dropbox: {
                 dropbox_client_id: process.env.DROPBOX_CLIENT_ID!,
+                dropbox_redirect_uri: process.env.DROPBOX_REDIRECT_URI!,
             },
         },
         limit: 10,

@@ -32,6 +32,12 @@ export const uploadAdapterObject = {
         Icon: OneDriveIcon,
         Component: OneDriveUploader,
     },
+    [UploadAdapter.DROPBOX]: {
+        id: UploadAdapter.DROPBOX,
+        name: 'Dropbox',
+        Icon: DropBoxIcon,
+        Component: DropboxUploader,
+    },
     [UploadAdapter.LINK]: {
         id: UploadAdapter.LINK,
         name: 'Link',
@@ -43,12 +49,6 @@ export const uploadAdapterObject = {
         name: 'Camera',
         Icon: CameraIcon,
         Component: CameraUploader,
-    },
-    [UploadAdapter.DROPBOX]: {
-        id: UploadAdapter.DROPBOX,
-        name: 'Dropbox',
-        Icon: DropBoxIcon,
-        Component: DropboxUploader,
     },
     // {
     //     id: UploadAdapter.UNSPLASH,

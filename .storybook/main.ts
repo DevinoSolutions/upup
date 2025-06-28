@@ -48,7 +48,10 @@ const config = {
         builder: '@storybook/builder-webpack5',
     },
 
-    webpackFinal: async config => {
+    webpackFinal: async (config: {
+        module: { rules: any[] }
+        resolve: { fallback: any; alias: any }
+    }) => {
         // Remove default rules for .md files
         config.module.rules = config.module.rules.filter(
             rule => !rule.test?.test?.('.md'),
@@ -101,13 +104,14 @@ const config = {
         reactDocgen: 'react-docgen-typescript',
     },
 
-    env: config => ({
+    env: (config: any) => ({
         ...config,
         GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID!,
         GOOGLE_API_KEY: process.env.GOOGLE_API_KEY!,
         GOOGLE_APP_ID: process.env.GOOGLE_APP_ID!,
         ONEDRIVE_CLIENT_ID: process.env.ONEDRIVE_CLIENT_ID!,
         DROPBOX_CLIENT_ID: process.env.DROPBOX_CLIENT_ID!,
+        DROPBOX_REDIRECT_URI: process.env.dropbox_redirect_uri!,
     }),
 }
 

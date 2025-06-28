@@ -28,7 +28,7 @@ const usePCAInstance = (clientId: string) => {
                         navigateToLoginRequestUrl: true,
                     },
                     cache: {
-                        cacheLocation: 'localStorage',
+                        cacheLocation: 'sessionStorage',
                         storeAuthStateInCookie: true,
                     },
                     system: {

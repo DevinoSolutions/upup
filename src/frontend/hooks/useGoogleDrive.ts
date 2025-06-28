@@ -2,8 +2,10 @@ import { GoogleFile, Root, Token, User } from 'google'
 import { useCallback, useEffect, useState } from 'react'
 import { GoogleDriveConfigs } from '../../shared/types'
 import { useRootContext } from '../context/RootContext'
+import { createSecureStorage } from '../lib/storageHelper'
 import useLoadGAPI from './useLoadGAPI'
 
+const secureStorage = createSecureStorage()
 export default function useGoogleDrive(
     googleConfigs = {} as GoogleDriveConfigs,
 ) {
@@ -62,7 +64,7 @@ export default function useGoogleDrive(
     const handleSignOut = async () => {
         // const google = await window.google
         // google.accounts.id.revoke()
-        localStorage.removeItem('token')
+        secureStorage.removeItem('token')
         setUser(undefined)
         setGoogleFiles(undefined)
     }
@@ -124,7 +126,7 @@ export default function useGoogleDrive(
          * @description Initialize the Google Drive API
          * @returns {Promise<void>}
          */
-        const storedTokenStr = localStorage.getItem('token')
+        const storedTokenStr = secureStorage.getItem('token')
         const storedToken = storedTokenStr ? JSON.parse(storedTokenStr) : null
 
         if (storedToken && storedToken.expires_in > Date.now())
@@ -140,7 +142,7 @@ export default function useGoogleDrive(
                         ux_mode: 'popup',
                         callback(tokenResponse: Token) {
                             if (!tokenResponse?.error) {
-                                localStorage.setItem(
+                                secureStorage.setItem(
                                     'token',
                                     JSON.stringify({
                                         ...tokenResponse,
