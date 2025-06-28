@@ -2,7 +2,7 @@
     "name": "upup-react-file-uploader",
     "author": "Devino Solutions",
     "license": "MIT",
-    "version": "1.4.6",
+    "version": "1.5.0",
     "publishConfig": {
         "access": "public"
     },
@@ -179,6 +179,7 @@
         "@types/gapi": "^0.0.47",
         "babel-plugin-module-resolver": "^5.0.0",
         "clsx": "^2.1.1",
+        "dropbox": "^10.34.0",
         "framer-motion": "^12.0.6",
         "load-script": "^2.0.0",
         "pako": "^2.1.0",

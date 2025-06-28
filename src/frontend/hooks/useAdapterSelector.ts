@@ -22,7 +22,6 @@ export default function useAdapterSelector() {
     const handleAdapterClick = useCallback(
         (adapterId: UploadAdapter) => {
             onIntegrationClick(adapterId)
-
             if (adapterId === UploadAdapter.INTERNAL) inputRef.current?.click()
             else setActiveAdapter(adapterId)
         },

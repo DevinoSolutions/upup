@@ -1,8 +1,8 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
     prefix: 'upup-',
+    content: ['./src/**/*.{tsx,ts,css}', './stories/**/*.{tsx,ts,jsx,js}'],
     important: '.upup-scope',
-    content: ['./src/**/*.{tsx,ts,css}'],
     darkMode: 'class',
     theme: {
         extend: {

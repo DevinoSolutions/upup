@@ -12,12 +12,15 @@ import {
     useState,
 } from 'react'
 import { useRootContext } from '../context/RootContext'
+import { createSecureStorage } from '../lib/storageHelper'
 
 type Props = {
     msalInstance?: PublicClientApplication
     setUser: Dispatch<SetStateAction<MicrosoftUser | undefined>>
     setOneDriveFiles: Dispatch<SetStateAction<OneDriveRoot | undefined>>
 }
+
+const secureStorage = createSecureStorage()
 
 export default function useOneDriveAuth({
     msalInstance,
@@ -150,12 +153,12 @@ export default function useOneDriveAuth({
                     expiresOn: response.expiresOn!.getTime(),
                 }
                 setToken(newToken)
-                sessionStorage.setItem('isAuthenticated', 'true')
+                secureStorage.setItem('isAuthenticated', 'true')
             }
         } catch (error) {
             onError(`Handle sign-in failed: ${(error as Error)?.message}`)
             setToken(undefined)
-            sessionStorage.removeItem('isAuthenticated')
+            secureStorage.removeItem('isAuthenticated')
         }
     }, [isInitialized, isAuthenticating, isAuthInProgress, signIn, onError])
 
@@ -183,16 +186,16 @@ export default function useOneDriveAuth({
             msalInstance.clearCache()
 
             // Set logout flag in session storage
-            sessionStorage.setItem('recentLogout', 'true')
+            secureStorage.setItem('recentLogout', 'true')
 
             // Clear remaining session storage
-            sessionStorage.removeItem('isAuthenticated')
+            secureStorage.removeItem('isAuthenticated')
         } catch (error) {
             onError(`Sign-out failed: ${(error as Error)?.message}`)
         } finally {
             setIsAuthInProgress(false)
             // Clear the logout flag after a short delay
-            setTimeout(() => sessionStorage.removeItem('recentLogout'), 1000) // Adjust timeout as needed
+            setTimeout(() => secureStorage.removeItem('recentLogout'), 1000) // Adjust timeout as needed
         }
     }, [
         msalInstance,
@@ -212,8 +215,8 @@ export default function useOneDriveAuth({
 
         const autoLogin = async () => {
             // Check for recent logout or existing authentication
-            const hasRecentlyLoggedOut = sessionStorage.getItem('recentLogout')
-            const isAuthenticated = sessionStorage.getItem('isAuthenticated')
+            const hasRecentlyLoggedOut = secureStorage.getItem('recentLogout')
+            const isAuthenticated = secureStorage.getItem('isAuthenticated')
 
             if (hasRecentlyLoggedOut || isAuthenticated) return
 

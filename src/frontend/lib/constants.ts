@@ -1,8 +1,10 @@
 import { UploadAdapter } from '../../shared/types'
 import CameraUploader from '../components/CameraUploader'
+import DropboxUploader from '../components/DropboxUploader'
 import GoogleDriveUploader from '../components/GoogleDriveUploader'
 import {
     CameraIcon,
+    DropBoxIcon,
     GoogleDriveIcon,
     LinkIcon,
     MyDeviceIcon,
@@ -30,6 +32,12 @@ export const uploadAdapterObject = {
         Icon: OneDriveIcon,
         Component: OneDriveUploader,
     },
+    [UploadAdapter.DROPBOX]: {
+        id: UploadAdapter.DROPBOX,
+        name: 'Dropbox',
+        Icon: DropBoxIcon,
+        Component: DropboxUploader,
+    },
     [UploadAdapter.LINK]: {
         id: UploadAdapter.LINK,
         name: 'Link',
@@ -42,11 +50,6 @@ export const uploadAdapterObject = {
         Icon: CameraIcon,
         Component: CameraUploader,
     },
-    // {
-    //     id: UploadAdapter.DROPBOX,
-    //     name: 'Dropbox',
-    //     Icon: DropBoxIcon,
-    // },
     // {
     //     id: UploadAdapter.UNSPLASH,
     //     name: 'Unsplash',

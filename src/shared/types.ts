@@ -4,9 +4,9 @@ export enum UploadAdapter {
     INTERNAL = 'INTERNAL',
     GOOGLE_DRIVE = 'GOOGLE_DRIVE',
     ONE_DRIVE = 'ONE_DRIVE',
+    DROPBOX = 'DROPBOX',
     LINK = 'LINK',
     CAMERA = 'CAMERA',
-    // DROPBOX = 'DROPBOX',
     // UNSPLASH = 'UNSPLASH',
     // BOX = 'BOX',
 }
@@ -20,6 +20,11 @@ export type GoogleDriveConfigs = {
 export type OneDriveConfigs = {
     onedrive_client_id: string
     redirectUri?: string
+}
+
+export type DropboxConfigs = {
+    dropbox_client_id?: string
+    dropbox_redirect_uri?: string
 }
 
 export enum UpupProvider {
@@ -122,6 +127,7 @@ export type UpupUploaderProps = {
     driveConfigs?: {
         googleDrive?: GoogleDriveConfigs
         oneDrive?: OneDriveConfigs
+        dropbox?: DropboxConfigs
     }
     shouldCompress?: boolean
     accept?: string
