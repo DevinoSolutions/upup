@@ -1,6 +1,6 @@
 // storageHelper.ts
 /* Toggle Base64 encoding/decoding (simple “encryption”) */
-const ENCRYPTION = false
+const ENCRYPTION = true
 
 type SecureStorageAPI = {
     setItem: (key: string, value: string) => void
