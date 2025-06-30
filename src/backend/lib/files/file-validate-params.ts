@@ -2,8 +2,6 @@ import checkFileType from '../../../shared/lib/checkFileType'
 import { UploadError, UploadErrorType } from '../../../shared/types'
 import { FileParams } from '../../types'
 
-const DEFAULT_MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB;
-
 export default function fileValidateParams(file: FileParams) {
     // Validate required file params
     const requiredFileParams = ['name', 'type', 'size'] as const
@@ -20,7 +18,7 @@ export default function fileValidateParams(file: FileParams) {
         type: fileType,
         accept = '*',
         size,
-        maxFileSize = DEFAULT_MAX_FILE_SIZE,
+        maxFileSize = file.maxFileSize,
     } = file
 
     // Validate file type against accept pattern
@@ -33,7 +31,7 @@ export default function fileValidateParams(file: FileParams) {
         )
 
     // Validate file size
-    if (size > maxFileSize)
+    if (maxFileSize && size > maxFileSize)
         throw new UploadError(
             `File size: ${size} exceeds maximum limit of ${
                 maxFileSize / (1024 * 1024)

@@ -53,6 +53,10 @@ const meta = {
                     onFilesSelected={files => {
                         console.log(files)
                     }}
+                    maxFileSize={{
+                        size: 1,
+                        unit: 'KB',
+                    }}
                     onError={error => {
                         console.error('UpupUploader Error:', error)
                     }}

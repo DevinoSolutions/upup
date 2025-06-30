@@ -36,7 +36,7 @@ export default function useRootProvider({
     limit: propLimit = 1,
     isProcessing = false,
     allowPreview = true,
-    maxFileSize = { size: 10, unit: 'MB' },
+    maxFileSize,
     shouldCompress = false,
     uploadAdapters = [UploadAdapter.INTERNAL, UploadAdapter.LINK],
     onError: errorHandler,
@@ -151,7 +151,11 @@ export default function useRootProvider({
             if (!checkFileType(accept, file)) {
                 onError(`${file.name} has an unsupported type!`)
                 onFileTypeMismatch(file, accept)
-            } else if (!checkFileSize(file, maxFileSize))
+            } else if (
+                maxFileSize?.size &&
+                maxFileSize?.unit &&
+                !checkFileSize(file, maxFileSize)
+            )
                 onError(
                     `${file.name} is larger than ${maxFileSize.size} ${maxFileSize.unit}!`,
                 )
@@ -240,10 +244,13 @@ export default function useRootProvider({
                     constraints: {
                         multiple,
                         accept,
-                        maxFileSize: sizeToBytes(
-                            maxFileSize.size,
-                            maxFileSize.unit,
-                        ),
+                        maxFileSize:
+                            maxFileSize?.size && maxFileSize?.unit
+                                ? sizeToBytes(
+                                      maxFileSize.size,
+                                      maxFileSize.unit,
+                                  )
+                                : undefined,
                     },
                     customProps,
                     enableAutoCorsConfig,
@@ -296,8 +303,8 @@ export default function useRootProvider({
             tokenEndpoint,
             multiple,
             accept,
-            maxFileSize.size,
-            maxFileSize.unit,
+            maxFileSize?.size,
+            maxFileSize?.unit,
             customProps,
             enableAutoCorsConfig,
             onFilesUploadComplete,
