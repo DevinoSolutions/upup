@@ -122,8 +122,12 @@ export default function AdapterSelector() {
                         },
                     )}
                 >
-                    Max {maxFileSize.size} {maxFileSize.unit} file
-                    {limit > 1 ? 's are ' : ' is '} allowed
+                    {maxFileSize?.size && maxFileSize?.unit && (
+                        <>
+                            Max {maxFileSize.size} {maxFileSize.unit} file
+                            {limit > 1 ? 's are ' : ' is '}allowed
+                        </>
+                    )}
                 </p>
             </div>
         </div>

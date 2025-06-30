@@ -41,7 +41,6 @@ type ContextProps = Required<
         | 'isProcessing'
         | 'allowPreview'
         | 'mini'
-        | 'maxFileSize'
         | 'onFileClick'
         | 'onIntegrationClick'
         | 'onFilesDragOver'
@@ -52,10 +51,11 @@ type ContextProps = Required<
         | 'classNames'
         | 'icons'
     >
-> & {
-    multiple: boolean
-    icons: Required<UpupUploaderPropsIcons>
-}
+> &
+    Pick<UpupUploaderProps, 'maxFileSize'> & {
+        multiple: boolean
+        icons: Required<UpupUploaderPropsIcons>
+    }
 
 export interface IRootContext {
     inputRef: RefObject<HTMLInputElement | null>
