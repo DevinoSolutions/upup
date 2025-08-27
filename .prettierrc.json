@@ -3,12 +3,9 @@
     "singleQuote": true,
     "semi": false,
     "arrowParens": "avoid",
-    "endOfLine": "lf",
+    "endOfLine": "auto",
     "plugins": [
         "prettier-plugin-organize-imports",
         "prettier-plugin-tailwindcss"
-    ],
-    "importOrder": ["^react$", "^[^.]", "^\\."],
-    "importOrderSeparation": true,
-    "importOrderSortSpecifiers": true
+    ]
 }

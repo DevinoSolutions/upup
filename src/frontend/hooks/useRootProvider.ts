@@ -36,6 +36,7 @@ export default function useRootProvider({
     limit: propLimit = 1,
     isProcessing = false,
     allowPreview = true,
+    allowFolderUpload = true,
     maxFileSize,
     shouldCompress = false,
     uploadAdapters = [UploadAdapter.INTERNAL, UploadAdapter.LINK],
@@ -137,44 +138,68 @@ export default function useRootProvider({
         setSelectedFilesMap(filesMap)
     }
     const handleSetSelectedFiles = (newFiles: File[]) => {
+        // Start from existing files to ensure appending behavior.
         const newFilesMap = new Map(selectedFilesMap)
-        const newFilesMapArray = Array.from(newFilesMap.values())
-        const newFilesWithParams: FileWithParams[] = []
+        // Track existing URLs (when present) to avoid duplicates across drops.
+        const existingUrls = new Set(
+            Array.from(newFilesMap.values())
+                .map(v => (v as any).url)
+                .filter(Boolean),
+        ) as Set<string>
+
+        // Collect only the files that are actually accepted and added in this batch.
+        const addedThisBatch: FileWithParams[] = []
+
         for (const file of newFiles) {
-            // Check if files length has surpassed the limit
+            // Respect the limit strictly; stop when capacity is reached.
             if (newFilesMap.size >= limit) {
                 onWarn('Allowed limit has been surpassed!')
                 break
             }
+
             const fileWithParams = fileAppendParams(file)
-            newFilesWithParams.push(fileWithParams)
+
             if (!checkFileType(accept, file)) {
                 onError(`${file.name} has an unsupported type!`)
                 onFileTypeMismatch(file, accept)
-            } else if (
+                continue
+            }
+
+            if (
                 maxFileSize?.size &&
                 maxFileSize?.unit &&
                 !checkFileSize(file, maxFileSize)
-            )
+            ) {
                 onError(
                     `${file.name} is larger than ${maxFileSize.size} ${maxFileSize.unit}!`,
                 )
-            else if (newFilesMap.has(fileWithParams.id))
-                onWarn(`${file.name} has previously been selected`)
-            else if (
-                newFilesMapArray.find(item => (file as any).url === item.url)
-            )
-                onWarn(
-                    `A file with this url: ${
-                        (file as any).url
-                    } has previously been selected`,
-                )
-            else {
-                newFilesMap.set(fileWithParams.id, fileWithParams)
-                setSelectedFilesMap(newFilesMap)
-                onFilesSelected(newFilesWithParams)
+                continue
             }
+
+            if (newFilesMap.has(fileWithParams.id)) {
+                onWarn(`${file.name} has previously been selected`)
+                continue
+            }
+
+            const fileUrl = (file as any).url as string | undefined
+            if (fileUrl && existingUrls.has(fileUrl)) {
+                onWarn(
+                    `A file with this url: ${fileUrl} has previously been selected`,
+                )
+                continue
+            }
+
+            newFilesMap.set(fileWithParams.id, fileWithParams)
+            addedThisBatch.push(fileWithParams)
+            if (fileUrl) existingUrls.add(fileUrl)
         }
+
+        // Apply state update once for better performance and atomicity.
+        setSelectedFilesMap(newFilesMap)
+
+        // Emit a single selection event for just-added files.
+        if (addedThisBatch.length) onFilesSelected(addedThisBatch)
+
         setIsAddingMore(false)
     }
 
@@ -315,16 +340,16 @@ export default function useRootProvider({
             onFilesUploadProgress,
         ],
     )
-    const handleDone = useCallback(() => {
-        onDoneClicked()
-        handleCancel()
-    }, [])
-
     const handleCancel = useCallback(() => {
         setUploadStatus(UploadStatus.PENDING)
         setSelectedFilesMap(new Map())
         setFilesProgressMap({})
     }, [])
+
+    const handleDone = useCallback(() => {
+        onDoneClicked()
+        handleCancel()
+    }, [handleCancel, onDoneClicked])
 
     return {
         inputRef,
@@ -366,6 +391,7 @@ export default function useRootProvider({
             limit,
             isProcessing,
             allowPreview,
+            allowFolderUpload,
             multiple,
             icons: {
                 ContainerAddMoreIcon: icons.ContainerAddMoreIcon || TbPlus,

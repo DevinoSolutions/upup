@@ -10,7 +10,7 @@ function handleSelectedFilesUpdate(prevFiles: GoogleFile[], file: GoogleFile) {
 
 export default function useGoogleDriveUploader(token?: Token) {
     const {
-        props: { onError },
+        props: { onError, accept },
         googleDriveConfigs,
         setActiveAdapter,
         setFiles,
@@ -92,9 +92,52 @@ export default function useGoogleDriveUploader(token?: Token) {
         }
     }
 
+    const submitFiles = async (files: GoogleFile[]) => {
+        if (!files?.length) return
+        setShowLoader(true)
+        setDownloadProgress(0)
+        try {
+            const filtered = files.filter(f => {
+                if (!accept || accept === '*') return true
+                const ext = f.name.split('.').pop() || ''
+                return accept.includes(ext)
+            })
+            const downloadedFiles = (await downloadFiles(filtered)).filter(
+                Boolean,
+            )
+            setFiles(downloadedFiles as File[])
+            setSelectedFiles([])
+            setActiveAdapter(undefined)
+        } catch (error) {
+            onError('Error processing files:' + (error as Error)?.message)
+        } finally {
+            setShowLoader(false)
+            setDownloadProgress(0)
+        }
+    }
+
     const handleCancelDownload = () => {
         setSelectedFiles([])
         setDownloadProgress(0)
+    }
+
+    const onSelectCurrentFolder = async () => {
+        try {
+            const current = path[path.length - 1]
+            if (!current) return
+
+            const files: GoogleFile[] = []
+            const walk = (node: GoogleFile | Root) => {
+                if ('children' in node && Array.isArray(node.children))
+                    node.children.forEach(child => walk(child as any))
+                else files.push(node as GoogleFile)
+            }
+            walk(current as any)
+
+            await submitFiles(files)
+        } catch (error) {
+            onError('Error selecting folder: ' + (error as Error)?.message)
+        }
     }
 
     return {
@@ -106,5 +149,6 @@ export default function useGoogleDriveUploader(token?: Token) {
         handleSubmit,
         downloadProgress,
         handleCancelDownload,
+        onSelectCurrentFolder,
     }
 }

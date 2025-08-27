@@ -50,7 +50,7 @@ const getDownloadUrl = async (
 
 export default function useDropboxUploader(token?: string) {
     const {
-        props: { onError },
+        props: { onError, accept },
         setActiveAdapter,
         setFiles,
     } = useRootContext()
@@ -119,29 +119,8 @@ export default function useDropboxUploader(token?: string) {
                 })
             }
         },
-        [token, fetchFolderContents, onError],
+        [fetchFolderContents],
     )
-    const downloadFiles = useCallback(
-        async (files: DropboxFile[], token?: string) => {
-            if (!token) {
-                onError('No access token provided for Dropbox download')
-                return
-            }
-            const promises = files.map(async (file, index) => {
-                const downloadedFile = await downloadFile(file, token)
-
-                setDownloadProgress(
-                    Math.round(((index + 1) / files.length) * 100),
-                )
-
-                return downloadedFile
-            })
-
-            return await Promise.all(promises)
-        },
-        [],
-    )
-
     /**
      * @description Download a single file
      * @param {DropboxFile} file - The file to download
@@ -173,6 +152,27 @@ export default function useDropboxUploader(token?: string) {
             }
         },
         [onError],
+    )
+
+    const downloadFiles = useCallback(
+        async (files: DropboxFile[], token?: string) => {
+            if (!token) {
+                onError('No access token provided for Dropbox download')
+                return
+            }
+            const promises = files.map(async (file, index) => {
+                const downloadedFile = await downloadFile(file, token)
+
+                setDownloadProgress(
+                    Math.round(((index + 1) / files.length) * 100),
+                )
+
+                return downloadedFile
+            })
+
+            return await Promise.all(promises)
+        },
+        [downloadFile, onError],
     )
 
     /**
@@ -217,6 +217,97 @@ export default function useDropboxUploader(token?: string) {
         setDownloadProgress(0)
     }, [])
 
+    const handleSubmitWithFiles = useCallback(
+        async (files: DropboxFile[]) => {
+            if (!files?.length) return
+            setShowLoader(true)
+            setDownloadProgress(0)
+            try {
+                const filtered = files.filter(f => {
+                    if (!accept || accept === '*') return true
+                    const ext = f.name.split('.').pop() || ''
+                    return accept.includes(ext)
+                })
+                const downloadedFiles = (
+                    await downloadFiles(filtered, token)
+                )?.filter(Boolean)
+                setFiles(downloadedFiles as File[])
+                setSelectedFiles([])
+                setActiveAdapter(undefined)
+            } catch (error) {
+                onError('Error processing files: ' + (error as Error)?.message)
+            } finally {
+                setShowLoader(false)
+                setDownloadProgress(0)
+            }
+        },
+        [accept, downloadFiles, onError, setActiveAdapter, setFiles, token],
+    )
+
+    const onSelectCurrentFolder = useCallback(async () => {
+        try {
+            const current = path[path.length - 1]
+            if (!current) return
+
+            const collectAllFiles = async (folderPath: string) => {
+                if (!token) throw new Error('No access token')
+
+                const initial = await fetch(
+                    'https://api.dropboxapi.com/2/files/list_folder',
+                    {
+                        method: 'POST',
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            path: folderPath,
+                            recursive: true,
+                            include_media_info: true,
+                        }),
+                    },
+                )
+                let data = await initial.json()
+                if (!initial.ok)
+                    throw new Error(
+                        data.error_summary || 'Failed to fetch folder',
+                    )
+
+                let entries = data.entries || []
+                while (data.has_more) {
+                    const cont = await fetch(
+                        'https://api.dropboxapi.com/2/files/list_folder/continue',
+                        {
+                            method: 'POST',
+                            headers: {
+                                Authorization: `Bearer ${token}`,
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({ cursor: data.cursor }),
+                        },
+                    )
+                    data = await cont.json()
+                    if (!cont.ok)
+                        throw new Error(
+                            data.error_summary || 'Failed to continue list',
+                        )
+                    entries = entries.concat(data.entries || [])
+                }
+
+                // Map and filter only files
+                return entries
+                    .map(formatFileItem)
+                    .filter((e: DropboxFile) => !e.isFolder)
+            }
+
+            const startPath = (current as any).path_display || '/'
+            const files = await collectAllFiles(startPath)
+            await handleSubmitWithFiles(files)
+        } catch (error) {
+            onError('Error selecting folder: ' + (error as Error)?.message)
+        }
+    }, [handleSubmitWithFiles, onError, path, token])
+
     return {
         path,
         setPath,
@@ -227,5 +318,6 @@ export default function useDropboxUploader(token?: string) {
         handleSubmit,
         downloadProgress,
         handleCancelDownload,
+        onSelectCurrentFolder,
     }
 }

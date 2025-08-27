@@ -249,6 +249,7 @@ export function useDropboxAuth(cfg?: DropboxConfigs) {
                 return null
             }
         },
+        // eslint-disable-next-line react-hooks/exhaustive-deps
         [clientId, onError],
     )
 

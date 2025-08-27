@@ -16,7 +16,17 @@ export default [
         // files: ['**/*.{js,mjs,cjs,ts,jsx,tsx}'],
         files: ['**/*.{ts,tsx}'],
     },
-    { languageOptions: { globals: { ...globals.browser, ...globals.node } } },
+    {
+        languageOptions: {
+            globals: { ...globals.browser, ...globals.node },
+            parserOptions: {
+                ecmaFeatures: { jsx: true },
+            },
+        },
+        settings: {
+            react: { version: 'detect' },
+        },
+    },
     pluginJs.configs.recommended,
     ...tseslint.configs.recommended,
     pluginReact.configs.flat.recommended,
@@ -28,7 +38,7 @@ export default [
         rules: {
             'react-hooks/rules-of-hooks': 'error', // Checks rules of Hooks
             'react-hooks/exhaustive-deps': 'warn', // Checks effect dependencies
-            'prettier/prettier': 'error', // Show Prettier errors as ESLint errors
+            'prettier/prettier': ['warn', { endOfLine: 'auto' }], // Show Prettier errors as warnings and auto EOL
             '@typescript-eslint/no-explicit-any': 'off',
         },
     },

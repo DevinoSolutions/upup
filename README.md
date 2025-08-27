@@ -29,12 +29,7 @@ import { UpupUploader, UpupProvider } from 'upup-react-file-uploader'
 import 'upup-react-file-uploader/styles'
 
 export default function Uploader() {
-    return (
-        <UpupUploader
-            provider={UpupProvider.AWS}
-            tokenEndpoint="/api/upload-token"
-        />
-    )
+    return <UpupUploader provider={UpupProvider.AWS} tokenEndpoint="/api/upload-token" />
 }
 ```
 

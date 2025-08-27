@@ -39,8 +39,12 @@ export function checkFileSize(
 }
 
 export const fileAppendParams = (file: File) => {
+    const rel =
+        (file as any).relativePath ||
+        (file as any).webkitRelativePath ||
+        file.name
     Object.assign(file, {
-        id: (file as any).id || b64EncodeUnicode(file.name),
+        id: (file as any).id || b64EncodeUnicode(rel),
         url: (file as any).url || URL.createObjectURL(file),
     })
 

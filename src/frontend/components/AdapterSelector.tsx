@@ -7,7 +7,16 @@ import ShouldRender from './shared/ShouldRender'
 
 export default function AdapterSelector() {
     const {
-        props: { mini, accept, multiple, limit, maxFileSize, dark, classNames },
+        props: {
+            mini,
+            accept,
+            multiple,
+            limit,
+            maxFileSize,
+            dark,
+            classNames,
+            allowFolderUpload,
+        },
         isAddingMore,
         setIsAddingMore,
         inputRef,
@@ -36,8 +45,8 @@ export default function AdapterSelector() {
                 >
                     {chosenAdapters.map(({ Icon, id, name }) => (
                         <button
-                            type="button"
                             key={id}
+                            type="button"
                             className={cn(
                                 'upup-group upup-flex upup-items-center upup-gap-[6px] upup-border-b upup-border-gray-200 upup-px-2 upup-py-1 md:upup-flex-col md:upup-justify-center md:upup-rounded-lg md:upup-border-none md:upup-p-0',
                                 {
@@ -51,18 +60,7 @@ export default function AdapterSelector() {
                             }}
                             onClick={() => handleAdapterClick(id)}
                         >
-                            <span
-                                className={cn(
-                                    'upup-scale-75 upup-rounded-lg upup-bg-white upup-p-0 upup-text-2xl upup-font-semibold group-hover:upup-scale-90 md:upup-scale-100 md:upup-p-[6px] md:upup-shadow md:group-hover:upup-scale-110',
-                                    {
-                                        'upup-bg-[#323232] dark:upup-bg-[#323232]':
-                                            dark,
-                                    },
-                                    classNames.adapterButtonIcon,
-                                )}
-                            >
-                                <Icon />
-                            </span>
+                            <Icon />
                             <span
                                 className={cn(
                                     'upup-text-xs upup-text-[#242634]',
@@ -83,8 +81,13 @@ export default function AdapterSelector() {
                 type="file"
                 accept={accept}
                 className="upup-hidden"
+                data-testid="upup-file-input"
                 ref={inputRef}
                 multiple={multiple}
+                // Allow selecting folders when enabled (webkitdirectory works in Chromium-based browsers)
+                {...((allowFolderUpload
+                    ? { webkitdirectory: true, directory: true }
+                    : {}) as any)}
                 onChange={handleInputFileChange}
             />
             <div className="upup-flex upup-flex-col upup-items-center upup-gap-1 upup-text-center md:upup-gap-2 md:upup-px-[30px]">
@@ -113,6 +116,20 @@ export default function AdapterSelector() {
                     >
                         browse
                     </button>
+                    {allowFolderUpload && (
+                        <span
+                            className={cn(
+                                'upup-text-xs upup-text-[#0B0B0B] md:upup-text-sm',
+                                {
+                                    'upup-text-white dark:upup-text-white':
+                                        dark,
+                                },
+                            )}
+                        >
+                            {' '}
+                            or folder
+                        </span>
+                    )}
                 </div>
                 <p
                     className={cn(

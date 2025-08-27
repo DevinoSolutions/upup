@@ -122,6 +122,7 @@ export type UpupUploaderProps = {
     tokenEndpoint: string
 
     // Optional Props
+    allowFolderUpload?: boolean
     enableAutoCorsConfig?: boolean
     uploadAdapters?: UploadAdapter[]
     driveConfigs?: {

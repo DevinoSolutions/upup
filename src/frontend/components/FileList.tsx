@@ -14,7 +14,7 @@ export default memo(function FileList() {
         activeAdapter,
         files,
         upload: { proceedUpload, uploadStatus, totalProgress },
-        props: { dark, classNames, allowPreview, isProcessing },
+        props: { dark, classNames, isProcessing },
         handleDone,
         handleCancel,
     } = useRootContext()
@@ -44,12 +44,11 @@ export default memo(function FileList() {
                             ` ${
                                 isProcessing &&
                                 'upup-pointer-events-none upup-opacity-75'
-                            }  upup-flex upup-flex-col upup-gap-4`,
+                            }  upup-flex upup-flex-col upup-gap-3 upup-font-[Arial,Helvetica,sans-serif]`,
                             {
-                                'md:upup-grid md:upup-gap-y-6': allowPreview,
-                                'md:upup-grid-cols-3':
-                                    allowPreview && files.size > 1,
-                                'upup-flex-1': files.size === 1 && allowPreview,
+                                'md:upup-grid md:upup-gap-y-6': files.size > 1,
+                                'md:upup-grid-cols-2': files.size > 1,
+                                'upup-flex-1': files.size === 1,
                                 [classNames.fileListContainerInnerMultiple!]:
                                     classNames.fileListContainerInnerMultiple &&
                                     files.size > 1,
@@ -59,9 +58,24 @@ export default memo(function FileList() {
                             },
                         )}
                     >
-                        {Array.from(files.values()).map(file => (
-                            <FileItem key={file.id} file={file} />
-                        ))}
+                        {Array.from(files.values())
+                            .sort((a: any, b: any) => {
+                                const pa: string =
+                                    (a as any).relativePath ||
+                                    (a as any).webkitRelativePath ||
+                                    a.name
+                                const pb: string =
+                                    (b as any).relativePath ||
+                                    (b as any).webkitRelativePath ||
+                                    b.name
+                                return (
+                                    pa.localeCompare(pb) ||
+                                    a.name.localeCompare(b.name)
+                                )
+                            })
+                            .map(file => (
+                                <FileItem key={file.id} file={file} />
+                            ))}
                     </div>
                 </motion.div>
             </MyAnimatePresence>
@@ -77,7 +91,7 @@ export default memo(function FileList() {
                 <ShouldRender if={uploadStatus !== UploadStatus.SUCCESSFUL}>
                     <button
                         className={cn(
-                            'upup-disabled:animate-pulse upup-ml-auto upup-rounded-lg upup-bg-blue-600 upup-px-3 upup-py-2 upup-text-sm upup-font-medium upup-text-white',
+                            'upup-disabled:animate-pulse upup-ml-auto upup-rounded-full upup-bg-blue-600 upup-px-4 upup-py-2 upup-text-sm upup-font-medium upup-text-white',
                             {
                                 'upup-bg-[#30C5F7] dark:upup-bg-[#30C5F7]':
                                     dark,
