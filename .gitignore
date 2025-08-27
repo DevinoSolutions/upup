@@ -24,3 +24,5 @@ public
 coverage
 
 *.tgz
+
+playwright-report
