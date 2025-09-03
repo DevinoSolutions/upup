@@ -25,4 +25,6 @@ coverage
 
 *.tgz
 
-playwright-report
+# package managers
+pnpm-lock.yaml
+package-lock.json
