@@ -120,7 +120,7 @@ jobs:
   Build:
     name: Build project
     runs-on: ubuntu-latest
-  needs: [Prettier-check, Test, E2E]
+    needs: [Prettier-check, Test, E2E]
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
