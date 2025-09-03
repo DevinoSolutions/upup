@@ -108,37 +108,12 @@ const config = {
 
     env: (config: any) => ({
         ...config,
-        // Prefer explicit Storybook envs, but fall back to NEXT_PUBLIC_* from local .env
-        GOOGLE_CLIENT_ID:
-            process.env.GOOGLE_CLIENT_ID ||
-            process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ||
-            '',
-        GOOGLE_API_KEY:
-            process.env.GOOGLE_API_KEY ||
-            process.env.NEXT_PUBLIC_GOOGLE_API_KEY ||
-            '',
-        GOOGLE_APP_ID:
-            process.env.GOOGLE_APP_ID ||
-            process.env.NEXT_PUBLIC_GOOGLE_APP_ID ||
-            '',
-        ONEDRIVE_CLIENT_ID:
-            process.env.ONEDRIVE_CLIENT_ID ||
-            process.env.NEXT_PUBLIC_ONEDRIVE_CLIENT_ID ||
-            '',
-        DROPBOX_CLIENT_ID:
-            process.env.DROPBOX_CLIENT_ID ||
-            process.env.NEXT_PUBLIC_DROPBOX_CLIENT_ID ||
-            '',
-        // Some code looks for lowercase dropbox_redirect_uri; provide both
-        DROPBOX_REDIRECT_URI:
-            process.env.DROPBOX_REDIRECT_URI ||
-            (process.env.NEXT_PUBLIC_DROPBOX_REDIRECT_URI as string) ||
-            'http://localhost:6006/dp_redirect',
-        dropbox_redirect_uri:
-            process.env.dropbox_redirect_uri ||
-            process.env.DROPBOX_REDIRECT_URI ||
-            (process.env.NEXT_PUBLIC_DROPBOX_REDIRECT_URI as string) ||
-            'http://localhost:6006/dp_redirect',
+        GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID!,
+        GOOGLE_API_KEY: process.env.GOOGLE_API_KEY!,
+        GOOGLE_APP_ID: process.env.GOOGLE_APP_ID!,
+        ONEDRIVE_CLIENT_ID: process.env.ONEDRIVE_CLIENT_ID!,
+        DROPBOX_CLIENT_ID: process.env.DROPBOX_CLIENT_ID!,
+        DROPBOX_REDIRECT_URI: process.env.dropbox_redirect_uri!,
     }),
 }
 
