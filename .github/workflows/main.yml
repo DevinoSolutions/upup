@@ -230,6 +230,8 @@ jobs:
           GOOGLE_APP_ID: ${{ secrets.GOOGLE_APP_ID }}
           ONEDRIVE_CLIENT_ID: ${{ secrets.ONEDRIVE_CLIENT_ID }}
           DROPBOX_CLIENT_ID: ${{ secrets.DROPBOX_CLIENT_ID }}
+          DROPBOX_APP_SECRET: ${{ secrets.DROPBOX_APP_SECRET }}
+          DROPBOX_REDIRECT_URI: ${{ secrets.DROPBOX_REDIRECT_URI }}
         run: pnpm run test:e2e --reporter=list
 
       - name: Upload Playwright report
