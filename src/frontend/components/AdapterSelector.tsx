@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useCallback } from 'react'
 import { useRootContext } from '../context/RootContext'
 import useAdapterSelector from '../hooks/useAdapterSelector'
 import { cn } from '../lib/tailwind'
@@ -15,14 +15,64 @@ export default function AdapterSelector() {
             maxFileSize,
             dark,
             classNames,
-            allowFolderUpload,
+            showSelectFolderButton,
         },
         isAddingMore,
         setIsAddingMore,
         inputRef,
+        setFiles,
     } = useRootContext()
     const { chosenAdapters, handleAdapterClick, handleInputFileChange } =
         useAdapterSelector()
+
+    const handleBrowseFilesClick = useCallback(() => {
+        if (inputRef.current) {
+            inputRef.current.removeAttribute('webkitdirectory')
+            inputRef.current.removeAttribute('directory')
+            inputRef.current.click()
+        }
+    }, [inputRef])
+
+    const handleSelectFolderClick = useCallback(async () => {
+        const anyWindow = window as any
+        if (anyWindow.showDirectoryPicker) {
+            try {
+                const directoryHandle = await anyWindow.showDirectoryPicker()
+                const files: File[] = []
+
+                async function getFiles(dirHandle: any, path = '') {
+                    for await (const entry of dirHandle.values()) {
+                        const newPath = path
+                            ? `${path}/${entry.name}`
+                            : entry.name
+                        if (entry.kind === 'file') {
+                            const file = await entry.getFile()
+                            ;(file as any).webkitRelativePath = newPath
+                            files.push(file)
+                        } else if (entry.kind === 'directory') {
+                            await getFiles(entry, newPath)
+                        }
+                    }
+                }
+                await getFiles(directoryHandle)
+                if (files.length > 0) {
+                    setFiles(files)
+                    if (inputRef.current) {
+                        inputRef.current.value = ''
+                    }
+                }
+            } catch {
+                // User cancelled, do nothing.
+            }
+        } else {
+            // Fallback to existing behavior
+            if (inputRef.current) {
+                inputRef.current.setAttribute('webkitdirectory', 'true')
+                inputRef.current.setAttribute('directory', 'true')
+                inputRef.current.click()
+            }
+        }
+    }, [inputRef, setFiles])
 
     return (
         <div
@@ -84,10 +134,6 @@ export default function AdapterSelector() {
                 data-testid="upup-file-input"
                 ref={inputRef}
                 multiple={multiple}
-                // Allow selecting folders when enabled (webkitdirectory works in Chromium-based browsers)
-                {...((allowFolderUpload
-                    ? { webkitdirectory: true, directory: true }
-                    : {}) as any)}
                 onChange={handleInputFileChange}
             />
             <div className="upup-flex upup-flex-col upup-items-center upup-gap-1 upup-text-center md:upup-gap-2 md:upup-px-[30px]">
@@ -112,23 +158,38 @@ export default function AdapterSelector() {
                                     dark,
                             },
                         )}
-                        onClick={() => inputRef.current?.click()}
+                        onClick={handleBrowseFilesClick}
                     >
-                        browse
+                        browse files
                     </button>
-                    {allowFolderUpload && (
-                        <span
-                            className={cn(
-                                'upup-text-xs upup-text-[#0B0B0B] md:upup-text-sm',
-                                {
-                                    'upup-text-white dark:upup-text-white':
-                                        dark,
-                                },
-                            )}
-                        >
-                            {' '}
-                            or folder
-                        </span>
+                    {showSelectFolderButton && (
+                        <>
+                            <span
+                                className={cn(
+                                    'upup-text-xs upup-text-[#0B0B0B] md:upup-text-sm',
+                                    {
+                                        'upup-text-white dark:upup-text-white':
+                                            dark,
+                                    },
+                                )}
+                            >
+                                {' '}
+                                or
+                            </span>
+                            <button
+                                type="button"
+                                className={cn(
+                                    'upup-cursor-pointer upup-text-xs upup-font-semibold upup-text-[#0E2ADD] md:upup-text-sm',
+                                    {
+                                        'upup-text-[#59D1F9] dark:upup-text-[#59D1F9]':
+                                            dark,
+                                    },
+                                )}
+                                onClick={handleSelectFolderClick}
+                            >
+                                select a folder
+                            </button>
+                        </>
                     )}
                 </div>
                 <p
