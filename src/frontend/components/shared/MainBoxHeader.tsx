@@ -70,7 +70,7 @@ export default function MainBoxHeader({ handleCancel }: Readonly<Props>) {
             <ShouldRender if={!isAddingMore && limit > 1 && !isLimitReached}>
                 <button
                     className={cn(
-                        'upup-col-start-3 upup-col-end-5 upup-flex upup-items-center upup-justify-end upup-gap-1 upup-p-1 upup-text-sm upup-text-blue-600 md:upup-col-start-4',
+                        'upup-col-start-3 upup-col-end-5 upup-flex upup-items-center upup-justify-end upup-gap-1 upup-rounded-md upup-border upup-border-dashed upup-border-blue-400/50 upup-px-2 upup-py-1 upup-text-sm upup-text-blue-600 md:upup-col-start-4',
                         {
                             'upup-text-[#30C5F7] dark:upup-text-[#30C5F7]':
                                 dark,

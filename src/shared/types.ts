@@ -122,6 +122,7 @@ export type UpupUploaderProps = {
     tokenEndpoint: string
 
     // Optional Props
+    showSelectFolderButton?: boolean // Controls the "select a folder" button visibility
     enableAutoCorsConfig?: boolean
     uploadAdapters?: UploadAdapter[]
     driveConfigs?: {

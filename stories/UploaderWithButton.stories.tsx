@@ -36,6 +36,11 @@ const meta = {
                 UploadAdapter.LINK,
             ],
         },
+        showSelectFolderButton: {
+            control: 'boolean',
+            description:
+                'Show "select a folder" button for browsing folders via file explorer',
+        },
     },
     render: (args, context) => {
         const isDarkMode = context.globals.theme !== 'light'
@@ -53,10 +58,7 @@ const meta = {
                     onFilesSelected={files => {
                         console.log(files)
                     }}
-                    maxFileSize={{
-                        size: 1,
-                        unit: 'KB',
-                    }}
+                    maxFileSize={{ size: 10, unit: 'MB' }}
                     onError={error => {
                         console.error('UpupUploader Error:', error)
                     }}
@@ -86,7 +88,8 @@ export const UploaderWithButton: Story = {
         },
         limit: 10,
         provider: UpupProvider.BackBlaze,
-        tokenEndpoint: 'https://localhost:3000/api/upload',
+        tokenEndpoint:
+            process.env.TOKEN_ENDPOINT || 'http://localhost:3000/api/upload',
         uploadAdapters: [
             UploadAdapter.INTERNAL,
             UploadAdapter.ONE_DRIVE,
@@ -107,6 +110,7 @@ export const UploaderWithButton: Story = {
                 'accept',
                 'limit',
                 'mini',
+                'showSelectFolderButton',
             ],
         },
     },

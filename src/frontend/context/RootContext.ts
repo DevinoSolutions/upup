@@ -50,6 +50,7 @@ type ContextProps = Required<
         | 'dark'
         | 'classNames'
         | 'icons'
+        | 'showSelectFolderButton'
     >
 > &
     Pick<UpupUploaderProps, 'maxFileSize'> & {

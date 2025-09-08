@@ -1,4 +1,4 @@
-import { AnimationProps, motion } from 'framer-motion'
+import { motion, type Transition } from 'framer-motion'
 import { GoogleFile, Root } from 'google'
 import { OneDriveFile } from 'microsoft'
 import React from 'react'
@@ -32,7 +32,7 @@ export default function DriveBrowserItem({
         f => f.id === file.id,
     ).length
 
-    const transition: AnimationProps['transition'] = {
+    const transition: Transition = {
         type: 'spring',
         damping: 10,
         stiffness: 100,

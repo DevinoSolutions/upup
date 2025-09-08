@@ -33,6 +33,7 @@ type Props = {
     showLoader: boolean
     handleSubmit: () => Promise<void>
     handleCancelDownload: () => void
+    onSelectCurrentFolder?: () => Promise<void> | void
 }
 
 function filterItems(item: OneDriveFile | GoogleFile, accept: string) {
@@ -56,6 +57,7 @@ export default function DriveBrowser({
     showLoader,
     handleSubmit,
     handleCancelDownload,
+    onSelectCurrentFolder,
     ...rest
 }: Readonly<Props>) {
     const {
@@ -127,7 +129,9 @@ export default function DriveBrowser({
                         </div>
                     </ShouldRender>
 
-                    <ShouldRender if={!!selectedFiles.length}>
+                    <ShouldRender
+                        if={!!selectedFiles.length || !!onSelectCurrentFolder}
+                    >
                         <MyAnimatePresence>
                             <motion.div
                                 key="drive-browser"
@@ -144,6 +148,23 @@ export default function DriveBrowser({
                                     classNames.driveFooter,
                                 )}
                             >
+                                <ShouldRender if={!!onSelectCurrentFolder}>
+                                    <button
+                                        className={cn(
+                                            'upup-rounded-md upup-bg-transparent upup-px-3 upup-py-2 upup-text-sm upup-font-medium upup-text-blue-600 upup-transition-all upup-duration-300',
+                                            {
+                                                'upup-text-[#30C5F7] dark:upup-text-[#30C5F7]':
+                                                    dark,
+                                            },
+                                        )}
+                                        onClick={() =>
+                                            onSelectCurrentFolder?.()
+                                        }
+                                        disabled={showLoader}
+                                    >
+                                        Select this folder
+                                    </button>
+                                </ShouldRender>
                                 <button
                                     className={cn(
                                         'upup-rounded-md upup-bg-blue-600 upup-px-3 upup-py-2 upup-text-sm upup-font-medium upup-text-white upup-transition-all upup-duration-300',

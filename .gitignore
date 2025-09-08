@@ -22,5 +22,14 @@ public
 
 # Tests
 coverage
+/test-results
 
 *.tgz
+
+# package managers
+pnpm-lock.yaml
+package-lock.json
+
+# playwright
+playwright-report
+

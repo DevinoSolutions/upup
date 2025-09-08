@@ -3,7 +3,9 @@ import React, {
     HTMLAttributes,
     memo,
     MouseEventHandler,
+    useEffect,
     useMemo,
+    useState,
 } from 'react'
 import { createPortal } from 'react-dom'
 import { useRootContext } from '../context/RootContext'
@@ -28,6 +30,48 @@ export default memo(
             props: { dark, classNames },
         } = useRootContext()
         const isImage = useMemo(() => fileGetIsImage(fileType), [fileType])
+        const isText = useMemo(() => {
+            if (!fileType) return false
+            if (fileType.startsWith('text/')) return true
+            const lower = fileName.toLowerCase()
+            return (
+                lower.endsWith('.txt') ||
+                lower.endsWith('.md') ||
+                lower.endsWith('.json') ||
+                lower.endsWith('.csv') ||
+                lower.endsWith('.log') ||
+                lower.endsWith('.js') ||
+                lower.endsWith('.ts') ||
+                lower.endsWith('.css') ||
+                lower.endsWith('.html')
+            )
+        }, [fileType, fileName])
+
+        const [textContent, setTextContent] = useState<string>('')
+        const [textLoading, setTextLoading] = useState(false)
+        const [textError, setTextError] = useState<string>()
+
+        useEffect(() => {
+            let cancelled = false
+            const loadText = async () => {
+                if (!isText) return
+                try {
+                    setTextLoading(true)
+                    const res = await fetch(fileUrl)
+                    const txt = await res.text()
+                    if (!cancelled) setTextContent(txt)
+                } catch (e) {
+                    if (!cancelled)
+                        setTextError((e as Error)?.message || 'Preview error')
+                } finally {
+                    if (!cancelled) setTextLoading(false)
+                }
+            }
+            loadText()
+            return () => {
+                cancelled = true
+            }
+        }, [fileUrl, isText])
 
         return createPortal(
             <div
@@ -55,15 +99,28 @@ export default memo(
                             />
                         </ShouldRender>
                         <ShouldRender if={!isImage}>
-                            <object
-                                data={fileUrl}
-                                width="100%"
-                                height="100%"
-                                name={fileName}
-                                type={fileType}
-                            >
-                                <p>Loading...</p>
-                            </object>
+                            <ShouldRender if={isText}>
+                                <div className="upup-h-full upup-w-full upup-overflow-auto upup-p-4 upup-font-mono upup-text-xs">
+                                    {textLoading && <p>Loading...</p>}
+                                    {textError && <p>Error: {textError}</p>}
+                                    {!textLoading && !textError && (
+                                        <pre className="upup-whitespace-pre-wrap">
+                                            {textContent}
+                                        </pre>
+                                    )}
+                                </div>
+                            </ShouldRender>
+                            <ShouldRender if={!isText}>
+                                <object
+                                    data={fileUrl}
+                                    width="100%"
+                                    height="100%"
+                                    name={fileName}
+                                    type={fileType}
+                                >
+                                    <p>Loading...</p>
+                                </object>
+                            </ShouldRender>
                         </ShouldRender>
                     </div>
                 </div>

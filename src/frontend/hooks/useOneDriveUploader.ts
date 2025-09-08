@@ -44,7 +44,7 @@ export default function useOneDriveUploader(graphClient?: Client) {
     const {
         setFiles,
         setActiveAdapter,
-        props: { onError },
+        props: { onError, accept },
     } = useRootContext()
     const [isClickLoading, setIsClickLoading] = useState<boolean>()
     const [path, setPath] = useState<OneDriveRoot[]>([])
@@ -72,6 +72,31 @@ export default function useOneDriveUploader(graphClient?: Client) {
         } finally {
             setIsClickLoading(false)
         }
+    }
+
+    const fetchChildren = async (folderId: string) => {
+        const response = await graphClient
+            ?.api(`/me/drive/items/${folderId}/children`)
+            .select(
+                'id,name,folder,file,thumbnails,@microsoft.graph.downloadUrl',
+            )
+            .expand('thumbnails')
+            .get()
+        return response.value.map(formatFileItem) as OneDriveFile[]
+    }
+
+    const getAllFilesRecursively = async (rootFolderId: string) => {
+        const files: OneDriveFile[] = []
+        const queue: string[] = [rootFolderId]
+        while (queue.length) {
+            const folderId = queue.shift()!
+            const children = await fetchChildren(folderId)
+            for (const child of children) {
+                if (child.isFolder) queue.push(child.id)
+                else files.push(child)
+            }
+        }
+        return files
     }
 
     const handleClick = async (file: OneDriveFile) => {
@@ -158,9 +183,47 @@ export default function useOneDriveUploader(graphClient?: Client) {
         }
     }
 
+    const submitFiles = async (files: OneDriveFile[]) => {
+        if (!files?.length) return
+        setShowLoader(true)
+        setDownloadProgress(0)
+        try {
+            const filtered = files.filter(f => {
+                if (!accept || accept === '*') return true
+                const ext = f.name.split('.').pop() || ''
+                return accept.includes(ext)
+            })
+            const downloadedFiles = (await downloadFiles(filtered)).filter(
+                Boolean,
+            )
+            setFiles(downloadedFiles as File[])
+            setSelectedFiles([])
+            setActiveAdapter(undefined)
+        } catch (error) {
+            onError('Error processing files:' + (error as Error)?.message)
+        } finally {
+            setShowLoader(false)
+            setDownloadProgress(0)
+        }
+    }
     const handleCancelDownload = () => {
         setSelectedFiles([])
         setDownloadProgress(0)
+    }
+
+    const onSelectCurrentFolder = async () => {
+        try {
+            const current = path[path.length - 1]
+            if (!current) return
+            if (!graphClient) {
+                onError('Graph client not initialized')
+                return
+            }
+            const files = await getAllFilesRecursively(current.id)
+            await submitFiles(files)
+        } catch (error) {
+            onError('Error selecting folder: ' + (error as Error)?.message)
+        }
     }
 
     return {
@@ -173,5 +236,6 @@ export default function useOneDriveUploader(graphClient?: Client) {
         handleSubmit,
         downloadProgress,
         handleCancelDownload,
+        onSelectCurrentFolder,
     }
 }

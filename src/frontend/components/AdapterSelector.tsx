@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useCallback } from 'react'
 import { useRootContext } from '../context/RootContext'
 import useAdapterSelector from '../hooks/useAdapterSelector'
 import { cn } from '../lib/tailwind'
@@ -7,13 +7,72 @@ import ShouldRender from './shared/ShouldRender'
 
 export default function AdapterSelector() {
     const {
-        props: { mini, accept, multiple, limit, maxFileSize, dark, classNames },
+        props: {
+            mini,
+            accept,
+            multiple,
+            limit,
+            maxFileSize,
+            dark,
+            classNames,
+            showSelectFolderButton,
+        },
         isAddingMore,
         setIsAddingMore,
         inputRef,
+        setFiles,
     } = useRootContext()
     const { chosenAdapters, handleAdapterClick, handleInputFileChange } =
         useAdapterSelector()
+
+    const handleBrowseFilesClick = useCallback(() => {
+        if (inputRef.current) {
+            inputRef.current.removeAttribute('webkitdirectory')
+            inputRef.current.removeAttribute('directory')
+            inputRef.current.click()
+        }
+    }, [inputRef])
+
+    const handleSelectFolderClick = useCallback(async () => {
+        const anyWindow = window as any
+        if (anyWindow.showDirectoryPicker) {
+            try {
+                const directoryHandle = await anyWindow.showDirectoryPicker()
+                const files: File[] = []
+
+                async function getFiles(dirHandle: any, path = '') {
+                    for await (const entry of dirHandle.values()) {
+                        const newPath = path
+                            ? `${path}/${entry.name}`
+                            : entry.name
+                        if (entry.kind === 'file') {
+                            const file = await entry.getFile()
+                            ;(file as any).webkitRelativePath = newPath
+                            files.push(file)
+                        } else if (entry.kind === 'directory') {
+                            await getFiles(entry, newPath)
+                        }
+                    }
+                }
+                await getFiles(directoryHandle)
+                if (files.length > 0) {
+                    setFiles(files)
+                    if (inputRef.current) {
+                        inputRef.current.value = ''
+                    }
+                }
+            } catch {
+                // User cancelled, do nothing.
+            }
+        } else {
+            // Fallback to existing behavior
+            if (inputRef.current) {
+                inputRef.current.setAttribute('webkitdirectory', 'true')
+                inputRef.current.setAttribute('directory', 'true')
+                inputRef.current.click()
+            }
+        }
+    }, [inputRef, setFiles])
 
     return (
         <div
@@ -36,8 +95,8 @@ export default function AdapterSelector() {
                 >
                     {chosenAdapters.map(({ Icon, id, name }) => (
                         <button
-                            type="button"
                             key={id}
+                            type="button"
                             className={cn(
                                 'upup-group upup-flex upup-items-center upup-gap-[6px] upup-border-b upup-border-gray-200 upup-px-2 upup-py-1 md:upup-flex-col md:upup-justify-center md:upup-rounded-lg md:upup-border-none md:upup-p-0',
                                 {
@@ -51,18 +110,7 @@ export default function AdapterSelector() {
                             }}
                             onClick={() => handleAdapterClick(id)}
                         >
-                            <span
-                                className={cn(
-                                    'upup-scale-75 upup-rounded-lg upup-bg-white upup-p-0 upup-text-2xl upup-font-semibold group-hover:upup-scale-90 md:upup-scale-100 md:upup-p-[6px] md:upup-shadow md:group-hover:upup-scale-110',
-                                    {
-                                        'upup-bg-[#323232] dark:upup-bg-[#323232]':
-                                            dark,
-                                    },
-                                    classNames.adapterButtonIcon,
-                                )}
-                            >
-                                <Icon />
-                            </span>
+                            <Icon />
                             <span
                                 className={cn(
                                     'upup-text-xs upup-text-[#242634]',
@@ -83,6 +131,7 @@ export default function AdapterSelector() {
                 type="file"
                 accept={accept}
                 className="upup-hidden"
+                data-testid="upup-file-input"
                 ref={inputRef}
                 multiple={multiple}
                 onChange={handleInputFileChange}
@@ -109,10 +158,39 @@ export default function AdapterSelector() {
                                     dark,
                             },
                         )}
-                        onClick={() => inputRef.current?.click()}
+                        onClick={handleBrowseFilesClick}
                     >
-                        browse
+                        browse files
                     </button>
+                    {showSelectFolderButton && (
+                        <>
+                            <span
+                                className={cn(
+                                    'upup-text-xs upup-text-[#0B0B0B] md:upup-text-sm',
+                                    {
+                                        'upup-text-white dark:upup-text-white':
+                                            dark,
+                                    },
+                                )}
+                            >
+                                {' '}
+                                or
+                            </span>
+                            <button
+                                type="button"
+                                className={cn(
+                                    'upup-cursor-pointer upup-text-xs upup-font-semibold upup-text-[#0E2ADD] md:upup-text-sm',
+                                    {
+                                        'upup-text-[#59D1F9] dark:upup-text-[#59D1F9]':
+                                            dark,
+                                    },
+                                )}
+                                onClick={handleSelectFolderClick}
+                            >
+                                select a folder
+                            </button>
+                        </>
+                    )}
                 </div>
                 <p
                     className={cn(
