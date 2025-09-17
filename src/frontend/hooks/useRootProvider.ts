@@ -36,7 +36,7 @@ export default function useRootProvider({
     limit: propLimit = 1,
     isProcessing = false,
     allowPreview = true,
-    allowFolderUpload = true,
+    showSelectFolderButton = false,
     maxFileSize,
     shouldCompress = false,
     uploadAdapters = [UploadAdapter.INTERNAL, UploadAdapter.LINK],
@@ -391,7 +391,7 @@ export default function useRootProvider({
             limit,
             isProcessing,
             allowPreview,
-            allowFolderUpload,
+            showSelectFolderButton,
             multiple,
             icons: {
                 ContainerAddMoreIcon: icons.ContainerAddMoreIcon || TbPlus,

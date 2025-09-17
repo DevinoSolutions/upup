@@ -113,7 +113,7 @@ const config = {
         GOOGLE_APP_ID: process.env.GOOGLE_APP_ID!,
         ONEDRIVE_CLIENT_ID: process.env.ONEDRIVE_CLIENT_ID!,
         DROPBOX_CLIENT_ID: process.env.DROPBOX_CLIENT_ID!,
-        DROPBOX_REDIRECT_URI: process.env.dropbox_redirect_uri!,
+        DROPBOX_REDIRECT_URI: process.env.DROPBOX_REDIRECT_URI!,
     }),
 }
 

@@ -36,6 +36,11 @@ const meta = {
                 UploadAdapter.LINK,
             ],
         },
+        showSelectFolderButton: {
+            control: 'boolean',
+            description:
+                'Show "select a folder" button for browsing folders via file explorer',
+        },
     },
     render: (args, context) => {
         const isDarkMode = context.globals.theme !== 'light'
@@ -105,6 +110,7 @@ export const UploaderWithButton: Story = {
                 'accept',
                 'limit',
                 'mini',
+                'showSelectFolderButton',
             ],
         },
     },
