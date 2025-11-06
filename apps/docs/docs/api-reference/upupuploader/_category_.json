@@ -1,0 +1,8 @@
+{
+  "label": "UpupUploader",
+  "position": 3,
+  "link": {
+    "type": "generated-index",
+    "description": "The UpupUploader is a fully-customisable React component. The full list of props has been split into categories for easier understanding."
+  }
+}

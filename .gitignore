@@ -1,35 +1,32 @@
-*.log
-.DS_Store
+# Dependencies
 node_modules
-.cache
-dist
-dist-node
-.idea
-.vscode
+apps/*/node_modules
+packages/*/node_modules
 
-
-# storybook
+# Build outputs
+.turbo
+**/.turbo-cache
+**/.next
+**/build
+packages/upup/dist
+packages/upup/dist-node
+apps/landing/public/documentation
+coverage
+playwright-report
 storybook-static
 
-# local env files
+# Logs
+*.log
+
+# Env files
 .env
 .env.*
 !.env.example
 
-# public folder temp files
-public
-/stories/Uploader.stories.js
+# Editors
+.DS_Store
+.idea
+.vscode
 
-# Tests
-coverage
-/test-results
-
+# Misc
 *.tgz
-
-# package managers
-pnpm-lock.yaml
-package-lock.json
-
-# playwright
-playwright-report
-

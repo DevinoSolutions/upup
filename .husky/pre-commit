@@ -1,4 +1,4 @@
-pnpm prettier-check
-pnpm test
-pnpm build
-pnpm build-storybook
+pnpm --filter upup-react-file-uploader run prettier-check
+pnpm --filter upup-react-file-uploader run test
+pnpm --filter upup-react-file-uploader run build
+pnpm --filter upup-react-file-uploader run build-storybook
