@@ -13,40 +13,22 @@ const nextConfig = {
           }
         : undefined,
     transpilePackages: ['@stackblitz/sdk'],
-    trailingSlash: false,
-    async headers() {
+    async rewrites() {
+        if (isDev) {
+            return [
+                {
+                    source: '/documentation/:path*',
+                    destination: `${docsOrigin}/documentation/:path*`,
+                },
+            ];
+        }
+
         return [
             {
                 source: '/documentation/:path*',
-                headers: [
-                    {
-                        key: 'Cache-Control',
-                        value: 'public, max-age=31536000, immutable',
-                    },
-                ],
+                destination: '/documentation/index.html',
             },
         ];
-    },
-    async rewrites() {
-        if (isDev) {
-            return {
-                beforeFiles: [
-                    {
-                        source: '/documentation/:path*',
-                        destination: `${docsOrigin}/documentation/:path*`,
-                    },
-                ],
-                afterFiles: [],
-                fallback: [],
-            };
-        }
-
-        // In production, let Next.js serve everything from public/documentation automatically
-        return {
-            beforeFiles: [],
-            afterFiles: [],
-            fallback: [],
-        };
     },
 };
 
