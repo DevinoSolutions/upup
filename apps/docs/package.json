@@ -4,8 +4,8 @@
   "private": true,
   "scripts": {
     "docusaurus": "docusaurus",
-    "dev": "dotenv -e ../../.env.ports -e ../../local-dev/ports/docs.env -- docusaurus start",
-    "start-doc": "dotenv -e ../../.env.ports -e ../../local-dev/ports/docs.env -- docusaurus start",
+    "dev": "dotenv --override -e ../../.env.ports -e ../../local-dev/ports/docs.env -- docusaurus start",
+    "start-doc": "dotenv --override -e ../../.env.ports -e ../../local-dev/ports/docs.env -- docusaurus start",
     "start-server": "node server.js",
     "build": "docusaurus build --out-dir ../landing/public/documentation",
     "swizzle": "docusaurus swizzle",

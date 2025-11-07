@@ -17,7 +17,7 @@ Feel free to extend this list as new local services are added—just stay inside
 
 ## Getting Started
 
-Each app loads two env files via `dotenv-cli`: the shared `.env.ports` plus its own override in `local-dev/ports/*.env`. That keeps shared values centralized while letting every dev server set its own `PORT`.
+Each app loads two env files via `dotenv-cli` with `--override`: the shared `.env.ports` plus its own override in `local-dev/ports/*.env`. That keeps shared values centralized while letting every dev server set its own `PORT`, even if the parent process already defined one.
 
 ```
 local-dev/
