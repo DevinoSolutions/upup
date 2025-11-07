@@ -14,6 +14,7 @@
     "dev:all": "turbo run dev --parallel",
     "dev:package": "pnpm --filter upup-react-file-uploader run dev",
     "lint": "turbo run lint",
+    "prettier-check": "pnpm --filter upup-react-file-uploader exec prettier --check \"src/**/*.{ts,tsx}\"",
     "start": "pnpm --filter @upup/landing run start",
     "test": "turbo run test",
     "typecheck": "turbo run typecheck"
