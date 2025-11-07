@@ -1,4 +1,3 @@
-/* eslint-disable prettier/prettier */
 import { DragEventHandler, useCallback, useMemo, useState } from 'react'
 import { UploadStatus, useRootContext } from '../context/RootContext'
 
