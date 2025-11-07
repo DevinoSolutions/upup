@@ -14,6 +14,7 @@ const nextConfig = {
         : undefined,
     transpilePackages: ['@stackblitz/sdk'],
     trailingSlash: false,
+    skipTrailingSlashRedirect: true,
     async redirects() {
         return [
             {
@@ -38,7 +39,16 @@ const nextConfig = {
         }
 
         return {
-            beforeFiles: [],
+            beforeFiles: [
+                {
+                    source: '/documentation',
+                    destination: '/documentation/index.html',
+                },
+                {
+                    source: '/documentation/',
+                    destination: '/documentation/index.html',
+                },
+            ],
             afterFiles: [],
             fallback: [],
         };
