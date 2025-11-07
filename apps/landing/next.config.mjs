@@ -13,7 +13,7 @@ const nextConfig = {
           }
         : undefined,
     transpilePackages: ['@stackblitz/sdk'],
-    trailingSlash: true,
+    trailingSlash: false,
     async rewrites() {
         if (isDev) {
             return {
