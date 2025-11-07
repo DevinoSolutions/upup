@@ -108,7 +108,7 @@ export default forwardRef<UpupUploaderRef, UpupUploaderProps>(
                                         },
                                     )}
                                 >
-                                    Add your documents here, you can upload up.
+                                    Add your documents here, you can upload up
                                     to {providerValues.props.limit} files max
                                 </p>
                             </ShouldRender>
