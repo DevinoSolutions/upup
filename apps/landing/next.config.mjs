@@ -39,7 +39,7 @@ const nextConfig = {
                     destination: '/documentation/index.html',
                 },
                 {
-                    source: '/documentation/:path*',
+                    source: '/documentation/',
                     destination: '/documentation/index.html',
                 },
             ],
