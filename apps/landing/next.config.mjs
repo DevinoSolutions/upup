@@ -14,14 +14,19 @@ const nextConfig = {
         : undefined,
     transpilePackages: ['@stackblitz/sdk'],
     trailingSlash: false,
+    async redirects() {
+        return [
+            {
+                source: '/documentation',
+                destination: '/documentation/',
+                permanent: true,
+            },
+        ];
+    },
     async rewrites() {
         if (isDev) {
             return {
                 beforeFiles: [
-                    {
-                        source: '/documentation',
-                        destination: `${docsOrigin}/documentation/`,
-                    },
                     {
                         source: '/documentation/:path*',
                         destination: `${docsOrigin}/documentation/:path*`,
@@ -33,16 +38,7 @@ const nextConfig = {
         }
 
         return {
-            beforeFiles: [
-                {
-                    source: '/documentation',
-                    destination: '/documentation/index.html',
-                },
-                {
-                    source: '/documentation/',
-                    destination: '/documentation/index.html',
-                },
-            ],
+            beforeFiles: [],
             afterFiles: [],
             fallback: [],
         };
