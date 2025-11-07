@@ -18,6 +18,7 @@
     "start": "pnpm --filter @upup/landing run start",
     "test": "turbo run test",
     "test:coverage": "pnpm --filter upup-react-file-uploader exec jest --coverage --coverageDirectory ../../coverage",
+    "test:e2e": "pnpm --filter upup-react-file-uploader exec playwright test",
     "typecheck": "turbo run typecheck",
     "playwright:install": "pnpm --filter upup-react-file-uploader run playwright:install"
   },
