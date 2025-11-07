@@ -17,7 +17,7 @@
     "prettier-check": "pnpm --filter upup-react-file-uploader exec prettier --check \"src/**/*.{ts,tsx}\"",
     "start": "pnpm --filter @upup/landing run start",
     "test": "turbo run test",
-    "test:coverage": "pnpm --filter upup-react-file-uploader run test:coverage",
+    "test:coverage": "pnpm --filter upup-react-file-uploader exec jest --coverage --coverageDirectory ../../coverage",
     "typecheck": "turbo run typecheck"
   },
   "devDependencies": {
