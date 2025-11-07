@@ -25,15 +25,7 @@ const nextConfig = {
 
         return [
             {
-                source: '/documentation',
-                destination: '/documentation/index.html',
-            },
-            {
-                source: '/documentation/',
-                destination: '/documentation/index.html',
-            },
-            {
-                source: '/documentation/docs/:path*',
+                source: '/documentation/:path*',
                 destination: '/documentation/index.html',
             },
         ];
