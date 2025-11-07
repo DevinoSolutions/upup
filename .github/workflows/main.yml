@@ -214,7 +214,7 @@ jobs:
           S3_KEY_ID: ${{ secrets.S3_KEY_ID }}
           S3_SECRET: ${{ secrets.S3_SECRET }}
         run: |
-          node ./server/index.js &
+          pnpm run dev:server &
           echo "Waiting for backend health..."
           for i in {1..60}; do
             if curl -sf http://localhost:3000/health >/dev/null; then echo OK; break; fi
