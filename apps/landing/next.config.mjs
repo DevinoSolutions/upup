@@ -1,18 +1,39 @@
 /** @type {import('next').NextConfig} */
+const isDev = process.env.NODE_ENV !== 'production';
+
 const nextConfig = {
     reactStrictMode: true,
     pageExtensions: ['js', 'jsx', 'ts', 'tsx'],
-    experimental: {
-        optimizePackageImports: ['@stackblitz/sdk'],
-    },
+    experimental: !isDev
+        ? {
+              optimizePackageImports: ['@stackblitz/sdk'],
+          }
+        : undefined,
     transpilePackages: ['@stackblitz/sdk'],
+    trailingSlash: true,
     async rewrites() {
-        return [
-            {
-                source: '/documentation/:path*',
-                destination: '/documentation/index.html',
-            },
-        ];
+        if (isDev) {
+            return {
+                beforeFiles: [
+                    {
+                        source: '/documentation',
+                        destination: 'http://localhost:3002/documentation/',
+                    },
+                    {
+                        source: '/documentation/:path*',
+                        destination: 'http://localhost:3002/documentation/:path*',
+                    },
+                ],
+                afterFiles: [],
+                fallback: [],
+            };
+        }
+
+        return {
+            beforeFiles: [],
+            afterFiles: [],
+            fallback: [],
+        };
     },
 };
 
