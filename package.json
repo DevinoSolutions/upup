@@ -18,7 +18,8 @@
     "start": "pnpm --filter @upup/landing run start",
     "test": "turbo run test",
     "test:coverage": "pnpm --filter upup-react-file-uploader exec jest --coverage --coverageDirectory ../../coverage",
-    "typecheck": "turbo run typecheck"
+    "typecheck": "turbo run typecheck",
+    "playwright:install": "pnpm --filter upup-react-file-uploader run playwright:install"
   },
   "devDependencies": {
     "concurrently": "^9.2.1",
