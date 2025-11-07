@@ -33,7 +33,16 @@ const nextConfig = {
         }
 
         return {
-            beforeFiles: [],
+            beforeFiles: [
+                {
+                    source: '/documentation',
+                    destination: '/documentation/index.html',
+                },
+                {
+                    source: '/documentation/:path*',
+                    destination: '/documentation/index.html',
+                },
+            ],
             afterFiles: [],
             fallback: [],
         };
