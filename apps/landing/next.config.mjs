@@ -31,10 +31,6 @@ const nextConfig = {
         return {
             beforeFiles: [
                 {
-                    source: '/documentation',
-                    destination: '/documentation/index.html',
-                },
-                {
                     source: '/documentation/',
                     destination: '/documentation/index.html',
                 },
