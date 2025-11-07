@@ -16,7 +16,7 @@
     "lint": "turbo run lint",
     "prettier-check": "pnpm --filter upup-react-file-uploader exec prettier --check \"src/**/*.{ts,tsx}\"",
     "docs:build": "pnpm --filter docs run build",
-    "start": "pnpm --filter @upup/landing run start",
+    "start": "pnpm run docs:build && pnpm --filter @upup/landing run start",
     "dev:server": "pnpm --filter upup-react-file-uploader exec node server/index.js",
     "test": "turbo run test",
     "test:coverage": "pnpm --filter upup-react-file-uploader exec jest --coverage --coverageDirectory ../../coverage",

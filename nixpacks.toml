@@ -7,8 +7,5 @@ nixPkgs = ["nodejs_20", "pnpm"]
 [phases.build]
 cmds = ["pnpm run build"]
 
-[phases.postBuild]
-cmds = ["pnpm --filter docs run build"]
-
 [start]
 cmd = "pnpm start"
