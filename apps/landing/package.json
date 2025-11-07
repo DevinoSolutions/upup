@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "dotenv -e ../../.env.ports -e ../../local-dev/ports/landing.env -- next dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",

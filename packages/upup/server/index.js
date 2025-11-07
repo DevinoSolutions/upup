@@ -9,7 +9,11 @@ const { getSignedUrl } = require('@aws-sdk/s3-request-presigner')
 const { v4: uuid } = require('uuid')
 require('dotenv').config()
 
-const PORT = process.env.PORT ? Number(process.env.PORT) : 3000
+const PORT = process.env.UPUP_DEV_SERVER_PORT
+    ? Number(process.env.UPUP_DEV_SERVER_PORT)
+    : process.env.PORT
+    ? Number(process.env.PORT)
+    : 3000
 
 const app = express()
 app.use(express.json({ limit: '2mb' }))

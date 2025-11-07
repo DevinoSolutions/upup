@@ -1,6 +1,9 @@
 /** @type {import('next').NextConfig} */
 const isDev = process.env.NODE_ENV !== 'production';
 
+const docsPort = process.env.DOCS_PORT || '3002'
+const docsOrigin = `http://localhost:${docsPort}`
+
 const nextConfig = {
     reactStrictMode: true,
     pageExtensions: ['js', 'jsx', 'ts', 'tsx'],
@@ -17,11 +20,11 @@ const nextConfig = {
                 beforeFiles: [
                     {
                         source: '/documentation',
-                        destination: 'http://localhost:3002/documentation/',
+                        destination: `${docsOrigin}/documentation/`,
                     },
                     {
                         source: '/documentation/:path*',
-                        destination: 'http://localhost:3002/documentation/:path*',
+                        destination: `${docsOrigin}/documentation/:path*`,
                     },
                 ],
                 afterFiles: [],

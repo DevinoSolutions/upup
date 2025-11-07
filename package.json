@@ -8,7 +8,7 @@
     "build:docs": "turbo run build --filter=docs",
     "build:package": "pnpm --filter upup-react-file-uploader run build",
     "clean": "turbo run clean",
-    "dev": "concurrently \"pnpm run dev:apps\" \"pnpm run dev:package-watch\"",
+    "dev": "dotenv -e .env.ports -- concurrently \"pnpm run dev:apps\" \"pnpm run dev:package-watch\"",
     "dev:apps": "turbo run dev --parallel --filter=@upup/landing --filter=docs",
     "dev:package-watch": "pnpm --filter upup-react-file-uploader run dev:build",
     "dev:all": "turbo run dev --parallel",
@@ -20,6 +20,7 @@
   },
   "devDependencies": {
     "concurrently": "^9.2.1",
+    "dotenv-cli": "^7.4.2",
     "turbo": "2.5.8"
   },
   "pnpm": {
