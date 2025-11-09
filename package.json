@@ -23,7 +23,8 @@
     "test:coverage": "pnpm --filter upup-react-file-uploader exec jest --coverage --coverageDirectory ../../coverage",
     "test:e2e": "pnpm --filter upup-react-file-uploader exec playwright test",
     "typecheck": "turbo run typecheck",
-    "playwright:install": "pnpm --filter upup-react-file-uploader run playwright:install"
+    "playwright:install": "pnpm --filter upup-react-file-uploader run playwright:install",
+    "release": "pnpm --filter upup-react-file-uploader run release"
   },
   "devDependencies": {
     "concurrently": "^9.2.1",
