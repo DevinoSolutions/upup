@@ -5,7 +5,6 @@
   "scripts": {
     "docusaurus": "docusaurus",
     "dev": "dotenv -e ../../local-dev/ports/docs.env -- docusaurus start",
-    "start-doc": "dotenv -e ../../local-dev/ports/docs.env -- docusaurus start",
     "start-server": "node server.js",
     "build": "docusaurus build --out-dir ../landing/public/documentation",
     "swizzle": "docusaurus swizzle",
