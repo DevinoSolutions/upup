@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - master
+      - dev
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -31,7 +32,7 @@ jobs:
         id: changesets
         uses: changesets/action@v1
         with:
-          publish: pnpm run release
+          publish: ${{ github.ref == 'refs/heads/master' && 'pnpm run release' || 'pnpm --filter upup-react-file-uploader run test-release' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

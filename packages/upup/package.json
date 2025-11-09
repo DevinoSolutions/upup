@@ -77,6 +77,7 @@
         "storybook": "dotenv -e ../../.env -e ../../local-dev/.env.ports -- pnpm exec storybook dev -p 53050",
         "build-storybook": "pnpm exec storybook build",
         "ci": "pnpm run prettier-check && pnpm run build",
+        "test-release": "pnpm run prettier-check && pnpm run build && pnpm exec changeset publish --dry-run",
         "release": "pnpm run prettier-check && pnpm run build && pnpm exec changeset publish",
         "prepare": "pnpm run build"
     },
