@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "dotenv --override -e ../../.env.ports -e ../../local-dev/ports/landing.env -- next dev",
+    "dev": "dotenv -e ../../local-dev/ports/landing.env -- next dev",
     "build": "pnpm --filter docs run build --out-dir ./public/documentation && next build",
     "start": "next start",
     "lint": "eslint .",

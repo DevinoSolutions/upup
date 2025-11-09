@@ -17,15 +17,26 @@ pnpm install
 pnpm dev
 ```
 
-`pnpm dev` launches the landing page and documentation in watch mode via Turborepo while the package builds in watch mode for local consumption.
+`pnpm dev` launches the landing page and documentation in watch mode via Turborepo while the package builds in watch mode for local consumption. All services use ports defined in `local-dev/.env.ports` to avoid conflicts with other projects.
 
-### Other Useful Commands
+### Development Commands
 
-- `pnpm dev:package` – run Storybook plus the local mock server for the package.
-- `pnpm build` – build all workspaces (package bundle, docs static output, Next production build).
-- `pnpm build:package` – build only the library package.
-- `pnpm build:landing` / `pnpm build:docs` – targeted builds for individual apps.
-- `pnpm lint` / `pnpm test` / `pnpm typecheck` – workspace-wide pipelines through Turborepo.
+- `pnpm dev` – run everything (landing + docs + package in watch mode)
+- `pnpm dev:package` – run Storybook plus the local mock server for the package only
+- `pnpm build` – build all workspaces (package bundle, docs static output, Next production build)
+- `pnpm build:package` – build only the library package
+- `pnpm build:landing` / `pnpm build:docs` – targeted builds for individual apps
+- `pnpm lint` / `pnpm test` / `pnpm typecheck` – workspace-wide pipelines through Turborepo
+
+### Port Configuration
+
+This project uses the **53000 port range** (see `local-dev/.env.ports`):
+- Landing: 53000
+- Docs: 53002
+- Dev Server: 53010
+- Storybook: 53050
+
+This avoids conflicts with other projects like Shorty (52000 range). See `local-dev/LOCAL-DEV.md` for details.
 
 ## Dokploy & Nixpacks
 
