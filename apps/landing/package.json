@@ -1,0 +1,52 @@
+{
+  "name": "@upup/landing",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "dotenv -e ../../local-dev/ports/landing.env -- next dev",
+    "build": "pnpm --filter docs run build --out-dir ./public/documentation && next build",
+    "start": "next start",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf .next node_modules/.cache"
+  },
+  "dependencies": {
+    "@material-tailwind/react": "^2.1.9",
+    "@stackblitz/sdk": "^1.11.0",
+    "@types/gtag.js": "^0.0.20",
+    "clsx": "^2.1.1",
+    "framer-motion": "^12.8.0",
+    "gray-matter": "^4.0.3",
+    "gsap": "^3.13.0",
+    "lucide-react": "^0.503.0",
+    "next": "16.0.1",
+    "postprocessing": "^6.37.6",
+    "prettier-plugin-tailwindcss": "^0.5.14",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "react-icons": "^5.5.0",
+    "react-toastify": "^11.0.5",
+    "react-tooltip": "^5.29.1",
+    "three": "^0.178.0",
+    "upup-react-file-uploader": "workspace:*"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3",
+    "@tailwindcss/forms": "^0.5.7",
+    "@tailwindcss/postcss": "^4",
+    "@tailwindcss/typography": "^0.5.16",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "@types/three": "^0.178.1",
+    "autoprefixer": "^10.4.19",
+    "eslint": "^9",
+    "eslint-config-next": "16.0.1",
+    "eslint-plugin-react": "^7.37.4",
+    "react-syntax-highlighter": "^15.6.1",
+    "tailwindcss": "^3.4.3",
+    "tailwindcss-elevation": "^2.0.0",
+    "typescript": "^5",
+    "typescript-eslint": "^8.46.2"
+  }
+}

@@ -1,0 +1,35 @@
+*.log
+.DS_Store
+node_modules
+.cache
+dist
+dist-node
+.idea
+.vscode
+
+
+# storybook
+storybook-static
+
+# local env files
+.env
+.env.*
+!.env.example
+
+# public folder temp files
+public
+/stories/Uploader.stories.js
+
+# Tests
+coverage
+/test-results
+
+*.tgz
+
+# package managers
+pnpm-lock.yaml
+package-lock.json
+
+# playwright
+playwright-report
+

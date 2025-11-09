@@ -1,0 +1,235 @@
+/**
+ * Any CSS included here will be global. The classic template
+ * bundles Infima by default. Infima is a CSS framework designed to
+ * work well for content-centric websites.
+ */
+
+/* Font inspired by https://nextjs.org/ */
+
+@font-face {
+  font-family: "Geist";
+  src: url("../fonts/GeistVF.woff") format("woff"),
+  url("../fonts/GeistMonoVF.woff") format("woff");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Light mode */
+:root {
+  --ifm-color-primary: #1849d6; /* Base color for light mode */
+  --ifm-color-primary-dark: #1642c1; /* Slightly darker shade */
+  --ifm-color-primary-darker: #153cb1; /* Even darker shade */
+  --ifm-color-primary-darkest: #113091; /* Darkest shade */
+  --ifm-color-primary-light: #2f5bda; /* Slightly lighter shade */
+  --ifm-color-primary-lighter: #3a65dd; /* Even lighter shade */
+  --ifm-color-primary-lightest: #557de3; /* Lightest shade */
+  --ifm-code-font-size: 95%;
+  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
+
+  /* Custom */
+  --ifm-color-badge: rgb(24 73 214 / 0.1);
+  --ifm-color-text: #ffffff;
+  --ifm-color-off-background: #fafafa;
+  --ifm-color-off-border: #eaeaea;
+  --ifm-color-drop-shadow: rgb(24 73 214 / 0.3);
+  font-family: "Geist", serif !important;
+
+  /* Tailwind Styles */
+  --tw-space-y-reverse: 0;
+  --tw-text-opacity: 1;
+  --tw-bg-opacity: 1;
+  --tw-translate-x: 0.25rem /* 4px */;
+}
+
+/* Dark mode */
+[data-theme="dark"] {
+  --ifm-color-primary: #37c4f5; /* Base color for dark mode */
+  --ifm-color-primary-dark: #32b0dd; /* Slightly darker shade */
+  --ifm-color-primary-darker: #2fa6d1; /* Even darker shade */
+  --ifm-color-primary-darkest: #2788ac; /* Darkest shade */
+  --ifm-color-primary-light: #4cccf6; /* Slightly lighter shade */
+  --ifm-color-primary-lighter: #57d1f7; /* Even lighter shade */
+  --ifm-color-primary-lightest: #77dbf8; /* Lightest shade */
+  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
+
+  /* Custom */
+  --ifm-color-badge: rgb(55 198 245 / 0.1);
+  --ifm-color-text: #1b1b1d;
+  --ifm-color-off-background: #161616;
+  --ifm-color-off-border: #262626;
+  --ifm-color-drop-shadow: rgb(55 198 245 / 0.3);
+}
+
+* {
+  transition-property: background-color;
+  transition-duration: 300ms;
+  transition-timing-function: ease-in-out;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+h1 {
+  font-size: 3.75rem /* 60px */;
+}
+
+h2 {
+  font-size: 2.75rem;
+}
+
+h4 {
+  font-size: 1.875rem;
+}
+
+.wrapper {
+  padding-top: 5rem;
+  padding-bottom: 5rem;
+}
+
+/* Tailwind Container with 1rem padding on both sides */
+.container {
+  padding-left: 1rem;
+  padding-right: 1rem;
+  width: 100%;
+
+  @media (min-width: 640px) {
+    max-width: 640px;
+  }
+
+  @media (min-width: 768px) {
+    max-width: 768px;
+  }
+
+  @media (min-width: 996px) {
+    max-width: 996px;
+  }
+
+  @media (min-width: 1024px) {
+    max-width: 1024px;
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+
+  @media (min-width: 1280px) {
+    max-width: 1280px;
+  }
+
+  @media (min-width: 1536px) {
+    max-width: 1536px;
+  }
+}
+
+/* The switch - the box around the slider */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 24px;
+
+  /* Hide default HTML checkbox */
+  input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+
+    &:checked + .slider {
+      background-color: var(--ifm-color-primary);
+    }
+
+    &:focus + .slider {
+      box-shadow: 0 0 2px var(--ifm-color-primary);
+    }
+
+    &:checked + .slider:before {
+      -webkit-transform: translateX(26px);
+      -ms-transform: translateX(26px);
+      transform: translateX(26px);
+    }
+  }
+
+  /* The slider */
+  .slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--docusaurus-highlighted-code-line-bg);
+    -webkit-transition: 0.4s;
+    transition: 0.4s;
+    box-shadow: 0 0 2px var(--ifm-color-primary);
+
+    &:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: var(--ifm-color-text);
+      -webkit-transition: 0.4s;
+      transition: 0.4s;
+    }
+
+    /* Rounded sliders */
+    &.round {
+      border-radius: 24px;
+    }
+
+    &.round:before {
+      border-radius: 50%;
+    }
+  }
+}
+
+.range {
+  width: 100%; /* Width of the outside container */
+
+  /* The slider itself */
+  .slider {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 100%;
+    height: 10px;
+    border-radius: 5px;
+    background-color: var(--docusaurus-highlighted-code-line-bg);
+    outline: none;
+    opacity: 0.7;
+    -webkit-transition: 0.2s;
+    transition: opacity 0.2s;
+    box-shadow: 0 0 2px var(--ifm-color-primary);
+
+    &::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--ifm-color-primary);
+      cursor: pointer;
+    }
+
+    &::-moz-range-thumb {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--ifm-color-primary);
+      cursor: pointer;
+    }
+
+    &:disabled {
+      opacity: 0.3;
+    }
+  }
+}
+
+.feedback-link {
+  color: unset;
+
+  &:hover {
+    text-decoration: none;
+  }
+}

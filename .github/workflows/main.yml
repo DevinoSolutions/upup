@@ -207,24 +207,24 @@ jobs:
 
       - name: Start backend (dev server)
         env:
-          PORT: 3000
+          PORT: 53010
           S3_BUCKET: ${{ secrets.S3_BUCKET }}
           S3_REGION: ${{ secrets.S3_REGION }}
           S3_ENDPOINT: ${{ secrets.S3_ENDPOINT }}
           S3_KEY_ID: ${{ secrets.S3_KEY_ID }}
           S3_SECRET: ${{ secrets.S3_SECRET }}
         run: |
-          node ./server/index.js &
+          pnpm run dev:server &
           echo "Waiting for backend health..."
           for i in {1..60}; do
-            if curl -sf http://localhost:3000/health >/dev/null; then echo OK; break; fi
+            if curl -sf http://localhost:53010/health >/dev/null; then echo OK; break; fi
             sleep 2
           done
 
       - name: Run Playwright tests
         env:
           # Storybook is started by Playwright's webServer config on port 6007
-          TOKEN_ENDPOINT: http://localhost:3000/api/upload
+          TOKEN_ENDPOINT: http://localhost:53010/api/upload
           GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
           GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
           GOOGLE_APP_ID: ${{ secrets.GOOGLE_APP_ID }}

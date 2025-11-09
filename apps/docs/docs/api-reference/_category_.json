@@ -1,0 +1,8 @@
+{
+  "label": "API Reference",
+  "position": 2,
+  "link": {
+    "type": "generated-index",
+    "description": "Details on the client and server components and utilities exported from the upup package"
+  }
+}

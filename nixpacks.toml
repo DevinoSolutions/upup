@@ -1,0 +1,11 @@
+[build]
+providers = ["node"]
+
+[phases.setup]
+nixPkgs = ["nodejs_20", "pnpm"]
+
+[phases.build]
+cmds = ["pnpm run build"]
+
+[start]
+cmd = "pnpm start"

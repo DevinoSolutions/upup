@@ -1,106 +1,49 @@
-# Upup – React File Uploads Made Easy ☁️
+﻿# Upup Monorepo
 
-[![CI](https://github.com/DevinoSolutions/upup/actions/workflows/publish.yml/badge.svg?branch=master)](https://github.com/DevinoSolutions/upup/actions/workflows/publish.yml)
-[![npm version](https://img.shields.io/npm/v/upup-react-file-uploader)](https://www.npmjs.com/package/upup-react-file-uploader)
-[![npm downloads](https://img.shields.io/npm/dw/upup-react-file-uploader)](https://www.npmjs.com/package/upup-react-file-uploader)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Discord](https://img.shields.io/discord/1299099371647930502?label=discord&logo=discord&logoColor=white&color=5865F2)](https://discord.gg/ny5WUE9ayc)
+This repository now hosts the Upup React uploader package alongside the marketing landing page and documentation site. The codebase is managed with pnpm workspaces and Turborepo so local package changes can be previewed immediately in both client apps.
 
-Open-source, plug-and-play uploads to **S3, DigitalOcean Spaces, Backblaze B2, Azure Blob, Google Drive, OneDrive** and more – with a single React component and tiny server helpers.
+## Structure
 
-👉 Try out the live demo: https://useupup.com#demo
+- `apps/landing` – Next.js landing experience that embeds the local `upup-react-file-uploader`.
+- `apps/docs` – Docusaurus site that documents Upup and exports static assets consumed by the landing app.
+- `packages/upup` – Source for the published `upup-react-file-uploader` package (stories, server mocks, tests, etc.).
 
-You can even play with the code without any setup: https://stackblitz.com/edit/stackblitz-starters-flxnhixb
+Shared tooling lives at the repository root (`package.json`, `turbo.json`, `pnpm-workspace.yaml`).
 
-## Install
+## Getting Started
 
 ```bash
-npm i upup-react-file-uploader     # or yarn add / pnpm add / bun install
+pnpm install
+pnpm dev
 ```
 
-## Quick start (React / Next.js)
+`pnpm dev` launches the landing page and documentation in watch mode via Turborepo while the package builds in watch mode for local consumption. All services use ports defined in `local-dev/.env.ports` to avoid conflicts with other projects.
 
-```tsx
-// On your frontend (aka React, Next.JS Pages, etc).
+### Development Commands
 
-'use client'
+- `pnpm dev` – run everything (landing + docs + package in watch mode)
+- `pnpm dev:package` – run Storybook plus the local mock server for the package only
+- `pnpm build` – build all workspaces (package bundle, docs static output, Next production build)
+- `pnpm build:package` – build only the library package
+- `pnpm build:landing` / `pnpm build:docs` – targeted builds for individual apps
+- `pnpm lint` / `pnpm test` / `pnpm typecheck` – workspace-wide pipelines through Turborepo
 
-import { UpupUploader, UpupProvider } from 'upup-react-file-uploader'
-import 'upup-react-file-uploader/styles'
+### Port Configuration
 
-export default function Uploader() {
-    return (
-        <UpupUploader
-            provider={UpupProvider.AWS}
-            tokenEndpoint="/api/upload-token"
-        />
-    )
-}
-```
+This project uses the **53000 port range** (see `local-dev/.env.ports`):
+- Landing: 53000
+- Docs: 53002
+- Dev Server: 53010
+- Storybook: 53050
 
-```tsx
-// On your backend (aka, NextJS APIs, Express.JS server, NestJS, etc.)
+This avoids conflicts with other projects like Shorty (52000 range). See `local-dev/LOCAL-DEV.md` for details.
 
-import { s3GeneratePresignedUrl } from "upup-react-file-uploader/server";
+## Dokploy & Nixpacks
 
-export async function POST(req: Request) {
-  try {
-    const body = await req.json();
-    const { provider, customProps, enableAutoCorsConfig ...fileParams } = body;
+Deployment environments that rely on Nixpacks can continue to use the provided `nixpacks.toml`, which now points at the Turborepo-driven build (`pnpm run build`) and starts the Next.js app with `pnpm start`.
 
-    const origin = req.headers.get("origin");
+For Dokploy templates, point to this repository root so both apps and the package are built together. Any new package changes automatically flow into the landing page and documentation during their builds.
 
-    // Generate presigned URL
-    const presignedData = await s3GeneratePresignedUrl({
-      origin: origin as string,
-      provider,
-      fileParams,
-      bucketName: process.env.BACKBLAZE_BUCKET_NAME!,
-      s3ClientConfig: {
-        region: process.env.BACKBLAZE_BUCKET_REGION,
-        credentials: {
-          accessKeyId: process.env.BACKBLAZE_KEY_ID!,
-          secretAccessKey: process.env.BACKBLAZE_APP_KEY!,
-        },
-        endpoint: process.env.BACKBLAZE_S3_ENDPOINT,
-        forcePathStyle: false,
-      },
-      enableAutoCorsConfig
-    });
+## Package Publishing
 
-    return NextResponse.json(presignedData);
-  } catch (error) {
-    console.error(error);
-
-    return NextResponse.json({
-      message: (error as Error).message,
-      error: true,
-    });
-  }
-}
-```
-
-☞ **Full documentation & code examples → [https://useupup.com/documentation/docs/getting-started](https://useupup.com/documentation/docs/getting-started)**
-
-## Contributing
-
-We love PRs! Please see [CONTRIBUTING](CONTRIBUTING.md) and adhere to our [Code of Conduct](CODE_OF_CONDUCT.md).
-
-## Battle-tested in production:
-
--   📚 uNotes – AI doc uploads for past exams → https://unotes.net
--   🎙 Shorty – media uploads for transcripts → https://aishorty.com
-
-## Security
-
-Found a vulnerability? Check our [Security Policy](SECURITY.md).
-
-## Discord & Support
-
-Please join our Discord if you need any support: https://discord.com/invite/ny5WUE9ayc
-
-## License
-
-[MIT](LICENSE)
-
-Made with ❤️ by [Devino](https://devino.ca/)
+When you're ready to release a new version of `upup-react-file-uploader`, run the usual Changesets workflow from the monorepo root (e.g. `pnpm --filter upup-react-file-uploader run release`). The package directory retains all existing build, lint, and test tooling.
