@@ -18,6 +18,7 @@
     "prettier-write": "pnpm --filter upup-react-file-uploader exec prettier --write \"src/**/*.{ts,tsx}\"",
     "docs:build": "pnpm --filter docs run build",
     "start": "pnpm run docs:build && pnpm --filter @upup/landing run start",
+    "dev:server": "pnpm --filter upup-react-file-uploader exec node server/index.js",
     "test": "turbo run test",
     "test:coverage": "pnpm --filter upup-react-file-uploader exec jest --coverage --coverageDirectory ../../coverage",
     "test:e2e": "pnpm --filter upup-react-file-uploader exec playwright test",
