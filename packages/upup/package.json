@@ -57,7 +57,7 @@
     "scripts": {
         "dev": "concurrently \"pnpm run storybook\" \"pnpm run dev:server\" --names \"storybook,server\" --prefix-colors \"blue,green\"",
         "dev:build": "pnpm run build:css && pnpm exec tsup --config tsup.config.ts --watch",
-        "dev:server": "dotenv -e ../../local-dev/.env.ports -- node ./server/index.js",
+        "dev:server": "dotenv -e ../../.env -e ../../local-dev/.env.ports -- node ./server/index.js",
         "build:css": "pnpm exec postcss src/frontend/tailwind.css -o ./dist/tailwind-prefixed.css",
         "build": "pnpm run prebuild && pnpm exec tsup --config tsup.config.ts && pnpm run build:css",
         "prebuild": "node -e \"const fs=require('fs');['dist','dist-node'].forEach(d=>fs.rmSync(d,{recursive:true,force:true}));\" && pnpm run lint",
@@ -74,7 +74,7 @@
         "prettier-check": "pnpm exec prettier --check .",
         "prettier-write": "pnpm exec prettier --write .",
         "analyze": "pnpm exec size-limit --why",
-        "storybook": "dotenv -e ../../local-dev/.env.ports -- pnpm exec storybook dev -p ${STORYBOOK_PORT:-6006}",
+        "storybook": "dotenv -e ../../.env -e ../../local-dev/.env.ports -- pnpm exec storybook dev -p 53050",
         "build-storybook": "pnpm exec storybook build",
         "ci": "pnpm run prettier-check && pnpm run build",
         "release": "pnpm run prettier-check && pnpm run build && pnpm exec changeset publish",

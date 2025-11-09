@@ -89,7 +89,7 @@ export const UploaderWithButton: Story = {
         limit: 10,
         provider: UpupProvider.BackBlaze,
         tokenEndpoint:
-            process.env.TOKEN_ENDPOINT || 'http://localhost:3000/api/upload',
+            process.env.TOKEN_ENDPOINT || 'http://localhost:53010/api/upload',
         uploadAdapters: [
             UploadAdapter.INTERNAL,
             UploadAdapter.ONE_DRIVE,
