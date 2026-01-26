@@ -25,9 +25,16 @@ test.describe('Upup Uploader Component - Full Validation', () => {
     await expect(uploaderPage.uploaderRegion).toContainText(locators.messages.dropInstructions);
   });
 
-  test('BUG: upload button should disable after clicking', async ({ uploaderPage, page }) => {
-    test.fail(true, 'Known issue: Upload button remains visible and active after click');
-    
+  test('upload button should hide after clicking', async ({ uploaderPage, page }) => {
+    // Mock the upload API to prevent 500 errors
+    await page.route('**/api/upload**', async route => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ success: true, key: 'mock-key' })
+      });
+    });
+
     await uploaderPage.uploadFiles(['test-files/image1.jpg']);
     const uploadBtn = page.getByRole('button', { name: 'Upload 1 file' });
     

@@ -88,7 +88,8 @@ export default memo(function FileList() {
                     classNames.fileListFooter,
                 )}
             >
-                <ShouldRender if={uploadStatus !== UploadStatus.SUCCESSFUL}>
+                {/* FIX: Hide upload button when status is SUCCESSFUL or FAILED */}
+                <ShouldRender if={uploadStatus !== UploadStatus.SUCCESSFUL && uploadStatus !== UploadStatus.FAILED}>
                     <button
                         className={cn(
                             'upup-disabled:animate-pulse upup-ml-auto upup-rounded-full upup-bg-blue-600 upup-px-4 upup-py-2 upup-text-sm upup-font-medium upup-text-white',
