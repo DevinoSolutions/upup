@@ -1,22 +1,9 @@
 import { expect, test } from '@playwright/test'
+import { setupMockUploadApi } from './fixtures/mockUploadApi'
 
 test('folder upload selects and displays structured files', async ({ page }) => {
-    let uploadCount = 0;
-
-    // Mock ALL /api/upload requests
-    await page.route('**/api/upload**', async route => {
-        uploadCount++;
-        console.log(`Mock triggered (${uploadCount}/3):`, route.request().url());
-        await route.fulfill({
-            status: 200,
-            contentType: 'application/json',
-            body: JSON.stringify({
-                success: true,
-                key: `mock-upload-key-${uploadCount}`,
-                url: `https://mock-storage.com/file-${uploadCount}.png`
-            })
-        });
-    });
+    // Setup mock before navigation
+    const mockUploadApi = await setupMockUploadApi(page);
 
     // Navigate to Storybook
     await page.goto('/iframe.html?id=upupuploader--uploader-with-button')
@@ -81,18 +68,11 @@ test('folder upload selects and displays structured files', async ({ page }) => 
         /photo\.png[\s\S]*photo2\.png[\s\S]*readme\.txt/i,
     )
 
-    // Click upload and wait for all 3 responses (Playwright-native way)
-    const responsePromises = [
-        page.waitForResponse(r => r.url().includes('/api/upload') && r.status() === 200),
-        page.waitForResponse(r => r.url().includes('/api/upload') && r.status() === 200),
-        page.waitForResponse(r => r.url().includes('/api/upload') && r.status() === 200),
-    ];
-
+    // Click upload and wait for all responses
+    const uploadPromise = mockUploadApi.waitForUploads(files.length);
     await uploadBtn.click();
+    await uploadPromise;
 
-    // Wait for all 3 upload responses
-    await Promise.all(responsePromises);
-
-    // Verify all 3 files were uploaded
-    expect(uploadCount).toBe(3);
+    // Verify all files were uploaded
+    expect(mockUploadApi.getUploadCount()).toBe(files.length);
 })
