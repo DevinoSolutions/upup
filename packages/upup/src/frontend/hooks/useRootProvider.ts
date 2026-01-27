@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
     TbCameraRotate,
     TbCapture,
@@ -77,6 +77,19 @@ export default function useRootProvider({
         {} as FilesProgressMap,
     )
     const [uploadError, setUploadError] = useState('')
+
+    // Keep a ref to selectedFilesMap for unmount cleanup
+    const selectedFilesMapRef = useRef(selectedFilesMap)
+    useEffect(() => {
+        selectedFilesMapRef.current = selectedFilesMap
+    }, [selectedFilesMap])
+
+    // Revoke all blob URLs on unmount to prevent memory leaks in SPAs
+    useEffect(() => {
+        return () => {
+            selectedFilesMapRef.current.forEach(file => revokeFileUrl(file))
+        }
+    }, [])
 
     const limit = useMemo(
         () => (mini ? 1 : Math.max(propLimit, 1)),
