@@ -1,9 +1,11 @@
 import { expect, test } from '@playwright/test'
 import { setupMockUploadApi } from './fixtures/mockUploadApi'
 
-test('folder upload selects and displays structured files', async ({ page }) => {
+test('folder upload selects and displays structured files', async ({
+    page,
+}) => {
     // Setup mock before navigation
-    const mockUploadApi = await setupMockUploadApi(page);
+    const mockUploadApi = await setupMockUploadApi(page)
 
     // Navigate to Storybook
     await page.goto('/iframe.html?id=upupuploader--uploader-with-button')
@@ -69,10 +71,10 @@ test('folder upload selects and displays structured files', async ({ page }) => 
     )
 
     // Click upload and wait for all responses
-    const uploadPromise = mockUploadApi.waitForUploads(files.length);
-    await uploadBtn.click();
-    await uploadPromise;
+    const uploadPromise = mockUploadApi.waitForUploads(files.length)
+    await uploadBtn.click()
+    await uploadPromise
 
     // Verify all files were uploaded
-    expect(mockUploadApi.getUploadCount()).toBe(files.length);
+    expect(mockUploadApi.getUploadCount()).toBe(files.length)
 })
