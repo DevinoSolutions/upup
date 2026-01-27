@@ -20,7 +20,7 @@ export class UploaderPage {
 
   async goTo(): Promise<void> {
     await this.page.goto(
-      'http://localhost:6007/iframe.html?id=upupuploader--uploader-with-button&viewMode=story'
+      'http://localhost:53050/iframe.html?id=upupuploader--uploader-with-button&viewMode=story'
     );
     await this.page.waitForLoadState('domcontentloaded');
     await this.uploaderRegion.waitFor({ state: 'visible' });
