@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
     TbCameraRotate,
     TbCapture,
@@ -17,6 +17,7 @@ import {
     checkFileSize,
     compressFile,
     fileAppendParams,
+    revokeFileUrl,
     sizeToBytes,
 } from '../lib/file'
 import { ProviderSDK } from '../lib/storage/provider'
@@ -77,6 +78,19 @@ export default function useRootProvider({
     )
     const [uploadError, setUploadError] = useState('')
 
+    // Keep a ref to selectedFilesMap for unmount cleanup
+    const selectedFilesMapRef = useRef(selectedFilesMap)
+    useEffect(() => {
+        selectedFilesMapRef.current = selectedFilesMap
+    }, [selectedFilesMap])
+
+    // Revoke all blob URLs on unmount to prevent memory leaks in SPAs
+    useEffect(() => {
+        return () => {
+            selectedFilesMapRef.current.forEach(file => revokeFileUrl(file))
+        }
+    }, [])
+
     const limit = useMemo(
         () => (mini ? 1 : Math.max(propLimit, 1)),
         [mini, propLimit],
@@ -124,6 +138,9 @@ export default function useRootProvider({
         return await proceedUpload(filesToUpload)
     }
     function dynamicallyReplaceFiles(files: File[] | FileWithParams[]) {
+        // Revoke old blob URLs to prevent memory leak
+        selectedFilesMap.forEach(file => revokeFileUrl(file))
+
         const filesMap = new Map<string, FileWithParams>()
         if (isFileWithParamsArray(files)) {
             for (const f of files) {
@@ -162,6 +179,7 @@ export default function useRootProvider({
             if (!checkFileType(accept, file)) {
                 onError(`${file.name} has an unsupported type!`)
                 onFileTypeMismatch(file, accept)
+                revokeFileUrl(fileWithParams)
                 continue
             }
 
@@ -173,11 +191,13 @@ export default function useRootProvider({
                 onError(
                     `${file.name} is larger than ${maxFileSize.size} ${maxFileSize.unit}!`,
                 )
+                revokeFileUrl(fileWithParams)
                 continue
             }
 
             if (newFilesMap.has(fileWithParams.id)) {
                 onWarn(`${file.name} has previously been selected`)
+                revokeFileUrl(fileWithParams)
                 continue
             }
 
@@ -186,6 +206,7 @@ export default function useRootProvider({
                 onWarn(
                     `A file with this url: ${fileUrl} has previously been selected`,
                 )
+                revokeFileUrl(fileWithParams)
                 continue
             }
 
@@ -205,12 +226,16 @@ export default function useRootProvider({
 
     const handleFileRemove = useCallback(
         (fileId: string) => {
+            const file = selectedFilesMap.get(fileId)
+            if (!file) return
+
+            // Revoke blob URL to prevent memory leak
+            revokeFileUrl(file)
+
             const selectedFilesMapCopy = new Map(selectedFilesMap)
             selectedFilesMapCopy.delete(fileId)
 
             setSelectedFilesMap(selectedFilesMapCopy)
-
-            const file = selectedFilesMap.get(fileId)!
             onFileRemove(file)
         },
         [onFileRemove, selectedFilesMap],
@@ -341,10 +366,13 @@ export default function useRootProvider({
         ],
     )
     const handleCancel = useCallback(() => {
+        // Revoke all blob URLs to prevent memory leak
+        selectedFilesMap.forEach(file => revokeFileUrl(file))
+
         setUploadStatus(UploadStatus.PENDING)
         setSelectedFilesMap(new Map())
         setFilesProgressMap({})
-    }, [])
+    }, [selectedFilesMap])
 
     const handleDone = useCallback(() => {
         onDoneClicked()
