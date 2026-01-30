@@ -77,6 +77,7 @@ export default function useRootProvider({
         {} as FilesProgressMap,
     )
     const [uploadError, setUploadError] = useState('')
+    const [warningMessage, setWarningMessage] = useState<string>('')
 
     // Keep a ref to selectedFilesMap for unmount cleanup
     const selectedFilesMapRef = useRef(selectedFilesMap)
@@ -118,10 +119,16 @@ export default function useRootProvider({
 
     const onWarn = useCallback(
         (message: string) => {
+            setWarningMessage(message)
             if (warningHandler) warningHandler(message)
         },
         [warningHandler],
     )
+
+    const clearWarning = useCallback(() => {
+        setWarningMessage('')
+    }, [])
+
     function isFileWithParamsArray(
         files: File[] | FileWithParams[],
     ): files is FileWithParams[] {
@@ -166,11 +173,15 @@ export default function useRootProvider({
 
         // Collect only the files that are actually accepted and added in this batch.
         const addedThisBatch: FileWithParams[] = []
+        const totalSelectedFiles = newFiles.length
 
         for (const file of newFiles) {
             // Respect the limit strictly; stop when capacity is reached.
             if (newFilesMap.size >= limit) {
-                onWarn('Allowed limit has been surpassed!')
+                const remainingCount = totalSelectedFiles - addedThisBatch.length
+                onWarn(
+                    `You selected ${totalSelectedFiles} file${totalSelectedFiles > 1 ? 's' : ''}. Only ${limit} ${limit > 1 ? 'were' : 'was'} added. ${remainingCount} file${remainingCount > 1 ? 's' : ''} ignored.`
+                )
                 break
             }
 
@@ -278,6 +289,7 @@ export default function useRootProvider({
             if (!selectedFilesMap.size && !dynamicFiles) return
             setUploadStatus(UploadStatus.ONGOING)
             setUploadError('')
+            clearWarning()
             const sendEvent = !dynamicFiles
             const selectedFiles = dynamicFiles
                 ? dynamicFiles
@@ -363,6 +375,7 @@ export default function useRootProvider({
             onError,
             onFileUploadProgress,
             onFilesUploadProgress,
+            clearWarning,
         ],
     )
     const handleCancel = useCallback(() => {
@@ -404,6 +417,8 @@ export default function useRootProvider({
             setUploadStatus,
             uploadError,
         },
+        warningMessage,
+        clearWarning,
         props: {
             mini,
             dark,
