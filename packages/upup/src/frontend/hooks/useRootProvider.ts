@@ -178,9 +178,16 @@ export default function useRootProvider({
         for (const file of newFiles) {
             // Respect the limit strictly; stop when capacity is reached.
             if (newFilesMap.size >= limit) {
-                const remainingCount = totalSelectedFiles - addedThisBatch.length
+                const remainingCount =
+                    totalSelectedFiles - addedThisBatch.length
                 onWarn(
-                    `You selected ${totalSelectedFiles} file${totalSelectedFiles > 1 ? 's' : ''}. Only ${limit} ${limit > 1 ? 'were' : 'was'} added. ${remainingCount} file${remainingCount > 1 ? 's' : ''} ignored.`
+                    `You selected ${totalSelectedFiles} file${
+                        totalSelectedFiles > 1 ? 's' : ''
+                    }. Only ${limit} ${
+                        limit > 1 ? 'were' : 'was'
+                    } added. ${remainingCount} file${
+                        remainingCount > 1 ? 's' : ''
+                    } ignored.`,
                 )
                 break
             }
