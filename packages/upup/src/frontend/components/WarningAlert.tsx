@@ -20,10 +20,10 @@ export default function WarningAlert({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             className={cn(
-                'upup-absolute upup-top-4 upup-left-1/2 upup--translate-x-1/2 upup-z-50',
+                'upup-absolute upup-top-4 upup-left-4 upup-right-4 upup-z-50',
                 'upup-flex upup-items-center upup-gap-2',
                 'upup-px-4 upup-py-3 upup-rounded-lg upup-shadow-lg',
-                'upup-max-w-md upup-w-full',
+                'upup-mx-auto upup-max-w-lg',
                 {
                     'upup-bg-amber-50 upup-border upup-border-amber-200 upup-text-amber-900':
                         !dark,
@@ -38,7 +38,7 @@ export default function WarningAlert({
                     'upup-text-amber-300': dark,
                 })}
             />
-            <p className="upup-flex-1 upup-text-sm upup-font-medium">
+            <p className="upup-flex-1 upup-text-sm upup-font-medium upup-break-words">
                 {message}
             </p>
             <button
