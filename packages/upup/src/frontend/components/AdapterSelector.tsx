@@ -1,4 +1,5 @@
 import React, { useCallback } from 'react'
+import { TbDragDrop } from 'react-icons/tb/index.js'
 import { useRootContext } from '../context/RootContext'
 import useAdapterSelector from '../hooks/useAdapterSelector'
 import { cn } from '../lib/tailwind'
@@ -136,78 +137,95 @@ export default function AdapterSelector() {
                 multiple={multiple}
                 onChange={handleInputFileChange}
             />
-            <div className="upup-flex upup-flex-col upup-items-center upup-gap-1 upup-text-center md:upup-gap-2 md:upup-px-[30px]">
-                <div className="upup-flex upup-items-center upup-gap-1">
-                    <span
+            {mini ? (
+                <div className="upup-flex upup-items-center upup-justify-center">
+                    <TbDragDrop
+                        size={32}
                         className={cn(
-                            'upup-text-xs upup-text-[#0B0B0B] md:upup-text-sm',
+                            'upup-h-16 upup-w-16 md:upup-h-20 md:upup-w-20',
                             {
+                                'upup-text-[#0B0B0B]': !dark,
                                 'upup-text-white dark:upup-text-white': dark,
                             },
                         )}
-                    >
-                        Drag your file
-                        {limit > 1 ? 's' : ''} or
-                    </span>
-                    <button
-                        type="button"
+                    />
+                </div>
+            ) : (
+                <div className="upup-flex upup-flex-col upup-items-center upup-gap-1 upup-text-center md:upup-gap-2 md:upup-px-[30px]">
+                    <div className="upup-flex upup-items-center upup-gap-1">
+                        <span
+                            className={cn(
+                                'upup-text-xs upup-text-[#0B0B0B] md:upup-text-sm',
+                                {
+                                    'upup-text-white dark:upup-text-white':
+                                        dark,
+                                },
+                            )}
+                        >
+                            Drag your file
+                            {limit > 1 ? 's' : ''} or
+                        </span>
+                        <button
+                            type="button"
+                            className={cn(
+                                'upup-cursor-pointer upup-text-xs upup-font-semibold upup-text-[#0E2ADD] md:upup-text-sm',
+                                {
+                                    'upup-text-[#59D1F9] dark:upup-text-[#59D1F9]':
+                                        dark,
+                                },
+                            )}
+                            onClick={handleBrowseFilesClick}
+                        >
+                            browse files
+                        </button>
+                        {showSelectFolderButton && (
+                            <>
+                                <span
+                                    className={cn(
+                                        'upup-text-xs upup-text-[#0B0B0B] md:upup-text-sm',
+                                        {
+                                            'upup-text-white dark:upup-text-white':
+                                                dark,
+                                        },
+                                    )}
+                                >
+                                    {' '}
+                                    or
+                                </span>
+                                <button
+                                    type="button"
+                                    className={cn(
+                                        'upup-cursor-pointer upup-text-xs upup-font-semibold upup-text-[#0E2ADD] md:upup-text-sm',
+                                        {
+                                            'upup-text-[#59D1F9] dark:upup-text-[#59D1F9]':
+                                                dark,
+                                        },
+                                    )}
+                                    onClick={handleSelectFolderClick}
+                                >
+                                    select a folder
+                                </button>
+                            </>
+                        )}
+                    </div>
+                    <p
                         className={cn(
-                            'upup-cursor-pointer upup-text-xs upup-font-semibold upup-text-[#0E2ADD] md:upup-text-sm',
+                            'upup-text-center upup-text-xs upup-text-[#6D6D6D] md:upup-text-sm',
                             {
-                                'upup-text-[#59D1F9] dark:upup-text-[#59D1F9]':
+                                'upup-text-gray-300 dark:upup-text-gray-300':
                                     dark,
                             },
                         )}
-                        onClick={handleBrowseFilesClick}
                     >
-                        browse files
-                    </button>
-                    {showSelectFolderButton && (
-                        <>
-                            <span
-                                className={cn(
-                                    'upup-text-xs upup-text-[#0B0B0B] md:upup-text-sm',
-                                    {
-                                        'upup-text-white dark:upup-text-white':
-                                            dark,
-                                    },
-                                )}
-                            >
-                                {' '}
-                                or
-                            </span>
-                            <button
-                                type="button"
-                                className={cn(
-                                    'upup-cursor-pointer upup-text-xs upup-font-semibold upup-text-[#0E2ADD] md:upup-text-sm',
-                                    {
-                                        'upup-text-[#59D1F9] dark:upup-text-[#59D1F9]':
-                                            dark,
-                                    },
-                                )}
-                                onClick={handleSelectFolderClick}
-                            >
-                                select a folder
-                            </button>
-                        </>
-                    )}
+                        {maxFileSize?.size && maxFileSize?.unit && (
+                            <>
+                                Max {maxFileSize.size} {maxFileSize.unit} file
+                                {limit > 1 ? 's are ' : ' is '}allowed
+                            </>
+                        )}
+                    </p>
                 </div>
-                <p
-                    className={cn(
-                        'upup-text-center upup-text-xs upup-text-[#6D6D6D] md:upup-text-sm',
-                        {
-                            'upup-text-gray-300 dark:upup-text-gray-300': dark,
-                        },
-                    )}
-                >
-                    {maxFileSize?.size && maxFileSize?.unit && (
-                        <>
-                            Max {maxFileSize.size} {maxFileSize.unit} file
-                            {limit > 1 ? 's are ' : ' is '}allowed
-                        </>
-                    )}
-                </p>
-            </div>
+            )}
         </div>
     )
 }
