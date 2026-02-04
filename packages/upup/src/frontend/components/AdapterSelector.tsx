@@ -138,7 +138,7 @@ export default function AdapterSelector() {
                 onChange={handleInputFileChange}
             />
             {mini ? (
-                <div className="upup-flex upup-items-center upup-justify-center">
+                <div className="upup-flex upup-flex-col upup-items-center upup-justify-center upup-gap-2">
                     <TbUpload
                         size={32}
                         className={cn(
@@ -149,6 +149,15 @@ export default function AdapterSelector() {
                             },
                         )}
                     />
+                    <p
+                        className={cn('upup-text-center upup-text-xs', {
+                            'upup-text-[#6D6D6D] dark:upup-text-gray-400':
+                                !dark,
+                            'upup-text-gray-400 dark:upup-text-gray-500': dark,
+                        })}
+                    >
+                        Drag or browse to upload
+                    </p>
                 </div>
             ) : (
                 <div className="upup-flex upup-flex-col upup-items-center upup-gap-1 upup-text-center md:upup-gap-2 md:upup-px-[30px]">
