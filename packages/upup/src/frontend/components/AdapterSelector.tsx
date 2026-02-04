@@ -150,7 +150,7 @@ export default function AdapterSelector() {
                         )}
                     />
                     <p
-                        className={cn('upup-text-center upup-text-xs', {
+                        className={cn('px-6 upup-text-center upup-text-xs', {
                             'upup-text-[#6D6D6D] dark:upup-text-gray-400':
                                 !dark,
                             'upup-text-gray-400 dark:upup-text-gray-500': dark,
