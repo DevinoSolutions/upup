@@ -1,5 +1,5 @@
 import React, { useCallback } from 'react'
-import { TbDragDrop } from 'react-icons/tb/index.js'
+import { TbUpload } from 'react-icons/tb/index.js'
 import { useRootContext } from '../context/RootContext'
 import useAdapterSelector from '../hooks/useAdapterSelector'
 import { cn } from '../lib/tailwind'
@@ -139,7 +139,7 @@ export default function AdapterSelector() {
             />
             {mini ? (
                 <div className="upup-flex upup-items-center upup-justify-center">
-                    <TbDragDrop
+                    <TbUpload
                         size={32}
                         className={cn(
                             'upup-h-16 upup-w-16 md:upup-h-20 md:upup-w-20',
