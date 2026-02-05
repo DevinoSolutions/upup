@@ -57,7 +57,7 @@ export default forwardRef<UpupUploaderRef, UpupUploaderProps>(
                         className={cn('upup-w-full', {
                             'upup-h-[480px] upup-max-w-[600px]':
                                 !providerValues.props.mini,
-                            'upup-h-[397px] upup-max-w-[280px]':
+                            'upup-h-[280px] upup-max-w-[280px]':
                                 providerValues.props.mini,
                         })}
                     >
