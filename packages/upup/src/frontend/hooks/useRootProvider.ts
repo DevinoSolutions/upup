@@ -31,8 +31,6 @@ type FileProgress = {
 
 export type FilesProgressMap = Record<string, FileProgress>
 
-const DEFAULT_MAX_RETRIES = 3
-
 async function uploadWithRetry(
     fn: () => Promise<UploadResult>,
     maxRetries: number,
