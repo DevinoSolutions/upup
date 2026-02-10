@@ -1,5 +1,6 @@
 import React from 'react'
 import Webcam from 'react-webcam'
+import { t } from '../../shared/i18n'
 import useCameraUploader from '../hooks/useCameraUploader'
 import { cn } from '../lib/tailwind'
 import AdapterViewContainer from './shared/AdapterViewContainer'
@@ -15,6 +16,7 @@ export default function CameraUploader() {
         url,
         webcamRef,
         facingMode,
+        translations: tr,
         props: {
             dark,
             classNames,
@@ -78,7 +80,7 @@ export default function CameraUploader() {
                             <span>
                                 <CameraCaptureIcon />
                             </span>
-                            <span>Capture</span>
+                            <span>{tr.capture}</span>
                         </button>
                         <button
                             className={cn(
@@ -91,7 +93,14 @@ export default function CameraUploader() {
                             <span>
                                 <CameraRotateIcon />
                             </span>
-                            <span>switch to {newCameraSide}</span>
+                            <span>
+                                {t(tr.switchToCamera, {
+                                    side:
+                                        newCameraSide === 'front'
+                                            ? tr.front
+                                            : tr.back,
+                                })}
+                            </span>
                         </button>
                     </ShouldRender>
                     <ShouldRender if={!!url}>
@@ -107,7 +116,7 @@ export default function CameraUploader() {
                             onClick={handleFetchImage}
                             type="button"
                         >
-                            Add Image
+                            {tr.addImage}
                         </button>
                     </ShouldRender>
                 </div>

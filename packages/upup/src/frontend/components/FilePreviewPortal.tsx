@@ -8,6 +8,7 @@ import React, {
     useState,
 } from 'react'
 import { createPortal } from 'react-dom'
+import { t } from '../../shared/i18n'
 import { useRootContext } from '../context/RootContext'
 import { fileGetIsImage } from '../lib/file'
 import { cn } from '../lib/tailwind'
@@ -28,6 +29,7 @@ export default memo(
     ) {
         const {
             props: { dark, classNames },
+            translations: tr,
         } = useRootContext()
         const isImage = useMemo(() => fileGetIsImage(fileType), [fileType])
         const isText = useMemo(() => {
@@ -101,8 +103,14 @@ export default memo(
                         <ShouldRender if={!isImage}>
                             <ShouldRender if={isText}>
                                 <div className="upup-h-full upup-w-full upup-overflow-auto upup-p-4 upup-font-mono upup-text-xs">
-                                    {textLoading && <p>Loading...</p>}
-                                    {textError && <p>Error: {textError}</p>}
+                                    {textLoading && <p>{tr.loading}</p>}
+                                    {textError && (
+                                        <p>
+                                            {t(tr.previewError, {
+                                                message: textError,
+                                            })}
+                                        </p>
+                                    )}
                                     {!textLoading && !textError && (
                                         <pre className="upup-whitespace-pre-wrap">
                                             {textContent}
@@ -118,7 +126,7 @@ export default memo(
                                     name={fileName}
                                     type={fileType}
                                 >
-                                    <p>Loading...</p>
+                                    <p>{tr.loading}</p>
                                 </object>
                             </ShouldRender>
                         </ShouldRender>

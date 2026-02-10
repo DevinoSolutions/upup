@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion'
 import React, { memo } from 'react'
+import { plural, t } from '../../shared/i18n'
 import { UploadStatus, useRootContext } from '../context/RootContext'
 import { cn } from '../lib/tailwind'
 import FileItem from './FileItem'
@@ -13,6 +14,7 @@ export default memo(function FileList() {
         isAddingMore,
         activeAdapter,
         files,
+        translations: tr,
         upload: { proceedUpload, uploadStatus, totalProgress },
         props: { dark, classNames, isProcessing },
         handleDone,
@@ -112,7 +114,9 @@ export default memo(function FileList() {
                             isProcessing
                         }
                     >
-                        Upload {files.size} file{files.size > 1 ? 's' : ''}
+                        {t(plural(tr, 'uploadFiles', files.size), {
+                            count: files.size,
+                        })}
                     </button>
                 </ShouldRender>
                 <ShouldRender if={uploadStatus === UploadStatus.SUCCESSFUL}>
@@ -127,7 +131,7 @@ export default memo(function FileList() {
                         )}
                         onClick={handleDone}
                     >
-                        Done
+                        {tr.done}
                     </button>
                 </ShouldRender>
                 <ProgressBar

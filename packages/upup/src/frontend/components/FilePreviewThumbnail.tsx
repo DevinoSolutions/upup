@@ -1,4 +1,5 @@
 import React, { Dispatch, SetStateAction, memo, useMemo } from 'react'
+import type { Translations } from '../../shared/i18n/types'
 import { UpupUploaderPropsClassNames } from '../../shared/types'
 import { fileGetExtension, fileIs3D } from '../lib/file'
 import { cn } from '../lib/tailwind'
@@ -13,6 +14,7 @@ type Props = {
     fileUrl: string
     classNames: UpupUploaderPropsClassNames
     allowPreview: boolean
+    translations: Translations
 }
 
 export default memo(
@@ -24,6 +26,7 @@ export default memo(
         fileType,
         classNames,
         allowPreview,
+        translations: tr,
     }: Props) {
         const extension = useMemo(
             () => fileGetExtension(fileType, fileName),
@@ -56,7 +59,7 @@ export default memo(
                         type={fileType}
                         onLoad={() => setCanPreview(true)}
                     >
-                        <p>Loading...</p>
+                        <p>{tr.loading}</p>
                     </object>
                     <FileIcon extension={extension} />
                 </ShouldRender>
@@ -86,7 +89,7 @@ export default memo(
                             type={fileType}
                             className="upup-absolute upup-h-full upup-w-full"
                         >
-                            <p>Loading...</p>
+                            <p>{tr.loading}</p>
                         </object>
                     </div>
                 </ShouldRender>
