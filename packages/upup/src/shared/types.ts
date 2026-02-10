@@ -139,6 +139,7 @@ export type UpupUploaderProps = {
     maxFileSize?: MaxFileSizeObject
     customProps?: object
     dark?: boolean
+    maxRetries?: number
     classNames?: UpupUploaderPropsClassNames
     icons?: UpupUploaderPropsIcons
 

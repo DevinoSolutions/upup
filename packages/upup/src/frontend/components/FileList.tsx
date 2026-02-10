@@ -14,7 +14,7 @@ export default memo(function FileList() {
         activeAdapter,
         files,
         upload: { proceedUpload, uploadStatus, totalProgress },
-        props: { dark, classNames, isProcessing },
+        props: { dark, classNames, isProcessing, maxRetries },
         handleDone,
         handleCancel,
     } = useRootContext()
@@ -115,7 +115,7 @@ export default memo(function FileList() {
                         Upload {files.size} file{files.size > 1 ? 's' : ''}
                     </button>
                 </ShouldRender>
-                <ShouldRender if={uploadStatus === UploadStatus.FAILED}>
+                <ShouldRender if={uploadStatus === UploadStatus.FAILED && !maxRetries}>
                     <button
                         className={cn(
                             'upup-disabled:animate-pulse upup-ml-auto upup-rounded-full upup-bg-red-600 upup-px-4 upup-py-2 upup-text-sm upup-font-medium upup-text-white',

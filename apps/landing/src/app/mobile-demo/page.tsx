@@ -45,6 +45,8 @@ function MobileDemoContent() {
   const shouldCompress = searchParams.get('shouldCompress') === 'true';
   const fileSizeLimit = parseInt(searchParams.get('fileSizeLimit') || '999');
   const darkMode = searchParams.get('darkMode') === 'true';
+  const autoRetryEnabled = searchParams.get('autoRetryEnabled') === 'true';
+  const autoRetryCount = parseInt(searchParams.get('autoRetryCount') || '3');
 
   // Apply dark mode immediately
   useEffect(() => {
@@ -78,6 +80,7 @@ function MobileDemoContent() {
         allowPreview={allowPreview}
         shouldCompress={shouldCompress}
         fileSizeLimit={fileSizeLimit}
+        maxRetries={autoRetryEnabled ? autoRetryCount : undefined}
       />
     </div>
   );

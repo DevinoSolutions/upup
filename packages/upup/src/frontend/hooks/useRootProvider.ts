@@ -21,6 +21,7 @@ import {
     sizeToBytes,
 } from '../lib/file'
 import { ProviderSDK } from '../lib/storage/provider'
+import { UploadResult } from '../types/StorageSDK'
 
 type FileProgress = {
     id: string
@@ -29,6 +30,22 @@ type FileProgress = {
 }
 
 export type FilesProgressMap = Record<string, FileProgress>
+
+const DEFAULT_MAX_RETRIES = 3
+
+async function uploadWithRetry(
+    fn: () => Promise<UploadResult>,
+    maxRetries: number,
+): Promise<UploadResult> {
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+            return await fn()
+        } catch (error) {
+            if (attempt === maxRetries) throw error
+        }
+    }
+    throw new Error('Upload failed after retries')
+}
 
 export default function useRootProvider({
     accept = '*',
@@ -65,6 +82,7 @@ export default function useRootProvider({
     driveConfigs,
     customProps,
     enableAutoCorsConfig = false,
+    maxRetries,
 }: UpupUploaderProps): IRootContext {
     const inputRef = useRef<HTMLInputElement>(null)
     const [isAddingMore, setIsAddingMore] = useState(false)
@@ -306,30 +324,36 @@ export default function useRootProvider({
                     enableAutoCorsConfig,
                 })
 
-                // Upload files
+                // Upload files with automatic retries if configured
+                const uploadOptions = {
+                    onFileUploadStart,
+                    onFileUploadProgress: (file: FileWithParams, progress: { loaded: number; total: number; percentage: number }) => {
+                        setFilesProgressMap(prev => ({
+                            ...prev,
+                            [file.id]: {
+                                ...prev[file.id],
+                                loaded: progress.loaded,
+                            },
+                        }))
+                        onFileUploadProgress(file, progress)
+                    },
+                    onFileUploadComplete,
+                    sendEvent,
+                    onError,
+                    onFilesUploadProgress: (completedFiles: number) =>
+                        onFilesUploadProgress(
+                            completedFiles,
+                            processedFiles.length,
+                        ),
+                }
                 const uploadResults = await Promise.all(
                     processedFiles.map(file =>
-                        sdk.upload(file, {
-                            onFileUploadStart,
-                            onFileUploadProgress: (file, progress) => {
-                                setFilesProgressMap(prev => ({
-                                    ...prev,
-                                    [file.id]: {
-                                        ...prev[file.id],
-                                        loaded: progress.loaded,
-                                    },
-                                }))
-                                onFileUploadProgress(file, progress)
-                            },
-                            onFileUploadComplete,
-                            sendEvent,
-                            onError,
-                            onFilesUploadProgress: (completedFiles: number) =>
-                                onFilesUploadProgress(
-                                    completedFiles,
-                                    processedFiles.length,
-                                ),
-                        }),
+                        maxRetries
+                            ? uploadWithRetry(
+                                  () => sdk.upload(file, uploadOptions),
+                                  maxRetries,
+                              )
+                            : sdk.upload(file, uploadOptions),
                     ),
                 )
                 const finalFiles = uploadResults.map(result => result.file)
@@ -363,6 +387,7 @@ export default function useRootProvider({
             onError,
             onFileUploadProgress,
             onFilesUploadProgress,
+            maxRetries,
         ],
     )
     const handleCancel = useCallback(() => {
@@ -407,6 +432,7 @@ export default function useRootProvider({
         props: {
             mini,
             dark,
+            maxRetries,
             onError,
             onIntegrationClick,
             onFileClick,
