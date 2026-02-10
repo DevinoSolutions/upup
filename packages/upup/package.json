@@ -17,6 +17,11 @@
             "import": "./dist/index.browser.mjs",
             "require": "./dist/index.browser.js"
         },
+        "./locales": {
+            "types": "./dist/shared/i18n/locales/index.d.ts",
+            "import": "./dist/shared/i18n/locales/index.mjs",
+            "require": "./dist/shared/i18n/locales/index.js"
+        },
         "./server": {
             "types": "./dist-node/index.node.d.ts",
             "default": "./dist-node/index.node.js"
