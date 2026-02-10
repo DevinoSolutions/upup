@@ -2,6 +2,12 @@
 
 import Uploader from "@/components/Uploader";
 import { useSearchParams } from 'next/navigation';
+import type { Translations } from 'upup-react-file-uploader';
+import { en_US, ja_JP, zh_CN, zh_TW, fr_FR, ar_SA, de_DE, es_ES, ko_KR } from 'upup-react-file-uploader/locales';
+
+const LOCALE_MAP: Record<string, Translations> = {
+  en_US, ja_JP, zh_CN, zh_TW, fr_FR, ar_SA, de_DE, es_ES, ko_KR,
+};
 import { Suspense, useEffect } from 'react';
 
 function MobileDemoContent() {
@@ -45,6 +51,8 @@ function MobileDemoContent() {
   const shouldCompress = searchParams.get('shouldCompress') === 'true';
   const fileSizeLimit = parseInt(searchParams.get('fileSizeLimit') || '999');
   const darkMode = searchParams.get('darkMode') === 'true';
+  const language = searchParams.get('language') || 'en_US';
+  const locale = LOCALE_MAP[language] ?? en_US;
 
   // Apply dark mode immediately
   useEffect(() => {
@@ -78,6 +86,7 @@ function MobileDemoContent() {
         allowPreview={allowPreview}
         shouldCompress={shouldCompress}
         fileSizeLimit={fileSizeLimit}
+        locale={locale}
       />
     </div>
   );

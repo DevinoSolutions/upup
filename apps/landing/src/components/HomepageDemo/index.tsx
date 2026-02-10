@@ -17,10 +17,14 @@ import {
   FaCloud,
   FaHdd,
   FaInfoCircle,
-  FaShieldAlt
+  FaShieldAlt,
+  FaLanguage
 } from "react-icons/fa";
 import { SiDropbox, SiGoogledrive } from "react-icons/si";
 import { GrOnedrive } from "react-icons/gr";
+import type { Translations } from 'upup-react-file-uploader';
+import { en_US } from 'upup-react-file-uploader';
+import { ar_SA, de_DE, es_ES, fr_FR, ja_JP, ko_KR, zh_CN, zh_TW } from 'upup-react-file-uploader/locales';
 import Uploader from "@/components/Uploader";
 import { Tooltip } from 'react-tooltip';
 import 'react-tooltip/dist/react-tooltip.css';
@@ -77,6 +81,19 @@ const UPLOAD_ADAPTERS = [
   { value: "DROPBOX", label: "Dropbox", icon: SiDropbox }
 ];
 
+// Available languages for the locale selector
+const LANGUAGES: { code: string; label: string; locale: Translations }[] = [
+  { code: 'en_US', label: 'English', locale: en_US },
+  { code: 'fr_FR', label: 'Français', locale: fr_FR },
+  { code: 'de_DE', label: 'Deutsch', locale: de_DE },
+  { code: 'es_ES', label: 'Español', locale: es_ES },
+  { code: 'ja_JP', label: '日本語', locale: ja_JP },
+  { code: 'ko_KR', label: '한국어', locale: ko_KR },
+  { code: 'zh_CN', label: '简体中文', locale: zh_CN },
+  { code: 'zh_TW', label: '繁體中文', locale: zh_TW },
+  { code: 'ar_SA', label: 'العربية', locale: ar_SA },
+];
+
 export default function HomepageDemo() {
   const { isDarkMode } = useContext(ThemeContext);
   const [mini, setMini] = useState(false);
@@ -86,6 +103,7 @@ export default function HomepageDemo() {
   const [enabledAdapters, setEnabledAdapters] = useState(["INTERNAL", "GOOGLE_DRIVE", "ONE_DRIVE", "LINK", "CAMERA"]);
   const [allowPreview, setAllowPreview] = useState(true);
   const [shouldCompress, setShouldCompress] = useState(false);
+  const [selectedLanguage, setSelectedLanguage] = useState('en_US');
   const [fileSizeValue, setFileSizeValue] = useState(25); // Default 25
   const [fileSizeUnit, setFileSizeUnit] = useState(1024 * 1024); // Default MB
   const [restrictionsEnabled, setRestrictionsEnabled] = useState(false); // New state for restrictions toggle
@@ -102,7 +120,8 @@ export default function HomepageDemo() {
       allowPreview: allowPreview.toString(),
       shouldCompress: shouldCompress.toString(),
       fileSizeLimit: (restrictionsEnabled ? fileSizeLimit : 999).toString(),
-      darkMode: isDarkMode.toString(), // Add dark mode parameter
+      darkMode: isDarkMode.toString(),
+      language: selectedLanguage,
     });
     return `/mobile-demo?${params.toString()}`;
   };
@@ -484,6 +503,30 @@ export default function HomepageDemo() {
                   </div>
                 </div>
 
+                {/* Language Card */}
+                <div className="shadow-md dark:shadow-none p-4 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm border border-gray-200/50 dark:border-gray-700/50 rounded-2xl hover:bg-white/80 dark:hover:bg-gray-800/80 transition-all duration-300">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-6 h-6 bg-primary/10 dark:bg-primary-dark/10 rounded-lg flex items-center justify-center">
+                      <FaLanguage className="w-3.5 h-3.5 text-primary dark:text-primary-dark" />
+                    </div>
+                    <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">
+                      Language
+                    </h3>
+                  </div>
+
+                  <select
+                    value={selectedLanguage}
+                    onChange={(e) => setSelectedLanguage(e.target.value)}
+                    className="w-full px-3 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary/20 dark:focus:ring-primary-dark/20 focus:border-primary dark:focus:border-primary-dark transition-colors text-gray-900 dark:text-white cursor-pointer"
+                  >
+                    {LANGUAGES.map((lang) => (
+                      <option key={lang.code} value={lang.code} className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
+                        {lang.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
                 {/* Documentation Link Card */}
                 <div className="p-4 bg-gradient-to-r from-primary/5 to-primary-dark/5 dark:from-primary-dark/10 dark:to-primary/10 border border-primary/20 dark:border-primary-dark/20 rounded-xl hover:from-primary/10 hover:to-primary-dark/10 dark:hover:from-primary-dark/20 dark:hover:to-primary/20 transition-all duration-300 backdrop-blur-sm">
                   <div className="flex items-center justify-between">
@@ -549,6 +592,7 @@ export default function HomepageDemo() {
                           allowPreview={allowPreview}
                           shouldCompress={shouldCompress}
                           fileSizeLimit={restrictionsEnabled ? fileSizeLimit : 999}
+                          locale={LANGUAGES.find(l => l.code === selectedLanguage)?.locale}
                       />
                     )}
                   </div>
