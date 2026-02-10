@@ -327,7 +327,14 @@ export default function useRootProvider({
                 // Upload files with automatic retries if configured
                 const uploadOptions = {
                     onFileUploadStart,
-                    onFileUploadProgress: (file: FileWithParams, progress: { loaded: number; total: number; percentage: number }) => {
+                    onFileUploadProgress: (
+                        file: FileWithParams,
+                        progress: {
+                            loaded: number
+                            total: number
+                            percentage: number
+                        },
+                    ) => {
                         setFilesProgressMap(prev => ({
                             ...prev,
                             [file.id]: {

@@ -115,13 +115,14 @@ export default memo(function FileList() {
                         Upload {files.size} file{files.size > 1 ? 's' : ''}
                     </button>
                 </ShouldRender>
-                <ShouldRender if={uploadStatus === UploadStatus.FAILED && !maxRetries}>
+                <ShouldRender
+                    if={uploadStatus === UploadStatus.FAILED && !maxRetries}
+                >
                     <button
                         className={cn(
                             'upup-disabled:animate-pulse upup-ml-auto upup-rounded-full upup-bg-red-600 upup-px-4 upup-py-2 upup-text-sm upup-font-medium upup-text-white',
                             {
-                                'upup-bg-red-500 dark:upup-bg-red-500':
-                                    dark,
+                                'upup-bg-red-500 dark:upup-bg-red-500': dark,
                             },
                             classNames.uploadButton,
                         )}
