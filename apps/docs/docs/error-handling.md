@@ -41,3 +41,17 @@ export class UploadError extends Error {
     }
 }
 ```
+
+## Retry Behavior
+
+You can configure automatic retries for failed uploads using the [`maxRetries`](/docs/api-reference/upupuploader/optional-props.md#maxretries) prop on the `UpupUploader` component. When set, each file upload is silently retried up to the specified number of times before being considered a failure.
+
+```tsx
+<UpupUploader
+  provider={UpupProvider.AWS}
+  tokenEndpoint="/api/upload-token"
+  maxRetries={3} // Automatically retry failed uploads up to 3 times
+/>
+```
+
+When `maxRetries` is not set, a manual **"Retry Upload"** button appears in the UI on failure, allowing users to retry at their discretion.
