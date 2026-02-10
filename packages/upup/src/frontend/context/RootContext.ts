@@ -10,6 +10,7 @@ import {
     FileWithParams,
     GoogleDriveConfigs,
     OneDriveConfigs,
+    Translations,
     UploadAdapter,
     UpupUploaderProps,
     UpupUploaderPropsIcons,
@@ -62,6 +63,8 @@ export interface IRootContext {
     inputRef: RefObject<HTMLInputElement | null>
     activeAdapter?: UploadAdapter
     setActiveAdapter: Dispatch<SetStateAction<UploadAdapter | undefined>>
+
+    translations: Translations
 
     files: Map<string, FileWithParams>
     setFiles: (newFiles: File[]) => void

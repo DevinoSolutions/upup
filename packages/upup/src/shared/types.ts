@@ -1,4 +1,7 @@
 import { FC } from 'react'
+import type { Translations } from './i18n/types'
+
+export type { Translations }
 
 export enum UploadAdapter {
     INTERNAL = 'INTERNAL',
@@ -141,6 +144,12 @@ export type UpupUploaderProps = {
     dark?: boolean
     classNames?: UpupUploaderPropsClassNames
     icons?: UpupUploaderPropsIcons
+
+    // i18n / Localisation
+    /** A full locale preset (e.g. `ja_JP`). Defaults to `en_US`. */
+    locale?: Translations
+    /** Per-key overrides that are deep-merged on top of the active locale. */
+    translations?: Partial<Translations>
 
     // Event Handlers
     onFilesSelected?: (files: FileWithParams[]) => void

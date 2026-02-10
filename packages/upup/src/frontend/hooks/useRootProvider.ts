@@ -6,6 +6,7 @@ import {
     TbPlus,
     TbTrash,
 } from 'react-icons/tb/index.js'
+import { en_US, mergeTranslations } from '../../shared/i18n'
 import checkFileType from '../../shared/lib/checkFileType'
 import {
     FileWithParams,
@@ -45,6 +46,8 @@ export default function useRootProvider({
     onWarn: warningHandler,
     icons = {},
     classNames = {},
+    locale,
+    translations: translationOverrides,
     onIntegrationClick = () => {},
     onFileClick = () => {},
     onFileRemove = () => {},
@@ -96,6 +99,12 @@ export default function useRootProvider({
         [mini, propLimit],
     )
     const multiple = useMemo(() => (mini ? false : limit > 1), [limit, mini])
+
+    const translations = useMemo(
+        () => mergeTranslations(locale ?? en_US, translationOverrides),
+        [locale, translationOverrides],
+    )
+
     const totalProgress = useMemo(() => {
         const filesProgressMapValues = Object.values(filesProgressMap)
         if (!filesProgressMapValues.length) return 0
@@ -385,6 +394,7 @@ export default function useRootProvider({
         setActiveAdapter,
         isAddingMore,
         setIsAddingMore,
+        translations,
         files: selectedFilesMap,
         setFiles: handleSetSelectedFiles,
         dynamicUpload,
