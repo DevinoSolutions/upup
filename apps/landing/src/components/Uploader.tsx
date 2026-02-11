@@ -35,6 +35,7 @@ interface Props {
     allowPreview?: boolean;
     shouldCompress?: boolean;
     fileSizeLimit?: number; // in MB
+    imageEditor?: boolean;
 }
 
 export default function Uploader({
@@ -44,7 +45,8 @@ export default function Uploader({
                                      enabledAdapters = ["INTERNAL", "GOOGLE_DRIVE", "ONE_DRIVE", "LINK", "CAMERA"],
                                      allowPreview = true,
                                      shouldCompress = false,
-                                     fileSizeLimit = 25
+                                     fileSizeLimit = 25,
+                                     imageEditor = false
                                  }: Readonly<Props>) {
     // Detect dark mode using Tailwind's class strategy
     const {isDarkMode} = useContext(ThemeContext)
@@ -101,6 +103,7 @@ export default function Uploader({
                 mini={mini}
                 allowPreview={allowPreview}
                 shouldCompress={shouldCompress}
+                imageEditor={imageEditor}
                 maxFileSize={{ size: fileSizeLimit, unit: 'MB' }}
                 classNames={customClassNames}
                 onFilesUploadComplete={(files) => {
