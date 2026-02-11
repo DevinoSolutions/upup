@@ -4,6 +4,7 @@ import useGoogleDrive from '../hooks/useGoogleDrive'
 
 import useGoogleDriveUploader from '../hooks/useGoogleDriveUploader'
 import DriveBrowser from './shared/DriveBrowser'
+import DriveAuthFallback from './shared/DriveAuthFallback'
 
 export default function GoogleDriveUploader() {
     const { googleDriveConfigs } = useRootContext()
@@ -12,8 +13,19 @@ export default function GoogleDriveUploader() {
         googleFiles: driveFiles,
         handleSignOut,
         token,
+        authCancelled,
+        retryAuth,
     } = useGoogleDrive(googleDriveConfigs)
     const props = useGoogleDriveUploader(token)
+
+    if (authCancelled && !token) {
+        return (
+            <DriveAuthFallback
+                providerName="Google Drive"
+                onRetry={retryAuth}
+            />
+        )
+    }
 
     return (
         <DriveBrowser
