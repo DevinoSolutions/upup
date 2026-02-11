@@ -3,8 +3,8 @@ import { useRootContext } from '../context/RootContext'
 import useGoogleDrive from '../hooks/useGoogleDrive'
 
 import useGoogleDriveUploader from '../hooks/useGoogleDriveUploader'
-import DriveBrowser from './shared/DriveBrowser'
 import DriveAuthFallback from './shared/DriveAuthFallback'
+import DriveBrowser from './shared/DriveBrowser'
 
 export default function GoogleDriveUploader() {
     const { googleDriveConfigs } = useRootContext()
