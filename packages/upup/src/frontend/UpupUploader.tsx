@@ -197,6 +197,7 @@ export default forwardRef<UpupUploaderRef, UpupUploaderProps>(
                     <ImageEditorModal
                         file={providerValues.editingFile}
                         onClose={providerValues.closeImageEditor}
+                        onSave={providerValues.saveImageEdit}
                     />
                 )}
             </RootContext.Provider>

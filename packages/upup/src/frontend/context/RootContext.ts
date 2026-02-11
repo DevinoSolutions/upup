@@ -82,6 +82,7 @@ export interface IRootContext {
     editingFile: FileWithParams | null
     openImageEditor: (file: FileWithParams) => void
     closeImageEditor: () => void
+    saveImageEdit: (editedImageData: string, mimeType?: string) => void
     replaceFile: (fileId: string, newFile: FileWithParams) => void
 
     oneDriveConfigs?: OneDriveConfigs

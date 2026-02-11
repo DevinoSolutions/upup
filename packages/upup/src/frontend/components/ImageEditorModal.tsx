@@ -1,4 +1,11 @@
-import React, { memo, useCallback, useEffect, useRef } from 'react'
+import React, {
+    ComponentType,
+    memo,
+    useCallback,
+    useEffect,
+    useRef,
+    useState,
+} from 'react'
 import { createPortal } from 'react-dom'
 import { FileWithParams } from '../../shared/types'
 import { useRootContext } from '../context/RootContext'
@@ -7,24 +14,114 @@ import { cn } from '../lib/tailwind'
 type Props = {
     file: FileWithParams
     onClose: () => void
+    onSave: (editedImageData: string, mimeType?: string) => void
+}
+
+/**
+ * Filerobot's onBeforeSave / onSave callback signature.
+ * We only use the imageData.imageBase64 field.
+ */
+type FilerobotImageState = {
+    imageBase64?: string
+    fullName?: string
+    mimeType?: string
+    width?: number
+    height?: number
+}
+
+type FilerobotDesignState = Record<string, unknown>
+
+/**
+ * The props shape of the default-exported <FilerobotImageEditor> component.
+ * We only type the subset we use to keep this lightweight.
+ */
+type FilerobotEditorProps = {
+    source: string
+    savingPixelRatio?: number
+    previewPixelRatio?: number
+    onSave?: (
+        imageData: FilerobotImageState,
+        designState: FilerobotDesignState,
+    ) => void
+    onClose?: () => void
+    onBeforeSave?: (imageData: FilerobotImageState) => boolean | void
+    annotationsCommon?: Record<string, unknown>
+    Rotate?: Record<string, unknown>
+    Crop?: Record<string, unknown>
+    tabsIds?: unknown[]
+    defaultTabId?: unknown
+    defaultToolId?: unknown
+    [key: string]: unknown
 }
 
 /**
  * Accessible modal shell for the image editor.
+ * Lazy-loads `react-filerobot-image-editor` at runtime so the dependency
+ * is never bundled into the core entry point.
+ *
  * - Focus trap: keeps focus inside the modal while open.
  * - ESC closes.
  * - Restores focus to the triggering element on close.
  * - aria-label / role="dialog".
- *
- * The actual Filerobot editor component will be lazily loaded
- * inside this shell in a later commit.
  */
-export default memo(function ImageEditorModal({ file, onClose }: Props) {
+export default memo(function ImageEditorModal({
+    file,
+    onClose,
+    onSave,
+}: Props) {
     const {
-        props: { dark },
+        props: { dark, imageEditor: editorConfig },
     } = useRootContext()
+
     const overlayRef = useRef<HTMLDivElement>(null)
     const previousFocusRef = useRef<Element | null>(null)
+
+    // Lazy-loaded editor component + TABS/TOOLS constants
+    const [EditorComponent, setEditorComponent] =
+        useState<ComponentType<FilerobotEditorProps> | null>(null)
+    const [editorConstants, setEditorConstants] = useState<{
+        TABS: Record<string, unknown>
+        TOOLS: Record<string, unknown>
+    } | null>(null)
+    const [loadError, setLoadError] = useState<string | null>(null)
+
+    // Dynamically import react-filerobot-image-editor (browser only)
+    useEffect(() => {
+        if (typeof window === 'undefined') return
+
+        let cancelled = false
+        ;(async () => {
+            try {
+                const mod = await import(
+                    /* webpackIgnore: true */
+                    'react-filerobot-image-editor'
+                )
+                if (cancelled) return
+                setEditorComponent(
+                    () => mod.default as ComponentType<FilerobotEditorProps>,
+                )
+                setEditorConstants({
+                    TABS: (mod as Record<string, unknown>).TABS as Record<
+                        string,
+                        unknown
+                    >,
+                    TOOLS: (mod as Record<string, unknown>).TOOLS as Record<
+                        string,
+                        unknown
+                    >,
+                })
+            } catch {
+                if (cancelled) return
+                setLoadError(
+                    'Image editor failed to load. Make sure "react-filerobot-image-editor" is installed.',
+                )
+            }
+        })()
+
+        return () => {
+            cancelled = true
+        }
+    }, [])
 
     // Capture the element that had focus before the modal opened
     // and restore it when the modal closes.
@@ -52,9 +149,10 @@ export default memo(function ImageEditorModal({ file, onClose }: Props) {
 
             // Basic focus trap: Tab cycles within the modal.
             if (e.key === 'Tab') {
-                const focusable = overlayRef.current?.querySelectorAll<HTMLElement>(
-                    'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
-                )
+                const focusable =
+                    overlayRef.current?.querySelectorAll<HTMLElement>(
+                        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+                    )
                 if (!focusable || focusable.length === 0) return
                 const first = focusable[0]
                 const last = focusable[focusable.length - 1]
@@ -80,6 +178,28 @@ export default memo(function ImageEditorModal({ file, onClose }: Props) {
         (e: React.MouseEvent) => e.stopPropagation(),
         [],
     )
+
+    // Filerobot onSave handler
+    const handleEditorSave = useCallback(
+        (imageData: FilerobotImageState) => {
+            if (!imageData.imageBase64) return
+            const dataURL = imageData.imageBase64.startsWith('data:')
+                ? imageData.imageBase64
+                : `data:${imageData.mimeType || file.type};base64,${imageData.imageBase64}`
+            onSave(dataURL, imageData.mimeType)
+        },
+        [file.type, onSave],
+    )
+
+    // Build Filerobot tabs from config
+    const resolvedTabs = editorConstants?.TABS
+        ? editorConfig.tabs?.map(
+              tab =>
+                  (editorConstants.TABS as Record<string, unknown>)[
+                      tab.toUpperCase()
+                  ] ?? tab,
+          )
+        : undefined
 
     return createPortal(
         <div
@@ -127,13 +247,57 @@ export default memo(function ImageEditorModal({ file, onClose }: Props) {
                     </button>
                 </div>
 
-                {/* Editor body — placeholder for Filerobot (wired in commit 4) */}
-                <div className="upup-flex upup-flex-1 upup-items-center upup-justify-center upup-p-4">
-                    <img
-                        src={file.url}
-                        alt={file.name}
-                        className="upup-max-h-full upup-max-w-full upup-rounded upup-object-contain"
-                    />
+                {/* Editor body */}
+                <div className="upup-relative upup-flex-1 upup-overflow-hidden">
+                    {loadError && (
+                        <div className="upup-flex upup-h-full upup-items-center upup-justify-center upup-p-8">
+                            <p
+                                className={cn(
+                                    'upup-text-center upup-text-sm',
+                                    dark
+                                        ? 'upup-text-red-400'
+                                        : 'upup-text-red-600',
+                                )}
+                            >
+                                {loadError}
+                            </p>
+                        </div>
+                    )}
+
+                    {!EditorComponent && !loadError && (
+                        <div className="upup-flex upup-h-full upup-items-center upup-justify-center">
+                            <div
+                                className={cn(
+                                    'upup-h-8 upup-w-8 upup-animate-spin upup-rounded-full upup-border-2 upup-border-t-transparent',
+                                    dark
+                                        ? 'upup-border-gray-500'
+                                        : 'upup-border-gray-300',
+                                )}
+                            />
+                        </div>
+                    )}
+
+                    {EditorComponent && !loadError && (
+                        <EditorComponent
+                            source={file.url}
+                            onSave={handleEditorSave}
+                            onClose={onClose}
+                            savingPixelRatio={4}
+                            previewPixelRatio={4}
+                            defaultTabId={
+                                editorConstants?.TABS
+                                    ? (
+                                          editorConstants.TABS as Record<
+                                              string,
+                                              unknown
+                                          >
+                                      ).ADJUST
+                                    : undefined
+                            }
+                            tabsIds={resolvedTabs}
+                            onBeforeSave={() => false}
+                        />
+                    )}
                 </div>
             </div>
         </div>,

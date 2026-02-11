@@ -23,6 +23,11 @@ import {
     sizeToBytes,
 } from '../lib/file'
 import { ProviderSDK } from '../lib/storage/provider'
+import {
+    blobToFileWithParams,
+    dataURLtoBlob,
+    revokeAndReplace,
+} from '../lib/imageEditorHelpers'
 
 type FileProgress = {
     id: string
@@ -137,21 +142,66 @@ export default function useRootProvider({
         [resolvedImageEditor],
     )
 
-    const closeImageEditor = useCallback(() => {
-        const current = editingFile
-        setEditingFile(null)
-
-        // Process the next file in the queue, if any.
+    const advanceEditorQueue = useCallback(() => {
         setEditorQueue(prev => {
             if (prev.length === 0) return prev
             const [next, ...rest] = prev
-            // Use setTimeout so state settles before opening the next editor.
             setTimeout(() => openImageEditor(next), 0)
             return rest
         })
+    }, [openImageEditor])
 
+    const closeImageEditor = useCallback(() => {
+        const current = editingFile
+        setEditingFile(null)
+        advanceEditorQueue()
         if (current) resolvedImageEditor.onCancel?.(current)
-    }, [editingFile, openImageEditor, resolvedImageEditor])
+    }, [editingFile, advanceEditorQueue, resolvedImageEditor])
+
+    const saveImageEdit = useCallback(
+        (editedImageData: string, mimeType?: string) => {
+            if (!editingFile) return
+
+            const original = editingFile
+            const outputMime =
+                mimeType ||
+                resolvedImageEditor.output?.mimeType ||
+                original.type
+            const quality = resolvedImageEditor.output?.quality
+
+            // Convert the base64 / dataURL to a Blob.
+            // If a quality or mimeType override is specified and the data is a
+            // plain dataURL, we re-encode via canvas; otherwise use as-is.
+            let blob: Blob
+            if (
+                (quality !== undefined || outputMime !== original.type) &&
+                editedImageData.startsWith('data:')
+            ) {
+                // Fast path: just decode the dataURL directly with the given mime.
+                const raw = dataURLtoBlob(editedImageData)
+                blob = new Blob([raw], { type: outputMime })
+            } else {
+                blob = dataURLtoBlob(editedImageData)
+            }
+
+            const newFile = blobToFileWithParams(
+                blob,
+                original,
+                resolvedImageEditor.output,
+            )
+
+            // Replace in the files map, revoking the old blob URL.
+            setSelectedFilesMap(prev =>
+                revokeAndReplace(prev, original.id, newFile),
+            )
+
+            resolvedImageEditor.onSave?.(newFile, original)
+
+            setEditingFile(null)
+            advanceEditorQueue()
+        },
+        [editingFile, resolvedImageEditor, advanceEditorQueue],
+    )
 
     const replaceFile = useCallback(
         (fileId: string, newFile: FileWithParams) => {
@@ -485,6 +535,7 @@ export default function useRootProvider({
         editingFile,
         openImageEditor,
         closeImageEditor,
+        saveImageEdit,
         replaceFile,
         oneDriveConfigs: driveConfigs?.oneDrive,
         googleDriveConfigs: driveConfigs?.googleDrive,
