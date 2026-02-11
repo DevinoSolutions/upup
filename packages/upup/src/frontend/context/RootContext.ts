@@ -79,6 +79,11 @@ export interface IRootContext {
     handleDone: () => void
     handleCancel: () => void
 
+    editingFile: FileWithParams | null
+    openImageEditor: (file: FileWithParams) => void
+    closeImageEditor: () => void
+    replaceFile: (fileId: string, newFile: FileWithParams) => void
+
     oneDriveConfigs?: OneDriveConfigs
     googleDriveConfigs?: GoogleDriveConfigs
     dropboxConfigs?: DropboxConfigs

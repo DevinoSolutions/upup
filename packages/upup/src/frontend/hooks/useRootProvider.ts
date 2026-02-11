@@ -80,6 +80,8 @@ export default function useRootProvider({
         {} as FilesProgressMap,
     )
     const [uploadError, setUploadError] = useState('')
+    const [editingFile, setEditingFile] = useState<FileWithParams | null>(null)
+    const [editorQueue, setEditorQueue] = useState<FileWithParams[]>([])
 
     // Keep a ref to selectedFilesMap for unmount cleanup
     const selectedFilesMapRef = useRef(selectedFilesMap)
@@ -126,6 +128,50 @@ export default function useRootProvider({
         }
         return { enabled: false, autoOpen: 'never' }
     }, [imageEditorProp])
+
+    const openImageEditor = useCallback(
+        (file: FileWithParams) => {
+            setEditingFile(file)
+            resolvedImageEditor.onOpen?.(file)
+        },
+        [resolvedImageEditor],
+    )
+
+    const closeImageEditor = useCallback(() => {
+        const current = editingFile
+        setEditingFile(null)
+
+        // Process the next file in the queue, if any.
+        setEditorQueue(prev => {
+            if (prev.length === 0) return prev
+            const [next, ...rest] = prev
+            // Use setTimeout so state settles before opening the next editor.
+            setTimeout(() => openImageEditor(next), 0)
+            return rest
+        })
+
+        if (current) resolvedImageEditor.onCancel?.(current)
+    }, [editingFile, openImageEditor, resolvedImageEditor])
+
+    const replaceFile = useCallback(
+        (fileId: string, newFile: FileWithParams) => {
+            setSelectedFilesMap(prev => {
+                const next = new Map(prev)
+                next.set(fileId, newFile)
+                return next
+            })
+        },
+        [],
+    )
+
+    // Auto-open editor queue processing: when a queue is populated and no
+    // editor is currently open, open the next file.
+    useEffect(() => {
+        if (editingFile || editorQueue.length === 0) return
+        const [next, ...rest] = editorQueue
+        setEditorQueue(rest)
+        openImageEditor(next)
+    }, [editingFile, editorQueue, openImageEditor])
 
     const onError = useCallback(
         (message: string) => {
@@ -240,6 +286,29 @@ export default function useRootProvider({
 
         // Emit a single selection event for just-added files.
         if (addedThisBatch.length) onFilesSelected(addedThisBatch)
+
+        // Auto-open image editor for newly added images if configured.
+        if (resolvedImageEditor.enabled && addedThisBatch.length) {
+            const newImages = addedThisBatch.filter(f =>
+                f.type.startsWith('image/'),
+            )
+
+            if (newImages.length > 0) {
+                if (
+                    resolvedImageEditor.autoOpen === 'single' &&
+                    newImages.length === 1
+                ) {
+                    openImageEditor(newImages[0])
+                } else if (resolvedImageEditor.autoOpen === 'always') {
+                    // Queue all: first one opens immediately, rest are queued.
+                    const [first, ...rest] = newImages
+                    openImageEditor(first)
+                    if (rest.length) {
+                        setEditorQueue(prev => [...prev, ...rest])
+                    }
+                }
+            }
+        }
 
         setIsAddingMore(false)
     }
@@ -413,6 +482,10 @@ export default function useRootProvider({
         handleDone,
         handleCancel,
         handleFileRemove,
+        editingFile,
+        openImageEditor,
+        closeImageEditor,
+        replaceFile,
         oneDriveConfigs: driveConfigs?.oneDrive,
         googleDriveConfigs: driveConfigs?.googleDrive,
         dropboxConfigs: driveConfigs?.dropbox,

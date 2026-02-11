@@ -5,6 +5,7 @@ import { TbLoader } from 'react-icons/tb/index.js'
 import { devinoDark, devinoLight, logoDark, logoLight } from '../assets/logos'
 import { FileWithParams, UpupUploaderProps } from '../shared/types'
 import DefaultLoaderIcon from './components/DefaultLoaderIcon'
+import ImageEditorModal from './components/ImageEditorModal'
 import MainBox from './components/MainBox'
 import ShouldRender from './components/shared/ShouldRender'
 import RootContext from './context/RootContext'
@@ -192,6 +193,12 @@ export default forwardRef<UpupUploaderRef, UpupUploaderProps>(
                         </section>
                     </div>
                 </div>
+                {providerValues.editingFile && (
+                    <ImageEditorModal
+                        file={providerValues.editingFile}
+                        onClose={providerValues.closeImageEditor}
+                    />
+                )}
             </RootContext.Provider>
         )
     },
