@@ -10,6 +10,7 @@ import {
     FileWithParams,
     GoogleDriveConfigs,
     OneDriveConfigs,
+    ResolvedImageEditorOptions,
     UploadAdapter,
     UpupUploaderProps,
     UpupUploaderPropsIcons,
@@ -56,6 +57,7 @@ type ContextProps = Required<
     Pick<UpupUploaderProps, 'maxFileSize'> & {
         multiple: boolean
         icons: Required<UpupUploaderPropsIcons>
+        imageEditor: ResolvedImageEditorOptions
     }
 
 export interface IRootContext {

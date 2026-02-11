@@ -9,6 +9,8 @@ import {
 import checkFileType from '../../shared/lib/checkFileType'
 import {
     FileWithParams,
+    ImageEditorOptions,
+    ResolvedImageEditorOptions,
     UploadAdapter,
     UpupUploaderProps,
 } from '../../shared/types'
@@ -52,6 +54,7 @@ export default function useRootProvider({
     onFilesDragLeave = () => {},
     onFilesDrop = () => {},
     onFileTypeMismatch = () => {},
+    imageEditor: imageEditorProp,
     onFileUploadStart = () => {},
     onFileUploadProgress = () => {},
     onFilesUploadProgress = () => {},
@@ -106,6 +109,23 @@ export default function useRootProvider({
         )
         return Math.round(loadedValues / filesProgressMapValues.length)
     }, [filesProgressMap])
+
+    const resolvedImageEditor = useMemo<ResolvedImageEditorOptions>(() => {
+        if (imageEditorProp === true) {
+            return { enabled: true, autoOpen: 'never' }
+        }
+        if (
+            typeof imageEditorProp === 'object' &&
+            imageEditorProp !== null
+        ) {
+            return {
+                ...imageEditorProp,
+                enabled: imageEditorProp.enabled ?? false,
+                autoOpen: imageEditorProp.autoOpen ?? 'never',
+            }
+        }
+        return { enabled: false, autoOpen: 'never' }
+    }, [imageEditorProp])
 
     const onError = useCallback(
         (message: string) => {
@@ -430,6 +450,7 @@ export default function useRootProvider({
                 LoaderIcon: icons.LoaderIcon || TbLoader,
             },
             classNames,
+            imageEditor: resolvedImageEditor,
         },
     }
 }
