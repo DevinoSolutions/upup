@@ -13,7 +13,15 @@ export default defineConfig([
         target: 'es2019',
         minify: true,
         globalName: 'Upup',
-        external: ['react', 'react-dom'],
+        external: [
+            'react',
+            'react-dom',
+            'react-filerobot-image-editor',
+            'filerobot-image-editor',
+            'react-konva',
+            'konva',
+            'styled-components',
+        ],
     },
     {
         // SERVER / NODE BUILD

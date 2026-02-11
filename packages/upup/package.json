@@ -93,7 +93,19 @@
     ],
     "peerDependencies": {
         "react": "^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0",
-        "react-dom": "^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0"
+        "react-dom": "^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0",
+        "react-filerobot-image-editor": ">=4.0.0",
+        "filerobot-image-editor": ">=4.0.0",
+        "react-konva": ">=18.0.0",
+        "konva": ">=9.0.0",
+        "styled-components": ">=5.0.0"
+    },
+    "peerDependenciesMeta": {
+        "react-filerobot-image-editor": { "optional": true },
+        "filerobot-image-editor": { "optional": true },
+        "react-konva": { "optional": true },
+        "konva": { "optional": true },
+        "styled-components": { "optional": true }
     },
     "devDependencies": {
         "@babel/core": "^7.23.3",
@@ -161,6 +173,7 @@
         "prettier-plugin-tailwindcss": "^0.5.7",
         "react": "^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0",
         "react-dom": "^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0",
+        "react-filerobot-image-editor": "^4.7.0",
         "react-syntax-highlighter": "15.4.5",
         "remark-gfm": "^4.0.0",
         "rollup-plugin-analyzer": "^4.0.0",

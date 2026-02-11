@@ -9,7 +9,6 @@ import {
 import checkFileType from '../../shared/lib/checkFileType'
 import {
     FileWithParams,
-    ImageEditorOptions,
     ResolvedImageEditorOptions,
     UploadAdapter,
     UpupUploaderProps,
@@ -22,12 +21,12 @@ import {
     revokeFileUrl,
     sizeToBytes,
 } from '../lib/file'
-import { ProviderSDK } from '../lib/storage/provider'
 import {
     blobToFileWithParams,
     dataURLtoBlob,
     revokeAndReplace,
 } from '../lib/imageEditorHelpers'
+import { ProviderSDK } from '../lib/storage/provider'
 
 type FileProgress = {
     id: string
@@ -121,10 +120,7 @@ export default function useRootProvider({
         if (imageEditorProp === true) {
             return { enabled: true, autoOpen: 'never' }
         }
-        if (
-            typeof imageEditorProp === 'object' &&
-            imageEditorProp !== null
-        ) {
+        if (typeof imageEditorProp === 'object' && imageEditorProp !== null) {
             return {
                 ...imageEditorProp,
                 enabled: imageEditorProp.enabled ?? false,

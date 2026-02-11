@@ -64,11 +64,8 @@ type FilerobotEditorProps = {
  * - Restores focus to the triggering element on close.
  * - aria-label / role="dialog".
  */
-export default memo(function ImageEditorModal({
-    file,
-    onClose,
-    onSave,
-}: Props) {
+export default memo(function ImageEditorModal(props: Props) {
+    const { file, onClose, onSave } = props
     const {
         props: { dark, imageEditor: editorConfig },
     } = useRootContext()
@@ -185,7 +182,9 @@ export default memo(function ImageEditorModal({
             if (!imageData.imageBase64) return
             const dataURL = imageData.imageBase64.startsWith('data:')
                 ? imageData.imageBase64
-                : `data:${imageData.mimeType || file.type};base64,${imageData.imageBase64}`
+                : `data:${imageData.mimeType || file.type};base64,${
+                      imageData.imageBase64
+                  }`
             onSave(dataURL, imageData.mimeType)
         },
         [file.type, onSave],
