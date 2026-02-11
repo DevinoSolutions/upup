@@ -11,6 +11,7 @@ These optional props are not required for the UpupUploader component to work.
 | [accept](#accept)                             | `accept="image/png"`                                                                               | string          | optional | `*`                                            |
 | [dark](#dark)                                 | `dark={true}`                                                                                      | boolean         | optional | `false`                                        |
 | [driveConfigs](#driveconfigs)                 | `driveConfigs={{ oneDrive: { onedrive_client_id: process.env.NEXT_PUBLIC_ONEDRIVE_CLIENT_ID! } }}` | object          | optional | -                                              |
+| [imageEditor](#imageeditor)                   | `imageEditor={true}`                                                                               | boolean \| ImageEditorOptions | optional | `false`                        |
 | [limit](#limit)                               | `limit={5}`                                                                                        | number          | optional | `1`                                            |
 | [maxFileSize](#maxfilesize)                   | `maxFileSize={{ size: 20, unit: "MB" }}`                                                           | object          | optional | `{ size: 10, unit: "MB" }`                     |
 | [mini](#mini)                                 | `mini={true}`                                                                                      | boolean         | optional | `false`                                        |
@@ -52,6 +53,22 @@ driveConfigs={{
 
 :::note
 For Next.js, don't forget to add the `NEXT_PUBLIC_` before the environment variable name. For instance: `GOOGLE_API_KEY` will now become `NEXT_PUBLIC_GOOGLE_API_KEY`
+:::
+
+## `imageEditor`
+
+Enables the built-in image editor powered by [Filerobot Image Editor](https://github.com/scaleflex/filerobot-image-editor). Pass `true` for defaults or an `ImageEditorOptions` object for fine-grained control. See the [Image Editor guide](./image-editor.md) for full details.
+
+```tsx
+// Simple boolean
+<UpupUploader imageEditor />
+
+// With options
+<UpupUploader imageEditor={{ enabled: true, autoOpen: 'single' }} />
+```
+
+:::note
+You must install `react-filerobot-image-editor` separately — it is an optional peer dependency.
 :::
 
 ## `limit`
