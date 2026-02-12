@@ -1,6 +1,6 @@
 import {
-    dataURLtoBlob,
     blobToFileWithParams,
+    dataURLtoBlob,
     revokeAndReplace,
 } from '../../frontend/lib/imageEditorHelpers'
 import { FileWithParams } from '../../shared/types'
@@ -10,9 +10,7 @@ import { FileWithParams } from '../../shared/types'
 // ---------------------------------------------------------------------------
 
 const revokeObjectURL = jest.fn()
-const createObjectURL = jest.fn(
-    (_obj: Blob | MediaSource) => 'blob:http://localhost/new-url',
-)
+const createObjectURL = jest.fn(() => 'blob:http://localhost/new-url')
 
 beforeAll(() => {
     global.URL.createObjectURL = createObjectURL
@@ -114,14 +112,16 @@ describe('blobToFileWithParams', () => {
         const original = makeFileWithParams()
         const blob = new Blob(['edited'], { type: 'image/png' })
         const result = blobToFileWithParams(blob, original, {
-            fileName: (f) => `edited-${f.name}`,
+            fileName: f => `edited-${f.name}`,
         })
 
         expect(result.name).toBe('edited-photo.png')
     })
 
     it('preserves key, fileHash, and thumbnail from original', () => {
-        const thumbFile = new File(['thumb'], 'thumb.jpg', { type: 'image/jpeg' })
+        const thumbFile = new File(['thumb'], 'thumb.jpg', {
+            type: 'image/jpeg',
+        })
         const original = makeFileWithParams({
             key: 'my-key',
             fileHash: 'hash-123',
@@ -159,7 +159,9 @@ describe('blobToFileWithParams', () => {
 describe('revokeAndReplace', () => {
     it('returns a new Map (does not mutate the original)', () => {
         const original = makeFileWithParams()
-        const replacement = makeFileWithParams({ url: 'blob:http://localhost/new' })
+        const replacement = makeFileWithParams({
+            url: 'blob:http://localhost/new',
+        })
         const map = new Map([['dGVzdC1pZA==', original]])
 
         const next = revokeAndReplace(map, 'dGVzdC1pZA==', replacement)
@@ -170,7 +172,9 @@ describe('revokeAndReplace', () => {
 
     it('replaces the file at the given id', () => {
         const original = makeFileWithParams()
-        const replacement = makeFileWithParams({ url: 'blob:http://localhost/new' })
+        const replacement = makeFileWithParams({
+            url: 'blob:http://localhost/new',
+        })
         const map = new Map([['dGVzdC1pZA==', original]])
 
         const next = revokeAndReplace(map, 'dGVzdC1pZA==', replacement)
@@ -180,7 +184,9 @@ describe('revokeAndReplace', () => {
 
     it('revokes the old blob URL of the replaced file', () => {
         const original = makeFileWithParams()
-        const replacement = makeFileWithParams({ url: 'blob:http://localhost/new' })
+        const replacement = makeFileWithParams({
+            url: 'blob:http://localhost/new',
+        })
         const map = new Map([['dGVzdC1pZA==', original]])
 
         revokeAndReplace(map, 'dGVzdC1pZA==', replacement)
@@ -191,7 +197,9 @@ describe('revokeAndReplace', () => {
     })
 
     it('does not call revokeObjectURL when the file id is not in the map', () => {
-        const replacement = makeFileWithParams({ url: 'blob:http://localhost/new' })
+        const replacement = makeFileWithParams({
+            url: 'blob:http://localhost/new',
+        })
         const map = new Map<string, FileWithParams>()
 
         const next = revokeAndReplace(map, 'missing-id', replacement)
@@ -202,7 +210,10 @@ describe('revokeAndReplace', () => {
 
     it('preserves other entries in the map', () => {
         const fileA = makeFileWithParams({ id: 'a' })
-        const fileB = makeFileWithParams({ id: 'b', url: 'blob:http://localhost/b' })
+        const fileB = makeFileWithParams({
+            id: 'b',
+            url: 'blob:http://localhost/b',
+        })
         const replacement = makeFileWithParams({
             id: 'a',
             url: 'blob:http://localhost/a-new',
