@@ -9,11 +9,7 @@ import React, {
 } from 'react'
 
 import { useRootContext } from '../context/RootContext'
-import {
-    fileCanPreviewText,
-    fileGetIsImage,
-    fileGetIsText,
-} from '../lib/file'
+import { fileCanPreviewText, fileGetIsImage, fileGetIsText } from '../lib/file'
 import { cn } from '../lib/tailwind'
 import FilePreviewThumbnail from './FilePreviewThumbnail'
 import ProgressBar from './shared/ProgressBar'

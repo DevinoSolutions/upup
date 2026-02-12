@@ -1,6 +1,11 @@
 import React, { Dispatch, SetStateAction, memo, useMemo } from 'react'
 import { UpupUploaderPropsClassNames } from '../../shared/types'
-import { fileCanPreviewText, fileGetExtension, fileGetIsText, fileIs3D } from '../lib/file'
+import {
+    fileCanPreviewText,
+    fileGetExtension,
+    fileGetIsText,
+    fileIs3D,
+} from '../lib/file'
 import { cn } from '../lib/tailwind'
 import FileIcon from './FileIcon'
 import ShouldRender from './shared/ShouldRender'

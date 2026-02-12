@@ -29,7 +29,14 @@ export default memo(
             fileSize?: number
         }
     >(function FilePreviewPortal(
-        { onStopPropagation, fileUrl, fileName, fileType, fileSize, ...restProps },
+        {
+            onStopPropagation,
+            fileUrl,
+            fileName,
+            fileType,
+            fileSize,
+            ...restProps
+        },
         ref,
     ) {
         const {
@@ -73,20 +80,30 @@ export default memo(
                         let result = ''
                         let done = false
 
-                        while (!done && result.length < PREVIEW_TEXT_TRUNCATE_LENGTH) {
-                            const { value, done: streamDone } = await reader.read()
+                        while (
+                            !done &&
+                            result.length < PREVIEW_TEXT_TRUNCATE_LENGTH
+                        ) {
+                            const { value, done: streamDone } =
+                                await reader.read()
                             done = streamDone
                             if (value) {
-                                result += decoder.decode(value, { stream: !done })
+                                result += decoder.decode(value, {
+                                    stream: !done,
+                                })
                             }
                         }
                         reader.cancel()
 
                         if (!cancelled) {
                             const wasTruncated =
-                                !done || result.length > PREVIEW_TEXT_TRUNCATE_LENGTH
+                                !done ||
+                                result.length > PREVIEW_TEXT_TRUNCATE_LENGTH
                             if (wasTruncated) {
-                                result = result.slice(0, PREVIEW_TEXT_TRUNCATE_LENGTH)
+                                result = result.slice(
+                                    0,
+                                    PREVIEW_TEXT_TRUNCATE_LENGTH,
+                                )
                             }
                             setIsTruncated(wasTruncated)
                             setTextContent(result)
@@ -146,7 +163,9 @@ export default memo(
                                             </pre>
                                             {isTruncated && (
                                                 <div className="upup-mt-4 upup-rounded upup-border upup-border-yellow-500/30 upup-bg-yellow-500/10 upup-px-3 upup-py-2 upup-text-xs upup-text-yellow-400">
-                                                    Content truncated — file is too large to preview in full.
+                                                    Content truncated — file is
+                                                    too large to preview in
+                                                    full.
                                                 </div>
                                             )}
                                         </>
