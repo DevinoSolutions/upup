@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react'
+import React from 'react'
 import { UploadStatus, useRootContext } from '../../context/RootContext'
 import { cn } from '../../lib/tailwind'
 import ShouldRender from './ShouldRender'
@@ -11,7 +11,6 @@ export default function MainBoxHeader({ handleCancel }: Readonly<Props>) {
     const {
         files,
         setIsAddingMore,
-        isAddingMore,
         props: {
             mini,
             limit,
@@ -24,10 +23,6 @@ export default function MainBoxHeader({ handleCancel }: Readonly<Props>) {
     } = useRootContext()
     const isUploading = uploadStatus === UploadStatus.ONGOING
     const isLimitReached = limit === files.size
-    const cancelText = useMemo(
-        () => (isAddingMore ? 'Cancel' : 'Remove all files'),
-        [isAddingMore],
-    )
 
     if (mini) return null
 
@@ -52,7 +47,7 @@ export default function MainBoxHeader({ handleCancel }: Readonly<Props>) {
                 onClick={handleCancel}
                 disabled={isUploading || isProcessing}
             >
-                {cancelText}
+                Remove all files
             </button>
             <span
                 className={cn(
@@ -62,12 +57,9 @@ export default function MainBoxHeader({ handleCancel }: Readonly<Props>) {
                     },
                 )}
             >
-                <ShouldRender if={isAddingMore}>Adding more files</ShouldRender>
-                <ShouldRender if={!isAddingMore}>
-                    {files.size} file{files.size > 1 ? 's' : ''} selected
-                </ShouldRender>
+                {files.size} file{files.size > 1 ? 's' : ''} selected
             </span>
-            <ShouldRender if={!isAddingMore && limit > 1 && !isLimitReached}>
+            <ShouldRender if={limit > 1 && !isLimitReached}>
                 <button
                     className={cn(
                         'upup-col-start-3 upup-col-end-5 upup-flex upup-items-center upup-justify-end upup-gap-1 upup-rounded-md upup-border upup-border-dashed upup-border-blue-400/50 upup-px-2 upup-py-1 upup-text-sm upup-text-blue-600 md:upup-col-start-4',
