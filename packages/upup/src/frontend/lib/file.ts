@@ -125,6 +125,52 @@ export function fileGetIsImage(fileType: string) {
     return fileType.startsWith('image/')
 }
 
+/**
+ * Maximum file size (in bytes) for which text-based preview is allowed.
+ * Files exceeding this threshold will show a static icon instead of rendering content,
+ * preventing the browser from freezing on large text files (e.g. 3MB+ JSON).
+ */
+export const PREVIEW_MAX_TEXT_SIZE = 512 * 1024 // 512 KB
+
+/**
+ * Maximum number of characters to render in the preview portal for text files.
+ * Content beyond this limit is truncated with an indicator.
+ */
+export const PREVIEW_TEXT_TRUNCATE_LENGTH = 100_000 // ~100 KB of text
+
+/**
+ * Determines whether a file is a text-based file that could be previewed as text.
+ */
+export function fileGetIsText(fileType: string, fileName: string): boolean {
+    if (!fileType) return false
+    if (fileType.startsWith('text/')) return true
+    const lower = fileName.toLowerCase()
+    return (
+        lower.endsWith('.txt') ||
+        lower.endsWith('.md') ||
+        lower.endsWith('.json') ||
+        lower.endsWith('.csv') ||
+        lower.endsWith('.log') ||
+        lower.endsWith('.js') ||
+        lower.endsWith('.ts') ||
+        lower.endsWith('.css') ||
+        lower.endsWith('.html')
+    )
+}
+
+/**
+ * Returns true if a text file is small enough to safely preview inline.
+ */
+export function fileCanPreviewText(
+    fileType: string,
+    fileName: string,
+    fileSize: number | undefined,
+): boolean {
+    if (!fileGetIsText(fileType, fileName)) return false
+    if (fileSize === undefined) return true // unknown size, allow preview
+    return fileSize <= PREVIEW_MAX_TEXT_SIZE
+}
+
 export function fileGetExtension(fileType: string, fileName: string) {
     if (!fileType) {
         return fileName.split('.').pop()?.toLowerCase() || ''
