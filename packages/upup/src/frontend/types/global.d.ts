@@ -19,3 +19,12 @@ declare module 'react-filerobot-image-editor' {
     export const TABS: Record<string, unknown>
     export const TOOLS: Record<string, unknown>
 }
+
+// styled-components is a transitive dep of filerobot-image-editor.
+declare module 'styled-components' {
+    import { ComponentType, ReactNode } from 'react'
+    export const StyleSheetManager: ComponentType<{
+        shouldForwardProp?: (prop: string) => boolean
+        children: ReactNode
+    }>
+}
