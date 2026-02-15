@@ -20,6 +20,10 @@ import {
     revokeFileUrl,
     sizeToBytes,
 } from '../lib/file'
+import {
+    fileFingerprint,
+    loadSession,
+} from '../lib/resumable/multipartSessionStore'
 import { ProviderSDK } from '../lib/storage/provider'
 import { UploadResult } from '../types/StorageSDK'
 
@@ -94,6 +98,17 @@ export default function useRootProvider({
         {} as FilesProgressMap,
     )
     const [uploadError, setUploadError] = useState('')
+    const [uploadSpeed, setUploadSpeed] = useState(0)
+    const [uploadEta, setUploadEta] = useState(0)
+    const [uploadedBytes, setUploadedBytes] = useState(0)
+    const [totalBytes, setTotalBytes] = useState(0)
+
+    // SDK ref for pause/resume control
+    const sdkRef = useRef<ProviderSDK | null>(null)
+    // Speed tracking refs
+    const speedSamplesRef = useRef<{ time: number; bytes: number }[]>([])
+    // Ref for totalBytes so progress callback always has the latest value
+    const totalBytesRef = useRef(0)
 
     // Keep a ref to selectedFilesMap for unmount cleanup
     const selectedFilesMapRef = useRef(selectedFilesMap)
@@ -276,19 +291,41 @@ export default function useRootProvider({
 
     const handlePrepareFiles = useCallback(
         async (files: FileWithParams[]) => {
+            // Pre-populate progress from existing multipart sessions
             const progressMap = files.reduce((a, b) => {
+                let initialLoaded = 0
+                if (resumable?.mode === 'multipart') {
+                    const fp = fileFingerprint(b)
+                    const session = loadSession(fp)
+                    if (session?.uploadedBytes) {
+                        initialLoaded = session.uploadedBytes
+                    }
+                }
                 a[b.id] = {
                     id: b.id,
-                    loaded: 0,
+                    loaded: initialLoaded,
                     total: b.size,
                 }
                 return a
             }, {} as FilesProgressMap)
             setFilesProgressMap(progressMap)
 
+            // Set total bytes for ETA calculation
+            const total = files.reduce((sum, f) => sum + f.size, 0)
+            setTotalBytes(total)
+            totalBytesRef.current = total
+            const initialUploaded = Object.values(progressMap).reduce(
+                (sum: number, fp: FileProgress) => sum + fp.loaded,
+                0,
+            )
+            setUploadedBytes(initialUploaded)
+            setUploadSpeed(0)
+            setUploadEta(0)
+            speedSamplesRef.current = []
+
             return onPrepareFiles ? await onPrepareFiles(files) : files
         },
-        [onPrepareFiles],
+        [onPrepareFiles, resumable],
     )
     const proceedUpload = useCallback(
         async (dynamicFiles: FileWithParams[] | undefined = undefined) => {
@@ -324,6 +361,10 @@ export default function useRootProvider({
                     resumable,
                 })
 
+                // Store SDK ref for pause/resume
+                sdkRef.current = sdk
+                speedSamplesRef.current = [{ time: Date.now(), bytes: 0 }]
+
                 // For multipart resumable uploads, filter out already-uploaded files on retry
                 const filesToUpload =
                     resumable?.mode === 'multipart'
@@ -341,13 +382,66 @@ export default function useRootProvider({
                             percentage: number
                         },
                     ) => {
-                        setFilesProgressMap(prev => ({
+                        // Skip visual updates while paused so the UI freezes immediately
+                        if (sdkRef.current?.isPaused) return
+
+                        setFilesProgressMap((prev: FilesProgressMap) => ({
                             ...prev,
                             [file.id]: {
                                 ...prev[file.id],
                                 loaded: progress.loaded,
                             },
                         }))
+
+                        // Update aggregate uploaded bytes for speed/ETA
+                        setFilesProgressMap((prev: FilesProgressMap) => {
+                            const totalLoaded = Object.values(prev).reduce(
+                                (sum: number, fp: FileProgress) =>
+                                    sum + fp.loaded,
+                                0,
+                            )
+                            setUploadedBytes(totalLoaded)
+
+                            // Rolling-average speed calculation (last 3 seconds)
+                            const now = Date.now()
+                            speedSamplesRef.current.push({
+                                time: now,
+                                bytes: totalLoaded,
+                            })
+                            // Keep only samples from last 3 seconds
+                            const cutoff = now - 3000
+                            speedSamplesRef.current =
+                                speedSamplesRef.current.filter(
+                                    (s: { time: number; bytes: number }) =>
+                                        s.time >= cutoff,
+                                )
+
+                            if (speedSamplesRef.current.length >= 2) {
+                                const oldest = speedSamplesRef.current[0]
+                                const newest =
+                                    speedSamplesRef.current[
+                                        speedSamplesRef.current.length - 1
+                                    ]
+                                const elapsed =
+                                    (newest.time - oldest.time) / 1000
+                                if (elapsed > 0) {
+                                    const speed =
+                                        (newest.bytes - oldest.bytes) / elapsed
+                                    setUploadSpeed(Math.max(0, speed))
+
+                                    const remaining =
+                                        totalBytesRef.current - totalLoaded
+                                    if (speed > 0) {
+                                        setUploadEta(
+                                            Math.ceil(remaining / speed),
+                                        )
+                                    }
+                                }
+                            }
+
+                            return prev
+                        })
+
                         onFileUploadProgress(file, progress)
                     },
                     onFileUploadComplete,
@@ -372,12 +466,14 @@ export default function useRootProvider({
                 const finalFiles = uploadResults.map(result => result.file)
                 if (sendEvent) onFilesUploadComplete(finalFiles)
 
+                sdkRef.current = null
                 setUploadStatus(UploadStatus.SUCCESSFUL)
                 return finalFiles
             } catch (error) {
                 onError((error as Error).message)
+                sdkRef.current = null
                 setUploadStatus(UploadStatus.FAILED)
-                setFilesProgressMap({})
+                // Preserve filesProgressMap so progress stays visible alongside the Retry button
                 return
             }
         },
@@ -405,13 +501,33 @@ export default function useRootProvider({
         ],
     )
     const handleCancel = useCallback(() => {
+        // Abort in-flight upload
+        sdkRef.current?.abort()
+        sdkRef.current = null
+
         // Revoke all blob URLs to prevent memory leak
         selectedFilesMap.forEach(file => revokeFileUrl(file))
 
         setUploadStatus(UploadStatus.PENDING)
         setSelectedFilesMap(new Map())
         setFilesProgressMap({})
+        setUploadSpeed(0)
+        setUploadEta(0)
+        setUploadedBytes(0)
+        setTotalBytes(0)
     }, [selectedFilesMap])
+
+    const handlePause = useCallback(() => {
+        sdkRef.current?.pause()
+        setUploadStatus(UploadStatus.PAUSED)
+    }, [])
+
+    const handleResume = useCallback(() => {
+        sdkRef.current?.resume()
+        // Reset speed tracking on resume for accurate ETA
+        speedSamplesRef.current = [{ time: Date.now(), bytes: uploadedBytes }]
+        setUploadStatus(UploadStatus.ONGOING)
+    }, [uploadedBytes])
 
     const handleDone = useCallback(() => {
         onDoneClicked()
@@ -431,6 +547,8 @@ export default function useRootProvider({
         dynamicallyReplaceFiles,
         handleDone,
         handleCancel,
+        handlePause,
+        handleResume,
         handleFileRemove,
         oneDriveConfigs: driveConfigs?.oneDrive,
         googleDriveConfigs: driveConfigs?.googleDrive,
@@ -442,6 +560,10 @@ export default function useRootProvider({
             uploadStatus,
             setUploadStatus,
             uploadError,
+            uploadSpeed,
+            uploadEta,
+            uploadedBytes,
+            totalBytes,
         },
         props: {
             mini,
