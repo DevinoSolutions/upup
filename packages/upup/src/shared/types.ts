@@ -48,6 +48,12 @@ export type ImageEditorOptions = {
     /** Whether the editor is enabled (default false). */
     enabled?: boolean
     /**
+     * How the editor is displayed.
+     * - "inline":  overlays the editor on top of the uploader container (default)
+     * - "modal":   opens the editor in a full-screen modal dialog
+     */
+    display?: 'inline' | 'modal'
+    /**
      * When to auto-open the editor after file selection.
      * - "never":  never auto-open (user clicks Edit manually)
      * - "single": auto-open when exactly 1 new image is added
@@ -106,9 +112,9 @@ export type ImageEditorOptions = {
 
 /** Resolved image editor config with all defaults applied. */
 export type ResolvedImageEditorOptions = Required<
-    Pick<ImageEditorOptions, 'enabled' | 'autoOpen'>
+    Pick<ImageEditorOptions, 'enabled' | 'autoOpen' | 'display'>
 > &
-    Omit<ImageEditorOptions, 'enabled' | 'autoOpen'>
+    Omit<ImageEditorOptions, 'enabled' | 'autoOpen' | 'display'>
 
 export type UpupUploaderPropsClassNames = {
     fileIcon?: string

@@ -118,16 +118,17 @@ export default function useRootProvider({
 
     const resolvedImageEditor = useMemo<ResolvedImageEditorOptions>(() => {
         if (imageEditorProp === true) {
-            return { enabled: true, autoOpen: 'never' }
+            return { enabled: true, autoOpen: 'never', display: 'inline' }
         }
         if (typeof imageEditorProp === 'object' && imageEditorProp !== null) {
             return {
                 ...imageEditorProp,
                 enabled: imageEditorProp.enabled ?? false,
                 autoOpen: imageEditorProp.autoOpen ?? 'never',
+                display: imageEditorProp.display ?? 'inline',
             }
         }
-        return { enabled: false, autoOpen: 'never' }
+        return { enabled: false, autoOpen: 'never', display: 'inline' }
     }, [imageEditorProp])
 
     const openImageEditor = useCallback(
