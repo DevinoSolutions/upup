@@ -3,6 +3,7 @@ import { useRootContext } from '../context/RootContext'
 import useGoogleDrive from '../hooks/useGoogleDrive'
 
 import useGoogleDriveUploader from '../hooks/useGoogleDriveUploader'
+import { GoogleDriveIcon } from './Icons'
 import DriveAuthFallback from './shared/DriveAuthFallback'
 import DriveBrowser from './shared/DriveBrowser'
 
@@ -23,6 +24,7 @@ export default function GoogleDriveUploader() {
             <DriveAuthFallback
                 providerName="Google Drive"
                 onRetry={retryAuth}
+                icon={<GoogleDriveIcon />}
             />
         )
     }

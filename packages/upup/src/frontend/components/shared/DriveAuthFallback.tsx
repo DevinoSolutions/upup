@@ -6,11 +6,13 @@ import AdapterViewContainer from './AdapterViewContainer'
 type Props = {
     providerName: string
     onRetry: () => void
+    icon?: React.ReactNode
 }
 
 export default function DriveAuthFallback({
     providerName,
     onRetry,
+    icon,
 }: Readonly<Props>) {
     const {
         props: { dark, classNames },
@@ -42,7 +44,14 @@ export default function DriveAuthFallback({
                     )}
                     onClick={onRetry}
                 >
-                    Sign in with {providerName}
+                    <span className="upup-inline-flex upup-items-center upup-gap-2">
+                        {icon && (
+                            <span className="upup-inline-flex upup-h-5 upup-w-5 [&>svg]:upup-h-full [&>svg]:upup-w-full">
+                                {icon}
+                            </span>
+                        )}
+                        Sign in with {providerName}
+                    </span>
                 </button>
             </div>
         </AdapterViewContainer>
