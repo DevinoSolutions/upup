@@ -8,6 +8,7 @@ export {
     FileWithProgress,
     GoogleDriveConfigs,
     OneDriveConfigs,
+    ResumableUploadOptions,
     UploadAdapter,
     UpupProvider,
 } from './shared/types'
