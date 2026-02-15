@@ -76,10 +76,10 @@ export default function AdapterSelector() {
     return (
         <div
             className={cn(
-                'upup-relative upup-flex upup-h-full upup-items-center upup-justify-center upup-gap-3 upup-rounded-lg',
+                'upup-relative upup-flex upup-h-full upup-gap-3 upup-rounded-lg',
                 {
                     'upup-flex-col': isAddingMore,
-                    'upup-flex-col-reverse md:upup-flex-col md:upup-gap-14':
+                    'upup-flex-col-reverse upup-items-center upup-justify-center md:upup-flex-col md:upup-gap-14':
                         !isAddingMore,
                 },
             )}
