@@ -229,6 +229,48 @@ export default memo(function ImageEditorInline(props: Props) {
         [dark],
     )
 
+    // CSS overrides for hardcoded light-mode values in @scaleflex/ui & FIE
+    // Input backgrounds: @scaleflex/ui's getInputBackgroundColor() bypasses the
+    //   theme system and always returns lightPalette[BackgroundStateless] (#fff).
+    // Carousel gradients: FIE's Carousel.styled.js hardcodes white gradients
+    //   for the prev/next arrow wrappers.
+    // These cannot be fixed via the palette prop — CSS overrides are required.
+    const darkCssOverrides = dark
+        ? `
+        /* Input background & border overrides (hardcoded in @scaleflex/ui) */
+        [data-upup-dark] .SfxInput-Base {
+            background-color: #2d2d2d !important;
+            border-color: #4b5563 !important;
+        }
+        [data-upup-dark] .SfxInput-Base:focus-within {
+            background-color: #353535 !important;
+            border-color: #6b7280 !important;
+        }
+        [data-upup-dark] .SfxInput-Base:hover {
+            background-color: #353535 !important;
+        }
+        /* Carousel gradient arrow overrides (hardcoded white in FIE) */
+        [data-upup-dark] .FIE_carousel-prev-button {
+            background: linear-gradient(
+                90deg,
+                #232323 1.56%,
+                rgba(35, 35, 35, 0.89) 52.4%,
+                rgba(35, 35, 35, 0.53) 76.04%,
+                rgba(35, 35, 35, 0) 100%
+            ) !important;
+        }
+        [data-upup-dark] .FIE_carousel-next-button {
+            background: linear-gradient(
+                270deg,
+                #232323 1.56%,
+                rgba(35, 35, 35, 0.89) 52.4%,
+                rgba(35, 35, 35, 0.53) 76.04%,
+                rgba(35, 35, 35, 0) 100%
+            ) !important;
+        }
+        `
+        : ''
+
     return (
         <div
             ref={containerRef}
@@ -240,7 +282,13 @@ export default memo(function ImageEditorInline(props: Props) {
                 dark ? 'upup-bg-[#232323]' : 'upup-bg-white',
             )}
             onKeyDown={handleKeyDown}
+            {...(dark ? { 'data-upup-dark': '' } : {})}
         >
+            {/* Dark-mode CSS overrides for hardcoded library values */}
+            {darkCssOverrides && (
+                <style dangerouslySetInnerHTML={{ __html: darkCssOverrides }} />
+            )}
+
             {/* Header — Cancel / Title / (Save is handled by Filerobot) */}
             <div
                 className={cn(
