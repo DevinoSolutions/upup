@@ -3,6 +3,7 @@ import React, {
     memo,
     useCallback,
     useEffect,
+    useMemo,
     useRef,
     useState,
 } from 'react'
@@ -173,6 +174,43 @@ export default memo(function ImageEditorInline(props: Props) {
           )
         : undefined
 
+    // Build Filerobot theme to match dark/light mode and style the Save button
+    const filerobotTheme = useMemo(
+        () =>
+            dark
+                ? {
+                      palette: {
+                          'bg-secondary': '#1a1a1a',
+                          'bg-primary': '#232323',
+                          'bg-primary-active': '#2d2d2d',
+                          'accent-primary': '#30C5F7',
+                          'accent-primary-active': '#6DD8FB',
+                          'icons-primary': '#d1d5db',
+                          'icons-secondary': '#9ca3af',
+                          'borders-secondary': '#374151',
+                          'borders-primary': '#4b5563',
+                          'borders-strong': '#6b7280',
+                          'light-shadow': 'rgba(0, 0, 0, 0.4)',
+                          warning: '#f59e0b',
+                      },
+                      typography: {
+                          fontFamily: 'inherit',
+                      },
+                  }
+                : {
+                      palette: {
+                          'bg-secondary': '#f9fafb',
+                          'bg-primary': '#ffffff',
+                          'accent-primary': '#2563eb',
+                          'accent-primary-active': '#1d4ed8',
+                      },
+                      typography: {
+                          fontFamily: 'inherit',
+                      },
+                  },
+        [dark],
+    )
+
     return (
         <div
             ref={containerRef}
@@ -180,7 +218,7 @@ export default memo(function ImageEditorInline(props: Props) {
             aria-label={`Editing image: ${file.name}`}
             tabIndex={-1}
             className={cn(
-                'upup-absolute upup-inset-0 upup-z-50 upup-flex upup-flex-col upup-overflow-hidden upup-rounded-2xl',
+                'upup-absolute upup-inset-0 upup-z-[9999] upup-flex upup-flex-col upup-overflow-hidden',
                 dark ? 'upup-bg-[#232323]' : 'upup-bg-white',
             )}
             onKeyDown={handleKeyDown}
@@ -190,17 +228,17 @@ export default memo(function ImageEditorInline(props: Props) {
                 className={cn(
                     'upup-flex upup-items-center upup-justify-between upup-border-b upup-px-4 upup-py-2',
                     dark
-                        ? 'upup-border-gray-700'
-                        : 'upup-border-gray-200',
+                        ? 'upup-border-gray-700 upup-bg-[#232323]'
+                        : 'upup-border-gray-200 upup-bg-white',
                 )}
             >
                 <button
                     type="button"
                     className={cn(
-                        'upup-text-sm upup-font-medium upup-transition-colors',
+                        'upup-text-sm upup-font-semibold upup-transition-colors',
                         dark
-                            ? 'upup-text-gray-300 hover:upup-text-white'
-                            : 'upup-text-gray-600 hover:upup-text-gray-900',
+                            ? 'upup-text-[#30C5F7] hover:upup-text-[#6DD8FB]'
+                            : 'upup-text-blue-600 hover:upup-text-blue-800',
                     )}
                     onClick={onClose}
                 >
@@ -208,8 +246,8 @@ export default memo(function ImageEditorInline(props: Props) {
                 </button>
                 <span
                     className={cn(
-                        'upup-text-sm upup-font-medium',
-                        dark ? 'upup-text-gray-200' : 'upup-text-gray-800',
+                        'upup-text-sm upup-font-semibold',
+                        dark ? 'upup-text-gray-100' : 'upup-text-gray-900',
                     )}
                 >
                     Editing {file.name}
@@ -259,6 +297,7 @@ export default memo(function ImageEditorInline(props: Props) {
                             onClose={onClose}
                             savingPixelRatio={4}
                             previewPixelRatio={4}
+                            theme={filerobotTheme}
                             defaultTabId={
                                 editorConstants?.TABS
                                     ? (
