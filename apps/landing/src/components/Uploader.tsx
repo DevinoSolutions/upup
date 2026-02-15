@@ -92,42 +92,45 @@ export default function Uploader({
     };
 
     return (
-        <div className="flex justify-center items-center w-full h-full lg:min-h-[auto] min-h-[70vh]">
-            <UpupUploader
-                provider={UpupProvider.BackBlaze}
-                limit={limit}
-                tokenEndpoint={customFields.tokenEndpoint}
-                uploadAdapters={uploadAdapters}
-                driveConfigs={customFields.driveConfigs}
-                dark={isDarkMode}
-                mini={mini}
-                allowPreview={allowPreview}
-                shouldCompress={shouldCompress}
-                maxFileSize={{ size: fileSizeLimit, unit: 'MB' }}
-                classNames={customClassNames}
-                maxRetries={maxRetries}
-                onFilesUploadComplete={(files) => {
-                    console.log("Files uploaded successfully:", files);
-                    toast.success("Files uploaded successfully!");
-                }}
-                onError={(e) => {
-                    console.error(e);
-                    toast.error(e);
-                }}
-                onWarn={(warning) => {
-                    console.warn(warning);
-                    toast.warn(warning);
-                }}
-                onFileTypeMismatch={(file, acceptedTypes) => {
-                    toast.error(`File type not supported. Accepted types: ${acceptedTypes}`);
-                }}
-                onFileUploadStart={(file) => {
-                    toast.info(`Starting upload: ${file.name}`);
-                }}
-                onFileUploadComplete={(file) => {
-                    toast.success(`Upload complete: ${file.name}`);
-                }}
-            />
-        </div>
+      <div className="flex justify-center items-center w-full h-full lg:min-h-[auto] min-h-[70vh]">
+        <UpupUploader
+          provider={UpupProvider.BackBlaze}
+          limit={limit}
+          tokenEndpoint={customFields.tokenEndpoint}
+          uploadAdapters={uploadAdapters}
+          driveConfigs={customFields.driveConfigs}
+          dark={isDarkMode}
+          mini={mini}
+          allowPreview={allowPreview}
+          shouldCompress={shouldCompress}
+          maxFileSize={{ size: fileSizeLimit, unit: "MB" }}
+          classNames={customClassNames}
+          maxRetries={maxRetries}
+          resumable={{ mode: "multipart" }}
+          onFilesUploadComplete={(files) => {
+            console.log("Files uploaded successfully:", files);
+            toast.success("Files uploaded successfully!");
+          }}
+          onError={(e) => {
+            console.error(e);
+            toast.error(e);
+          }}
+          onWarn={(warning) => {
+            console.warn(warning);
+            toast.warn(warning);
+          }}
+          onFileTypeMismatch={(file, acceptedTypes) => {
+            toast.error(
+              `File type not supported. Accepted types: ${acceptedTypes}`,
+            );
+          }}
+          onFileUploadStart={(file) => {
+            toast.info(`Starting upload: ${file.name}`);
+          }}
+          onFileUploadComplete={(file) => {
+            toast.success(`Upload complete: ${file.name}`);
+          }}
+        />
+      </div>
     );
 }
