@@ -15,6 +15,7 @@ These optional props are not required for the UpupUploader component to work.
 | [maxFileSize](#maxfilesize)                   | `maxFileSize={{ size: 20, unit: "MB" }}`                                                           | object          | optional | `{ size: 10, unit: "MB" }`                     |
 | [maxRetries](#maxretries)                     | `maxRetries={3}`                                                                                   | number          | optional | -                                              |
 | [mini](#mini)                                 | `mini={true}`                                                                                      | boolean         | optional | `false`                                        |
+| [resumable](#resumable)                       | `resumable={{ mode: 'multipart' }}`                                                                | object          | optional | -                                              |
 | [uploadAdapters](#uploadadapters)             | `uploadAdapters={[UploadAdapter.LINK]}`                                                            | UploadAdapter[] | optional | `[UploadAdapter.INTERNAL, UploadAdapter.LINK]` |
 | [enableAutoCorsConfig](#enableautocorsconfig) | `enableAutoCorsConfig={false}`                                                                     | boolean         | optional | `false`                                        |
 
@@ -105,6 +106,53 @@ Enables compact mode for the uploader component. When enabled:
 - Limits file selection to 1 file (overrides [`limit`](#limit) prop)
 - Uses smaller container dimensions
 - Simplifies UI elements
+
+## `resumable`
+
+Enables resumable multipart uploads for large files. When configured, files are split into chunks and uploaded individually, allowing uploads to survive page refreshes and network interruptions.
+
+```tsx
+import { UpupUploader, UpupProvider } from "upup-react-file-uploader";
+import 'upup-react-file-uploader/styles'
+
+export default function Uploader() {
+  return (
+    <UpupUploader
+      provider={UpupProvider.AWS}
+      tokenEndpoint="/api/upload-token"
+      resumable={{ mode: "multipart" }}
+    />
+  );
+}
+```
+
+**Configuration options:**
+
+```typescript
+type ResumableUploadOptions = {
+  mode: "multipart";
+  /** Part size in bytes. Minimum 5 MiB, clamped automatically. */
+  chunkSizeBytes?: number;
+  /** Persist sessions in localStorage for cross-refresh resume. Default: true */
+  persist?: boolean;
+};
+```
+
+| Option           | Type    | Default | Description                                                                               |
+| ---------------- | ------- | ------- | ----------------------------------------------------------------------------------------- |
+| `mode`           | string  | -       | Must be `"multipart"`. (`"tus"` is reserved for future use.)                            |
+| `chunkSizeBytes` | number  | auto    | Override the part size. Minimum 5 MiB. Auto-computed based on file size if omitted.       |
+| `persist`        | boolean | `true`  | Save upload sessions to `localStorage` so uploads survive page refreshes.                 |
+
+:::info
+Resumable uploads require additional server-side setup. Your `tokenEndpoint` must handle the multipart actions (`multipart:init`, `multipart:signPart`, `multipart:listParts`, `multipart:complete`, `multipart:abort`).
+
+See the full [Resumable Uploads guide](/docs/resumable-uploads.md) for server setup instructions and code examples.
+:::
+
+:::note
+Resumable uploads are only supported for S3-compatible providers (AWS, BackBlaze, DigitalOcean). Azure uploads always use a single PUT request regardless of this setting.
+:::
 
 ## `uploadAdapters`
 
