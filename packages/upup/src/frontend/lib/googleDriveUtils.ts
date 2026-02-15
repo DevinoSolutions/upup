@@ -2,25 +2,41 @@ import { GoogleFile } from 'google'
 
 /**
  * Mapping of Google Workspace mimeTypes to their Office Open XML export formats.
+ *
+ * Uses native Google Docs/Sheets/Slides export URLs instead of the Drive API
+ * /export endpoint, which has a 10 MB limit on exported content.
+ * The native URLs go through Google's Docs infrastructure directly (the same
+ * mechanism as "File → Download" in the web UI) and can handle much larger files.
  */
 export const GOOGLE_WORKSPACE_EXPORTS: Record<
     string,
-    { exportMimeType: string; extension: string }
+    {
+        exportMimeType: string
+        extension: string
+        /** Native export URL pattern — use with `id` interpolation */
+        exportUrl: (fileId: string) => string
+    }
 > = {
     'application/vnd.google-apps.document': {
         exportMimeType:
             'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
         extension: 'docx',
+        exportUrl: (id: string) =>
+            `https://docs.google.com/document/d/${id}/export?format=docx`,
     },
     'application/vnd.google-apps.spreadsheet': {
         exportMimeType:
             'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         extension: 'xlsx',
+        exportUrl: (id: string) =>
+            `https://docs.google.com/spreadsheets/d/${id}/export?format=xlsx`,
     },
     'application/vnd.google-apps.presentation': {
         exportMimeType:
             'application/vnd.openxmlformats-officedocument.presentationml.presentation',
         extension: 'pptx',
+        exportUrl: (id: string) =>
+            `https://docs.google.com/presentation/d/${id}/export/pptx`,
     },
 }
 

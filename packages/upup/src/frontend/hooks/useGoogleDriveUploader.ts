@@ -56,12 +56,9 @@ export default function useGoogleDriveUploader(token?: Token) {
             let fileType: string
 
             if (exportInfo) {
-                // Google Workspace file – use the export endpoint
-                url = `https://www.googleapis.com/drive/v3/files/${
-                    file.id
-                }/export?mimeType=${encodeURIComponent(
-                    exportInfo.exportMimeType,
-                )}&key=${googleDriveConfigs?.google_api_key}`
+                // Google Workspace file – use native Docs/Sheets/Slides
+                // export URL (bypasses the Drive API 10 MB export limit)
+                url = exportInfo.exportUrl(file.id)
                 fileName = file.name.endsWith(`.${exportInfo.extension}`)
                     ? file.name
                     : `${file.name}.${exportInfo.extension}`
