@@ -19,6 +19,7 @@ import { FilesProgressMap } from '../hooks/useRootProvider'
 export enum UploadStatus {
     PENDING = 'PENDING',
     ONGOING = 'ONGOING',
+    PAUSED = 'PAUSED',
     SUCCESSFUL = 'SUCCESSFUL',
     FAILED = 'FAILED',
 }
@@ -30,6 +31,14 @@ type ContextUpload = {
     totalProgress: number
     filesProgressMap: FilesProgressMap
     proceedUpload: () => Promise<FileWithParams[] | undefined>
+    /** Current upload speed in bytes/sec (rolling average) */
+    uploadSpeed: number
+    /** Estimated seconds remaining */
+    uploadEta: number
+    /** Total bytes uploaded so far across all files */
+    uploadedBytes: number
+    /** Total bytes to upload across all files */
+    totalBytes: number
 }
 
 type ContextProps = Required<
@@ -76,6 +85,8 @@ export interface IRootContext {
     handleFileRemove: (fileId: string) => void
     handleDone: () => void
     handleCancel: () => void
+    handlePause: () => void
+    handleResume: () => void
 
     oneDriveConfigs?: OneDriveConfigs
     googleDriveConfigs?: GoogleDriveConfigs
