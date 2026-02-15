@@ -8,7 +8,10 @@ type Props = {
     onRetry: () => void
 }
 
-export default function DriveAuthFallback({ providerName, onRetry }: Readonly<Props>) {
+export default function DriveAuthFallback({
+    providerName,
+    onRetry,
+}: Readonly<Props>) {
     const {
         props: { dark, classNames },
     } = useRootContext()
