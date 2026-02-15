@@ -6,6 +6,8 @@ export interface MultipartSession {
     uploadId: string
     partSize: number
     updatedAt: number
+    /** Bytes uploaded so far (used for progress pre-population on resume) */
+    uploadedBytes?: number
 }
 
 const STORAGE_PREFIX = 'upup_mp_'
@@ -55,6 +57,25 @@ export function loadSession(fingerprint: string): MultipartSession | null {
         return session
     } catch {
         return null
+    }
+}
+
+/**
+ * Update only the progress-related fields of an existing session.
+ */
+export function updateSessionProgress(
+    fingerprint: string,
+    uploadedBytes: number,
+): void {
+    try {
+        const raw = localStorage.getItem(storageKey(fingerprint))
+        if (!raw) return
+        const session: MultipartSession = JSON.parse(raw)
+        session.uploadedBytes = uploadedBytes
+        session.updatedAt = Date.now()
+        localStorage.setItem(storageKey(fingerprint), JSON.stringify(session))
+    } catch {
+        // silently ignore
     }
 }
 
