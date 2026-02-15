@@ -18,6 +18,7 @@ import {
     loadSession,
     removeSession,
     saveSession,
+    updateSessionProgress,
 } from '../resumable/multipartSessionStore'
 
 type UploadConfig = Pick<
@@ -37,6 +38,9 @@ export class ProviderSDK implements StorageSDK {
     private readonly config: UploadConfig
     private uploadCount = 0
     private currentXhr: XMLHttpRequest | null = null
+    private _paused = false
+    private _pauseResolve: (() => void) | null = null
+    private _pausePromise: Promise<void> | null = null
 
     constructor(config: UploadConfig) {
         this.config = config
@@ -82,6 +86,32 @@ export class ProviderSDK implements StorageSDK {
             this.currentXhr.abort()
             this.currentXhr = null
         }
+    }
+
+    /**
+     * Pause multipart upload — blocks between parts without aborting the current XHR.
+     */
+    pause(): void {
+        if (this._paused) return
+        this._paused = true
+        this._pausePromise = new Promise<void>(resolve => {
+            this._pauseResolve = resolve
+        })
+    }
+
+    /**
+     * Resume a paused multipart upload.
+     */
+    resume(): void {
+        if (!this._paused) return
+        this._paused = false
+        this._pauseResolve?.()
+        this._pauseResolve = null
+        this._pausePromise = null
+    }
+
+    get isPaused(): boolean {
+        return this._paused
     }
 
     /**
@@ -168,6 +198,7 @@ export class ProviderSDK implements StorageSDK {
         let uploadId: string
         let partSize: number
         let existingParts: MultipartPart[] = []
+        let needsInit = true
 
         // Step 1: Check for existing session (resume) or init new
         const existingSession = persist ? loadSession(fingerprint) : null
@@ -177,16 +208,29 @@ export class ProviderSDK implements StorageSDK {
             uploadId = existingSession.uploadId
             partSize = existingSession.partSize
 
-            // Get already-uploaded parts from S3
-            const listResponse =
-                await this.tokenEndpointRequest<MultipartListPartsResponse>({
-                    action: 'multipart:listParts',
-                    provider: this.config.provider,
-                    key,
-                    uploadId,
-                })
-            existingParts = listResponse.parts
-        } else {
+            // Get already-uploaded parts from S3 — fall back to fresh init on stale session
+            try {
+                const listResponse =
+                    await this.tokenEndpointRequest<MultipartListPartsResponse>(
+                        {
+                            action: 'multipart:listParts',
+                            provider: this.config.provider,
+                            key,
+                            uploadId,
+                        },
+                    )
+                existingParts = listResponse.parts
+                needsInit = false
+            } catch {
+                // Session is stale (upload ID expired / deleted) — remove and start fresh
+                console.warn(
+                    'Existing multipart session is stale, starting fresh upload',
+                )
+                removeSession(fingerprint)
+            }
+        }
+
+        if (needsInit) {
             const chunkSizeBytes =
                 this.config.resumable?.mode === 'multipart'
                     ? this.config.resumable.chunkSizeBytes
@@ -216,6 +260,7 @@ export class ProviderSDK implements StorageSDK {
                     uploadId,
                     partSize,
                     updatedAt: Date.now(),
+                    uploadedBytes: 0,
                 })
             }
         }
@@ -235,8 +280,22 @@ export class ProviderSDK implements StorageSDK {
 
         this.uploadCount++
 
+        // Fire initial progress for resumed uploads so UI immediately shows the resume point
+        if (uploadedBytes > 0 && options.onFileUploadProgress) {
+            options.onFileUploadProgress(file, {
+                loaded: uploadedBytes,
+                total: file.size,
+                percentage: (uploadedBytes / file.size) * 100,
+            })
+        }
+
         for (let partNumber = 1; partNumber <= totalParts; partNumber++) {
             if (uploadedPartNumbers.has(partNumber)) continue
+
+            // If paused, wait until resumed
+            if (this._paused && this._pausePromise) {
+                await this._pausePromise
+            }
 
             const start = (partNumber - 1) * partSize
             const end = Math.min(start + partSize, file.size)
@@ -270,6 +329,11 @@ export class ProviderSDK implements StorageSDK {
             }
 
             bytesUploaded += partBlob.size
+
+            // Update session with progress so resume after refresh starts from here
+            if (persist) {
+                updateSessionProgress(fingerprint, bytesUploaded)
+            }
         }
 
         // Step 3: List parts (canonical ETags from S3) and complete
