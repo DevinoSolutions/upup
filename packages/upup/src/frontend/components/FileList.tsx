@@ -14,7 +14,7 @@ export default memo(function FileList() {
         activeAdapter,
         files,
         upload: { proceedUpload, uploadStatus, totalProgress },
-        props: { dark, classNames, isProcessing, maxRetries },
+        props: { dark, classNames, isProcessing, maxRetries, resumable },
         handleDone,
         handleCancel,
     } = useRootContext()
@@ -130,7 +130,9 @@ export default memo(function FileList() {
                             proceedUpload()
                         }}
                     >
-                        Retry Upload
+                        {resumable?.mode === 'multipart'
+                            ? 'Resume Upload'
+                            : 'Retry Upload'}
                     </button>
                 </ShouldRender>
                 <ShouldRender if={uploadStatus === UploadStatus.SUCCESSFUL}>

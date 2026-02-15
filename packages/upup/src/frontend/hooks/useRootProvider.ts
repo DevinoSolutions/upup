@@ -81,6 +81,7 @@ export default function useRootProvider({
     customProps,
     enableAutoCorsConfig = false,
     maxRetries,
+    resumable,
 }: UpupUploaderProps): IRootContext {
     const inputRef = useRef<HTMLInputElement>(null)
     const [isAddingMore, setIsAddingMore] = useState(false)
@@ -320,7 +321,14 @@ export default function useRootProvider({
                     },
                     customProps,
                     enableAutoCorsConfig,
+                    resumable,
                 })
+
+                // For multipart resumable uploads, filter out already-uploaded files on retry
+                const filesToUpload =
+                    resumable?.mode === 'multipart'
+                        ? processedFiles.filter(f => !f.key)
+                        : processedFiles
 
                 // Upload files with automatic retries if configured
                 const uploadOptions = {
@@ -352,7 +360,7 @@ export default function useRootProvider({
                         ),
                 }
                 const uploadResults = await Promise.all(
-                    processedFiles.map(file =>
+                    filesToUpload.map(file =>
                         maxRetries
                             ? uploadWithRetry(
                                   () => sdk.upload(file, uploadOptions),
@@ -386,6 +394,7 @@ export default function useRootProvider({
             maxFileSize?.unit,
             customProps,
             enableAutoCorsConfig,
+            resumable,
             onFilesUploadComplete,
             onFileUploadStart,
             onFileUploadComplete,
@@ -438,6 +447,7 @@ export default function useRootProvider({
             mini,
             dark,
             maxRetries,
+            resumable,
             onError,
             onIntegrationClick,
             onFileClick,

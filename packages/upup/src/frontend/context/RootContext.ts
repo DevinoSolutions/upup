@@ -53,7 +53,7 @@ type ContextProps = Required<
         | 'showSelectFolderButton'
     >
 > &
-    Pick<UpupUploaderProps, 'maxFileSize' | 'maxRetries'> & {
+    Pick<UpupUploaderProps, 'maxFileSize' | 'maxRetries' | 'resumable'> & {
         multiple: boolean
         icons: Required<UpupUploaderPropsIcons>
     }
