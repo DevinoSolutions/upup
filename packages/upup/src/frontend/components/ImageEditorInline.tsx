@@ -88,14 +88,8 @@ export default memo(function ImageEditorInline(props: Props) {
         ;(async () => {
             try {
                 const [mod, scMod] = await Promise.all([
-                    import(
-                        /* webpackIgnore: true */
-                        'react-filerobot-image-editor'
-                    ),
-                    import(
-                        /* webpackIgnore: true */
-                        'styled-components'
-                    ).catch(() => null),
+                    import('react-filerobot-image-editor'),
+                    import('styled-components').catch(() => null),
                 ])
                 if (cancelled) return
                 setEditorComponent(
