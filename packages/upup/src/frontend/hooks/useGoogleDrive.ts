@@ -1,10 +1,10 @@
 import { GoogleFile, Root, Token, User } from 'google'
 import { useCallback, useEffect, useState } from 'react'
+import { t } from 'shared/i18n'
 import { GoogleDriveConfigs } from '../../shared/types'
 import { useRootContext } from '../context/RootContext'
 import { createSecureStorage } from '../lib/storageHelper'
 import useLoadGAPI from './useLoadGAPI'
-import { t } from 'shared/i18n'
 
 const secureStorage = createSecureStorage()
 export default function useGoogleDrive(
@@ -155,10 +155,12 @@ export default function useGoogleDrive(
                                     }),
                                 )
                                 return setToken(tokenResponse)
-                                } else {
+                            } else {
                                 onError(
                                     t(translations.genericErrorDetails, {
-                                        details: (tokenResponse?.error as Error)?.message ?? '',
+                                        details:
+                                            (tokenResponse?.error as Error)
+                                                ?.message ?? '',
                                     }),
                                 )
                             }

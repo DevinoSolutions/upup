@@ -1,3 +1,5 @@
+import { en_US, mergeTranslations, t } from '../../../shared/i18n'
+import type { Translations } from '../../../shared/i18n/types'
 import {
     FileWithParams,
     PresignedUrlResponse,
@@ -6,8 +8,6 @@ import {
     UpupProvider,
     UpupUploaderProps,
 } from '../../../shared/types'
-import type { Translations } from '../../../shared/i18n/types'
-import { en_US, mergeTranslations, t } from '../../../shared/i18n'
 import { StorageSDK, UploadOptions, UploadResult } from '../../types/StorageSDK'
 
 type UploadConfig = Pick<

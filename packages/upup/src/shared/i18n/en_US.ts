@@ -82,12 +82,16 @@ export const en_US: Translations = {
     multipleFilesNotAllowed: 'Multiple file uploads are not allowed',
     failedToGetUploadUrl: 'Failed to get upload URL',
     statusError: 'Status: {{status}} ({{statusText}}). Details: {{details}}',
-    networkErrorDuringUpload: 'Network error during upload - Status: {{status}} ({{statusText}})',
+    networkErrorDuringUpload:
+        'Network error during upload - Status: {{status}} ({{statusText}})',
     missingRequiredConfiguration: 'Missing required configuration: {{missing}}',
-    invalidProvider: 'Invalid provider: {{provider}}. Valid options: {{validOptions}}',
-    invalidTokenEndpoint: 'Invalid tokenEndpoint URL: {{tokenEndpoint}} {{error}}',
+    invalidProvider:
+        'Invalid provider: {{provider}}. Valid options: {{validOptions}}',
+    invalidTokenEndpoint:
+        'Invalid tokenEndpoint URL: {{tokenEndpoint}} {{error}}',
     maxFileSizeMustBeGreater: 'maxFileSize must be greater than 0',
-    invalidAcceptFormat: 'Invalid accept format: {{accept}}. Use MIME types, */*, * or extensions (like .fbx)',
+    invalidAcceptFormat:
+        'Invalid accept format: {{accept}}. Use MIME types, */*, * or extensions (like .fbx)',
 
     unauthorizedAccess: 'Unauthorized access to Provider',
     presignedUrlInvalid: 'Presigned URL has expired or is invalid',
@@ -112,7 +116,8 @@ export const en_US: Translations = {
     fileUnsupportedType: '{{name}} has an unsupported type!',
     fileTooLargeName: '{{name}} is larger than {{size}} {{unit}}!',
     filePreviouslySelected: '{{name}} has previously been selected',
-    fileWithUrlPreviouslySelected: 'A file with this url: {{url}} has previously been selected',
+    fileWithUrlPreviouslySelected:
+        'A file with this url: {{url}} has previously been selected',
     errorCompressingFile: 'Error compressing {{name}}',
 
     // Integration / Auth errors
@@ -127,9 +132,11 @@ export const en_US: Translations = {
     dropboxNoAccessToken: 'No access token provided for Dropbox download',
 
     // MSAL / OneDrive messages
-    silentTokenAcquisitionFailed: 'Silent token acquisition failed: {{details}}',
+    silentTokenAcquisitionFailed:
+        'Silent token acquisition failed: {{details}}',
     msalInitializationFailed: 'MSAL initialization failed: {{details}}',
-    silentTokenAcquisitionProceeding: 'Silent token acquisition failed, proceeding with interactive login{{details}}',
+    silentTokenAcquisitionProceeding:
+        'Silent token acquisition failed, proceeding with interactive login{{details}}',
     signInFailed: 'Sign-in failed: {{message}}',
     handleSignInFailed: 'Handle sign-in failed: {{message}}',
     signOutFailed: 'Sign-out failed: {{message}}',

@@ -68,12 +68,16 @@ export const ar_SA: Translations = {
     multipleFilesNotAllowed: 'غير مسموح بتحميل عدة ملفات',
     failedToGetUploadUrl: 'فشل في الحصول على رابط الرفع',
     statusError: 'الحالة: {{status}} ({{statusText}}). التفاصيل: {{details}}',
-    networkErrorDuringUpload: 'خطأ في الشبكة أثناء الرفع - الحالة: {{status}} ({{statusText}})',
+    networkErrorDuringUpload:
+        'خطأ في الشبكة أثناء الرفع - الحالة: {{status}} ({{statusText}})',
     missingRequiredConfiguration: 'تكوين مفقود مطلوب: {{missing}}',
-    invalidProvider: 'مزود غير صالح: {{provider}}. الخيارات الصحيحة: {{validOptions}}',
-    invalidTokenEndpoint: 'عنوان tokenEndpoint غير صالح: {{tokenEndpoint}} {{error}}',
+    invalidProvider:
+        'مزود غير صالح: {{provider}}. الخيارات الصحيحة: {{validOptions}}',
+    invalidTokenEndpoint:
+        'عنوان tokenEndpoint غير صالح: {{tokenEndpoint}} {{error}}',
     maxFileSizeMustBeGreater: 'يجب أن يكون حجم الملف الأقصى أكبر من 0',
-    invalidAcceptFormat: 'تنسيق القبول غير صالح: {{accept}}. استخدم أنواع MIME أو */* أو ملحقات (مثل .fbx)',
+    invalidAcceptFormat:
+        'تنسيق القبول غير صالح: {{accept}}. استخدم أنواع MIME أو */* أو ملحقات (مثل .fbx)',
 
     unauthorizedAccess: 'دخول غير مصرح إلى المزود',
     presignedUrlInvalid: 'رابط التحميل المسبق انتهت صلاحيته أو غير صالح',
@@ -87,8 +91,10 @@ export const ar_SA: Translations = {
     uploadFailed: 'فشل الرفع: {{message}}',
 
     // Dropbox-specific
-    dropboxSessionExpired: 'انتهت صلاحية جلسة Dropbox الخاصة بك. يرجى إعادة المصادقة للمتابعة.',
-    dropboxMissingPermissions: 'تطبيق Dropbox الخاص بك يفتقد الأذونات المطلوبة. يرجى إضافة الأذونات التالية في وحدة تحكم مطوري Dropbox: files.metadata.read, account_info.read',
+    dropboxSessionExpired:
+        'انتهت صلاحية جلسة Dropbox الخاصة بك. يرجى إعادة المصادقة للمتابعة.',
+    dropboxMissingPermissions:
+        'تطبيق Dropbox الخاص بك يفتقد الأذونات المطلوبة. يرجى إضافة الأذونات التالية في وحدة تحكم مطوري Dropbox: files.metadata.read, account_info.read',
     failedToRefreshExpiredToken: 'فشل تحديث الرمز المنتهي',
 
     // Upup UI messages
@@ -113,7 +119,8 @@ export const ar_SA: Translations = {
     // MSAL / OneDrive messages
     silentTokenAcquisitionFailed: 'فشل الحصول على رمز صامت: {{details}}',
     msalInitializationFailed: 'فشل تهيئة MSAL: {{details}}',
-    silentTokenAcquisitionProceeding: 'فشل الحصول على رمز صامت، المتابعة بتسجيل تفاعلي{{details}}',
+    silentTokenAcquisitionProceeding:
+        'فشل الحصول على رمز صامت، المتابعة بتسجيل تفاعلي{{details}}',
     signInFailed: 'فشل تسجيل الدخول: {{message}}',
     handleSignInFailed: 'فشل معالجة تسجيل الدخول: {{message}}',
     signOutFailed: 'فشل تسجيل الخروج: {{message}}',

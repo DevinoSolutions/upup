@@ -11,8 +11,8 @@ import {
     useEffect,
     useState,
 } from 'react'
-import { useRootContext } from '../context/RootContext'
 import { t } from '../../shared/i18n'
+import { useRootContext } from '../context/RootContext'
 import { createSecureStorage } from '../lib/storageHelper'
 
 type Props = {

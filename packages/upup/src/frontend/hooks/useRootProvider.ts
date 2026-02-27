@@ -186,7 +186,9 @@ export default function useRootProvider({
             const fileWithParams = fileAppendParams(file)
 
             if (!checkFileType(accept, file)) {
-                onError(t(translations.fileUnsupportedType, { name: file.name }))
+                onError(
+                    t(translations.fileUnsupportedType, { name: file.name }),
+                )
                 onFileTypeMismatch(file, accept)
                 revokeFileUrl(fileWithParams)
                 continue
@@ -209,7 +211,9 @@ export default function useRootProvider({
             }
 
             if (newFilesMap.has(fileWithParams.id)) {
-                onWarn(t(translations.filePreviouslySelected, { name: file.name }))
+                onWarn(
+                    t(translations.filePreviouslySelected, { name: file.name }),
+                )
                 revokeFileUrl(fileWithParams)
                 continue
             }
@@ -266,7 +270,11 @@ export default function useRootProvider({
                 )
             } catch (error) {
                 files.forEach(file =>
-                    onError(t(translations.errorCompressingFile, { name: file.name })),
+                    onError(
+                        t(translations.errorCompressingFile, {
+                            name: file.name,
+                        }),
+                    ),
                 )
                 throw error
             }

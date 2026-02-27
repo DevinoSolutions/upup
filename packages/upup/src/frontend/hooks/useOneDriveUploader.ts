@@ -1,8 +1,8 @@
 import { Client } from '@microsoft/microsoft-graph-client'
 import { OneDriveFile, OneDriveRoot } from 'microsoft'
 import { useState } from 'react'
-import { useRootContext } from '../context/RootContext'
 import { t } from '../../shared/i18n'
+import { useRootContext } from '../context/RootContext'
 
 const formatFileItem = (item: any) => ({
     id: item.id,

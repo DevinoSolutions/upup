@@ -1,7 +1,7 @@
 import { GoogleFile, Root, Token } from 'google'
 import { useState } from 'react'
-import { useRootContext } from '../context/RootContext'
 import { t } from '../../shared/i18n'
+import { useRootContext } from '../context/RootContext'
 
 function handleSelectedFilesUpdate(prevFiles: GoogleFile[], file: GoogleFile) {
     return prevFiles.includes(file)

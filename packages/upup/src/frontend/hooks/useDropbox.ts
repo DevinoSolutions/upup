@@ -97,11 +97,14 @@ export function useDropbox() {
                         ) {
                             onError(translations.dropboxSessionExpired)
                             logout()
-                            throw new Error('Token expired - re-authentication required')
+                            throw new Error(
+                                'Token expired - re-authentication required',
+                            )
                         }
 
                         if (errorMessage.includes('missing_scope')) {
-                            errorMessage = translations.dropboxMissingPermissions
+                            errorMessage =
+                                translations.dropboxMissingPermissions
                         }
                     } catch {
                         // If we can't parse the error, but it's a 401, still try to refresh

@@ -1,7 +1,7 @@
 import { DropboxFile, DropboxRoot } from 'dropbox'
 import { useCallback, useState } from 'react'
-import { useRootContext } from '../context/RootContext'
 import { t } from '../../shared/i18n'
+import { useRootContext } from '../context/RootContext'
 
 /**
  * @description Helper function to format API response items
