@@ -146,8 +146,8 @@ export type UpupUploaderProps = {
     icons?: UpupUploaderPropsIcons
 
     // i18n / Localisation
-    /** A full locale preset (e.g. `ja_JP`). Defaults to `en_US`. */
-    locale?: Translations
+    /** A full locale pack (a `Translations` object, e.g. `ja_JP`). Defaults to `en_US`. */
+    localePack?: Translations
     /** Per-key overrides that are deep-merged on top of the active locale. */
     translations?: Partial<Translations>
 

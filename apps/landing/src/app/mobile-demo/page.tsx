@@ -66,18 +66,20 @@ function MobileDemoContent() {
   }, [darkMode]);
 
   return (
-    <div style={{ 
-      padding: '16px', 
-      width: '100%',
-      minHeight: '100vh',
-      maxWidth: '400px',
-      margin: '0 auto',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-      background: darkMode ? '#111827' : 'white',
-      color: darkMode ? '#f9fafb' : '#111827',
-      position: 'relative',
-      zIndex: 1000
-    }}>
+    <div
+      style={{
+        padding: "16px",
+        width: "100%",
+        minHeight: "100vh",
+        maxWidth: "400px",
+        margin: "0 auto",
+        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+        background: darkMode ? "#111827" : "white",
+        color: darkMode ? "#f9fafb" : "#111827",
+        position: "relative",
+        zIndex: 1000,
+      }}
+    >
       <Uploader
         limit={limit}
         mini={mini}
@@ -86,7 +88,7 @@ function MobileDemoContent() {
         allowPreview={allowPreview}
         shouldCompress={shouldCompress}
         fileSizeLimit={fileSizeLimit}
-        locale={locale}
+        localePack={locale}
       />
     </div>
   );

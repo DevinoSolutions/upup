@@ -17,6 +17,8 @@ pnpm install
 pnpm dev
 ```
 
+> Note for local development: the package API had a breaking rename — the `locale` prop is now `localePack`. Update any examples or local usage accordingly; see [`packages/upup/CHANGELOG.md#unreleased`](packages/upup/CHANGELOG.md#unreleased) for details.
+
 `pnpm dev` launches the landing page and documentation in watch mode via Turborepo while the package builds in watch mode for local consumption. All services use ports defined in `local-dev/.env.ports` to avoid conflicts with other projects.
 
 ### Development Commands

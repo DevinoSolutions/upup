@@ -12,7 +12,7 @@ These optional props are not required for the UpupUploader component to work.
 | [dark](#dark)                                 | `dark={true}`                                                                                      | boolean              | optional | `false`                                        |
 | [driveConfigs](#driveconfigs)                 | `driveConfigs={{ oneDrive: { onedrive_client_id: process.env.NEXT_PUBLIC_ONEDRIVE_CLIENT_ID! } }}` | object               | optional | -                                              |
 | [limit](#limit)                               | `limit={5}`                                                                                        | number               | optional | `1`                                            |
-| [locale](#locale)                             | `locale={ja_JP}`                                                                                   | `Translations`       | optional | `en_US`                                        |
+| [localePack](#localePack)                             | `localePack={ja_JP}`                                                                                   | `Translations`       | optional | `en_US`                                        |
 | [maxFileSize](#maxfilesize)                   | `maxFileSize={{ size: 20, unit: "MB" }}`                                                           | object               | optional | `{ size: 10, unit: "MB" }`                     |
 | [mini](#mini)                                 | `mini={true}`                                                                                      | boolean              | optional | `false`                                        |
 | [translations](#translations)                | `translations={{ browseFiles: "pick files" }}`                                                     | `Partial<Translations>` | optional | -                                              |
@@ -64,14 +64,14 @@ Maximum number of files allowed for upload. When using [`mini`](#mini) mode, thi
 Files beyond the limit will trigger [`onWarn`](/docs/api-reference/upupuploader/event-handlers.md#onwarn) callback with a message:"Allowed limit has been surpassed!"
 :::
 
-## `locale`
+## `localePack`
 
-A complete locale object that replaces the default English strings. Import a built-in locale from `upup-react-file-uploader/locales`:
+A complete locale object that replaces the default English strings. Import a built-in locale from `upup-react-file-uploader/locales` and pass it as `localePack`:
 
 ```tsx
 import { ja_JP } from 'upup-react-file-uploader/locales'
 
-<UpupUploader locale={ja_JP} />
+<UpupUploader localePack={ja_JP} />
 ```
 
 Available locales: `en_US`, `ar_SA`, `de_DE`, `es_ES`, `fr_FR`, `ja_JP`, `ko_KR`, `zh_CN`, `zh_TW`.
@@ -94,7 +94,7 @@ Enables compact mode for the uploader component. When enabled:
 
 ## `translations`
 
-Partial overrides for individual translation keys. These are merged on top of the active [`locale`](#locale) (or the default `en_US`):
+Partial overrides for individual translation keys. These are merged on top of the active [`localePack`](#localePack) (or the default `en_US`):
 
 ```tsx
 <UpupUploader
@@ -105,13 +105,13 @@ Partial overrides for individual translation keys. These are merged on top of th
 />
 ```
 
-You can combine `locale` and `translations` — the overrides take priority:
+You can combine `localePack` and `translations` — the overrides take priority:
 
 ```tsx
 import { fr_FR } from 'upup-react-file-uploader/locales'
 
 <UpupUploader
-  locale={fr_FR}
+  localePack={fr_FR}
   translations={{ browseFiles: 'choisir des fichiers' }}
 />
 ```

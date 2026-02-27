@@ -6,7 +6,8 @@ import {
     TbPlus,
     TbTrash,
 } from 'react-icons/tb/index.js'
-import { en_US, mergeTranslations } from '../../shared/i18n'
+import { en_US, mergeTranslations, t } from '../../shared/i18n'
+import { UploadError } from '../../shared/types'
 import checkFileType from '../../shared/lib/checkFileType'
 import {
     FileWithParams,
@@ -46,7 +47,7 @@ export default function useRootProvider({
     onWarn: warningHandler,
     icons = {},
     classNames = {},
-    locale,
+    localePack,
     translations: translationOverrides,
     onIntegrationClick = () => {},
     onFileClick = () => {},
@@ -101,8 +102,8 @@ export default function useRootProvider({
     const multiple = useMemo(() => (mini ? false : limit > 1), [limit, mini])
 
     const translations = useMemo(
-        () => mergeTranslations(locale ?? en_US, translationOverrides),
-        [locale, translationOverrides],
+        () => mergeTranslations(localePack ?? en_US, translationOverrides),
+        [localePack, translationOverrides],
     )
 
     const totalProgress = useMemo(() => {
@@ -179,14 +180,14 @@ export default function useRootProvider({
         for (const file of newFiles) {
             // Respect the limit strictly; stop when capacity is reached.
             if (newFilesMap.size >= limit) {
-                onWarn('Allowed limit has been surpassed!')
+                onWarn(t(translations.allowedLimitSurpassed))
                 break
             }
 
             const fileWithParams = fileAppendParams(file)
 
             if (!checkFileType(accept, file)) {
-                onError(`${file.name} has an unsupported type!`)
+                onError(t(translations.unsupportedFileType, { fileName: file.name }))
                 onFileTypeMismatch(file, accept)
                 revokeFileUrl(fileWithParams)
                 continue
@@ -198,14 +199,18 @@ export default function useRootProvider({
                 !checkFileSize(file, maxFileSize)
             ) {
                 onError(
-                    `${file.name} is larger than ${maxFileSize.size} ${maxFileSize.unit}!`,
+                    t(translations.largerThanMaxFileSize, {
+                        fileName: file.name,
+                        size: maxFileSize.size,
+                        unit: maxFileSize.unit,
+                    }),
                 )
                 revokeFileUrl(fileWithParams)
                 continue
             }
 
             if (newFilesMap.has(fileWithParams.id)) {
-                onWarn(`${file.name} has previously been selected`)
+                onWarn(t(translations.previouslySelected, { fileName: file.name }))
                 revokeFileUrl(fileWithParams)
                 continue
             }
@@ -213,7 +218,7 @@ export default function useRootProvider({
             const fileUrl = (file as any).url as string | undefined
             if (fileUrl && existingUrls.has(fileUrl)) {
                 onWarn(
-                    `A file with this url: ${fileUrl} has previously been selected`,
+                    t(translations.filePreviouslySelectedWithUrl, { url: fileUrl }),
                 )
                 revokeFileUrl(fileWithParams)
                 continue
@@ -259,7 +264,7 @@ export default function useRootProvider({
                     }),
                 )
             } catch (error) {
-                files.forEach(file => onError(`Error compressing ${file.name}`))
+                files.forEach(file => onError(t(translations.errorCompressing, { fileName: file.name })))
                 throw error
             }
         },
@@ -347,7 +352,11 @@ export default function useRootProvider({
                 setUploadStatus(UploadStatus.SUCCESSFUL)
                 return finalFiles
             } catch (error) {
-                onError((error as Error).message)
+                if (error instanceof UploadError) {
+                    onError(t(translations.genericError, { message: (error as Error).message }))
+                } else {
+                    onError((error as Error).message)
+                }
                 setUploadStatus(UploadStatus.FAILED)
                 setFilesProgressMap({})
                 return

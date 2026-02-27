@@ -24,7 +24,7 @@ The following locales are included out of the box:
 
 ## Using a Locale
 
-Import the desired locale from `upup-react-file-uploader/locales` and pass it to the `locale` prop:
+Import the desired locale from `upup-react-file-uploader/locales` and pass it to the `localePack` prop:
 
 ```tsx
 import { UpupUploader, UpupProvider } from 'upup-react-file-uploader'
@@ -36,13 +36,13 @@ export default function Uploader() {
     <UpupUploader
       provider={UpupProvider.AWS}
       tokenEndpoint="/api/upload-token"
-      locale={ja_JP}
+      localePack={ja_JP}
     />
   )
 }
 ```
 
-When no `locale` is provided, the component defaults to `en_US` (English).
+When no `localePack` is provided, the component defaults to `en_US` (English).
 
 ## Overriding Individual Strings
 
@@ -58,7 +58,7 @@ export default function Uploader() {
     <UpupUploader
       provider={UpupProvider.AWS}
       tokenEndpoint="/api/upload-token"
-      locale={fr_FR}
+      localePack={fr_FR}
       translations={{
         browseFiles: 'sélectionner des fichiers', // override one key
       }}
