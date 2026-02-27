@@ -7,7 +7,6 @@ import {
     TbTrash,
 } from 'react-icons/tb/index.js'
 import { en_US, mergeTranslations, t } from '../../shared/i18n'
-import { UploadError } from '../../shared/types'
 import checkFileType from '../../shared/lib/checkFileType'
 import {
     FileWithParams,
@@ -180,14 +179,14 @@ export default function useRootProvider({
         for (const file of newFiles) {
             // Respect the limit strictly; stop when capacity is reached.
             if (newFilesMap.size >= limit) {
-                onWarn(t(translations.allowedLimitSurpassed))
+                onWarn(translations.allowedLimitSurpassed)
                 break
             }
 
             const fileWithParams = fileAppendParams(file)
 
             if (!checkFileType(accept, file)) {
-                onError(t(translations.unsupportedFileType, { fileName: file.name }))
+                onError(t(translations.fileUnsupportedType, { name: file.name }))
                 onFileTypeMismatch(file, accept)
                 revokeFileUrl(fileWithParams)
                 continue
@@ -199,10 +198,10 @@ export default function useRootProvider({
                 !checkFileSize(file, maxFileSize)
             ) {
                 onError(
-                    t(translations.largerThanMaxFileSize, {
-                        fileName: file.name,
-                        size: maxFileSize.size,
-                        unit: maxFileSize.unit,
+                    t(translations.fileTooLargeName, {
+                        name: file.name,
+                        size: String(maxFileSize.size),
+                        unit: String(maxFileSize.unit),
                     }),
                 )
                 revokeFileUrl(fileWithParams)
@@ -210,7 +209,7 @@ export default function useRootProvider({
             }
 
             if (newFilesMap.has(fileWithParams.id)) {
-                onWarn(t(translations.previouslySelected, { fileName: file.name }))
+                onWarn(t(translations.filePreviouslySelected, { name: file.name }))
                 revokeFileUrl(fileWithParams)
                 continue
             }
@@ -218,7 +217,9 @@ export default function useRootProvider({
             const fileUrl = (file as any).url as string | undefined
             if (fileUrl && existingUrls.has(fileUrl)) {
                 onWarn(
-                    t(translations.filePreviouslySelectedWithUrl, { url: fileUrl }),
+                    t(translations.fileWithUrlPreviouslySelected, {
+                        url: fileUrl,
+                    }),
                 )
                 revokeFileUrl(fileWithParams)
                 continue
@@ -264,7 +265,9 @@ export default function useRootProvider({
                     }),
                 )
             } catch (error) {
-                files.forEach(file => onError(t(translations.errorCompressing, { fileName: file.name })))
+                files.forEach(file =>
+                    onError(t(translations.errorCompressingFile, { name: file.name })),
+                )
                 throw error
             }
         },
@@ -318,6 +321,7 @@ export default function useRootProvider({
                     },
                     customProps,
                     enableAutoCorsConfig,
+                    translations: translations,
                 })
 
                 // Upload files
@@ -352,11 +356,7 @@ export default function useRootProvider({
                 setUploadStatus(UploadStatus.SUCCESSFUL)
                 return finalFiles
             } catch (error) {
-                if (error instanceof UploadError) {
-                    onError(t(translations.genericError, { message: (error as Error).message }))
-                } else {
-                    onError((error as Error).message)
-                }
+                onError((error as Error).message)
                 setUploadStatus(UploadStatus.FAILED)
                 setFilesProgressMap({})
                 return

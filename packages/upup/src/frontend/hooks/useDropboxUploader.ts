@@ -1,6 +1,7 @@
 import { DropboxFile, DropboxRoot } from 'dropbox'
 import { useCallback, useState } from 'react'
 import { useRootContext } from '../context/RootContext'
+import { t } from '../../shared/i18n'
 
 /**
  * @description Helper function to format API response items
@@ -53,6 +54,7 @@ export default function useDropboxUploader(token?: string) {
         props: { onError, accept },
         setActiveAdapter,
         setFiles,
+        translations,
     } = useRootContext()
     const [path, setPath] = useState<DropboxRoot[]>([])
     const [selectedFiles, setSelectedFiles] = useState<DropboxFile[]>([])
@@ -157,7 +159,7 @@ export default function useDropboxUploader(token?: string) {
     const downloadFiles = useCallback(
         async (files: DropboxFile[], token?: string) => {
             if (!token) {
-                onError('No access token provided for Dropbox download')
+                onError(translations.dropboxNoAccessToken)
                 return
             }
             const promises = files.map(async (file, index) => {
@@ -195,7 +197,11 @@ export default function useDropboxUploader(token?: string) {
             setSelectedFiles([])
             setActiveAdapter(undefined)
         } catch (error) {
-            onError('Error processing files: ' + (error as Error)?.message)
+            onError(
+                t(translations.errorProcessingFiles, {
+                    message: (error as Error)?.message ?? '',
+                }),
+            )
         } finally {
             setShowLoader(false)
             setDownloadProgress(0)
@@ -235,7 +241,11 @@ export default function useDropboxUploader(token?: string) {
                 setSelectedFiles([])
                 setActiveAdapter(undefined)
             } catch (error) {
-                onError('Error processing files: ' + (error as Error)?.message)
+                onError(
+                    t(translations.errorProcessingFiles, {
+                        message: (error as Error)?.message ?? '',
+                    }),
+                )
             } finally {
                 setShowLoader(false)
                 setDownloadProgress(0)
@@ -304,7 +314,11 @@ export default function useDropboxUploader(token?: string) {
             const files = await collectAllFiles(startPath)
             await handleSubmitWithFiles(files)
         } catch (error) {
-            onError('Error selecting folder: ' + (error as Error)?.message)
+            onError(
+                t(translations.errorSelectingFolder, {
+                    message: (error as Error)?.message ?? '',
+                }),
+            )
         }
     }, [handleSubmitWithFiles, onError, path, token])
 

@@ -4,6 +4,7 @@ import { GoogleDriveConfigs } from '../../shared/types'
 import { useRootContext } from '../context/RootContext'
 import { createSecureStorage } from '../lib/storageHelper'
 import useLoadGAPI from './useLoadGAPI'
+import { t } from 'shared/i18n'
 
 const secureStorage = createSecureStorage()
 export default function useGoogleDrive(
@@ -12,6 +13,7 @@ export default function useGoogleDrive(
     const { google_client_id, google_api_key } = googleConfigs
     const {
         props: { onError },
+        translations,
     } = useRootContext()
     const [user, setUser] = useState<User>()
     const [googleFiles, setGoogleFiles] = useState<Root>()
@@ -153,8 +155,12 @@ export default function useGoogleDrive(
                                     }),
                                 )
                                 return setToken(tokenResponse)
-                            } else {
-                                onError('Error: ' + tokenResponse?.error)
+                                } else {
+                                onError(
+                                    t(translations.genericErrorDetails, {
+                                        details: (tokenResponse?.error as Error)?.message ?? '',
+                                    }),
+                                )
                             }
                         },
                     })

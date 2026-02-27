@@ -2,6 +2,7 @@ import { Client } from '@microsoft/microsoft-graph-client'
 import { OneDriveFile, OneDriveRoot } from 'microsoft'
 import { useState } from 'react'
 import { useRootContext } from '../context/RootContext'
+import { t } from '../../shared/i18n'
 
 const formatFileItem = (item: any) => ({
     id: item.id,
@@ -45,6 +46,7 @@ export default function useOneDriveUploader(graphClient?: Client) {
         setFiles,
         setActiveAdapter,
         props: { onError, accept },
+        translations,
     } = useRootContext()
     const [isClickLoading, setIsClickLoading] = useState<boolean>()
     const [path, setPath] = useState<OneDriveRoot[]>([])
@@ -67,7 +69,9 @@ export default function useOneDriveUploader(graphClient?: Client) {
             setPath(prevPath => [...prevPath, { ...file, children: files }])
         } catch (error) {
             onError(
-                'Error fetching folder contents:' + (error as Error)?.message,
+                t(translations.errorProcessingFiles, {
+                    message: (error as Error)?.message ?? '',
+                }),
             )
         } finally {
             setIsClickLoading(false)
@@ -101,7 +105,7 @@ export default function useOneDriveUploader(graphClient?: Client) {
 
     const handleClick = async (file: OneDriveFile) => {
         if (!graphClient) {
-            onError('Graph client not initialized')
+            onError(translations.graphClientNotInitialized)
             return
         }
 
@@ -176,7 +180,11 @@ export default function useOneDriveUploader(graphClient?: Client) {
             setSelectedFiles([])
             setActiveAdapter(undefined)
         } catch (error) {
-            onError('Error processing files:' + (error as Error)?.message)
+            onError(
+                t(translations.errorProcessingFiles, {
+                    message: (error as Error)?.message ?? '',
+                }),
+            )
         } finally {
             setShowLoader(false)
             setDownloadProgress(0)
@@ -200,7 +208,11 @@ export default function useOneDriveUploader(graphClient?: Client) {
             setSelectedFiles([])
             setActiveAdapter(undefined)
         } catch (error) {
-            onError('Error processing files:' + (error as Error)?.message)
+            onError(
+                t(translations.errorProcessingFiles, {
+                    message: (error as Error)?.message ?? '',
+                }),
+            )
         } finally {
             setShowLoader(false)
             setDownloadProgress(0)
@@ -216,13 +228,17 @@ export default function useOneDriveUploader(graphClient?: Client) {
             const current = path[path.length - 1]
             if (!current) return
             if (!graphClient) {
-                onError('Graph client not initialized')
+                onError(translations.graphClientNotInitialized)
                 return
             }
             const files = await getAllFilesRecursively(current.id)
             await submitFiles(files)
         } catch (error) {
-            onError('Error selecting folder: ' + (error as Error)?.message)
+            onError(
+                t(translations.errorSelectingFolder, {
+                    message: (error as Error)?.message ?? '',
+                }),
+            )
         }
     }
 

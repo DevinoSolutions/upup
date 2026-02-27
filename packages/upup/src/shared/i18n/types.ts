@@ -94,4 +94,55 @@ export type Translations = {
 
     // ── Powered by ────────────────────────────────────────────
     poweredBy: string
+
+    // ── Errors & Warnings ───────────────────────────────────
+    multipleFilesNotAllowed: string
+    failedToGetUploadUrl: string
+    statusError: string
+    networkErrorDuringUpload: string
+    missingRequiredConfiguration: string
+    invalidProvider: string
+    invalidTokenEndpoint: string
+    maxFileSizeMustBeGreater: string
+    invalidAcceptFormat: string
+    unauthorizedAccess: string
+    presignedUrlInvalid: string
+    temporaryCredentialsInvalid: string
+    corsMisconfigured: string
+    fileTooLarge: string
+    invalidFileType: string
+    storageQuotaExceeded: string
+    signedUrlGenerationFailed: string
+    uploadFailedWithCode: string
+    uploadFailed: string
+    // Dropbox-specific
+    dropboxSessionExpired: string
+    dropboxMissingPermissions: string
+    failedToRefreshExpiredToken: string
+
+    // Upup UI messages
+    allowedLimitSurpassed: string
+    fileUnsupportedType: string
+    fileTooLargeName: string
+    filePreviouslySelected: string
+    fileWithUrlPreviouslySelected: string
+    errorCompressingFile: string
+
+    // Integration / Auth errors
+    clientIdRequired: string
+    popupBlocked: string
+    dropboxClientIdMissing: string
+    dropboxAuthFailed: string
+    genericErrorDetails: string
+    errorProcessingFiles: string
+    errorSelectingFolder: string
+    graphClientNotInitialized: string
+    dropboxNoAccessToken: string
+    // MSAL / OneDrive messages
+    silentTokenAcquisitionFailed: string
+    msalInitializationFailed: string
+    silentTokenAcquisitionProceeding: string
+    signInFailed: string
+    handleSignInFailed: string
+    signOutFailed: string
 }

@@ -77,4 +77,60 @@ export const en_US: Translations = {
 
     // ── Powered by ────────────────────────────────────────────
     poweredBy: 'Powered by',
+
+    // ── Errors & Warnings ───────────────────────────────────
+    multipleFilesNotAllowed: 'Multiple file uploads are not allowed',
+    failedToGetUploadUrl: 'Failed to get upload URL',
+    statusError: 'Status: {{status}} ({{statusText}}). Details: {{details}}',
+    networkErrorDuringUpload: 'Network error during upload - Status: {{status}} ({{statusText}})',
+    missingRequiredConfiguration: 'Missing required configuration: {{missing}}',
+    invalidProvider: 'Invalid provider: {{provider}}. Valid options: {{validOptions}}',
+    invalidTokenEndpoint: 'Invalid tokenEndpoint URL: {{tokenEndpoint}} {{error}}',
+    maxFileSizeMustBeGreater: 'maxFileSize must be greater than 0',
+    invalidAcceptFormat: 'Invalid accept format: {{accept}}. Use MIME types, */*, * or extensions (like .fbx)',
+
+    unauthorizedAccess: 'Unauthorized access to Provider',
+    presignedUrlInvalid: 'Presigned URL has expired or is invalid',
+    temporaryCredentialsInvalid: 'Temporary credentials are no longer valid',
+    corsMisconfigured: 'CORS configuration prevents file upload',
+    fileTooLarge: 'File exceeds maximum size limit',
+    invalidFileType: 'File type is not allowed',
+    storageQuotaExceeded: 'Storage quota has been exceeded',
+    signedUrlGenerationFailed: 'Failed to generate signed upload URL',
+    uploadFailedWithCode: 'Upload failed with error code: {{code}}',
+    uploadFailed: 'Upload failed: {{message}}',
+
+    // Dropbox-specific
+    dropboxSessionExpired:
+        'Your Dropbox session has expired. Please re-authenticate to continue.',
+    dropboxMissingPermissions:
+        'Your Dropbox app is missing required permissions. Please add the following scopes in the Dropbox Developer Console: files.metadata.read, account_info.read',
+    failedToRefreshExpiredToken: 'Failed to refresh expired token',
+
+    // Upup UI messages
+    allowedLimitSurpassed: 'Allowed limit has been surpassed!',
+    fileUnsupportedType: '{{name}} has an unsupported type!',
+    fileTooLargeName: '{{name}} is larger than {{size}} {{unit}}!',
+    filePreviouslySelected: '{{name}} has previously been selected',
+    fileWithUrlPreviouslySelected: 'A file with this url: {{url}} has previously been selected',
+    errorCompressingFile: 'Error compressing {{name}}',
+
+    // Integration / Auth errors
+    clientIdRequired: 'Client ID is required...',
+    popupBlocked: 'Popup blocked',
+    dropboxClientIdMissing: 'Dropbox clientId missing',
+    dropboxAuthFailed: 'Dropbox authentication failed',
+    genericErrorDetails: 'Error: {{details}}',
+    errorProcessingFiles: 'Error processing files: {{message}}',
+    errorSelectingFolder: 'Error selecting folder: {{message}}',
+    graphClientNotInitialized: 'Graph client not initialized',
+    dropboxNoAccessToken: 'No access token provided for Dropbox download',
+
+    // MSAL / OneDrive messages
+    silentTokenAcquisitionFailed: 'Silent token acquisition failed: {{details}}',
+    msalInitializationFailed: 'MSAL initialization failed: {{details}}',
+    silentTokenAcquisitionProceeding: 'Silent token acquisition failed, proceeding with interactive login{{details}}',
+    signInFailed: 'Sign-in failed: {{message}}',
+    handleSignInFailed: 'Handle sign-in failed: {{message}}',
+    signOutFailed: 'Sign-out failed: {{message}}',
 }

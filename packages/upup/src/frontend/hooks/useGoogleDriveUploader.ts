@@ -1,6 +1,7 @@
 import { GoogleFile, Root, Token } from 'google'
 import { useState } from 'react'
 import { useRootContext } from '../context/RootContext'
+import { t } from '../../shared/i18n'
 
 function handleSelectedFilesUpdate(prevFiles: GoogleFile[], file: GoogleFile) {
     return prevFiles.includes(file)
@@ -14,6 +15,7 @@ export default function useGoogleDriveUploader(token?: Token) {
         googleDriveConfigs,
         setActiveAdapter,
         setFiles,
+        translations,
     } = useRootContext()
     const [path, setPath] = useState<Root[]>([])
     const [selectedFiles, setSelectedFiles] = useState<GoogleFile[]>([])
@@ -85,7 +87,11 @@ export default function useGoogleDriveUploader(token?: Token) {
             setSelectedFiles([])
             setActiveAdapter(undefined)
         } catch (error) {
-            onError('Error processing files:' + (error as Error)?.message)
+            onError(
+                t(translations.errorProcessingFiles, {
+                    message: (error as Error)?.message ?? '',
+                }),
+            )
         } finally {
             setShowLoader(false)
             setDownloadProgress(0)
@@ -109,7 +115,11 @@ export default function useGoogleDriveUploader(token?: Token) {
             setSelectedFiles([])
             setActiveAdapter(undefined)
         } catch (error) {
-            onError('Error processing files:' + (error as Error)?.message)
+            onError(
+                t(translations.errorProcessingFiles, {
+                    message: (error as Error)?.message ?? '',
+                }),
+            )
         } finally {
             setShowLoader(false)
             setDownloadProgress(0)
@@ -136,7 +146,11 @@ export default function useGoogleDriveUploader(token?: Token) {
 
             await submitFiles(files)
         } catch (error) {
-            onError('Error selecting folder: ' + (error as Error)?.message)
+            onError(
+                t(translations.errorSelectingFolder, {
+                    message: (error as Error)?.message ?? '',
+                }),
+            )
         }
     }
 

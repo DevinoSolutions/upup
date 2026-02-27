@@ -63,4 +63,58 @@ export const ar_SA: Translations = {
     back: 'الخلفية',
 
     poweredBy: 'مدعوم من',
+
+    // ── Errors & Warnings ───────────────────────────────────
+    multipleFilesNotAllowed: 'غير مسموح بتحميل عدة ملفات',
+    failedToGetUploadUrl: 'فشل في الحصول على رابط الرفع',
+    statusError: 'الحالة: {{status}} ({{statusText}}). التفاصيل: {{details}}',
+    networkErrorDuringUpload: 'خطأ في الشبكة أثناء الرفع - الحالة: {{status}} ({{statusText}})',
+    missingRequiredConfiguration: 'تكوين مفقود مطلوب: {{missing}}',
+    invalidProvider: 'مزود غير صالح: {{provider}}. الخيارات الصحيحة: {{validOptions}}',
+    invalidTokenEndpoint: 'عنوان tokenEndpoint غير صالح: {{tokenEndpoint}} {{error}}',
+    maxFileSizeMustBeGreater: 'يجب أن يكون حجم الملف الأقصى أكبر من 0',
+    invalidAcceptFormat: 'تنسيق القبول غير صالح: {{accept}}. استخدم أنواع MIME أو */* أو ملحقات (مثل .fbx)',
+
+    unauthorizedAccess: 'دخول غير مصرح إلى المزود',
+    presignedUrlInvalid: 'رابط التحميل المسبق انتهت صلاحيته أو غير صالح',
+    temporaryCredentialsInvalid: 'البيانات المؤقتة لم تعد صالحة',
+    corsMisconfigured: 'إعدادات CORS تمنع رفع الملف',
+    fileTooLarge: 'حجم الملف يتجاوز الحد الأقصى',
+    invalidFileType: 'نوع الملف غير مسموح',
+    storageQuotaExceeded: 'تم تجاوز حصة التخزين',
+    signedUrlGenerationFailed: 'فشل إنشاء رابط الرفع الموقع',
+    uploadFailedWithCode: 'فشل الرفع برمز الخطأ: {{code}}',
+    uploadFailed: 'فشل الرفع: {{message}}',
+
+    // Dropbox-specific
+    dropboxSessionExpired: 'انتهت صلاحية جلسة Dropbox الخاصة بك. يرجى إعادة المصادقة للمتابعة.',
+    dropboxMissingPermissions: 'تطبيق Dropbox الخاص بك يفتقد الأذونات المطلوبة. يرجى إضافة الأذونات التالية في وحدة تحكم مطوري Dropbox: files.metadata.read, account_info.read',
+    failedToRefreshExpiredToken: 'فشل تحديث الرمز المنتهي',
+
+    // Upup UI messages
+    allowedLimitSurpassed: 'تم تجاوز الحد المسموح!',
+    fileUnsupportedType: '{{name}} نوعه غير مدعوم!',
+    fileTooLargeName: '{{name}} أكبر من {{size}} {{unit}}!',
+    filePreviouslySelected: '{{name}} تم تحديده سابقاً',
+    fileWithUrlPreviouslySelected: 'ملف بهذا الرابط: {{url}} تم تحديده سابقاً',
+    errorCompressingFile: 'خطأ في ضغط {{name}}',
+
+    // Integration / Auth errors
+    clientIdRequired: 'معرّف العميل مطلوب...',
+    popupBlocked: 'تم حظر النافذة المنبثقة',
+    dropboxClientIdMissing: 'مفقود معرف تطبيق Dropbox',
+    dropboxAuthFailed: 'فشل مصادقة Dropbox',
+    genericErrorDetails: 'خطأ: {{details}}',
+    errorProcessingFiles: 'خطأ في معالجة الملفات: {{message}}',
+    errorSelectingFolder: 'خطأ في تحديد المجلد: {{message}}',
+    graphClientNotInitialized: 'عميل Graph غير مهيأ',
+    dropboxNoAccessToken: 'لم يتم توفير رمز وصول لتنزيل Dropbox',
+
+    // MSAL / OneDrive messages
+    silentTokenAcquisitionFailed: 'فشل الحصول على رمز صامت: {{details}}',
+    msalInitializationFailed: 'فشل تهيئة MSAL: {{details}}',
+    silentTokenAcquisitionProceeding: 'فشل الحصول على رمز صامت، المتابعة بتسجيل تفاعلي{{details}}',
+    signInFailed: 'فشل تسجيل الدخول: {{message}}',
+    handleSignInFailed: 'فشل معالجة تسجيل الدخول: {{message}}',
+    signOutFailed: 'فشل تسجيل الخروج: {{message}}',
 }
