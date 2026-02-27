@@ -63,4 +63,73 @@ export const fr_FR: Translations = {
     back: 'arrière',
 
     poweredBy: 'Propulsé par',
+    multipleFilesNotAllowed:
+        'Les téléchargements de plusieurs fichiers ne sont pas autorisés',
+    failedToGetUploadUrl: "Échec de la récupération de l'URL d'envoi",
+    statusError: 'Statut : {{status}} ({{statusText}}). Détails : {{details}}',
+    networkErrorDuringUpload:
+        'Erreur réseau pendant le téléchargement - Statut : {{status}} ({{statusText}})',
+    missingRequiredConfiguration:
+        'Configuration requise manquante : {{missing}}',
+    invalidProvider:
+        'Fournisseur invalide : {{provider}}. Options valides : {{validOptions}}',
+    invalidTokenEndpoint:
+        'URL tokenEndpoint invalide : {{tokenEndpoint}} {{error}}',
+    maxFileSizeMustBeGreater: 'maxFileSize doit être supérieur à 0',
+    invalidAcceptFormat:
+        'Format accept invalide : {{accept}}. Utilisez les types MIME, */*, * ou des extensions (ex. .fbx)',
+
+    unauthorizedAccess: 'Accès non autorisé au fournisseur',
+    presignedUrlInvalid: "L'URL pré-signée a expiré ou est invalide",
+    temporaryCredentialsInvalid:
+        'Les identifiants temporaires ne sont plus valides',
+    corsMisconfigured:
+        'La configuration CORS empêche le téléchargement de fichiers',
+    fileTooLarge: 'Le fichier dépasse la taille maximale autorisée',
+    invalidFileType: "Le type de fichier n'est pas autorisé",
+    storageQuotaExceeded: 'Le quota de stockage a été dépassé',
+    signedUrlGenerationFailed: "Échec de la génération de l'URL signée",
+    uploadFailedWithCode:
+        "Le téléchargement a échoué avec le code d'erreur : {{code}}",
+    uploadFailed: 'Échec du téléchargement : {{message}}',
+
+    // Dropbox-specific
+    dropboxSessionExpired:
+        'Votre session Dropbox a expiré. Veuillez vous ré-authentifier.',
+    dropboxMissingPermissions:
+        "Votre application Dropbox n'a pas les autorisations nécessaires. Ajoutez les scopes suivants dans la console Dropbox Developer : files.metadata.read, account_info.read",
+    failedToRefreshExpiredToken: 'Échec du rafraîchissement du token expiré',
+
+    // Upup UI messages
+    allowedLimitSurpassed: 'La limite autorisée a été dépassée !',
+    fileUnsupportedType: '{{name}} a un type non pris en charge !',
+    fileTooLargeName: '{{name}} est plus grand que {{size}} {{unit}} !',
+    filePreviouslySelected: '{{name}} a déjà été sélectionné',
+    fileWithUrlPreviouslySelected:
+        'Un fichier avec cette URL : {{url}} a déjà été sélectionné',
+    errorCompressingFile: 'Erreur lors de la compression de {{name}}',
+
+    // Integration / Auth errors
+    clientIdRequired: 'Client ID requis...',
+    popupBlocked: 'Popup bloqué',
+    dropboxClientIdMissing: 'ClientId Dropbox manquant',
+    dropboxAuthFailed: "Échec de l'authentification Dropbox",
+    genericErrorDetails: 'Erreur : {{details}}',
+    errorProcessingFiles:
+        'Erreur lors du traitement des fichiers : {{message}}',
+    errorSelectingFolder:
+        'Erreur lors de la sélection du dossier : {{message}}',
+    graphClientNotInitialized: 'Client Graph non initialisé',
+    dropboxNoAccessToken:
+        "Aucun jeton d'accès fourni pour le téléchargement Dropbox",
+
+    // MSAL / OneDrive messages
+    silentTokenAcquisitionFailed:
+        "Échec de l'acquisition silencieuse du jeton : {{details}}",
+    msalInitializationFailed: "Échec de l'initialisation MSAL : {{details}}",
+    silentTokenAcquisitionProceeding:
+        "Acquisition silencieuse échouée, poursuite avec l'authentification interactive{{details}}",
+    signInFailed: 'Échec de la connexion : {{message}}',
+    handleSignInFailed: 'Échec du traitement de la connexion : {{message}}',
+    signOutFailed: 'Échec de la déconnexion : {{message}}',
 }

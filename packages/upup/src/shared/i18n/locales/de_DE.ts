@@ -62,4 +62,70 @@ export const de_DE: Translations = {
     back: 'Rück',
 
     poweredBy: 'Bereitgestellt von',
+    multipleFilesNotAllowed: 'Mehrere Dateien dürfen nicht hochgeladen werden',
+    failedToGetUploadUrl: 'Fehler beim Abrufen der Upload-URL',
+    statusError: 'Status: {{status}} ({{statusText}}). Details: {{details}}',
+    networkErrorDuringUpload:
+        'Netzwerkfehler während des Uploads - Status: {{status}} ({{statusText}})',
+    missingRequiredConfiguration:
+        'Fehlende erforderliche Konfiguration: {{missing}}',
+    invalidProvider:
+        'Ungültiger Anbieter: {{provider}}. Gültige Optionen: {{validOptions}}',
+    invalidTokenEndpoint:
+        'Ungültige tokenEndpoint-URL: {{tokenEndpoint}} {{error}}',
+    maxFileSizeMustBeGreater: 'maxFileSize muss größer als 0 sein',
+    invalidAcceptFormat:
+        'Ungültiges Accept-Format: {{accept}}. Verwenden Sie MIME-Typen, */*, * oder Erweiterungen (z. B. .fbx)',
+
+    unauthorizedAccess: 'Unbefugter Zugriff auf den Anbieter',
+    presignedUrlInvalid: 'Die Presigned-URL ist abgelaufen oder ungültig',
+    temporaryCredentialsInvalid:
+        'Temporäre Anmeldeinformationen sind nicht mehr gültig',
+    corsMisconfigured: 'CORS-Konfiguration verhindert den Datei-Upload',
+    fileTooLarge: 'Datei überschreitet die maximale Größenbegrenzung',
+    invalidFileType: 'Dateityp ist nicht erlaubt',
+    storageQuotaExceeded: 'Speicherplatzkontingent wurde überschritten',
+    signedUrlGenerationFailed:
+        'Erstellung der signierten Upload-URL fehlgeschlagen',
+    uploadFailedWithCode: 'Upload fehlgeschlagen mit Fehlercode: {{code}}',
+    uploadFailed: 'Upload fehlgeschlagen: {{message}}',
+
+    // Dropbox-specific
+    dropboxSessionExpired:
+        'Ihre Dropbox-Sitzung ist abgelaufen. Bitte authentifizieren Sie sich erneut, um fortzufahren.',
+    dropboxMissingPermissions:
+        'Ihre Dropbox-App hat nicht die benötigten Berechtigungen. Fügen Sie bitte folgende Scopes in der Dropbox Developer Console hinzu: files.metadata.read, account_info.read',
+    failedToRefreshExpiredToken:
+        'Aktualisierung des abgelaufenen Tokens fehlgeschlagen',
+
+    // Upup UI messages
+    allowedLimitSurpassed: 'Erlaubtes Limit überschritten!',
+    fileUnsupportedType: '{{name}} hat einen nicht unterstützten Typ!',
+    fileTooLargeName: '{{name}} ist größer als {{size}} {{unit}}!',
+    filePreviouslySelected: '{{name}} wurde bereits ausgewählt',
+    fileWithUrlPreviouslySelected:
+        'Eine Datei mit dieser URL: {{url}} wurde bereits ausgewählt',
+    errorCompressingFile: 'Fehler beim Komprimieren von {{name}}',
+
+    // Integration / Auth errors
+    clientIdRequired: 'Client-ID ist erforderlich...',
+    popupBlocked: 'Popup blockiert',
+    dropboxClientIdMissing: 'Dropbox-Client-ID fehlt',
+    dropboxAuthFailed: 'Dropbox-Authentifizierung fehlgeschlagen',
+    genericErrorDetails: 'Fehler: {{details}}',
+    errorProcessingFiles: 'Fehler beim Verarbeiten der Dateien: {{message}}',
+    errorSelectingFolder: 'Fehler beim Auswählen des Ordners: {{message}}',
+    graphClientNotInitialized: 'Graph-Client nicht initialisiert',
+    dropboxNoAccessToken: 'Kein Zugriffstoken für Dropbox-Download vorhanden',
+
+    // MSAL / OneDrive messages
+    silentTokenAcquisitionFailed:
+        'Stilles Token-Abrufen fehlgeschlagen: {{details}}',
+    msalInitializationFailed:
+        'MSAL-Initialisierung fehlgeschlagen: {{details}}',
+    silentTokenAcquisitionProceeding:
+        'Stilles Token-Abrufen fehlgeschlagen, fahre mit interaktivem Login fort{{details}}',
+    signInFailed: 'Anmeldung fehlgeschlagen: {{message}}',
+    handleSignInFailed: 'Fehler beim Verarbeiten der Anmeldung: {{message}}',
+    signOutFailed: 'Abmeldung fehlgeschlagen: {{message}}',
 }
