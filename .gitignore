@@ -31,3 +31,7 @@ storybook-static
 
 # Misc
 *.tgz
+
+# dist
+/dist
+/dist-node

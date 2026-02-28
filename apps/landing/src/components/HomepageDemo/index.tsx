@@ -181,10 +181,10 @@ export default function HomepageDemo() {
               Interactive Demo
             </div>
             <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 dark:text-gray-100 mb-4">
-              Try it yourself
+              Try the interactive example
             </h2>
             <p className="text-xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto">
-              Customize and test our uploader component with different themes, adapters, and settings.
+              Customize the UI, drag & drop files, and test our TypeScript npm package with different themes and settings.
             </p>
           </div>
 
