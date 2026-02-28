@@ -51,6 +51,16 @@ export const fileAppendParams = (file: File) => {
     return file as FileWithParams
 }
 
+/**
+ * Revokes a blob URL to free memory. Safe to call on any file URL.
+ * @param file - FileWithParams object containing the URL to revoke
+ */
+export const revokeFileUrl = (file: FileWithParams) => {
+    if (file.url?.startsWith('blob:')) {
+        URL.revokeObjectURL(file.url)
+    }
+}
+
 export async function compressFile(oldFile: FileWithParams) {
     const buffer = await oldFile.arrayBuffer()
 
@@ -63,6 +73,9 @@ export async function compressFile(oldFile: FileWithParams) {
     newFileWithParams.thumbnail = oldFile.thumbnail
     newFileWithParams.fileHash = oldFile.fileHash
     newFileWithParams.key = oldFile.key
+
+    // Revoke old blob URL to prevent memory leak
+    revokeFileUrl(oldFile)
 
     return newFileWithParams
 }

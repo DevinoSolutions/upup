@@ -3,9 +3,9 @@ import type { Config } from '@docusaurus/types';
 import { themes as prismThemes } from 'prism-react-renderer';
 
 const config: Config = {
-  title: 'Modern File Uploads for React',
+  title: 'Upup Docs – React File Upload Library & Examples',
   tagline:
-      'Open-source React component library with cloud storage integrations, drag & drop, and enterprise-grade features.',
+      'Open-source React & TypeScript file upload library for Next.js, Vite, Remix & Gatsby. Customizable drag & drop UI, file picker, progress bar, retry logic, and cloud integrations for S3, Azure Blob, Google Drive, OneDrive, DigitalOcean Spaces & Backblaze B2. Supports large files and resumable uploads.',
   favicon: 'img/favicon.ico',
 
   url: process.env.NEXT_PUBLIC_BASE_URL || 'https://useupup.com',
@@ -13,6 +13,16 @@ const config: Config = {
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'warn',
   markdown: { mermaid: true },
+  headTags: [
+    {
+      tagName: 'meta',
+      attributes: {
+        name: 'description',
+        content:
+          'Upup docs: React & TypeScript file upload library with drag & drop, file picker, customizable UI, progress bar & retry. S3 & Azure helpers. Large files.',
+      },
+    },
+  ],
   presets: [
     [
       '@docusaurus/preset-classic',

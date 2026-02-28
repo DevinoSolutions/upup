@@ -75,17 +75,17 @@ const mainFeatures = [
   {
     icon: <FaCloud className="w-6 h-6" />,
     title: 'Multi-Cloud Support',
-    description: 'Connect to AWS S3, DigitalOcean Spaces, Backblaze B2, Azure Blob, and more cloud providers'
+  description: 'Connect to AWS S3, DigitalOcean Spaces, Backblaze B2, Azure Blob, and more cloud providers'
   },
   {
     icon: <FaUpload className="w-6 h-6" />,
-    title: 'Drag & Drop Interface',
-    description: 'Intuitive file management with smooth drag and drop functionality built for modern UX'
+    title: 'Drag & Drop / Dropzone',
+    description: 'Intuitive drag-and-drop file dropzone and file picker with an upload button — built for a modern, customizable UI'
   },
   {
     icon: <FaEye className="w-6 h-6" />,
-    title: 'Instant Previews',
-    description: 'Preview images, documents, and media files instantly before uploading to save time'
+    title: 'Image & Video Previews',
+    description: 'File upload with preview — see images, videos, documents, and other media files instantly before uploading'
   },
   {
     icon: <FaGlobe className="w-6 h-6" />,
@@ -94,13 +94,13 @@ const mainFeatures = [
   },
   {
     icon: <FaBolt className="w-6 h-6" />,
-    title: 'Performance Optimized',
-    description: 'Built for speed with compression, chunked uploads, and optimized loading states'
+    title: 'Progress Bar & Retry Logic',
+    description: 'Real-time upload progress bar with automatic retry on failure, resumable chunked uploads, and server-side optimization'
   },
   {
     icon: <FaShieldAlt className="w-6 h-6" />,
-    title: 'Enterprise Security',
-    description: 'Pre-signed URLs, CORS protection, and enterprise-grade security out of the box'
+    title: 'Multiple Files & Validation',
+    description: 'Upload multiple files — including large files — with file size limit validation, pre-signed URLs, and enterprise-grade security'
   }
 ];
 
@@ -812,8 +812,7 @@ export default function HomepageFeatures() {
                 className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto"
                 variants={itemVariants}
             >
-              From simple drag-and-drop to enterprise-grade cloud integrations,
-              built for developers who care about user experience.
+              A customizable React file upload component for Next.js, Vite, Remix & Gatsby — with drag-and-drop dropzone, file picker, upload button, progress bar, retry logic, and server-side helpers for image, video, and multiple file uploads.
             </motion.p>
           </motion.div>
 
@@ -1217,7 +1216,7 @@ export default function HomepageFeatures() {
                   className="text-lg text-gray-600 dark:text-gray-300"
                   variants={itemVariants}
               >
-                Handle any file format your users need to upload
+                Upload images, videos, documents, and large files — handle any file type and size limit your users need
               </motion.p>
             </motion.div>
 
