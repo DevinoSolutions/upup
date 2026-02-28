@@ -1,6 +1,6 @@
 ﻿<p align="center">
   <a href="https://useupup.com">
-    <img src="https://media2.dev.to/dynamic/image/width=1000,height=280,fit=cover,gravity=auto,format=auto/https%3A%2F%2Fdev-to-uploads.s3.amazonaws.com%2Fuploads%2Farticles%2Fbv3pa1myovex6hvw9n05.png" alt="Upup – QReact file upload component with drag and drop, progress bar, and cloud storage" />
+    <img src="https://media2.dev.to/dynamic/image/width=1000,height=280,fit=cover,gravity=auto,format=auto/https%3A%2F%2Fdev-to-uploads.s3.amazonaws.com%2Fuploads%2Farticles%2Fbv3pa1myovex6hvw9n05.png" alt="Upup – React file upload component with drag and drop, progress bar, and cloud storage" />
   </a>
 </p>
 
