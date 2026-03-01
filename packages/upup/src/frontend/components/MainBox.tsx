@@ -10,11 +10,15 @@ import AdapterView from './AdapterView'
 import FileList from './FileList'
 import MyAnimatePresence from './shared/MyAnimatePresence'
 import ShouldRender from './shared/ShouldRender'
+import WarningAlert from './WarningAlert'
+
 export default function MainBox() {
     const {
         files,
         activeAdapter,
         isAddingMore,
+        warningMessage,
+        clearWarning,
         props: { dark },
     } = useRootContext()
     const {
@@ -50,6 +54,13 @@ export default function MainBox() {
                 onDragLeave={handleDragLeave}
                 onDrop={handleDrop}
             >
+                <ShouldRender if={!!warningMessage}>
+                    <WarningAlert
+                        message={warningMessage}
+                        onClose={clearWarning}
+                        dark={dark}
+                    />
+                </ShouldRender>
                 <ShouldRender if={!!activeAdapter}>
                     <AdapterView />
                 </ShouldRender>

@@ -81,6 +81,8 @@ export interface IRootContext {
     googleDriveConfigs?: GoogleDriveConfigs
     dropboxConfigs?: DropboxConfigs
     upload: ContextUpload
+    warningMessage: string
+    clearWarning: () => void
     props: ContextProps
 }
 
