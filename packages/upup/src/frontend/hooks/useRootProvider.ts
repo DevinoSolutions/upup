@@ -503,6 +503,14 @@ export default function useRootProvider({
     const handleCancel = useCallback(() => {
         // Abort in-flight upload
         sdkRef.current?.abort()
+
+        // Best-effort abort multipart uploads on the provider to avoid orphaned uploads
+        if (sdkRef.current && resumable?.mode === 'multipart') {
+            selectedFilesMap.forEach(file => {
+                void sdkRef.current?.abortMultipart(file)
+            })
+        }
+
         sdkRef.current = null
 
         // Revoke all blob URLs to prevent memory leak
@@ -515,7 +523,7 @@ export default function useRootProvider({
         setUploadEta(0)
         setUploadedBytes(0)
         setTotalBytes(0)
-    }, [selectedFilesMap])
+    }, [resumable?.mode, selectedFilesMap])
 
     const handlePause = useCallback(() => {
         sdkRef.current?.pause()
