@@ -127,63 +127,65 @@ export default memo(
         }, [fileUrl, isText, isOversizedText])
 
         return createPortal(
-            <div
-                className="upup-fixed upup-inset-0 upup-z-[2147483647] upup-flex upup-items-center upup-justify-center upup-bg-black/40"
-                ref={ref}
-                {...restProps}
-            >
-                <div className="upup-relative upup-h-[90vh] upup-w-[90vw] upup-p-4">
-                    <div
-                        className={cn(
-                            'upup-absolute upup-inset-0 upup-m-4 upup-bg-white',
-                            {
-                                'upup-bg-[#232323] dark:upup-bg-[#232323]':
-                                    dark,
-                            },
-                            classNames.filePreviewPortal,
-                        )}
-                        onClick={onStopPropagation}
-                    >
-                        <ShouldRender if={isImage}>
-                            <img
-                                src={fileUrl}
-                                alt={fileName}
-                                className="upup-h-full upup-w-full upup-rounded upup-object-contain"
-                            />
-                        </ShouldRender>
-                        <ShouldRender if={!isImage}>
-                            <ShouldRender if={isText}>
-                                <div className="upup-h-full upup-w-full upup-overflow-auto upup-p-4 upup-font-mono upup-text-xs">
-                                    {textLoading && <p>Loading...</p>}
-                                    {textError && <p>Error: {textError}</p>}
-                                    {!textLoading && !textError && (
-                                        <>
-                                            <pre className="upup-whitespace-pre-wrap">
-                                                {textContent}
-                                            </pre>
-                                            {isTruncated && (
-                                                <div className="upup-mt-4 upup-rounded upup-border upup-border-yellow-500/30 upup-bg-yellow-500/10 upup-px-3 upup-py-2 upup-text-xs upup-text-yellow-400">
-                                                    Content truncated — file is
-                                                    too large to preview in
-                                                    full.
-                                                </div>
-                                            )}
-                                        </>
-                                    )}
-                                </div>
+            <div className="upup-scope">
+                <div
+                    className="upup-fixed upup-inset-0 upup-z-[2147483647] upup-flex upup-items-center upup-justify-center upup-bg-black/40"
+                    ref={ref}
+                    {...restProps}
+                >
+                    <div className="upup-relative upup-h-[90vh] upup-w-[90vw] upup-p-4">
+                        <div
+                            className={cn(
+                                'upup-absolute upup-inset-0 upup-m-4 upup-bg-white',
+                                {
+                                    'upup-bg-[#232323] dark:upup-bg-[#232323]':
+                                        dark,
+                                },
+                                classNames.filePreviewPortal,
+                            )}
+                            onClick={onStopPropagation}
+                        >
+                            <ShouldRender if={isImage}>
+                                <img
+                                    src={fileUrl}
+                                    alt={fileName}
+                                    className="upup-h-full upup-w-full upup-rounded upup-object-contain"
+                                />
                             </ShouldRender>
-                            <ShouldRender if={!isText}>
-                                <object
-                                    data={fileUrl}
-                                    width="100%"
-                                    height="100%"
-                                    name={fileName}
-                                    type={fileType}
-                                >
-                                    <p>Loading...</p>
-                                </object>
+                            <ShouldRender if={!isImage}>
+                                <ShouldRender if={isText}>
+                                    <div className="upup-h-full upup-w-full upup-overflow-auto upup-p-4 upup-font-mono upup-text-xs">
+                                        {textLoading && <p>Loading...</p>}
+                                        {textError && <p>Error: {textError}</p>}
+                                        {!textLoading && !textError && (
+                                            <>
+                                                <pre className="upup-whitespace-pre-wrap">
+                                                    {textContent}
+                                                </pre>
+                                                {isTruncated && (
+                                                    <div className="upup-mt-4 upup-rounded upup-border upup-border-yellow-500/30 upup-bg-yellow-500/10 upup-px-3 upup-py-2 upup-text-xs upup-text-yellow-400">
+                                                        Content truncated — file
+                                                        is too large to preview
+                                                        in full.
+                                                    </div>
+                                                )}
+                                            </>
+                                        )}
+                                    </div>
+                                </ShouldRender>
+                                <ShouldRender if={!isText}>
+                                    <object
+                                        data={fileUrl}
+                                        width="100%"
+                                        height="100%"
+                                        name={fileName}
+                                        type={fileType}
+                                    >
+                                        <p>Loading...</p>
+                                    </object>
+                                </ShouldRender>
                             </ShouldRender>
-                        </ShouldRender>
+                        </div>
                     </div>
                 </div>
             </div>,
