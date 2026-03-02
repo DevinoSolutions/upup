@@ -4,7 +4,7 @@ sidebar_position: 1
 
 # Getting Started
 
-Upup is an open-source, free-to-use **Full-stack library** that easily handles your file upload needs with seamless DigitalOcean Spaces, Amazon S3, Backblaze, Microsoft Azure Blob Storage, Google Drive, and OneDrive integrations.
+Upup is an open-source, free-to-use **React & TypeScript file upload library** that works with **Next.js, Vite, Remix, Gatsby** and any React framework. It handles your file upload needs with seamless DigitalOcean Spaces, Amazon S3, Backblaze, Microsoft Azure Blob Storage, Google Drive, and OneDrive integrations.
 
 ## Installation
 

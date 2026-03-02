@@ -204,7 +204,7 @@ export default function HeroSection() {
                         className="text-xl sm:text-2xl text-gray-600 dark:text-gray-300 mb-12 leading-relaxed max-w-3xl mx-auto"
                         variants={subtitleVariants}
                     >
-                        Open-source full-stack file uploader with{" "}
+                        Open-source React & TypeScript file upload library with{" "}
                         <motion.span
                             className="font-semibold text-gray-900 dark:text-white"
                             initial={{ opacity: 0.7 }}
@@ -214,7 +214,7 @@ export default function HeroSection() {
                             cloud integrations
                         </motion.span>
                         ,{" "}
-                        drag & drop, and enterprise features.
+                        customizable drag & drop UI, progress bar, and retry logic. Works with Next.js, Vite, Remix, Gatsby & more.
                     </motion.p>
 
                     {/* CTA Buttons */}

@@ -130,7 +130,7 @@ export default forwardRef<UpupUploaderRef, UpupUploaderProps>(
                                 )}
                             >
                                 <a
-                                    href={'https://getupup.ca/'}
+                                    href={'https://useupup.com/'}
                                     target={'_blank'}
                                     rel="noopener noreferrer"
                                     className="upup-flex upup-items-center upup-gap-[5px]"

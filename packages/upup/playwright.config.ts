@@ -20,8 +20,8 @@ export default defineConfig({
     timeout: 60_000,
     // Start Storybook before running tests; reuse if already running
     webServer: {
-        // Launch Storybook using the package.json script
-        command: `pnpm run storybook`,
+        // Launch Storybook on the configured port
+        command: `pnpm exec storybook dev -p ${STORYBOOK_PORT}`,
         url: `http://localhost:${STORYBOOK_PORT}`,
         timeout: 120_000,
         reuseExistingServer: true,
