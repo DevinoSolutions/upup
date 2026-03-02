@@ -118,73 +118,84 @@ export default forwardRef<UpupUploaderRef, UpupUploaderProps>(
                                 <div
                                     className={cn(
                                         'upup-flex upup-w-full upup-flex-col upup-items-center upup-justify-between upup-gap-1 md:upup-flex-row',
+                                        {
+                                            'upup-flex-col':
+                                                providerValues.props.mini,
+                                        },
                                     )}
                                 >
                                     <a
-                                        href={'https://getupup.ca/'}
+                                        href={'https://useupup.com/'}
                                         target={'_blank'}
                                         rel="noopener noreferrer"
                                         className="upup-flex upup-items-center upup-gap-[5px]"
                                     >
-                                        <ShouldRender
-                                            if={providerValues.props.dark}
+                                        <a
+                                            href={'https://getupup.ca/'}
+                                            target={'_blank'}
+                                            rel="noopener noreferrer"
+                                            className="upup-flex upup-items-center upup-gap-[5px]"
                                         >
-                                            <img
-                                                src={logoDark}
-                                                width={61}
-                                                height={13}
-                                                alt="logo-dark"
-                                            />
-                                        </ShouldRender>
-                                        <ShouldRender
-                                            if={!providerValues.props.dark}
+                                            <ShouldRender
+                                                if={providerValues.props.dark}
+                                            >
+                                                <img
+                                                    src={logoDark}
+                                                    width={61}
+                                                    height={13}
+                                                    alt="logo-dark"
+                                                />
+                                            </ShouldRender>
+                                            <ShouldRender
+                                                if={!providerValues.props.dark}
+                                            >
+                                                <img
+                                                    src={logoLight}
+                                                    width={61}
+                                                    height={13}
+                                                    alt="logo-light"
+                                                />
+                                            </ShouldRender>
+                                        </a>
+                                        <a
+                                            href={'https://devino.ca/'}
+                                            target={'_blank'}
+                                            rel="noopener noreferrer"
+                                            className="upup-flex upup-flex-row upup-items-center upup-justify-end upup-gap-1"
                                         >
-                                            <img
-                                                src={logoLight}
-                                                width={61}
-                                                height={13}
-                                                alt="logo-light"
-                                            />
-                                        </ShouldRender>
-                                    </a>
-                                    <a
-                                        href={'https://devino.ca/'}
-                                        target={'_blank'}
-                                        rel="noopener noreferrer"
-                                        className="upup-flex upup-flex-row upup-items-center upup-justify-end upup-gap-1"
-                                    >
-                                        <span
-                                            className={cn(
-                                                'upup-mr-0.5 upup-text-xs upup-leading-5 upup-text-[#6D6D6D] md:upup-text-sm',
-                                                {
-                                                    'upup-text-gray-300 dark:upup-text-gray-300':
-                                                        providerValues.props
-                                                            .dark,
-                                                },
-                                            )}
-                                        >
-                                            Built by{' '}
-                                        </span>
-                                        <ShouldRender
-                                            if={providerValues.props.dark}
-                                        >
-                                            <img
-                                                src={devinoDark}
-                                                width={61}
-                                                height={13}
-                                                alt="logo-dark"
-                                            />
-                                        </ShouldRender>
-                                        <ShouldRender
-                                            if={!providerValues.props.dark}
-                                        >
-                                            <img
-                                                src={devinoLight}
-                                                width={61}
-                                                height={13}
-                                                alt="logo-light"
-                                            />
-                                        </ShouldRender>
+                                            <span
+                                                className={cn(
+                                                    'upup-mr-0.5 upup-text-xs upup-leading-5 upup-text-[#6D6D6D] md:upup-text-sm',
+                                                    {
+                                                        'upup-text-gray-300 dark:upup-text-gray-300':
+                                                            providerValues.props
+                                                                .dark,
+                                                    },
+                                                )}
+                                            >
+                                                Built by{' '}
+                                            </span>
+                                            <ShouldRender
+                                                if={providerValues.props.dark}
+                                            >
+                                                <img
+                                                    src={devinoDark}
+                                                    width={61}
+                                                    height={13}
+                                                    alt="logo-dark"
+                                                />
+                                            </ShouldRender>
+                                            <ShouldRender
+                                                if={!providerValues.props.dark}
+                                            >
+                                                <img
+                                                    src={devinoLight}
+                                                    width={61}
+                                                    height={13}
+                                                    alt="logo-light"
+                                                />
+                                            </ShouldRender>
+                                        </a>
                                     </a>
                                 </div>
                             </ShouldRender>
