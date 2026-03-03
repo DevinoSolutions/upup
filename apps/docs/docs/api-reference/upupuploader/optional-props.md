@@ -11,8 +11,9 @@ These optional props are not required for the UpupUploader component to work.
 | [accept](#accept)                             | `accept="image/png"`                                                                               | string               | optional | `*`                                            |
 | [dark](#dark)                                 | `dark={true}`                                                                                      | boolean              | optional | `false`                                        |
 | [driveConfigs](#driveconfigs)                 | `driveConfigs={{ oneDrive: { onedrive_client_id: process.env.NEXT_PUBLIC_ONEDRIVE_CLIENT_ID! } }}` | object               | optional | -                                              |
+| [imageEditor](#imageeditor)                   | `imageEditor={true}`                                                                               | `boolean \| ImageEditorOptions` | optional | `false`                        |
 | [limit](#limit)                               | `limit={5}`                                                                                        | number               | optional | `1`                                            |
-| [localePack](#localePack)                             | `localePack={ja_JP}`                                                                                   | `Translations`       | optional | `en_US`                                        |
+| [localePack](#localepack)                             | `localePack={ja_JP}`                                                                                   | `Translations`       | optional | `en_US`                                        |
 | [maxFileSize](#maxfilesize)                   | `maxFileSize={{ size: 20, unit: "MB" }}`                                                           | object               | optional | `{ size: 10, unit: "MB" }`                     |
 | [mini](#mini)                                 | `mini={true}`                                                                                      | boolean              | optional | `false`                                        |
 | [translations](#translations)                | `translations={{ browseFiles: "pick files" }}`                                                     | `Partial<Translations>` | optional | -                                              |
@@ -56,6 +57,12 @@ driveConfigs={{
 For Next.js, don't forget to add the `NEXT_PUBLIC_` before the environment variable name. For instance: `GOOGLE_API_KEY` will now become `NEXT_PUBLIC_GOOGLE_API_KEY`
 :::
 
+## `imageEditor`
+
+Enables the built-in image editor. Set to `true` for defaults or pass an `ImageEditorOptions` object for advanced behavior.
+
+See [Image Editor](/docs/api-reference/upupuploader/image-editor) for full configuration.
+
 ## `limit`
 
 Maximum number of files allowed for upload. When using [`mini`](#mini) mode, this is automatically set to 1.
@@ -94,7 +101,7 @@ Enables compact mode for the uploader component. When enabled:
 
 ## `translations`
 
-Partial overrides for individual translation keys. These are merged on top of the active [`localePack`](#localePack) (or the default `en_US`):
+Partial overrides for individual translation keys. These are merged on top of the active [`localePack`](#localepack) (or the default `en_US`):
 
 ```tsx
 <UpupUploader

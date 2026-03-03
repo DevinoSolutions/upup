@@ -8,6 +8,7 @@ export {
     FileWithParams,
     FileWithProgress,
     GoogleDriveConfigs,
+    ImageEditorOptions,
     OneDriveConfigs,
     Translations,
     UploadAdapter,

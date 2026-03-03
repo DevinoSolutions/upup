@@ -36,6 +36,7 @@ interface Props {
     shouldCompress?: boolean;
     fileSizeLimit?: number; // in MB
     localePack?: Translations;
+    imageEditor?: boolean;
 }
 
 export default function Uploader({
@@ -47,6 +48,7 @@ export default function Uploader({
                                      shouldCompress = false,
                                      fileSizeLimit = 25,
                                      localePack,
+                                     imageEditor = false,
                                  }: Readonly<Props>) {
     // Detect dark mode using Tailwind's class strategy
     const {isDarkMode} = useContext(ThemeContext)
@@ -103,6 +105,7 @@ export default function Uploader({
           mini={mini}
           allowPreview={allowPreview}
           shouldCompress={shouldCompress}
+          imageEditor={imageEditor}
           maxFileSize={{ size: fileSizeLimit, unit: "MB" }}
           classNames={customClassNames}
           localePack={localePack}

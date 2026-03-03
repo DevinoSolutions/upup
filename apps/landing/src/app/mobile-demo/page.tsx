@@ -49,6 +49,7 @@ function MobileDemoContent() {
   const enabledAdapters = searchParams.get('enabledAdapters')?.split(',') || ['INTERNAL'];
   const allowPreview = searchParams.get('allowPreview') !== 'false';
   const shouldCompress = searchParams.get('shouldCompress') === 'true';
+  const imageEditor = searchParams.get('imageEditor') === 'true';
   const fileSizeLimit = parseInt(searchParams.get('fileSizeLimit') || '999');
   const darkMode = searchParams.get('darkMode') === 'true';
   const language = searchParams.get('language') || 'en_US';
@@ -87,6 +88,7 @@ function MobileDemoContent() {
         enabledAdapters={enabledAdapters}
         allowPreview={allowPreview}
         shouldCompress={shouldCompress}
+        imageEditor={imageEditor}
         fileSizeLimit={fileSizeLimit}
         localePack={locale}
       />

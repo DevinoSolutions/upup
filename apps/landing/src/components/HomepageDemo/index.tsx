@@ -18,7 +18,8 @@ import {
   FaHdd,
   FaInfoCircle,
   FaShieldAlt,
-  FaLanguage
+  FaLanguage,
+  FaCrop
 } from "react-icons/fa";
 import { SiDropbox, SiGoogledrive } from "react-icons/si";
 import { GrOnedrive } from "react-icons/gr";
@@ -103,12 +104,16 @@ export default function HomepageDemo() {
   const [enabledAdapters, setEnabledAdapters] = useState(["INTERNAL", "GOOGLE_DRIVE", "ONE_DRIVE", "LINK", "CAMERA"]);
   const [allowPreview, setAllowPreview] = useState(true);
   const [shouldCompress, setShouldCompress] = useState(false);
+  const [imageEditor, setImageEditor] = useState(false);
   const [selectedLanguage, setSelectedLanguage] = useState('en_US');
   const [fileSizeValue, setFileSizeValue] = useState(25); // Default 25
   const [fileSizeUnit, setFileSizeUnit] = useState(1024 * 1024); // Default MB
   const [restrictionsEnabled, setRestrictionsEnabled] = useState(false); // New state for restrictions toggle
   const [iframeLoading, setIframeLoading] = useState(false); // Loading state for iframe
   const [currentIframeUrl, setCurrentIframeUrl] = useState(""); // Track current iframe URL
+
+  // Calculate file size limit in bytes for the uploader
+  const fileSizeLimit = Math.floor((fileSizeValue * fileSizeUnit) / (1024 * 1024)); // Convert to MB for uploader
 
   // Generate iframe URL with current settings
   const generateMobileDemoUrl = () => {
@@ -119,6 +124,7 @@ export default function HomepageDemo() {
       enabledAdapters: enabledAdapters.join(','),
       allowPreview: allowPreview.toString(),
       shouldCompress: shouldCompress.toString(),
+      imageEditor: imageEditor.toString(),
       fileSizeLimit: (restrictionsEnabled ? fileSizeLimit : 999).toString(),
       darkMode: isDarkMode.toString(),
       language: selectedLanguage,
@@ -140,10 +146,7 @@ export default function HomepageDemo() {
       }
       setCurrentIframeUrl(newUrl);
     }
-  }, [mini, selectedTheme, enabledAdapters, allowPreview, shouldCompress, restrictionsEnabled, limit, fileSizeValue, fileSizeUnit, isDarkMode, mobileMode]);
-
-  // Calculate file size limit in bytes for the uploader
-  const fileSizeLimit = Math.floor((fileSizeValue * fileSizeUnit) / (1024 * 1024)); // Convert to MB for uploader
+  }, [mini, selectedTheme, enabledAdapters, allowPreview, shouldCompress, imageEditor, restrictionsEnabled, limit, fileSizeValue, fileSizeUnit, isDarkMode, mobileMode]);
 
   const handleMiniChange: ChangeEventHandler<HTMLInputElement> = useCallback(
       (e) => {
@@ -233,14 +236,6 @@ export default function HomepageDemo() {
               Customize the UI, drag & drop files, and test our TypeScript npm package with different themes and settings.
             </p>
           </div>
-          <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 dark:text-gray-100 mb-4">
-            Try it yourself
-          </h2>
-          <p className="text-xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto">
-            Customize and test our uploader component with different themes,
-            adapters, and settings.
-          </p>
-        </div>
 
         <div className="flex min-h-[70vh] lg:flex-row md:flex-col flex-col gap-8">
           {/* Controls Panel */}
@@ -577,6 +572,29 @@ export default function HomepageDemo() {
                       <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 dark:peer-focus:ring-primary-dark/20 rounded-full peer dark:bg-gray-600 peer-checked:after:translate-x-4 peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all after:shadow-md dark:border-gray-600 peer-checked:bg-primary dark:peer-checked:bg-primary-dark"></div>
                     </label>
                   </div>
+
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <FaCrop className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                      <div
+                        className="text-sm font-medium text-gray-900 dark:text-gray-100 cursor-help flex items-center gap-1"
+                        data-tooltip-id="image-editor-tooltip"
+                        data-tooltip-content="Open an image editor to crop, rotate, resize, and apply filters before uploading"
+                      >
+                        <FaInfoCircle className="w-3 h-3 text-blue-500 dark:text-blue-400" />
+                        Image Editor
+                      </div>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={imageEditor}
+                        onChange={(e) => setImageEditor(e.target.checked)}
+                        className="sr-only peer"
+                      />
+                      <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 dark:peer-focus:ring-primary-dark/20 rounded-full peer dark:bg-gray-600 peer-checked:after:translate-x-4 peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all after:shadow-md dark:border-gray-600 peer-checked:bg-primary dark:peer-checked:bg-primary-dark"></div>
+                    </label>
+                  </div>
                 </div>
               </div>
 
@@ -674,6 +692,7 @@ export default function HomepageDemo() {
                       enabledAdapters={enabledAdapters}
                       allowPreview={allowPreview}
                       shouldCompress={shouldCompress}
+                      imageEditor={imageEditor}
                       fileSizeLimit={restrictionsEnabled ? fileSizeLimit : 999}
                       localePack={
                         LANGUAGES.find((l) => l.code === selectedLanguage)
@@ -693,6 +712,7 @@ export default function HomepageDemo() {
       <Tooltip id="mobile-tooltip" className="z-50" />
       <Tooltip id="preview-tooltip" className="z-50" />
       <Tooltip id="compress-tooltip" className="z-50" />
+      <Tooltip id="image-editor-tooltip" className="z-50" />
     </section>
   );
 }

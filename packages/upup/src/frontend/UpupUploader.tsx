@@ -6,6 +6,8 @@ import { devinoDark, devinoLight, logoDark, logoLight } from '../assets/logos'
 import { t } from '../shared/i18n'
 import { FileWithParams, UpupUploaderProps } from '../shared/types'
 import DefaultLoaderIcon from './components/DefaultLoaderIcon'
+import ImageEditorInline from './components/ImageEditorInline'
+import ImageEditorModal from './components/ImageEditorModal'
 import MainBox from './components/MainBox'
 import ShouldRender from './components/shared/ShouldRender'
 import RootContext from './context/RootContext'
@@ -120,6 +122,19 @@ export default forwardRef<UpupUploaderRef, UpupUploaderProps>(
                             </ShouldRender>
                             <MainBox />
 
+                            {/* Inline image editor — overlays the uploader content */}
+                            {providerValues.editingFile &&
+                                providerValues.props.imageEditor.display ===
+                                    'inline' && (
+                                    <ImageEditorInline
+                                        file={providerValues.editingFile}
+                                        onClose={
+                                            providerValues.closeImageEditor
+                                        }
+                                        onSave={providerValues.saveImageEdit}
+                                    />
+                                )}
+
                             <div
                                 className={cn(
                                     'upup-flex upup-w-full upup-flex-col upup-items-center upup-justify-between upup-gap-1 md:upup-flex-row',
@@ -198,6 +213,14 @@ export default forwardRef<UpupUploaderRef, UpupUploaderProps>(
                         </section>
                     </div>
                 </div>
+                {providerValues.editingFile &&
+                    providerValues.props.imageEditor.display === 'modal' && (
+                        <ImageEditorModal
+                            file={providerValues.editingFile}
+                            onClose={providerValues.closeImageEditor}
+                            onSave={providerValues.saveImageEdit}
+                        />
+                    )}
             </RootContext.Provider>
         )
     },

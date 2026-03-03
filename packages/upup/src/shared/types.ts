@@ -42,6 +42,83 @@ type MaxFileSizeObject = {
     unit: 'B' | 'KB' | 'MB' | 'GB' | 'TB' | 'PB' | 'EB' | 'ZB' | 'YB'
 }
 
+/**
+ * Configuration for the optional image editor.
+ * The editor is lazy-loaded at runtime; consumers must install
+ * `react-filerobot-image-editor` and its peer deps separately.
+ */
+export type ImageEditorOptions = {
+    /** Whether the editor is enabled (default false). */
+    enabled?: boolean
+    /**
+     * How the editor is displayed.
+     * - "inline":  overlays the editor on top of the uploader container (default)
+     * - "modal":   opens the editor in a full-screen modal dialog
+     */
+    display?: 'inline' | 'modal'
+    /**
+     * When to auto-open the editor after file selection.
+     * - "never":  never auto-open (user clicks Edit manually)
+     * - "single": auto-open when exactly 1 new image is added
+     * - "always": auto-open for every newly added image (queued sequentially)
+     */
+    autoOpen?: 'never' | 'single' | 'always'
+    /** Output settings for the edited image. */
+    output?: {
+        /** MIME type for the saved image (e.g. "image/png", "image/webp"). */
+        mimeType?: string
+        /** Quality 0–1 for lossy formats (jpeg/webp). */
+        quality?: number
+        /** Custom file name generator. Receives the original File. */
+        fileName?: (original: File) => string
+    }
+    /**
+     * Filerobot tab keys to show.
+     * @see https://github.com/nicedayfor/filerobot-image-editor#tabs
+     */
+    tabs?: (
+        | 'Adjust'
+        | 'Annotate'
+        | 'Filters'
+        | 'Finetune'
+        | 'Resize'
+        | 'Watermark'
+    )[]
+    /**
+     * Filerobot tool keys to show inside the Annotate tab.
+     * @see https://github.com/nicedayfor/filerobot-image-editor#tools
+     */
+    tools?: (
+        | 'Crop'
+        | 'Rotate'
+        | 'Flip'
+        | 'Brightness'
+        | 'Contrast'
+        | 'HSV'
+        | 'Blur'
+        | 'Text'
+        | 'Line'
+        | 'Rect'
+        | 'Ellipse'
+        | 'Polygon'
+        | 'Pen'
+        | 'Arrow'
+        | 'Image'
+    )[]
+    /** Callback fired when the editor modal opens. */
+    onOpen?: (file: FileWithParams) => void
+    /** Callback fired when the user cancels editing. */
+    onCancel?: (file: FileWithParams) => void
+    /** Callback fired after the user saves an edit. */
+    onSave?: (editedFile: FileWithParams, originalFile: FileWithParams) => void
+}
+
+/** Resolved image editor config with all defaults applied. */
+export type ResolvedImageEditorOptions = Required<
+    Pick<ImageEditorOptions, 'enabled' | 'autoOpen' | 'display'>
+> &
+    Omit<ImageEditorOptions, 'enabled' | 'autoOpen' | 'display'>
+
 export type UpupUploaderPropsClassNames = {
     fileIcon?: string
     containerMini?: string
@@ -140,6 +217,8 @@ export type UpupUploaderProps = {
     isProcessing?: boolean
     mini?: boolean
     maxFileSize?: MaxFileSizeObject
+    /** Optional image editor. Pass `true` for defaults or an `ImageEditorOptions` object. */
+    imageEditor?: boolean | ImageEditorOptions
     customProps?: object
     dark?: boolean
     classNames?: UpupUploaderPropsClassNames
