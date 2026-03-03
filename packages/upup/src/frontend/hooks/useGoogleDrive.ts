@@ -1,6 +1,6 @@
 import { GoogleFile, Root, Token, User } from 'google'
 import { useCallback, useEffect, useState } from 'react'
-import { t } from 'shared/i18n'
+import { t } from '../../shared/i18n'
 import { GoogleDriveConfigs } from '../../shared/types'
 import { useRootContext } from '../context/RootContext'
 import { createSecureStorage } from '../lib/storageHelper'
