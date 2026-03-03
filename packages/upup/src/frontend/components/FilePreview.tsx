@@ -9,7 +9,7 @@ import React, {
 } from 'react'
 
 import { useRootContext } from '../context/RootContext'
-import { fileGetIsImage } from '../lib/file'
+import { fileCanPreviewText, fileGetIsImage, fileGetIsText } from '../lib/file'
 import { cn } from '../lib/tailwind'
 import FilePreviewThumbnail from './FilePreviewThumbnail'
 import ProgressBar from './shared/ProgressBar'
@@ -51,22 +51,16 @@ export default memo(function FilePreview(props: Props) {
     } = useRootContext()
 
     const isImage = useMemo(() => fileGetIsImage(fileType), [fileType])
-    const isText = useMemo(() => {
-        if (!fileType) return false
-        if (fileType.startsWith('text/')) return true
-        const lower = fileName.toLowerCase()
-        return (
-            lower.endsWith('.txt') ||
-            lower.endsWith('.md') ||
-            lower.endsWith('.json') ||
-            lower.endsWith('.csv') ||
-            lower.endsWith('.log') ||
-            lower.endsWith('.js') ||
-            lower.endsWith('.ts') ||
-            lower.endsWith('.css') ||
-            lower.endsWith('.html')
-        )
-    }, [fileType, fileName])
+    const isText = useMemo(
+        () => fileGetIsText(fileType, fileName),
+        [fileType, fileName],
+    )
+
+    // Only allow inline text preview for files within the safe size threshold
+    const canPreviewText = useMemo(
+        () => fileCanPreviewText(fileType, fileName, fileSize),
+        [fileType, fileName, fileSize],
+    )
 
     const progress = useMemo(
         () =>
@@ -79,8 +73,12 @@ export default memo(function FilePreview(props: Props) {
     )
 
     useEffect(() => {
-        if ((isImage || isText) && !canPreview) setCanPreview(true)
-    }, [isImage, isText, canPreview, setCanPreview])
+        // For text files, only set canPreview if below the safe size threshold.
+        // Large text files (e.g. 3MB+ JSON) would freeze the browser if rendered
+        // via <object> tags, so they get a static icon instead.
+        if ((isImage || (isText && canPreviewText)) && !canPreview)
+            setCanPreview(true)
+    }, [isImage, isText, canPreviewText, canPreview, setCanPreview])
 
     const onHandleFileRemove: MouseEventHandler<HTMLButtonElement> = e => {
         e.stopPropagation()
@@ -120,6 +118,7 @@ export default memo(function FilePreview(props: Props) {
                             fileType={fileType}
                             fileName={fileName}
                             fileUrl={fileUrl}
+                            fileSize={fileSize}
                             allowPreview={allowPreview}
                             classNames={classNames}
                         />
