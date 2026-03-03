@@ -3,6 +3,7 @@
 import React, { forwardRef, useImperativeHandle } from 'react'
 import { TbLoader } from 'react-icons/tb/index.js'
 import { devinoDark, devinoLight, logoDark, logoLight } from '../assets/logos'
+import { t } from '../shared/i18n'
 import { FileWithParams, UpupUploaderProps } from '../shared/types'
 import DefaultLoaderIcon from './components/DefaultLoaderIcon'
 import ImageEditorInline from './components/ImageEditorInline'
@@ -110,8 +111,13 @@ export default forwardRef<UpupUploaderRef, UpupUploaderProps>(
                                         },
                                     )}
                                 >
-                                    Add your documents here, you can upload up
-                                    to {providerValues.props.limit} files max
+                                    {t(
+                                        providerValues.translations
+                                            .addDocumentsHere,
+                                        {
+                                            limit: providerValues.props.limit,
+                                        },
+                                    )}
                                 </p>
                             </ShouldRender>
                             <MainBox />
@@ -180,7 +186,7 @@ export default forwardRef<UpupUploaderRef, UpupUploaderProps>(
                                             },
                                         )}
                                     >
-                                        Built by{' '}
+                                        {providerValues.translations.builtBy}{' '}
                                     </span>
                                     <ShouldRender
                                         if={providerValues.props.dark}

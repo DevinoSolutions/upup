@@ -8,6 +8,7 @@ import React, {
     useMemo,
 } from 'react'
 
+import type { Translations } from '../../shared/i18n/types'
 import { useRootContext } from '../context/RootContext'
 import { fileCanPreviewText, fileGetIsImage, fileGetIsText } from '../lib/file'
 import { cn } from '../lib/tailwind'
@@ -41,6 +42,7 @@ export default memo(function FilePreview(props: Props) {
 
     const {
         handleFileRemove,
+        translations: tr,
         openImageEditor,
         upload: { filesProgressMap },
         props: {
@@ -93,10 +95,10 @@ export default memo(function FilePreview(props: Props) {
         if (file) openImageEditor(file)
     }
 
-    const formatFileSize = (bytes?: number) => {
-        if (!bytes || bytes === 0) return '0 Byte'
+    const formatFileSize = (bytes: number | undefined, tr: Translations) => {
+        if (!bytes || bytes === 0) return tr.zeroBytes
         const k = 1024
-        const sizes = ['Bytes', 'KB', 'MB', 'GB']
+        const sizes = [tr.bytes, tr.kb, tr.mb, tr.gb]
         const i = Math.floor(Math.log(bytes) / Math.log(k))
         return Math.round((bytes / Math.pow(k, i)) * 10) / 10 + ' ' + sizes[i]
     }
@@ -129,6 +131,7 @@ export default memo(function FilePreview(props: Props) {
                             fileSize={fileSize}
                             allowPreview={allowPreview}
                             classNames={classNames}
+                            translations={tr}
                         />
                     </div>
                 </ShouldRender>
@@ -173,7 +176,7 @@ export default memo(function FilePreview(props: Props) {
                     onClick={onHandleFileRemove}
                     type="button"
                     disabled={!!progress}
-                    aria-label="Remove file"
+                    aria-label={tr.removeFile}
                 >
                     <FileDeleteIcon className="upup-h-3 upup-w-3" />
                 </button>
@@ -190,7 +193,7 @@ export default memo(function FilePreview(props: Props) {
                     {fileName}
                 </div>
                 <div className="upup-mt-0.5 upup-text-[11px] upup-leading-tight upup-text-gray-400">
-                    {formatFileSize(fileSize)}
+                    {formatFileSize(fileSize, tr)}
                 </div>
                 {allowPreview && canPreview && (
                     <button
@@ -198,7 +201,7 @@ export default memo(function FilePreview(props: Props) {
                         className="upup-mt-1 upup-text-[11px] upup-font-normal upup-leading-tight upup-text-[#4A9EFF] upup-transition-all hover:upup-text-blue-300 hover:upup-underline"
                         onClick={onRequestPreview}
                     >
-                        Click to preview
+                        {tr.clickToPreview}
                     </button>
                 )}
             </div>

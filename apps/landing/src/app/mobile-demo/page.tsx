@@ -2,6 +2,12 @@
 
 import Uploader from "@/components/Uploader";
 import { useSearchParams } from 'next/navigation';
+import type { Translations } from 'upup-react-file-uploader';
+import { en_US, ja_JP, zh_CN, zh_TW, fr_FR, ar_SA, de_DE, es_ES, ko_KR } from 'upup-react-file-uploader/locales';
+
+const LOCALE_MAP: Record<string, Translations> = {
+  en_US, ja_JP, zh_CN, zh_TW, fr_FR, ar_SA, de_DE, es_ES, ko_KR,
+};
 import { Suspense, useEffect } from 'react';
 
 function MobileDemoContent() {
@@ -46,6 +52,8 @@ function MobileDemoContent() {
   const imageEditor = searchParams.get('imageEditor') === 'true';
   const fileSizeLimit = parseInt(searchParams.get('fileSizeLimit') || '999');
   const darkMode = searchParams.get('darkMode') === 'true';
+  const language = searchParams.get('language') || 'en_US';
+  const locale = LOCALE_MAP[language] ?? en_US;
 
   // Apply dark mode immediately
   useEffect(() => {
@@ -59,18 +67,20 @@ function MobileDemoContent() {
   }, [darkMode]);
 
   return (
-    <div style={{ 
-      padding: '16px', 
-      width: '100%',
-      minHeight: '100vh',
-      maxWidth: '400px',
-      margin: '0 auto',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-      background: darkMode ? '#111827' : 'white',
-      color: darkMode ? '#f9fafb' : '#111827',
-      position: 'relative',
-      zIndex: 1000
-    }}>
+    <div
+      style={{
+        padding: "16px",
+        width: "100%",
+        minHeight: "100vh",
+        maxWidth: "400px",
+        margin: "0 auto",
+        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+        background: darkMode ? "#111827" : "white",
+        color: darkMode ? "#f9fafb" : "#111827",
+        position: "relative",
+        zIndex: 1000,
+      }}
+    >
       <Uploader
         limit={limit}
         mini={mini}
@@ -80,6 +90,7 @@ function MobileDemoContent() {
         shouldCompress={shouldCompress}
         imageEditor={imageEditor}
         fileSizeLimit={fileSizeLimit}
+        localePack={locale}
       />
     </div>
   );

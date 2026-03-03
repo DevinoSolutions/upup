@@ -6,6 +6,7 @@ import {
     TbPlus,
     TbTrash,
 } from 'react-icons/tb/index.js'
+import { en_US, mergeTranslations, t } from '../../shared/i18n'
 import checkFileType from '../../shared/lib/checkFileType'
 import {
     FileWithParams,
@@ -51,6 +52,8 @@ export default function useRootProvider({
     onWarn: warningHandler,
     icons = {},
     classNames = {},
+    localePack,
+    translations: translationOverrides,
     onIntegrationClick = () => {},
     onFileClick = () => {},
     onFileRemove = () => {},
@@ -105,6 +108,12 @@ export default function useRootProvider({
         [mini, propLimit],
     )
     const multiple = useMemo(() => (mini ? false : limit > 1), [limit, mini])
+
+    const translations = useMemo(
+        () => mergeTranslations(localePack ?? en_US, translationOverrides),
+        [localePack, translationOverrides],
+    )
+
     const totalProgress = useMemo(() => {
         const filesProgressMapValues = Object.values(filesProgressMap)
         if (!filesProgressMapValues.length) return 0
@@ -283,14 +292,16 @@ export default function useRootProvider({
         for (const file of newFiles) {
             // Respect the limit strictly; stop when capacity is reached.
             if (newFilesMap.size >= limit) {
-                onWarn('Allowed limit has been surpassed!')
+                onWarn(translations.allowedLimitSurpassed)
                 break
             }
 
             const fileWithParams = fileAppendParams(file)
 
             if (!checkFileType(accept, file)) {
-                onError(`${file.name} has an unsupported type!`)
+                onError(
+                    t(translations.fileUnsupportedType, { name: file.name }),
+                )
                 onFileTypeMismatch(file, accept)
                 revokeFileUrl(fileWithParams)
                 continue
@@ -302,14 +313,20 @@ export default function useRootProvider({
                 !checkFileSize(file, maxFileSize)
             ) {
                 onError(
-                    `${file.name} is larger than ${maxFileSize.size} ${maxFileSize.unit}!`,
+                    t(translations.fileTooLargeName, {
+                        name: file.name,
+                        size: String(maxFileSize.size),
+                        unit: String(maxFileSize.unit),
+                    }),
                 )
                 revokeFileUrl(fileWithParams)
                 continue
             }
 
             if (newFilesMap.has(fileWithParams.id)) {
-                onWarn(`${file.name} has previously been selected`)
+                onWarn(
+                    t(translations.filePreviouslySelected, { name: file.name }),
+                )
                 revokeFileUrl(fileWithParams)
                 continue
             }
@@ -317,7 +334,9 @@ export default function useRootProvider({
             const fileUrl = (file as any).url as string | undefined
             if (fileUrl && existingUrls.has(fileUrl)) {
                 onWarn(
-                    `A file with this url: ${fileUrl} has previously been selected`,
+                    t(translations.fileWithUrlPreviouslySelected, {
+                        url: fileUrl,
+                    }),
                 )
                 revokeFileUrl(fileWithParams)
                 continue
@@ -386,7 +405,13 @@ export default function useRootProvider({
                     }),
                 )
             } catch (error) {
-                files.forEach(file => onError(`Error compressing ${file.name}`))
+                files.forEach(file =>
+                    onError(
+                        t(translations.errorCompressingFile, {
+                            name: file.name,
+                        }),
+                    ),
+                )
                 throw error
             }
         },
@@ -440,6 +465,7 @@ export default function useRootProvider({
                     },
                     customProps,
                     enableAutoCorsConfig,
+                    translations: translations,
                 })
 
                 // Upload files
@@ -521,6 +547,7 @@ export default function useRootProvider({
         setActiveAdapter,
         isAddingMore,
         setIsAddingMore,
+        translations,
         files: selectedFilesMap,
         setFiles: handleSetSelectedFiles,
         dynamicUpload,

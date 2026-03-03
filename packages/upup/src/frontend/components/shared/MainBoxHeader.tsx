@@ -1,4 +1,5 @@
-import React from 'react'
+import React, { useMemo } from 'react'
+import { plural, t } from '../../../shared/i18n'
 import { UploadStatus, useRootContext } from '../../context/RootContext'
 import { cn } from '../../lib/tailwind'
 import ShouldRender from './ShouldRender'
@@ -11,6 +12,8 @@ export default function MainBoxHeader({ handleCancel }: Readonly<Props>) {
     const {
         files,
         setIsAddingMore,
+        isAddingMore,
+        translations: tr,
         props: {
             mini,
             limit,
@@ -23,6 +26,10 @@ export default function MainBoxHeader({ handleCancel }: Readonly<Props>) {
     } = useRootContext()
     const isUploading = uploadStatus === UploadStatus.ONGOING
     const isLimitReached = limit === files.size
+    const cancelText = useMemo(
+        () => (isAddingMore ? tr.cancel : tr.removeAllFiles),
+        [isAddingMore, tr],
+    )
 
     if (mini) return null
 
@@ -47,7 +54,7 @@ export default function MainBoxHeader({ handleCancel }: Readonly<Props>) {
                 onClick={handleCancel}
                 disabled={isUploading || isProcessing}
             >
-                Remove all files
+                {cancelText}
             </button>
             <span
                 className={cn(
@@ -57,9 +64,16 @@ export default function MainBoxHeader({ handleCancel }: Readonly<Props>) {
                     },
                 )}
             >
-                {files.size} file{files.size > 1 ? 's' : ''} selected
+                <ShouldRender if={isAddingMore}>
+                    {tr.addingMoreFiles}
+                </ShouldRender>
+                <ShouldRender if={!isAddingMore}>
+                    {t(plural(tr, 'filesSelected', files.size), {
+                        count: files.size,
+                    })}
+                </ShouldRender>
             </span>
-            <ShouldRender if={limit > 1 && !isLimitReached}>
+            <ShouldRender if={!isAddingMore && limit > 1 && !isLimitReached}>
                 <button
                     className={cn(
                         'upup-col-start-3 upup-col-end-5 upup-flex upup-items-center upup-justify-end upup-gap-1 upup-rounded-md upup-border upup-border-dashed upup-border-blue-400/50 upup-px-2 upup-py-1 upup-text-sm upup-text-blue-600 md:upup-col-start-4',
@@ -72,7 +86,7 @@ export default function MainBoxHeader({ handleCancel }: Readonly<Props>) {
                     onClick={() => setIsAddingMore(true)}
                     disabled={isUploading || isProcessing}
                 >
-                    <ContainerAddMoreIcon /> Add More
+                    <ContainerAddMoreIcon /> {tr.addMore}
                 </button>
             </ShouldRender>
         </div>

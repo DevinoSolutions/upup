@@ -6,17 +6,19 @@ sidebar_position: 5
 
 These optional props are not required for the UpupUploader component to work.
 
-| Prop                                          | Example                                                                                            | Type            | Status   | Default Value                                  |
-| --------------------------------------------- | -------------------------------------------------------------------------------------------------- | --------------- | -------- | ---------------------------------------------- |
-| [accept](#accept)                             | `accept="image/png"`                                                                               | string          | optional | `*`                                            |
-| [dark](#dark)                                 | `dark={true}`                                                                                      | boolean         | optional | `false`                                        |
-| [driveConfigs](#driveconfigs)                 | `driveConfigs={{ oneDrive: { onedrive_client_id: process.env.NEXT_PUBLIC_ONEDRIVE_CLIENT_ID! } }}` | object          | optional | -                                              |
-| [imageEditor](#imageeditor)                   | `imageEditor={true}`                                                                               | boolean \| ImageEditorOptions | optional | `false`                        |
-| [limit](#limit)                               | `limit={5}`                                                                                        | number          | optional | `1`                                            |
-| [maxFileSize](#maxfilesize)                   | `maxFileSize={{ size: 20, unit: "MB" }}`                                                           | object          | optional | `{ size: 10, unit: "MB" }`                     |
-| [mini](#mini)                                 | `mini={true}`                                                                                      | boolean         | optional | `false`                                        |
-| [uploadAdapters](#uploadadapters)             | `uploadAdapters={[UploadAdapter.LINK]}`                                                            | UploadAdapter[] | optional | `[UploadAdapter.INTERNAL, UploadAdapter.LINK]` |
-| [enableAutoCorsConfig](#enableautocorsconfig) | `enableAutoCorsConfig={false}`                                                                     | boolean         | optional | `false`                                        |
+| Prop                                          | Example                                                                                            | Type                 | Status   | Default Value                                  |
+| --------------------------------------------- | -------------------------------------------------------------------------------------------------- | -------------------- | -------- | ---------------------------------------------- |
+| [accept](#accept)                             | `accept="image/png"`                                                                               | string               | optional | `*`                                            |
+| [dark](#dark)                                 | `dark={true}`                                                                                      | boolean              | optional | `false`                                        |
+| [driveConfigs](#driveconfigs)                 | `driveConfigs={{ oneDrive: { onedrive_client_id: process.env.NEXT_PUBLIC_ONEDRIVE_CLIENT_ID! } }}` | object               | optional | -                                              |
+| [imageEditor](#imageeditor)                   | `imageEditor={true}`                                                                               | `boolean \| ImageEditorOptions` | optional | `false`                        |
+| [limit](#limit)                               | `limit={5}`                                                                                        | number               | optional | `1`                                            |
+| [localePack](#localepack)                             | `localePack={ja_JP}`                                                                                   | `Translations`       | optional | `en_US`                                        |
+| [maxFileSize](#maxfilesize)                   | `maxFileSize={{ size: 20, unit: "MB" }}`                                                           | object               | optional | `{ size: 10, unit: "MB" }`                     |
+| [mini](#mini)                                 | `mini={true}`                                                                                      | boolean              | optional | `false`                                        |
+| [translations](#translations)                | `translations={{ browseFiles: "pick files" }}`                                                     | `Partial<Translations>` | optional | -                                              |
+| [uploadAdapters](#uploadadapters)             | `uploadAdapters={[UploadAdapter.LINK]}`                                                            | `UploadAdapter[]`    | optional | `[UploadAdapter.INTERNAL, UploadAdapter.LINK]` |
+| [enableAutoCorsConfig](#enableautocorsconfig) | `enableAutoCorsConfig={false}`                                                                     | boolean              | optional | `false`                                        |
 
 ## `accept`
 
@@ -57,19 +59,9 @@ For Next.js, don't forget to add the `NEXT_PUBLIC_` before the environment varia
 
 ## `imageEditor`
 
-Enables the built-in image editor powered by [Filerobot Image Editor](https://github.com/scaleflex/filerobot-image-editor). Pass `true` for defaults or an `ImageEditorOptions` object for fine-grained control. See the [Image Editor guide](./image-editor.md) for full details.
+Enables the built-in image editor. Set to `true` for defaults or pass an `ImageEditorOptions` object for advanced behavior.
 
-```tsx
-// Simple boolean
-<UpupUploader imageEditor />
-
-// With options
-<UpupUploader imageEditor={{ enabled: true, autoOpen: 'single' }} />
-```
-
-:::note
-You must install `react-filerobot-image-editor` separately — it is an optional peer dependency.
-:::
+See [Image Editor](/docs/api-reference/upupuploader/image-editor) for full configuration.
 
 ## `limit`
 
@@ -78,6 +70,20 @@ Maximum number of files allowed for upload. When using [`mini`](#mini) mode, thi
 :::note
 Files beyond the limit will trigger [`onWarn`](/docs/api-reference/upupuploader/event-handlers.md#onwarn) callback with a message:"Allowed limit has been surpassed!"
 :::
+
+## `localePack`
+
+A complete locale object that replaces the default English strings. Import a built-in locale from `upup-react-file-uploader/locales` and pass it as `localePack`:
+
+```tsx
+import { ja_JP } from 'upup-react-file-uploader/locales'
+
+<UpupUploader localePack={ja_JP} />
+```
+
+Available locales: `en_US`, `ar_SA`, `de_DE`, `es_ES`, `fr_FR`, `ja_JP`, `ko_KR`, `zh_CN`, `zh_TW`.
+
+See [Localization](/docs/localization) for full details, interpolation, and custom locale authoring.
 
 ## `maxFileSize`
 
@@ -92,6 +98,32 @@ Enables compact mode for the uploader component. When enabled:
 - Limits file selection to 1 file (overrides [`limit`](#limit) prop)
 - Uses smaller container dimensions
 - Simplifies UI elements
+
+## `translations`
+
+Partial overrides for individual translation keys. These are merged on top of the active [`localePack`](#localepack) (or the default `en_US`):
+
+```tsx
+<UpupUploader
+  translations={{
+    browseFiles: 'pick files',
+    addMore: 'Select more',
+  }}
+/>
+```
+
+You can combine `localePack` and `translations` — the overrides take priority:
+
+```tsx
+import { fr_FR } from 'upup-react-file-uploader/locales'
+
+<UpupUploader
+  localePack={fr_FR}
+  translations={{ browseFiles: 'choisir des fichiers' }}
+/>
+```
+
+See [Localization](/docs/localization) for the full list of keys, interpolation, and pluralization.
 
 ## `uploadAdapters`
 

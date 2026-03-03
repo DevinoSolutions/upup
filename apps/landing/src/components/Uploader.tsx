@@ -2,7 +2,7 @@
 
 import React, {useContext} from "react";
 
-import {UpupUploader, UpupProvider, UploadAdapter} from 'upup-react-file-uploader'
+import {UpupUploader, UpupProvider, UploadAdapter, Translations} from 'upup-react-file-uploader'
 
 import "upup-react-file-uploader/styles";
 import {ThemeContext} from "@/lib/contexts";
@@ -35,6 +35,7 @@ interface Props {
     allowPreview?: boolean;
     shouldCompress?: boolean;
     fileSizeLimit?: number; // in MB
+    localePack?: Translations;
     imageEditor?: boolean;
 }
 
@@ -46,7 +47,8 @@ export default function Uploader({
                                      allowPreview = true,
                                      shouldCompress = false,
                                      fileSizeLimit = 25,
-                                     imageEditor = false
+                                     localePack,
+                                     imageEditor = false,
                                  }: Readonly<Props>) {
     // Detect dark mode using Tailwind's class strategy
     const {isDarkMode} = useContext(ThemeContext)
@@ -92,42 +94,45 @@ export default function Uploader({
     };
 
     return (
-        <div className="flex justify-center items-center w-full h-full lg:min-h-[auto] min-h-[70vh]">
-            <UpupUploader
-                provider={UpupProvider.BackBlaze}
-                limit={limit}
-                tokenEndpoint={customFields.tokenEndpoint}
-                uploadAdapters={uploadAdapters}
-                driveConfigs={customFields.driveConfigs}
-                dark={isDarkMode}
-                mini={mini}
-                allowPreview={allowPreview}
-                shouldCompress={shouldCompress}
-                imageEditor={imageEditor}
-                maxFileSize={{ size: fileSizeLimit, unit: 'MB' }}
-                classNames={customClassNames}
-                onFilesUploadComplete={(files) => {
-                    console.log("Files uploaded successfully:", files);
-                    toast.success("Files uploaded successfully!");
-                }}
-                onError={(e) => {
-                    console.error(e);
-                    toast.error(e);
-                }}
-                onWarn={(warning) => {
-                    console.warn(warning);
-                    toast.warn(warning);
-                }}
-                onFileTypeMismatch={(file, acceptedTypes) => {
-                    toast.error(`File type not supported. Accepted types: ${acceptedTypes}`);
-                }}
-                onFileUploadStart={(file) => {
-                    toast.info(`Starting upload: ${file.name}`);
-                }}
-                onFileUploadComplete={(file) => {
-                    toast.success(`Upload complete: ${file.name}`);
-                }}
-            />
-        </div>
+      <div className="flex justify-center items-center w-full h-full lg:min-h-[auto] min-h-[70vh]">
+        <UpupUploader
+          provider={UpupProvider.BackBlaze}
+          limit={limit}
+          tokenEndpoint={customFields.tokenEndpoint}
+          uploadAdapters={uploadAdapters}
+          driveConfigs={customFields.driveConfigs}
+          dark={isDarkMode}
+          mini={mini}
+          allowPreview={allowPreview}
+          shouldCompress={shouldCompress}
+          imageEditor={imageEditor}
+          maxFileSize={{ size: fileSizeLimit, unit: "MB" }}
+          classNames={customClassNames}
+          localePack={localePack}
+          onFilesUploadComplete={(files) => {
+            console.log("Files uploaded successfully:", files);
+            toast.success("Files uploaded successfully!");
+          }}
+          onError={(e) => {
+            console.error(e);
+            toast.error(e);
+          }}
+          onWarn={(warning) => {
+            console.warn(warning);
+            toast.warn(warning);
+          }}
+          onFileTypeMismatch={(file, acceptedTypes) => {
+            toast.error(
+              `File type not supported. Accepted types: ${acceptedTypes}`,
+            );
+          }}
+          onFileUploadStart={(file) => {
+            toast.info(`Starting upload: ${file.name}`);
+          }}
+          onFileUploadComplete={(file) => {
+            toast.success(`Upload complete: ${file.name}`);
+          }}
+        />
+      </div>
     );
 }

@@ -1,4 +1,5 @@
 import React, { useCallback } from 'react'
+import { plural, t } from '../../shared/i18n'
 import { useRootContext } from '../context/RootContext'
 import useAdapterSelector from '../hooks/useAdapterSelector'
 import { cn } from '../lib/tailwind'
@@ -16,6 +17,7 @@ export default function AdapterSelector() {
             classNames,
             showSelectFolderButton,
         },
+        translations: tr,
         isAddingMore,
         setIsAddingMore,
         inputRef,
@@ -193,8 +195,7 @@ export default function AdapterSelector() {
                             },
                         )}
                     >
-                        Drag your file
-                        {limit > 1 ? 's' : ''} or
+                        {limit > 1 ? tr.dragFilesOr : tr.dragFileOr}
                     </span>
                     <button
                         type="button"
@@ -207,7 +208,7 @@ export default function AdapterSelector() {
                         )}
                         onClick={handleBrowseFilesClick}
                     >
-                        browse files
+                        {tr.browseFiles}
                     </button>
                     {showSelectFolderButton && (
                         <>
@@ -221,7 +222,7 @@ export default function AdapterSelector() {
                                 )}
                             >
                                 {' '}
-                                or
+                                {tr.or}
                             </span>
                             <button
                                 type="button"
@@ -234,7 +235,7 @@ export default function AdapterSelector() {
                                 )}
                                 onClick={handleSelectFolderClick}
                             >
-                                select a folder
+                                {tr.selectAFolder}
                             </button>
                         </>
                     )}
@@ -249,8 +250,10 @@ export default function AdapterSelector() {
                 >
                     {maxFileSize?.size && maxFileSize?.unit && (
                         <>
-                            Max {maxFileSize.size} {maxFileSize.unit} file
-                            {limit > 1 ? 's are ' : ' is '}allowed
+                            {t(plural(tr, 'maxFileSizeAllowed', limit), {
+                                size: maxFileSize.size,
+                                unit: maxFileSize.unit,
+                            })}
                         </>
                     )}
                 </p>

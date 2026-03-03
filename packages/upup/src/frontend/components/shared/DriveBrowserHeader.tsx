@@ -29,6 +29,7 @@ export default function DriveBrowserHeader({
 }: Readonly<Props>) {
     const {
         setActiveAdapter,
+        translations: tr,
         props: { dark, classNames },
     } = useRootContext()
 
@@ -108,7 +109,7 @@ export default function DriveBrowserHeader({
                             setActiveAdapter(undefined)
                         }}
                     >
-                        Log out
+                        {tr.logOut}
                     </button>
                 </div>
             </div>
@@ -134,7 +135,7 @@ export default function DriveBrowserHeader({
                             },
                             classNames.driveSearchInput,
                         )}
-                        placeholder="Search"
+                        placeholder={tr.search}
                         value={searchTerm}
                         onChange={e => onSearch(e.currentTarget.value)}
                     />

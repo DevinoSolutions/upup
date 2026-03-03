@@ -1,3 +1,5 @@
+import { en_US, mergeTranslations, t } from '../../../shared/i18n'
+import type { Translations } from '../../../shared/i18n/types'
 import {
     FileWithParams,
     PresignedUrlResponse,
@@ -18,14 +20,17 @@ type UploadConfig = Pick<
         maxFileSize?: number
     }
     enableAutoCorsConfig: boolean
+    translations?: Partial<Translations>
 }
 
 export class ProviderSDK implements StorageSDK {
     private readonly config: UploadConfig
+    private readonly translations: Translations
     private uploadCount = 0
 
     constructor(config: UploadConfig) {
         this.config = config
+        this.translations = mergeTranslations(en_US, config.translations)
         this.validateConfig()
         this.uploadCount = 0
     }
@@ -36,7 +41,10 @@ export class ProviderSDK implements StorageSDK {
     ): Promise<UploadResult> {
         try {
             if (!this.config.constraints?.multiple && this.uploadCount > 0)
-                throw new Error('Multiple file uploads are not allowed')
+                throw new UploadError(
+                    this.translations.multipleFilesNotAllowed,
+                    UploadErrorType.FILE_VALIDATION_ERROR,
+                )
 
             options.onFileUploadStart?.(file)
             // Get presigned URL from backend
@@ -107,7 +115,10 @@ export class ProviderSDK implements StorageSDK {
 
         if (!response.ok) {
             const errorData = await response.json()
-            throw new Error(errorData.details || 'Failed to get upload URL')
+            throw new UploadError(
+                errorData.details || this.translations.failedToGetUploadUrl,
+                UploadErrorType.PRESIGNED_URL_ERROR,
+            )
         }
 
         const data = await response.json()
@@ -164,8 +175,13 @@ export class ProviderSDK implements StorageSDK {
                     )
                 } else {
                     reject(
-                        new Error(
-                            `Status: ${xhr.status} (${xhr.statusText}). Details: ${xhr.responseText}`,
+                        new UploadError(
+                            t(this.translations.statusError, {
+                                status: String(xhr.status),
+                                statusText: xhr.statusText ?? '',
+                                details: xhr.responseText ?? '',
+                            }),
+                            UploadErrorType.UNKNOWN_UPLOAD_ERROR,
                         ),
                     )
                 }
@@ -173,8 +189,12 @@ export class ProviderSDK implements StorageSDK {
 
             xhr.addEventListener('error', () =>
                 reject(
-                    new Error(
-                        `Network error during upload - Status: ${xhr.status} (${xhr.statusText})`,
+                    new UploadError(
+                        t(this.translations.networkErrorDuringUpload, {
+                            status: String(xhr.status),
+                            statusText: xhr.statusText ?? '',
+                        }),
+                        UploadErrorType.UNKNOWN_UPLOAD_ERROR,
                     ),
                 ),
             )
@@ -193,7 +213,9 @@ export class ProviderSDK implements StorageSDK {
         // Validate required fields
         if (missing.length > 0) {
             throw new UploadError(
-                `Missing required configuration: ${missing.join(', ')}`,
+                t(this.translations.missingRequiredConfiguration, {
+                    missing: missing.join(', '),
+                }),
                 UploadErrorType.FILE_VALIDATION_ERROR,
             )
         }
@@ -201,9 +223,10 @@ export class ProviderSDK implements StorageSDK {
         // Validate provider enum
         if (!Object.values(UpupProvider).includes(this.config.provider)) {
             throw new UploadError(
-                `Invalid provider: ${
-                    this.config.provider
-                }. Valid options: ${Object.values(UpupProvider).join(', ')}`,
+                t(this.translations.invalidProvider, {
+                    provider: String(this.config.provider),
+                    validOptions: Object.values(UpupProvider).join(', '),
+                }),
                 UploadErrorType.CORS_CONFIG_ERROR,
             )
         }
@@ -213,7 +236,10 @@ export class ProviderSDK implements StorageSDK {
             new URL(this.config.tokenEndpoint)
         } catch (e) {
             throw new UploadError(
-                `Invalid tokenEndpoint URL: ${this.config.tokenEndpoint}` + e,
+                t(this.translations.invalidTokenEndpoint, {
+                    tokenEndpoint: String(this.config.tokenEndpoint),
+                    error: String(e),
+                }),
                 UploadErrorType.CORS_CONFIG_ERROR,
             )
         }
@@ -224,7 +250,7 @@ export class ProviderSDK implements StorageSDK {
 
             if (maxFileSize !== undefined && maxFileSize <= 0) {
                 throw new UploadError(
-                    `maxFileSize must be greater than 0`,
+                    this.translations.maxFileSizeMustBeGreater,
                     UploadErrorType.FILE_VALIDATION_ERROR,
                 )
             }
@@ -236,7 +262,9 @@ export class ProviderSDK implements StorageSDK {
                 )
             ) {
                 throw new UploadError(
-                    `Invalid accept format: ${accept}. Use MIME types, */*, * or extensions (like .fbx)`,
+                    t(this.translations.invalidAcceptFormat, {
+                        accept: String(accept),
+                    }),
                     UploadErrorType.FILE_VALIDATION_ERROR,
                 )
             }
@@ -258,7 +286,7 @@ export class ProviderSDK implements StorageSDK {
                 case 'FORBIDDEN':
                 case 'AUTHENTICATION_FAILED':
                     throw new UploadError(
-                        'Unauthorized access to Provider',
+                        this.translations.unauthorizedAccess,
                         UploadErrorType.PERMISSION_ERROR,
                     )
 
@@ -266,14 +294,14 @@ export class ProviderSDK implements StorageSDK {
                 case 'URL_EXPIRED':
                 case 'PRESIGNED_URL_INVALID':
                     throw new UploadError(
-                        'Presigned URL has expired or is invalid',
+                        this.translations.presignedUrlInvalid,
                         UploadErrorType.EXPIRED_URL,
                         true,
                     )
 
                 case 'TEMPORARY_CREDENTIALS_INVALID':
                     throw new UploadError(
-                        'Temporary credentials are no longer valid',
+                        this.translations.temporaryCredentialsInvalid,
                         UploadErrorType.TEMPORARY_CREDENTIALS_ERROR,
                         true,
                     )
@@ -282,20 +310,20 @@ export class ProviderSDK implements StorageSDK {
                 case 'CORS_MISCONFIGURED':
                 case 'ORIGIN_NOT_ALLOWED':
                     throw new UploadError(
-                        'CORS configuration prevents file upload',
+                        this.translations.corsMisconfigured,
                         UploadErrorType.CORS_CONFIG_ERROR,
                     )
 
                 // File Validation Errors
                 case 'FILE_TOO_LARGE':
                     throw new UploadError(
-                        'File exceeds maximum size limit',
+                        this.translations.fileTooLarge,
                         UploadErrorType.FILE_VALIDATION_ERROR,
                     )
 
                 case 'INVALID_FILE_TYPE':
                     throw new UploadError(
-                        'File type is not allowed',
+                        this.translations.invalidFileType,
                         UploadErrorType.FILE_VALIDATION_ERROR,
                     )
 
@@ -303,20 +331,20 @@ export class ProviderSDK implements StorageSDK {
                 case 'NETWORK_ERROR':
                 case 'CONNECTION_TIMEOUT':
                     throw new UploadError(
-                        'Network error during upload',
+                        this.translations.networkErrorDuringUpload,
                         UploadErrorType.UNKNOWN_UPLOAD_ERROR,
                         true,
                     )
 
                 case 'STORAGE_QUOTA_EXCEEDED':
                     throw new UploadError(
-                        'Storage quota has been exceeded',
+                        this.translations.storageQuotaExceeded,
                         UploadErrorType.PERMISSION_ERROR,
                     )
 
                 case 'SIGNED_URL_GENERATION_FAILED':
                     throw new UploadError(
-                        'Failed to generate signed upload URL',
+                        this.translations.signedUrlGenerationFailed,
                         UploadErrorType.SIGNED_URL_ERROR,
                         true,
                     )
@@ -324,7 +352,9 @@ export class ProviderSDK implements StorageSDK {
                 // Catch-all for any unhandled specific error codes
                 default:
                     throw new UploadError(
-                        `Upload failed with error code: ${errorCode}`,
+                        t(this.translations.uploadFailedWithCode, {
+                            code: String(errorCode),
+                        }),
                         UploadErrorType.UNKNOWN_UPLOAD_ERROR,
                         true,
                     )
@@ -333,7 +363,9 @@ export class ProviderSDK implements StorageSDK {
 
         // Fallback for errors without specific codes
         throw new UploadError(
-            `Upload failed: ${(error as Error).message}`,
+            t(this.translations.uploadFailed, {
+                message: (error as Error).message,
+            }),
             UploadErrorType.UNKNOWN_UPLOAD_ERROR,
             true,
         )
