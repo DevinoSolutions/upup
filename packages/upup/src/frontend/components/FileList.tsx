@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion'
 import React, { memo } from 'react'
+import { plural, t } from '../../shared/i18n'
 import {
     TbPlayerPauseFilled,
     TbPlayerPlayFilled,
@@ -33,6 +34,7 @@ export default memo(function FileList() {
         isAddingMore,
         activeAdapter,
         files,
+        translations: tr,
         upload: {
             proceedUpload,
             uploadStatus,
@@ -143,7 +145,9 @@ export default memo(function FileList() {
                             isProcessing
                         }
                     >
-                        Upload {files.size} file{files.size > 1 ? 's' : ''}
+                        {t(plural(tr, 'uploadFiles', files.size), {
+                            count: files.size,
+                        })}
                     </button>
                 </ShouldRender>
                 <ShouldRender
@@ -178,7 +182,7 @@ export default memo(function FileList() {
                         )}
                         onClick={handleDone}
                     >
-                        Done
+                        {tr.done}
                     </button>
                 </ShouldRender>
                 <div className="upup-flex upup-flex-1 upup-flex-col upup-gap-1">

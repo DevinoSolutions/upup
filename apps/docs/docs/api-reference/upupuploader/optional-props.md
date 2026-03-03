@@ -6,18 +6,21 @@ sidebar_position: 5
 
 These optional props are not required for the UpupUploader component to work.
 
-| Prop                                          | Example                                                                                            | Type            | Status   | Default Value                                  |
-| --------------------------------------------- | -------------------------------------------------------------------------------------------------- | --------------- | -------- | ---------------------------------------------- |
-| [accept](#accept)                             | `accept="image/png"`                                                                               | string          | optional | `*`                                            |
-| [dark](#dark)                                 | `dark={true}`                                                                                      | boolean         | optional | `false`                                        |
-| [driveConfigs](#driveconfigs)                 | `driveConfigs={{ oneDrive: { onedrive_client_id: process.env.NEXT_PUBLIC_ONEDRIVE_CLIENT_ID! } }}` | object          | optional | -                                              |
-| [limit](#limit)                               | `limit={5}`                                                                                        | number          | optional | `1`                                            |
-| [maxFileSize](#maxfilesize)                   | `maxFileSize={{ size: 20, unit: "MB" }}`                                                           | object          | optional | `{ size: 10, unit: "MB" }`                     |
-| [maxRetries](#maxretries)                     | `maxRetries={3}`                                                                                   | number          | optional | -                                              |
-| [mini](#mini)                                 | `mini={true}`                                                                                      | boolean         | optional | `false`                                        |
-| [resumable](#resumable)                       | `resumable={{ mode: 'multipart' }}`                                                                | object          | optional | -                                              |
-| [uploadAdapters](#uploadadapters)             | `uploadAdapters={[UploadAdapter.LINK]}`                                                            | UploadAdapter[] | optional | `[UploadAdapter.INTERNAL, UploadAdapter.LINK]` |
-| [enableAutoCorsConfig](#enableautocorsconfig) | `enableAutoCorsConfig={false}`                                                                     | boolean         | optional | `false`                                        |
+| Prop                                          | Example                                                                                            | Type                 | Status   | Default Value                                  |
+| --------------------------------------------- | -------------------------------------------------------------------------------------------------- | -------------------- | -------- | ---------------------------------------------- |
+| [accept](#accept)                             | `accept="image/png"`                                                                               | string               | optional | `*`                                            |
+| [dark](#dark)                                 | `dark={true}`                                                                                      | boolean              | optional | `false`                                        |
+| [driveConfigs](#driveconfigs)                 | `driveConfigs={{ oneDrive: { onedrive_client_id: process.env.NEXT_PUBLIC_ONEDRIVE_CLIENT_ID! } }}` | object               | optional | -                                              |
+| [imageEditor](#imageeditor)                   | `imageEditor={true}`                                                                               | `boolean \| ImageEditorOptions` | optional | `false`                        |
+| [limit](#limit)                               | `limit={5}`                                                                                        | number               | optional | `1`                                            |
+| [localePack](#localepack)                     | `localePack={ja_JP}`                                                                               | `Translations`       | optional | `en_US`                                        |
+| [maxFileSize](#maxfilesize)                   | `maxFileSize={{ size: 20, unit: "MB" }}`                                                           | object               | optional | `{ size: 10, unit: "MB" }`                     |
+| [maxRetries](#maxretries)                     | `maxRetries={3}`                                                                                   | number               | optional | -                                              |
+| [mini](#mini)                                 | `mini={true}`                                                                                      | boolean              | optional | `false`                                        |
+| [resumable](#resumable)                       | `resumable={{ mode: 'multipart' }}`                                                                | object               | optional | -                                              |
+| [translations](#translations)                 | `translations={{ browseFiles: "pick files" }}`                                                     | `Partial<Translations>` | optional | -                                              |
+| [uploadAdapters](#uploadadapters)             | `uploadAdapters={[UploadAdapter.LINK]}`                                                            | `UploadAdapter[]`    | optional | `[UploadAdapter.INTERNAL, UploadAdapter.LINK]` |
+| [enableAutoCorsConfig](#enableautocorsconfig) | `enableAutoCorsConfig={false}`                                                                     | boolean              | optional | `false`                                        |
 
 ## `accept`
 
@@ -56,6 +59,12 @@ driveConfigs={{
 For Next.js, don't forget to add the `NEXT_PUBLIC_` before the environment variable name. For instance: `GOOGLE_API_KEY` will now become `NEXT_PUBLIC_GOOGLE_API_KEY`
 :::
 
+## `imageEditor`
+
+Enables the built-in image editor. Set to `true` for defaults or pass an `ImageEditorOptions` object for advanced behavior.
+
+See [Image Editor](/docs/api-reference/upupuploader/image-editor) for full configuration.
+
 ## `limit`
 
 Maximum number of files allowed for upload. When using [`mini`](#mini) mode, this is automatically set to 1.
@@ -63,6 +72,20 @@ Maximum number of files allowed for upload. When using [`mini`](#mini) mode, thi
 :::note
 Files beyond the limit will trigger [`onWarn`](/docs/api-reference/upupuploader/event-handlers.md#onwarn) callback with a message:"Allowed limit has been surpassed!"
 :::
+
+## `localePack`
+
+A complete locale object that replaces the default English strings. Import a built-in locale from `upup-react-file-uploader/locales` and pass it as `localePack`:
+
+```tsx
+import { ja_JP } from 'upup-react-file-uploader/locales'
+
+<UpupUploader localePack={ja_JP} />
+```
+
+Available locales: `en_US`, `ar_SA`, `de_DE`, `es_ES`, `fr_FR`, `ja_JP`, `ko_KR`, `zh_CN`, `zh_TW`.
+
+See [Localization](/docs/localization) for full details, interpolation, and custom locale authoring.
 
 ## `maxFileSize`
 
@@ -153,6 +176,32 @@ See the full [Resumable Uploads guide](/docs/resumable-uploads.md) for server se
 :::note
 Resumable uploads are only supported for S3-compatible providers (AWS, BackBlaze, DigitalOcean). Azure uploads always use a single PUT request regardless of this setting.
 :::
+
+## `translations`
+
+Partial overrides for individual translation keys. These are merged on top of the active [`localePack`](#localepack) (or the default `en_US`):
+
+```tsx
+<UpupUploader
+  translations={{
+    browseFiles: 'pick files',
+    addMore: 'Select more',
+  }}
+/>
+```
+
+You can combine `localePack` and `translations` — the overrides take priority:
+
+```tsx
+import { fr_FR } from 'upup-react-file-uploader/locales'
+
+<UpupUploader
+  localePack={fr_FR}
+  translations={{ browseFiles: 'choisir des fichiers' }}
+/>
+```
+
+See [Localization](/docs/localization) for the full list of keys, interpolation, and pluralization.
 
 ## `uploadAdapters`
 

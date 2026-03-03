@@ -2,7 +2,7 @@
 
 import React, {useContext} from "react";
 
-import {UpupUploader, UpupProvider, UploadAdapter} from 'upup-react-file-uploader'
+import {UpupUploader, UpupProvider, UploadAdapter, Translations} from 'upup-react-file-uploader'
 
 import "upup-react-file-uploader/styles";
 import {ThemeContext} from "@/lib/contexts";
@@ -36,6 +36,8 @@ interface Props {
     shouldCompress?: boolean;
     fileSizeLimit?: number; // in MB
     maxRetries?: number;
+    localePack?: Translations;
+    imageEditor?: boolean;
 }
 
 export default function Uploader({
@@ -47,6 +49,8 @@ export default function Uploader({
                                      shouldCompress = false,
                                      fileSizeLimit = 25,
                                      maxRetries,
+                                     localePack,
+                                     imageEditor = false,
                                  }: Readonly<Props>) {
     // Detect dark mode using Tailwind's class strategy
     const {isDarkMode} = useContext(ThemeContext)
@@ -103,10 +107,12 @@ export default function Uploader({
           mini={mini}
           allowPreview={allowPreview}
           shouldCompress={shouldCompress}
+          imageEditor={imageEditor}
           maxFileSize={{ size: fileSizeLimit, unit: "MB" }}
           classNames={customClassNames}
           maxRetries={maxRetries}
           resumable={{ mode: "multipart" }}
+          localePack={localePack}
           onFilesUploadComplete={(files) => {
             console.log("Files uploaded successfully:", files);
             toast.success("Files uploaded successfully!");

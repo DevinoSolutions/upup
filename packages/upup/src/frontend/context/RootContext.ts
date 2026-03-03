@@ -10,6 +10,8 @@ import {
     FileWithParams,
     GoogleDriveConfigs,
     OneDriveConfigs,
+    ResolvedImageEditorOptions,
+    Translations,
     UploadAdapter,
     UpupUploaderProps,
     UpupUploaderPropsIcons,
@@ -65,12 +67,15 @@ type ContextProps = Required<
     Pick<UpupUploaderProps, 'maxFileSize' | 'maxRetries' | 'resumable'> & {
         multiple: boolean
         icons: Required<UpupUploaderPropsIcons>
+        imageEditor: ResolvedImageEditorOptions
     }
 
 export interface IRootContext {
     inputRef: RefObject<HTMLInputElement | null>
     activeAdapter?: UploadAdapter
     setActiveAdapter: Dispatch<SetStateAction<UploadAdapter | undefined>>
+
+    translations: Translations
 
     files: Map<string, FileWithParams>
     setFiles: (newFiles: File[]) => void
@@ -87,6 +92,12 @@ export interface IRootContext {
     handleCancel: () => void
     handlePause: () => void
     handleResume: () => void
+
+    editingFile: FileWithParams | null
+    openImageEditor: (file: FileWithParams) => void
+    closeImageEditor: () => void
+    saveImageEdit: (editedImageData: string, mimeType?: string) => void
+    replaceFile: (fileId: string, newFile: FileWithParams) => void
 
     oneDriveConfigs?: OneDriveConfigs
     googleDriveConfigs?: GoogleDriveConfigs

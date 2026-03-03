@@ -8,6 +8,7 @@ import React, {
     useMemo,
     useState,
 } from 'react'
+import { plural, t } from '../../../shared/i18n'
 import { useRootContext } from '../../context/RootContext'
 import { searchDriveFiles } from '../../lib/file'
 import { cn } from '../../lib/tailwind'
@@ -62,6 +63,7 @@ export default function DriveBrowser({
 }: Readonly<Props>) {
     const {
         props: { accept, dark, classNames },
+        translations: tr,
     } = useRootContext()
     const [searchTerm, setSearchTerm] = useState('')
     const items = (path[path.length - 1]?.children as Array<any>)?.filter(
@@ -122,7 +124,7 @@ export default function DriveBrowser({
                             <ShouldRender if={!displayedItems.length}>
                                 <div className="upup-flex upup-h-full upup-flex-col upup-items-center upup-justify-center">
                                     <p className="upup-text-xs upup-opacity-70">
-                                        No accepted files found
+                                        {tr.noAcceptedFilesFound}
                                     </p>
                                 </div>
                             </ShouldRender>
@@ -162,7 +164,7 @@ export default function DriveBrowser({
                                         }
                                         disabled={showLoader}
                                     >
-                                        Select this folder
+                                        {tr.selectThisFolder}
                                     </button>
                                 </ShouldRender>
                                 <button
@@ -178,10 +180,14 @@ export default function DriveBrowser({
                                     onClick={handleSubmit}
                                     disabled={showLoader}
                                 >
-                                    Add {selectedFiles.length} file
-                                    <ShouldRender if={selectedFiles.length > 1}>
-                                        s
-                                    </ShouldRender>
+                                    {t(
+                                        plural(
+                                            tr,
+                                            'addFiles',
+                                            selectedFiles.length,
+                                        ),
+                                        { count: selectedFiles.length },
+                                    )}
                                 </button>
                                 <button
                                     className={cn(
@@ -195,7 +201,7 @@ export default function DriveBrowser({
                                     onClick={handleCancelDownload}
                                     disabled={showLoader}
                                 >
-                                    Cancel
+                                    {tr.cancel}
                                 </button>
                             </motion.div>
                         </MyAnimatePresence>

@@ -27,28 +27,20 @@ export const metadata: Metadata = {
     icons: { icon: "/favicon.ico" },
     title: siteConfig.title,
     description: siteConfig.tagline,
-    keywords: [
-        "React file uploader",
-        "file upload component",
-        "Google Drive uploader",
-        "S3 upload",
-        "OneDrive integration",
-        "drag and drop uploader",
-        "cloud storage React component",
-    ],
     openGraph: {
-        title: "Upup – The True Best React File Upload Component",
+        title: "Upup – Open-Source React File Upload Library",
         description:
-            "React file uploader with drag & drop, instant previews, and cloud storage integrations including Google Drive, OneDrive, and S3.",
+            "Free React & TypeScript file upload library & npm package. Customizable drag & drop dropzone with progress bar, retry, file picker & upload button. Upload images, videos & large files via S3 or Azure.",
         images: ["https://useupup.com/img/social-card.png"],
         url: "https://useupup.com/",
         type: "website",
+        siteName: "Upup – React File Uploader",
     },
     twitter: {
         card: "summary_large_image",
-        title: "Upup – The True Best React File Upload Component",
+        title: "Upup – Open-Source React File Upload Library",
         description:
-            "Open-source React uploader with drag-and-drop, previews, and cloud storage integrations.",
+            "React & TypeScript file upload npm package with drag & drop dropzone, file picker, progress bar & retry. Upload images, videos & large files to S3, Azure or Google Drive. Open-source.",
         images: ["https://useupup.com/img/social-card.png"],
     },
 };
