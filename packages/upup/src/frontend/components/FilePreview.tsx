@@ -41,11 +41,13 @@ export default memo(function FilePreview(props: Props) {
 
     const {
         handleFileRemove,
+        openImageEditor,
         upload: { filesProgressMap },
         props: {
             classNames,
             icons: { FileDeleteIcon },
             allowPreview,
+            imageEditor,
         },
         files,
     } = useRootContext()
@@ -83,6 +85,12 @@ export default memo(function FilePreview(props: Props) {
     const onHandleFileRemove: MouseEventHandler<HTMLButtonElement> = e => {
         e.stopPropagation()
         handleFileRemove(fileId)
+    }
+
+    const onHandleEditImage: MouseEventHandler<HTMLButtonElement> = e => {
+        e.stopPropagation()
+        const file = files.get(fileId)
+        if (file) openImageEditor(file)
     }
 
     const formatFileSize = (bytes?: number) => {
@@ -124,6 +132,33 @@ export default memo(function FilePreview(props: Props) {
                         />
                     </div>
                 </ShouldRender>
+
+                {isImage && imageEditor.enabled && (
+                    <button
+                        className={cn(
+                            'upup-absolute upup-right-1.5 upup-top-8 upup-z-10',
+                            'upup-flex upup-h-5 upup-w-5 upup-items-center upup-justify-center',
+                            'upup-rounded-full upup-bg-white upup-text-blue-600 upup-shadow-sm',
+                            'hover:upup-bg-white hover:upup-text-blue-700',
+                            'upup-ring-1 upup-ring-black/5',
+                            'disabled:upup-cursor-not-allowed disabled:upup-opacity-50',
+                        )}
+                        onClick={onHandleEditImage}
+                        type="button"
+                        disabled={!!progress}
+                        aria-label="Edit image"
+                    >
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 20 20"
+                            fill="currentColor"
+                            className="upup-h-3 upup-w-3"
+                            aria-hidden="true"
+                        >
+                            <path d="M2.695 14.763l-1.262 3.154a.5.5 0 00.65.65l3.155-1.262a4 4 0 001.343-.885L17.5 5.5a2.121 2.121 0 00-3-3L3.58 13.42a4 4 0 00-.885 1.343z" />
+                        </svg>
+                    </button>
+                )}
 
                 <button
                     className={cn(
