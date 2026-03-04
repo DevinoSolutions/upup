@@ -36,6 +36,7 @@ export default function useOneDriveAuth({
     const [isInitialized, setIsInitialized] = useState(false)
     const [isAuthenticating, setIsAuthenticating] = useState(false)
     const [isAuthInProgress, setIsAuthInProgress] = useState(false)
+    const [authCancelled, setAuthCancelled] = useState(false)
 
     // Initialize MSAL
     useEffect(() => {
@@ -163,7 +164,11 @@ export default function useOneDriveAuth({
                     expiresOn: response.expiresOn!.getTime(),
                 }
                 setToken(newToken)
+                setAuthCancelled(false)
                 secureStorage.setItem('isAuthenticated', 'true')
+            } else {
+                // Popup was closed or sign-in returned no result
+                setAuthCancelled(true)
             }
         } catch (error) {
             onError(
@@ -171,6 +176,7 @@ export default function useOneDriveAuth({
                     message: (error as Error)?.message ?? '',
                 }),
             )
+            setAuthCancelled(true)
             setToken(undefined)
             secureStorage.removeItem('isAuthenticated')
         }
@@ -259,10 +265,17 @@ export default function useOneDriveAuth({
         msalInstance,
     ])
 
+    const retryAuth = useCallback(() => {
+        setAuthCancelled(false)
+        handleSignIn()
+    }, [handleSignIn])
+
     return {
         token,
         signOut: handleSignOut,
         isInitialized,
         isAuthenticating,
+        authCancelled,
+        retryAuth,
     }
 }

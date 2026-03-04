@@ -1,5 +1,5 @@
 import { GoogleFile, Root, Token, User } from 'google'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { t } from '../../shared/i18n'
 import { GoogleDriveConfigs } from '../../shared/types'
 import { useRootContext } from '../context/RootContext'
@@ -19,6 +19,10 @@ export default function useGoogleDrive(
     const [googleFiles, setGoogleFiles] = useState<Root>()
     const [rawFiles, setRawFiles] = useState<GoogleFile[]>()
     const [token, setToken] = useState<Token>()
+    const [authCancelled, setAuthCancelled] = useState(false)
+    const tokenClientRef = useRef<{
+        requestAccessToken: (opts?: object) => void
+    } | null>(null)
 
     const fetchDrive = useCallback(
         async (url: string) => {
@@ -137,36 +141,43 @@ export default function useGoogleDrive(
         if (gisLoaded) {
             ;(async () => {
                 const google = await window.google
-                google.accounts.oauth2
-                    .initTokenClient({
-                        client_id: google_client_id,
-                        scope: 'https://www.googleapis.com/auth/drive.readonly https://www.googleapis.com/auth/userinfo.profile',
-                        ux_mode: 'popup',
-                        callback(tokenResponse: Token) {
-                            if (!tokenResponse?.error) {
-                                secureStorage.setItem(
-                                    'token',
-                                    JSON.stringify({
-                                        ...tokenResponse,
-                                        expires_in:
-                                            Date.now() +
-                                            (tokenResponse.expires_in - 20) *
-                                                1000,
-                                    }),
-                                )
-                                return setToken(tokenResponse)
-                            } else {
-                                onError(
-                                    t(translations.genericErrorDetails, {
-                                        details:
-                                            (tokenResponse?.error as Error)
-                                                ?.message ?? '',
-                                    }),
-                                )
-                            }
-                        },
-                    })
-                    .requestAccessToken({})
+                const client = google.accounts.oauth2.initTokenClient({
+                    client_id: google_client_id,
+                    scope: 'https://www.googleapis.com/auth/drive.readonly https://www.googleapis.com/auth/userinfo.profile',
+                    ux_mode: 'popup',
+                    callback(tokenResponse: Token) {
+                        if (!tokenResponse?.error) {
+                            setAuthCancelled(false)
+                            secureStorage.setItem(
+                                'token',
+                                JSON.stringify({
+                                    ...tokenResponse,
+                                    expires_in:
+                                        Date.now() +
+                                        (tokenResponse.expires_in - 20) * 1000,
+                                }),
+                            )
+                            return setToken(tokenResponse)
+                        } else {
+                            onError(
+                                t(translations.genericErrorDetails, {
+                                    details: String(tokenResponse?.error ?? ''),
+                                }),
+                            )
+                        }
+                    },
+                    error_callback(error: { type: string; message?: string }) {
+                        // Fired when popup is closed or blocked by the user
+                        setAuthCancelled(true)
+                        onError(
+                            t(translations.genericErrorDetails, {
+                                details: error.message || error.type,
+                            }),
+                        )
+                    },
+                })
+                tokenClientRef.current = client
+                client.requestAccessToken({})
             })()
         }
     }, [gisLoaded, google_client_id, onError])
@@ -190,5 +201,13 @@ export default function useGoogleDrive(
         organizeFiles()
     }, [organizeFiles])
 
-    return { user, googleFiles, handleSignOut, token }
+    /**
+     * @description Re-trigger the OAuth popup so the user can retry authentication
+     */
+    const retryAuth = useCallback(() => {
+        setAuthCancelled(false)
+        tokenClientRef.current?.requestAccessToken({})
+    }, [])
+
+    return { user, googleFiles, handleSignOut, token, authCancelled, retryAuth }
 }
