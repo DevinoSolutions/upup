@@ -59,6 +59,7 @@ export default memo(function FileItem({ file }: Props) {
                     fileType={file.type}
                     fileUrl={file.url}
                     fileName={file.name}
+                    fileSize={file.size}
                 />
             )}
         </div>

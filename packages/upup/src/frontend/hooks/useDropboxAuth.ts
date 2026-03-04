@@ -61,6 +61,7 @@ const b64url = (ab: ArrayBuffer) =>
 export function useDropboxAuth(cfg?: DropboxConfigs) {
     const {
         props: { onError },
+        translations,
     } = useRootContext()
 
     const [token, setTok] = useState<string>()
@@ -126,7 +127,7 @@ export function useDropboxAuth(cfg?: DropboxConfigs) {
     /* ── popup launcher ── */
     const authenticate = useCallback(async () => {
         if (!clientId) {
-            onError('Dropbox clientId missing')
+            onError(translations.dropboxClientIdMissing)
             return
         }
         if (busy) {
@@ -159,7 +160,7 @@ export function useDropboxAuth(cfg?: DropboxConfigs) {
         )
 
         if (!winRef.current) {
-            onError('Popup blocked')
+            onError(translations.popupBlocked)
             return
         }
 
@@ -212,7 +213,7 @@ export function useDropboxAuth(cfg?: DropboxConfigs) {
                 if ((e as Error).message?.includes('Failed to read')) return
                 console.error('[DBX-AUTH] poll/error', e)
                 if ((e as Error).message != 'invalid_grant')
-                    onError('Dropbox authentication failed')
+                    onError(translations.dropboxAuthFailed)
                 setBusy(false)
                 winRef.current?.close()
                 clearInterval(pollRef.current!)
@@ -244,7 +245,7 @@ export function useDropboxAuth(cfg?: DropboxConfigs) {
                 return j.access_token
             } catch (e) {
                 console.error('[DBX-AUTH] refresh error', e)
-                onError('Dropbox session expired – please reconnect')
+                onError(translations.dropboxSessionExpired)
                 logout()
                 return null
             }

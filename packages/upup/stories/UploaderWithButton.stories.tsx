@@ -74,16 +74,16 @@ export const UploaderWithButton: Story = {
     args: {
         driveConfigs: {
             googleDrive: {
-                google_client_id: process.env.GOOGLE_CLIENT_ID!,
-                google_api_key: process.env.GOOGLE_API_KEY!,
-                google_app_id: process.env.GOOGLE_APP_ID!,
+                google_client_id: process.env.GOOGLE_CLIENT_ID ?? '',
+                google_api_key: process.env.GOOGLE_API_KEY ?? '',
+                google_app_id: process.env.GOOGLE_APP_ID ?? '',
             },
             oneDrive: {
-                onedrive_client_id: process.env.ONEDRIVE_CLIENT_ID!,
+                onedrive_client_id: process.env.ONEDRIVE_CLIENT_ID ?? '',
             },
             dropbox: {
-                dropbox_client_id: process.env.DROPBOX_CLIENT_ID!,
-                dropbox_redirect_uri: process.env.DROPBOX_REDIRECT_URI!,
+                dropbox_client_id: process.env.DROPBOX_CLIENT_ID ?? '',
+                dropbox_redirect_uri: process.env.DROPBOX_REDIRECT_URI ?? '',
             },
         },
         limit: 10,

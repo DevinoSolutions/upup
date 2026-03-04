@@ -82,6 +82,10 @@ export async function POST(req: Request) {
 
 :::
 
+:::tip Resumable Uploads
+To support resumable multipart uploads, your API route needs to handle additional actions. See the [Resumable Uploads guide](/docs/resumable-uploads.md#server-setup) for the full route handler with `multipart:init`, `multipart:signPart`, `multipart:listParts`, `multipart:complete`, and `multipart:abort` actions.
+:::
+
 ### React.js Basic Implementation
 
 ```tsx

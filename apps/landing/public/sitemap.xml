@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <!-- Next.js landing pages -->
+  <sitemap>
+    <loc>https://useupup.com/sitemap-landing.xml</loc>
+  </sitemap>
+  <!-- Docusaurus auto-generated docs sitemap -->
+  <sitemap>
+    <loc>https://useupup.com/documentation/sitemap.xml</loc>
+  </sitemap>
+</sitemapindex>

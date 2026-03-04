@@ -10,6 +10,8 @@ import {
     FileWithParams,
     GoogleDriveConfigs,
     OneDriveConfigs,
+    ResolvedImageEditorOptions,
+    Translations,
     UploadAdapter,
     UpupUploaderProps,
     UpupUploaderPropsIcons,
@@ -19,6 +21,7 @@ import { FilesProgressMap } from '../hooks/useRootProvider'
 export enum UploadStatus {
     PENDING = 'PENDING',
     ONGOING = 'ONGOING',
+    PAUSED = 'PAUSED',
     SUCCESSFUL = 'SUCCESSFUL',
     FAILED = 'FAILED',
 }
@@ -30,6 +33,14 @@ type ContextUpload = {
     totalProgress: number
     filesProgressMap: FilesProgressMap
     proceedUpload: () => Promise<FileWithParams[] | undefined>
+    /** Current upload speed in bytes/sec (rolling average) */
+    uploadSpeed: number
+    /** Estimated seconds remaining */
+    uploadEta: number
+    /** Total bytes uploaded so far across all files */
+    uploadedBytes: number
+    /** Total bytes to upload across all files */
+    totalBytes: number
 }
 
 type ContextProps = Required<
@@ -53,15 +64,18 @@ type ContextProps = Required<
         | 'showSelectFolderButton'
     >
 > &
-    Pick<UpupUploaderProps, 'maxFileSize'> & {
+    Pick<UpupUploaderProps, 'maxFileSize' | 'maxRetries' | 'resumable'> & {
         multiple: boolean
         icons: Required<UpupUploaderPropsIcons>
+        imageEditor: ResolvedImageEditorOptions
     }
 
 export interface IRootContext {
     inputRef: RefObject<HTMLInputElement | null>
     activeAdapter?: UploadAdapter
     setActiveAdapter: Dispatch<SetStateAction<UploadAdapter | undefined>>
+
+    translations: Translations
 
     files: Map<string, FileWithParams>
     setFiles: (newFiles: File[]) => void
@@ -76,6 +90,14 @@ export interface IRootContext {
     handleFileRemove: (fileId: string) => void
     handleDone: () => void
     handleCancel: () => void
+    handlePause: () => void
+    handleResume: () => void
+
+    editingFile: FileWithParams | null
+    openImageEditor: (file: FileWithParams) => void
+    closeImageEditor: () => void
+    saveImageEdit: (editedImageData: string, mimeType?: string) => void
+    replaceFile: (fileId: string, newFile: FileWithParams) => void
 
     oneDriveConfigs?: OneDriveConfigs
     googleDriveConfigs?: GoogleDriveConfigs
