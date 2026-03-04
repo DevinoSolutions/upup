@@ -108,12 +108,12 @@ const config = {
 
     env: (config: any) => ({
         ...config,
-        GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID!,
-        GOOGLE_API_KEY: process.env.GOOGLE_API_KEY!,
-        GOOGLE_APP_ID: process.env.GOOGLE_APP_ID!,
-        ONEDRIVE_CLIENT_ID: process.env.ONEDRIVE_CLIENT_ID!,
-        DROPBOX_CLIENT_ID: process.env.DROPBOX_CLIENT_ID!,
-        DROPBOX_REDIRECT_URI: process.env.DROPBOX_REDIRECT_URI!,
+        GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID ?? '',
+        GOOGLE_API_KEY: process.env.GOOGLE_API_KEY ?? '',
+        GOOGLE_APP_ID: process.env.GOOGLE_APP_ID ?? '',
+        ONEDRIVE_CLIENT_ID: process.env.ONEDRIVE_CLIENT_ID ?? '',
+        DROPBOX_CLIENT_ID: process.env.DROPBOX_CLIENT_ID ?? '',
+        DROPBOX_REDIRECT_URI: process.env.DROPBOX_REDIRECT_URI ?? '',
     }),
 }
 

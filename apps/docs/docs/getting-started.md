@@ -4,7 +4,7 @@ sidebar_position: 1
 
 # Getting Started
 
-Upup is an open-source, free-to-use **Full-stack library** that easily handles your file upload needs with seamless DigitalOcean Spaces, Amazon S3, Backblaze, Microsoft Azure Blob Storage, Google Drive, and OneDrive integrations.
+Upup is an open-source, free-to-use **React & TypeScript file upload library** that works with **Next.js, Vite, Remix, Gatsby** and any React framework. It handles your file upload needs with seamless DigitalOcean Spaces, Amazon S3, Backblaze, Microsoft Azure Blob Storage, Google Drive, and OneDrive integrations.
 
 ## Installation
 
@@ -170,6 +170,13 @@ The full list of exported server utility functions include:
 
 - [`s3GeneratePresignedUrl`](/docs/api-reference/s3-generate-presigned-url.md): for S3-compatible Uploads: like AWS, Digital Ocean, Backblaze
 - [`azureGenerateSasUrl`](/docs/api-reference/azure-generate-sas-url.md): for Azure Blob Uploads only
+- `s3InitiateMultipartUpload`: Initiate a resumable multipart upload session
+- `s3GeneratePresignedPartUrl`: Generate a presigned URL for a single upload part
+- `s3ListMultipartParts`: List all uploaded parts for a multipart upload
+- `s3CompleteMultipartUpload`: Complete a multipart upload by assembling parts
+- `s3AbortMultipartUpload`: Abort an in-progress multipart upload
+
+For resumable multipart upload setup, see the [Resumable Uploads guide](/docs/resumable-uploads.md).
 
 :::info
 

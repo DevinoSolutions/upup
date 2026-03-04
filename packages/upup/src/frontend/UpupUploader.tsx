@@ -3,8 +3,11 @@
 import React, { forwardRef, useImperativeHandle } from 'react'
 import { TbLoader } from 'react-icons/tb/index.js'
 import { devinoDark, devinoLight, logoDark, logoLight } from '../assets/logos'
+import { t } from '../shared/i18n'
 import { FileWithParams, UpupUploaderProps } from '../shared/types'
 import DefaultLoaderIcon from './components/DefaultLoaderIcon'
+import ImageEditorInline from './components/ImageEditorInline'
+import ImageEditorModal from './components/ImageEditorModal'
 import MainBox from './components/MainBox'
 import ShouldRender from './components/shared/ShouldRender'
 import RootContext from './context/RootContext'
@@ -57,9 +60,14 @@ export default forwardRef<UpupUploaderRef, UpupUploaderProps>(
                         className={cn('upup-w-full', {
                             'upup-h-[480px] upup-max-w-[600px]':
                                 !providerValues.props.mini,
-                            'upup-h-[397px] upup-max-w-[280px]':
+                            'upup-h-auto upup-max-w-[280px]':
                                 providerValues.props.mini,
                         })}
+                        style={
+                            providerValues.props.mini
+                                ? { aspectRatio: '1 / 1' }
+                                : undefined
+                        }
                     >
                         <section
                             aria-labelledby="drop-instructions"
@@ -108,90 +116,118 @@ export default forwardRef<UpupUploaderRef, UpupUploaderProps>(
                                         },
                                     )}
                                 >
-                                    Add your documents here, you can upload up
-                                    to {providerValues.props.limit} files max
+                                    {t(
+                                        providerValues.translations
+                                            .addDocumentsHere,
+                                        {
+                                            limit: providerValues.props.limit,
+                                        },
+                                    )}
                                 </p>
                             </ShouldRender>
                             <MainBox />
 
-                            <div
-                                className={cn(
-                                    'upup-flex upup-w-full upup-flex-col upup-items-center upup-justify-between upup-gap-1 md:upup-flex-row',
-                                    {
-                                        'upup-flex-col':
-                                            providerValues.props.mini,
-                                    },
+                            {/* Inline image editor — overlays the uploader content */}
+                            {providerValues.editingFile &&
+                                providerValues.props.imageEditor.display ===
+                                    'inline' && (
+                                    <ImageEditorInline
+                                        file={providerValues.editingFile}
+                                        onClose={
+                                            providerValues.closeImageEditor
+                                        }
+                                        onSave={providerValues.saveImageEdit}
+                                    />
                                 )}
-                            >
-                                <a
-                                    href={'https://getupup.ca/'}
-                                    target={'_blank'}
-                                    rel="noopener noreferrer"
-                                    className="upup-flex upup-items-center upup-gap-[5px]"
+
+                            <ShouldRender if={!providerValues.props.mini}>
+                                <div
+                                    className={cn(
+                                        'upup-flex upup-w-full upup-flex-col upup-items-center upup-justify-between upup-gap-1 md:upup-flex-row',
+                                    )}
                                 >
-                                    <ShouldRender
-                                        if={providerValues.props.dark}
+                                    <a
+                                        href={'https://useupup.com/'}
+                                        target={'_blank'}
+                                        rel="noopener noreferrer"
+                                        className="upup-flex upup-items-center upup-gap-[5px]"
                                     >
-                                        <img
-                                            src={logoDark}
-                                            width={61}
-                                            height={13}
-                                            alt="logo-dark"
-                                        />
-                                    </ShouldRender>
-                                    <ShouldRender
-                                        if={!providerValues.props.dark}
+                                        <ShouldRender
+                                            if={providerValues.props.dark}
+                                        >
+                                            <img
+                                                src={logoDark}
+                                                width={61}
+                                                height={13}
+                                                alt="logo-dark"
+                                            />
+                                        </ShouldRender>
+                                        <ShouldRender
+                                            if={!providerValues.props.dark}
+                                        >
+                                            <img
+                                                src={logoLight}
+                                                width={61}
+                                                height={13}
+                                                alt="logo-light"
+                                            />
+                                        </ShouldRender>
+                                    </a>
+                                    <a
+                                        href={'https://devino.ca/'}
+                                        target={'_blank'}
+                                        rel="noopener noreferrer"
+                                        className="upup-flex upup-flex-row upup-items-center upup-justify-end upup-gap-1"
                                     >
-                                        <img
-                                            src={logoLight}
-                                            width={61}
-                                            height={13}
-                                            alt="logo-light"
-                                        />
-                                    </ShouldRender>
-                                </a>
-                                <a
-                                    href={'https://devino.ca/'}
-                                    target={'_blank'}
-                                    rel="noopener noreferrer"
-                                    className="upup-flex upup-flex-row upup-items-center upup-justify-end upup-gap-1"
-                                >
-                                    <span
-                                        className={cn(
-                                            'upup-mr-0.5 upup-text-xs upup-leading-5 upup-text-[#6D6D6D] md:upup-text-sm',
+                                        <span
+                                            className={cn(
+                                                'upup-mr-0.5 upup-text-xs upup-leading-5 upup-text-[#6D6D6D] md:upup-text-sm',
+                                                {
+                                                    'upup-text-gray-300 dark:upup-text-gray-300':
+                                                        providerValues.props
+                                                            .dark,
+                                                },
+                                            )}
+                                        >
                                             {
-                                                'upup-text-gray-300 dark:upup-text-gray-300':
-                                                    providerValues.props.dark,
-                                            },
-                                        )}
-                                    >
-                                        Built by{' '}
-                                    </span>
-                                    <ShouldRender
-                                        if={providerValues.props.dark}
-                                    >
-                                        <img
-                                            src={devinoDark}
-                                            width={61}
-                                            height={13}
-                                            alt="logo-dark"
-                                        />
-                                    </ShouldRender>
-                                    <ShouldRender
-                                        if={!providerValues.props.dark}
-                                    >
-                                        <img
-                                            src={devinoLight}
-                                            width={61}
-                                            height={13}
-                                            alt="logo-light"
-                                        />
-                                    </ShouldRender>
-                                </a>
-                            </div>
+                                                providerValues.translations
+                                                    .builtBy
+                                            }{' '}
+                                        </span>
+                                        <ShouldRender
+                                            if={providerValues.props.dark}
+                                        >
+                                            <img
+                                                src={devinoDark}
+                                                width={61}
+                                                height={13}
+                                                alt="logo-dark"
+                                            />
+                                        </ShouldRender>
+                                        <ShouldRender
+                                            if={!providerValues.props.dark}
+                                        >
+                                            <img
+                                                src={devinoLight}
+                                                width={61}
+                                                height={13}
+                                                alt="logo-light"
+                                            />
+                                        </ShouldRender>
+                                    </a>
+                                </div>
+                            </ShouldRender>
                         </section>
                     </div>
                 </div>
+                {providerValues.editingFile &&
+                    providerValues.props.imageEditor.display === 'modal' && (
+                        <ImageEditorModal
+                            file={providerValues.editingFile}
+                            onClose={providerValues.closeImageEditor}
+                            onSave={providerValues.saveImageEdit}
+                        />
+                    )}
             </RootContext.Provider>
         )
     },

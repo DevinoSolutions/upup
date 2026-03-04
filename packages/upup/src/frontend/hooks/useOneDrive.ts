@@ -15,13 +15,18 @@ export default function useOneDrive(clientId = '') {
     const [oneDriveFiles, setOneDriveFiles] = useState<OneDriveRoot>()
     const [graphClient, setGraphClient] = useState<Client>()
     const { msalInstance } = usePCAInstance(clientId)
-    const { token, signOut, isInitialized, isAuthenticating } = useOneDriveAuth(
-        {
-            msalInstance,
-            setUser,
-            setOneDriveFiles,
-        },
-    )
+    const {
+        token,
+        signOut,
+        isInitialized,
+        isAuthenticating,
+        authCancelled,
+        retryAuth,
+    } = useOneDriveAuth({
+        msalInstance,
+        setUser,
+        setOneDriveFiles,
+    })
 
     // Initialize Graph client when we have both msalInstance and token
     useEffect(() => {
@@ -111,5 +116,8 @@ export default function useOneDrive(clientId = '') {
         oneDriveFiles,
         signOut,
         graphClient,
+        token,
+        authCancelled,
+        retryAuth,
     }
 }

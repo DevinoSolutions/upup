@@ -1,5 +1,10 @@
 import { motion } from 'framer-motion'
 import React, { memo } from 'react'
+import {
+    TbPlayerPauseFilled,
+    TbPlayerPlayFilled,
+} from 'react-icons/tb/index.js'
+import { plural, t } from '../../shared/i18n'
 import { UploadStatus, useRootContext } from '../context/RootContext'
 import { cn } from '../lib/tailwind'
 import FileItem from './FileItem'
@@ -8,15 +13,42 @@ import MyAnimatePresence from './shared/MyAnimatePresence'
 import ProgressBar from './shared/ProgressBar'
 import ShouldRender from './shared/ShouldRender'
 
+function formatBytes(bytes: number): string {
+    if (bytes === 0) return '0 B'
+    const k = 1024
+    const sizes = ['B', 'KB', 'MB', 'GB']
+    const i = Math.floor(Math.log(bytes) / Math.log(k))
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i]
+}
+
+function formatEta(seconds: number): string {
+    if (seconds <= 0 || !isFinite(seconds)) return ''
+    const m = Math.floor(seconds / 60)
+    const s = seconds % 60
+    if (m > 0) return `${m}m ${s}s left`
+    return `${s}s left`
+}
+
 export default memo(function FileList() {
     const {
         isAddingMore,
         activeAdapter,
         files,
-        upload: { proceedUpload, uploadStatus, totalProgress },
-        props: { dark, classNames, isProcessing },
+        translations: tr,
+        upload: {
+            proceedUpload,
+            uploadStatus,
+            totalProgress,
+            uploadSpeed,
+            uploadEta,
+            uploadedBytes,
+            totalBytes,
+        },
+        props: { dark, classNames, isProcessing, maxRetries, resumable },
         handleDone,
         handleCancel,
+        handlePause,
+        handleResume,
     } = useRootContext()
 
     return (
@@ -109,10 +141,33 @@ export default memo(function FileList() {
                         }}
                         disabled={
                             uploadStatus === UploadStatus.ONGOING ||
+                            uploadStatus === UploadStatus.PAUSED ||
                             isProcessing
                         }
                     >
-                        Upload {files.size} file{files.size > 1 ? 's' : ''}
+                        {t(plural(tr, 'uploadFiles', files.size), {
+                            count: files.size,
+                        })}
+                    </button>
+                </ShouldRender>
+                <ShouldRender
+                    if={uploadStatus === UploadStatus.FAILED && !maxRetries}
+                >
+                    <button
+                        className={cn(
+                            'upup-disabled:animate-pulse upup-ml-auto upup-rounded-full upup-bg-red-600 upup-px-4 upup-py-2 upup-text-sm upup-font-medium upup-text-white',
+                            {
+                                'upup-bg-red-500 dark:upup-bg-red-500': dark,
+                            },
+                            classNames.uploadButton,
+                        )}
+                        onClick={() => {
+                            proceedUpload()
+                        }}
+                    >
+                        {resumable?.mode === 'multipart'
+                            ? 'Resume Upload'
+                            : 'Retry Upload'}
                     </button>
                 </ShouldRender>
                 <ShouldRender if={uploadStatus === UploadStatus.SUCCESSFUL}>
@@ -127,15 +182,88 @@ export default memo(function FileList() {
                         )}
                         onClick={handleDone}
                     >
-                        Done
+                        {tr.done}
                     </button>
                 </ShouldRender>
-                <ProgressBar
-                    className="upup-flex-1"
-                    progressBarClassName="upup-rounded"
-                    progress={totalProgress}
-                    showValue
-                />
+                <div className="upup-flex upup-flex-1 upup-flex-col upup-gap-1">
+                    <div className="upup-flex upup-items-center upup-gap-2">
+                        <ShouldRender
+                            if={
+                                resumable?.mode === 'multipart' &&
+                                (uploadStatus === UploadStatus.ONGOING ||
+                                    uploadStatus === UploadStatus.PAUSED)
+                            }
+                        >
+                            <button
+                                className={cn(
+                                    'upup-flex upup-h-7 upup-w-7 upup-items-center upup-justify-center upup-rounded-full upup-bg-gray-200 upup-text-gray-700 upup-transition-colors hover:upup-bg-gray-300',
+                                    {
+                                        'upup-bg-white/10 upup-text-white hover:upup-bg-white/20':
+                                            dark,
+                                    },
+                                )}
+                                onClick={
+                                    uploadStatus === UploadStatus.PAUSED
+                                        ? handleResume
+                                        : handlePause
+                                }
+                                title={
+                                    uploadStatus === UploadStatus.PAUSED
+                                        ? 'Resume upload'
+                                        : 'Pause upload'
+                                }
+                            >
+                                {uploadStatus === UploadStatus.PAUSED ? (
+                                    <TbPlayerPlayFilled size={14} />
+                                ) : (
+                                    <TbPlayerPauseFilled size={14} />
+                                )}
+                            </button>
+                        </ShouldRender>
+                        <ProgressBar
+                            className="upup-flex-1"
+                            progressBarClassName="upup-rounded"
+                            progress={totalProgress}
+                            showValue
+                        />
+                    </div>
+                    <ShouldRender
+                        if={
+                            (uploadStatus === UploadStatus.ONGOING ||
+                                uploadStatus === UploadStatus.PAUSED) &&
+                            totalBytes > 0
+                        }
+                    >
+                        <div
+                            className={cn(
+                                'upup-flex upup-items-center upup-justify-between upup-text-[11px] upup-text-gray-500',
+                                {
+                                    'upup-text-gray-400': dark,
+                                },
+                            )}
+                        >
+                            <span>
+                                {formatBytes(uploadedBytes)} of{' '}
+                                {formatBytes(totalBytes)}
+                                {uploadSpeed > 0 &&
+                                    ` · ${formatBytes(uploadSpeed)}/s`}
+                            </span>
+                            <ShouldRender
+                                if={
+                                    uploadStatus === UploadStatus.ONGOING &&
+                                    uploadEta > 0
+                                }
+                            >
+                                <span>{formatEta(uploadEta)}</span>
+                            </ShouldRender>
+                            <ShouldRender
+                                if={uploadStatus === UploadStatus.PAUSED}
+                            >
+                                <span>Paused</span>
+                            </ShouldRender>
+                        </div>
+                    </ShouldRender>
+                </div>
             </div>
         </div>
     )

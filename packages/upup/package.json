@@ -17,6 +17,11 @@
             "import": "./dist/index.browser.mjs",
             "require": "./dist/index.browser.js"
         },
+        "./locales": {
+            "types": "./dist/shared/i18n/locales/index.d.ts",
+            "import": "./dist/shared/i18n/locales/index.mjs",
+            "require": "./dist/shared/i18n/locales/index.js"
+        },
         "./server": {
             "types": "./dist-node/index.node.d.ts",
             "default": "./dist-node/index.node.js"
@@ -42,17 +47,30 @@
     "keywords": [
         "react",
         "typescript",
-        "aws/sdk",
-        "s3",
-        "file",
-        "uploader",
-        "react-uploader",
-        "one-drive",
+        "file-upload",
+        "react-file-upload",
+        "drag-and-drop",
+        "dropzone",
+        "file-picker",
+        "file-preview",
+        "upload-progress-bar",
+        "resumable-upload",
+        "chunked-upload",
+        "presigned-url",
+        "aws-s3",
+        "azure-blob-storage",
         "google-drive",
-        "pako",
-        "gzip",
-        "compress",
-        "decompress"
+        "onedrive",
+        "cloud-storage",
+        "image-upload",
+        "video-upload",
+        "multiple-file-upload",
+        "large-file-upload",
+        "file-validation",
+        "nextjs",
+        "vite",
+        "remix",
+        "open-source"
     ],
     "scripts": {
         "dev": "concurrently \"pnpm run storybook\" \"pnpm run dev:server\" --names \"storybook,server\" --prefix-colors \"blue,green\"",
@@ -93,7 +111,29 @@
     ],
     "peerDependencies": {
         "react": "^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0",
-        "react-dom": "^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0"
+        "react-dom": "^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0",
+        "react-filerobot-image-editor": ">=4.0.0",
+        "filerobot-image-editor": ">=4.0.0",
+        "react-konva": ">=18.0.0",
+        "konva": ">=9.0.0",
+        "styled-components": ">=5.0.0"
+    },
+    "peerDependenciesMeta": {
+        "react-filerobot-image-editor": {
+            "optional": true
+        },
+        "filerobot-image-editor": {
+            "optional": true
+        },
+        "react-konva": {
+            "optional": true
+        },
+        "konva": {
+            "optional": true
+        },
+        "styled-components": {
+            "optional": true
+        }
     },
     "devDependencies": {
         "@babel/core": "^7.23.3",
@@ -161,6 +201,8 @@
         "prettier-plugin-tailwindcss": "^0.5.7",
         "react": "^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0",
         "react-dom": "^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0",
+        "react-filerobot-image-editor": ">=4.0.0",
+        "filerobot-image-editor": ">=4.0.0",
         "react-syntax-highlighter": "15.4.5",
         "remark-gfm": "^4.0.0",
         "rollup-plugin-analyzer": "^4.0.0",
@@ -175,7 +217,10 @@
         "typescript": "^5.3.2",
         "typescript-eslint": "^8.21.0",
         "webpack": "5.89.0",
-        "zod": "^3.22.4"
+        "zod": "^3.22.4",
+        "react-konva": ">=18.0.0",
+        "konva": ">=9.0.0",
+        "styled-components": ">=5.0.0"
     },
     "dependencies": {
         "@aws-sdk/client-s3": "^3.689.0",
