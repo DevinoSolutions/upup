@@ -11,6 +11,7 @@ import React, {
 import { plural, t } from '../../../shared/i18n'
 import { useRootContext } from '../../context/RootContext'
 import { searchDriveFiles } from '../../lib/file'
+import { isDriveFileAccepted } from '../../lib/googleDriveUtils'
 import { cn } from '../../lib/tailwind'
 import AdapterViewContainer from './AdapterViewContainer'
 import DriveBrowserHeader from './DriveBrowserHeader'
@@ -41,11 +42,17 @@ function filterItems(item: OneDriveFile | GoogleFile, accept: string) {
     const isFolder = Boolean(
         (item as OneDriveFile).isFolder || (item as GoogleFile).children,
     )
-    const isFileAccepted =
-        accept && accept !== '*' && !isFolder
-            ? accept.includes(item.name.split('.').pop()!)
-            : true
-    return isFolder ? item : isFileAccepted
+    if (isFolder) return true
+    if (!accept || accept === '*') return true
+
+    // GoogleFile has mimeType directly on the object
+    const isGoogleFile = 'mimeType' in item && !('isFolder' in item)
+    if (isGoogleFile) {
+        return isDriveFileAccepted(item as GoogleFile, accept)
+    }
+
+    // OneDrive: keep existing extension-based check
+    return accept.includes(item.name.split('.').pop()!)
 }
 
 export default function DriveBrowser({
