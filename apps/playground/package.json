@@ -1,0 +1,41 @@
+{
+  "name": "@upup/playground",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "dotenv -e ../../local-dev/.env.ports -- node ./scripts/next-port-runner.cjs dev",
+    "build": "next build",
+    "start": "dotenv -e ../../local-dev/.env.ports -- node ./scripts/next-port-runner.cjs start",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf .next node_modules/.cache"
+  },
+  "dependencies": {
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.503.0",
+    "next": "16.1.6",
+    "prettier-plugin-tailwindcss": "^0.5.14",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "react-icons": "^5.5.0",
+    "react-toastify": "^11.0.5",
+    "react-tooltip": "^5.29.1",
+    "upup-react-file-uploader": "workspace:*"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3",
+    "@tailwindcss/forms": "^0.5.7",
+    "@tailwindcss/postcss": "^4",
+    "@tailwindcss/typography": "^0.5.16",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "autoprefixer": "^10.4.19",
+    "eslint": "^9",
+    "eslint-config-next": "16.1.6",
+    "eslint-plugin-react": "^7.37.4",
+    "tailwindcss": "^3.4.3",
+    "typescript": "^5",
+    "typescript-eslint": "^8.46.2"
+  }
+}

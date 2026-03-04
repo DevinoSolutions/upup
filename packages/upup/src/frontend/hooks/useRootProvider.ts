@@ -5,7 +5,7 @@ import {
     TbLoader,
     TbPlus,
     TbTrash,
-} from 'react-icons/tb/index.js'
+} from 'react-icons/tb'
 import { en_US, mergeTranslations, t } from '../../shared/i18n'
 import checkFileType from '../../shared/lib/checkFileType'
 import {

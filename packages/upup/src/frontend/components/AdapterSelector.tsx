@@ -1,5 +1,5 @@
 import React, { useCallback } from 'react'
-import { TbUpload } from 'react-icons/tb/index.js'
+import { TbUpload } from 'react-icons/tb'
 import { plural, t } from '../../shared/i18n'
 import { useRootContext } from '../context/RootContext'
 import useAdapterSelector from '../hooks/useAdapterSelector'

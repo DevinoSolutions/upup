@@ -1,7 +1,7 @@
 'use client'
 
 import React, { forwardRef, useImperativeHandle } from 'react'
-import { TbLoader } from 'react-icons/tb/index.js'
+import { TbLoader } from 'react-icons/tb'
 import { devinoDark, devinoLight, logoDark, logoLight } from '../assets/logos'
 import { t } from '../shared/i18n'
 import { FileWithParams, UpupUploaderProps } from '../shared/types'

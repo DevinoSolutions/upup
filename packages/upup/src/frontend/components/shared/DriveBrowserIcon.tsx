@@ -1,7 +1,7 @@
 import { GoogleFile } from 'google'
 import { OneDriveFile } from 'microsoft'
 import React, { ReactEventHandler } from 'react'
-import { TbFile, TbFolder } from 'react-icons/tb/index.js'
+import { TbFile, TbFolder } from 'react-icons/tb'
 import { b64EncodeUnicode } from '../../../shared/lib/encoder'
 import { useRootContext } from '../../context/RootContext'
 import { cn } from '../../lib/tailwind'
