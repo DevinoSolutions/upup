@@ -1,6 +1,6 @@
 import React, { useCallback } from 'react'
-import { plural, t } from '../../shared/i18n'
 import { TbUpload } from 'react-icons/tb/index.js'
+import { plural, t } from '../../shared/i18n'
 import { useRootContext } from '../context/RootContext'
 import useAdapterSelector from '../hooks/useAdapterSelector'
 import { cn } from '../lib/tailwind'
@@ -187,7 +187,11 @@ export default function AdapterSelector() {
                 onChange={handleInputFileChange}
             />
             {mini ? (
-                <div className="upup-flex upup-flex-col upup-items-center upup-justify-center upup-gap-2">
+                <button
+                    type="button"
+                    onClick={handleBrowseFilesClick}
+                    className="upup-flex upup-cursor-pointer upup-flex-col upup-items-center upup-justify-center upup-gap-2 upup-rounded-lg upup-p-2"
+                >
                     <TbUpload
                         size={32}
                         className={cn(
@@ -207,7 +211,7 @@ export default function AdapterSelector() {
                     >
                         Drag or browse to upload
                     </p>
-                </div>
+                </button>
             ) : (
                 <div className="upup-flex upup-flex-col upup-items-center upup-gap-1 upup-px-3 upup-text-center md:upup-gap-2 md:upup-px-[30px]">
                     <div className="upup-flex upup-flex-wrap upup-items-center upup-justify-center upup-gap-1">
