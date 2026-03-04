@@ -8,6 +8,7 @@ export default function UrlUploader() {
     const {
         setFiles,
         setActiveAdapter,
+        translations: tr,
         props: {
             icons: { LoaderIcon },
             dark,
@@ -35,7 +36,7 @@ export default function UrlUploader() {
             <form onSubmit={handleFormSubmit} className="upup-px-3 upup-py-2">
                 <input
                     type="url"
-                    placeholder="Enter file url"
+                    placeholder={tr.enterFileUrl}
                     className={cn(
                         'upup-w-full upup-rounded-md upup-border-2 upup-border-[#e0e0e0] upup-bg-transparent upup-px-3 upup-py-2 upup-outline-none',
                         {
@@ -59,7 +60,7 @@ export default function UrlUploader() {
                     type="submit"
                     disabled={!url}
                 >
-                    {loading ? <LoaderIcon /> : 'Fetch'}
+                    {loading ? <LoaderIcon /> : tr.fetch}
                 </button>
             </form>
         </AdapterViewContainer>

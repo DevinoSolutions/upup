@@ -38,6 +38,8 @@ export default function Uploader() {
 }
 ```
 
+> Note: Breaking change — the `locale` prop has been renamed to `localePack` in recent versions. Update examples and code to use `localePack={...}`. See [CHANGELOG.md#unreleased](CHANGELOG.md#unreleased) for migration details.
+
 ```tsx
 // On your backend (aka, NextJS APIs, Express.JS server, NestJS, etc.)
 

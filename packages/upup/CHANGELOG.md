@@ -1,5 +1,21 @@
 # upup-react-file-uploader
 
+## Unreleased
+
+### Breaking Changes
+
+- Renamed the `locale` prop to `localePack` to make it clear that a full `Translations` object is expected. This is a breaking change for callers: update any places that passed `locale={...}` to `localePack={...}`. The provider still accepts `translations` for partial overrides.
+
+### Migration
+
+- Replace occurrences of `locale={...}` with `localePack={...}` in your code and docs. Example:
+
+```tsx
+import { ja_JP } from 'upup-react-file-uploader/locales'
+
+<UpupUploader localePack={ja_JP} />
+```
+
 ## 1.0.0
 
 ### 1.0.0 Major changes

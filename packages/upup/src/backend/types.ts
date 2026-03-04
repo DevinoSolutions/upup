@@ -35,3 +35,12 @@ export type AzureCredentials = {
     clientSecret: string
     storageAccount: string
 }
+
+export type S3MultipartParams = {
+    bucketName: string
+    s3ClientConfig: S3ClientConfig
+    origin: string
+    provider: UpupProvider
+    enableAutoCorsConfig?: boolean
+    expiresIn?: number
+}

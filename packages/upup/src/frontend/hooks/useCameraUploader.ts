@@ -9,7 +9,7 @@ export enum FacingMode {
 }
 
 export default function useCameraUploader() {
-    const { setFiles, setActiveAdapter, props } = useRootContext()
+    const { setFiles, setActiveAdapter, translations, props } = useRootContext()
     const { fetchImage } = useFetchFileByUrl()
     const webcamRef = useRef<Webcam>(null)
     const [url, setUrl] = useState('')
@@ -52,6 +52,7 @@ export default function useCameraUploader() {
         clearUrl,
         handleCameraSwitch,
         newCameraSide,
+        translations,
         props,
     }
 }
