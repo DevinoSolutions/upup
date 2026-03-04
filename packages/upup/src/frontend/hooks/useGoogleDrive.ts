@@ -155,19 +155,17 @@ export default function useGoogleDrive(
                                     expires_in:
                                         Date.now() +
                                         (tokenResponse.expires_in - 20) * 1000,
-                                    }),
-                                )
-                                return setToken(tokenResponse)
-                            } else {
-                                onError(
-                                    t(translations.genericErrorDetails, {
-                                        details: String(
-                                            tokenResponse?.error ?? '',
-                                        ),
-                                    }),
-                                )
-                            }
-                        },
+                                }),
+                            )
+                            return setToken(tokenResponse)
+                        } else {
+                            onError(
+                                t(translations.genericErrorDetails, {
+                                    details: String(tokenResponse?.error ?? ''),
+                                }),
+                            )
+                        }
+                    },
                     error_callback(error: { type: string; message?: string }) {
                         // Fired when popup is closed or blocked by the user
                         setAuthCancelled(true)
