@@ -1,4 +1,5 @@
 import React, { useCallback } from 'react'
+import { TbUpload } from 'react-icons/tb/index.js'
 import { plural, t } from '../../shared/i18n'
 import { useRootContext } from '../context/RootContext'
 import useAdapterSelector from '../hooks/useAdapterSelector'
@@ -185,79 +186,109 @@ export default function AdapterSelector() {
                 multiple={multiple}
                 onChange={handleInputFileChange}
             />
-            <div className="upup-flex upup-flex-col upup-items-center upup-gap-1 upup-px-3 upup-text-center md:upup-gap-2 md:upup-px-[30px]">
-                <div className="upup-flex upup-flex-wrap upup-items-center upup-justify-center upup-gap-1">
-                    <span
+            {mini ? (
+                <button
+                    type="button"
+                    onClick={handleBrowseFilesClick}
+                    className="upup-flex upup-cursor-pointer upup-flex-col upup-items-center upup-justify-center upup-gap-2 upup-rounded-lg upup-p-2"
+                >
+                    <TbUpload
+                        size={32}
                         className={cn(
-                            'upup-text-xs upup-text-[#0B0B0B] md:upup-text-sm',
+                            'upup-h-16 upup-w-16 md:upup-h-20 md:upup-w-20',
                             {
+                                'upup-text-[#0B0B0B]': !dark,
                                 'upup-text-white dark:upup-text-white': dark,
                             },
                         )}
+                    />
+                    <p
+                        className={cn('px-6 upup-text-center upup-text-xs', {
+                            'upup-text-[#6D6D6D] dark:upup-text-gray-400':
+                                !dark,
+                            'upup-text-gray-400 dark:upup-text-gray-500': dark,
+                        })}
                     >
-                        {limit > 1 ? tr.dragFilesOr : tr.dragFileOr}
-                    </span>
-                    <button
-                        type="button"
+                        Drag or browse to upload
+                    </p>
+                </button>
+            ) : (
+                <div className="upup-flex upup-flex-col upup-items-center upup-gap-1 upup-px-3 upup-text-center md:upup-gap-2 md:upup-px-[30px]">
+                    <div className="upup-flex upup-flex-wrap upup-items-center upup-justify-center upup-gap-1">
+                        <span
+                            className={cn(
+                                'upup-text-xs upup-text-[#0B0B0B] md:upup-text-sm',
+                                {
+                                    'upup-text-white dark:upup-text-white':
+                                        dark,
+                                },
+                            )}
+                        >
+                            {limit > 1 ? tr.dragFilesOr : tr.dragFileOr}
+                        </span>
+                        <button
+                            type="button"
+                            className={cn(
+                                'upup-cursor-pointer upup-text-xs upup-font-semibold upup-text-[#0E2ADD] md:upup-text-sm',
+                                {
+                                    'upup-text-[#59D1F9] dark:upup-text-[#59D1F9]':
+                                        dark,
+                                },
+                            )}
+                            onClick={handleBrowseFilesClick}
+                        >
+                            {tr.browseFiles}
+                        </button>
+                        {showSelectFolderButton && (
+                            <>
+                                <span
+                                    className={cn(
+                                        'upup-text-xs upup-text-[#0B0B0B] md:upup-text-sm',
+                                        {
+                                            'upup-text-white dark:upup-text-white':
+                                                dark,
+                                        },
+                                    )}
+                                >
+                                    {' '}
+                                    {tr.or}
+                                </span>
+                                <button
+                                    type="button"
+                                    className={cn(
+                                        'upup-cursor-pointer upup-text-xs upup-font-semibold upup-text-[#0E2ADD] md:upup-text-sm',
+                                        {
+                                            'upup-text-[#59D1F9] dark:upup-text-[#59D1F9]':
+                                                dark,
+                                        },
+                                    )}
+                                    onClick={handleSelectFolderClick}
+                                >
+                                    {tr.selectAFolder}
+                                </button>
+                            </>
+                        )}
+                    </div>
+                    <p
                         className={cn(
-                            'upup-cursor-pointer upup-text-xs upup-font-semibold upup-text-[#0E2ADD] md:upup-text-sm',
+                            'upup-text-center upup-text-xs upup-text-[#6D6D6D] md:upup-text-sm',
                             {
-                                'upup-text-[#59D1F9] dark:upup-text-[#59D1F9]':
+                                'upup-text-gray-300 dark:upup-text-gray-300':
                                     dark,
                             },
                         )}
-                        onClick={handleBrowseFilesClick}
                     >
-                        {tr.browseFiles}
-                    </button>
-                    {showSelectFolderButton && (
-                        <>
-                            <span
-                                className={cn(
-                                    'upup-text-xs upup-text-[#0B0B0B] md:upup-text-sm',
-                                    {
-                                        'upup-text-white dark:upup-text-white':
-                                            dark,
-                                    },
-                                )}
-                            >
-                                {' '}
-                                {tr.or}
-                            </span>
-                            <button
-                                type="button"
-                                className={cn(
-                                    'upup-cursor-pointer upup-text-xs upup-font-semibold upup-text-[#0E2ADD] md:upup-text-sm',
-                                    {
-                                        'upup-text-[#59D1F9] dark:upup-text-[#59D1F9]':
-                                            dark,
-                                    },
-                                )}
-                                onClick={handleSelectFolderClick}
-                            >
-                                {tr.selectAFolder}
-                            </button>
-                        </>
-                    )}
+                        {maxFileSize?.size && maxFileSize?.unit && (
+                            <>
+                                {t(plural(tr, 'maxFileSizeAllowed', limit), {
+                                    size: maxFileSize.size,
+                                    unit: maxFileSize.unit,
+                                })}
+                            </>
+                        )}
+                    </p>
                 </div>
-                <p
-                    className={cn(
-                        'upup-text-center upup-text-xs upup-text-[#6D6D6D] md:upup-text-sm',
-                        {
-                            'upup-text-gray-300 dark:upup-text-gray-300': dark,
-                        },
-                    )}
-                >
-                    {maxFileSize?.size && maxFileSize?.unit && (
-                        <>
-                            {t(plural(tr, 'maxFileSizeAllowed', limit), {
-                                size: maxFileSize.size,
-                                unit: maxFileSize.unit,
-                            })}
-                        </>
-                    )}
-                </p>
-            </div>
+            )}
         </div>
     )
 }
