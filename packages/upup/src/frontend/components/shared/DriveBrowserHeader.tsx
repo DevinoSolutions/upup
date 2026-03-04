@@ -1,7 +1,7 @@
 import { Root, User } from 'google'
 import { MicrosoftUser, OneDriveRoot } from 'microsoft'
 import React, { Dispatch, SetStateAction } from 'react'
-import { TbSearch, TbUser } from 'react-icons/tb/index.js'
+import { TbSearch, TbUser } from 'react-icons/tb'
 import { useRootContext } from '../../context/RootContext'
 import { cn } from '../../lib/tailwind'
 import ShouldRender from './ShouldRender'

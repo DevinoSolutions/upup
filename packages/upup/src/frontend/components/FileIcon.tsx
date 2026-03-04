@@ -23,7 +23,7 @@ import {
     TbFileTypeXls,
     TbFileTypeXml,
     TbFileTypeZip,
-} from 'react-icons/tb/index.js'
+} from 'react-icons/tb'
 import { useRootContext } from '../context/RootContext'
 import { cn } from '../lib/tailwind'
 

@@ -1,5 +1,5 @@
 import React from 'react'
-import { TbLoader } from 'react-icons/tb/index.js'
+import { TbLoader } from 'react-icons/tb'
 
 export default function DefaultLoaderIcon() {
     return (

@@ -3,7 +3,7 @@ import React, { memo } from 'react'
 import {
     TbPlayerPauseFilled,
     TbPlayerPlayFilled,
-} from 'react-icons/tb/index.js'
+} from 'react-icons/tb'
 import { plural, t } from '../../shared/i18n'
 import { UploadStatus, useRootContext } from '../context/RootContext'
 import { cn } from '../lib/tailwind'

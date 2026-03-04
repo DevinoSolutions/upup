@@ -2,25 +2,42 @@
 
 import Uploader from "@/components/Uploader";
 import { useSearchParams } from 'next/navigation';
+import type { Translations } from 'upup-react-file-uploader';
+import { en_US, ja_JP, zh_CN, zh_TW, fr_FR, ar_SA, de_DE, es_ES, ko_KR } from 'upup-react-file-uploader/locales';
+
+const LOCALE_MAP: Record<string, Translations> = {
+  en_US, ja_JP, zh_CN, zh_TW, fr_FR, ar_SA, de_DE, es_ES, ko_KR,
+};
 import { Suspense, useEffect } from 'react';
 
 function MobileDemoContent() {
   const searchParams = useSearchParams();
   
-  // Hide header and other chrome when embedded in iframe
+  // Hide navbar and other UI elements
   useEffect(() => {
-    const header = document.querySelector('nav, [data-playground-header]') as HTMLElement;
-    if (header) {
-      header.style.display = 'none';
+    // Hide navbar/header
+    const navbar = document.querySelector('nav, [data-playground-header]') as HTMLElement;
+    if (navbar) {
+      navbar.style.display = 'none';
+    }
+    
+    // Hide splash cursor
+    const splashCursor = document.querySelector('[data-splash]') as HTMLElement;
+    if (splashCursor) {
+      splashCursor.style.display = 'none';
     }
     
     // Clean up body styling (background will be handled by dark mode effect)
     document.body.style.margin = '0';
     document.body.style.padding = '0';
     
+    // Cleanup on unmount
     return () => {
-      if (header) {
-        header.style.display = '';
+      if (navbar) {
+        navbar.style.display = '';
+      }
+      if (splashCursor) {
+        splashCursor.style.display = '';
       }
     };
   }, []);
@@ -32,8 +49,13 @@ function MobileDemoContent() {
   const enabledAdapters = searchParams.get('enabledAdapters')?.split(',') || ['INTERNAL'];
   const allowPreview = searchParams.get('allowPreview') !== 'false';
   const shouldCompress = searchParams.get('shouldCompress') === 'true';
+  const imageEditor = searchParams.get('imageEditor') === 'true';
   const fileSizeLimit = parseInt(searchParams.get('fileSizeLimit') || '999');
   const darkMode = searchParams.get('darkMode') === 'true';
+  const autoRetryEnabled = searchParams.get('autoRetryEnabled') === 'true';
+  const autoRetryCount = parseInt(searchParams.get('autoRetryCount') || '3');
+  const language = searchParams.get('language') || 'en_US';
+  const locale = LOCALE_MAP[language] ?? en_US;
 
   // Apply dark mode immediately
   useEffect(() => {
@@ -47,18 +69,20 @@ function MobileDemoContent() {
   }, [darkMode]);
 
   return (
-    <div style={{ 
-      padding: '16px', 
-      width: '100%',
-      minHeight: '100vh',
-      maxWidth: '400px',
-      margin: '0 auto',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-      background: darkMode ? '#111827' : 'white',
-      color: darkMode ? '#f9fafb' : '#111827',
-      position: 'relative',
-      zIndex: 1000
-    }}>
+    <div
+      style={{
+        padding: "16px",
+        width: "100%",
+        minHeight: "100vh",
+        maxWidth: "400px",
+        margin: "0 auto",
+        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+        background: darkMode ? "#111827" : "white",
+        color: darkMode ? "#f9fafb" : "#111827",
+        position: "relative",
+        zIndex: 1000,
+      }}
+    >
       <Uploader
         limit={limit}
         mini={mini}
@@ -66,7 +90,10 @@ function MobileDemoContent() {
         enabledAdapters={enabledAdapters}
         allowPreview={allowPreview}
         shouldCompress={shouldCompress}
+        imageEditor={imageEditor}
         fileSizeLimit={fileSizeLimit}
+        maxRetries={autoRetryEnabled ? autoRetryCount : undefined}
+        localePack={locale}
       />
     </div>
   );
@@ -79,6 +106,9 @@ export default function MobileDemoPage() {
       <style jsx global>{`
         nav,
         [data-playground-header] {
+          display: none !important;
+        }
+        [data-splash] {
           display: none !important;
         }
         body {
