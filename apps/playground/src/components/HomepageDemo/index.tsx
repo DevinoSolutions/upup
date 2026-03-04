@@ -1,7 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import React, { ChangeEventHandler, useCallback, useState, useEffect, useRef, useContext } from "react";
+import React, {
+  ChangeEventHandler,
+  useCallback,
+  useState,
+  useEffect,
+  useRef,
+  useContext,
+} from "react";
 import {
   FaCog,
   FaExpand,
@@ -20,17 +27,26 @@ import {
   FaShieldAlt,
   FaLanguage,
   FaCrop,
-  FaRedo
+  FaRedo,
 } from "react-icons/fa";
 import { SiDropbox, SiGoogledrive } from "react-icons/si";
 import { GrOnedrive } from "react-icons/gr";
-import type { Translations } from 'upup-react-file-uploader';
-import { en_US } from 'upup-react-file-uploader';
-import { ar_SA, de_DE, es_ES, fr_FR, ja_JP, ko_KR, zh_CN, zh_TW } from 'upup-react-file-uploader/locales';
+import type { Translations } from "upup-react-file-uploader";
+import { en_US } from "upup-react-file-uploader";
+import {
+  ar_SA,
+  de_DE,
+  es_ES,
+  fr_FR,
+  ja_JP,
+  ko_KR,
+  zh_CN,
+  zh_TW,
+} from "upup-react-file-uploader/locales";
 import Uploader from "@/components/Uploader";
-import { Tooltip } from 'react-tooltip';
-import 'react-tooltip/dist/react-tooltip.css';
-import {Play, Zap} from "lucide-react";
+import { Tooltip } from "react-tooltip";
+import "react-tooltip/dist/react-tooltip.css";
+import { Play, Zap } from "lucide-react";
 import { ThemeContext } from "@/lib/contexts";
 
 const UPUP_LIMIT_DEFAULT = 1;
@@ -42,35 +58,35 @@ const FILE_SIZE_UNITS = [
   { value: 1, label: "B" },
   { value: 1024, label: "KB" },
   { value: 1024 * 1024, label: "MB" },
-  { value: 1024 * 1024 * 1024, label: "GB" }
+  { value: 1024 * 1024 * 1024, label: "GB" },
 ];
 
 // Color themes for the uploader
 const COLOR_THEMES = {
   blue: {
     name: "Blue",
-    class: "theme-blue"
+    class: "theme-blue",
   },
   emerald: {
     name: "Emerald",
-    class: "theme-emerald"
+    class: "theme-emerald",
   },
   purple: {
     name: "Purple",
-    class: "theme-purple"
+    class: "theme-purple",
   },
   rose: {
     name: "Rose",
-    class: "theme-rose"
+    class: "theme-rose",
   },
   orange: {
     name: "Orange",
-    class: "theme-orange"
+    class: "theme-orange",
   },
   indigo: {
     name: "Indigo",
-    class: "theme-indigo"
-  }
+    class: "theme-indigo",
+  },
 };
 
 // Upload adapter options
@@ -80,20 +96,20 @@ const UPLOAD_ADAPTERS = [
   { value: "ONE_DRIVE", label: "OneDrive", icon: GrOnedrive },
   { value: "LINK", label: "URL Links", icon: FaGlobe },
   { value: "CAMERA", label: "Camera", icon: FaCamera },
-  { value: "DROPBOX", label: "Dropbox", icon: SiDropbox }
+  { value: "DROPBOX", label: "Dropbox", icon: SiDropbox },
 ];
 
 // Available languages for the locale selector
 const LANGUAGES: { code: string; label: string; locale: Translations }[] = [
-  { code: 'en_US', label: 'English', locale: en_US },
-  { code: 'fr_FR', label: 'Français', locale: fr_FR },
-  { code: 'de_DE', label: 'Deutsch', locale: de_DE },
-  { code: 'es_ES', label: 'Español', locale: es_ES },
-  { code: 'ja_JP', label: '日本語', locale: ja_JP },
-  { code: 'ko_KR', label: '한국어', locale: ko_KR },
-  { code: 'zh_CN', label: '简体中文', locale: zh_CN },
-  { code: 'zh_TW', label: '繁體中文', locale: zh_TW },
-  { code: 'ar_SA', label: 'العربية', locale: ar_SA },
+  { code: "en_US", label: "English", locale: en_US },
+  { code: "fr_FR", label: "Français", locale: fr_FR },
+  { code: "de_DE", label: "Deutsch", locale: de_DE },
+  { code: "es_ES", label: "Español", locale: es_ES },
+  { code: "ja_JP", label: "日本語", locale: ja_JP },
+  { code: "ko_KR", label: "한국어", locale: ko_KR },
+  { code: "zh_CN", label: "简体中文", locale: zh_CN },
+  { code: "zh_TW", label: "繁體中文", locale: zh_TW },
+  { code: "ar_SA", label: "العربية", locale: ar_SA },
 ];
 
 export default function HomepageDemo() {
@@ -102,13 +118,19 @@ export default function HomepageDemo() {
   const [mobileMode, setMobileMode] = useState(false);
   const [limit, setLimit] = useState(UPUP_LIMIT_DEFAULT);
   const [selectedTheme, setSelectedTheme] = useState("blue");
-  const [enabledAdapters, setEnabledAdapters] = useState(["INTERNAL", "GOOGLE_DRIVE", "ONE_DRIVE", "LINK", "CAMERA"]);
+  const [enabledAdapters, setEnabledAdapters] = useState([
+    "INTERNAL",
+    "GOOGLE_DRIVE",
+    "ONE_DRIVE",
+    "LINK",
+    "CAMERA",
+  ]);
   const [allowPreview, setAllowPreview] = useState(true);
   const [shouldCompress, setShouldCompress] = useState(false);
   const [imageEditor, setImageEditor] = useState(false);
   const [autoRetryEnabled, setAutoRetryEnabled] = useState(false);
   const [autoRetryCount, setAutoRetryCount] = useState(3);
-  const [selectedLanguage, setSelectedLanguage] = useState('en_US');
+  const [selectedLanguage, setSelectedLanguage] = useState("en_US");
   const [fileSizeValue, setFileSizeValue] = useState(25); // Default 25
   const [fileSizeUnit, setFileSizeUnit] = useState(1024 * 1024); // Default MB
   const [restrictionsEnabled, setRestrictionsEnabled] = useState(false); // New state for restrictions toggle
@@ -116,7 +138,9 @@ export default function HomepageDemo() {
   const [currentIframeUrl, setCurrentIframeUrl] = useState(""); // Track current iframe URL
 
   // Calculate file size limit in bytes for the uploader
-  const fileSizeLimit = Math.floor((fileSizeValue * fileSizeUnit) / (1024 * 1024)); // Convert to MB for uploader
+  const fileSizeLimit = Math.floor(
+    (fileSizeValue * fileSizeUnit) / (1024 * 1024),
+  ); // Convert to MB for uploader
 
   // Generate iframe URL with current settings
   const generateMobileDemoUrl = () => {
@@ -124,7 +148,7 @@ export default function HomepageDemo() {
       limit: (restrictionsEnabled ? limit : 99).toString(),
       mini: mini.toString(),
       theme: selectedTheme,
-      enabledAdapters: enabledAdapters.join(','),
+      enabledAdapters: enabledAdapters.join(","),
       allowPreview: allowPreview.toString(),
       shouldCompress: shouldCompress.toString(),
       imageEditor: imageEditor.toString(),
@@ -151,14 +175,30 @@ export default function HomepageDemo() {
       }
       setCurrentIframeUrl(newUrl);
     }
-  }, [mini, selectedTheme, enabledAdapters, allowPreview, shouldCompress, imageEditor, autoRetryEnabled, autoRetryCount, restrictionsEnabled, limit, fileSizeValue, fileSizeUnit, isDarkMode, mobileMode, selectedLanguage]);
+  }, [
+    mini,
+    selectedTheme,
+    enabledAdapters,
+    allowPreview,
+    shouldCompress,
+    imageEditor,
+    autoRetryEnabled,
+    autoRetryCount,
+    restrictionsEnabled,
+    limit,
+    fileSizeValue,
+    fileSizeUnit,
+    isDarkMode,
+    mobileMode,
+    selectedLanguage,
+  ]);
 
   const handleMiniChange: ChangeEventHandler<HTMLInputElement> = useCallback(
-      (e) => {
-        if (!mini) setLimit(1);
-        setMini(e.currentTarget.checked);
-      },
-      [mini]
+    (e) => {
+      if (!mini) setLimit(1);
+      setMini(e.currentTarget.checked);
+    },
+    [mini],
   );
 
   const handleThemeChange = useCallback((theme: string) => {
@@ -166,10 +206,10 @@ export default function HomepageDemo() {
   }, []);
 
   const handleAdapterToggle = useCallback((adapter: string) => {
-    setEnabledAdapters(prev =>
-        prev.includes(adapter)
-            ? prev.filter(a => a !== adapter)
-            : [...prev, adapter]
+    setEnabledAdapters((prev) =>
+      prev.includes(adapter)
+        ? prev.filter((a) => a !== adapter)
+        : [...prev, adapter],
     );
   }, []);
 
@@ -227,20 +267,21 @@ export default function HomepageDemo() {
         }
       `}</style>
 
-        <div className="relative max-w-7xl mx-auto">
-          {/* Section Header */}
-          <div className="text-center mb-16">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm border border-gray-200/50 dark:border-gray-700/50 text-sm font-medium text-gray-700 dark:text-gray-300 mb-6">
-              <Play className="w-4 h-4 text-primary dark:text-primary-dark" />
-              Interactive Demo
-            </div>
-            <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 dark:text-gray-100 mb-4">
-              Try the interactive example
-            </h2>
-            <p className="text-xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto">
-              Customize the UI, drag & drop files, and test our TypeScript npm package with different themes and settings.
-            </p>
+      <div className="relative max-w-7xl mx-auto">
+        {/* Section Header */}
+        <div className="text-center mb-16">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm border border-gray-200/50 dark:border-gray-700/50 text-sm font-medium text-gray-700 dark:text-gray-300 mb-6">
+            <Play className="w-4 h-4 text-primary dark:text-primary-dark" />
+            Interactive Demo
           </div>
+          <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 dark:text-gray-100 mb-4">
+            Try the interactive example
+          </h2>
+          <p className="text-xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto">
+            Customize the UI, drag & drop files, and test our TypeScript npm
+            package with different themes and settings.
+          </p>
+        </div>
 
         <div className="flex min-h-[70vh] lg:flex-row md:flex-col flex-col gap-8">
           {/* Controls Panel */}
@@ -618,7 +659,9 @@ export default function HomepageDemo() {
                         <input
                           type="checkbox"
                           checked={autoRetryEnabled}
-                          onChange={(e) => setAutoRetryEnabled(e.target.checked)}
+                          onChange={(e) =>
+                            setAutoRetryEnabled(e.target.checked)
+                          }
                           className="sr-only peer"
                         />
                         <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 dark:peer-focus:ring-primary-dark/20 rounded-full peer dark:bg-gray-600 peer-checked:after:translate-x-4 peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all after:shadow-md dark:border-gray-600 peer-checked:bg-primary dark:peer-checked:bg-primary-dark"></div>
@@ -626,18 +669,30 @@ export default function HomepageDemo() {
                     </div>
                     <div
                       className={`overflow-hidden transition-all duration-300 ease-in-out ${
-                        autoRetryEnabled ? "max-h-20 opacity-100" : "max-h-0 opacity-0"
+                        autoRetryEnabled
+                          ? "max-h-20 opacity-100"
+                          : "max-h-0 opacity-0"
                       }`}
                     >
                       <div className="flex items-center gap-2 pl-6">
-                        <label htmlFor="retryCount" className="text-xs font-medium text-gray-700 dark:text-gray-300">
+                        <label
+                          htmlFor="retryCount"
+                          className="text-xs font-medium text-gray-700 dark:text-gray-300"
+                        >
                           Retries
                         </label>
                         <input
                           type="number"
                           id="retryCount"
                           value={autoRetryCount}
-                          onChange={(e) => setAutoRetryCount(Math.max(1, Math.min(10, Number(e.target.value) || 1)))}
+                          onChange={(e) =>
+                            setAutoRetryCount(
+                              Math.max(
+                                1,
+                                Math.min(10, Number(e.target.value) || 1),
+                              ),
+                            )
+                          }
                           min="1"
                           max="10"
                           className="w-16 px-2 py-1 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded focus:ring-1 focus:ring-primary/20 dark:focus:ring-primary-dark/20 focus:border-primary dark:focus:border-primary-dark transition-colors text-gray-900 dark:text-white"

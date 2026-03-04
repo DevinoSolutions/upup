@@ -1,70 +1,92 @@
 "use client";
 
 import Uploader from "@/components/Uploader";
-import { useSearchParams } from 'next/navigation';
-import type { Translations } from 'upup-react-file-uploader';
-import { en_US, ja_JP, zh_CN, zh_TW, fr_FR, ar_SA, de_DE, es_ES, ko_KR } from 'upup-react-file-uploader/locales';
+import { useSearchParams } from "next/navigation";
+import type { Translations } from "upup-react-file-uploader";
+import {
+  en_US,
+  ja_JP,
+  zh_CN,
+  zh_TW,
+  fr_FR,
+  ar_SA,
+  de_DE,
+  es_ES,
+  ko_KR,
+} from "upup-react-file-uploader/locales";
 
 const LOCALE_MAP: Record<string, Translations> = {
-  en_US, ja_JP, zh_CN, zh_TW, fr_FR, ar_SA, de_DE, es_ES, ko_KR,
+  en_US,
+  ja_JP,
+  zh_CN,
+  zh_TW,
+  fr_FR,
+  ar_SA,
+  de_DE,
+  es_ES,
+  ko_KR,
 };
-import { Suspense, useEffect } from 'react';
+import { Suspense, useEffect } from "react";
 
 function MobileDemoContent() {
   const searchParams = useSearchParams();
-  
+
   // Hide navbar and other UI elements
   useEffect(() => {
     // Hide navbar/header
-    const navbar = document.querySelector('nav, [data-playground-header]') as HTMLElement;
+    const navbar = document.querySelector(
+      "nav, [data-playground-header]",
+    ) as HTMLElement;
     if (navbar) {
-      navbar.style.display = 'none';
+      navbar.style.display = "none";
     }
-    
+
     // Hide splash cursor
-    const splashCursor = document.querySelector('[data-splash]') as HTMLElement;
+    const splashCursor = document.querySelector("[data-splash]") as HTMLElement;
     if (splashCursor) {
-      splashCursor.style.display = 'none';
+      splashCursor.style.display = "none";
     }
-    
+
     // Clean up body styling (background will be handled by dark mode effect)
-    document.body.style.margin = '0';
-    document.body.style.padding = '0';
-    
+    document.body.style.margin = "0";
+    document.body.style.padding = "0";
+
     // Cleanup on unmount
     return () => {
       if (navbar) {
-        navbar.style.display = '';
+        navbar.style.display = "";
       }
       if (splashCursor) {
-        splashCursor.style.display = '';
+        splashCursor.style.display = "";
       }
     };
   }, []);
-  
+
   // Parse URL parameters
-  const limit = parseInt(searchParams.get('limit') || '99');
-  const mini = searchParams.get('mini') === 'true';
-  const theme = searchParams.get('theme') || 'blue';
-  const enabledAdapters = searchParams.get('enabledAdapters')?.split(',') || ['INTERNAL'];
-  const allowPreview = searchParams.get('allowPreview') !== 'false';
-  const shouldCompress = searchParams.get('shouldCompress') === 'true';
-  const imageEditor = searchParams.get('imageEditor') === 'true';
-  const fileSizeLimit = parseInt(searchParams.get('fileSizeLimit') || '999');
-  const darkMode = searchParams.get('darkMode') === 'true';
-  const autoRetryEnabled = searchParams.get('autoRetryEnabled') === 'true';
-  const autoRetryCount = parseInt(searchParams.get('autoRetryCount') || '3');
-  const language = searchParams.get('language') || 'en_US';
+  const limit = parseInt(searchParams.get("limit") || "99");
+  const mini = searchParams.get("mini") === "true";
+  const theme = searchParams.get("theme") || "blue";
+  const enabledAdapters = searchParams.get("enabledAdapters")?.split(",") || [
+    "INTERNAL",
+  ];
+  const allowPreview = searchParams.get("allowPreview") !== "false";
+  const shouldCompress = searchParams.get("shouldCompress") === "true";
+  const imageEditor = searchParams.get("imageEditor") === "true";
+  const fileSizeLimit = parseInt(searchParams.get("fileSizeLimit") || "999");
+  const darkMode = searchParams.get("darkMode") === "true";
+  const autoRetryEnabled = searchParams.get("autoRetryEnabled") === "true";
+  const autoRetryCount = parseInt(searchParams.get("autoRetryCount") || "3");
+  const language = searchParams.get("language") || "en_US";
   const locale = LOCALE_MAP[language] ?? en_US;
 
   // Apply dark mode immediately
   useEffect(() => {
     if (darkMode) {
-      document.documentElement.classList.add('dark');
-      document.body.style.background = '#111827'; // dark gray-900
+      document.documentElement.classList.add("dark");
+      document.body.style.background = "#111827"; // dark gray-900
     } else {
-      document.documentElement.classList.remove('dark');
-      document.body.style.background = 'white';
+      document.documentElement.classList.remove("dark");
+      document.body.style.background = "white";
     }
   }, [darkMode]);
 
@@ -117,8 +139,14 @@ export default function MobileDemoPage() {
         }
         /* Dark mode styles will be handled by the component */
       `}</style>
-      
-      <Suspense fallback={<div style={{padding: '16px', background: 'white'}}>Loading mobile demo...</div>}>
+
+      <Suspense
+        fallback={
+          <div style={{ padding: "16px", background: "white" }}>
+            Loading mobile demo...
+          </div>
+        }
+      >
         <MobileDemoContent />
       </Suspense>
     </>

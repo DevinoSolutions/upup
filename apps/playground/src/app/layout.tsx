@@ -8,37 +8,37 @@ import { Providers } from "@/components/providers";
 import PlaygroundHeader from "@/components/PlaygroundHeader";
 
 const geistSans = Geist({
-    variable: "--font-geist-sans",
-    subsets: ["latin"],
+  variable: "--font-geist-sans",
+  subsets: ["latin"],
 });
 
 const geistMono = Geist_Mono({
-    variable: "--font-geist-mono",
-    subsets: ["latin"],
+  variable: "--font-geist-mono",
+  subsets: ["latin"],
 });
 
 export const viewport: Viewport = {
-    themeColor: "#ffffff",
+  themeColor: "#ffffff",
 };
 
 export const metadata: Metadata = {
-    icons: { icon: "/favicon.ico" },
-    title: "Upup Playground",
-    description: "Developer playground for testing the Upup uploader component.",
+  icons: { icon: "/favicon.ico" },
+  title: "Upup Playground",
+  description: "Developer playground for testing the Upup uploader component.",
 };
 
 export default function RootLayout({
-    children,
+  children,
 }: {
-    children: React.ReactNode;
+  children: React.ReactNode;
 }) {
-    return (
-        <html lang="en" suppressHydrationWarning>
-            <head>
-                <link rel="icon" href="/favicon.ico" />
-                <meta name="theme-color" content="#ffffff" />
-                <Script id="extension-handler" strategy="beforeInteractive">
-                    {`
+  return (
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <link rel="icon" href="/favicon.ico" />
+        <meta name="theme-color" content="#ffffff" />
+        <Script id="extension-handler" strategy="beforeInteractive">
+          {`
             (function() {
               const preserveBodyAttributes = () => {
                 if (typeof window !== 'undefined' && document.body) {
@@ -63,9 +63,9 @@ export default function RootLayout({
               window.addEventListener('load', preserveBodyAttributes);
             })();
           `}
-                </Script>
-                <Script id="theme-script" strategy="beforeInteractive">
-                    {`
+        </Script>
+        <Script id="theme-script" strategy="beforeInteractive">
+          {`
             (function() {
               try {
                 let themeSet = false;
@@ -95,23 +95,23 @@ export default function RootLayout({
               }
             })();
           `}
-                </Script>
-            </head>
-            <body
-                className={`overflow-x-hidden ${geistSans.variable} ${geistMono.variable} antialiased dark:bg-slate-950`}
-                suppressHydrationWarning={true}
-                data-hydration-stable="true"
-                key="main-body"
-            >
-                <Providers>
-                    <ThemeProvider>
-                        <div className="flex flex-col min-h-screen w-full bg-gradient-to-br from-slate-50 to-blue-50 dark:from-gray-950 dark:to-slate-900">
-                            <PlaygroundHeader />
-                            {children}
-                        </div>
-                    </ThemeProvider>
-                </Providers>
-            </body>
-        </html>
-    );
+        </Script>
+      </head>
+      <body
+        className={`overflow-x-hidden ${geistSans.variable} ${geistMono.variable} antialiased dark:bg-slate-950`}
+        suppressHydrationWarning={true}
+        data-hydration-stable="true"
+        key="main-body"
+      >
+        <Providers>
+          <ThemeProvider>
+            <div className="flex flex-col min-h-screen w-full bg-gradient-to-br from-slate-50 to-blue-50 dark:from-gray-950 dark:to-slate-900">
+              <PlaygroundHeader />
+              {children}
+            </div>
+          </ThemeProvider>
+        </Providers>
+      </body>
+    </html>
+  );
 }

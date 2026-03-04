@@ -10,8 +10,9 @@
 
 @font-face {
   font-family: "Geist";
-  src: url("./fonts/GeistVF.woff") format("woff"),
-  url("./fonts/GeistMonoVF.woff") format("woff");
+  src:
+    url("./fonts/GeistVF.woff") format("woff"),
+    url("./fonts/GeistMonoVF.woff") format("woff");
   font-weight: normal;
   font-style: normal;
   font-display: swap;
@@ -44,8 +45,14 @@ body {
     animation: scale-in 0.15s ease-out forwards;
   }
   @keyframes scale-in {
-    0%   { transform: scaleY(0); opacity: 0; }
-    100% { transform: scaleY(1); opacity: 1; }
+    0% {
+      transform: scaleY(0);
+      opacity: 0;
+    }
+    100% {
+      transform: scaleY(1);
+      opacity: 1;
+    }
   }
 }
 
@@ -372,8 +379,6 @@ body {
     flex: 1 1 auto;
   }
   .upup-scope.upup-h-full.upup-w-full > * {
-
     height: 600px;
-
   }
 }
