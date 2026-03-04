@@ -60,9 +60,14 @@ export default forwardRef<UpupUploaderRef, UpupUploaderProps>(
                         className={cn('upup-w-full', {
                             'upup-h-[480px] upup-max-w-[600px]':
                                 !providerValues.props.mini,
-                            'upup-h-[280px] upup-max-w-[280px]':
+                            'upup-h-auto upup-max-w-[280px]':
                                 providerValues.props.mini,
                         })}
+                        style={
+                            providerValues.props.mini
+                                ? { aspectRatio: '1 / 1' }
+                                : undefined
+                        }
                     >
                         <section
                             aria-labelledby="drop-instructions"
