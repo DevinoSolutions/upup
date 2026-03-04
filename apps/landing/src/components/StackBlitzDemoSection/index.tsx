@@ -107,8 +107,7 @@ export default function StackBlitzDemoSection() {
                             </span>
                         </h2>
                         <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto mb-8">
-                            Experiment with Upup directly in this interactive playground. Make
-                            changes to the code and see results instantly.
+                            See a live React dropzone example — edit the TypeScript component, customize the upload button and file picker, and watch results instantly.
                         </p>
                     </div>
 
@@ -160,7 +159,7 @@ export default function StackBlitzDemoSection() {
                     {!isFullscreen && (
                         <div className="text-center mt-12">
                             <p className="text-gray-600 dark:text-gray-400 mb-6">
-                                Like what you see? Get started with Upup in your project today.
+                                Like what you see? Install the npm package in your Next.js, Vite, Remix, or Gatsby project and start uploading files today.
                             </p>
                             <div className="flex flex-col sm:flex-row gap-4 justify-center">
                                 <Link target="_blank" href="/documentation" className="group inline-flex items-center gap-2 px-8 py-4 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-2xl font-semibold hover:bg-gray-800 dark:hover:bg-gray-100 transition-all duration-200">

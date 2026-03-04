@@ -1,5 +1,6 @@
 import { GoogleFile, Root, Token, User } from 'google'
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { t } from '../../shared/i18n'
 import { GoogleDriveConfigs } from '../../shared/types'
 import { useRootContext } from '../context/RootContext'
 import { createSecureStorage } from '../lib/storageHelper'
@@ -12,6 +13,7 @@ export default function useGoogleDrive(
     const { google_client_id, google_api_key } = googleConfigs
     const {
         props: { onError },
+        translations,
     } = useRootContext()
     const [user, setUser] = useState<User>()
     const [googleFiles, setGoogleFiles] = useState<Root>()
@@ -153,17 +155,27 @@ export default function useGoogleDrive(
                                     expires_in:
                                         Date.now() +
                                         (tokenResponse.expires_in - 20) * 1000,
-                                }),
-                            )
-                            return setToken(tokenResponse)
-                        } else {
-                            onError('Error: ' + tokenResponse?.error)
-                        }
-                    },
+                                    }),
+                                )
+                                return setToken(tokenResponse)
+                            } else {
+                                onError(
+                                    t(translations.genericErrorDetails, {
+                                        details: String(
+                                            tokenResponse?.error ?? '',
+                                        ),
+                                    }),
+                                )
+                            }
+                        },
                     error_callback(error: { type: string; message?: string }) {
                         // Fired when popup is closed or blocked by the user
                         setAuthCancelled(true)
-                        onError(error.message || error.type)
+                        onError(
+                            t(translations.genericErrorDetails, {
+                                details: error.message || error.type,
+                            }),
+                        )
                     },
                 })
                 tokenClientRef.current = client

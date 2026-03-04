@@ -3,8 +3,11 @@
 import React, { forwardRef, useImperativeHandle } from 'react'
 import { TbLoader } from 'react-icons/tb/index.js'
 import { devinoDark, devinoLight, logoDark, logoLight } from '../assets/logos'
+import { t } from '../shared/i18n'
 import { FileWithParams, UpupUploaderProps } from '../shared/types'
 import DefaultLoaderIcon from './components/DefaultLoaderIcon'
+import ImageEditorInline from './components/ImageEditorInline'
+import ImageEditorModal from './components/ImageEditorModal'
 import MainBox from './components/MainBox'
 import ShouldRender from './components/shared/ShouldRender'
 import RootContext from './context/RootContext'
@@ -108,11 +111,29 @@ export default forwardRef<UpupUploaderRef, UpupUploaderProps>(
                                         },
                                     )}
                                 >
-                                    Add your documents here, you can upload up
-                                    to {providerValues.props.limit} files max
+                                    {t(
+                                        providerValues.translations
+                                            .addDocumentsHere,
+                                        {
+                                            limit: providerValues.props.limit,
+                                        },
+                                    )}
                                 </p>
                             </ShouldRender>
                             <MainBox />
+
+                            {/* Inline image editor — overlays the uploader content */}
+                            {providerValues.editingFile &&
+                                providerValues.props.imageEditor.display ===
+                                    'inline' && (
+                                    <ImageEditorInline
+                                        file={providerValues.editingFile}
+                                        onClose={
+                                            providerValues.closeImageEditor
+                                        }
+                                        onSave={providerValues.saveImageEdit}
+                                    />
+                                )}
 
                             <div
                                 className={cn(
@@ -124,7 +145,7 @@ export default forwardRef<UpupUploaderRef, UpupUploaderProps>(
                                 )}
                             >
                                 <a
-                                    href={'https://getupup.ca/'}
+                                    href={'https://useupup.com/'}
                                     target={'_blank'}
                                     rel="noopener noreferrer"
                                     className="upup-flex upup-items-center upup-gap-[5px]"
@@ -165,7 +186,7 @@ export default forwardRef<UpupUploaderRef, UpupUploaderProps>(
                                             },
                                         )}
                                     >
-                                        Built by{' '}
+                                        {providerValues.translations.builtBy}{' '}
                                     </span>
                                     <ShouldRender
                                         if={providerValues.props.dark}
@@ -192,6 +213,14 @@ export default forwardRef<UpupUploaderRef, UpupUploaderProps>(
                         </section>
                     </div>
                 </div>
+                {providerValues.editingFile &&
+                    providerValues.props.imageEditor.display === 'modal' && (
+                        <ImageEditorModal
+                            file={providerValues.editingFile}
+                            onClose={providerValues.closeImageEditor}
+                            onSave={providerValues.saveImageEdit}
+                        />
+                    )}
             </RootContext.Provider>
         )
     },

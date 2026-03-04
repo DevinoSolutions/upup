@@ -11,6 +11,7 @@ import {
     useEffect,
     useState,
 } from 'react'
+import { t } from '../../shared/i18n'
 import { useRootContext } from '../context/RootContext'
 import { createSecureStorage } from '../lib/storageHelper'
 
@@ -29,6 +30,7 @@ export default function useOneDriveAuth({
 }: Props) {
     const {
         props: { onError },
+        translations,
     } = useRootContext()
     const [token, setToken] = useState<MicrosoftToken>()
     const [isInitialized, setIsInitialized] = useState(false)
@@ -66,14 +68,17 @@ export default function useOneDriveAuth({
                             })
                     } catch (error) {
                         onError(
-                            `Silent token acquisition failed: ${(error as Error)
-                                ?.message}`,
+                            t(translations.silentTokenAcquisitionFailed, {
+                                details: (error as Error)?.message ?? '',
+                            }),
                         ) // Silent token acquisition failed, user will need to sign in again
                     }
                 }
             } catch (error) {
                 onError(
-                    `MSAL initialization failed: ${(error as Error)?.message}`,
+                    t(translations.msalInitializationFailed, {
+                        details: (error as Error)?.message ?? '',
+                    }),
                 )
                 setIsInitialized(false)
             }
@@ -111,8 +116,9 @@ export default function useOneDriveAuth({
                         })
                     } catch (error) {
                         onError(
-                            'Silent token acquisition failed, proceeding with interactive login' +
-                                (error as Error)?.message,
+                            t(translations.silentTokenAcquisitionProceeding, {
+                                details: (error as Error)?.message ?? '',
+                            }),
                         ) // Silent token acquisition failed, fall through to interactive login
                     }
                 }
@@ -129,7 +135,11 @@ export default function useOneDriveAuth({
 
                 return null
             } catch (error) {
-                onError(`Sign-in failed: ${(error as Error)?.message}`)
+                onError(
+                    t(translations.signInFailed, {
+                        message: (error as Error)?.message ?? '',
+                    }),
+                )
                 return null
             } finally {
                 setIsAuthenticating(false)
@@ -161,7 +171,11 @@ export default function useOneDriveAuth({
                 setAuthCancelled(true)
             }
         } catch (error) {
-            onError(`Handle sign-in failed: ${(error as Error)?.message}`)
+            onError(
+                t(translations.handleSignInFailed, {
+                    message: (error as Error)?.message ?? '',
+                }),
+            )
             setAuthCancelled(true)
             setToken(undefined)
             secureStorage.removeItem('isAuthenticated')
@@ -197,7 +211,11 @@ export default function useOneDriveAuth({
             // Clear remaining session storage
             secureStorage.removeItem('isAuthenticated')
         } catch (error) {
-            onError(`Sign-out failed: ${(error as Error)?.message}`)
+            onError(
+                t(translations.signOutFailed, {
+                    message: (error as Error)?.message ?? '',
+                }),
+            )
         } finally {
             setIsAuthInProgress(false)
             // Clear the logout flag after a short delay

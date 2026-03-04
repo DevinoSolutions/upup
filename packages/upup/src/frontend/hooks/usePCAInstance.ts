@@ -5,6 +5,7 @@ import { useRootContext } from '../context/RootContext'
 const usePCAInstance = (clientId: string) => {
     const {
         props: { onError },
+        translations,
     } = useRootContext()
     const [msalInstance, setMsalInstance] = useState<PublicClientApplication>()
     const [isInitializing, setIsInitializing] = useState(true)
@@ -15,7 +16,7 @@ const usePCAInstance = (clientId: string) => {
         const initializeMsal = async () => {
             if (!clientId) {
                 setIsInitializing(false)
-                onError('Client ID is required...')
+                onError(translations.clientIdRequired)
                 return
             }
 

@@ -69,6 +69,13 @@ describe('CameraUploader Component', () => {
             url: '',
             webcamRef: { current: null },
             facingMode: FacingMode.Environment,
+            translations: {
+                capture: 'Capture',
+                switchToCamera: 'switch to {{side}}',
+                addImage: 'Add Image',
+                front: 'front',
+                back: 'back',
+            } as any,
             props: {
                 dark: false,
                 classNames: {},

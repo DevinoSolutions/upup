@@ -8,15 +8,19 @@ export default function useAdapterSelector() {
         inputRef,
         setActiveAdapter,
         setFiles,
+        translations,
         props: { uploadAdapters, onIntegrationClick },
     } = useRootContext()
 
     const chosenAdapters = useMemo(
         () =>
-            Object.values(uploadAdapterObject).filter(item =>
-                uploadAdapters.includes(item.id),
-            ),
-        [uploadAdapters],
+            Object.values(uploadAdapterObject)
+                .filter(item => uploadAdapters.includes(item.id))
+                .map(item => ({
+                    ...item,
+                    name: translations[item.nameKey],
+                })),
+        [uploadAdapters, translations],
     )
 
     const handleAdapterClick = useCallback(
