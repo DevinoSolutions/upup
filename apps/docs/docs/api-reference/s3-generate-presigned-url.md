@@ -188,3 +188,7 @@ s3GeneratePresignedUrl({
 :::tip
 Check our [code examples](/docs/code-examples.md) for how to configure `s3GeneratePresignedUrl` for your particular back-end stack, and how to [configure your credentials with the right permissions](/docs/credentials-configuration.md)
 :::
+
+:::info Resumable Uploads
+For large file uploads, you can enable [resumable multipart uploads](/docs/resumable-uploads.md) on the client. This requires additional server utilities (`s3InitiateMultipartUpload`, `s3GeneratePresignedPartUrl`, `s3ListMultipartParts`, `s3CompleteMultipartUpload`, `s3AbortMultipartUpload`) — all exported from `upup-react-file-uploader/server`. See the [Resumable Uploads guide](/docs/resumable-uploads.md) for full setup instructions.
+:::

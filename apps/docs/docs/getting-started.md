@@ -170,6 +170,13 @@ The full list of exported server utility functions include:
 
 - [`s3GeneratePresignedUrl`](/docs/api-reference/s3-generate-presigned-url.md): for S3-compatible Uploads: like AWS, Digital Ocean, Backblaze
 - [`azureGenerateSasUrl`](/docs/api-reference/azure-generate-sas-url.md): for Azure Blob Uploads only
+- `s3InitiateMultipartUpload`: Initiate a resumable multipart upload session
+- `s3GeneratePresignedPartUrl`: Generate a presigned URL for a single upload part
+- `s3ListMultipartParts`: List all uploaded parts for a multipart upload
+- `s3CompleteMultipartUpload`: Complete a multipart upload by assembling parts
+- `s3AbortMultipartUpload`: Abort an in-progress multipart upload
+
+For resumable multipart upload setup, see the [Resumable Uploads guide](/docs/resumable-uploads.md).
 
 :::info
 

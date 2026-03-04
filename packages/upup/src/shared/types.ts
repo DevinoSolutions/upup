@@ -221,6 +221,8 @@ export type UpupUploaderProps = {
     imageEditor?: boolean | ImageEditorOptions
     customProps?: object
     dark?: boolean
+    maxRetries?: number
+    resumable?: ResumableUploadOptions
     classNames?: UpupUploaderPropsClassNames
     icons?: UpupUploaderPropsIcons
 
@@ -306,3 +308,70 @@ export type FileWithParams = File & {
 }
 
 export type FileWithProgress = FileWithParams & { progress: number }
+
+/**
+ * Options for resumable uploads.
+ * Currently supports 'multipart' mode for S3-compatible providers.
+ * 'tus' mode is reserved for future implementation.
+ */
+export type ResumableUploadOptions =
+    | {
+          mode: 'multipart'
+          /** Part size in bytes. Minimum 5 MiB, clamped automatically. */
+          chunkSizeBytes?: number
+          /** Persist upload sessions in localStorage for cross-refresh resume. Default: true */
+          persist?: boolean
+      }
+    | {
+          mode: 'tus'
+          /** Tus server endpoint (not implemented yet) */
+          endpoint: string
+      }
+
+/**
+ * Response from tokenEndpoint for multipart:init action
+ */
+export type MultipartInitResponse = {
+    key: string
+    uploadId: string
+    partSize: number
+    expiresIn: number
+}
+
+/**
+ * Response from tokenEndpoint for multipart:signPart action
+ */
+export type MultipartSignPartResponse = {
+    uploadUrl: string
+    expiresIn: number
+}
+
+/**
+ * A single uploaded part reference
+ */
+export type MultipartPart = {
+    partNumber: number
+    eTag: string
+}
+
+/**
+ * Response from tokenEndpoint for multipart:listParts action
+ */
+export type MultipartListPartsResponse = {
+    parts: MultipartPart[]
+}
+
+/**
+ * Response from tokenEndpoint for multipart:complete action
+ */
+export type MultipartCompleteResponse = {
+    key: string
+    publicUrl: string
+}
+
+/**
+ * Response from tokenEndpoint for multipart:abort action
+ */
+export type MultipartAbortResponse = {
+    ok: true
+}

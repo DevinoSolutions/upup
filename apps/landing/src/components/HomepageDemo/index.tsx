@@ -19,7 +19,8 @@ import {
   FaInfoCircle,
   FaShieldAlt,
   FaLanguage,
-  FaCrop
+  FaCrop,
+  FaRedo
 } from "react-icons/fa";
 import { SiDropbox, SiGoogledrive } from "react-icons/si";
 import { GrOnedrive } from "react-icons/gr";
@@ -105,6 +106,8 @@ export default function HomepageDemo() {
   const [allowPreview, setAllowPreview] = useState(true);
   const [shouldCompress, setShouldCompress] = useState(false);
   const [imageEditor, setImageEditor] = useState(false);
+  const [autoRetryEnabled, setAutoRetryEnabled] = useState(false);
+  const [autoRetryCount, setAutoRetryCount] = useState(3);
   const [selectedLanguage, setSelectedLanguage] = useState('en_US');
   const [fileSizeValue, setFileSizeValue] = useState(25); // Default 25
   const [fileSizeUnit, setFileSizeUnit] = useState(1024 * 1024); // Default MB
@@ -125,6 +128,8 @@ export default function HomepageDemo() {
       allowPreview: allowPreview.toString(),
       shouldCompress: shouldCompress.toString(),
       imageEditor: imageEditor.toString(),
+      autoRetryEnabled: autoRetryEnabled.toString(),
+      autoRetryCount: autoRetryCount.toString(),
       fileSizeLimit: (restrictionsEnabled ? fileSizeLimit : 999).toString(),
       darkMode: isDarkMode.toString(),
       language: selectedLanguage,
@@ -146,7 +151,7 @@ export default function HomepageDemo() {
       }
       setCurrentIframeUrl(newUrl);
     }
-  }, [mini, selectedTheme, enabledAdapters, allowPreview, shouldCompress, imageEditor, restrictionsEnabled, limit, fileSizeValue, fileSizeUnit, isDarkMode, mobileMode]);
+  }, [mini, selectedTheme, enabledAdapters, allowPreview, shouldCompress, imageEditor, autoRetryEnabled, autoRetryCount, restrictionsEnabled, limit, fileSizeValue, fileSizeUnit, isDarkMode, mobileMode, selectedLanguage]);
 
   const handleMiniChange: ChangeEventHandler<HTMLInputElement> = useCallback(
       (e) => {
@@ -595,6 +600,51 @@ export default function HomepageDemo() {
                       <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 dark:peer-focus:ring-primary-dark/20 rounded-full peer dark:bg-gray-600 peer-checked:after:translate-x-4 peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all after:shadow-md dark:border-gray-600 peer-checked:bg-primary dark:peer-checked:bg-primary-dark"></div>
                     </label>
                   </div>
+
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <FaRedo className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                        <div
+                          className="text-sm font-medium text-gray-900 dark:text-gray-100 cursor-help flex items-center gap-1"
+                          data-tooltip-id="autoretry-tooltip"
+                          data-tooltip-content="Automatically retry failed uploads before showing an error. When disabled, a manual retry button appears on failure."
+                        >
+                          <FaInfoCircle className="w-3 h-3 text-blue-500 dark:text-blue-400" />
+                          Auto Retry
+                        </div>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={autoRetryEnabled}
+                          onChange={(e) => setAutoRetryEnabled(e.target.checked)}
+                          className="sr-only peer"
+                        />
+                        <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 dark:peer-focus:ring-primary-dark/20 rounded-full peer dark:bg-gray-600 peer-checked:after:translate-x-4 peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all after:shadow-md dark:border-gray-600 peer-checked:bg-primary dark:peer-checked:bg-primary-dark"></div>
+                      </label>
+                    </div>
+                    <div
+                      className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                        autoRetryEnabled ? "max-h-20 opacity-100" : "max-h-0 opacity-0"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 pl-6">
+                        <label htmlFor="retryCount" className="text-xs font-medium text-gray-700 dark:text-gray-300">
+                          Retries
+                        </label>
+                        <input
+                          type="number"
+                          id="retryCount"
+                          value={autoRetryCount}
+                          onChange={(e) => setAutoRetryCount(Math.max(1, Math.min(10, Number(e.target.value) || 1)))}
+                          min="1"
+                          max="10"
+                          className="w-16 px-2 py-1 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded focus:ring-1 focus:ring-primary/20 dark:focus:ring-primary-dark/20 focus:border-primary dark:focus:border-primary-dark transition-colors text-gray-900 dark:text-white"
+                        />
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -694,6 +744,7 @@ export default function HomepageDemo() {
                       shouldCompress={shouldCompress}
                       imageEditor={imageEditor}
                       fileSizeLimit={restrictionsEnabled ? fileSizeLimit : 999}
+                      maxRetries={autoRetryEnabled ? autoRetryCount : undefined}
                       localePack={
                         LANGUAGES.find((l) => l.code === selectedLanguage)
                           ?.locale
@@ -713,6 +764,7 @@ export default function HomepageDemo() {
       <Tooltip id="preview-tooltip" className="z-50" />
       <Tooltip id="compress-tooltip" className="z-50" />
       <Tooltip id="image-editor-tooltip" className="z-50" />
+      <Tooltip id="autoretry-tooltip" className="z-50" />
     </section>
   );
 }

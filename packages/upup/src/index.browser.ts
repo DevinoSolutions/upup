@@ -10,6 +10,7 @@ export {
     GoogleDriveConfigs,
     ImageEditorOptions,
     OneDriveConfigs,
+    ResumableUploadOptions,
     Translations,
     UploadAdapter,
     UpupProvider,

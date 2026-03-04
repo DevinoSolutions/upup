@@ -35,6 +35,7 @@ interface Props {
     allowPreview?: boolean;
     shouldCompress?: boolean;
     fileSizeLimit?: number; // in MB
+    maxRetries?: number;
     localePack?: Translations;
     imageEditor?: boolean;
 }
@@ -47,6 +48,7 @@ export default function Uploader({
                                      allowPreview = true,
                                      shouldCompress = false,
                                      fileSizeLimit = 25,
+                                     maxRetries,
                                      localePack,
                                      imageEditor = false,
                                  }: Readonly<Props>) {
@@ -108,6 +110,8 @@ export default function Uploader({
           imageEditor={imageEditor}
           maxFileSize={{ size: fileSizeLimit, unit: "MB" }}
           classNames={customClassNames}
+          maxRetries={maxRetries}
+          resumable={{ mode: "multipart" }}
           localePack={localePack}
           onFilesUploadComplete={(files) => {
             console.log("Files uploaded successfully:", files);

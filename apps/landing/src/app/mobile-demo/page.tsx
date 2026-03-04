@@ -52,6 +52,8 @@ function MobileDemoContent() {
   const imageEditor = searchParams.get('imageEditor') === 'true';
   const fileSizeLimit = parseInt(searchParams.get('fileSizeLimit') || '999');
   const darkMode = searchParams.get('darkMode') === 'true';
+  const autoRetryEnabled = searchParams.get('autoRetryEnabled') === 'true';
+  const autoRetryCount = parseInt(searchParams.get('autoRetryCount') || '3');
   const language = searchParams.get('language') || 'en_US';
   const locale = LOCALE_MAP[language] ?? en_US;
 
@@ -90,6 +92,7 @@ function MobileDemoContent() {
         shouldCompress={shouldCompress}
         imageEditor={imageEditor}
         fileSizeLimit={fileSizeLimit}
+        maxRetries={autoRetryEnabled ? autoRetryCount : undefined}
         localePack={locale}
       />
     </div>
