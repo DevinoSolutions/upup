@@ -8,7 +8,7 @@ export default defineConfig([
         dts: {
             entry: ['src/index.browser.ts', 'src/shared/i18n/locales/index.ts'],
         },
-        splitting: true,
+        splitting: false,
         sourcemap: true,
         target: 'es2019',
         minify: true,
