@@ -12,7 +12,6 @@
 
 ```tsx
 import { ja_JP } from 'upup-react-file-uploader/locales'
-
 ;<UpupUploader localePack={ja_JP} />
 ```
 
