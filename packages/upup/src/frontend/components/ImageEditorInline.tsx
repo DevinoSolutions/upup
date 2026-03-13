@@ -9,6 +9,10 @@ import React, {
 } from 'react'
 import { FileWithParams } from '../../shared/types'
 import { useRootContext } from '../context/RootContext'
+import {
+    getFilerobotTheme,
+    getImageEditorCssOverrides,
+} from '../lib/imageEditorHelpers'
 import { cn } from '../lib/tailwind'
 
 type Props = {
@@ -168,159 +172,11 @@ export default memo(function ImageEditorInline(props: Props) {
           )
         : undefined
 
-    // Build Filerobot theme to match dark/light mode and style the Save button
-    const filerobotTheme = useMemo(
-        () =>
-            dark
-                ? {
-                      palette: {
-                          'bg-secondary': '#1a1a1a',
-                          'bg-primary': '#232323',
-                          'bg-primary-active': '#2d2d2d',
-                          'bg-stateless': '#2d2d2d',
-                          'bg-hover': '#3a3a3a',
-                          'bg-active': '#3a3a3a',
-                          'accent-primary': '#30C5F7',
-                          'accent-primary-hover': '#6DD8FB',
-                          'accent-primary-active': '#6DD8FB',
-                          accent_1_2_opacity: 'rgba(48, 197, 247, 0.12)',
-                          'accent-stateless': '#30C5F7',
-                          'icon-primary': '#ffffff',
-                          'icons-primary': '#ffffff',
-                          'icons-secondary': '#d1d5db',
-                          'icons-placeholder': '#9ca3af',
-                          'borders-secondary': '#374151',
-                          'borders-primary': '#4b5563',
-                          'borders-strong': '#6b7280',
-                          'borders-disabled': '#6b7280',
-                          'borders-button': '#4b5563',
-                          'light-shadow': 'rgba(0, 0, 0, 0.4)',
-                          warning: '#f59e0b',
-                          'txt-primary': '#ffffff',
-                          'txt-secondary': '#d1d5db',
-                          'txt-primary-invert': '#232323',
-                          'txt-secondary-invert': '#1a1a1a',
-                          'btn-primary-text': '#ffffff',
-                          'btn-secondary-text': '#d1d5db',
-                          'btn-disabled-text': '#6b7280',
-                          'link-stateless': '#d1d5db',
-                      },
-                      typography: {
-                          fontFamily: 'inherit',
-                      },
-                  }
-                : {
-                      palette: {
-                          'bg-secondary': '#f9fafb',
-                          'bg-primary': '#ffffff',
-                          'accent-primary': '#2563eb',
-                          'accent-primary-active': '#1d4ed8',
-                          'accent-stateless': '#2563eb',
-                          'txt-primary': '#1f2937',
-                          'txt-secondary': '#4b5563',
-                          'btn-primary-text': '#ffffff',
-                      },
-                      typography: {
-                          fontFamily: 'inherit',
-                      },
-                  },
+    const filerobotTheme = useMemo(() => getFilerobotTheme(dark), [dark])
+    const editorCssOverrides = useMemo(
+        () => getImageEditorCssOverrides(dark),
         [dark],
     )
-
-    // CSS overrides for hardcoded light-mode values in @scaleflex/ui & FIE
-    // Input backgrounds: @scaleflex/ui's getInputBackgroundColor() bypasses the
-    //   theme system and always returns lightPalette[BackgroundStateless] (#fff).
-    // Carousel gradients: FIE's Carousel.styled.js hardcodes white gradients
-    //   for the prev/next arrow wrappers.
-    // These cannot be fixed via the palette prop — CSS overrides are required.
-    const darkCssOverrides = dark
-        ? `
-        /* Input background & border overrides (hardcoded in @scaleflex/ui) */
-        [data-upup-dark] .SfxInput-Base {
-            background-color: #2d2d2d !important;
-            border-color: #4b5563 !important;
-        }
-        [data-upup-dark] .SfxInput-Base:focus-within {
-            background-color: #353535 !important;
-            border-color: #6b7280 !important;
-        }
-        [data-upup-dark] .SfxInput-Base:hover {
-            background-color: #353535 !important;
-        }
-        /* Carousel gradient arrow overrides (hardcoded white in FIE) */
-        [data-upup-dark] .FIE_carousel-prev-button {
-            background: linear-gradient(
-                90deg,
-                #232323 1.56%,
-                rgba(35, 35, 35, 0.89) 52.4%,
-                rgba(35, 35, 35, 0.53) 76.04%,
-                rgba(35, 35, 35, 0) 100%
-            ) !important;
-        }
-        [data-upup-dark] .FIE_carousel-next-button {
-            background: linear-gradient(
-                270deg,
-                #232323 1.56%,
-                rgba(35, 35, 35, 0.89) 52.4%,
-                rgba(35, 35, 35, 0.53) 76.04%,
-                rgba(35, 35, 35, 0) 100%
-            ) !important;
-        }
-        /* Save button visibility in dark mode */
-        [data-upup-dark] .FIE_topbar-save-button {
-            background-color: #30c5f7 !important;
-            color: #ffffff !important;
-            border: none !important;
-        }
-        [data-upup-dark] .FIE_topbar-save-button .SfxButton-Label {
-            color: #ffffff !important;
-            opacity: 1 !important;
-        }
-        [data-upup-dark] .FIE_topbar-save-button:hover,
-        [data-upup-dark] .FIE_topbar-save-button:focus-visible {
-            background-color: #6dd8fb !important;
-        }
-        [data-upup-dark] .FIE_topbar-save-button:active {
-            background-color: #27b1df !important;
-        }
-        /* Save button fallback when Filerobot falls back to missing palette tokens */
-        [data-upup-dark] .FIE_topbar-save-button:disabled {
-            color: #9ca3af !important;
-            background-color: rgba(48, 197, 247, 0.12) !important;
-            border: 1px solid #4b5563 !important;
-        }
-        [data-upup-dark] .FIE_topbar-save-button:disabled .SfxButton-Label {
-            color: #9ca3af !important;
-            opacity: 1 !important;
-        }
-        /* Add watermark button: match Save button styling */
-        [data-upup-dark] .FIE_watermark-add-button {
-            background-color: #30c5f7 !important;
-            color: #ffffff !important;
-            border: none !important;
-        }
-        [data-upup-dark] .FIE_watermark-add-button .SfxButton-Label {
-            color: #ffffff !important;
-            opacity: 1 !important;
-        }
-        [data-upup-dark] .FIE_watermark-add-button:hover,
-        [data-upup-dark] .FIE_watermark-add-button:focus-visible {
-            background-color: #6dd8fb !important;
-        }
-        [data-upup-dark] .FIE_watermark-add-button:active {
-            background-color: #27b1df !important;
-        }
-        [data-upup-dark] .FIE_watermark-add-button:disabled {
-            color: #9ca3af !important;
-            background-color: rgba(48, 197, 247, 0.12) !important;
-            border: 1px solid #4b5563 !important;
-        }
-        [data-upup-dark] .FIE_watermark-add-button:disabled .SfxButton-Label {
-            color: #9ca3af !important;
-            opacity: 1 !important;
-        }
-        `
-        : ''
 
     return (
         <div
@@ -333,11 +189,13 @@ export default memo(function ImageEditorInline(props: Props) {
                 dark ? 'upup-bg-[#232323]' : 'upup-bg-white',
             )}
             onKeyDown={handleKeyDown}
-            {...(dark ? { 'data-upup-dark': '' } : {})}
+            data-upup-theme={dark ? 'dark' : 'light'}
         >
-            {/* Dark-mode CSS overrides for hardcoded library values */}
-            {darkCssOverrides && (
-                <style dangerouslySetInnerHTML={{ __html: darkCssOverrides }} />
+            {/* Theme fallback overrides for hardcoded library values */}
+            {editorCssOverrides && (
+                <style
+                    dangerouslySetInnerHTML={{ __html: editorCssOverrides }}
+                />
             )}
 
             {/* Header — Cancel / Title / (Save is handled by Filerobot) */}

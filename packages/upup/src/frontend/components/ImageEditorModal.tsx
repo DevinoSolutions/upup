@@ -3,12 +3,17 @@ import React, {
     memo,
     useCallback,
     useEffect,
+    useMemo,
     useRef,
     useState,
 } from 'react'
 import { createPortal } from 'react-dom'
 import { FileWithParams } from '../../shared/types'
 import { useRootContext } from '../context/RootContext'
+import {
+    getFilerobotTheme,
+    getImageEditorCssOverrides,
+} from '../lib/imageEditorHelpers'
 import { cn } from '../lib/tailwind'
 
 type Props = {
@@ -223,6 +228,12 @@ export default memo(function ImageEditorModal(props: Props) {
           )
         : undefined
 
+    const filerobotTheme = useMemo(() => getFilerobotTheme(dark), [dark])
+    const editorCssOverrides = useMemo(
+        () => getImageEditorCssOverrides(dark),
+        [dark],
+    )
+
     return createPortal(
         <div className="upup-scope">
             <div
@@ -240,8 +251,17 @@ export default memo(function ImageEditorModal(props: Props) {
                         'upup-relative upup-flex upup-h-[90vh] upup-w-[90vw] upup-max-w-5xl upup-flex-col upup-overflow-hidden upup-rounded-xl upup-shadow-2xl',
                         dark ? 'upup-bg-[#232323]' : 'upup-bg-white',
                     )}
+                    data-upup-theme={dark ? 'dark' : 'light'}
                     onClick={handleContentClick}
                 >
+                    {editorCssOverrides && (
+                        <style
+                            dangerouslySetInnerHTML={{
+                                __html: editorCssOverrides,
+                            }}
+                        />
+                    )}
+
                     {/* Header */}
                     <div
                         className={cn(
@@ -311,6 +331,7 @@ export default memo(function ImageEditorModal(props: Props) {
                                     onClose={onClose}
                                     savingPixelRatio={4}
                                     previewPixelRatio={4}
+                                    theme={filerobotTheme}
                                     defaultTabId={
                                         editorConstants?.TABS
                                             ? (
