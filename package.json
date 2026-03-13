@@ -31,6 +31,7 @@
     "release": "pnpm --filter upup-react-file-uploader run release"
   },
   "devDependencies": {
+    "@changesets/cli": "^2.30.0",
     "concurrently": "^9.2.1",
     "dotenv-cli": "^7.4.2",
     "turbo": "2.5.8"
