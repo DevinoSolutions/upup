@@ -1,4 +1,4 @@
-# Upup – React File Uploads Made Easy ☁️
+# Upup - React File Uploads Made Easy
 
 [![CI](https://github.com/DevinoSolutions/upup/actions/workflows/publish.yml/badge.svg?branch=master)](https://github.com/DevinoSolutions/upup/actions/workflows/publish.yml)
 [![npm version](https://img.shields.io/npm/v/upup-react-file-uploader)](https://www.npmjs.com/package/upup-react-file-uploader)
@@ -6,9 +6,9 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Discord](https://img.shields.io/discord/1299099371647930502?label=discord&logo=discord&logoColor=white&color=5865F2)](https://discord.gg/ny5WUE9ayc)
 
-Open-source, plug-and-play uploads to **S3, DigitalOcean Spaces, Backblaze B2, Azure Blob, Google Drive, OneDrive** and more – with a single React component and tiny server helpers.
+Open-source, plug-and-play uploads to **S3, DigitalOcean Spaces, Backblaze B2, Azure Blob, Google Drive, OneDrive** and more with a single React component and tiny server helpers.
 
-👉 Try out the live demo: https://useupup.com#demo
+Try out the live demo: https://useupup.com#demo
 
 You can even play with the code without any setup: https://stackblitz.com/edit/stackblitz-starters-flxnhixb
 
@@ -21,27 +21,27 @@ npm i upup-react-file-uploader     # or yarn add / pnpm add / bun install
 ## Quick start (React / Next.js)
 
 ```tsx
-// On your frontend (aka React, Next.JS Pages, etc).
+// On your frontend (aka React, Next.js Pages, etc.)
 
-'use client'
+"use client";
 
-import { UpupUploader, UpupProvider } from 'upup-react-file-uploader'
-import 'upup-react-file-uploader/styles'
+import { UpupUploader, UpupProvider } from "upup-react-file-uploader";
+import "upup-react-file-uploader/styles";
 
 export default function Uploader() {
-    return (
-        <UpupUploader
-            provider={UpupProvider.AWS}
-            tokenEndpoint="/api/upload-token"
-        />
-    )
+  return (
+    <UpupUploader
+      provider={UpupProvider.AWS}
+      tokenEndpoint="/api/upload-token"
+    />
+  );
 }
 ```
 
-> Note: Breaking change — the `locale` prop has been renamed to `localePack` in recent versions. Update examples and code to use `localePack={...}`. See [CHANGELOG.md#unreleased](CHANGELOG.md#unreleased) for migration details.
+> Note: current localization examples use `localePack` for full locale packs and `translations` for per-key overrides. If you tested unpublished builds that used `locale`, update those examples to `localePack`. See [CHANGELOG.md#unreleased](CHANGELOG.md#unreleased) for the current 2.x release notes.
 
 ```tsx
-// On your backend (aka, NextJS APIs, Express.JS server, NestJS, etc.)
+// On your backend (aka Next.js APIs, Express.js, NestJS, etc.)
 
 import { s3GeneratePresignedUrl } from "upup-react-file-uploader/server";
 
@@ -82,16 +82,16 @@ export async function POST(req: Request) {
 }
 ```
 
-☞ **Full documentation & code examples → [https://useupup.com/documentation/docs/getting-started](https://useupup.com/documentation/docs/getting-started)**
+Full documentation and code examples: [https://useupup.com/documentation/docs/getting-started](https://useupup.com/documentation/docs/getting-started)
 
 ## Contributing
 
 We love PRs! Please see [CONTRIBUTING](CONTRIBUTING.md) and adhere to our [Code of Conduct](CODE_OF_CONDUCT.md).
 
-## Battle-tested in production:
+## Battle-tested in production
 
--   📚 uNotes – AI doc uploads for past exams → https://unotes.net
--   🎙 Shorty – media uploads for transcripts → https://aishorty.com
+- uNotes - AI doc uploads for past exams -> https://unotes.net
+- Shorty - media uploads for transcripts -> https://aishorty.com
 
 ## Security
 
@@ -105,4 +105,4 @@ Please join our Discord if you need any support: https://discord.com/invite/ny5W
 
 [MIT](LICENSE)
 
-Made with ❤️ by [Devino](https://devino.ca/)
+Made by [Devino](https://devino.ca/)

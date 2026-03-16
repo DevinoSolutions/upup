@@ -43,25 +43,25 @@ Works with **Next.js**, **Vite**, **Remix**, **Gatsby**, and any React framework
 npm i upup-react-file-uploader     # or yarn add / pnpm add / bun install
 ```
 
-> Note for local development: the package API had a breaking rename — the `locale` prop is now `localePack`. Update any examples or local usage accordingly; see [`packages/upup/CHANGELOG.md#unreleased`](packages/upup/CHANGELOG.md#unreleased) for details.
+> Note for local development: current localization examples use `localePack` for full locale packs and `translations` for per-key overrides. If you tested unpublished builds that used `locale`, update those examples to `localePack`. See [`packages/upup/CHANGELOG.md#unreleased`](packages/upup/CHANGELOG.md#unreleased) for the current 2.x release notes.
 
 `pnpm dev` launches the landing page and documentation in watch mode via Turborepo while the package builds in watch mode for local consumption. All services use ports defined in `local-dev/.env.ports` to avoid conflicts with other projects.
 
 ### Frontend (React / Next.js / Vite / Remix)
 
 ```tsx
-'use client'
+"use client";
 
-import { UpupUploader, UpupProvider } from 'upup-react-file-uploader'
-import 'upup-react-file-uploader/styles'
+import { UpupUploader, UpupProvider } from "upup-react-file-uploader";
+import "upup-react-file-uploader/styles";
 
 export default function Uploader() {
-    return (
-        <UpupUploader
-            provider={UpupProvider.AWS}
-            tokenEndpoint="/api/upload-token"
-        />
-    )
+  return (
+    <UpupUploader
+      provider={UpupProvider.AWS}
+      tokenEndpoint="/api/upload-token"
+    />
+  );
 }
 ```
 
@@ -132,12 +132,12 @@ pnpm dev          # runs landing + docs + package watcher via Turborepo
 
 ### Commands
 
-| Command | Description |
-| --- | --- |
-| `pnpm dev` | Run everything in watch mode |
-| `pnpm dev:package` | Storybook + local mock server |
-| `pnpm build` | Build all (package → docs → landing) |
-| `pnpm lint` / `pnpm test` / `pnpm typecheck` | Workspace-wide pipelines |
+| Command                                      | Description                          |
+| -------------------------------------------- | ------------------------------------ |
+| `pnpm dev`                                   | Run everything in watch mode         |
+| `pnpm dev:package`                           | Storybook + local mock server        |
+| `pnpm build`                                 | Build all (package → docs → landing) |
+| `pnpm lint` / `pnpm test` / `pnpm typecheck` | Workspace-wide pipelines             |
 
 ### Publishing
 
