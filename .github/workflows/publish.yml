@@ -70,8 +70,8 @@ jobs:
         if: github.ref == 'refs/heads/master' && steps.changesets.outputs.hasChangesets == 'false' && steps.package_meta.outputs.needs_publish == 'true'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ steps.package_meta.outputs.name }}@${{ steps.package_meta.outputs.version }}
-          name: ${{ steps.package_meta.outputs.name }}@${{ steps.package_meta.outputs.version }}
+          tag_name: v${{ steps.package_meta.outputs.version }}
+          name: v${{ steps.package_meta.outputs.version }}
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
