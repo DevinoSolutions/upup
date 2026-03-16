@@ -23,18 +23,18 @@ npm i upup-react-file-uploader     # or yarn add / pnpm add / bun install
 ```tsx
 // On your frontend (aka React, Next.js Pages, etc.)
 
-"use client";
+'use client'
 
-import { UpupUploader, UpupProvider } from "upup-react-file-uploader";
-import "upup-react-file-uploader/styles";
+import { UpupUploader, UpupProvider } from 'upup-react-file-uploader'
+import 'upup-react-file-uploader/styles'
 
 export default function Uploader() {
-  return (
-    <UpupUploader
-      provider={UpupProvider.AWS}
-      tokenEndpoint="/api/upload-token"
-    />
-  );
+    return (
+        <UpupUploader
+            provider={UpupProvider.AWS}
+            tokenEndpoint="/api/upload-token"
+        />
+    )
 }
 ```
 
@@ -90,8 +90,8 @@ We love PRs! Please see [CONTRIBUTING](CONTRIBUTING.md) and adhere to our [Code 
 
 ## Battle-tested in production
 
-- uNotes - AI doc uploads for past exams -> https://unotes.net
-- Shorty - media uploads for transcripts -> https://aishorty.com
+-   uNotes - AI doc uploads for past exams -> https://unotes.net
+-   Shorty - media uploads for transcripts -> https://aishorty.com
 
 ## Security
 
