@@ -1,6 +1,11 @@
 import { GoogleFile, Root, Token } from 'google'
 import { useState } from 'react'
+import { t } from '../../shared/i18n'
 import { useRootContext } from '../context/RootContext'
+import {
+    getWorkspaceExportInfo,
+    isDriveFileAccepted,
+} from '../lib/googleDriveUtils'
 
 function handleSelectedFilesUpdate(prevFiles: GoogleFile[], file: GoogleFile) {
     return prevFiles.includes(file)
@@ -14,6 +19,7 @@ export default function useGoogleDriveUploader(token?: Token) {
         googleDriveConfigs,
         setActiveAdapter,
         setFiles,
+        translations,
     } = useRootContext()
     const [path, setPath] = useState<Root[]>([])
     const [selectedFiles, setSelectedFiles] = useState<GoogleFile[]>([])
@@ -46,21 +52,43 @@ export default function useGoogleDriveUploader(token?: Token) {
 
     const downloadFile = async (file: GoogleFile) => {
         try {
-            const response = await fetch(
-                `https://www.googleapis.com/drive/v3/files/${file.id}?key=${googleDriveConfigs?.google_api_key}&alt=media`,
-                {
-                    headers: {
-                        Authorization: `Bearer ${token?.access_token}`,
-                    },
+            const exportInfo = getWorkspaceExportInfo(file.mimeType)
+            let url: string
+            let fileName: string
+            let fileType: string
+
+            if (exportInfo) {
+                // Google Workspace file – use native Docs/Sheets/Slides
+                // export URL (bypasses the Drive API 10 MB export limit)
+                url = exportInfo.exportUrl(file.id)
+                fileName = file.name.endsWith(`.${exportInfo.extension}`)
+                    ? file.name
+                    : `${file.name}.${exportInfo.extension}`
+                fileType = exportInfo.exportMimeType
+            } else {
+                // Regular file – download via alt=media
+                url = `https://www.googleapis.com/drive/v3/files/${file.id}?key=${googleDriveConfigs?.google_api_key}&alt=media`
+                fileName = file.name
+                fileType = file.mimeType || 'application/octet-stream'
+            }
+
+            const response = await fetch(url, {
+                headers: {
+                    Authorization: `Bearer ${token?.access_token}`,
                 },
-            )
-            if (!response.ok)
-                throw new Error(`HTTP error! status: ${response.status}`)
+            })
+
+            if (!response.ok) {
+                const body = await response.text().catch(() => '')
+                throw new Error(
+                    `HTTP error! status: ${response.status}${
+                        body ? ` - ${body}` : ''
+                    }`,
+                )
+            }
 
             const blob = await response.blob()
-            return new File([blob], file.name, {
-                type: file.mimeType || 'application/octet-stream',
-            })
+            return new File([blob], fileName, { type: fileType })
         } catch (error) {
             onError((error as Error)?.message)
             return
@@ -85,7 +113,11 @@ export default function useGoogleDriveUploader(token?: Token) {
             setSelectedFiles([])
             setActiveAdapter(undefined)
         } catch (error) {
-            onError('Error processing files:' + (error as Error)?.message)
+            onError(
+                t(translations.errorProcessingFiles, {
+                    message: (error as Error)?.message ?? '',
+                }),
+            )
         } finally {
             setShowLoader(false)
             setDownloadProgress(0)
@@ -97,11 +129,7 @@ export default function useGoogleDriveUploader(token?: Token) {
         setShowLoader(true)
         setDownloadProgress(0)
         try {
-            const filtered = files.filter(f => {
-                if (!accept || accept === '*') return true
-                const ext = f.name.split('.').pop() || ''
-                return accept.includes(ext)
-            })
+            const filtered = files.filter(f => isDriveFileAccepted(f, accept))
             const downloadedFiles = (await downloadFiles(filtered)).filter(
                 Boolean,
             )
@@ -109,7 +137,11 @@ export default function useGoogleDriveUploader(token?: Token) {
             setSelectedFiles([])
             setActiveAdapter(undefined)
         } catch (error) {
-            onError('Error processing files:' + (error as Error)?.message)
+            onError(
+                t(translations.errorProcessingFiles, {
+                    message: (error as Error)?.message ?? '',
+                }),
+            )
         } finally {
             setShowLoader(false)
             setDownloadProgress(0)
@@ -136,7 +168,11 @@ export default function useGoogleDriveUploader(token?: Token) {
 
             await submitFiles(files)
         } catch (error) {
-            onError('Error selecting folder: ' + (error as Error)?.message)
+            onError(
+                t(translations.errorSelectingFolder, {
+                    message: (error as Error)?.message ?? '',
+                }),
+            )
         }
     }
 

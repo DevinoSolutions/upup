@@ -17,6 +17,11 @@
             "import": "./dist/index.browser.mjs",
             "require": "./dist/index.browser.js"
         },
+        "./locales": {
+            "types": "./dist/shared/i18n/locales/index.d.ts",
+            "import": "./dist/shared/i18n/locales/index.mjs",
+            "require": "./dist/shared/i18n/locales/index.js"
+        },
         "./server": {
             "types": "./dist-node/index.node.d.ts",
             "default": "./dist-node/index.node.js"
@@ -106,7 +111,29 @@
     ],
     "peerDependencies": {
         "react": "^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0",
-        "react-dom": "^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0"
+        "react-dom": "^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0",
+        "react-filerobot-image-editor": ">=4.0.0",
+        "filerobot-image-editor": ">=4.0.0",
+        "react-konva": ">=18.0.0",
+        "konva": ">=9.0.0",
+        "styled-components": ">=5.0.0"
+    },
+    "peerDependenciesMeta": {
+        "react-filerobot-image-editor": {
+            "optional": true
+        },
+        "filerobot-image-editor": {
+            "optional": true
+        },
+        "react-konva": {
+            "optional": true
+        },
+        "konva": {
+            "optional": true
+        },
+        "styled-components": {
+            "optional": true
+        }
     },
     "devDependencies": {
         "@babel/core": "^7.23.3",
@@ -157,6 +184,7 @@
         "eslint-plugin-prettier": "^5.2.3",
         "eslint-plugin-react": "^7.37.4",
         "eslint-plugin-react-hooks": "^5.1.0",
+        "filerobot-image-editor": ">=4.0.0",
         "globals": "^15.14.0",
         "highlight.js": "10.7.3",
         "husky": "^8.0.3",
@@ -174,6 +202,7 @@
         "prettier-plugin-tailwindcss": "^0.5.7",
         "react": "^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0",
         "react-dom": "^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0",
+        "react-filerobot-image-editor": ">=4.0.0",
         "react-syntax-highlighter": "15.4.5",
         "remark-gfm": "^4.0.0",
         "rollup-plugin-analyzer": "^4.0.0",
@@ -188,7 +217,10 @@
         "typescript": "^5.3.2",
         "typescript-eslint": "^8.21.0",
         "webpack": "5.89.0",
-        "zod": "^3.22.4"
+        "zod": "^3.22.4",
+        "react-konva": ">=18.0.0",
+        "konva": ">=9.0.0",
+        "styled-components": ">=5.0.0"
     },
     "dependencies": {
         "@aws-sdk/client-s3": "^3.689.0",
@@ -208,7 +240,7 @@
         "framer-motion": "^12.0.6",
         "load-script": "^2.0.0",
         "pako": "^2.1.0",
-        "react-icons": "^4.12.0",
+        "react-icons": "^5.5.0",
         "react-webcam": "^7.2.0",
         "tailwind-merge": "^2.6.0",
         "truncate": "^3.0.0",

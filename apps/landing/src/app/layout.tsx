@@ -24,7 +24,6 @@ export const viewport: Viewport = {
 }
 
 export const metadata: Metadata = {
-    icons: { icon: "/favicon.ico" },
     title: siteConfig.title,
     description: siteConfig.tagline,
     openGraph: {
@@ -53,7 +52,6 @@ export default function RootLayout({
     return (
         <html lang="en" suppressHydrationWarning>
         <head>
-            <link rel="icon" href="/favicon.ico" />
             <meta name="theme-color" content="#ffffff" />
             {/* Script to handle browser extension conflicts before hydration */}
             <Script id="extension-handler" strategy="beforeInteractive">

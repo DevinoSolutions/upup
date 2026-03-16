@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react'
+import { plural, t } from '../../../shared/i18n'
 import { UploadStatus, useRootContext } from '../../context/RootContext'
 import { cn } from '../../lib/tailwind'
 import ShouldRender from './ShouldRender'
@@ -12,6 +13,7 @@ export default function MainBoxHeader({ handleCancel }: Readonly<Props>) {
         files,
         setIsAddingMore,
         isAddingMore,
+        translations: tr,
         props: {
             mini,
             limit,
@@ -25,8 +27,8 @@ export default function MainBoxHeader({ handleCancel }: Readonly<Props>) {
     const isUploading = uploadStatus === UploadStatus.ONGOING
     const isLimitReached = limit === files.size
     const cancelText = useMemo(
-        () => (isAddingMore ? 'Cancel' : 'Remove all files'),
-        [isAddingMore],
+        () => (isAddingMore ? tr.cancel : tr.removeAllFiles),
+        [isAddingMore, tr],
     )
 
     if (mini) return null
@@ -62,9 +64,13 @@ export default function MainBoxHeader({ handleCancel }: Readonly<Props>) {
                     },
                 )}
             >
-                <ShouldRender if={isAddingMore}>Adding more files</ShouldRender>
+                <ShouldRender if={isAddingMore}>
+                    {tr.addingMoreFiles}
+                </ShouldRender>
                 <ShouldRender if={!isAddingMore}>
-                    {files.size} file{files.size > 1 ? 's' : ''} selected
+                    {t(plural(tr, 'filesSelected', files.size), {
+                        count: files.size,
+                    })}
                 </ShouldRender>
             </span>
             <ShouldRender if={!isAddingMore && limit > 1 && !isLimitReached}>
@@ -80,7 +86,7 @@ export default function MainBoxHeader({ handleCancel }: Readonly<Props>) {
                     onClick={() => setIsAddingMore(true)}
                     disabled={isUploading || isProcessing}
                 >
-                    <ContainerAddMoreIcon /> Add More
+                    <ContainerAddMoreIcon /> {tr.addMore}
                 </button>
             </ShouldRender>
         </div>

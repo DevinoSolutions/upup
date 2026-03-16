@@ -1,0 +1,8 @@
+changelog:
+  exclude:
+    labels:
+      - ignore-for-release
+      - internal
+    authors:
+      - dependabot[bot]
+      - github-actions[bot]

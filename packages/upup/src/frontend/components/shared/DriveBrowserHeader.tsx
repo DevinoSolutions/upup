@@ -1,7 +1,7 @@
 import { Root, User } from 'google'
 import { MicrosoftUser, OneDriveRoot } from 'microsoft'
 import React, { Dispatch, SetStateAction } from 'react'
-import { TbSearch, TbUser } from 'react-icons/tb/index.js'
+import { TbSearch, TbUser } from 'react-icons/tb'
 import { useRootContext } from '../../context/RootContext'
 import { cn } from '../../lib/tailwind'
 import ShouldRender from './ShouldRender'
@@ -29,6 +29,7 @@ export default function DriveBrowserHeader({
 }: Readonly<Props>) {
     const {
         setActiveAdapter,
+        translations: tr,
         props: { dark, classNames },
     } = useRootContext()
 
@@ -108,7 +109,7 @@ export default function DriveBrowserHeader({
                             setActiveAdapter(undefined)
                         }}
                     >
-                        Log out
+                        {tr.logOut}
                     </button>
                 </div>
             </div>
@@ -134,7 +135,7 @@ export default function DriveBrowserHeader({
                             },
                             classNames.driveSearchInput,
                         )}
-                        placeholder="Search"
+                        placeholder={tr.search}
                         value={searchTerm}
                         onChange={e => onSearch(e.currentTarget.value)}
                     />

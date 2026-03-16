@@ -16,6 +16,7 @@ export function useDropbox() {
     const {
         props: { onError },
         dropboxConfigs,
+        translations,
     } = useRootContext()
 
     const {
@@ -83,7 +84,7 @@ export function useDropbox() {
                                 return fetchDropbox(url, method, body, true)
                             } else {
                                 throw new Error(
-                                    'Failed to refresh expired token',
+                                    translations.failedToRefreshExpiredToken,
                                 )
                             }
                         }
@@ -94,9 +95,7 @@ export function useDropbox() {
                             errorMessage.includes('expired_access_token') &&
                             !refreshToken
                         ) {
-                            onError(
-                                'Your Dropbox session has expired. Please re-authenticate to continue.',
-                            )
+                            onError(translations.dropboxSessionExpired)
                             logout()
                             throw new Error(
                                 'Token expired - re-authentication required',
@@ -105,7 +104,7 @@ export function useDropbox() {
 
                         if (errorMessage.includes('missing_scope')) {
                             errorMessage =
-                                'Your Dropbox app is missing required permissions. Please add the following scopes in the Dropbox Developer Console: files.metadata.read, account_info.read'
+                                translations.dropboxMissingPermissions
                         }
                     } catch {
                         // If we can't parse the error, but it's a 401, still try to refresh
@@ -121,9 +120,7 @@ export function useDropbox() {
                                 return fetchDropbox(url, method, body, true)
                             }
                         } else if (response.status === 401 && !refreshToken) {
-                            onError(
-                                'Your Dropbox session has expired. Please re-authenticate to continue.',
-                            )
+                            onError(translations.dropboxSessionExpired)
                             logout()
                             throw new Error(
                                 'Token expired - re-authentication required',

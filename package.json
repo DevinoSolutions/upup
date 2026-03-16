@@ -10,6 +10,9 @@
     "clean": "turbo run clean",
     "dev": "dotenv -e local-dev/.env.ports -- concurrently \"pnpm run dev:apps\" \"pnpm run dev:package-watch\"",
     "dev:apps": "turbo run dev --parallel --filter=@upup/landing --filter=docs",
+    "dev:playground": "pnpm --filter @upup/playground run dev",
+    "build:playground": "turbo run build --filter=@upup/playground",
+    "start:playground": "pnpm --filter @upup/playground run start",
     "dev:package-watch": "pnpm --filter upup-react-file-uploader run dev:build",
     "dev:all": "turbo run dev --parallel",
     "dev:package": "dotenv -e local-dev/.env.ports -- pnpm --filter upup-react-file-uploader run dev",
@@ -28,6 +31,7 @@
     "release": "pnpm --filter upup-react-file-uploader run release"
   },
   "devDependencies": {
+    "@changesets/cli": "^2.30.0",
     "concurrently": "^9.2.1",
     "dotenv-cli": "^7.4.2",
     "turbo": "2.5.8"

@@ -9,6 +9,7 @@ export default function AdapterView() {
     const {
         activeAdapter,
         setActiveAdapter,
+        translations: tr,
         props: { mini, dark, classNames },
     } = useRootContext()
     const UploadComponent =
@@ -49,7 +50,7 @@ export default function AdapterView() {
                         onClick={() => setActiveAdapter(undefined)}
                         type="button"
                     >
-                        Cancel
+                        {tr.cancel}
                     </button>
                 </div>
                 <UploadComponent />
