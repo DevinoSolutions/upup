@@ -13,7 +13,7 @@
 2. **Composable strategies:** Pluggable credential, OAuth, and upload strategies. Consumer chooses client mode or server mode.
 3. **Middleware pipeline:** Extensible file processing pipeline. Built-in steps (HEIC, EXIF, compress, checksum) ship as defaults; consumers can add custom steps.
 4. **Web Workers:** Offload CPU-heavy work (hashing, gzip) to workers from within core.
-5. **Two modes:** Client mode (no server beyond tokenEndpoint) and server mode (`@upup/server` handles OAuth + streaming).
+5. **Two modes:** Client mode (no server beyond uploadEndpoint) and server mode (`@upup/server` handles OAuth + streaming).
 6. **React-first UI:** `@upup/react` is a first-class React package, not a wrapper. `useUpupUpload()` hook returns reactive state natively.
 7. **Managed service ready:** Architecture supports a hosted `@upup/server` as a paid managed service with zero code changes to core/react.
 8. **Learn from Uppy's pain points:** 4 packages not 30+, embeddable server not standalone companion, Tailwind-native styling, typed errors, simple middleware API.
@@ -51,9 +51,9 @@ packages/
 
 Zero runtime dependencies. Contains everything that core, react, and server all need.
 
-- **Types:** `FileWithParams`, `UpupOptions`, `UploadStatus`, `UploadAdapter`, `UpupProvider`, strategy interfaces, error classes
+- **Types:** `UploadFile`, `CoreOptions`, `UploadStatus`, `FileSource`, `StorageProvider`, strategy interfaces, error classes
 - **i18n:** `t()`, `plural()`, translation types, locale packs (en_US, ar_SA, etc.)
-- **Constants:** Enums, default values, MIME type mappings
+- **Constants:** Enums (`FileSource`, `StorageProvider`, `UploadStatus`), default values, MIME type mappings
 - **Strategy interfaces:** `CredentialStrategy`, `OAuthStrategy`, `UploadStrategy`, `RuntimeAdapter`
 - **Pipeline interfaces:** `PipelineStep`, `PipelineContext`
 - **Error classes:** `UpupError`, `UpupAuthError`, `UpupNetworkError`, `UpupQuotaError`, `UpupValidationError`
@@ -68,7 +68,7 @@ Depends only on `@upup/shared`. Framework-agnostic. Runs in browser and Node.js.
 - **Web Worker manager:** Pool of workers for CPU-heavy pipeline steps (hash, gzip). Falls back to main thread when workers unavailable.
 - **Provider API clients:** Google Drive, Dropbox, OneDrive file listing and OAuth helpers. Shared between client and server modes.
 - **Built-in strategies:**
-  - `TokenEndpointCredentials` — calls consumer's tokenEndpoint for presigned URLs
+  - `TokenEndpointCredentials` — calls consumer's uploadEndpoint for presigned URLs
   - `ClientOAuth` — handles OAuth in the browser
   - `DirectUpload` — uploads from browser directly to cloud storage
 - **Upload protocols:** Single PUT, S3 multipart, tus
@@ -82,9 +82,9 @@ Depends on `@upup/core` and `@upup/shared`. The React package.
 
 - **`useUpupUpload()` hook:** Thin wrapper over `UpupCore`. Returns reactive state + methods. This IS headless mode.
 - **`<UpupUploader>` component:** Uses `useUpupUpload()` internally. Ships the full UI.
-- **All UI components:** MainBox, FileList, FilePreview, FilePreviewPortal, AdapterSelector, AdapterView, ProgressBar, MainBoxHeader, Informer, ImageEditorInline, ImageEditorModal, CameraUploader, AudioUploader, ScreenCaptureUploader
+- **All UI components:** DropZone, FileList, FilePreview, FilePreviewPortal, SourceSelector, SourceView, ProgressBar, MainBoxHeader, Notifier, ImageEditorInline, ImageEditorModal, CameraUploader, AudioUploader, ScreenCaptureUploader
 - **Tailwind CSS:** All classes prefixed `upup-`. `classNames` prop for overrides. `cn()` utility.
-- **Adapter UIs:** Custom file browser for Google Drive, Dropbox, OneDrive (calls core's provider clients or server endpoints depending on mode)
+- **Source UIs:** Custom file browser for Google Drive, Dropbox, OneDrive (calls core's provider clients or server endpoints depending on mode)
 
 #### @upup/server
 
@@ -110,7 +110,7 @@ Depends on `@upup/core` and `@upup/shared`. Node.js server-side package.
 
 ### Client Mode
 
-No server required beyond consumer's existing tokenEndpoint. Everything runs in the browser.
+No server required beyond consumer's existing uploadEndpoint. Everything runs in the browser.
 
 ```
 Browser:
@@ -121,7 +121,7 @@ Browser:
     └── DirectUpload → XHR PUT to S3/Azure presigned URL
 
 Consumer's server:
-  tokenEndpoint → generates presigned URLs using their own cloud credentials
+  uploadEndpoint → generates presigned URLs using their own cloud credentials
 ```
 
 **Consumer setup:**
@@ -130,7 +130,7 @@ import { useUpupUpload } from '@upup/react'
 
 const uploader = useUpupUpload({
   provider: 'aws',
-  tokenEndpoint: '/api/upload',
+  uploadEndpoint: '/api/upload',
   driveConfigs: {
     googleDrive: { clientId: '...', apiKey: '...', appId: '...' },
   },
@@ -209,13 +209,13 @@ const uploader = useUpupUpload({
 ```typescript
 class UpupCore {
   // --- State ---
-  readonly files: Map<string, FileWithParams>
+  readonly files: Map<string, UploadFile>
   readonly status: UploadStatus
   readonly progress: UploadProgress
   readonly error: UpupError | null
 
   // --- Constructor ---
-  constructor(options: UpupCoreOptions)
+  constructor(options: CoreOptions)
 
   // --- File Management ---
   addFiles(files: File[]): Promise<void>         // validates, runs onBeforeFileAdded
@@ -225,7 +225,7 @@ class UpupCore {
   reorderFiles(fromIndex: number, toIndex: number): void
 
   // --- Upload Lifecycle ---
-  upload(): Promise<FileWithParams[]>             // runs pipeline then uploads
+  upload(): Promise<UploadFile[]>             // runs pipeline then uploads
   pause(): void
   resume(): void
   cancel(): void
@@ -247,9 +247,9 @@ class UpupCore {
 ### Options
 
 ```typescript
-type UpupCoreOptions = {
+type CoreOptions = {
   // --- Required (one of) ---
-  tokenEndpoint?: string          // Client mode — shorthand
+  uploadEndpoint?: string          // Client mode — shorthand
   serverUrl?: string              // Server mode — shorthand
   apiKey?: string                 // Managed mode — shorthand
 
@@ -259,7 +259,7 @@ type UpupCoreOptions = {
   uploadStrategy?: UploadStrategy
 
   // --- Storage ---
-  provider?: UpupProvider         // 'aws' | 'azure' | 'backblaze' | 'digitalocean'
+  provider?: StorageProvider         // 'aws' | 'azure' | 'backblaze' | 'digitalocean'
 
   // --- Pipeline ---
   pipeline?: PipelineStep[]       // Custom pipeline. If omitted, uses defaults based on enabled options.
@@ -309,15 +309,15 @@ type UpupCoreOptions = {
 
   // --- Callbacks ---
   onBeforeFileAdded?: (file: File) => boolean | File | undefined
-  onBeforeUpload?: (files: Map<string, FileWithParams>) => boolean | undefined
-  onFileUploadStart?: (file: FileWithParams) => void
-  onFileUploadProgress?: (file: FileWithParams, progress: ProgressInfo) => void
-  onFileUploadComplete?: (file: FileWithParams, key: string) => void
-  onFilesUploadComplete?: (files: FileWithParams[]) => void
-  onFileRemove?: (file: FileWithParams) => void
+  onBeforeUpload?: (files: Map<string, UploadFile>) => boolean | undefined
+  onFileUploadStart?: (file: UploadFile) => void
+  onFileUploadProgress?: (file: UploadFile, progress: ProgressInfo) => void
+  onFileUploadComplete?: (file: UploadFile, key: string) => void
+  onFilesUploadComplete?: (files: UploadFile[]) => void
+  onFileRemove?: (file: UploadFile) => void
   onError?: (error: UpupError) => void
   onRestrictionFailed?: (file: File, error: RestrictionError) => void
-  onRetry?: (file: FileWithParams, attempt: number, maxRetries: number) => void
+  onRetry?: (file: UploadFile, attempt: number, maxRetries: number) => void
 }
 ```
 
@@ -388,20 +388,20 @@ interface PipelineStep {
    * Process a single file. Return the (possibly modified) file.
    * Throw to reject the file from the batch.
    */
-  process(file: FileWithParams, context: PipelineContext): Promise<FileWithParams>
+  process(file: UploadFile, context: PipelineContext): Promise<UploadFile>
 
   /**
    * Optional: check if this step applies to the given file.
    * If omitted, the step runs for all files.
    */
-  shouldProcess?(file: FileWithParams): boolean
+  shouldProcess?(file: UploadFile): boolean
 }
 
 interface PipelineContext {
   /** All files in the current batch (read-only) */
-  files: ReadonlyMap<string, FileWithParams>
+  files: ReadonlyMap<string, UploadFile>
   /** Core options */
-  options: Readonly<UpupCoreOptions>
+  options: Readonly<CoreOptions>
   /** Emit events */
   emit(event: string, data?: unknown): void
   /** i18n */
@@ -679,7 +679,7 @@ class UpupQuotaError extends UpupError {
 }
 
 class UpupStorageError extends UpupError {
-  provider: UpupProvider
+  provider: StorageProvider
   operation: 'presign' | 'upload' | 'multipart-init' | 'multipart-complete'
 }
 ```
@@ -731,9 +731,9 @@ enum UpupErrorCode {
 The primary headless API. Thin reactive wrapper over `UpupCore`:
 
 ```typescript
-function useUpupUpload(options: UpupCoreOptions): {
+function useUpupUpload(options: CoreOptions): {
   // --- State (reactive) ---
-  files: FileWithParams[]
+  files: UploadFile[]
   status: UploadStatus
   progress: UploadProgress
   error: UpupError | null
@@ -746,7 +746,7 @@ function useUpupUpload(options: UpupCoreOptions): {
   reorderFiles(fromIndex: number, toIndex: number): void
 
   // --- Upload Lifecycle ---
-  upload(): Promise<FileWithParams[]>
+  upload(): Promise<UploadFile[]>
   pause(): void
   resume(): void
   cancel(): void
@@ -763,7 +763,7 @@ function useUpupUpload(options: UpupCoreOptions): {
 function MyCustomUploader() {
   const { files, upload, addFiles, progress, status } = useUpupUpload({
     provider: 'aws',
-    tokenEndpoint: '/api/upload',
+    uploadEndpoint: '/api/upload',
     checksumVerification: true,
   })
 
@@ -789,8 +789,8 @@ function App() {
   return (
     <UpupUploader
       provider="aws"
-      tokenEndpoint="/api/upload"
-      uploadAdapters={['INTERNAL', 'GOOGLE_DRIVE', 'CAMERA']}
+      uploadEndpoint="/api/upload"
+      fileSources={['LOCAL', 'GOOGLE_DRIVE', 'CAMERA']}
       dark
     />
   )
@@ -808,8 +808,8 @@ const UpupUploader = forwardRef((props, ref) => {
   useImperativeHandle(ref, () => ({
     useUpload: () => ({
       ...uploader,
-      dynamicUpload: uploader.upload,
-      resetState: uploader.cancel,
+      uploadFiles: uploader.upload,
+      replaceFiles: uploader.setFiles,
     }),
   }))
 
@@ -860,7 +860,7 @@ function createUpupRoutes(config: UpupServerConfig): HonoRoutes
 type UpupServerConfig = {
   // --- Storage ---
   storage: {
-    type: UpupProvider
+    type: StorageProvider
     bucket: string
     region: string
     accessKeyId?: string          // or use env vars
@@ -922,7 +922,7 @@ Phase 1: Create new package structure, move code:
 ```
 packages/upup/src/shared/         → packages/shared/src/
 packages/upup/src/frontend/lib/   → packages/core/src/ (pipeline, file utils, storage)
-packages/upup/src/frontend/hooks/useRootProvider.ts → packages/core/src/UpupCore.ts
+packages/upup/src/frontend/hooks/useRootProvider.ts → packages/core/src/UpupCore.ts (renamed from useRootProvider)
 packages/upup/src/frontend/       → packages/react/src/ (components, hooks, context)
 packages/upup/src/backend/        → packages/server/src/
 ```
@@ -942,6 +942,7 @@ Phase 5: Remove packages/upup.
 - `UploadStatus` enum values renamed: `PENDING` → `IDLE`, `ONGOING` → `UPLOADING`
 - `UpupUploaderRef.useUpload()` — still works but `useUpupUpload()` hook is the preferred headless API
 - Node.js backend utilities: `upup-react-file-uploader/node` → `@upup/server`
+- All naming changes from Section 15 (Naming Conventions)
 
 ---
 
@@ -995,3 +996,72 @@ packages:
 | Virus scanning / transcoding | Server lifecycle hooks |
 | Offline queue (future) | Core's serializable state + ServiceWorker |
 | Virtual scrolling (future) | UI concern — stays in `@upup/react` |
+
+---
+
+## 15. Naming Conventions
+
+All names were audited and standardized for v2. The principles:
+- Names should describe what something **is** or **does**, not implementation details
+- Avoid overloaded terms (`provider`, `adapter`, `params`)
+- Match industry conventions (DropZone, not MainBox)
+- Remove redundant prefixes inside scoped packages (`UploaderProps`, not `UpupUploaderProps`)
+
+### Renames from v1
+
+| v1 Name | v2 Name | Reason |
+|---|---|---|
+| **Types** | | |
+| `FileWithParams` | `UploadFile` | "params" is vague; this is a file with upload metadata |
+| `FileWithProgress` | `UploadFileWithProgress` | Follows `UploadFile` |
+| `UploadAdapter` | `FileSource` | "adapter" = design pattern; these are file sources |
+| `UpupProvider` | `StorageProvider` | Disambiguates from React Provider / strategy provider |
+| `UpupUploaderProps` | `UploaderProps` | Redundant prefix inside `@upup/react` |
+| `UpupUploaderPropsClassNames` | `UploaderClassNames` | Same |
+| `UpupUploaderPropsIcons` | `UploaderIcons` | Same |
+| `UpupUploaderRef` | `UploaderRef` | Same |
+| `UpupCoreOptions` | `CoreOptions` | Same |
+| `StorageSDK` / `ProviderSDK` | `StorageClient` | Not an SDK; it's a client |
+| **Enum Values** | | |
+| `UploadAdapter.INTERNAL` | `FileSource.LOCAL` | "local files from device" |
+| `UploadAdapter.LINK` | `FileSource.URL` | Industry-standard term |
+| `UploadAdapter.AUDIO` | `FileSource.MICROPHONE` | More specific — it's mic recording |
+| `UploadAdapter.SCREEN_CAPTURE` | `FileSource.SCREEN` | Shorter, still clear |
+| `UploadAdapter.CAMERA` | `FileSource.CAMERA` | Unchanged |
+| `UploadAdapter.GOOGLE_DRIVE` | `FileSource.GOOGLE_DRIVE` | Unchanged |
+| `UploadAdapter.ONE_DRIVE` | `FileSource.ONE_DRIVE` | Unchanged |
+| `UploadAdapter.DROPBOX` | `FileSource.DROPBOX` | Unchanged |
+| **Components** | | |
+| `MainBox` | `DropZone` | Industry-standard term |
+| `AdapterSelector` | `SourceSelector` | Follows `FileSource` |
+| `AdapterView` | `SourceView` | Same |
+| `Informer` | `Notifier` | Standard term for toast/notification |
+| `ShouldRender` | Removed | Use inline `{condition && <X/>}` |
+| **Hooks / Internals** | | |
+| `useRootProvider` | `useUploaderEngine` | Describes what it does |
+| `RootContext` | `UploaderContext` | Matches component name |
+| `proceedUpload` | `startUpload` | Standard verb |
+| `dynamicUpload` | `uploadFiles` | Describes the action |
+| `dynamicallyReplaceFiles` | `replaceFiles` | Simpler |
+| `handlePrepareFiles` | `preprocessFiles` | Clearer |
+| `handleSetSelectedFiles` | `processSelectedFiles` | Describes the action |
+| **Props** | | |
+| `tokenEndpoint` | `uploadEndpoint` | More general — works for any credential strategy |
+| `uploadAdapters` | `fileSources` | Follows `FileSource` enum |
+| **Google types** | | |
+| `User` | `GoogleUser` | Consistency with `MicrosoftUser`, `DropboxUser` |
+| `Root` | `GoogleRoot` | Consistency with `OneDriveRoot`, `DropboxRoot` |
+
+### Names Kept As-Is
+
+These names are clear and follow conventions — no changes needed:
+
+- Component names: `FileList`, `FilePreview`, `FilePreviewPortal`, `ProgressBar`, `CameraUploader`, etc.
+- Hook names: `useUpload`, `useCameraUploader`, `useGoogleDrive`, etc.
+- i18n: `t()`, `plural()`, translation keys
+- CSS prefix: `upup-`
+- Utility: `cn()`
+- Callbacks: `onFileUploadComplete`, `onError`, `onRestrictionFailed`, etc.
+- `classNames` prop
+- `UpupCore` class name (reads naturally with scoped import: `import { UpupCore } from '@upup/core'`)
+- `UpupUploader` component name (keeps brand identity in consumer code)
