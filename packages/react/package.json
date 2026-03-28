@@ -1,0 +1,71 @@
+{
+  "name": "@upup/react",
+  "version": "2.0.0",
+  "private": false,
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    },
+    "./locales": {
+      "types": "./dist/locales/index.d.ts",
+      "import": "./dist/locales/index.mjs",
+      "require": "./dist/locales/index.js"
+    },
+    "./styles": "./dist/tailwind-prefixed.css"
+  },
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsup && pnpm run build:css",
+    "build:css": "postcss src/tailwind.css -o ./dist/tailwind-prefixed.css",
+    "dev": "tsup --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@upup/core": "workspace:*",
+    "@upup/shared": "workspace:*",
+    "clsx": "^2.1.1",
+    "framer-motion": "^12.0.6",
+    "react-icons": "^5.5.0",
+    "react-webcam": "^7.2.0",
+    "tailwind-merge": "^2.6.0",
+    "truncate": "^3.0.0",
+    "use-debounce": "^10.0.4"
+  },
+  "peerDependencies": {
+    "react": "^18.0.0 || ^19.0.0",
+    "react-dom": "^18.0.0 || ^19.0.0",
+    "filerobot-image-editor": ">=4.0.0",
+    "react-filerobot-image-editor": ">=4.0.0",
+    "konva": ">=9.0.0",
+    "react-konva": ">=18.0.0",
+    "styled-components": ">=5.0.0"
+  },
+  "peerDependenciesMeta": {
+    "react-filerobot-image-editor": { "optional": true },
+    "filerobot-image-editor": { "optional": true },
+    "react-konva": { "optional": true },
+    "konva": { "optional": true },
+    "styled-components": { "optional": true }
+  },
+  "devDependencies": {
+    "@types/react": ">=18.0.0",
+    "@types/react-dom": ">=18.0.0",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.5.2",
+    "postcss-cli": "^11.0.1",
+    "postcss-prefix-selector": "^2.1.1",
+    "tailwindcss": "^3.4.17",
+    "tsup": "^8.4.0",
+    "typescript": "^5.3.2",
+    "vitest": "^3.0.0",
+    "@testing-library/react": "^16.0.1"
+  }
+}
