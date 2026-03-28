@@ -8,7 +8,7 @@ packages/*/node_modules
 **/.turbo-cache
 **/.next
 **/build
-packages/upup/dist
+packages/*/dist
 packages/upup/dist-node
 apps/landing/public/documentation
 coverage
