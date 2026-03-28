@@ -1,0 +1,10 @@
+export enum FileSource {
+  LOCAL = 'LOCAL',
+  GOOGLE_DRIVE = 'GOOGLE_DRIVE',
+  ONE_DRIVE = 'ONE_DRIVE',
+  DROPBOX = 'DROPBOX',
+  URL = 'URL',
+  CAMERA = 'CAMERA',
+  MICROPHONE = 'MICROPHONE',
+  SCREEN = 'SCREEN',
+}
