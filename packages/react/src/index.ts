@@ -78,6 +78,22 @@ export {
     GOOGLE_WORKSPACE_EXPORTS,
 } from './lib/google-drive-utils'
 
+// File preview components (migrated from v1)
+export { default as FilePreview } from './components/file-preview'
+export { default as FilePreviewPortal } from './components/file-preview-portal'
+export { default as FilePreviewThumbnail } from './components/file-preview-thumbnail'
+export { default as ImageEditorInline } from './components/image-editor-inline'
+export { default as ImageEditorModal } from './components/image-editor-modal'
+
+// Image editor helpers
+export {
+    dataURLtoBlob,
+    blobToUploadFile,
+    revokeAndReplace,
+    getFilerobotTheme,
+    getImageEditorCssOverrides,
+} from './lib/image-editor-helpers'
+
 // Lib utilities
 export { cn } from './lib/tailwind'
 export { adapterNameKeys, uploadAdapterObject } from './lib/constants'
