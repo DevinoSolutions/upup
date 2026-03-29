@@ -3,6 +3,9 @@ import { EventEmitter } from './events'
 import { PluginManager, type UpupPlugin, type ExtensionMethods } from './plugin'
 import { FileManager, type FileManagerOptions } from './file-manager'
 import { PipelineEngine } from './pipeline/engine'
+import { UploadManager } from './upload-manager'
+import { TokenEndpointCredentials } from './strategies/token-endpoint'
+import { DirectUpload } from './strategies/direct-upload'
 
 export interface CoreOptions extends FileManagerOptions {
   uploadEndpoint?: string
@@ -43,6 +46,7 @@ export class UpupCore {
   private pluginManager = new PluginManager()
   private fileManager: FileManager
   private pipelineEngine: PipelineEngine | null = null
+  private uploadManager: UploadManager | null = null
   private _status: UploadStatus = UploadStatus.IDLE
   private _error: Error | null = null
   private options: CoreOptions
@@ -173,6 +177,39 @@ export class UpupCore {
     this._status = UploadStatus.UPLOADING
     this.emitter.emit('state-change', { status: this._status })
 
+    // Only run actual uploads if credentials/endpoint are configured
+    if (this.options.uploadEndpoint || this.options.serverUrl) {
+      const credentialUrl = this.options.uploadEndpoint ?? `${this.options.serverUrl}/presign`
+      const credentials = new TokenEndpointCredentials({ url: credentialUrl })
+      const uploadStrategy = new DirectUpload()
+
+      this.uploadManager = new UploadManager({
+        credentials,
+        uploadStrategy,
+        maxConcurrentUploads: this.options.maxConcurrentUploads ?? 3,
+        maxRetries: this.options.maxRetries,
+        fastAbortThreshold: this.options.fastAbortThreshold,
+        isSuccessfulCall: this.options.isSuccessfulCall,
+        onProgress: (fileId, loaded, total) => {
+          this.emitter.emit('upload-progress', { fileId, loaded, total })
+          this.emitter.emit('state-change', { progress: this.progress })
+        },
+        onFileComplete: (file, result) => {
+          // Update the file with its key from the result
+          const updated = { ...file, key: result.key } as UploadFile
+          this.files.set(file.id, updated)
+          this.emitter.emit('upload-success', { file: updated, result })
+          this.emitter.emit('state-change', { files: this.files })
+        },
+        onFileError: (file, error) => {
+          this.emitter.emit('upload-error', { file, error })
+        },
+      })
+
+      await this.uploadManager.uploadAll([...this.files.values()])
+      this.uploadManager = null
+    }
+
     this._status = UploadStatus.SUCCESSFUL
     this.emitter.emit('upload-all-complete', [...this.files.values()])
     this.emitter.emit('state-change', { status: this._status })
@@ -181,6 +218,9 @@ export class UpupCore {
   }
 
   pause(): void {
+    if (this.uploadManager) {
+      this.uploadManager.pause()
+    }
     this._status = UploadStatus.PAUSED
     this.emitter.emit('upload-pause', {})
     this.emitter.emit('state-change', { status: this._status })
@@ -193,6 +233,10 @@ export class UpupCore {
   }
 
   cancel(): void {
+    if (this.uploadManager) {
+      this.uploadManager.abort()
+      this.uploadManager = null
+    }
     this._status = UploadStatus.IDLE
     this.emitter.emit('upload-cancel', {})
     this.emitter.emit('state-change', { status: this._status })
