@@ -11,8 +11,8 @@ import { toast } from "react-toastify";
 
 const customFields = {
   uploadEndpoint: process.env.NEXT_PUBLIC_BASE_URL
-    ? process.env.NEXT_PUBLIC_BASE_URL + "/api/getPresignedUrl"
-    : "/api/getPresignedUrl", // fallback to relative path
+    ? process.env.NEXT_PUBLIC_BASE_URL + "/api/upup"
+    : "/api/upup", // fallback to relative path
   driveConfigs: {
     googleDrive: {
       google_client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "",

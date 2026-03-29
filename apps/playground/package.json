@@ -21,7 +21,8 @@
     "react-toastify": "^11.0.5",
     "react-tooltip": "^5.29.1",
     "@upup/react": "workspace:*",
-    "@upup/shared": "workspace:*"
+    "@upup/shared": "workspace:*",
+    "@upup/server": "workspace:*"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
