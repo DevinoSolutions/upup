@@ -78,10 +78,10 @@ export default function HeroSection() {
     }, []);
 
     const packageManagers = useMemo(() => [
-        {id: "npm", name: "npm", command: "npm install @upup/react @upup/shared"},
-        {id: "pnpm", name: "pnpm", command: "pnpm add @upup/react @upup/shared"},
-        {id: "yarn", name: "Yarn", command: "yarn add @upup/react @upup/shared"},
-        {id: "bun", name: "Bun", command: "bun add @upup/react @upup/shared"},
+        {id: "npm", name: "npm", command: "npm install @upup/react @upup/shared @upup/server"},
+        {id: "pnpm", name: "pnpm", command: "pnpm add @upup/react @upup/shared @upup/server"},
+        {id: "yarn", name: "Yarn", command: "yarn add @upup/react @upup/shared @upup/server"},
+        {id: "bun", name: "Bun", command: "bun add @upup/react @upup/shared @upup/server"},
     ], []);
 
     const currentCommand = useMemo(() => {

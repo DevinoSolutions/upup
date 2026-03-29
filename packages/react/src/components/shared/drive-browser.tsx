@@ -77,7 +77,7 @@ export default function DriveBrowser({
     const { dark, classNames } = useUploaderContext()
 
     // Get accept from core options if available
-    const accept = (useUploaderContext() as any)?.core?.options?.accept ?? ''
+    const accept = useUploaderContext().core.options.accept ?? ''
 
     const [searchTerm, setSearchTerm] = useState('')
     const items = (path[path.length - 1]?.children as Array<any>)?.filter(

@@ -13,6 +13,7 @@ export default defineConfig({
     'steps/deduplicate': 'src/steps/deduplicate.ts',
   },
   format: ['esm', 'cjs'],
+  target: 'es2019',
   dts: true,
   splitting: true,
   treeshake: true,

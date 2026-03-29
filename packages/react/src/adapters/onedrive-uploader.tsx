@@ -10,8 +10,8 @@ import useOneDriveUploader from '../hooks/use-onedrive-uploader'
 export default function OneDriveUploader() {
     const ctx = useUploaderContext()
     const oneDriveConfigs =
-        (ctx as any)?.core?.options?.oneDriveConfigs ?? {}
-    const clientId = oneDriveConfigs?.onedrive_client_id ?? ''
+        ctx.core.options.oneDriveConfigs ?? {}
+    const clientId = (oneDriveConfigs?.onedrive_client_id as string) ?? ''
 
     const {
         user,

@@ -28,8 +28,8 @@ const getDownloadUrl = async (file: OneDriveFile, token: string): Promise<string
 
 export default function useOneDriveUploader(token?: string) {
     const ctx = useUploaderContext()
-    const onError = (ctx as any)?.core?.options?.onError ?? ((msg: string) => console.error(msg))
-    const accept = (ctx as any)?.core?.options?.accept ?? ''
+    const onError = ctx.core.options.onError ?? ((msg: string) => console.error(msg))
+    const accept = ctx.core.options.accept ?? ''
     const setFiles = ctx.setFiles
     const setActiveSource = ctx.setActiveSource
 

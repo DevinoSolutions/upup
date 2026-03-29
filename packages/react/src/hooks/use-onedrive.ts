@@ -45,7 +45,7 @@ async function loadMSAL(clientId: string): Promise<MSALInstance | null> {
 
 export default function useOneDrive(clientId = '') {
     const ctx = useUploaderContext()
-    const onError = (ctx as any)?.core?.options?.onError ?? ((msg: string) => console.error(msg))
+    const onError = ctx.core.options.onError ?? ((msg: string) => console.error(msg))
 
     const [user, setUser] = useState<MicrosoftUser>()
     const [oneDriveFiles, setOneDriveFiles] = useState<OneDriveRoot>()

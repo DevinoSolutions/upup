@@ -16,8 +16,8 @@ const formatFileItem = (entry: any): DropboxFile => ({
 
 export function useDropbox(configs?: DropboxConfigs) {
     const ctx = useUploaderContext()
-    const onError = (ctx as any)?.core?.options?.onError ?? ((msg: string) => console.error(msg))
-    const dropboxConfigs = configs ?? (ctx as any)?.core?.options?.dropboxConfigs
+    const onError = ctx.core.options.onError ?? ((msg: string) => console.error(msg))
+    const dropboxConfigs = configs ?? ctx.core.options.dropboxConfigs
 
     const {
         isAuthenticated,

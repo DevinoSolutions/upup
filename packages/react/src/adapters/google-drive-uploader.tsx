@@ -11,7 +11,7 @@ export default function GoogleDriveUploader() {
     const ctx = useUploaderContext()
     // Configs come from core options if wired up, otherwise empty
     const googleDriveConfigs: GoogleDriveConfigs =
-        (ctx as any)?.core?.options?.googleDriveConfigs ?? {}
+        ctx.core.options.googleDriveConfigs ?? {}
 
     const {
         user,

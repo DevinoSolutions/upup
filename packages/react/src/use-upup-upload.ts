@@ -25,6 +25,13 @@ export interface UseUpupUploadReturn {
   core: UpupCore
 }
 
+/**
+ * React hook that wraps `UpupCore` with reactive state updates.
+ *
+ * **Important:** Options are read once at mount time and are not reactive.
+ * Changing `options` after the initial render has no effect. If you need
+ * to reconfigure, unmount and remount the component with a new `key`.
+ */
 export function useUpupUpload(options: CoreOptions): UseUpupUploadReturn {
   const coreRef = useRef<UpupCore | null>(null)
   const [, forceUpdate] = useState(0)

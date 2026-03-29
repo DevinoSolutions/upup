@@ -8,7 +8,7 @@ import useDropboxUploader from '../hooks/use-dropbox-uploader'
 
 export default function DropboxUploader() {
     const ctx = useUploaderContext()
-    const dropboxConfigs = (ctx as any)?.core?.options?.dropboxConfigs
+    const dropboxConfigs = ctx.core.options.dropboxConfigs
 
     const {
         user,

@@ -26,6 +26,10 @@ export interface CoreOptions extends FileManagerOptions {
   fastAbortThreshold?: number
   isSuccessfulCall?: (response: { status: number; headers: Record<string, string>; body: unknown }) => boolean | Promise<boolean>
   crashRecovery?: boolean | object
+  onError?: (error: string | Error) => void
+  googleDriveConfigs?: Record<string, unknown>
+  oneDriveConfigs?: Record<string, unknown>
+  dropboxConfigs?: Record<string, unknown>
   driveConfigs?: Record<string, unknown>
   meta?: Record<string, unknown>
   locale?: unknown
@@ -49,7 +53,7 @@ export class UpupCore {
   private uploadManager: UploadManager | null = null
   private _status: UploadStatus = UploadStatus.IDLE
   private _error: Error | null = null
-  private options: CoreOptions
+  readonly options: CoreOptions
 
   constructor(options: CoreOptions) {
     this.options = options

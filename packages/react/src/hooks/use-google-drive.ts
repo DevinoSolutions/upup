@@ -39,7 +39,7 @@ export type GoogleDriveConfigs = {
 export default function useGoogleDrive(googleConfigs: GoogleDriveConfigs = {}) {
     const { google_client_id, google_api_key } = googleConfigs
     const ctx = useUploaderContext()
-    const onError = (ctx as any)?.core?.options?.onError ?? ((msg: string) => console.error(msg))
+    const onError = ctx.core.options.onError ?? ((msg: string) => console.error(msg))
 
     const [user, setUser] = useState<GoogleUser>()
     const [googleFiles, setGoogleFiles] = useState<GoogleRoot>()
