@@ -32,6 +32,52 @@ export { default as useAudioUploader } from './hooks/use-audio-uploader'
 export { default as useScreenCapture } from './hooks/use-screen-capture'
 export { default as useFetchFileByUrl } from './hooks/use-fetch-file-by-url'
 
+// Cloud drive adapter components (migrated from v1)
+export { default as GoogleDriveUploader } from './adapters/google-drive-uploader'
+export { default as OneDriveUploader } from './adapters/onedrive-uploader'
+export { default as DropboxUploader } from './adapters/dropbox-uploader'
+
+// Shared drive browser components
+export { default as DriveBrowser } from './components/shared/drive-browser'
+export { default as DriveBrowserHeader } from './components/shared/drive-browser-header'
+export { default as DriveBrowserIcon } from './components/shared/drive-browser-icon'
+export { default as DriveBrowserItem } from './components/shared/drive-browser-item'
+export { default as DriveAuthFallback } from './components/shared/drive-auth-fallback'
+export { default as MainBoxHeader } from './components/shared/main-box-header'
+
+// Cloud drive hooks
+export { default as useGoogleDrive } from './hooks/use-google-drive'
+export type { GoogleDriveConfigs } from './hooks/use-google-drive'
+export { default as useGoogleDriveUploader } from './hooks/use-google-drive-uploader'
+export { default as useOneDrive } from './hooks/use-onedrive'
+export type { OneDriveConfigs } from './hooks/use-onedrive'
+export { default as useOneDriveUploader } from './hooks/use-onedrive-uploader'
+export { useDropbox } from './hooks/use-dropbox'
+export { default as useDropboxUploader } from './hooks/use-dropbox-uploader'
+export { useDropboxAuth } from './hooks/use-dropbox-auth'
+export type { DropboxConfigs } from './hooks/use-dropbox-auth'
+export { default as useLoadGAPI } from './hooks/use-load-gapi'
+
+// Drive utility types and functions
+export type {
+    GoogleFile,
+    GoogleRoot,
+    GoogleUser,
+    GoogleToken,
+    OneDriveFile,
+    OneDriveRoot,
+    MicrosoftUser,
+    DropboxFile,
+    DropboxRoot,
+    DropboxUser,
+} from './lib/google-drive-utils'
+export {
+    getWorkspaceExportInfo,
+    getDriveEffectiveExtension,
+    isDriveFileAccepted,
+    GOOGLE_WORKSPACE_EXPORTS,
+} from './lib/google-drive-utils'
+
 // Lib utilities
 export { cn } from './lib/tailwind'
 export { adapterNameKeys, uploadAdapterObject } from './lib/constants'
