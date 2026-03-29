@@ -164,9 +164,9 @@ export class UpupCore {
     if (this.pipelineEngine) {
       const context: PipelineContext = {
         files: this.files,
-        options: this.options as any,
+        options: this.options as Record<string, unknown>,
         emit: (event, data) => this.emitter.emit(event, data),
-        t: ((key: string) => key) as any,
+        t: (key: string) => key,
       }
       const processed = await this.pipelineEngine.processAll([...this.files.values()], context)
       for (const file of processed) {
@@ -217,6 +217,12 @@ export class UpupCore {
     return [...this.files.values()]
   }
 
+  /**
+   * Pause in-flight uploads by aborting the current abort controller.
+   * Note: This cancels active HTTP requests. Resume will re-upload
+   * files that were in progress — true pause/resume of partial uploads
+   * requires multipart upload support.
+   */
   pause(): void {
     if (this.uploadManager) {
       this.uploadManager.pause()
@@ -226,10 +232,26 @@ export class UpupCore {
     this.emitter.emit('state-change', { status: this._status })
   }
 
+  /**
+   * Resume uploads after a pause. Re-uploads files that did not
+   * complete successfully (those without a `key` set).
+   */
   resume(): void {
     this._status = UploadStatus.UPLOADING
     this.emitter.emit('upload-resume', {})
     this.emitter.emit('state-change', { status: this._status })
+
+    // Re-upload files that were not completed
+    if (this.uploadManager) {
+      const incomplete = [...this.files.values()].filter(f => f.key == null)
+      if (incomplete.length > 0) {
+        this.uploadManager.uploadAll(incomplete).catch((err) => {
+          this._status = UploadStatus.FAILED
+          this.emitter.emit('error', { error: err })
+          this.emitter.emit('state-change', { status: this._status })
+        })
+      }
+    }
   }
 
   cancel(): void {

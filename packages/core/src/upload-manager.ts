@@ -6,6 +6,15 @@ import {
   type UploadResult,
 } from '@upup/shared'
 
+export class UpupUploadBatchError extends Error {
+  readonly errors: { file: UploadFile; error: Error }[]
+  constructor(message: string, errors: { file: UploadFile; error: Error }[]) {
+    super(message)
+    this.name = 'UpupUploadBatchError'
+    this.errors = errors
+  }
+}
+
 export interface UploadManagerOptions {
   credentials: CredentialStrategy
   uploadStrategy: UploadStrategy
@@ -31,10 +40,11 @@ export class UploadManager {
   async uploadAll(files: UploadFile[]): Promise<UploadResult[]> {
     const { maxConcurrentUploads } = this.options
     const results: UploadResult[] = []
+    const errors: { file: UploadFile; error: Error }[] = []
     const queue = [...files]
     let active = 0
 
-    await new Promise<void>((resolve, reject) => {
+    await new Promise<void>((resolve) => {
       const tryNext = () => {
         if (queue.length === 0 && active === 0) {
           resolve()
@@ -51,9 +61,11 @@ export class UploadManager {
               this.options.onFileComplete(file, result)
             })
             .catch((err) => {
+              const error = err instanceof Error ? err : new Error(String(err))
               if (this.options.onFileError) {
-                this.options.onFileError(file, err instanceof Error ? err : new Error(String(err)))
+                this.options.onFileError(file, error)
               }
+              errors.push({ file, error })
             })
             .finally(() => {
               active--
@@ -69,6 +81,13 @@ export class UploadManager {
         resolve()
       }
     })
+
+    if (errors.length > 0 && results.length === 0 && !this.options.onFileError) {
+      throw new UpupUploadBatchError(
+        `All ${errors.length} file upload(s) failed`,
+        errors,
+      )
+    }
 
     return results
   }
