@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion'
 import React, { memo, useCallback, useState } from 'react'
 import { TbPlayerPauseFilled, TbPlayerPlayFilled } from 'react-icons/tb'
+import { UploadStatus } from '@upup/shared'
 import { useUploaderContext } from '../context/uploader-context'
 import { cn } from '../lib/tailwind'
 import ProgressBar from './progress-bar'
@@ -44,10 +45,10 @@ export default memo(function FileList({ className }: FileListProps) {
 
     const isHidden = isAddingMore || !!activeSource || !files.length
 
-    const isUploading = status === 'uploading'
-    const isPaused = status === 'paused'
-    const isSuccessful = status === 'complete'
-    const isFailed = status === 'error'
+    const isUploading = status === UploadStatus.UPLOADING
+    const isPaused = status === UploadStatus.PAUSED
+    const isSuccessful = status === UploadStatus.SUCCESSFUL
+    const isFailed = status === UploadStatus.FAILED
 
     const totalProgress = progress?.percentage ?? 0
 

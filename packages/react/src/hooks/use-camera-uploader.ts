@@ -8,7 +8,6 @@ import {
     useState,
 } from 'react'
 import Webcam from 'react-webcam'
-import { v4 as uuid } from 'uuid'
 import { useUploaderContext } from '../context/uploader-context'
 import useFetchFileByUrl from './use-fetch-file-by-url'
 
@@ -123,7 +122,7 @@ export default function useCameraUploader() {
         const blob = videoBlobRef.current
         if (!blob) return
 
-        const file = new File([blob], `${uuid()}.webm`, {
+        const file = new File([blob], `${crypto.randomUUID()}.webm`, {
             type: 'video/webm',
         })
         await setFiles([file])

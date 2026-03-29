@@ -1,7 +1,6 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { v4 as uuid } from 'uuid'
 import { useUploaderContext } from '../context/uploader-context'
 
 export default function useScreenCapture() {
@@ -81,7 +80,7 @@ export default function useScreenCapture() {
         const blob = videoBlobRef.current
         if (!blob) return
 
-        const file = new File([blob], `${uuid()}.webm`, {
+        const file = new File([blob], `${crypto.randomUUID()}.webm`, {
             type: 'video/webm',
         })
         await setFiles([file])

@@ -1,7 +1,6 @@
 'use client'
 
 import { useCallback, useState } from 'react'
-import { v4 as uuid } from 'uuid'
 import { useUploaderContext } from '../context/uploader-context'
 
 export default function useFetchFileByUrl() {
@@ -20,7 +19,7 @@ export default function useFetchFileByUrl() {
                 const blob = await response.blob()
                 const extension = blob.type.split('/')[1]
 
-                const file = new File([blob], `${uuid()}.${extension}`, {
+                const file = new File([blob], `${crypto.randomUUID()}.${extension}`, {
                     type: blob.type,
                 })
 

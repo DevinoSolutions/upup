@@ -1,7 +1,6 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { v4 as uuid } from 'uuid'
 import { useUploaderContext } from '../context/uploader-context'
 
 export default function useAudioUploader() {
@@ -121,7 +120,7 @@ export default function useAudioUploader() {
         const blob = audioBlobRef.current
         if (!blob) return
 
-        const file = new File([blob], `${uuid()}.webm`, {
+        const file = new File([blob], `${crypto.randomUUID()}.webm`, {
             type: 'audio/webm',
         })
         await setFiles([file])

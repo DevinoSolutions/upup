@@ -125,7 +125,7 @@ export default memo(function FilePreview(props: Props) {
     }, [isRenaming])
 
     const showDeleteButton =
-        showRemoveButtonAfterComplete || status !== UploadStatus.COMPLETE
+        showRemoveButtonAfterComplete || status !== UploadStatus.SUCCESSFUL
 
     return (
         <div className="upup-inline-block" {...restProps}>
@@ -206,7 +206,7 @@ export default memo(function FilePreview(props: Props) {
                         disabled={isUploading}
                         aria-label="Remove file"
                     >
-                        <FileDeleteIcon className="upup-h-3 upup-w-3" />
+                        {FileDeleteIcon && <FileDeleteIcon className="upup-h-3 upup-w-3" />}
                     </button>
                 )}
 
@@ -214,7 +214,7 @@ export default memo(function FilePreview(props: Props) {
                     <ProgressBar
                         className="upup-absolute upup-bottom-0 upup-left-0 upup-right-0"
                         progressBarClassName="upup-rounded-t-none upup-rounded-b-md"
-                        progress={undefined}
+                        progress={0}
                     />
                 )}
             </div>
