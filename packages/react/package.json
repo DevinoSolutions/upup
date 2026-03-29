@@ -40,32 +40,43 @@
     "use-debounce": "^10.0.4"
   },
   "peerDependencies": {
+    "filerobot-image-editor": ">=4.0.0",
+    "konva": ">=9.0.0",
     "react": "^18.0.0 || ^19.0.0",
     "react-dom": "^18.0.0 || ^19.0.0",
-    "filerobot-image-editor": ">=4.0.0",
     "react-filerobot-image-editor": ">=4.0.0",
-    "konva": ">=9.0.0",
     "react-konva": ">=18.0.0",
     "styled-components": ">=5.0.0"
   },
   "peerDependenciesMeta": {
-    "react-filerobot-image-editor": { "optional": true },
-    "filerobot-image-editor": { "optional": true },
-    "react-konva": { "optional": true },
-    "konva": { "optional": true },
-    "styled-components": { "optional": true }
+    "react-filerobot-image-editor": {
+      "optional": true
+    },
+    "filerobot-image-editor": {
+      "optional": true
+    },
+    "react-konva": {
+      "optional": true
+    },
+    "konva": {
+      "optional": true
+    },
+    "styled-components": {
+      "optional": true
+    }
   },
   "devDependencies": {
+    "@testing-library/react": "^16.0.1",
     "@types/react": ">=18.0.0",
     "@types/react-dom": ">=18.0.0",
     "autoprefixer": "^10.4.20",
+    "jsdom": "22.1.0",
     "postcss": "^8.5.2",
     "postcss-cli": "^11.0.1",
     "postcss-prefix-selector": "^2.1.1",
     "tailwindcss": "^3.4.17",
     "tsup": "^8.4.0",
     "typescript": "^5.3.2",
-    "vitest": "^3.0.0",
-    "@testing-library/react": "^16.0.1"
+    "vitest": "^3.0.0"
   }
 }
