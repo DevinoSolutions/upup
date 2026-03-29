@@ -28,6 +28,7 @@
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit"
   },
+  "files": ["dist"],
   "dependencies": {
     "@upup/core": "workspace:*",
     "@upup/shared": "workspace:*",

@@ -43,14 +43,14 @@ function matchesAccept(file: File, accept: string): boolean {
 function nativeToUploadFile(file: File): UploadFile {
   return Object.assign(file, {
     id: generateFileId(),
-    url: null,
-    relativePath: null,
-    key: null,
-    fileHash: null,
-    checksumSHA256: null,
-    etag: null,
-    thumbnail: null,
-  }) as unknown as UploadFile
+    url: undefined,
+    relativePath: undefined,
+    key: undefined,
+    fileHash: undefined,
+    checksumSHA256: undefined,
+    etag: undefined,
+    thumbnail: undefined,
+  }) as UploadFile
 }
 
 export class FileManager {

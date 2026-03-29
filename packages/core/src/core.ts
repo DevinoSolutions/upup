@@ -90,7 +90,7 @@ export class UpupCore {
   get progress(): { totalFiles: number; completedFiles: number; percentage: number } {
     const files = [...this.files.values()]
     const total = files.length
-    const completed = files.filter(f => f.key !== null).length
+    const completed = files.filter(f => f.key != null).length
     return {
       totalFiles: total,
       completedFiles: completed,

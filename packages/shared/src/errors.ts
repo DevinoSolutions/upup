@@ -22,12 +22,12 @@ export enum UpupErrorCode {
 }
 
 export type RestrictionFailedReason =
-  | 'TYPE_MISMATCH'
-  | 'FILE_TOO_LARGE'
-  | 'FILE_TOO_SMALL'
-  | 'LIMIT_EXCEEDED'
-  | 'TOTAL_SIZE_EXCEEDED'
-  | 'DUPLICATE'
+  | UpupErrorCode.TYPE_MISMATCH
+  | UpupErrorCode.FILE_TOO_LARGE
+  | UpupErrorCode.FILE_TOO_SMALL
+  | UpupErrorCode.LIMIT_EXCEEDED
+  | UpupErrorCode.TOTAL_SIZE_EXCEEDED
+  | UpupErrorCode.DUPLICATE
   | 'BEFORE_FILE_ADDED_REJECTED'
 
 export class UpupError extends Error {

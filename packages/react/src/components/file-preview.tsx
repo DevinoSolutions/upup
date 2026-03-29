@@ -155,7 +155,7 @@ export default memo(function FilePreview(props: Props) {
                             setCanPreview={setCanPreview}
                             fileType={file.type}
                             fileName={file.name}
-                            fileUrl={file.url}
+                            fileUrl={file.url ?? ''}
                             fileSize={file.size}
                             allowPreview={allowPreview}
                             classNames={classNames}

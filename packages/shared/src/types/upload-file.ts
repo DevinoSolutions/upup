@@ -1,9 +1,9 @@
 export type UploadFile = File & {
   id: string
-  url: string
+  url?: string
   relativePath?: string
   key?: string
-  fileHash?: string | undefined
+  fileHash?: string
   checksumSHA256?: string
   etag?: string
   thumbnail?: {

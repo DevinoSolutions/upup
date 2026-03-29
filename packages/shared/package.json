@@ -20,17 +20,9 @@
     "dev": "tsup --watch",
     "typecheck": "tsc --noEmit"
   },
+  "files": ["dist"],
   "devDependencies": {
-    "@types/react": "^19.2.14",
     "tsup": "^8.4.0",
     "typescript": "^5.3.2"
-  },
-  "peerDependencies": {
-    "react": ">=18.0.0"
-  },
-  "peerDependenciesMeta": {
-    "react": {
-      "optional": true
-    }
   }
 }

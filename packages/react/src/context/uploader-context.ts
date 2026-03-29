@@ -2,7 +2,8 @@
 
 import { createContext, useContext } from 'react'
 import type { UseUpupUploadReturn } from '../use-upup-upload'
-import type { FileSource, UploaderClassNames, UploaderIcons } from '@upup/shared'
+import type { FileSource, UploaderClassNames } from '@upup/shared'
+import type { UploaderIcons } from '../types/icons'
 
 export type UploadSource = 'local' | 'camera' | 'url' | 'google_drive' | 'onedrive' | 'dropbox' | 'microphone' | 'screen'
 

@@ -7,6 +7,7 @@ export { PasteZone } from './components/paste-zone'
 export type { PasteZoneProps } from './components/paste-zone'
 export { UploaderContext, useUploaderContext } from './context/uploader-context'
 export type { UploadSource, UploaderContextValue } from './context/uploader-context'
+export type { UploaderIcons } from './types/icons'
 
 // Core UI components (migrated from v1)
 export { default as DropZone } from './components/drop-zone'

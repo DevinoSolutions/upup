@@ -272,7 +272,7 @@ export default memo(function ImageEditorInline(props: Props) {
                         shouldForwardProp={shouldForwardProp}
                     >
                         <EditorComponent
-                            source={file.url}
+                            source={file.url ?? ''}
                             onSave={handleEditorSave}
                             onClose={onClose}
                             savingPixelRatio={4}

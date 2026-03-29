@@ -11,7 +11,8 @@ import FileList from './components/file-list'
 import Notifier from './components/notifier'
 import useInformer from './hooks/use-informer'
 import type { CoreOptions } from '@upup/core'
-import { FileSource, type UploaderClassNames, type UploaderIcons } from '@upup/shared'
+import { FileSource, type UploaderClassNames } from '@upup/shared'
+import type { UploaderIcons } from './types/icons'
 
 export interface UpupUploaderProps extends CoreOptions {
   dark?: boolean
