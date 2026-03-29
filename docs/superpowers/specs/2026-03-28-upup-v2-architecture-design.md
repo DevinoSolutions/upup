@@ -1,9 +1,9 @@
 # upup v2.0 Architecture Design
 
-> Design spec for the upup-react-file-uploader v2.0 rewrite: multi-package architecture with headless core, composable strategies, middleware pipeline, and Web Workers.
+> Design spec for the upup-react-file-uploader v2.0 rewrite: multi-package architecture with headless core, composable strategies, middleware pipeline, plugin system, SSR-first design, and optimized bundle size.
 
 **Date:** 2026-03-28
-**Status:** Draft — pending approval
+**Status:** Revised — incorporating competitive enhancements from react-uploady, better-upload, uploadcare, react-filepond analysis
 
 ---
 
@@ -11,12 +11,16 @@
 
 1. **Headless-first:** A framework-agnostic core (`@upup/core`) that works in browser and Node.js. Zero DOM dependency.
 2. **Composable strategies:** Pluggable credential, OAuth, and upload strategies. Consumer chooses client mode or server mode.
-3. **Middleware pipeline:** Extensible file processing pipeline. Built-in steps (HEIC, EXIF, compress, checksum) ship as defaults; consumers can add custom steps.
-4. **Web Workers:** Offload CPU-heavy work (hashing, gzip) to workers from within core.
-5. **Two modes:** Client mode (no server beyond uploadEndpoint) and server mode (`@upup/server` handles OAuth + streaming).
-6. **React-first UI:** `@upup/react` is a first-class React package, not a wrapper. `useUpupUpload()` hook returns reactive state natively.
-7. **Managed service ready:** Architecture supports a hosted `@upup/server` as a paid managed service with zero code changes to core/react.
-8. **Learn from Uppy's pain points:** 4 packages not 30+, embeddable server not standalone companion, Tailwind-native styling, typed errors, simple middleware API.
+3. **Middleware pipeline:** Extensible file processing pipeline. Built-in steps (HEIC, EXIF, compress, checksum) are opt-in imports; consumers can add custom steps.
+4. **Plugin system:** Vite-inspired plain-object plugins with factory functions. Type-safe extensions via `.use()` chaining.
+5. **SSR-first:** Every React component works with Next.js App Router out of the box. No hydration mismatches. `'use client'` directives, deferred initialization, no browser APIs at module scope.
+6. **Bundle size discipline:** Subpath exports isolate heavy dependencies (pako, heic2any). Tree-shakeable with `sideEffects: false`. CI-enforced size budgets via `size-limit`.
+7. **Progressive complexity:** Simple things simple (3 options for basic upload), complex things possible (pipeline steps, plugins). Zero-plugin zero-config is the default.
+8. **Web Workers:** Offload CPU-heavy work (hashing, gzip) to workers from within core.
+9. **Two modes:** Client mode (no server beyond uploadEndpoint) and server mode (`@upup/server` handles OAuth + streaming).
+10. **React-first UI:** `@upup/react` is a first-class React package, not a wrapper. `useUpupUpload()` hook returns reactive state natively.
+11. **Managed service ready:** Architecture supports a hosted `@upup/server` as a paid managed service with zero code changes to core/react.
+12. **Learn from Uppy's pain points:** 4 packages not 30+, embeddable server not standalone companion, Tailwind-native styling, typed errors, simple middleware API.
 
 ---
 
@@ -62,9 +66,10 @@ Zero runtime dependencies. Contains everything that core, react, and server all 
 
 Depends only on `@upup/shared`. Framework-agnostic. Runs in browser and Node.js.
 
-- **UpupCore class:** State machine + event emitter. The engine.
+- **UpupCore class:** State machine + event emitter + plugin host. The engine.
+- **Plugin system:** `core.use(plugin)` for type-safe extensions. Plugins are plain objects with `{ name, setup(core) }`.
 - **Middleware pipeline engine:** Executes pipeline steps in sequence on files.
-- **Built-in pipeline steps:** HEIC conversion, EXIF stripping, image compression, thumbnail generation, gzip compression, SHA-256 checksum.
+- **Built-in pipeline steps (opt-in imports):** HEIC conversion, EXIF stripping, image compression, thumbnail generation, gzip compression, SHA-256 checksum. Each is a separate subpath export — only what you import gets bundled.
 - **Web Worker manager:** Pool of workers for CPU-heavy pipeline steps (hash, gzip). Falls back to main thread when workers unavailable.
 - **Provider API clients:** Google Drive, Dropbox, OneDrive file listing and OAuth helpers. Shared between client and server modes.
 - **Built-in strategies:**
@@ -76,27 +81,61 @@ Depends only on `@upup/shared`. Framework-agnostic. Runs in browser and Node.js.
 - **Crash recovery:** Serializable state, IndexedDB persistence
 - **Browser runtime adapter:** Default `RuntimeAdapter` using Web Crypto, OffscreenCanvas, Web Workers, XHR
 
+**Subpath exports** — one npm package, multiple entry points:
+```json
+{
+  "exports": {
+    ".":            { "import": "./dist/index.mjs", "types": "./dist/index.d.mts" },
+    "./steps/hash": { "import": "./dist/steps/hash.mjs", "types": "./dist/steps/hash.d.mts" },
+    "./steps/gzip": { "import": "./dist/steps/gzip.mjs", "types": "./dist/steps/gzip.d.mts" },
+    "./steps/heic": { "import": "./dist/steps/heic.mjs", "types": "./dist/steps/heic.d.mts" },
+    "./steps/exif": { "import": "./dist/steps/exif.mjs", "types": "./dist/steps/exif.d.mts" },
+    "./steps/compress": { "import": "./dist/steps/compress.mjs", "types": "./dist/steps/compress.d.mts" },
+    "./steps/thumbnail": { "import": "./dist/steps/thumbnail.mjs", "types": "./dist/steps/thumbnail.d.mts" },
+    "./steps/deduplicate": { "import": "./dist/steps/deduplicate.mjs", "types": "./dist/steps/deduplicate.d.mts" },
+    "./pipeline": { "import": "./dist/pipeline.mjs", "types": "./dist/pipeline.d.mts" }
+  },
+  "sideEffects": false
+}
+```
+
+**Import patterns:**
+```typescript
+// Level 1: Core only (~8-10KB gzipped) — 90% of users
+import { UpupCore } from '@upup/core'
+
+// Level 2: Add specific steps (each ~1-3KB)
+import { hashStep } from '@upup/core/steps/hash'
+import { exifStep } from '@upup/core/steps/exif'
+
+// Level 3: All steps re-exported for convenience (pulls in heavy deps)
+import { hashStep, exifStep, heicStep, gzipStep } from '@upup/core/pipeline'
+```
+
 #### @upup/react
 
-Depends on `@upup/core` and `@upup/shared`. The React package.
+Depends on `@upup/core` and `@upup/shared`. The React package. **SSR-safe by design.**
 
-- **`useUpupUpload()` hook:** Thin wrapper over `UpupCore`. Returns reactive state + methods. This IS headless mode.
+- **`useUpupUpload()` hook:** Thin wrapper over `UpupCore`. Returns reactive state + methods. This IS headless mode. Defers `UpupCore` initialization to `useEffect` — safe for SSR.
 - **`<UpupUploader>` component:** Uses `useUpupUpload()` internally. Ships the full UI.
+- **`<PasteZone>` component:** Standalone headless component for clipboard paste upload. Also available as `enablePaste` prop on `UpupUploader`.
 - **All UI components:** DropZone, FileList, FilePreview, FilePreviewPortal, SourceSelector, SourceView, ProgressBar, MainBoxHeader, Notifier, ImageEditorInline, ImageEditorModal, CameraUploader, AudioUploader, ScreenCaptureUploader
 - **Tailwind CSS:** All classes prefixed `upup-`. `classNames` prop for overrides. `cn()` utility.
 - **Source UIs:** Custom file browser for Google Drive, Dropbox, OneDrive (calls core's provider clients or server endpoints depending on mode)
+- **SSR handling:** All components use `'use client'` directive. Browser-only APIs (`File`, `Blob`, `URL.createObjectURL`, `navigator.clipboard`) gated behind `useIsClient()`. No portals during SSR. Tested with Next.js App Router `next build` + `next start`.
+- **Declarative sources shorthand:** `sources={['local', 'camera', 'url', 'google_drive']}` as sugar over individual adapter config
 
 #### @upup/server
 
 Depends on `@upup/core` and `@upup/shared`. Node.js server-side package.
 
 - **Route handlers:** Not a standalone server. Embeds in your existing app.
-- **Framework adapters:**
+- **Framework adapters:** Each is a thin wrapper (~20 lines) around a generic `Request → Response` handler:
+  - `@upup/server` — Generic handler (works anywhere with Web Request/Response)
   - `@upup/server/next` — Next.js App Router handler
   - `@upup/server/express` — Express middleware
   - `@upup/server/hono` — Hono/Cloudflare Workers handler
   - `@upup/server/fastify` — Fastify plugin
-  - `@upup/server/standalone` — For running as separate process
 - **OAuth proxy:** Handles OAuth flows server-side. Tokens never reach the browser.
 - **File streaming:** Streams files from cloud drives directly to storage (Drive -> S3) without touching browser.
 - **Presigned URL generation:** For S3, Azure, DigitalOcean, Backblaze.
@@ -207,7 +246,7 @@ const uploader = useUpupUpload({
 ### Class Design
 
 ```typescript
-class UpupCore {
+class UpupCore<TExtensions = {}> {
   // --- State ---
   readonly files: Map<string, UploadFile>
   readonly status: UploadStatus
@@ -217,8 +256,17 @@ class UpupCore {
   // --- Constructor ---
   constructor(options: CoreOptions)
 
+  // --- Plugin System ---
+  use<TPlugin extends UpupPlugin>(
+    plugin: TPlugin
+  ): UpupCore<TExtensions & ExtensionOf<TPlugin>>
+  readonly ext: TExtensions                        // type-safe access to plugin extensions
+  registerExtension(name: string, methods: Record<string, (...args: unknown[]) => unknown>): void
+  getExtension(name: string): Record<string, (...args: unknown[]) => unknown> | undefined
+
   // --- File Management ---
-  addFiles(files: File[]): Promise<void>         // validates, runs onBeforeFileAdded
+  addFiles(files: File[]): Promise<void>                               // validates, runs onBeforeFileAdded (async)
+  addFiles(files: File[], overrides: Partial<UploadOptions>): Promise<void>  // per-batch overrides
   removeFile(id: string): void
   removeAll(): void
   setFiles(files: File[]): Promise<void>          // replace all files
@@ -228,7 +276,7 @@ class UpupCore {
   upload(): Promise<UploadFile[]>             // runs pipeline then uploads
   pause(): void
   resume(): void
-  cancel(): void
+  cancel(): void                              // respects fastAbortThreshold
   retry(fileId?: string): void                    // retry single file or all failed
 
   // --- Events ---
@@ -261,6 +309,9 @@ type CoreOptions = {
   // --- Storage ---
   provider?: StorageProvider         // 'aws' | 'azure' | 'backblaze' | 'digitalocean'
 
+  // --- Plugins ---
+  plugins?: UpupPlugin[]          // convenience — equivalent to calling core.use() for each
+
   // --- Pipeline ---
   pipeline?: PipelineStep[]       // Custom pipeline. If omitted, uses defaults based on enabled options.
 
@@ -286,6 +337,10 @@ type CoreOptions = {
   maxConcurrentUploads?: number
   autoUpload?: boolean
   resumable?: ResumableUploadOptions
+  fastAbortThreshold?: number      // default: 100 — skip individual abort() when cancelling more files than this
+
+  // --- Upload response validation ---
+  isSuccessfulCall?: (response: UploadResponse) => boolean | Promise<boolean>  // custom success detection beyond HTTP 2xx
 
   // --- Crash recovery ---
   crashRecovery?: boolean | CrashRecoveryOptions
@@ -307,8 +362,8 @@ type CoreOptions = {
   // --- Runtime (advanced) ---
   runtime?: RuntimeAdapter        // Override browser defaults for React Native / Node.js
 
-  // --- Callbacks ---
-  onBeforeFileAdded?: (file: File) => boolean | File | undefined
+  // --- Callbacks (all async-safe) ---
+  onBeforeFileAdded?: (file: File) => boolean | File | undefined | Promise<boolean | File | undefined>
   onBeforeUpload?: (files: Map<string, UploadFile>) => boolean | undefined
   onFileUploadStart?: (file: UploadFile) => void
   onFileUploadProgress?: (file: UploadFile, progress: ProgressInfo) => void
@@ -319,6 +374,23 @@ type CoreOptions = {
   onRestrictionFailed?: (file: File, error: RestrictionError) => void
   onRetry?: (file: UploadFile, attempt: number, maxRetries: number) => void
 }
+
+// Per-batch upload overrides (subset of CoreOptions relevant per-file)
+type UploadOptions = {
+  checksumVerification?: boolean
+  imageCompression?: boolean | ImageCompressionOptions
+  heicConversion?: boolean
+  stripExifData?: boolean
+  maxRetries?: number
+  metadata?: Record<string, string>
+}
+
+// Upload response shape for isSuccessfulCall
+type UploadResponse = {
+  status: number
+  headers: Record<string, string>
+  body: unknown
+}
 ```
 
 ### Event System
@@ -328,6 +400,7 @@ type UpupEvent =
   | 'state-change'          // any state mutation
   | 'files-added'           // after validation + pipeline
   | 'file-removed'
+  | 'file-rejected'         // file rejected by onBeforeFileAdded or validation (with reason)
   | 'upload-start'
   | 'upload-progress'       // per-file
   | 'upload-complete'       // per-file
@@ -339,6 +412,7 @@ type UpupEvent =
   | 'pipeline-start'        // file entering pipeline
   | 'pipeline-step'         // individual step completed
   | 'pipeline-complete'     // file exited pipeline
+  | 'plugin-registered'     // plugin initialized via .use()
   | 'restriction-failed'
   | 'retry'
   | 'error'
@@ -375,7 +449,149 @@ enum UploadStatus {
 
 ---
 
-## 5. Middleware Pipeline
+## 5. Plugin System
+
+Inspired by Vite's plugin design: plain objects, factory functions, no classes, no inheritance.
+
+### Plugin Interface
+
+```typescript
+interface UpupPlugin {
+  /** Unique name — used for deduplication and debugging */
+  name: string
+  /** Called once when the plugin is registered via core.use() or plugins[] option */
+  setup(core: UpupCore): void
+}
+```
+
+### Creating Plugins
+
+Plugins are factory functions that return a `UpupPlugin` object:
+
+```typescript
+// Third-party thumbnail plugin
+function thumbnailPlugin(opts?: { size: number }): UpupPlugin {
+  return {
+    name: 'thumbnails',
+    setup(core) {
+      const thumbnails = new Map<string, string>()
+
+      core.on('files-added', (files) => {
+        for (const file of files) {
+          if (file.type.startsWith('image/')) {
+            thumbnails.set(file.id, generateThumb(file, opts?.size ?? 200))
+          }
+        }
+      })
+
+      core.on('file-removed', (file) => thumbnails.delete(file.id))
+
+      // Register extension methods accessible via core.ext
+      core.registerExtension('thumbnails', {
+        getThumbnail: (fileId: string) => thumbnails.get(fileId),
+        hasThumbnail: (fileId: string) => thumbnails.has(fileId),
+      })
+    },
+  }
+}
+```
+
+### Using Plugins
+
+**Chained `.use()` — full type inference:**
+
+```typescript
+const core = new UpupCore({ provider: 'aws', uploadEndpoint: '/api/upload' })
+  .use(thumbnailPlugin({ size: 150 }))
+  .use(analyticsPlugin())
+
+// TypeScript knows about extensions:
+core.ext.thumbnails.getThumbnail('file-1')  // ✅ typed
+core.ext.analytics.getMetrics()              // ✅ typed
+```
+
+**`plugins` option — convenient but loses extension types:**
+
+```typescript
+const core = new UpupCore({
+  provider: 'aws',
+  uploadEndpoint: '/api/upload',
+  plugins: [thumbnailPlugin(), analyticsPlugin()],
+})
+
+// Extensions exist at runtime but TypeScript doesn't know about them:
+core.getExtension('thumbnails')?.getThumbnail('file-1')  // untyped
+```
+
+This is a TypeScript limitation — arrays of heterogeneous plugins can't propagate individual generic types. The `.use()` chain is recommended when type safety matters.
+
+### Type-Safe Extension Inference
+
+```typescript
+// Plugin authors declare their extension type
+interface ThumbnailExtension {
+  thumbnails: {
+    getThumbnail(fileId: string): string | undefined
+    hasThumbnail(fileId: string): boolean
+  }
+}
+
+// UpupCore tracks accumulated extensions via generic parameter
+class UpupCore<TExtensions = {}> {
+  use<TPlugin extends UpupPlugin>(
+    plugin: TPlugin
+  ): UpupCore<TExtensions & ExtensionOf<TPlugin>> {
+    plugin.setup(this)
+    return this as any  // safe — extensions are additive
+  }
+
+  get ext(): TExtensions {
+    return this._extensions as TExtensions
+  }
+}
+
+// ExtensionOf<T> is a conditional type that extracts the extension type from a plugin
+type ExtensionOf<T> = T extends { __extensionType: infer E } ? E : {}
+```
+
+### Plugin Lifecycle
+
+1. Plugins are initialized in order (either from `plugins[]` option or `.use()` calls).
+2. Each plugin's `setup()` is called exactly once.
+3. Plugins can listen to any core event, modify options, add pipeline steps, or register extensions.
+4. Duplicate plugin names are rejected (throws error).
+5. Plugins are destroyed when `core.destroy()` is called.
+
+### Progressive Complexity
+
+```typescript
+// Level 1: 90% of users — zero plugins, zero config beyond essentials
+const { files, upload } = useUpupUpload({
+  provider: 'aws',
+  uploadEndpoint: '/api/upload',
+})
+
+// Level 2: Add pipeline steps (opt-in imports, not plugins)
+import { hashStep } from '@upup/core/steps/hash'
+import { exifStep } from '@upup/core/steps/exif'
+
+const { files, upload } = useUpupUpload({
+  provider: 'aws',
+  uploadEndpoint: '/api/upload',
+  pipeline: [hashStep(), exifStep()],
+})
+
+// Level 3: Add plugins for cross-cutting concerns
+const { files, upload } = useUpupUpload({
+  provider: 'aws',
+  uploadEndpoint: '/api/upload',
+  plugins: [analyticsPlugin(), thumbnailPlugin()],
+})
+```
+
+---
+
+## 6. Middleware Pipeline
 
 ### Interface
 
@@ -413,48 +629,54 @@ interface PipelineContext {
 
 ### Built-in Steps
 
-Each ships as a factory function in `@upup/core`:
+Each ships as a factory function. **Individual subpath imports** keep bundles small — only what you import gets bundled:
 
 ```typescript
-import {
-  heicConvert,
-  exifStrip,
-  imageCompress,
-  thumbnailGenerate,
-  gzipCompress,
-  checksumSHA256,
-  deduplicateFiles,
-} from '@upup/core/pipeline'
+// Individual imports (recommended — tree-shakeable, no heavy deps unless you import them)
+import { hashStep } from '@upup/core/steps/hash'        // ~1KB, no deps
+import { exifStep } from '@upup/core/steps/exif'        // ~2KB
+import { heicStep } from '@upup/core/steps/heic'        // ~15KB (pulls heic2any)
+import { gzipStep } from '@upup/core/steps/gzip'        // ~8KB (pulls pako)
+import { compressStep } from '@upup/core/steps/compress' // ~2KB
+import { thumbnailStep } from '@upup/core/steps/thumbnail' // ~2KB
+import { deduplicateStep } from '@upup/core/steps/deduplicate' // ~1KB
+
+// Convenience re-export (pulls ALL steps including heavy deps)
+import { hashStep, exifStep, heicStep } from '@upup/core/pipeline'
 ```
 
 ### Default Pipeline
 
-When no custom pipeline is provided, `UpupCore` constructs one from the boolean options:
+When no custom pipeline is provided and boolean options are set, `UpupCore` dynamically imports only the needed steps:
 
 ```typescript
-// Internal — constructed from options
+// Internal — constructed from options, lazy-loaded
 const defaultPipeline = [
-  options.contentDeduplication && deduplicateFiles(),
-  options.heicConversion && heicConvert(),
-  options.stripExifData && exifStrip(),
-  options.imageCompression && imageCompress(normalizeCompressionOptions(options.imageCompression)),
-  options.thumbnailGenerator && thumbnailGenerate(normalizeThumbnailOptions(options.thumbnailGenerator)),
-  options.shouldCompress && gzipCompress(),
-  options.checksumVerification && checksumSHA256(),
+  options.contentDeduplication && (await import('@upup/core/steps/deduplicate')).deduplicateStep(),
+  options.heicConversion && (await import('@upup/core/steps/heic')).heicStep(),
+  options.stripExifData && (await import('@upup/core/steps/exif')).exifStep(),
+  options.imageCompression && (await import('@upup/core/steps/compress')).compressStep(normalizeCompressionOptions(options.imageCompression)),
+  options.thumbnailGenerator && (await import('@upup/core/steps/thumbnail')).thumbnailStep(normalizeThumbnailOptions(options.thumbnailGenerator)),
+  options.shouldCompress && (await import('@upup/core/steps/gzip')).gzipStep(),
+  options.checksumVerification && (await import('@upup/core/steps/hash')).hashStep(),
 ].filter(Boolean)
 ```
+
+When `pipeline` is provided explicitly, `UpupCore` uses it directly — no dynamic imports.
 
 ### Custom Pipeline
 
 Consumers can compose their own:
 
 ```typescript
-import { heicConvert, exifStrip, checksumSHA256 } from '@upup/core/pipeline'
+import { heicStep } from '@upup/core/steps/heic'
+import { exifStep } from '@upup/core/steps/exif'
+import { hashStep } from '@upup/core/steps/hash'
 
 const core = new UpupCore({
   pipeline: [
-    heicConvert(),
-    exifStrip(),
+    heicStep(),
+    exifStep(),
     // Custom step — add watermark
     {
       name: 'watermark',
@@ -464,14 +686,14 @@ const core = new UpupCore({
         return watermarked
       },
     },
-    checksumSHA256(),
+    hashStep(),
   ],
 })
 ```
 
 ---
 
-## 6. Web Workers (Feature #11)
+## 7. Web Workers (Feature #11)
 
 ### Scope: Option 1 — Hash + Gzip Only
 
@@ -519,10 +741,10 @@ If `Worker` is unavailable (SSR, old browser, React Native), the same functions 
 
 ### Integration with Pipeline
 
-Built-in pipeline steps that benefit from workers (`checksumSHA256`, `gzipCompress`) automatically use `context.worker` when available:
+Built-in pipeline steps that benefit from workers (`hashStep`, `gzipStep`) automatically use `context.worker` when available:
 
 ```typescript
-// Inside checksumSHA256 pipeline step
+// Inside hashStep pipeline step
 async process(file, context) {
   const buffer = await file.arrayBuffer()
   const hash = context.worker
@@ -534,7 +756,7 @@ async process(file, context) {
 
 ---
 
-## 7. Strategy Interfaces
+## 8. Strategy Interfaces
 
 ### CredentialStrategy
 
@@ -643,7 +865,7 @@ interface RuntimeAdapter {
 
 ---
 
-## 8. Error System
+## 9. Error System
 
 ### Error Classes
 
@@ -724,13 +946,15 @@ enum UpupErrorCode {
 
 ---
 
-## 9. React Integration (@upup/react)
+## 10. React Integration (@upup/react)
 
 ### useUpupUpload Hook
 
-The primary headless API. Thin reactive wrapper over `UpupCore`:
+The primary headless API. Thin reactive wrapper over `UpupCore`. **SSR-safe** — defers `UpupCore` initialization to client side:
 
 ```typescript
+'use client'
+
 function useUpupUpload(options: CoreOptions): {
   // --- State (reactive) ---
   files: UploadFile[]
@@ -754,6 +978,32 @@ function useUpupUpload(options: CoreOptions): {
 
   // --- Core instance (escape hatch) ---
   core: UpupCore
+}
+```
+
+**SSR implementation pattern:**
+
+```typescript
+function useUpupUpload(options: CoreOptions) {
+  const coreRef = useRef<UpupCore | null>(null)
+
+  // Lazy initialization — safe during SSR (typeof window check)
+  if (typeof window !== 'undefined' && !coreRef.current) {
+    coreRef.current = new UpupCore(options)
+  }
+
+  useEffect(() => {
+    // Hydration fallback — if SSR skipped the ref init
+    if (!coreRef.current) {
+      coreRef.current = new UpupCore(options)
+    }
+    return () => {
+      coreRef.current?.destroy()
+      coreRef.current = null
+    }
+  }, [])
+
+  // ... reactive state subscription via useSyncExternalStore
 }
 ```
 
@@ -790,11 +1040,28 @@ function App() {
     <UpupUploader
       provider="aws"
       uploadEndpoint="/api/upload"
-      fileSources={['LOCAL', 'GOOGLE_DRIVE', 'CAMERA']}
+      sources={['local', 'google_drive', 'camera']}  // declarative source shorthand
+      enablePaste                                      // clipboard paste support
       dark
     />
   )
 }
+```
+
+**New props:**
+
+```typescript
+type UpupUploaderProps = CoreOptions & {
+  // ... existing UI props ...
+  sources?: UploadSource[]     // shorthand: ['local', 'camera', 'url', 'google_drive', 'onedrive', 'dropbox']
+  enablePaste?: boolean        // listen for paste events on the drop zone
+}
+
+// UploadSource type
+type UploadSource = 'local' | 'camera' | 'url' | 'google_drive' | 'onedrive' | 'dropbox' | 'microphone' | 'screen'
+```
+
+`sources` is sugar over `fileSources`. Source order in the array determines tab order in the UI. Default: `['local']`.
 ```
 
 Internally:
@@ -836,7 +1103,7 @@ Props remain the same. The ref API remains the same. The `useUpupUpload()` hook 
 
 ---
 
-## 10. Server Integration (@upup/server)
+## 11. Server Integration (@upup/server)
 
 ### Handler Factory
 
@@ -913,7 +1180,7 @@ POST   /files/:provider/transfer — Stream file from drive to storage
 
 ---
 
-## 11. Migration Path
+## 12. Migration Path
 
 ### From packages/upup to 4 packages
 
@@ -946,20 +1213,40 @@ Phase 5: Remove packages/upup.
 
 ---
 
-## 12. Build & Tooling
+## 13. Build & Tooling
 
-Each package uses tsup:
+Each package uses tsup. All packages set `"sideEffects": false` for tree-shaking.
 
 | Package | Formats | Entry points |
 |---------|---------|-------------|
 | `@upup/shared` | ESM + CJS | `src/index.ts` |
-| `@upup/core` | ESM + CJS | `src/index.ts`, `src/pipeline/index.ts` |
+| `@upup/core` | ESM + CJS | `src/index.ts`, `src/pipeline/index.ts`, `src/steps/hash.ts`, `src/steps/gzip.ts`, `src/steps/heic.ts`, `src/steps/exif.ts`, `src/steps/compress.ts`, `src/steps/thumbnail.ts`, `src/steps/deduplicate.ts` |
 | `@upup/react` | ESM + CJS | `src/index.ts` (includes CSS) |
-| `@upup/server` | ESM + CJS | `src/index.ts`, `src/next.ts`, `src/express.ts`, `src/hono.ts`, `src/fastify.ts`, `src/standalone.ts` |
+| `@upup/server` | ESM + CJS | `src/index.ts`, `src/next.ts`, `src/express.ts`, `src/hono.ts`, `src/fastify.ts` |
 
 DTS (declaration files) generated for all packages.
 
-pnpm workspace configuration:
+### Bundle Size Enforcement
+
+CI-enforced size budgets via `size-limit`:
+
+```json
+{
+  "size-limit": [
+    { "path": "packages/core/dist/index.mjs", "limit": "12 KB", "name": "@upup/core (main)" },
+    { "path": "packages/shared/dist/index.mjs", "limit": "5 KB", "name": "@upup/shared" },
+    { "path": "packages/react/dist/index.mjs", "limit": "25 KB", "name": "@upup/react" },
+    { "path": "packages/server/dist/index.mjs", "limit": "10 KB", "name": "@upup/server" },
+    { "path": "packages/core/dist/steps/hash.mjs", "limit": "3 KB", "name": "@upup/core/steps/hash" },
+    { "path": "packages/core/dist/steps/heic.mjs", "limit": "20 KB", "name": "@upup/core/steps/heic" },
+    { "path": "packages/core/dist/steps/gzip.mjs", "limit": "12 KB", "name": "@upup/core/steps/gzip" }
+  ]
+}
+```
+
+Budgets are initial targets — adjust after baseline measurement. `@upup/core` main entry must stay lean (no heavy deps). Heavy deps (pako, heic2any) live behind subpath exports.
+
+### pnpm workspace
 
 ```yaml
 # pnpm-workspace.yaml
@@ -970,24 +1257,43 @@ packages:
 
 ---
 
-## 13. Testing Strategy
+## 14. Testing Strategy
 
-- **@upup/core:** Unit tests for UpupCore, pipeline steps, worker pool, strategies. Jest/Vitest.
+- **@upup/core:** Unit tests for UpupCore, pipeline steps, worker pool, strategies, plugin system. Vitest.
 - **@upup/react:** Component tests for useUpupUpload hook and UpupUploader component. React Testing Library.
 - **@upup/server:** Integration tests for route handlers. Supertest.
 - **E2E:** Existing Playwright tests in packages/upup/e2e/ migrate to test the full @upup/react component.
+- **Accessibility:** `axe-core` integration tests for all interactive components. WCAG AA compliance.
+  - All interactive elements: proper ARIA roles and labels
+  - File list: `role="list"` / `role="listitem"` with `aria-live="polite"` status announcements
+  - Drop zone: drag state announced via ARIA attributes
+  - Upload progress: `aria-valuenow` / `aria-valuemin` / `aria-valuemax`
+  - Full keyboard navigation: Tab → Enter/Space → Tab through files → Delete to remove
+  - Focus management: focus returns to sensible element after file removal, upload completion
+  - Error messages associated with their file via `aria-describedby`
+  - Color contrast compliance (WCAG AA minimum)
+- **Bundle size:** `size-limit` CI check on every PR — fails if any package exceeds its budget.
 
 ---
 
-## 14. What This Unlocks
+## 15. What This Unlocks
 
 | Capability | How |
 |---|---|
 | Headless React uploader | `useUpupUpload()` from `@upup/react` |
 | Full UI uploader | `<UpupUploader>` from `@upup/react` (same as today) |
 | Custom processing pipeline | `pipeline: [...]` in core options |
-| Web Workers for heavy compute | Automatic in `checksumSHA256()` and `gzipCompress()` steps |
+| Third-party plugins | `core.use(plugin)` — analytics, thumbnails, virus scanning, etc. |
+| Type-safe plugin extensions | `.use()` chaining with generic inference |
+| Minimal bundle by default | Core ~8-10KB gzip. Steps are opt-in subpath imports. |
+| SSR / Next.js App Router | Works out of the box — `'use client'`, deferred init, no hydration issues |
+| Clipboard paste upload | `enablePaste` prop or `<PasteZone>` component |
+| Custom success detection | `isSuccessfulCall` for APIs that return 200 with error bodies |
+| Async file validation | `onBeforeFileAdded` supports `Promise<boolean>` — server-side duplicate checks |
+| Per-batch option overrides | `addFiles(files, { maxRetries: 5 })` |
+| Web Workers for heavy compute | Automatic in `hashStep()` and `gzipStep()` |
 | Server-side OAuth + streaming | `@upup/server` embedded in Next.js/Express |
+| Declarative source config | `sources={['local', 'camera', 'url']}` shorthand |
 | Vue/Svelte bindings (future) | Wrap `UpupCore` from `@upup/core` |
 | React Native (future) | Provide `ReactNativeRuntime` adapter |
 | Managed service (future) | Host `@upup/server`, add billing |
@@ -999,7 +1305,7 @@ packages:
 
 ---
 
-## 15. Naming Conventions
+## 16. Naming Conventions
 
 All names were audited and standardized for v2. The principles:
 - Names should describe what something **is** or **does**, not implementation details
