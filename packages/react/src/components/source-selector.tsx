@@ -16,6 +16,7 @@ export default function SourceSelector({ className }: SourceSelectorProps) {
         dark,
         classNames,
         addFiles,
+        activeSource,
     } = useUploaderContext()
 
     const { chosenAdapters, handleAdapterClick, handleInputFileChange, localInputRef } =
@@ -81,6 +82,8 @@ export default function SourceSelector({ className }: SourceSelectorProps) {
         >
             {!mini && (
                 <div
+                    role="tablist"
+                    aria-label="Upload sources"
                     className={cn(
                         'upup-flex upup-w-full upup-flex-col upup-justify-center upup-gap-1 md:upup-flex-row md:upup-flex-wrap md:upup-items-center md:upup-gap-[30px] md:upup-px-[30px]',
                         (classNames as any)?.adapterButtonList,
@@ -90,6 +93,8 @@ export default function SourceSelector({ className }: SourceSelectorProps) {
                         <button
                             key={id}
                             type="button"
+                            role="tab"
+                            aria-selected={activeSource === id}
                             className={cn(
                                 'upup-group upup-flex upup-items-center upup-gap-[6px] upup-border-b upup-border-gray-200 upup-px-2 upup-py-1 md:upup-flex-col md:upup-justify-center md:upup-rounded-lg md:upup-border-none md:upup-p-0',
                                 {

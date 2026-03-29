@@ -45,9 +45,8 @@ export default function DropZone({ children, className }: DropZoneProps) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            tabIndex={0}
             role="region"
-            aria-label="File upload drop zone"
+            aria-label="Drop files here or click to browse"
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}

@@ -107,6 +107,8 @@ export default memo(function FileList({ className }: FileListProps) {
                 )}
             >
                 <div
+                    role="list"
+                    aria-live="polite"
                     className={cn(
                         'upup-flex upup-flex-col upup-gap-3 upup-font-[Arial,Helvetica,sans-serif]',
                         {
@@ -125,6 +127,7 @@ export default memo(function FileList({ className }: FileListProps) {
                         return (
                             <div
                                 key={file.id}
+                                role="listitem"
                                 className={cn(
                                     'upup-rounded-xl upup-transition',
                                     {
