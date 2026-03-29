@@ -7,32 +7,32 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.mjs",
-      "require": "./dist/index.js"
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
     },
     "./next": {
       "types": "./dist/next.d.ts",
-      "import": "./dist/next.mjs",
-      "require": "./dist/next.js"
+      "import": "./dist/next.js",
+      "require": "./dist/next.cjs"
     },
     "./express": {
       "types": "./dist/express.d.ts",
-      "import": "./dist/express.mjs",
-      "require": "./dist/express.js"
+      "import": "./dist/express.js",
+      "require": "./dist/express.cjs"
     },
     "./hono": {
       "types": "./dist/hono.d.ts",
-      "import": "./dist/hono.mjs",
-      "require": "./dist/hono.js"
+      "import": "./dist/hono.js",
+      "require": "./dist/hono.cjs"
     },
     "./fastify": {
       "types": "./dist/fastify.d.ts",
-      "import": "./dist/fastify.mjs",
-      "require": "./dist/fastify.js"
+      "import": "./dist/fastify.js",
+      "require": "./dist/fastify.cjs"
     }
   },
-  "main": "./dist/index.js",
-  "module": "./dist/index.mjs",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
     "build": "tsup",

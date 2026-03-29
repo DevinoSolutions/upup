@@ -7,18 +7,18 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.mjs",
-      "require": "./dist/index.js"
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
     },
     "./locales": {
       "types": "./dist/locales/index.d.ts",
-      "import": "./dist/locales/index.mjs",
-      "require": "./dist/locales/index.js"
+      "import": "./dist/locales/index.js",
+      "require": "./dist/locales/index.cjs"
     },
     "./styles": "./dist/tailwind-prefixed.css"
   },
-  "main": "./dist/index.js",
-  "module": "./dist/index.mjs",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
     "build": "tsup && pnpm run build:css",

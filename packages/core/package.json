@@ -7,17 +7,17 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.mjs",
-      "require": "./dist/index.js"
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
     },
     "./pipeline": {
       "types": "./dist/pipeline/index.d.ts",
-      "import": "./dist/pipeline/index.mjs",
-      "require": "./dist/pipeline/index.js"
+      "import": "./dist/pipeline/index.js",
+      "require": "./dist/pipeline/index.cjs"
     }
   },
-  "main": "./dist/index.js",
-  "module": "./dist/index.mjs",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
     "build": "tsup",
