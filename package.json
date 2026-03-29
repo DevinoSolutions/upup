@@ -28,12 +28,22 @@
     "test:e2e:ui": "pnpm --filter upup-react-file-uploader run test:e2e:ui",
     "typecheck": "turbo run typecheck",
     "playwright:install": "pnpm --filter upup-react-file-uploader run playwright:install",
-    "release": "pnpm --filter upup-react-file-uploader run release"
+    "release": "pnpm --filter upup-react-file-uploader run release",
+    "size": "size-limit",
+    "size:check": "size-limit --limit"
   },
+  "size-limit": [
+    { "path": "packages/core/dist/index.js", "limit": "12 KB", "name": "@upup/core (main)" },
+    { "path": "packages/shared/dist/index.js", "limit": "5 KB", "name": "@upup/shared" },
+    { "path": "packages/core/dist/steps/hash.js", "limit": "3 KB", "name": "@upup/core/steps/hash" },
+    { "path": "packages/core/dist/steps/deduplicate.js", "limit": "3 KB", "name": "@upup/core/steps/deduplicate" }
+  ],
   "devDependencies": {
     "@changesets/cli": "^2.30.0",
+    "@size-limit/preset-small-lib": "^10.0.3",
     "concurrently": "^9.2.1",
     "dotenv-cli": "^7.4.2",
+    "size-limit": "^10.0.3",
     "turbo": "2.5.8"
   },
   "pnpm": {
