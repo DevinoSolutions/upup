@@ -21,6 +21,17 @@ export { default as ProgressBar } from './components/progress-bar'
 export { default as Notifier } from './components/notifier'
 export type { InformerMessage, InformerMessageType, UseInformerReturn } from './hooks/use-informer'
 
+// Device capture components (migrated from v1)
+export { default as CameraUploader } from './components/camera-uploader'
+export { default as AudioUploader } from './components/audio-uploader'
+export { default as ScreenCaptureUploader } from './components/screen-capture-uploader'
+export { default as UrlUploader } from './components/url-uploader'
+export { default as useCameraUploader } from './hooks/use-camera-uploader'
+export type { CameraMode, FacingMode } from './hooks/use-camera-uploader'
+export { default as useAudioUploader } from './hooks/use-audio-uploader'
+export { default as useScreenCapture } from './hooks/use-screen-capture'
+export { default as useFetchFileByUrl } from './hooks/use-fetch-file-by-url'
+
 // Lib utilities
 export { cn } from './lib/tailwind'
 export { adapterNameKeys, uploadAdapterObject } from './lib/constants'
