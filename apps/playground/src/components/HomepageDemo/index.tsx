@@ -18,6 +18,7 @@ import {
   FaPalette,
   FaUpload,
   FaEye,
+  FaEyeSlash,
   FaBolt,
   FaCamera,
   FaGlobe,
@@ -28,11 +29,15 @@ import {
   FaLanguage,
   FaCrop,
   FaRedo,
+  FaMicrophone,
+  FaDesktop,
+  FaImage,
+  FaTh,
 } from "react-icons/fa";
 import { SiDropbox, SiGoogledrive } from "react-icons/si";
 import { GrOnedrive } from "react-icons/gr";
-import type { Translations } from "upup-react-file-uploader";
-import { en_US } from "upup-react-file-uploader";
+import type { Translations } from "@upup/shared";
+import { en_US } from "@upup/shared";
 import {
   ar_SA,
   de_DE,
@@ -42,7 +47,7 @@ import {
   ko_KR,
   zh_CN,
   zh_TW,
-} from "upup-react-file-uploader/locales";
+} from "@upup/react/locales";
 import Uploader from "@/components/Uploader";
 import { Tooltip } from "react-tooltip";
 import "react-tooltip/dist/react-tooltip.css";
@@ -97,6 +102,8 @@ const UPLOAD_ADAPTERS = [
   { value: "LINK", label: "URL Links", icon: FaGlobe },
   { value: "CAMERA", label: "Camera", icon: FaCamera },
   { value: "DROPBOX", label: "Dropbox", icon: SiDropbox },
+  { value: "AUDIO", label: "Audio", icon: FaMicrophone },
+  { value: "SCREEN_CAPTURE", label: "Screen Capture", icon: FaDesktop },
 ];
 
 // Available languages for the locale selector
@@ -127,12 +134,32 @@ export default function HomepageDemo() {
   ]);
   const [allowPreview, setAllowPreview] = useState(true);
   const [shouldCompress, setShouldCompress] = useState(false);
+  const [imageCompression, setImageCompression] = useState(false);
   const [imageEditor, setImageEditor] = useState(false);
+  const [thumbnailGenerator, setThumbnailGenerator] = useState(false);
   const [autoRetryEnabled, setAutoRetryEnabled] = useState(false);
   const [autoRetryCount, setAutoRetryCount] = useState(3);
   const [selectedLanguage, setSelectedLanguage] = useState("en_US");
   const [fileSizeValue, setFileSizeValue] = useState(25); // Default 25
   const [fileSizeUnit, setFileSizeUnit] = useState(1024 * 1024); // Default MB
+  const [minFileSizeValue, setMinFileSizeValue] = useState(0); // Default 0 (disabled)
+  const [minFileSizeUnit, setMinFileSizeUnit] = useState(1024); // Default KB
+  const [maxTotalFileSizeValue, setMaxTotalFileSizeValue] = useState(0); // Default 0 (disabled)
+  const [maxTotalFileSizeUnit, setMaxTotalFileSizeUnit] = useState(1024 * 1024); // Default MB
+  const [note, setNote] = useState("");
+  const [hideUploadButton, setHideUploadButton] = useState(false);
+  const [disableLocalFiles, setDisableLocalFiles] = useState(false);
+  const [showRemoveButtonAfterComplete, setShowRemoveButtonAfterComplete] = useState(true);
+  const [onBeforeFileAddedEnabled, setOnBeforeFileAddedEnabled] = useState(false);
+  const [disabled, setDisabled] = useState(false);
+  const [hideCancelButton, setHideCancelButton] = useState(false);
+  const [hidePauseResumeButton, setHidePauseResumeButton] = useState(false);
+  const [hideProgressAfterFinish, setHideProgressAfterFinish] = useState(false);
+  const [hideRetryButton, setHideRetryButton] = useState(false);
+  const [disableInformer, setDisableInformer] = useState(false);
+  const [showSelectedFiles, setShowSelectedFiles] = useState(true);
+  const [allowMultipleUploadBatches, setAllowMultipleUploadBatches] = useState(true);
+  const [onBeforeUploadEnabled, setOnBeforeUploadEnabled] = useState(false);
   const [restrictionsEnabled, setRestrictionsEnabled] = useState(false); // New state for restrictions toggle
   const [iframeLoading, setIframeLoading] = useState(false); // Loading state for iframe
   const [currentIframeUrl, setCurrentIframeUrl] = useState(""); // Track current iframe URL
@@ -141,6 +168,18 @@ export default function HomepageDemo() {
   const fileSizeLimit = Math.floor(
     (fileSizeValue * fileSizeUnit) / (1024 * 1024),
   ); // Convert to MB for uploader
+
+  // Get min file size unit label
+  const getMinFileSizeUnitLabel = () => {
+    const unit = FILE_SIZE_UNITS.find((u) => u.value === minFileSizeUnit);
+    return unit?.label || 'KB';
+  };
+
+  // Get max total file size unit label
+  const getMaxTotalFileSizeUnitLabel = () => {
+    const unit = FILE_SIZE_UNITS.find((u) => u.value === maxTotalFileSizeUnit);
+    return unit?.label || 'MB';
+  };
 
   // Generate iframe URL with current settings
   const generateMobileDemoUrl = () => {
@@ -151,12 +190,32 @@ export default function HomepageDemo() {
       enabledAdapters: enabledAdapters.join(","),
       allowPreview: allowPreview.toString(),
       shouldCompress: shouldCompress.toString(),
+      imageCompression: imageCompression.toString(),
       imageEditor: imageEditor.toString(),
+      thumbnailGenerator: thumbnailGenerator.toString(),
       autoRetryEnabled: autoRetryEnabled.toString(),
       autoRetryCount: autoRetryCount.toString(),
       fileSizeLimit: (restrictionsEnabled ? fileSizeLimit : 999).toString(),
+      minFileSizeValue: (restrictionsEnabled && minFileSizeValue > 0 ? minFileSizeValue : 0).toString(),
+      minFileSizeUnit: getMinFileSizeUnitLabel(),
+      maxTotalFileSizeValue: (restrictionsEnabled && maxTotalFileSizeValue > 0 ? maxTotalFileSizeValue : 0).toString(),
+      maxTotalFileSizeUnit: getMaxTotalFileSizeUnitLabel(),
       darkMode: isDarkMode.toString(),
       language: selectedLanguage,
+      note,
+      hideUploadButton: hideUploadButton.toString(),
+      disableLocalFiles: disableLocalFiles.toString(),
+      showRemoveButtonAfterComplete: showRemoveButtonAfterComplete.toString(),
+      onBeforeFileAddedEnabled: onBeforeFileAddedEnabled.toString(),
+      disabled: disabled.toString(),
+      hideCancelButton: hideCancelButton.toString(),
+      hidePauseResumeButton: hidePauseResumeButton.toString(),
+      hideProgressAfterFinish: hideProgressAfterFinish.toString(),
+      hideRetryButton: hideRetryButton.toString(),
+      disableInformer: disableInformer.toString(),
+      showSelectedFiles: showSelectedFiles.toString(),
+      allowMultipleUploadBatches: allowMultipleUploadBatches.toString(),
+      onBeforeUploadEnabled: onBeforeUploadEnabled.toString(),
     });
     return `/mobile-demo?${params.toString()}`;
   };
@@ -181,16 +240,36 @@ export default function HomepageDemo() {
     enabledAdapters,
     allowPreview,
     shouldCompress,
+    imageCompression,
     imageEditor,
+    thumbnailGenerator,
     autoRetryEnabled,
     autoRetryCount,
     restrictionsEnabled,
     limit,
     fileSizeValue,
     fileSizeUnit,
+    minFileSizeValue,
+    minFileSizeUnit,
+    maxTotalFileSizeValue,
+    maxTotalFileSizeUnit,
     isDarkMode,
     mobileMode,
     selectedLanguage,
+    note,
+    hideUploadButton,
+    disableLocalFiles,
+    showRemoveButtonAfterComplete,
+    onBeforeFileAddedEnabled,
+    disabled,
+    hideCancelButton,
+    hidePauseResumeButton,
+    hideProgressAfterFinish,
+    hideRetryButton,
+    disableInformer,
+    showSelectedFiles,
+    allowMultipleUploadBatches,
+    onBeforeUploadEnabled,
   ]);
 
   const handleMiniChange: ChangeEventHandler<HTMLInputElement> = useCallback(
@@ -465,6 +544,90 @@ export default function HomepageDemo() {
                               </select>
                             </div>
                           </div>
+
+                          {/* Min File Size */}
+                          <div className="flex flex-col gap-1">
+                            <label
+                              htmlFor="minFileSizeValue"
+                              className="text-xs font-medium text-gray-700 dark:text-gray-300"
+                            >
+                              Min Size
+                            </label>
+                            <div className="flex gap-1">
+                              <input
+                                type="number"
+                                id="minFileSizeValue"
+                                value={minFileSizeValue}
+                                onChange={(e) =>
+                                  setMinFileSizeValue(
+                                    Math.max(0, Number(e.target.value) || 0),
+                                  )
+                                }
+                                min="0"
+                                className="w-20 px-2 py-1 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded focus:ring-1 focus:ring-primary/20 dark:focus:ring-primary-dark/20 focus:border-primary dark:focus:border-primary-dark transition-colors text-gray-900 dark:text-white"
+                                placeholder="0"
+                              />
+                              <select
+                                value={minFileSizeUnit}
+                                onChange={(e) =>
+                                  setMinFileSizeUnit(Number(e.target.value))
+                                }
+                                className="px-2 py-1 min-w-[60px] text-xs bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded focus:ring-1 focus:ring-primary/20 dark:focus:ring-primary-dark/20 focus:border-primary dark:focus:border-primary-dark transition-colors text-gray-900 dark:text-white"
+                              >
+                                {FILE_SIZE_UNITS.map((unit) => (
+                                  <option
+                                    key={unit.value}
+                                    value={unit.value}
+                                    className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                                  >
+                                    {unit.label}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+                          </div>
+
+                          {/* Max Total File Size */}
+                          <div className="flex flex-col gap-1">
+                            <label
+                              htmlFor="maxTotalFileSizeValue"
+                              className="text-xs font-medium text-gray-700 dark:text-gray-300"
+                            >
+                              Max Total
+                            </label>
+                            <div className="flex gap-1">
+                              <input
+                                type="number"
+                                id="maxTotalFileSizeValue"
+                                value={maxTotalFileSizeValue}
+                                onChange={(e) =>
+                                  setMaxTotalFileSizeValue(
+                                    Math.max(0, Number(e.target.value) || 0),
+                                  )
+                                }
+                                min="0"
+                                className="w-20 px-2 py-1 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded focus:ring-1 focus:ring-primary/20 dark:focus:ring-primary-dark/20 focus:border-primary dark:focus:border-primary-dark transition-colors text-gray-900 dark:text-white"
+                                placeholder="0"
+                              />
+                              <select
+                                value={maxTotalFileSizeUnit}
+                                onChange={(e) =>
+                                  setMaxTotalFileSizeUnit(Number(e.target.value))
+                                }
+                                className="px-2 py-1 min-w-[60px] text-xs bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded focus:ring-1 focus:ring-primary/20 dark:focus:ring-primary-dark/20 focus:border-primary dark:focus:border-primary-dark transition-colors text-gray-900 dark:text-white"
+                              >
+                                {FILE_SIZE_UNITS.map((unit) => (
+                                  <option
+                                    key={unit.value}
+                                    value={unit.value}
+                                    className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                                  >
+                                    {unit.label}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -621,6 +784,29 @@ export default function HomepageDemo() {
 
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
+                      <FaImage className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                      <div
+                        className="text-sm font-medium text-gray-900 dark:text-gray-100 cursor-help flex items-center gap-1"
+                        data-tooltip-id="image-compression-tooltip"
+                        data-tooltip-content="Compress images using canvas-based quality and dimension reduction before uploading"
+                      >
+                        <FaInfoCircle className="w-3 h-3 text-blue-500 dark:text-blue-400" />
+                        Image Compression
+                      </div>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={imageCompression}
+                        onChange={(e) => setImageCompression(e.target.checked)}
+                        className="sr-only peer"
+                      />
+                      <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 dark:peer-focus:ring-primary-dark/20 rounded-full peer dark:bg-gray-600 peer-checked:after:translate-x-4 peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all after:shadow-md dark:border-gray-600 peer-checked:bg-primary dark:peer-checked:bg-primary-dark"></div>
+                    </label>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
                       <FaCrop className="w-4 h-4 text-gray-600 dark:text-gray-400" />
                       <div
                         className="text-sm font-medium text-gray-900 dark:text-gray-100 cursor-help flex items-center gap-1"
@@ -636,6 +822,29 @@ export default function HomepageDemo() {
                         type="checkbox"
                         checked={imageEditor}
                         onChange={(e) => setImageEditor(e.target.checked)}
+                        className="sr-only peer"
+                      />
+                      <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 dark:peer-focus:ring-primary-dark/20 rounded-full peer dark:bg-gray-600 peer-checked:after:translate-x-4 peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all after:shadow-md dark:border-gray-600 peer-checked:bg-primary dark:peer-checked:bg-primary-dark"></div>
+                    </label>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <FaTh className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                      <div
+                        className="text-sm font-medium text-gray-900 dark:text-gray-100 cursor-help flex items-center gap-1"
+                        data-tooltip-id="thumbnail-generator-tooltip"
+                        data-tooltip-content="Generate smaller thumbnail previews for image files before uploading"
+                      >
+                        <FaInfoCircle className="w-3 h-3 text-blue-500 dark:text-blue-400" />
+                        Thumbnail Generator
+                      </div>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={thumbnailGenerator}
+                        onChange={(e) => setThumbnailGenerator(e.target.checked)}
                         className="sr-only peer"
                       />
                       <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 dark:peer-focus:ring-primary-dark/20 rounded-full peer dark:bg-gray-600 peer-checked:after:translate-x-4 peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all after:shadow-md dark:border-gray-600 peer-checked:bg-primary dark:peer-checked:bg-primary-dark"></div>
@@ -699,6 +908,359 @@ export default function HomepageDemo() {
                         />
                       </div>
                     </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Advanced Options Card */}
+              <div className="shadow-md dark:shadow-none p-4 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm border border-gray-200/50 dark:border-gray-700/50 rounded-2xl hover:bg-white/80 dark:hover:bg-gray-800/80 transition-all duration-300">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-6 h-6 bg-primary/10 dark:bg-primary-dark/10 rounded-lg flex items-center justify-center">
+                    <FaCog className="w-3.5 h-3.5 text-primary dark:text-primary-dark" />
+                  </div>
+                  <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">
+                    Advanced Options
+                  </h3>
+                </div>
+                <div className="space-y-3">
+                  {/* Note */}
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <FaFileAlt className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                      <div
+                        className="text-sm font-medium text-gray-900 dark:text-gray-100 cursor-help flex items-center gap-1"
+                        data-tooltip-id="note-tooltip"
+                        data-tooltip-content="Informational text shown in the upload area"
+                      >
+                        <FaInfoCircle className="w-3 h-3 text-blue-500 dark:text-blue-400" />
+                        Note
+                      </div>
+                    </div>
+                    <input
+                      type="text"
+                      value={note}
+                      onChange={(e) => setNote(e.target.value)}
+                      placeholder="e.g. Images only, up to 5 MB"
+                      className="w-full px-3 py-1.5 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-1 focus:ring-primary/20 dark:focus:ring-primary-dark/20 focus:border-primary dark:focus:border-primary-dark transition-colors text-gray-900 dark:text-white"
+                    />
+                  </div>
+
+                  {/* Hide Upload Button */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <FaUpload className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                      <div
+                        className="text-sm font-medium text-gray-900 dark:text-gray-100 cursor-help flex items-center gap-1"
+                        data-tooltip-id="hideUploadButton-tooltip"
+                        data-tooltip-content="Hide the upload button from the file list"
+                      >
+                        <FaInfoCircle className="w-3 h-3 text-blue-500 dark:text-blue-400" />
+                        Hide Upload Button
+                      </div>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={hideUploadButton}
+                        onChange={(e) => setHideUploadButton(e.target.checked)}
+                        className="sr-only peer"
+                      />
+                      <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 dark:peer-focus:ring-primary-dark/20 rounded-full peer dark:bg-gray-600 peer-checked:after:translate-x-4 peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all after:shadow-md dark:border-gray-600 peer-checked:bg-primary dark:peer-checked:bg-primary-dark"></div>
+                    </label>
+                  </div>
+
+                  {/* Disable Local Files */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <FaHdd className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                      <div
+                        className="text-sm font-medium text-gray-900 dark:text-gray-100 cursor-help flex items-center gap-1"
+                        data-tooltip-id="disableLocalFiles-tooltip"
+                        data-tooltip-content="Disable selecting files from the local device"
+                      >
+                        <FaInfoCircle className="w-3 h-3 text-blue-500 dark:text-blue-400" />
+                        Disable Local Files
+                      </div>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={disableLocalFiles}
+                        onChange={(e) => setDisableLocalFiles(e.target.checked)}
+                        className="sr-only peer"
+                      />
+                      <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 dark:peer-focus:ring-primary-dark/20 rounded-full peer dark:bg-gray-600 peer-checked:after:translate-x-4 peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all after:shadow-md dark:border-gray-600 peer-checked:bg-primary dark:peer-checked:bg-primary-dark"></div>
+                    </label>
+                  </div>
+
+                  {/* Show Remove Button After Complete */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <FaEye className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                      <div
+                        className="text-sm font-medium text-gray-900 dark:text-gray-100 cursor-help flex items-center gap-1"
+                        data-tooltip-id="showRemoveButtonAfterComplete-tooltip"
+                        data-tooltip-content="Show the remove button on files after upload completes"
+                      >
+                        <FaInfoCircle className="w-3 h-3 text-blue-500 dark:text-blue-400" />
+                        Remove After Complete
+                      </div>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={showRemoveButtonAfterComplete}
+                        onChange={(e) =>
+                          setShowRemoveButtonAfterComplete(e.target.checked)
+                        }
+                        className="sr-only peer"
+                      />
+                      <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 dark:peer-focus:ring-primary-dark/20 rounded-full peer dark:bg-gray-600 peer-checked:after:translate-x-4 peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all after:shadow-md dark:border-gray-600 peer-checked:bg-primary dark:peer-checked:bg-primary-dark"></div>
+                    </label>
+                  </div>
+
+                  {/* onBeforeFileAdded */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <FaShieldAlt className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                      <div
+                        className="text-sm font-medium text-gray-900 dark:text-gray-100 cursor-help flex items-center gap-1"
+                        data-tooltip-id="onBeforeFileAdded-tooltip"
+                        data-tooltip-content="Enable a callback that rejects hidden files (starting with '.')"
+                      >
+                        <FaInfoCircle className="w-3 h-3 text-blue-500 dark:text-blue-400" />
+                        onBeforeFileAdded
+                      </div>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={onBeforeFileAddedEnabled}
+                        onChange={(e) =>
+                          setOnBeforeFileAddedEnabled(e.target.checked)
+                        }
+                        className="sr-only peer"
+                      />
+                      <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 dark:peer-focus:ring-primary-dark/20 rounded-full peer dark:bg-gray-600 peer-checked:after:translate-x-4 peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all after:shadow-md dark:border-gray-600 peer-checked:bg-primary dark:peer-checked:bg-primary-dark"></div>
+                    </label>
+                  </div>
+
+                  {/* onBeforeUpload */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <FaShieldAlt className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                      <div
+                        className="text-sm font-medium text-gray-900 dark:text-gray-100 cursor-help flex items-center gap-1"
+                        data-tooltip-id="onBeforeUpload-tooltip"
+                        data-tooltip-content="Enable a callback that fires before upload starts"
+                      >
+                        <FaInfoCircle className="w-3 h-3 text-blue-500 dark:text-blue-400" />
+                        onBeforeUpload
+                      </div>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={onBeforeUploadEnabled}
+                        onChange={(e) =>
+                          setOnBeforeUploadEnabled(e.target.checked)
+                        }
+                        className="sr-only peer"
+                      />
+                      <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 dark:peer-focus:ring-primary-dark/20 rounded-full peer dark:bg-gray-600 peer-checked:after:translate-x-4 peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all after:shadow-md dark:border-gray-600 peer-checked:bg-primary dark:peer-checked:bg-primary-dark"></div>
+                    </label>
+                  </div>
+
+                  {/* Disabled */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <FaBolt className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                      <div
+                        className="text-sm font-medium text-gray-900 dark:text-gray-100 cursor-help flex items-center gap-1"
+                        data-tooltip-id="disabled-tooltip"
+                        data-tooltip-content="Disable the uploader entirely"
+                      >
+                        <FaInfoCircle className="w-3 h-3 text-blue-500 dark:text-blue-400" />
+                        Disabled
+                      </div>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={disabled}
+                        onChange={(e) => setDisabled(e.target.checked)}
+                        className="sr-only peer"
+                      />
+                      <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 dark:peer-focus:ring-primary-dark/20 rounded-full peer dark:bg-gray-600 peer-checked:after:translate-x-4 peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all after:shadow-md dark:border-gray-600 peer-checked:bg-primary dark:peer-checked:bg-primary-dark"></div>
+                    </label>
+                  </div>
+
+                  {/* Hide Cancel Button */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <FaInfoCircle className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                      <div
+                        className="text-sm font-medium text-gray-900 dark:text-gray-100 cursor-help flex items-center gap-1"
+                        data-tooltip-id="hideCancelButton-tooltip"
+                        data-tooltip-content="Hide the cancel button during uploads"
+                      >
+                        <FaInfoCircle className="w-3 h-3 text-blue-500 dark:text-blue-400" />
+                        Hide Cancel Button
+                      </div>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={hideCancelButton}
+                        onChange={(e) => setHideCancelButton(e.target.checked)}
+                        className="sr-only peer"
+                      />
+                      <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 dark:peer-focus:ring-primary-dark/20 rounded-full peer dark:bg-gray-600 peer-checked:after:translate-x-4 peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all after:shadow-md dark:border-gray-600 peer-checked:bg-primary dark:peer-checked:bg-primary-dark"></div>
+                    </label>
+                  </div>
+
+                  {/* Hide Pause/Resume Button */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <FaInfoCircle className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                      <div
+                        className="text-sm font-medium text-gray-900 dark:text-gray-100 cursor-help flex items-center gap-1"
+                        data-tooltip-id="hidePauseResumeButton-tooltip"
+                        data-tooltip-content="Hide the pause/resume button during uploads"
+                      >
+                        <FaInfoCircle className="w-3 h-3 text-blue-500 dark:text-blue-400" />
+                        Hide Pause/Resume
+                      </div>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={hidePauseResumeButton}
+                        onChange={(e) => setHidePauseResumeButton(e.target.checked)}
+                        className="sr-only peer"
+                      />
+                      <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 dark:peer-focus:ring-primary-dark/20 rounded-full peer dark:bg-gray-600 peer-checked:after:translate-x-4 peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all after:shadow-md dark:border-gray-600 peer-checked:bg-primary dark:peer-checked:bg-primary-dark"></div>
+                    </label>
+                  </div>
+
+                  {/* Hide Progress After Finish */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <FaEye className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                      <div
+                        className="text-sm font-medium text-gray-900 dark:text-gray-100 cursor-help flex items-center gap-1"
+                        data-tooltip-id="hideProgressAfterFinish-tooltip"
+                        data-tooltip-content="Hide the progress bar after upload finishes"
+                      >
+                        <FaInfoCircle className="w-3 h-3 text-blue-500 dark:text-blue-400" />
+                        Hide Progress After Finish
+                      </div>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={hideProgressAfterFinish}
+                        onChange={(e) => setHideProgressAfterFinish(e.target.checked)}
+                        className="sr-only peer"
+                      />
+                      <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 dark:peer-focus:ring-primary-dark/20 rounded-full peer dark:bg-gray-600 peer-checked:after:translate-x-4 peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all after:shadow-md dark:border-gray-600 peer-checked:bg-primary dark:peer-checked:bg-primary-dark"></div>
+                    </label>
+                  </div>
+
+                  {/* Hide Retry Button */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <FaEyeSlash className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                      <div
+                        className="text-sm font-medium text-gray-900 dark:text-gray-100 cursor-help flex items-center gap-1"
+                        data-tooltip-id="hideRetryButton-tooltip"
+                        data-tooltip-content="Hide the retry button when uploads fail"
+                      >
+                        <FaInfoCircle className="w-3 h-3 text-blue-500 dark:text-blue-400" />
+                        Hide Retry Button
+                      </div>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={hideRetryButton}
+                        onChange={(e) => setHideRetryButton(e.target.checked)}
+                        className="sr-only peer"
+                      />
+                      <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 dark:peer-focus:ring-primary-dark/20 rounded-full peer dark:bg-gray-600 peer-checked:after:translate-x-4 peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all after:shadow-md dark:border-gray-600 peer-checked:bg-primary dark:peer-checked:bg-primary-dark"></div>
+                    </label>
+                  </div>
+
+                  {/* Disable Informer */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <FaEyeSlash className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                      <div
+                        className="text-sm font-medium text-gray-900 dark:text-gray-100 cursor-help flex items-center gap-1"
+                        data-tooltip-id="disableInformer-tooltip"
+                        data-tooltip-content="Disable the notification bar — use your own notification system"
+                      >
+                        <FaInfoCircle className="w-3 h-3 text-blue-500 dark:text-blue-400" />
+                        Disable Informer
+                      </div>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={disableInformer}
+                        onChange={(e) => setDisableInformer(e.target.checked)}
+                        className="sr-only peer"
+                      />
+                      <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 dark:peer-focus:ring-primary-dark/20 rounded-full peer dark:bg-gray-600 peer-checked:after:translate-x-4 peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all after:shadow-md dark:border-gray-600 peer-checked:bg-primary dark:peer-checked:bg-primary-dark"></div>
+                    </label>
+                  </div>
+
+                  {/* Show Selected Files */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <FaFileAlt className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                      <div
+                        className="text-sm font-medium text-gray-900 dark:text-gray-100 cursor-help flex items-center gap-1"
+                        data-tooltip-id="showSelectedFiles-tooltip"
+                        data-tooltip-content="Show the list of selected files"
+                      >
+                        <FaInfoCircle className="w-3 h-3 text-blue-500 dark:text-blue-400" />
+                        Show Selected Files
+                      </div>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={showSelectedFiles}
+                        onChange={(e) => setShowSelectedFiles(e.target.checked)}
+                        className="sr-only peer"
+                      />
+                      <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 dark:peer-focus:ring-primary-dark/20 rounded-full peer dark:bg-gray-600 peer-checked:after:translate-x-4 peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all after:shadow-md dark:border-gray-600 peer-checked:bg-primary dark:peer-checked:bg-primary-dark"></div>
+                    </label>
+                  </div>
+
+                  {/* Allow Multiple Upload Batches */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <FaUpload className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                      <div
+                        className="text-sm font-medium text-gray-900 dark:text-gray-100 cursor-help flex items-center gap-1"
+                        data-tooltip-id="allowMultipleUploadBatches-tooltip"
+                        data-tooltip-content="Allow adding more files after the first upload batch"
+                      >
+                        <FaInfoCircle className="w-3 h-3 text-blue-500 dark:text-blue-400" />
+                        Multiple Batches
+                      </div>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={allowMultipleUploadBatches}
+                        onChange={(e) => setAllowMultipleUploadBatches(e.target.checked)}
+                        className="sr-only peer"
+                      />
+                      <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 dark:peer-focus:ring-primary-dark/20 rounded-full peer dark:bg-gray-600 peer-checked:after:translate-x-4 peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all after:shadow-md dark:border-gray-600 peer-checked:bg-primary dark:peer-checked:bg-primary-dark"></div>
+                    </label>
                   </div>
                 </div>
               </div>
@@ -795,15 +1357,26 @@ export default function HomepageDemo() {
                       mini={mini}
                       theme={selectedTheme}
                       enabledAdapters={enabledAdapters}
-                      allowPreview={allowPreview}
                       shouldCompress={shouldCompress}
-                      imageEditor={imageEditor}
+                      imageCompression={imageCompression}
+                      thumbnailGenerator={thumbnailGenerator}
                       fileSizeLimit={restrictionsEnabled ? fileSizeLimit : 999}
+                      minFileSizeValue={restrictionsEnabled && minFileSizeValue > 0 ? minFileSizeValue : undefined}
+                      minFileSizeUnit={restrictionsEnabled && minFileSizeValue > 0 ? getMinFileSizeUnitLabel() : undefined}
+                      maxTotalFileSizeValue={restrictionsEnabled && maxTotalFileSizeValue > 0 ? maxTotalFileSizeValue : undefined}
+                      maxTotalFileSizeUnit={restrictionsEnabled && maxTotalFileSizeValue > 0 ? getMaxTotalFileSizeUnitLabel() : undefined}
                       maxRetries={autoRetryEnabled ? autoRetryCount : undefined}
-                      localePack={
+                      translations={
                         LANGUAGES.find((l) => l.code === selectedLanguage)
                           ?.locale
                       }
+                      onBeforeFileAdded={onBeforeFileAddedEnabled ? (file: File) => {
+                        if (file.name.startsWith('.')) {
+                          alert(`Hidden file "${file.name}" was rejected by onBeforeFileAdded`);
+                          return false;
+                        }
+                        return true;
+                      } : undefined}
                     />
                   )}
                 </div>
@@ -818,8 +1391,24 @@ export default function HomepageDemo() {
       <Tooltip id="mobile-tooltip" className="z-50" />
       <Tooltip id="preview-tooltip" className="z-50" />
       <Tooltip id="compress-tooltip" className="z-50" />
+      <Tooltip id="image-compression-tooltip" className="z-50" />
       <Tooltip id="image-editor-tooltip" className="z-50" />
+      <Tooltip id="thumbnail-generator-tooltip" className="z-50" />
       <Tooltip id="autoretry-tooltip" className="z-50" />
+      <Tooltip id="note-tooltip" className="z-50" />
+      <Tooltip id="hideUploadButton-tooltip" className="z-50" />
+      <Tooltip id="disableLocalFiles-tooltip" className="z-50" />
+      <Tooltip id="showRemoveButtonAfterComplete-tooltip" className="z-50" />
+      <Tooltip id="onBeforeFileAdded-tooltip" className="z-50" />
+      <Tooltip id="onBeforeUpload-tooltip" className="z-50" />
+      <Tooltip id="disabled-tooltip" className="z-50" />
+      <Tooltip id="hideCancelButton-tooltip" className="z-50" />
+      <Tooltip id="hidePauseResumeButton-tooltip" className="z-50" />
+      <Tooltip id="hideProgressAfterFinish-tooltip" className="z-50" />
+      <Tooltip id="showSelectedFiles-tooltip" className="z-50" />
+      <Tooltip id="hideRetryButton-tooltip" className="z-50" />
+      <Tooltip id="disableInformer-tooltip" className="z-50" />
+      <Tooltip id="allowMultipleUploadBatches-tooltip" className="z-50" />
     </section>
   );
 }

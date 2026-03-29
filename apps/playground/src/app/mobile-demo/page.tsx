@@ -2,7 +2,7 @@
 
 import Uploader from "@/components/Uploader";
 import { useSearchParams } from "next/navigation";
-import type { Translations } from "upup-react-file-uploader";
+import type { Translations } from "@upup/shared";
 import {
   en_US,
   ja_JP,
@@ -13,7 +13,7 @@ import {
   de_DE,
   es_ES,
   ko_KR,
-} from "upup-react-file-uploader/locales";
+} from "@upup/react/locales";
 
 const LOCALE_MAP: Record<string, Translations> = {
   en_US,
@@ -73,11 +73,22 @@ function MobileDemoContent() {
   const shouldCompress = searchParams.get("shouldCompress") === "true";
   const imageEditor = searchParams.get("imageEditor") === "true";
   const fileSizeLimit = parseInt(searchParams.get("fileSizeLimit") || "999");
+  const minFileSizeValue = parseInt(searchParams.get("minFileSizeValue") || "0");
+  const minFileSizeUnit = searchParams.get("minFileSizeUnit") || "KB";
+  const maxTotalFileSizeValue = parseInt(searchParams.get("maxTotalFileSizeValue") || "0");
+  const maxTotalFileSizeUnit = searchParams.get("maxTotalFileSizeUnit") || "MB";
+  const imageCompression = searchParams.get("imageCompression") === "true";
+  const thumbnailGenerator = searchParams.get("thumbnailGenerator") === "true";
   const darkMode = searchParams.get("darkMode") === "true";
   const autoRetryEnabled = searchParams.get("autoRetryEnabled") === "true";
   const autoRetryCount = parseInt(searchParams.get("autoRetryCount") || "3");
   const language = searchParams.get("language") || "en_US";
   const locale = LOCALE_MAP[language] ?? en_US;
+  const note = searchParams.get("note") || "";
+  const hideUploadButton = searchParams.get("hideUploadButton") === "true";
+  const disableLocalFiles = searchParams.get("disableLocalFiles") === "true";
+  const showRemoveButtonAfterComplete = searchParams.get("showRemoveButtonAfterComplete") !== "false";
+  const onBeforeFileAddedEnabled = searchParams.get("onBeforeFileAddedEnabled") === "true";
 
   // Apply dark mode immediately
   useEffect(() => {
@@ -110,12 +121,23 @@ function MobileDemoContent() {
         mini={mini}
         theme={theme}
         enabledAdapters={enabledAdapters}
-        allowPreview={allowPreview}
         shouldCompress={shouldCompress}
-        imageEditor={imageEditor}
+        imageCompression={imageCompression}
+        thumbnailGenerator={thumbnailGenerator}
         fileSizeLimit={fileSizeLimit}
+        minFileSizeValue={minFileSizeValue > 0 ? minFileSizeValue : undefined}
+        minFileSizeUnit={minFileSizeValue > 0 ? minFileSizeUnit : undefined}
+        maxTotalFileSizeValue={maxTotalFileSizeValue > 0 ? maxTotalFileSizeValue : undefined}
+        maxTotalFileSizeUnit={maxTotalFileSizeValue > 0 ? maxTotalFileSizeUnit : undefined}
         maxRetries={autoRetryEnabled ? autoRetryCount : undefined}
-        localePack={locale}
+        translations={locale}
+        onBeforeFileAdded={onBeforeFileAddedEnabled ? (file: File) => {
+          if (file.name.startsWith('.')) {
+            alert(`Hidden file "${file.name}" was rejected by onBeforeFileAdded`);
+            return false;
+          }
+          return true;
+        } : undefined}
       />
     </div>
   );

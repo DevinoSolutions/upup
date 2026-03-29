@@ -2,19 +2,15 @@
 
 import React, { useContext } from "react";
 
-import {
-  UpupUploader,
-  UpupProvider,
-  UploadAdapter,
-  Translations,
-} from "upup-react-file-uploader";
+import { UpupUploader } from "@upup/react";
+import { StorageProvider, FileSource, Translations } from "@upup/shared";
 
-import "upup-react-file-uploader/styles";
+import "@upup/react/styles";
 import { ThemeContext } from "@/lib/contexts";
 import { toast } from "react-toastify";
 
 const customFields = {
-  tokenEndpoint: process.env.NEXT_PUBLIC_BASE_URL
+  uploadEndpoint: process.env.NEXT_PUBLIC_BASE_URL
     ? process.env.NEXT_PUBLIC_BASE_URL + "/api/getPresignedUrl"
     : "/api/getPresignedUrl", // fallback to relative path
   driveConfigs: {
@@ -37,12 +33,17 @@ interface Props {
   mini: boolean;
   theme?: string;
   enabledAdapters?: string[];
-  allowPreview?: boolean;
   shouldCompress?: boolean;
+  imageCompression?: boolean;
   fileSizeLimit?: number; // in MB
+  minFileSizeValue?: number;
+  minFileSizeUnit?: string;
+  maxTotalFileSizeValue?: number;
+  maxTotalFileSizeUnit?: string;
   maxRetries?: number;
-  localePack?: Translations;
-  imageEditor?: boolean;
+  translations?: Translations;
+  thumbnailGenerator?: boolean;
+  onBeforeFileAdded?: (file: File) => boolean | File | undefined;
 }
 
 export default function Uploader({
@@ -50,33 +51,42 @@ export default function Uploader({
   mini,
   theme = "blue",
   enabledAdapters = ["INTERNAL", "GOOGLE_DRIVE", "ONE_DRIVE", "LINK", "CAMERA"],
-  allowPreview = true,
   shouldCompress = false,
+  imageCompression = false,
   fileSizeLimit = 25,
+  minFileSizeValue,
+  minFileSizeUnit,
+  maxTotalFileSizeValue,
+  maxTotalFileSizeUnit,
   maxRetries,
-  localePack,
-  imageEditor = false,
+  translations,
+  thumbnailGenerator = false,
+  onBeforeFileAdded,
 }: Readonly<Props>) {
   // Detect dark mode using Tailwind's class strategy
   const { isDarkMode } = useContext(ThemeContext);
 
-  // Convert string array to UploadAdapter enum values
-  const uploadAdapters = enabledAdapters.map((adapter) => {
+  // Convert string array to FileSource enum values
+  const fileSources = enabledAdapters.map((adapter) => {
     switch (adapter) {
       case "INTERNAL":
-        return UploadAdapter.INTERNAL;
+        return FileSource.LOCAL;
       case "GOOGLE_DRIVE":
-        return UploadAdapter.GOOGLE_DRIVE;
+        return FileSource.GOOGLE_DRIVE;
       case "ONE_DRIVE":
-        return UploadAdapter.ONE_DRIVE;
+        return FileSource.ONE_DRIVE;
       case "LINK":
-        return UploadAdapter.LINK;
+        return FileSource.URL;
       case "CAMERA":
-        return UploadAdapter.CAMERA;
+        return FileSource.CAMERA;
       case "DROPBOX":
-        return UploadAdapter.DROPBOX;
+        return FileSource.DROPBOX;
+      case "AUDIO":
+        return FileSource.MICROPHONE;
+      case "SCREEN_CAPTURE":
+        return FileSource.SCREEN;
       default:
-        return UploadAdapter.INTERNAL;
+        return FileSource.LOCAL;
     }
   });
 
@@ -110,44 +120,23 @@ export default function Uploader({
   return (
     <div className="flex justify-center items-center w-full h-full lg:min-h-[auto] min-h-[70vh]">
       <UpupUploader
-        provider={UpupProvider.BackBlaze}
+        provider={StorageProvider.BackBlaze}
         limit={limit}
-        tokenEndpoint={customFields.tokenEndpoint}
-        uploadAdapters={uploadAdapters}
+        uploadEndpoint={customFields.uploadEndpoint}
+        fileSources={fileSources}
         driveConfigs={customFields.driveConfigs}
         dark={isDarkMode}
         mini={mini}
-        allowPreview={allowPreview}
         shouldCompress={shouldCompress}
-        imageEditor={imageEditor}
+        imageCompression={imageCompression}
+        thumbnailGenerator={thumbnailGenerator}
         maxFileSize={{ size: fileSizeLimit, unit: "MB" }}
+        minFileSize={minFileSizeValue && minFileSizeUnit ? { size: minFileSizeValue, unit: minFileSizeUnit as any } : undefined}
+        maxTotalFileSize={maxTotalFileSizeValue && maxTotalFileSizeUnit ? { size: maxTotalFileSizeValue, unit: maxTotalFileSizeUnit as any } : undefined}
         classNames={customClassNames}
         maxRetries={maxRetries}
-        resumable={{ mode: "multipart" }}
-        localePack={localePack}
-        onFilesUploadComplete={(files) => {
-          console.log("Files uploaded successfully:", files);
-          toast.success("Files uploaded successfully!");
-        }}
-        onError={(e) => {
-          console.error(e);
-          toast.error(e);
-        }}
-        onWarn={(warning) => {
-          console.warn(warning);
-          toast.warn(warning);
-        }}
-        onFileTypeMismatch={(file, acceptedTypes) => {
-          toast.error(
-            `File type not supported. Accepted types: ${acceptedTypes}`,
-          );
-        }}
-        onFileUploadStart={(file) => {
-          toast.info(`Starting upload: ${file.name}`);
-        }}
-        onFileUploadComplete={(file) => {
-          toast.success(`Upload complete: ${file.name}`);
-        }}
+        translations={translations}
+        onBeforeFileAdded={onBeforeFileAdded}
       />
     </div>
   );
