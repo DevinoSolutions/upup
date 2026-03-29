@@ -1,1 +1,7 @@
-export {}
+export { UpupCore } from './core'
+export type { CoreOptions, UploadOptions } from './core'
+export { EventEmitter } from './events'
+export { PluginManager } from './plugin'
+export type { UpupPlugin, ExtensionMethods } from './plugin'
+export { FileManager } from './file-manager'
+export { PipelineEngine } from './pipeline/engine'
