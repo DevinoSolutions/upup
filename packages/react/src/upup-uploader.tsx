@@ -4,6 +4,12 @@ import { forwardRef, useImperativeHandle, useState, useMemo, type Ref } from 're
 import { useUpupUpload, type UseUpupUploadReturn } from './use-upup-upload'
 import { UploaderContext, type UploadSource, type UploaderContextValue } from './context/uploader-context'
 import { PasteZone } from './components/paste-zone'
+import DropZone from './components/drop-zone'
+import SourceSelector from './components/source-selector'
+import SourceView from './components/source-view'
+import FileList from './components/file-list'
+import Notifier from './components/notifier'
+import useInformer from './hooks/use-informer'
 import type { CoreOptions } from '@upup/core'
 import { FileSource, type UploaderClassNames, type UploaderIcons } from '@upup/shared'
 
@@ -51,6 +57,7 @@ export const UpupUploader = forwardRef<UpupUploaderRef, UpupUploaderProps>(
 
     const uploader = useUpupUpload(coreOptions)
     const [activeSource, setActiveSource] = useState<FileSource | null>(null)
+    const informer = useInformer()
 
     const fileSources = explicitFileSources ?? sourcesToFileSources(sources)
 
@@ -73,13 +80,24 @@ export const UpupUploader = forwardRef<UpupUploaderRef, UpupUploaderProps>(
       [uploader, activeSource, dark, mini, classNames, icons, enablePaste, sources],
     )
 
+    const hasMultipleSources = fileSources.length > 1
+
     const content = (
       <UploaderContext.Provider value={contextValue}>
         <div className={`upup-container ${dark ? 'upup-dark' : ''} ${mini ? 'upup-mini' : ''}`}>
-          {/* Component tree will be filled in subsequent tasks */}
-          <div className="upup-dropzone">
-            <p>Drop files here or click to browse</p>
-          </div>
+          <DropZone>
+            {activeSource ? (
+              <SourceView />
+            ) : (
+              <SourceSelector />
+            )}
+          </DropZone>
+          <FileList />
+          <Notifier
+            messages={informer.messages}
+            onDismiss={informer.dismissMessage}
+            dark={dark}
+          />
         </div>
       </UploaderContext.Provider>
     )
