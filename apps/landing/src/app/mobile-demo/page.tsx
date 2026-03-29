@@ -2,8 +2,8 @@
 
 import Uploader from "@/components/Uploader";
 import { useSearchParams } from 'next/navigation';
-import type { Translations } from 'upup-react-file-uploader';
-import { en_US, ja_JP, zh_CN, zh_TW, fr_FR, ar_SA, de_DE, es_ES, ko_KR } from 'upup-react-file-uploader/locales';
+import type { Translations } from "@upup/shared";
+import { en_US, ja_JP, zh_CN, zh_TW, fr_FR, ar_SA, de_DE, es_ES, ko_KR } from "@upup/react/locales";
 
 const LOCALE_MAP: Record<string, Translations> = {
   en_US, ja_JP, zh_CN, zh_TW, fr_FR, ar_SA, de_DE, es_ES, ko_KR,
@@ -88,12 +88,10 @@ function MobileDemoContent() {
         mini={mini}
         theme={theme}
         enabledAdapters={enabledAdapters}
-        allowPreview={allowPreview}
         shouldCompress={shouldCompress}
-        imageEditor={imageEditor}
         fileSizeLimit={fileSizeLimit}
         maxRetries={autoRetryEnabled ? autoRetryCount : undefined}
-        localePack={locale}
+        translations={locale}
       />
     </div>
   );

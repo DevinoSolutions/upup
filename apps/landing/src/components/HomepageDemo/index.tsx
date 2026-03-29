@@ -20,13 +20,14 @@ import {
   FaShieldAlt,
   FaLanguage,
   FaCrop,
-  FaRedo
+  FaRedo,
+  FaImage
 } from "react-icons/fa";
 import { SiDropbox, SiGoogledrive } from "react-icons/si";
 import { GrOnedrive } from "react-icons/gr";
-import type { Translations } from 'upup-react-file-uploader';
-import { en_US } from 'upup-react-file-uploader';
-import { ar_SA, de_DE, es_ES, fr_FR, ja_JP, ko_KR, zh_CN, zh_TW } from 'upup-react-file-uploader/locales';
+import type { Translations } from "@upup/shared";
+import { en_US } from "@upup/shared";
+import { ar_SA, de_DE, es_ES, fr_FR, ja_JP, ko_KR, zh_CN, zh_TW } from "@upup/react/locales";
 import Uploader from "@/components/Uploader";
 import { Tooltip } from 'react-tooltip';
 import 'react-tooltip/dist/react-tooltip.css';
@@ -105,6 +106,7 @@ export default function HomepageDemo() {
   const [enabledAdapters, setEnabledAdapters] = useState(["INTERNAL", "GOOGLE_DRIVE", "ONE_DRIVE", "LINK", "CAMERA"]);
   const [allowPreview, setAllowPreview] = useState(true);
   const [shouldCompress, setShouldCompress] = useState(false);
+  const [imageCompression, setImageCompression] = useState(false);
   const [imageEditor, setImageEditor] = useState(false);
   const [autoRetryEnabled, setAutoRetryEnabled] = useState(false);
   const [autoRetryCount, setAutoRetryCount] = useState(3);
@@ -127,6 +129,7 @@ export default function HomepageDemo() {
       enabledAdapters: enabledAdapters.join(','),
       allowPreview: allowPreview.toString(),
       shouldCompress: shouldCompress.toString(),
+      imageCompression: imageCompression.toString(),
       imageEditor: imageEditor.toString(),
       autoRetryEnabled: autoRetryEnabled.toString(),
       autoRetryCount: autoRetryCount.toString(),
@@ -151,7 +154,7 @@ export default function HomepageDemo() {
       }
       setCurrentIframeUrl(newUrl);
     }
-  }, [mini, selectedTheme, enabledAdapters, allowPreview, shouldCompress, imageEditor, autoRetryEnabled, autoRetryCount, restrictionsEnabled, limit, fileSizeValue, fileSizeUnit, isDarkMode, mobileMode, selectedLanguage]);
+  }, [mini, selectedTheme, enabledAdapters, allowPreview, shouldCompress, imageCompression, imageEditor, autoRetryEnabled, autoRetryCount, restrictionsEnabled, limit, fileSizeValue, fileSizeUnit, isDarkMode, mobileMode, selectedLanguage]);
 
   const handleMiniChange: ChangeEventHandler<HTMLInputElement> = useCallback(
       (e) => {
@@ -580,6 +583,29 @@ export default function HomepageDemo() {
 
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
+                      <FaImage className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                      <div
+                        className="text-sm font-medium text-gray-900 dark:text-gray-100 cursor-help flex items-center gap-1"
+                        data-tooltip-id="image-compression-tooltip"
+                        data-tooltip-content="Compress images using canvas-based quality and dimension reduction before uploading"
+                      >
+                        <FaInfoCircle className="w-3 h-3 text-blue-500 dark:text-blue-400" />
+                        Image Compression
+                      </div>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={imageCompression}
+                        onChange={(e) => setImageCompression(e.target.checked)}
+                        className="sr-only peer"
+                      />
+                      <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 dark:peer-focus:ring-primary-dark/20 rounded-full peer dark:bg-gray-600 peer-checked:after:translate-x-4 peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all after:shadow-md dark:border-gray-600 peer-checked:bg-primary dark:peer-checked:bg-primary-dark"></div>
+                    </label>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
                       <FaCrop className="w-4 h-4 text-gray-600 dark:text-gray-400" />
                       <div
                         className="text-sm font-medium text-gray-900 dark:text-gray-100 cursor-help flex items-center gap-1"
@@ -740,12 +766,11 @@ export default function HomepageDemo() {
                       mini={mini}
                       theme={selectedTheme}
                       enabledAdapters={enabledAdapters}
-                      allowPreview={allowPreview}
                       shouldCompress={shouldCompress}
-                      imageEditor={imageEditor}
+                      imageCompression={imageCompression}
                       fileSizeLimit={restrictionsEnabled ? fileSizeLimit : 999}
                       maxRetries={autoRetryEnabled ? autoRetryCount : undefined}
-                      localePack={
+                      translations={
                         LANGUAGES.find((l) => l.code === selectedLanguage)
                           ?.locale
                       }
@@ -763,6 +788,7 @@ export default function HomepageDemo() {
       <Tooltip id="mobile-tooltip" className="z-50" />
       <Tooltip id="preview-tooltip" className="z-50" />
       <Tooltip id="compress-tooltip" className="z-50" />
+      <Tooltip id="image-compression-tooltip" className="z-50" />
       <Tooltip id="image-editor-tooltip" className="z-50" />
       <Tooltip id="autoretry-tooltip" className="z-50" />
     </section>
