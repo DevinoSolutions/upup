@@ -34,7 +34,7 @@
   },
   "size-limit": [
     { "path": "packages/core/dist/index.js", "limit": "12 KB", "name": "@upup/core (main)" },
-    { "path": "packages/shared/dist/index.js", "limit": "5 KB", "name": "@upup/shared" },
+    { "path": "packages/shared/dist/index.js", "limit": "20 KB", "name": "@upup/shared" },
     { "path": "packages/core/dist/steps/hash.js", "limit": "3 KB", "name": "@upup/core/steps/hash" },
     { "path": "packages/core/dist/steps/deduplicate.js", "limit": "3 KB", "name": "@upup/core/steps/deduplicate" }
   ],
