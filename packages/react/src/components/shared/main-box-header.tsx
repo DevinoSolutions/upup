@@ -23,7 +23,7 @@ export default function MainBoxHeader({ handleCancel }: Readonly<Props>) {
     const isUploading = status === UploadStatus.UPLOADING
     const fileCount = files.length
     // Access icons safely
-    const ContainerAddMoreIcon = (icons as any)?.ContainerAddMoreIcon
+    const ContainerAddMoreIcon = icons.ContainerAddMoreIcon
 
     if (mini) return null
 
@@ -34,7 +34,7 @@ export default function MainBoxHeader({ handleCancel }: Readonly<Props>) {
                 {
                     'upup-bg-white/5 dark:upup-bg-white/5': dark,
                 },
-                (classNames as any)?.containerHeader,
+                classNames.containerHeader,
             )}
         >
             <button
@@ -43,7 +43,7 @@ export default function MainBoxHeader({ handleCancel }: Readonly<Props>) {
                     {
                         'upup-text-[#30C5F7] dark:upup-text-[#30C5F7]': dark,
                     },
-                    (classNames as any)?.containerCancelButton,
+                    classNames.containerCancelButton,
                 )}
                 onClick={handleCancel}
                 disabled={isUploading}
@@ -69,7 +69,7 @@ export default function MainBoxHeader({ handleCancel }: Readonly<Props>) {
                             'upup-text-[#30C5F7] dark:upup-text-[#30C5F7]':
                                 dark,
                         },
-                        (classNames as any)?.containerAddMoreButton,
+                        classNames.containerAddMoreButton,
                     )}
                     onClick={() => setActiveSource(null)}
                     disabled={isUploading}

@@ -47,7 +47,7 @@ export default function SourceView({ className }: SourceViewProps) {
                         'upup-bg-white/5 upup-text-[#FAFAFA] dark:upup-bg-white/5 dark:upup-text-[#FAFAFA]':
                             dark,
                     },
-                    (classNames as any)?.adapterViewHeader,
+                    classNames.adapterViewHeader,
                 )}
             >
                 <Icon />
@@ -57,7 +57,7 @@ export default function SourceView({ className }: SourceViewProps) {
                         {
                             'upup-text-[#30C5F7] dark:upup-text-[#30C5F7]': dark,
                         },
-                        (classNames as any)?.adapterViewCancelButton,
+                        classNames.adapterViewCancelButton,
                     )}
                     onClick={() => setActiveSource(null)}
                     type="button"

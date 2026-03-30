@@ -120,7 +120,7 @@ export default function DriveBrowser({
                             'upup-bg-white/10 upup-text-[#fafafa] dark:upup-bg-white/10 dark:upup-text-[#fafafa]':
                                 dark,
                         },
-                        (classNames as any)?.driveBody,
+                        classNames.driveBody,
                     )}
                 >
                     {!!displayedItems.length ? (
@@ -164,7 +164,7 @@ export default function DriveBrowser({
                             'upup-bg-white/5 upup-text-[#fafafa] dark:upup-bg-white/5 dark:upup-text-[#fafafa]':
                                 dark,
                         },
-                        (classNames as any)?.driveFooter,
+                        classNames.driveFooter,
                     )}
                 >
                     {!!onSelectCurrentFolder && (
@@ -190,7 +190,7 @@ export default function DriveBrowser({
                                 'upup-bg-[#30C5F7] dark:upup-bg-[#30C5F7]':
                                     dark,
                             },
-                            (classNames as any)?.driveAddFilesButton,
+                            classNames.driveAddFilesButton,
                         )}
                         onClick={handleSubmit}
                         disabled={showLoader}
@@ -205,7 +205,7 @@ export default function DriveBrowser({
                                 'upup-text-[#30C5F7] dark:upup-text-[#30C5F7]':
                                     dark,
                             },
-                            (classNames as any)?.driveCancelFilesButton,
+                            classNames.driveCancelFilesButton,
                         )}
                         onClick={handleCancelDownload}
                         disabled={showLoader}

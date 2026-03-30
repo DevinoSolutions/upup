@@ -45,7 +45,7 @@ export default function DriveBrowserHeader({
                         'upup-bg-white/5 upup-text-[#FAFAFA] dark:upup-bg-white/5 dark:upup-text-[#FAFAFA]':
                             dark,
                     },
-                    (classNames as any)?.driveHeader,
+                    classNames.driveHeader,
                 )}
             >
                 {!!path && (
@@ -102,7 +102,7 @@ export default function DriveBrowserHeader({
                                 'upup-text-[#30C5F7] dark:upup-text-[#30C5F7]':
                                     dark,
                             },
-                            (classNames as any)?.driveLogoutButton,
+                            classNames.driveLogoutButton,
                         )}
                         onClick={() => {
                             handleSignOut()
@@ -122,7 +122,7 @@ export default function DriveBrowserHeader({
                             'upup-bg-white/5 upup-text-[#fafafa] dark:upup-bg-white/5 dark:upup-text-[#fafafa]':
                                 dark,
                         },
-                        (classNames as any)?.driveSearchContainer,
+                        classNames.driveSearchContainer,
                     )}
                 >
                     <input
@@ -133,7 +133,7 @@ export default function DriveBrowserHeader({
                                 'upup-bg-white/5 upup-text-[#6D6D6D] dark:upup-bg-white/5 dark:upup-text-[#6D6D6D]':
                                     dark,
                             },
-                            (classNames as any)?.driveSearchInput,
+                            classNames.driveSearchInput,
                         )}
                         placeholder="Search"
                         value={searchTerm}

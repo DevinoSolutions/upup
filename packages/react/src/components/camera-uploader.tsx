@@ -58,7 +58,7 @@ export default function CameraUploader() {
         CameraVideoRecordIcon,
         CameraVideoStopIcon,
         CameraVideoDeleteIcon,
-    } = icons as any
+    } = icons
 
     const isPhoto = mode === 'photo'
     const isVideo = mode === 'video'
@@ -72,7 +72,7 @@ export default function CameraUploader() {
                 className={cn(
                     'upup-flex upup-gap-1 upup-rounded-lg upup-p-1',
                     dark ? 'upup-bg-gray-700' : 'upup-bg-gray-200',
-                    (classNames as any)?.cameraModeToggle,
+                    classNames.cameraModeToggle,
                 )}
             >
                 <button
@@ -118,7 +118,7 @@ export default function CameraUploader() {
                         className={cn(
                             'upup-relative upup-aspect-video upup-bg-contain upup-bg-center upup-bg-no-repeat upup-shadow-xl',
                             dark ? 'upup-bg-white/5' : 'upup-bg-black/[0.025]',
-                            (classNames as any)?.cameraPreviewContainer,
+                            classNames.cameraPreviewContainer,
                         )}
                         style={{ backgroundImage: `url(${url})` }}
                     >
@@ -126,7 +126,7 @@ export default function CameraUploader() {
                             onClick={clearUrl}
                             className={cn(
                                 'upup-absolute upup--right-2 upup--top-2 upup-z-10 upup-rounded-full upup-bg-[#272727] upup-p-1 upup-text-xl upup-text-[#f5f5f5]',
-                                (classNames as any)?.cameraDeleteButton,
+                                classNames.cameraDeleteButton,
                             )}
                             type="button"
                         >
@@ -140,7 +140,7 @@ export default function CameraUploader() {
                     <div
                         className={cn(
                             'upup-relative',
-                            (classNames as any)?.cameraVideoPreview,
+                            classNames.cameraVideoPreview,
                         )}
                     >
                         <video
@@ -153,7 +153,7 @@ export default function CameraUploader() {
                             onClick={deleteVideoRecording}
                             className={cn(
                                 'upup-absolute upup--right-2 upup--top-2 upup-z-10 upup-rounded-full upup-bg-[#272727] upup-p-1 upup-text-xl upup-text-[#f5f5f5]',
-                                (classNames as any)?.cameraVideoDeleteButton,
+                                classNames.cameraVideoDeleteButton,
                             )}
                             type="button"
                         >
@@ -206,7 +206,7 @@ export default function CameraUploader() {
                                 'upup-mt-2 upup-flex upup-w-1/3 upup-flex-col upup-items-center upup-justify-center upup-rounded-md upup-p-2 upup-text-white upup-transition-all upup-duration-300',
                                 dark ? 'upup-bg-[#59D1F9]' : 'upup-bg-blue-600',
                                 countdown !== null && 'upup-cursor-not-allowed upup-opacity-50',
-                                (classNames as any)?.cameraCaptureButton,
+                                classNames.cameraCaptureButton,
                             )}
                             onClick={capture}
                             disabled={countdown !== null}
@@ -218,7 +218,7 @@ export default function CameraUploader() {
                         <button
                             className={cn(
                                 'upup-mt-2 upup-flex upup-w-1/3 upup-flex-col upup-items-center upup-rounded-md upup-bg-gray-500 upup-p-2 upup-text-white upup-transition-all upup-duration-300 hover:upup-bg-gray-600',
-                                (classNames as any)?.cameraRotateButton,
+                                classNames.cameraRotateButton,
                             )}
                             onClick={handleCameraSwitch}
                             type="button"
@@ -231,7 +231,7 @@ export default function CameraUploader() {
                         <button
                             className={cn(
                                 'upup-mt-2 upup-flex upup-w-1/3 upup-flex-col upup-items-center upup-rounded-md upup-bg-gray-500 upup-p-2 upup-text-white upup-transition-all upup-duration-300 hover:upup-bg-gray-600',
-                                (classNames as any)?.cameraMirrorButton,
+                                classNames.cameraMirrorButton,
                             )}
                             onClick={toggleMirror}
                             type="button"
@@ -246,7 +246,7 @@ export default function CameraUploader() {
                         className={cn(
                             'upup-mt-2 upup-w-full upup-rounded-md upup-p-2 upup-text-white upup-transition-all upup-duration-300',
                             dark ? 'upup-bg-[#59D1F9]' : 'upup-bg-blue-600',
-                            (classNames as any)?.cameraAddButton,
+                            classNames.cameraAddButton,
                         )}
                         onClick={handleFetchImage}
                         type="button"
@@ -262,7 +262,7 @@ export default function CameraUploader() {
                             <button
                                 className={cn(
                                     'upup-mt-2 upup-flex upup-w-1/3 upup-flex-col upup-items-center upup-justify-center upup-rounded-md upup-bg-red-600 upup-p-2 upup-text-white upup-transition-all upup-duration-300 hover:upup-bg-red-700',
-                                    (classNames as any)?.cameraVideoRecordButton,
+                                    classNames.cameraVideoRecordButton,
                                 )}
                                 onClick={startVideoRecording}
                                 type="button"
@@ -274,7 +274,7 @@ export default function CameraUploader() {
                             <button
                                 className={cn(
                                     'upup-mt-2 upup-flex upup-w-1/3 upup-flex-col upup-items-center upup-justify-center upup-rounded-md upup-bg-gray-700 upup-p-2 upup-text-white upup-transition-all upup-duration-300 hover:upup-bg-gray-800',
-                                    (classNames as any)?.cameraVideoStopButton,
+                                    classNames.cameraVideoStopButton,
                                 )}
                                 onClick={stopVideoRecording}
                                 type="button"
@@ -286,7 +286,7 @@ export default function CameraUploader() {
                         <button
                             className={cn(
                                 'upup-mt-2 upup-flex upup-w-1/3 upup-flex-col upup-items-center upup-rounded-md upup-bg-gray-500 upup-p-2 upup-text-white upup-transition-all upup-duration-300 hover:upup-bg-gray-600',
-                                (classNames as any)?.cameraRotateButton,
+                                classNames.cameraRotateButton,
                             )}
                             onClick={handleCameraSwitch}
                             disabled={isRecording}
@@ -300,7 +300,7 @@ export default function CameraUploader() {
                         <button
                             className={cn(
                                 'upup-mt-2 upup-flex upup-w-1/3 upup-flex-col upup-items-center upup-rounded-md upup-bg-gray-500 upup-p-2 upup-text-white upup-transition-all upup-duration-300 hover:upup-bg-gray-600',
-                                (classNames as any)?.cameraMirrorButton,
+                                classNames.cameraMirrorButton,
                             )}
                             onClick={toggleMirror}
                             disabled={isRecording}
@@ -316,7 +316,7 @@ export default function CameraUploader() {
                         className={cn(
                             'upup-mt-2 upup-w-full upup-rounded-md upup-p-2 upup-text-white upup-transition-all upup-duration-300',
                             dark ? 'upup-bg-[#59D1F9]' : 'upup-bg-blue-600',
-                            (classNames as any)?.cameraVideoAddButton,
+                            classNames.cameraVideoAddButton,
                         )}
                         onClick={handleAddVideo}
                         type="button"

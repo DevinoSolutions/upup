@@ -52,12 +52,12 @@ export default function DriveBrowserItem({
                     'upup-font-medium': isFolder,
                     'upup-bg-[#bab4b499]': isFileSelected,
                     'upup-bg-[#e9ecef00]': !isFileSelected,
-                    [(classNames as any)?.driveItemContainerDefault!]:
+                    [classNames.driveItemContainerDefault!]:
                         !isFileSelected &&
-                        (classNames as any)?.driveItemContainerDefault,
-                    [(classNames as any)?.driveItemContainerSelected!]:
+                        classNames.driveItemContainerDefault,
+                    [classNames.driveItemContainerSelected!]:
                         isFileSelected &&
-                        (classNames as any)?.driveItemContainerSelected,
+                        classNames.driveItemContainerSelected,
                 },
             )}
             onClick={() => handleClick(file as any)}
@@ -65,7 +65,7 @@ export default function DriveBrowserItem({
             <div
                 className={cn(
                     'upup-flex upup-items-center upup-gap-2',
-                    (classNames as any)?.driveItemContainerInner,
+                    classNames.driveItemContainerInner,
                 )}
             >
                 <DriveBrowserIcon file={file} />
@@ -76,7 +76,7 @@ export default function DriveBrowserItem({
                             'upup-text-[#e0e0e0] dark:upup-text-[#e0e0e0]':
                                 dark,
                         },
-                        (classNames as any)?.driveItemInnerText,
+                        classNames.driveItemInnerText,
                     )}
                 >
                     {file.name}

@@ -72,7 +72,7 @@ export default memo(function FileList({ className }: FileListProps) {
                 className={cn(
                     'upup-shadow-bottom upup-flex upup-items-center upup-justify-between upup-rounded-t-lg upup-bg-black/[0.025] upup-px-3 upup-py-2 upup-text-sm',
                     { 'upup-bg-white/5 dark:upup-bg-white/5': dark },
-                    (classNames as any)?.containerHeader,
+                    classNames.containerHeader,
                 )}
             >
                 <button
@@ -82,7 +82,7 @@ export default memo(function FileList({ className }: FileListProps) {
                             'upup-text-[#30C5F7] dark:upup-text-[#30C5F7]':
                                 dark,
                         },
-                        (classNames as any)?.containerCancelButton,
+                        classNames.containerCancelButton,
                     )}
                     onClick={cancel}
                     disabled={isUploading}
@@ -104,7 +104,7 @@ export default memo(function FileList({ className }: FileListProps) {
                 className={cn(
                     'upup-preview-scroll upup-flex upup-flex-1 upup-flex-col upup-overflow-y-auto upup-bg-black/[0.075] upup-p-3',
                     { 'upup-bg-white/10 dark:upup-bg-white/10': dark },
-                    (classNames as any)?.fileListContainer,
+                    classNames.fileListContainer,
                 )}
             >
                 <div
@@ -156,7 +156,7 @@ export default memo(function FileList({ className }: FileListProps) {
                 className={cn(
                     'upup-shadow-top upup-flex upup-items-center upup-gap-3 upup-rounded-b-lg upup-bg-black/[0.025] upup-px-3 upup-py-2',
                     { 'upup-bg-white/5 dark:upup-bg-white/5': dark },
-                    (classNames as any)?.fileListFooter,
+                    classNames.fileListFooter,
                 )}
             >
                 {!isSuccessful && !isFailed && (
@@ -167,7 +167,7 @@ export default memo(function FileList({ className }: FileListProps) {
                                 'upup-bg-[#30C5F7] dark:upup-bg-[#30C5F7]':
                                     dark,
                             },
-                            (classNames as any)?.uploadButton,
+                            classNames.uploadButton,
                         )}
                         onClick={() => upload()}
                         disabled={isUploading || isPaused}
@@ -180,7 +180,7 @@ export default memo(function FileList({ className }: FileListProps) {
                         className={cn(
                             'upup-disabled:animate-pulse upup-ml-auto upup-rounded-full upup-bg-red-600 upup-px-4 upup-py-2 upup-text-sm upup-font-medium upup-text-white',
                             { 'upup-bg-red-500 dark:upup-bg-red-500': dark },
-                            (classNames as any)?.uploadButton,
+                            classNames.uploadButton,
                         )}
                         onClick={() => upload()}
                     >
@@ -195,7 +195,7 @@ export default memo(function FileList({ className }: FileListProps) {
                                 'upup-bg-[#30C5F7] dark:upup-bg-[#30C5F7]':
                                     dark,
                             },
-                            (classNames as any)?.uploadDoneButton,
+                            classNames.uploadDoneButton,
                         )}
                         onClick={cancel}
                     >

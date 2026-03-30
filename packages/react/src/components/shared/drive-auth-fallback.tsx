@@ -25,7 +25,7 @@ export default function DriveAuthFallback({
                             'upup-text-[#FAFAFA] dark:upup-text-[#FAFAFA]':
                                 dark,
                         },
-                        (classNames as any)?.adapterView,
+                        classNames.adapterView,
                     )}
                 >
                     Authenticate with {providerName} to select files for upload

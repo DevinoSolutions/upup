@@ -86,7 +86,7 @@ export default function SourceSelector({ className }: SourceSelectorProps) {
                     aria-label="Upload sources"
                     className={cn(
                         'upup-flex upup-w-full upup-flex-col upup-justify-center upup-gap-1 md:upup-flex-row md:upup-flex-wrap md:upup-items-center md:upup-gap-[30px] md:upup-px-[30px]',
-                        (classNames as any)?.adapterButtonList,
+                        classNames.adapterButtonList,
                     )}
                 >
                     {chosenAdapters.map(({ Icon, id }) => (
@@ -101,7 +101,7 @@ export default function SourceSelector({ className }: SourceSelectorProps) {
                                     'upup-border-[#6D6D6D] dark:upup-border-[#6D6D6D]':
                                         dark,
                                 },
-                                (classNames as any)?.adapterButton,
+                                classNames.adapterButton,
                             )}
                             onClick={() => handleAdapterClick(id)}
                         >
@@ -113,7 +113,7 @@ export default function SourceSelector({ className }: SourceSelectorProps) {
                                         'upup-text-gray-300 dark:upup-text-gray-300':
                                             dark,
                                     },
-                                    (classNames as any)?.adapterButtonText,
+                                    classNames.adapterButtonText,
                                 )}
                             >
                                 {id}

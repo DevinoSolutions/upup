@@ -20,7 +20,7 @@ export default function UrlUploader() {
         icons,
     } = useUploaderContext()
 
-    const { LoaderIcon } = icons as any
+    const { LoaderIcon } = icons
     const tr = TR
 
     const [url, setUrl] = useState('')
@@ -45,7 +45,7 @@ export default function UrlUploader() {
                 className={cn(
                     'upup-w-full upup-rounded-md upup-border-2 upup-border-[#e0e0e0] upup-bg-transparent upup-px-3 upup-py-2 upup-outline-none',
                     dark && 'upup-border-[#6D6D6D] upup-text-[#6D6D6D]',
-                    (classNames as any)?.urlInput,
+                    classNames.urlInput,
                 )}
                 value={url}
                 onChange={e => setUrl(e.currentTarget.value)}
@@ -54,7 +54,7 @@ export default function UrlUploader() {
                 className={cn(
                     'upup-disabled:bg-[#e0e0e0] upup-mt-2 upup-w-full upup-rounded-md upup-bg-blue-600 upup-p-2 upup-text-white upup-transition-all upup-duration-300',
                     dark && 'upup-bg-[#59D1F9] upup-disabled:bg-[#6D6D6D]',
-                    (classNames as any)?.urlFetchButton,
+                    classNames.urlFetchButton,
                 )}
                 type="submit"
                 disabled={!url}
