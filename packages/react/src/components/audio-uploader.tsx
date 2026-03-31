@@ -3,17 +3,10 @@
 import React from 'react'
 import { cn } from '../lib/tailwind'
 import useAudioUploader from '../hooks/use-audio-uploader'
-
-// TODO: replace with i18n translations (Task 3.8)
-const TR = {
-    startRecording: 'Start Recording',
-    recording: 'Recording',
-    stopRecording: 'Stop Recording',
-    addAudio: 'Add Audio',
-    deleteRecording: 'Delete',
-}
+import { useUploaderContext } from '../context/uploader-context'
 
 export default function AudioUploader() {
+    const { translations: tr } = useUploaderContext()
     const {
         isRecording,
         audioUrl,
@@ -29,7 +22,6 @@ export default function AudioUploader() {
     } = useAudioUploader()
 
     const { AudioRecordIcon, AudioStopIcon, AudioDeleteIcon } = icons
-    const tr = TR
 
     return (
         <div className="upup-flex upup-h-full upup-w-full upup-flex-col upup-items-center upup-justify-center upup-gap-4 upup-px-3 upup-py-4">

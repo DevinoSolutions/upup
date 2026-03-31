@@ -11,7 +11,7 @@ import FileList from './components/file-list'
 import Notifier from './components/notifier'
 import useInformer from './hooks/use-informer'
 import type { CoreOptions } from '@upup/core'
-import { FileSource, type UploaderClassNames } from '@upup/shared'
+import { FileSource, en_US, mergeTranslations, type UploaderClassNames, type Translations } from '@upup/shared'
 import type { UploaderIcons } from './types/icons'
 
 export interface UpupUploaderProps extends CoreOptions {
@@ -22,6 +22,8 @@ export interface UpupUploaderProps extends CoreOptions {
   sources?: UploadSource[]
   fileSources?: FileSource[]
   enablePaste?: boolean
+  locale?: Translations
+  translationOverrides?: Partial<Translations>
   ref?: Ref<UpupUploaderRef>
 }
 
@@ -53,6 +55,8 @@ export const UpupUploader = forwardRef<UpupUploaderRef, UpupUploaderProps>(
       sources = ['local'],
       fileSources: explicitFileSources,
       enablePaste = false,
+      locale = en_US,
+      translationOverrides,
       ...coreOptions
     } = props
 
@@ -60,6 +64,10 @@ export const UpupUploader = forwardRef<UpupUploaderRef, UpupUploaderProps>(
     const [activeSource, setActiveSource] = useState<FileSource | null>(null)
     const informer = useInformer()
 
+    const translations = useMemo(
+      () => mergeTranslations(locale, translationOverrides),
+      [locale, translationOverrides],
+    )
     const fileSources = explicitFileSources ?? sourcesToFileSources(sources)
 
     useImperativeHandle(ref, () => ({
@@ -77,8 +85,9 @@ export const UpupUploader = forwardRef<UpupUploaderRef, UpupUploaderProps>(
         icons: icons as UploaderIcons,
         enablePaste,
         sources,
+        translations,
       }),
-      [uploader, activeSource, dark, mini, classNames, icons, enablePaste, sources],
+      [uploader, activeSource, dark, mini, classNames, icons, enablePaste, sources, translations],
     )
 
     const hasMultipleSources = fileSources.length > 1

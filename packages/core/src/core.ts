@@ -6,6 +6,7 @@ import { PipelineEngine } from './pipeline/engine'
 import { UploadManager } from './upload-manager'
 import { TokenEndpointCredentials } from './strategies/token-endpoint'
 import { DirectUpload } from './strategies/direct-upload'
+import { CrashRecoveryManager, IndexedDBStorage } from './crash-recovery'
 
 export interface CoreOptions extends FileManagerOptions {
   uploadEndpoint?: string
@@ -53,6 +54,7 @@ export class UpupCore {
   private uploadManager: UploadManager | null = null
   private _status: UploadStatus = UploadStatus.IDLE
   private _error: Error | null = null
+  private crashRecovery: CrashRecoveryManager | null = null
   readonly options: CoreOptions
 
   constructor(options: CoreOptions) {
@@ -76,6 +78,13 @@ export class UpupCore {
       for (const plugin of options.plugins) {
         this.use(plugin)
       }
+    }
+
+    if (options.crashRecovery) {
+      this.crashRecovery = new CrashRecoveryManager(new IndexedDBStorage())
+      this.on('state-change', () => {
+        this.crashRecovery?.save(this.getSnapshot()).catch(() => {})
+      })
     }
   }
 
@@ -217,6 +226,7 @@ export class UpupCore {
     this._status = UploadStatus.SUCCESSFUL
     this.emitter.emit('upload-all-complete', [...this.files.values()])
     this.emitter.emit('state-change', { status: this._status })
+    this.crashRecovery?.clear().catch(() => {})
 
     return [...this.files.values()]
   }
@@ -280,21 +290,42 @@ export class UpupCore {
     this.emitter.off(event, handler)
   }
 
-  getSnapshot(): unknown {
+  getSnapshot(): { files: [string, UploadFile][]; status: UploadStatus } {
     return {
       files: [...this.files.entries()],
       status: this._status,
     }
   }
 
-  restore(_snapshot: unknown): void {
-    // Will be implemented in Task 2.9
+  restore(snapshot: { files: [string, UploadFile][]; status: UploadStatus }): void {
+    const fileMap = this.fileManager.getFiles()
+    fileMap.clear()
+    for (const [id, file] of snapshot.files) {
+      fileMap.set(id, file)
+    }
+    this._status = snapshot.status
+    this.emitter.emit('state-change', { files: this.files, status: this._status })
+  }
+
+  async restoreFromCrashRecovery(): Promise<boolean> {
+    if (!this.crashRecovery) return false
+    const snapshot = await this.crashRecovery.restore()
+    if (snapshot && typeof snapshot === 'object' && 'files' in snapshot) {
+      this.restore(snapshot as { files: [string, UploadFile][]; status: UploadStatus })
+      return true
+    }
+    return false
+  }
+
+  async clearCrashRecovery(): Promise<void> {
+    await this.crashRecovery?.clear()
   }
 
   destroy(): void {
     this.emitter.removeAllListeners()
     this.pluginManager.destroy()
     this.fileManager.removeAll()
+    this.crashRecovery?.clear().catch(() => {})
     this._status = UploadStatus.IDLE
     this._error = null
   }

@@ -3,17 +3,10 @@
 import React from 'react'
 import { cn } from '../lib/tailwind'
 import useScreenCapture from '../hooks/use-screen-capture'
-
-// TODO: replace with i18n translations (Task 3.8)
-const TR = {
-    startScreenCapture: 'Start Screen Capture',
-    screenRecording: 'Recording',
-    stopScreenCapture: 'Stop',
-    addScreenCapture: 'Add Screen Recording',
-    deleteScreenCapture: 'Delete',
-}
+import { useUploaderContext } from '../context/uploader-context'
 
 export default function ScreenCaptureUploader() {
+    const { translations: tr } = useUploaderContext()
     const {
         isRecording,
         videoUrl,
@@ -30,7 +23,6 @@ export default function ScreenCaptureUploader() {
     } = useScreenCapture()
 
     const { ScreenCaptureStartIcon, ScreenCaptureStopIcon, ScreenCaptureDeleteIcon } = icons
-    const tr = TR
 
     return (
         <div

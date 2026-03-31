@@ -2,26 +2,13 @@
 
 import React from 'react'
 import Webcam from 'react-webcam'
+import { t } from '@upup/shared'
 import { cn } from '../lib/tailwind'
 import useCameraUploader from '../hooks/use-camera-uploader'
 import { useUploaderContext } from '../context/uploader-context'
 
-// TODO: replace with i18n translations (Task 3.8)
-const TR = {
-    photo: 'Photo',
-    video: 'Video',
-    capture: 'Capture',
-    switchToCamera: 'Switch to {side}',
-    front: 'front',
-    back: 'back',
-    mirrorCamera: 'Mirror',
-    addImage: 'Add Image',
-    startVideoRecording: 'Record',
-    stopVideoRecording: 'Stop',
-    addVideo: 'Add Video',
-}
-
 export default function CameraUploader() {
+    const { translations: tr } = useUploaderContext()
     const {
         capture,
         handleFetchImage,
@@ -62,8 +49,6 @@ export default function CameraUploader() {
 
     const isPhoto = mode === 'photo'
     const isVideo = mode === 'video'
-
-    const tr = TR
 
     return (
         <div className="upup-flex upup-h-full upup-w-full upup-flex-col upup-justify-center upup-overflow-auto upup-px-3 upup-py-2">
@@ -225,7 +210,7 @@ export default function CameraUploader() {
                         >
                             <span>{CameraRotateIcon && <CameraRotateIcon />}</span>
                             <span>
-                                {tr.switchToCamera.replace('{side}', newCameraSide === 'front' ? tr.front : tr.back)}
+                                {t(tr.switchToCamera, { side: newCameraSide === 'front' ? tr.front : tr.back })}
                             </span>
                         </button>
                         <button
@@ -294,7 +279,7 @@ export default function CameraUploader() {
                         >
                             <span>{CameraRotateIcon && <CameraRotateIcon />}</span>
                             <span>
-                                {tr.switchToCamera.replace('{side}', newCameraSide === 'front' ? tr.front : tr.back)}
+                                {t(tr.switchToCamera, { side: newCameraSide === 'front' ? tr.front : tr.back })}
                             </span>
                         </button>
                         <button

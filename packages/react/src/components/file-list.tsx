@@ -32,6 +32,7 @@ export default memo(function FileList({ className }: FileListProps) {
         pause,
         resume,
         cancel,
+        reorderFiles,
         dark,
         classNames,
         mini,
@@ -56,6 +57,37 @@ export default memo(function FileList({ className }: FileListProps) {
         setDraggedFileId(undefined)
         setDropTargetFileId(undefined)
     }, [])
+
+    const handleDragStart = useCallback((fileId: string) => {
+        setDraggedFileId(fileId)
+    }, [])
+
+    const handleDragOver = useCallback(
+        (e: React.DragEvent, fileId: string) => {
+            e.preventDefault()
+            if (draggedFileId && draggedFileId !== fileId) {
+                setDropTargetFileId(fileId)
+            }
+        },
+        [draggedFileId],
+    )
+
+    const handleDrop = useCallback(
+        (e: React.DragEvent, targetFileId: string) => {
+            e.preventDefault()
+            if (!draggedFileId || draggedFileId === targetFileId) {
+                clearDragState()
+                return
+            }
+            const fromIndex = files.findIndex(f => f.id === draggedFileId)
+            const toIndex = files.findIndex(f => f.id === targetFileId)
+            if (fromIndex !== -1 && toIndex !== -1) {
+                reorderFiles(fromIndex, toIndex)
+            }
+            clearDragState()
+        },
+        [draggedFileId, files, reorderFiles, clearDragState],
+    )
 
     if (mini) return null
 
@@ -129,8 +161,13 @@ export default memo(function FileList({ className }: FileListProps) {
                             <div
                                 key={file.id}
                                 role="listitem"
+                                draggable={!isUploading}
+                                onDragStart={() => handleDragStart(file.id)}
+                                onDragOver={(e) => handleDragOver(e, file.id)}
+                                onDrop={(e) => handleDrop(e, file.id)}
+                                onDragEnd={clearDragState}
                                 className={cn(
-                                    'upup-rounded-xl upup-transition',
+                                    'upup-cursor-grab upup-rounded-xl upup-transition',
                                     {
                                         'upup-opacity-60': isDraggedFile,
                                         'upup-ring-2 upup-ring-blue-400':
@@ -141,7 +178,6 @@ export default memo(function FileList({ className }: FileListProps) {
                                 )}
                                 data-upup-file-id={file.id}
                             >
-                                {/* TODO: <FileItem file={file} /> — wire up after migration (Task 3.8) */}
                                 <div className="upup-text-sm upup-truncate">
                                     {file.name}
                                 </div>

@@ -5,12 +5,6 @@ import { useUploaderContext } from '../context/uploader-context'
 import useFetchFileByUrl from '../hooks/use-fetch-file-by-url'
 import { cn } from '../lib/tailwind'
 
-// TODO: replace with i18n translations (Task 3.8)
-const TR = {
-    enterFileUrl: 'Enter file URL...',
-    fetch: 'Fetch',
-}
-
 export default function UrlUploader() {
     const {
         setFiles,
@@ -18,10 +12,10 @@ export default function UrlUploader() {
         dark,
         classNames,
         icons,
+        translations: tr,
     } = useUploaderContext()
 
     const { LoaderIcon } = icons
-    const tr = TR
 
     const [url, setUrl] = useState('')
     const { loading, fetchImage } = useFetchFileByUrl()
