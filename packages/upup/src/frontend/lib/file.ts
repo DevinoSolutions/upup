@@ -1,6 +1,17 @@
 import pako from 'pako'
 import { b64EncodeUnicode } from '../../shared/lib/encoder'
-import { FileWithParams, UpupUploaderProps } from '../../shared/types'
+import {
+    FileWithParams,
+    ImageCompressionOptions,
+    ThumbnailGeneratorOptions,
+    UpupUploaderProps,
+} from '../../shared/types'
+import {
+    copyPreservedFileMetadata,
+    fileHasRelativePath,
+    getFileOrderPath,
+} from './fileOrder'
+import { blobToFileWithParams } from './imageEditorHelpers'
 
 /**
  * @param bytes assign keyword depend on size
@@ -38,14 +49,26 @@ export function checkFileSize(
     return false
 }
 
+export function checkMinFileSize(
+    file: File,
+    minFileSize: UpupUploaderProps['minFileSize'],
+) {
+    const minBytes = sizeToBytes(minFileSize!.size, minFileSize!.unit)
+    return file.size >= minBytes
+}
+
 export const fileAppendParams = (file: File) => {
     const rel =
         (file as any).relativePath ||
         (file as any).webkitRelativePath ||
         file.name
+    const relativePath = fileHasRelativePath(file as File & FileWithParams)
+        ? getFileOrderPath(file as File & FileWithParams)
+        : undefined
     Object.assign(file, {
         id: (file as any).id || b64EncodeUnicode(rel),
         url: (file as any).url || URL.createObjectURL(file),
+        ...(relativePath ? { relativePath } : {}),
     })
 
     return file as FileWithParams
@@ -61,6 +84,53 @@ export const revokeFileUrl = (file: FileWithParams) => {
     }
 }
 
+const FINGERPRINT_CHUNK_SIZE = 1024 * 1024 // 1 MB
+
+/**
+ * Computes a SHA-256 content fingerprint for a file.
+ * For files ≤ 2 MB the entire content is hashed.
+ * For larger files, only the first and last 1 MB plus the encoded file size
+ * are hashed, which keeps the operation fast while still catching duplicates.
+ */
+export async function computeFileHash(file: File): Promise<string> {
+    let data: ArrayBuffer
+
+    if (file.size <= FINGERPRINT_CHUNK_SIZE * 2) {
+        data = await file.arrayBuffer()
+    } else {
+        const head = await file.slice(0, FINGERPRINT_CHUNK_SIZE).arrayBuffer()
+        const tail = await file
+            .slice(file.size - FINGERPRINT_CHUNK_SIZE)
+            .arrayBuffer()
+        const sizeTag = new TextEncoder().encode(String(file.size))
+        const merged = new Uint8Array(
+            head.byteLength + tail.byteLength + sizeTag.byteLength,
+        )
+        merged.set(new Uint8Array(head), 0)
+        merged.set(new Uint8Array(tail), head.byteLength)
+        merged.set(sizeTag, head.byteLength + tail.byteLength)
+        data = merged.buffer
+    }
+
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data)
+    return Array.from(new Uint8Array(hashBuffer))
+        .map(b => b.toString(16).padStart(2, '0'))
+        .join('')
+}
+
+/**
+ * Computes a full SHA-256 hash of the entire file content.
+ * Unlike `computeFileHash` (which uses partial hashing for large files),
+ * this always hashes every byte for true integrity verification.
+ */
+export async function computeFullContentHash(file: File): Promise<string> {
+    const data = await file.arrayBuffer()
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data)
+    return Array.from(new Uint8Array(hashBuffer))
+        .map(b => b.toString(16).padStart(2, '0'))
+        .join('')
+}
+
 export async function compressFile(oldFile: FileWithParams) {
     const buffer = await oldFile.arrayBuffer()
 
@@ -69,15 +139,335 @@ export async function compressFile(oldFile: FileWithParams) {
         lastModified: oldFile.lastModified,
     })
     const newFileWithParams = fileAppendParams(compressed)
-    newFileWithParams.id = oldFile.id
-    newFileWithParams.thumbnail = oldFile.thumbnail
-    newFileWithParams.fileHash = oldFile.fileHash
-    newFileWithParams.key = oldFile.key
+    copyPreservedFileMetadata(newFileWithParams, oldFile)
 
     // Revoke old blob URL to prevent memory leak
     revokeFileUrl(oldFile)
 
     return newFileWithParams
+}
+
+/** MIME types for HEIC/HEIF images that need conversion. */
+const HEIC_MIME_TYPES = new Set([
+    'image/heic',
+    'image/heif',
+    'image/heic-sequence',
+    'image/heif-sequence',
+])
+
+/**
+ * Returns true when the file is a HEIC/HEIF image (by MIME type or extension).
+ * Extension check covers cases where the OS does not set the correct MIME type.
+ */
+function isHeicFile(file: File): boolean {
+    if (HEIC_MIME_TYPES.has(file.type.toLowerCase())) return true
+    const ext = file.name.split('.').pop()?.toLowerCase()
+    return ext === 'heic' || ext === 'heif'
+}
+
+/**
+ * Converts a HEIC/HEIF image to JPEG using heic2any.
+ * Non-HEIC files are returned unchanged.
+ */
+export async function convertHeicFile(
+    file: FileWithParams,
+): Promise<FileWithParams> {
+    if (!isHeicFile(file)) return file
+
+    const heic2any = (await import('heic2any')).default
+    const blob = await heic2any({
+        blob: file,
+        toType: 'image/jpeg',
+        quality: 0.92,
+    })
+    const resultBlob = Array.isArray(blob) ? blob[0] : blob
+
+    const name = file.name
+        .replace(/\.heic$/i, '.jpg')
+        .replace(/\.heif$/i, '.jpg')
+    const converted = new File([resultBlob], name, {
+        type: 'image/jpeg',
+    }) as FileWithParams
+    converted.url = URL.createObjectURL(converted)
+    copyPreservedFileMetadata(converted, file)
+
+    revokeFileUrl(file)
+    return converted
+}
+
+/**
+ * Strips EXIF metadata from an image by re-drawing it on a canvas at original
+ * dimensions and full quality. Non-image files are returned unchanged.
+ */
+export async function stripExifData(
+    file: FileWithParams,
+): Promise<FileWithParams> {
+    if (!fileGetIsImage(file.type)) return file
+
+    const bitmap = await createImageBitmap(file)
+    const { width, height } = bitmap
+
+    const canvas = new OffscreenCanvas(width, height)
+    const ctx = canvas.getContext('2d')
+    if (!ctx) {
+        bitmap.close()
+        return file
+    }
+
+    ctx.drawImage(bitmap, 0, 0, width, height)
+    bitmap.close()
+
+    const blob = await canvas.convertToBlob({ type: file.type, quality: 1.0 })
+
+    // Keep original if stripping made it larger
+    if (blob.size >= file.size) return file
+
+    return blobToFileWithParams(blob, file)
+}
+
+const IMAGE_COMPRESSION_DEFAULTS: Required<ImageCompressionOptions> = {
+    quality: 0.8,
+    maxWidth: 1920,
+    maxHeight: 1920,
+    mimeType: '',
+    convertSize: Infinity,
+}
+
+/**
+ * Canvas-based image compression: resizes dimensions and reduces quality.
+ * Non-image files are returned unchanged.
+ */
+export async function compressImageFile(
+    file: FileWithParams,
+    options: ImageCompressionOptions = {},
+): Promise<FileWithParams> {
+    if (!fileGetIsImage(file.type)) return file
+
+    const { quality, maxWidth, maxHeight, mimeType, convertSize } = {
+        ...IMAGE_COMPRESSION_DEFAULTS,
+        ...options,
+    }
+
+    const outputMime =
+        mimeType || (file.size > convertSize ? 'image/jpeg' : file.type)
+
+    const bitmap = await createImageBitmap(file)
+    const { width, height } = bitmap
+
+    // Calculate scaled dimensions preserving aspect ratio
+    let newWidth = width
+    let newHeight = height
+    if (width > maxWidth || height > maxHeight) {
+        const ratio = Math.min(maxWidth / width, maxHeight / height)
+        newWidth = Math.round(width * ratio)
+        newHeight = Math.round(height * ratio)
+    }
+
+    const canvas = new OffscreenCanvas(newWidth, newHeight)
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return file
+
+    ctx.drawImage(bitmap, 0, 0, newWidth, newHeight)
+    bitmap.close()
+
+    const blob = await canvas.convertToBlob({
+        type: outputMime,
+        quality,
+    })
+
+    // Keep original if compression made it larger
+    if (blob.size >= file.size) return file
+
+    return blobToFileWithParams(blob, file)
+}
+
+export const THUMBNAIL_DEFAULTS: Required<ThumbnailGeneratorOptions> = {
+    thumbnailWidth: 200,
+    thumbnailHeight: 200,
+    thumbnailType: 'image/jpeg',
+    waitForThumbnailsBeforeUpload: false,
+}
+
+type ThumbnailCanvas = OffscreenCanvas | HTMLCanvasElement
+
+function createThumbnailCanvas(width: number, height: number): ThumbnailCanvas {
+    if (typeof OffscreenCanvas !== 'undefined') {
+        return new OffscreenCanvas(width, height)
+    }
+
+    if (typeof document === 'undefined') {
+        throw new Error('Canvas API is not available in this environment')
+    }
+
+    const canvas = document.createElement('canvas')
+    canvas.width = width
+    canvas.height = height
+    return canvas
+}
+
+function getThumbnailDimensions(
+    width: number,
+    height: number,
+    thumbnailWidth: number,
+    thumbnailHeight: number,
+) {
+    const ratio = Math.min(thumbnailWidth / width, thumbnailHeight / height, 1)
+    return {
+        width: Math.max(Math.round(width * ratio), 1),
+        height: Math.max(Math.round(height * ratio), 1),
+    }
+}
+
+async function thumbnailCanvasToBlob(
+    canvas: ThumbnailCanvas,
+    thumbnailType: string,
+): Promise<Blob> {
+    if ('convertToBlob' in canvas) {
+        return canvas.convertToBlob({
+            type: thumbnailType,
+            quality: 0.8,
+        })
+    }
+
+    return await new Promise<Blob>((resolve, reject) => {
+        canvas.toBlob(
+            blob => {
+                if (blob) {
+                    resolve(blob)
+                } else {
+                    reject(new Error('Failed to create thumbnail blob'))
+                }
+            },
+            thumbnailType,
+            0.8,
+        )
+    })
+}
+
+async function createThumbnailFileFromSource(
+    source: CanvasImageSource,
+    fileName: string,
+    width: number,
+    height: number,
+    options: Required<ThumbnailGeneratorOptions>,
+): Promise<File | undefined> {
+    const { width: nextWidth, height: nextHeight } = getThumbnailDimensions(
+        width,
+        height,
+        options.thumbnailWidth,
+        options.thumbnailHeight,
+    )
+
+    const canvas = createThumbnailCanvas(nextWidth, nextHeight)
+    const ctx = canvas.getContext('2d') as
+        | OffscreenCanvasRenderingContext2D
+        | CanvasRenderingContext2D
+        | null
+    if (!ctx) return
+
+    ctx.drawImage(source, 0, 0, nextWidth, nextHeight)
+
+    const blob = await thumbnailCanvasToBlob(canvas, options.thumbnailType)
+
+    return new File([blob], `thumb_${fileName}`, {
+        type: options.thumbnailType,
+        lastModified: Date.now(),
+    })
+}
+
+async function createVideoThumbnailFile(
+    file: FileWithParams,
+    options: Required<ThumbnailGeneratorOptions>,
+): Promise<File | undefined> {
+    if (typeof document === 'undefined') return
+
+    const video = document.createElement('video')
+    const videoUrl = file.url || URL.createObjectURL(file)
+    const shouldRevokeUrl = !file.url
+
+    video.preload = 'metadata'
+    video.muted = true
+    video.playsInline = true
+
+    try {
+        await new Promise<void>((resolve, reject) => {
+            const handleLoadedData = () => {
+                cleanup()
+                resolve()
+            }
+            const handleError = () => {
+                cleanup()
+                reject(new Error('Failed to load video thumbnail source'))
+            }
+            const cleanup = () => {
+                video.removeEventListener('loadeddata', handleLoadedData)
+                video.removeEventListener('error', handleError)
+            }
+
+            video.addEventListener('loadeddata', handleLoadedData)
+            video.addEventListener('error', handleError)
+            video.src = videoUrl
+        })
+
+        if (!video.videoWidth || !video.videoHeight) return
+
+        return await createThumbnailFileFromSource(
+            video,
+            file.name,
+            video.videoWidth,
+            video.videoHeight,
+            options,
+        )
+    } finally {
+        video.pause()
+        video.removeAttribute('src')
+        video.load()
+        if (shouldRevokeUrl) {
+            URL.revokeObjectURL(videoUrl)
+        }
+    }
+}
+
+/**
+ * Generates a thumbnail for an image or video file and attaches it to
+ * `file.thumbnail`. Other file types are returned unchanged.
+ */
+export async function generateThumbnailForFile(
+    file: FileWithParams,
+    options: ThumbnailGeneratorOptions = {},
+): Promise<FileWithParams> {
+    const resolvedOptions = {
+        ...THUMBNAIL_DEFAULTS,
+        ...options,
+    }
+
+    if (fileGetIsImage(file.type)) {
+        const bitmap = await createImageBitmap(file)
+
+        try {
+            const thumbFile = await createThumbnailFileFromSource(
+                bitmap,
+                file.name,
+                bitmap.width,
+                bitmap.height,
+                resolvedOptions,
+            )
+            if (thumbFile) {
+                file.thumbnail = { file: thumbFile }
+            }
+            return file
+        } finally {
+            bitmap.close()
+        }
+    }
+
+    if (!fileGetIsVideo(file.type)) return file
+
+    const thumbFile = await createVideoThumbnailFile(file, resolvedOptions)
+    if (thumbFile) {
+        file.thumbnail = { file: thumbFile }
+    }
+    return file
 }
 
 export function searchDriveFiles<
@@ -123,6 +513,10 @@ export function searchDriveFiles<
 
 export function fileGetIsImage(fileType: string) {
     return fileType.startsWith('image/')
+}
+
+export function fileGetIsVideo(fileType: string) {
+    return fileType.startsWith('video/')
 }
 
 /**

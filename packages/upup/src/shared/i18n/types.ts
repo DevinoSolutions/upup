@@ -17,12 +17,18 @@ export type Translations = {
     dropbox: string
     link: string
     camera: string
+    audio: string
+    screenCapture: string
 
     // ── Drop-zone / AdapterSelector ───────────────────────────
     /** Singular: "Drag your file or" */
     dragFileOr: string
     /** Plural: "Drag your files or" */
     dragFilesOr: string
+    /** Singular: "Drag your file here" (when browse is disabled) */
+    dragFileHere: string
+    /** Plural: "Drag your files here" (when browse is disabled) */
+    dragFilesHere: string
     browseFiles: string
     or: string
     selectAFolder: string
@@ -30,6 +36,22 @@ export type Translations = {
     maxFileSizeAllowed_one: string
     /** "Max {{size}} {{unit}} files are allowed" */
     maxFileSizeAllowed_other: string
+    /** "Min {{size}} {{unit}}" */
+    minFileSizeDisplay: string
+    /** "Allowed types: {{types}}" */
+    allowedFileTypes: string
+    /** "Up to {{limit}} file" */
+    maxFileCount_one: string
+    /** "Up to {{limit}} files" */
+    maxFileCount_other: string
+    /** "At least {{limit}} file required" */
+    minFileCount_one: string
+    /** "At least {{limit}} files required" */
+    minFileCount_other: string
+    /** "Total file size exceeds the maximum of {{size}} {{unit}}" */
+    totalFileSizeExceeded: string
+    /** "Max total size: {{size}} {{unit}}" */
+    maxTotalFileSizeDisplay: string
 
     // ── UpupUploader (root) ───────────────────────────────────
     /** "Add your documents here, you can upload up to {{limit}} files max" */
@@ -53,6 +75,7 @@ export type Translations = {
 
     // ── FilePreview ───────────────────────────────────────────
     removeFile: string
+    renameFile: string
     clickToPreview: string
     /** "0 Byte" */
     zeroBytes: string
@@ -87,10 +110,31 @@ export type Translations = {
     /** "switch to {{side}}" */
     switchToCamera: string
     addImage: string
+    photo: string
+    video: string
+    startVideoRecording: string
+    stopVideoRecording: string
+    cameraRecording: string
+    addVideo: string
+    mirrorCamera: string
 
     // ── Camera sides ──────────────────────────────────────────
     front: string
     back: string
+
+    // ── AudioUploader ─────────────────────────────────────────
+    startRecording: string
+    stopRecording: string
+    recording: string
+    addAudio: string
+    deleteRecording: string
+
+    // ── ScreenCaptureUploader ─────────────────────────────────
+    startScreenCapture: string
+    stopScreenCapture: string
+    screenRecording: string
+    addScreenCapture: string
+    deleteScreenCapture: string
 
     // ── Powered by ────────────────────────────────────────────
     poweredBy: string
@@ -124,9 +168,15 @@ export type Translations = {
     allowedLimitSurpassed: string
     fileUnsupportedType: string
     fileTooLargeName: string
+    fileTooSmallName: string
+    minFileSizeAllowed_one: string
+    minFileSizeAllowed_other: string
+    minFileSizeMustBeGreater: string
     filePreviouslySelected: string
     fileWithUrlPreviouslySelected: string
     errorCompressingFile: string
+    errorCompressingImage: string
+    generatingThumbnails: string
 
     // Integration / Auth errors
     clientIdRequired: string

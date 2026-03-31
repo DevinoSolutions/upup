@@ -14,9 +14,14 @@ export default function AdapterSelector() {
             multiple,
             limit,
             maxFileSize,
+            minFileSize,
+            minFiles,
+            maxTotalFileSize,
             dark,
             classNames,
             showSelectFolderButton,
+            disableLocalFiles,
+            note,
         },
         translations: tr,
         isAddingMore,
@@ -155,9 +160,6 @@ export default function AdapterSelector() {
                                 },
                                 classNames.adapterButton,
                             )}
-                            onKeyDown={e => {
-                                if (e.key === 'Enter') e.preventDefault()
-                            }}
                             onClick={() => handleAdapterClick(id)}
                         >
                             <Icon />
@@ -184,12 +186,17 @@ export default function AdapterSelector() {
                 data-testid="upup-file-input"
                 ref={inputRef}
                 multiple={multiple}
+                disabled={disableLocalFiles}
+                aria-label="Choose files to upload"
                 onChange={handleInputFileChange}
             />
             {mini ? (
                 <button
                     type="button"
-                    onClick={handleBrowseFilesClick}
+                    onClick={
+                        disableLocalFiles ? undefined : handleBrowseFilesClick
+                    }
+                    disabled={disableLocalFiles}
                     className="upup-flex upup-cursor-pointer upup-flex-col upup-items-center upup-justify-center upup-gap-2 upup-rounded-lg upup-p-2"
                 >
                     <TbUpload
@@ -224,22 +231,30 @@ export default function AdapterSelector() {
                                 },
                             )}
                         >
-                            {limit > 1 ? tr.dragFilesOr : tr.dragFileOr}
+                            {disableLocalFiles
+                                ? limit > 1
+                                    ? tr.dragFilesHere
+                                    : tr.dragFileHere
+                                : limit > 1
+                                ? tr.dragFilesOr
+                                : tr.dragFileOr}
                         </span>
-                        <button
-                            type="button"
-                            className={cn(
-                                'upup-cursor-pointer upup-text-xs upup-font-semibold upup-text-[#0E2ADD] md:upup-text-sm',
-                                {
-                                    'upup-text-[#59D1F9] dark:upup-text-[#59D1F9]':
-                                        dark,
-                                },
-                            )}
-                            onClick={handleBrowseFilesClick}
-                        >
-                            {tr.browseFiles}
-                        </button>
-                        {showSelectFolderButton && (
+                        {!disableLocalFiles && (
+                            <button
+                                type="button"
+                                className={cn(
+                                    'upup-cursor-pointer upup-text-xs upup-font-semibold upup-text-[#0E2ADD] md:upup-text-sm',
+                                    {
+                                        'upup-text-[#59D1F9] dark:upup-text-[#59D1F9]':
+                                            dark,
+                                    },
+                                )}
+                                onClick={handleBrowseFilesClick}
+                            >
+                                {tr.browseFiles}
+                            </button>
+                        )}
+                        {!disableLocalFiles && showSelectFolderButton && (
                             <>
                                 <span
                                     className={cn(
@@ -269,7 +284,7 @@ export default function AdapterSelector() {
                             </>
                         )}
                     </div>
-                    <p
+                    <div
                         className={cn(
                             'upup-text-center upup-text-xs upup-text-[#6D6D6D] md:upup-text-sm',
                             {
@@ -279,14 +294,52 @@ export default function AdapterSelector() {
                         )}
                     >
                         {maxFileSize?.size && maxFileSize?.unit && (
-                            <>
+                            <p>
                                 {t(plural(tr, 'maxFileSizeAllowed', limit), {
                                     size: maxFileSize.size,
                                     unit: maxFileSize.unit,
                                 })}
-                            </>
+                            </p>
                         )}
-                    </p>
+                        {minFileSize?.size && minFileSize?.unit && (
+                            <p>
+                                {t(tr.minFileSizeDisplay, {
+                                    size: minFileSize.size,
+                                    unit: minFileSize.unit,
+                                })}
+                            </p>
+                        )}
+                        {limit && limit > 0 && (
+                            <p>
+                                {t(plural(tr, 'maxFileCount', limit), {
+                                    limit,
+                                })}
+                            </p>
+                        )}
+                        {minFiles && minFiles > 0 && (
+                            <p>
+                                {t(plural(tr, 'minFileCount', minFiles), {
+                                    limit: minFiles,
+                                })}
+                            </p>
+                        )}
+                        {maxTotalFileSize?.size && maxTotalFileSize?.unit && (
+                            <p>
+                                {t(tr.maxTotalFileSizeDisplay, {
+                                    size: maxTotalFileSize.size,
+                                    unit: maxTotalFileSize.unit,
+                                })}
+                            </p>
+                        )}
+                        {accept && (
+                            <p>
+                                {t(tr.allowedFileTypes, {
+                                    types: accept,
+                                })}
+                            </p>
+                        )}
+                        {note && <p>{note}</p>}
+                    </div>
                 </div>
             )}
         </div>

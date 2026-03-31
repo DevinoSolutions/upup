@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion'
-import React, { memo } from 'react'
+import React, { memo, useCallback, useEffect, useMemo, useState } from 'react'
 import { TbPlayerPauseFilled, TbPlayerPlayFilled } from 'react-icons/tb'
 import { plural, t } from '../../shared/i18n'
 import { UploadStatus, useRootContext } from '../context/RootContext'
@@ -31,6 +31,8 @@ export default memo(function FileList() {
         isAddingMore,
         activeAdapter,
         files,
+        canReorderFiles,
+        reorderFiles,
         translations: tr,
         upload: {
             proceedUpload,
@@ -41,12 +43,95 @@ export default memo(function FileList() {
             uploadedBytes,
             totalBytes,
         },
-        props: { dark, classNames, isProcessing, maxRetries, resumable },
+        props: {
+            dark,
+            classNames,
+            isProcessing,
+            maxRetries,
+            resumable,
+            minFiles,
+            hideUploadButton,
+            disabled,
+            hidePauseResumeButton,
+            hideProgressAfterFinish,
+            hideRetryButton,
+            showSelectedFiles,
+        },
         handleDone,
         handleCancel,
         handlePause,
         handleResume,
     } = useRootContext()
+    const [draggedFileId, setDraggedFileId] = useState<string>()
+    const [dropTargetFileId, setDropTargetFileId] = useState<string>()
+
+    const orderedFiles = useMemo(() => Array.from(files.values()), [files])
+    const isReorderEnabled = useMemo(
+        () =>
+            canReorderFiles &&
+            !isProcessing &&
+            uploadStatus !== UploadStatus.ONGOING &&
+            uploadStatus !== UploadStatus.PAUSED &&
+            uploadStatus !== UploadStatus.SUCCESSFUL,
+        [canReorderFiles, isProcessing, uploadStatus],
+    )
+
+    const clearDragState = useCallback(() => {
+        setDraggedFileId(undefined)
+        setDropTargetFileId(undefined)
+    }, [])
+
+    useEffect(() => {
+        if (!isReorderEnabled) {
+            clearDragState()
+        }
+    }, [clearDragState, isReorderEnabled])
+
+    const handleDragStart = useCallback(
+        (fileId: string) => (e: React.DragEvent<HTMLDivElement>) => {
+            if (!isReorderEnabled) return
+
+            setDraggedFileId(fileId)
+            e.dataTransfer.effectAllowed = 'move'
+            e.dataTransfer.setData('text/plain', fileId)
+        },
+        [isReorderEnabled],
+    )
+
+    const handleDragOver = useCallback(
+        (fileId: string) => (e: React.DragEvent<HTMLDivElement>) => {
+            if (!isReorderEnabled || draggedFileId === fileId) return
+
+            e.preventDefault()
+            e.dataTransfer.dropEffect = 'move'
+            setDropTargetFileId(fileId)
+        },
+        [draggedFileId, isReorderEnabled],
+    )
+
+    const handleDrop = useCallback(
+        (targetId: string) => (e: React.DragEvent<HTMLDivElement>) => {
+            if (!isReorderEnabled) return
+
+            e.preventDefault()
+            const sourceId =
+                draggedFileId || e.dataTransfer.getData('text/plain')
+            if (sourceId && sourceId !== targetId) {
+                reorderFiles(sourceId, targetId)
+            }
+            clearDragState()
+        },
+        [clearDragState, draggedFileId, isReorderEnabled, reorderFiles],
+    )
+
+    const handleDragLeave = useCallback(
+        (fileId: string) => () => {
+            if (dropTargetFileId === fileId) {
+                setDropTargetFileId(undefined)
+            }
+        },
+        [dropTargetFileId],
+    )
 
     return (
         <div
@@ -59,55 +144,79 @@ export default memo(function FileList() {
         >
             <MainBoxHeader handleCancel={handleCancel} />
 
-            <MyAnimatePresence>
-                <motion.div
-                    className={cn(
-                        'upup-preview-scroll upup-flex upup-flex-1 upup-flex-col upup-overflow-y-auto upup-bg-black/[0.075] upup-p-3',
-                        { 'upup-bg-white/10 dark:upup-bg-white/10': dark },
-                        classNames.fileListContainer,
-                    )}
-                >
-                    <div
+            <ShouldRender if={showSelectedFiles}>
+                <MyAnimatePresence>
+                    <motion.div
                         className={cn(
-                            // Always-on classes
-                            ` ${
-                                isProcessing &&
-                                'upup-pointer-events-none upup-opacity-75'
-                            }  upup-flex upup-flex-col upup-gap-3 upup-font-[Arial,Helvetica,sans-serif]`,
-                            {
-                                'md:upup-grid md:upup-gap-y-6': files.size > 1,
-                                'md:upup-grid-cols-2': files.size > 1,
-                                'upup-flex-1': files.size === 1,
-                                [classNames.fileListContainerInnerMultiple!]:
-                                    classNames.fileListContainerInnerMultiple &&
-                                    files.size > 1,
-                                [classNames.fileListContainerInnerSingle!]:
-                                    classNames.fileListContainerInnerSingle &&
-                                    files.size === 1,
-                            },
+                            'upup-preview-scroll upup-flex upup-flex-1 upup-flex-col upup-overflow-y-auto upup-bg-black/[0.075] upup-p-3',
+                            { 'upup-bg-white/10 dark:upup-bg-white/10': dark },
+                            classNames.fileListContainer,
                         )}
                     >
-                        {Array.from(files.values())
-                            .sort((a: any, b: any) => {
-                                const pa: string =
-                                    (a as any).relativePath ||
-                                    (a as any).webkitRelativePath ||
-                                    a.name
-                                const pb: string =
-                                    (b as any).relativePath ||
-                                    (b as any).webkitRelativePath ||
-                                    b.name
+                        <div
+                            className={cn(
+                                // Always-on classes
+                                ` ${
+                                    isProcessing &&
+                                    'upup-pointer-events-none upup-opacity-75'
+                                }  upup-flex upup-flex-col upup-gap-3 upup-font-[Arial,Helvetica,sans-serif]`,
+                                {
+                                    'md:upup-grid md:upup-gap-y-6':
+                                        files.size > 1,
+                                    'md:upup-grid-cols-2': files.size > 1,
+                                    'upup-flex-1': files.size === 1,
+                                    [classNames.fileListContainerInnerMultiple!]:
+                                        classNames.fileListContainerInnerMultiple &&
+                                        files.size > 1,
+                                    [classNames.fileListContainerInnerSingle!]:
+                                        classNames.fileListContainerInnerSingle &&
+                                        files.size === 1,
+                                },
+                            )}
+                        >
+                            {orderedFiles.map(file => {
+                                const isDraggedFile = draggedFileId === file.id
+                                const isDropTarget =
+                                    dropTargetFileId === file.id &&
+                                    draggedFileId !== file.id
+
                                 return (
-                                    pa.localeCompare(pb) ||
-                                    a.name.localeCompare(b.name)
+                                    <div
+                                        key={file.id}
+                                        className={cn(
+                                            'upup-rounded-xl upup-transition',
+                                            {
+                                                'upup-cursor-grab active:upup-cursor-grabbing':
+                                                    isReorderEnabled,
+                                                'upup-opacity-60':
+                                                    isDraggedFile,
+                                                'upup-ring-2 upup-ring-blue-400':
+                                                    isDropTarget && !dark,
+                                                'upup-ring-2 upup-ring-[#30C5F7]':
+                                                    isDropTarget && dark,
+                                            },
+                                        )}
+                                        draggable={isReorderEnabled}
+                                        onDragStart={handleDragStart(file.id)}
+                                        onDragOver={handleDragOver(file.id)}
+                                        onDragLeave={handleDragLeave(file.id)}
+                                        onDrop={handleDrop(file.id)}
+                                        onDragEnd={clearDragState}
+                                        aria-grabbed={
+                                            isReorderEnabled
+                                                ? isDraggedFile
+                                                : undefined
+                                        }
+                                        data-upup-file-id={file.id}
+                                    >
+                                        <FileItem file={file} />
+                                    </div>
                                 )
-                            })
-                            .map(file => (
-                                <FileItem key={file.id} file={file} />
-                            ))}
-                    </div>
-                </motion.div>
-            </MyAnimatePresence>
+                            })}
+                        </div>
+                    </motion.div>
+                </MyAnimatePresence>
+            </ShouldRender>
             <div
                 className={cn(
                     'upup-shadow-top upup-flex upup-items-center upup-gap-3 upup-rounded-b-lg upup-bg-black/[0.025] upup-px-3 upup-py-2',
@@ -120,6 +229,7 @@ export default memo(function FileList() {
                 {/* FIX: Hide upload button when status is SUCCESSFUL or FAILED */}
                 <ShouldRender
                     if={
+                        !hideUploadButton &&
                         uploadStatus !== UploadStatus.SUCCESSFUL &&
                         uploadStatus !== UploadStatus.FAILED
                     }
@@ -139,7 +249,9 @@ export default memo(function FileList() {
                         disabled={
                             uploadStatus === UploadStatus.ONGOING ||
                             uploadStatus === UploadStatus.PAUSED ||
-                            isProcessing
+                            isProcessing ||
+                            disabled ||
+                            (!!minFiles && files.size < minFiles)
                         }
                     >
                         {t(plural(tr, 'uploadFiles', files.size), {
@@ -148,7 +260,11 @@ export default memo(function FileList() {
                     </button>
                 </ShouldRender>
                 <ShouldRender
-                    if={uploadStatus === UploadStatus.FAILED && !maxRetries}
+                    if={
+                        uploadStatus === UploadStatus.FAILED &&
+                        !maxRetries &&
+                        !hideRetryButton
+                    }
                 >
                     <button
                         className={cn(
@@ -186,6 +302,7 @@ export default memo(function FileList() {
                     <div className="upup-flex upup-items-center upup-gap-2">
                         <ShouldRender
                             if={
+                                !hidePauseResumeButton &&
                                 resumable?.mode === 'multipart' &&
                                 (uploadStatus === UploadStatus.ONGOING ||
                                     uploadStatus === UploadStatus.PAUSED)
@@ -209,6 +326,11 @@ export default memo(function FileList() {
                                         ? 'Resume upload'
                                         : 'Pause upload'
                                 }
+                                aria-label={
+                                    uploadStatus === UploadStatus.PAUSED
+                                        ? 'Resume upload'
+                                        : 'Pause upload'
+                                }
                             >
                                 {uploadStatus === UploadStatus.PAUSED ? (
                                     <TbPlayerPlayFilled size={14} />
@@ -217,12 +339,21 @@ export default memo(function FileList() {
                                 )}
                             </button>
                         </ShouldRender>
-                        <ProgressBar
-                            className="upup-flex-1"
-                            progressBarClassName="upup-rounded"
-                            progress={totalProgress}
-                            showValue
-                        />
+                        <ShouldRender
+                            if={
+                                !(
+                                    hideProgressAfterFinish &&
+                                    uploadStatus === UploadStatus.SUCCESSFUL
+                                )
+                            }
+                        >
+                            <ProgressBar
+                                className="upup-flex-1"
+                                progressBarClassName="upup-rounded"
+                                progress={totalProgress}
+                                showValue
+                            />
+                        </ShouldRender>
                     </div>
                     <ShouldRender
                         if={
@@ -238,6 +369,7 @@ export default memo(function FileList() {
                                     'upup-text-gray-400': dark,
                                 },
                             )}
+                            aria-live="polite"
                         >
                             <span>
                                 {formatBytes(uploadedBytes)} of{' '}

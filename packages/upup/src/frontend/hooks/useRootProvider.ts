@@ -2,26 +2,46 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
     TbCameraRotate,
     TbCapture,
+    TbFlipHorizontal,
     TbLoader,
+    TbMicrophone,
+    TbPlayerStop,
     TbPlus,
+    TbScreenShare,
     TbTrash,
+    TbVideo,
 } from 'react-icons/tb'
 import { en_US, mergeTranslations, t } from '../../shared/i18n'
 import checkFileType from '../../shared/lib/checkFileType'
 import {
     FileWithParams,
+    ImageCompressionOptions,
     ResolvedImageEditorOptions,
+    ThumbnailGeneratorOptions,
     UploadAdapter,
     UpupUploaderProps,
 } from '../../shared/types'
 import { IRootContext, UploadStatus } from '../context/RootContext'
 import {
     checkFileSize,
+    checkMinFileSize,
     compressFile,
+    compressImageFile,
+    computeFileHash,
+    computeFullContentHash,
+    convertHeicFile,
     fileAppendParams,
+    generateThumbnailForFile,
     revokeFileUrl,
     sizeToBytes,
+    stripExifData,
 } from '../lib/file'
+import {
+    copyPreservedFileMetadata,
+    reorderFilesMap,
+    selectionContainsFolders,
+    sortFilesForSelection,
+} from '../lib/fileOrder'
 import {
     blobToFileWithParams,
     dataURLtoBlob,
@@ -33,6 +53,8 @@ import {
 } from '../lib/resumable/multipartSessionStore'
 import { ProviderSDK } from '../lib/storage/provider'
 import { UploadResult } from '../types/StorageSDK'
+import { useCrashRecovery } from './useCrashRecovery'
+import useInformer from './useInformer'
 
 type FileProgress = {
     id: string
@@ -45,12 +67,14 @@ export type FilesProgressMap = Record<string, FileProgress>
 async function uploadWithRetry(
     fn: () => Promise<UploadResult>,
     maxRetries: number,
+    onRetryAttempt?: (attempt: number, maxRetries: number) => void,
 ): Promise<UploadResult> {
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
         try {
             return await fn()
         } catch (error) {
             if (attempt === maxRetries) throw error
+            onRetryAttempt?.(attempt, maxRetries)
         }
     }
     throw new Error('Upload failed after retries')
@@ -65,7 +89,12 @@ export default function useRootProvider({
     allowPreview = true,
     showSelectFolderButton = false,
     maxFileSize,
+    minFileSize,
+    minFiles,
+    maxTotalFileSize,
     shouldCompress = false,
+    imageCompression,
+    thumbnailGenerator,
     uploadAdapters = [UploadAdapter.INTERNAL, UploadAdapter.LINK],
     onError: errorHandler,
     onWarn: warningHandler,
@@ -80,6 +109,8 @@ export default function useRootProvider({
     onFilesDragLeave = () => {},
     onFilesDrop = () => {},
     onFileTypeMismatch = () => {},
+    onRestrictionFailed,
+    onRetry,
     imageEditor: imageEditorProp,
     onFileUploadStart = () => {},
     onFileUploadProgress = () => {},
@@ -95,9 +126,43 @@ export default function useRootProvider({
     customProps,
     enableAutoCorsConfig = false,
     maxRetries,
+    maxConcurrentUploads,
+    autoUpload = false,
     resumable,
+    crashRecovery,
+    note,
+    showRemoveButtonAfterComplete = true,
+    hideUploadButton = false,
+    disableLocalFiles = false,
+    onBeforeFileAdded,
+    disabled = false,
+    reducedMotion = 'user',
+    contentDeduplication = false,
+    stripExifData: stripExifDataProp = false,
+    heicConversion: heicConversionProp = false,
+    checksumVerification: checksumVerificationProp = false,
+    hideCancelButton = false,
+    hidePauseResumeButton = false,
+    hideProgressAfterFinish = false,
+    hideRetryButton = false,
+    disableInformer = false,
+    showSelectedFiles = true,
+    allowMultipleUploadBatches = true,
+    infoTimeout,
+    meta,
+    width,
+    height,
+    autoOpen,
+    onBeforeUpload,
 }: UpupUploaderProps): IRootContext {
+    const informer = useInformer(infoTimeout)
     const inputRef = useRef<HTMLInputElement>(null)
+    const {
+        persistFiles,
+        restoreFiles,
+        clearPersistedFiles,
+        enabled: crashRecoveryEnabled,
+    } = useCrashRecovery(crashRecovery)
     const [isAddingMore, setIsAddingMore] = useState(false)
     const [selectedFilesMap, setSelectedFilesMap] = useState<
         Map<string, FileWithParams>
@@ -133,6 +198,17 @@ export default function useRootProvider({
         return () => {
             selectedFilesMapRef.current.forEach(file => revokeFileUrl(file))
         }
+    }, [])
+
+    // Crash recovery: restore persisted files on mount
+    useEffect(() => {
+        if (!crashRecoveryEnabled) return
+        restoreFiles().then(restoredMap => {
+            if (restoredMap && restoredMap.size > 0) {
+                setSelectedFilesMap(restoredMap)
+            }
+        })
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
     const limit = useMemo(
@@ -264,17 +340,18 @@ export default function useRootProvider({
     const onError = useCallback(
         (message: string) => {
             setUploadError(message)
-
-            if (errorHandler) errorHandler(message)
+            informer.addMessage(message, 'error')
+            errorHandler?.(message)
         },
-        [errorHandler],
+        [informer, errorHandler],
     )
 
     const onWarn = useCallback(
         (message: string) => {
-            if (warningHandler) warningHandler(message)
+            informer.addMessage(message, 'warning')
+            warningHandler?.(message)
         },
-        [warningHandler],
+        [informer, warningHandler],
     )
     function isFileWithParamsArray(
         files: File[] | FileWithParams[],
@@ -287,8 +364,8 @@ export default function useRootProvider({
     }
     async function dynamicUpload(files: File[] | FileWithParams[]) {
         const filesToUpload = isFileWithParamsArray(files)
-            ? files
-            : files.map(file => fileAppendParams(file))
+            ? sortFilesForSelection(files)
+            : sortFilesForSelection(files).map(file => fileAppendParams(file))
         return await proceedUpload(filesToUpload)
     }
     function dynamicallyReplaceFiles(files: File[] | FileWithParams[]) {
@@ -297,18 +374,20 @@ export default function useRootProvider({
 
         const filesMap = new Map<string, FileWithParams>()
         if (isFileWithParamsArray(files)) {
-            for (const f of files) {
+            for (const f of sortFilesForSelection(files)) {
                 filesMap.set(f.id, f)
             }
         } else {
-            for (const f of files) {
+            for (const f of sortFilesForSelection(files)) {
                 const fileWithParams = fileAppendParams(f)
                 filesMap.set(fileWithParams.id, fileWithParams)
             }
         }
         setSelectedFilesMap(filesMap)
+        if (crashRecoveryEnabled) void persistFiles(filesMap)
     }
-    const handleSetSelectedFiles = (newFiles: File[]) => {
+    const handleSetSelectedFiles = async (newFiles: File[]) => {
+        const orderedNewFiles = sortFilesForSelection(newFiles)
         // Start from existing files to ensure appending behavior.
         const newFilesMap = new Map(selectedFilesMap)
         // Track existing URLs (when present) to avoid duplicates across drops.
@@ -321,20 +400,43 @@ export default function useRootProvider({
         // Collect only the files that are actually accepted and added in this batch.
         const addedThisBatch: FileWithParams[] = []
 
-        for (const file of newFiles) {
+        for (let file of orderedNewFiles) {
             // Respect the limit strictly; stop when capacity is reached.
             if (newFilesMap.size >= limit) {
-                onWarn(translations.allowedLimitSurpassed)
+                const msg = translations.allowedLimitSurpassed
+                onWarn(msg)
+                onRestrictionFailed?.(file, {
+                    reason: 'LIMIT_EXCEEDED',
+                    message: msg,
+                })
                 break
+            }
+
+            // Allow the consumer to reject or transform the file before adding.
+            if (onBeforeFileAdded) {
+                const result = onBeforeFileAdded(file)
+                if (result === false) {
+                    onRestrictionFailed?.(file, {
+                        reason: 'BEFORE_FILE_ADDED_REJECTED',
+                        message: 'File rejected by onBeforeFileAdded',
+                    })
+                    continue
+                }
+                if (result instanceof File) file = result
             }
 
             const fileWithParams = fileAppendParams(file)
 
             if (!checkFileType(accept, file)) {
-                onError(
-                    t(translations.fileUnsupportedType, { name: file.name }),
-                )
+                const msg = t(translations.fileUnsupportedType, {
+                    name: file.name,
+                })
+                onError(msg)
                 onFileTypeMismatch(file, accept)
+                onRestrictionFailed?.(file, {
+                    reason: 'TYPE_MISMATCH',
+                    message: msg,
+                })
                 revokeFileUrl(fileWithParams)
                 continue
             }
@@ -344,32 +446,83 @@ export default function useRootProvider({
                 maxFileSize?.unit &&
                 !checkFileSize(file, maxFileSize)
             ) {
-                onError(
-                    t(translations.fileTooLargeName, {
-                        name: file.name,
-                        size: String(maxFileSize.size),
-                        unit: String(maxFileSize.unit),
-                    }),
-                )
+                const msg = t(translations.fileTooLargeName, {
+                    name: file.name,
+                    size: String(maxFileSize.size),
+                    unit: String(maxFileSize.unit),
+                })
+                onError(msg)
+                onRestrictionFailed?.(file, {
+                    reason: 'FILE_TOO_LARGE',
+                    message: msg,
+                })
+                revokeFileUrl(fileWithParams)
+                continue
+            }
+
+            if (
+                minFileSize?.size &&
+                minFileSize?.unit &&
+                !checkMinFileSize(file, minFileSize)
+            ) {
+                const msg = t(translations.fileTooSmallName, {
+                    name: file.name,
+                    size: String(minFileSize.size),
+                    unit: String(minFileSize.unit),
+                })
+                onError(msg)
+                onRestrictionFailed?.(file, {
+                    reason: 'FILE_TOO_SMALL',
+                    message: msg,
+                })
                 revokeFileUrl(fileWithParams)
                 continue
             }
 
             if (newFilesMap.has(fileWithParams.id)) {
-                onWarn(
-                    t(translations.filePreviouslySelected, { name: file.name }),
-                )
+                const msg = t(translations.filePreviouslySelected, {
+                    name: file.name,
+                })
+                onWarn(msg)
+                onRestrictionFailed?.(file, {
+                    reason: 'DUPLICATE',
+                    message: msg,
+                })
                 revokeFileUrl(fileWithParams)
                 continue
             }
 
+            // Content-based deduplication via SHA-256 hash
+            if (contentDeduplication) {
+                const hash = await computeFileHash(file)
+                fileWithParams.fileHash = hash
+                const isDuplicateContent = Array.from(
+                    newFilesMap.values(),
+                ).some(existing => existing.fileHash === hash)
+                if (isDuplicateContent) {
+                    const msg = t(translations.filePreviouslySelected, {
+                        name: file.name,
+                    })
+                    onWarn(msg)
+                    onRestrictionFailed?.(file, {
+                        reason: 'DUPLICATE',
+                        message: msg,
+                    })
+                    revokeFileUrl(fileWithParams)
+                    continue
+                }
+            }
+
             const fileUrl = (file as any).url as string | undefined
             if (fileUrl && existingUrls.has(fileUrl)) {
-                onWarn(
-                    t(translations.fileWithUrlPreviouslySelected, {
-                        url: fileUrl,
-                    }),
-                )
+                const msg = t(translations.fileWithUrlPreviouslySelected, {
+                    url: fileUrl,
+                })
+                onWarn(msg)
+                onRestrictionFailed?.(file, {
+                    reason: 'DUPLICATE',
+                    message: msg,
+                })
                 revokeFileUrl(fileWithParams)
                 continue
             }
@@ -379,8 +532,38 @@ export default function useRootProvider({
             if (fileUrl) existingUrls.add(fileUrl)
         }
 
+        // Enforce max total file size across all selected files
+        if (maxTotalFileSize?.size && maxTotalFileSize?.unit) {
+            const maxTotalBytes = sizeToBytes(
+                maxTotalFileSize.size,
+                maxTotalFileSize.unit,
+            )
+            const totalBytes = Array.from(newFilesMap.values()).reduce(
+                (sum, f) => sum + f.size,
+                0,
+            )
+            if (totalBytes > maxTotalBytes) {
+                const msg = t(translations.totalFileSizeExceeded, {
+                    size: maxTotalFileSize.size,
+                    unit: maxTotalFileSize.unit,
+                })
+                onError(msg)
+                // Revert: remove files added this batch that pushed over limit
+                for (const f of addedThisBatch) {
+                    onRestrictionFailed?.(f, {
+                        reason: 'TOTAL_SIZE_EXCEEDED',
+                        message: msg,
+                    })
+                    newFilesMap.delete(f.id)
+                }
+                setSelectedFilesMap(newFilesMap)
+                return
+            }
+        }
+
         // Apply state update once for better performance and atomicity.
         setSelectedFilesMap(newFilesMap)
+        if (crashRecoveryEnabled) void persistFiles(newFilesMap)
 
         // Emit a single selection event for just-added files.
         if (addedThisBatch.length) onFilesSelected(addedThisBatch)
@@ -423,9 +606,55 @@ export default function useRootProvider({
             selectedFilesMapCopy.delete(fileId)
 
             setSelectedFilesMap(selectedFilesMapCopy)
+            if (crashRecoveryEnabled) void persistFiles(selectedFilesMapCopy)
             onFileRemove(file)
         },
-        [onFileRemove, selectedFilesMap],
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        [onFileRemove, selectedFilesMap, crashRecoveryEnabled],
+    )
+
+    const handleFileRename = useCallback(
+        (fileId: string, newName: string) => {
+            const file = selectedFilesMap.get(fileId)
+            if (!file) return
+
+            const renamedFile = new File([file], newName, {
+                type: file.type,
+                lastModified: file.lastModified,
+            }) as FileWithParams
+            copyPreservedFileMetadata(renamedFile, file, {
+                preserveUrl: true,
+            })
+
+            const copy = new Map(selectedFilesMap)
+            copy.set(fileId, renamedFile)
+            setSelectedFilesMap(copy)
+            if (crashRecoveryEnabled) void persistFiles(copy)
+        },
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        [selectedFilesMap, crashRecoveryEnabled],
+    )
+
+    const canReorderFiles = useMemo(
+        () =>
+            selectedFilesMap.size > 1 &&
+            !selectionContainsFolders(selectedFilesMap.values()),
+        [selectedFilesMap],
+    )
+
+    const reorderFiles = useCallback(
+        (sourceId: string, targetId: string) => {
+            const reorderedFilesMap = reorderFilesMap(
+                selectedFilesMap,
+                sourceId,
+                targetId,
+            )
+            if (reorderedFilesMap === selectedFilesMap) return
+
+            setSelectedFilesMap(reorderedFilesMap)
+            if (crashRecoveryEnabled) void persistFiles(reorderedFilesMap)
+        },
+        [selectedFilesMap, crashRecoveryEnabled, persistFiles],
     )
 
     const compressFiles = useCallback(
@@ -447,7 +676,54 @@ export default function useRootProvider({
                 throw error
             }
         },
+        // eslint-disable-next-line react-hooks/exhaustive-deps
         [onError],
+    )
+
+    const compressImageFiles = useCallback(
+        async (files: FileWithParams[]) => {
+            const opts: ImageCompressionOptions =
+                typeof imageCompression === 'object' ? imageCompression : {}
+            try {
+                return await Promise.all(
+                    files.map(file => compressImageFile(file, opts)),
+                )
+            } catch (error) {
+                files.forEach(file =>
+                    onError(
+                        t(translations.errorCompressingImage, {
+                            name: file.name,
+                        }),
+                    ),
+                )
+                throw error
+            }
+        },
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        [imageCompression, onError],
+    )
+
+    const stripExifDataFiles = useCallback(
+        async (files: FileWithParams[]) =>
+            Promise.all(files.map(file => stripExifData(file))),
+        [],
+    )
+
+    const convertHeicFiles = useCallback(
+        async (files: FileWithParams[]) =>
+            Promise.all(files.map(file => convertHeicFile(file))),
+        [],
+    )
+
+    const generateThumbnails = useCallback(
+        async (files: FileWithParams[]) => {
+            const opts: ThumbnailGeneratorOptions =
+                typeof thumbnailGenerator === 'object' ? thumbnailGenerator : {}
+            return Promise.all(
+                files.map(file => generateThumbnailForFile(file, opts)),
+            )
+        },
+        [thumbnailGenerator],
     )
 
     const handlePrepareFiles = useCallback(
@@ -491,16 +767,67 @@ export default function useRootProvider({
     const proceedUpload = useCallback(
         async (dynamicFiles: FileWithParams[] | undefined = undefined) => {
             if (!selectedFilesMap.size && !dynamicFiles) return
-            setUploadStatus(UploadStatus.ONGOING)
-            setUploadError('')
-            const sendEvent = !dynamicFiles
+
             const selectedFiles = dynamicFiles
                 ? dynamicFiles
                 : Array.from(selectedFilesMap.values())
+
+            // Enforce minimum file count before starting upload
+            if (minFiles && selectedFiles.length < minFiles) {
+                onError(
+                    t(plural(translations, 'minFileCount', minFiles), {
+                        limit: minFiles,
+                    }),
+                )
+                return
+            }
+
+            // Run onBeforeUpload gate if provided
+            if (onBeforeUpload) {
+                const result = onBeforeUpload(selectedFilesMap)
+                if (result === false) return
+            }
+
+            // Enforce max total file size before starting upload
+            if (maxTotalFileSize?.size && maxTotalFileSize?.unit) {
+                const maxTotalBytes = sizeToBytes(
+                    maxTotalFileSize.size,
+                    maxTotalFileSize.unit,
+                )
+                const totalBytes = selectedFiles.reduce(
+                    (sum, f) => sum + f.size,
+                    0,
+                )
+                if (totalBytes > maxTotalBytes) {
+                    onError(
+                        t(translations.totalFileSizeExceeded, {
+                            size: maxTotalFileSize.size,
+                            unit: maxTotalFileSize.unit,
+                        }),
+                    )
+                    return
+                }
+            }
+
+            setUploadStatus(UploadStatus.ONGOING)
+            setUploadError('')
+            const sendEvent = !dynamicFiles
             try {
-                const compressedFiles = shouldCompress
-                    ? await compressFiles(selectedFiles)
+                const heicConvertedFiles = heicConversionProp
+                    ? await convertHeicFiles(selectedFiles)
                     : selectedFiles
+                const exifStrippedFiles = stripExifDataProp
+                    ? await stripExifDataFiles(heicConvertedFiles)
+                    : heicConvertedFiles
+                const imageCompressedFiles = imageCompression
+                    ? await compressImageFiles(exifStrippedFiles)
+                    : exifStrippedFiles
+                const thumbnailedFiles = thumbnailGenerator
+                    ? await generateThumbnails(imageCompressedFiles)
+                    : imageCompressedFiles
+                const compressedFiles = shouldCompress
+                    ? await compressFiles(thumbnailedFiles)
+                    : thumbnailedFiles
                 const processedFiles = await handlePrepareFiles(compressedFiles)
                 // Initialize SDK
                 const sdk = new ProviderSDK({
@@ -526,6 +853,16 @@ export default function useRootProvider({
                 // Store SDK ref for pause/resume
                 sdkRef.current = sdk
                 speedSamplesRef.current = [{ time: Date.now(), bytes: 0 }]
+
+                // Compute full-content SHA-256 checksums before upload
+                if (checksumVerificationProp) {
+                    await Promise.all(
+                        processedFiles.map(async file => {
+                            file.checksumSHA256 =
+                                await computeFullContentHash(file)
+                        }),
+                    )
+                }
 
                 // For multipart resumable uploads, filter out already-uploaded files on retry
                 const filesToUpload =
@@ -615,21 +952,50 @@ export default function useRootProvider({
                             processedFiles.length,
                         ),
                 }
-                const uploadResults = await Promise.all(
-                    filesToUpload.map(file =>
-                        maxRetries
-                            ? uploadWithRetry(
-                                  () => sdk.upload(file, uploadOptions),
-                                  maxRetries,
-                              )
-                            : sdk.upload(file, uploadOptions),
-                    ),
-                )
+                const uploadOne = (file: FileWithParams) =>
+                    maxRetries
+                        ? uploadWithRetry(
+                              () => sdk.upload(file, uploadOptions),
+                              maxRetries,
+                              (attempt, max) => onRetry?.(file, attempt, max),
+                          )
+                        : sdk.upload(file, uploadOptions)
+
+                let uploadResults: Awaited<ReturnType<typeof uploadOne>>[]
+                if (
+                    maxConcurrentUploads &&
+                    maxConcurrentUploads > 0 &&
+                    maxConcurrentUploads < filesToUpload.length
+                ) {
+                    // Concurrency-limited upload
+                    uploadResults = []
+                    const queue = [...filesToUpload]
+                    const active: Promise<void>[] = []
+                    while (queue.length > 0 || active.length > 0) {
+                        while (
+                            active.length < maxConcurrentUploads &&
+                            queue.length > 0
+                        ) {
+                            const file = queue.shift()!
+                            const p = uploadOne(file).then(result => {
+                                uploadResults.push(result)
+                                active.splice(active.indexOf(p), 1)
+                            })
+                            active.push(p)
+                        }
+                        if (active.length > 0) await Promise.race(active)
+                    }
+                } else {
+                    uploadResults = await Promise.all(
+                        filesToUpload.map(uploadOne),
+                    )
+                }
                 const finalFiles = uploadResults.map(result => result.file)
                 if (sendEvent) onFilesUploadComplete(finalFiles)
 
                 sdkRef.current = null
                 setUploadStatus(UploadStatus.SUCCESSFUL)
+                if (crashRecoveryEnabled) void clearPersistedFiles()
                 return finalFiles
             } catch (error) {
                 onError((error as Error).message)
@@ -639,6 +1005,7 @@ export default function useRootProvider({
                 return
             }
         },
+        // eslint-disable-next-line react-hooks/exhaustive-deps
         [
             selectedFilesMap,
             shouldCompress,
@@ -660,6 +1027,11 @@ export default function useRootProvider({
             onFileUploadProgress,
             onFilesUploadProgress,
             maxRetries,
+            maxConcurrentUploads,
+            minFiles,
+            maxTotalFileSize,
+            translations,
+            checksumVerificationProp,
         ],
     )
     const handleCancel = useCallback(() => {
@@ -685,7 +1057,13 @@ export default function useRootProvider({
         setUploadEta(0)
         setUploadedBytes(0)
         setTotalBytes(0)
-    }, [resumable?.mode, selectedFilesMap])
+        if (crashRecoveryEnabled) void clearPersistedFiles()
+    }, [
+        resumable?.mode,
+        selectedFilesMap,
+        crashRecoveryEnabled,
+        clearPersistedFiles,
+    ])
 
     const handlePause = useCallback(() => {
         sdkRef.current?.pause()
@@ -704,6 +1082,31 @@ export default function useRootProvider({
         handleCancel()
     }, [handleCancel, onDoneClicked])
 
+    // Auto-upload: trigger upload as soon as files are selected
+    useEffect(() => {
+        if (autoUpload && selectedFilesMap.size > 0) {
+            proceedUpload()
+        }
+    }, [autoUpload, selectedFilesMap, proceedUpload])
+
+    // Auto-open: set initial adapter on mount
+    useEffect(() => {
+        if (autoOpen) {
+            setActiveAdapter(autoOpen)
+        }
+    }, [autoOpen])
+
+    // Resolve dark mode: support 'auto' via media query
+    const resolvedDark = useMemo(() => {
+        if (dark === 'auto') {
+            return (
+                typeof window !== 'undefined' &&
+                window.matchMedia('(prefers-color-scheme: dark)').matches
+            )
+        }
+        return !!dark
+    }, [dark])
+
     return {
         inputRef,
         activeAdapter,
@@ -721,6 +1124,9 @@ export default function useRootProvider({
         handlePause,
         handleResume,
         handleFileRemove,
+        handleFileRename,
+        canReorderFiles,
+        reorderFiles,
         editingFile,
         openImageEditor,
         closeImageEditor,
@@ -743,7 +1149,7 @@ export default function useRootProvider({
         },
         props: {
             mini,
-            dark,
+            dark: resolvedDark,
             maxRetries,
             resumable,
             onError,
@@ -755,21 +1161,61 @@ export default function useRootProvider({
             uploadAdapters,
             accept,
             maxFileSize,
+            minFileSize,
+            minFiles,
+            maxTotalFileSize,
             limit,
             isProcessing,
             allowPreview,
             showSelectFolderButton,
+            showRemoveButtonAfterComplete,
+            hideUploadButton,
+            disableLocalFiles,
+            disabled,
+            hideCancelButton,
+            hidePauseResumeButton,
+            hideProgressAfterFinish,
+            hideRetryButton,
+            disableInformer,
+            showSelectedFiles,
+            allowMultipleUploadBatches,
+            infoTimeout,
+            meta,
+            width,
+            height,
+            autoOpen,
+            onBeforeUpload,
+            note,
             multiple,
             icons: {
                 ContainerAddMoreIcon: icons.ContainerAddMoreIcon || TbPlus,
                 FileDeleteIcon: icons.FileDeleteIcon || TbTrash,
                 CameraCaptureIcon: icons.CameraCaptureIcon || TbCapture,
                 CameraRotateIcon: icons.CameraRotateIcon || TbCameraRotate,
+                CameraMirrorIcon: icons.CameraMirrorIcon || TbFlipHorizontal,
                 CameraDeleteIcon: icons.CameraDeleteIcon || TbTrash,
+                CameraVideoRecordIcon: icons.CameraVideoRecordIcon || TbVideo,
+                CameraVideoStopIcon: icons.CameraVideoStopIcon || TbPlayerStop,
+                CameraVideoDeleteIcon: icons.CameraVideoDeleteIcon || TbTrash,
                 LoaderIcon: icons.LoaderIcon || TbLoader,
+                AudioRecordIcon: icons.AudioRecordIcon || TbMicrophone,
+                AudioStopIcon: icons.AudioStopIcon || TbPlayerStop,
+                AudioDeleteIcon: icons.AudioDeleteIcon || TbTrash,
+                ScreenCaptureStartIcon:
+                    icons.ScreenCaptureStartIcon || TbScreenShare,
+                ScreenCaptureStopIcon:
+                    icons.ScreenCaptureStopIcon || TbPlayerStop,
+                ScreenCaptureDeleteIcon:
+                    icons.ScreenCaptureDeleteIcon || TbTrash,
             },
             classNames,
             imageEditor: resolvedImageEditor,
+            reducedMotion,
+            contentDeduplication,
+            stripExifData: stripExifDataProp,
+            heicConversion: heicConversionProp,
+            checksumVerification: checksumVerificationProp,
         },
+        informer,
     }
 }

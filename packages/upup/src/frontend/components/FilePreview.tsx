@@ -1,15 +1,19 @@
 import React, {
     Dispatch,
     HTMLAttributes,
+    KeyboardEventHandler,
     MouseEventHandler,
     SetStateAction,
     memo,
+    useCallback,
     useEffect,
     useMemo,
+    useRef,
+    useState,
 } from 'react'
 
 import type { Translations } from '../../shared/i18n/types'
-import { useRootContext } from '../context/RootContext'
+import { UploadStatus, useRootContext } from '../context/RootContext'
 import { fileCanPreviewText, fileGetIsImage, fileGetIsText } from '../lib/file'
 import { cn } from '../lib/tailwind'
 import FilePreviewThumbnail from './FilePreviewThumbnail'
@@ -42,17 +46,23 @@ export default memo(function FilePreview(props: Props) {
 
     const {
         handleFileRemove,
+        handleFileRename,
         translations: tr,
         openImageEditor,
-        upload: { filesProgressMap },
+        upload: { filesProgressMap, uploadStatus },
         props: {
             classNames,
             icons: { FileDeleteIcon },
             allowPreview,
             imageEditor,
+            showRemoveButtonAfterComplete,
         },
         files,
     } = useRootContext()
+
+    const [isRenaming, setIsRenaming] = useState(false)
+    const [renameValue, setRenameValue] = useState('')
+    const renameInputRef = useRef<HTMLInputElement>(null)
 
     const isImage = useMemo(() => fileGetIsImage(fileType), [fileType])
     const isText = useMemo(
@@ -94,6 +104,42 @@ export default memo(function FilePreview(props: Props) {
         const file = files.get(fileId)
         if (file) openImageEditor(file)
     }
+
+    const startRename = useCallback(() => {
+        if (progress) return
+        // Strip extension for editing
+        const dotIdx = fileName.lastIndexOf('.')
+        setRenameValue(dotIdx > 0 ? fileName.slice(0, dotIdx) : fileName)
+        setIsRenaming(true)
+    }, [fileName, progress])
+
+    const commitRename = useCallback(() => {
+        setIsRenaming(false)
+        const trimmed = renameValue.trim()
+        if (!trimmed) return
+        const dotIdx = fileName.lastIndexOf('.')
+        const ext = dotIdx > 0 ? fileName.slice(dotIdx) : ''
+        const newName = trimmed + ext
+        if (newName !== fileName) {
+            handleFileRename(fileId, newName)
+        }
+    }, [renameValue, fileName, fileId, handleFileRename])
+
+    const onRenameKeyDown: KeyboardEventHandler<HTMLInputElement> = e => {
+        if (e.key === 'Enter') {
+            e.preventDefault()
+            commitRename()
+        } else if (e.key === 'Escape') {
+            setIsRenaming(false)
+        }
+    }
+
+    useEffect(() => {
+        if (isRenaming && renameInputRef.current) {
+            renameInputRef.current.focus()
+            renameInputRef.current.select()
+        }
+    }, [isRenaming])
 
     const formatFileSize = (bytes: number | undefined, tr: Translations) => {
         if (!bytes || bytes === 0) return tr.zeroBytes
@@ -163,23 +209,30 @@ export default memo(function FilePreview(props: Props) {
                     </button>
                 )}
 
-                <button
-                    className={cn(
-                        'upup-absolute upup-right-1.5 upup-top-1.5 upup-z-10',
-                        'upup-flex upup-h-5 upup-w-5 upup-items-center upup-justify-center',
-                        'upup-rounded-full upup-bg-white upup-text-red-600 upup-shadow-sm',
-                        'hover:upup-bg-white hover:upup-text-red-700',
-                        'upup-ring-1 upup-ring-black/5',
-                        'disabled:upup-cursor-not-allowed disabled:upup-opacity-50',
-                        classNames.fileDeleteButton,
-                    )}
-                    onClick={onHandleFileRemove}
-                    type="button"
-                    disabled={!!progress}
-                    aria-label={tr.removeFile}
+                <ShouldRender
+                    if={
+                        showRemoveButtonAfterComplete ||
+                        uploadStatus !== UploadStatus.SUCCESSFUL
+                    }
                 >
-                    <FileDeleteIcon className="upup-h-3 upup-w-3" />
-                </button>
+                    <button
+                        className={cn(
+                            'upup-absolute upup-right-1.5 upup-top-1.5 upup-z-10',
+                            'upup-flex upup-h-5 upup-w-5 upup-items-center upup-justify-center',
+                            'upup-rounded-full upup-bg-white upup-text-red-600 upup-shadow-sm',
+                            'hover:upup-bg-white hover:upup-text-red-700',
+                            'upup-ring-1 upup-ring-black/5',
+                            'disabled:upup-cursor-not-allowed disabled:upup-opacity-50',
+                            classNames.fileDeleteButton,
+                        )}
+                        onClick={onHandleFileRemove}
+                        type="button"
+                        disabled={!!progress}
+                        aria-label={tr.removeFile}
+                    >
+                        <FileDeleteIcon className="upup-h-3 upup-w-3" />
+                    </button>
+                </ShouldRender>
 
                 <ProgressBar
                     className="upup-absolute upup-bottom-0 upup-left-0 upup-right-0"
@@ -189,9 +242,33 @@ export default memo(function FilePreview(props: Props) {
             </div>
 
             <div className="upup-mt-1 upup-px-0.5">
-                <div className="upup-truncate upup-text-[13px] upup-font-normal upup-leading-tight upup-text-white">
-                    {fileName}
-                </div>
+                {isRenaming ? (
+                    <input
+                        ref={renameInputRef}
+                        type="text"
+                        value={renameValue}
+                        onChange={e => setRenameValue(e.target.value)}
+                        onBlur={commitRename}
+                        onKeyDown={onRenameKeyDown}
+                        className="upup-w-full upup-rounded upup-border upup-border-blue-400 upup-bg-gray-800 upup-px-1 upup-text-[13px] upup-font-normal upup-leading-tight upup-text-white upup-outline-none"
+                    />
+                ) : (
+                    <div
+                        className="upup-cursor-pointer upup-truncate upup-text-[13px] upup-font-normal upup-leading-tight upup-text-white hover:upup-text-blue-300"
+                        onClick={startRename}
+                        onKeyDown={e => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault()
+                                startRename()
+                            }
+                        }}
+                        tabIndex={0}
+                        role="button"
+                        title={tr.renameFile}
+                    >
+                        {fileName}
+                    </div>
+                )}
                 <div className="upup-mt-0.5 upup-text-[11px] upup-leading-tight upup-text-gray-400">
                     {formatFileSize(fileSize, tr)}
                 </div>

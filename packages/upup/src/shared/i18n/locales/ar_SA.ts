@@ -11,14 +11,26 @@ export const ar_SA: Translations = {
     dropbox: 'Dropbox',
     link: 'رابط',
     camera: 'الكاميرا',
+    audio: 'الصوت',
+    screenCapture: 'تسجيل الشاشة',
 
     dragFileOr: 'اسحب الملف أو',
     dragFilesOr: 'اسحب الملفات أو',
+    dragFileHere: 'اسحب الملف هنا',
+    dragFilesHere: 'اسحب الملفات هنا',
     browseFiles: 'تصفح الملفات',
     or: 'أو',
     selectAFolder: 'اختر مجلداً',
     maxFileSizeAllowed_one: 'الحد الأقصى لحجم الملف {{size}} {{unit}}',
     maxFileSizeAllowed_other: 'الحد الأقصى لحجم الملفات {{size}} {{unit}}',
+    minFileSizeDisplay: 'الحد الأدنى {{size}} {{unit}}',
+    allowedFileTypes: 'الأنواع المسموحة: {{types}}',
+    maxFileCount_one: 'حتى {{limit}} ملف',
+    maxFileCount_other: 'حتى {{limit}} ملفات',
+    minFileCount_one: 'مطلوب {{limit}} ملف على الأقل',
+    minFileCount_other: 'مطلوب {{limit}} ملفات على الأقل',
+    totalFileSizeExceeded: 'الحجم الإجمالي للملفات يتجاوز الحد الأقصى {{size}} {{unit}}',
+    maxTotalFileSizeDisplay: 'الحجم الإجمالي الأقصى: {{size}} {{unit}}',
 
     addDocumentsHere:
         'أضف مستنداتك هنا، يمكنك رفع حتى {{limit}} ملفات كحد أقصى',
@@ -34,6 +46,7 @@ export const ar_SA: Translations = {
     uploadFiles_other: 'رفع {{count}} ملفات',
 
     removeFile: 'إزالة الملف',
+    renameFile: 'انقر لإعادة التسمية',
     clickToPreview: 'انقر للمعاينة',
     zeroBytes: '٠ بايت',
     bytes: 'بايت',
@@ -58,9 +71,30 @@ export const ar_SA: Translations = {
     capture: 'التقاط',
     switchToCamera: 'التبديل إلى الكاميرا {{side}}',
     addImage: 'إضافة صورة',
+    photo: 'صورة',
+    video: 'فيديو',
+    startVideoRecording: 'تسجيل',
+    stopVideoRecording: 'إيقاف',
+    cameraRecording: 'جارٍ التسجيل...',
+    addVideo: 'إضافة فيديو',
+    mirrorCamera: 'عكس',
 
     front: 'الأمامية',
     back: 'الخلفية',
+
+    // ── AudioUploader ─────────────────────────────────────────
+    startRecording: 'بدء التسجيل',
+    stopRecording: 'إيقاف التسجيل',
+    recording: 'جارٍ التسجيل...',
+    addAudio: 'إضافة صوت',
+    deleteRecording: 'حذف التسجيل',
+
+    // ── ScreenCaptureUploader ─────────────────────────────────
+    startScreenCapture: 'بدء تسجيل الشاشة',
+    stopScreenCapture: 'إيقاف التسجيل',
+    screenRecording: 'جارٍ تسجيل الشاشة...',
+    addScreenCapture: 'إضافة تسجيل الشاشة',
+    deleteScreenCapture: 'حذف التسجيل',
 
     poweredBy: 'مدعوم من',
 
@@ -101,9 +135,15 @@ export const ar_SA: Translations = {
     allowedLimitSurpassed: 'تم تجاوز الحد المسموح!',
     fileUnsupportedType: '{{name}} نوعه غير مدعوم!',
     fileTooLargeName: '{{name}} أكبر من {{size}} {{unit}}!',
+    fileTooSmallName: '{{name}} أصغر من {{size}} {{unit}}!',
+    minFileSizeAllowed_one: 'الحد الأدنى {{size}} {{unit}} للملف مطلوب',
+    minFileSizeAllowed_other: 'الحد الأدنى {{size}} {{unit}} للملفات مطلوب',
+    minFileSizeMustBeGreater: 'يجب أن يكون الحد الأدنى لحجم الملف أكبر من 0',
     filePreviouslySelected: '{{name}} تم تحديده سابقاً',
     fileWithUrlPreviouslySelected: 'ملف بهذا الرابط: {{url}} تم تحديده سابقاً',
     errorCompressingFile: 'خطأ في ضغط {{name}}',
+    errorCompressingImage: 'خطأ في ضغط الصورة {{name}}',
+    generatingThumbnails: 'جارٍ إنشاء الصور المصغرة...',
 
     // Integration / Auth errors
     clientIdRequired: 'معرّف العميل مطلوب...',

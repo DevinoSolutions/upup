@@ -33,6 +33,11 @@ export default forwardRef<HTMLDivElement, Props>(function ProgressBar(
                         progressBarClassName,
                         classNames.progressBar,
                     )}
+                    role="progressbar"
+                    aria-valuenow={progress}
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                    aria-label="Upload progress"
                 >
                     <div
                         style={{

@@ -24,6 +24,7 @@ export interface UploadResult {
     key: string
     file: FileWithParams
     httpStatus: number
+    etag?: string
 }
 
 export interface StorageSDK {

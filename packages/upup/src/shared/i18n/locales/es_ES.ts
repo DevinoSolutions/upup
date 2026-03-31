@@ -11,13 +11,25 @@ export const es_ES: Translations = {
     dropbox: 'Dropbox',
     link: 'Enlace',
     camera: 'Cámara',
+    audio: 'Audio',
+    screenCapture: 'Captura de pantalla',
 
     dragFileOr: 'Arrastra tu archivo o',
     dragFilesOr: 'Arrastra tus archivos o',
+    dragFileHere: 'Arrastra tu archivo aquí',
+    dragFilesHere: 'Arrastra tus archivos aquí',
     browseFiles: 'explorar archivos',
     or: 'o',
     selectAFolder: 'seleccionar una carpeta',
     maxFileSizeAllowed_one: 'Tamaño máximo de archivo: {{size}} {{unit}}',
+    minFileSizeDisplay: 'Mín. {{size}} {{unit}}',
+    allowedFileTypes: 'Tipos permitidos: {{types}}',
+    maxFileCount_one: 'Hasta {{limit}} archivo',
+    maxFileCount_other: 'Hasta {{limit}} archivos',
+    minFileCount_one: 'Se requiere al menos {{limit}} archivo',
+    minFileCount_other: 'Se requieren al menos {{limit}} archivos',
+    totalFileSizeExceeded: 'El tamaño total de archivos supera el máximo de {{size}} {{unit}}',
+    maxTotalFileSizeDisplay: 'Tamaño total máximo: {{size}} {{unit}}',
     maxFileSizeAllowed_other: 'Tamaño máximo de archivos: {{size}} {{unit}}',
 
     addDocumentsHere:
@@ -34,6 +46,7 @@ export const es_ES: Translations = {
     uploadFiles_other: 'Subir {{count}} archivos',
 
     removeFile: 'Eliminar archivo',
+    renameFile: 'Haz clic para renombrar',
     clickToPreview: 'Vista previa',
     zeroBytes: '0 bytes',
     bytes: 'bytes',
@@ -58,9 +71,30 @@ export const es_ES: Translations = {
     capture: 'Capturar',
     switchToCamera: 'cambiar a cámara {{side}}',
     addImage: 'Añadir imagen',
+    photo: 'Foto',
+    video: 'Vídeo',
+    startVideoRecording: 'Grabar',
+    stopVideoRecording: 'Detener',
+    cameraRecording: 'Grabando...',
+    addVideo: 'Añadir vídeo',
+    mirrorCamera: 'Espejo',
 
     front: 'frontal',
     back: 'trasera',
+
+    // ── AudioUploader ─────────────────────────────────────────
+    startRecording: 'Iniciar grabación',
+    stopRecording: 'Detener grabación',
+    recording: 'Grabando...',
+    addAudio: 'Agregar audio',
+    deleteRecording: 'Eliminar grabación',
+
+    // ── ScreenCaptureUploader ─────────────────────────────────
+    startScreenCapture: 'Iniciar captura de pantalla',
+    stopScreenCapture: 'Detener captura',
+    screenRecording: 'Grabando pantalla...',
+    addScreenCapture: 'Agregar captura de pantalla',
+    deleteScreenCapture: 'Eliminar grabación',
 
     poweredBy: 'Desarrollado por',
     multipleFilesNotAllowed: 'No se permiten cargas de múltiples archivos',
@@ -101,10 +135,16 @@ export const es_ES: Translations = {
     allowedLimitSurpassed: '¡Se ha superado el límite permitido!',
     fileUnsupportedType: '¡{{name}} tiene un tipo no compatible!',
     fileTooLargeName: '{{name}} es mayor que {{size}} {{unit}}!',
+    fileTooSmallName: '{{name}} es menor que {{size}} {{unit}}!',
+    minFileSizeAllowed_one: 'Se requiere un archivo de mín. {{size}} {{unit}}',
+    minFileSizeAllowed_other: 'Se requieren archivos de mín. {{size}} {{unit}}',
+    minFileSizeMustBeGreater: 'minFileSize debe ser mayor que 0',
     filePreviouslySelected: '{{name}} ya ha sido seleccionado',
     fileWithUrlPreviouslySelected:
         'Un archivo con esta URL: {{url}} ya ha sido seleccionado',
     errorCompressingFile: 'Error al comprimir {{name}}',
+    errorCompressingImage: 'Error al comprimir la imagen {{name}}',
+    generatingThumbnails: 'Generando miniaturas...',
 
     // Integration / Auth errors
     clientIdRequired: 'Se requiere Client ID...',

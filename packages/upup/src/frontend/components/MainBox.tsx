@@ -24,6 +24,7 @@ export default function MainBox() {
         handleDragOver,
         handleDragLeave,
         handleDrop,
+        handlePaste,
     } = useMainBox()
 
     return (
@@ -46,9 +47,13 @@ export default function MainBox() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
+                tabIndex={0}
+                role="region"
+                aria-label="File upload drop zone"
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
                 onDrop={handleDrop}
+                onPaste={handlePaste}
             >
                 <ShouldRender if={!!activeAdapter}>
                     <AdapterView />

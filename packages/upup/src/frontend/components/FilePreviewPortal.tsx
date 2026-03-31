@@ -5,6 +5,7 @@ import React, {
     MouseEventHandler,
     useEffect,
     useMemo,
+    useRef,
     useState,
 } from 'react'
 import { createPortal } from 'react-dom'
@@ -13,6 +14,7 @@ import { useRootContext } from '../context/RootContext'
 import {
     fileGetIsImage,
     fileGetIsText,
+    fileGetIsVideo,
     PREVIEW_MAX_TEXT_SIZE,
     PREVIEW_TEXT_TRUNCATE_LENGTH,
 } from '../lib/file'
@@ -45,10 +47,14 @@ export default memo(
             translations: tr,
         } = useRootContext()
         const isImage = useMemo(() => fileGetIsImage(fileType), [fileType])
+        const isVideo = useMemo(() => fileGetIsVideo(fileType), [fileType])
         const isText = useMemo(
             () => fileGetIsText(fileType, fileName),
             [fileType, fileName],
         )
+        const dialogRef = useRef<HTMLDivElement | null>(null)
+        const previouslyFocusedElementRef = useRef<HTMLElement | null>(null)
+        const { onKeyDown: onPortalKeyDown, ...portalProps } = restProps
 
         const isOversizedText = useMemo(
             () =>
@@ -128,12 +134,102 @@ export default memo(
             }
         }, [fileUrl, isText, isOversizedText])
 
+        useEffect(() => {
+            previouslyFocusedElementRef.current =
+                document.activeElement instanceof HTMLElement
+                    ? document.activeElement
+                    : null
+
+            const dialog = dialogRef.current
+            if (!dialog) return
+
+            const focusableElements = dialog.querySelectorAll<HTMLElement>(
+                [
+                    'button:not([disabled])',
+                    '[href]',
+                    'input:not([disabled])',
+                    'select:not([disabled])',
+                    'textarea:not([disabled])',
+                    '[tabindex]:not([tabindex="-1"])',
+                ].join(','),
+            )
+
+            const initialFocusTarget = focusableElements[0] ?? dialog
+            initialFocusTarget.focus()
+
+            return () => {
+                previouslyFocusedElementRef.current?.focus()
+            }
+        }, [])
+
+        const handleKeyDown: React.KeyboardEventHandler<HTMLDivElement> = e => {
+            onPortalKeyDown?.(e)
+            if (e.defaultPrevented) return
+
+            if (e.key === 'Escape') {
+                e.preventDefault()
+                dialogRef.current?.click()
+                return
+            }
+
+            if (e.key !== 'Tab') return
+
+            const dialog = dialogRef.current
+            if (!dialog) return
+
+            const focusableElements = Array.from(
+                dialog.querySelectorAll<HTMLElement>(
+                    [
+                        'button:not([disabled])',
+                        '[href]',
+                        'input:not([disabled])',
+                        'select:not([disabled])',
+                        'textarea:not([disabled])',
+                        '[tabindex]:not([tabindex="-1"])',
+                    ].join(','),
+                ),
+            )
+
+            if (!focusableElements.length) {
+                e.preventDefault()
+                dialog.focus()
+                return
+            }
+
+            const firstFocusable = focusableElements[0]
+            const lastFocusable =
+                focusableElements[focusableElements.length - 1]
+
+            if (e.shiftKey && document.activeElement === firstFocusable) {
+                e.preventDefault()
+                lastFocusable.focus()
+            } else if (
+                !e.shiftKey &&
+                document.activeElement === lastFocusable
+            ) {
+                e.preventDefault()
+                firstFocusable.focus()
+            }
+        }
+
         return createPortal(
             <div className="upup-scope">
                 <div
                     className="upup-fixed upup-inset-0 upup-z-[2147483647] upup-flex upup-items-center upup-justify-center upup-bg-black/40"
-                    ref={ref}
-                    {...restProps}
+                    {...portalProps}
+                    ref={node => {
+                        dialogRef.current = node
+                        if (typeof ref === 'function') {
+                            ref(node)
+                        } else if (ref) {
+                            ref.current = node
+                        }
+                    }}
+                    role="dialog"
+                    aria-modal="true"
+                    aria-label={`${fileName} preview`}
+                    tabIndex={-1}
+                    onKeyDown={handleKeyDown}
                 >
                     <div className="upup-relative upup-h-[90vh] upup-w-[90vw] upup-p-4">
                         <div
@@ -154,7 +250,15 @@ export default memo(
                                     className="upup-h-full upup-w-full upup-rounded upup-object-contain"
                                 />
                             </ShouldRender>
-                            <ShouldRender if={!isImage}>
+                            <ShouldRender if={!isImage && isVideo}>
+                                <video
+                                    src={fileUrl}
+                                    controls
+                                    playsInline
+                                    className="upup-h-full upup-w-full upup-rounded upup-object-contain"
+                                />
+                            </ShouldRender>
+                            <ShouldRender if={!isImage && !isVideo}>
                                 <ShouldRender if={isText}>
                                     <div className="upup-h-full upup-w-full upup-overflow-auto upup-p-4 upup-font-mono upup-text-xs">
                                         {textLoading && <p>{tr.loading}</p>}

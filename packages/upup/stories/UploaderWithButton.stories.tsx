@@ -34,6 +34,8 @@ const meta = {
                 UploadAdapter.DROPBOX,
                 UploadAdapter.CAMERA,
                 UploadAdapter.LINK,
+                UploadAdapter.AUDIO,
+                UploadAdapter.SCREEN_CAPTURE,
             ],
         },
         showSelectFolderButton: {
@@ -97,6 +99,8 @@ export const UploaderWithButton: Story = {
             UploadAdapter.DROPBOX,
             UploadAdapter.CAMERA,
             UploadAdapter.LINK,
+            UploadAdapter.AUDIO,
+            UploadAdapter.SCREEN_CAPTURE,
         ],
     },
     parameters: {

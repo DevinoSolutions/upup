@@ -16,6 +16,7 @@ import {
     UpupUploaderProps,
     UpupUploaderPropsIcons,
 } from '../../shared/types'
+import { UseInformerReturn } from '../hooks/useInformer'
 import { FilesProgressMap } from '../hooks/useRootProvider'
 
 export enum UploadStatus {
@@ -58,13 +59,45 @@ type ContextProps = Required<
         | 'onFilesDragLeave'
         | 'onFilesDrop'
         | 'onError'
-        | 'dark'
         | 'classNames'
         | 'icons'
         | 'showSelectFolderButton'
+        | 'showRemoveButtonAfterComplete'
+        | 'hideUploadButton'
+        | 'disableLocalFiles'
+        | 'disabled'
+        | 'hideCancelButton'
+        | 'hidePauseResumeButton'
+        | 'hideProgressAfterFinish'
+        | 'hideRetryButton'
+        | 'disableInformer'
+        | 'showSelectedFiles'
+        | 'allowMultipleUploadBatches'
     >
 > &
-    Pick<UpupUploaderProps, 'maxFileSize' | 'maxRetries' | 'resumable'> & {
+    Pick<
+        UpupUploaderProps,
+        | 'maxFileSize'
+        | 'minFileSize'
+        | 'minFiles'
+        | 'maxTotalFileSize'
+        | 'maxRetries'
+        | 'resumable'
+        | 'note'
+        | 'onBeforeUpload'
+        | 'autoOpen'
+        | 'meta'
+        | 'width'
+        | 'height'
+        | 'infoTimeout'
+        | 'reducedMotion'
+        | 'contentDeduplication'
+        | 'stripExifData'
+        | 'heicConversion'
+        | 'checksumVerification'
+    > & {
+        /** Resolved dark mode value (always boolean, 'auto' is resolved by useRootProvider) */
+        dark: boolean
         multiple: boolean
         icons: Required<UpupUploaderPropsIcons>
         imageEditor: ResolvedImageEditorOptions
@@ -88,6 +121,9 @@ export interface IRootContext {
     setIsAddingMore: Dispatch<SetStateAction<boolean>>
 
     handleFileRemove: (fileId: string) => void
+    handleFileRename: (fileId: string, newName: string) => void
+    canReorderFiles: boolean
+    reorderFiles: (sourceId: string, targetId: string) => void
     handleDone: () => void
     handleCancel: () => void
     handlePause: () => void
@@ -104,6 +140,7 @@ export interface IRootContext {
     dropboxConfigs?: DropboxConfigs
     upload: ContextUpload
     props: ContextProps
+    informer: UseInformerReturn
 }
 
 const RootContext = createContext<IRootContext>({

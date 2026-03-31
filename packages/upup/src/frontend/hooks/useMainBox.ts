@@ -1,4 +1,10 @@
-import { DragEventHandler, useCallback, useMemo, useState } from 'react'
+import {
+    ClipboardEventHandler,
+    DragEventHandler,
+    useCallback,
+    useMemo,
+    useState,
+} from 'react'
 import { UploadStatus, useRootContext } from '../context/RootContext'
 
 export default function useMainBox() {
@@ -163,6 +169,24 @@ export default function useMainBox() {
         [disableDragAction, onFilesDrop, setFiles, isProcessing],
     )
 
+    const handlePaste: ClipboardEventHandler<HTMLDivElement> = useCallback(
+        e => {
+            if (disableDragAction || isProcessing) return
+
+            const items = Array.from(e.clipboardData?.items || [])
+            const pastedFiles = items
+                .filter(item => item.kind === 'file')
+                .map(item => item.getAsFile())
+                .filter((f): f is File => f !== null)
+
+            if (!pastedFiles.length) return
+
+            e.preventDefault()
+            setFiles(pastedFiles)
+        },
+        [disableDragAction, isProcessing, setFiles],
+    )
+
     return {
         isDragging,
         absoluteIsDragging,
@@ -170,5 +194,6 @@ export default function useMainBox() {
         handleDragOver,
         handleDragLeave,
         handleDrop,
+        handlePaste,
     }
 }

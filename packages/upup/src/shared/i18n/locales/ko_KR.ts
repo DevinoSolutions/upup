@@ -11,13 +11,25 @@ export const ko_KR: Translations = {
     dropbox: 'Dropbox',
     link: '링크',
     camera: '카메라',
+    audio: '오디오',
+    screenCapture: '화면 캐처',
 
     dragFileOr: '파일을 드래그하거나',
     dragFilesOr: '파일을 드래그하거나',
+    dragFileHere: '파일을 여기에 드래그',
+    dragFilesHere: '파일을 여기에 드래그',
     browseFiles: '파일 찾아보기',
     or: '또는',
     selectAFolder: '폴더 선택',
     maxFileSizeAllowed_one: '최대 {{size}} {{unit}} 파일 허용',
+    minFileSizeDisplay: '최소 {{size}} {{unit}}',
+    allowedFileTypes: '허용 유형: {{types}}',
+    maxFileCount_one: '최대 {{limit}}개 파일',
+    maxFileCount_other: '최대 {{limit}}개 파일',
+    minFileCount_one: '최소 {{limit}}개 파일 필요',
+    minFileCount_other: '최소 {{limit}}개 파일 필요',
+    totalFileSizeExceeded: '총 파일 크기가 최대 {{size}} {{unit}}을(를) 초과합니다',
+    maxTotalFileSizeDisplay: '최대 총 크기: {{size}} {{unit}}',
     maxFileSizeAllowed_other: '최대 {{size}} {{unit}} 파일 허용',
 
     addDocumentsHere:
@@ -34,6 +46,7 @@ export const ko_KR: Translations = {
     uploadFiles_other: '{{count}}개 파일 업로드',
 
     removeFile: '파일 삭제',
+    renameFile: '이름을 변경하려면 클릭',
     clickToPreview: '미리보기',
     zeroBytes: '0 바이트',
     bytes: '바이트',
@@ -58,9 +71,30 @@ export const ko_KR: Translations = {
     capture: '촬영',
     switchToCamera: '{{side}} 카메라로 전환',
     addImage: '이미지 추가',
+    photo: '사진',
+    video: '동영상',
+    startVideoRecording: '녹화',
+    stopVideoRecording: '중지',
+    cameraRecording: '녹화 중...',
+    addVideo: '동영상 추가',
+    mirrorCamera: '거울',
 
     front: '전면',
     back: '후면',
+
+    // ── AudioUploader ─────────────────────────────────────────
+    startRecording: '녹음 시작',
+    stopRecording: '녹음 중지',
+    recording: '녹음 중...',
+    addAudio: '오디오 추가',
+    deleteRecording: '녹음 삭제',
+
+    // ── ScreenCaptureUploader ─────────────────────────────────
+    startScreenCapture: '화면 캐처 시작',
+    stopScreenCapture: '캐처 중지',
+    screenRecording: '화면 녹화 중...',
+    addScreenCapture: '화면 캐처 추가',
+    deleteScreenCapture: '녹화 삭제',
 
     poweredBy: 'Powered by',
     multipleFilesNotAllowed: '여러 파일 업로드는 허용되지 않습니다',
@@ -99,10 +133,16 @@ export const ko_KR: Translations = {
     allowedLimitSurpassed: '허용된 한도를 초과했습니다!',
     fileUnsupportedType: '{{name}}는 지원되지 않는 유형입니다!',
     fileTooLargeName: '{{name}}이(가) {{size}} {{unit}}보다 큽니다!',
+    fileTooSmallName: '{{name}}이(가) {{size}} {{unit}}보다 작습니다!',
+    minFileSizeAllowed_one: '최소 {{size}} {{unit}} 파일이 필요합니다',
+    minFileSizeAllowed_other: '최소 {{size}} {{unit}} 파일이 필요합니다',
+    minFileSizeMustBeGreater: 'minFileSize는 0보다 커야 합니다',
     filePreviouslySelected: '{{name}}이(가) 이미 선택되었습니다',
     fileWithUrlPreviouslySelected:
         '이 URL의 파일: {{url}}이(가) 이미 선택되었습니다',
     errorCompressingFile: '{{name}} 압축 중 오류 발생',
+    errorCompressingImage: '이미지 {{name}} 압축 중 오류 발생',
+    generatingThumbnails: '썸네일 생성 중...',
 
     // Integration / Auth errors
     clientIdRequired: '클라이언트 ID가 필요합니다...',

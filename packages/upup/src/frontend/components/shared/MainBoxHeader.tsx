@@ -20,6 +20,9 @@ export default function MainBoxHeader({ handleCancel }: Readonly<Props>) {
             isProcessing,
             dark,
             classNames,
+            disabled,
+            hideCancelButton,
+            allowMultipleUploadBatches,
             icons: { ContainerAddMoreIcon },
         },
         upload: { uploadStatus },
@@ -43,19 +46,22 @@ export default function MainBoxHeader({ handleCancel }: Readonly<Props>) {
                 classNames.containerHeader,
             )}
         >
-            <button
-                className={cn(
-                    'upup-max-md upup-col-start-1 upup-col-end-3 upup-row-start-2 upup-p-1 upup-text-left upup-text-sm upup-text-blue-600 md:upup-col-end-2 md:upup-row-start-1',
-                    {
-                        'upup-text-[#30C5F7] dark:upup-text-[#30C5F7]': dark,
-                    },
-                    classNames.containerCancelButton,
-                )}
-                onClick={handleCancel}
-                disabled={isUploading || isProcessing}
-            >
-                {cancelText}
-            </button>
+            <ShouldRender if={!hideCancelButton}>
+                <button
+                    className={cn(
+                        'upup-max-md upup-col-start-1 upup-col-end-3 upup-row-start-2 upup-p-1 upup-text-left upup-text-sm upup-text-blue-600 md:upup-col-end-2 md:upup-row-start-1',
+                        {
+                            'upup-text-[#30C5F7] dark:upup-text-[#30C5F7]':
+                                dark,
+                        },
+                        classNames.containerCancelButton,
+                    )}
+                    onClick={handleCancel}
+                    disabled={isUploading || isProcessing || disabled}
+                >
+                    {cancelText}
+                </button>
+            </ShouldRender>
             <span
                 className={cn(
                     'upup-col-span-4 upup-text-center upup-text-sm upup-text-[#6D6D6D] md:upup-col-span-2',
@@ -63,6 +69,7 @@ export default function MainBoxHeader({ handleCancel }: Readonly<Props>) {
                         'upup-text-gray-300 dark:upup-text-gray-300': dark,
                     },
                 )}
+                aria-live="polite"
             >
                 <ShouldRender if={isAddingMore}>
                     {tr.addingMoreFiles}
@@ -73,7 +80,15 @@ export default function MainBoxHeader({ handleCancel }: Readonly<Props>) {
                     })}
                 </ShouldRender>
             </span>
-            <ShouldRender if={!isAddingMore && limit > 1 && !isLimitReached}>
+            <ShouldRender
+                if={
+                    !isAddingMore &&
+                    limit > 1 &&
+                    !isLimitReached &&
+                    (allowMultipleUploadBatches ||
+                        uploadStatus !== UploadStatus.SUCCESSFUL)
+                }
+            >
                 <button
                     className={cn(
                         'upup-col-start-3 upup-col-end-5 upup-flex upup-items-center upup-justify-end upup-gap-1 upup-rounded-md upup-border upup-border-dashed upup-border-blue-400/50 upup-px-2 upup-py-1 upup-text-sm upup-text-blue-600 md:upup-col-start-4',
@@ -84,7 +99,7 @@ export default function MainBoxHeader({ handleCancel }: Readonly<Props>) {
                         classNames.containerAddMoreButton,
                     )}
                     onClick={() => setIsAddingMore(true)}
-                    disabled={isUploading || isProcessing}
+                    disabled={isUploading || isProcessing || disabled}
                 >
                     <ContainerAddMoreIcon /> {tr.addMore}
                 </button>

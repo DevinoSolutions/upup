@@ -1,17 +1,21 @@
 import type { Translations } from '../../shared/i18n/types'
 import { UploadAdapter } from '../../shared/types'
+import AudioUploader from '../components/AudioUploader'
 import CameraUploader from '../components/CameraUploader'
 import DropboxUploader from '../components/DropboxUploader'
 import GoogleDriveUploader from '../components/GoogleDriveUploader'
 import {
+    AudioIcon,
     CameraIcon,
     DropBoxIcon,
     GoogleDriveIcon,
     LinkIcon,
     MyDeviceIcon,
     OneDriveIcon,
+    ScreenCastIcon,
 } from '../components/Icons'
 import OneDriveUploader from '../components/OneDriveUploader'
+import ScreenCaptureUploader from '../components/ScreenCaptureUploader'
 import UrlUploader from '../components/UrlUploader'
 
 /** Translation key used for each adapter's display name */
@@ -22,6 +26,8 @@ export const adapterNameKeys: Record<UploadAdapter, keyof Translations> = {
     [UploadAdapter.DROPBOX]: 'dropbox',
     [UploadAdapter.LINK]: 'link',
     [UploadAdapter.CAMERA]: 'camera',
+    [UploadAdapter.AUDIO]: 'audio',
+    [UploadAdapter.SCREEN_CAPTURE]: 'screenCapture',
 }
 
 export const uploadAdapterObject = {
@@ -60,6 +66,18 @@ export const uploadAdapterObject = {
         nameKey: 'camera' as keyof Translations,
         Icon: CameraIcon,
         Component: CameraUploader,
+    },
+    [UploadAdapter.AUDIO]: {
+        id: UploadAdapter.AUDIO,
+        nameKey: 'audio' as keyof Translations,
+        Icon: AudioIcon,
+        Component: AudioUploader,
+    },
+    [UploadAdapter.SCREEN_CAPTURE]: {
+        id: UploadAdapter.SCREEN_CAPTURE,
+        nameKey: 'screenCapture' as keyof Translations,
+        Icon: ScreenCastIcon,
+        Component: ScreenCaptureUploader,
     },
     // {
     //     id: UploadAdapter.UNSPLASH,

@@ -5,6 +5,7 @@ import {
     fileCanPreviewText,
     fileGetExtension,
     fileGetIsText,
+    fileGetIsVideo,
     fileIs3D,
 } from '../lib/file'
 import { cn } from '../lib/tailwind'
@@ -43,6 +44,7 @@ export default memo(
         const is3D = useMemo(() => {
             return fileIs3D(extension?.toLowerCase() || '')
         }, [extension])
+        const isVideo = useMemo(() => fileGetIsVideo(fileType), [fileType])
 
         // Large text files (e.g. 3MB+ JSON) must not be rendered via <object> tags
         // as the browser will attempt to parse and lay out the entire content,
@@ -66,16 +68,28 @@ export default memo(
         return (
             <>
                 <ShouldRender if={!canPreview}>
-                    <object
-                        data={fileUrl}
-                        width="0%"
-                        height="0%"
-                        name={fileName}
-                        type={fileType}
-                        onLoad={() => setCanPreview(true)}
-                    >
-                        <p>{tr.loading}</p>
-                    </object>
+                    <ShouldRender if={isVideo}>
+                        <video
+                            src={fileUrl}
+                            preload="metadata"
+                            muted
+                            playsInline
+                            className="upup-hidden"
+                            onLoadedData={() => setCanPreview(true)}
+                        />
+                    </ShouldRender>
+                    <ShouldRender if={!isVideo}>
+                        <object
+                            data={fileUrl}
+                            width="0%"
+                            height="0%"
+                            name={fileName}
+                            type={fileType}
+                            onLoad={() => setCanPreview(true)}
+                        >
+                            <p>{tr.loading}</p>
+                        </object>
+                    </ShouldRender>
                     <FileIcon extension={extension} />
                 </ShouldRender>
 
@@ -96,16 +110,27 @@ export default memo(
                             }`,
                         )}
                     >
-                        <object
-                            data={fileUrl}
-                            width="100%"
-                            height="100%"
-                            name={fileName}
-                            type={fileType}
-                            className="upup-absolute upup-h-full upup-w-full"
-                        >
-                            <p>{tr.loading}</p>
-                        </object>
+                        <ShouldRender if={isVideo}>
+                            <video
+                                src={fileUrl}
+                                preload="metadata"
+                                muted
+                                playsInline
+                                className="upup-absolute upup-h-full upup-w-full upup-object-cover"
+                            />
+                        </ShouldRender>
+                        <ShouldRender if={!isVideo}>
+                            <object
+                                data={fileUrl}
+                                width="100%"
+                                height="100%"
+                                name={fileName}
+                                type={fileType}
+                                className="upup-absolute upup-h-full upup-w-full"
+                            >
+                                <p>{tr.loading}</p>
+                            </object>
+                        </ShouldRender>
                     </div>
                 </ShouldRender>
             </>

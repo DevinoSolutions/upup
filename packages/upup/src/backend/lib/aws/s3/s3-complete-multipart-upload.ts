@@ -40,11 +40,11 @@ export default async function s3CompleteMultipartUpload({
             },
         })
 
-        await client.send(command)
+        const result = await client.send(command)
 
         const publicUrl = await s3GenerateSignedUrl(s3ClientConfig, key, Bucket)
 
-        return { key, publicUrl }
+        return { key, publicUrl, etag: result.ETag }
     } catch (error) {
         if (error instanceof UploadError) throw error
 

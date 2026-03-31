@@ -9,18 +9,23 @@ export default function useAdapterSelector() {
         setActiveAdapter,
         setFiles,
         translations,
-        props: { uploadAdapters, onIntegrationClick },
+        props: { uploadAdapters, onIntegrationClick, disableLocalFiles },
     } = useRootContext()
 
     const chosenAdapters = useMemo(
         () =>
             Object.values(uploadAdapterObject)
                 .filter(item => uploadAdapters.includes(item.id))
+                .filter(
+                    item =>
+                        !disableLocalFiles ||
+                        item.id !== UploadAdapter.INTERNAL,
+                )
                 .map(item => ({
                     ...item,
                     name: translations[item.nameKey],
                 })),
-        [uploadAdapters, translations],
+        [uploadAdapters, translations, disableLocalFiles],
     )
 
     const handleAdapterClick = useCallback(

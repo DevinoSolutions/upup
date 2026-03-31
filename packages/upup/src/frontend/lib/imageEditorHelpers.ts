@@ -1,5 +1,6 @@
 import { FileWithParams, ImageEditorOptions } from '../../shared/types'
 import { revokeFileUrl } from './file'
+import { copyPreservedFileMetadata } from './fileOrder'
 
 type FilerobotTheme = {
     palette: Record<string, string>
@@ -48,11 +49,8 @@ export function blobToFileWithParams(
 
     // Preserve file identity so the upload pipeline sees the same entry.
     const fileWithParams = file as FileWithParams
-    fileWithParams.id = original.id
     fileWithParams.url = URL.createObjectURL(file)
-    fileWithParams.key = original.key
-    fileWithParams.fileHash = original.fileHash
-    fileWithParams.thumbnail = original.thumbnail
+    copyPreservedFileMetadata(fileWithParams, original)
 
     return fileWithParams
 }

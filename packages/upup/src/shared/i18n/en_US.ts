@@ -13,15 +13,27 @@ export const en_US: Translations = {
     dropbox: 'Dropbox',
     link: 'Link',
     camera: 'Camera',
+    audio: 'Audio',
+    screenCapture: 'Screen Capture',
 
     // ── Drop-zone / AdapterSelector ───────────────────────────
     dragFileOr: 'Drag your file or',
     dragFilesOr: 'Drag your files or',
+    dragFileHere: 'Drag your file here',
+    dragFilesHere: 'Drag your files here',
     browseFiles: 'browse files',
     or: 'or',
     selectAFolder: 'select a folder',
     maxFileSizeAllowed_one: 'Max {{size}} {{unit}} file is allowed',
     maxFileSizeAllowed_other: 'Max {{size}} {{unit}} files are allowed',
+    minFileSizeDisplay: 'Min {{size}} {{unit}}',
+    allowedFileTypes: 'Allowed types: {{types}}',
+    maxFileCount_one: 'Up to {{limit}} file',
+    maxFileCount_other: 'Up to {{limit}} files',
+    minFileCount_one: 'At least {{limit}} file required',
+    minFileCount_other: 'At least {{limit}} files required',
+    totalFileSizeExceeded: 'Total file size exceeds the maximum of {{size}} {{unit}}',
+    maxTotalFileSizeDisplay: 'Max total size: {{size}} {{unit}}',
 
     // ── UpupUploader (root) ───────────────────────────────────
     addDocumentsHere:
@@ -41,6 +53,7 @@ export const en_US: Translations = {
 
     // ── FilePreview ───────────────────────────────────────────
     removeFile: 'Remove file',
+    renameFile: 'Click to rename',
     clickToPreview: 'Click to preview',
     zeroBytes: '0 Byte',
     bytes: 'Bytes',
@@ -70,10 +83,31 @@ export const en_US: Translations = {
     capture: 'Capture',
     switchToCamera: 'switch to {{side}}',
     addImage: 'Add Image',
+    photo: 'Photo',
+    video: 'Video',
+    startVideoRecording: 'Record',
+    stopVideoRecording: 'Stop',
+    cameraRecording: 'Recording...',
+    addVideo: 'Add Video',
+    mirrorCamera: 'Mirror',
 
     // ── Camera sides ──────────────────────────────────────────
     front: 'front',
     back: 'back',
+
+    // ── AudioUploader ─────────────────────────────────────────
+    startRecording: 'Start Recording',
+    stopRecording: 'Stop Recording',
+    recording: 'Recording...',
+    addAudio: 'Add Audio',
+    deleteRecording: 'Delete Recording',
+
+    // ── ScreenCaptureUploader ─────────────────────────────────
+    startScreenCapture: 'Start Screen Capture',
+    stopScreenCapture: 'Stop Capture',
+    screenRecording: 'Recording Screen...',
+    addScreenCapture: 'Add Screen Capture',
+    deleteScreenCapture: 'Delete Recording',
 
     // ── Powered by ────────────────────────────────────────────
     poweredBy: 'Powered by',
@@ -115,10 +149,16 @@ export const en_US: Translations = {
     allowedLimitSurpassed: 'Allowed limit has been surpassed!',
     fileUnsupportedType: '{{name}} has an unsupported type!',
     fileTooLargeName: '{{name}} is larger than {{size}} {{unit}}!',
+    fileTooSmallName: '{{name}} is smaller than {{size}} {{unit}}!',
+    minFileSizeAllowed_one: 'Min {{size}} {{unit}} file is required',
+    minFileSizeAllowed_other: 'Min {{size}} {{unit}} files are required',
+    minFileSizeMustBeGreater: 'minFileSize must be greater than 0',
     filePreviouslySelected: '{{name}} has previously been selected',
     fileWithUrlPreviouslySelected:
         'A file with this url: {{url}} has previously been selected',
     errorCompressingFile: 'Error compressing {{name}}',
+    errorCompressingImage: 'Error compressing image {{name}}',
+    generatingThumbnails: 'Generating thumbnails...',
 
     // Integration / Auth errors
     clientIdRequired: 'Client ID is required...',

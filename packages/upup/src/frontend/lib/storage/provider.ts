@@ -1,3 +1,4 @@
+import * as tus from 'tus-js-client'
 import { en_US, mergeTranslations, t } from '../../../shared/i18n'
 import type { Translations } from '../../../shared/i18n/types'
 import {
@@ -42,6 +43,7 @@ export class ProviderSDK implements StorageSDK {
     private readonly translations: Translations
     private uploadCount = 0
     private currentXhr: XMLHttpRequest | null = null
+    private currentTusUpload: tus.Upload | null = null
     private _paused = false
     private _pauseResolve: (() => void) | null = null
     private _pausePromise: Promise<void> | null = null
@@ -64,6 +66,13 @@ export class ProviderSDK implements StorageSDK {
         )
     }
 
+    /**
+     * Determine whether to use tus protocol upload.
+     */
+    private shouldUseTus(): boolean {
+        return this.config.resumable?.mode === 'tus'
+    }
+
     async upload(
         file: FileWithParams,
         options = {} as UploadOptions,
@@ -77,6 +86,9 @@ export class ProviderSDK implements StorageSDK {
 
             options.onFileUploadStart?.(file)
 
+            if (this.shouldUseTus()) {
+                return await this.tusUpload(file, options)
+            }
             if (this.shouldUseMultipart()) {
                 return await this.multipartUpload(file, options)
             }
@@ -87,9 +99,13 @@ export class ProviderSDK implements StorageSDK {
     }
 
     /**
-     * Abort any in-flight XHR request.
+     * Abort any in-flight XHR or tus upload.
      */
     abort(): void {
+        if (this.currentTusUpload) {
+            this.currentTusUpload.abort(true)
+            this.currentTusUpload = null
+        }
         if (this.currentXhr) {
             this.currentXhr.abort()
             this.currentXhr = null
@@ -97,25 +113,35 @@ export class ProviderSDK implements StorageSDK {
     }
 
     /**
-     * Pause multipart upload — blocks between parts without aborting the current XHR.
+     * Pause upload — for multipart, blocks between parts; for tus, aborts the HTTP request
+     * so it can be resumed from where it left off.
      */
     pause(): void {
         if (this._paused) return
         this._paused = true
-        this._pausePromise = new Promise<void>(resolve => {
-            this._pauseResolve = resolve
-        })
+        if (this.currentTusUpload) {
+            this.currentTusUpload.abort()
+        } else {
+            this._pausePromise = new Promise<void>(resolve => {
+                this._pauseResolve = resolve
+            })
+        }
     }
 
     /**
-     * Resume a paused multipart upload.
+     * Resume a paused upload — for multipart, unblocks the part loop; for tus, restarts
+     * the tus upload from the last offset.
      */
     resume(): void {
         if (!this._paused) return
         this._paused = false
-        this._pauseResolve?.()
-        this._pauseResolve = null
-        this._pausePromise = null
+        if (this.currentTusUpload) {
+            this.currentTusUpload.start()
+        } else {
+            this._pauseResolve?.()
+            this._pauseResolve = null
+            this._pausePromise = null
+        }
     }
 
     get isPaused(): boolean {
@@ -143,6 +169,122 @@ export class ProviderSDK implements StorageSDK {
         removeSession(fingerprint)
     }
 
+    // ─── Tus protocol upload ─────────────────────────────────────────
+
+    private tusUpload(
+        file: FileWithParams,
+        options: UploadOptions,
+    ): Promise<UploadResult> {
+        return new Promise<UploadResult>((resolve, reject) => {
+            const tusConfig =
+                this.config.resumable?.mode === 'tus'
+                    ? this.config.resumable
+                    : undefined
+            if (!tusConfig) {
+                reject(
+                    new UploadError(
+                        'Tus configuration is missing',
+                        UploadErrorType.FILE_VALIDATION_ERROR,
+                    ),
+                )
+                return
+            }
+
+            this.uploadCount++
+
+            const metadata: Record<string, string> = {
+                filename: file.name,
+                filetype: file.type || 'application/octet-stream',
+                ...tusConfig.metadata,
+                ...options.metadata,
+            }
+
+            const upload = new tus.Upload(file, {
+                endpoint: tusConfig.endpoint,
+                chunkSize: tusConfig.chunkSize,
+                retryDelays: tusConfig.retryDelays ?? [0, 1000, 3000, 5000],
+                storeFingerprintForResuming:
+                    tusConfig.storeFingerprintForResuming ?? true,
+                removeFingerprintOnSuccess:
+                    tusConfig.removeFingerprintOnSuccess ?? true,
+                headers: tusConfig.headers,
+                metadata,
+                parallelUploads: tusConfig.parallelUploads,
+
+                onProgress: (loaded: number, total: number) => {
+                    options.onFileUploadProgress?.(file, {
+                        loaded,
+                        total,
+                        percentage: total > 0 ? (loaded / total) * 100 : 0,
+                    })
+                    options.onFilesUploadProgress?.(this.uploadCount)
+                },
+
+                onSuccess: () => {
+                    this.currentTusUpload = null
+                    // Extract the key from the tus upload URL
+                    const uploadUrl = upload.url ?? ''
+                    const key = this.extractTusKey(uploadUrl)
+                    file.key = key
+
+                    if (options.sendEvent) {
+                        options.onFileUploadComplete?.(file, key)
+                    }
+
+                    resolve({
+                        key,
+                        file,
+                        httpStatus: 200,
+                    })
+                },
+
+                onError: (error: tus.DetailedError) => {
+                    this.currentTusUpload = null
+                    reject(
+                        new UploadError(
+                            error.message ||
+                                t(
+                                    this.translations
+                                        .networkErrorDuringUpload,
+                                    {
+                                        status: 'unknown',
+                                        statusText: 'Tus upload failed',
+                                    },
+                                ),
+                            UploadErrorType.UNKNOWN_UPLOAD_ERROR,
+                            true,
+                        ),
+                    )
+                },
+            })
+
+            this.currentTusUpload = upload
+
+            // Check for previous uploads to resume, then start
+            upload.findPreviousUploads().then(previousUploads => {
+                if (previousUploads.length > 0) {
+                    upload.resumeFromPreviousUpload(previousUploads[0])
+                }
+                upload.start()
+            })
+        })
+    }
+
+    /**
+     * Extract a storage key from the tus upload URL.
+     * Typically the last path segment(s) of the URL returned by the tus server.
+     */
+    private extractTusKey(uploadUrl: string): string {
+        try {
+            const url = new URL(uploadUrl)
+            // Remove leading slash and return the path as the key
+            return url.pathname.replace(/^\//, '')
+        } catch {
+            // Fallback: return the raw URL if parsing fails
+            return uploadUrl
+        }
+    }
+
     // ─── Single PUT upload (existing behavior) ───────────────────────
 
     private async singleUpload(
@@ -164,6 +306,9 @@ export class ProviderSDK implements StorageSDK {
 
         if (!uploadResponse.ok)
             throw new Error(`status ${uploadResponse.status}`)
+        const etag =
+            uploadResponse.headers.get('ETag')?.replace(/"/g, '') ?? undefined
+        file.etag = etag
         if (options.sendEvent) {
             options.onFileUploadComplete?.(file, presignedData.key)
         }
@@ -188,6 +333,7 @@ export class ProviderSDK implements StorageSDK {
             key: presignedData.key,
             file,
             httpStatus: uploadResponse.status,
+            etag,
         }
     }
 
@@ -365,6 +511,7 @@ export class ProviderSDK implements StorageSDK {
         // Step 4: Cleanup session
         removeSession(fingerprint)
 
+        file.etag = completeResponse.etag?.replace(/"/g, '')
         if (options.sendEvent) {
             options.onFileUploadComplete?.(file, completeResponse.key)
         }
@@ -393,6 +540,7 @@ export class ProviderSDK implements StorageSDK {
             key: completeResponse.key,
             file,
             httpStatus: 200,
+            etag: completeResponse.etag?.replace(/"/g, ''),
         }
     }
 
@@ -636,12 +784,21 @@ export class ProviderSDK implements StorageSDK {
             )
         }
 
-        // Validate resumable config
+        // Validate tus config
         if (this.config.resumable?.mode === 'tus') {
-            throw new UploadError(
-                'Tus resumable uploads are not yet supported. Use mode: "multipart".',
-                UploadErrorType.FILE_VALIDATION_ERROR,
-            )
+            try {
+                new URL(this.config.resumable.endpoint)
+            } catch {
+                throw new UploadError(
+                    t(this.translations.invalidTokenEndpoint, {
+                        tokenEndpoint: String(
+                            this.config.resumable.endpoint,
+                        ),
+                        error: 'Invalid tus endpoint URL',
+                    }),
+                    UploadErrorType.FILE_VALIDATION_ERROR,
+                )
+            }
         }
 
         // Validate constraints if present
