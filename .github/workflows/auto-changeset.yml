@@ -1,0 +1,145 @@
+name: Auto Changeset
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - 'packages/upup/**'
+
+permissions:
+  contents: write
+  pull-requests: write
+  models: read
+
+concurrency:
+  group: auto-changeset-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  auto-changeset:
+    runs-on: ubuntu-latest
+    # Skip if the commit was made by the changeset bot or this workflow
+    if: >
+      !contains(github.event.head_commit.message, '[skip changeset]') &&
+      !contains(github.event.head_commit.message, 'Version Packages')
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Check for existing changesets
+        id: check
+        run: |
+          CHANGESET_FILES=$(find .changeset -name '*.md' ! -name 'README.md' | head -1)
+          if [ -n "$CHANGESET_FILES" ]; then
+            echo "has_changeset=true" >> $GITHUB_OUTPUT
+            echo "✅ Changeset already exists — skipping auto-generation."
+          else
+            echo "has_changeset=false" >> $GITHUB_OUTPUT
+            echo "📝 No changeset found — will auto-generate one."
+          fi
+
+      - name: Get commit diff
+        if: steps.check.outputs.has_changeset == 'false'
+        id: diff
+        run: |
+          # Get the diff of the last merge/push vs the previous commit
+          DIFF=$(git log -1 --pretty=format:"%B" && echo "---" && git diff HEAD~1 HEAD --stat -- packages/upup/)
+          # Truncate to ~3000 chars to stay within token limits
+          DIFF=$(echo "$DIFF" | head -80)
+          echo "diff<<DIFF_EOF" >> $GITHUB_OUTPUT
+          echo "$DIFF" >> $GITHUB_OUTPUT
+          echo "DIFF_EOF" >> $GITHUB_OUTPUT
+
+      - name: Generate AI release summary
+        if: steps.check.outputs.has_changeset == 'false'
+        id: ai
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const diff = `${{ steps.diff.outputs.diff }}`;
+
+            const prompt = `You are a developer writing a changelog entry for an npm package called "upup-react-file-uploader" (a React file upload component).
+
+            Based on the following git commit message and diff stats, write a concise changelog summary (2-4 bullet points, each ≤100 chars). Use past tense. Focus on what changed for the end user, not internal details. Do NOT include the version number.
+
+            Example format:
+            - Added retry logic for failed chunked uploads
+            - Fixed progress bar not updating on slow connections
+            - Improved TypeScript type exports
+
+            Commit info and diff:
+            ${diff}`;
+
+            try {
+              const response = await fetch("https://models.github.ai/inference/chat/completions", {
+                method: "POST",
+                headers: {
+                  "Authorization": `Bearer ${process.env.GITHUB_TOKEN}`,
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  model: "openai/gpt-4o-mini",
+                  messages: [{ role: "user", content: prompt }],
+                  max_tokens: 300,
+                  temperature: 0.3,
+                }),
+              });
+
+              if (!response.ok) {
+                const errText = await response.text();
+                core.warning(`AI request failed (${response.status}): ${errText}`);
+                core.setOutput("summary", "- Bug fixes and improvements");
+                return;
+              }
+
+              const data = await response.json();
+              const summary = data.choices?.[0]?.message?.content?.trim() || "- Bug fixes and improvements";
+              core.setOutput("summary", summary);
+              core.info(`AI summary:\n${summary}`);
+            } catch (err) {
+              core.warning(`AI generation failed: ${err.message}`);
+              core.setOutput("summary", "- Bug fixes and improvements");
+            }
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create changeset file
+        if: steps.check.outputs.has_changeset == 'false'
+        run: |
+          # Generate a random changeset name
+          CHANGESET_NAME="auto-$(date +%s)-$(shuf -i 1000-9999 -n 1)"
+
+          cat > ".changeset/${CHANGESET_NAME}.md" << 'CHANGESET_EOF'
+          ---
+          "upup-react-file-uploader": patch
+          ---
+
+          ${{ steps.ai.outputs.summary }}
+          CHANGESET_EOF
+
+          echo "📝 Created .changeset/${CHANGESET_NAME}.md"
+          cat ".changeset/${CHANGESET_NAME}.md"
+
+      - name: Commit and push changeset
+        if: steps.check.outputs.has_changeset == 'false'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .changeset/*.md
+          git commit -m "ci: auto-generate changeset [skip changeset]"
+          git push
