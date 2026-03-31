@@ -29,6 +29,9 @@ storybook-static
 .idea
 .vscode
 
+# Claude Code
+.claude/
+
 # Misc
 *.tgz
 
