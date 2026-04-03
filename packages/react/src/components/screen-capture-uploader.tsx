@@ -17,8 +17,6 @@ export default function ScreenCaptureUploader() {
         stopRecording,
         deleteRecording,
         handleAddScreenCapture,
-        dark,
-        classNames,
         icons,
     } = useScreenCapture()
 
@@ -26,20 +24,15 @@ export default function ScreenCaptureUploader() {
 
     return (
         <div
-            className={cn(
-                'upup-flex upup-h-full upup-w-full upup-flex-col upup-items-center upup-justify-center upup-gap-4 upup-px-3 upup-py-4',
-                classNames.screenCaptureContainer,
-            )}
+            className="upup-flex upup-h-full upup-w-full upup-flex-col upup-items-center upup-justify-center upup-gap-4 upup-px-3 upup-py-4"
+            data-upup-slot="screenCaptureUploader.root"
         >
             {/* Idle state */}
             {!isRecording && !videoUrl && (
                 <div className="upup-flex upup-flex-1 upup-flex-col upup-items-center upup-justify-center upup-gap-4">
                     <button
-                        className={cn(
-                            'upup-flex upup-flex-col upup-items-center upup-justify-center upup-gap-2 upup-rounded-lg upup-bg-blue-600 upup-px-6 upup-py-4 upup-text-white upup-shadow-lg upup-transition-all upup-duration-300 hover:upup-bg-blue-700',
-                            dark && 'upup-bg-[#59D1F9]',
-                            classNames.screenCaptureStartButton,
-                        )}
+                        className="upup-flex upup-flex-col upup-items-center upup-justify-center upup-gap-2 upup-rounded-lg upup-px-6 upup-py-4 upup-text-white upup-shadow-lg upup-transition-all upup-duration-300"
+                        style={{ backgroundColor: 'var(--upup-color-primary)' }}
                         onClick={startRecording}
                         type="button"
                     >
@@ -56,25 +49,18 @@ export default function ScreenCaptureUploader() {
                         ref={videoRef}
                         autoPlay
                         muted
-                        className={cn(
-                            'upup-max-h-48 upup-w-full upup-max-w-md upup-rounded-lg upup-bg-black/5 upup-shadow-md',
-                            dark && 'upup-bg-white/5',
-                            classNames.screenCapturePreview,
-                        )}
+                        className="upup-max-h-48 upup-w-full upup-max-w-md upup-rounded-lg upup-shadow-md"
+                        style={{ backgroundColor: 'var(--upup-color-surface-alt)' }}
+                        data-upup-slot="screenCaptureUploader.preview"
                     />
                     <span
-                        className={cn(
-                            'upup-text-sm upup-font-medium upup-text-red-500',
-                            dark && 'upup-text-red-400',
-                        )}
+                        className="upup-text-sm upup-font-medium"
+                        style={{ color: 'var(--upup-color-danger)' }}
                     >
                         {t('screenCapture.screenRecording')} {formattedDuration}
                     </span>
                     <button
-                        className={cn(
-                            'upup-flex upup-items-center upup-gap-2 upup-rounded-md upup-bg-gray-700 upup-px-4 upup-py-2 upup-text-white upup-transition-all upup-duration-300 hover:upup-bg-gray-800',
-                            classNames.screenCaptureStopButton,
-                        )}
+                        className="upup-flex upup-items-center upup-gap-2 upup-rounded-md upup-bg-gray-700 upup-px-4 upup-py-2 upup-text-white upup-transition-all upup-duration-300 hover:upup-bg-gray-800"
                         onClick={stopRecording}
                         type="button"
                     >
@@ -91,31 +77,26 @@ export default function ScreenCaptureUploader() {
                         ref={previewRef}
                         src={videoUrl ?? undefined}
                         controls
-                        className={cn(
-                            'upup-max-h-48 upup-w-full upup-max-w-md upup-rounded-lg upup-shadow-md',
-                            dark && 'upup-bg-white/5',
-                            classNames.screenCapturePreview,
-                        )}
+                        className="upup-max-h-48 upup-w-full upup-max-w-md upup-rounded-lg upup-shadow-md"
+                        style={{ backgroundColor: 'var(--upup-color-surface-alt)' }}
+                        data-upup-slot="screenCaptureUploader.preview"
                     />
                     <div className="upup-flex upup-gap-3">
                         <button
-                            className={cn(
-                                'upup-flex upup-items-center upup-gap-2 upup-rounded-md upup-bg-blue-600 upup-px-4 upup-py-2 upup-text-white upup-transition-all upup-duration-300 hover:upup-bg-blue-700',
-                                dark && 'upup-bg-[#59D1F9]',
-                                classNames.screenCaptureAddButton,
-                            )}
+                            className="upup-flex upup-items-center upup-gap-2 upup-rounded-md upup-px-4 upup-py-2 upup-text-white upup-transition-all upup-duration-300"
+                            style={{ backgroundColor: 'var(--upup-color-primary)' }}
                             onClick={handleAddScreenCapture}
                             type="button"
+                            data-upup-slot="screenCaptureUploader.addButton"
                         >
                             {t('screenCapture.addScreenCapture')}
                         </button>
                         <button
-                            className={cn(
-                                'upup-flex upup-items-center upup-gap-2 upup-rounded-md upup-bg-red-500 upup-px-4 upup-py-2 upup-text-white upup-transition-all upup-duration-300 hover:upup-bg-red-600',
-                                classNames.screenCaptureDeleteButton,
-                            )}
+                            className="upup-flex upup-items-center upup-gap-2 upup-rounded-md upup-px-4 upup-py-2 upup-text-white upup-transition-all upup-duration-300"
+                            style={{ backgroundColor: 'var(--upup-color-danger)' }}
                             onClick={deleteRecording}
                             type="button"
+                            data-upup-slot="screenCaptureUploader.deleteButton"
                         >
                             {ScreenCaptureDeleteIcon && <ScreenCaptureDeleteIcon />}
                             <span>{t('screenCapture.deleteScreenCapture')}</span>

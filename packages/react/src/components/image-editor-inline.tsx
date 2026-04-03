@@ -91,7 +91,8 @@ function EditorWrapper({
  */
 export default memo(function ImageEditorInline(props: Props) {
     const { file, onClose, onSave } = props
-    const { dark } = useUploaderContext()
+    const { resolvedTheme } = useUploaderContext()
+    const dark = resolvedTheme.mode === 'dark'
 
     const containerRef = useRef<HTMLDivElement>(null)
 

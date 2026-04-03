@@ -59,8 +59,7 @@ export default memo(function FilePreview(props: Props) {
         removeFile,
         status,
         files,
-        dark,
-        classNames,
+        resolvedTheme,
         icons: { FileDeleteIcon },
     } = useUploaderContext()
 
@@ -133,14 +132,7 @@ export default memo(function FilePreview(props: Props) {
                 className={cn(
                     'upup-relative upup-h-[145px] upup-w-[145px] upup-overflow-hidden upup-rounded-lg upup-bg-white upup-shadow-sm',
                     'upup-bg-contain upup-bg-center upup-bg-no-repeat',
-                    {
-                        [classNames.fileThumbnailMultiple!]:
-                            classNames.fileThumbnailMultiple &&
-                            files.length > 1,
-                        [classNames.fileThumbnailSingle!]:
-                            classNames.fileThumbnailSingle &&
-                            files.length === 1,
-                    },
+                    {},
                 )}
                 style={
                     isImage
@@ -158,7 +150,6 @@ export default memo(function FilePreview(props: Props) {
                             fileUrl={file.url ?? ''}
                             fileSize={file.size}
                             allowPreview={allowPreview}
-                            classNames={classNames}
                         />
                     </div>
                 )}
@@ -199,7 +190,6 @@ export default memo(function FilePreview(props: Props) {
                             'hover:upup-bg-white hover:upup-text-red-700',
                             'upup-ring-1 upup-ring-black/5',
                             'disabled:upup-cursor-not-allowed disabled:upup-opacity-50',
-                            classNames.fileDeleteButton,
                         )}
                         onClick={onHandleFileRemove}
                         type="button"

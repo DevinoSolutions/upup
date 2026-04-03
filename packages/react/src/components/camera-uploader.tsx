@@ -20,8 +20,6 @@ export default function CameraUploader() {
         webcamRef,
         facingMode,
         countdown,
-        dark,
-        classNames,
         icons,
         // Video recording
         mode,
@@ -53,24 +51,22 @@ export default function CameraUploader() {
         <div className="upup-flex upup-h-full upup-w-full upup-flex-col upup-justify-center upup-overflow-auto upup-px-3 upup-py-2">
             {/* Photo / Video mode toggle */}
             <div
-                className={cn(
-                    'upup-flex upup-gap-1 upup-rounded-lg upup-p-1',
-                    dark ? 'upup-bg-gray-700' : 'upup-bg-gray-200',
-                    classNames.cameraModeToggle,
-                )}
+                className="upup-flex upup-gap-1 upup-rounded-lg upup-p-1"
+                style={{ backgroundColor: 'var(--upup-color-surface-alt)' }}
+                data-upup-slot="cameraUploader.modeToggle"
             >
                 <button
                     type="button"
                     className={cn(
                         'upup-flex-1 upup-rounded-md upup-py-1 upup-text-sm upup-font-medium upup-transition-all',
                         isPhoto
-                            ? dark
-                                ? 'upup-bg-gray-800 upup-text-white upup-shadow-sm'
-                                : 'upup-bg-white upup-text-gray-900 upup-shadow-sm'
-                            : dark
-                              ? 'upup-text-gray-400 hover:upup-text-gray-300'
-                              : 'upup-text-gray-500 hover:upup-text-gray-700',
+                            ? 'upup-shadow-sm'
+                            : 'upup-opacity-60',
                     )}
+                    style={{
+                        backgroundColor: isPhoto ? 'var(--upup-color-surface)' : 'transparent',
+                        color: isPhoto ? 'var(--upup-color-text)' : 'var(--upup-color-text-muted)',
+                    }}
                     onClick={() => setMode('photo')}
                     disabled={isRecording}
                 >
@@ -81,13 +77,13 @@ export default function CameraUploader() {
                     className={cn(
                         'upup-flex-1 upup-rounded-md upup-py-1 upup-text-sm upup-font-medium upup-transition-all',
                         isVideo
-                            ? dark
-                                ? 'upup-bg-gray-800 upup-text-white upup-shadow-sm'
-                                : 'upup-bg-white upup-text-gray-900 upup-shadow-sm'
-                            : dark
-                              ? 'upup-text-gray-400 hover:upup-text-gray-300'
-                              : 'upup-text-gray-500 hover:upup-text-gray-700',
+                            ? 'upup-shadow-sm'
+                            : 'upup-opacity-60',
                     )}
+                    style={{
+                        backgroundColor: isVideo ? 'var(--upup-color-surface)' : 'transparent',
+                        color: isVideo ? 'var(--upup-color-text)' : 'var(--upup-color-text-muted)',
+                    }}
                     onClick={() => setMode('video')}
                     disabled={countdown !== null}
                 >
@@ -99,20 +95,18 @@ export default function CameraUploader() {
                 {/* Photo mode: image preview */}
                 {isPhoto && !!url && (
                     <div
-                        className={cn(
-                            'upup-relative upup-aspect-video upup-bg-contain upup-bg-center upup-bg-no-repeat upup-shadow-xl',
-                            dark ? 'upup-bg-white/5' : 'upup-bg-black/[0.025]',
-                            classNames.cameraPreviewContainer,
-                        )}
-                        style={{ backgroundImage: `url(${url})` }}
+                        className="upup-relative upup-aspect-video upup-bg-contain upup-bg-center upup-bg-no-repeat upup-shadow-xl"
+                        style={{
+                            backgroundImage: `url(${url})`,
+                            backgroundColor: 'var(--upup-color-surface-alt)',
+                        }}
+                        data-upup-slot="cameraUploader.previewContainer"
                     >
                         <button
                             onClick={clearUrl}
-                            className={cn(
-                                'upup-absolute upup--right-2 upup--top-2 upup-z-10 upup-rounded-full upup-bg-[#272727] upup-p-1 upup-text-xl upup-text-[#f5f5f5]',
-                                classNames.cameraDeleteButton,
-                            )}
+                            className="upup-absolute upup--right-2 upup--top-2 upup-z-10 upup-rounded-full upup-bg-[#272727] upup-p-1 upup-text-xl upup-text-[#f5f5f5]"
                             type="button"
+                            data-upup-slot="cameraUploader.deleteButton"
                         >
                             {CameraDeleteIcon && <CameraDeleteIcon />}
                         </button>
@@ -122,10 +116,8 @@ export default function CameraUploader() {
                 {/* Video mode: video preview */}
                 {isVideo && !!videoUrl && !isRecording && (
                     <div
-                        className={cn(
-                            'upup-relative',
-                            classNames.cameraVideoPreview,
-                        )}
+                        className="upup-relative"
+                        data-upup-slot="cameraUploader.videoPreview"
                     >
                         <video
                             ref={videoPreviewRef}
@@ -135,10 +127,7 @@ export default function CameraUploader() {
                         />
                         <button
                             onClick={deleteVideoRecording}
-                            className={cn(
-                                'upup-absolute upup--right-2 upup--top-2 upup-z-10 upup-rounded-full upup-bg-[#272727] upup-p-1 upup-text-xl upup-text-[#f5f5f5]',
-                                classNames.cameraVideoDeleteButton,
-                            )}
+                            className="upup-absolute upup--right-2 upup--top-2 upup-z-10 upup-rounded-full upup-bg-[#272727] upup-p-1 upup-text-xl upup-text-[#f5f5f5]"
                             type="button"
                         >
                             {CameraVideoDeleteIcon && <CameraVideoDeleteIcon />}
@@ -188,24 +177,22 @@ export default function CameraUploader() {
                         <button
                             className={cn(
                                 'upup-mt-2 upup-flex upup-w-1/3 upup-flex-col upup-items-center upup-justify-center upup-rounded-md upup-p-2 upup-text-white upup-transition-all upup-duration-300',
-                                dark ? 'upup-bg-[#59D1F9]' : 'upup-bg-blue-600',
                                 countdown !== null && 'upup-cursor-not-allowed upup-opacity-50',
-                                classNames.cameraCaptureButton,
                             )}
+                            style={{ backgroundColor: 'var(--upup-color-primary)' }}
                             onClick={capture}
                             disabled={countdown !== null}
                             type="button"
+                            data-upup-slot="cameraUploader.captureButton"
                         >
                             <span>{CameraCaptureIcon && <CameraCaptureIcon />}</span>
                             <span>{t('camera.capture')}</span>
                         </button>
                         <button
-                            className={cn(
-                                'upup-mt-2 upup-flex upup-w-1/3 upup-flex-col upup-items-center upup-rounded-md upup-bg-gray-500 upup-p-2 upup-text-white upup-transition-all upup-duration-300 hover:upup-bg-gray-600',
-                                classNames.cameraRotateButton,
-                            )}
+                            className="upup-mt-2 upup-flex upup-w-1/3 upup-flex-col upup-items-center upup-rounded-md upup-bg-gray-500 upup-p-2 upup-text-white upup-transition-all upup-duration-300 hover:upup-bg-gray-600"
                             onClick={handleCameraSwitch}
                             type="button"
+                            data-upup-slot="cameraUploader.rotateButton"
                         >
                             <span>{CameraRotateIcon && <CameraRotateIcon />}</span>
                             <span>
@@ -213,12 +200,10 @@ export default function CameraUploader() {
                             </span>
                         </button>
                         <button
-                            className={cn(
-                                'upup-mt-2 upup-flex upup-w-1/3 upup-flex-col upup-items-center upup-rounded-md upup-bg-gray-500 upup-p-2 upup-text-white upup-transition-all upup-duration-300 hover:upup-bg-gray-600',
-                                classNames.cameraMirrorButton,
-                            )}
+                            className="upup-mt-2 upup-flex upup-w-1/3 upup-flex-col upup-items-center upup-rounded-md upup-bg-gray-500 upup-p-2 upup-text-white upup-transition-all upup-duration-300 hover:upup-bg-gray-600"
                             onClick={toggleMirror}
                             type="button"
+                            data-upup-slot="cameraUploader.mirrorButton"
                         >
                             <span>{CameraMirrorIcon && <CameraMirrorIcon />}</span>
                             <span>{t('camera.mirrorCamera')}</span>
@@ -227,13 +212,11 @@ export default function CameraUploader() {
                 )}
                 {isPhoto && !!url && (
                     <button
-                        className={cn(
-                            'upup-mt-2 upup-w-full upup-rounded-md upup-p-2 upup-text-white upup-transition-all upup-duration-300',
-                            dark ? 'upup-bg-[#59D1F9]' : 'upup-bg-blue-600',
-                            classNames.cameraAddButton,
-                        )}
+                        className="upup-mt-2 upup-w-full upup-rounded-md upup-p-2 upup-text-white upup-transition-all upup-duration-300"
+                        style={{ backgroundColor: 'var(--upup-color-primary)' }}
                         onClick={handleFetchImage}
                         type="button"
+                        data-upup-slot="cameraUploader.addButton"
                     >
                         {t('camera.addImage')}
                     </button>
@@ -244,37 +227,31 @@ export default function CameraUploader() {
                     <>
                         {!isRecording ? (
                             <button
-                                className={cn(
-                                    'upup-mt-2 upup-flex upup-w-1/3 upup-flex-col upup-items-center upup-justify-center upup-rounded-md upup-bg-red-600 upup-p-2 upup-text-white upup-transition-all upup-duration-300 hover:upup-bg-red-700',
-                                    classNames.cameraVideoRecordButton,
-                                )}
+                                className="upup-mt-2 upup-flex upup-w-1/3 upup-flex-col upup-items-center upup-justify-center upup-rounded-md upup-bg-red-600 upup-p-2 upup-text-white upup-transition-all upup-duration-300 hover:upup-bg-red-700"
                                 onClick={startVideoRecording}
                                 type="button"
+                                data-upup-slot="cameraUploader.videoRecordButton"
                             >
                                 <span>{CameraVideoRecordIcon && <CameraVideoRecordIcon />}</span>
                                 <span>{t('camera.startVideoRecording')}</span>
                             </button>
                         ) : (
                             <button
-                                className={cn(
-                                    'upup-mt-2 upup-flex upup-w-1/3 upup-flex-col upup-items-center upup-justify-center upup-rounded-md upup-bg-gray-700 upup-p-2 upup-text-white upup-transition-all upup-duration-300 hover:upup-bg-gray-800',
-                                    classNames.cameraVideoStopButton,
-                                )}
+                                className="upup-mt-2 upup-flex upup-w-1/3 upup-flex-col upup-items-center upup-justify-center upup-rounded-md upup-bg-gray-700 upup-p-2 upup-text-white upup-transition-all upup-duration-300 hover:upup-bg-gray-800"
                                 onClick={stopVideoRecording}
                                 type="button"
+                                data-upup-slot="cameraUploader.videoStopButton"
                             >
                                 <span>{CameraVideoStopIcon && <CameraVideoStopIcon />}</span>
                                 <span>{t('camera.stopVideoRecording')}</span>
                             </button>
                         )}
                         <button
-                            className={cn(
-                                'upup-mt-2 upup-flex upup-w-1/3 upup-flex-col upup-items-center upup-rounded-md upup-bg-gray-500 upup-p-2 upup-text-white upup-transition-all upup-duration-300 hover:upup-bg-gray-600',
-                                classNames.cameraRotateButton,
-                            )}
+                            className="upup-mt-2 upup-flex upup-w-1/3 upup-flex-col upup-items-center upup-rounded-md upup-bg-gray-500 upup-p-2 upup-text-white upup-transition-all upup-duration-300 hover:upup-bg-gray-600"
                             onClick={handleCameraSwitch}
                             disabled={isRecording}
                             type="button"
+                            data-upup-slot="cameraUploader.rotateButton"
                         >
                             <span>{CameraRotateIcon && <CameraRotateIcon />}</span>
                             <span>
@@ -282,13 +259,11 @@ export default function CameraUploader() {
                             </span>
                         </button>
                         <button
-                            className={cn(
-                                'upup-mt-2 upup-flex upup-w-1/3 upup-flex-col upup-items-center upup-rounded-md upup-bg-gray-500 upup-p-2 upup-text-white upup-transition-all upup-duration-300 hover:upup-bg-gray-600',
-                                classNames.cameraMirrorButton,
-                            )}
+                            className="upup-mt-2 upup-flex upup-w-1/3 upup-flex-col upup-items-center upup-rounded-md upup-bg-gray-500 upup-p-2 upup-text-white upup-transition-all upup-duration-300 hover:upup-bg-gray-600"
                             onClick={toggleMirror}
                             disabled={isRecording}
                             type="button"
+                            data-upup-slot="cameraUploader.mirrorButton"
                         >
                             <span>{CameraMirrorIcon && <CameraMirrorIcon />}</span>
                             <span>{t('camera.mirrorCamera')}</span>
@@ -297,13 +272,11 @@ export default function CameraUploader() {
                 )}
                 {isVideo && !!videoUrl && !isRecording && (
                     <button
-                        className={cn(
-                            'upup-mt-2 upup-w-full upup-rounded-md upup-p-2 upup-text-white upup-transition-all upup-duration-300',
-                            dark ? 'upup-bg-[#59D1F9]' : 'upup-bg-blue-600',
-                            classNames.cameraVideoAddButton,
-                        )}
+                        className="upup-mt-2 upup-w-full upup-rounded-md upup-p-2 upup-text-white upup-transition-all upup-duration-300"
+                        style={{ backgroundColor: 'var(--upup-color-primary)' }}
                         onClick={handleAddVideo}
                         type="button"
+                        data-upup-slot="cameraUploader.videoAddButton"
                     >
                         {t('camera.addVideo')}
                     </button>

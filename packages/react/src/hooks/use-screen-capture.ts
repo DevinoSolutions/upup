@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useUploaderContext } from '../context/uploader-context'
 
 export default function useScreenCapture() {
-    const { setFiles, setActiveSource, dark, classNames, icons } = useUploaderContext()
+    const { setFiles, setActiveSource, icons } = useUploaderContext()
     const [isRecording, setIsRecording] = useState(false)
     const [videoUrl, setVideoUrl] = useState<string | null>(null)
     const [duration, setDuration] = useState(0)
@@ -117,8 +117,6 @@ export default function useScreenCapture() {
         stopRecording,
         deleteRecording,
         handleAddScreenCapture,
-        dark,
-        classNames,
         icons,
     }
 }

@@ -8,10 +8,9 @@ import { cn } from '../lib/tailwind'
 type NotifierProps = {
     messages: InformerMessage[]
     onDismiss: (id: string) => void
-    dark?: boolean
 }
 
-export default function Notifier({ messages, onDismiss, dark }: NotifierProps) {
+export default function Notifier({ messages, onDismiss }: NotifierProps) {
     if (messages.length === 0) return null
 
     return (
@@ -19,30 +18,29 @@ export default function Notifier({ messages, onDismiss, dark }: NotifierProps) {
             role="alert"
             aria-live="polite"
             className="upup-absolute upup-bottom-10 upup-left-2 upup-right-2 upup-z-50 upup-flex upup-flex-col upup-gap-1.5"
+            data-upup-slot="notifier.root"
         >
             {messages.map(message => (
                 <div
                     key={message.id}
                     className={cn(
-                        'upup-flex upup-animate-informer-in upup-items-start upup-justify-between upup-gap-2 upup-rounded-lg upup-px-3 upup-py-2 upup-text-xs upup-shadow-lg',
-                        dark
-                            ? {
-                                  'upup-bg-red-600 upup-text-white':
-                                      message.type === 'error',
-                                  'upup-bg-amber-500 upup-text-amber-100':
-                                      message.type === 'warning',
-                                  'upup-bg-blue-600 upup-text-white':
-                                      message.type === 'info',
-                              }
-                            : {
-                                  'upup-bg-red-500 upup-text-white':
-                                      message.type === 'error',
-                                  'upup-bg-amber-400 upup-text-amber-900':
-                                      message.type === 'warning',
-                                  'upup-bg-blue-500 upup-text-white':
-                                      message.type === 'info',
-                              },
+                        'upup-flex upup-animate-informer-in upup-items-start upup-justify-between upup-gap-2 upup-rounded-lg upup-px-3 upup-py-2 upup-text-xs upup-shadow-lg upup-text-white',
+                        {
+                            'upup-bg-red-500': message.type === 'error',
+                            'upup-bg-amber-400 upup-text-amber-900':
+                                message.type === 'warning',
+                            'upup-bg-blue-500': message.type === 'info',
+                        },
                     )}
+                    style={{
+                        backgroundColor:
+                            message.type === 'error'
+                                ? 'var(--upup-color-danger)'
+                                : message.type === 'info'
+                                  ? 'var(--upup-color-primary)'
+                                  : undefined,
+                    }}
+                    data-upup-slot="notifier.message"
                 >
                     <span className="upup-leading-4">{message.text}</span>
                     <button

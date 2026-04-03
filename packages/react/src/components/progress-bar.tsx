@@ -7,14 +7,6 @@ type Props = {
     progress: number
     showValue?: boolean
     progressBarClassName?: string
-    /** Optional class names for sub-elements */
-    classNames?: {
-        progressBarContainer?: string
-        progressBar?: string
-        progressBarInner?: string
-        progressBarText?: string
-    }
-    dark?: boolean
 } & HTMLAttributes<HTMLDivElement>
 
 export default forwardRef<HTMLDivElement, Props>(function ProgressBar(
@@ -23,8 +15,6 @@ export default forwardRef<HTMLDivElement, Props>(function ProgressBar(
         className,
         progressBarClassName,
         showValue = false,
-        classNames = {},
-        dark,
         ...rest
     },
     ref,
@@ -37,37 +27,37 @@ export default forwardRef<HTMLDivElement, Props>(function ProgressBar(
             className={cn(
                 'upup-flex upup-items-center upup-gap-2',
                 className,
-                classNames.progressBarContainer,
             )}
+            data-upup-slot="progressBar.root"
             {...rest}
         >
             <div
                 className={cn(
-                    'upup-h-[6px] upup-flex-1 upup-overflow-hidden upup-rounded-[4px] upup-bg-[#F5F5F5]',
+                    'upup-h-[6px] upup-flex-1 upup-overflow-hidden upup-rounded-[4px]',
                     progressBarClassName,
-                    classNames.progressBar,
                 )}
+                style={{ backgroundColor: 'var(--upup-color-surface-alt)' }}
                 role="progressbar"
                 aria-valuenow={progress}
                 aria-valuemin={0}
                 aria-valuemax={100}
                 aria-label="Upload progress"
+                data-upup-slot="progressBar.track"
             >
                 <div
-                    style={{ width: progress + '%' }}
-                    className={cn(
-                        'upup-h-full upup-bg-[#8EA5E7]',
-                        classNames.progressBarInner,
-                    )}
+                    style={{
+                        width: progress + '%',
+                        backgroundColor: 'var(--upup-color-primary)',
+                    }}
+                    className="upup-h-full"
+                    data-upup-slot="progressBar.fill"
                 />
             </div>
             {showValue && (
                 <p
-                    className={cn(
-                        'upup-text-xs upup-font-semibold',
-                        { 'upup-text-white': dark },
-                        classNames.progressBarText,
-                    )}
+                    className="upup-text-xs upup-font-semibold"
+                    style={{ color: 'var(--upup-color-text)' }}
+                    data-upup-slot="progressBar.text"
                 >
                     {progress}%
                 </p>

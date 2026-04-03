@@ -74,8 +74,6 @@ export default function DriveBrowser({
     onSelectCurrentFolder,
     ...rest
 }: Readonly<Props>) {
-    const { dark, classNames } = useUploaderContext()
-
     // Get accept from core options if available
     const accept = useUploaderContext().core.options.accept ?? ''
 
@@ -96,14 +94,20 @@ export default function DriveBrowser({
 
     if (isLoading) {
         return (
-            <div className="upup-flex upup-h-full upup-w-full upup-items-center upup-justify-center">
-                <div className="upup-h-8 upup-w-8 upup-animate-spin upup-rounded-full upup-border-2 upup-border-blue-500 upup-border-t-transparent" />
+            <div
+                className="upup-flex upup-h-full upup-w-full upup-items-center upup-justify-center"
+                data-upup-slot="driveBrowser.loading"
+            >
+                <div className="upup-h-8 upup-w-8 upup-animate-spin upup-rounded-full upup-border-2 upup-border-t-transparent" style={{ borderColor: 'var(--upup-color-primary)' }} />
             </div>
         )
     }
 
     return (
-        <div className="upup-grid upup-h-full upup-w-full upup-grid-rows-[auto,1fr,auto] upup-overflow-auto">
+        <div
+            className="upup-grid upup-h-full upup-w-full upup-grid-rows-[auto,1fr,auto] upup-overflow-auto"
+            data-upup-slot="driveBrowser.root"
+        >
             <DriveBrowserHeader
                 showSearch={!!items?.length}
                 path={path}
@@ -114,14 +118,12 @@ export default function DriveBrowser({
             />
             {!!path && (
                 <div
-                    className={cn(
-                        'upup-h-full upup-overflow-y-scroll upup-bg-black/[0.075] upup-pt-2',
-                        {
-                            'upup-bg-white/10 upup-text-[#fafafa] dark:upup-bg-white/10 dark:upup-text-[#fafafa]':
-                                dark,
-                        },
-                        classNames.driveBody,
-                    )}
+                    className="upup-h-full upup-overflow-y-scroll upup-pt-2"
+                    style={{
+                        backgroundColor: 'var(--upup-color-surface-alt)',
+                        color: 'var(--upup-color-text)',
+                    }}
+                    data-upup-slot="driveBrowser.body"
                 >
                     {!!displayedItems.length ? (
                         <ul className="upup-p-2">
@@ -158,24 +160,14 @@ export default function DriveBrowser({
                     animate={{ y: '0%', height: 'auto' }}
                     exit={{ y: '100%', height: 0 }}
                     transition={{ duration: 0.2 }}
-                    className={cn(
-                        'upup-flex upup-origin-bottom upup-items-center upup-justify-start upup-gap-4 upup-bg-black/[0.025] upup-px-3 upup-py-2',
-                        {
-                            'upup-bg-white/5 upup-text-[#fafafa] dark:upup-bg-white/5 dark:upup-text-[#fafafa]':
-                                dark,
-                        },
-                        classNames.driveFooter,
-                    )}
+                    className="upup-flex upup-origin-bottom upup-items-center upup-justify-start upup-gap-4 upup-px-3 upup-py-2"
+                    style={{ backgroundColor: 'var(--upup-color-surface-alt)' }}
+                    data-upup-slot="driveBrowser.footer"
                 >
                     {!!onSelectCurrentFolder && (
                         <button
-                            className={cn(
-                                'upup-rounded-md upup-bg-transparent upup-px-3 upup-py-2 upup-text-sm upup-font-medium upup-text-blue-600 upup-transition-all upup-duration-300',
-                                {
-                                    'upup-text-[#30C5F7] dark:upup-text-[#30C5F7]':
-                                        dark,
-                                },
-                            )}
+                            className="upup-rounded-md upup-bg-transparent upup-px-3 upup-py-2 upup-text-sm upup-font-medium upup-transition-all upup-duration-300"
+                            style={{ color: 'var(--upup-color-primary)' }}
                             onClick={() => onSelectCurrentFolder?.()}
                             disabled={showLoader}
                         >
@@ -184,31 +176,23 @@ export default function DriveBrowser({
                     )}
                     <button
                         className={cn(
-                            'upup-rounded-md upup-bg-blue-600 upup-px-3 upup-py-2 upup-text-sm upup-font-medium upup-text-white upup-transition-all upup-duration-300',
-                            {
-                                'upup-animate-pulse': showLoader,
-                                'upup-bg-[#30C5F7] dark:upup-bg-[#30C5F7]':
-                                    dark,
-                            },
-                            classNames.driveAddFilesButton,
+                            'upup-rounded-md upup-px-3 upup-py-2 upup-text-sm upup-font-medium upup-text-white upup-transition-all upup-duration-300',
+                            { 'upup-animate-pulse': showLoader },
                         )}
+                        style={{ backgroundColor: 'var(--upup-color-primary)' }}
                         onClick={handleSubmit}
                         disabled={showLoader}
+                        data-upup-slot="driveBrowser.addFilesButton"
                     >
                         Add {selectedFiles.length} file
                         {selectedFiles.length !== 1 ? 's' : ''}
                     </button>
                     <button
-                        className={cn(
-                            'upup-ml-auto upup-rounded-md upup-p-1 upup-text-sm upup-text-blue-600 upup-transition-all upup-duration-300',
-                            {
-                                'upup-text-[#30C5F7] dark:upup-text-[#30C5F7]':
-                                    dark,
-                            },
-                            classNames.driveCancelFilesButton,
-                        )}
+                        className="upup-ml-auto upup-rounded-md upup-p-1 upup-text-sm upup-transition-all upup-duration-300"
+                        style={{ color: 'var(--upup-color-primary)' }}
                         onClick={handleCancelDownload}
                         disabled={showLoader}
+                        data-upup-slot="driveBrowser.cancelFilesButton"
                     >
                         Cancel
                     </button>

@@ -9,8 +9,7 @@ export default function UrlUploader() {
     const {
         setFiles,
         setActiveSource,
-        dark,
-        classNames,
+        resolvedTheme,
         icons,
         t,
     } = useUploaderContext()
@@ -36,22 +35,21 @@ export default function UrlUploader() {
             <input
                 type="url"
                 placeholder={t('url.enterFileUrl')}
-                className={cn(
-                    'upup-w-full upup-rounded-md upup-border-2 upup-border-[#e0e0e0] upup-bg-transparent upup-px-3 upup-py-2 upup-outline-none',
-                    dark && 'upup-border-[#6D6D6D] upup-text-[#6D6D6D]',
-                    classNames.urlInput,
-                )}
+                className="upup-w-full upup-rounded-md upup-border-2 upup-bg-transparent upup-px-3 upup-py-2 upup-outline-none"
+                style={{
+                    borderColor: 'var(--upup-color-border)',
+                    color: 'var(--upup-color-text)',
+                }}
                 value={url}
                 onChange={e => setUrl(e.currentTarget.value)}
+                data-upup-slot="urlUploader.input"
             />
             <button
-                className={cn(
-                    'upup-disabled:bg-[#e0e0e0] upup-mt-2 upup-w-full upup-rounded-md upup-bg-blue-600 upup-p-2 upup-text-white upup-transition-all upup-duration-300',
-                    dark && 'upup-bg-[#59D1F9] upup-disabled:bg-[#6D6D6D]',
-                    classNames.urlFetchButton,
-                )}
+                className="upup-mt-2 upup-w-full upup-rounded-md upup-p-2 upup-text-white upup-transition-all upup-duration-300 disabled:upup-opacity-50"
+                style={{ backgroundColor: 'var(--upup-color-primary)' }}
                 type="submit"
                 disabled={!url}
+                data-upup-slot="urlUploader.fetchButton"
             >
                 {loading ? (LoaderIcon ? <LoaderIcon /> : '...') : t('url.fetch')}
             </button>

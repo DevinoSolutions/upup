@@ -1,6 +1,52 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  .upup-container {
+    --upup-color-surface: #FFFFFF;
+    --upup-color-surface-alt: #F7F7F8;
+    --upup-color-primary: #1849D6;
+    --upup-color-primary-hover: #0E2ADD;
+    --upup-color-text: #0B0B0B;
+    --upup-color-text-muted: #6D6D6D;
+    --upup-color-border: #D1D5DB;
+    --upup-color-border-active: #1849D6;
+    --upup-color-danger: #DC2626;
+    --upup-color-success: #16A34A;
+    --upup-color-drag-bg: #E7ECFC;
+    --upup-color-overlay: rgba(0, 0, 0, 0.5);
+    --upup-radius-sm: 4px;
+    --upup-radius-md: 8px;
+    --upup-radius-lg: 12px;
+    --upup-radius-full: 9999px;
+    --upup-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+    --upup-shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07);
+    --upup-shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+    --upup-spacing-xs: 4px;
+    --upup-spacing-sm: 8px;
+    --upup-spacing-md: 12px;
+    --upup-spacing-lg: 16px;
+  }
+
+  .upup-container[data-theme="dark"] {
+    --upup-color-surface: #1A1A2E;
+    --upup-color-surface-alt: #252540;
+    --upup-color-primary: #30C5F7;
+    --upup-color-primary-hover: #59D1F9;
+    --upup-color-text: #FFFFFF;
+    --upup-color-text-muted: #D1D5DB;
+    --upup-color-border: #4B5563;
+    --upup-color-border-active: #30C5F7;
+    --upup-color-danger: #EF4444;
+    --upup-color-success: #22C55E;
+    --upup-color-drag-bg: #045671;
+    --upup-color-overlay: rgba(0, 0, 0, 0.7);
+    --upup-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
+    --upup-shadow-md: 0 4px 6px rgba(0, 0, 0, 0.3);
+    --upup-shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.4);
+  }
+}
 @layer components {
     .upup-shadow-wrapper {
         box-shadow:

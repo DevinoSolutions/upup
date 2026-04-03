@@ -15,22 +15,26 @@ import {
   FileSource,
   enUS,
   createTranslator,
-  type UploaderClassNames,
+  tokensToVars,
+  type UpupThemeConfig,
   type Translator,
 } from '@upup/shared'
 import type { UploaderIcons } from './types/icons'
 import { type UpupI18nProp, isByoTranslator } from './types/i18n'
+import { useUpupTheme } from './theme/useUpupTheme'
+import { deriveDataState } from './theme/data-state'
+import { cn } from './lib/tailwind'
 
 export interface UpupUploaderProps extends CoreOptions {
-  dark?: boolean
   mini?: boolean
-  classNames?: Partial<UploaderClassNames>
   icons?: Partial<UploaderIcons>
   sources?: UploadSource[]
   fileSources?: FileSource[]
   enablePaste?: boolean
   /** Unified i18n configuration. Replaces `locale` + `translationOverrides`. */
   i18n?: UpupI18nProp
+  /** Theme configuration — replaces old `dark` and `classNames` props */
+  theme?: UpupThemeConfig
   ref?: Ref<UpupUploaderRef>
 }
 
@@ -55,20 +59,21 @@ function sourcesToFileSources(sources: UploadSource[]): FileSource[] {
 export const UpupUploader = forwardRef<UpupUploaderRef, UpupUploaderProps>(
   function UpupUploader(props, ref) {
     const {
-      dark = false,
       mini = false,
-      classNames = {},
       icons = {},
       sources = ['local'],
       fileSources: explicitFileSources,
       enablePaste = false,
       i18n: i18nProp,
+      theme,
       ...coreOptions
     } = props
 
     const uploader = useUpupUpload(coreOptions)
     const [activeSource, setActiveSource] = useState<FileSource | null>(null)
     const informer = useInformer()
+    const resolvedTheme = useUpupTheme(theme)
+    const cssVars = useMemo(() => tokensToVars(resolvedTheme.tokens), [resolvedTheme.tokens])
 
     const t: Translator = useMemo(() => {
       if (i18nProp && isByoTranslator(i18nProp)) {
@@ -93,15 +98,15 @@ export const UpupUploader = forwardRef<UpupUploaderRef, UpupUploaderProps>(
         ...uploader,
         activeSource,
         setActiveSource,
-        dark,
+        resolvedTheme,
+        cssVars,
         mini,
-        classNames: classNames as UploaderClassNames,
         icons: icons as UploaderIcons,
         enablePaste,
         sources,
         t,
       }),
-      [uploader, activeSource, dark, mini, classNames, icons, enablePaste, sources, t],
+      [uploader, activeSource, resolvedTheme, cssVars, mini, icons, enablePaste, sources, t],
     )
 
     const hasMultipleSources = fileSources.length > 1
@@ -109,7 +114,11 @@ export const UpupUploader = forwardRef<UpupUploaderRef, UpupUploaderProps>(
     const content = (
       <UploaderContext.Provider value={contextValue}>
         <div
-          className={`upup-container ${dark ? 'upup-dark' : ''} ${mini ? 'upup-mini' : ''}`}
+          className={cn('upup-container', { 'upup-mini': mini })}
+          style={cssVars as React.CSSProperties}
+          data-theme={resolvedTheme.mode === 'dark' ? 'dark' : 'light'}
+          data-state={deriveDataState(uploader.status, false)}
+          data-upup-slot="uploader.root"
           lang={t.locale}
           dir={t.dir}
         >
@@ -124,7 +133,6 @@ export const UpupUploader = forwardRef<UpupUploaderRef, UpupUploaderProps>(
           <Notifier
             messages={informer.messages}
             onDismiss={informer.dismissMessage}
-            dark={dark}
           />
         </div>
       </UploaderContext.Provider>

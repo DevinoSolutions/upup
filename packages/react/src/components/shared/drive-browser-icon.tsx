@@ -2,8 +2,6 @@
 
 import React, { type ReactEventHandler } from 'react'
 import { TbFile, TbFolder } from 'react-icons/tb'
-import { useUploaderContext } from '../../context/uploader-context'
-import { cn } from '../../lib/tailwind'
 import type { OneDriveFile, GoogleFile } from '../../lib/google-drive-utils'
 
 function b64EncodeUnicode(str: string): string {
@@ -25,7 +23,6 @@ export default function DriveBrowserIcon({
 }: {
     file: OneDriveFile | GoogleFile
 }) {
-    const { dark } = useUploaderContext()
     const isFolder = Boolean(
         (file as OneDriveFile).isFolder || (file as GoogleFile).children,
     )
@@ -37,21 +34,13 @@ export default function DriveBrowserIcon({
     if (isFolder)
         return (
             <i className="upup-flex-grow upup-text-lg">
-                <TbFolder
-                    className={cn({
-                        'upup-text-[#6D6D6D] dark:upup-text-[#6D6D6D]': dark,
-                    })}
-                />
+                <TbFolder style={{ color: 'var(--upup-color-text-muted)' }} />
             </i>
         )
     if (!src)
         return (
             <i className="upup-flex-grow upup-text-lg">
-                <TbFile
-                    className={cn({
-                        'upup-text-[#6D6D6D] dark:upup-text-[#6D6D6D]': dark,
-                    })}
-                />
+                <TbFile style={{ color: 'var(--upup-color-text-muted)' }} />
             </i>
         )
 

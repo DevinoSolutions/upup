@@ -9,6 +9,11 @@ export { UploaderContext, useUploaderContext } from './context/uploader-context'
 export type { UploadSource, UploaderContextValue } from './context/uploader-context'
 export type { UploaderIcons } from './types/icons'
 
+// Theme system
+export { UpupThemeProvider } from './theme'
+export type { UpupThemeProviderProps } from './theme'
+export { useUpupTheme } from './theme/useUpupTheme'
+
 // Core UI components (migrated from v1)
 export { default as DropZone } from './components/drop-zone'
 export type { DropZoneProps } from './components/drop-zone'

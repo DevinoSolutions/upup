@@ -2,7 +2,6 @@
 
 import { motion, type Transition } from 'framer-motion'
 import React from 'react'
-import { useUploaderContext } from '../../context/uploader-context'
 import { cn } from '../../lib/tailwind'
 import type { OneDriveFile, GoogleFile, GoogleRoot } from '../../lib/google-drive-utils'
 import DriveBrowserIcon from './drive-browser-icon'
@@ -22,7 +21,6 @@ export default function DriveBrowserItem({
     handleClick,
     index,
 }: Readonly<DriveBrowserItemProps>) {
-    const { dark, classNames } = useUploaderContext()
     const isFolder = Boolean(
         (file as OneDriveFile).isFolder || (file as GoogleFile).children,
     )
@@ -47,37 +45,25 @@ export default function DriveBrowserItem({
             exit={{ opacity: 0, y: 10, transition }}
             transition={transition}
             className={cn(
-                'upup-hover:bg-[#bab4b499] upup-group upup-mb-1 upup-flex upup-cursor-pointer upup-items-center upup-justify-between upup-gap-2 upup-rounded-md upup-p-1 upup-py-2',
+                'upup-group upup-mb-1 upup-flex upup-cursor-pointer upup-items-center upup-justify-between upup-gap-2 upup-rounded-md upup-p-1 upup-py-2 upup-transition-colors',
                 {
                     'upup-font-medium': isFolder,
-                    'upup-bg-[#bab4b499]': isFileSelected,
-                    'upup-bg-[#e9ecef00]': !isFileSelected,
-                    [classNames.driveItemContainerDefault!]:
-                        !isFileSelected &&
-                        classNames.driveItemContainerDefault,
-                    [classNames.driveItemContainerSelected!]:
-                        isFileSelected &&
-                        classNames.driveItemContainerSelected,
                 },
             )}
+            style={{
+                backgroundColor: isFileSelected
+                    ? 'var(--upup-color-drag-bg)'
+                    : 'transparent',
+            }}
             onClick={() => handleClick(file as any)}
+            data-upup-slot={isFileSelected ? 'driveBrowser.itemSelected' : 'driveBrowser.itemDefault'}
         >
-            <div
-                className={cn(
-                    'upup-flex upup-items-center upup-gap-2',
-                    classNames.driveItemContainerInner,
-                )}
-            >
+            <div className="upup-flex upup-items-center upup-gap-2">
                 <DriveBrowserIcon file={file} />
                 <h1
-                    className={cn(
-                        'upup-text-wrap upup-break-all upup-text-xs',
-                        {
-                            'upup-text-[#e0e0e0] dark:upup-text-[#e0e0e0]':
-                                dark,
-                        },
-                        classNames.driveItemInnerText,
-                    )}
+                    className="upup-text-wrap upup-break-all upup-text-xs"
+                    style={{ color: 'var(--upup-color-text)' }}
+                    data-upup-slot="driveBrowser.itemInnerText"
                 >
                     {file.name}
                 </h1>

@@ -43,7 +43,7 @@ export default memo(
         },
         ref,
     ) {
-        const { dark, classNames } = useUploaderContext()
+        const { resolvedTheme } = useUploaderContext()
         const isClient = useIsClient()
 
         const isImage = useMemo(() => fileGetIsImage(fileType), [fileType])
@@ -233,14 +233,9 @@ export default memo(
                 >
                     <div className="upup-relative upup-h-[90vh] upup-w-[90vw] upup-p-4">
                         <div
-                            className={cn(
-                                'upup-absolute upup-inset-0 upup-m-4 upup-bg-white',
-                                {
-                                    'upup-bg-[#232323] dark:upup-bg-[#232323]':
-                                        dark,
-                                },
-                                classNames.filePreviewPortal,
-                            )}
+                            className="upup-absolute upup-inset-0 upup-m-4"
+                            style={{ backgroundColor: 'var(--upup-color-surface)' }}
+                            data-upup-slot="filePreviewPortal.root"
                             onClick={onStopPropagation}
                         >
                             {isImage && (

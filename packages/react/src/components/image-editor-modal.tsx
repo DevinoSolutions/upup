@@ -89,7 +89,8 @@ function EditorWrapper({
  */
 export default memo(function ImageEditorModal(props: Props) {
     const { file, onClose, onSave } = props
-    const { dark } = useUploaderContext()
+    const { resolvedTheme } = useUploaderContext()
+    const dark = resolvedTheme.mode === 'dark'
     const isClient = useIsClient()
 
     const overlayRef = useRef<HTMLDivElement>(null)

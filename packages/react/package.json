@@ -28,7 +28,9 @@
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit"
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "dependencies": {
     "@upup/core": "workspace:*",
     "@upup/shared": "workspace:*",
@@ -81,6 +83,7 @@
     "postcss": "^8.5.2",
     "postcss-cli": "^11.0.1",
     "postcss-prefix-selector": "^2.1.1",
+    "tailwind-variants": "^3.2.2",
     "tailwindcss": "^3.4.17",
     "tsup": "^8.4.0",
     "typescript": "^5.3.2",

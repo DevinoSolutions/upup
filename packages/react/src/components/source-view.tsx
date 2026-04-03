@@ -17,8 +17,7 @@ export default function SourceView({ className }: SourceViewProps) {
         activeSource,
         setActiveSource,
         mini,
-        dark,
-        classNames,
+        resolvedTheme,
     } = useUploaderContext()
 
     const adapterEntry = activeSource
@@ -39,28 +38,23 @@ export default function SourceView({ className }: SourceViewProps) {
                 className,
             )}
             key="source-view"
+            data-upup-slot="sourceView.root"
         >
             <div
-                className={cn(
-                    'upup-shadow-bottom upup-flex upup-items-center upup-justify-between upup-bg-black/[0.025] upup-px-3 upup-py-2 upup-text-sm upup-font-medium upup-text-[#1b5dab]',
-                    {
-                        'upup-bg-white/5 upup-text-[#FAFAFA] dark:upup-bg-white/5 dark:upup-text-[#FAFAFA]':
-                            dark,
-                    },
-                    classNames.adapterViewHeader,
-                )}
+                className="upup-shadow-bottom upup-flex upup-items-center upup-justify-between upup-px-3 upup-py-2 upup-text-sm upup-font-medium"
+                style={{
+                    backgroundColor: 'var(--upup-color-surface-alt)',
+                    color: 'var(--upup-color-primary)',
+                }}
+                data-upup-slot="sourceView.header"
             >
                 <Icon />
                 <button
-                    className={cn(
-                        'upup-rounded-md upup-p-1 upup-text-blue-600 upup-transition-all upup-duration-300',
-                        {
-                            'upup-text-[#30C5F7] dark:upup-text-[#30C5F7]': dark,
-                        },
-                        classNames.adapterViewCancelButton,
-                    )}
+                    className="upup-rounded-md upup-p-1 upup-transition-all upup-duration-300"
+                    style={{ color: 'var(--upup-color-primary)' }}
                     onClick={() => setActiveSource(null)}
                     type="button"
+                    data-upup-slot="sourceView.cancelButton"
                 >
                     Cancel
                 </button>

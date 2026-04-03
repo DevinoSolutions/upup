@@ -33,8 +33,7 @@ export default memo(function FileList({ className }: FileListProps) {
         resume,
         cancel,
         reorderFiles,
-        dark,
-        classNames,
+        resolvedTheme,
         mini,
         t,
     } = useUploaderContext()
@@ -102,34 +101,27 @@ export default memo(function FileList({ className }: FileListProps) {
                 { 'upup-hidden': isHidden },
                 className,
             )}
+            data-upup-slot="fileList.root"
         >
             {/* Header */}
             <div
-                className={cn(
-                    'upup-shadow-bottom upup-flex upup-items-center upup-justify-between upup-rounded-t-lg upup-bg-black/[0.025] upup-px-3 upup-py-2 upup-text-sm',
-                    { 'upup-bg-white/5 dark:upup-bg-white/5': dark },
-                    classNames.containerHeader,
-                )}
+                className="upup-shadow-bottom upup-flex upup-items-center upup-justify-between upup-rounded-t-lg upup-px-3 upup-py-2 upup-text-sm"
+                style={{ backgroundColor: 'var(--upup-color-surface-alt)' }}
+                data-upup-slot="fileList.header"
             >
                 <button
-                    className={cn(
-                        'upup-text-blue-600',
-                        {
-                            'upup-text-[#30C5F7] dark:upup-text-[#30C5F7]':
-                                dark,
-                        },
-                        classNames.containerCancelButton,
-                    )}
+                    className="upup-font-medium"
+                    style={{ color: 'var(--upup-color-primary)' }}
                     onClick={cancel}
                     disabled={isUploading}
+                    data-upup-slot="fileList.cancelButton"
                 >
                     {t('header.removeAllFiles')}
                 </button>
                 <span
-                    className={cn('upup-text-[#6D6D6D]', {
-                        'upup-text-gray-300 dark:upup-text-gray-300': dark,
-                    })}
+                    style={{ color: 'var(--upup-color-text-muted)' }}
                     aria-live="polite"
+                    data-upup-slot="fileList.fileCount"
                 >
                     {t('header.filesSelected', { count: files.length })}
                 </span>
@@ -137,11 +129,9 @@ export default memo(function FileList({ className }: FileListProps) {
 
             {/* File list */}
             <motion.div
-                className={cn(
-                    'upup-preview-scroll upup-flex upup-flex-1 upup-flex-col upup-overflow-y-auto upup-bg-black/[0.075] upup-p-3',
-                    { 'upup-bg-white/10 dark:upup-bg-white/10': dark },
-                    classNames.fileListContainer,
-                )}
+                className="upup-preview-scroll upup-flex upup-flex-1 upup-flex-col upup-overflow-y-auto upup-p-3"
+                style={{ backgroundColor: 'var(--upup-color-surface-alt)', opacity: 0.9 }}
+                data-upup-slot="fileList.body"
             >
                 <div
                     role="list"
@@ -174,15 +164,20 @@ export default memo(function FileList({ className }: FileListProps) {
                                     'upup-cursor-grab upup-rounded-xl upup-transition',
                                     {
                                         'upup-opacity-60': isDraggedFile,
-                                        'upup-ring-2 upup-ring-blue-400':
-                                            isDropTarget && !dark,
-                                        'upup-ring-2 upup-ring-[#30C5F7]':
-                                            isDropTarget && dark,
+                                        'upup-ring-2': isDropTarget,
                                     },
                                 )}
+                                style={{
+                                    ...(isDropTarget
+                                        ? { '--tw-ring-color': 'var(--upup-color-border-active)' } as React.CSSProperties
+                                        : {}),
+                                }}
                                 data-upup-file-id={file.id}
                             >
-                                <div className="upup-text-sm upup-truncate">
+                                <div
+                                    className="upup-text-sm upup-truncate"
+                                    style={{ color: 'var(--upup-color-text)' }}
+                                >
                                     {file.name}
                                 </div>
                             </div>
@@ -193,51 +188,37 @@ export default memo(function FileList({ className }: FileListProps) {
 
             {/* Footer */}
             <div
-                className={cn(
-                    'upup-shadow-top upup-flex upup-items-center upup-gap-3 upup-rounded-b-lg upup-bg-black/[0.025] upup-px-3 upup-py-2',
-                    { 'upup-bg-white/5 dark:upup-bg-white/5': dark },
-                    classNames.fileListFooter,
-                )}
+                className="upup-shadow-top upup-flex upup-items-center upup-gap-3 upup-rounded-b-lg upup-px-3 upup-py-2"
+                style={{ backgroundColor: 'var(--upup-color-surface-alt)' }}
+                data-upup-slot="fileList.footer"
             >
                 {!isSuccessful && !isFailed && (
                     <button
-                        className={cn(
-                            'upup-disabled:animate-pulse upup-ml-auto upup-rounded-full upup-bg-blue-600 upup-px-4 upup-py-2 upup-text-sm upup-font-medium upup-text-white',
-                            {
-                                'upup-bg-[#30C5F7] dark:upup-bg-[#30C5F7]':
-                                    dark,
-                            },
-                            classNames.uploadButton,
-                        )}
+                        className="upup-disabled:animate-pulse upup-ml-auto upup-rounded-full upup-px-4 upup-py-2 upup-text-sm upup-font-medium upup-text-white"
+                        style={{ backgroundColor: 'var(--upup-color-primary)' }}
                         onClick={() => upload()}
                         disabled={isUploading || isPaused}
+                        data-upup-slot="fileList.uploadButton"
                     >
                         {t('fileList.uploadFiles', { count: files.length })}
                     </button>
                 )}
                 {isFailed && (
                     <button
-                        className={cn(
-                            'upup-disabled:animate-pulse upup-ml-auto upup-rounded-full upup-bg-red-600 upup-px-4 upup-py-2 upup-text-sm upup-font-medium upup-text-white',
-                            { 'upup-bg-red-500 dark:upup-bg-red-500': dark },
-                            classNames.uploadButton,
-                        )}
+                        className="upup-disabled:animate-pulse upup-ml-auto upup-rounded-full upup-px-4 upup-py-2 upup-text-sm upup-font-medium upup-text-white"
+                        style={{ backgroundColor: 'var(--upup-color-danger)' }}
                         onClick={() => upload()}
+                        data-upup-slot="fileList.uploadButton"
                     >
                         {t('fileList.uploadFiles', { count: files.length })}
                     </button>
                 )}
                 {isSuccessful && (
                     <button
-                        className={cn(
-                            'upup-disabled:animate-pulse upup-ml-auto upup-rounded-lg upup-bg-blue-600 upup-px-3 upup-py-2 upup-text-sm upup-font-medium upup-text-white',
-                            {
-                                'upup-bg-[#30C5F7] dark:upup-bg-[#30C5F7]':
-                                    dark,
-                            },
-                            classNames.uploadDoneButton,
-                        )}
+                        className="upup-disabled:animate-pulse upup-ml-auto upup-rounded-lg upup-px-3 upup-py-2 upup-text-sm upup-font-medium upup-text-white"
+                        style={{ backgroundColor: 'var(--upup-color-primary)' }}
                         onClick={cancel}
+                        data-upup-slot="fileList.doneButton"
                     >
                         {t('common.done')}
                     </button>
@@ -246,13 +227,11 @@ export default memo(function FileList({ className }: FileListProps) {
                     <div className="upup-flex upup-items-center upup-gap-2">
                         {(isUploading || isPaused) && (
                             <button
-                                className={cn(
-                                    'upup-flex upup-h-7 upup-w-7 upup-items-center upup-justify-center upup-rounded-full upup-bg-gray-200 upup-text-gray-700 upup-transition-colors hover:upup-bg-gray-300',
-                                    {
-                                        'upup-bg-white/10 upup-text-white hover:upup-bg-white/20':
-                                            dark,
-                                    },
-                                )}
+                                className="upup-flex upup-h-7 upup-w-7 upup-items-center upup-justify-center upup-rounded-full upup-transition-colors"
+                                style={{
+                                    backgroundColor: 'var(--upup-color-surface-alt)',
+                                    color: 'var(--upup-color-text)',
+                                }}
                                 onClick={isPaused ? resume : pause}
                                 title={
                                     isPaused ? 'Resume upload' : 'Pause upload'
@@ -273,7 +252,6 @@ export default memo(function FileList({ className }: FileListProps) {
                             progressBarClassName="upup-rounded"
                             progress={totalProgress}
                             showValue
-                            dark={dark}
                         />
                     </div>
                 </div>

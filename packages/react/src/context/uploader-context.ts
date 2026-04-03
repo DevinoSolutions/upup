@@ -2,7 +2,7 @@
 
 import { createContext, useContext } from 'react'
 import type { UseUpupUploadReturn } from '../use-upup-upload'
-import type { FileSource, UploaderClassNames, Translator } from '@upup/shared'
+import type { FileSource, UpupResolvedTheme, Translator } from '@upup/shared'
 import type { UploaderIcons } from '../types/icons'
 
 export type UploadSource = 'local' | 'camera' | 'url' | 'google_drive' | 'onedrive' | 'dropbox' | 'microphone' | 'screen'
@@ -10,9 +10,10 @@ export type UploadSource = 'local' | 'camera' | 'url' | 'google_drive' | 'onedri
 export interface UploaderUIState {
   activeSource: FileSource | null
   setActiveSource: (source: FileSource | null) => void
-  dark: boolean
+  resolvedTheme: UpupResolvedTheme
+  /** Flat CSS variable map for the style attribute */
+  cssVars: Record<string, string>
   mini: boolean
-  classNames: UploaderClassNames
   icons: UploaderIcons
   enablePaste: boolean
   sources: UploadSource[]

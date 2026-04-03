@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useUploaderContext } from '../context/uploader-context'
 
 export default function useAudioUploader() {
-    const { setFiles, setActiveSource, dark, classNames, icons } = useUploaderContext()
+    const { setFiles, setActiveSource, icons } = useUploaderContext()
     const [isRecording, setIsRecording] = useState(false)
     const [audioUrl, setAudioUrl] = useState<string | null>(null)
     const [duration, setDuration] = useState(0)
@@ -157,8 +157,6 @@ export default function useAudioUploader() {
         stopRecording,
         deleteRecording,
         handleAddAudio,
-        dark,
-        classNames,
         icons,
     }
 }

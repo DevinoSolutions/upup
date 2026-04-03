@@ -1,7 +1,6 @@
 'use client'
 
 import React from 'react'
-import { cn } from '../lib/tailwind'
 import useAudioUploader from '../hooks/use-audio-uploader'
 import { useUploaderContext } from '../context/uploader-context'
 
@@ -16,34 +15,30 @@ export default function AudioUploader() {
         stopRecording,
         deleteRecording,
         handleAddAudio,
-        dark,
-        classNames,
         icons,
     } = useAudioUploader()
 
     const { AudioRecordIcon, AudioStopIcon, AudioDeleteIcon } = icons
 
     return (
-        <div className="upup-flex upup-h-full upup-w-full upup-flex-col upup-items-center upup-justify-center upup-gap-4 upup-px-3 upup-py-4">
+        <div
+            className="upup-flex upup-h-full upup-w-full upup-flex-col upup-items-center upup-justify-center upup-gap-4 upup-px-3 upup-py-4"
+            data-upup-slot="audioUploader.root"
+        >
             {/* Idle state */}
             {!isRecording && !audioUrl && (
                 <div className="upup-flex upup-flex-1 upup-flex-col upup-items-center upup-justify-center upup-gap-4">
                     <button
-                        className={cn(
-                            'upup-flex upup-flex-col upup-items-center upup-justify-center upup-gap-2 upup-rounded-full upup-bg-red-500 upup-p-6 upup-text-white upup-shadow-lg upup-transition-all upup-duration-300 hover:upup-bg-red-600',
-                            dark && 'upup-bg-red-600',
-                            classNames.audioRecordButton,
-                        )}
+                        className="upup-flex upup-flex-col upup-items-center upup-justify-center upup-gap-2 upup-rounded-full upup-p-6 upup-text-white upup-shadow-lg upup-transition-all upup-duration-300"
+                        style={{ backgroundColor: 'var(--upup-color-danger)' }}
                         onClick={startRecording}
                         type="button"
                     >
                         {AudioRecordIcon && <AudioRecordIcon />}
                     </button>
                     <span
-                        className={cn(
-                            'upup-text-sm upup-text-gray-600',
-                            dark && 'upup-text-gray-300',
-                        )}
+                        className="upup-text-sm"
+                        style={{ color: 'var(--upup-color-text-muted)' }}
                     >
                         {t('audio.startRecording')}
                     </span>
@@ -57,25 +52,17 @@ export default function AudioUploader() {
                         ref={canvasRef}
                         width={300}
                         height={100}
-                        className={cn(
-                            'upup-rounded-lg upup-bg-black/5',
-                            dark && 'upup-bg-white/5',
-                            classNames.audioWaveform,
-                        )}
+                        className="upup-rounded-lg"
+                        style={{ backgroundColor: 'var(--upup-color-surface-alt)' }}
                     />
                     <span
-                        className={cn(
-                            'upup-text-sm upup-font-medium upup-text-red-500',
-                            dark && 'upup-text-red-400',
-                        )}
+                        className="upup-text-sm upup-font-medium"
+                        style={{ color: 'var(--upup-color-danger)' }}
                     >
                         {t('audio.recording')} {formattedDuration}
                     </span>
                     <button
-                        className={cn(
-                            'upup-flex upup-items-center upup-gap-2 upup-rounded-md upup-bg-gray-700 upup-px-4 upup-py-2 upup-text-white upup-transition-all upup-duration-300 hover:upup-bg-gray-800',
-                            classNames.audioStopButton,
-                        )}
+                        className="upup-flex upup-items-center upup-gap-2 upup-rounded-md upup-bg-gray-700 upup-px-4 upup-py-2 upup-text-white upup-transition-all upup-duration-300 hover:upup-bg-gray-800"
                         onClick={stopRecording}
                         type="button"
                     >
@@ -89,11 +76,9 @@ export default function AudioUploader() {
             {!isRecording && !!audioUrl && (
                 <div className="upup-flex upup-flex-1 upup-flex-col upup-items-center upup-justify-center upup-gap-4">
                     <div
-                        className={cn(
-                            'upup-w-full upup-max-w-sm upup-rounded-lg upup-bg-black/5 upup-p-4',
-                            dark && 'upup-bg-white/5',
-                            classNames.audioPlaybackContainer,
-                        )}
+                        className="upup-w-full upup-max-w-sm upup-rounded-lg upup-p-4"
+                        style={{ backgroundColor: 'var(--upup-color-surface-alt)' }}
+                        data-upup-slot="audioUploader.playbackContainer"
                     >
                         <audio
                             src={audioUrl ?? undefined}
@@ -103,23 +88,20 @@ export default function AudioUploader() {
                     </div>
                     <div className="upup-flex upup-gap-3">
                         <button
-                            className={cn(
-                                'upup-flex upup-items-center upup-gap-2 upup-rounded-md upup-bg-blue-600 upup-px-4 upup-py-2 upup-text-white upup-transition-all upup-duration-300 hover:upup-bg-blue-700',
-                                dark && 'upup-bg-[#59D1F9]',
-                                classNames.audioAddButton,
-                            )}
+                            className="upup-flex upup-items-center upup-gap-2 upup-rounded-md upup-px-4 upup-py-2 upup-text-white upup-transition-all upup-duration-300"
+                            style={{ backgroundColor: 'var(--upup-color-primary)' }}
                             onClick={handleAddAudio}
                             type="button"
+                            data-upup-slot="audioUploader.addButton"
                         >
                             {t('audio.addAudio')}
                         </button>
                         <button
-                            className={cn(
-                                'upup-flex upup-items-center upup-gap-2 upup-rounded-md upup-bg-red-500 upup-px-4 upup-py-2 upup-text-white upup-transition-all upup-duration-300 hover:upup-bg-red-600',
-                                classNames.audioDeleteButton,
-                            )}
+                            className="upup-flex upup-items-center upup-gap-2 upup-rounded-md upup-px-4 upup-py-2 upup-text-white upup-transition-all upup-duration-300"
+                            style={{ backgroundColor: 'var(--upup-color-danger)' }}
                             onClick={deleteRecording}
                             type="button"
+                            data-upup-slot="audioUploader.deleteButton"
                         >
                             {AudioDeleteIcon && <AudioDeleteIcon />}
                             <span>{t('audio.deleteRecording')}</span>

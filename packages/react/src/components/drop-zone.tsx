@@ -14,7 +14,7 @@ export type DropZoneProps = {
 }
 
 export default function DropZone({ children, className }: DropZoneProps) {
-    const { files, activeSource, dark } = useUploaderContext()
+    const { files, activeSource, resolvedTheme } = useUploaderContext()
     const {
         isDragging,
         absoluteIsDragging,
@@ -31,22 +31,26 @@ export default function DropZone({ children, className }: DropZoneProps) {
             className={cn(
                 'upup-relative upup-flex-1 upup-overflow-hidden upup-rounded-lg',
                 {
-                    'upup-border upup-border-[#1849D6]': absoluteHasBorder,
-                    'upup-border-[#30C5F7] dark:upup-border-[#30C5F7]':
-                        absoluteHasBorder && dark,
+                    'upup-border': absoluteHasBorder,
                     'upup-border-dashed': !isDragging,
-                    'upup-bg-[#E7ECFC] upup-backdrop-blur-sm':
-                        absoluteIsDragging && !dark,
-                    'upup-bg-[#045671] upup-backdrop-blur-sm dark:upup-bg-[#045671]':
-                        absoluteIsDragging && dark,
+                    'upup-backdrop-blur-sm': absoluteIsDragging,
                 },
                 className,
             )}
+            style={{
+                borderColor: absoluteHasBorder
+                    ? 'var(--upup-color-border-active)'
+                    : undefined,
+                backgroundColor: absoluteIsDragging
+                    ? 'var(--upup-color-drag-bg)'
+                    : undefined,
+            }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             role="region"
             aria-label="Drop files here or click to browse"
+            data-upup-slot="dropZone.root"
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}

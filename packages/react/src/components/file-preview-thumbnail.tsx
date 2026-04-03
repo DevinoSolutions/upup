@@ -1,7 +1,6 @@
 'use client'
 
 import React, { Dispatch, SetStateAction, memo, useMemo } from 'react'
-import type { UploaderClassNames } from '@upup/shared'
 import {
     fileCanPreviewText,
     fileGetExtension,
@@ -38,7 +37,6 @@ type Props = {
     fileName: string
     fileUrl: string
     fileSize?: number
-    classNames: UploaderClassNames
     allowPreview: boolean
     loadingLabel?: string
 }
@@ -51,7 +49,6 @@ export default memo(
         fileName,
         fileType,
         fileSize,
-        classNames,
         allowPreview,
         loadingLabel = 'Loading…',
     }: Props) {
@@ -76,7 +73,7 @@ export default memo(
                 <div className="upup-flex upup-flex-col upup-items-center upup-gap-2">
                     <FileIcon
                         extension={extension}
-                        className={classNames.fileIcon}
+                        className={undefined}
                     />
                 </div>
             )
@@ -117,7 +114,6 @@ export default memo(
                             extension={extension}
                             className={cn(
                                 { 'md:upup-hidden': allowPreview },
-                                classNames.fileIcon,
                             )}
                         />
                         <div

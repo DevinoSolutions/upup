@@ -13,8 +13,7 @@ export type SourceSelectorProps = {
 export default function SourceSelector({ className }: SourceSelectorProps) {
     const {
         mini,
-        dark,
-        classNames,
+        resolvedTheme,
         addFiles,
         activeSource,
         t,
@@ -80,15 +79,14 @@ export default function SourceSelector({ className }: SourceSelectorProps) {
                 },
                 className,
             )}
+            data-upup-slot="sourceSelector.root"
         >
             {!mini && (
                 <div
                     role="tablist"
                     aria-label="Upload sources"
-                    className={cn(
-                        'upup-flex upup-w-full upup-flex-col upup-justify-center upup-gap-1 md:upup-flex-row md:upup-flex-wrap md:upup-items-center md:upup-gap-[30px] md:upup-px-[30px]',
-                        classNames.adapterButtonList,
-                    )}
+                    className="upup-flex upup-w-full upup-flex-col upup-justify-center upup-gap-1 md:upup-flex-row md:upup-flex-wrap md:upup-items-center md:upup-gap-[30px] md:upup-px-[30px]"
+                    data-upup-slot="sourceSelector.adapterList"
                 >
                     {chosenAdapters.map(({ Icon, id }) => (
                         <button
@@ -96,26 +94,18 @@ export default function SourceSelector({ className }: SourceSelectorProps) {
                             type="button"
                             role="tab"
                             aria-selected={activeSource === id}
-                            className={cn(
-                                'upup-group upup-flex upup-items-center upup-gap-[6px] upup-border-b upup-border-gray-200 upup-px-2 upup-py-1 md:upup-flex-col md:upup-justify-center md:upup-rounded-lg md:upup-border-none md:upup-p-0',
-                                {
-                                    'upup-border-[#6D6D6D] dark:upup-border-[#6D6D6D]':
-                                        dark,
-                                },
-                                classNames.adapterButton,
-                            )}
+                            className="upup-group upup-flex upup-items-center upup-gap-[6px] upup-border-b upup-px-2 upup-py-1 md:upup-flex-col md:upup-justify-center md:upup-rounded-lg md:upup-border-none md:upup-p-0"
+                            style={{
+                                borderColor: 'var(--upup-color-border)',
+                            }}
                             onClick={() => handleAdapterClick(id)}
+                            data-upup-slot="sourceSelector.adapterButton"
                         >
                             {Icon && <Icon />}
                             <span
-                                className={cn(
-                                    'upup-text-xs upup-text-[#242634]',
-                                    {
-                                        'upup-text-gray-300 dark:upup-text-gray-300':
-                                            dark,
-                                    },
-                                    classNames.adapterButtonText,
-                                )}
+                                className="upup-text-xs"
+                                style={{ color: 'var(--upup-color-text-muted)' }}
+                                data-upup-slot="sourceSelector.adapterButtonText"
                             >
                                 {id}
                             </span>
@@ -139,19 +129,12 @@ export default function SourceSelector({ className }: SourceSelectorProps) {
                 >
                     <TbUpload
                         size={32}
-                        className={cn(
-                            'upup-h-16 upup-w-16 md:upup-h-20 md:upup-w-20',
-                            {
-                                'upup-text-[#0B0B0B]': !dark,
-                                'upup-text-white dark:upup-text-white': dark,
-                            },
-                        )}
+                        className="upup-h-16 upup-w-16 md:upup-h-20 md:upup-w-20"
+                        style={{ color: 'var(--upup-color-text)' }}
                     />
                     <p
-                        className={cn('px-6 upup-text-center upup-text-xs', {
-                            'upup-text-[#6D6D6D] dark:upup-text-gray-400': !dark,
-                            'upup-text-gray-400 dark:upup-text-gray-500': dark,
-                        })}
+                        className="px-6 upup-text-center upup-text-xs"
+                        style={{ color: 'var(--upup-color-text-muted)' }}
                     >
                         {t('dropzone.dragOrBrowse')}
                     </p>
@@ -160,23 +143,18 @@ export default function SourceSelector({ className }: SourceSelectorProps) {
                 <div className="upup-flex upup-flex-col upup-items-center upup-gap-1 upup-px-3 upup-text-center md:upup-gap-2 md:upup-px-[30px]">
                     <div className="upup-flex upup-flex-wrap upup-items-center upup-justify-center upup-gap-1">
                         <span
-                            className={cn(
-                                'upup-text-xs upup-text-[#0B0B0B] md:upup-text-sm',
-                                { 'upup-text-white dark:upup-text-white': dark },
-                            )}
+                            className="upup-text-xs md:upup-text-sm"
+                            style={{ color: 'var(--upup-color-text)' }}
+                            data-upup-slot="sourceSelector.dragText"
                         >
                             {t('dropzone.dragFilesOr', { count: 2 })}
                         </span>
                         <button
                             type="button"
-                            className={cn(
-                                'upup-cursor-pointer upup-text-xs upup-font-semibold upup-text-[#0E2ADD] md:upup-text-sm',
-                                {
-                                    'upup-text-[#59D1F9] dark:upup-text-[#59D1F9]':
-                                        dark,
-                                },
-                            )}
+                            className="upup-cursor-pointer upup-text-xs upup-font-semibold md:upup-text-sm"
+                            style={{ color: 'var(--upup-color-primary-hover)' }}
                             onClick={handleBrowseFilesClick}
+                            data-upup-slot="sourceSelector.browseText"
                         >
                             {t('dropzone.browseFiles')}
                         </button>

@@ -19,7 +19,7 @@ export enum FacingMode {
 export type CameraMode = 'photo' | 'video'
 
 export default function useCameraUploader() {
-    const { setFiles, setActiveSource, dark, classNames, icons } = useUploaderContext()
+    const { setFiles, setActiveSource, resolvedTheme, icons } = useUploaderContext()
     const { fetchImage } = useFetchFileByUrl()
     const webcamRef = useRef<Webcam>(null)
     const [url, setUrl] = useState('')
@@ -160,8 +160,6 @@ export default function useCameraUploader() {
         newCameraSide,
         mirrored,
         toggleMirror,
-        dark,
-        classNames,
         icons,
         // Video recording
         mode,
