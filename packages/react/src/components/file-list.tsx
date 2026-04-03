@@ -36,6 +36,7 @@ export default memo(function FileList({ className }: FileListProps) {
         dark,
         classNames,
         mini,
+        t,
     } = useUploaderContext()
 
     const [draggedFileId, setDraggedFileId] = useState<string>()
@@ -122,7 +123,7 @@ export default memo(function FileList({ className }: FileListProps) {
                     onClick={cancel}
                     disabled={isUploading}
                 >
-                    Remove all
+                    {t('header.removeAllFiles')}
                 </button>
                 <span
                     className={cn('upup-text-[#6D6D6D]', {
@@ -130,7 +131,7 @@ export default memo(function FileList({ className }: FileListProps) {
                     })}
                     aria-live="polite"
                 >
-                    {files.length} file{files.length !== 1 ? 's' : ''} selected
+                    {t('header.filesSelected', { count: files.length })}
                 </span>
             </div>
 
@@ -211,7 +212,7 @@ export default memo(function FileList({ className }: FileListProps) {
                         onClick={() => upload()}
                         disabled={isUploading || isPaused}
                     >
-                        Upload {files.length} file{files.length !== 1 ? 's' : ''}
+                        {t('fileList.uploadFiles', { count: files.length })}
                     </button>
                 )}
                 {isFailed && (
@@ -223,7 +224,7 @@ export default memo(function FileList({ className }: FileListProps) {
                         )}
                         onClick={() => upload()}
                     >
-                        Retry Upload
+                        {t('fileList.uploadFiles', { count: files.length })}
                     </button>
                 )}
                 {isSuccessful && (
@@ -238,7 +239,7 @@ export default memo(function FileList({ className }: FileListProps) {
                         )}
                         onClick={cancel}
                     >
-                        Done
+                        {t('common.done')}
                     </button>
                 )}
                 <div className="upup-flex upup-flex-1 upup-flex-col upup-gap-1">

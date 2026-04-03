@@ -18,6 +18,7 @@ export default function MainBoxHeader({ handleCancel }: Readonly<Props>) {
         classNames,
         icons,
         setActiveSource,
+        t,
     } = useUploaderContext()
 
     const isUploading = status === UploadStatus.UPLOADING
@@ -48,7 +49,7 @@ export default function MainBoxHeader({ handleCancel }: Readonly<Props>) {
                 onClick={handleCancel}
                 disabled={isUploading}
             >
-                Remove all files
+                {t('header.removeAllFiles')}
             </button>
             <span
                 className={cn(
@@ -59,7 +60,7 @@ export default function MainBoxHeader({ handleCancel }: Readonly<Props>) {
                 )}
                 aria-live="polite"
             >
-                {fileCount} file{fileCount !== 1 ? 's' : ''} selected
+                {t('header.filesSelected', { count: fileCount })}
             </span>
             {ContainerAddMoreIcon && (
                 <button
@@ -74,7 +75,7 @@ export default function MainBoxHeader({ handleCancel }: Readonly<Props>) {
                     onClick={() => setActiveSource(null)}
                     disabled={isUploading}
                 >
-                    <ContainerAddMoreIcon /> Add more
+                    <ContainerAddMoreIcon /> {t('header.addMore')}
                 </button>
             )}
         </div>

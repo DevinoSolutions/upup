@@ -13,7 +13,7 @@ export default function DriveAuthFallback({
     providerName,
     onRetry,
 }: Readonly<Props>) {
-    const { dark, classNames } = useUploaderContext()
+    const { dark, classNames, t } = useUploaderContext()
 
     return (
         <div className="upup-flex upup-h-full upup-w-full upup-items-center upup-justify-center">
@@ -28,7 +28,7 @@ export default function DriveAuthFallback({
                         classNames.adapterView,
                     )}
                 >
-                    Authenticate with {providerName} to select files for upload
+                    {t('driveBrowser.authenticatePrompt', { provider: providerName })}
                 </p>
                 <button
                     type="button"
@@ -41,7 +41,7 @@ export default function DriveAuthFallback({
                     )}
                     onClick={onRetry}
                 >
-                    Sign in with {providerName}
+                    {t('driveBrowser.signInWith', { provider: providerName })}
                 </button>
             </div>
         </div>

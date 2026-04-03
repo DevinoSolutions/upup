@@ -32,7 +32,7 @@ export default function DriveBrowserHeader({
     onSearch,
     searchTerm,
 }: Readonly<Props>) {
-    const { setActiveSource, dark, classNames } = useUploaderContext()
+    const { setActiveSource, dark, classNames, t } = useUploaderContext()
 
     if (!user) return null
 
@@ -109,7 +109,7 @@ export default function DriveBrowserHeader({
                             setActiveSource(null)
                         }}
                     >
-                        Log out
+                        {t('driveBrowser.logOut')}
                     </button>
                 </div>
             </div>
@@ -135,7 +135,7 @@ export default function DriveBrowserHeader({
                             },
                             classNames.driveSearchInput,
                         )}
-                        placeholder="Search"
+                        placeholder={t('driveBrowser.search')}
                         value={searchTerm}
                         onChange={(e) => onSearch(e.currentTarget.value)}
                     />

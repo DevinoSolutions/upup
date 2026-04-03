@@ -17,6 +17,7 @@ export default function SourceSelector({ className }: SourceSelectorProps) {
         classNames,
         addFiles,
         activeSource,
+        t,
     } = useUploaderContext()
 
     const { chosenAdapters, handleAdapterClick, handleInputFileChange, localInputRef } =
@@ -152,7 +153,7 @@ export default function SourceSelector({ className }: SourceSelectorProps) {
                             'upup-text-gray-400 dark:upup-text-gray-500': dark,
                         })}
                     >
-                        Drag or browse to upload
+                        {t('dropzone.dragOrBrowse')}
                     </p>
                 </button>
             ) : (
@@ -164,7 +165,7 @@ export default function SourceSelector({ className }: SourceSelectorProps) {
                                 { 'upup-text-white dark:upup-text-white': dark },
                             )}
                         >
-                            Drag files here or
+                            {t('dropzone.dragFilesOr', { count: 2 })}
                         </span>
                         <button
                             type="button"
@@ -177,7 +178,7 @@ export default function SourceSelector({ className }: SourceSelectorProps) {
                             )}
                             onClick={handleBrowseFilesClick}
                         >
-                            browse files
+                            {t('dropzone.browseFiles')}
                         </button>
                     </div>
                 </div>

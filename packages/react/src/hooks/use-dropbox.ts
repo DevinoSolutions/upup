@@ -16,6 +16,7 @@ const formatFileItem = (entry: any): DropboxFile => ({
 
 export function useDropbox(configs?: DropboxConfigs) {
     const ctx = useUploaderContext()
+    const t = ctx.t
     const onError = ctx.core.options.onError ?? ((msg: string) => console.error(msg))
     const dropboxConfigs = configs ?? ctx.core.options.dropboxConfigs
 
@@ -74,7 +75,7 @@ export function useDropbox(configs?: DropboxConfigs) {
                         errorMessage.includes('expired_access_token') &&
                         !refreshToken
                     ) {
-                        onError('Dropbox session expired. Please sign in again.')
+                        onError(t('errors.dropboxSessionExpired'))
                         logout()
                         throw new Error('Token expired - re-authentication required')
                     }
@@ -83,7 +84,7 @@ export function useDropbox(configs?: DropboxConfigs) {
                         const newToken = await refreshAccessToken(refreshToken)
                         if (newToken) return fetchDropbox(url, method, body, true)
                     } else if (response.status === 401 && !refreshToken) {
-                        onError('Dropbox session expired. Please sign in again.')
+                        onError(t('errors.dropboxSessionExpired'))
                         logout()
                         throw new Error('Token expired - re-authentication required')
                     }
