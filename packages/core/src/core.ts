@@ -7,6 +7,7 @@ import { UploadManager } from './upload-manager'
 import { TokenEndpointCredentials } from './strategies/token-endpoint'
 import { DirectUpload } from './strategies/direct-upload'
 import { CrashRecoveryManager, IndexedDBStorage } from './crash-recovery'
+import { WorkerPool } from './worker-pool'
 import { heicStep } from './steps/heic'
 import { exifStep } from './steps/exif'
 import { compressStep } from './steps/compress'
@@ -72,6 +73,8 @@ export interface CoreOptions extends FileManagerOptions {
   translations?: unknown
   restrictions?: Restrictions
   cloudDrives?: CloudDrivesConfig
+  enableWorkers?: boolean
+  workerPoolSize?: number
 }
 
 export type ValidationResult = {
@@ -98,6 +101,7 @@ export class UpupCore {
   private _status: UploadStatus = UploadStatus.IDLE
   private _error: Error | null = null
   private crashRecovery: CrashRecoveryManager | null = null
+  private workerPool?: WorkerPool
   options: CoreOptions
 
   constructor(options: CoreOptions) {
@@ -158,6 +162,12 @@ export class UpupCore {
       this.crashRecovery = new CrashRecoveryManager(new IndexedDBStorage())
       this.on('state-change', () => {
         this.crashRecovery?.save(this.getSnapshot()).catch(() => {})
+      })
+    }
+
+    if (options.enableWorkers) {
+      this.workerPool = new WorkerPool({
+        maxWorkers: options.workerPoolSize,
       })
     }
   }
@@ -471,6 +481,7 @@ export class UpupCore {
   }
 
   destroy(): void {
+    this.workerPool?.destroy()
     this.emitter.removeAllListeners()
     this.pluginManager.destroy()
     this.fileManager.removeAll()
