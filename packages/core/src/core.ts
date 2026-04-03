@@ -7,6 +7,11 @@ import { UploadManager } from './upload-manager'
 import { TokenEndpointCredentials } from './strategies/token-endpoint'
 import { DirectUpload } from './strategies/direct-upload'
 import { CrashRecoveryManager, IndexedDBStorage } from './crash-recovery'
+import { heicStep } from './steps/heic'
+import { exifStep } from './steps/exif'
+import { compressStep } from './steps/compress'
+import { thumbnailStep } from './steps/thumbnail'
+import { hashStep } from './steps/hash'
 
 export interface Restrictions {
   maxFileSize?: import('@upup/shared').MaxFileSizeObject
@@ -136,6 +141,11 @@ export class UpupCore {
 
     if (options.pipeline) {
       this.pipelineEngine = new PipelineEngine(options.pipeline)
+    } else {
+      const autoSteps = this.buildAutoPipeline()
+      if (autoSteps.length > 0) {
+        this.pipelineEngine = new PipelineEngine(autoSteps)
+      }
     }
 
     if (options.plugins) {
@@ -231,6 +241,38 @@ export class UpupCore {
   reorderFiles(fileIds: string[]): void {
     this.fileManager.reorderFiles(fileIds)
     this.emitter.emit('state-change', { files: this.files })
+  }
+
+  private buildAutoPipeline(): PipelineStep[] {
+    const steps: PipelineStep[] = []
+
+    if (this.options.heicConversion) {
+      steps.push(heicStep())
+    }
+
+    if (this.options.stripExifData) {
+      steps.push(exifStep())
+    }
+
+    if (this.options.imageCompression || this.options.shouldCompress) {
+      const opts = typeof this.options.imageCompression === 'object'
+        ? this.options.imageCompression
+        : {}
+      steps.push(compressStep(opts))
+    }
+
+    if (this.options.thumbnailGenerator) {
+      const opts = typeof this.options.thumbnailGenerator === 'object'
+        ? this.options.thumbnailGenerator
+        : {}
+      steps.push(thumbnailStep(opts))
+    }
+
+    if (this.options.checksumVerification) {
+      steps.push(hashStep())
+    }
+
+    return steps
   }
 
   async validateFiles(files: File[]): Promise<ValidationResult[]> {
