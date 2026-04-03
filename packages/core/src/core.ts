@@ -8,6 +8,15 @@ import { TokenEndpointCredentials } from './strategies/token-endpoint'
 import { DirectUpload } from './strategies/direct-upload'
 import { CrashRecoveryManager, IndexedDBStorage } from './crash-recovery'
 
+export interface Restrictions {
+  maxFileSize?: import('@upup/shared').MaxFileSizeObject
+  minFileSize?: import('@upup/shared').MaxFileSizeObject
+  maxTotalFileSize?: import('@upup/shared').MaxFileSizeObject
+  maxNumberOfFiles?: number
+  minNumberOfFiles?: number
+  allowedFileTypes?: string[]
+}
+
 export interface CoreOptions extends FileManagerOptions {
   uploadEndpoint?: string
   serverUrl?: string
@@ -35,6 +44,7 @@ export interface CoreOptions extends FileManagerOptions {
   meta?: Record<string, unknown>
   locale?: unknown
   translations?: unknown
+  restrictions?: Restrictions
 }
 
 export type UploadOptions = {
@@ -55,19 +65,31 @@ export class UpupCore {
   private _status: UploadStatus = UploadStatus.IDLE
   private _error: Error | null = null
   private crashRecovery: CrashRecoveryManager | null = null
-  readonly options: CoreOptions
+  options: CoreOptions
 
   constructor(options: CoreOptions) {
-    this.options = options
+    this.options = { ...options }
+
+    // Merge restrictions into flat options (flat takes precedence)
+    if (options.restrictions) {
+      const r = options.restrictions
+      if (r.maxFileSize && !options.maxFileSize) this.options.maxFileSize = r.maxFileSize
+      if (r.minFileSize && !options.minFileSize) this.options.minFileSize = r.minFileSize
+      if (r.maxTotalFileSize && !options.maxTotalFileSize) this.options.maxTotalFileSize = r.maxTotalFileSize
+      if (r.maxNumberOfFiles != null && !options.limit) this.options.limit = r.maxNumberOfFiles
+      if (r.minNumberOfFiles != null && !options.minFiles) this.options.minFiles = r.minNumberOfFiles
+      if (r.allowedFileTypes && !options.accept) this.options.accept = r.allowedFileTypes.join(',')
+    }
+
     this.fileManager = new FileManager({
-      accept: options.accept,
-      limit: options.limit,
-      minFiles: options.minFiles,
-      maxFileSize: options.maxFileSize,
-      minFileSize: options.minFileSize,
-      maxTotalFileSize: options.maxTotalFileSize,
-      contentDeduplication: options.contentDeduplication,
-      onBeforeFileAdded: options.onBeforeFileAdded,
+      accept: this.options.accept,
+      limit: this.options.limit,
+      minFiles: this.options.minFiles,
+      maxFileSize: this.options.maxFileSize,
+      minFileSize: this.options.minFileSize,
+      maxTotalFileSize: this.options.maxTotalFileSize,
+      contentDeduplication: this.options.contentDeduplication,
+      onBeforeFileAdded: this.options.onBeforeFileAdded,
     })
 
     if (options.pipeline) {
