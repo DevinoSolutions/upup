@@ -1,4 +1,5 @@
 export * from './upload-file'
+export * from './upload-result'
 export * from './file-source'
 export * from './storage-provider'
 export * from './upload-status'

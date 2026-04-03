@@ -1,6 +1,8 @@
 import {
   UpupValidationError,
   UpupErrorCode,
+  FileSource,
+  UploadStatus,
   type UploadFile,
   type MaxFileSizeObject,
 } from '@upup/shared'
@@ -22,12 +24,12 @@ function generateFileId(): string {
   return `upup-${Date.now()}-${++fileIdCounter}`
 }
 
-function fileSizeInBytes(size: MaxFileSizeObject): number {
+export function fileSizeInBytes(size: MaxFileSizeObject): number {
   const units: Record<string, number> = { B: 1, KB: 1024, MB: 1024 ** 2, GB: 1024 ** 3 }
   return size.size * (units[size.unit] ?? 1)
 }
 
-function matchesAccept(file: File, accept: string): boolean {
+export function matchesAccept(file: File, accept: string): boolean {
   const types = accept.split(',').map(t => t.trim())
   return types.some(type => {
     if (type.endsWith('/*')) {
@@ -40,15 +42,18 @@ function matchesAccept(file: File, accept: string): boolean {
   })
 }
 
-function nativeToUploadFile(file: File): UploadFile {
+function nativeToUploadFile(file: File, source: FileSource = FileSource.LOCAL): UploadFile {
   return Object.assign(file, {
     id: generateFileId(),
+    source,
+    status: UploadStatus.IDLE,
+    metadata: {},
     url: undefined,
     relativePath: undefined,
     key: undefined,
+    etag: undefined,
     fileHash: undefined,
     checksumSHA256: undefined,
-    etag: undefined,
     thumbnail: undefined,
   }) as UploadFile
 }

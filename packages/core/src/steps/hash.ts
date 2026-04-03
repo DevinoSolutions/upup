@@ -12,6 +12,7 @@ export function hashStep(): PipelineStep {
     async process(file: UploadFile, _context: PipelineContext): Promise<UploadFile> {
       const buffer = await file.arrayBuffer()
       const hash = await computeSHA256(buffer)
+      file.metadata = { ...file.metadata, checksum: hash, originalContentHash: hash }
       return Object.assign(file, { checksumSHA256: hash })
     },
   }
