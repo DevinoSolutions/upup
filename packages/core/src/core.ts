@@ -17,6 +17,27 @@ export interface Restrictions {
   allowedFileTypes?: string[]
 }
 
+export interface GoogleDriveConfig {
+  clientId: string
+  apiKey: string
+  appId: string
+}
+
+export interface OneDriveConfig {
+  clientId: string
+  authority?: string
+}
+
+export interface DropboxConfig {
+  appKey: string
+}
+
+export interface CloudDrivesConfig {
+  googleDrive?: GoogleDriveConfig
+  oneDrive?: OneDriveConfig
+  dropbox?: DropboxConfig
+}
+
 export interface CoreOptions extends FileManagerOptions {
   uploadEndpoint?: string
   serverUrl?: string
@@ -45,6 +66,7 @@ export interface CoreOptions extends FileManagerOptions {
   locale?: unknown
   translations?: unknown
   restrictions?: Restrictions
+  cloudDrives?: CloudDrivesConfig
 }
 
 export type UploadOptions = {
@@ -79,6 +101,20 @@ export class UpupCore {
       if (r.maxNumberOfFiles != null && !options.limit) this.options.limit = r.maxNumberOfFiles
       if (r.minNumberOfFiles != null && !options.minFiles) this.options.minFiles = r.minNumberOfFiles
       if (r.allowedFileTypes && !options.accept) this.options.accept = r.allowedFileTypes.join(',')
+    }
+
+    // Merge cloudDrives into flat options (flat takes precedence)
+    if (options.cloudDrives) {
+      const cd = options.cloudDrives
+      if (cd.googleDrive && !options.googleDriveConfigs) {
+        this.options.googleDriveConfigs = cd.googleDrive
+      }
+      if (cd.oneDrive && !options.oneDriveConfigs) {
+        this.options.oneDriveConfigs = cd.oneDrive
+      }
+      if (cd.dropbox && !options.dropboxConfigs) {
+        this.options.dropboxConfigs = cd.dropbox
+      }
     }
 
     this.fileManager = new FileManager({
