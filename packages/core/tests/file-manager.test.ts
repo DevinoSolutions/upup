@@ -62,7 +62,9 @@ describe('FileManager', () => {
   it('reorders files', async () => {
     const fm = new FileManager({})
     const files = await fm.addFiles([makeNativeFile('a.jpg'), makeNativeFile('b.jpg'), makeNativeFile('c.jpg')])
-    fm.reorderFiles(0, 2)
+    const ids = files.map(f => f.id)
+    // Move first to last: [a, b, c] -> [b, c, a]
+    fm.reorderFiles([ids[1], ids[2], ids[0]])
     const ordered = [...fm.getFiles().values()]
     expect(ordered[0].name).toBe('b.jpg')
     expect(ordered[2].name).toBe('a.jpg')

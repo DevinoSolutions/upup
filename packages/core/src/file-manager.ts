@@ -162,10 +162,21 @@ export class FileManager {
     return this.addFiles(nativeFiles)
   }
 
-  reorderFiles(fromIndex: number, toIndex: number): void {
-    const entries = [...this.files.entries()]
-    const [moved] = entries.splice(fromIndex, 1)
-    entries.splice(toIndex, 0, moved)
-    this.files = new Map(entries)
+  reorderFiles(fileIds: string[]): void {
+    if (fileIds.length !== this.files.size) {
+      throw new Error(
+        `reorderFiles: expected ${this.files.size} IDs but received ${fileIds.length}`,
+      )
+    }
+
+    const newMap = new Map<string, UploadFile>()
+    for (const id of fileIds) {
+      const file = this.files.get(id)
+      if (!file) {
+        throw new Error(`reorderFiles: unknown file ID "${id}"`)
+      }
+      newMap.set(id, file)
+    }
+    this.files = newMap
   }
 }

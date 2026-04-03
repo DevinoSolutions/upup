@@ -164,8 +164,8 @@ export class UpupCore {
     this.emitter.emit('state-change', { files: this.files })
   }
 
-  reorderFiles(fromIndex: number, toIndex: number): void {
-    this.fileManager.reorderFiles(fromIndex, toIndex)
+  reorderFiles(fileIds: string[]): void {
+    this.fileManager.reorderFiles(fileIds)
     this.emitter.emit('state-change', { files: this.files })
   }
 

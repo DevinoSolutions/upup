@@ -14,7 +14,7 @@ export interface UseUpupUploadReturn {
   removeFile(id: string): void
   removeAll(): void
   setFiles(files: File[]): Promise<void>
-  reorderFiles(fromIndex: number, toIndex: number): void
+  reorderFiles(fileIds: string[]): void
 
   upload(): Promise<UploadFile[]>
   pause(): void
@@ -95,7 +95,7 @@ export function useUpupUpload(options: CoreOptions): UseUpupUploadReturn {
     removeFile: (id) => core.removeFile(id),
     removeAll: () => core.removeAll(),
     setFiles: (files) => core.setFiles(files),
-    reorderFiles: (from, to) => core.reorderFiles(from, to),
+    reorderFiles: (fileIds) => core.reorderFiles(fileIds),
 
     upload: () => core.upload(),
     pause: () => core.pause(),

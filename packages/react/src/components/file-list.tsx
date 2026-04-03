@@ -79,10 +79,13 @@ export default memo(function FileList({ className }: FileListProps) {
                 clearDragState()
                 return
             }
-            const fromIndex = files.findIndex(f => f.id === draggedFileId)
-            const toIndex = files.findIndex(f => f.id === targetFileId)
-            if (fromIndex !== -1 && toIndex !== -1) {
-                reorderFiles(fromIndex, toIndex)
+            const ids = files.map(f => f.id)
+            const fromIdx = ids.indexOf(draggedFileId)
+            const toIdx = ids.indexOf(targetFileId)
+            if (fromIdx !== -1 && toIdx !== -1) {
+                ids.splice(fromIdx, 1)
+                ids.splice(toIdx, 0, draggedFileId)
+                reorderFiles(ids)
             }
             clearDragState()
         },
