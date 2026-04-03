@@ -10,7 +10,7 @@ export interface PipelineContext {
   files: ReadonlyMap<string, UploadFile>
   options: Record<string, unknown>
   emit(event: string, data?: unknown): void
-  t: (template: string, vars?: Record<string, unknown>) => string
+  t: (key: string, vars?: Record<string, unknown>) => string
   worker?: {
     execute<T>(task: { type: string; data: ArrayBuffer }): Promise<T>
   }

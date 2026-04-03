@@ -1,11 +1,9 @@
-import type { Translations } from './types'
+import type { UpupMessages } from './types'
 
 /**
- * Interpolate `{{key}}` placeholders in a translation string.
+ * @deprecated Use `createTranslator()` instead. Will be removed in v3.
  *
- * @example
- * t('Upload {{count}} files', { count: 3 })
- * // → "Upload 3 files"
+ * Interpolate `{{key}}` placeholders in a translation string.
  */
 export function t(
     template: string,
@@ -18,35 +16,45 @@ export function t(
 }
 
 /**
+ * @deprecated Use `createTranslator()` with ICU plural syntax instead. Will be removed in v3.
+ *
  * Pick the correct plural form for a translation key.
- *
- * Given a base key (e.g. `"uploadFiles"`) and a count, this returns
- * the `_one` variant when count === 1 and `_other` otherwise.
- *
- * @example
- * plural(translations, 'uploadFiles', 3)
- * // → translations.uploadFiles_other  ("Upload {{count}} files")
  */
 export function plural(
-    translations: Translations,
+    translations: UpupMessages,
     baseKey: string,
     count: number,
 ): string {
     const suffix = count === 1 ? '_one' : '_other'
-    const key = `${baseKey}${suffix}` as keyof Translations
-    return (
-        translations[key] ?? translations[baseKey as keyof Translations] ?? ''
-    )
+    const key = `${baseKey}${suffix}`
+    const flat = translations as unknown as Record<string, string>
+    return flat[key] ?? flat[baseKey] ?? ''
 }
 
 /**
+ * @deprecated Use `createTranslator()` with overrides instead. Will be removed in v3.
+ *
  * Deep-merge a partial translations override onto a base locale.
- * Only top-level keys are merged (the object is flat by design).
  */
 export function mergeTranslations(
-    base: Translations,
-    overrides?: Partial<Translations>,
-): Translations {
+    base: UpupMessages,
+    overrides?: Partial<UpupMessages>,
+): UpupMessages {
     if (!overrides) return base
-    return { ...base, ...overrides }
+    const result = { ...base } as Record<string, unknown>
+    for (const key of Object.keys(overrides)) {
+        const baseNs = (base as unknown as Record<string, unknown>)[key]
+        const overrideNs = (overrides as unknown as Record<string, unknown>)[key]
+        if (
+            baseNs &&
+            typeof baseNs === 'object' &&
+            overrideNs &&
+            typeof overrideNs === 'object'
+        ) {
+            result[key] = { ...baseNs, ...overrideNs }
+        } else if (overrideNs !== undefined) {
+            result[key] = overrideNs
+        }
+    }
+    return result as unknown as UpupMessages
 }
