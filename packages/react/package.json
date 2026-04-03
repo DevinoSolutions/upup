@@ -73,6 +73,7 @@
   "devDependencies": {
     "@tailwindcss/container-queries": "^0.1.1",
     "@testing-library/react": "^16.0.1",
+    "@testing-library/user-event": "^14.6.1",
     "@types/jest-axe": "^3.5.9",
     "@types/pako": "^2.0.4",
     "@types/react": ">=18.0.0",

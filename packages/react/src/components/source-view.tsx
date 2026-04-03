@@ -1,7 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import React from 'react'
+import React, { useEffect } from 'react'
 import { useUploaderContext } from '../context/uploader-context'
 import { uploadAdapterObject } from '../lib/constants'
 import { cn } from '../lib/tailwind'
@@ -19,6 +19,16 @@ export default function SourceView({ className }: SourceViewProps) {
         mini,
         resolvedTheme,
     } = useUploaderContext()
+
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape' && activeSource) {
+                setActiveSource(null)
+            }
+        }
+        document.addEventListener('keydown', handleKeyDown)
+        return () => document.removeEventListener('keydown', handleKeyDown)
+    }, [activeSource, setActiveSource])
 
     const adapterEntry = activeSource
         ? uploadAdapterObject[activeSource as keyof typeof uploadAdapterObject]

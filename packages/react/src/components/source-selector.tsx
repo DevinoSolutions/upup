@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useCallback, useRef } from 'react'
+import React, { useCallback } from 'react'
 import { TbUpload } from 'react-icons/tb'
 import { useUploaderContext } from '../context/uploader-context'
 import useAdapterSelector from '../hooks/use-adapter-selector'
@@ -29,6 +29,29 @@ export default function SourceSelector({ className }: SourceSelectorProps) {
             localInputRef.current.click()
         }
     }, [localInputRef])
+
+    const handleTabListKeyDown = useCallback(
+        (e: React.KeyboardEvent) => {
+            const tabs = Array.from(
+                e.currentTarget.querySelectorAll('[role="tab"]'),
+            ) as HTMLElement[]
+            const currentIndex = tabs.indexOf(e.target as HTMLElement)
+            if (currentIndex === -1) return
+
+            let nextIndex: number | null = null
+            if (e.key === 'ArrowRight') {
+                nextIndex = (currentIndex + 1) % tabs.length
+            } else if (e.key === 'ArrowLeft') {
+                nextIndex = (currentIndex - 1 + tabs.length) % tabs.length
+            }
+
+            if (nextIndex !== null) {
+                e.preventDefault()
+                tabs[nextIndex].focus()
+            }
+        },
+        [],
+    )
 
     const handleSelectFolderClick = useCallback(async () => {
         const anyWindow = window as any
@@ -85,6 +108,7 @@ export default function SourceSelector({ className }: SourceSelectorProps) {
                 <div
                     role="tablist"
                     aria-label="Upload sources"
+                    onKeyDown={handleTabListKeyDown}
                     className="upup-flex upup-w-full upup-flex-col upup-justify-center upup-gap-1 md:upup-flex-row md:upup-flex-wrap md:upup-items-center md:upup-gap-[30px] md:upup-px-[30px]"
                     data-upup-slot="sourceSelector.adapterList"
                 >

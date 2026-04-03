@@ -1,7 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import React, { memo, useCallback, useState } from 'react'
+import React, { memo, useCallback, useEffect, useRef, useState } from 'react'
 import { TbPlayerPauseFilled, TbPlayerPlayFilled } from 'react-icons/tb'
 import { UploadStatus } from '@upup/shared'
 import { useUploaderContext } from '../context/uploader-context'
@@ -33,6 +33,7 @@ export default memo(function FileList({ className }: FileListProps) {
         resume,
         cancel,
         reorderFiles,
+        removeFile,
         resolvedTheme,
         mini,
         t,
@@ -52,6 +53,54 @@ export default memo(function FileList({ className }: FileListProps) {
     const isFailed = status === UploadStatus.FAILED
 
     const totalProgress = progress?.percentage ?? 0
+
+    // Focus management refs
+    const lastRemovedIndexRef = useRef<number | null>(null)
+    const doneButtonRef = useRef<HTMLButtonElement>(null)
+    const retryButtonRef = useRef<HTMLButtonElement>(null)
+
+    const handleRemoveFile = useCallback((id: string) => {
+        const index = files.findIndex(f => f.id === id)
+        lastRemovedIndexRef.current = index
+        removeFile(id)
+    }, [files, removeFile])
+
+    const handleFileKeyDown = useCallback(
+        (e: React.KeyboardEvent, fileId: string, index: number) => {
+            const items = Array.from(
+                e.currentTarget.parentElement?.querySelectorAll('[role="listitem"]') || [],
+            ) as HTMLElement[]
+
+            if (e.key === 'ArrowDown') {
+                e.preventDefault()
+                items[Math.min(index + 1, items.length - 1)]?.focus()
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault()
+                items[Math.max(index - 1, 0)]?.focus()
+            } else if (e.key === 'Delete' || e.key === 'Backspace') {
+                e.preventDefault()
+                handleRemoveFile(fileId)
+            }
+        },
+        [handleRemoveFile],
+    )
+
+    // Focus management after file removal
+    useEffect(() => {
+        if (lastRemovedIndexRef.current === null) return
+        const items = document.querySelectorAll('[data-upup-file-id]')
+        const targetIndex = Math.min(lastRemovedIndexRef.current, items.length - 1)
+        if (targetIndex >= 0) {
+            (items[targetIndex] as HTMLElement).focus()
+        }
+        lastRemovedIndexRef.current = null
+    }, [files.length])
+
+    // Focus management after upload completion
+    useEffect(() => {
+        if (isSuccessful) doneButtonRef.current?.focus()
+        if (isFailed) retryButtonRef.current?.focus()
+    }, [isSuccessful, isFailed])
 
     const clearDragState = useCallback(() => {
         setDraggedFileId(undefined)
@@ -145,7 +194,7 @@ export default memo(function FileList({ className }: FileListProps) {
                         },
                     )}
                 >
-                    {files.map(file => {
+                    {files.map((file, index) => {
                         const isDraggedFile = draggedFileId === file.id
                         const isDropTarget =
                             dropTargetFileId === file.id &&
@@ -155,11 +204,13 @@ export default memo(function FileList({ className }: FileListProps) {
                             <div
                                 key={file.id}
                                 role="listitem"
+                                tabIndex={0}
                                 draggable={!isUploading}
                                 onDragStart={() => handleDragStart(file.id)}
                                 onDragOver={(e) => handleDragOver(e, file.id)}
                                 onDrop={(e) => handleDrop(e, file.id)}
                                 onDragEnd={clearDragState}
+                                onKeyDown={(e) => handleFileKeyDown(e, file.id, index)}
                                 className={cn(
                                     'upup-cursor-grab upup-rounded-xl upup-transition',
                                     {
@@ -205,6 +256,7 @@ export default memo(function FileList({ className }: FileListProps) {
                 )}
                 {isFailed && (
                     <button
+                        ref={retryButtonRef}
                         className="upup-disabled:animate-pulse upup-ml-auto upup-rounded-full upup-px-4 upup-py-2 upup-text-sm upup-font-medium upup-text-white"
                         style={{ backgroundColor: 'var(--upup-color-danger)' }}
                         onClick={() => upload()}
@@ -215,6 +267,7 @@ export default memo(function FileList({ className }: FileListProps) {
                 )}
                 {isSuccessful && (
                     <button
+                        ref={doneButtonRef}
                         className="upup-disabled:animate-pulse upup-ml-auto upup-rounded-lg upup-px-3 upup-py-2 upup-text-sm upup-font-medium upup-text-white"
                         style={{ backgroundColor: 'var(--upup-color-primary)' }}
                         onClick={cancel}

@@ -50,6 +50,7 @@ export default function DropZone({ children, className }: DropZoneProps) {
             exit={{ opacity: 0 }}
             role="region"
             aria-label="Drop files here or click to browse"
+            aria-dropeffect={isDragging ? 'copy' : 'none'}
             data-upup-slot="dropZone.root"
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}

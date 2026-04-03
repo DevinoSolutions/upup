@@ -1,5 +1,7 @@
 export { useUpupUpload } from './use-upup-upload'
 export type { UseUpupUploadReturn } from './use-upup-upload'
+export { createPropGetters } from './prop-getters'
+export type { PropGetterDeps } from './prop-getters'
 export { useIsClient } from './use-is-client'
 export { UpupUploader } from './upup-uploader'
 export type { UpupUploaderProps, UpupUploaderRef } from './upup-uploader'

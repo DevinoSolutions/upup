@@ -54,6 +54,37 @@ describe('useUpupUpload', () => {
     expect(result.current.files.length).toBe(0)
   })
 
+  describe('prop-getters', () => {
+    it('getDropzoneProps returns required properties', () => {
+      const { result } = renderHook(() =>
+        useUpupUpload({ provider: 'aws', uploadEndpoint: '/api/upload' }),
+      )
+      const props = result.current.getDropzoneProps()
+      expect(props.role).toBe('region')
+      expect(props['aria-dropeffect']).toBe('none')
+      expect(typeof props.onDrop).toBe('function')
+      expect(typeof props.onDragOver).toBe('function')
+    })
+
+    it('getRootProps returns required properties', () => {
+      const { result } = renderHook(() =>
+        useUpupUpload({ provider: 'aws', uploadEndpoint: '/api/upload' }),
+      )
+      const props = result.current.getRootProps()
+      expect(props.role).toBe('application')
+      expect(props['aria-busy']).toBe(false)
+    })
+
+    it('getInputProps returns required properties', () => {
+      const { result } = renderHook(() =>
+        useUpupUpload({ provider: 'aws', uploadEndpoint: '/api/upload' }),
+      )
+      const props = result.current.getInputProps()
+      expect(props.type).toBe('file')
+      expect(props['aria-hidden']).toBe(true)
+    })
+  })
+
   it('cleans up core on unmount', () => {
     const { result, unmount } = renderHook(() =>
       useUpupUpload({ provider: 'aws', uploadEndpoint: '/api/upload' })

@@ -4,6 +4,7 @@ import { useRef, useState, useEffect } from 'react'
 import { UpupCore, type CoreOptions } from '@upup/core'
 import { UploadStatus, type UploadFile, type UpupError } from '@upup/shared'
 import type { ExtensionMethods } from '@upup/core'
+import { createPropGetters } from './prop-getters'
 
 export interface UseUpupUploadReturn {
   files: UploadFile[]
@@ -27,6 +28,10 @@ export interface UseUpupUploadReturn {
   ext: Record<string, ExtensionMethods>
 
   core: UpupCore
+
+  getDropzoneProps: ReturnType<typeof createPropGetters>['getDropzoneProps']
+  getRootProps: ReturnType<typeof createPropGetters>['getRootProps']
+  getInputProps: ReturnType<typeof createPropGetters>['getInputProps']
 }
 
 export interface UseUpupUploadOptions extends CoreOptions {
@@ -112,8 +117,46 @@ export function useUpupUpload(options: UseUpupUploadOptions): UseUpupUploadRetur
       on: () => () => {},
       ext: {},
       core: null as unknown as UpupCore,
+      getDropzoneProps: () => ({
+        onDragOver: () => {},
+        onDragLeave: () => {},
+        onDrop: () => {},
+        onPaste: () => {},
+        role: 'region' as const,
+        'aria-label': 'Drop files here or click to browse',
+        'aria-dropeffect': 'none' as const,
+        tabIndex: 0,
+      }),
+      getRootProps: () => ({
+        role: 'application' as const,
+        'aria-label': 'File uploader',
+        'aria-busy': false,
+        'aria-describedby': undefined as string | undefined,
+      }),
+      getInputProps: () => ({
+        type: 'file' as const,
+        multiple: true,
+        accept: undefined as string | undefined,
+        onChange: () => {},
+        style: { display: 'none' as const },
+        tabIndex: -1,
+        'aria-hidden': true as const,
+      }),
     }
   }
+
+  const [isDragging, setIsDragging] = useState(false)
+  const disableDragAction = core.status === UploadStatus.UPLOADING
+
+  const propGetters = createPropGetters({
+    addFiles: (files) => core.addFiles(files),
+    status: core.status,
+    accept: options.accept as string | undefined,
+    multiple: options.limit !== 1,
+    isDragging,
+    setIsDragging,
+    disableDragAction,
+  })
 
   return {
     files: [...core.files.values()],
@@ -137,5 +180,7 @@ export function useUpupUpload(options: UseUpupUploadOptions): UseUpupUploadRetur
     ext: core.ext,
 
     core,
+
+    ...propGetters,
   }
 }
