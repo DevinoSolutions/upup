@@ -3,6 +3,7 @@
 import { useRef, useState, useEffect } from 'react'
 import { UpupCore, type CoreOptions } from '@upup/core'
 import { UploadStatus, type UploadFile, type UpupError } from '@upup/shared'
+import type { ExtensionMethods } from '@upup/core'
 
 export interface UseUpupUploadReturn {
   files: UploadFile[]
@@ -22,7 +23,17 @@ export interface UseUpupUploadReturn {
   cancel(): void
   retry(fileId?: string): void
 
+  on(event: string, handler: (...args: unknown[]) => void): () => void
+  ext: Record<string, ExtensionMethods>
+
   core: UpupCore
+}
+
+export interface UseUpupUploadOptions extends CoreOptions {
+  onFileAdded?: (files: UploadFile[]) => void
+  onFileRemoved?: (file: UploadFile) => void
+  onUploadProgress?: (progress: { fileId: string; loaded: number; total: number }) => void
+  onUploadComplete?: (files: UploadFile[]) => void
 }
 
 /**
@@ -32,7 +43,7 @@ export interface UseUpupUploadReturn {
  * Changing `options` after the initial render has no effect. If you need
  * to reconfigure, unmount and remount the component with a new `key`.
  */
-export function useUpupUpload(options: CoreOptions): UseUpupUploadReturn {
+export function useUpupUpload(options: UseUpupUploadOptions): UseUpupUploadReturn {
   const coreRef = useRef<UpupCore | null>(null)
   const [, forceUpdate] = useState(0)
 
@@ -55,8 +66,25 @@ export function useUpupUpload(options: CoreOptions): UseUpupUploadReturn {
       forceUpdate(n => n + 1)
     })
 
+    // Wire convenience callbacks
+    const unsubCallbacks: Array<() => void> = []
+
+    if (options.onFileAdded) {
+      unsubCallbacks.push(core.on('files-added', options.onFileAdded as (...args: unknown[]) => void))
+    }
+    if (options.onFileRemoved) {
+      unsubCallbacks.push(core.on('file-removed', options.onFileRemoved as (...args: unknown[]) => void))
+    }
+    if (options.onUploadProgress) {
+      unsubCallbacks.push(core.on('upload-progress', options.onUploadProgress as (...args: unknown[]) => void))
+    }
+    if (options.onUploadComplete) {
+      unsubCallbacks.push(core.on('upload-all-complete', options.onUploadComplete as (...args: unknown[]) => void))
+    }
+
     return () => {
       unsub()
+      for (const u of unsubCallbacks) u()
       core.destroy()
       coreRef.current = null
     }
@@ -81,6 +109,8 @@ export function useUpupUpload(options: CoreOptions): UseUpupUploadReturn {
       resume: () => {},
       cancel: () => {},
       retry: () => {},
+      on: () => () => {},
+      ext: {},
       core: null as unknown as UpupCore,
     }
   }
@@ -102,6 +132,9 @@ export function useUpupUpload(options: CoreOptions): UseUpupUploadReturn {
     resume: () => core.resume(),
     cancel: () => core.cancel(),
     retry: (fileId) => core.retry(fileId),
+
+    on: (event, handler) => core.on(event, handler),
+    ext: core.ext,
 
     core,
   }

@@ -3,6 +3,8 @@ export type { CoreOptions, UploadOptions, ValidationResult, Restrictions, CloudD
 export { EventEmitter } from './events'
 export { PluginManager } from './plugin'
 export type { UpupPlugin, ExtensionMethods } from './plugin'
+export { composeEnhancers } from './compose-enhancers'
+export type { CoreEnhancer } from './compose-enhancers'
 export { FileManager } from './file-manager'
 export { PipelineEngine } from './pipeline/engine'
 export { DirectUpload } from './strategies/direct-upload'
