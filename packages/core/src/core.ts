@@ -5,6 +5,7 @@ import { FileManager, type FileManagerOptions, fileSizeInBytes, matchesAccept } 
 import { PipelineEngine } from './pipeline/engine'
 import { UploadManager } from './upload-manager'
 import { TokenEndpointCredentials } from './strategies/token-endpoint'
+import { ServerCredentials } from './strategies/server-credentials'
 import { DirectUpload } from './strategies/direct-upload'
 import { CrashRecoveryManager, IndexedDBStorage } from './crash-recovery'
 import { WorkerPool } from './worker-pool'
@@ -102,10 +103,16 @@ export class UpupCore {
   private _error: Error | null = null
   private crashRecovery: CrashRecoveryManager | null = null
   private workerPool?: WorkerPool
+  private fileOverrides = new Map<string, Partial<UploadOptions>>()
   options: CoreOptions
 
   constructor(options: CoreOptions) {
     this.options = { ...options }
+
+    // When apiKey is set and serverUrl is not, auto-set to managed endpoint
+    if (this.options.apiKey && !this.options.serverUrl) {
+      this.options.serverUrl = 'https://api.upup.dev/v1'
+    }
 
     // Merge restrictions into flat options (flat takes precedence)
     if (options.restrictions) {
@@ -122,13 +129,13 @@ export class UpupCore {
     if (options.cloudDrives) {
       const cd = options.cloudDrives
       if (cd.googleDrive && !options.googleDriveConfigs) {
-        this.options.googleDriveConfigs = cd.googleDrive
+        this.options.googleDriveConfigs = cd.googleDrive as unknown as Record<string, unknown>
       }
       if (cd.oneDrive && !options.oneDriveConfigs) {
-        this.options.oneDriveConfigs = cd.oneDrive
+        this.options.oneDriveConfigs = cd.oneDrive as unknown as Record<string, unknown>
       }
       if (cd.dropbox && !options.dropboxConfigs) {
-        this.options.dropboxConfigs = cd.dropbox
+        this.options.dropboxConfigs = cd.dropbox as unknown as Record<string, unknown>
       }
     }
 
@@ -217,6 +224,11 @@ export class UpupCore {
     try {
       const added = await this.fileManager.addFiles(files)
       if (added.length > 0) {
+        if (overrides) {
+          for (const file of added) {
+            this.fileOverrides.set(file.id, overrides)
+          }
+        }
         this.emitter.emit('files-added', added)
         this.emitter.emit('state-change', { files: this.files })
       }
@@ -233,6 +245,7 @@ export class UpupCore {
   removeFile(id: string): void {
     const file = this.fileManager.removeFile(id)
     if (file) {
+      this.fileOverrides.delete(id)
       this.emitter.emit('file-removed', file)
       this.emitter.emit('state-change', { files: this.files })
     }
@@ -240,6 +253,7 @@ export class UpupCore {
 
   removeAll(): void {
     this.fileManager.removeAll()
+    this.fileOverrides.clear()
     this.emitter.emit('state-change', { files: this.files })
   }
 
@@ -351,8 +365,14 @@ export class UpupCore {
 
     // Only run actual uploads if credentials/endpoint are configured
     if (this.options.uploadEndpoint || this.options.serverUrl) {
-      const credentialUrl = this.options.uploadEndpoint ?? `${this.options.serverUrl}/presign`
-      const credentials = new TokenEndpointCredentials({ url: credentialUrl })
+      const credentials = this.options.apiKey
+        ? new ServerCredentials({
+            serverUrl: this.options.serverUrl!,
+            apiKey: this.options.apiKey,
+          })
+        : new TokenEndpointCredentials({
+            url: this.options.uploadEndpoint ?? `${this.options.serverUrl}/presign`,
+          })
       const uploadStrategy = new DirectUpload()
 
       this.uploadManager = new UploadManager({
@@ -482,6 +502,7 @@ export class UpupCore {
 
   destroy(): void {
     this.workerPool?.destroy()
+    this.fileOverrides.clear()
     this.emitter.removeAllListeners()
     this.pluginManager.destroy()
     this.fileManager.removeAll()
