@@ -12,7 +12,7 @@ export default function UrlUploader() {
         dark,
         classNames,
         icons,
-        translations: tr,
+        t,
     } = useUploaderContext()
 
     const { LoaderIcon } = icons
@@ -35,7 +35,7 @@ export default function UrlUploader() {
         <form onSubmit={handleFormSubmit} className="upup-px-3 upup-py-2">
             <input
                 type="url"
-                placeholder={tr.enterFileUrl}
+                placeholder={t('url.enterFileUrl')}
                 className={cn(
                     'upup-w-full upup-rounded-md upup-border-2 upup-border-[#e0e0e0] upup-bg-transparent upup-px-3 upup-py-2 upup-outline-none',
                     dark && 'upup-border-[#6D6D6D] upup-text-[#6D6D6D]',
@@ -53,7 +53,7 @@ export default function UrlUploader() {
                 type="submit"
                 disabled={!url}
             >
-                {loading ? (LoaderIcon ? <LoaderIcon /> : '...') : tr.fetch}
+                {loading ? (LoaderIcon ? <LoaderIcon /> : '...') : t('url.fetch')}
             </button>
         </form>
     )

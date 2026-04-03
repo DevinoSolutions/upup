@@ -2,13 +2,12 @@
 
 import React from 'react'
 import Webcam from 'react-webcam'
-import { t } from '@upup/shared'
 import { cn } from '../lib/tailwind'
 import useCameraUploader from '../hooks/use-camera-uploader'
 import { useUploaderContext } from '../context/uploader-context'
 
 export default function CameraUploader() {
-    const { translations: tr } = useUploaderContext()
+    const { t } = useUploaderContext()
     const {
         capture,
         handleFetchImage,
@@ -75,7 +74,7 @@ export default function CameraUploader() {
                     onClick={() => setMode('photo')}
                     disabled={isRecording}
                 >
-                    {tr.photo}
+                    {t('camera.photo')}
                 </button>
                 <button
                     type="button"
@@ -92,7 +91,7 @@ export default function CameraUploader() {
                     onClick={() => setMode('video')}
                     disabled={countdown !== null}
                 >
-                    {tr.video}
+                    {t('camera.video')}
                 </button>
             </div>
 
@@ -198,7 +197,7 @@ export default function CameraUploader() {
                             type="button"
                         >
                             <span>{CameraCaptureIcon && <CameraCaptureIcon />}</span>
-                            <span>{tr.capture}</span>
+                            <span>{t('camera.capture')}</span>
                         </button>
                         <button
                             className={cn(
@@ -210,7 +209,7 @@ export default function CameraUploader() {
                         >
                             <span>{CameraRotateIcon && <CameraRotateIcon />}</span>
                             <span>
-                                {t(tr.switchToCamera, { side: newCameraSide === 'front' ? tr.front : tr.back })}
+                                {t('camera.switchToCamera', { side: newCameraSide === 'front' ? t('camera.front') : t('camera.back') })}
                             </span>
                         </button>
                         <button
@@ -222,7 +221,7 @@ export default function CameraUploader() {
                             type="button"
                         >
                             <span>{CameraMirrorIcon && <CameraMirrorIcon />}</span>
-                            <span>{tr.mirrorCamera}</span>
+                            <span>{t('camera.mirrorCamera')}</span>
                         </button>
                     </>
                 )}
@@ -236,7 +235,7 @@ export default function CameraUploader() {
                         onClick={handleFetchImage}
                         type="button"
                     >
-                        {tr.addImage}
+                        {t('camera.addImage')}
                     </button>
                 )}
 
@@ -253,7 +252,7 @@ export default function CameraUploader() {
                                 type="button"
                             >
                                 <span>{CameraVideoRecordIcon && <CameraVideoRecordIcon />}</span>
-                                <span>{tr.startVideoRecording}</span>
+                                <span>{t('camera.startVideoRecording')}</span>
                             </button>
                         ) : (
                             <button
@@ -265,7 +264,7 @@ export default function CameraUploader() {
                                 type="button"
                             >
                                 <span>{CameraVideoStopIcon && <CameraVideoStopIcon />}</span>
-                                <span>{tr.stopVideoRecording}</span>
+                                <span>{t('camera.stopVideoRecording')}</span>
                             </button>
                         )}
                         <button
@@ -279,7 +278,7 @@ export default function CameraUploader() {
                         >
                             <span>{CameraRotateIcon && <CameraRotateIcon />}</span>
                             <span>
-                                {t(tr.switchToCamera, { side: newCameraSide === 'front' ? tr.front : tr.back })}
+                                {t('camera.switchToCamera', { side: newCameraSide === 'front' ? t('camera.front') : t('camera.back') })}
                             </span>
                         </button>
                         <button
@@ -292,7 +291,7 @@ export default function CameraUploader() {
                             type="button"
                         >
                             <span>{CameraMirrorIcon && <CameraMirrorIcon />}</span>
-                            <span>{tr.mirrorCamera}</span>
+                            <span>{t('camera.mirrorCamera')}</span>
                         </button>
                     </>
                 )}
@@ -306,7 +305,7 @@ export default function CameraUploader() {
                         onClick={handleAddVideo}
                         type="button"
                     >
-                        {tr.addVideo}
+                        {t('camera.addVideo')}
                     </button>
                 )}
             </div>

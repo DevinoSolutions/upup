@@ -6,7 +6,7 @@ import useAudioUploader from '../hooks/use-audio-uploader'
 import { useUploaderContext } from '../context/uploader-context'
 
 export default function AudioUploader() {
-    const { translations: tr } = useUploaderContext()
+    const { t } = useUploaderContext()
     const {
         isRecording,
         audioUrl,
@@ -45,7 +45,7 @@ export default function AudioUploader() {
                             dark && 'upup-text-gray-300',
                         )}
                     >
-                        {tr.startRecording}
+                        {t('audio.startRecording')}
                     </span>
                 </div>
             )}
@@ -69,7 +69,7 @@ export default function AudioUploader() {
                             dark && 'upup-text-red-400',
                         )}
                     >
-                        {tr.recording} {formattedDuration}
+                        {t('audio.recording')} {formattedDuration}
                     </span>
                     <button
                         className={cn(
@@ -80,7 +80,7 @@ export default function AudioUploader() {
                         type="button"
                     >
                         {AudioStopIcon && <AudioStopIcon />}
-                        <span>{tr.stopRecording}</span>
+                        <span>{t('audio.stopRecording')}</span>
                     </button>
                 </div>
             )}
@@ -111,7 +111,7 @@ export default function AudioUploader() {
                             onClick={handleAddAudio}
                             type="button"
                         >
-                            {tr.addAudio}
+                            {t('audio.addAudio')}
                         </button>
                         <button
                             className={cn(
@@ -122,7 +122,7 @@ export default function AudioUploader() {
                             type="button"
                         >
                             {AudioDeleteIcon && <AudioDeleteIcon />}
-                            <span>{tr.deleteRecording}</span>
+                            <span>{t('audio.deleteRecording')}</span>
                         </button>
                     </div>
                 </div>

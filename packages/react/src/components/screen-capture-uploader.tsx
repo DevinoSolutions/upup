@@ -6,7 +6,7 @@ import useScreenCapture from '../hooks/use-screen-capture'
 import { useUploaderContext } from '../context/uploader-context'
 
 export default function ScreenCaptureUploader() {
-    const { translations: tr } = useUploaderContext()
+    const { t } = useUploaderContext()
     const {
         isRecording,
         videoUrl,
@@ -44,7 +44,7 @@ export default function ScreenCaptureUploader() {
                         type="button"
                     >
                         {ScreenCaptureStartIcon && <ScreenCaptureStartIcon />}
-                        <span>{tr.startScreenCapture}</span>
+                        <span>{t('screenCapture.startScreenCapture')}</span>
                     </button>
                 </div>
             )}
@@ -68,7 +68,7 @@ export default function ScreenCaptureUploader() {
                             dark && 'upup-text-red-400',
                         )}
                     >
-                        {tr.screenRecording} {formattedDuration}
+                        {t('screenCapture.screenRecording')} {formattedDuration}
                     </span>
                     <button
                         className={cn(
@@ -79,7 +79,7 @@ export default function ScreenCaptureUploader() {
                         type="button"
                     >
                         {ScreenCaptureStopIcon && <ScreenCaptureStopIcon />}
-                        <span>{tr.stopScreenCapture}</span>
+                        <span>{t('screenCapture.stopScreenCapture')}</span>
                     </button>
                 </div>
             )}
@@ -107,7 +107,7 @@ export default function ScreenCaptureUploader() {
                             onClick={handleAddScreenCapture}
                             type="button"
                         >
-                            {tr.addScreenCapture}
+                            {t('screenCapture.addScreenCapture')}
                         </button>
                         <button
                             className={cn(
@@ -118,7 +118,7 @@ export default function ScreenCaptureUploader() {
                             type="button"
                         >
                             {ScreenCaptureDeleteIcon && <ScreenCaptureDeleteIcon />}
-                            <span>{tr.deleteScreenCapture}</span>
+                            <span>{t('screenCapture.deleteScreenCapture')}</span>
                         </button>
                     </div>
                 </div>

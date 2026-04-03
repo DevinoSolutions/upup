@@ -11,8 +11,15 @@ import FileList from './components/file-list'
 import Notifier from './components/notifier'
 import useInformer from './hooks/use-informer'
 import type { CoreOptions } from '@upup/core'
-import { FileSource, en_US, mergeTranslations, type UploaderClassNames, type Translations } from '@upup/shared'
+import {
+  FileSource,
+  enUS,
+  createTranslator,
+  type UploaderClassNames,
+  type Translator,
+} from '@upup/shared'
 import type { UploaderIcons } from './types/icons'
+import { type UpupI18nProp, isByoTranslator } from './types/i18n'
 
 export interface UpupUploaderProps extends CoreOptions {
   dark?: boolean
@@ -22,8 +29,8 @@ export interface UpupUploaderProps extends CoreOptions {
   sources?: UploadSource[]
   fileSources?: FileSource[]
   enablePaste?: boolean
-  locale?: Translations
-  translationOverrides?: Partial<Translations>
+  /** Unified i18n configuration. Replaces `locale` + `translationOverrides`. */
+  i18n?: UpupI18nProp
   ref?: Ref<UpupUploaderRef>
 }
 
@@ -55,8 +62,7 @@ export const UpupUploader = forwardRef<UpupUploaderRef, UpupUploaderProps>(
       sources = ['local'],
       fileSources: explicitFileSources,
       enablePaste = false,
-      locale = en_US,
-      translationOverrides,
+      i18n: i18nProp,
       ...coreOptions
     } = props
 
@@ -64,10 +70,18 @@ export const UpupUploader = forwardRef<UpupUploaderRef, UpupUploaderProps>(
     const [activeSource, setActiveSource] = useState<FileSource | null>(null)
     const informer = useInformer()
 
-    const translations = useMemo(
-      () => mergeTranslations(locale, translationOverrides),
-      [locale, translationOverrides],
-    )
+    const t: Translator = useMemo(() => {
+      if (i18nProp && isByoTranslator(i18nProp)) {
+        return i18nProp.t
+      }
+      const config = i18nProp ?? {}
+      return createTranslator({
+        bundle: ('bundle' in config && config.bundle) ? config.bundle : enUS,
+        overrides: 'overrides' in config ? config.overrides : undefined,
+        onMissingKey: 'onMissingKey' in config ? config.onMissingKey : undefined,
+        loadLocale: 'loadLocale' in config ? config.loadLocale : undefined,
+      })
+    }, [i18nProp])
     const fileSources = explicitFileSources ?? sourcesToFileSources(sources)
 
     useImperativeHandle(ref, () => ({
@@ -85,16 +99,20 @@ export const UpupUploader = forwardRef<UpupUploaderRef, UpupUploaderProps>(
         icons: icons as UploaderIcons,
         enablePaste,
         sources,
-        translations,
+        t,
       }),
-      [uploader, activeSource, dark, mini, classNames, icons, enablePaste, sources, translations],
+      [uploader, activeSource, dark, mini, classNames, icons, enablePaste, sources, t],
     )
 
     const hasMultipleSources = fileSources.length > 1
 
     const content = (
       <UploaderContext.Provider value={contextValue}>
-        <div className={`upup-container ${dark ? 'upup-dark' : ''} ${mini ? 'upup-mini' : ''}`}>
+        <div
+          className={`upup-container ${dark ? 'upup-dark' : ''} ${mini ? 'upup-mini' : ''}`}
+          lang={t.locale}
+          dir={t.dir}
+        >
           <DropZone>
             {activeSource ? (
               <SourceView />

@@ -1,26 +1,23 @@
 'use client'
 
 import React from 'react'
-import type { Translations } from '@upup/shared'
 import { FileSource } from '@upup/shared'
 
-// TODO: Import adapter icon + component once migrated (Task 3.8)
-
-/** Translation key used for each FileSource's display name */
-export const adapterNameKeys: Record<FileSource, keyof Translations> = {
-    [FileSource.LOCAL]: 'myDevice',
-    [FileSource.GOOGLE_DRIVE]: 'googleDrive',
-    [FileSource.ONE_DRIVE]: 'oneDrive',
-    [FileSource.DROPBOX]: 'dropbox',
-    [FileSource.URL]: 'link',
-    [FileSource.CAMERA]: 'camera',
-    [FileSource.MICROPHONE]: 'audio',
-    [FileSource.SCREEN]: 'screenCapture',
+/** Dot-path translation key used for each FileSource's display name */
+export const adapterNameKeys: Record<FileSource, string> = {
+    [FileSource.LOCAL]: 'adapters.myDevice',
+    [FileSource.GOOGLE_DRIVE]: 'adapters.googleDrive',
+    [FileSource.ONE_DRIVE]: 'adapters.oneDrive',
+    [FileSource.DROPBOX]: 'adapters.dropbox',
+    [FileSource.URL]: 'adapters.link',
+    [FileSource.CAMERA]: 'adapters.camera',
+    [FileSource.MICROPHONE]: 'adapters.audio',
+    [FileSource.SCREEN]: 'adapters.screenCapture',
 }
 
 export type AdapterEntry = {
     id: FileSource
-    nameKey: keyof Translations
+    nameKey: string
     /** TODO: replace with real icon component (Task 3.8) */
     Icon: React.ComponentType | undefined
     /** TODO: replace with real uploader component (Task 3.8) */
@@ -30,49 +27,49 @@ export type AdapterEntry = {
 export const uploadAdapterObject: Record<FileSource, AdapterEntry> = {
     [FileSource.LOCAL]: {
         id: FileSource.LOCAL,
-        nameKey: 'myDevice',
+        nameKey: 'adapters.myDevice',
         Icon: undefined,
         Component: undefined,
     },
     [FileSource.GOOGLE_DRIVE]: {
         id: FileSource.GOOGLE_DRIVE,
-        nameKey: 'googleDrive',
+        nameKey: 'adapters.googleDrive',
         Icon: undefined,
         Component: undefined,
     },
     [FileSource.ONE_DRIVE]: {
         id: FileSource.ONE_DRIVE,
-        nameKey: 'oneDrive',
+        nameKey: 'adapters.oneDrive',
         Icon: undefined,
         Component: undefined,
     },
     [FileSource.DROPBOX]: {
         id: FileSource.DROPBOX,
-        nameKey: 'dropbox',
+        nameKey: 'adapters.dropbox',
         Icon: undefined,
         Component: undefined,
     },
     [FileSource.URL]: {
         id: FileSource.URL,
-        nameKey: 'link',
+        nameKey: 'adapters.link',
         Icon: undefined,
         Component: undefined,
     },
     [FileSource.CAMERA]: {
         id: FileSource.CAMERA,
-        nameKey: 'camera',
+        nameKey: 'adapters.camera',
         Icon: undefined,
         Component: undefined,
     },
     [FileSource.MICROPHONE]: {
         id: FileSource.MICROPHONE,
-        nameKey: 'audio',
+        nameKey: 'adapters.audio',
         Icon: undefined,
         Component: undefined,
     },
     [FileSource.SCREEN]: {
         id: FileSource.SCREEN,
-        nameKey: 'screenCapture',
+        nameKey: 'adapters.screenCapture',
         Icon: undefined,
         Component: undefined,
     },
