@@ -1,7 +1,7 @@
-import { UploadStatus, type UploadFile, type PipelineStep, type PipelineContext } from '@upup/shared'
+import { UploadStatus, UpupErrorCode, type UploadFile, type PipelineStep, type PipelineContext } from '@upup/shared'
 import { EventEmitter } from './events'
 import { PluginManager, type UpupPlugin, type ExtensionMethods } from './plugin'
-import { FileManager, type FileManagerOptions } from './file-manager'
+import { FileManager, type FileManagerOptions, fileSizeInBytes, matchesAccept } from './file-manager'
 import { PipelineEngine } from './pipeline/engine'
 import { UploadManager } from './upload-manager'
 import { TokenEndpointCredentials } from './strategies/token-endpoint'
@@ -67,6 +67,12 @@ export interface CoreOptions extends FileManagerOptions {
   translations?: unknown
   restrictions?: Restrictions
   cloudDrives?: CloudDrivesConfig
+}
+
+export type ValidationResult = {
+  file: File
+  valid: boolean
+  errors: Array<{ code: string; message: string }>
 }
 
 export type UploadOptions = {
@@ -225,6 +231,49 @@ export class UpupCore {
   reorderFiles(fileIds: string[]): void {
     this.fileManager.reorderFiles(fileIds)
     this.emitter.emit('state-change', { files: this.files })
+  }
+
+  async validateFiles(files: File[]): Promise<ValidationResult[]> {
+    const results: ValidationResult[] = []
+
+    for (const file of files) {
+      const errors: Array<{ code: string; message: string }> = []
+
+      if (this.options.accept && !matchesAccept(file, this.options.accept)) {
+        errors.push({
+          code: UpupErrorCode.TYPE_MISMATCH,
+          message: `File type "${file.type}" is not accepted`,
+        })
+      }
+
+      if (this.options.maxFileSize) {
+        const maxBytes = fileSizeInBytes(this.options.maxFileSize)
+        if (file.size > maxBytes) {
+          errors.push({
+            code: UpupErrorCode.FILE_TOO_LARGE,
+            message: `File "${file.name}" exceeds maximum size`,
+          })
+        }
+      }
+
+      if (this.options.minFileSize) {
+        const minBytes = fileSizeInBytes(this.options.minFileSize)
+        if (file.size < minBytes) {
+          errors.push({
+            code: UpupErrorCode.FILE_TOO_SMALL,
+            message: `File "${file.name}" is below minimum size`,
+          })
+        }
+      }
+
+      results.push({
+        file,
+        valid: errors.length === 0,
+        errors,
+      })
+    }
+
+    return results
   }
 
   async upload(): Promise<UploadFile[]> {
