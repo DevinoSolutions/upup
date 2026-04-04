@@ -3,15 +3,15 @@
 import React from 'react'
 import { FileSource } from '@upup/shared'
 import {
-    TbDeviceDesktop,
-    TbBrandGoogleDrive,
-    TbBrandOnedrive,
-    TbBrandDropbox,
-    TbLink,
-    TbCamera,
-    TbMicrophone,
-    TbScreenShare,
-} from 'react-icons/tb'
+    MyDeviceIcon,
+    GoogleDriveIcon,
+    OneDriveIcon,
+    DropBoxIcon,
+    LinkIcon,
+    CameraIcon,
+    AudioIcon,
+    ScreenCastIcon,
+} from '../components/Icons'
 
 /** Dot-path translation key used for each FileSource's display name */
 export const adapterNameKeys: Record<FileSource, string> = {
@@ -28,7 +28,7 @@ export const adapterNameKeys: Record<FileSource, string> = {
 export type AdapterEntry = {
     id: FileSource
     nameKey: string
-    Icon: React.ComponentType<{ size?: number }> | undefined
+    Icon: React.ComponentType | undefined
     /** TODO: replace with real uploader component (Task 3.8) */
     Component: React.ComponentType | undefined
 }
@@ -37,49 +37,49 @@ export const uploadAdapterObject: Record<FileSource, AdapterEntry> = {
     [FileSource.LOCAL]: {
         id: FileSource.LOCAL,
         nameKey: 'adapters.myDevice',
-        Icon: TbDeviceDesktop,
+        Icon: MyDeviceIcon,
         Component: undefined,
     },
     [FileSource.GOOGLE_DRIVE]: {
         id: FileSource.GOOGLE_DRIVE,
         nameKey: 'adapters.googleDrive',
-        Icon: TbBrandGoogleDrive,
+        Icon: GoogleDriveIcon,
         Component: undefined,
     },
     [FileSource.ONE_DRIVE]: {
         id: FileSource.ONE_DRIVE,
         nameKey: 'adapters.oneDrive',
-        Icon: TbBrandOnedrive,
+        Icon: OneDriveIcon,
         Component: undefined,
     },
     [FileSource.DROPBOX]: {
         id: FileSource.DROPBOX,
         nameKey: 'adapters.dropbox',
-        Icon: TbBrandDropbox,
+        Icon: DropBoxIcon,
         Component: undefined,
     },
     [FileSource.URL]: {
         id: FileSource.URL,
         nameKey: 'adapters.link',
-        Icon: TbLink,
+        Icon: LinkIcon,
         Component: undefined,
     },
     [FileSource.CAMERA]: {
         id: FileSource.CAMERA,
         nameKey: 'adapters.camera',
-        Icon: TbCamera,
+        Icon: CameraIcon,
         Component: undefined,
     },
     [FileSource.MICROPHONE]: {
         id: FileSource.MICROPHONE,
         nameKey: 'adapters.audio',
-        Icon: TbMicrophone,
+        Icon: AudioIcon,
         Component: undefined,
     },
     [FileSource.SCREEN]: {
         id: FileSource.SCREEN,
         nameKey: 'adapters.screenCapture',
-        Icon: TbScreenShare,
+        Icon: ScreenCastIcon,
         Component: undefined,
     },
 }
