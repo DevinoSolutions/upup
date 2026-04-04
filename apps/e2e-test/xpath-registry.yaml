@@ -1,0 +1,247 @@
+# upup v2 E2E XPath / Selector Registry
+# Generated from Chrome DevTools snapshots
+# Use these selectors for automated testing
+
+# =============================================================================
+# NAVIGATION
+# =============================================================================
+navigation:
+  container: "[data-testid='main-nav']"
+  links:
+    basic: "a[data-testid='nav-basic']"
+    headless: "a[data-testid='nav-headless']"
+    theme: "a[data-testid='nav-theme']"
+    i18n: "a[data-testid='nav-i18n']"
+    files: "a[data-testid='nav-files']"
+    upload: "a[data-testid='nav-upload']"
+    prop_getters: "a[data-testid='nav-prop-getters']"
+    plugins: "a[data-testid='nav-plugins']"
+    a11y: "a[data-testid='nav-a11y']"
+    sources: "a[data-testid='nav-sources']"
+    theme_provider: "a[data-testid='nav-theme-provider']"
+    restrictions: "a[data-testid='nav-restrictions']"
+
+# =============================================================================
+# UPUP COMPONENT SELECTORS (from rendered DOM)
+# =============================================================================
+upup_component:
+  # Root container
+  root: "[data-upup-slot='uploader.root']"
+  root_data_theme: "[data-theme]"
+  root_data_state: "[data-state]"
+  root_lang: "[lang]"
+  root_dir: "[dir]"
+
+  # Drop zone
+  dropzone:
+    region: "[role='region'][aria-label]"
+    aria_dropeffect: "[aria-dropeffect]"
+    slot: "[data-upup-slot='dropzone.root']"
+
+  # Source selector
+  source_selector:
+    slot: "[data-upup-slot='sourceSelector.root']"
+    browse_button: "[data-upup-slot='sourceSelector.browseButton']"
+    adapter_buttons: "[data-upup-slot='sourceSelector.adapterButton']"
+
+  # File list
+  file_list:
+    container: "[role='list'][aria-live='polite']"
+    items: "[role='listitem']"
+    slot: "[data-upup-slot='fileList.root']"
+    upload_button: "[data-upup-slot='fileList.uploadButton']"
+    done_button: "[data-upup-slot='fileList.doneButton']"
+
+  # Progress bar
+  progress_bar:
+    role: "[role='progressbar']"
+    aria_valuenow: "[aria-valuenow]"
+    aria_valuemin: "[aria-valuemin='0']"
+    aria_valuemax: "[aria-valuemax='100']"
+
+  # File preview
+  file_preview:
+    slot: "[data-upup-slot='filePreview.root']"
+    delete_button: "[data-upup-slot='filePreview.deleteButton']"
+
+  # Header
+  header:
+    slot: "[data-upup-slot='header.root']"
+    remove_all: "[data-upup-slot='header.removeAllButton']"
+    add_more: "[data-upup-slot='header.addMoreButton']"
+    file_count: "[data-upup-slot='header.fileCount']"
+
+# =============================================================================
+# PAGE 01: BASIC UPLOADER
+# =============================================================================
+page_basic:
+  title: "h1[data-testid='basic-title']"
+  mini_toggle: "button[data-testid='basic-mini-toggle']"
+  file_count: "[data-testid='basic-file-count']"
+  status: "[data-testid='basic-status']"
+  progress: "[data-testid='basic-progress']"
+  mini_state: "[data-testid='basic-mini-state']"
+  event_log: "[data-testid='basic-event-log']"
+  uploader: "[data-testid='basic-uploader']"
+
+# =============================================================================
+# PAGE 02: HEADLESS HOOK
+# =============================================================================
+page_headless:
+  title: "h1[data-testid='headless-title']"
+  file_input: "input[data-testid='headless-file-input']"
+  buttons:
+    upload: "button[data-testid='headless-btn-upload']"
+    pause: "button[data-testid='headless-btn-pause']"
+    resume: "button[data-testid='headless-btn-resume']"
+    cancel: "button[data-testid='headless-btn-cancel']"
+    retry: "button[data-testid='headless-btn-retry']"
+    remove_all: "button[data-testid='headless-btn-remove-all']"
+    reverse_order: "button[data-testid='headless-btn-reverse']"
+  status: "[data-testid='headless-status']"
+  progress: "[data-testid='headless-progress']"
+  error: "[data-testid='headless-error']"
+  file_count: "[data-testid='headless-file-count']"
+  file_list: "[data-testid='headless-file-list']"
+  ext_keys: "[data-testid='headless-ext-keys']"
+  core_options: "[data-testid='headless-core-options']"
+  prop_getters:
+    dropzone: "[data-testid='headless-propgetter-dropzone']"
+    root: "[data-testid='headless-propgetter-root']"
+    input: "[data-testid='headless-propgetter-input']"
+  event_log: "[data-testid='headless-event-log']"
+
+# =============================================================================
+# PAGE 03: THEME SYSTEM
+# =============================================================================
+page_theme:
+  title: "h1[data-testid='theme-title']"
+  controls:
+    light_btn: "button[data-testid='theme-btn-light']"
+    dark_btn: "button[data-testid='theme-btn-dark']"
+    custom_btn: "button[data-testid='theme-btn-custom']"
+  active_preset: "[data-testid='theme-active-preset']"
+  uploaders:
+    light: "[data-testid='theme-uploader-light']"
+    dark: "[data-testid='theme-uploader-dark']"
+    custom: "[data-testid='theme-uploader-custom']"
+  css_vars_table: "[data-testid='theme-css-vars']"
+  preset_comparison:
+    light_primary: "[data-testid='theme-preset-light-primary']"
+    dark_primary: "[data-testid='theme-preset-dark-primary']"
+
+# =============================================================================
+# PAGE 04: I18N SYSTEM
+# =============================================================================
+page_i18n:
+  title: "h1[data-testid='i18n-title']"
+  locale_select: "[data-testid='i18n-locale-select']"
+  byo_toggle: "button[data-testid='i18n-byo-toggle']"
+  override_toggle: "button[data-testid='i18n-override-toggle']"
+  missing_key_log: "[data-testid='i18n-missing-keys']"
+  uploader: "[data-testid='i18n-uploader']"
+
+# =============================================================================
+# PAGE 05: FILE OPERATIONS
+# =============================================================================
+page_files:
+  title: "h1[data-testid='files-title']"
+  buttons:
+    add_test: "button[data-testid='files-add-test']"
+    remove_first: "button[data-testid='files-remove-first']"
+    remove_all: "button[data-testid='files-remove-all']"
+    reorder: "button[data-testid='files-reorder']"
+  file_count: "[data-testid='files-count']"
+  file_list: "[data-testid='files-list']"
+
+# =============================================================================
+# PAGE 06: UPLOAD LIFECYCLE
+# =============================================================================
+page_upload:
+  title: "h1[data-testid='upload-title']"
+  status: "[data-testid='upload-status']"
+  progress: "[data-testid='upload-progress']"
+  buttons:
+    upload: "button[data-testid='upload-btn-upload']"
+    pause: "button[data-testid='upload-btn-pause']"
+    resume: "button[data-testid='upload-btn-resume']"
+    cancel: "button[data-testid='upload-btn-cancel']"
+    retry: "button[data-testid='upload-btn-retry']"
+  event_log: "[data-testid='upload-event-log']"
+
+# =============================================================================
+# PAGE 07: PROP GETTERS
+# =============================================================================
+page_prop_getters:
+  title: "h1[data-testid='propgetters-title']"
+  custom_dropzone: "[data-testid='propgetters-dropzone']"
+  custom_root: "[data-testid='propgetters-root']"
+  custom_input: "[data-testid='propgetters-input']"
+  dropzone_props: "[data-testid='propgetters-dropzone-props']"
+  root_props: "[data-testid='propgetters-root-props']"
+  input_props: "[data-testid='propgetters-input-props']"
+  drag_indicator: "[data-testid='propgetters-drag-indicator']"
+
+# =============================================================================
+# PAGE 08: PLUGIN SYSTEM
+# =============================================================================
+page_plugins:
+  title: "h1[data-testid='plugins-title']"
+  counter_value: "[data-testid='plugins-counter']"
+  plugin_names: "[data-testid='plugins-names']"
+  add_button: "button[data-testid='plugins-add']"
+  compose_result: "[data-testid='plugins-compose-result']"
+
+# =============================================================================
+# PAGE 09: ACCESSIBILITY
+# =============================================================================
+page_a11y:
+  title: "h1[data-testid='a11y-title']"
+  checklist: "[data-testid='a11y-checklist']"
+  checks:
+    role_region: "[data-testid='a11y-check-role-region']"
+    aria_live: "[data-testid='a11y-check-aria-live']"
+    aria_dropeffect: "[data-testid='a11y-check-aria-dropeffect']"
+    role_progressbar: "[data-testid='a11y-check-role-progressbar']"
+    data_upup_slot: "[data-testid='a11y-check-data-upup-slot']"
+    data_state: "[data-testid='a11y-check-data-state']"
+    data_theme: "[data-testid='a11y-check-data-theme']"
+    lang_attr: "[data-testid='a11y-check-lang']"
+    dir_attr: "[data-testid='a11y-check-dir']"
+
+# =============================================================================
+# PAGE 10: ALL SOURCES
+# =============================================================================
+page_sources:
+  title: "h1[data-testid='sources-title']"
+  uploader: "[data-testid='sources-uploader']"
+  detected_sources: "[data-testid='sources-detected']"
+
+# =============================================================================
+# PAGE 11: THEME PROVIDER
+# =============================================================================
+page_theme_provider:
+  title: "h1[data-testid='provider-title']"
+  uploader_1: "[data-testid='provider-uploader-1']"
+  uploader_2: "[data-testid='provider-uploader-2']"
+  css_var_1: "[data-testid='provider-css-var-1']"
+  css_var_2: "[data-testid='provider-css-var-2']"
+  match_result: "[data-testid='provider-match-result']"
+
+# =============================================================================
+# PAGE 12: RESTRICTIONS
+# =============================================================================
+page_restrictions:
+  title: "h1[data-testid='restrict-title']"
+  buttons:
+    add_valid: "button[data-testid='restrict-add-valid']"
+    add_invalid_type: "button[data-testid='restrict-add-invalid-type']"
+    add_oversized: "button[data-testid='restrict-add-oversized']"
+    exceed_limit: "button[data-testid='restrict-exceed-limit']"
+    validate: "button[data-testid='restrict-validate']"
+    clear_errors: "button[data-testid='restrict-clear-errors']"
+  file_count: "[data-testid='restrict-file-count']"
+  file_list: "[data-testid='restrict-file-list']"
+  error_log: "[data-testid='restrict-error-log']"
+  validation_result: "[data-testid='restrict-validation-result']"
+  config_display: "[data-testid='restrict-config']"

@@ -1,0 +1,66 @@
+uid=6_0 RootWebArea "upup E2E Test App" url="http://localhost:3335/prop-getters"
+  uid=6_1 navigation
+    uid=6_2 heading "E2E Tests" level="2"
+    uid=6_3 link "Basic" url="http://localhost:3335/basic"
+      uid=6_4 StaticText "Basic"
+    uid=6_5 link "Headless" url="http://localhost:3335/headless"
+      uid=6_6 StaticText "Headless"
+    uid=6_7 link "Theme" url="http://localhost:3335/theme"
+      uid=6_8 StaticText "Theme"
+    uid=6_9 link "i18n" url="http://localhost:3335/i18n"
+      uid=6_10 StaticText "i18n"
+    uid=6_11 link "Files" url="http://localhost:3335/files"
+      uid=6_12 StaticText "Files"
+    uid=6_13 link "Upload" url="http://localhost:3335/upload"
+      uid=6_14 StaticText "Upload"
+    uid=6_15 link "Prop Getters" url="http://localhost:3335/prop-getters"
+      uid=6_16 StaticText "Prop Getters"
+    uid=6_17 link "Plugins" url="http://localhost:3335/plugins"
+      uid=6_18 StaticText "Plugins"
+    uid=6_19 link "A11y" url="http://localhost:3335/a11y"
+      uid=6_20 StaticText "A11y"
+    uid=6_21 link "Sources" url="http://localhost:3335/sources"
+      uid=6_22 StaticText "Sources"
+    uid=6_23 link "ThemeProvider" url="http://localhost:3335/theme-provider"
+      uid=6_24 StaticText "ThemeProvider"
+    uid=6_25 link "Restrictions" url="http://localhost:3335/restrictions"
+      uid=6_26 StaticText "Restrictions"
+  uid=6_27 main
+    uid=6_28 heading "Prop Getters" level="1"
+    uid=6_29 button "Add test file"
+    uid=6_30 button "Open file picker"
+    uid=6_31 region "Drop files here or click to browse"
+      uid=6_32 StaticText "Drag files here or click to browse"
+      uid=6_33 StaticText "Dragging: "
+      uid=6_34 StaticText "false"
+    uid=6_35 StaticText "Files: "
+    uid=6_36 StaticText "0"
+    uid=6_37 heading "Prop Objects" level="2"
+    uid=6_38 heading "getDropzoneProps()" level="3"
+    uid=6_39 StaticText "{
+  "onDragOver": "[Function]",
+  "onDragLeave": "[Function]",
+  "onDrop": "[Function]",
+  "onPaste": "[Function]",
+  "role": "region",
+  "aria-label": "Drop files here or click to browse",
+  "aria-dropeffect": "none",
+  "tabIndex": 0
+}"
+    uid=6_40 heading "getRootProps()" level="3"
+    uid=6_41 StaticText "{
+  "role": "application",
+  "aria-label": "File uploader",
+  "aria-busy": false
+}"
+    uid=6_42 heading "getInputProps()" level="3"
+    uid=6_43 StaticText "{
+  "type": "file",
+  "multiple": true,
+  "onChange": "[Function]",
+  "style": {
+    "display": "none"
+  },
+  "tabIndex": -1,
+  "aria-hidden": true
+}"
