@@ -29,18 +29,18 @@ export default function DropZone({ children, className }: DropZoneProps) {
         <motion.div
             key="drop-zone"
             className={cn(
-                'upup-relative upup-flex-1 upup-overflow-hidden upup-rounded-lg',
+                'upup-relative upup-flex-1 upup-overflow-hidden upup-rounded-lg upup-border upup-transition-colors',
                 {
-                    'upup-border': absoluteHasBorder,
                     'upup-border-dashed': !isDragging,
+                    'upup-border-solid': isDragging,
                     'upup-backdrop-blur-sm': absoluteIsDragging,
                 },
                 className,
             )}
             style={{
-                borderColor: absoluteHasBorder
+                borderColor: isDragging
                     ? 'var(--upup-color-border-active)'
-                    : undefined,
+                    : 'var(--upup-color-border)',
                 backgroundColor: absoluteIsDragging
                     ? 'var(--upup-color-drag-bg)'
                     : undefined,

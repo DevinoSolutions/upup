@@ -93,6 +93,8 @@ export const UpupUploader = forwardRef<UpupUploaderRef, UpupUploaderProps>(
       useUpload: () => uploader,
     }))
 
+    const limit = coreOptions.limit
+
     const contextValue: UploaderContextValue = useMemo(
       () => ({
         ...uploader,
@@ -104,9 +106,10 @@ export const UpupUploader = forwardRef<UpupUploaderRef, UpupUploaderProps>(
         icons: icons as UploaderIcons,
         enablePaste,
         sources,
+        limit,
         t,
       }),
-      [uploader, activeSource, resolvedTheme, cssVars, mini, icons, enablePaste, sources, t],
+      [uploader, activeSource, resolvedTheme, cssVars, mini, icons, enablePaste, sources, limit, t],
     )
 
     const hasMultipleSources = fileSources.length > 1
@@ -114,14 +117,31 @@ export const UpupUploader = forwardRef<UpupUploaderRef, UpupUploaderProps>(
     const content = (
       <UploaderContext.Provider value={contextValue}>
         <div
-          className={cn('upup-scope upup-container', { 'upup-mini': mini })}
-          style={cssVars as React.CSSProperties}
+          className={cn(
+            'upup-scope upup-container upup-shadow-wrapper upup-rounded-2xl upup-flex upup-flex-col upup-gap-3',
+            mini
+              ? 'upup-mini upup-max-w-[280px]'
+              : 'upup-h-[480px] upup-max-w-[600px] upup-px-5 upup-py-4',
+          )}
+          style={{
+            ...(cssVars as React.CSSProperties),
+            backgroundColor: 'var(--upup-color-surface)',
+          }}
           data-theme={resolvedTheme.mode === 'dark' ? 'dark' : 'light'}
           data-state={deriveDataState(uploader.status, false)}
           data-upup-slot="uploader.root"
           lang={t.locale}
           dir={t.dir}
         >
+          {!mini && limit !== undefined && limit > 1 && (
+            <p
+              className="upup-text-center upup-text-sm upup-font-medium"
+              style={{ color: 'var(--upup-color-text-muted)' }}
+              data-upup-slot="uploader.header"
+            >
+              {t('dropzone.addDocumentsHere', { limit })}
+            </p>
+          )}
           <DropZone>
             {activeSource ? (
               <SourceView />
@@ -134,6 +154,34 @@ export const UpupUploader = forwardRef<UpupUploaderRef, UpupUploaderProps>(
             messages={informer.messages}
             onDismiss={informer.dismissMessage}
           />
+          {!mini && (
+            <div
+              className="upup-flex upup-items-center upup-justify-center upup-gap-1 upup-text-xs"
+              style={{ color: 'var(--upup-color-text-muted)' }}
+              data-upup-slot="uploader.footer"
+            >
+              <a
+                href="https://upup.dev"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="upup-font-semibold"
+                style={{ color: 'var(--upup-color-primary-hover)' }}
+              >
+                upup
+              </a>
+              <span>{'·'}</span>
+              <span>Built by</span>
+              <a
+                href="https://devino.ca"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="upup-font-semibold"
+                style={{ color: 'var(--upup-color-primary-hover)' }}
+              >
+                devino
+              </a>
+            </div>
+          )}
         </div>
       </UploaderContext.Provider>
     )

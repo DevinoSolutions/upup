@@ -112,26 +112,31 @@ export default function SourceSelector({ className }: SourceSelectorProps) {
                     className="upup-flex upup-w-full upup-flex-col upup-justify-center upup-gap-1 md:upup-flex-row md:upup-flex-wrap md:upup-items-center md:upup-gap-[30px] md:upup-px-[30px]"
                     data-upup-slot="sourceSelector.adapterList"
                 >
-                    {chosenAdapters.map(({ Icon, id }) => (
+                    {chosenAdapters.map(({ Icon, id, nameKey }) => (
                         <button
                             key={id}
                             type="button"
                             role="tab"
                             aria-selected={activeSource === id}
-                            className="upup-group upup-flex upup-items-center upup-gap-[6px] upup-border-b upup-px-2 upup-py-1 md:upup-flex-col md:upup-justify-center md:upup-rounded-lg md:upup-border-none md:upup-p-0"
+                            className="upup-group upup-flex upup-items-center upup-gap-[6px] upup-rounded-lg upup-px-3 upup-py-2 upup-transition-colors hover:upup-opacity-80 md:upup-flex-col md:upup-justify-center md:upup-p-3"
                             style={{
+                                backgroundColor: activeSource === id ? 'var(--upup-color-drag-bg)' : undefined,
                                 borderColor: 'var(--upup-color-border)',
                             }}
                             onClick={() => handleAdapterClick(id)}
                             data-upup-slot="sourceSelector.adapterButton"
                         >
-                            {Icon && <Icon />}
+                            {Icon && (
+                                <Icon
+                                    size={24}
+                                />
+                            )}
                             <span
                                 className="upup-text-xs"
                                 style={{ color: 'var(--upup-color-text-muted)' }}
                                 data-upup-slot="sourceSelector.adapterButtonText"
                             >
-                                {id}
+                                {t(nameKey as any)}
                             </span>
                         </button>
                     ))}

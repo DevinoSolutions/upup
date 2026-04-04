@@ -17,6 +17,8 @@ export interface UploaderUIState {
   icons: UploaderIcons
   enablePaste: boolean
   sources: UploadSource[]
+  /** Max number of files (from CoreOptions.limit) */
+  limit?: number
   /** The translator function -- use `t('namespace.key', { values })` */
   t: Translator
 }

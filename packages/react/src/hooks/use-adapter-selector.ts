@@ -15,12 +15,26 @@ export default function useAdapterSelector() {
     // inputRef is not yet in UploaderContextValue — maintain a local ref as fallback
     const localInputRef = useRef<HTMLInputElement | null>(null)
 
+    /** Map UploadSource (lowercase) to FileSource (uppercase) for filtering */
+    const sourceToFileSource: Record<string, FileSource> = useMemo(() => ({
+        local: FileSource.LOCAL,
+        camera: FileSource.CAMERA,
+        url: FileSource.URL,
+        google_drive: FileSource.GOOGLE_DRIVE,
+        onedrive: FileSource.ONE_DRIVE,
+        dropbox: FileSource.DROPBOX,
+        microphone: FileSource.MICROPHONE,
+        screen: FileSource.SCREEN,
+    }), [])
+
     const chosenAdapters = useMemo(
-        () =>
-            Object.values(uploadAdapterObject).filter(item =>
-                sources.includes(item.id as any),
-            ),
-        [sources],
+        () => {
+            const fileSources = sources.map(s => sourceToFileSource[s]).filter(Boolean)
+            return Object.values(uploadAdapterObject).filter(item =>
+                fileSources.includes(item.id),
+            )
+        },
+        [sources, sourceToFileSource],
     )
 
     const handleAdapterClick = useCallback(
