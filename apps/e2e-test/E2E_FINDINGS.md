@@ -1,6 +1,6 @@
 # E2E Test Findings
 
-**Date:** 2026-04-02
+**Date:** 2026-04-04 (updated)
 **Branch:** huge-refactor
 **Server:** http://localhost:3335
 **Tester:** Automated (Claude Code)
@@ -81,7 +81,31 @@
 | /theme-provider | PASS | 0 | Clean |
 | /restrictions | PASS | 0 | Clean |
 
-**Overall: 9/9 pages render, 0 console errors, 0 runtime errors**
+**Overall: 12/12 pages render with full styled UpupUploader UI, 0 console errors, 0 runtime errors**
+
+---
+
+## Real Interaction Test Results (with Chrome DevTools)
+
+### Styled UI Rendering
+- **CONFIRMED**: UpupUploader renders with full styled dropzone (dashed border, "browse files" link)
+- **BUG FOUND & FIXED**: `upup-scope` class was missing from root element, causing zero CSS to apply. Fixed in commit 0492465.
+
+### Theme System (verified via screenshots)
+- **Light preset**: Blue borders, blue accent links — PASS
+- **Dark preset**: Dark background, cyan accent borders — PASS
+- **Custom tokens**: Purple borders from custom color.primary — PASS
+- **ThemeProvider**: Two uploaders with different --upup-color-primary values (verified: #8b5cf6 vs #ef4444, "Colors are different: YES") — PASS
+
+### i18n System (verified via screenshots)
+- **English (en-US)**: "Drag your files or browse files" — PASS
+- **French (fr-FR)**: "Glissez vos fichiers ou parcourir les fichiers" — PASS (locale switching works)
+- **Missing keys**: 0 in both locales — PASS
+
+### File Restrictions (verified via click interactions)
+- **Add valid image**: File count 0→1, accepted correctly — PASS
+- **Add invalid type**: Rejected with error "File type text/plain is not accepted" — PASS
+- **Error log**: Shows error count and message — PASS
 
 ---
 
