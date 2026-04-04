@@ -114,7 +114,7 @@ export const UpupUploader = forwardRef<UpupUploaderRef, UpupUploaderProps>(
     const content = (
       <UploaderContext.Provider value={contextValue}>
         <div
-          className={cn('upup-container', { 'upup-mini': mini })}
+          className={cn('upup-scope upup-container', { 'upup-mini': mini })}
           style={cssVars as React.CSSProperties}
           data-theme={resolvedTheme.mode === 'dark' ? 'dark' : 'light'}
           data-state={deriveDataState(uploader.status, false)}

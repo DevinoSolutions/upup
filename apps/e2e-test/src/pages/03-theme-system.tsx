@@ -108,6 +108,7 @@ export default function ThemeSystemPage() {
           <UpupUploader
             sources={['local']}
             theme={{ mode: 'light' }}
+            uploadEndpoint="/api/upload"
           />
         </div>
 
@@ -117,6 +118,7 @@ export default function ThemeSystemPage() {
           <UpupUploader
             sources={['local']}
             theme={{ mode: 'dark' }}
+            uploadEndpoint="/api/upload"
           />
         </div>
 
@@ -132,6 +134,7 @@ export default function ThemeSystemPage() {
                 dropzone: { className: 'custom-dropzone-slot' },
               },
             }}
+            uploadEndpoint="/api/upload"
           />
         </div>
       </div>

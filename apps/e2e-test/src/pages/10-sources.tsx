@@ -58,7 +58,24 @@ export default function AllSources() {
       </div>
 
       <div data-testid="sources-uploader-container" ref={containerRef}>
-        <UpupUploader ref={uploaderRef} sources={ALL_SOURCES} />
+        <UpupUploader
+          ref={uploaderRef}
+          sources={ALL_SOURCES}
+          driveConfigs={{
+            googleDrive: {
+              google_client_id: '716672485589-j2junjhv8ui7hmjhgb1sv3l2n0vs5lr5.apps.googleusercontent.com',
+              google_api_key: 'AIzaSyACzUpBfc3l1khFfAdumBtoMKp8NAr7hhY',
+              google_app_id: 'oauthappupup',
+            },
+            oneDrive: {
+              onedrive_client_id: '99ee7f72-91bf-44b9-925d-091c18b83269',
+            },
+            dropbox: {
+              dropbox_client_id: '8oqtlukxuuatirk',
+            },
+          }}
+          uploadEndpoint="/api/upload"
+        />
       </div>
 
       <div data-testid="sources-detection">

@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react'
+import { UpupUploader } from '@upup/react'
 import { useUpupUpload } from '@upup/react'
 import type { UploadFile } from '@upup/shared'
 
@@ -36,6 +37,12 @@ function createOversizedFile(name: string): File {
   return new File([buffer], name, { type: 'image/png' })
 }
 
+const restrictionConfig = {
+  maxNumberOfFiles: 3,
+  maxFileSize: { size: 1, unit: 'MB' as const },
+  allowedFileTypes: ['image/*'],
+}
+
 export default function Restrictions() {
   const [errors, setErrors] = useState<ErrorEntry[]>([])
   const [nextId, setNextId] = useState(1)
@@ -51,11 +58,7 @@ export default function Restrictions() {
     addFiles,
     core,
   } = useUpupUpload({
-    restrictions: {
-      maxNumberOfFiles: 3,
-      maxFileSize: { size: 1, unit: 'MB' },
-      allowedFileTypes: ['image/*'],
-    },
+    restrictions: restrictionConfig,
     onError: (error) => {
       logError('restriction', typeof error === 'string' ? error : error.message)
     },
@@ -134,7 +137,19 @@ export default function Restrictions() {
         <p data-testid="restrict-config-allowed-types">allowedFileTypes: image/*</p>
       </div>
 
+      {/* Real UpupUploader with restrictions */}
+      <div data-testid="restrict-uploader-wrapper" style={{ marginBottom: 16 }}>
+        <h2 data-testid="restrict-uploader-title">Uploader with Restrictions</h2>
+        <UpupUploader
+          sources={['local']}
+          restrictions={restrictionConfig}
+          uploadEndpoint="/api/upload"
+        />
+      </div>
+
+      {/* Headless hook controls for programmatic testing */}
       <div data-testid="restrict-controls">
+        <h2>Programmatic Controls (headless hook)</h2>
         <button data-testid="restrict-add-valid-btn" onClick={handleAddValidImage}>
           Add valid image
         </button>

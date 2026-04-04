@@ -24,7 +24,7 @@ export default function I18nSystemPage() {
   const byoTranslator: Translator = useCallback(
     (key, params) => {
       // Resolve via default en-US, then prefix
-      const base = createTranslator({ locale: enUS })
+      const base = createTranslator({ bundle: enUS })
       const resolved = base(key, params)
       return `CUSTOM: ${resolved}`
     },
@@ -110,6 +110,7 @@ export default function I18nSystemPage() {
           key={`${locale}-${useByo}-${useOverride}`}
           sources={['local']}
           i18n={getI18nProp()}
+          uploadEndpoint="/api/upload"
         />
       </div>
 

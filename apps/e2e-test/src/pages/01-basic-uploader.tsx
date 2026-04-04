@@ -1,4 +1,4 @@
-import { useRef, useState, useCallback } from 'react'
+import { useRef, useState, useCallback, useEffect } from 'react'
 import { UpupUploader, type UpupUploaderRef } from '@upup/react'
 
 interface EventEntry {
@@ -26,6 +26,20 @@ export default function BasicUploaderPage() {
       ...prev.slice(0, 49),
     ])
   }, [])
+
+  // Subscribe to core events via the ref once the uploader is mounted
+  useEffect(() => {
+    const hook = uploaderRef.current?.useUpload?.()
+    if (!hook) return
+    const unsubs: (() => void)[] = []
+    unsubs.push(hook.on('files-added', (...args: unknown[]) => {
+      logEvent('files-added', { args })
+    }))
+    unsubs.push(hook.on('upload-all-complete', (...args: unknown[]) => {
+      logEvent('upload-complete', { args })
+    }))
+    return () => unsubs.forEach(u => u())
+  }, [logEvent])
 
   // Derive status info from ref when available
   const hook = uploaderRef.current?.useUpload?.()
@@ -58,8 +72,7 @@ export default function BasicUploaderPage() {
           ref={uploaderRef}
           sources={['local']}
           mini={mini}
-          onFileAdded={files => logEvent('files-added', { count: files.length })}
-          onUploadComplete={files => logEvent('upload-complete', { count: files.length })}
+          uploadEndpoint="/api/upload"
         />
       </div>
 

@@ -1,6 +1,7 @@
 import React, { Suspense, lazy } from 'react'
 import ReactDOM from 'react-dom/client'
 import { BrowserRouter, Routes, Route, NavLink } from 'react-router-dom'
+import '@upup/react/styles'
 
 const BasicUploader = lazy(() => import('./pages/01-basic-uploader'))
 const HeadlessHook = lazy(() => import('./pages/02-headless-hook'))

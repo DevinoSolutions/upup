@@ -49,7 +49,7 @@ export default function Accessibility() {
       <h1 data-testid="a11y-title">Accessibility</h1>
 
       <div data-testid="a11y-uploader-container" ref={containerRef}>
-        <UpupUploader ref={uploaderRef} />
+        <UpupUploader ref={uploaderRef} uploadEndpoint="/api/upload" />
       </div>
 
       <div data-testid="a11y-checklist">
