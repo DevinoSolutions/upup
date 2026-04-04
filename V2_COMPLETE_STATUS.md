@@ -51,7 +51,7 @@ Items #1-41 from V2_FEATURE_STATUS.md were already implemented before this sessi
 | 64 | Async locale loading | DONE | loadLocale callback in createTranslator options |
 | 65 | createTranslator() with cache | DONE | packages/shared/src/i18n/create-translator.ts |
 | 66 | onMissingKey handler | DONE | Callback in translator options, invoked for missing keys |
-| 67 | Pipeline context real t() | NOT DONE | core.ts:355 still has stub `t: (key: string) => key` — not wired to translator |
+| 67 | Pipeline context real t() | DONE | core.ts creates translator via createTranslator({ bundle: enUS }) and passes to pipeline context |
 | 68 | CoreOptions locale/translations typing | DONE | Typed i18n config replaces `unknown` stubs |
 
 ### Theme Features (Plan 3)
@@ -75,7 +75,7 @@ Items #1-41 from V2_FEATURE_STATUS.md were already implemented before this sessi
 |---|---------|--------|----------|
 | 79 | UploadFile.source field | DONE | source: FileSource on UploadFile, initialized in nativeToUploadFile() |
 | 80 | validateFiles() method | DONE | Public method on UpupCore |
-| 81 | Dynamic pipeline imports | PARTIAL | buildAutoPipeline() builds steps from boolean options, but uses static imports not `await import()`. Functionally equivalent but doesn't tree-shake. |
+| 81 | Dynamic pipeline imports | DONE | buildAutoPipeline() uses `await import('./steps/heic')` etc. Pipeline built lazily during upload(), not constructor. |
 | 84 | enableWorkers / workerPoolSize | DONE | CoreOptions properties, wired to WorkerPool in constructor |
 
 ### Server Features (Plan 4)
@@ -98,9 +98,9 @@ Items #1-41 from V2_FEATURE_STATUS.md were already implemented before this sessi
 
 | Status | Before Plans | After Plans |
 |--------|-------------|-------------|
-| Done | 41 (48%) | **84 (98%)** |
-| Partial | 14 (16%) | **1 (1%)** — #81 static imports instead of dynamic |
-| Not Done | 31 (36%) | **1 (1%)** — #67 pipeline t() still stub |
+| Done | 41 (48%) | **86 (100%)** |
+| Partial | 14 (16%) | **0 (0%)** |
+| Not Done | 31 (36%) | **0 (0%)** |
 
 ---
 

@@ -1,4 +1,4 @@
-import { UploadStatus, UpupErrorCode, type UploadFile, type PipelineStep, type PipelineContext } from '@upup/shared'
+import { UploadStatus, UpupErrorCode, createTranslator, enUS, type UploadFile, type PipelineStep, type PipelineContext } from '@upup/shared'
 import { EventEmitter } from './events'
 import { PluginManager, type UpupPlugin, type ExtensionMethods } from './plugin'
 import { FileManager, type FileManagerOptions, fileSizeInBytes, matchesAccept } from './file-manager'
@@ -9,11 +9,6 @@ import { ServerCredentials } from './strategies/server-credentials'
 import { DirectUpload } from './strategies/direct-upload'
 import { CrashRecoveryManager, IndexedDBStorage } from './crash-recovery'
 import { WorkerPool } from './worker-pool'
-import { heicStep } from './steps/heic'
-import { exifStep } from './steps/exif'
-import { compressStep } from './steps/compress'
-import { thumbnailStep } from './steps/thumbnail'
-import { hashStep } from './steps/hash'
 
 export interface Restrictions {
   maxFileSize?: import('@upup/shared').MaxFileSizeObject
@@ -152,12 +147,8 @@ export class UpupCore {
 
     if (options.pipeline) {
       this.pipelineEngine = new PipelineEngine(options.pipeline)
-    } else {
-      const autoSteps = this.buildAutoPipeline()
-      if (autoSteps.length > 0) {
-        this.pipelineEngine = new PipelineEngine(autoSteps)
-      }
     }
+    // Auto-pipeline from boolean options is built lazily in upload() via buildAutoPipeline()
 
     if (options.plugins) {
       for (const plugin of options.plugins) {
@@ -267,18 +258,21 @@ export class UpupCore {
     this.emitter.emit('state-change', { files: this.files })
   }
 
-  private buildAutoPipeline(): PipelineStep[] {
+  private async buildAutoPipeline(): Promise<PipelineStep[]> {
     const steps: PipelineStep[] = []
 
     if (this.options.heicConversion) {
+      const { heicStep } = await import('./steps/heic')
       steps.push(heicStep())
     }
 
     if (this.options.stripExifData) {
+      const { exifStep } = await import('./steps/exif')
       steps.push(exifStep())
     }
 
     if (this.options.imageCompression || this.options.shouldCompress) {
+      const { compressStep } = await import('./steps/compress')
       const opts = typeof this.options.imageCompression === 'object'
         ? this.options.imageCompression
         : {}
@@ -286,6 +280,7 @@ export class UpupCore {
     }
 
     if (this.options.thumbnailGenerator) {
+      const { thumbnailStep } = await import('./steps/thumbnail')
       const opts = typeof this.options.thumbnailGenerator === 'object'
         ? this.options.thumbnailGenerator
         : {}
@@ -293,6 +288,7 @@ export class UpupCore {
     }
 
     if (this.options.checksumVerification) {
+      const { hashStep } = await import('./steps/hash')
       steps.push(hashStep())
     }
 
@@ -347,12 +343,21 @@ export class UpupCore {
     this.emitter.emit('upload-start', {})
     this.emitter.emit('state-change', { status: this._status })
 
+    // Build auto-pipeline lazily from boolean options if no explicit pipeline
+    if (!this.pipelineEngine) {
+      const autoSteps = await this.buildAutoPipeline()
+      if (autoSteps.length > 0) {
+        this.pipelineEngine = new PipelineEngine(autoSteps)
+      }
+    }
+
     if (this.pipelineEngine) {
+      const translator = createTranslator({ bundle: enUS })
       const context: PipelineContext = {
         files: this.files,
         options: this.options as Record<string, unknown>,
         emit: (event, data) => this.emitter.emit(event, data),
-        t: (key: string) => key,
+        t: (key: string, vars?: Record<string, unknown>) => translator(key as Parameters<typeof translator>[0], vars),
       }
       const processed = await this.pipelineEngine.processAll([...this.files.values()], context)
       for (const file of processed) {
