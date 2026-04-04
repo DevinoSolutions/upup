@@ -1,0 +1,210 @@
+import React, {
+    Dispatch,
+    HTMLAttributes,
+    MouseEventHandler,
+    SetStateAction,
+    memo,
+    useEffect,
+    useMemo,
+} from 'react'
+
+import type { Translations } from '../shared/i18n/types'
+import { useRootContext } from '../context/RootContext'
+import { fileCanPreviewText, fileGetIsImage, fileGetIsText } from '../lib/file'
+import { cn } from '../lib/tailwind'
+import FilePreviewThumbnail from './FilePreviewThumbnail'
+import ProgressBar from './shared/ProgressBar'
+import ShouldRender from './shared/ShouldRender'
+
+type Props = {
+    fileName: string
+    fileType: string
+    fileId: string
+    fileUrl: string
+    fileSize?: number
+    canPreview: boolean
+    setCanPreview: Dispatch<SetStateAction<boolean>>
+    onRequestPreview?: () => void
+} & HTMLAttributes<HTMLDivElement>
+
+export default memo(function FilePreview(props: Props) {
+    const {
+        fileType,
+        fileId,
+        fileName,
+        fileUrl,
+        fileSize,
+        canPreview,
+        setCanPreview,
+        onRequestPreview,
+        ...restProps
+    } = props
+
+    const {
+        handleFileRemove,
+        translations: tr,
+        openImageEditor,
+        upload: { filesProgressMap },
+        props: {
+            classNames,
+            icons: { FileDeleteIcon },
+            allowPreview,
+            imageEditor,
+        },
+        files,
+    } = useRootContext()
+
+    const isImage = useMemo(() => fileGetIsImage(fileType), [fileType])
+    const isText = useMemo(
+        () => fileGetIsText(fileType, fileName),
+        [fileType, fileName],
+    )
+
+    // Only allow inline text preview for files within the safe size threshold
+    const canPreviewText = useMemo(
+        () => fileCanPreviewText(fileType, fileName, fileSize),
+        [fileType, fileName, fileSize],
+    )
+
+    const progress = useMemo(
+        () =>
+            Math.floor(
+                (filesProgressMap[fileId]?.loaded /
+                    filesProgressMap[fileId]?.total) *
+                    100,
+            ),
+        [fileId, filesProgressMap],
+    )
+
+    useEffect(() => {
+        // For text files, only set canPreview if below the safe size threshold.
+        // Large text files (e.g. 3MB+ JSON) would freeze the browser if rendered
+        // via <object> tags, so they get a static icon instead.
+        if ((isImage || (isText && canPreviewText)) && !canPreview)
+            setCanPreview(true)
+    }, [isImage, isText, canPreviewText, canPreview, setCanPreview])
+
+    const onHandleFileRemove: MouseEventHandler<HTMLButtonElement> = e => {
+        e.stopPropagation()
+        handleFileRemove(fileId)
+    }
+
+    const onHandleEditImage: MouseEventHandler<HTMLButtonElement> = e => {
+        e.stopPropagation()
+        const file = files.get(fileId)
+        if (file) openImageEditor(file)
+    }
+
+    const formatFileSize = (bytes: number | undefined, tr: Translations) => {
+        if (!bytes || bytes === 0) return tr.zeroBytes
+        const k = 1024
+        const sizes = [tr.bytes, tr.kb, tr.mb, tr.gb]
+        const i = Math.floor(Math.log(bytes) / Math.log(k))
+        return Math.round((bytes / Math.pow(k, i)) * 10) / 10 + ' ' + sizes[i]
+    }
+
+    return (
+        <div className="upup-inline-block" {...restProps}>
+            <div
+                className={cn(
+                    'upup-relative upup-h-[145px] upup-w-[145px] upup-overflow-hidden upup-rounded-lg upup-bg-white upup-shadow-sm',
+                    'upup-bg-contain upup-bg-center upup-bg-no-repeat',
+                    {
+                        [classNames.fileThumbnailMultiple!]:
+                            classNames.fileThumbnailMultiple && files.size > 1,
+                        [classNames.fileThumbnailSingle!]:
+                            classNames.fileThumbnailSingle && files.size === 1,
+                    },
+                )}
+                style={
+                    isImage ? { backgroundImage: `url(${fileUrl})` } : undefined
+                }
+            >
+                <ShouldRender if={!isImage}>
+                    <div className="upup-flex upup-h-full upup-items-center upup-justify-center upup-p-6">
+                        <FilePreviewThumbnail
+                            canPreview={canPreview}
+                            setCanPreview={setCanPreview}
+                            fileType={fileType}
+                            fileName={fileName}
+                            fileUrl={fileUrl}
+                            fileSize={fileSize}
+                            allowPreview={allowPreview}
+                            classNames={classNames}
+                            translations={tr}
+                        />
+                    </div>
+                </ShouldRender>
+
+                {isImage && imageEditor.enabled && (
+                    <button
+                        className={cn(
+                            'upup-absolute upup-right-1.5 upup-top-8 upup-z-10',
+                            'upup-flex upup-h-5 upup-w-5 upup-items-center upup-justify-center',
+                            'upup-rounded-full upup-bg-white upup-text-blue-600 upup-shadow-sm',
+                            'hover:upup-bg-white hover:upup-text-blue-700',
+                            'upup-ring-1 upup-ring-black/5',
+                            'disabled:upup-cursor-not-allowed disabled:upup-opacity-50',
+                        )}
+                        onClick={onHandleEditImage}
+                        type="button"
+                        disabled={!!progress}
+                        aria-label="Edit image"
+                    >
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 20 20"
+                            fill="currentColor"
+                            className="upup-h-3 upup-w-3"
+                            aria-hidden="true"
+                        >
+                            <path d="M2.695 14.763l-1.262 3.154a.5.5 0 00.65.65l3.155-1.262a4 4 0 001.343-.885L17.5 5.5a2.121 2.121 0 00-3-3L3.58 13.42a4 4 0 00-.885 1.343z" />
+                        </svg>
+                    </button>
+                )}
+
+                <button
+                    className={cn(
+                        'upup-absolute upup-right-1.5 upup-top-1.5 upup-z-10',
+                        'upup-flex upup-h-5 upup-w-5 upup-items-center upup-justify-center',
+                        'upup-rounded-full upup-bg-white upup-text-red-600 upup-shadow-sm',
+                        'hover:upup-bg-white hover:upup-text-red-700',
+                        'upup-ring-1 upup-ring-black/5',
+                        'disabled:upup-cursor-not-allowed disabled:upup-opacity-50',
+                        classNames.fileDeleteButton,
+                    )}
+                    onClick={onHandleFileRemove}
+                    type="button"
+                    disabled={!!progress}
+                    aria-label={tr.removeFile}
+                >
+                    <FileDeleteIcon className="upup-h-3 upup-w-3" />
+                </button>
+
+                <ProgressBar
+                    className="upup-absolute upup-bottom-0 upup-left-0 upup-right-0"
+                    progressBarClassName="upup-rounded-t-none upup-rounded-b-md"
+                    progress={progress}
+                />
+            </div>
+
+            <div className="upup-mt-1 upup-px-0.5">
+                <div className="upup-truncate upup-text-[13px] upup-font-normal upup-leading-tight upup-text-white">
+                    {fileName}
+                </div>
+                <div className="upup-mt-0.5 upup-text-[11px] upup-leading-tight upup-text-gray-400">
+                    {formatFileSize(fileSize, tr)}
+                </div>
+                {allowPreview && canPreview && (
+                    <button
+                        type="button"
+                        className="upup-mt-1 upup-text-[11px] upup-font-normal upup-leading-tight upup-text-[#4A9EFF] upup-transition-all hover:upup-text-blue-300 hover:upup-underline"
+                        onClick={onRequestPreview}
+                    >
+                        {tr.clickToPreview}
+                    </button>
+                )}
+            </div>
+        </div>
+    )
+})

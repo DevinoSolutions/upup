@@ -1,0 +1,75 @@
+{
+  "name": "@upup/core",
+  "version": "2.0.0",
+  "private": false,
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./pipeline": {
+      "types": "./dist/pipeline/index.d.ts",
+      "import": "./dist/pipeline/index.js",
+      "require": "./dist/pipeline/index.cjs"
+    },
+    "./steps/hash": {
+      "types": "./dist/steps/hash.d.ts",
+      "import": "./dist/steps/hash.js",
+      "require": "./dist/steps/hash.cjs"
+    },
+    "./steps/gzip": {
+      "types": "./dist/steps/gzip.d.ts",
+      "import": "./dist/steps/gzip.js",
+      "require": "./dist/steps/gzip.cjs"
+    },
+    "./steps/heic": {
+      "types": "./dist/steps/heic.d.ts",
+      "import": "./dist/steps/heic.js",
+      "require": "./dist/steps/heic.cjs"
+    },
+    "./steps/exif": {
+      "types": "./dist/steps/exif.d.ts",
+      "import": "./dist/steps/exif.js",
+      "require": "./dist/steps/exif.cjs"
+    },
+    "./steps/compress": {
+      "types": "./dist/steps/compress.d.ts",
+      "import": "./dist/steps/compress.js",
+      "require": "./dist/steps/compress.cjs"
+    },
+    "./steps/thumbnail": {
+      "types": "./dist/steps/thumbnail.d.ts",
+      "import": "./dist/steps/thumbnail.js",
+      "require": "./dist/steps/thumbnail.cjs"
+    },
+    "./steps/deduplicate": {
+      "types": "./dist/steps/deduplicate.d.ts",
+      "import": "./dist/steps/deduplicate.js",
+      "require": "./dist/steps/deduplicate.cjs"
+    }
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@upup/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "rollup": "^4.60.0",
+    "tsup": "^8.4.0",
+    "typescript": "^5.3.2",
+    "vitest": "^3.0.0"
+  }
+}

@@ -1,0 +1,10 @@
+// Re-export all locale packs from the shared compat layer
+export { en_US } from '../shared/i18n'
+export { ar_SA } from '../shared/i18n/locales/ar_SA'
+export { de_DE } from '../shared/i18n/locales/de_DE'
+export { es_ES } from '../shared/i18n/locales/es_ES'
+export { fr_FR } from '../shared/i18n/locales/fr_FR'
+export { ja_JP } from '../shared/i18n/locales/ja_JP'
+export { ko_KR } from '../shared/i18n/locales/ko_KR'
+export { zh_CN } from '../shared/i18n/locales/zh_CN'
+export { zh_TW } from '../shared/i18n/locales/zh_TW'
