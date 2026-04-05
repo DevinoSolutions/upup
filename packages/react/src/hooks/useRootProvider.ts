@@ -109,6 +109,8 @@ export default function useRootProvider({
         google_drive: UploadAdapter.GOOGLE_DRIVE,
         onedrive: UploadAdapter.ONE_DRIVE,
         dropbox: UploadAdapter.DROPBOX,
+        microphone: UploadAdapter.AUDIO,
+        screen: UploadAdapter.SCREEN,
     }
     const resolvedAdapters = uploadAdapters
         ?? (sources ? sources.map(s => sourceToAdapter[s]).filter(Boolean) : [UploadAdapter.INTERNAL, UploadAdapter.LINK])

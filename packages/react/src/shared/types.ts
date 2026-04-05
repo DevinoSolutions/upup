@@ -10,8 +10,8 @@ export enum UploadAdapter {
     DROPBOX = 'DROPBOX',
     LINK = 'LINK',
     CAMERA = 'CAMERA',
-    // UNSPLASH = 'UNSPLASH',
-    // BOX = 'BOX',
+    AUDIO = 'AUDIO',
+    SCREEN = 'SCREEN',
 }
 
 export type GoogleDriveConfigs = {

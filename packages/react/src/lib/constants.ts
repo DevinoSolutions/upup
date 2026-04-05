@@ -4,12 +4,14 @@ import CameraUploader from '../components/CameraUploader'
 import DropboxUploader from '../components/DropboxUploader'
 import GoogleDriveUploader from '../components/GoogleDriveUploader'
 import {
+    AudioIcon,
     CameraIcon,
     DropBoxIcon,
     GoogleDriveIcon,
     LinkIcon,
     MyDeviceIcon,
     OneDriveIcon,
+    ScreenCastIcon,
 } from '../components/Icons'
 import OneDriveUploader from '../components/OneDriveUploader'
 import UrlUploader from '../components/UrlUploader'
@@ -22,6 +24,8 @@ export const adapterNameKeys: Record<UploadAdapter, keyof Translations> = {
     [UploadAdapter.DROPBOX]: 'dropbox',
     [UploadAdapter.LINK]: 'link',
     [UploadAdapter.CAMERA]: 'camera',
+    [UploadAdapter.AUDIO]: 'audio',
+    [UploadAdapter.SCREEN]: 'screenCapture',
 }
 
 export const uploadAdapterObject = {
@@ -61,10 +65,16 @@ export const uploadAdapterObject = {
         Icon: CameraIcon,
         Component: CameraUploader,
     },
-    // {
-    //     id: UploadAdapter.UNSPLASH,
-    //     name: 'Unsplash',
-    //     Icon: UnsplashIcon,
-    // },
-    // { id: UploadAdapter.BOX, name: 'Box', Icon: BoxIcon },
+    [UploadAdapter.AUDIO]: {
+        id: UploadAdapter.AUDIO,
+        nameKey: 'audio' as keyof Translations,
+        Icon: AudioIcon,
+        Component: undefined, // TODO: AudioUploader component
+    },
+    [UploadAdapter.SCREEN]: {
+        id: UploadAdapter.SCREEN,
+        nameKey: 'screenCapture' as keyof Translations,
+        Icon: ScreenCastIcon,
+        Component: undefined, // TODO: ScreenCaptureUploader component
+    },
 }

@@ -53,7 +53,7 @@ function App() {
           provider="BackBlaze"
           maxFiles={99}
           uploadEndpoint="/api/upload"
-          sources={['local', 'google_drive', 'onedrive', 'url', 'camera']}
+          sources={['local', 'google_drive', 'onedrive', 'url', 'camera', 'microphone', 'screen']}
           dark={true}
           maxFileSize={{ size: 999, unit: 'MB' }}
           driveConfigs={{

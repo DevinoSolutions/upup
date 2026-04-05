@@ -13,6 +13,8 @@ export const en_US: Translations = {
     dropbox: 'Dropbox',
     link: 'Link',
     camera: 'Camera',
+    audio: 'Audio',
+    screenCapture: 'Screen Capture',
 
     // ── Drop-zone / AdapterSelector ───────────────────────────
     dragFileOr: 'Drag your file or',

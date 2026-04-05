@@ -17,6 +17,8 @@ export type Translations = {
     dropbox: string
     link: string
     camera: string
+    audio: string
+    screenCapture: string
 
     // ── Drop-zone / AdapterSelector ───────────────────────────
     /** Singular: "Drag your file or" */
