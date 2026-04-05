@@ -78,7 +78,7 @@ export default function Uploader({
       <UpupUploader
         provider="backblaze"
         maxFiles={limit}
-        uploadEndpoint={
+        serverUrl={
           process.env.NEXT_PUBLIC_BASE_URL
             ? process.env.NEXT_PUBLIC_BASE_URL + "/api/upup"
             : "/api/upup"
