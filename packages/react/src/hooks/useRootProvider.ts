@@ -74,6 +74,7 @@ export default function useRootProvider({
     onWarn: warningHandler,
     icons = {},
     classNames = {},
+    i18n,
     localePack,
     translations: translationOverrides,
     onIntegrationClick = () => {},
@@ -163,9 +164,12 @@ export default function useRootProvider({
     )
     const multiple = useMemo(() => (mini ? false : limit > 1), [limit, mini])
 
+    // i18n prop takes precedence over localePack/translations
+    const resolvedLocale = i18n?.locale ?? localePack ?? en_US
+    const resolvedOverrides = i18n?.overrides ?? translationOverrides
     const translations = useMemo(
-        () => mergeTranslations(localePack ?? en_US, translationOverrides),
-        [localePack, translationOverrides],
+        () => mergeTranslations(resolvedLocale, resolvedOverrides),
+        [resolvedLocale, resolvedOverrides],
     )
 
     const totalProgress = useMemo(() => {
