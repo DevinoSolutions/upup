@@ -328,6 +328,10 @@ export type UpupUploaderProps = {
     onUploadStart?: () => void
     /** v2: Called when all uploads complete or fail */
     onUploadComplete?: (files: FileWithParams[]) => void
+    /** v2: Called whenever upload status changes (idle → uploading → complete/failed) */
+    onStatusChange?: (status: string) => void
+    /** v2: Alias for onFileRemove with v2 naming */
+    onFileRemoved?: (file: FileWithParams) => void
     onFilesDragOver?: (files: File[]) => void
     onFilesDragLeave?: (files: File[]) => void
     onFilesDrop?: (files: File[]) => void

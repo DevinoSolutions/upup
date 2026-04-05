@@ -87,7 +87,9 @@ export default function useRootProvider({
     translations: translationOverrides,
     onIntegrationClick = () => {},
     onFileClick = () => {},
-    onFileRemove = () => {},
+    onFileRemove: onFileRemoveProp = () => {},
+    onFileRemoved,
+    onStatusChange,
     onFilesDragOver = () => {},
     onFilesDragLeave = () => {},
     onFilesDrop = () => {},
@@ -147,6 +149,8 @@ export default function useRootProvider({
     const accept = restrictions?.allowedFileTypes ? restrictions.allowedFileTypes.join(',') : acceptProp
     // allowFolderUpload → showSelectFolderButton alias
     const showSelectFolderButton = allowFolderUpload || showSelectFolderButtonProp
+    // onFileRemoved → onFileRemove alias (v2 naming)
+    const onFileRemove = onFileRemoved ?? onFileRemoveProp
     // cloudDrives → driveConfigs mapping (cloudDrives has cleaner keys)
     const driveConfigs = driveConfigsProp ?? (cloudDrives ? {
         googleDrive: cloudDrives.googleDrive ? {
