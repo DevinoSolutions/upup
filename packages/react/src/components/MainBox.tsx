@@ -24,6 +24,7 @@ export default function MainBox() {
         handleDragOver,
         handleDragLeave,
         handleDrop,
+        handlePaste,
     } = useMainBox()
 
     return (
@@ -49,6 +50,7 @@ export default function MainBox() {
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
                 onDrop={handleDrop}
+                onPaste={handlePaste}
             >
                 <ShouldRender if={!!activeAdapter}>
                     <AdapterView />

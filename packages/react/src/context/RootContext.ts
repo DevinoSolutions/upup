@@ -57,6 +57,7 @@ type ContextProps = Required<
         | 'onFilesDragOver'
         | 'onFilesDragLeave'
         | 'onFilesDrop'
+        | 'enablePaste'
         | 'onError'
         | 'dark'
         | 'classNames'

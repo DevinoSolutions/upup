@@ -1,4 +1,4 @@
-import { DragEventHandler, useCallback, useMemo, useState } from 'react'
+import { ClipboardEventHandler, DragEventHandler, useCallback, useMemo, useState } from 'react'
 import { UploadStatus, useRootContext } from '../context/RootContext'
 
 export default function useMainBox() {
@@ -7,7 +7,7 @@ export default function useMainBox() {
         activeAdapter,
         isAddingMore,
         upload: { uploadStatus },
-        props: { onFilesDragOver, onFilesDragLeave, onFilesDrop, isProcessing },
+        props: { onFilesDragOver, onFilesDragLeave, onFilesDrop, isProcessing, enablePaste },
         setFiles,
     } = useRootContext()
     const [isDragging, setIsDragging] = useState(false)
@@ -163,6 +163,33 @@ export default function useMainBox() {
         [disableDragAction, onFilesDrop, setFiles, isProcessing],
     )
 
+    // v2: clipboard paste support
+    const handlePaste: ClipboardEventHandler<HTMLDivElement> = useCallback(
+        e => {
+            if (!enablePaste || isProcessing) return
+            const items = Array.from(e.clipboardData?.items || [])
+            const pastedFiles: File[] = []
+            for (const item of items) {
+                if (item.kind === 'file') {
+                    const file = item.getAsFile()
+                    if (file) {
+                        // Generate a name for pasted images (screenshots etc.)
+                        const name = file.name === 'image.png' || !file.name
+                            ? `pasted-${Date.now()}.${file.type.split('/')[1] || 'png'}`
+                            : file.name
+                        const renamed = new File([file], name, { type: file.type })
+                        pastedFiles.push(renamed)
+                    }
+                }
+            }
+            if (pastedFiles.length > 0) {
+                e.preventDefault()
+                setFiles(pastedFiles)
+            }
+        },
+        [enablePaste, isProcessing, setFiles],
+    )
+
     return {
         isDragging,
         absoluteIsDragging,
@@ -170,5 +197,6 @@ export default function useMainBox() {
         handleDragOver,
         handleDragLeave,
         handleDrop,
+        handlePaste,
     }
 }
