@@ -242,6 +242,14 @@ export type UpupUploaderProps = {
     imageCompression?: boolean
     /** v2: Generate thumbnails for images/videos before upload. */
     thumbnailGenerator?: boolean
+    /** v2: Verify file integrity with SHA-256 checksums. */
+    checksumVerification?: boolean
+    /** v2: Convert HEIC/HEIF images to JPEG before upload. */
+    heicConversion?: boolean
+    /** v2: Strip EXIF metadata from images for privacy. */
+    stripExifData?: boolean
+    /** v2: Enable content-based deduplication (prevents same file added twice). */
+    contentDeduplication?: boolean
     accept?: string
     /** @deprecated Use `maxFiles` instead */
     limit?: number
