@@ -157,6 +157,15 @@ importers:
       '@types/gtag.js':
         specifier: ^0.0.20
         version: 0.0.20
+      '@upup/react':
+        specifier: workspace:*
+        version: link:../../packages/react
+      '@upup/server':
+        specifier: workspace:*
+        version: link:../../packages/server
+      '@upup/shared':
+        specifier: workspace:*
+        version: link:../../packages/shared
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
