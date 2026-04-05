@@ -35,6 +35,7 @@ export default function MainBoxHeader({ handleCancel }: Readonly<Props>) {
 
     return (
         <div
+            data-testid="upup-header"
             className={cn(
                 'upup-shadow-bottom upup-left-0 upup-right-0 upup-top-0 upup-z-10 upup-grid upup-grid-cols-4 upup-grid-rows-2 upup-items-center upup-justify-between upup-rounded-t-lg upup-bg-black/[0.025] upup-px-3 upup-py-2 md:upup-grid-rows-1',
                 {
