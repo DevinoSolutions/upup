@@ -91,6 +91,8 @@ export default function useRootProvider({
     onBeforeFileAdded,
     onRestrictionFailed,
     enablePaste = false,
+    autoUpload = false,
+    maxConcurrentUploads,
     imageEditor: imageEditorProp,
     onFileUploadStart = () => {},
     onFileUploadProgress = () => {},
@@ -464,6 +466,14 @@ export default function useRootProvider({
 
         // Emit a single selection event for just-added files.
         if (addedThisBatch.length) onFilesSelected(addedThisBatch)
+
+        // v2: auto-upload immediately after file selection
+        if (autoUpload && addedThisBatch.length) {
+            // Delay slightly to ensure state is committed before upload
+            setTimeout(() => {
+                proceedUpload(Array.from(newFilesMap.values()))
+            }, 0)
+        }
 
         // Auto-open image editor for newly added images if configured.
         if (resolvedImageEditor.enabled && addedThisBatch.length) {

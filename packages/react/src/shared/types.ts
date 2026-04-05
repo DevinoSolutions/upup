@@ -250,6 +250,10 @@ export type UpupUploaderProps = {
     stripExifData?: boolean
     /** v2: Enable content-based deduplication (prevents same file added twice). */
     contentDeduplication?: boolean
+    /** v2: Upload files immediately after selection (no upload button needed). Default false. */
+    autoUpload?: boolean
+    /** v2: Maximum concurrent uploads. Default 3. */
+    maxConcurrentUploads?: number
     accept?: string
     /** @deprecated Use `maxFiles` instead */
     limit?: number
