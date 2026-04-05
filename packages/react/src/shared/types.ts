@@ -281,6 +281,8 @@ export type UpupUploaderProps = {
     onFilesDragLeave?: (files: File[]) => void
     onFilesDrop?: (files: File[]) => void
     onFileTypeMismatch?: (file: File, acceptedTypes: string) => void
+    /** v2: Async filter called before each file is added. Return false to reject, a File to replace, or true/undefined to accept. */
+    onBeforeFileAdded?: (file: File) => boolean | File | undefined | Promise<boolean | File | undefined>
     onError?: (errorMessage: string) => void
     onWarn?: (warningMessage: string) => void
 }

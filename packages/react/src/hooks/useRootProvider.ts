@@ -84,6 +84,7 @@ export default function useRootProvider({
     onFilesDragLeave = () => {},
     onFilesDrop = () => {},
     onFileTypeMismatch = () => {},
+    onBeforeFileAdded,
     imageEditor: imageEditorProp,
     onFileUploadStart = () => {},
     onFileUploadProgress = () => {},
@@ -334,7 +335,7 @@ export default function useRootProvider({
         }
         setSelectedFilesMap(filesMap)
     }
-    const handleSetSelectedFiles = (newFiles: File[]) => {
+    const handleSetSelectedFiles = async (newFiles: File[]) => {
         // Start from existing files to ensure appending behavior.
         const newFilesMap = new Map(selectedFilesMap)
         // Track existing URLs (when present) to avoid duplicates across drops.
@@ -352,6 +353,13 @@ export default function useRootProvider({
             if (newFilesMap.size >= limit) {
                 onWarn(translations.allowedLimitSurpassed)
                 break
+            }
+
+            // v2: async file filter
+            if (onBeforeFileAdded) {
+                const result = await onBeforeFileAdded(file)
+                if (result === false) continue
+                // If result is a File, use it as replacement (not implemented yet)
             }
 
             const fileWithParams = fileAppendParams(file)
