@@ -59,6 +59,9 @@ export { default as SourceSelector } from './components/AdapterSelector'
 export { default as SourceView } from './components/AdapterView'
 export { default as DropZone } from './components/MainBox'
 
+// ── Prop getters (v2 headless) ──────────────────────────
+export { createPropGetters } from './prop-getters'
+
 // ── Utilities ───────────────────────────────────────────
 export { cn } from './lib/tailwind'
 
