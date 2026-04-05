@@ -59,7 +59,7 @@ function App() {
           provider="backblaze"
           maxFiles={99}
           uploadEndpoint="/api/upload"
-          sources={['local', 'google_drive', 'onedrive', 'url', 'camera', 'microphone', 'screen']}
+          sources={['local', 'google_drive', 'onedrive', 'dropbox', 'url', 'camera', 'microphone', 'screen']}
           theme={{ mode: tab }}
           maxFileSize={{ size: 999, unit: 'MB' }}
           minFileSize={{ size: 1, unit: 'KB' }}
