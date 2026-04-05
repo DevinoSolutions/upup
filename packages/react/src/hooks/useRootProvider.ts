@@ -103,7 +103,8 @@ export default function useRootProvider({
     provider,
     tokenEndpoint,
     uploadEndpoint,
-    driveConfigs,
+    cloudDrives,
+    driveConfigs: driveConfigsProp,
     customProps,
     enableAutoCorsConfig = false,
     maxRetries,
@@ -129,6 +130,22 @@ export default function useRootProvider({
     const dark = theme?.mode ? theme.mode === 'dark' : darkProp
     // imageCompression → shouldCompress alias
     const shouldCompress = imageCompression || shouldCompressProp
+    // cloudDrives → driveConfigs mapping (cloudDrives has cleaner keys)
+    const driveConfigs = driveConfigsProp ?? (cloudDrives ? {
+        googleDrive: cloudDrives.googleDrive ? {
+            google_client_id: cloudDrives.googleDrive.clientId,
+            google_api_key: cloudDrives.googleDrive.apiKey,
+            google_app_id: cloudDrives.googleDrive.appId,
+        } : undefined,
+        oneDrive: cloudDrives.oneDrive ? {
+            onedrive_client_id: cloudDrives.oneDrive.clientId,
+            redirectUri: cloudDrives.oneDrive.redirectUri,
+        } : undefined,
+        dropbox: cloudDrives.dropbox ? {
+            dropbox_client_id: cloudDrives.dropbox.clientId,
+            dropbox_redirect_uri: cloudDrives.dropbox.redirectUri,
+        } : undefined,
+    } : undefined)
     const inputRef = useRef<HTMLInputElement>(null)
     const [isAddingMore, setIsAddingMore] = useState(false)
     const [selectedFilesMap, setSelectedFilesMap] = useState<

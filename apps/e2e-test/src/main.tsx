@@ -56,13 +56,14 @@ function App() {
           sources={['local', 'google_drive', 'onedrive', 'url', 'camera', 'microphone', 'screen']}
           theme={{ mode: 'dark' }}
           maxFileSize={{ size: 999, unit: 'MB' }}
-          driveConfigs={{
+          cloudDrives={{
             googleDrive: {
-              google_client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID || '',
-              google_api_key: import.meta.env.VITE_GOOGLE_API_KEY || '',
-              google_app_id: import.meta.env.VITE_GOOGLE_APP_ID || '',
+              clientId: import.meta.env.VITE_GOOGLE_CLIENT_ID || '',
+              apiKey: import.meta.env.VITE_GOOGLE_API_KEY || '',
+              appId: import.meta.env.VITE_GOOGLE_APP_ID || '',
             },
-            oneDrive: { onedrive_client_id: import.meta.env.VITE_ONEDRIVE_CLIENT_ID || '' },
+            oneDrive: { clientId: import.meta.env.VITE_ONEDRIVE_CLIENT_ID || '' },
+            dropbox: { clientId: import.meta.env.VITE_DROPBOX_CLIENT_ID || '' },
           }}
         />
       )}

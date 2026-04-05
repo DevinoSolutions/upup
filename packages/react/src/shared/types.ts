@@ -224,6 +224,13 @@ export type UpupUploaderProps = {
     enableAutoCorsConfig?: boolean
     /** @deprecated Use `sources` instead */
     uploadAdapters?: UploadAdapter[]
+    /** v2: Cloud drive configurations with cleaner keys */
+    cloudDrives?: {
+        googleDrive?: { clientId: string; apiKey: string; appId: string }
+        oneDrive?: { clientId: string; redirectUri?: string }
+        dropbox?: { clientId: string; redirectUri?: string }
+    }
+    /** @deprecated Use `cloudDrives` instead */
     driveConfigs?: {
         googleDrive?: GoogleDriveConfigs
         oneDrive?: OneDriveConfigs
