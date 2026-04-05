@@ -33,7 +33,7 @@ export default function UrlUploader() {
     }
 
     return (
-        <AdapterViewContainer>
+        <AdapterViewContainer data-testid="upup-url-uploader">
             <form onSubmit={handleFormSubmit} className="upup-px-3 upup-py-2">
                 <input
                     type="url"

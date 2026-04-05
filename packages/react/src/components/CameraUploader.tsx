@@ -27,7 +27,7 @@ export default function CameraUploader() {
 
     return (
         <AdapterViewContainer>
-            <div className="upup-flex upup-h-full upup-w-full upup-flex-col upup-justify-center upup-overflow-auto upup-px-3 upup-py-2">
+            <div data-testid="upup-camera-uploader" className="upup-flex upup-h-full upup-w-full upup-flex-col upup-justify-center upup-overflow-auto upup-px-3 upup-py-2">
                 <div className="upup-flex-1 upup-pt-10">
                     <ShouldRender if={!!url}>
                         <div
