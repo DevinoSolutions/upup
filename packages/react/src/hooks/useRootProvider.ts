@@ -67,6 +67,8 @@ export default function useRootProvider({
     allowPreview = true,
     showSelectFolderButton = false,
     maxFileSize,
+    minFileSize,
+    maxTotalFileSize,
     shouldCompress = false,
     uploadAdapters,
     sources,
@@ -383,6 +385,23 @@ export default function useRootProvider({
                         name: file.name,
                         size: String(maxFileSize.size),
                         unit: String(maxFileSize.unit),
+                    }),
+                )
+                revokeFileUrl(fileWithParams)
+                continue
+            }
+
+            // v2: min file size check
+            if (
+                minFileSize?.size &&
+                minFileSize?.unit &&
+                !checkFileSize(file, minFileSize, 'min')
+            ) {
+                onError(
+                    t(translations.fileTooSmallName, {
+                        name: file.name,
+                        size: String(minFileSize.size),
+                        unit: String(minFileSize.unit),
                     }),
                 )
                 revokeFileUrl(fileWithParams)

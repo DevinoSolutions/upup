@@ -31,11 +31,12 @@ export const sizeToBytes = (
  */
 export function checkFileSize(
     file: File,
-    maxFileSize: UpupUploaderProps['maxFileSize'],
+    sizeLimit: UpupUploaderProps['maxFileSize'],
+    mode: 'max' | 'min' = 'max',
 ) {
-    const maxBytes = sizeToBytes(maxFileSize!.size, maxFileSize!.unit)
-    if (file.size <= maxBytes) return true
-    return false
+    const limitBytes = sizeToBytes(sizeLimit!.size, sizeLimit!.unit)
+    if (mode === 'min') return file.size >= limitBytes
+    return file.size <= limitBytes
 }
 
 export const fileAppendParams = (file: File) => {

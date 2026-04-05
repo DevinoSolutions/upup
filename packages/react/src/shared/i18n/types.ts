@@ -126,6 +126,7 @@ export type Translations = {
     allowedLimitSurpassed: string
     fileUnsupportedType: string
     fileTooLargeName: string
+    fileTooSmallName: string
     filePreviouslySelected: string
     fileWithUrlPreviouslySelected: string
     errorCompressingFile: string

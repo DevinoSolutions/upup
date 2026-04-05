@@ -117,6 +117,7 @@ export const en_US: Translations = {
     allowedLimitSurpassed: 'Allowed limit has been surpassed!',
     fileUnsupportedType: '{{name}} has an unsupported type!',
     fileTooLargeName: '{{name}} is larger than {{size}} {{unit}}!',
+    fileTooSmallName: '{{name}} is smaller than {{size}} {{unit}}!',
     filePreviouslySelected: '{{name}} has previously been selected',
     fileWithUrlPreviouslySelected:
         'A file with this url: {{url}} has previously been selected',

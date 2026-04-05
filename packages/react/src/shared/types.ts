@@ -236,6 +236,10 @@ export type UpupUploaderProps = {
     isProcessing?: boolean
     mini?: boolean
     maxFileSize?: MaxFileSizeObject
+    /** v2: Minimum file size. Files smaller than this will be rejected. */
+    minFileSize?: MaxFileSizeObject
+    /** v2: Maximum total size of all files combined. */
+    maxTotalFileSize?: MaxFileSizeObject
     /** Optional image editor. Pass `true` for defaults or an `ImageEditorOptions` object. */
     imageEditor?: boolean | ImageEditorOptions
     customProps?: object
