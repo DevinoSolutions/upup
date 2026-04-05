@@ -107,6 +107,7 @@ export default function useRootProvider({
     tokenEndpoint,
     uploadEndpoint,
     serverUrl,
+    apiKey,
     cloudDrives,
     driveConfigs: driveConfigsProp,
     customProps,
@@ -129,7 +130,9 @@ export default function useRootProvider({
     const resolvedAdapters = uploadAdapters
         ?? (sources ? sources.map(s => sourceToAdapter[s]).filter(Boolean) : [UploadAdapter.INTERNAL, UploadAdapter.LINK])
     const resolvedLimit = propLimit ?? maxFiles ?? 1
-    const resolvedEndpoint = tokenEndpoint ?? uploadEndpoint ?? (serverUrl ? `${serverUrl}/presign` : '')
+    // apiKey → managed service, serverUrl → self-hosted server, tokenEndpoint/uploadEndpoint → direct
+    const resolvedServerUrl = serverUrl ?? (apiKey ? 'https://api.upup.dev/v1' : undefined)
+    const resolvedEndpoint = tokenEndpoint ?? uploadEndpoint ?? (resolvedServerUrl ? `${resolvedServerUrl}/presign` : '')
     // theme.mode → dark mapping (theme takes precedence over dark prop)
     const dark = theme?.mode ? theme.mode === 'dark' : darkProp
     // imageCompression → shouldCompress alias

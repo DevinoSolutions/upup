@@ -212,6 +212,8 @@ export type UpupUploaderProps = {
     uploadEndpoint?: string
     /** v2: Server URL for @upup/server handler (replaces tokenEndpoint in server mode) */
     serverUrl?: string
+    /** v2: API key for upup managed service — no server setup needed */
+    apiKey?: string
     /** v2: Alias for limit */
     maxFiles?: number
     /** v2: Theme configuration. mode replaces `dark`, tokens/slots replace `classNames`. */
