@@ -278,6 +278,10 @@ export type UpupUploaderProps = {
     allowFolderUpload?: boolean
     /** v2: Disable drag-and-drop (keep browse/click functional). Default false. */
     disableDragDrop?: boolean
+    /** v2: Additional CSS class name applied to the root container */
+    className?: string
+    /** v2: Inline styles applied to the root container */
+    style?: React.CSSProperties
     isProcessing?: boolean
     mini?: boolean
     maxFileSize?: MaxFileSizeObject
