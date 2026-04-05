@@ -59,7 +59,8 @@ async function uploadWithRetry(
 export default function useRootProvider({
     accept = '*',
     mini = false,
-    dark = false,
+    dark: darkProp = false,
+    theme,
     limit: propLimit,
     maxFiles,
     isProcessing = false,
@@ -116,6 +117,8 @@ export default function useRootProvider({
         ?? (sources ? sources.map(s => sourceToAdapter[s]).filter(Boolean) : [UploadAdapter.INTERNAL, UploadAdapter.LINK])
     const resolvedLimit = propLimit ?? maxFiles ?? 1
     const resolvedEndpoint = tokenEndpoint ?? uploadEndpoint ?? ''
+    // theme.mode → dark mapping (theme takes precedence over dark prop)
+    const dark = theme?.mode ? theme.mode === 'dark' : darkProp
     const inputRef = useRef<HTMLInputElement>(null)
     const [isAddingMore, setIsAddingMore] = useState(false)
     const [selectedFilesMap, setSelectedFilesMap] = useState<

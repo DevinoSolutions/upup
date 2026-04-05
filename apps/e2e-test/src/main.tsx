@@ -54,7 +54,7 @@ function App() {
           maxFiles={99}
           uploadEndpoint="/api/upload"
           sources={['local', 'google_drive', 'onedrive', 'url', 'camera', 'microphone', 'screen']}
-          dark={true}
+          theme={{ mode: 'dark' }}
           maxFileSize={{ size: 999, unit: 'MB' }}
           driveConfigs={{
             googleDrive: {

@@ -211,6 +211,12 @@ export type UpupUploaderProps = {
     uploadEndpoint?: string
     /** v2: Alias for limit */
     maxFiles?: number
+    /** v2: Theme configuration. mode replaces `dark`, tokens/slots replace `classNames`. */
+    theme?: {
+        mode?: 'light' | 'dark'
+        tokens?: Record<string, unknown>
+        slots?: Record<string, unknown>
+    }
 
     // ── v1 Props (still supported) ───────────────────────────
     showSelectFolderButton?: boolean
