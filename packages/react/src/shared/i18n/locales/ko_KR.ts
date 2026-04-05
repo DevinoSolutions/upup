@@ -11,6 +11,8 @@ export const ko_KR: Translations = {
     dropbox: 'Dropbox',
     link: '링크',
     camera: '카메라',
+    audio: 'Audio',
+    screenCapture: 'Screen Capture',
 
     dragFileOr: '파일을 드래그하거나',
     dragFilesOr: '파일을 드래그하거나',
@@ -99,6 +101,7 @@ export const ko_KR: Translations = {
     allowedLimitSurpassed: '허용된 한도를 초과했습니다!',
     fileUnsupportedType: '{{name}}는 지원되지 않는 유형입니다!',
     fileTooLargeName: '{{name}}이(가) {{size}} {{unit}}보다 큽니다!',
+    fileTooSmallName: '{{name}} is smaller than {{size}} {{unit}}!',
     filePreviouslySelected: '{{name}}이(가) 이미 선택되었습니다',
     fileWithUrlPreviouslySelected:
         '이 URL의 파일: {{url}}이(가) 이미 선택되었습니다',

@@ -11,6 +11,8 @@ export const es_ES: Translations = {
     dropbox: 'Dropbox',
     link: 'Enlace',
     camera: 'Cámara',
+    audio: 'Audio',
+    screenCapture: 'Screen Capture',
 
     dragFileOr: 'Arrastra tu archivo o',
     dragFilesOr: 'Arrastra tus archivos o',
@@ -101,6 +103,7 @@ export const es_ES: Translations = {
     allowedLimitSurpassed: '¡Se ha superado el límite permitido!',
     fileUnsupportedType: '¡{{name}} tiene un tipo no compatible!',
     fileTooLargeName: '{{name}} es mayor que {{size}} {{unit}}!',
+    fileTooSmallName: '{{name}} is smaller than {{size}} {{unit}}!',
     filePreviouslySelected: '{{name}} ya ha sido seleccionado',
     fileWithUrlPreviouslySelected:
         'Un archivo con esta URL: {{url}} ya ha sido seleccionado',

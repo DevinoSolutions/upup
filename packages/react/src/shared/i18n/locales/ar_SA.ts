@@ -11,6 +11,8 @@ export const ar_SA: Translations = {
     dropbox: 'Dropbox',
     link: 'رابط',
     camera: 'الكاميرا',
+    audio: 'Audio',
+    screenCapture: 'Screen Capture',
 
     dragFileOr: 'اسحب الملف أو',
     dragFilesOr: 'اسحب الملفات أو',
@@ -101,6 +103,7 @@ export const ar_SA: Translations = {
     allowedLimitSurpassed: 'تم تجاوز الحد المسموح!',
     fileUnsupportedType: '{{name}} نوعه غير مدعوم!',
     fileTooLargeName: '{{name}} أكبر من {{size}} {{unit}}!',
+    fileTooSmallName: '{{name}} is smaller than {{size}} {{unit}}!',
     filePreviouslySelected: '{{name}} تم تحديده سابقاً',
     fileWithUrlPreviouslySelected: 'ملف بهذا الرابط: {{url}} تم تحديده سابقاً',
     errorCompressingFile: 'خطأ في ضغط {{name}}',

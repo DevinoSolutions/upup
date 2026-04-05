@@ -11,6 +11,8 @@ export const zh_TW: Translations = {
     dropbox: 'Dropbox',
     link: '連結',
     camera: '相機',
+    audio: 'Audio',
+    screenCapture: 'Screen Capture',
 
     dragFileOr: '拖曳檔案或',
     dragFilesOr: '拖曳檔案或',
@@ -96,6 +98,7 @@ export const zh_TW: Translations = {
     allowedLimitSurpassed: '已超出允許的限制！',
     fileUnsupportedType: '{{name}} 的類型不受支援！',
     fileTooLargeName: '{{name}} 大於 {{size}} {{unit}}！',
+    fileTooSmallName: '{{name}} is smaller than {{size}} {{unit}}!',
     filePreviouslySelected: '{{name}} 先前已被選取',
     fileWithUrlPreviouslySelected: '具有此 URL 的檔案：{{url}} 先前已被選取',
     errorCompressingFile: '壓縮 {{name}} 時發生錯誤',

@@ -11,6 +11,8 @@ export const zh_CN: Translations = {
     dropbox: 'Dropbox',
     link: '链接',
     camera: '相机',
+    audio: 'Audio',
+    screenCapture: 'Screen Capture',
 
     dragFileOr: '拖拽文件或',
     dragFilesOr: '拖拽文件或',
@@ -96,6 +98,7 @@ export const zh_CN: Translations = {
     allowedLimitSurpassed: '已超出允许的限制！',
     fileUnsupportedType: '{{name}} 的类型不受支持！',
     fileTooLargeName: '{{name}} 大于 {{size}} {{unit}}！',
+    fileTooSmallName: '{{name}} is smaller than {{size}} {{unit}}!',
     filePreviouslySelected: '{{name}} 已被选择过',
     fileWithUrlPreviouslySelected: '具有此 URL 的文件：{{url}} 已被选择过',
     errorCompressingFile: '压缩 {{name}} 时出错',

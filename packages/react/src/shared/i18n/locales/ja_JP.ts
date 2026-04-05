@@ -11,6 +11,8 @@ export const ja_JP: Translations = {
     dropbox: 'Dropbox',
     link: 'リンク',
     camera: 'カメラ',
+    audio: 'Audio',
+    screenCapture: 'Screen Capture',
 
     dragFileOr: 'ファイルをドラッグするか、',
     dragFilesOr: 'ファイルをドラッグするか、',
@@ -101,6 +103,7 @@ export const ja_JP: Translations = {
     allowedLimitSurpassed: '許可された上限を超えました！',
     fileUnsupportedType: '{{name}} はサポートされていないタイプです！',
     fileTooLargeName: '{{name}} は {{size}} {{unit}} より大きいです！',
+    fileTooSmallName: '{{name}} is smaller than {{size}} {{unit}}!',
     filePreviouslySelected: '{{name}} は既に選択されています',
     fileWithUrlPreviouslySelected:
         'このURLのファイル：{{url}} は既に選択されています',
