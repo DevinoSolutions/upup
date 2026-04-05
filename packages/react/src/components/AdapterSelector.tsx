@@ -147,6 +147,7 @@ export default function AdapterSelector() {
                         <button
                             key={id}
                             type="button"
+                            data-testid={`upup-source-${id.toLowerCase()}`}
                             className={cn(
                                 'upup-group upup-flex upup-items-center upup-gap-[6px] upup-border-b upup-border-gray-200 upup-px-2 upup-py-1 md:upup-flex-col md:upup-justify-center md:upup-rounded-lg md:upup-border-none md:upup-p-0',
                                 {
@@ -228,6 +229,7 @@ export default function AdapterSelector() {
                         </span>
                         <button
                             type="button"
+                            data-testid="upup-browse-files"
                             className={cn(
                                 'upup-cursor-pointer upup-text-xs upup-font-semibold upup-text-[#0E2ADD] md:upup-text-sm',
                                 {

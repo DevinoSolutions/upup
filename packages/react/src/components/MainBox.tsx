@@ -31,6 +31,7 @@ export default function MainBox() {
         <MyAnimatePresence>
             <motion.div
                 key="adapter-selector"
+                data-testid="upup-dropzone"
                 className={cn(
                     'upup-relative upup-flex-1 upup-overflow-hidden upup-rounded-lg',
                     {

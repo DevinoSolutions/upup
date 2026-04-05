@@ -499,6 +499,39 @@ Constrain images and videos to the parent width and preserve their intrinsic asp
 .upup-scope [hidden]:where(:not([hidden="until-found"])) {
   display: none;
 }
+.upup-scope .upup-container {
+  width: 100%;
+}
+@media (min-width: 640px) {
+
+  .upup-scope .upup-container {
+    max-width: 640px;
+  }
+}
+@media (min-width: 768px) {
+
+  .upup-scope .upup-container {
+    max-width: 768px;
+  }
+}
+@media (min-width: 1024px) {
+
+  .upup-scope .upup-container {
+    max-width: 1024px;
+  }
+}
+@media (min-width: 1280px) {
+
+  .upup-scope .upup-container {
+    max-width: 1280px;
+  }
+}
+@media (min-width: 1536px) {
+
+  .upup-scope .upup-container {
+    max-width: 1536px;
+  }
+}
 .upup-scope .upup-shadow-wrapper {
         box-shadow:
             0px 4px 50px 0px rgba(0, 0, 0, 0.08),

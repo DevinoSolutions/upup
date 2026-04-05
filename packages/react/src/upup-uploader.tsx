@@ -55,7 +55,7 @@ export default forwardRef<UpupUploaderRef, UpupUploaderProps>(
 
         return (
             <RootContext.Provider value={providerValues}>
-                <div className="upup-scope upup-h-full upup-w-full">
+                <div className="upup-scope upup-h-full upup-w-full" data-testid="upup-root">
                     <div
                         className={cn('upup-w-full', {
                             'upup-h-[480px] upup-max-w-[600px]':
@@ -70,6 +70,7 @@ export default forwardRef<UpupUploaderRef, UpupUploaderProps>(
                         }
                     >
                         <section
+                            data-testid="upup-container"
                             aria-labelledby="drop-instructions"
                             className={cn(
                                 `upup-shadow-wrapper upup-relative ${
