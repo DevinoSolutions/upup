@@ -201,7 +201,8 @@ export type UploadSource = 'local' | 'camera' | 'url' | 'google_drive' | 'onedri
 
 export type UpupUploaderProps = {
     // Required Props
-    provider: UpupProvider
+    /** Storage provider. Accepts enum or string: 'aws' | 'azure' | 'backblaze' | 'digitalocean' */
+    provider: UpupProvider | 'aws' | 'azure' | 'backblaze' | 'digitalocean'
     tokenEndpoint?: string
 
     // ── v2 DX aliases (preferred) ────────────────────────────
@@ -290,6 +291,8 @@ export type UpupUploaderProps = {
     onFilesDragLeave?: (files: File[]) => void
     onFilesDrop?: (files: File[]) => void
     onFileTypeMismatch?: (file: File, acceptedTypes: string) => void
+    /** v2: Called when a file is rejected for any reason (type, size, limit). */
+    onRestrictionFailed?: (file: File, reason: 'TYPE_MISMATCH' | 'FILE_TOO_LARGE' | 'FILE_TOO_SMALL' | 'LIMIT_EXCEEDED') => void
     /** v2: Enable clipboard paste uploads (Ctrl+V / Cmd+V). Default false. */
     enablePaste?: boolean
     /** v2: Async filter called before each file is added. Return false to reject, a File to replace, or true/undefined to accept. */

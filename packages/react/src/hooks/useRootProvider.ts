@@ -89,6 +89,7 @@ export default function useRootProvider({
     onFilesDrop = () => {},
     onFileTypeMismatch = () => {},
     onBeforeFileAdded,
+    onRestrictionFailed,
     enablePaste = false,
     imageEditor: imageEditorProp,
     onFileUploadStart = () => {},
@@ -359,6 +360,7 @@ export default function useRootProvider({
             // Respect the limit strictly; stop when capacity is reached.
             if (newFilesMap.size >= limit) {
                 onWarn(translations.allowedLimitSurpassed)
+                onRestrictionFailed?.(file, 'LIMIT_EXCEEDED')
                 break
             }
 
@@ -376,6 +378,7 @@ export default function useRootProvider({
                     t(translations.fileUnsupportedType, { name: file.name }),
                 )
                 onFileTypeMismatch(file, accept)
+                onRestrictionFailed?.(file, 'TYPE_MISMATCH')
                 revokeFileUrl(fileWithParams)
                 continue
             }
@@ -392,6 +395,7 @@ export default function useRootProvider({
                         unit: String(maxFileSize.unit),
                     }),
                 )
+                onRestrictionFailed?.(file, 'FILE_TOO_LARGE')
                 revokeFileUrl(fileWithParams)
                 continue
             }
@@ -409,6 +413,7 @@ export default function useRootProvider({
                         unit: String(minFileSize.unit),
                     }),
                 )
+                onRestrictionFailed?.(file, 'FILE_TOO_SMALL')
                 revokeFileUrl(fileWithParams)
                 continue
             }
