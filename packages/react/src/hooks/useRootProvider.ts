@@ -58,7 +58,7 @@ async function uploadWithRetry(
 }
 
 export default function useRootProvider({
-    accept = '*',
+    accept: acceptProp = '*',
     mini = false,
     dark: darkProp = false,
     theme,
@@ -67,9 +67,10 @@ export default function useRootProvider({
     isProcessing = false,
     allowPreview = true,
     showSelectFolderButton = false,
-    maxFileSize,
-    minFileSize,
-    maxTotalFileSize,
+    maxFileSize: maxFileSizeProp,
+    minFileSize: minFileSizeProp,
+    maxTotalFileSize: maxTotalFileSizeProp,
+    restrictions,
     shouldCompress: shouldCompressProp = false,
     imageCompression = false,
     thumbnailGenerator = false,
@@ -129,7 +130,7 @@ export default function useRootProvider({
     }
     const resolvedAdapters = uploadAdapters
         ?? (sources ? sources.map(s => sourceToAdapter[s]).filter(Boolean) : [UploadAdapter.INTERNAL, UploadAdapter.LINK])
-    const resolvedLimit = propLimit ?? maxFiles ?? 1
+    const resolvedLimit = propLimit ?? maxFiles ?? restrictions?.maxNumberOfFiles ?? 1
     // apiKey → managed service, serverUrl → self-hosted server, tokenEndpoint/uploadEndpoint → direct
     const resolvedServerUrl = serverUrl ?? (apiKey ? 'https://api.upup.dev/v1' : undefined)
     const resolvedEndpoint = tokenEndpoint ?? uploadEndpoint ?? (resolvedServerUrl ? `${resolvedServerUrl}/presign` : '')
@@ -137,6 +138,11 @@ export default function useRootProvider({
     const dark = theme?.mode ? theme.mode === 'dark' : darkProp
     // imageCompression → shouldCompress alias
     const shouldCompress = imageCompression || shouldCompressProp
+    // restrictions → flat props mapping (restrictions takes precedence)
+    const maxFileSize = maxFileSizeProp ?? restrictions?.maxFileSize
+    const minFileSize = minFileSizeProp ?? restrictions?.minFileSize
+    const maxTotalFileSize = maxTotalFileSizeProp ?? restrictions?.maxTotalFileSize
+    const accept = restrictions?.allowedFileTypes ? restrictions.allowedFileTypes.join(',') : acceptProp
     // cloudDrives → driveConfigs mapping (cloudDrives has cleaner keys)
     const driveConfigs = driveConfigsProp ?? (cloudDrives ? {
         googleDrive: cloudDrives.googleDrive ? {

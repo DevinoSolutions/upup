@@ -216,6 +216,14 @@ export type UpupUploaderProps = {
     apiKey?: string
     /** v2: Alias for limit */
     maxFiles?: number
+    /** v2: Unified file restrictions object */
+    restrictions?: {
+        maxFileSize?: MaxFileSizeObject
+        minFileSize?: MaxFileSizeObject
+        maxTotalFileSize?: MaxFileSizeObject
+        maxNumberOfFiles?: number
+        allowedFileTypes?: string[]
+    }
     /** v2: Theme configuration. mode replaces `dark`, tokens/slots replace `classNames`. */
     theme?: {
         mode?: 'light' | 'dark'
