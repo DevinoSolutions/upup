@@ -1,3 +1,4 @@
+'use client'
 import React from 'react'
 import Webcam from 'react-webcam'
 import { t } from '../shared/i18n'

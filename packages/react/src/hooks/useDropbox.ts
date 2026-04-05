@@ -1,3 +1,4 @@
+'use client'
 import { DropboxFile, DropboxRoot, DropboxUser } from 'dropbox'
 import { useCallback, useEffect, useState } from 'react'
 import { useRootContext } from '../context/RootContext'

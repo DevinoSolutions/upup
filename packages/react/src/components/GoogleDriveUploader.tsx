@@ -1,3 +1,4 @@
+'use client'
 import React from 'react'
 import { useRootContext } from '../context/RootContext'
 import useGoogleDrive from '../hooks/useGoogleDrive'

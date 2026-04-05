@@ -1,3 +1,4 @@
+'use client'
 import { DropboxFile, DropboxRoot } from 'dropbox'
 import { useCallback, useState } from 'react'
 import { t } from '../shared/i18n'

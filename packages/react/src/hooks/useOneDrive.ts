@@ -1,3 +1,4 @@
+'use client'
 import { InteractionType } from '@azure/msal-browser'
 import { Client } from '@microsoft/microsoft-graph-client'
 import { AuthCodeMSALBrowserAuthenticationProvider } from '@microsoft/microsoft-graph-client/authProviders/authCodeMsalBrowser/index.js'

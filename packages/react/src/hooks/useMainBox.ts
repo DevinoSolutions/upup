@@ -1,3 +1,4 @@
+'use client'
 import { ClipboardEventHandler, DragEventHandler, useCallback, useMemo, useState } from 'react'
 import { UploadStatus, useRootContext } from '../context/RootContext'
 

@@ -1,3 +1,4 @@
+'use client'
 import React, { Dispatch, SetStateAction, memo, useMemo } from 'react'
 import type { Translations } from '../shared/i18n/types'
 import { UpupUploaderPropsClassNames } from '../shared/types'

@@ -1,3 +1,4 @@
+'use client'
 import { ChangeEventHandler, useCallback, useMemo } from 'react'
 import { UploadAdapter } from '../shared/types'
 import { useRootContext } from '../context/RootContext'

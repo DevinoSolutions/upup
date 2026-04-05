@@ -1,3 +1,4 @@
+'use client'
 import React, { useEffect } from 'react'
 import { useDropbox } from '../hooks/useDropbox'
 import useDropboxUploader from '../hooks/useDropboxUploader'

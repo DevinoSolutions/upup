@@ -1,3 +1,4 @@
+'use client'
 import React, { forwardRef, JSX, memo, SVGAttributes, SVGProps } from 'react'
 import {
     TbFile,

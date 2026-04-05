@@ -1,3 +1,4 @@
+'use client'
 import { MouseEventHandler, useRef, useState } from 'react'
 import Webcam from 'react-webcam'
 import { useRootContext } from '../context/RootContext'

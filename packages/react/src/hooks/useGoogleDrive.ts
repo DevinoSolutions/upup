@@ -1,3 +1,4 @@
+'use client'
 import { GoogleFile, Root, Token, User } from 'google'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { t } from '../shared/i18n'

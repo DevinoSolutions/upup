@@ -1,3 +1,4 @@
+'use client'
 // @ts-expect-error typings incomplete
 import { Dropbox, DropboxUser } from 'dropbox'
 import { useCallback, useEffect, useRef, useState } from 'react'

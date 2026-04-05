@@ -1,3 +1,4 @@
+'use client'
 import { motion } from 'framer-motion'
 import React, { memo } from 'react'
 import { TbPlayerPauseFilled, TbPlayerPlayFilled } from 'react-icons/tb'

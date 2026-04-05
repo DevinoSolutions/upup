@@ -1,3 +1,4 @@
+'use client'
 import React, { MouseEventHandler, memo, useCallback, useState } from 'react'
 import { FileWithParams } from '../shared/types'
 import { useRootContext } from '../context/RootContext'

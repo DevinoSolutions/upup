@@ -1,3 +1,4 @@
+'use client'
 import React, { useCallback } from 'react'
 import { TbUpload } from 'react-icons/tb'
 import { plural, t } from '../shared/i18n'

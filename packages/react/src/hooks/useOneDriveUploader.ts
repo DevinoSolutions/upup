@@ -1,3 +1,4 @@
+'use client'
 import { Client } from '@microsoft/microsoft-graph-client'
 import { OneDriveFile, OneDriveRoot } from 'microsoft'
 import { useState } from 'react'
