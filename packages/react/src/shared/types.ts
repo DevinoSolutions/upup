@@ -210,6 +210,8 @@ export type UpupUploaderProps = {
     sources?: UploadSource[]
     /** v2: Alias for tokenEndpoint */
     uploadEndpoint?: string
+    /** v2: Server URL for @upup/server handler (replaces tokenEndpoint in server mode) */
+    serverUrl?: string
     /** v2: Alias for limit */
     maxFiles?: number
     /** v2: Theme configuration. mode replaces `dark`, tokens/slots replace `classNames`. */

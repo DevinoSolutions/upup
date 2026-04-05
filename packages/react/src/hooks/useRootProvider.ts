@@ -106,6 +106,7 @@ export default function useRootProvider({
     provider,
     tokenEndpoint,
     uploadEndpoint,
+    serverUrl,
     cloudDrives,
     driveConfigs: driveConfigsProp,
     customProps,
@@ -128,7 +129,7 @@ export default function useRootProvider({
     const resolvedAdapters = uploadAdapters
         ?? (sources ? sources.map(s => sourceToAdapter[s]).filter(Boolean) : [UploadAdapter.INTERNAL, UploadAdapter.LINK])
     const resolvedLimit = propLimit ?? maxFiles ?? 1
-    const resolvedEndpoint = tokenEndpoint ?? uploadEndpoint ?? ''
+    const resolvedEndpoint = tokenEndpoint ?? uploadEndpoint ?? (serverUrl ? `${serverUrl}/presign` : '')
     // theme.mode → dark mapping (theme takes precedence over dark prop)
     const dark = theme?.mode ? theme.mode === 'dark' : darkProp
     // imageCompression → shouldCompress alias
