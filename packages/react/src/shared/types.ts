@@ -228,7 +228,12 @@ export type UpupUploaderProps = {
         oneDrive?: OneDriveConfigs
         dropbox?: DropboxConfigs
     }
+    /** @deprecated Use `imageCompression` instead */
     shouldCompress?: boolean
+    /** v2: Enable automatic image compression before upload. */
+    imageCompression?: boolean
+    /** v2: Generate thumbnails for images/videos before upload. */
+    thumbnailGenerator?: boolean
     accept?: string
     /** @deprecated Use `maxFiles` instead */
     limit?: number

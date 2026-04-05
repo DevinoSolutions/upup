@@ -69,7 +69,9 @@ export default function useRootProvider({
     maxFileSize,
     minFileSize,
     maxTotalFileSize,
-    shouldCompress = false,
+    shouldCompress: shouldCompressProp = false,
+    imageCompression = false,
+    thumbnailGenerator = false,
     uploadAdapters,
     sources,
     onError: errorHandler,
@@ -124,6 +126,8 @@ export default function useRootProvider({
     const resolvedEndpoint = tokenEndpoint ?? uploadEndpoint ?? ''
     // theme.mode → dark mapping (theme takes precedence over dark prop)
     const dark = theme?.mode ? theme.mode === 'dark' : darkProp
+    // imageCompression → shouldCompress alias
+    const shouldCompress = imageCompression || shouldCompressProp
     const inputRef = useRef<HTMLInputElement>(null)
     const [isAddingMore, setIsAddingMore] = useState(false)
     const [selectedFilesMap, setSelectedFilesMap] = useState<
