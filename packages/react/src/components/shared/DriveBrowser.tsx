@@ -89,7 +89,7 @@ export default function DriveBrowser({
     return (
         <AdapterViewContainer isLoading={isLoading}>
             <ShouldRender if={true} isLoading={isLoading}>
-                <div className="upup-grid upup-h-full upup-w-full upup-grid-rows-[auto,1fr,auto] upup-overflow-auto">
+                <div data-testid="upup-drive-browser" className="upup-grid upup-h-full upup-w-full upup-grid-rows-[auto,1fr,auto] upup-overflow-auto">
                     <DriveBrowserHeader
                         showSearch={!!items?.length}
                         path={path}

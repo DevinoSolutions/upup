@@ -18,7 +18,7 @@ export default forwardRef<HTMLDivElement, Props>(function ProgressBar(
     } = useRootContext()
     return (
         <ShouldRender if={!!progress}>
-            <div
+            <div data-testid="upup-progress-bar"
                 ref={ref}
                 className={cn(
                     'upup-flex upup-items-center upup-gap-2',

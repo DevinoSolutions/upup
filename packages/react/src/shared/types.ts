@@ -272,6 +272,8 @@ export type UpupUploaderProps = {
     /** @deprecated Use `maxFiles` instead */
     limit?: number
     allowPreview?: boolean
+    /** v2: Show/hide the upup branding footer. Default true. */
+    showBranding?: boolean
     isProcessing?: boolean
     mini?: boolean
     maxFileSize?: MaxFileSizeObject

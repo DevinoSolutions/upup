@@ -11,7 +11,7 @@ export default function AdapterViewContainer({
     } = useRootContext()
 
     return (
-        <div
+        <div data-testid="upup-adapter-view"
             className={cn(
                 'upup-flex upup-items-center upup-justify-center upup-overflow-hidden upup-bg-black/[0.075]',
                 {

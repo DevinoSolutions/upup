@@ -67,6 +67,7 @@ export default function useRootProvider({
     isProcessing = false,
     allowPreview = true,
     showSelectFolderButton = false,
+    showBranding = true,
     maxFileSize: maxFileSizeProp,
     minFileSize: minFileSizeProp,
     maxTotalFileSize: maxTotalFileSizeProp,
@@ -861,6 +862,7 @@ export default function useRootProvider({
             isProcessing,
             allowPreview,
             showSelectFolderButton,
+            showBranding,
             multiple,
             icons: {
                 ContainerAddMoreIcon: icons.ContainerAddMoreIcon || TbPlus,

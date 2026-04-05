@@ -141,8 +141,9 @@ export default forwardRef<UpupUploaderRef, UpupUploaderProps>(
                                     />
                                 )}
 
-                            <ShouldRender if={!providerValues.props.mini}>
+                            <ShouldRender if={!providerValues.props.mini && providerValues.props.showBranding !== false}>
                                 <div
+                                    data-testid="upup-branding"
                                     className={cn(
                                         'upup-flex upup-w-full upup-flex-col upup-items-center upup-justify-between upup-gap-1 md:upup-flex-row',
                                     )}
