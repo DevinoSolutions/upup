@@ -41,7 +41,7 @@ export type {
 // ── v2 re-exports from @upup/shared ─────────────────────
 export type { UploadStatus } from '@upup/shared'
 
-// ── Sub-components (v2 composability) ───────────────────
+// ── Sub-components (v1 names) ───────────────────────────
 export { default as AdapterSelector } from './components/AdapterSelector'
 export { default as AdapterView } from './components/AdapterView'
 export { default as CameraUploader } from './components/CameraUploader'
@@ -52,6 +52,11 @@ export { default as GoogleDriveUploader } from './components/GoogleDriveUploader
 export { default as MainBox } from './components/MainBox'
 export { default as OneDriveUploader } from './components/OneDriveUploader'
 export { default as UrlUploader } from './components/UrlUploader'
+
+// ── v2 component name aliases ───────────────────────────
+export { default as SourceSelector } from './components/AdapterSelector'
+export { default as SourceView } from './components/AdapterView'
+export { default as DropZone } from './components/MainBox'
 
 // ── Utilities ───────────────────────────────────────────
 export { cn } from './lib/tailwind'
