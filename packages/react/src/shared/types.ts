@@ -266,6 +266,8 @@ export type UpupUploaderProps = {
     autoUpload?: boolean
     /** v2: Maximum concurrent uploads. Default 3. */
     maxConcurrentUploads?: number
+    /** v2: Enable crash recovery — saves upload state to IndexedDB for resume after page refresh */
+    crashRecovery?: boolean
     accept?: string
     /** @deprecated Use `maxFiles` instead */
     limit?: number
@@ -318,6 +320,10 @@ export type UpupUploaderProps = {
     ) => void
     onFilesUploadProgress?: (completedFiles: number, totalFiles: number) => void
     onFileRemove?: (file: FileWithParams) => void
+    /** v2: Called once when the batch upload starts */
+    onUploadStart?: () => void
+    /** v2: Called when all uploads complete or fail */
+    onUploadComplete?: (files: FileWithParams[]) => void
     onFilesDragOver?: (files: File[]) => void
     onFilesDragLeave?: (files: File[]) => void
     onFilesDrop?: (files: File[]) => void
