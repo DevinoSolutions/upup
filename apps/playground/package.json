@@ -23,7 +23,6 @@
     "@upup/react": "workspace:*",
     "@upup/shared": "workspace:*",
     "@upup/server": "workspace:*",
-    "upup-react-file-uploader": "workspace:*"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
