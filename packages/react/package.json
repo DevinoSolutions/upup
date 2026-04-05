@@ -93,6 +93,6 @@
     "tailwindcss": "^3.4.17",
     "tsup": "^8.4.0",
     "typescript": "^5.3.2",
-    "vitest": "^3.0.0"
+    "vitest": "^4.1.2"
   }
 }
