@@ -60,13 +60,15 @@ export default function useRootProvider({
     accept = '*',
     mini = false,
     dark = false,
-    limit: propLimit = 1,
+    limit: propLimit,
+    maxFiles,
     isProcessing = false,
     allowPreview = true,
     showSelectFolderButton = false,
     maxFileSize,
     shouldCompress = false,
-    uploadAdapters = [UploadAdapter.INTERNAL, UploadAdapter.LINK],
+    uploadAdapters,
+    sources,
     onError: errorHandler,
     onWarn: warningHandler,
     icons = {},
@@ -91,12 +93,27 @@ export default function useRootProvider({
     onPrepareFiles,
     provider,
     tokenEndpoint,
+    uploadEndpoint,
     driveConfigs,
     customProps,
     enableAutoCorsConfig = false,
     maxRetries,
     resumable,
 }: UpupUploaderProps): IRootContext {
+    // ── v2 DX aliases ────────────────────────────────────────
+    // sources → uploadAdapters mapping
+    const sourceToAdapter: Record<string, UploadAdapter> = {
+        local: UploadAdapter.INTERNAL,
+        camera: UploadAdapter.CAMERA,
+        url: UploadAdapter.LINK,
+        google_drive: UploadAdapter.GOOGLE_DRIVE,
+        onedrive: UploadAdapter.ONE_DRIVE,
+        dropbox: UploadAdapter.DROPBOX,
+    }
+    const resolvedAdapters = uploadAdapters
+        ?? (sources ? sources.map(s => sourceToAdapter[s]).filter(Boolean) : [UploadAdapter.INTERNAL, UploadAdapter.LINK])
+    const resolvedLimit = propLimit ?? maxFiles ?? 1
+    const resolvedEndpoint = tokenEndpoint ?? uploadEndpoint ?? ''
     const inputRef = useRef<HTMLInputElement>(null)
     const [isAddingMore, setIsAddingMore] = useState(false)
     const [selectedFilesMap, setSelectedFilesMap] = useState<
@@ -136,8 +153,8 @@ export default function useRootProvider({
     }, [])
 
     const limit = useMemo(
-        () => (mini ? 1 : Math.max(propLimit, 1)),
-        [mini, propLimit],
+        () => (mini ? 1 : Math.max(resolvedLimit, 1)),
+        [mini, resolvedLimit],
     )
     const multiple = useMemo(() => (mini ? false : limit > 1), [limit, mini])
 
@@ -505,7 +522,7 @@ export default function useRootProvider({
                 // Initialize SDK
                 const sdk = new ProviderSDK({
                     provider,
-                    tokenEndpoint,
+                    tokenEndpoint: resolvedEndpoint,
                     constraints: {
                         multiple,
                         accept,
@@ -645,7 +662,7 @@ export default function useRootProvider({
             compressFiles,
             handlePrepareFiles,
             provider,
-            tokenEndpoint,
+            resolvedEndpoint,
             multiple,
             accept,
             maxFileSize?.size,
@@ -752,7 +769,7 @@ export default function useRootProvider({
             onFilesDragOver,
             onFilesDragLeave,
             onFilesDrop,
-            uploadAdapters,
+            uploadAdapters: resolvedAdapters,
             accept,
             maxFileSize,
             limit,

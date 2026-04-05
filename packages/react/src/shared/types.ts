@@ -196,14 +196,26 @@ export type UpupUploaderPropsIcons = {
     LoaderIcon?: FC<{ className?: string }>
 }
 
+/** Shorthand source names for v2 DX */
+export type UploadSource = 'local' | 'camera' | 'url' | 'google_drive' | 'onedrive' | 'dropbox' | 'microphone' | 'screen'
+
 export type UpupUploaderProps = {
     // Required Props
     provider: UpupProvider
-    tokenEndpoint: string
+    tokenEndpoint?: string
 
-    // Optional Props
-    showSelectFolderButton?: boolean // Controls the "select a folder" button visibility
+    // ── v2 DX aliases (preferred) ────────────────────────────
+    /** v2: Shorthand source list. e.g. sources={['local','camera','google_drive']} */
+    sources?: UploadSource[]
+    /** v2: Alias for tokenEndpoint */
+    uploadEndpoint?: string
+    /** v2: Alias for limit */
+    maxFiles?: number
+
+    // ── v1 Props (still supported) ───────────────────────────
+    showSelectFolderButton?: boolean
     enableAutoCorsConfig?: boolean
+    /** @deprecated Use `sources` instead */
     uploadAdapters?: UploadAdapter[]
     driveConfigs?: {
         googleDrive?: GoogleDriveConfigs
@@ -212,6 +224,7 @@ export type UpupUploaderProps = {
     }
     shouldCompress?: boolean
     accept?: string
+    /** @deprecated Use `maxFiles` instead */
     limit?: number
     allowPreview?: boolean
     isProcessing?: boolean
@@ -255,7 +268,6 @@ export type UpupUploaderProps = {
     onFilesDragLeave?: (files: File[]) => void
     onFilesDrop?: (files: File[]) => void
     onFileTypeMismatch?: (file: File, acceptedTypes: string) => void
-    // onCancelUpload?: (files: FileWithParams[]) => void
     onError?: (errorMessage: string) => void
     onWarn?: (warningMessage: string) => void
 }

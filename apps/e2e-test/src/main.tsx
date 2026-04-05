@@ -6,11 +6,12 @@ import { UpupUploader } from '@upup/react'
 function App() {
   return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0a0a1a', padding: 40 }}>
+      {/* v2 DX: sources instead of uploadAdapters, maxFiles instead of limit, uploadEndpoint instead of tokenEndpoint */}
       <UpupUploader
         provider="BackBlaze"
-        limit={99}
+        maxFiles={99}
         uploadEndpoint="/api/upload"
-        uploadAdapters={['INTERNAL', 'GOOGLE_DRIVE', 'ONE_DRIVE', 'LINK', 'CAMERA']}
+        sources={['local', 'google_drive', 'onedrive', 'url', 'camera']}
         dark={true}
         maxFileSize={{ size: 999, unit: 'MB' }}
         driveConfigs={{
