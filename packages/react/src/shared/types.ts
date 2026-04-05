@@ -276,6 +276,8 @@ export type UpupUploaderProps = {
     showBranding?: boolean
     /** v2: Allow selecting entire folders (directory upload). Adds "select a folder" button. */
     allowFolderUpload?: boolean
+    /** v2: Disable drag-and-drop (keep browse/click functional). Default false. */
+    disableDragDrop?: boolean
     isProcessing?: boolean
     mini?: boolean
     maxFileSize?: MaxFileSizeObject
