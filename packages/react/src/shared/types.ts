@@ -274,6 +274,8 @@ export type UpupUploaderProps = {
     allowPreview?: boolean
     /** v2: Show/hide the upup branding footer. Default true. */
     showBranding?: boolean
+    /** v2: Allow selecting entire folders (directory upload). Adds "select a folder" button. */
+    allowFolderUpload?: boolean
     isProcessing?: boolean
     mini?: boolean
     maxFileSize?: MaxFileSizeObject

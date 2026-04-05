@@ -66,7 +66,8 @@ export default function useRootProvider({
     maxFiles,
     isProcessing = false,
     allowPreview = true,
-    showSelectFolderButton = false,
+    showSelectFolderButton: showSelectFolderButtonProp = false,
+    allowFolderUpload = false,
     showBranding = true,
     maxFileSize: maxFileSizeProp,
     minFileSize: minFileSizeProp,
@@ -144,6 +145,8 @@ export default function useRootProvider({
     const minFileSize = minFileSizeProp ?? restrictions?.minFileSize
     const maxTotalFileSize = maxTotalFileSizeProp ?? restrictions?.maxTotalFileSize
     const accept = restrictions?.allowedFileTypes ? restrictions.allowedFileTypes.join(',') : acceptProp
+    // allowFolderUpload → showSelectFolderButton alias
+    const showSelectFolderButton = allowFolderUpload || showSelectFolderButtonProp
     // cloudDrives → driveConfigs mapping (cloudDrives has cleaner keys)
     const driveConfigs = driveConfigsProp ?? (cloudDrives ? {
         googleDrive: cloudDrives.googleDrive ? {
