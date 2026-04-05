@@ -12,10 +12,11 @@ export { useIsClient } from './use-is-client'
 
 // ── Enums ────────────────────────────────────────────────
 export { UploadAdapter, UpupProvider } from './shared/types'
-// v2 alias
 export { FileSource } from '@upup/shared'
+/** v2 alias for UpupProvider */
+export { UpupProvider as StorageProvider } from './shared/types'
 
-// ── Types ────────────────────────────────────────────────
+// ── v1 Types (backward compat) ──────────────────────────
 export type {
     FileWithParams,
     FileWithProgress,
@@ -30,6 +31,15 @@ export type {
     UpupUploaderPropsClassNames,
     UpupUploaderPropsIcons,
 } from './shared/types'
+
+// ── v2 Type aliases ─────────────────────────────────────
+export type {
+    FileWithParams as UploadFile,
+    FileWithProgress as UploadFileWithProgress,
+} from './shared/types'
+
+// ── v2 re-exports from @upup/shared ─────────────────────
+export type { UploadStatus } from '@upup/shared'
 
 // ── i18n ─────────────────────────────────────────────────
 export { en_US } from './shared/i18n'
