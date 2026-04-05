@@ -33,29 +33,39 @@ function HeadlessDemo() {
 }
 
 function App() {
-  const [showHeadless, setShowHeadless] = useState(false)
+  const [tab, setTab] = useState<'dark' | 'light' | 'headless'>('dark')
+
+  const tabStyle = (t: string) => ({
+    padding: '8px 16px',
+    background: tab === t ? '#30C5F7' : '#333',
+    color: '#fff',
+    border: 'none',
+    borderRadius: 6,
+    cursor: 'pointer' as const,
+  })
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#0a0a1a', padding: 40, gap: 24 }}>
       <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
-        <button onClick={() => setShowHeadless(false)} style={{ padding: '8px 16px', background: !showHeadless ? '#30C5F7' : '#333', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer' }}>
-          Full UI Component
-        </button>
-        <button onClick={() => setShowHeadless(true)} style={{ padding: '8px 16px', background: showHeadless ? '#30C5F7' : '#333', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer' }}>
-          Headless Hook
-        </button>
+        <button onClick={() => setTab('dark')} style={tabStyle('dark')}>Dark Mode</button>
+        <button onClick={() => setTab('light')} style={tabStyle('light')}>Light Mode</button>
+        <button onClick={() => setTab('headless')} style={tabStyle('headless')}>Headless Hook</button>
       </div>
 
-      {showHeadless ? (
+      {tab === 'headless' ? (
         <HeadlessDemo />
       ) : (
         <UpupUploader
-          provider="BackBlaze"
+          provider="backblaze"
           maxFiles={99}
           uploadEndpoint="/api/upload"
           sources={['local', 'google_drive', 'onedrive', 'url', 'camera', 'microphone', 'screen']}
-          theme={{ mode: 'dark' }}
+          theme={{ mode: tab }}
           maxFileSize={{ size: 999, unit: 'MB' }}
+          minFileSize={{ size: 1, unit: 'KB' }}
+          enablePaste
+          onRestrictionFailed={(file, reason) => console.log('Rejected:', file.name, reason)}
+          onFilesUploadComplete={(files) => console.log('Upload complete:', files.length, 'files')}
           cloudDrives={{
             googleDrive: {
               clientId: import.meta.env.VITE_GOOGLE_CLIENT_ID || '',
