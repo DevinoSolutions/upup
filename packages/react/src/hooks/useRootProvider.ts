@@ -736,7 +736,7 @@ export default function useRootProvider({
                             : sdk.upload(file, uploadOptions),
                     ),
                 )
-                const finalFiles = uploadResults.map(result => result.file)
+                const finalFiles = uploadResults.map((result: any) => result.file)
                 if (sendEvent) onFilesUploadComplete(finalFiles)
 
                 sdkRef.current = null
@@ -872,8 +872,8 @@ export default function useRootProvider({
             allowPreview,
             showSelectFolderButton,
             showBranding,
-            className,
-            style,
+            className: className ?? '',
+            style: style ?? {},
             multiple,
             icons: {
                 ContainerAddMoreIcon: icons.ContainerAddMoreIcon || TbPlus,

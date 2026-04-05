@@ -62,6 +62,9 @@ export { default as DropZone } from './components/MainBox'
 // ── Prop getters (v2 headless) ──────────────────────────
 export { createPropGetters } from './prop-getters'
 
+// ── Context hook (for custom sub-components) ────────────
+export { useRootContext, useRootContext as useUploaderContext } from './context/RootContext'
+
 // ── Utilities ───────────────────────────────────────────
 export { cn } from './lib/tailwind'
 
