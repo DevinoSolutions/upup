@@ -38,8 +38,9 @@ export type {
     FileWithProgress as UploadFileWithProgress,
 } from './shared/types'
 
-// ── v2 re-exports from @upup/shared ─────────────────────
+// ── v2 re-exports from @upup/shared + @upup/core ───────
 export type { UploadStatus } from '@upup/shared'
+export { UpupCore, type CoreOptions } from '@upup/core'
 
 // ── Sub-components (v1 names) ───────────────────────────
 export { default as AdapterSelector } from './components/AdapterSelector'
