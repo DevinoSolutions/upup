@@ -31,8 +31,8 @@ import {
 } from "react-icons/fa";
 import { SiDropbox, SiGoogledrive } from "react-icons/si";
 import { GrOnedrive } from "react-icons/gr";
-import type { Translations } from "upup-react-file-uploader";
-import { en_US } from "upup-react-file-uploader";
+import type { Translations } from "@upup/react";
+import { en_US } from "@upup/react";
 import {
   ar_SA,
   de_DE,
@@ -42,7 +42,7 @@ import {
   ko_KR,
   zh_CN,
   zh_TW,
-} from "upup-react-file-uploader/locales";
+} from "@upup/react/locales";
 import Uploader from "@/components/Uploader";
 import { Tooltip } from "react-tooltip";
 import "react-tooltip/dist/react-tooltip.css";

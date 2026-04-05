@@ -2,34 +2,21 @@
 
 import React, { useContext } from "react";
 
-import {
-  UpupUploader,
-  UpupProvider,
-  UploadAdapter,
-  Translations,
-} from "upup-react-file-uploader";
-
-import "upup-react-file-uploader/styles";
+import { UpupUploader, type Translations } from "@upup/react";
+import "@upup/react/styles";
 import { ThemeContext } from "@/lib/contexts";
 import { toast } from "react-toastify";
 
-const customFields = {
-  tokenEndpoint: process.env.NEXT_PUBLIC_BASE_URL
-    ? process.env.NEXT_PUBLIC_BASE_URL + "/api/getPresignedUrl"
-    : "/api/getPresignedUrl", // fallback to relative path
-  driveConfigs: {
-    googleDrive: {
-      google_client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "",
-      google_api_key: process.env.NEXT_PUBLIC_GOOGLE_API_KEY || "",
-      google_app_id: process.env.NEXT_PUBLIC_GOOGLE_APP_ID || "",
-    },
-    oneDrive: {
-      onedrive_client_id: process.env.NEXT_PUBLIC_ONEDRIVE_CLIENT_ID || "",
-    },
-    dropbox: {
-      dropbox_client_id: process.env.NEXT_PUBLIC_DROPBOX_CLIENT_ID || "",
-    },
-  },
+// v2 source mapping — human-readable strings
+const adapterToSource: Record<string, string> = {
+  INTERNAL: "local",
+  GOOGLE_DRIVE: "google_drive",
+  ONE_DRIVE: "onedrive",
+  LINK: "url",
+  CAMERA: "camera",
+  DROPBOX: "dropbox",
+  AUDIO: "microphone",
+  SCREEN_CAPTURE: "screen",
 };
 
 interface Props {
@@ -39,7 +26,7 @@ interface Props {
   enabledAdapters?: string[];
   allowPreview?: boolean;
   shouldCompress?: boolean;
-  fileSizeLimit?: number; // in MB
+  fileSizeLimit?: number;
   maxRetries?: number;
   localePack?: Translations;
   imageEditor?: boolean;
@@ -57,42 +44,21 @@ export default function Uploader({
   localePack,
   imageEditor = false,
 }: Readonly<Props>) {
-  // Detect dark mode using Tailwind's class strategy
   const { isDarkMode } = useContext(ThemeContext);
 
-  // Convert string array to UploadAdapter enum values
-  const uploadAdapters = enabledAdapters.map((adapter) => {
-    switch (adapter) {
-      case "INTERNAL":
-        return UploadAdapter.INTERNAL;
-      case "GOOGLE_DRIVE":
-        return UploadAdapter.GOOGLE_DRIVE;
-      case "ONE_DRIVE":
-        return UploadAdapter.ONE_DRIVE;
-      case "LINK":
-        return UploadAdapter.LINK;
-      case "CAMERA":
-        return UploadAdapter.CAMERA;
-      case "DROPBOX":
-        return UploadAdapter.DROPBOX;
-      default:
-        return UploadAdapter.INTERNAL;
-    }
-  });
+  // v2: convert adapter strings to source shorthand
+  const sources = enabledAdapters
+    .map((a) => adapterToSource[a])
+    .filter(Boolean) as any[];
 
-  // Get the current theme
   const currentTheme = theme || "blue";
 
-  // Custom class names for theming - these will use global CSS classes
   const customClassNames = {
-    // Soft pastel backgrounds for containers
     containerMini: `uploader-container-mini-${currentTheme} `,
     containerFull: `uploader-container-full-${currentTheme}`,
-    // Darker backgrounds for other elements
     fileListContainer: `uploader-file-list-${currentTheme}`,
     driveBody: `uploader-drive-body-${currentTheme}`,
     adapterView: `uploader-adapter-view-${currentTheme}`,
-    // Button and interactive elements
     uploadButton: `uploader-btn-${currentTheme}`,
     uploadDoneButton: `uploader-btn-${currentTheme}`,
     adapterButton: `uploader-adapter-${currentTheme}`,
@@ -110,21 +76,36 @@ export default function Uploader({
   return (
     <div className="flex justify-center items-center w-full h-full lg:min-h-[auto] min-h-[70vh]">
       <UpupUploader
-        provider={UpupProvider.BackBlaze}
-        limit={limit}
-        tokenEndpoint={customFields.tokenEndpoint}
-        uploadAdapters={uploadAdapters}
-        driveConfigs={customFields.driveConfigs}
-        dark={isDarkMode}
+        provider="backblaze"
+        maxFiles={limit}
+        uploadEndpoint={
+          process.env.NEXT_PUBLIC_BASE_URL
+            ? process.env.NEXT_PUBLIC_BASE_URL + "/api/upup"
+            : "/api/upup"
+        }
+        sources={sources}
+        cloudDrives={{
+          googleDrive: {
+            clientId: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "",
+            apiKey: process.env.NEXT_PUBLIC_GOOGLE_API_KEY || "",
+            appId: process.env.NEXT_PUBLIC_GOOGLE_APP_ID || "",
+          },
+          oneDrive: {
+            clientId: process.env.NEXT_PUBLIC_ONEDRIVE_CLIENT_ID || "",
+          },
+          dropbox: {
+            clientId: process.env.NEXT_PUBLIC_DROPBOX_CLIENT_ID || "",
+          },
+        }}
+        theme={{ mode: isDarkMode ? "dark" : "light" }}
         mini={mini}
         allowPreview={allowPreview}
-        shouldCompress={shouldCompress}
+        imageCompression={shouldCompress}
         imageEditor={imageEditor}
         maxFileSize={{ size: fileSizeLimit, unit: "MB" }}
         classNames={customClassNames}
         maxRetries={maxRetries}
-        resumable={{ mode: "multipart" }}
-        localePack={localePack}
+        i18n={localePack ? { locale: localePack } : undefined}
         onFilesUploadComplete={(files) => {
           console.log("Files uploaded successfully:", files);
           toast.success("Files uploaded successfully!");
