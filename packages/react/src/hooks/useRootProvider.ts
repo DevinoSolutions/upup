@@ -288,6 +288,7 @@ export default function useRootProvider({
     useEffect(() => {
         if (!coreRef.current) return
         coreRef.current.updateOptions({
+            provider,
             uploadEndpoint: resolvedEndpoint || undefined,
             accept,
             limit: resolvedLimit,
@@ -300,7 +301,7 @@ export default function useRootProvider({
             maxConcurrentUploads,
             autoUpload,
         })
-    }, [resolvedEndpoint, accept, resolvedLimit, maxFileSize, minFileSize, maxTotalFileSize, maxRetries, onBeforeFileAdded, shouldCompress, maxConcurrentUploads, autoUpload])
+    }, [provider, resolvedEndpoint, accept, resolvedLimit, maxFileSize, minFileSize, maxTotalFileSize, maxRetries, onBeforeFileAdded, shouldCompress, maxConcurrentUploads, autoUpload])
 
     // v2: emit source-change event when active adapter changes
     useEffect(() => {
