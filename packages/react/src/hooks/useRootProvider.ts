@@ -796,6 +796,8 @@ export default function useRootProvider({
                         }),
                     ),
                 )
+                // v2: emit compression error via UpupCore
+                coreRef.current?.emit('compression-error', { error, fileCount: files.length })
                 throw error
             }
         },
