@@ -140,6 +140,8 @@ export function useDropbox() {
                 return response
             } catch (error) {
                 console.error('Dropbox API error:', error)
+                // v2: emit Dropbox API error via UpupCore
+                core?.emit('dropbox-api-error', { error })
                 throw error
             }
         },
@@ -210,6 +212,8 @@ export function useDropbox() {
                     await fetchRootContents()
                 } catch (error) {
                     console.error('Error initializing Dropbox data:', error)
+                    // v2: emit Dropbox init error via UpupCore
+                    core?.emit('dropbox-init-error', { error })
                 }
             })()
         }
