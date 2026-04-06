@@ -10,7 +10,7 @@ export enum FacingMode {
 }
 
 export default function useCameraUploader() {
-    const { setFiles, setActiveAdapter, translations, props } = useRootContext()
+    const { core, setFiles, setActiveAdapter, translations, props } = useRootContext()
     const { fetchImage } = useFetchFileByUrl()
     const webcamRef = useRef<Webcam>(null)
     const [url, setUrl] = useState('')
@@ -26,6 +26,8 @@ export default function useCameraUploader() {
         if (!url) return
 
         setUrl(url)
+        // v2: emit camera-capture event via UpupCore
+        core?.emit('camera-capture', { dataUrl: url })
     }
 
     const handleFetchImage: MouseEventHandler<HTMLButtonElement> = async () => {
@@ -34,6 +36,8 @@ export default function useCameraUploader() {
             setFiles([file])
             setUrl('')
             setActiveAdapter(undefined)
+            // v2: emit camera-confirm event via UpupCore when photo is accepted
+            core?.emit('camera-confirm', { file })
         }
     }
 
