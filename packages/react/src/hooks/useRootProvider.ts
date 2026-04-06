@@ -274,6 +274,12 @@ export default function useRootProvider({
         })
     }, [resolvedEndpoint, accept, resolvedLimit, maxFileSize, minFileSize, maxTotalFileSize, maxRetries, onBeforeFileAdded, shouldCompress, maxConcurrentUploads])
 
+    // v2: emit source-change event when active adapter changes
+    useEffect(() => {
+        if (!coreRef.current || activeAdapter === undefined) return
+        coreRef.current.emit('source-change', { source: activeAdapter })
+    }, [activeAdapter])
+
     const limit = useMemo(
         () => (mini ? 1 : Math.max(resolvedLimit, 1)),
         [mini, resolvedLimit],
