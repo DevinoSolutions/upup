@@ -180,6 +180,8 @@ export default function useOneDriveAuth({
                     message: (error as Error)?.message ?? '',
                 }),
             )
+            // v2: emit sign-in error via UpupCore
+            core?.emit('onedrive-auth-error', { error })
             setAuthCancelled(true)
             setToken(undefined)
             secureStorage.removeItem('isAuthenticated')
@@ -222,6 +224,8 @@ export default function useOneDriveAuth({
                     message: (error as Error)?.message ?? '',
                 }),
             )
+            // v2: emit sign-out error via UpupCore
+            core?.emit('onedrive-auth-logout-error', { error })
         } finally {
             setIsAuthInProgress(false)
             // Clear the logout flag after a short delay
