@@ -193,6 +193,8 @@ export default function useMainBox() {
             if (pastedFiles.length > 0) {
                 e.preventDefault()
                 setFiles(pastedFiles)
+                // v2: emit paste event via UpupCore
+                core?.emit('paste', { files: pastedFiles })
             }
         },
         [enablePaste, isProcessing, setFiles],
