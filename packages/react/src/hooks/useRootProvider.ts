@@ -332,6 +332,12 @@ export default function useRootProvider({
         coreRef.current.emit('progress-map-change', { filesProgressMap })
     }, [filesProgressMap])
 
+    // v2: emit theme-change event when dark/theme prop changes
+    useEffect(() => {
+        if (!coreRef.current) return
+        coreRef.current.emit('theme-change', { dark })
+    }, [dark])
+
     const limit = useMemo(
         () => (mini ? 1 : Math.max(resolvedLimit, 1)),
         [mini, resolvedLimit],
