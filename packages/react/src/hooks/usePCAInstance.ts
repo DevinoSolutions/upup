@@ -5,6 +5,7 @@ import { useRootContext } from '../context/RootContext'
 
 const usePCAInstance = (clientId: string) => {
     const {
+        core,
         props: { onError },
         translations,
     } = useRootContext()
@@ -42,7 +43,11 @@ const usePCAInstance = (clientId: string) => {
                     },
                 })
 
-                if (mounted) setMsalInstance(instance)
+                if (mounted) {
+                    setMsalInstance(instance)
+                    // v2: emit onedrive-msal-ready event via UpupCore
+                    core?.emit('onedrive-msal-ready', {})
+                }
             } catch (error) {
                 onError((error as Error).message)
             } finally {
