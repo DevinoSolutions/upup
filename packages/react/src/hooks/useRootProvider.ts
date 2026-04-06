@@ -364,6 +364,12 @@ export default function useRootProvider({
         coreRef.current.emit('limit-change', { limit, multiple })
     }, [limit, multiple])
 
+    // v2: emit adapter-change event when the active source/adapter changes
+    useEffect(() => {
+        if (!coreRef.current) return
+        coreRef.current.emit('adapter-change', { adapter: activeAdapter })
+    }, [activeAdapter])
+
     const totalProgress = useMemo(() => {
         const filesProgressMapValues = Object.values(filesProgressMap)
         if (!filesProgressMapValues.length) return 0
