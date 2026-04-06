@@ -298,8 +298,9 @@ export default function useRootProvider({
             onBeforeFileAdded,
             shouldCompress,
             maxConcurrentUploads,
+            autoUpload,
         })
-    }, [resolvedEndpoint, accept, resolvedLimit, maxFileSize, minFileSize, maxTotalFileSize, maxRetries, onBeforeFileAdded, shouldCompress, maxConcurrentUploads])
+    }, [resolvedEndpoint, accept, resolvedLimit, maxFileSize, minFileSize, maxTotalFileSize, maxRetries, onBeforeFileAdded, shouldCompress, maxConcurrentUploads, autoUpload])
 
     // v2: emit source-change event when active adapter changes
     useEffect(() => {
