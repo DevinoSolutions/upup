@@ -212,6 +212,8 @@ export default function useDropboxUploader(token?: string) {
                     message: (error as Error)?.message ?? '',
                 }),
             )
+            // v2: emit submit error via UpupCore
+            core?.emit('dropbox-submit-error', { error })
         } finally {
             setShowLoader(false)
             setDownloadProgress(0)
@@ -260,6 +262,8 @@ export default function useDropboxUploader(token?: string) {
                         message: (error as Error)?.message ?? '',
                     }),
                 )
+                // v2: emit folder submit error via UpupCore
+                core?.emit('dropbox-folder-submit-error', { error })
             } finally {
                 setShowLoader(false)
                 setDownloadProgress(0)
@@ -333,8 +337,10 @@ export default function useDropboxUploader(token?: string) {
                     message: (error as Error)?.message ?? '',
                 }),
             )
+            // v2: emit folder select error via UpupCore
+            core?.emit('dropbox-folder-select-error', { error })
         }
-    }, [handleSubmitWithFiles, onError, path, token])
+    }, [core, handleSubmitWithFiles, onError, path, token])
 
     return {
         path,
