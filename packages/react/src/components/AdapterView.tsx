@@ -8,6 +8,7 @@ import MyAnimatePresence from './shared/MyAnimatePresence'
 
 export default function AdapterView() {
     const {
+        core,
         activeAdapter,
         setActiveAdapter,
         translations: tr,
@@ -48,7 +49,11 @@ export default function AdapterView() {
                             },
                             classNames.adapterViewCancelButton,
                         )}
-                        onClick={() => setActiveAdapter(undefined)}
+                        onClick={() => {
+                            // v2: emit adapter-view-cancel event via UpupCore
+                            core?.emit('adapter-view-cancel', { adapterId: activeAdapter })
+                            setActiveAdapter(undefined)
+                        }}
                         type="button"
                     >
                         {tr.cancel}
