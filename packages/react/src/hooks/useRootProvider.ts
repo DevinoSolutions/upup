@@ -473,6 +473,7 @@ export default function useRootProvider({
             if (newFilesMap.size >= limit) {
                 onWarn(translations.allowedLimitSurpassed)
                 onRestrictionFailed?.(file, 'LIMIT_EXCEEDED')
+                coreRef.current?.emit('restriction-failed', { file, reason: 'LIMIT_EXCEEDED' })
                 break
             }
 
@@ -491,6 +492,7 @@ export default function useRootProvider({
                 )
                 onFileTypeMismatch(file, accept)
                 onRestrictionFailed?.(file, 'TYPE_MISMATCH')
+                coreRef.current?.emit('restriction-failed', { file, reason: 'TYPE_MISMATCH' })
                 revokeFileUrl(fileWithParams)
                 continue
             }
@@ -508,6 +510,7 @@ export default function useRootProvider({
                     }),
                 )
                 onRestrictionFailed?.(file, 'FILE_TOO_LARGE')
+                coreRef.current?.emit('restriction-failed', { file, reason: 'FILE_TOO_LARGE' })
                 revokeFileUrl(fileWithParams)
                 continue
             }
@@ -526,6 +529,7 @@ export default function useRootProvider({
                     }),
                 )
                 onRestrictionFailed?.(file, 'FILE_TOO_SMALL')
+                coreRef.current?.emit('restriction-failed', { file, reason: 'FILE_TOO_SMALL' })
                 revokeFileUrl(fileWithParams)
                 continue
             }
