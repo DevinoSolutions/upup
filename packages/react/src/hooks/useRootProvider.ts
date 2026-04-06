@@ -560,6 +560,8 @@ export default function useRootProvider({
     }
     async function resetState() {
         setIsAddingMore(false)
+        // v2: emit state-reset before the done/cancel chain clears state
+        coreRef.current?.emit('state-reset', {})
         handleDone()
     }
     async function dynamicUpload(files: File[] | FileWithParams[]) {
@@ -585,9 +587,10 @@ export default function useRootProvider({
         }
         setSelectedFilesMap(filesMap)
 
-        // v2: sync replaced files into UpupCore
+        // v2: sync replaced files into UpupCore and emit event
         if (coreRef.current) {
             coreRef.current.syncFilesFromExternal(filesMap as Map<string, any>)
+            coreRef.current.emit('files-replaced', { count: filesMap.size })
         }
     }
     const handleSetSelectedFiles = async (newFiles: File[]) => {
