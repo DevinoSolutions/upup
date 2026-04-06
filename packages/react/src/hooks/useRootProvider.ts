@@ -312,6 +312,12 @@ export default function useRootProvider({
         coreRef.current.emit('editing-file-change', { file: editingFile })
     }, [editingFile])
 
+    // v2: emit upload-error-change event when uploadError message changes
+    useEffect(() => {
+        if (!coreRef.current) return
+        coreRef.current.emit('upload-error-change', { error: uploadError })
+    }, [uploadError])
+
     const limit = useMemo(
         () => (mini ? 1 : Math.max(resolvedLimit, 1)),
         [mini, resolvedLimit],
