@@ -197,6 +197,7 @@ export default function useRootProvider({
 
     const inputRef = useRef<HTMLInputElement>(null)
     const [isAddingMore, setIsAddingMore] = useState(false)
+    const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
     const [selectedFilesMap, setSelectedFilesMap] = useState<
         Map<string, FileWithParams>
     >(new Map())
@@ -285,6 +286,12 @@ export default function useRootProvider({
         if (!coreRef.current) return
         coreRef.current.emit('adding-more', { isAddingMore })
     }, [isAddingMore])
+
+    // v2: emit view-mode-change event when grid/list toggle changes
+    useEffect(() => {
+        if (!coreRef.current) return
+        coreRef.current.emit('view-mode-change', { viewMode })
+    }, [viewMode])
 
     // v2: emit upload-metrics event when aggregate progress state changes
     useEffect(() => {
@@ -1078,6 +1085,8 @@ export default function useRootProvider({
         setActiveAdapter,
         isAddingMore,
         setIsAddingMore,
+        viewMode,
+        setViewMode,
         translations,
         files: selectedFilesMap,
         setFiles: handleSetSelectedFiles,

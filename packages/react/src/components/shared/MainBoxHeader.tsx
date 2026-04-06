@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react'
+import { TbLayoutGrid, TbLayoutList } from 'react-icons/tb'
 import { plural, t } from '../../shared/i18n'
 import { UploadStatus, useRootContext } from '../../context/RootContext'
 import { cn } from '../../lib/tailwind'
@@ -13,6 +14,8 @@ export default function MainBoxHeader({ handleCancel }: Readonly<Props>) {
         files,
         setIsAddingMore,
         isAddingMore,
+        viewMode,
+        setViewMode,
         translations: tr,
         props: {
             mini,
@@ -74,22 +77,36 @@ export default function MainBoxHeader({ handleCancel }: Readonly<Props>) {
                     })}
                 </ShouldRender>
             </span>
-            <ShouldRender if={!isAddingMore && limit > 1 && !isLimitReached}>
-                <button
-                    className={cn(
-                        'upup-col-start-3 upup-col-end-5 upup-flex upup-items-center upup-justify-end upup-gap-1 upup-rounded-md upup-border upup-border-dashed upup-border-blue-400/50 upup-px-2 upup-py-1 upup-text-sm upup-text-blue-600 md:upup-col-start-4',
-                        {
-                            'upup-text-[#30C5F7] dark:upup-text-[#30C5F7]':
-                                dark,
-                        },
-                        classNames.containerAddMoreButton,
-                    )}
-                    onClick={() => setIsAddingMore(true)}
-                    disabled={isUploading || isProcessing}
-                >
-                    <ContainerAddMoreIcon /> {tr.addMore}
-                </button>
-            </ShouldRender>
+            <div className="upup-col-start-3 upup-col-end-5 upup-flex upup-items-center upup-justify-end upup-gap-2 md:upup-col-start-4">
+                <ShouldRender if={files.size > 1}>
+                    <button
+                        className={cn(
+                            'upup-flex upup-h-7 upup-w-7 upup-items-center upup-justify-center upup-rounded upup-text-gray-500 upup-transition-colors hover:upup-bg-black/10',
+                            { 'upup-text-gray-300 hover:upup-bg-white/10': dark },
+                        )}
+                        onClick={() => setViewMode(v => v === 'grid' ? 'list' : 'grid')}
+                        title={viewMode === 'grid' ? 'Switch to list view' : 'Switch to grid view'}
+                    >
+                        {viewMode === 'grid' ? <TbLayoutList size={16} /> : <TbLayoutGrid size={16} />}
+                    </button>
+                </ShouldRender>
+                <ShouldRender if={!isAddingMore && limit > 1 && !isLimitReached}>
+                    <button
+                        className={cn(
+                            'upup-flex upup-items-center upup-gap-1 upup-rounded-md upup-border upup-border-dashed upup-border-blue-400/50 upup-px-2 upup-py-1 upup-text-sm upup-text-blue-600',
+                            {
+                                'upup-text-[#30C5F7] dark:upup-text-[#30C5F7]':
+                                    dark,
+                            },
+                            classNames.containerAddMoreButton,
+                        )}
+                        onClick={() => setIsAddingMore(true)}
+                        disabled={isUploading || isProcessing}
+                    >
+                        <ContainerAddMoreIcon /> {tr.addMore}
+                    </button>
+                </ShouldRender>
+            </div>
         </div>
     )
 }

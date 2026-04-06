@@ -94,6 +94,9 @@ export interface IRootContext {
     isAddingMore: boolean
     setIsAddingMore: Dispatch<SetStateAction<boolean>>
 
+    viewMode: 'grid' | 'list'
+    setViewMode: Dispatch<SetStateAction<'grid' | 'list'>>
+
     handleFileRemove: (fileId: string) => void
     handleDone: () => void
     handleCancel: () => void

@@ -47,6 +47,7 @@ export default memo(function FileList() {
         handleCancel,
         handlePause,
         handleResume,
+        viewMode,
     } = useRootContext()
 
     return (
@@ -77,8 +78,8 @@ export default memo(function FileList() {
                                 'upup-pointer-events-none upup-opacity-75'
                             }  upup-flex upup-flex-col upup-gap-3 upup-font-[Arial,Helvetica,sans-serif]`,
                             {
-                                'md:upup-grid md:upup-gap-y-6': files.size > 1,
-                                'md:upup-grid-cols-2': files.size > 1,
+                                'md:upup-grid md:upup-gap-y-6': files.size > 1 && viewMode === 'grid',
+                                'md:upup-grid-cols-2': files.size > 1 && viewMode === 'grid',
                                 'upup-flex-1': files.size === 1,
                                 [classNames.fileListContainerInnerMultiple!]:
                                     classNames.fileListContainerInnerMultiple &&
