@@ -98,6 +98,8 @@ export default function useDropboxUploader(token?: string) {
                 ])
             } catch (error) {
                 onError((error as Error).message)
+                // v2: emit folder fetch error via UpupCore
+                core?.emit('dropbox-folder-error', { error })
             } finally {
                 setIsClickLoading(false)
             }
@@ -152,6 +154,8 @@ export default function useDropboxUploader(token?: string) {
                 })
             } catch (error) {
                 onError((error as Error).message)
+                // v2: emit download error via UpupCore
+                core?.emit('dropbox-download-error', { error, fileName: file.name })
                 return
             }
         },

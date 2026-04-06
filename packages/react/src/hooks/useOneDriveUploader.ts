@@ -160,6 +160,8 @@ export default function useOneDriveUploader(graphClient?: Client) {
             })
         } catch (error) {
             onError((error as Error).message)
+            // v2: emit download error via UpupCore
+            core?.emit('onedrive-download-error', { error, fileName: file.name })
             return
         }
     }

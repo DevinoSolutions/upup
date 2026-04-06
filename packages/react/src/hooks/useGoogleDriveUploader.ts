@@ -93,6 +93,8 @@ export default function useGoogleDriveUploader(token?: Token) {
             return new File([blob], fileName, { type: fileType })
         } catch (error) {
             onError((error as Error)?.message)
+            // v2: emit download error via UpupCore
+            core?.emit('gdrive-download-error', { error, fileName: file.name })
             return
         }
     }
