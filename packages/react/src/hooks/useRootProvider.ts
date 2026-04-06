@@ -1064,6 +1064,8 @@ export default function useRootProvider({
 
     const handleDone = useCallback(() => {
         onDoneClicked()
+        // v2: emit done event before resetting state via handleCancel
+        coreRef.current?.emit('done', {})
         handleCancel()
     }, [handleCancel, onDoneClicked])
 
