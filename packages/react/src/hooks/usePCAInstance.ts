@@ -19,6 +19,8 @@ const usePCAInstance = (clientId: string) => {
             if (!clientId) {
                 setIsInitializing(false)
                 onError(translations.clientIdRequired)
+                // v2: emit missing clientId error via UpupCore
+                core?.emit('onedrive-msal-config-error', { reason: 'clientId missing' })
                 return
             }
 
@@ -50,6 +52,8 @@ const usePCAInstance = (clientId: string) => {
                 }
             } catch (error) {
                 onError((error as Error).message)
+                // v2: emit MSAL creation error via UpupCore
+                core?.emit('onedrive-msal-error', { error })
             } finally {
                 if (mounted) setIsInitializing(false)
             }
