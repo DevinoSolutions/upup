@@ -1029,9 +1029,10 @@ export default function useRootProvider({
         setUploadStatus(UploadStatus.PENDING)
         setSelectedFilesMap(new Map())
 
-        // v2: sync cleared state into UpupCore
+        // v2: sync cleared state into UpupCore and emit cancel event
         if (coreRef.current) {
             coreRef.current.syncFilesFromExternal(new Map())
+            coreRef.current.emit('upload-cancel', {})
         }
 
         setFilesProgressMap({})
@@ -1044,6 +1045,8 @@ export default function useRootProvider({
     const handlePause = useCallback(() => {
         sdkRef.current?.pause()
         setUploadStatus(UploadStatus.PAUSED)
+        // v2: emit pause event via UpupCore
+        coreRef.current?.emit('upload-pause', {})
     }, [])
 
     const handleResume = useCallback(() => {
@@ -1051,6 +1054,8 @@ export default function useRootProvider({
         // Reset speed tracking on resume for accurate ETA
         speedSamplesRef.current = [{ time: Date.now(), bytes: uploadedBytes }]
         setUploadStatus(UploadStatus.ONGOING)
+        // v2: emit resume event via UpupCore
+        coreRef.current?.emit('upload-resume', {})
     }, [uploadedBytes])
 
     const handleDone = useCallback(() => {
