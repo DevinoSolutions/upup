@@ -501,6 +501,8 @@ export default function useRootProvider({
     const onWarn = useCallback(
         (message: string) => {
             if (warningHandler) warningHandler(message)
+            // v2: emit warn event via UpupCore so consumers can listen
+            coreRef.current?.emit('warn', { message })
         },
         [warningHandler],
     )
