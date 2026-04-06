@@ -718,6 +718,8 @@ export default function useRootProvider({
 
         // v2: auto-upload immediately after file selection
         if (autoUpload && addedThisBatch.length) {
+            // v2: emit event so consumers know upload was triggered automatically
+            coreRef.current?.emit('auto-upload', { count: addedThisBatch.length })
             // Delay slightly to ensure state is committed before upload
             setTimeout(() => {
                 proceedUpload(Array.from(newFilesMap.values()))
@@ -834,7 +836,12 @@ export default function useRootProvider({
             setUploadEta(0)
             speedSamplesRef.current = []
 
-            return onPrepareFiles ? await onPrepareFiles(files) : files
+            const prepared = onPrepareFiles ? await onPrepareFiles(files) : files
+            // v2: emit prepare-files event so consumers can observe the prepared file list
+            if (onPrepareFiles) {
+                coreRef.current?.emit('prepare-files', { count: prepared.length })
+            }
+            return prepared
         },
         [onPrepareFiles, resumable],
     )
