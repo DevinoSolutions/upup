@@ -280,6 +280,12 @@ export default function useRootProvider({
         coreRef.current.emit('source-change', { source: activeAdapter })
     }, [activeAdapter])
 
+    // v2: emit adding-more event when isAddingMore state changes
+    useEffect(() => {
+        if (!coreRef.current) return
+        coreRef.current.emit('adding-more', { isAddingMore })
+    }, [isAddingMore])
+
     const limit = useMemo(
         () => (mini ? 1 : Math.max(resolvedLimit, 1)),
         [mini, resolvedLimit],
