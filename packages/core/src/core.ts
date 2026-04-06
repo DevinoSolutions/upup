@@ -263,6 +263,8 @@ export class UpupCore {
    */
   syncFilesFromExternal(files: Map<string, UploadFile>): void {
     this.fileManager.syncFromExternal(files)
+    // v2: emit so consumers can observe external file-state synchronisation
+    this.emitter.emit('files-synced', { count: files.size })
   }
 
   /**
@@ -271,6 +273,8 @@ export class UpupCore {
    */
   syncStatusFromExternal(status: UploadStatus): void {
     this._status = status
+    // v2: emit so consumers can observe external status synchronisation
+    this.emitter.emit('status-synced', { status })
   }
 
   /** Update options after construction (e.g. when React props change). */
