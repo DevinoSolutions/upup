@@ -245,6 +245,11 @@ export default function useRootProvider({
         }
     }, [])
 
+    // v2: emit 'ready' event once on mount so consumers know the uploader is initialised
+    useEffect(() => {
+        coreRef.current?.emit('ready', {})
+    }, [])
+
     // v2: track browser online/offline and emit events via UpupCore (#19 Offline Queue)
     useEffect(() => {
         const handleOnline = () => {
