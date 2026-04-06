@@ -16,6 +16,7 @@ function handleSelectedFilesUpdate(prevFiles: GoogleFile[], file: GoogleFile) {
 
 export default function useGoogleDriveUploader(token?: Token) {
     const {
+        core,
         props: { onError, accept },
         googleDriveConfigs,
         setActiveAdapter,
@@ -113,6 +114,8 @@ export default function useGoogleDriveUploader(token?: Token) {
             // Clear selection and return to internal view
             setSelectedFiles([])
             setActiveAdapter(undefined)
+            // v2: emit gdrive-files-submit event via UpupCore
+            core?.emit('gdrive-files-submit', { files: downloadedFiles as File[] })
         } catch (error) {
             onError(
                 t(translations.errorProcessingFiles, {
@@ -152,6 +155,8 @@ export default function useGoogleDriveUploader(token?: Token) {
     const handleCancelDownload = () => {
         setSelectedFiles([])
         setDownloadProgress(0)
+        // v2: emit gdrive-cancel event via UpupCore
+        core?.emit('gdrive-cancel', {})
     }
 
     const onSelectCurrentFolder = async () => {

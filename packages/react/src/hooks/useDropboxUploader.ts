@@ -52,6 +52,7 @@ const getDownloadUrl = async (
 
 export default function useDropboxUploader(token?: string) {
     const {
+        core,
         props: { onError, accept },
         setActiveAdapter,
         setFiles,
@@ -197,6 +198,8 @@ export default function useDropboxUploader(token?: string) {
 
             setSelectedFiles([])
             setActiveAdapter(undefined)
+            // v2: emit dropbox-files-submit event via UpupCore
+            core?.emit('dropbox-files-submit', { files: downloadedFiles as File[] })
         } catch (error) {
             onError(
                 t(translations.errorProcessingFiles, {
@@ -222,7 +225,9 @@ export default function useDropboxUploader(token?: string) {
     const handleCancelDownload = useCallback(() => {
         setSelectedFiles([])
         setDownloadProgress(0)
-    }, [])
+        // v2: emit dropbox-cancel event via UpupCore
+        core?.emit('dropbox-cancel', {})
+    }, [core])
 
     const handleSubmitWithFiles = useCallback(
         async (files: DropboxFile[]) => {
