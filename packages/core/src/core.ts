@@ -527,6 +527,8 @@ export class UpupCore {
     }
     this._status = snapshot.status
     this.emitter.emit('state-change', { files: this.files, status: this._status })
+    // v2: emit dedicated event so consumers know a snapshot was applied
+    this.emitter.emit('snapshot-restored', { count: snapshot.files.length, status: snapshot.status })
   }
 
   async restoreFromCrashRecovery(): Promise<boolean> {
@@ -534,6 +536,8 @@ export class UpupCore {
     const snapshot = await this.crashRecovery.restore()
     if (snapshot && typeof snapshot === 'object' && 'files' in snapshot) {
       this.restore(snapshot as { files: [string, UploadFile][]; status: UploadStatus })
+      // v2: emit dedicated event so consumers know crash recovery was applied
+      this.emitter.emit('crash-recovery-restored', {})
       return true
     }
     return false
