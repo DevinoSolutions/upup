@@ -98,6 +98,8 @@ export function useDropbox() {
                             !refreshToken
                         ) {
                             onError(translations.dropboxSessionExpired)
+                            // v2: emit session-expired via UpupCore
+                            core?.emit('dropbox-session-expired', { reason: 'expired_access_token' })
                             logout()
                             throw new Error(
                                 'Token expired - re-authentication required',
@@ -123,6 +125,8 @@ export function useDropbox() {
                             }
                         } else if (response.status === 401 && !refreshToken) {
                             onError(translations.dropboxSessionExpired)
+                            // v2: emit session-expired via UpupCore
+                            core?.emit('dropbox-session-expired', { reason: '401_no_refresh' })
                             logout()
                             throw new Error(
                                 'Token expired - re-authentication required',
@@ -165,8 +169,10 @@ export function useDropbox() {
             })
         } catch (error) {
             onError(`Failed to fetch user info: ${(error as Error).message}`)
+            // v2: emit user info fetch error via UpupCore
+            core?.emit('dropbox-user-info-error', { error })
         }
-    }, [fetchDropbox, onError])
+    }, [core, fetchDropbox, onError])
 
     /**
      * Get the list of files from Dropbox root
