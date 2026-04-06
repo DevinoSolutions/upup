@@ -134,6 +134,8 @@ export function useDropboxAuth(cfg?: DropboxConfigs) {
     const authenticate = useCallback(async () => {
         if (!clientId) {
             onError(translations.dropboxClientIdMissing)
+            // v2: emit missing clientId error via UpupCore
+            core?.emit('dropbox-auth-config-error', { reason: 'clientId missing' })
             return
         }
         if (busy) {
@@ -167,6 +169,8 @@ export function useDropboxAuth(cfg?: DropboxConfigs) {
 
         if (!winRef.current) {
             onError(translations.popupBlocked)
+            // v2: emit popup-blocked error via UpupCore
+            core?.emit('dropbox-auth-popup-blocked', {})
             return
         }
 

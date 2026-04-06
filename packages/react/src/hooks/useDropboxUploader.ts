@@ -166,6 +166,8 @@ export default function useDropboxUploader(token?: string) {
         async (files: DropboxFile[], token?: string) => {
             if (!token) {
                 onError(translations.dropboxNoAccessToken)
+                // v2: emit no-token error via UpupCore
+                core?.emit('dropbox-no-token', {})
                 return
             }
             const promises = files.map(async (file, index) => {
