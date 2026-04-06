@@ -177,6 +177,7 @@ export default function useRootProvider({
     if (typeof window !== 'undefined' && !coreRef.current) {
         coreRef.current = new UpupCore({
             uploadEndpoint: resolvedEndpoint || undefined,
+            provider,
             accept,
             limit: resolvedLimit,
             maxFileSize,
@@ -188,6 +189,9 @@ export default function useRootProvider({
             autoUpload,
             shouldCompress,
             maxConcurrentUploads,
+            googleDriveConfigs: driveConfigs?.googleDrive as Record<string, unknown> | undefined,
+            oneDriveConfigs: driveConfigs?.oneDrive as Record<string, unknown> | undefined,
+            dropboxConfigs: driveConfigs?.dropbox as Record<string, unknown> | undefined,
         })
     }
 
