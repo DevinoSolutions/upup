@@ -297,6 +297,15 @@ export default function useRootProvider({
         })
     }, [uploadSpeed, uploadEta, uploadedBytes, totalBytes])
 
+    // v2: emit editor-queue-change event when image editor queue changes
+    useEffect(() => {
+        if (!coreRef.current) return
+        coreRef.current.emit('editor-queue-change', {
+            queueLength: editorQueue.length,
+            queue: editorQueue,
+        })
+    }, [editorQueue])
+
     const limit = useMemo(
         () => (mini ? 1 : Math.max(resolvedLimit, 1)),
         [mini, resolvedLimit],
