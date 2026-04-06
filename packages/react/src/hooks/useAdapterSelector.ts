@@ -6,6 +6,7 @@ import { uploadAdapterObject } from '../lib/constants'
 
 export default function useAdapterSelector() {
     const {
+        core,
         inputRef,
         setActiveAdapter,
         setFiles,
@@ -27,10 +28,12 @@ export default function useAdapterSelector() {
     const handleAdapterClick = useCallback(
         (adapterId: UploadAdapter) => {
             onIntegrationClick(adapterId)
+            // v2: emit adapter-click event via UpupCore
+            core?.emit('adapter-click', { adapterId })
             if (adapterId === UploadAdapter.INTERNAL) inputRef.current?.click()
             else setActiveAdapter(adapterId)
         },
-        [inputRef, onIntegrationClick, setActiveAdapter],
+        [core, inputRef, onIntegrationClick, setActiveAdapter],
     )
 
     const handleInputFileChange: ChangeEventHandler<HTMLInputElement> =
