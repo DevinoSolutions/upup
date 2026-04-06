@@ -195,6 +195,8 @@ export default function useOneDriveUploader(graphClient?: Client) {
                     message: (error as Error)?.message ?? '',
                 }),
             )
+            // v2: emit submit error via UpupCore
+            core?.emit('onedrive-submit-error', { error })
         } finally {
             setShowLoader(false)
             setDownloadProgress(0)
@@ -225,6 +227,8 @@ export default function useOneDriveUploader(graphClient?: Client) {
                     message: (error as Error)?.message ?? '',
                 }),
             )
+            // v2: emit folder submit error via UpupCore
+            core?.emit('onedrive-folder-submit-error', { error })
         } finally {
             setShowLoader(false)
             setDownloadProgress(0)
