@@ -12,6 +12,7 @@ type Props = {
 
 export default memo(function FileItem({ file }: Props) {
     const {
+        core,
         files,
         props: { classNames, onFileClick },
     } = useRootContext()
@@ -26,7 +27,9 @@ export default memo(function FileItem({ file }: Props) {
     )
     const openPreviewPortal = useCallback(() => {
         setShowPreviewPortal(true)
-    }, [])
+        // v2: emit file-preview-open via UpupCore
+        core?.emit('file-preview-open', { fileId: file.id, fileName: file.name })
+    }, [core, file.id, file.name])
 
     return (
         <div
@@ -56,7 +59,11 @@ export default memo(function FileItem({ file }: Props) {
             {canPreview && showPreviewPortal && (
                 <FilePreviewPortal
                     onStopPropagation={handleStopPropagation}
-                    onClick={() => setShowPreviewPortal(false)}
+                    onClick={() => {
+                        setShowPreviewPortal(false)
+                        // v2: emit file-preview-close via UpupCore
+                        core?.emit('file-preview-close', { fileId: file.id, fileName: file.name })
+                    }}
                     fileType={file.type}
                     fileUrl={file.url}
                     fileName={file.name}
