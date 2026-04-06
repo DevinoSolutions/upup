@@ -248,6 +248,20 @@ export default function useRootProvider({
         }
     }, [uploadStatus])
 
+    // v2: keep UpupCore options in sync when React props change
+    useEffect(() => {
+        if (!coreRef.current) return
+        coreRef.current.updateOptions({
+            uploadEndpoint: resolvedEndpoint || undefined,
+            accept,
+            limit: resolvedLimit,
+            maxFileSize,
+            minFileSize,
+            maxTotalFileSize,
+            maxRetries,
+        })
+    }, [resolvedEndpoint, accept, resolvedLimit, maxFileSize, minFileSize, maxTotalFileSize, maxRetries])
+
     const limit = useMemo(
         () => (mini ? 1 : Math.max(resolvedLimit, 1)),
         [mini, resolvedLimit],

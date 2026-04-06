@@ -269,6 +269,11 @@ export class UpupCore {
     this._status = status
   }
 
+  /** Update options after construction (e.g. when React props change). */
+  updateOptions(partial: Partial<CoreOptions>): void {
+    Object.assign(this.options, partial)
+  }
+
   reorderFiles(fileIds: string[]): void {
     this.fileManager.reorderFiles(fileIds)
     this.emitter.emit('state-change', { files: this.files })
