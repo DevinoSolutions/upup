@@ -246,11 +246,15 @@ export class UpupCore {
     this.fileManager.removeAll()
     this.fileOverrides.clear()
     this.emitter.emit('state-change', { files: this.files })
+    // v2: dedicated event so consumers know all files were cleared at once
+    this.emitter.emit('files-cleared', {})
   }
 
   async setFiles(files: File[]): Promise<void> {
     await this.fileManager.setFiles(files)
     this.emitter.emit('state-change', { files: this.files })
+    // v2: dedicated event so consumers can observe programmatic file replacement
+    this.emitter.emit('files-set', { count: this.files.size })
   }
 
   /**
@@ -277,6 +281,8 @@ export class UpupCore {
   reorderFiles(fileIds: string[]): void {
     this.fileManager.reorderFiles(fileIds)
     this.emitter.emit('state-change', { files: this.files })
+    // v2: emit dedicated event so consumers can react specifically to reordering
+    this.emitter.emit('files-reordered', { fileIds })
   }
 
   private async buildAutoPipeline(): Promise<PipelineStep[]> {
