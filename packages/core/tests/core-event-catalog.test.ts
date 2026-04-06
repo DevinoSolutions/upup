@@ -55,6 +55,7 @@ describe('UpupCore — event catalog', () => {
         'dropbox-auth-profile-error', 'dropbox-auth-poll-error',
         'dropbox-auth-token-refreshed', 'dropbox-auth-refresh-error',
         'dropbox-auth-config-error', 'dropbox-auth-popup-blocked',
+        'dropbox-auth-logout', 'dropbox-files-loaded',
         'onedrive-auth-success', 'onedrive-auth-logout',
         'onedrive-graph-ready', 'onedrive-files-submit', 'onedrive-cancel',
         'onedrive-folder-submit', 'onedrive-download-error',
