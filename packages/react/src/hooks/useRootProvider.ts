@@ -318,6 +318,7 @@ export default function useRootProvider({
         (file: FileWithParams) => {
             setEditingFile(file)
             resolvedImageEditor.onOpen?.(file)
+            coreRef.current?.emit('image-editor-open', { file })
         },
         [resolvedImageEditor],
     )
@@ -335,7 +336,10 @@ export default function useRootProvider({
         const current = editingFile
         setEditingFile(null)
         advanceEditorQueue()
-        if (current) resolvedImageEditor.onCancel?.(current)
+        if (current) {
+            resolvedImageEditor.onCancel?.(current)
+            coreRef.current?.emit('image-editor-cancel', { file: current })
+        }
     }, [editingFile, advanceEditorQueue, resolvedImageEditor])
 
     const saveImageEdit = useCallback(
@@ -371,11 +375,15 @@ export default function useRootProvider({
             )
 
             // Replace in the files map, revoking the old blob URL.
-            setSelectedFilesMap(prev =>
-                revokeAndReplace(prev, original.id, newFile),
-            )
+            setSelectedFilesMap(prev => {
+                const updated = revokeAndReplace(prev, original.id, newFile)
+                // v2: sync updated file state into UpupCore
+                coreRef.current?.syncFilesFromExternal(updated as Map<string, any>)
+                return updated
+            })
 
             resolvedImageEditor.onSave?.(newFile, original)
+            coreRef.current?.emit('image-editor-save', { file: newFile, original })
 
             setEditingFile(null)
             advanceEditorQueue()
@@ -388,6 +396,8 @@ export default function useRootProvider({
             setSelectedFilesMap(prev => {
                 const next = new Map(prev)
                 next.set(fileId, newFile)
+                // v2: sync into UpupCore
+                coreRef.current?.syncFilesFromExternal(next as Map<string, any>)
                 return next
             })
         },
