@@ -381,6 +381,12 @@ export default function useRootProvider({
         return Math.round(loadedValues / filesProgressMapValues.length)
     }, [filesProgressMap])
 
+    // v2: emit total-progress-change event when aggregate upload progress changes
+    useEffect(() => {
+        if (!coreRef.current) return
+        coreRef.current.emit('total-progress-change', { totalProgress })
+    }, [totalProgress])
+
     const resolvedImageEditor = useMemo<ResolvedImageEditorOptions>(() => {
         if (imageEditorProp === true) {
             return { enabled: true, autoOpen: 'never', display: 'inline' }
