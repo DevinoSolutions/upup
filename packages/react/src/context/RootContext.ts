@@ -97,6 +97,9 @@ export interface IRootContext {
     viewMode: 'grid' | 'list'
     setViewMode: Dispatch<SetStateAction<'grid' | 'list'>>
 
+    /** v2: true when the browser has network connectivity */
+    isOnline: boolean
+
     handleFileRemove: (fileId: string) => void
     handleDone: () => void
     handleCancel: () => void

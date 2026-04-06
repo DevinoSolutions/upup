@@ -198,6 +198,9 @@ export default function useRootProvider({
     const inputRef = useRef<HTMLInputElement>(null)
     const [isAddingMore, setIsAddingMore] = useState(false)
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
+    const [isOnline, setIsOnline] = useState(() =>
+        typeof navigator !== 'undefined' ? navigator.onLine : true,
+    )
     const [selectedFilesMap, setSelectedFilesMap] = useState<
         Map<string, FileWithParams>
     >(new Map())
@@ -239,6 +242,24 @@ export default function useRootProvider({
         return () => {
             coreRef.current?.destroy()
             coreRef.current = null
+        }
+    }, [])
+
+    // v2: track browser online/offline and emit events via UpupCore (#19 Offline Queue)
+    useEffect(() => {
+        const handleOnline = () => {
+            setIsOnline(true)
+            coreRef.current?.emit('connection-online', {})
+        }
+        const handleOffline = () => {
+            setIsOnline(false)
+            coreRef.current?.emit('connection-offline', {})
+        }
+        window.addEventListener('online', handleOnline)
+        window.addEventListener('offline', handleOffline)
+        return () => {
+            window.removeEventListener('online', handleOnline)
+            window.removeEventListener('offline', handleOffline)
         }
     }, [])
 
@@ -1087,6 +1108,7 @@ export default function useRootProvider({
         setIsAddingMore,
         viewMode,
         setViewMode,
+        isOnline,
         translations,
         files: selectedFilesMap,
         setFiles: handleSetSelectedFiles,

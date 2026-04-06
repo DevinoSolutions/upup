@@ -15,6 +15,7 @@ export default function MainBox() {
         files,
         activeAdapter,
         isAddingMore,
+        isOnline,
         props: { dark },
     } = useRootContext()
     const {
@@ -53,6 +54,16 @@ export default function MainBox() {
                 onDrop={handleDrop}
                 onPaste={handlePaste}
             >
+                <ShouldRender if={!isOnline}>
+                    <div
+                        className={cn(
+                            'upup-absolute upup-inset-x-0 upup-top-0 upup-z-20 upup-px-3 upup-py-1.5 upup-text-center upup-text-xs upup-font-medium upup-text-white upup-bg-yellow-500',
+                            { 'upup-bg-yellow-600': dark },
+                        )}
+                    >
+                        No internet connection — uploads will resume when you reconnect.
+                    </div>
+                </ShouldRender>
                 <ShouldRender if={!!activeAdapter}>
                     <AdapterView />
                 </ShouldRender>
