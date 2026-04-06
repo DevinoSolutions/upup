@@ -5,6 +5,7 @@ import { useRootContext } from '../context/RootContext'
 
 export default function useFetchFileByUrl() {
     const {
+        core,
         props: { onError },
     } = useRootContext()
     const [loading, setLoading] = useState(false)
@@ -23,6 +24,8 @@ export default function useFetchFileByUrl() {
                     type: blob.type,
                 })
 
+                // v2: emit url-fetch event via UpupCore
+                core?.emit('url-fetch', { file })
                 return file
             } catch (error) {
                 onError((error as Error).message)

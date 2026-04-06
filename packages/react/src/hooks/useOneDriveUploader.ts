@@ -44,6 +44,7 @@ const getDownloadUrl = async (file: OneDriveFile, graphClient: Client) => {
 
 export default function useOneDriveUploader(graphClient?: Client) {
     const {
+        core,
         setFiles,
         setActiveAdapter,
         props: { onError, accept },
@@ -180,6 +181,8 @@ export default function useOneDriveUploader(graphClient?: Client) {
             // Clear selection and return to internal view
             setSelectedFiles([])
             setActiveAdapter(undefined)
+            // v2: emit onedrive-files-submit event via UpupCore
+            core?.emit('onedrive-files-submit', { files: downloadedFiles as File[] })
         } catch (error) {
             onError(
                 t(translations.errorProcessingFiles, {
@@ -222,6 +225,8 @@ export default function useOneDriveUploader(graphClient?: Client) {
     const handleCancelDownload = () => {
         setSelectedFiles([])
         setDownloadProgress(0)
+        // v2: emit onedrive-cancel event via UpupCore
+        core?.emit('onedrive-cancel', {})
     }
 
     const onSelectCurrentFolder = async () => {
