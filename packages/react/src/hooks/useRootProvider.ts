@@ -488,6 +488,8 @@ export default function useRootProvider({
                 coreRef.current?.syncFilesFromExternal(next as Map<string, any>)
                 return next
             })
+            // v2: emit file-replaced event so consumers can react to programmatic file swaps
+            coreRef.current?.emit('file-replaced', { fileId, newFile })
         },
         [],
     )
