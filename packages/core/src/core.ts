@@ -280,6 +280,8 @@ export class UpupCore {
   /** Update options after construction (e.g. when React props change). */
   updateOptions(partial: Partial<CoreOptions>): void {
     Object.assign(this.options, partial)
+    // v2: emit so consumers can observe option changes at runtime
+    this.emitter.emit('options-updated', { partial })
   }
 
   reorderFiles(fileIds: string[]): void {
@@ -542,6 +544,8 @@ export class UpupCore {
   }
 
   destroy(): void {
+    // v2: emit before clearing listeners so teardown handlers fire
+    this.emitter.emit('destroyed', {})
     this.workerPool?.destroy()
     this.fileOverrides.clear()
     this.emitter.removeAllListeners()
