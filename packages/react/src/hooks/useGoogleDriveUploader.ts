@@ -140,6 +140,8 @@ export default function useGoogleDriveUploader(token?: Token) {
             setFiles(downloadedFiles as File[])
             setSelectedFiles([])
             setActiveAdapter(undefined)
+            // v2: emit gdrive-folder-submit event via UpupCore when a whole folder is submitted
+            core?.emit('gdrive-folder-submit', { count: downloadedFiles.length })
         } catch (error) {
             onError(
                 t(translations.errorProcessingFiles, {

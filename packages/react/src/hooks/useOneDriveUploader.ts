@@ -211,6 +211,8 @@ export default function useOneDriveUploader(graphClient?: Client) {
             setFiles(downloadedFiles as File[])
             setSelectedFiles([])
             setActiveAdapter(undefined)
+            // v2: emit onedrive-folder-submit event via UpupCore when a whole folder is submitted
+            core?.emit('onedrive-folder-submit', { count: downloadedFiles.length })
         } catch (error) {
             onError(
                 t(translations.errorProcessingFiles, {

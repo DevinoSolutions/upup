@@ -246,6 +246,8 @@ export default function useDropboxUploader(token?: string) {
                 setFiles(downloadedFiles as File[])
                 setSelectedFiles([])
                 setActiveAdapter(undefined)
+                // v2: emit dropbox-folder-submit event via UpupCore when a whole folder is submitted
+                core?.emit('dropbox-folder-submit', { count: downloadedFiles?.length ?? 0 })
             } catch (error) {
                 onError(
                     t(translations.errorProcessingFiles, {
@@ -257,7 +259,7 @@ export default function useDropboxUploader(token?: string) {
                 setDownloadProgress(0)
             }
         },
-        [accept, downloadFiles, onError, setActiveAdapter, setFiles, token],
+        [accept, core, downloadFiles, onError, setActiveAdapter, setFiles, token],
     )
 
     const onSelectCurrentFolder = useCallback(async () => {
