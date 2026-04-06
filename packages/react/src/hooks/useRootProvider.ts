@@ -1,6 +1,7 @@
 'use client'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { UpupCore } from '@upup/core'
+import { UploadStatus as CoreUploadStatus } from '@upup/shared'
 import {
     TbCameraRotate,
     TbCapture,
@@ -222,6 +223,22 @@ export default function useRootProvider({
             selectedFilesMapRef.current.forEach(file => revokeFileUrl(file))
         }
     }, [])
+
+    // v2: sync upload status into UpupCore whenever it changes
+    useEffect(() => {
+        if (!coreRef.current) return
+        const statusMap: Record<string, CoreUploadStatus> = {
+            [UploadStatus.PENDING]: CoreUploadStatus.IDLE,
+            [UploadStatus.ONGOING]: CoreUploadStatus.UPLOADING,
+            [UploadStatus.PAUSED]: CoreUploadStatus.PAUSED,
+            [UploadStatus.SUCCESSFUL]: CoreUploadStatus.SUCCESSFUL,
+            [UploadStatus.FAILED]: CoreUploadStatus.FAILED,
+        }
+        const coreStatus = statusMap[uploadStatus]
+        if (coreStatus) {
+            coreRef.current.syncStatusFromExternal(coreStatus)
+        }
+    }, [uploadStatus])
 
     const limit = useMemo(
         () => (mini ? 1 : Math.max(resolvedLimit, 1)),

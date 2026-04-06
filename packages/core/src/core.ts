@@ -261,6 +261,14 @@ export class UpupCore {
     this.fileManager.syncFromExternal(files)
   }
 
+  /**
+   * Sync the core's status from an external source (e.g. React v1 layer).
+   * Keeps core.status in sync without triggering core's own state transitions.
+   */
+  syncStatusFromExternal(status: UploadStatus): void {
+    this._status = status
+  }
+
   reorderFiles(fileIds: string[]): void {
     this.fileManager.reorderFiles(fileIds)
     this.emitter.emit('state-change', { files: this.files })
