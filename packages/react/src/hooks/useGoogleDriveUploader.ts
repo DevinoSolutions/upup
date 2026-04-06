@@ -124,6 +124,8 @@ export default function useGoogleDriveUploader(token?: Token) {
                     message: (error as Error)?.message ?? '',
                 }),
             )
+            // v2: emit submit error via UpupCore
+            core?.emit('gdrive-submit-error', { error })
         } finally {
             setShowLoader(false)
             setDownloadProgress(0)
@@ -150,6 +152,8 @@ export default function useGoogleDriveUploader(token?: Token) {
                     message: (error as Error)?.message ?? '',
                 }),
             )
+            // v2: emit folder submit error via UpupCore
+            core?.emit('gdrive-folder-submit-error', { error })
         } finally {
             setShowLoader(false)
             setDownloadProgress(0)
@@ -183,6 +187,8 @@ export default function useGoogleDriveUploader(token?: Token) {
                     message: (error as Error)?.message ?? '',
                 }),
             )
+            // v2: emit folder select error via UpupCore
+            core?.emit('gdrive-folder-select-error', { error })
         }
     }
 
