@@ -61,6 +61,7 @@ const b64url = (ab: ArrayBuffer) =>
 /* ─────────── React hook ─────────── */
 export function useDropboxAuth(cfg?: DropboxConfigs) {
     const {
+        core,
         props: { onError },
         translations,
     } = useRootContext()
@@ -114,6 +115,8 @@ export function useDropboxAuth(cfg?: DropboxConfigs) {
                 }
                 secure.setItem(USER_KEY, JSON.stringify(dbxUser))
                 setUser(dbxUser)
+                // v2: emit dropbox-auth-success event via UpupCore
+                core?.emit('dropbox-auth-success', { user: dbxUser })
             } catch (e) {
                 console.log('[DBX-AUTH] profile fetch failed', e)
             }
@@ -122,7 +125,7 @@ export function useDropboxAuth(cfg?: DropboxConfigs) {
             setRtok(refresh || undefined)
             setBusy(false)
         },
-        [],
+        [core],
     )
 
     /* ── popup launcher ── */
@@ -264,7 +267,9 @@ export function useDropboxAuth(cfg?: DropboxConfigs) {
         winRef.current?.close()
         if (winRef.current) winRef.current.close()
         setBusy(false)
-    }, [])
+        // v2: emit dropbox-auth-logout event via UpupCore
+        core?.emit('dropbox-auth-logout', {})
+    }, [core])
 
     return {
         token: token,

@@ -30,6 +30,7 @@ export default function useOneDriveAuth({
     setOneDriveFiles,
 }: Props) {
     const {
+        core,
         props: { onError },
         translations,
     } = useRootContext()
@@ -167,6 +168,8 @@ export default function useOneDriveAuth({
                 setToken(newToken)
                 setAuthCancelled(false)
                 secureStorage.setItem('isAuthenticated', 'true')
+                // v2: emit onedrive-auth-success event via UpupCore
+                core?.emit('onedrive-auth-success', { token: newToken })
             } else {
                 // Popup was closed or sign-in returned no result
                 setAuthCancelled(true)
@@ -211,6 +214,8 @@ export default function useOneDriveAuth({
 
             // Clear remaining session storage
             secureStorage.removeItem('isAuthenticated')
+            // v2: emit onedrive-auth-logout event via UpupCore
+            core?.emit('onedrive-auth-logout', {})
         } catch (error) {
             onError(
                 t(translations.signOutFailed, {
