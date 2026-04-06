@@ -13,6 +13,7 @@ export default function useGoogleDrive(
 ) {
     const { google_client_id, google_api_key } = googleConfigs
     const {
+        core,
         props: { onError },
         translations,
     } = useRootContext()
@@ -74,6 +75,8 @@ export default function useGoogleDrive(
         secureStorage.removeItem('token')
         setUser(undefined)
         setGoogleFiles(undefined)
+        // v2: emit gdrive-sign-out event via UpupCore
+        core?.emit('gdrive-sign-out', {})
     }
 
     /**
@@ -158,6 +161,8 @@ export default function useGoogleDrive(
                                         (tokenResponse.expires_in - 20) * 1000,
                                 }),
                             )
+                            // v2: emit gdrive-auth-success event via UpupCore
+                            core?.emit('gdrive-auth-success', { token: tokenResponse })
                             return setToken(tokenResponse)
                         } else {
                             onError(

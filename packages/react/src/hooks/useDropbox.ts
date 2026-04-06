@@ -15,6 +15,7 @@ const formatFileItem = (entry: any): DropboxFile => ({
 
 export function useDropbox() {
     const {
+        core,
         props: { onError },
         dropboxConfigs,
         translations,
@@ -191,10 +192,12 @@ export function useDropbox() {
                 isFolder: true,
                 children: files,
             })
+            // v2: emit dropbox-files-loaded event via UpupCore
+            core?.emit('dropbox-files-loaded', { count: files.length })
         } catch (error) {
             onError(`Failed to fetch file list: ${(error as Error).message}`)
         }
-    }, [fetchDropbox, onError])
+    }, [core, fetchDropbox, onError])
 
     /**
      * Initialize user data and files when authentication is complete

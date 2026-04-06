@@ -10,6 +10,7 @@ import usePCAInstance from './usePCAInstance'
 
 export default function useOneDrive(clientId = '') {
     const {
+        core,
         props: { onError },
     } = useRootContext()
     const [user, setUser] = useState<MicrosoftUser>()
@@ -59,13 +60,15 @@ export default function useOneDrive(clientId = '') {
             })
 
             setGraphClient(client)
+            // v2: emit onedrive-graph-ready event via UpupCore
+            core?.emit('onedrive-graph-ready', {})
         } catch (error) {
             onError(
                 `Error initializing Graph client: ${(error as Error)?.message}`,
             )
             setGraphClient(undefined)
         }
-    }, [msalInstance, token, isInitialized, isAuthenticating, onError])
+    }, [core, msalInstance, token, isInitialized, isAuthenticating, onError])
 
     // Fetch user profile and files when Graph client is ready
     useEffect(() => {
