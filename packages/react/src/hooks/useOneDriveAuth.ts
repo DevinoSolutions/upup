@@ -73,7 +73,9 @@ export default function useOneDriveAuth({
                             t(translations.silentTokenAcquisitionFailed, {
                                 details: (error as Error)?.message ?? '',
                             }),
-                        ) // Silent token acquisition failed, user will need to sign in again
+                        )
+                        // v2: emit silent token error via UpupCore
+                        core?.emit('onedrive-auth-silent-error', { error })
                     }
                 }
             } catch (error) {
@@ -82,6 +84,8 @@ export default function useOneDriveAuth({
                         details: (error as Error)?.message ?? '',
                     }),
                 )
+                // v2: emit MSAL init error via UpupCore
+                core?.emit('onedrive-auth-init-error', { error })
                 setIsInitialized(false)
             }
         }
@@ -142,6 +146,8 @@ export default function useOneDriveAuth({
                         message: (error as Error)?.message ?? '',
                     }),
                 )
+                // v2: emit sign-in failure via UpupCore
+                core?.emit('onedrive-auth-signin-error', { error })
                 return null
             } finally {
                 setIsAuthenticating(false)
