@@ -318,6 +318,14 @@ export default function useRootProvider({
         coreRef.current.emit('upload-error-change', { error: uploadError })
     }, [uploadError])
 
+    // v2: emit files-count-change event when selected files count changes
+    useEffect(() => {
+        if (!coreRef.current) return
+        coreRef.current.emit('files-count-change', {
+            count: selectedFilesMap.size,
+        })
+    }, [selectedFilesMap.size])
+
     const limit = useMemo(
         () => (mini ? 1 : Math.max(resolvedLimit, 1)),
         [mini, resolvedLimit],
