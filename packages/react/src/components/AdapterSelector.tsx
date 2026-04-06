@@ -9,6 +9,7 @@ import ShouldRender from './shared/ShouldRender'
 
 export default function AdapterSelector() {
     const {
+        core,
         props: {
             mini,
             accept,
@@ -34,7 +35,9 @@ export default function AdapterSelector() {
             inputRef.current.removeAttribute('directory')
             inputRef.current.click()
         }
-    }, [inputRef])
+        // v2: emit browse-files event via UpupCore
+        core?.emit('browse-files', {})
+    }, [core, inputRef])
 
     const handleSelectFolderClick = useCallback(async () => {
         const anyWindow = window as any
@@ -60,6 +63,8 @@ export default function AdapterSelector() {
                 await getFiles(directoryHandle)
                 if (files.length > 0) {
                     setFiles(files)
+                    // v2: emit folder-select event via UpupCore
+                    core?.emit('folder-select', { count: files.length })
                     if (inputRef.current) {
                         inputRef.current.value = ''
                     }
@@ -74,8 +79,10 @@ export default function AdapterSelector() {
                 inputRef.current.setAttribute('directory', 'true')
                 inputRef.current.click()
             }
+            // v2: emit folder-select event via UpupCore (fallback path)
+            core?.emit('folder-select', { count: 0 })
         }
-    }, [inputRef, setFiles])
+    }, [core, inputRef, setFiles])
 
     return (
         <div
