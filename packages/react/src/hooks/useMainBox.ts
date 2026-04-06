@@ -4,6 +4,7 @@ import { UploadStatus, useRootContext } from '../context/RootContext'
 
 export default function useMainBox() {
     const {
+        core,
         files,
         activeAdapter,
         isAddingMore,
@@ -38,6 +39,8 @@ export default function useMainBox() {
 
             const files = Array.from(e.dataTransfer.files)
             onFilesDragOver(files)
+            // v2: emit drag-over event via UpupCore
+            core?.emit('drag-over', {})
         },
         [disableDragAction, onFilesDragOver, isProcessing],
     )
@@ -51,6 +54,8 @@ export default function useMainBox() {
 
             const files = Array.from(e.dataTransfer.files)
             onFilesDragLeave(files)
+            // v2: emit drag-leave event via UpupCore
+            core?.emit('drag-leave', {})
         },
         [disableDragAction, onFilesDragLeave, isProcessing],
     )
@@ -158,6 +163,8 @@ export default function useMainBox() {
 
             onFilesDrop(droppedFiles)
             setFiles(droppedFiles)
+            // v2: emit drop event via UpupCore
+            core?.emit('drop', { files: droppedFiles })
 
             setIsDragging(false)
         },
