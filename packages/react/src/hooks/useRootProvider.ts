@@ -326,6 +326,12 @@ export default function useRootProvider({
         })
     }, [selectedFilesMap.size])
 
+    // v2: emit progress-map-change event when per-file progress state changes
+    useEffect(() => {
+        if (!coreRef.current) return
+        coreRef.current.emit('progress-map-change', { filesProgressMap })
+    }, [filesProgressMap])
+
     const limit = useMemo(
         () => (mini ? 1 : Math.max(resolvedLimit, 1)),
         [mini, resolvedLimit],
