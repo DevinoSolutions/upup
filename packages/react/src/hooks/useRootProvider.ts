@@ -358,6 +358,12 @@ export default function useRootProvider({
         coreRef.current.emit('locale-change', { locale: resolvedLocale, translations })
     }, [resolvedLocale, translations])
 
+    // v2: emit limit-change event when the computed file limit changes
+    useEffect(() => {
+        if (!coreRef.current) return
+        coreRef.current.emit('limit-change', { limit, multiple })
+    }, [limit, multiple])
+
     const totalProgress = useMemo(() => {
         const filesProgressMapValues = Object.values(filesProgressMap)
         if (!filesProgressMapValues.length) return 0
