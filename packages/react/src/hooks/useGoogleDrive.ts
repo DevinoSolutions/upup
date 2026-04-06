@@ -52,6 +52,8 @@ export default function useGoogleDrive(
         const data = await response.json()
         if (data.error) {
             onError(data.error)
+            // v2: emit gdrive API error via UpupCore
+            core?.emit('gdrive-api-error', { error: data.error })
             return
         }
         setRawFiles(data.files)
@@ -170,6 +172,8 @@ export default function useGoogleDrive(
                                     details: String(tokenResponse?.error ?? ''),
                                 }),
                             )
+                            // v2: emit gdrive auth error via UpupCore
+                            core?.emit('gdrive-auth-error', { error: tokenResponse?.error })
                         }
                     },
                     error_callback(error: { type: string; message?: string }) {
@@ -180,6 +184,8 @@ export default function useGoogleDrive(
                                 details: error.message || error.type,
                             }),
                         )
+                        // v2: emit gdrive auth popup error via UpupCore
+                        core?.emit('gdrive-auth-popup-error', { error })
                     },
                 })
                 tokenClientRef.current = client
