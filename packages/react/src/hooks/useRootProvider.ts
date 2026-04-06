@@ -183,6 +183,11 @@ export default function useRootProvider({
             minFileSize,
             maxTotalFileSize,
             maxRetries,
+            onBeforeFileAdded,
+            onError: (err) => onError(typeof err === 'string' ? err : err.message),
+            autoUpload,
+            shouldCompress,
+            maxConcurrentUploads,
         })
     }
 
@@ -259,8 +264,11 @@ export default function useRootProvider({
             minFileSize,
             maxTotalFileSize,
             maxRetries,
+            onBeforeFileAdded,
+            shouldCompress,
+            maxConcurrentUploads,
         })
-    }, [resolvedEndpoint, accept, resolvedLimit, maxFileSize, minFileSize, maxTotalFileSize, maxRetries])
+    }, [resolvedEndpoint, accept, resolvedLimit, maxFileSize, minFileSize, maxTotalFileSize, maxRetries, onBeforeFileAdded, shouldCompress, maxConcurrentUploads])
 
     const limit = useMemo(
         () => (mini ? 1 : Math.max(resolvedLimit, 1)),
