@@ -66,6 +66,8 @@ export default function useOneDrive(clientId = '') {
             onError(
                 `Error initializing Graph client: ${(error as Error)?.message}`,
             )
+            // v2: emit graph client init error via UpupCore
+            core?.emit('onedrive-graph-error', { error })
             setGraphClient(undefined)
         }
     }, [core, msalInstance, token, isInitialized, isAuthenticating, onError])
@@ -109,6 +111,8 @@ export default function useOneDrive(clientId = '') {
                     'Error fetching profile or file list:' +
                         (error as Error)?.message,
                 )
+                // v2: emit OneDrive init error via UpupCore
+                core?.emit('onedrive-init-error', { error })
             }
         }
 
