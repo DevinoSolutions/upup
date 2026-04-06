@@ -694,7 +694,14 @@ export default function useRootProvider({
 
                 // Upload files with automatic retries if configured
                 const uploadOptions = {
-                    onFileUploadStart,
+                    onFileUploadStart: (...args: Parameters<typeof onFileUploadStart>) => {
+                        onFileUploadStart(...args)
+
+                        // v2: bridge per-file start to UpupCore
+                        if (coreRef.current) {
+                            coreRef.current.emit('file-upload-start', { file: args[0] })
+                        }
+                    },
                     onFileUploadProgress: (
                         file: FileWithParams,
                         progress: {
@@ -764,8 +771,24 @@ export default function useRootProvider({
                         })
 
                         onFileUploadProgress(file, progress)
+
+                        // v2: bridge progress to UpupCore event system
+                        if (coreRef.current) {
+                            coreRef.current.emit('upload-progress', {
+                                fileId: file.id,
+                                loaded: progress.loaded,
+                                total: progress.total,
+                            })
+                        }
                     },
-                    onFileUploadComplete,
+                    onFileUploadComplete: (...args: Parameters<typeof onFileUploadComplete>) => {
+                        onFileUploadComplete(...args)
+
+                        // v2: bridge per-file completion to UpupCore
+                        if (coreRef.current) {
+                            coreRef.current.emit('upload-success', { file: args[0] })
+                        }
+                    },
                     sendEvent,
                     onError,
                     onFilesUploadProgress: (completedFiles: number) =>
