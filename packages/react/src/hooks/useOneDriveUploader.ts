@@ -75,6 +75,8 @@ export default function useOneDriveUploader(graphClient?: Client) {
                     message: (error as Error)?.message ?? '',
                 }),
             )
+            // v2: emit folder fetch error via UpupCore
+            core?.emit('onedrive-folder-fetch-error', { error })
         } finally {
             setIsClickLoading(false)
         }
@@ -108,6 +110,8 @@ export default function useOneDriveUploader(graphClient?: Client) {
     const handleClick = async (file: OneDriveFile) => {
         if (!graphClient) {
             onError(translations.graphClientNotInitialized)
+            // v2: emit graph-not-ready error via UpupCore
+            core?.emit('onedrive-graph-not-ready', { action: 'click' })
             return
         }
 
@@ -239,6 +243,8 @@ export default function useOneDriveUploader(graphClient?: Client) {
             if (!current) return
             if (!graphClient) {
                 onError(translations.graphClientNotInitialized)
+                // v2: emit graph-not-ready error via UpupCore
+                core?.emit('onedrive-graph-not-ready', { action: 'select-folder' })
                 return
             }
             const files = await getAllFilesRecursively(current.id)
@@ -249,6 +255,8 @@ export default function useOneDriveUploader(graphClient?: Client) {
                     message: (error as Error)?.message ?? '',
                 }),
             )
+            // v2: emit folder select error via UpupCore
+            core?.emit('onedrive-folder-select-error', { error })
         }
     }
 
