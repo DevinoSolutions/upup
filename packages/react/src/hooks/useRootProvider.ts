@@ -504,6 +504,11 @@ export default function useRootProvider({
         // Emit a single selection event for just-added files.
         if (addedThisBatch.length) onFilesSelected(addedThisBatch)
 
+        // v2: bridge to UpupCore event system
+        if (addedThisBatch.length && coreRef.current) {
+            coreRef.current.emit('files-added', addedThisBatch)
+        }
+
         // v2: auto-upload immediately after file selection
         if (autoUpload && addedThisBatch.length) {
             // Delay slightly to ensure state is committed before upload
@@ -551,6 +556,11 @@ export default function useRootProvider({
 
             setSelectedFilesMap(selectedFilesMapCopy)
             onFileRemove(file)
+
+            // v2: bridge to UpupCore event system
+            if (coreRef.current) {
+                coreRef.current.emit('file-removed', file)
+            }
         },
         [onFileRemove, selectedFilesMap],
     )
@@ -620,6 +630,12 @@ export default function useRootProvider({
             if (!selectedFilesMap.size && !dynamicFiles) return
             setUploadStatus(UploadStatus.ONGOING)
             setUploadError('')
+
+            // v2: bridge to UpupCore event system
+            if (coreRef.current) {
+                coreRef.current.emit('upload-start', {})
+            }
+
             const sendEvent = !dynamicFiles
             const selectedFiles = dynamicFiles
                 ? dynamicFiles
@@ -755,11 +771,22 @@ export default function useRootProvider({
                 const finalFiles = uploadResults.map((result: any) => result.file)
                 if (sendEvent) onFilesUploadComplete(finalFiles)
 
+                // v2: bridge to UpupCore event system
+                if (coreRef.current) {
+                    coreRef.current.emit('upload-all-complete', finalFiles)
+                }
+
                 sdkRef.current = null
                 setUploadStatus(UploadStatus.SUCCESSFUL)
                 return finalFiles
             } catch (error) {
                 onError((error as Error).message)
+
+                // v2: bridge to UpupCore event system
+                if (coreRef.current) {
+                    coreRef.current.emit('upload-error', { error })
+                }
+
                 sdkRef.current = null
                 setUploadStatus(UploadStatus.FAILED)
                 // Preserve filesProgressMap so progress stays visible alongside the Retry button

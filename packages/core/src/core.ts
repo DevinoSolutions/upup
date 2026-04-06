@@ -474,6 +474,11 @@ export class UpupCore {
     this.emitter.off(event, handler)
   }
 
+  /** Emit an event externally (used by React layer to bridge v1 callbacks). */
+  emit(event: string, data?: unknown): void {
+    this.emitter.emit(event, data)
+  }
+
   getSnapshot(): { files: [string, UploadFile][]; status: UploadStatus } {
     return {
       files: [...this.files.entries()],
