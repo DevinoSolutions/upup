@@ -119,6 +119,8 @@ export function useDropboxAuth(cfg?: DropboxConfigs) {
                 core?.emit('dropbox-auth-success', { user: dbxUser })
             } catch (e) {
                 console.log('[DBX-AUTH] profile fetch failed', e)
+                // v2: emit profile-fetch error via UpupCore
+                core?.emit('dropbox-auth-profile-error', { error: e })
             }
 
             setTok(access)
@@ -216,6 +218,8 @@ export function useDropboxAuth(cfg?: DropboxConfigs) {
                 /* cross-origin while still on dropbox or exchange error */
                 if ((e as Error).message?.includes('Failed to read')) return
                 console.error('[DBX-AUTH] poll/error', e)
+                // v2: emit poll error via UpupCore
+                core?.emit('dropbox-auth-poll-error', { error: e })
                 if ((e as Error).message != 'invalid_grant')
                     onError(translations.dropboxAuthFailed)
                 setBusy(false)
@@ -246,9 +250,13 @@ export function useDropboxAuth(cfg?: DropboxConfigs) {
                 secure.setItem(TOKEN_KEY, j.access_token)
                 setTok(j.access_token)
                 console.log('[DBX-AUTH] token refreshed')
+                // v2: emit token refresh success via UpupCore
+                core?.emit('dropbox-auth-token-refreshed', {})
                 return j.access_token
             } catch (e) {
                 console.error('[DBX-AUTH] refresh error', e)
+                // v2: emit token refresh error via UpupCore
+                core?.emit('dropbox-auth-refresh-error', { error: e })
                 onError(translations.dropboxSessionExpired)
                 logout()
                 return null
