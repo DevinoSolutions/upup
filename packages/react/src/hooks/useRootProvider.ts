@@ -306,6 +306,12 @@ export default function useRootProvider({
         })
     }, [editorQueue])
 
+    // v2: emit editing-file-change event when the active editing file changes
+    useEffect(() => {
+        if (!coreRef.current) return
+        coreRef.current.emit('editing-file-change', { file: editingFile })
+    }, [editingFile])
+
     const limit = useMemo(
         () => (mini ? 1 : Math.max(resolvedLimit, 1)),
         [mini, resolvedLimit],
