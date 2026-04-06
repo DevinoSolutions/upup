@@ -638,6 +638,8 @@ export default function useRootProvider({
                 onWarn(
                     t(translations.filePreviouslySelected, { name: file.name }),
                 )
+                // v2: emit restriction-failed for duplicate file
+                coreRef.current?.emit('restriction-failed', { file, reason: 'DUPLICATE' })
                 revokeFileUrl(fileWithParams)
                 continue
             }
@@ -649,6 +651,8 @@ export default function useRootProvider({
                         url: fileUrl,
                     }),
                 )
+                // v2: emit restriction-failed for duplicate URL
+                coreRef.current?.emit('restriction-failed', { file, reason: 'DUPLICATE' })
                 revokeFileUrl(fileWithParams)
                 continue
             }
