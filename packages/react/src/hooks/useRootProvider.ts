@@ -224,6 +224,14 @@ export default function useRootProvider({
         }
     }, [])
 
+    // v2: destroy UpupCore on unmount to clean up event listeners and worker pool
+    useEffect(() => {
+        return () => {
+            coreRef.current?.destroy()
+            coreRef.current = null
+        }
+    }, [])
+
     // v2: sync upload status into UpupCore whenever it changes
     useEffect(() => {
         if (!coreRef.current) return
