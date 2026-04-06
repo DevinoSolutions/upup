@@ -352,6 +352,12 @@ export default function useRootProvider({
         [resolvedLocale, resolvedOverrides],
     )
 
+    // v2: emit locale-change event when resolved translations change
+    useEffect(() => {
+        if (!coreRef.current) return
+        coreRef.current.emit('locale-change', { locale: resolvedLocale, translations })
+    }, [resolvedLocale, translations])
+
     const totalProgress = useMemo(() => {
         const filesProgressMapValues = Object.values(filesProgressMap)
         if (!filesProgressMapValues.length) return 0
