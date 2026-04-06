@@ -286,6 +286,17 @@ export default function useRootProvider({
         coreRef.current.emit('adding-more', { isAddingMore })
     }, [isAddingMore])
 
+    // v2: emit upload-metrics event when aggregate progress state changes
+    useEffect(() => {
+        if (!coreRef.current) return
+        coreRef.current.emit('upload-metrics', {
+            uploadSpeed,
+            uploadEta,
+            uploadedBytes,
+            totalBytes,
+        })
+    }, [uploadSpeed, uploadEta, uploadedBytes, totalBytes])
+
     const limit = useMemo(
         () => (mini ? 1 : Math.max(resolvedLimit, 1)),
         [mini, resolvedLimit],
