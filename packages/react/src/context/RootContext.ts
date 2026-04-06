@@ -5,6 +5,7 @@ import {
     SetStateAction,
     useContext,
 } from 'react'
+import type { UpupCore } from '@upup/core'
 import {
     DropboxConfigs,
     FileWithParams,
@@ -75,6 +76,8 @@ type ContextProps = Required<
     }
 
 export interface IRootContext {
+    /** v2: UpupCore instance — coexists with v1 engine */
+    core: UpupCore | null
     inputRef: RefObject<HTMLInputElement | null>
     activeAdapter?: UploadAdapter
     setActiveAdapter: Dispatch<SetStateAction<UploadAdapter | undefined>>

@@ -1,5 +1,6 @@
 'use client'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { UpupCore } from '@upup/core'
 import {
     TbCameraRotate,
     TbCapture,
@@ -169,6 +170,21 @@ export default function useRootProvider({
             dropbox_redirect_uri: cloudDrives.dropbox.redirectUri,
         } : undefined,
     } : undefined)
+
+    // v2: UpupCore instance — coexists with v1 engine, available via context.core
+    const coreRef = useRef<UpupCore | null>(null)
+    if (typeof window !== 'undefined' && !coreRef.current) {
+        coreRef.current = new UpupCore({
+            uploadEndpoint: resolvedEndpoint || undefined,
+            accept,
+            limit: resolvedLimit,
+            maxFileSize,
+            minFileSize,
+            maxTotalFileSize,
+            maxRetries,
+        })
+    }
+
     const inputRef = useRef<HTMLInputElement>(null)
     const [isAddingMore, setIsAddingMore] = useState(false)
     const [selectedFilesMap, setSelectedFilesMap] = useState<
@@ -816,6 +832,7 @@ export default function useRootProvider({
     }, [handleCancel, onDoneClicked])
 
     return {
+        core: coreRef.current,
         inputRef,
         activeAdapter,
         setActiveAdapter,
