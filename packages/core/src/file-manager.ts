@@ -162,6 +162,14 @@ export class FileManager {
     return this.addFiles(nativeFiles)
   }
 
+  /** Replace internal file map with pre-validated files from an external source (e.g. React v1 layer). */
+  syncFromExternal(files: Map<string, UploadFile>): void {
+    this.files.clear()
+    for (const [id, file] of files) {
+      this.files.set(id, file)
+    }
+  }
+
   reorderFiles(fileIds: string[]): void {
     if (fileIds.length !== this.files.size) {
       throw new Error(

@@ -398,6 +398,11 @@ export default function useRootProvider({
             }
         }
         setSelectedFilesMap(filesMap)
+
+        // v2: sync replaced files into UpupCore
+        if (coreRef.current) {
+            coreRef.current.syncFilesFromExternal(filesMap as Map<string, any>)
+        }
     }
     const handleSetSelectedFiles = async (newFiles: File[]) => {
         // Start from existing files to ensure appending behavior.
@@ -501,6 +506,11 @@ export default function useRootProvider({
         // Apply state update once for better performance and atomicity.
         setSelectedFilesMap(newFilesMap)
 
+        // v2: sync file state into UpupCore's FileManager
+        if (coreRef.current) {
+            coreRef.current.syncFilesFromExternal(newFilesMap as Map<string, any>)
+        }
+
         // Emit a single selection event for just-added files.
         if (addedThisBatch.length) onFilesSelected(addedThisBatch)
 
@@ -555,6 +565,12 @@ export default function useRootProvider({
             selectedFilesMapCopy.delete(fileId)
 
             setSelectedFilesMap(selectedFilesMapCopy)
+
+            // v2: sync file state into UpupCore's FileManager
+            if (coreRef.current) {
+                coreRef.current.syncFilesFromExternal(selectedFilesMapCopy as Map<string, any>)
+            }
+
             onFileRemove(file)
 
             // v2: bridge to UpupCore event system
@@ -834,6 +850,12 @@ export default function useRootProvider({
 
         setUploadStatus(UploadStatus.PENDING)
         setSelectedFilesMap(new Map())
+
+        // v2: sync cleared state into UpupCore
+        if (coreRef.current) {
+            coreRef.current.syncFilesFromExternal(new Map())
+        }
+
         setFilesProgressMap({})
         setUploadSpeed(0)
         setUploadEta(0)

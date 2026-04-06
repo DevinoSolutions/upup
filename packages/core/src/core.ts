@@ -253,6 +253,14 @@ export class UpupCore {
     this.emitter.emit('state-change', { files: this.files })
   }
 
+  /**
+   * Sync the core's internal file state from an external source (e.g. React v1 layer).
+   * Bypasses validation — the caller is responsible for ensuring files are valid.
+   */
+  syncFilesFromExternal(files: Map<string, UploadFile>): void {
+    this.fileManager.syncFromExternal(files)
+  }
+
   reorderFiles(fileIds: string[]): void {
     this.fileManager.reorderFiles(fileIds)
     this.emitter.emit('state-change', { files: this.files })
