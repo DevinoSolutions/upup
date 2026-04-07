@@ -37,13 +37,22 @@ export const en_US: Translations = {
     filesSelected_other: '{{count}} files selected',
     addMore: 'Add More',
 
+    // ── MainBox ───────────────────────────────────────────────
+    dropzoneLabel: 'Drop files here or press Enter to browse',
+
     // ── FileList ──────────────────────────────────────────────
     uploadFiles_one: 'Upload {{count}} file',
     uploadFiles_other: 'Upload {{count}} files',
+    resumeUpload: 'Resume Upload',
+    retryUpload: 'Retry Upload',
 
     // ── FilePreview ───────────────────────────────────────────
     removeFile: 'Remove file',
     clickToPreview: 'Click to preview',
+    editImage: 'Edit image',
+
+    // ── ImageEditorModal ──────────────────────────────────────
+    closeEditor: 'Close editor',
     zeroBytes: '0 Byte',
     bytes: 'Bytes',
     kb: 'KB',

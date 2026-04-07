@@ -47,15 +47,25 @@ export type Translations = {
     filesSelected_other: string
     addMore: string
 
+    // ── MainBox ───────────────────────────────────────────────
+    /** Aria-label for the drop zone */
+    dropzoneLabel: string
+
     // ── FileList ──────────────────────────────────────────────
     /** "Upload {{count}} file" */
     uploadFiles_one: string
     /** "Upload {{count}} files" */
     uploadFiles_other: string
+    resumeUpload: string
+    retryUpload: string
 
     // ── FilePreview ───────────────────────────────────────────
     removeFile: string
     clickToPreview: string
+    editImage: string
+
+    // ── ImageEditorModal ──────────────────────────────────────
+    closeEditor: string
     /** "0 Byte" */
     zeroBytes: string
     bytes: string

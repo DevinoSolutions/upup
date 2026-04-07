@@ -74,6 +74,7 @@ export default memo(function ImageEditorModal(props: Props) {
     const { file, onClose, onSave } = props
     const {
         props: { dark, imageEditor: editorConfig },
+        translations: tr,
     } = useRootContext()
 
     const overlayRef = useRef<HTMLDivElement>(null)
@@ -277,7 +278,7 @@ export default memo(function ImageEditorModal(props: Props) {
                         </h2>
                         <button
                             type="button"
-                            aria-label="Close editor"
+                            aria-label={tr.closeEditor}
                             className={cn(
                                 'upup-flex upup-h-7 upup-w-7 upup-items-center upup-justify-center upup-rounded-full',
                                 'upup-text-lg upup-leading-none upup-transition-colors',

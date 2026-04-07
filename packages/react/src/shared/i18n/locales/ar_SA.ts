@@ -32,11 +32,17 @@ export const ar_SA: Translations = {
     filesSelected_other: 'تم اختيار {{count}} ملفات',
     addMore: 'إضافة المزيد',
 
+    dropzoneLabel: 'Drop files here or press Enter to browse',
+
     uploadFiles_one: 'رفع ملف {{count}}',
     uploadFiles_other: 'رفع {{count}} ملفات',
+    resumeUpload: 'Resume Upload',
+    retryUpload: 'Retry Upload',
 
     removeFile: 'إزالة الملف',
     clickToPreview: 'انقر للمعاينة',
+    editImage: 'Edit image',
+    closeEditor: 'Close editor',
     zeroBytes: '٠ بايت',
     bytes: 'بايت',
     kb: 'ك.ب',

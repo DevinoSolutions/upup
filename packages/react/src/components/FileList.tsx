@@ -167,8 +167,8 @@ export default memo(function FileList() {
                         }}
                     >
                         {resumable?.mode === 'multipart'
-                            ? 'Resume Upload'
-                            : 'Retry Upload'}
+                            ? tr.resumeUpload
+                            : tr.retryUpload}
                     </button>
                 </ShouldRender>
                 <ShouldRender if={uploadStatus === UploadStatus.SUCCESSFUL}>
@@ -210,7 +210,7 @@ export default memo(function FileList() {
                                 }
                                 title={
                                     uploadStatus === UploadStatus.PAUSED
-                                        ? 'Resume upload'
+                                        ? tr.resumeUpload
                                         : 'Pause upload'
                                 }
                             >

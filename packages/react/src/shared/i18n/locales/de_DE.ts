@@ -31,11 +31,17 @@ export const de_DE: Translations = {
     filesSelected_other: '{{count}} Dateien ausgewählt',
     addMore: 'Mehr hinzufügen',
 
+    dropzoneLabel: 'Drop files here or press Enter to browse',
+
     uploadFiles_one: '{{count}} Datei hochladen',
     uploadFiles_other: '{{count}} Dateien hochladen',
+    resumeUpload: 'Resume Upload',
+    retryUpload: 'Retry Upload',
 
     removeFile: 'Datei entfernen',
     clickToPreview: 'Vorschau anzeigen',
+    editImage: 'Edit image',
+    closeEditor: 'Close editor',
     zeroBytes: '0 Byte',
     bytes: 'Bytes',
     kb: 'KB',

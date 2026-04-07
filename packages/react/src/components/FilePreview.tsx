@@ -150,7 +150,7 @@ export default memo(function FilePreview(props: Props) {
                         onClick={onHandleEditImage}
                         type="button"
                         disabled={!!progress}
-                        aria-label="Edit image"
+                        aria-label={tr.editImage}
                     >
                         <svg
                             xmlns="http://www.w3.org/2000/svg"

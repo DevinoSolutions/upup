@@ -34,11 +34,17 @@ export const ja_JP: Translations = {
     filesSelected_other: '{{count}} ファイル選択済み',
     addMore: '追加',
 
+    dropzoneLabel: 'Drop files here or press Enter to browse',
+
     uploadFiles_one: '{{count}} ファイルをアップロード',
     uploadFiles_other: '{{count}} ファイルをアップロード',
+    resumeUpload: 'Resume Upload',
+    retryUpload: 'Retry Upload',
 
     removeFile: 'ファイルを削除',
     clickToPreview: 'プレビュー',
+    editImage: 'Edit image',
+    closeEditor: 'Close editor',
     zeroBytes: '0 バイト',
     bytes: 'バイト',
     kb: 'KB',

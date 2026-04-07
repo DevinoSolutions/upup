@@ -31,11 +31,17 @@ export const zh_TW: Translations = {
     filesSelected_other: '已選擇 {{count}} 個檔案',
     addMore: '新增更多',
 
+    dropzoneLabel: 'Drop files here or press Enter to browse',
+
     uploadFiles_one: '上傳 {{count}} 個檔案',
     uploadFiles_other: '上傳 {{count}} 個檔案',
+    resumeUpload: 'Resume Upload',
+    retryUpload: 'Retry Upload',
 
     removeFile: '移除檔案',
     clickToPreview: '點擊預覽',
+    editImage: 'Edit image',
+    closeEditor: 'Close editor',
     zeroBytes: '0 位元組',
     bytes: '位元組',
     kb: 'KB',

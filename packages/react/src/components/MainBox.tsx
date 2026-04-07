@@ -17,6 +17,7 @@ export default function MainBox() {
         isAddingMore,
         isOnline,
         inputRef,
+        translations: tr,
         props: { dark },
     } = useRootContext()
     const {
@@ -37,7 +38,7 @@ export default function MainBox() {
                 data-upup-slot="main-box"
                 role="button"
                 tabIndex={0}
-                aria-label="Drop files here or press Enter to browse"
+                aria-label={tr.dropzoneLabel}
                 aria-dropeffect={isDragging ? 'copy' : 'none'}
                 onKeyDown={(e) => {
                     if (e.key === 'Enter' || e.key === ' ') {

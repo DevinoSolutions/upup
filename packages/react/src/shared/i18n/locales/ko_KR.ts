@@ -32,11 +32,17 @@ export const ko_KR: Translations = {
     filesSelected_other: '{{count}}개 파일 선택됨',
     addMore: '더 추가',
 
+    dropzoneLabel: 'Drop files here or press Enter to browse',
+
     uploadFiles_one: '{{count}}개 파일 업로드',
     uploadFiles_other: '{{count}}개 파일 업로드',
+    resumeUpload: 'Resume Upload',
+    retryUpload: 'Retry Upload',
 
     removeFile: '파일 삭제',
     clickToPreview: '미리보기',
+    editImage: 'Edit image',
+    closeEditor: 'Close editor',
     zeroBytes: '0 바이트',
     bytes: '바이트',
     kb: 'KB',

@@ -32,11 +32,17 @@ export const fr_FR: Translations = {
     filesSelected_other: '{{count}} fichiers sélectionnés',
     addMore: 'Ajouter',
 
+    dropzoneLabel: 'Drop files here or press Enter to browse',
+
     uploadFiles_one: 'Télécharger {{count}} fichier',
     uploadFiles_other: 'Télécharger {{count}} fichiers',
+    resumeUpload: 'Resume Upload',
+    retryUpload: 'Retry Upload',
 
     removeFile: 'Supprimer le fichier',
     clickToPreview: 'Aperçu',
+    editImage: 'Edit image',
+    closeEditor: 'Close editor',
     zeroBytes: '0 octet',
     bytes: 'octets',
     kb: 'Ko',
