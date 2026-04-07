@@ -59,6 +59,16 @@ async function uploadWithRetry(
     throw new Error('Upload failed after retries')
 }
 
+// RTL locales - defined at module scope to avoid reallocation on every render
+const RTL_LOCALES = new Set(['ar', 'ar-SA', 'he', 'he-IL', 'fa', 'fa-IR', 'ur', 'ur-PK'])
+
+// Compute text direction based on locale language
+function getDir(i18nLocale: string | object | undefined): 'ltr' | 'rtl' {
+    const lang = typeof i18nLocale === 'string' ? i18nLocale : 'en-US'
+    const base = lang.split('-')[0]
+    return RTL_LOCALES.has(lang) || RTL_LOCALES.has(base) ? 'rtl' : 'ltr'
+}
+
 export default function useRootProvider({
     accept: acceptProp = '*',
     mini = false,
@@ -393,12 +403,8 @@ export default function useRootProvider({
 
     // RTL support: derive lang/dir from the locale
     // If i18n.locale is a string code (e.g. 'ar-SA'), use it directly; otherwise default to 'en-US'
-    const RTL_LOCALES = new Set(['ar', 'ar-SA', 'he', 'he-IL', 'fa', 'fa-IR', 'ur', 'ur-PK'])
     const lang = typeof i18nLocale === 'string' ? i18nLocale : 'en-US'
-    const dir: 'ltr' | 'rtl' = (() => {
-        const base = lang.split('-')[0]
-        return RTL_LOCALES.has(lang) || RTL_LOCALES.has(base) ? 'rtl' : 'ltr'
-    })()
+    const dir: 'ltr' | 'rtl' = getDir(i18nLocale)
 
     // v2: emit locale-change event when resolved translations change
     useEffect(() => {
