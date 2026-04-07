@@ -19,6 +19,7 @@ export default forwardRef<HTMLDivElement, Props>(function ProgressBar(
     return (
         <ShouldRender if={!!progress}>
             <div data-testid="upup-progress-bar"
+                data-upup-slot="progress-bar"
                 ref={ref}
                 className={cn(
                     'upup-flex upup-items-center upup-gap-2',

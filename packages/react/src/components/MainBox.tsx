@@ -33,6 +33,7 @@ export default function MainBox() {
             <motion.div
                 key="adapter-selector"
                 data-testid="upup-dropzone"
+                data-upup-slot="main-box"
                 className={cn(
                     'upup-relative upup-flex-1 upup-overflow-hidden upup-rounded-lg',
                     {

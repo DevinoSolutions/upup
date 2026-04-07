@@ -34,6 +34,7 @@ export default memo(function FileItem({ file }: Props) {
     return (
         <div
             data-testid="upup-file-item"
+            data-upup-slot="file-item"
             className={cn(
                 'upup-relative upup-flex upup-flex-1 upup-flex-col upup-items-start upup-gap-1 upup-bg-transparent',
                 {

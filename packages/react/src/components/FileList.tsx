@@ -53,6 +53,7 @@ export default memo(function FileList() {
     return (
         <div
             data-testid="upup-file-list"
+            data-upup-slot="file-list"
             className={cn(
                 'upup-relative upup-flex upup-h-full upup-flex-col upup-rounded-lg upup-shadow',
                 {

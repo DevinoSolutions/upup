@@ -86,6 +86,7 @@ export default function AdapterSelector() {
 
     return (
         <div
+            data-upup-slot="adapter-selector"
             className={cn(
                 'upup-relative upup-flex upup-h-full upup-gap-3 upup-rounded-lg',
                 {
