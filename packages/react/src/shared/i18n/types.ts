@@ -59,6 +59,9 @@ export type Translations = {
     resumeUpload: string
     retryUpload: string
 
+    // ── ProgressBar ───────────────────────────────────────────
+    uploadProgress: string
+
     // ── FilePreview ───────────────────────────────────────────
     removeFile: string
     clickToPreview: string

@@ -42,6 +42,7 @@ export const es_ES: Translations = {
     removeFile: 'Eliminar archivo',
     clickToPreview: 'Vista previa',
     editImage: 'Edit image',
+    uploadProgress: 'Upload progress',
     closeEditor: 'Close editor',
     zeroBytes: '0 bytes',
     bytes: 'bytes',

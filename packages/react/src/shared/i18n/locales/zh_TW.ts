@@ -41,6 +41,7 @@ export const zh_TW: Translations = {
     removeFile: '移除檔案',
     clickToPreview: '點擊預覽',
     editImage: 'Edit image',
+    uploadProgress: 'Upload progress',
     closeEditor: 'Close editor',
     zeroBytes: '0 位元組',
     bytes: '位元組',

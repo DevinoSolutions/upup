@@ -1,11 +1,12 @@
-import React, { PropsWithChildren } from 'react'
+import React, { HTMLAttributes, PropsWithChildren } from 'react'
 import { useRootContext } from '../../context/RootContext'
 import { cn } from '../../lib/tailwind'
 
 export default function AdapterViewContainer({
     children,
     isLoading = false,
-}: PropsWithChildren<{ isLoading?: boolean }>) {
+    ...rest
+}: PropsWithChildren<{ isLoading?: boolean } & HTMLAttributes<HTMLDivElement>>) {
     const {
         props: { dark, classNames },
     } = useRootContext()
@@ -23,6 +24,7 @@ export default function AdapterViewContainer({
                         isLoading && classNames.driveLoading,
                 },
             )}
+            {...rest}
         >
             {children}
         </div>

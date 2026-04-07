@@ -36,6 +36,7 @@ type Props = {
     handleSubmit: () => Promise<void>
     handleCancelDownload: () => void
     onSelectCurrentFolder?: () => Promise<void> | void
+    'data-upup-slot'?: string
 }
 
 function filterItems(item: OneDriveFile | GoogleFile, accept: string) {
@@ -66,6 +67,7 @@ export default function DriveBrowser({
     handleSubmit,
     handleCancelDownload,
     onSelectCurrentFolder,
+    'data-upup-slot': dataUpupSlot,
     ...rest
 }: Readonly<Props>) {
     const {
@@ -87,7 +89,7 @@ export default function DriveBrowser({
     }, [driveFiles, setPath])
 
     return (
-        <AdapterViewContainer isLoading={isLoading}>
+        <AdapterViewContainer isLoading={isLoading} data-upup-slot={dataUpupSlot}>
             <ShouldRender if={true} isLoading={isLoading}>
                 <div data-testid="upup-drive-browser" className="upup-grid upup-h-full upup-w-full upup-grid-rows-[auto,1fr,auto] upup-overflow-auto">
                     <DriveBrowserHeader

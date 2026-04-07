@@ -41,6 +41,7 @@ export const zh_CN: Translations = {
     removeFile: '删除文件',
     clickToPreview: '点击预览',
     editImage: 'Edit image',
+    uploadProgress: 'Upload progress',
     closeEditor: 'Close editor',
     zeroBytes: '0 字节',
     bytes: '字节',

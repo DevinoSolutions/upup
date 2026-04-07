@@ -29,6 +29,7 @@ export default function OneDriveUploader() {
             driveFiles={driveFiles}
             user={user}
             handleSignOut={handleSignOut}
+            data-upup-slot="onedrive-uploader"
             {...props}
         />
     )

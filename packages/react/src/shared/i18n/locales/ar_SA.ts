@@ -42,6 +42,7 @@ export const ar_SA: Translations = {
     removeFile: 'إزالة الملف',
     clickToPreview: 'انقر للمعاينة',
     editImage: 'Edit image',
+    uploadProgress: 'Upload progress',
     closeEditor: 'Close editor',
     zeroBytes: '٠ بايت',
     bytes: 'بايت',

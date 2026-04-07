@@ -28,6 +28,7 @@ export default function AdapterView() {
                 exit={{ y: '-100%' }}
                 className="upup-grid upup-h-full upup-w-full upup-grid-rows-[auto,1fr]"
                 key="adapter-view"
+                data-upup-slot="adapter-view"
             >
                 <div
                     className={cn(

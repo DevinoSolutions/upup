@@ -42,6 +42,7 @@ export const ko_KR: Translations = {
     removeFile: '파일 삭제',
     clickToPreview: '미리보기',
     editImage: 'Edit image',
+    uploadProgress: 'Upload progress',
     closeEditor: 'Close editor',
     zeroBytes: '0 바이트',
     bytes: '바이트',

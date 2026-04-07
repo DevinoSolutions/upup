@@ -15,12 +15,18 @@ export default forwardRef<HTMLDivElement, Props>(function ProgressBar(
 ) {
     const {
         props: { classNames, dark },
+        translations: tr,
     } = useRootContext()
     return (
         <ShouldRender if={!!progress}>
             <div data-testid="upup-progress-bar"
                 data-upup-slot="progress-bar"
                 ref={ref}
+                role="progressbar"
+                aria-valuenow={progress}
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-label={tr?.uploadProgress ?? 'Upload progress'}
                 className={cn(
                     'upup-flex upup-items-center upup-gap-2',
                     className,

@@ -46,6 +46,9 @@ export const en_US: Translations = {
     resumeUpload: 'Resume Upload',
     retryUpload: 'Retry Upload',
 
+    // ── ProgressBar ───────────────────────────────────────────
+    uploadProgress: 'Upload progress',
+
     // ── FilePreview ───────────────────────────────────────────
     removeFile: 'Remove file',
     clickToPreview: 'Click to preview',

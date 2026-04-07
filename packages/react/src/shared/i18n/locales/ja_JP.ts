@@ -44,6 +44,7 @@ export const ja_JP: Translations = {
     removeFile: 'ファイルを削除',
     clickToPreview: 'プレビュー',
     editImage: 'Edit image',
+    uploadProgress: 'Upload progress',
     closeEditor: 'Close editor',
     zeroBytes: '0 バイト',
     bytes: 'バイト',

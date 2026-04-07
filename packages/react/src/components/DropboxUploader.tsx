@@ -33,6 +33,7 @@ export default function DropboxUploader() {
             driveFiles={driveFiles as any}
             user={user}
             handleSignOut={handleSignOut}
+            data-upup-slot="dropbox-uploader"
             {...(props as any)}
         />
     )

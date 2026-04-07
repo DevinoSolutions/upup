@@ -33,6 +33,7 @@ export default function GoogleDriveUploader() {
             driveFiles={driveFiles}
             user={user}
             handleSignOut={handleSignOut}
+            data-upup-slot="google-drive-uploader"
             {...props}
         />
     )
