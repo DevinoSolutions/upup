@@ -89,7 +89,7 @@ export default function useRootProvider({
     restrictions,
     shouldCompress: shouldCompressProp = false,
     imageCompression = false,
-    thumbnailGenerator = false,
+    thumbnailGenerator = true,
     uploadAdapters,
     sources,
     onError: errorHandler,
@@ -110,7 +110,7 @@ export default function useRootProvider({
     onFileTypeMismatch = () => {},
     onBeforeFileAdded,
     onRestrictionFailed,
-    enablePaste = false,
+    enablePaste = true,
     autoUpload = false,
     maxConcurrentUploads,
     imageEditor: imageEditorProp,
@@ -147,8 +147,8 @@ export default function useRootProvider({
         screen: UploadAdapter.SCREEN,
     }
     const resolvedAdapters = uploadAdapters
-        ?? (sources ? sources.map(s => sourceToAdapter[s]).filter(Boolean) : [UploadAdapter.INTERNAL, UploadAdapter.LINK])
-    const resolvedLimit = propLimit ?? maxFiles ?? restrictions?.maxNumberOfFiles ?? 1
+        ?? (sources ? sources.map(s => sourceToAdapter[s]).filter(Boolean) : [UploadAdapter.INTERNAL, UploadAdapter.LINK, UploadAdapter.CAMERA, UploadAdapter.AUDIO, UploadAdapter.SCREEN])
+    const resolvedLimit = propLimit ?? maxFiles ?? restrictions?.maxNumberOfFiles ?? 10
     // apiKey → managed service, serverUrl → self-hosted server, tokenEndpoint/uploadEndpoint → direct
     const resolvedServerUrl = serverUrl ?? (apiKey ? 'https://api.upup.dev/v1' : undefined)
     const resolvedEndpoint = tokenEndpoint ?? uploadEndpoint ?? (resolvedServerUrl ? `${resolvedServerUrl}/presign` : '')
@@ -157,7 +157,7 @@ export default function useRootProvider({
     // imageCompression → shouldCompress alias
     const shouldCompress = imageCompression || shouldCompressProp
     // restrictions → flat props mapping (restrictions takes precedence)
-    const maxFileSize = maxFileSizeProp ?? restrictions?.maxFileSize
+    const maxFileSize = maxFileSizeProp ?? restrictions?.maxFileSize ?? 1073741824 // 1 GB default
     const minFileSize = minFileSizeProp ?? restrictions?.minFileSize
     const maxTotalFileSize = maxTotalFileSizeProp ?? restrictions?.maxTotalFileSize
     const accept = restrictions?.allowedFileTypes ? restrictions.allowedFileTypes.join(',') : acceptProp
