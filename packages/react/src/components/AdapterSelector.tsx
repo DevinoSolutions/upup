@@ -192,6 +192,8 @@ export default function AdapterSelector() {
                 accept={accept}
                 className="upup-hidden"
                 data-testid="upup-file-input"
+                aria-hidden="true"
+                tabIndex={-1}
                 ref={inputRef}
                 multiple={multiple}
                 onChange={handleInputFileChange}

@@ -16,6 +16,7 @@ export default function MainBox() {
         activeAdapter,
         isAddingMore,
         isOnline,
+        inputRef,
         props: { dark },
     } = useRootContext()
     const {
@@ -34,6 +35,20 @@ export default function MainBox() {
                 key="adapter-selector"
                 data-testid="upup-dropzone"
                 data-upup-slot="main-box"
+                role="button"
+                tabIndex={0}
+                aria-label="Drop files here or press Enter to browse"
+                aria-dropeffect={isDragging ? 'copy' : 'none'}
+                onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault()
+                        if (inputRef.current) {
+                            inputRef.current.removeAttribute('webkitdirectory')
+                            inputRef.current.removeAttribute('directory')
+                            inputRef.current.click()
+                        }
+                    }
+                }}
                 className={cn(
                     'upup-relative upup-flex-1 upup-overflow-hidden upup-rounded-lg',
                     {
