@@ -70,3 +70,6 @@ export { cn } from './lib/tailwind'
 
 // ── i18n ─────────────────────────────────────────────────
 export { en_US } from './shared/i18n'
+
+// ── Theme ────────────────────────────────────────────────
+export { UpupThemeProvider } from './theme'

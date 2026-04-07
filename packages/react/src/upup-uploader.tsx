@@ -14,6 +14,7 @@ import RootContext from './context/RootContext'
 import useRootProvider from './hooks/useRootProvider'
 import useUpload from './hooks/useUpload'
 import { cn } from './lib/tailwind'
+import { UpupThemeProvider } from './theme'
 
 export type UpupUploaderRef = {
     useUpload(): {
@@ -54,6 +55,7 @@ export default forwardRef<UpupUploaderRef, UpupUploaderProps>(
         }))
 
         return (
+            <UpupThemeProvider theme={props.theme}>
             <RootContext.Provider value={providerValues}>
                 <div className={`upup-scope upup-h-full upup-w-full ${providerValues.props.className ?? ''}`} style={providerValues.props.style} data-testid="upup-root">
                     <div
@@ -231,6 +233,7 @@ export default forwardRef<UpupUploaderRef, UpupUploaderProps>(
                         />
                     )}
             </RootContext.Provider>
+            </UpupThemeProvider>
         )
     },
 )
