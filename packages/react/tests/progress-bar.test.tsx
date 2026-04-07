@@ -31,15 +31,10 @@ describe('ProgressBar', () => {
     expect(bar?.getAttribute('aria-label')).toBeTruthy()
   })
 
-  it('has aria-valuenow=0 when progress is 0', () => {
+  it('does not render when progress is 0', () => {
     const { container } = render(<ProgressBar progress={0} />)
-    // ShouldRender gates on !!progress so bar is hidden at 0 — test is a no-op guard
-    const bar =
-      container.querySelector('[data-upup-slot="progress-bar"]') ??
-      container.querySelector('[role="progressbar"]')
-    if (bar) {
-      expect(bar.getAttribute('aria-valuenow')).toBe('0')
-    }
+    const bar = container.querySelector('[role="progressbar"]')
+    expect(bar).toBeNull()
   })
 
   it('has aria-valuenow=100 when progress is 100', () => {

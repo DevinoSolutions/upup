@@ -67,7 +67,7 @@ export default function DriveBrowser({
     handleSubmit,
     handleCancelDownload,
     onSelectCurrentFolder,
-    'data-upup-slot': dataUpupSlot,
+    'data-upup-slot': dataUpupSlot = 'drive-browser',
     ...rest
 }: Readonly<Props>) {
     const {

@@ -237,7 +237,7 @@ export default memo(function ImageEditorModal(props: Props) {
     )
 
     return createPortal(
-        <div className="upup-scope">
+        <div className="upup-scope" data-upup-slot="image-editor">
             <div
                 ref={overlayRef}
                 role="dialog"

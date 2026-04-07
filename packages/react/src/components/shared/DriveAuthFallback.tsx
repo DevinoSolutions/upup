@@ -17,7 +17,7 @@ export default function DriveAuthFallback({
     } = useRootContext()
 
     return (
-        <AdapterViewContainer>
+        <AdapterViewContainer data-upup-slot="drive-auth-fallback">
             <div className="upup-flex upup-h-full upup-w-full upup-flex-col upup-items-center upup-justify-center upup-gap-4 upup-p-6 upup-text-center">
                 <p
                     className={cn(

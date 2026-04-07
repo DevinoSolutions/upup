@@ -130,7 +130,7 @@ export default memo(
         }, [fileUrl, isText, isOversizedText])
 
         return createPortal(
-            <div className="upup-scope">
+            <div className="upup-scope" data-upup-slot="file-preview-portal">
                 <div
                     className="upup-fixed upup-inset-0 upup-z-[2147483647] upup-flex upup-items-center upup-justify-center upup-bg-black/40"
                     ref={ref}
