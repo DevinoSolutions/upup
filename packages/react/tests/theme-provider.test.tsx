@@ -52,4 +52,16 @@ describe('UpupThemeProvider', () => {
     const wrapper = container.firstChild as HTMLElement
     expect(wrapper.style.getPropertyValue('--upup-color-primary')).toBe('#ff0000')
   })
+
+  it('handles system mode without throwing', () => {
+    const { container } = render(
+      <UpupThemeProvider theme={{ mode: 'system' }}>
+        <div />
+      </UpupThemeProvider>
+    )
+    const wrapper = container.firstChild as HTMLElement
+    const theme = wrapper.getAttribute('data-theme')
+    // system resolves to either 'light' or 'dark', never 'system'
+    expect(theme === 'light' || theme === 'dark').toBe(true)
+  })
 })
