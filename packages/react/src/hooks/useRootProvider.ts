@@ -382,12 +382,23 @@ export default function useRootProvider({
     const multiple = useMemo(() => (mini ? false : limit > 1), [limit, mini])
 
     // i18n prop takes precedence over localePack/translations
-    const resolvedLocale = i18n?.locale ?? localePack ?? en_US
+    // i18n.locale may be a Translations object or a BCP-47 string code (e.g. 'ar-SA')
+    const i18nLocale = i18n?.locale
+    const resolvedLocale = (typeof i18nLocale === 'object' ? i18nLocale : undefined) ?? localePack ?? en_US
     const resolvedOverrides = i18n?.overrides ?? translationOverrides
     const translations = useMemo(
         () => mergeTranslations(resolvedLocale, resolvedOverrides),
         [resolvedLocale, resolvedOverrides],
     )
+
+    // RTL support: derive lang/dir from the locale
+    // If i18n.locale is a string code (e.g. 'ar-SA'), use it directly; otherwise default to 'en-US'
+    const RTL_LOCALES = new Set(['ar', 'ar-SA', 'he', 'he-IL', 'fa', 'fa-IR', 'ur', 'ur-PK'])
+    const lang = typeof i18nLocale === 'string' ? i18nLocale : 'en-US'
+    const dir: 'ltr' | 'rtl' = (() => {
+        const base = lang.split('-')[0]
+        return RTL_LOCALES.has(lang) || RTL_LOCALES.has(base) ? 'rtl' : 'ltr'
+    })()
 
     // v2: emit locale-change event when resolved translations change
     useEffect(() => {
@@ -1131,6 +1142,8 @@ export default function useRootProvider({
         setViewMode,
         isOnline,
         translations,
+        lang,
+        dir,
         files: selectedFilesMap,
         setFiles: handleSetSelectedFiles,
         dynamicUpload,

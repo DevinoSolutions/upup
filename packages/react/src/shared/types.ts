@@ -301,8 +301,11 @@ export type UpupUploaderProps = {
     // i18n / Localisation
     /** v2: i18n configuration. Accepts a locale pack or per-key overrides. */
     i18n?: {
-        /** Full locale pack (e.g. import { fr_FR } from '@upup/react/locales') */
-        locale?: Translations
+        /**
+         * Full locale pack (e.g. import { fr_FR } from '@upup/react/locales'),
+         * or a BCP-47 locale code string (e.g. 'ar-SA') for lang/dir only.
+         */
+        locale?: Translations | string
         /** Per-key overrides merged on top of the locale */
         overrides?: Partial<Translations>
     }

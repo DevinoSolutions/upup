@@ -57,7 +57,7 @@ export default forwardRef<UpupUploaderRef, UpupUploaderProps>(
         return (
             <UpupThemeProvider theme={props.theme}>
             <RootContext.Provider value={providerValues}>
-                <div className={`upup-scope upup-h-full upup-w-full ${providerValues.props.className ?? ''}`} style={providerValues.props.style} data-testid="upup-root" data-upup-slot="root">
+                <div className={`upup-scope upup-h-full upup-w-full ${providerValues.props.className ?? ''}`} style={providerValues.props.style} data-testid="upup-root" data-upup-slot="root" lang={providerValues.lang} dir={providerValues.dir}>
                     <div
                         className={cn('upup-w-full', {
                             'upup-h-[480px] upup-max-w-[600px]':

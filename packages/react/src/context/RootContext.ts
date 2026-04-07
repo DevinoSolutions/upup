@@ -83,6 +83,8 @@ export interface IRootContext {
     setActiveAdapter: Dispatch<SetStateAction<UploadAdapter | undefined>>
 
     translations: Translations
+    lang: string
+    dir: 'ltr' | 'rtl'
 
     files: Map<string, FileWithParams>
     setFiles: (newFiles: File[]) => void
