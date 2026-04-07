@@ -211,7 +211,7 @@ export default memo(function FileList() {
                                 title={
                                     uploadStatus === UploadStatus.PAUSED
                                         ? tr.resumeUpload
-                                        : 'Pause upload'
+                                        : tr.pauseUpload
                                 }
                             >
                                 {uploadStatus === UploadStatus.PAUSED ? (

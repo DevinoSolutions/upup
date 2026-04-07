@@ -31,6 +31,8 @@ export const fr_FR: Translations = {
     filesSelected_one: '{{count}} fichier sélectionné',
     filesSelected_other: '{{count}} fichiers sélectionnés',
     addMore: 'Ajouter',
+    switchToListView: 'Switch to list view',
+    switchToGridView: 'Switch to grid view',
 
     dropzoneLabel: 'Drop files here or press Enter to browse',
 
@@ -38,6 +40,7 @@ export const fr_FR: Translations = {
     uploadFiles_other: 'Télécharger {{count}} fichiers',
     resumeUpload: 'Resume Upload',
     retryUpload: 'Retry Upload',
+    pauseUpload: 'Pause upload',
 
     removeFile: 'Supprimer le fichier',
     clickToPreview: 'Aperçu',

@@ -86,7 +86,7 @@ export default function MainBoxHeader({ handleCancel }: Readonly<Props>) {
                             { 'upup-text-gray-300 hover:upup-bg-white/10': dark },
                         )}
                         onClick={() => setViewMode(v => v === 'grid' ? 'list' : 'grid')}
-                        title={viewMode === 'grid' ? 'Switch to list view' : 'Switch to grid view'}
+                        title={viewMode === 'grid' ? tr.switchToListView : tr.switchToGridView}
                     >
                         {viewMode === 'grid' ? <TbLayoutList size={16} /> : <TbLayoutGrid size={16} />}
                     </button>

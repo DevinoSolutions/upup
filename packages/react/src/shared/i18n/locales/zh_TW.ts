@@ -30,6 +30,8 @@ export const zh_TW: Translations = {
     filesSelected_one: '已選擇 {{count}} 個檔案',
     filesSelected_other: '已選擇 {{count}} 個檔案',
     addMore: '新增更多',
+    switchToListView: 'Switch to list view',
+    switchToGridView: 'Switch to grid view',
 
     dropzoneLabel: 'Drop files here or press Enter to browse',
 
@@ -37,6 +39,7 @@ export const zh_TW: Translations = {
     uploadFiles_other: '上傳 {{count}} 個檔案',
     resumeUpload: 'Resume Upload',
     retryUpload: 'Retry Upload',
+    pauseUpload: 'Pause upload',
 
     removeFile: '移除檔案',
     clickToPreview: '點擊預覽',

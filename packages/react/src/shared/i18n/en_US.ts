@@ -36,6 +36,8 @@ export const en_US: Translations = {
     filesSelected_one: '{{count}} file selected',
     filesSelected_other: '{{count}} files selected',
     addMore: 'Add More',
+    switchToListView: 'Switch to list view',
+    switchToGridView: 'Switch to grid view',
 
     // ── MainBox ───────────────────────────────────────────────
     dropzoneLabel: 'Drop files here or press Enter to browse',
@@ -45,6 +47,7 @@ export const en_US: Translations = {
     uploadFiles_other: 'Upload {{count}} files',
     resumeUpload: 'Resume Upload',
     retryUpload: 'Retry Upload',
+    pauseUpload: 'Pause upload',
 
     // ── ProgressBar ───────────────────────────────────────────
     uploadProgress: 'Upload progress',

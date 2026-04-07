@@ -46,6 +46,8 @@ export type Translations = {
     /** "{{count}} files selected" */
     filesSelected_other: string
     addMore: string
+    switchToListView: string
+    switchToGridView: string
 
     // ── MainBox ───────────────────────────────────────────────
     /** Aria-label for the drop zone */
@@ -58,6 +60,7 @@ export type Translations = {
     uploadFiles_other: string
     resumeUpload: string
     retryUpload: string
+    pauseUpload: string
 
     // ── ProgressBar ───────────────────────────────────────────
     uploadProgress: string

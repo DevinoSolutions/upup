@@ -31,6 +31,8 @@ export const ko_KR: Translations = {
     filesSelected_one: '{{count}}개 파일 선택됨',
     filesSelected_other: '{{count}}개 파일 선택됨',
     addMore: '더 추가',
+    switchToListView: 'Switch to list view',
+    switchToGridView: 'Switch to grid view',
 
     dropzoneLabel: 'Drop files here or press Enter to browse',
 
@@ -38,6 +40,7 @@ export const ko_KR: Translations = {
     uploadFiles_other: '{{count}}개 파일 업로드',
     resumeUpload: 'Resume Upload',
     retryUpload: 'Retry Upload',
+    pauseUpload: 'Pause upload',
 
     removeFile: '파일 삭제',
     clickToPreview: '미리보기',

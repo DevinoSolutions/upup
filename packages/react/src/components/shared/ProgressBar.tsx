@@ -26,7 +26,7 @@ export default forwardRef<HTMLDivElement, Props>(function ProgressBar(
                 aria-valuenow={progress}
                 aria-valuemin={0}
                 aria-valuemax={100}
-                aria-label={tr?.uploadProgress ?? 'Upload progress'}
+                aria-label={tr.uploadProgress}
                 className={cn(
                     'upup-flex upup-items-center upup-gap-2',
                     className,

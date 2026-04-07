@@ -33,6 +33,8 @@ export const ja_JP: Translations = {
     filesSelected_one: '{{count}} ファイル選択済み',
     filesSelected_other: '{{count}} ファイル選択済み',
     addMore: '追加',
+    switchToListView: 'Switch to list view',
+    switchToGridView: 'Switch to grid view',
 
     dropzoneLabel: 'Drop files here or press Enter to browse',
 
@@ -40,6 +42,7 @@ export const ja_JP: Translations = {
     uploadFiles_other: '{{count}} ファイルをアップロード',
     resumeUpload: 'Resume Upload',
     retryUpload: 'Retry Upload',
+    pauseUpload: 'Pause upload',
 
     removeFile: 'ファイルを削除',
     clickToPreview: 'プレビュー',

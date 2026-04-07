@@ -31,6 +31,8 @@ export const ar_SA: Translations = {
     filesSelected_one: 'تم اختيار ملف {{count}}',
     filesSelected_other: 'تم اختيار {{count}} ملفات',
     addMore: 'إضافة المزيد',
+    switchToListView: 'Switch to list view',
+    switchToGridView: 'Switch to grid view',
 
     dropzoneLabel: 'Drop files here or press Enter to browse',
 
@@ -38,6 +40,7 @@ export const ar_SA: Translations = {
     uploadFiles_other: 'رفع {{count}} ملفات',
     resumeUpload: 'Resume Upload',
     retryUpload: 'Retry Upload',
+    pauseUpload: 'Pause upload',
 
     removeFile: 'إزالة الملف',
     clickToPreview: 'انقر للمعاينة',
