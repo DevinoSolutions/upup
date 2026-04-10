@@ -9,6 +9,7 @@ export const fr_FR: Translations = {
     googleDrive: 'Google Drive',
     oneDrive: 'OneDrive',
     dropbox: 'Dropbox',
+    box: 'Box',
     link: 'Lien',
     camera: 'Caméra',
     audio: 'Audio',
@@ -104,6 +105,12 @@ export const fr_FR: Translations = {
     uploadFailedWithCode:
         "Le téléchargement a échoué avec le code d'erreur : {{code}}",
     uploadFailed: 'Échec du téléchargement : {{message}}',
+
+    // Box-specific
+    boxClientIdMissing: 'ClientId Box manquant',
+    boxAuthFailed: "Échec de l'authentification Box",
+    boxSessionExpired: 'Votre session Box a expiré. Veuillez vous ré-authentifier pour continuer.',
+    boxNoAccessToken: "Jeton d'accès Box manquant",
 
     // Dropbox-specific
     dropboxSessionExpired:

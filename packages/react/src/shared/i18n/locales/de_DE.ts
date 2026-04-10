@@ -9,6 +9,7 @@ export const de_DE: Translations = {
     googleDrive: 'Google Drive',
     oneDrive: 'OneDrive',
     dropbox: 'Dropbox',
+    box: 'Box',
     link: 'Link',
     camera: 'Kamera',
     audio: 'Audio',
@@ -101,6 +102,12 @@ export const de_DE: Translations = {
         'Erstellung der signierten Upload-URL fehlgeschlagen',
     uploadFailedWithCode: 'Upload fehlgeschlagen mit Fehlercode: {{code}}',
     uploadFailed: 'Upload fehlgeschlagen: {{message}}',
+
+    // Box-specific
+    boxClientIdMissing: 'Box Client-ID fehlt',
+    boxAuthFailed: 'Box-Authentifizierung fehlgeschlagen',
+    boxSessionExpired: 'Ihre Box-Sitzung ist abgelaufen. Bitte authentifizieren Sie sich erneut.',
+    boxNoAccessToken: 'Kein Box-Zugriffstoken vorhanden',
 
     // Dropbox-specific
     dropboxSessionExpired:

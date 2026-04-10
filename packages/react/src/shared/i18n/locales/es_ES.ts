@@ -9,6 +9,7 @@ export const es_ES: Translations = {
     googleDrive: 'Google Drive',
     oneDrive: 'OneDrive',
     dropbox: 'Dropbox',
+    box: 'Box',
     link: 'Enlace',
     camera: 'Cámara',
     audio: 'Audio',
@@ -101,6 +102,12 @@ export const es_ES: Translations = {
     signedUrlGenerationFailed: 'Error al generar la URL firmada de subida',
     uploadFailedWithCode: 'La subida falló con el código de error: {{code}}',
     uploadFailed: 'La subida falló: {{message}}',
+
+    // Box-specific
+    boxClientIdMissing: 'Falta el clientId de Box',
+    boxAuthFailed: 'Falló la autenticación de Box',
+    boxSessionExpired: 'Tu sesión de Box ha expirado. Por favor, vuelve a autenticarte para continuar.',
+    boxNoAccessToken: 'Falta el token de acceso de Box',
 
     // Dropbox-specific
     dropboxSessionExpired:

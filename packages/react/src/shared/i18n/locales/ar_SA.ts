@@ -9,6 +9,7 @@ export const ar_SA: Translations = {
     googleDrive: 'Google Drive',
     oneDrive: 'OneDrive',
     dropbox: 'Dropbox',
+    box: 'Box',
     link: 'رابط',
     camera: 'الكاميرا',
     audio: 'Audio',
@@ -101,6 +102,12 @@ export const ar_SA: Translations = {
     signedUrlGenerationFailed: 'فشل إنشاء رابط الرفع الموقع',
     uploadFailedWithCode: 'فشل الرفع برمز الخطأ: {{code}}',
     uploadFailed: 'فشل الرفع: {{message}}',
+
+    // Box-specific
+    boxClientIdMissing: 'معرف عميل Box مفقود',
+    boxAuthFailed: 'فشل مصادقة Box',
+    boxSessionExpired: 'انتهت جلسة Box. يرجى إعادة المصادقة للمتابعة.',
+    boxNoAccessToken: 'رمز الوصول إلى Box مفقود',
 
     // Dropbox-specific
     dropboxSessionExpired:

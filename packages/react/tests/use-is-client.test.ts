@@ -69,10 +69,10 @@ describe('UploadAdapter enum', () => {
         expect(UploadAdapter.SCREEN).toBeDefined()
     })
 
-    it('has 8 distinct adapter values', () => {
+    it('has 9 distinct adapter values', () => {
         const values = Object.values(UploadAdapter)
         const unique = new Set(values)
-        expect(unique.size).toBe(8)
+        expect(unique.size).toBe(9)
     })
 
     it('all adapter values are non-empty strings', () => {

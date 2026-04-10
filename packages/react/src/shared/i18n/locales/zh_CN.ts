@@ -9,6 +9,7 @@ export const zh_CN: Translations = {
     googleDrive: 'Google Drive',
     oneDrive: 'OneDrive',
     dropbox: 'Dropbox',
+    box: 'Box',
     link: '链接',
     camera: '相机',
     audio: 'Audio',
@@ -97,6 +98,12 @@ export const zh_CN: Translations = {
     signedUrlGenerationFailed: '生成签名上传 URL 失败',
     uploadFailedWithCode: '上传失败，错误代码：{{code}}',
     uploadFailed: '上传失败：{{message}}',
+
+    // Box-specific
+    boxClientIdMissing: '缺少 Box clientId',
+    boxAuthFailed: 'Box 认证失败',
+    boxSessionExpired: 'Box 会话已过期，请重新认证以继续。',
+    boxNoAccessToken: '缺少 Box 访问令牌',
 
     // Dropbox-specific
     dropboxSessionExpired: '您的 Dropbox 会话已过期。请重新验证以继续。',

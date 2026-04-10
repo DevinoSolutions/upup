@@ -15,6 +15,7 @@ export type Translations = {
     googleDrive: string
     oneDrive: string
     dropbox: string
+    box: string
     link: string
     camera: string
     audio: string
@@ -152,6 +153,10 @@ export type Translations = {
     popupBlocked: string
     dropboxClientIdMissing: string
     dropboxAuthFailed: string
+    boxClientIdMissing: string
+    boxAuthFailed: string
+    boxSessionExpired: string
+    boxNoAccessToken: string
     genericErrorDetails: string
     errorProcessingFiles: string
     errorSelectingFolder: string

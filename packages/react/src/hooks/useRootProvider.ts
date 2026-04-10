@@ -147,6 +147,7 @@ export default function useRootProvider({
         google_drive: UploadAdapter.GOOGLE_DRIVE,
         onedrive: UploadAdapter.ONE_DRIVE,
         dropbox: UploadAdapter.DROPBOX,
+        box: UploadAdapter.BOX,
         microphone: UploadAdapter.AUDIO,
         screen: UploadAdapter.SCREEN,
     }
@@ -184,6 +185,10 @@ export default function useRootProvider({
             dropbox_client_id: cloudDrives.dropbox.clientId,
             dropbox_redirect_uri: cloudDrives.dropbox.redirectUri,
         } : undefined,
+        box: cloudDrives.box ? {
+            box_client_id: cloudDrives.box.clientId,
+            box_redirect_uri: cloudDrives.box.redirectUri,
+        } : undefined,
     } : undefined)
 
     // v2: UpupCore instance — coexists with v1 engine, available via context.core
@@ -206,6 +211,7 @@ export default function useRootProvider({
             googleDriveConfigs: driveConfigs?.googleDrive as Record<string, unknown> | undefined,
             oneDriveConfigs: driveConfigs?.oneDrive as Record<string, unknown> | undefined,
             dropboxConfigs: driveConfigs?.dropbox as Record<string, unknown> | undefined,
+            boxConfigs: driveConfigs?.box as Record<string, unknown> | undefined,
         })
     }
 

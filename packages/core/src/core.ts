@@ -63,6 +63,7 @@ export interface CoreOptions extends FileManagerOptions {
   googleDriveConfigs?: Record<string, unknown>
   oneDriveConfigs?: Record<string, unknown>
   dropboxConfigs?: Record<string, unknown>
+  boxConfigs?: Record<string, unknown>
   driveConfigs?: Record<string, unknown>
   meta?: Record<string, unknown>
   locale?: unknown

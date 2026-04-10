@@ -1,10 +1,12 @@
 import type { Translations } from '../shared/i18n/types'
 import { UploadAdapter } from '../shared/types'
+import BoxUploader from '../components/BoxUploader'
 import CameraUploader from '../components/CameraUploader'
 import DropboxUploader from '../components/DropboxUploader'
 import GoogleDriveUploader from '../components/GoogleDriveUploader'
 import {
     AudioIcon,
+    BoxIcon,
     CameraIcon,
     DropBoxIcon,
     GoogleDriveIcon,
@@ -22,6 +24,7 @@ export const adapterNameKeys: Record<UploadAdapter, keyof Translations> = {
     [UploadAdapter.GOOGLE_DRIVE]: 'googleDrive',
     [UploadAdapter.ONE_DRIVE]: 'oneDrive',
     [UploadAdapter.DROPBOX]: 'dropbox',
+    [UploadAdapter.BOX]: 'box',
     [UploadAdapter.LINK]: 'link',
     [UploadAdapter.CAMERA]: 'camera',
     [UploadAdapter.AUDIO]: 'audio',
@@ -52,6 +55,12 @@ export const uploadAdapterObject = {
         nameKey: 'dropbox' as keyof Translations,
         Icon: DropBoxIcon,
         Component: DropboxUploader,
+    },
+    [UploadAdapter.BOX]: {
+        id: UploadAdapter.BOX,
+        nameKey: 'box' as keyof Translations,
+        Icon: BoxIcon,
+        Component: BoxUploader,
     },
     [UploadAdapter.LINK]: {
         id: UploadAdapter.LINK,

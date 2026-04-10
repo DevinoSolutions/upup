@@ -9,6 +9,7 @@ export const ko_KR: Translations = {
     googleDrive: 'Google Drive',
     oneDrive: 'OneDrive',
     dropbox: 'Dropbox',
+    box: 'Box',
     link: '링크',
     camera: '카메라',
     audio: 'Audio',
@@ -99,6 +100,12 @@ export const ko_KR: Translations = {
     signedUrlGenerationFailed: '서명된 업로드 URL 생성에 실패했습니다',
     uploadFailedWithCode: '오류 코드로 업로드 실패: {{code}}',
     uploadFailed: '업로드 실패: {{message}}',
+
+    // Box-specific
+    boxClientIdMissing: 'Box clientId가 없습니다',
+    boxAuthFailed: 'Box 인증에 실패했습니다',
+    boxSessionExpired: 'Box 세션이 만료되었습니다. 다시 인증해 주세요.',
+    boxNoAccessToken: 'Box 액세스 토큰이 없습니다',
 
     // Dropbox-specific
     dropboxSessionExpired:

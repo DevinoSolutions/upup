@@ -9,6 +9,7 @@ export const ja_JP: Translations = {
     googleDrive: 'Google Drive',
     oneDrive: 'OneDrive',
     dropbox: 'Dropbox',
+    box: 'Box',
     link: 'リンク',
     camera: 'カメラ',
     audio: 'Audio',
@@ -101,6 +102,12 @@ export const ja_JP: Translations = {
     signedUrlGenerationFailed: '署名付きアップロードURLの生成に失敗しました',
     uploadFailedWithCode: 'エラーコードでアップロードに失敗しました：{{code}}',
     uploadFailed: 'アップロードに失敗しました：{{message}}',
+
+    // Box-specific
+    boxClientIdMissing: 'Box の clientId がありません',
+    boxAuthFailed: 'Box 認証に失敗しました',
+    boxSessionExpired: 'Box セッションが期限切れです。再認証してください。',
+    boxNoAccessToken: 'Box アクセストークンがありません',
 
     // Dropbox-specific
     dropboxSessionExpired:

@@ -7,6 +7,7 @@ import {
 } from 'react'
 import type { UpupCore } from '@upup/core'
 import {
+    BoxConfigs,
     DropboxConfigs,
     FileWithParams,
     GoogleDriveConfigs,
@@ -117,6 +118,7 @@ export interface IRootContext {
     oneDriveConfigs?: OneDriveConfigs
     googleDriveConfigs?: GoogleDriveConfigs
     dropboxConfigs?: DropboxConfigs
+    boxConfigs?: BoxConfigs
     upload: ContextUpload
     props: ContextProps
 }
