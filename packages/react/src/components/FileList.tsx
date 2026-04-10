@@ -1,6 +1,7 @@
 'use client'
+import { useVirtualizer } from '@tanstack/react-virtual'
 import { motion } from 'framer-motion'
-import React, { memo } from 'react'
+import React, { memo, useRef } from 'react'
 import { TbPlayerPauseFilled, TbPlayerPlayFilled } from 'react-icons/tb'
 import { plural, t } from '../shared/i18n'
 import { UploadStatus, useRootContext } from '../context/RootContext'
@@ -10,6 +11,9 @@ import MainBoxHeader from './shared/MainBoxHeader'
 import MyAnimatePresence from './shared/MyAnimatePresence'
 import ProgressBar from './shared/ProgressBar'
 import ShouldRender from './shared/ShouldRender'
+
+const VIRTUAL_SCROLL_THRESHOLD = 20
+const ESTIMATED_ITEM_HEIGHT = 76 // px — approximate FileItem row height
 
 function formatBytes(bytes: number): string {
     if (bytes === 0) return '0 B'
@@ -50,6 +54,25 @@ export default memo(function FileList() {
         viewMode,
     } = useRootContext()
 
+    const scrollRef = useRef<HTMLDivElement>(null)
+
+    const sortedFiles = Array.from(files.values()).sort((a, b) => {
+        const pa = (a as any).relativePath || (a as any).webkitRelativePath || a.name
+        const pb = (b as any).relativePath || (b as any).webkitRelativePath || b.name
+        return pa.localeCompare(pb) || a.name.localeCompare(b.name)
+    })
+
+    // Virtual scrolling only for list mode with many files
+    const shouldVirtualize = sortedFiles.length >= VIRTUAL_SCROLL_THRESHOLD && viewMode !== 'grid'
+
+    const virtualizer = useVirtualizer({
+        count: sortedFiles.length,
+        getScrollElement: () => scrollRef.current,
+        estimateSize: () => ESTIMATED_ITEM_HEIGHT,
+        overscan: 5,
+        enabled: shouldVirtualize,
+    })
+
     return (
         <div
             data-testid="upup-file-list"
@@ -65,51 +88,62 @@ export default memo(function FileList() {
 
             <MyAnimatePresence>
                 <motion.div
+                    ref={scrollRef}
                     className={cn(
                         'upup-preview-scroll upup-flex upup-flex-1 upup-flex-col upup-overflow-y-auto upup-bg-black/[0.075] upup-p-3',
                         { 'upup-bg-white/10 dark:upup-bg-white/10': dark },
                         classNames.fileListContainer,
                     )}
                 >
-                    <div
-                        className={cn(
-                            // Always-on classes
-                            ` ${
-                                isProcessing &&
-                                'upup-pointer-events-none upup-opacity-75'
-                            }  upup-flex upup-flex-col upup-gap-3 upup-font-[Arial,Helvetica,sans-serif]`,
-                            {
-                                'md:upup-grid md:upup-gap-y-6': files.size > 1 && viewMode === 'grid',
-                                'md:upup-grid-cols-2': files.size > 1 && viewMode === 'grid',
-                                'upup-flex-1': files.size === 1,
-                                [classNames.fileListContainerInnerMultiple!]:
-                                    classNames.fileListContainerInnerMultiple &&
-                                    files.size > 1,
-                                [classNames.fileListContainerInnerSingle!]:
-                                    classNames.fileListContainerInnerSingle &&
-                                    files.size === 1,
-                            },
-                        )}
-                    >
-                        {Array.from(files.values())
-                            .sort((a: any, b: any) => {
-                                const pa: string =
-                                    (a as any).relativePath ||
-                                    (a as any).webkitRelativePath ||
-                                    a.name
-                                const pb: string =
-                                    (b as any).relativePath ||
-                                    (b as any).webkitRelativePath ||
-                                    b.name
-                                return (
-                                    pa.localeCompare(pb) ||
-                                    a.name.localeCompare(b.name)
-                                )
-                            })
-                            .map(file => (
+                    {shouldVirtualize ? (
+                        // Virtualized list: only renders visible FileItems
+                        <div
+                            data-upup-slot="file-list-virtual"
+                            style={{ height: virtualizer.getTotalSize(), position: 'relative' }}
+                            className={cn(
+                                isProcessing && 'upup-pointer-events-none upup-opacity-75',
+                                'upup-font-[Arial,Helvetica,sans-serif]',
+                            )}
+                        >
+                            {virtualizer.getVirtualItems().map(virtualItem => (
+                                <div
+                                    key={virtualItem.key}
+                                    data-index={virtualItem.index}
+                                    ref={virtualizer.measureElement}
+                                    style={{
+                                        position: 'absolute',
+                                        top: 0,
+                                        left: 0,
+                                        width: '100%',
+                                        transform: `translateY(${virtualItem.start}px)`,
+                                        paddingBottom: 12,
+                                    }}
+                                >
+                                    <FileItem file={sortedFiles[virtualItem.index]} />
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        // Standard rendering for small lists and grid mode
+                        <div
+                            className={cn(
+                                `${isProcessing && 'upup-pointer-events-none upup-opacity-75'} upup-flex upup-flex-col upup-gap-3 upup-font-[Arial,Helvetica,sans-serif]`,
+                                {
+                                    'md:upup-grid md:upup-gap-y-6': files.size > 1 && viewMode === 'grid',
+                                    'md:upup-grid-cols-2': files.size > 1 && viewMode === 'grid',
+                                    'upup-flex-1': files.size === 1,
+                                    [classNames.fileListContainerInnerMultiple!]:
+                                        classNames.fileListContainerInnerMultiple && files.size > 1,
+                                    [classNames.fileListContainerInnerSingle!]:
+                                        classNames.fileListContainerInnerSingle && files.size === 1,
+                                },
+                            )}
+                        >
+                            {sortedFiles.map(file => (
                                 <FileItem key={file.id} file={file} />
                             ))}
-                    </div>
+                        </div>
+                    )}
                 </motion.div>
             </MyAnimatePresence>
             <div
