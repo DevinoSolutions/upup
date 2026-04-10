@@ -178,6 +178,7 @@ export default memo(function FilePreview(props: Props) {
                     type="button"
                     disabled={!!progress}
                     aria-label={tr.removeFile}
+                    data-testid="upup-file-remove"
                 >
                     <FileDeleteIcon className="upup-h-3 upup-w-3" />
                 </button>

@@ -87,13 +87,13 @@ describe('ProviderSDK.validateConfig() — invalid provider', () => {
 // Invalid tokenEndpoint URL
 // ─────────────────────────────────────────────
 describe('ProviderSDK.validateConfig() — invalid tokenEndpoint', () => {
-    it('throws for a relative path', () => {
+    it('accepts a relative path starting with /', () => {
         expect(() =>
             new ProviderSDK(makeConfig({ tokenEndpoint: '/api/token' })),
-        ).toThrow()
+        ).not.toThrow()
     })
 
-    it('throws for a plain string with no protocol', () => {
+    it('throws for a plain string with no protocol or leading slash', () => {
         expect(() =>
             new ProviderSDK(makeConfig({ tokenEndpoint: 'not-a-url' })),
         ).toThrow()

@@ -1,5 +1,5 @@
 import React, { forwardRef, HTMLAttributes } from 'react'
-import { useRootContext } from '../../context/RootContext'
+import { useRootContext, UploadStatus } from '../../context/RootContext'
 import { cn } from '../../lib/tailwind'
 import ShouldRender from './ShouldRender'
 
@@ -16,9 +16,10 @@ export default forwardRef<HTMLDivElement, Props>(function ProgressBar(
     const {
         props: { classNames, dark },
         translations: tr,
+        upload: { uploadStatus },
     } = useRootContext()
     return (
-        <ShouldRender if={!!progress}>
+        <ShouldRender if={!!progress || uploadStatus === UploadStatus.ONGOING}>
             <div data-testid="upup-progress-bar"
                 data-upup-slot="progress-bar"
                 ref={ref}

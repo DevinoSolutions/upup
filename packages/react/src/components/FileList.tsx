@@ -129,6 +129,7 @@ export default memo(function FileList() {
                     }
                 >
                     <button
+                        data-testid="upup-upload-btn"
                         className={cn(
                             'upup-disabled:animate-pulse upup-ml-auto upup-rounded-full upup-bg-blue-600 upup-px-4 upup-py-2 upup-text-sm upup-font-medium upup-text-white',
                             {

@@ -157,7 +157,7 @@ export default function useRootProvider({
     // imageCompression → shouldCompress alias
     const shouldCompress = imageCompression || shouldCompressProp
     // restrictions → flat props mapping (restrictions takes precedence)
-    const maxFileSize = maxFileSizeProp ?? restrictions?.maxFileSize ?? 1073741824 // 1 GB default
+    const maxFileSize = maxFileSizeProp ?? restrictions?.maxFileSize ?? { size: 1, unit: 'GB' as const } // 1 GB default
     const minFileSize = minFileSizeProp ?? restrictions?.minFileSize
     const maxTotalFileSize = maxTotalFileSizeProp ?? restrictions?.maxTotalFileSize
     const accept = restrictions?.allowedFileTypes ? restrictions.allowedFileTypes.join(',') : acceptProp

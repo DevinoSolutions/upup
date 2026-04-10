@@ -623,14 +623,18 @@ export class ProviderSDK implements StorageSDK {
             )
         }
 
-        // Validate tokenEndpoint format
-        try {
-            new URL(this.config.tokenEndpoint)
-        } catch (e) {
+        // Validate tokenEndpoint format: must be a relative path (starts with /)
+        // or an absolute URL (http:// / https://)
+        const endpoint = this.config.tokenEndpoint
+        const isRelative = endpoint.startsWith('/')
+        const isAbsolute = (() => {
+            try { new URL(endpoint); return true } catch { return false }
+        })()
+        if (!isRelative && !isAbsolute) {
             throw new UploadError(
                 t(this.translations.invalidTokenEndpoint, {
-                    tokenEndpoint: String(this.config.tokenEndpoint),
-                    error: String(e),
+                    tokenEndpoint: endpoint,
+                    error: 'must be a relative path starting with / or an absolute URL',
                 }),
                 UploadErrorType.CORS_CONFIG_ERROR,
             )

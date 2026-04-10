@@ -114,6 +114,11 @@ export default function useMainBox() {
                         .map(traverse),
                 )
                 droppedFiles = filesArrays.flat()
+                // Fallback: webkitGetAsEntry returns null for programmatic DataTransfer
+                // (e.g. in tests), so fall through to dt.files if we got nothing
+                if (droppedFiles.length === 0) {
+                    droppedFiles = Array.from(dt.files)
+                }
             } else if ('getAsFileSystemHandle' in (items[0] || ({} as any))) {
                 // Newer FS Access API (optional; broad browser support not guaranteed)
                 const traverseHandle = async (

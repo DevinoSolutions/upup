@@ -12,7 +12,9 @@ vi.mock('../src/context/RootContext', () => ({
       icons: { LoaderIcon: () => null },
     },
     translations: { uploadProgress: 'Upload progress' },
+    upload: { uploadStatus: 'PENDING' },
   }),
+  UploadStatus: { ONGOING: 'ONGOING' },
 }))
 
 // Import after mock is set up

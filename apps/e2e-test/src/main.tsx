@@ -32,7 +32,22 @@ function HeadlessDemo() {
   )
 }
 
+/** Restrictions scenario — loaded via /?scenario=restrictions */
+function RestrictionsDemo() {
+  return (
+    <UpupUploader
+      uploadEndpoint="/api/upload"
+      accept="image/*"
+      limit={2}
+      maxFileSize={{ size: 50, unit: 'KB' }}
+      minFileSize={{ size: 1, unit: 'KB' }}
+      onRestrictionFailed={(file, reason) => console.log('Rejected:', file.name, reason)}
+    />
+  )
+}
+
 function App() {
+  const scenario = new URLSearchParams(window.location.search).get('scenario')
   const [tab, setTab] = useState<'dark' | 'light' | 'headless'>('dark')
 
   const tabStyle = (t: string) => ({
@@ -43,6 +58,14 @@ function App() {
     borderRadius: 6,
     cursor: 'pointer' as const,
   })
+
+  if (scenario === 'restrictions') {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0a0a1a', padding: 40 }}>
+        <RestrictionsDemo />
+      </div>
+    )
+  }
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#0a0a1a', padding: 40, gap: 24 }}>
@@ -63,6 +86,7 @@ function App() {
           theme={{ mode: tab }}
           maxFileSize={{ size: 999, unit: 'MB' }}
           minFileSize={{ size: 1, unit: 'KB' }}
+          thumbnailGenerator={false}
           enablePaste
           onRestrictionFailed={(file, reason) => console.log('Rejected:', file.name, reason)}
           onFilesUploadComplete={(files) => console.log('Upload complete:', files.length, 'files')}
