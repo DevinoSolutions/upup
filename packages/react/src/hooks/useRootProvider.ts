@@ -36,6 +36,7 @@ import {
 } from '../lib/resumable/multipartSessionStore'
 import { ProviderSDK } from '../lib/storage/provider'
 import { UploadResult } from '../types/StorageSDK'
+import { useSSEProcessing } from './useSSEProcessing'
 
 type FileProgress = {
     id: string
@@ -133,6 +134,9 @@ export default function useRootProvider({
     enableAutoCorsConfig = false,
     maxRetries,
     resumable,
+    processingEndpoint,
+    onFileProcessed,
+    processingTimeout,
 }: UpupUploaderProps): IRootContext {
     // ── v2 DX aliases ────────────────────────────────────────
     // sources → uploadAdapters mapping
@@ -204,6 +208,8 @@ export default function useRootProvider({
             dropboxConfigs: driveConfigs?.dropbox as Record<string, unknown> | undefined,
         })
     }
+
+    const { connectSSE } = useSSEProcessing({ processingEndpoint, onFileProcessed, processingTimeout })
 
     const inputRef = useRef<HTMLInputElement>(null)
     const [isAddingMore, setIsAddingMore] = useState(false)
@@ -1036,6 +1042,10 @@ export default function useRootProvider({
                 )
                 const finalFiles = uploadResults.map((result: any) => result.file)
                 if (sendEvent) onFilesUploadComplete(finalFiles)
+
+                // v2: SSE processing — open a server-sent event connection per file
+                // if `processingEndpoint` is configured (e.g. for post-upload transcoding)
+                finalFiles.forEach(connectSSE)
 
                 // v2: bridge to UpupCore event system
                 if (coreRef.current) {

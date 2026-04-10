@@ -353,6 +353,14 @@ export type UpupUploaderProps = {
     onBeforeFileAdded?: (file: File) => boolean | File | undefined | Promise<boolean | File | undefined>
     onError?: (errorMessage: string) => void
     onWarn?: (warningMessage: string) => void
+    /** v2: After each file upload, open an SSE connection to this endpoint.
+     *  The storage key is appended as ?key=... so the server can identify the file.
+     *  Use this to wait for server-side processing (virus scan, transcoding, etc.). */
+    processingEndpoint?: string
+    /** v2: Called when the server sends a processing-complete SSE event for a file. */
+    onFileProcessed?: (file: FileWithParams, data: Record<string, unknown>) => void
+    /** v2: Max milliseconds to wait for the server SSE event before closing. Default 60000. */
+    processingTimeout?: number
 }
 
 export type PresignedUrlResponse = {
