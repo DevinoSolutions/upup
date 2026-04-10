@@ -17,6 +17,7 @@ export default forwardRef<HTMLDivElement, Props>(function ProgressBar(
         props: { classNames, dark },
         translations: tr,
         upload: { uploadStatus },
+        themeSlots,
     } = useRootContext()
     return (
         <ShouldRender if={!!progress || uploadStatus === UploadStatus.ONGOING}>
@@ -32,6 +33,7 @@ export default forwardRef<HTMLDivElement, Props>(function ProgressBar(
                     'upup-flex upup-items-center upup-gap-2',
                     className,
                     classNames.progressBarContainer,
+                    themeSlots?.progressBar?.root,
                 )}
                 {...rest}
             >
@@ -40,6 +42,7 @@ export default forwardRef<HTMLDivElement, Props>(function ProgressBar(
                         'upup-h-[6px] upup-flex-1 upup-overflow-hidden upup-rounded-[4px] upup-bg-[#F5F5F5]',
                         progressBarClassName,
                         classNames.progressBar,
+                        themeSlots?.progressBar?.track,
                     )}
                 >
                     <div
@@ -49,6 +52,7 @@ export default forwardRef<HTMLDivElement, Props>(function ProgressBar(
                         className={cn(
                             'upup-h-full upup-bg-[#8EA5E7]',
                             classNames.progressBarInner,
+                            themeSlots?.progressBar?.fill,
                         )}
                     />
                 </div>
@@ -60,6 +64,7 @@ export default forwardRef<HTMLDivElement, Props>(function ProgressBar(
                                 'upup-text-white': dark,
                             },
                             classNames.progressBarText,
+                            themeSlots?.progressBar?.text,
                         )}
                     >
                         {progress}%

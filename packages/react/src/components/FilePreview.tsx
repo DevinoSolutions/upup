@@ -53,6 +53,7 @@ export default memo(function FilePreview(props: Props) {
             imageEditor,
         },
         files,
+        themeSlots,
     } = useRootContext()
 
     const isImage = useMemo(() => fileGetIsImage(fileType), [fileType])
@@ -104,7 +105,7 @@ export default memo(function FilePreview(props: Props) {
     }
 
     return (
-        <div className="upup-inline-block" data-testid="upup-file-preview" data-upup-slot="file-preview" {...restProps}>
+        <div className={cn('upup-inline-block', themeSlots?.filePreview?.root)} data-testid="upup-file-preview" data-upup-slot="file-preview" {...restProps}>
             <div
                 className={cn(
                     'upup-relative upup-h-[145px] upup-w-[145px] upup-overflow-hidden upup-rounded-lg upup-bg-white upup-shadow-sm',

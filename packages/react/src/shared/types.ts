@@ -234,7 +234,8 @@ export type UpupUploaderProps = {
     theme?: {
         mode?: 'light' | 'dark'
         tokens?: Record<string, unknown>
-        slots?: Record<string, unknown>
+        /** Per-slot className overrides — merged additively on top of built-in classes */
+        slots?: import('@upup/shared').UpupThemeSlots
     }
 
     // ── v1 Props (still supported) ───────────────────────────

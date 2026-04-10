@@ -52,6 +52,7 @@ export default memo(function FileList() {
         handlePause,
         handleResume,
         viewMode,
+        themeSlots,
     } = useRootContext()
 
     const scrollRef = useRef<HTMLDivElement>(null)
@@ -82,6 +83,7 @@ export default memo(function FileList() {
                 {
                     'upup-hidden': isAddingMore || activeAdapter || !files.size,
                 },
+                themeSlots?.fileList?.root,
             )}
         >
             <MainBoxHeader handleCancel={handleCancel} />

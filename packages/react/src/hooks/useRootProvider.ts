@@ -160,6 +160,8 @@ export default function useRootProvider({
     const resolvedEndpoint = tokenEndpoint ?? uploadEndpoint ?? (resolvedServerUrl ? `${resolvedServerUrl}/presign` : '')
     // theme.mode → dark mapping (theme takes precedence over dark prop)
     const dark = theme?.mode ? theme.mode === 'dark' : darkProp
+    // theme.slots → per-slot className overrides passed through context
+    const themeSlots = theme?.slots
     // imageCompression → shouldCompress alias
     const shouldCompress = imageCompression || shouldCompressProp
     // restrictions → flat props mapping (restrictions takes precedence)
@@ -1174,6 +1176,7 @@ export default function useRootProvider({
         translator,
         lang,
         dir,
+        themeSlots,
         files: selectedFilesMap,
         setFiles: handleSetSelectedFiles,
         dynamicUpload,
