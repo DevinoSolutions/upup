@@ -310,6 +310,12 @@ export type UpupUploaderProps = {
     /** v2: i18n configuration. Accepts a locale pack or per-key overrides. */
     i18n?: {
         /**
+         * ICU-enabled locale bundle from `@upup/shared/i18n` (e.g. `import { enUS } from '@upup/shared'`).
+         * When provided, enables ICU pluralization, namespaced key overrides, and runtime locale switching.
+         * Takes precedence over `locale`.
+         */
+        bundle?: import('@upup/shared').LocaleBundle
+        /**
          * Full locale pack (e.g. import { fr_FR } from '@upup/react/locales'),
          * or a BCP-47 locale code string (e.g. 'ar-SA') for lang/dir only.
          */

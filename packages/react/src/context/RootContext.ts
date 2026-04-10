@@ -84,6 +84,8 @@ export interface IRootContext {
     setActiveAdapter: Dispatch<SetStateAction<UploadAdapter | undefined>>
 
     translations: Translations
+    /** ICU-capable translator — present when `i18n.bundle` is supplied */
+    translator?: import('@upup/shared').Translator
     lang: string
     dir: 'ltr' | 'rtl'
 

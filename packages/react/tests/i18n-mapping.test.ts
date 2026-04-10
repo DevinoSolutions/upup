@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { en_US, mergeTranslations } from '../src/shared/i18n'
+import { createTranslator, enUS as enUSBundle } from '@upup/shared'
 import type { Translations } from '../src/shared/i18n/types'
 
 describe('i18n prop resolution', () => {
@@ -61,5 +62,37 @@ describe('i18n prop resolution', () => {
     const resolvedOverrides = i18n.overrides ?? translationOverrides
     const result = mergeTranslations(en_US, resolvedOverrides)
     expect(result.cancel).toBe('From translations prop')
+  })
+})
+
+describe('i18n.bundle (LocaleBundle) bridge', () => {
+  it('createTranslator works with enUS bundle', () => {
+    const t = createTranslator({ bundle: enUSBundle })
+    expect(t('common.cancel')).toBe('Cancel')
+    expect(t('common.done')).toBe('Done')
+  })
+
+  it('createTranslator supports ICU pluralization', () => {
+    const t = createTranslator({ bundle: enUSBundle })
+    const singular = t('dropzone.dragFilesOr', { count: 1 })
+    const plural = t('dropzone.dragFilesOr', { count: 2 })
+    expect(singular).toContain('file')
+    expect(plural).toContain('files')
+    expect(singular).not.toBe(plural)
+  })
+
+  it('bundle lang/dir are surfaced correctly', () => {
+    expect(enUSBundle.code).toBe('en-US')
+    expect(enUSBundle.dir).toBe('ltr')
+  })
+
+  it('bundle takes precedence over locale string for lang/dir', () => {
+    // Simulates useRootProvider logic: bundle?.code ?? i18nLocale (string)
+    const bundle = enUSBundle
+    const i18nLocale = 'ar-SA'
+    const lang = bundle?.code ?? i18nLocale
+    const dir = bundle?.dir ?? 'rtl'
+    expect(lang).toBe('en-US')
+    expect(dir).toBe('ltr')
   })
 })

@@ -1,7 +1,8 @@
 'use client'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { UpupCore } from '@upup/core'
-import { UploadStatus as CoreUploadStatus } from '@upup/shared'
+import { UploadStatus as CoreUploadStatus, createTranslator } from '@upup/shared'
+import type { Translator } from '@upup/shared'
 import {
     TbCameraRotate,
     TbCapture,
@@ -404,7 +405,8 @@ export default function useRootProvider({
     const multiple = useMemo(() => (mini ? false : limit > 1), [limit, mini])
 
     // i18n prop takes precedence over localePack/translations
-    // i18n.locale may be a Translations object or a BCP-47 string code (e.g. 'ar-SA')
+    // i18n.bundle (LocaleBundle) takes precedence over i18n.locale
+    const bundle = i18n?.bundle
     const i18nLocale = i18n?.locale
     const resolvedLocale = (typeof i18nLocale === 'object' ? i18nLocale : undefined) ?? localePack ?? en_US
     const resolvedOverrides = i18n?.overrides ?? translationOverrides
@@ -413,10 +415,15 @@ export default function useRootProvider({
         [resolvedLocale, resolvedOverrides],
     )
 
-    // RTL support: derive lang/dir from the locale
-    // If i18n.locale is a string code (e.g. 'ar-SA'), use it directly; otherwise default to 'en-US'
-    const lang = typeof i18nLocale === 'string' ? i18nLocale : 'en-US'
-    const dir: 'ltr' | 'rtl' = getDir(i18nLocale)
+    // ICU translator — created when i18n.bundle is provided
+    const translator = useMemo<Translator | undefined>(
+        () => (bundle ? createTranslator({ bundle }) : undefined),
+        [bundle],
+    )
+
+    // RTL support: bundle.code/dir take precedence; fall back to i18n.locale string; default 'en-US'
+    const lang = bundle?.code ?? (typeof i18nLocale === 'string' ? i18nLocale : 'en-US')
+    const dir: 'ltr' | 'rtl' = bundle?.dir ?? getDir(i18nLocale)
 
     // v2: emit locale-change event when resolved translations change
     useEffect(() => {
@@ -1164,6 +1171,7 @@ export default function useRootProvider({
         setViewMode,
         isOnline,
         translations,
+        translator,
         lang,
         dir,
         files: selectedFilesMap,
