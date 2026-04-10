@@ -13,6 +13,7 @@ import { t } from '../shared/i18n'
 import { useRootContext } from '../context/RootContext'
 import {
     fileGetIsImage,
+    fileGetIsPdf,
     fileGetIsText,
     PREVIEW_MAX_TEXT_SIZE,
     PREVIEW_TEXT_TRUNCATE_LENGTH,
@@ -46,6 +47,7 @@ export default memo(
             translations: tr,
         } = useRootContext()
         const isImage = useMemo(() => fileGetIsImage(fileType), [fileType])
+        const isPdf = useMemo(() => fileGetIsPdf(fileType, fileName), [fileType, fileName])
         const isText = useMemo(
             () => fileGetIsText(fileType, fileName),
             [fileType, fileName],
@@ -155,7 +157,17 @@ export default memo(
                                     className="upup-h-full upup-w-full upup-rounded upup-object-contain"
                                 />
                             </ShouldRender>
-                            <ShouldRender if={!isImage}>
+                            <ShouldRender if={isPdf}>
+                                <embed
+                                    src={fileUrl}
+                                    type="application/pdf"
+                                    width="100%"
+                                    height="100%"
+                                    className="upup-rounded"
+                                    title={fileName}
+                                />
+                            </ShouldRender>
+                            <ShouldRender if={!isImage && !isPdf}>
                                 <ShouldRender if={isText}>
                                     <div className="upup-h-full upup-w-full upup-overflow-auto upup-p-4 upup-font-mono upup-text-xs">
                                         {textLoading && <p>{tr.loading}</p>}

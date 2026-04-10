@@ -5,6 +5,7 @@ import { UpupUploaderPropsClassNames } from '../shared/types'
 import {
     fileCanPreviewText,
     fileGetExtension,
+    fileGetIsPdf,
     fileGetIsText,
     fileIs3D,
 } from '../lib/file'
@@ -45,6 +46,11 @@ export default memo(
             return fileIs3D(extension?.toLowerCase() || '')
         }, [extension])
 
+        const isPdf = useMemo(
+            () => fileGetIsPdf(fileType, fileName),
+            [fileType, fileName],
+        )
+
         // Large text files (e.g. 3MB+ JSON) must not be rendered via <object> tags
         // as the browser will attempt to parse and lay out the entire content,
         // blocking the main thread and freezing the page.
@@ -53,7 +59,8 @@ export default memo(
             return isText && !fileCanPreviewText(fileType, fileName, fileSize)
         }, [fileType, fileName, fileSize])
 
-        if (is3D || isOversizedText) {
+        // PDFs, 3D files, and oversized text → static icon (no inline embedding)
+        if (isPdf || is3D || isOversizedText) {
             return (
                 <div className="upup-flex upup-flex-col upup-items-center upup-gap-2">
                     <FileIcon

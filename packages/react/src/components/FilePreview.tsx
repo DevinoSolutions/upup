@@ -11,7 +11,7 @@ import React, {
 
 import type { Translations } from '../shared/i18n/types'
 import { useRootContext } from '../context/RootContext'
-import { fileCanPreviewText, fileGetIsImage, fileGetIsText } from '../lib/file'
+import { fileCanPreviewText, fileGetIsImage, fileGetIsPdf, fileGetIsText } from '../lib/file'
 import { cn } from '../lib/tailwind'
 import FilePreviewThumbnail from './FilePreviewThumbnail'
 import ProgressBar from './shared/ProgressBar'
@@ -56,6 +56,7 @@ export default memo(function FilePreview(props: Props) {
     } = useRootContext()
 
     const isImage = useMemo(() => fileGetIsImage(fileType), [fileType])
+    const isPdf = useMemo(() => fileGetIsPdf(fileType, fileName), [fileType, fileName])
     const isText = useMemo(
         () => fileGetIsText(fileType, fileName),
         [fileType, fileName],
@@ -78,12 +79,10 @@ export default memo(function FilePreview(props: Props) {
     )
 
     useEffect(() => {
-        // For text files, only set canPreview if below the safe size threshold.
-        // Large text files (e.g. 3MB+ JSON) would freeze the browser if rendered
-        // via <object> tags, so they get a static icon instead.
-        if ((isImage || (isText && canPreviewText)) && !canPreview)
+        // Images and PDFs are always previewable; text only if below the safe size threshold.
+        if ((isImage || isPdf || (isText && canPreviewText)) && !canPreview)
             setCanPreview(true)
-    }, [isImage, isText, canPreviewText, canPreview, setCanPreview])
+    }, [isImage, isPdf, isText, canPreviewText, canPreview, setCanPreview])
 
     const onHandleFileRemove: MouseEventHandler<HTMLButtonElement> = e => {
         e.stopPropagation()

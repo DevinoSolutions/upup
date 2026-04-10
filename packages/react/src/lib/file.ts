@@ -126,6 +126,11 @@ export function fileGetIsImage(fileType: string) {
     return fileType.startsWith('image/')
 }
 
+export function fileGetIsPdf(fileType: string, fileName: string): boolean {
+    if (fileType === 'application/pdf') return true
+    return fileName.toLowerCase().endsWith('.pdf')
+}
+
 /**
  * Maximum file size (in bytes) for which text-based preview is allowed.
  * Files exceeding this threshold will show a static icon instead of rendering content,

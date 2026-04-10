@@ -1,5 +1,19 @@
 import { describe, it, expect } from 'vitest'
-import { bytesToSize, sizeToBytes, checkFileSize } from '../src/lib/file'
+import { bytesToSize, sizeToBytes, checkFileSize, fileGetIsPdf } from '../src/lib/file'
+
+describe('fileGetIsPdf', () => {
+  it('returns true for application/pdf MIME type', () => {
+    expect(fileGetIsPdf('application/pdf', 'doc.pdf')).toBe(true)
+  })
+  it('returns true for .pdf extension regardless of MIME type', () => {
+    expect(fileGetIsPdf('', 'report.PDF')).toBe(true)
+    expect(fileGetIsPdf('application/octet-stream', 'file.pdf')).toBe(true)
+  })
+  it('returns false for non-PDF files', () => {
+    expect(fileGetIsPdf('image/jpeg', 'photo.jpg')).toBe(false)
+    expect(fileGetIsPdf('text/plain', 'doc.txt')).toBe(false)
+  })
+})
 
 describe('bytesToSize', () => {
   it('returns "0 Byte" for 0', () => {
