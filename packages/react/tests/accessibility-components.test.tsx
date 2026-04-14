@@ -134,3 +134,13 @@ describe('axe — BoxUploader', () => {
         expect(results).toHaveNoViolations()
     })
 })
+
+describe('axe — DropboxUploader', () => {
+    it('has no violations in auth-prompt state (missing clientId)', async () => {
+        // dropbox is not in the default sources list; pass it explicitly
+        const { container } = renderUploader({ sources: ['dropbox'] })
+        await activateSource(container, 'dropbox')
+        const results = await scanSlot(container, 'dropbox-uploader')
+        expect(results).toHaveNoViolations()
+    })
+})
