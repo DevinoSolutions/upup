@@ -206,3 +206,39 @@ describe('axe — FileList', () => {
         expect(results).toHaveNoViolations()
     })
 })
+
+describe('axe — FilePreview', () => {
+    it('has no violations for a single file preview', async () => {
+        const { container } = renderUploader()
+        const input = container.querySelector(
+            '[data-testid="upup-file-input"]',
+        ) as HTMLInputElement
+
+        const file = new File(
+            [new Uint8Array(2048).fill(120)],
+            'preview.txt',
+            { type: 'text/plain' },
+        )
+
+        // userEvent.upload does not trigger onChange in jsdom; fireEvent does.
+        Object.defineProperty(input, 'files', {
+            value: [file],
+            configurable: true,
+        })
+        fireEvent.change(input)
+
+        // Wait for FileItem (and thus FilePreview) to render inside FileList
+        await waitFor(() => {
+            const p = container.querySelector('[data-upup-slot="file-preview"]')
+            if (!p) throw new Error('file-preview slot not yet rendered')
+        })
+
+        const preview = container.querySelector(
+            '[data-upup-slot="file-preview"]',
+        ) as HTMLElement
+        expect(preview).not.toBeNull()
+
+        const results = await axe(preview)
+        expect(results).toHaveNoViolations()
+    })
+})
