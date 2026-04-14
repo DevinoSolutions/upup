@@ -144,3 +144,13 @@ describe('axe — DropboxUploader', () => {
         expect(results).toHaveNoViolations()
     })
 })
+
+describe('axe — GoogleDriveUploader', () => {
+    it('has no violations in auth-prompt state (missing clientId)', async () => {
+        // google_drive is not in the default sources list; pass it explicitly
+        const { container } = renderUploader({ sources: ['google_drive'] })
+        await activateSource(container, 'google_drive')
+        const results = await scanSlot(container, 'google-drive-uploader')
+        expect(results).toHaveNoViolations()
+    })
+})
