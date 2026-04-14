@@ -100,3 +100,12 @@ describe('axe — AdapterSelector (SourceSelector)', () => {
         expect(results).toHaveNoViolations()
     })
 })
+
+describe('axe — UrlUploader', () => {
+    it('has no violations after activating Link source', async () => {
+        const { container } = renderUploader()
+        await activateSource(container, 'link')
+        const results = await scanSlot(container, 'url-uploader')
+        expect(results).toHaveNoViolations()
+    })
+})
