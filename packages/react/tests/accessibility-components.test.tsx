@@ -69,16 +69,6 @@ async function activateSource(
     await user.click(btn)
 }
 
-// Placeholder — keeps vitest from failing with "no test suite found".
-// Subsequent tasks will replace this with real describe blocks.
-describe('accessibility-components scaffold', () => {
-    it('helpers are defined', () => {
-        expect(typeof renderUploader).toBe('function')
-        expect(typeof scanSlot).toBe('function')
-        expect(typeof activateSource).toBe('function')
-    })
-})
-
 describe('axe — MainBox (DropZone)', () => {
     it('has no violations in default state', async () => {
         const { container } = renderUploader()
