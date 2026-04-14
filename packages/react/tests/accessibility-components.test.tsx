@@ -92,3 +92,11 @@ describe('axe — MainBox (DropZone)', () => {
         expect(results).toHaveNoViolations()
     })
 })
+
+describe('axe — AdapterSelector (SourceSelector)', () => {
+    it('has no violations in default state', async () => {
+        const { container } = renderUploader()
+        const results = await scanSlot(container, 'adapter-selector')
+        expect(results).toHaveNoViolations()
+    })
+})
