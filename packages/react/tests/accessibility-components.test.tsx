@@ -69,6 +69,19 @@ async function activateSource(
     await user.click(btn)
 }
 
+/**
+ * Stub file selection on an <input type="file">. `userEvent.upload()` does not
+ * trigger React's onChange in jsdom — fireEvent.change does, provided that the
+ * `files` property is first stubbed onto the element.
+ */
+function stubFileInput(input: HTMLInputElement, files: File[]) {
+    Object.defineProperty(input, 'files', {
+        value: files,
+        configurable: true,
+    })
+    fireEvent.change(input)
+}
+
 describe('axe — MainBox (DropZone)', () => {
     it('has no violations in default state', async () => {
         const { container } = renderUploader()
@@ -174,12 +187,7 @@ describe('axe — FileList', () => {
             { type: 'text/plain' },
         )
 
-        // userEvent.upload does not trigger onChange in jsdom; fireEvent does.
-        Object.defineProperty(input, 'files', {
-            value: [file1, file2],
-            configurable: true,
-        })
-        fireEvent.change(input)
+        stubFileInput(input, [file1, file2])
 
         await waitFor(() => {
             const fl = container.querySelector('[data-upup-slot="file-list"]')
@@ -210,12 +218,7 @@ describe('axe — FilePreview', () => {
             { type: 'text/plain' },
         )
 
-        // userEvent.upload does not trigger onChange in jsdom; fireEvent does.
-        Object.defineProperty(input, 'files', {
-            value: [file],
-            configurable: true,
-        })
-        fireEvent.change(input)
+        stubFileInput(input, [file])
 
         // Wait for FileItem (and thus FilePreview) to render inside FileList
         await waitFor(() => {
@@ -223,12 +226,7 @@ describe('axe — FilePreview', () => {
             if (!p) throw new Error('file-preview slot not yet rendered')
         })
 
-        const preview = container.querySelector(
-            '[data-upup-slot="file-preview"]',
-        ) as HTMLElement
-        expect(preview).not.toBeNull()
-
-        const results = await axe(preview)
+        const results = await scanSlot(container, 'file-preview')
         expect(results).toHaveNoViolations()
     })
 })
