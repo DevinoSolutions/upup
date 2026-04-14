@@ -124,3 +124,13 @@ describe('axe — CameraUploader', () => {
         expect(results).toHaveNoViolations()
     })
 })
+
+describe('axe — BoxUploader', () => {
+    it('has no violations in auth-prompt state (missing clientId)', async () => {
+        // box is not in the default sources list; pass it explicitly
+        const { container } = renderUploader({ sources: ['box'] })
+        await activateSource(container, 'box')
+        const results = await scanSlot(container, 'box-uploader')
+        expect(results).toHaveNoViolations()
+    })
+})
