@@ -109,3 +109,18 @@ describe('axe — UrlUploader', () => {
         expect(results).toHaveNoViolations()
     })
 })
+
+describe('axe — CameraUploader', () => {
+    it('has no violations after activating Camera source', async () => {
+        const { container } = renderUploader()
+        await activateSource(container, 'camera')
+        const results = await scanSlot(container, 'camera-uploader', {
+            rules: {
+                // react-webcam renders a <video> without <track>; jsdom can't
+                // evaluate captions anyway, and this is a known library limitation.
+                'video-caption': { enabled: false },
+            },
+        })
+        expect(results).toHaveNoViolations()
+    })
+})
