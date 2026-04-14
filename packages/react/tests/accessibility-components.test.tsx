@@ -78,3 +78,17 @@ describe('accessibility-components scaffold', () => {
         expect(typeof activateSource).toBe('function')
     })
 })
+
+describe('axe — MainBox (DropZone)', () => {
+    it('has no violations in default state', async () => {
+        const { container } = renderUploader()
+        const results = await scanSlot(container, 'main-box', {
+            rules: {
+                // role="button" on the droppable region + nested controls is the
+                // WAI-ARIA dropzone pattern, not a violation.
+                'nested-interactive': { enabled: false },
+            },
+        })
+        expect(results).toHaveNoViolations()
+    })
+})
