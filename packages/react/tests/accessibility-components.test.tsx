@@ -242,3 +242,23 @@ describe('axe — FilePreview', () => {
         expect(results).toHaveNoViolations()
     })
 })
+
+describe('axe — AdapterView (SourceView)', () => {
+    it('has no violations in header region when any adapter is active', async () => {
+        const { container } = renderUploader()
+        await activateSource(container, 'link')
+
+        const adapterView = container.querySelector(
+            '[data-upup-slot="adapter-view"]',
+        ) as HTMLElement
+        expect(adapterView).not.toBeNull()
+
+        // Scope to the header (first child div) so we don't re-scan the inner
+        // UrlUploader — that's covered by the UrlUploader describe block.
+        const header = adapterView.firstElementChild as HTMLElement
+        expect(header).not.toBeNull()
+
+        const results = await axe(header)
+        expect(results).toHaveNoViolations()
+    })
+})
