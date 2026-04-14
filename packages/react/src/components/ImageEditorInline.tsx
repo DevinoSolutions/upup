@@ -190,6 +190,7 @@ export default memo(function ImageEditorInline(props: Props) {
                 dark ? 'upup-bg-[#232323]' : 'upup-bg-white',
             )}
             onKeyDown={handleKeyDown}
+            data-upup-slot="image-editor"
             data-upup-theme={dark ? 'dark' : 'light'}
         >
             {/* Theme fallback overrides for hardcoded library values */}

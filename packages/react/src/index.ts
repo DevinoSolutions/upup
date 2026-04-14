@@ -74,3 +74,30 @@ export { en_US } from './shared/i18n'
 
 // ── Theme ────────────────────────────────────────────────
 export { UpupThemeProvider } from './theme'
+
+// ── Slot recipes (tailwind-variants) ────────────────────
+export {
+    createRecipe,
+    progressBarRecipe,
+    fileListRecipe,
+    filePreviewRecipe,
+    adapterSelectorRecipe,
+    mainBoxRecipe,
+    adapterViewRecipe,
+    urlUploaderRecipe,
+    driveBrowserRecipe,
+    cameraUploaderRecipe,
+    fileItemRecipe,
+} from './recipes'
+export type {
+    ProgressBarSlots,
+    FileListSlots,
+    FilePreviewSlots,
+    AdapterSelectorSlots,
+    MainBoxSlots,
+    AdapterViewSlots,
+    UrlUploaderSlots,
+    DriveBrowserSlots,
+    CameraUploaderSlots,
+    FileItemSlots,
+} from './recipes'
