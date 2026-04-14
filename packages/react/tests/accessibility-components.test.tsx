@@ -154,3 +154,13 @@ describe('axe — GoogleDriveUploader', () => {
         expect(results).toHaveNoViolations()
     })
 })
+
+describe('axe — OneDriveUploader', () => {
+    it('has no violations in auth-prompt state (missing clientId)', async () => {
+        // onedrive is not in the default sources list; pass it explicitly
+        const { container } = renderUploader({ sources: ['onedrive'] })
+        await activateSource(container, 'one_drive')
+        const results = await scanSlot(container, 'onedrive-uploader')
+        expect(results).toHaveNoViolations()
+    })
+})
