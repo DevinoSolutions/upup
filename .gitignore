@@ -38,3 +38,6 @@ storybook-static
 # dist
 /dist
 /dist-node
+
+# Brainstorm companion sessions
+.superpowers/
