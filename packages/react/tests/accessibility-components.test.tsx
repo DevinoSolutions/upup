@@ -49,6 +49,9 @@ async function scanSlot(
 /**
  * Click a source button by its UploadAdapter id (lowercased).
  * Valid ids: internal, google_drive, one_drive, dropbox, box, link, camera.
+ *
+ * Pass the same `user` instance across multiple calls in a single test to
+ * preserve pointer event continuity.
  */
 async function activateSource(
     container: HTMLElement,
