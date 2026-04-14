@@ -129,6 +129,9 @@ describe('axe — CameraUploader', () => {
 })
 
 describe('axe — BoxUploader', () => {
+    // Coverage note: this test scopes to the DriveAuthFallback state. The
+    // authenticated picker state requires a live OAuth flow and is not covered
+    // by this suite.
     it('has no violations in auth-prompt state (missing clientId)', async () => {
         // box is not in the default sources list; pass it explicitly
         const { container } = renderUploader({ sources: ['box'] })
@@ -139,6 +142,9 @@ describe('axe — BoxUploader', () => {
 })
 
 describe('axe — DropboxUploader', () => {
+    // Coverage note: this test scopes to the DriveAuthFallback state. The
+    // authenticated picker state requires a live OAuth flow and is not covered
+    // by this suite.
     it('has no violations in auth-prompt state (missing clientId)', async () => {
         // dropbox is not in the default sources list; pass it explicitly
         const { container } = renderUploader({ sources: ['dropbox'] })
@@ -149,6 +155,9 @@ describe('axe — DropboxUploader', () => {
 })
 
 describe('axe — GoogleDriveUploader', () => {
+    // Coverage note: this test scopes to the DriveAuthFallback state. The
+    // authenticated picker state requires a live OAuth flow and is not covered
+    // by this suite.
     it('has no violations in auth-prompt state (missing clientId)', async () => {
         // google_drive is not in the default sources list; pass it explicitly
         const { container } = renderUploader({ sources: ['google_drive'] })
@@ -159,6 +168,9 @@ describe('axe — GoogleDriveUploader', () => {
 })
 
 describe('axe — OneDriveUploader', () => {
+    // Coverage note: this test scopes to the DriveAuthFallback state. The
+    // authenticated picker state requires a live OAuth flow and is not covered
+    // by this suite.
     it('has no violations in auth-prompt state (missing clientId)', async () => {
         // onedrive is not in the default sources list; pass it explicitly
         const { container } = renderUploader({ sources: ['onedrive'] })
