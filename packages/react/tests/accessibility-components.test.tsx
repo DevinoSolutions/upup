@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { render } from '@testing-library/react'
+import { render, fireEvent, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { axe, toHaveNoViolations, type JestAxeConfigureOptions } from 'jest-axe'
 import React from 'react'
@@ -161,6 +161,48 @@ describe('axe — OneDriveUploader', () => {
         const { container } = renderUploader({ sources: ['onedrive'] })
         await activateSource(container, 'one_drive')
         const results = await scanSlot(container, 'onedrive-uploader')
+        expect(results).toHaveNoViolations()
+    })
+})
+
+describe('axe — FileList', () => {
+    it('has no violations with files added', async () => {
+        const { container } = renderUploader()
+        const input = container.querySelector(
+            '[data-testid="upup-file-input"]',
+        ) as HTMLInputElement
+        expect(input).not.toBeNull()
+
+        const file1 = new File(
+            [new Uint8Array(2048).fill(120)],
+            'alpha.txt',
+            { type: 'text/plain' },
+        )
+        const file2 = new File(
+            [new Uint8Array(2048).fill(120)],
+            'beta.txt',
+            { type: 'text/plain' },
+        )
+
+        // userEvent.upload does not trigger onChange in jsdom; fireEvent does.
+        Object.defineProperty(input, 'files', {
+            value: [file1, file2],
+            configurable: true,
+        })
+        fireEvent.change(input)
+
+        await waitFor(() => {
+            const fl = container.querySelector('[data-upup-slot="file-list"]')
+            if (!fl || fl.className.includes('upup-hidden'))
+                throw new Error('file-list still hidden')
+        })
+
+        const results = await scanSlot(container, 'file-list', {
+            rules: {
+                // FileList footer buttons nest inside the list region; intentional.
+                'nested-interactive': { enabled: false },
+            },
+        })
         expect(results).toHaveNoViolations()
     })
 })
