@@ -9,7 +9,9 @@ export default function Home() {
       <h1 style={{ fontSize: 24, fontWeight: 700, marginBottom: 16 }}>
         upup Playground
       </h1>
-      <InteractiveExample />
+      <InteractiveExample
+        defaultExpanded={['upload', 'sources', 'limits', 'processing', 'behavior', 'appearance']}
+      />
       <Toast />
     </div>
   );
