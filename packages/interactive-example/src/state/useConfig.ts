@@ -30,7 +30,7 @@ export function useConfig(path: string) {
     const value = getPath(ctx.config, path)
     const set = useCallback(
         (next: unknown) => ctx.setConfig((prev) => setPath(prev, path, next)),
-        [ctx, path],
+        [ctx.setConfig, path],
     )
     return { value, set, config: ctx.config }
 }

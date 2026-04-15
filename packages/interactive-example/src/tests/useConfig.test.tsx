@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { render, screen, act } from '@testing-library/react'
 import React from 'react'
 import { ConfigProvider } from '../state/ConfigContext'
@@ -56,5 +56,13 @@ describe('useConfig', () => {
             </ConfigProvider>,
         )
         expect(screen.getByTestId('value').textContent).toBe('"abc"')
+    })
+
+    it('throws when used outside a ConfigProvider', () => {
+        const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+        expect(() => render(<Probe path="provider" />)).toThrow(
+            /useConfig must be used inside <ConfigProvider>/,
+        )
+        errorSpy.mockRestore()
     })
 })

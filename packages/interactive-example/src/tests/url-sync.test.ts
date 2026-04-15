@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { readConfigFromUrl, writeConfigToUrl } from '../state/url-sync'
+import { readConfigFromUrl, writeConfigToUrl, buildPermalink } from '../state/url-sync'
 import { serialize } from '../state/serialize'
 
 describe('url-sync', () => {
@@ -36,5 +36,18 @@ describe('url-sync', () => {
         const params = new URLSearchParams(window.location.search)
         expect(params.get('foo')).toBe('bar')
         expect(params.get('c')).toBeTruthy()
+    })
+
+    it('buildPermalink returns origin+pathname when config is empty', () => {
+        window.history.replaceState(null, '', '/some/path')
+        const url = buildPermalink({})
+        expect(url).toBe(`${window.location.origin}/some/path`)
+        expect(url).not.toContain('?c=')
+    })
+
+    it('buildPermalink appends ?c= when config is non-empty', () => {
+        window.history.replaceState(null, '', '/playground')
+        const url = buildPermalink({ provider: 'backblaze' as any })
+        expect(url).toMatch(new RegExp(`^${window.location.origin}/playground\\?c=`))
     })
 })
