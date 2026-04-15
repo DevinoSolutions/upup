@@ -22,7 +22,8 @@
     "react-tooltip": "^5.29.1",
     "@upup/react": "workspace:*",
     "@upup/shared": "workspace:*",
-    "@upup/server": "workspace:*"
+    "@upup/server": "workspace:*",
+    "@upup/interactive-example": "workspace:*"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
