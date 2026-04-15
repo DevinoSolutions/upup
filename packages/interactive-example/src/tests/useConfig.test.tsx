@@ -1,0 +1,60 @@
+import { describe, it, expect } from 'vitest'
+import { render, screen, act } from '@testing-library/react'
+import React from 'react'
+import { ConfigProvider } from '../state/ConfigContext'
+import { useConfig } from '../state/useConfig'
+
+function Probe({ path }: { path: string }) {
+    const { value, set } = useConfig(path)
+    return (
+        <div>
+            <span data-testid="value">{JSON.stringify(value)}</span>
+            <button onClick={() => set('backblaze')}>set</button>
+        </div>
+    )
+}
+
+describe('useConfig', () => {
+    it('returns initial value when set via initialConfig', () => {
+        render(
+            <ConfigProvider initialConfig={{ provider: 's3' } as any}>
+                <Probe path="provider" />
+            </ConfigProvider>,
+        )
+        expect(screen.getByTestId('value').textContent).toBe('"s3"')
+    })
+
+    it('returns undefined when path has no initial value', () => {
+        render(
+            <ConfigProvider initialConfig={{}}>
+                <Probe path="provider" />
+            </ConfigProvider>,
+        )
+        expect(screen.getByTestId('value').textContent).toBe('')
+    })
+
+    it('updates value when set() is called', () => {
+        render(
+            <ConfigProvider initialConfig={{ provider: 's3' } as any}>
+                <Probe path="provider" />
+            </ConfigProvider>,
+        )
+        act(() => {
+            screen.getByText('set').click()
+        })
+        expect(screen.getByTestId('value').textContent).toBe('"backblaze"')
+    })
+
+    it('supports dotted paths for nested config', () => {
+        render(
+            <ConfigProvider
+                initialConfig={{
+                    cloudDrives: { googleDrive: { clientId: 'abc' } } as any,
+                }}
+            >
+                <Probe path="cloudDrives.googleDrive.clientId" />
+            </ConfigProvider>,
+        )
+        expect(screen.getByTestId('value').textContent).toBe('"abc"')
+    })
+})
