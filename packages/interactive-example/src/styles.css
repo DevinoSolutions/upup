@@ -1,0 +1,176 @@
+/* Minimal default styles for InteractiveExample.
+   Consumers can override via className props on each slot. */
+.upup-ie-shell {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: 12px;
+    min-height: 500px;
+}
+
+.upup-ie-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    overflow-y: auto;
+    padding: 8px;
+    border-radius: 8px;
+    background: rgba(0, 0, 0, 0.03);
+}
+
+.upup-ie-category {
+    border-radius: 6px;
+    background: rgba(0, 0, 0, 0.02);
+}
+
+.upup-ie-category-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+    padding: 8px 10px;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    font-weight: 600;
+    text-align: left;
+}
+
+.upup-ie-category-label {
+    flex: 1;
+}
+
+.upup-ie-category-count {
+    font-size: 11px;
+    opacity: 0.6;
+}
+
+.upup-ie-category-body {
+    padding: 4px 12px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.upup-ie-field,
+.upup-ie-toggle {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 13px;
+}
+
+.upup-ie-toggle {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.upup-ie-toggle-text {
+    display: flex;
+    flex-direction: column;
+}
+
+.upup-ie-toggle-description {
+    font-size: 11px;
+    opacity: 0.6;
+}
+
+.upup-ie-field-label {
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.upup-ie-nested {
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 6px;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.upup-ie-nested legend {
+    font-size: 12px;
+    font-weight: 600;
+    padding: 0 4px;
+}
+
+.upup-ie-multiselect {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 4px;
+}
+
+.upup-ie-multiselect-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+}
+
+.upup-ie-main {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.upup-ie-tabs {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    padding-bottom: 4px;
+}
+
+.upup-ie-tabs button {
+    background: transparent;
+    border: 0;
+    padding: 6px 12px;
+    cursor: pointer;
+    border-radius: 4px;
+    font-size: 13px;
+}
+
+.upup-ie-tabs button.is-active {
+    background: rgba(59, 130, 246, 0.15);
+    font-weight: 600;
+}
+
+.upup-ie-tabs-spacer {
+    flex: 1;
+}
+
+.upup-ie-permalink {
+    font-size: 11px !important;
+    opacity: 0.7;
+}
+
+.upup-ie-code-pre {
+    margin: 0;
+    padding: 12px;
+    background: #1a1a1a;
+    color: #d0d6e0;
+    border-radius: 6px;
+    overflow: auto;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.upup-ie-focus {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    gap: 12px;
+}
+
+.upup-ie-focus-toggles {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+@media (max-width: 768px) {
+    .upup-ie-shell,
+    .upup-ie-focus {
+        grid-template-columns: 1fr;
+    }
+}
