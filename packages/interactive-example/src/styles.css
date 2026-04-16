@@ -489,6 +489,28 @@ html.dark .upup-ie-focus:not([data-theme="light"]),
     justify-content: center;
 }
 
+/* Pre-mount placeholder — matches uploader dimensions to avoid layout shift, and matches
+   uploader's own dark/light bg so there is no flash when the real uploader mounts. */
+.upup-ie-preview-placeholder {
+    width: 100%;
+    max-width: 600px;
+    height: 480px;
+    border-radius: 16px;
+    background: #ffffff;
+}
+
+html.dark .upup-ie-preview-placeholder,
+[data-theme="dark"] .upup-ie-preview-placeholder,
+[data-theme="dark"] .upup-ie-preview .upup-ie-preview-placeholder {
+    background: #232323;
+}
+
+@media (prefers-color-scheme: dark) {
+    html:not(.light):not([data-theme="light"]) .upup-ie-preview-placeholder {
+        background: #232323;
+    }
+}
+
 /* ── Code tab ──────────────────────────────────────────── */
 
 .upup-ie-code-tab {

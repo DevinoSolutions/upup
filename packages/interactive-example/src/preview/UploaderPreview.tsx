@@ -4,6 +4,12 @@ import { UpupUploader } from '@upup/react'
 import '@upup/react/styles'
 import { ConfigContext } from '../state/ConfigContext'
 
+function useMounted(): boolean {
+    const [mounted, setMounted] = useState(false)
+    useEffect(() => setMounted(true), [])
+    return mounted
+}
+
 function usePageThemeIsDark(): boolean {
     const [isDark, setIsDark] = useState(() => {
         if (typeof document === 'undefined') return false
@@ -44,6 +50,7 @@ function resolvePageTheme(): boolean {
 
 export function UploaderPreview({ width = 'auto' }: { width?: number | 'auto' }) {
     const ctx = useContext(ConfigContext)
+    const mounted = useMounted()
     const pageIsDark = usePageThemeIsDark()
     if (!ctx) return null
 
@@ -58,8 +65,12 @@ export function UploaderPreview({ width = 'auto' }: { width?: number | 'auto' })
 
     const style = width === 'auto' ? undefined : { width: `${width}px`, maxWidth: '100%' }
     return (
-        <div className="upup-ie-preview" style={style}>
-            <UpupUploader provider="s3" serverUrl="" {...rest} dark={dark} />
+        <div className="upup-ie-preview" style={style} suppressHydrationWarning>
+            {mounted ? (
+                <UpupUploader provider="s3" serverUrl="" {...rest} dark={dark} />
+            ) : (
+                <div className="upup-ie-preview-placeholder" aria-hidden="true" />
+            )}
         </div>
     )
 }
