@@ -9,7 +9,7 @@
     "build:package": "pnpm --filter upup-react-file-uploader run build",
     "clean": "turbo run clean",
     "dev": "dotenv -e local-dev/.env.ports -- concurrently \"pnpm run dev:apps\" \"pnpm run dev:package-watch\"",
-    "dev:apps": "turbo run dev --parallel --filter=@upup/landing --filter=docs",
+    "dev:apps": "turbo run dev --parallel --filter=@upup/landing --filter=docs --filter=@upup/playground",
     "dev:playground": "pnpm --filter @upup/playground run dev",
     "build:playground": "turbo run build --filter=@upup/playground",
     "start:playground": "pnpm --filter @upup/playground run start",
