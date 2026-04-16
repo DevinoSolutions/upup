@@ -223,9 +223,11 @@ export default function useRootProvider({
     const inputRef = useRef<HTMLInputElement>(null)
     const [isAddingMore, setIsAddingMore] = useState(false)
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
-    const [isOnline, setIsOnline] = useState(() =>
-        typeof navigator !== 'undefined' ? navigator.onLine : true,
-    )
+    // SSR-safe: always initialize to true so server and client first render match.
+    // Next.js/Node 21+ expose `navigator` globally but `navigator.onLine` is undefined
+    // (falsy), which used to give SSR=false / client=true and trigger a hydration
+    // mismatch. Real browser status is synced in the online/offline effect below.
+    const [isOnline, setIsOnline] = useState(true)
     const [selectedFilesMap, setSelectedFilesMap] = useState<
         Map<string, FileWithParams>
     >(new Map())
@@ -277,6 +279,11 @@ export default function useRootProvider({
 
     // v2: track browser online/offline and emit events via UpupCore (#19 Offline Queue)
     useEffect(() => {
+        // Sync with the real browser status now that we are on the client. State is
+        // seeded `true` for SSR safety; correct it here before attaching listeners.
+        if (typeof navigator !== 'undefined' && typeof navigator.onLine === 'boolean') {
+            setIsOnline(navigator.onLine)
+        }
         const handleOnline = () => {
             setIsOnline(true)
             coreRef.current?.emit('connection-online', {})

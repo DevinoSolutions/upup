@@ -1,5 +1,5 @@
 'use client'
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { resolveTheme, tokensToVars } from '@upup/shared'
 import type { UpupThemeConfig } from '@upup/shared'
 
@@ -11,9 +11,28 @@ interface UpupThemeProviderProps {
 export function UpupThemeProvider({ theme, children }: UpupThemeProviderProps) {
   const resolved = resolveTheme(theme)
   const cssVars = tokensToVars(resolved.tokens)
-  const resolvedMode = resolved.mode === 'system'
-    ? (typeof window !== 'undefined' && window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
-    : resolved.mode
+
+  // SSR-safe: when `mode === 'system'`, start with 'light' on both server and
+  // client-first-render (identical HTML → no hydration mismatch), then read the
+  // real `prefers-color-scheme` after mount and stay subscribed to changes.
+  const [resolvedMode, setResolvedMode] = useState<'light' | 'dark'>(
+    resolved.mode === 'system' ? 'light' : resolved.mode,
+  )
+
+  useEffect(() => {
+    if (resolved.mode !== 'system') {
+      setResolvedMode(resolved.mode)
+      return
+    }
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
+      return
+    }
+    const mq = window.matchMedia('(prefers-color-scheme: dark)')
+    const apply = () => setResolvedMode(mq.matches ? 'dark' : 'light')
+    apply()
+    mq.addEventListener?.('change', apply)
+    return () => mq.removeEventListener?.('change', apply)
+  }, [resolved.mode])
 
   return (
     <div
