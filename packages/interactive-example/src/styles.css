@@ -101,19 +101,7 @@
     display: flex;
     flex-direction: column;
     gap: 16px;
-    position: sticky;
-    top: 24px;
-    max-height: calc(100vh - 48px);
-    overflow-y: auto;
-    padding-right: 4px;
-}
-
-.upup-ie-sidebar::-webkit-scrollbar {
-    width: 6px;
-}
-.upup-ie-sidebar::-webkit-scrollbar-thumb {
-    background: var(--ie-card-border);
-    border-radius: 3px;
+    min-width: 0;
 }
 
 /* ── Glass cards (categories) ──────────────────────────── */
