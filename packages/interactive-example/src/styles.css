@@ -43,34 +43,13 @@
     line-height: 1.5;
 }
 
-/* Dark theme — auto via prefers-color-scheme, opt-out via [data-theme="light"] */
-@media (prefers-color-scheme: dark) {
-    .upup-ie-shell:not([data-theme="light"]),
-    .upup-ie-focus:not([data-theme="light"]) {
-        --ie-fg: #f3f4f6;
-        --ie-fg-muted: #9ca3af;
-        --ie-fg-faint: #6b7280;
-
-        --ie-card-bg: rgba(31, 41, 55, 0.5);
-        --ie-card-bg-hover: rgba(31, 41, 55, 0.8);
-        --ie-card-border: rgba(55, 65, 81, 0.5);
-        --ie-card-shadow: none;
-
-        --ie-input-bg: rgba(17, 24, 39, 0.6);
-        --ie-input-border: rgba(55, 65, 81, 0.7);
-        --ie-input-border-hover: rgba(96, 165, 250, 0.5);
-
-        --ie-switch-bg-off: #374151;
-        --ie-switch-bg-on: #3b82f6;
-
-        --ie-accent: #60a5fa;
-        --ie-accent-soft: rgba(96, 165, 250, 0.16);
-        --ie-accent-strong: #93c5fd;
-    }
-}
-
-[data-theme="dark"].upup-ie-shell,
-[data-theme="dark"].upup-ie-focus {
+/* Dark theme — explicit (ancestor html.dark, [data-theme="dark"] ancestor, or [data-theme="dark"] on self) */
+html.dark .upup-ie-shell:not([data-theme="light"]),
+html.dark .upup-ie-focus:not([data-theme="light"]),
+[data-theme="dark"] .upup-ie-shell:not([data-theme="light"]),
+[data-theme="dark"] .upup-ie-focus:not([data-theme="light"]),
+.upup-ie-shell[data-theme="dark"],
+.upup-ie-focus[data-theme="dark"] {
     --ie-fg: #f3f4f6;
     --ie-fg-muted: #9ca3af;
     --ie-fg-faint: #6b7280;
@@ -86,6 +65,30 @@
     --ie-accent: #60a5fa;
     --ie-accent-soft: rgba(96, 165, 250, 0.16);
     --ie-accent-strong: #93c5fd;
+    color-scheme: dark;
+}
+
+/* Dark theme — auto via prefers-color-scheme, unless an ancestor/self explicitly forces light */
+@media (prefers-color-scheme: dark) {
+    html:not(.light):not([data-theme="light"]) .upup-ie-shell:not([data-theme="light"]),
+    html:not(.light):not([data-theme="light"]) .upup-ie-focus:not([data-theme="light"]) {
+        --ie-fg: #f3f4f6;
+        --ie-fg-muted: #9ca3af;
+        --ie-fg-faint: #6b7280;
+        --ie-card-bg: rgba(31, 41, 55, 0.5);
+        --ie-card-bg-hover: rgba(31, 41, 55, 0.8);
+        --ie-card-border: rgba(55, 65, 81, 0.5);
+        --ie-card-shadow: none;
+        --ie-input-bg: rgba(17, 24, 39, 0.6);
+        --ie-input-border: rgba(55, 65, 81, 0.7);
+        --ie-input-border-hover: rgba(96, 165, 250, 0.5);
+        --ie-switch-bg-off: #374151;
+        --ie-switch-bg-on: #3b82f6;
+        --ie-accent: #60a5fa;
+        --ie-accent-soft: rgba(96, 165, 250, 0.16);
+        --ie-accent-strong: #93c5fd;
+        color-scheme: dark;
+    }
 }
 
 /* ── Layout ─────────────────────────────────────────────── */
