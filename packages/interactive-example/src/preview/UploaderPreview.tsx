@@ -48,13 +48,30 @@ function resolvePageTheme(): boolean {
     return false
 }
 
+// Build `{ onXxx: (...args) => console.log('[upup]', 'onXxx', ...args) }` for
+// every event-toggle the user has turned on. Events map into real callback
+// props on UpupUploader; if this wasn't done the toggles would be spread as a
+// non-existent `events={...}` prop and silently do nothing.
+function eventLoggers(flags: Record<string, boolean> | undefined): Record<string, (...args: unknown[]) => void> {
+    if (!flags) return {}
+    const out: Record<string, (...args: unknown[]) => void> = {}
+    for (const [name, enabled] of Object.entries(flags)) {
+        if (!enabled) continue
+        out[name] = (...args: unknown[]) => {
+            // eslint-disable-next-line no-console
+            console.log('[upup]', name, ...args)
+        }
+    }
+    return out
+}
+
 export function UploaderPreview({ width = 'auto' }: { width?: number | 'auto' }) {
     const ctx = useContext(ConfigContext)
     const mounted = useMounted()
     const pageIsDark = usePageThemeIsDark()
     if (!ctx) return null
 
-    const { theme, ...rest } = (ctx.config as any) ?? {}
+    const { theme, events, ...rest } = (ctx.config as any) ?? {}
     const themeMode: 'light' | 'dark' | 'system' | undefined = theme?.mode
     const dark =
         themeMode === 'dark'
@@ -63,11 +80,12 @@ export function UploaderPreview({ width = 'auto' }: { width?: number | 'auto' })
               ? false
               : pageIsDark
 
+    const handlers = eventLoggers(events)
     const style = width === 'auto' ? undefined : { width: `${width}px`, maxWidth: '100%' }
     return (
         <div className="upup-ie-preview" style={style} suppressHydrationWarning>
             {mounted ? (
-                <UpupUploader provider="s3" serverUrl="" {...rest} dark={dark} />
+                <UpupUploader provider="s3" serverUrl="" {...rest} {...handlers} dark={dark} />
             ) : (
                 <div className="upup-ie-preview-placeholder" aria-hidden="true" />
             )}

@@ -65,5 +65,52 @@ export const uploadCategory: CategoryDefinition = {
             primitive: 'bool',
             defaultValue: false,
         },
+        {
+            id: 'resumable',
+            label: 'Resumable uploads',
+            description: 'Multipart or tus resumable upload config',
+            primitive: 'nested',
+            defaultValue: undefined,
+            options: {
+                fields: [
+                    {
+                        id: 'mode',
+                        label: 'Mode',
+                        primitive: 'enum',
+                        defaultValue: 'multipart',
+                        options: { options: ['multipart', 'tus'] },
+                    },
+                    {
+                        id: 'chunkSizeBytes',
+                        label: 'Chunk size (bytes)',
+                        primitive: 'number',
+                        defaultValue: 5_242_880,
+                        options: { min: 1024, max: 104_857_600 },
+                    },
+                    {
+                        id: 'endpoint',
+                        label: 'tus endpoint (tus mode only)',
+                        primitive: 'string',
+                        defaultValue: '',
+                        options: { placeholder: 'https://tus.example.com/files' },
+                    },
+                ],
+            },
+        },
+        {
+            id: 'processingEndpoint',
+            label: 'Processing endpoint (SSE)',
+            description: 'After each upload, open an SSE stream at this URL; emits onFileProcessed when done',
+            primitive: 'string',
+            defaultValue: '',
+            options: { placeholder: '/api/processing/status' },
+        },
+        {
+            id: 'processingTimeout',
+            label: 'Processing timeout (ms)',
+            primitive: 'number',
+            defaultValue: 60_000,
+            options: { min: 1_000, max: 600_000 },
+        },
     ],
 }

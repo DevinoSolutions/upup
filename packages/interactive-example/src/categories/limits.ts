@@ -17,7 +17,8 @@ export const limitsCategory: CategoryDefinition = {
     description: 'File count and size validation',
     entries: [
         { id: 'accept', label: 'Accept (MIME pattern)', primitive: 'string', defaultValue: '', options: { placeholder: 'image/*' } },
-        { id: 'limit', label: 'File count limit', primitive: 'number', defaultValue: 10, options: { min: 1, max: 100 } },
+        { id: 'maxFiles', label: 'Max files (v2)', description: 'Preferred v2 alias for the legacy `limit` prop', primitive: 'number', defaultValue: 10, options: { min: 1, max: 100 } },
+        { id: 'limit', label: 'File count limit (legacy)', description: 'Deprecated — kept for v1 compat. Prefer `maxFiles`.', primitive: 'number', defaultValue: 10, options: { min: 1, max: 100 } },
         {
             id: 'maxFileSize',
             label: 'Max file size',

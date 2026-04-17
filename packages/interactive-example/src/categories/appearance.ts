@@ -38,5 +38,26 @@ export const appearanceCategory: CategoryDefinition = {
             },
         },
         { id: 'className', label: 'Root className', primitive: 'string', defaultValue: '' },
+        {
+            id: 'dark',
+            label: 'Dark (legacy boolean)',
+            description: 'Deprecated in v2 — prefer theme.mode. Still works for v1 consumers.',
+            primitive: 'bool',
+            defaultValue: false,
+        },
+        {
+            id: 'classNames',
+            label: 'classNames (legacy slot map)',
+            description: 'Deprecated in v2 — prefer theme.slots above.',
+            primitive: 'nested',
+            defaultValue: undefined,
+            options: {
+                fields: [
+                    { id: 'containerFull', label: 'containerFull', primitive: 'string', defaultValue: '' },
+                    { id: 'containerMini', label: 'containerMini', primitive: 'string', defaultValue: '' },
+                    { id: 'uploadButton', label: 'uploadButton', primitive: 'string', defaultValue: '' },
+                ],
+            },
+        },
     ],
 }
