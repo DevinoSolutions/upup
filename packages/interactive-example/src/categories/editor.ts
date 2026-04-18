@@ -22,10 +22,10 @@ export const editorCategory: CategoryDefinition = {
         },
         {
             id: 'imageEditor.output.quality',
-            label: 'Output quality (0–1)',
+            label: 'Output quality',
             primitive: 'number',
-            defaultValue: undefined,
-            options: { min: 0, max: 1, step: 0.1 },
+            defaultValue: 0.8,
+            options: { min: 0, max: 1, step: 0.05, display: 'slider' },
         },
     ],
 }

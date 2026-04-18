@@ -504,6 +504,79 @@ html.dark .upup-ie-focus:not([data-theme="light"]),
     text-overflow: ellipsis;
 }
 
+/* ── Color input (swatch + hex) ────────────────────────── */
+
+.upup-ie-color {
+    display: grid;
+    grid-template-columns: 44px 1fr;
+    gap: 8px;
+    align-items: stretch;
+}
+
+.upup-ie-color-swatch {
+    appearance: none;
+    -webkit-appearance: none;
+    border: 1px solid var(--ie-input-border);
+    background: var(--ie-input-bg);
+    border-radius: var(--ie-radius-input);
+    padding: 2px;
+    cursor: pointer;
+    width: 44px;
+    height: 36px;
+}
+
+.upup-ie-color-swatch::-webkit-color-swatch-wrapper { padding: 0; }
+.upup-ie-color-swatch::-webkit-color-swatch {
+    border: none;
+    border-radius: calc(var(--ie-radius-input) - 2px);
+}
+.upup-ie-color-swatch::-moz-color-swatch {
+    border: none;
+    border-radius: calc(var(--ie-radius-input) - 2px);
+}
+
+.upup-ie-color-hex {
+    font-family: var(--ie-mono);
+    font-size: 12px;
+}
+
+/* ── Range slider (output quality etc.) ────────────────── */
+
+.upup-ie-range {
+    display: grid;
+    grid-template-columns: 1fr 48px;
+    align-items: center;
+    gap: 10px;
+}
+
+.upup-ie-range input[type="range"] {
+    width: 100%;
+    accent-color: var(--ie-accent);
+}
+
+.upup-ie-range-readout {
+    font-family: var(--ie-mono);
+    font-size: 12px;
+    color: var(--ie-fg);
+    text-align: right;
+}
+
+/* ── Group heading inside a category (events subgroups) ─ */
+
+.upup-ie-group-heading {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ie-fg-muted);
+    margin: 8px 0 -4px;
+    padding-top: 4px;
+}
+
+.upup-ie-category-body > .upup-ie-group-heading:first-child {
+    margin-top: 0;
+}
+
 /* ── Segmented control (short enum options) ───────────── */
 
 .upup-ie-segmented {

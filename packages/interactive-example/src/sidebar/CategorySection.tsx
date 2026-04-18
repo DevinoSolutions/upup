@@ -9,6 +9,7 @@ import {
     StringInput,
     NestedConfig,
     SizeUnitInput,
+    ColorInput,
 } from './primitives'
 import { SOURCE_META, type SourceMeta } from '../icons/source-meta'
 
@@ -17,7 +18,7 @@ function renderEntry(entry: ToggleEntry) {
         case 'bool':
             return <BoolToggle key={entry.id} propId={entry.id} label={entry.label} description={entry.description} />
         case 'number':
-            return <NumberInput key={entry.id} propId={entry.id} label={entry.label} min={entry.options?.min as number | undefined} max={entry.options?.max as number | undefined} step={entry.options?.step as number | undefined} defaultValue={entry.defaultValue as number | undefined} />
+            return <NumberInput key={entry.id} propId={entry.id} label={entry.label} min={entry.options?.min as number | undefined} max={entry.options?.max as number | undefined} step={entry.options?.step as number | undefined} defaultValue={entry.defaultValue as number | undefined} display={entry.options?.display as 'slider' | 'number' | undefined} />
         case 'enum':
             return <EnumSelect key={entry.id} propId={entry.id} label={entry.label} options={(entry.options?.options as string[]) ?? []} layout={entry.options?.layout as 'segmented' | 'select' | undefined} defaultValue={entry.defaultValue as string | undefined} />
         case 'multi':
@@ -28,6 +29,8 @@ function renderEntry(entry: ToggleEntry) {
             return <NestedConfig key={entry.id} parentPath={entry.id} label={entry.label} fields={(entry.options?.fields as ToggleEntry[]) ?? []} legendIcon={entry.options?.legendIcon as React.FC | undefined} />
         case 'size-unit':
             return <SizeUnitInput key={entry.id} propId={entry.id} label={entry.label} defaultSize={entry.options?.defaultSize as number | undefined} defaultUnit={entry.options?.defaultUnit as 'B' | 'KB' | 'MB' | 'GB' | undefined} />
+        case 'color':
+            return <ColorInput key={entry.id} propId={entry.id} label={entry.label} placeholder={entry.options?.placeholder as string | undefined} defaultValue={entry.defaultValue as string | undefined} />
     }
 }
 
@@ -66,9 +69,30 @@ export function CategorySection({
             </button>
             {open && (
                 <div className="upup-ie-category-body">
-                    {category.entries.map(renderEntry)}
+                    {renderBody(category.entries)}
                 </div>
             )}
         </section>
     )
+}
+
+function renderBody(entries: ToggleEntry[]) {
+    // Flat render when no entry declares a group
+    if (!entries.some((e) => e.group)) {
+        return entries.map(renderEntry)
+    }
+    // Grouped render — preserves input order while inserting subheaders
+    const groups: Array<{ label: string | null; items: ToggleEntry[] }> = []
+    for (const entry of entries) {
+        const key = entry.group ?? null
+        const last = groups[groups.length - 1]
+        if (last && last.label === key) last.items.push(entry)
+        else groups.push({ label: key, items: [entry] })
+    }
+    return groups.map((g, idx) => (
+        <React.Fragment key={g.label ?? `__ungrouped-${idx}`}>
+            {g.label && <div className="upup-ie-group-heading">{g.label}</div>}
+            {g.items.map(renderEntry)}
+        </React.Fragment>
+    ))
 }

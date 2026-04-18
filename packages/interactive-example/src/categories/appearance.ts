@@ -14,8 +14,8 @@ export const appearanceCategory: CategoryDefinition = {
         },
         {
             id: 'theme.tokens.color.primary',
-            label: 'Primary color (hex)',
-            primitive: 'string',
+            label: 'Primary color',
+            primitive: 'color',
             defaultValue: '',
             options: { placeholder: '#30C5F7' },
         },

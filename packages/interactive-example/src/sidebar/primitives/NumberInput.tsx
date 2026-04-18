@@ -8,6 +8,7 @@ export function NumberInput({
     max,
     step = 1,
     defaultValue,
+    display,
 }: {
     propId: string
     label: string
@@ -16,6 +17,8 @@ export function NumberInput({
     step?: number
     /** Declared default — shown as placeholder so consumers know the baseline. */
     defaultValue?: number
+    /** 'slider' renders a range input with a live readout (for 0-1 style props). */
+    display?: 'number' | 'slider'
 }) {
     const id = useId()
     const { value, set } = useConfig(propId)
@@ -36,6 +39,28 @@ export function NumberInput({
         if (max != null && n > max) n = max
         setLocal(String(n))
         set(n)
+    }
+
+    if (display === 'slider' && min != null && max != null) {
+        const sliderValue = value == null ? (defaultValue ?? min) : Number(value)
+        const readout = value == null ? '—' : String(value)
+        return (
+            <div className="upup-ie-field">
+                <span className="upup-ie-field-label">{label}</span>
+                <div className="upup-ie-range">
+                    <input
+                        id={id}
+                        type="range"
+                        min={min}
+                        max={max}
+                        step={step}
+                        value={sliderValue}
+                        onChange={(e) => commit(e.currentTarget.value)}
+                    />
+                    <span className="upup-ie-range-readout">{readout}</span>
+                </div>
+            </div>
+        )
     }
 
     return (

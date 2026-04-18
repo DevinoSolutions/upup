@@ -23,6 +23,7 @@ export type PrimitiveKind =
     | 'string'
     | 'nested'
     | 'size-unit'
+    | 'color'
 
 export type ToggleEntry = {
     id: PropId
@@ -32,6 +33,8 @@ export type ToggleEntry = {
     defaultValue: unknown
     options?: Record<string, unknown>
     docsLink?: string
+    /** Optional subgroup heading within a category — used to split long lists like Events. */
+    group?: string
 }
 
 export type CategoryDefinition = {

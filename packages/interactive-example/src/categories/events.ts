@@ -1,51 +1,68 @@
-import type { CategoryDefinition } from '../types'
+import type { CategoryDefinition, ToggleEntry } from '../types'
 
-// Event prop names that exist on UpupUploaderProps. Each toggle, when on,
-// wires a console logger as the callback (see preview/UploaderPreview.tsx).
-// Grouped by phase so devs can find the one they want.
-const eventIds = [
-    // selection / interaction
-    'onFilesSelected',
-    'onFileClick',
-    'onDoneClicked',
-    'onIntegrationClick',
-    // gating (ask for a promise/bool before accepting)
-    'onBeforeFileAdded',
-    'onPrepareFiles',
-    // upload lifecycle
-    'onUploadStart',
-    'onFileUploadStart',
-    'onFileUploadProgress',
-    'onFilesUploadProgress',
-    'onFileUploadComplete',
-    'onFilesUploadComplete',
-    'onUploadComplete',
-    'onStatusChange',
-    // file list management
-    'onFileRemove',
-    'onFileRemoved',
-    // drag / drop
-    'onFilesDragOver',
-    'onFilesDragLeave',
-    'onFilesDrop',
-    // validation / errors
-    'onFileTypeMismatch',
-    'onRestrictionFailed',
-    'onError',
-    'onWarn',
-    // async processing (server SSE)
-    'onFileProcessed',
-] as const
+// Event prop names on UpupUploaderProps grouped by lifecycle. Each toggle
+// wires both the EventLog panel and a console logger as the callback
+// (see preview/UploaderPreview.tsx).
+const GROUPS: Array<{ label: string; ids: readonly string[] }> = [
+    {
+        label: 'Selection & clicks',
+        ids: [
+            'onFilesSelected',
+            'onFileClick',
+            'onDoneClicked',
+            'onIntegrationClick',
+        ],
+    },
+    {
+        label: 'Validation',
+        ids: [
+            'onBeforeFileAdded',
+            'onPrepareFiles',
+            'onFileTypeMismatch',
+            'onRestrictionFailed',
+        ],
+    },
+    {
+        label: 'Upload lifecycle',
+        ids: [
+            'onUploadStart',
+            'onFileUploadStart',
+            'onFileUploadProgress',
+            'onFilesUploadProgress',
+            'onFileUploadComplete',
+            'onFilesUploadComplete',
+            'onUploadComplete',
+            'onStatusChange',
+        ],
+    },
+    {
+        label: 'File management',
+        ids: ['onFileRemove', 'onFileRemoved'],
+    },
+    {
+        label: 'Drag & drop',
+        ids: ['onFilesDragOver', 'onFilesDragLeave', 'onFilesDrop'],
+    },
+    {
+        label: 'Errors & processing',
+        ids: ['onError', 'onWarn', 'onFileProcessed'],
+    },
+]
+
+const entries: ToggleEntry[] = GROUPS.flatMap(({ label, ids }) =>
+    ids.map((id) => ({
+        id: `events.${id}`,
+        label: id,
+        description: `Fires when ${id} triggers — payload shows in the event log below the preview.`,
+        primitive: 'bool' as const,
+        defaultValue: false,
+        group: label,
+    })),
+)
 
 export const eventsCategory: CategoryDefinition = {
     id: 'events',
     label: 'Events',
-    description: 'Toggle a console logger for any callback',
-    entries: eventIds.map((id) => ({
-        id: `events.${id}`,
-        label: id,
-        description: `Log to console with payload when ${id} fires`,
-        primitive: 'bool' as const,
-        defaultValue: false,
-    })),
+    description: 'Log UpupUploader callbacks live as you interact with the preview',
+    entries,
 }
