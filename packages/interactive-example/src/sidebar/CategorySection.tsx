@@ -17,9 +17,9 @@ function renderEntry(entry: ToggleEntry) {
         case 'bool':
             return <BoolToggle key={entry.id} propId={entry.id} label={entry.label} description={entry.description} />
         case 'number':
-            return <NumberInput key={entry.id} propId={entry.id} label={entry.label} min={entry.options?.min as number | undefined} max={entry.options?.max as number | undefined} step={entry.options?.step as number | undefined} />
+            return <NumberInput key={entry.id} propId={entry.id} label={entry.label} min={entry.options?.min as number | undefined} max={entry.options?.max as number | undefined} step={entry.options?.step as number | undefined} defaultValue={entry.defaultValue as number | undefined} />
         case 'enum':
-            return <EnumSelect key={entry.id} propId={entry.id} label={entry.label} options={(entry.options?.options as string[]) ?? []} layout={entry.options?.layout as 'segmented' | 'select' | undefined} />
+            return <EnumSelect key={entry.id} propId={entry.id} label={entry.label} options={(entry.options?.options as string[]) ?? []} layout={entry.options?.layout as 'segmented' | 'select' | undefined} defaultValue={entry.defaultValue as string | undefined} />
         case 'multi':
             return <MultiSelect key={entry.id} propId={entry.id} label={entry.label} options={(entry.options?.options as string[]) ?? []} meta={entry.id === 'sources' ? SOURCE_META : (entry.options?.meta as Record<string, SourceMeta> | undefined)} />
         case 'string':

@@ -7,12 +7,15 @@ export function NumberInput({
     min,
     max,
     step = 1,
+    defaultValue,
 }: {
     propId: string
     label: string
     min?: number
     max?: number
     step?: number
+    /** Declared default — shown as placeholder so consumers know the baseline. */
+    defaultValue?: number
 }) {
     const id = useId()
     const { value, set } = useConfig(propId)
@@ -45,6 +48,7 @@ export function NumberInput({
                 max={max}
                 step={step}
                 value={local}
+                placeholder={defaultValue != null ? String(defaultValue) : undefined}
                 onChange={(e) => setLocal(e.currentTarget.value)}
                 onBlur={(e) => commit(e.currentTarget.value)}
             />

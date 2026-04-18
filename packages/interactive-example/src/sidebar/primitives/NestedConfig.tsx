@@ -31,9 +31,9 @@ export function NestedConfig({
                     case 'bool':
                         return <BoolToggle key={f.id} propId={fullPath} label={f.label} description={f.description} />
                     case 'number':
-                        return <NumberInput key={f.id} propId={fullPath} label={f.label} min={f.options?.min as number | undefined} max={f.options?.max as number | undefined} step={f.options?.step as number | undefined} />
+                        return <NumberInput key={f.id} propId={fullPath} label={f.label} min={f.options?.min as number | undefined} max={f.options?.max as number | undefined} step={f.options?.step as number | undefined} defaultValue={f.defaultValue as number | undefined} />
                     case 'enum':
-                        return <EnumSelect key={f.id} propId={fullPath} label={f.label} options={(f.options?.options as string[]) ?? []} />
+                        return <EnumSelect key={f.id} propId={fullPath} label={f.label} options={(f.options?.options as string[]) ?? []} layout={f.options?.layout as 'segmented' | 'select' | undefined} defaultValue={f.defaultValue as string | undefined} />
                     case 'multi':
                         return <MultiSelect key={f.id} propId={fullPath} label={f.label} options={(f.options?.options as string[]) ?? []} />
                     case 'string':
