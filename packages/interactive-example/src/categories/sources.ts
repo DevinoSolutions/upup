@@ -35,52 +35,6 @@ export const sourcesCategory: CategoryDefinition = {
             },
         },
         {
-            id: 'cloudDrives.googleDrive',
-            label: 'Google Drive credentials',
-            primitive: 'nested',
-            defaultValue: undefined,
-            options: {
-                fields: [
-                    { id: 'clientId', label: 'Client ID', primitive: 'string', defaultValue: '' },
-                    { id: 'apiKey', label: 'API Key', primitive: 'string', defaultValue: '' },
-                    { id: 'appId', label: 'App ID', primitive: 'string', defaultValue: '' },
-                ],
-            },
-        },
-        {
-            id: 'cloudDrives.oneDrive',
-            label: 'OneDrive credentials',
-            primitive: 'nested',
-            defaultValue: undefined,
-            options: {
-                fields: [
-                    { id: 'clientId', label: 'Client ID', primitive: 'string', defaultValue: '' },
-                ],
-            },
-        },
-        {
-            id: 'cloudDrives.dropbox',
-            label: 'Dropbox credentials',
-            primitive: 'nested',
-            defaultValue: undefined,
-            options: {
-                fields: [
-                    { id: 'clientId', label: 'Client ID', primitive: 'string', defaultValue: '' },
-                ],
-            },
-        },
-        {
-            id: 'cloudDrives.box',
-            label: 'Box credentials',
-            primitive: 'nested',
-            defaultValue: undefined,
-            options: {
-                fields: [
-                    { id: 'clientId', label: 'Client ID', primitive: 'string', defaultValue: '' },
-                ],
-            },
-        },
-        {
             id: 'showSelectFolderButton',
             label: 'Show "Select folder" button',
             primitive: 'bool',

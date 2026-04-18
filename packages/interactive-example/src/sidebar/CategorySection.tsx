@@ -17,7 +17,7 @@ function renderEntry(entry: ToggleEntry) {
         case 'number':
             return <NumberInput key={entry.id} propId={entry.id} label={entry.label} min={entry.options?.min as number | undefined} max={entry.options?.max as number | undefined} step={entry.options?.step as number | undefined} />
         case 'enum':
-            return <EnumSelect key={entry.id} propId={entry.id} label={entry.label} options={(entry.options?.options as string[]) ?? []} />
+            return <EnumSelect key={entry.id} propId={entry.id} label={entry.label} options={(entry.options?.options as string[]) ?? []} layout={entry.options?.layout as 'segmented' | 'select' | undefined} />
         case 'multi':
             return <MultiSelect key={entry.id} propId={entry.id} label={entry.label} options={(entry.options?.options as string[]) ?? []} />
         case 'string':

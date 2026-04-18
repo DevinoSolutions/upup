@@ -4,11 +4,11 @@ import type { CategoryId } from '../types'
 
 const EXPECTED_IDS: CategoryId[] = [
     'upload', 'sources', 'limits', 'processing', 'editor',
-    'behavior', 'appearance', 'language', 'events',
+    'behavior', 'appearance', 'language', 'events', 'advanced',
 ]
 
 describe('category manifest', () => {
-    it('contains all 9 expected categories', () => {
+    it('contains all expected categories', () => {
         expect(categories.map((c) => c.id).sort()).toEqual([...EXPECTED_IDS].sort())
     })
 

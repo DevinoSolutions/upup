@@ -10,7 +10,7 @@ export const appearanceCategory: CategoryDefinition = {
             label: 'Theme mode',
             primitive: 'enum',
             defaultValue: 'system',
-            options: { options: ['light', 'dark', 'system'] },
+            options: { options: ['light', 'dark', 'system'], layout: 'segmented' },
         },
         {
             id: 'theme.tokens.color.primary',

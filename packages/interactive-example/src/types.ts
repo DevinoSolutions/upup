@@ -10,6 +10,7 @@ export type CategoryId =
     | 'appearance'
     | 'language'
     | 'events'
+    | 'advanced'
 
 /** Dotted path into UpupUploaderProps, e.g. "provider" or "cloudDrives.googleDrive.clientId". */
 export type PropId = string

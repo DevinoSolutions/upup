@@ -7,6 +7,7 @@ import { behaviorCategory } from './behavior'
 import { appearanceCategory } from './appearance'
 import { languageCategory } from './language'
 import { eventsCategory } from './events'
+import { advancedCategory } from './advanced'
 import type { CategoryDefinition, ToggleEntry } from '../types'
 
 export const categories: CategoryDefinition[] = [
@@ -19,6 +20,7 @@ export const categories: CategoryDefinition[] = [
     appearanceCategory,
     languageCategory,
     eventsCategory,
+    advancedCategory,
 ]
 
 export function allEntries(): ToggleEntry[] {

@@ -10,33 +10,10 @@ export const uploadCategory: CategoryDefinition = {
             label: 'Provider',
             primitive: 'enum',
             defaultValue: 's3',
-            options: { options: ['s3', 'backblaze', 'azure', 'digitalocean', 'aws'] },
-        },
-        {
-            id: 'tokenEndpoint',
-            label: 'Token endpoint',
-            primitive: 'string',
-            defaultValue: '',
-            options: { placeholder: '/api/upload-token' },
-        },
-        {
-            id: 'serverUrl',
-            label: 'Server URL',
-            primitive: 'string',
-            defaultValue: '',
-            options: { placeholder: '/api/upup' },
-        },
-        {
-            id: 'apiKey',
-            label: 'API key (managed mode)',
-            primitive: 'string',
-            defaultValue: '',
-        },
-        {
-            id: 'uploadEndpoint',
-            label: 'Upload endpoint',
-            primitive: 'string',
-            defaultValue: '',
+            options: {
+                options: ['s3', 'backblaze', 'azure', 'digitalocean', 'aws'],
+                layout: 'segmented',
+            },
         },
         {
             id: 'maxConcurrentUploads',
@@ -78,7 +55,10 @@ export const uploadCategory: CategoryDefinition = {
                         label: 'Mode',
                         primitive: 'enum',
                         defaultValue: 'multipart',
-                        options: { options: ['multipart', 'tus'] },
+                        options: {
+                            options: ['multipart', 'tus'],
+                            layout: 'segmented',
+                        },
                     },
                     {
                         id: 'chunkSizeBytes',
@@ -96,21 +76,6 @@ export const uploadCategory: CategoryDefinition = {
                     },
                 ],
             },
-        },
-        {
-            id: 'processingEndpoint',
-            label: 'Processing endpoint (SSE)',
-            description: 'After each upload, open an SSE stream at this URL; emits onFileProcessed when done',
-            primitive: 'string',
-            defaultValue: '',
-            options: { placeholder: '/api/processing/status' },
-        },
-        {
-            id: 'processingTimeout',
-            label: 'Processing timeout (ms)',
-            primitive: 'number',
-            defaultValue: 60_000,
-            options: { min: 1_000, max: 600_000 },
         },
     ],
 }

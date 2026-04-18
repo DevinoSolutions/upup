@@ -321,6 +321,54 @@ html.dark .upup-ie-focus:not([data-theme="light"]),
     padding-right: 32px;
 }
 
+/* ── Segmented control (short enum options) ───────────── */
+
+.upup-ie-segmented {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    padding: 4px;
+    background: var(--ie-input-bg);
+    border: 1px solid var(--ie-input-border);
+    border-radius: var(--ie-radius-input);
+    min-height: 38px;
+}
+
+.upup-ie-segmented-option {
+    appearance: none;
+    background: transparent;
+    border: 0;
+    color: var(--ie-fg);
+    font-size: 13px;
+    font-weight: 500;
+    padding: 6px 10px;
+    border-radius: calc(var(--ie-radius-input) - 2px);
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+    text-align: center;
+    white-space: nowrap;
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.upup-ie-segmented-option:hover {
+    background: var(--ie-accent-soft);
+}
+
+.upup-ie-segmented-option[data-active] {
+    background: var(--ie-accent);
+    color: var(--ie-accent-fg, #fff);
+}
+
+.upup-ie-segmented-option[data-active]:hover {
+    background: var(--ie-accent);
+}
+
+.upup-ie-segmented-option:focus-visible {
+    outline: 2px solid var(--ie-accent);
+    outline-offset: 1px;
+}
+
 /* ── Nested config (cloud drives, slot overrides, etc.) ─ */
 
 .upup-ie-nested {
