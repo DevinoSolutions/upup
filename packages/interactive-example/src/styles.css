@@ -107,6 +107,70 @@ html.dark .upup-ie-focus:not([data-theme="light"]),
     min-width: 0;
 }
 
+/* ── Presets bar (top of sidebar) ──────────────────────── */
+
+.upup-ie-presets {
+    background: var(--ie-card-bg);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 0.8px solid var(--ie-card-border);
+    border-radius: var(--ie-radius-card);
+    box-shadow: var(--ie-card-shadow);
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.upup-ie-presets-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ie-fg-muted);
+}
+
+.upup-ie-presets-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.upup-ie-preset {
+    appearance: none;
+    background: var(--ie-input-bg);
+    border: 1px solid var(--ie-input-border);
+    color: var(--ie-fg);
+    font-size: 12px;
+    font-weight: 500;
+    padding: 6px 12px;
+    border-radius: var(--ie-radius-pill);
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+    white-space: nowrap;
+}
+
+.upup-ie-preset:hover {
+    background: var(--ie-accent-soft);
+    border-color: var(--ie-accent);
+}
+
+.upup-ie-preset:focus-visible {
+    outline: 2px solid var(--ie-accent);
+    outline-offset: 2px;
+}
+
+.upup-ie-preset-reset {
+    color: var(--ie-fg-muted);
+    margin-left: auto;
+}
+
+.upup-ie-preset-reset:hover {
+    color: var(--ie-fg);
+    background: transparent;
+    border-color: var(--ie-fg-muted);
+}
+
 /* ── Glass cards (categories) ──────────────────────────── */
 
 .upup-ie-category {

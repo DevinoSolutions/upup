@@ -9,9 +9,9 @@ export const uploadCategory: CategoryDefinition = {
             id: 'provider',
             label: 'Provider',
             primitive: 'enum',
-            defaultValue: 's3',
+            defaultValue: 'aws',
             options: {
-                options: ['s3', 'backblaze', 'azure', 'digitalocean', 'aws'],
+                options: ['aws', 'backblaze', 'azure', 'digitalocean'],
                 layout: 'segmented',
             },
         },

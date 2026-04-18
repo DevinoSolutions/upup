@@ -10,7 +10,7 @@ export default function Home() {
         upup Playground
       </h1>
       <InteractiveExample
-        defaultExpanded={['upload', 'sources', 'limits', 'processing', 'behavior', 'appearance']}
+        defaultExpanded={['upload', 'appearance']}
       />
       <Toast />
     </div>
