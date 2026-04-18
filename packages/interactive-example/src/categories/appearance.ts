@@ -39,16 +39,9 @@ export const appearanceCategory: CategoryDefinition = {
         },
         { id: 'className', label: 'Root className', primitive: 'string', defaultValue: '' },
         {
-            id: 'dark',
-            label: 'Dark (legacy boolean)',
-            description: 'Deprecated in v2 — prefer theme.mode. Still works for v1 consumers.',
-            primitive: 'bool',
-            defaultValue: false,
-        },
-        {
             id: 'classNames',
-            label: 'classNames (legacy slot map)',
-            description: 'Deprecated in v2 — prefer theme.slots above.',
+            label: 'classNames (slot map)',
+            description: 'Per-slot className overrides. Parallel to theme.slots — theme.slots wiring is planned for a follow-up.',
             primitive: 'nested',
             defaultValue: undefined,
             options: {

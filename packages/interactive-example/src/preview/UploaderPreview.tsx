@@ -73,19 +73,20 @@ export function UploaderPreview({ width = 'auto' }: { width?: number | 'auto' })
 
     const { theme, events, ...rest } = (ctx.config as any) ?? {}
     const themeMode: 'light' | 'dark' | 'system' | undefined = theme?.mode
-    const dark =
-        themeMode === 'dark'
-            ? true
-            : themeMode === 'light'
-              ? false
-              : pageIsDark
+    const effectiveMode: 'light' | 'dark' =
+        themeMode === 'dark' || themeMode === 'light'
+            ? themeMode
+            : pageIsDark
+              ? 'dark'
+              : 'light'
+    const effectiveTheme = { ...(theme ?? {}), mode: effectiveMode }
 
     const handlers = eventLoggers(events)
     const style = width === 'auto' ? undefined : { width: `${width}px`, maxWidth: '100%' }
     return (
         <div className="upup-ie-preview" style={style} suppressHydrationWarning>
             {mounted ? (
-                <UpupUploader provider="s3" serverUrl="" {...rest} {...handlers} dark={dark} />
+                <UpupUploader provider="s3" serverUrl="" {...rest} {...handlers} theme={effectiveTheme} />
             ) : (
                 <div className="upup-ie-preview-placeholder" aria-hidden="true" />
             )}

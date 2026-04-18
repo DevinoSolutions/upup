@@ -257,8 +257,6 @@ export type UpupUploaderProps = {
         dropbox?: DropboxConfigs
         box?: BoxConfigs
     }
-    /** @deprecated Use `imageCompression` instead */
-    shouldCompress?: boolean
     /** v2: Enable automatic image compression before upload. */
     imageCompression?: boolean
     /** v2: Generate thumbnails for images/videos before upload. */
@@ -278,8 +276,6 @@ export type UpupUploaderProps = {
     /** v2: Enable crash recovery — saves upload state to IndexedDB for resume after page refresh */
     crashRecovery?: boolean
     accept?: string
-    /** @deprecated Use `maxFiles` instead */
-    limit?: number
     allowPreview?: boolean
     /** v2: Show/hide the upup branding footer. Default true. */
     showBranding?: boolean
@@ -301,7 +297,6 @@ export type UpupUploaderProps = {
     /** Optional image editor. Pass `true` for defaults or an `ImageEditorOptions` object. */
     imageEditor?: boolean | ImageEditorOptions
     customProps?: object
-    dark?: boolean
     maxRetries?: number
     resumable?: ResumableUploadOptions
     classNames?: UpupUploaderPropsClassNames

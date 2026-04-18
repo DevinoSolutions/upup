@@ -99,14 +99,14 @@ export default function Uploader({
       <div className="flex justify-center items-center w-full h-full lg:min-h-[auto] min-h-[70vh]">
         <UpupUploader
           provider={UpupProvider.BackBlaze}
-          limit={limit}
+          maxFiles={limit}
           tokenEndpoint={customFields.tokenEndpoint}
           uploadAdapters={uploadAdapters}
           driveConfigs={customFields.driveConfigs}
-          dark={isDarkMode}
+          theme={{ mode: isDarkMode ? 'dark' : 'light' }}
           mini={mini}
           allowPreview={allowPreview}
-          shouldCompress={shouldCompress}
+          imageCompression={shouldCompress}
           imageEditor={imageEditor}
           maxFileSize={{ size: fileSizeLimit, unit: "MB" }}
           classNames={customClassNames}

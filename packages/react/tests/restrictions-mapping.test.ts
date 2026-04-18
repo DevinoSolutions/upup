@@ -3,16 +3,15 @@ import { describe, it, expect } from 'vitest'
 describe('restrictions → flat props mapping', () => {
   it('maps restrictions.maxNumberOfFiles to limit', () => {
     const restrictions = { maxNumberOfFiles: 5 }
-    const propLimit = undefined
     const maxFiles = undefined
-    const resolvedLimit = propLimit ?? maxFiles ?? restrictions?.maxNumberOfFiles ?? 1
+    const resolvedLimit = maxFiles ?? restrictions?.maxNumberOfFiles ?? 1
     expect(resolvedLimit).toBe(5)
   })
 
-  it('flat prop takes precedence over restrictions', () => {
+  it('maxFiles takes precedence over restrictions.maxNumberOfFiles', () => {
     const restrictions = { maxNumberOfFiles: 10 }
     const maxFiles = 3
-    const resolvedLimit = undefined ?? maxFiles ?? restrictions?.maxNumberOfFiles ?? 1
+    const resolvedLimit = maxFiles ?? restrictions?.maxNumberOfFiles ?? 1
     expect(resolvedLimit).toBe(3)
   })
 

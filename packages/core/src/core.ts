@@ -51,7 +51,6 @@ export interface CoreOptions extends FileManagerOptions {
   stripExifData?: boolean
   imageCompression?: boolean | object
   thumbnailGenerator?: boolean | object
-  shouldCompress?: boolean
   checksumVerification?: boolean
   maxRetries?: number
   maxConcurrentUploads?: number
@@ -305,7 +304,7 @@ export class UpupCore {
       steps.push(exifStep())
     }
 
-    if (this.options.imageCompression || this.options.shouldCompress) {
+    if (this.options.imageCompression) {
       const { compressStep } = await import('./steps/compress')
       const opts = typeof this.options.imageCompression === 'object'
         ? this.options.imageCompression

@@ -9,10 +9,10 @@ These optional props are not required for the UpupUploader component to work.
 | Prop                                          | Example                                                                                            | Type                 | Status   | Default Value                                  |
 | --------------------------------------------- | -------------------------------------------------------------------------------------------------- | -------------------- | -------- | ---------------------------------------------- |
 | [accept](#accept)                             | `accept="image/png"`                                                                               | string               | optional | `*`                                            |
-| [dark](#dark)                                 | `dark={true}`                                                                                      | boolean              | optional | `false`                                        |
+| [theme](#theme)                               | `theme={{ mode: 'dark' }}`                                                                         | `UpupThemeConfig`    | optional | -                                              |
 | [driveConfigs](#driveconfigs)                 | `driveConfigs={{ oneDrive: { onedrive_client_id: process.env.NEXT_PUBLIC_ONEDRIVE_CLIENT_ID! } }}` | object               | optional | -                                              |
 | [imageEditor](#imageeditor)                   | `imageEditor={true}`                                                                               | `boolean \| ImageEditorOptions` | optional | `false`                        |
-| [limit](#limit)                               | `limit={5}`                                                                                        | number               | optional | `1`                                            |
+| [maxFiles](#maxfiles)                         | `maxFiles={5}`                                                                                     | number               | optional | `1`                                            |
 | [localePack](#localepack)                     | `localePack={ja_JP}`                                                                               | `Translations`       | optional | `en_US`                                        |
 | [maxFileSize](#maxfilesize)                   | `maxFileSize={{ size: 20, unit: "MB" }}`                                                           | object               | optional | `{ size: 10, unit: "MB" }`                     |
 | [maxRetries](#maxretries)                     | `maxRetries={3}`                                                                                   | number               | optional | -                                              |
@@ -32,9 +32,17 @@ Specifies which file types the uploader will accept. Uses standard MIME type for
 - `application/pdf` - PDFs only
 - `image/png, application/pdf` - PNGs and PDFs
 
-## `dark`
+## `theme`
 
-Enables dark mode styling for the uploader component. Uses a dark background (#232323) and light text when enabled.
+Configures the uploader's theme. Pass `mode: 'light' | 'dark' | 'system'` to control colour scheme. `'system'` follows the user's OS preference.
+
+```tsx
+<UpupUploader theme={{ mode: 'dark' }} />
+```
+
+:::note
+The legacy `dark={boolean}` prop was removed in v2.1. Use `theme={{ mode: 'dark' }}` instead.
+:::
 
 ## `driveConfigs`
 
@@ -65,12 +73,14 @@ Enables the built-in image editor. Set to `true` for defaults or pass an `ImageE
 
 See [Image Editor](/docs/api-reference/upupuploader/image-editor) for full configuration.
 
-## `limit`
+## `maxFiles`
 
 Maximum number of files allowed for upload. When using [`mini`](#mini) mode, this is automatically set to 1.
 
 :::note
-Files beyond the limit will trigger [`onWarn`](/docs/api-reference/upupuploader/event-handlers.md#onwarn) callback with a message:"Allowed limit has been surpassed!"
+Files beyond the limit will trigger [`onWarn`](/docs/api-reference/upupuploader/event-handlers.md#onwarn) callback with a message: "Allowed limit has been surpassed!"
+
+The legacy `limit` prop was removed in v2.1. Use `maxFiles` instead.
 :::
 
 ## `localePack`
@@ -126,7 +136,7 @@ A value of `3` is a good starting point for most use cases. Increase it for unre
 
 Enables compact mode for the uploader component. When enabled:
 
-- Limits file selection to 1 file (overrides [`limit`](#limit) prop)
+- Limits file selection to 1 file (overrides [`maxFiles`](#maxfiles) prop)
 - Uses smaller container dimensions
 - Simplifies UI elements
 

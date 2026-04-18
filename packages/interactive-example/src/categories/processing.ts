@@ -5,7 +5,6 @@ export const processingCategory: CategoryDefinition = {
     label: 'Processing',
     description: 'Pipeline steps before upload',
     entries: [
-        { id: 'shouldCompress', label: 'Compress generic files', primitive: 'bool', defaultValue: false },
         { id: 'imageCompression', label: 'Compress images', primitive: 'bool', defaultValue: false },
         { id: 'thumbnailGenerator', label: 'Generate thumbnails', primitive: 'bool', defaultValue: false },
         { id: 'checksumVerification', label: 'Checksum verification (SHA-256)', primitive: 'bool', defaultValue: false },

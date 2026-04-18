@@ -50,7 +50,6 @@ type ContextProps = Required<
         UpupUploaderProps,
         | 'uploadAdapters'
         | 'accept'
-        | 'limit'
         | 'isProcessing'
         | 'allowPreview'
         | 'mini'
@@ -61,7 +60,6 @@ type ContextProps = Required<
         | 'onFilesDrop'
         | 'enablePaste'
         | 'onError'
-        | 'dark'
         | 'classNames'
         | 'icons'
         | 'showSelectFolderButton'
@@ -71,6 +69,10 @@ type ContextProps = Required<
     >
 > &
     Pick<UpupUploaderProps, 'maxFileSize' | 'maxRetries' | 'resumable'> & {
+        /** Derived from `maxFiles ?? restrictions?.maxNumberOfFiles ?? 10`. */
+        limit: number
+        /** Derived from `theme?.mode === 'dark'`. */
+        dark: boolean
         multiple: boolean
         icons: Required<UpupUploaderPropsIcons>
         imageEditor: ResolvedImageEditorOptions

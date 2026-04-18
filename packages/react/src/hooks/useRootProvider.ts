@@ -74,9 +74,7 @@ function getDir(i18nLocale: string | object | undefined): 'ltr' | 'rtl' {
 export default function useRootProvider({
     accept: acceptProp = '*',
     mini = false,
-    dark: darkProp = false,
     theme,
-    limit: propLimit,
     maxFiles,
     isProcessing = false,
     allowPreview = true,
@@ -89,7 +87,6 @@ export default function useRootProvider({
     minFileSize: minFileSizeProp,
     maxTotalFileSize: maxTotalFileSizeProp,
     restrictions,
-    shouldCompress: shouldCompressProp = false,
     imageCompression = false,
     thumbnailGenerator = true,
     uploadAdapters,
@@ -154,16 +151,13 @@ export default function useRootProvider({
     }
     const resolvedAdapters = uploadAdapters
         ?? (sources ? sources.map(s => sourceToAdapter[s]).filter(Boolean) : [UploadAdapter.INTERNAL, UploadAdapter.LINK, UploadAdapter.CAMERA, UploadAdapter.AUDIO, UploadAdapter.SCREEN])
-    const resolvedLimit = propLimit ?? maxFiles ?? restrictions?.maxNumberOfFiles ?? 10
+    const resolvedLimit = maxFiles ?? restrictions?.maxNumberOfFiles ?? 10
     // apiKey → managed service, serverUrl → self-hosted server, tokenEndpoint/uploadEndpoint → direct
     const resolvedServerUrl = serverUrl ?? (apiKey ? 'https://api.upup.dev/v1' : undefined)
     const resolvedEndpoint = tokenEndpoint ?? uploadEndpoint ?? (resolvedServerUrl ? `${resolvedServerUrl}/presign` : '')
-    // theme.mode → dark mapping (theme takes precedence over dark prop)
-    const dark = theme?.mode ? theme.mode === 'dark' : darkProp
+    const dark = theme?.mode === 'dark'
     // theme.slots → per-slot className overrides passed through context
     const themeSlots = theme?.slots
-    // imageCompression → shouldCompress alias
-    const shouldCompress = imageCompression || shouldCompressProp
     // restrictions → flat props mapping (restrictions takes precedence)
     const maxFileSize = maxFileSizeProp ?? restrictions?.maxFileSize ?? { size: 1, unit: 'GB' as const } // 1 GB default
     const minFileSize = minFileSizeProp ?? restrictions?.minFileSize
@@ -209,7 +203,7 @@ export default function useRootProvider({
             onBeforeFileAdded,
             onError: (err) => onError(typeof err === 'string' ? err : err.message),
             autoUpload,
-            shouldCompress,
+            imageCompression,
             maxConcurrentUploads,
             googleDriveConfigs: driveConfigs?.googleDrive as Record<string, unknown> | undefined,
             oneDriveConfigs: driveConfigs?.oneDrive as Record<string, unknown> | undefined,
@@ -331,11 +325,11 @@ export default function useRootProvider({
             maxTotalFileSize,
             maxRetries,
             onBeforeFileAdded,
-            shouldCompress,
+            imageCompression,
             maxConcurrentUploads,
             autoUpload,
         })
-    }, [provider, serverUrl, apiKey, resolvedEndpoint, accept, resolvedLimit, maxFileSize, minFileSize, maxTotalFileSize, maxRetries, onBeforeFileAdded, shouldCompress, maxConcurrentUploads, autoUpload])
+    }, [provider, serverUrl, apiKey, resolvedEndpoint, accept, resolvedLimit, maxFileSize, minFileSize, maxTotalFileSize, maxRetries, onBeforeFileAdded, imageCompression, maxConcurrentUploads, autoUpload])
 
     // v2: emit source-change event when active adapter changes
     useEffect(() => {
@@ -912,7 +906,7 @@ export default function useRootProvider({
                 ? dynamicFiles
                 : Array.from(selectedFilesMap.values())
             try {
-                const compressedFiles = shouldCompress
+                const compressedFiles = imageCompression
                     ? await compressFiles(selectedFiles)
                     : selectedFiles
                 const processedFiles = await handlePrepareFiles(compressedFiles)
@@ -1093,7 +1087,7 @@ export default function useRootProvider({
         },
         [
             selectedFilesMap,
-            shouldCompress,
+            imageCompression,
             compressFiles,
             handlePrepareFiles,
             provider,

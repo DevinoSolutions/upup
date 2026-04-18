@@ -93,7 +93,7 @@ export default function MyUploader() {
         >
             <UpupUploader
                 {...args}
-                dark={isDarkMode}
+                theme={{ mode: isDarkMode ? 'dark' : 'light' }}
                 ref={ref}
                 onFilesSelected={() => {
                     // Use setTimeout to ensure we get the updated state after React has processed the file selection
