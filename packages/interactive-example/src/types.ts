@@ -22,6 +22,7 @@ export type PrimitiveKind =
     | 'multi'
     | 'string'
     | 'nested'
+    | 'size-unit'
 
 export type ToggleEntry = {
     id: PropId

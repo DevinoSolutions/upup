@@ -8,6 +8,7 @@ import {
     MultiSelect,
     StringInput,
     NestedConfig,
+    SizeUnitInput,
 } from './primitives'
 import { SOURCE_META, type SourceMeta } from '../icons/source-meta'
 
@@ -25,6 +26,8 @@ function renderEntry(entry: ToggleEntry) {
             return <StringInput key={entry.id} propId={entry.id} label={entry.label} placeholder={entry.options?.placeholder as string | undefined} />
         case 'nested':
             return <NestedConfig key={entry.id} parentPath={entry.id} label={entry.label} fields={(entry.options?.fields as ToggleEntry[]) ?? []} legendIcon={entry.options?.legendIcon as React.FC | undefined} />
+        case 'size-unit':
+            return <SizeUnitInput key={entry.id} propId={entry.id} label={entry.label} defaultSize={entry.options?.defaultSize as number | undefined} defaultUnit={entry.options?.defaultUnit as 'B' | 'KB' | 'MB' | 'GB' | undefined} />
     }
 }
 

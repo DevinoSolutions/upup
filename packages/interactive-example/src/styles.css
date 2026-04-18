@@ -552,6 +552,33 @@ html.dark .upup-ie-focus:not([data-theme="light"]),
     outline-offset: 1px;
 }
 
+/* ── Size + Unit inline row ───────────────────────────── */
+
+.upup-ie-size-unit {
+    display: grid;
+    grid-template-columns: 100px 1fr;
+    gap: 8px;
+    align-items: stretch;
+}
+
+.upup-ie-size-unit-input {
+    width: 100%;
+}
+
+.upup-ie-size-unit-segmented {
+    display: flex;
+    gap: 4px;
+    padding: 4px;
+    background: var(--ie-input-bg);
+    border: 1px solid var(--ie-input-border);
+    border-radius: var(--ie-radius-input);
+}
+
+.upup-ie-size-unit-option {
+    flex: 1 1 0;
+    min-width: 0;
+}
+
 /* ── Nested config (cloud drives, slot overrides, etc.) ─ */
 
 .upup-ie-nested {
