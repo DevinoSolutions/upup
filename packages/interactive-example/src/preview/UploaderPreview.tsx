@@ -3,6 +3,7 @@ import React, { useContext, useEffect, useState } from 'react'
 import { UpupUploader } from '@upup/react'
 import '@upup/react/styles'
 import { ConfigContext } from '../state/ConfigContext'
+import { useEventLog } from '../state/EventLogContext'
 
 function useMounted(): boolean {
     const [mounted, setMounted] = useState(false)
@@ -48,16 +49,20 @@ function resolvePageTheme(): boolean {
     return false
 }
 
-// Build `{ onXxx: (...args) => console.log('[upup]', 'onXxx', ...args) }` for
-// every event-toggle the user has turned on. Events map into real callback
-// props on UpupUploader; if this wasn't done the toggles would be spread as a
+// Build `{ onXxx: (...args) => record(name, args) + console.log }` for every
+// event-toggle the user has turned on. Events map into real callback props on
+// UpupUploader; if this wasn't done the toggles would be spread as a
 // non-existent `events={...}` prop and silently do nothing.
-function eventLoggers(flags: Record<string, boolean> | undefined): Record<string, (...args: unknown[]) => void> {
+function eventLoggers(
+    flags: Record<string, boolean> | undefined,
+    record: ((name: string, args: unknown[]) => void) | undefined,
+): Record<string, (...args: unknown[]) => void> {
     if (!flags) return {}
     const out: Record<string, (...args: unknown[]) => void> = {}
     for (const [name, enabled] of Object.entries(flags)) {
         if (!enabled) continue
         out[name] = (...args: unknown[]) => {
+            record?.(name, args)
             // eslint-disable-next-line no-console
             console.log('[upup]', name, ...args)
         }
@@ -67,6 +72,7 @@ function eventLoggers(flags: Record<string, boolean> | undefined): Record<string
 
 export function UploaderPreview({ width = 'auto' }: { width?: number | 'auto' }) {
     const ctx = useContext(ConfigContext)
+    const log = useEventLog()
     const mounted = useMounted()
     const pageIsDark = usePageThemeIsDark()
     if (!ctx) return null
@@ -81,7 +87,7 @@ export function UploaderPreview({ width = 'auto' }: { width?: number | 'auto' })
               : 'light'
     const effectiveTheme = { ...(theme ?? {}), mode: effectiveMode }
 
-    const handlers = eventLoggers(events)
+    const handlers = eventLoggers(events, log?.record)
     const style = width === 'auto' ? undefined : { width: `${width}px`, maxWidth: '100%' }
     return (
         <div className="upup-ie-preview" style={style} suppressHydrationWarning>

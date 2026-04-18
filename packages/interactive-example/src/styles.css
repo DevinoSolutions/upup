@@ -398,6 +398,112 @@ html.dark .upup-ie-focus:not([data-theme="light"]),
     padding-right: 32px;
 }
 
+/* ── Event log panel (below preview) ───────────────────── */
+
+.upup-ie-eventlog {
+    margin-top: 16px;
+    background: var(--ie-card-bg);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 0.8px solid var(--ie-card-border);
+    border-radius: var(--ie-radius-card);
+    overflow: hidden;
+}
+
+.upup-ie-eventlog-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--ie-card-border);
+}
+
+.upup-ie-eventlog-title {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ie-fg-muted);
+}
+
+.upup-ie-eventlog-count {
+    color: var(--ie-fg);
+    font-weight: 500;
+    text-transform: none;
+    letter-spacing: normal;
+}
+
+.upup-ie-eventlog-clear {
+    appearance: none;
+    background: transparent;
+    border: 1px solid var(--ie-input-border);
+    color: var(--ie-fg-muted);
+    font-size: 11px;
+    font-weight: 500;
+    padding: 4px 10px;
+    border-radius: var(--ie-radius-pill);
+    cursor: pointer;
+    transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.upup-ie-eventlog-clear:hover:not(:disabled) {
+    border-color: var(--ie-fg-muted);
+    color: var(--ie-fg);
+}
+
+.upup-ie-eventlog-clear:disabled {
+    cursor: default;
+    opacity: 0.4;
+}
+
+.upup-ie-eventlog-empty {
+    margin: 0;
+    padding: 18px 16px;
+    font-size: 12px;
+    color: var(--ie-fg-muted);
+    line-height: 1.5;
+}
+
+.upup-ie-eventlog-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    max-height: 260px;
+    overflow-y: auto;
+    font-family: var(--ie-mono);
+    font-size: 11.5px;
+}
+
+.upup-ie-eventlog-row {
+    display: grid;
+    grid-template-columns: auto auto 1fr;
+    gap: 10px;
+    padding: 6px 14px;
+    border-bottom: 1px solid var(--ie-card-border);
+}
+
+.upup-ie-eventlog-row:last-child {
+    border-bottom: 0;
+}
+
+.upup-ie-eventlog-time {
+    color: var(--ie-fg-faint);
+    white-space: nowrap;
+}
+
+.upup-ie-eventlog-name {
+    color: var(--ie-accent);
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.upup-ie-eventlog-args {
+    color: var(--ie-fg-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
 /* ── Segmented control (short enum options) ───────────── */
 
 .upup-ie-segmented {

@@ -1,8 +1,10 @@
 'use client'
 import React, { useContext, useEffect, useMemo, useState } from 'react'
 import { ConfigProvider, ConfigContext } from './state/ConfigContext'
+import { EventLogProvider } from './state/EventLogContext'
 import { Sidebar } from './sidebar/Sidebar'
 import { UploaderPreview } from './preview/UploaderPreview'
+import { EventLogPanel } from './preview/EventLogPanel'
 import { CodeTab } from './code/CodeTab'
 import { findEntry } from './categories'
 import {
@@ -142,6 +144,7 @@ function Shell({
                     {tab === 'preview' && <UploaderPreview width={previewWidth} />}
                     {tab === 'code' && showCodeTab && <CodeTab />}
                 </div>
+                {tab === 'preview' && <EventLogPanel />}
             </div>
         </div>
     )
@@ -180,16 +183,18 @@ export function InteractiveExample({
 
     return (
         <ConfigProvider initialConfig={merged}>
-            {!disableUrlSync && <UrlSync />}
-            {focus && focus.length > 0 ? (
-                <FocusMode focus={focus} previewWidth={previewWidth} />
-            ) : (
-                <Shell
-                    defaultExpanded={defaultExpanded}
-                    showCodeTab={showCodeTab}
-                    previewWidth={previewWidth}
-                />
-            )}
+            <EventLogProvider>
+                {!disableUrlSync && <UrlSync />}
+                {focus && focus.length > 0 ? (
+                    <FocusMode focus={focus} previewWidth={previewWidth} />
+                ) : (
+                    <Shell
+                        defaultExpanded={defaultExpanded}
+                        showCodeTab={showCodeTab}
+                        previewWidth={previewWidth}
+                    />
+                )}
+            </EventLogProvider>
         </ConfigProvider>
     )
 }
