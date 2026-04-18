@@ -148,6 +148,19 @@ html.dark .upup-ie-focus:not([data-theme="light"]),
     cursor: pointer;
     transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
     white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.upup-ie-preset-icon {
+    flex: 0 0 auto;
+    color: var(--ie-fg-muted);
+    transition: color 0.15s ease;
+}
+
+.upup-ie-preset:hover .upup-ie-preset-icon {
+    color: var(--ie-accent);
 }
 
 .upup-ie-preset:hover {
