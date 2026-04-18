@@ -42,6 +42,7 @@ export const ar_SA: Translations = {
     resumeUpload: 'Resume Upload',
     retryUpload: 'Retry Upload',
     pauseUpload: 'Pause upload',
+    paused: 'متوقف مؤقتاً',
 
     removeFile: 'إزالة الملف',
     clickToPreview: 'انقر للمعاينة',

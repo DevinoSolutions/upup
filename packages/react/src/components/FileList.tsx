@@ -297,7 +297,7 @@ export default memo(function FileList() {
                             <ShouldRender
                                 if={uploadStatus === UploadStatus.PAUSED}
                             >
-                                <span>Paused</span>
+                                <span>{tr.paused}</span>
                             </ShouldRender>
                         </div>
                     </ShouldRender>

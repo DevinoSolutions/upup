@@ -1,4 +1,4 @@
-import { UploadStatus, UpupErrorCode, createTranslator, enUS, type UploadFile, type PipelineStep, type PipelineContext } from '@upup/shared'
+import { UploadStatus, UpupErrorCode, createTranslator, enUS, type UploadFile, type PipelineStep, type PipelineContext, type LocaleBundle, type UpupLocaleCode, type UpupMessages } from '@upup/shared'
 import { EventEmitter } from './events'
 import { PluginManager, type UpupPlugin, type ExtensionMethods } from './plugin'
 import { FileManager, type FileManagerOptions, fileSizeInBytes, matchesAccept } from './file-manager'
@@ -65,8 +65,15 @@ export interface CoreOptions extends FileManagerOptions {
   boxConfigs?: Record<string, unknown>
   driveConfigs?: Record<string, unknown>
   meta?: Record<string, unknown>
-  locale?: unknown
-  translations?: unknown
+  /**
+   * i18n configuration. Accepts either:
+   * - a full LocaleBundle (`import { enUS } from '@upup/shared'`)
+   * - a BCP 47 locale code string (e.g. `'fr-FR'`) — consumers are
+   *   responsible for resolving codes to bundles via `i18n.loadLocale`.
+   */
+  locale?: LocaleBundle | UpupLocaleCode
+  /** Per-namespace message overrides merged on top of `locale.messages`. */
+  translations?: Partial<UpupMessages>
   restrictions?: Restrictions
   cloudDrives?: CloudDrivesConfig
   enableWorkers?: boolean

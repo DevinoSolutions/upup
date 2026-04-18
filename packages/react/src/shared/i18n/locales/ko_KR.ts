@@ -42,6 +42,7 @@ export const ko_KR: Translations = {
     resumeUpload: 'Resume Upload',
     retryUpload: 'Retry Upload',
     pauseUpload: 'Pause upload',
+    paused: '일시정지됨',
 
     removeFile: '파일 삭제',
     clickToPreview: '미리보기',

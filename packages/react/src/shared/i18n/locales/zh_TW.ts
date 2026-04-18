@@ -41,6 +41,7 @@ export const zh_TW: Translations = {
     resumeUpload: 'Resume Upload',
     retryUpload: 'Retry Upload',
     pauseUpload: 'Pause upload',
+    paused: '已暫停',
 
     removeFile: '移除檔案',
     clickToPreview: '點擊預覽',

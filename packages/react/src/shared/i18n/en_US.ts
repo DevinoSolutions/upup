@@ -49,6 +49,7 @@ export const en_US: Translations = {
     resumeUpload: 'Resume Upload',
     retryUpload: 'Retry Upload',
     pauseUpload: 'Pause upload',
+    paused: 'Paused',
 
     // ── ProgressBar ───────────────────────────────────────────
     uploadProgress: 'Upload progress',

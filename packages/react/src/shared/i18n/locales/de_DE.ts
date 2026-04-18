@@ -41,6 +41,7 @@ export const de_DE: Translations = {
     resumeUpload: 'Resume Upload',
     retryUpload: 'Retry Upload',
     pauseUpload: 'Pause upload',
+    paused: 'Pausiert',
 
     removeFile: 'Datei entfernen',
     clickToPreview: 'Vorschau anzeigen',

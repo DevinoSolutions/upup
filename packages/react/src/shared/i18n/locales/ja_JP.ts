@@ -44,6 +44,7 @@ export const ja_JP: Translations = {
     resumeUpload: 'Resume Upload',
     retryUpload: 'Retry Upload',
     pauseUpload: 'Pause upload',
+    paused: '一時停止中',
 
     removeFile: 'ファイルを削除',
     clickToPreview: 'プレビュー',

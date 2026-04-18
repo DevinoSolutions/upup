@@ -62,6 +62,8 @@ export type Translations = {
     resumeUpload: string
     retryUpload: string
     pauseUpload: string
+    /** Status label shown beside the progress bar when upload is paused */
+    paused: string
 
     // ── ProgressBar ───────────────────────────────────────────
     uploadProgress: string

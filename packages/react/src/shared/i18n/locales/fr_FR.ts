@@ -42,6 +42,7 @@ export const fr_FR: Translations = {
     resumeUpload: 'Resume Upload',
     retryUpload: 'Retry Upload',
     pauseUpload: 'Pause upload',
+    paused: 'En pause',
 
     removeFile: 'Supprimer le fichier',
     clickToPreview: 'Aperçu',
