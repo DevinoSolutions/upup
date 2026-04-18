@@ -1,4 +1,5 @@
 import type { CategoryDefinition } from '../types'
+import { CLOUD_DRIVE_META } from '../icons/source-meta'
 
 /**
  * Opt-in integrations most visitors won't touch on a first look.
@@ -60,10 +61,11 @@ export const advancedCategory: CategoryDefinition = {
         },
         {
             id: 'cloudDrives.googleDrive',
-            label: 'Google Drive credentials',
+            label: 'Google Drive',
             primitive: 'nested',
             defaultValue: undefined,
             options: {
+                legendIcon: CLOUD_DRIVE_META.googleDrive.Icon,
                 fields: [
                     { id: 'clientId', label: 'Client ID', primitive: 'string', defaultValue: '' },
                     { id: 'apiKey', label: 'API Key', primitive: 'string', defaultValue: '' },
@@ -73,10 +75,11 @@ export const advancedCategory: CategoryDefinition = {
         },
         {
             id: 'cloudDrives.oneDrive',
-            label: 'OneDrive credentials',
+            label: 'OneDrive',
             primitive: 'nested',
             defaultValue: undefined,
             options: {
+                legendIcon: CLOUD_DRIVE_META.oneDrive.Icon,
                 fields: [
                     { id: 'clientId', label: 'Client ID', primitive: 'string', defaultValue: '' },
                 ],
@@ -84,10 +87,11 @@ export const advancedCategory: CategoryDefinition = {
         },
         {
             id: 'cloudDrives.dropbox',
-            label: 'Dropbox credentials',
+            label: 'Dropbox',
             primitive: 'nested',
             defaultValue: undefined,
             options: {
+                legendIcon: CLOUD_DRIVE_META.dropbox.Icon,
                 fields: [
                     { id: 'clientId', label: 'Client ID', primitive: 'string', defaultValue: '' },
                 ],
@@ -95,10 +99,11 @@ export const advancedCategory: CategoryDefinition = {
         },
         {
             id: 'cloudDrives.box',
-            label: 'Box credentials',
+            label: 'Box',
             primitive: 'nested',
             defaultValue: undefined,
             options: {
+                legendIcon: CLOUD_DRIVE_META.box.Icon,
                 fields: [
                     { id: 'clientId', label: 'Client ID', primitive: 'string', defaultValue: '' },
                 ],

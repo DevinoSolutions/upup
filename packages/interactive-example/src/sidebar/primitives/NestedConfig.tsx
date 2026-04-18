@@ -10,14 +10,21 @@ export function NestedConfig({
     parentPath,
     label,
     fields,
+    legendIcon,
 }: {
     parentPath: string
     label: string
     fields: ToggleEntry[]
+    /** Optional icon shown alongside the legend — used for cloud drive blocks. */
+    legendIcon?: React.FC
 }) {
+    const Icon = legendIcon
     return (
         <fieldset className="upup-ie-nested">
-            <legend>{label}</legend>
+            <legend className={Icon ? 'upup-ie-nested-legend-with-icon' : undefined}>
+                {Icon ? <span className="upup-ie-nested-legend-icon"><Icon /></span> : null}
+                <span>{label}</span>
+            </legend>
             {fields.map((f) => {
                 const fullPath = `${parentPath}.${f.id}`
                 switch (f.primitive) {
@@ -32,7 +39,7 @@ export function NestedConfig({
                     case 'string':
                         return <StringInput key={f.id} propId={fullPath} label={f.label} placeholder={f.options?.placeholder as string | undefined} />
                     case 'nested':
-                        return <NestedConfig key={f.id} parentPath={fullPath} label={f.label} fields={(f.options?.fields as ToggleEntry[]) ?? []} />
+                        return <NestedConfig key={f.id} parentPath={fullPath} label={f.label} fields={(f.options?.fields as ToggleEntry[]) ?? []} legendIcon={f.options?.legendIcon as React.FC | undefined} />
                 }
             })}
         </fieldset>

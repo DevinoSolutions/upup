@@ -68,6 +68,19 @@ export { useRootContext, useRootContext as useUploaderContext } from './context/
 // ── Utilities ───────────────────────────────────────────
 export { cn } from './lib/tailwind'
 
+// ── Brand icons (authentic colours, matches uploader adapter buttons) ──
+export {
+    MyDeviceIcon,
+    BoxIcon,
+    DropBoxIcon,
+    GoogleDriveIcon,
+    OneDriveIcon,
+    LinkIcon,
+    CameraIcon,
+    AudioIcon,
+    ScreenCastIcon,
+} from './components/Icons'
+
 // ── i18n ─────────────────────────────────────────────────
 export { en_US } from './shared/i18n'
 
