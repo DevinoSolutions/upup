@@ -28,7 +28,6 @@ export type {
     Translations,
     UploadSource,
     UpupUploaderProps,
-    UpupUploaderPropsClassNames,
     UpupUploaderPropsIcons,
 } from './shared/types'
 

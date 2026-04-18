@@ -3,7 +3,7 @@ import type { CategoryDefinition } from '../types'
 export const appearanceCategory: CategoryDefinition = {
     id: 'appearance',
     label: 'Appearance',
-    description: 'Theme, tokens, and slot overrides',
+    description: 'Theme mode, tokens, and per-slot overrides',
     entries: [
         {
             id: 'theme.mode',
@@ -22,35 +22,22 @@ export const appearanceCategory: CategoryDefinition = {
         {
             id: 'theme.slots',
             label: 'Slot overrides (className strings)',
+            description: 'Apply custom className strings to internal slots. See docs for the full slot map.',
             primitive: 'nested',
             defaultValue: undefined,
             options: {
                 fields: [
-                    { id: 'fileList.uploadButton', label: 'fileList.uploadButton', primitive: 'string', defaultValue: '' },
+                    { id: 'uploader.container', label: 'uploader.container', primitive: 'string', defaultValue: '' },
                     { id: 'fileList.root', label: 'fileList.root', primitive: 'string', defaultValue: '' },
+                    { id: 'fileList.uploadButton', label: 'fileList.uploadButton', primitive: 'string', defaultValue: '' },
                     { id: 'filePreview.deleteButton', label: 'filePreview.deleteButton', primitive: 'string', defaultValue: '' },
                     { id: 'progressBar.fill', label: 'progressBar.fill', primitive: 'string', defaultValue: '' },
-                    { id: 'adapterSelector.adapterButton', label: 'adapterSelector.adapterButton', primitive: 'string', defaultValue: '' },
-                    { id: 'mainBox.root', label: 'mainBox.root', primitive: 'string', defaultValue: '' },
-                    { id: 'adapterView.header', label: 'adapterView.header', primitive: 'string', defaultValue: '' },
+                    { id: 'sourceSelector.adapterButton', label: 'sourceSelector.adapterButton', primitive: 'string', defaultValue: '' },
+                    { id: 'sourceView.header', label: 'sourceView.header', primitive: 'string', defaultValue: '' },
                     { id: 'urlUploader.fetchButton', label: 'urlUploader.fetchButton', primitive: 'string', defaultValue: '' },
                 ],
             },
         },
         { id: 'className', label: 'Root className', primitive: 'string', defaultValue: '' },
-        {
-            id: 'classNames',
-            label: 'classNames (slot map)',
-            description: 'Per-slot className overrides. Parallel to theme.slots — theme.slots wiring is planned for a follow-up.',
-            primitive: 'nested',
-            defaultValue: undefined,
-            options: {
-                fields: [
-                    { id: 'containerFull', label: 'containerFull', primitive: 'string', defaultValue: '' },
-                    { id: 'containerMini', label: 'containerMini', primitive: 'string', defaultValue: '' },
-                    { id: 'uploadButton', label: 'uploadButton', primitive: 'string', defaultValue: '' },
-                ],
-            },
-        },
     ],
 }

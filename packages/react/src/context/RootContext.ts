@@ -16,6 +16,7 @@ import {
     Translations,
     UploadAdapter,
     UpupUploaderProps,
+    UpupUploaderPropsClassNames,
     UpupUploaderPropsIcons,
 } from '../shared/types'
 import { FilesProgressMap } from '../hooks/useRootProvider'
@@ -60,7 +61,6 @@ type ContextProps = Required<
         | 'onFilesDrop'
         | 'enablePaste'
         | 'onError'
-        | 'classNames'
         | 'icons'
         | 'showSelectFolderButton'
         | 'showBranding'
@@ -73,6 +73,11 @@ type ContextProps = Required<
         limit: number
         /** Derived from `theme?.mode === 'dark'`. */
         dark: boolean
+        /**
+         * Flat slot className map consumed by internal components.
+         * Populated from `theme.slots` via `flattenSlotsToClassNames()`.
+         */
+        classNames: UpupUploaderPropsClassNames
         multiple: boolean
         icons: Required<UpupUploaderPropsIcons>
         imageEditor: ResolvedImageEditorOptions

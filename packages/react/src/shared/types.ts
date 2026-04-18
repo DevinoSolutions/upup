@@ -299,7 +299,6 @@ export type UpupUploaderProps = {
     customProps?: object
     maxRetries?: number
     resumable?: ResumableUploadOptions
-    classNames?: UpupUploaderPropsClassNames
     icons?: UpupUploaderPropsIcons
 
     // i18n / Localisation

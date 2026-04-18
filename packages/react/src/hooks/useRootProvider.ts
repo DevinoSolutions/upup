@@ -1,7 +1,7 @@
 'use client'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { UpupCore } from '@upup/core'
-import { UploadStatus as CoreUploadStatus, createTranslator } from '@upup/shared'
+import { UploadStatus as CoreUploadStatus, createTranslator, flattenSlotsToClassNames } from '@upup/shared'
 import type { Translator } from '@upup/shared'
 import {
     TbCameraRotate,
@@ -17,6 +17,7 @@ import {
     ResolvedImageEditorOptions,
     UploadAdapter,
     UpupUploaderProps,
+    UpupUploaderPropsClassNames,
 } from '../shared/types'
 import { IRootContext, UploadStatus } from '../context/RootContext'
 import {
@@ -94,7 +95,6 @@ export default function useRootProvider({
     onError: errorHandler,
     onWarn: warningHandler,
     icons = {},
-    classNames = {},
     i18n,
     localePack,
     translations: translationOverrides,
@@ -158,6 +158,9 @@ export default function useRootProvider({
     const dark = theme?.mode === 'dark'
     // theme.slots → per-slot className overrides passed through context
     const themeSlots = theme?.slots
+    // theme.slots → internal flat className map (v1-shape) consumed by
+    // components until they're migrated to read slot paths directly.
+    const resolvedClassNames = flattenSlotsToClassNames(themeSlots)
     // restrictions → flat props mapping (restrictions takes precedence)
     const maxFileSize = maxFileSizeProp ?? restrictions?.maxFileSize ?? { size: 1, unit: 'GB' as const } // 1 GB default
     const minFileSize = minFileSizeProp ?? restrictions?.minFileSize
@@ -1239,7 +1242,7 @@ export default function useRootProvider({
                 CameraDeleteIcon: icons.CameraDeleteIcon || TbTrash,
                 LoaderIcon: icons.LoaderIcon || TbLoader,
             },
-            classNames,
+            classNames: resolvedClassNames as UpupUploaderPropsClassNames,
             imageEditor: resolvedImageEditor,
         },
     }
