@@ -1,4 +1,4 @@
-import type { UpupServerConfig, FileMetadata } from './config'
+import type { UpupServerConfig, FileMetadata, DriveTokens } from './config'
 import {
   generatePresignedUrl,
   initiateMultipartUpload,
@@ -6,6 +6,15 @@ import {
   completeMultipartUpload,
   abortMultipartUpload,
 } from './providers/aws'
+import {
+  generateOAuthState,
+  saveOAuthState,
+  consumeOAuthState,
+  setTokens,
+  getTokens,
+  deleteTokens,
+  resolveUserId,
+} from './tokenStore'
 
 export type RouteHandler = (req: Request) => Promise<Response>
 
@@ -167,11 +176,84 @@ async function handleMultipartAbort(req: Request, config: UpupServerConfig): Pro
   }
 }
 
-const VALID_PROVIDERS = ['google-drive', 'onedrive', 'dropbox'] as const
+const VALID_PROVIDERS = ['google-drive', 'onedrive', 'dropbox', 'box'] as const
 type OAuthProvider = (typeof VALID_PROVIDERS)[number]
 
 function isValidProvider(p: string): p is OAuthProvider {
   return (VALID_PROVIDERS as readonly string[]).includes(p)
+}
+
+type ProviderOAuthMeta = {
+  authUrl: string
+  tokenUrl: string
+  scope: string
+  clientId: string
+  clientSecret: string
+  extra?: Record<string, string>
+}
+
+function getProviderMeta(
+  config: UpupServerConfig,
+  provider: OAuthProvider,
+): ProviderOAuthMeta | { error: string; status: number } {
+  const providers = config.providers
+  if (!providers) return { error: 'No OAuth providers configured', status: 500 }
+
+  switch (provider) {
+    case 'google-drive': {
+      const gc = providers.googleDrive
+      if (!gc) return { error: 'Google Drive not configured', status: 400 }
+      return {
+        authUrl: 'https://accounts.google.com/o/oauth2/v2/auth',
+        tokenUrl: 'https://oauth2.googleapis.com/token',
+        scope: 'https://www.googleapis.com/auth/drive.readonly',
+        clientId: gc.clientId,
+        clientSecret: gc.clientSecret,
+        extra: { access_type: 'offline', prompt: 'consent' },
+      }
+    }
+    case 'onedrive': {
+      const oc = providers.oneDrive
+      if (!oc) return { error: 'OneDrive not configured', status: 400 }
+      const tenant = oc.tenantId ?? 'common'
+      return {
+        authUrl: `https://login.microsoftonline.com/${tenant}/oauth2/v2.0/authorize`,
+        tokenUrl: `https://login.microsoftonline.com/${tenant}/oauth2/v2.0/token`,
+        scope: 'Files.Read.All offline_access',
+        clientId: oc.clientId,
+        clientSecret: oc.clientSecret,
+      }
+    }
+    case 'dropbox': {
+      const dc = providers.dropbox
+      if (!dc) return { error: 'Dropbox not configured', status: 400 }
+      return {
+        authUrl: 'https://www.dropbox.com/oauth2/authorize',
+        tokenUrl: 'https://api.dropboxapi.com/oauth2/token',
+        scope: 'files.content.read files.metadata.read',
+        clientId: dc.appKey,
+        clientSecret: dc.appSecret,
+        extra: { token_access_type: 'online' },
+      }
+    }
+    case 'box': {
+      const bc = providers.box
+      if (!bc) return { error: 'Box not configured', status: 400 }
+      return {
+        authUrl: 'https://account.box.com/api/oauth2/authorize',
+        tokenUrl: 'https://api.box.com/oauth2/token',
+        scope: 'root_readonly',
+        clientId: bc.clientId,
+        clientSecret: bc.clientSecret,
+      }
+    }
+  }
+}
+
+function callbackUrlFor(req: Request, provider: string): string {
+  const url = new URL(req.url)
+  const base = `${url.origin}${url.pathname.replace(/\/auth\/[\w-]+$/, '')}`
+  return `${base}/auth/${provider}/cb`
 }
 
 async function handleOAuthRedirect(
@@ -183,125 +265,612 @@ async function handleOAuthRedirect(
     return json({ error: `Unknown provider: ${provider}` }, 400)
   }
 
-  const providerConfig = config.providers
-  if (!providerConfig) {
-    return json({ error: 'No OAuth providers configured' }, 500)
+  if (!config.tokenStore) {
+    return json({ error: 'tokenStore is required for OAuth flows' }, 500)
   }
 
-  const url = new URL(req.url)
-  const redirectBase = `${url.origin}${url.pathname.replace(/\/auth\/[\w-]+$/, '')}`
-  const callbackUrl = `${redirectBase}/auth/${provider}/cb`
+  const userId = await resolveUserId(config, req)
+  if (!userId) return json({ error: 'Unauthenticated' }, 401)
 
-  // Build provider-specific OAuth URL
-  let oauthUrl: string
-  switch (provider) {
-    case 'google-drive': {
-      const gc = providerConfig.googleDrive
-      if (!gc) return json({ error: 'Google Drive not configured' }, 400)
-      oauthUrl =
-        `https://accounts.google.com/o/oauth2/v2/auth?` +
-        `client_id=${encodeURIComponent(gc.clientId)}` +
-        `&redirect_uri=${encodeURIComponent(callbackUrl)}` +
-        `&response_type=code&scope=${encodeURIComponent('https://www.googleapis.com/auth/drive.readonly')}` +
-        `&access_type=offline`
-      break
-    }
-    case 'onedrive': {
-      const oc = providerConfig.oneDrive
-      if (!oc) return json({ error: 'OneDrive not configured' }, 400)
-      const tenant = oc.tenantId ?? 'common'
-      oauthUrl =
-        `https://login.microsoftonline.com/${tenant}/oauth2/v2/authorize?` +
-        `client_id=${encodeURIComponent(oc.clientId)}` +
-        `&redirect_uri=${encodeURIComponent(callbackUrl)}` +
-        `&response_type=code&scope=${encodeURIComponent('Files.Read.All offline_access')}`
-      break
-    }
-    case 'dropbox': {
-      const dc = providerConfig.dropbox
-      if (!dc) return json({ error: 'Dropbox not configured' }, 400)
-      oauthUrl =
-        `https://www.dropbox.com/oauth2/authorize?` +
-        `client_id=${encodeURIComponent(dc.appKey)}` +
-        `&redirect_uri=${encodeURIComponent(callbackUrl)}` +
-        `&response_type=code&token_access_type=offline`
-      break
-    }
-    default:
-      return json({ error: `Unknown provider: ${provider}` }, 400)
-  }
+  const meta = getProviderMeta(config, provider)
+  if ('error' in meta) return json({ error: meta.error }, meta.status)
+
+  const state = generateOAuthState()
+  const returnTo = new URL(req.url).searchParams.get('returnTo') ?? undefined
+  await saveOAuthState(config.tokenStore, state, { userId, provider, returnTo })
+
+  const params = new URLSearchParams({
+    client_id: meta.clientId,
+    redirect_uri: callbackUrlFor(req, provider),
+    response_type: 'code',
+    scope: meta.scope,
+    state,
+    ...(meta.extra ?? {}),
+  })
 
   return new Response(null, {
     status: 302,
-    headers: { Location: oauthUrl },
+    headers: { Location: `${meta.authUrl}?${params.toString()}` },
   })
 }
 
 async function handleOAuthCallback(
-  _req: Request,
-  _config: UpupServerConfig,
+  req: Request,
+  config: UpupServerConfig,
   provider: string,
 ): Promise<Response> {
   if (!isValidProvider(provider)) {
     return json({ error: `Unknown provider: ${provider}` }, 400)
   }
-
-  // TODO: Exchange authorization code for tokens using provider credentials
-  // For now return a placeholder indicating the callback was received
-  const url = new URL(_req.url)
-  const code = url.searchParams.get('code')
-
-  if (!code) {
-    return json({ error: 'Missing authorization code' }, 400)
+  if (!config.tokenStore) {
+    return json({ error: 'tokenStore is required' }, 500)
   }
 
-  return json({
-    provider,
-    status: 'callback_received',
-    message: 'TODO: Exchange code for tokens',
+  const url = new URL(req.url)
+  const code = url.searchParams.get('code')
+  const state = url.searchParams.get('state')
+  const error = url.searchParams.get('error')
+
+  if (error) return json({ error: `OAuth error: ${error}` }, 400)
+  if (!code || !state) return json({ error: 'Missing code or state' }, 400)
+
+  const stateData = await consumeOAuthState(config.tokenStore, state)
+  if (!stateData || stateData.provider !== provider) {
+    return json({ error: 'Invalid or expired state' }, 400)
+  }
+
+  const meta = getProviderMeta(config, provider)
+  if ('error' in meta) return json({ error: meta.error }, meta.status)
+
+  const tokenRes = await fetch(meta.tokenUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      code,
+      client_id: meta.clientId,
+      client_secret: meta.clientSecret,
+      redirect_uri: callbackUrlFor(req, provider),
+      grant_type: 'authorization_code',
+    }),
+  })
+
+  if (!tokenRes.ok) {
+    const body = await tokenRes.text()
+    return json(
+      { error: 'Token exchange failed', detail: body.slice(0, 500) },
+      502,
+    )
+  }
+
+  const payload = (await tokenRes.json()) as {
+    access_token: string
+    expires_in?: number
+    refresh_token?: string
+    scope?: string
+    token_type?: string
+  }
+
+  const tokens: DriveTokens = {
+    accessToken: payload.access_token,
+    expiresAt: payload.expires_in
+      ? Date.now() + payload.expires_in * 1000
+      : undefined,
+    scope: payload.scope,
+    tokenType: payload.token_type,
+    refreshToken: payload.refresh_token,
+  }
+  await setTokens(config.tokenStore, stateData.userId, provider, tokens)
+
+  return htmlResponse(buildOAuthSuccessPage(provider, stateData.returnTo))
+}
+
+function htmlResponse(body: string, status = 200): Response {
+  return new Response(body, {
+    status,
+    headers: { 'Content-Type': 'text/html; charset=utf-8' },
   })
 }
 
+function buildOAuthSuccessPage(provider: string, returnTo?: string): string {
+  const safeProvider = provider.replace(/[^a-z0-9-]/gi, '')
+  const safeReturn = returnTo
+    ? returnTo.replace(/[<>"'\\]/g, '')
+    : ''
+  return `<!doctype html>
+<html><head><title>Connected</title></head><body>
+<script>
+  try {
+    if (window.opener) {
+      window.opener.postMessage(
+        { type: 'upup:oauth-success', provider: ${JSON.stringify(safeProvider)} },
+        '*',
+      );
+      window.close();
+    } else if (${JSON.stringify(safeReturn)}) {
+      window.location.replace(${JSON.stringify(safeReturn)});
+    } else {
+      document.body.textContent = 'Connected to ' + ${JSON.stringify(safeProvider)} + '. You may close this window.';
+    }
+  } catch (e) {
+    document.body.textContent = 'Connected. You may close this window.';
+  }
+</script>
+</body></html>`
+}
+
 async function handleListFiles(
-  _req: Request,
-  _config: UpupServerConfig,
+  req: Request,
+  config: UpupServerConfig,
   provider: string,
 ): Promise<Response> {
   if (!isValidProvider(provider)) {
     return json({ error: `Unknown provider: ${provider}` }, 400)
   }
+  if (!config.tokenStore) return json({ error: 'tokenStore is required' }, 500)
 
-  // TODO: Use stored tokens to list files from provider's API
-  return json({
-    provider,
-    files: [],
-    message: 'TODO: List files from cloud drive',
-  })
+  const userId = await resolveUserId(config, req)
+  if (!userId) return json({ error: 'Unauthenticated' }, 401)
+
+  const tokens = await getTokens(config.tokenStore, userId, provider)
+  if (!tokens) {
+    return json({ reauth: true, provider }, 401)
+  }
+
+  const url = new URL(req.url)
+  const folderId = url.searchParams.get('folderId') ?? undefined
+  const search = url.searchParams.get('search') ?? undefined
+
+  try {
+    const files = await listDriveFiles(provider, tokens.accessToken, {
+      folderId,
+      search,
+    })
+    return json({ provider, files })
+  } catch (err) {
+    if ((err as { status?: number }).status === 401) {
+      await deleteTokens(config.tokenStore, userId, provider)
+      return json({ reauth: true, provider }, 401)
+    }
+    return json({ error: (err as Error).message }, 500)
+  }
 }
 
 async function handleFileTransfer(
   req: Request,
-  _config: UpupServerConfig,
+  config: UpupServerConfig,
   provider: string,
 ): Promise<Response> {
   if (!isValidProvider(provider)) {
     return json({ error: `Unknown provider: ${provider}` }, 400)
   }
+  if (!config.tokenStore) return json({ error: 'tokenStore is required' }, 500)
+
+  const userId = await resolveUserId(config, req)
+  if (!userId) return json({ error: 'Unauthenticated' }, 401)
+
+  const tokens = await getTokens(config.tokenStore, userId, provider)
+  if (!tokens) return json({ reauth: true, provider }, 401)
+
+  let body: {
+    fileId: string
+    fileName?: string
+    size?: number
+    mimeType?: string
+  }
+  try {
+    body = (await req.json()) as typeof body
+  } catch {
+    return json({ error: 'Invalid JSON body' }, 400)
+  }
+  if (!body.fileId) return json({ error: 'Missing fileId' }, 400)
+
+  if (
+    config.maxFileSize &&
+    typeof body.size === 'number' &&
+    body.size > config.maxFileSize
+  ) {
+    return json({ error: 'File too large' }, 413)
+  }
+  if (
+    config.allowedTypes?.length &&
+    body.mimeType &&
+    !config.allowedTypes.includes(body.mimeType)
+  ) {
+    return json({ error: 'File type not allowed' }, 415)
+  }
 
   try {
-    const body = (await req.json()) as { fileId: string; fileName?: string }
-    if (!body.fileId) {
-      return json({ error: 'Missing fileId' }, 400)
-    }
-
-    // TODO: Download file from cloud provider and upload to S3
-    return json({
+    const { stream, size, fileName, mimeType } = await fetchDriveFile(
       provider,
-      fileId: body.fileId,
-      status: 'pending',
-      message: 'TODO: Transfer file from cloud drive to S3',
+      tokens.accessToken,
+      body,
+    )
+    const { transferDriveFileToS3 } = await import('./transfer')
+    const result = await transferDriveFileToS3({
+      stream,
+      size,
+      fileName,
+      mimeType,
+      storage: config.storage,
+      multipartThreshold: config.multipartThreshold,
     })
-  } catch (error) {
-    return json({ error: (error as Error).message }, 500)
+    if (config.hooks?.onFileUploaded) {
+      await config.hooks.onFileUploaded(result, req)
+    }
+    return json({ provider, ...result })
+  } catch (err) {
+    if ((err as { status?: number }).status === 401) {
+      await deleteTokens(config.tokenStore, userId, provider)
+      return json({ reauth: true, provider }, 401)
+    }
+    return json({ error: (err as Error).message }, 500)
+  }
+}
+
+type DriveFile = {
+  id: string
+  name: string
+  size?: number
+  mimeType?: string
+  thumbnailUrl?: string
+  isFolder: boolean
+  modifiedAt?: string
+}
+
+async function listDriveFiles(
+  provider: OAuthProvider,
+  accessToken: string,
+  opts: { folderId?: string; search?: string },
+): Promise<DriveFile[]> {
+  switch (provider) {
+    case 'google-drive':
+      return listGoogleDriveFiles(accessToken, opts)
+    case 'onedrive':
+      return listOneDriveFiles(accessToken, opts)
+    case 'dropbox':
+      return listDropboxFiles(accessToken, opts)
+    case 'box':
+      return listBoxFiles(accessToken, opts)
+  }
+}
+
+async function fetchDriveFile(
+  provider: OAuthProvider,
+  accessToken: string,
+  body: { fileId: string; fileName?: string; size?: number; mimeType?: string },
+): Promise<{
+  stream: ReadableStream<Uint8Array>
+  size: number
+  fileName: string
+  mimeType: string
+}> {
+  switch (provider) {
+    case 'google-drive':
+      return fetchGoogleDriveFile(accessToken, body)
+    case 'onedrive':
+      return fetchOneDriveFile(accessToken, body)
+    case 'dropbox':
+      return fetchDropboxFile(accessToken, body)
+    case 'box':
+      return fetchBoxFile(accessToken, body)
+  }
+}
+
+async function driveFetch(
+  url: string,
+  init: RequestInit = {},
+): Promise<Response> {
+  const res = await fetch(url, init)
+  if (res.status === 401) {
+    const err = new Error('Drive API 401') as Error & { status: number }
+    err.status = 401
+    throw err
+  }
+  if (!res.ok) {
+    const text = await res.text().catch(() => '')
+    throw new Error(
+      `Drive API ${res.status}: ${text.slice(0, 200) || res.statusText}`,
+    )
+  }
+  return res
+}
+
+async function listGoogleDriveFiles(
+  accessToken: string,
+  opts: { folderId?: string; search?: string },
+): Promise<DriveFile[]> {
+  const parent = opts.folderId ?? 'root'
+  const q = opts.search
+    ? `name contains '${opts.search.replace(/'/g, "\\'")}' and trashed = false`
+    : `'${parent}' in parents and trashed = false`
+  const params = new URLSearchParams({
+    q,
+    fields:
+      'files(id,name,size,mimeType,thumbnailLink,modifiedTime,iconLink)',
+    pageSize: '200',
+  })
+  const res = await driveFetch(
+    `https://www.googleapis.com/drive/v3/files?${params.toString()}`,
+    { headers: { Authorization: `Bearer ${accessToken}` } },
+  )
+  const data = (await res.json()) as {
+    files: Array<{
+      id: string
+      name: string
+      size?: string
+      mimeType: string
+      thumbnailLink?: string
+      modifiedTime?: string
+    }>
+  }
+  return data.files.map((f) => ({
+    id: f.id,
+    name: f.name,
+    size: f.size ? Number(f.size) : undefined,
+    mimeType: f.mimeType,
+    thumbnailUrl: f.thumbnailLink,
+    isFolder: f.mimeType === 'application/vnd.google-apps.folder',
+    modifiedAt: f.modifiedTime,
+  }))
+}
+
+async function fetchGoogleDriveFile(
+  accessToken: string,
+  body: { fileId: string; fileName?: string; size?: number; mimeType?: string },
+) {
+  const metaRes = await driveFetch(
+    `https://www.googleapis.com/drive/v3/files/${encodeURIComponent(
+      body.fileId,
+    )}?fields=name,size,mimeType`,
+    { headers: { Authorization: `Bearer ${accessToken}` } },
+  )
+  const meta = (await metaRes.json()) as {
+    name: string
+    size?: string
+    mimeType?: string
+  }
+  const dlRes = await driveFetch(
+    `https://www.googleapis.com/drive/v3/files/${encodeURIComponent(
+      body.fileId,
+    )}?alt=media`,
+    { headers: { Authorization: `Bearer ${accessToken}` } },
+  )
+  if (!dlRes.body) throw new Error('Empty download body')
+  return {
+    stream: dlRes.body,
+    size: Number(meta.size ?? body.size ?? 0),
+    fileName: body.fileName ?? meta.name,
+    mimeType: body.mimeType ?? meta.mimeType ?? 'application/octet-stream',
+  }
+}
+
+async function listOneDriveFiles(
+  accessToken: string,
+  opts: { folderId?: string; search?: string },
+): Promise<DriveFile[]> {
+  const path = opts.search
+    ? `/me/drive/root/search(q='${encodeURIComponent(opts.search)}')`
+    : opts.folderId
+      ? `/me/drive/items/${encodeURIComponent(opts.folderId)}/children`
+      : '/me/drive/root/children'
+  const res = await driveFetch(`https://graph.microsoft.com/v1.0${path}`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  })
+  const data = (await res.json()) as {
+    value: Array<{
+      id: string
+      name: string
+      size?: number
+      file?: { mimeType?: string }
+      folder?: unknown
+      lastModifiedDateTime?: string
+    }>
+  }
+  return data.value.map((f) => ({
+    id: f.id,
+    name: f.name,
+    size: f.size,
+    mimeType: f.file?.mimeType,
+    isFolder: !!f.folder,
+    modifiedAt: f.lastModifiedDateTime,
+  }))
+}
+
+async function fetchOneDriveFile(
+  accessToken: string,
+  body: { fileId: string; fileName?: string; size?: number; mimeType?: string },
+) {
+  const metaRes = await driveFetch(
+    `https://graph.microsoft.com/v1.0/me/drive/items/${encodeURIComponent(
+      body.fileId,
+    )}`,
+    { headers: { Authorization: `Bearer ${accessToken}` } },
+  )
+  const meta = (await metaRes.json()) as {
+    name: string
+    size?: number
+    file?: { mimeType?: string }
+  }
+  const dlRes = await driveFetch(
+    `https://graph.microsoft.com/v1.0/me/drive/items/${encodeURIComponent(
+      body.fileId,
+    )}/content`,
+    { headers: { Authorization: `Bearer ${accessToken}` } },
+  )
+  if (!dlRes.body) throw new Error('Empty download body')
+  return {
+    stream: dlRes.body,
+    size: meta.size ?? body.size ?? 0,
+    fileName: body.fileName ?? meta.name,
+    mimeType:
+      body.mimeType ?? meta.file?.mimeType ?? 'application/octet-stream',
+  }
+}
+
+async function listDropboxFiles(
+  accessToken: string,
+  opts: { folderId?: string; search?: string },
+): Promise<DriveFile[]> {
+  const endpoint = opts.search
+    ? 'https://api.dropboxapi.com/2/files/search_v2'
+    : 'https://api.dropboxapi.com/2/files/list_folder'
+  const body = opts.search
+    ? { query: opts.search }
+    : { path: opts.folderId ?? '', recursive: false }
+  const res = await driveFetch(endpoint, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(body),
+  })
+  const data = (await res.json()) as
+    | {
+        entries: Array<{
+          '.tag': 'file' | 'folder' | 'deleted'
+          id: string
+          name: string
+          path_lower?: string
+          size?: number
+          server_modified?: string
+        }>
+      }
+    | {
+        matches: Array<{
+          metadata: {
+            metadata: {
+              '.tag': 'file' | 'folder'
+              id: string
+              name: string
+              path_lower?: string
+              size?: number
+            }
+          }
+        }>
+      }
+  const entries =
+    'entries' in data
+      ? data.entries
+      : data.matches.map((m) => m.metadata.metadata)
+  return entries
+    .filter((e) => e['.tag'] !== 'deleted')
+    .map((e) => ({
+      id: e.path_lower ?? e.id,
+      name: e.name,
+      size: 'size' in e ? e.size : undefined,
+      isFolder: e['.tag'] === 'folder',
+      modifiedAt: 'server_modified' in e ? e.server_modified : undefined,
+    }))
+}
+
+async function fetchDropboxFile(
+  accessToken: string,
+  body: { fileId: string; fileName?: string; size?: number; mimeType?: string },
+) {
+  const dlRes = await driveFetch('https://content.dropboxapi.com/2/files/download', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Dropbox-API-Arg': JSON.stringify({ path: body.fileId }),
+    },
+  })
+  if (!dlRes.body) throw new Error('Empty download body')
+  const apiResult = dlRes.headers.get('Dropbox-API-Result')
+  let name = body.fileName ?? 'download'
+  let size = body.size ?? 0
+  if (apiResult) {
+    try {
+      const parsed = JSON.parse(apiResult) as { name?: string; size?: number }
+      name = body.fileName ?? parsed.name ?? name
+      size = parsed.size ?? size
+    } catch {}
+  }
+  return {
+    stream: dlRes.body,
+    size,
+    fileName: name,
+    mimeType:
+      body.mimeType ??
+      dlRes.headers.get('Content-Type') ??
+      'application/octet-stream',
+  }
+}
+
+async function listBoxFiles(
+  accessToken: string,
+  opts: { folderId?: string; search?: string },
+): Promise<DriveFile[]> {
+  if (opts.search) {
+    const params = new URLSearchParams({
+      query: opts.search,
+      limit: '200',
+    })
+    const res = await driveFetch(
+      `https://api.box.com/2.0/search?${params.toString()}`,
+      { headers: { Authorization: `Bearer ${accessToken}` } },
+    )
+    const data = (await res.json()) as {
+      entries: Array<{
+        type: 'file' | 'folder'
+        id: string
+        name: string
+        size?: number
+        modified_at?: string
+      }>
+    }
+    return data.entries.map((e) => ({
+      id: e.id,
+      name: e.name,
+      size: e.size,
+      isFolder: e.type === 'folder',
+      modifiedAt: e.modified_at,
+    }))
+  }
+  const folderId = opts.folderId ?? '0'
+  const res = await driveFetch(
+    `https://api.box.com/2.0/folders/${encodeURIComponent(folderId)}/items?limit=200&fields=id,name,size,type,modified_at`,
+    { headers: { Authorization: `Bearer ${accessToken}` } },
+  )
+  const data = (await res.json()) as {
+    entries: Array<{
+      type: 'file' | 'folder'
+      id: string
+      name: string
+      size?: number
+      modified_at?: string
+    }>
+  }
+  return data.entries.map((e) => ({
+    id: e.id,
+    name: e.name,
+    size: e.size,
+    isFolder: e.type === 'folder',
+    modifiedAt: e.modified_at,
+  }))
+}
+
+async function fetchBoxFile(
+  accessToken: string,
+  body: { fileId: string; fileName?: string; size?: number; mimeType?: string },
+) {
+  const metaRes = await driveFetch(
+    `https://api.box.com/2.0/files/${encodeURIComponent(body.fileId)}`,
+    { headers: { Authorization: `Bearer ${accessToken}` } },
+  )
+  const meta = (await metaRes.json()) as { name: string; size?: number }
+  const dlRes = await driveFetch(
+    `https://api.box.com/2.0/files/${encodeURIComponent(body.fileId)}/content`,
+    { headers: { Authorization: `Bearer ${accessToken}` }, redirect: 'follow' },
+  )
+  if (!dlRes.body) throw new Error('Empty download body')
+  return {
+    stream: dlRes.body,
+    size: meta.size ?? body.size ?? 0,
+    fileName: body.fileName ?? meta.name,
+    mimeType:
+      body.mimeType ??
+      dlRes.headers.get('Content-Type') ??
+      'application/octet-stream',
   }
 }
