@@ -652,20 +652,25 @@ export default function useRootProvider({
         // Collect only the files that are actually accepted and added in this batch.
         const addedThisBatch: FileWithParams[] = []
 
-        for (const file of newFiles) {
+        for (const incoming of newFiles) {
             // Respect the limit strictly; stop when capacity is reached.
             if (newFilesMap.size >= limit) {
                 onWarn(translations.allowedLimitSurpassed)
-                onRestrictionFailed?.(file, 'LIMIT_EXCEEDED')
-                coreRef.current?.emit('restriction-failed', { file, reason: 'LIMIT_EXCEEDED' })
+                onRestrictionFailed?.(incoming, 'LIMIT_EXCEEDED')
+                coreRef.current?.emit('restriction-failed', { file: incoming, reason: 'LIMIT_EXCEEDED' })
                 break
             }
 
-            // v2: async file filter
+            // v2: async file filter. Contract:
+            //   false          → skip this file
+            //   File           → use the returned File in place of the original
+            //                    (lets consumers rename, transcode, watermark, etc.)
+            //   undefined/true → accept the original file
+            let file: File = incoming
             if (onBeforeFileAdded) {
                 const result = await onBeforeFileAdded(file)
                 if (result === false) continue
-                // If result is a File, use it as replacement (not implemented yet)
+                if (result instanceof File) file = result
             }
 
             const fileWithParams = fileAppendParams(file)
