@@ -161,9 +161,25 @@ describe('UpupProvider', () => {
         expect(UpupProvider.DigitalOcean).toBe('digitalocean')
     })
 
-    it('has 4 distinct values', () => {
+    it('defines CloudflareR2 = "r2"', () => {
+        expect(UpupProvider.CloudflareR2).toBe('r2')
+    })
+
+    it('defines Wasabi = "wasabi"', () => {
+        expect(UpupProvider.Wasabi).toBe('wasabi')
+    })
+
+    it('defines MinIO = "minio"', () => {
+        expect(UpupProvider.MinIO).toBe('minio')
+    })
+
+    it('defines GCS = "gcs"', () => {
+        expect(UpupProvider.GCS).toBe('gcs')
+    })
+
+    it('has 8 distinct values', () => {
         const vals = Object.values(UpupProvider)
-        expect(new Set(vals).size).toBe(4)
+        expect(new Set(vals).size).toBe(8)
     })
 
     it('all values are lowercase strings', () => {

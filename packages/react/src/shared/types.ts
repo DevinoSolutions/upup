@@ -36,11 +36,33 @@ export type BoxConfigs = {
     box_redirect_uri?: string
 }
 
+/**
+ * Storage providers the uploader recognises by name.
+ *
+ * Every value except `Azure` is **S3-compatible** — the client uses the
+ * same presigned-URL flow for all of them. The string is forwarded to
+ * your `tokenEndpoint` / `serverUrl` so your server knows which SDK +
+ * endpoint to use when signing requests.
+ *
+ * Azure is a distinct protocol (Block Blob uploads via SAS URLs).
+ */
 export enum UpupProvider {
+    /** Amazon S3 */
     AWS = 'aws',
+    /** Microsoft Azure Blob Storage (separate protocol) */
     Azure = 'azure',
+    /** Backblaze B2 (S3-compatible) */
     BackBlaze = 'backblaze',
+    /** DigitalOcean Spaces (S3-compatible) */
     DigitalOcean = 'digitalocean',
+    /** Cloudflare R2 (S3-compatible) */
+    CloudflareR2 = 'r2',
+    /** Wasabi Hot Cloud Storage (S3-compatible) */
+    Wasabi = 'wasabi',
+    /** MinIO self-hosted object storage (S3-compatible) */
+    MinIO = 'minio',
+    /** Google Cloud Storage via its S3-compatible interoperability mode */
+    GCS = 'gcs',
 }
 
 type MaxFileSizeObject = {
@@ -207,8 +229,21 @@ export type UploadSource = 'local' | 'camera' | 'url' | 'google_drive' | 'onedri
 
 export type UpupUploaderProps = {
     // Required Props
-    /** Storage provider. Accepts enum or string: 'aws' | 'azure' | 'backblaze' | 'digitalocean' */
-    provider: UpupProvider | 'aws' | 'azure' | 'backblaze' | 'digitalocean'
+    /**
+     * Storage provider. Accepts the UpupProvider enum or any of the string
+     * literals. All S3-compatible providers share the same client code
+     * path; the string is forwarded to your server-side presigning code.
+     */
+    provider:
+        | UpupProvider
+        | 'aws'
+        | 'azure'
+        | 'backblaze'
+        | 'digitalocean'
+        | 'r2'
+        | 'wasabi'
+        | 'minio'
+        | 'gcs'
     tokenEndpoint?: string
 
     // ── v2 DX aliases (preferred) ────────────────────────────

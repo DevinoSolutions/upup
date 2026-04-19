@@ -51,6 +51,12 @@ the one-page migration guide.
 
 ### Added
 
+- **Four new `provider` values**: `'r2'` (Cloudflare R2), `'wasabi'`,
+  `'minio'`, `'gcs'` (Google Cloud Storage via S3 interop). All route
+  through the same S3-compatible client path as `aws`/`backblaze`/
+  `digitalocean`; your server-side presigner decides which SDK +
+  endpoint to use when you receive the string. `UpupProvider` enum
+  gains `CloudflareR2`, `Wasabi`, `MinIO`, `GCS` members.
 - **`theme.slots` is now wired end-to-end.** Before this release it
   was publicly typed but silently ignored; the runtime read from the
   flat `classNames` prop. Now slot overrides reach the DOM. Four new
