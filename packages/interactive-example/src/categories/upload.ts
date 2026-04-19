@@ -8,6 +8,7 @@ export const uploadCategory: CategoryDefinition = {
         {
             id: 'provider',
             label: 'Provider',
+            description: 'Storage backend the uploader signs URLs for. AWS covers S3-compatible stores.',
             primitive: 'enum',
             defaultValue: 'aws',
             options: {

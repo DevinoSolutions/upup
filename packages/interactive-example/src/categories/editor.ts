@@ -5,7 +5,13 @@ export const editorCategory: CategoryDefinition = {
     label: 'Editor',
     description: 'Image editor configuration',
     entries: [
-        { id: 'imageEditor.enabled', label: 'Enable image editor', primitive: 'bool', defaultValue: false },
+        {
+            id: 'imageEditor.enabled',
+            label: 'Enable image editor',
+            description: 'Lazy-loads react-filerobot-image-editor so users can crop, rotate, and annotate images before upload.',
+            primitive: 'bool',
+            defaultValue: false,
+        },
         {
             id: 'imageEditor.display',
             label: 'Display mode',

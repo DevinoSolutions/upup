@@ -1,5 +1,6 @@
 import React, { useId } from 'react'
 import { useConfig } from '../../state/useConfig'
+import { FieldLabel } from './FieldLabel'
 
 export function EnumSelect({
     propId,
@@ -7,6 +8,7 @@ export function EnumSelect({
     options,
     layout,
     defaultValue,
+    description,
 }: {
     propId: string
     label: string
@@ -18,6 +20,7 @@ export function EnumSelect({
      * value to config; unsetting brings this visual default back.
      */
     defaultValue?: string
+    description?: string
 }) {
     const id = useId()
     const { value, set } = useConfig(propId)
@@ -33,7 +36,7 @@ export function EnumSelect({
     if (resolvedLayout === 'segmented') {
         return (
             <div className="upup-ie-field" role="radiogroup" aria-labelledby={id}>
-                <span id={id} className="upup-ie-field-label">{label}</span>
+                <FieldLabel id={id} label={label} description={description} />
                 <div className="upup-ie-segmented">
                     {options.map((o) => {
                         const active = visual === o
@@ -60,7 +63,7 @@ export function EnumSelect({
 
     return (
         <label htmlFor={id} className="upup-ie-field">
-            <span className="upup-ie-field-label">{label}</span>
+            <FieldLabel label={label} description={description} />
             <select
                 id={id}
                 value={visual}

@@ -1,5 +1,6 @@
 import React, { useId, useState, useEffect } from 'react'
 import { useConfig } from '../../state/useConfig'
+import { FieldLabel } from './FieldLabel'
 
 export function NumberInput({
     propId,
@@ -9,6 +10,7 @@ export function NumberInput({
     step = 1,
     defaultValue,
     display,
+    description,
 }: {
     propId: string
     label: string
@@ -19,6 +21,7 @@ export function NumberInput({
     defaultValue?: number
     /** 'slider' renders a range input with a live readout (for 0-1 style props). */
     display?: 'number' | 'slider'
+    description?: string
 }) {
     const id = useId()
     const { value, set } = useConfig(propId)
@@ -46,7 +49,7 @@ export function NumberInput({
         const readout = value == null ? '—' : String(value)
         return (
             <div className="upup-ie-field">
-                <span className="upup-ie-field-label">{label}</span>
+                <FieldLabel label={label} description={description} />
                 <div className="upup-ie-range">
                     <input
                         id={id}
@@ -65,7 +68,7 @@ export function NumberInput({
 
     return (
         <label htmlFor={id} className="upup-ie-field">
-            <span className="upup-ie-field-label">{label}</span>
+            <FieldLabel label={label} description={description} />
             <input
                 id={id}
                 type="number"
