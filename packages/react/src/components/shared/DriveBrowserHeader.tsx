@@ -36,7 +36,7 @@ export default function DriveBrowserHeader({
     if (!user) return null
 
     return (
-        <div>
+        <div data-upup-slot="drive-browser-header">
             <div
                 className={cn(
                     'upup-shadow-bottom upup-grid upup-grid-cols-[1fr,auto] upup-bg-black/[0.025] upup-px-3 upup-py-2 upup-text-xs upup-font-medium upup-text-[#333]',

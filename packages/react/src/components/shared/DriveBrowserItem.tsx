@@ -44,6 +44,7 @@ export default function DriveBrowserItem({
         <MyAnimatePresence>
             <motion.div
                 key={file.id}
+                data-upup-slot="drive-browser-item"
                 initial={{
                     opacity: 0,
                     y: 10,
