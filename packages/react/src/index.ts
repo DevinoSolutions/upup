@@ -38,7 +38,7 @@ export type {
 } from './shared/types'
 
 // ── v2 re-exports from @upup/shared + @upup/core ───────
-export type { UploadStatus } from '@upup/shared'
+export type { UploadStatus, UpupThemeSlots, DeepPartialSlots, UpupSlotPath } from '@upup/shared'
 export { UpupCore, type CoreOptions } from '@upup/core'
 
 // ── Sub-components (v1 names) ───────────────────────────

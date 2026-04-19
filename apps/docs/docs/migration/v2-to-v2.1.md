@@ -140,14 +140,19 @@ Partial overrides are fine — every key is optional. See the
 
 ## `UpupUploaderPropsClassNames` type
 
-No longer exported from `@upup/react`. If you were using it to type
-your own class maps, switch to the shape under
-`@upup/shared`'s `DeepPartialSlots`.
+No longer publicly exported. If you were using it to type your own
+class maps, switch to `DeepPartialSlots` (re-exported from the same
+package):
 
 ```diff
-- import type { UpupUploaderPropsClassNames } from '@upup/react'
-+ import type { DeepPartialSlots } from '@upup/shared'
+- import type { UpupUploaderPropsClassNames } from 'upup-react-file-uploader'
++ import type { DeepPartialSlots } from 'upup-react-file-uploader'
 ```
+
+Everything you need now lives under the single `upup-react-file-uploader`
+install — the v2.0.0 split across `@upup/react`, `@upup/shared`, `@upup/core`
+has been collapsed. The former sub-packages are still workspace modules
+internally but aren't published.
 
 ## Events — no change
 
@@ -158,8 +163,9 @@ untouched.
 
 ## CoreOptions typing
 
-`@upup/core` consumers who pass `locale` or `translations` directly
-to the core API will see tighter types:
+Consumers using the headless `UpupCore` class (re-exported from
+`upup-react-file-uploader`) who pass `locale` or `translations`
+directly will see tighter types:
 
 ```diff
   new UpupCore({

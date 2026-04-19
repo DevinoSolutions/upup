@@ -1,12 +1,12 @@
 # Changelog
 
-All notable changes to this project are documented here. This repository
-ships multiple npm packages:
-
-- `upup-react-file-uploader` (the published package; lives at
-  `packages/upup`)
-- `@upup/react`, `@upup/core`, `@upup/shared`, `@upup/server` (workspace
-  packages that back the above)
+All notable changes to this project are documented here. **One npm
+package ships from this repo**: `upup-react-file-uploader` (sources at
+`packages/react`; the legacy `packages/upup` v1 codebase was retired
+in v2.1). Internal workspace packages (`@upup/core`, `@upup/shared`,
+`@upup/server`) still exist as private sources of modular testability
+but are bundled into the published artifact — consumers install one
+thing and get the whole engine.
 
 Dates use `YYYY-MM-DD`.
 
@@ -21,6 +21,14 @@ the one-page migration guide.
 
 ### ⚠️ Breaking changes
 
+- **Entire package rewire.** The legacy v1 implementation that lived
+  in `packages/upup` has been deleted; `upup-react-file-uploader@2.1`
+  is now backed by the v2 code in `packages/react` with
+  `@upup/core`/`@upup/shared` bundled in. Consumers upgrading from
+  v2.0.0 get a fundamentally different runtime — the public prop
+  surface is the migration guide (`docs/migration/v2-to-v2.1.md`)
+  but the engine, internals, i18n, theming, pipeline, and server
+  helpers are all new.
 - **Removed `dark` prop** — use `theme.mode: 'light' | 'dark' | 'system'`.
   The system path observes `prefers-color-scheme` and `html.dark` /
   `[data-theme]` ancestors.
