@@ -69,8 +69,8 @@ export function generateCode(config: UpupConfig): string {
     const allLines = [...propLines, ...eventLines]
     const propsBlock = allLines.length === 0 ? '' : '\n' + indent(allLines.join('\n'), 6)
 
-    return `import { UpupUploader } from '@upup/react'
-import '@upup/react/styles'
+    return `import { UpupUploader } from 'upup-react-file-uploader'
+import 'upup-react-file-uploader/styles'
 
 export default function App() {
   return (

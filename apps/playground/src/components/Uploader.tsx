@@ -2,8 +2,8 @@
 
 import React, { useContext } from "react";
 
-import { UpupUploader, type Translations } from "@upup/react";
-import "@upup/react/styles";
+import { UpupUploader, type Translations } from "upup-react-file-uploader";
+import "upup-react-file-uploader/styles";
 import { ThemeContext } from "@/lib/contexts";
 import { toast } from "react-toastify";
 

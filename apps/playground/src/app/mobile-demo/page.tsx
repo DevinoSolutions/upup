@@ -2,7 +2,7 @@
 
 import Uploader from "@/components/Uploader";
 import { useSearchParams } from "next/navigation";
-import type { Translations } from "@upup/react";
+import type { Translations } from "upup-react-file-uploader";
 import {
   en_US,
   ja_JP,
@@ -13,7 +13,7 @@ import {
   de_DE,
   es_ES,
   ko_KR,
-} from "@upup/react/locales";
+} from "upup-react-file-uploader/locales";
 
 const LOCALE_MAP: Record<string, Translations> = {
   en_US,

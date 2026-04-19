@@ -2,9 +2,9 @@
 
 import React, {useContext} from "react";
 
-import {UpupUploader, UpupProvider, UploadAdapter, Translations} from '@upup/react'
+import {UpupUploader, UpupProvider, UploadAdapter, Translations} from 'upup-react-file-uploader'
 
-import "@upup/react/styles";
+import "upup-react-file-uploader/styles";
 import {ThemeContext} from "@/lib/contexts";
 import {toast} from "react-toastify";
 

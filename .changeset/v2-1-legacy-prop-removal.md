@@ -1,8 +1,5 @@
 ---
 "upup-react-file-uploader": minor
-"@upup/react": minor
-"@upup/shared": minor
-"@upup/core": minor
 ---
 
 ## Removed four legacy v1 props

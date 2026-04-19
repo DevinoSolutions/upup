@@ -7,9 +7,10 @@ export default defineConfig({
   sourcemap: true,
   clean: true,
   target: 'es2019',
+  // @upup/core and @upup/shared are bundled into the published artifact so
+  // npm consumers install `upup-react-file-uploader` and get everything.
+  // They remain workspace packages internally for modular development.
   external: [
-    '@upup/core',
-    '@upup/shared',
     'react',
     'react-dom',
     'react-filerobot-image-editor',
@@ -18,4 +19,5 @@ export default defineConfig({
     'konva',
     'styled-components',
   ],
+  noExternal: ['@upup/core', '@upup/shared'],
 })

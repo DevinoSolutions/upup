@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import * as ReactPackage from '../src/index'
 
-describe('@upup/react public exports', () => {
+describe('upup-react-file-uploader public exports', () => {
   // Core component
   it('exports UpupUploader', () => {
     expect(ReactPackage.UpupUploader).toBeDefined()

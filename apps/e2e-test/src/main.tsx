@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import ReactDOM from 'react-dom/client'
 import './upup.css'
-import { UpupUploader, useUpupUpload } from '@upup/react'
+import { UpupUploader, useUpupUpload } from 'upup-react-file-uploader'
 
 /** Headless hook demo — v2 feature, custom UI built from scratch */
 function HeadlessDemo() {

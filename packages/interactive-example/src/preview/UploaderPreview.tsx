@@ -1,7 +1,7 @@
 'use client'
 import React, { useContext, useEffect, useState } from 'react'
-import { UpupUploader } from '@upup/react'
-import '@upup/react/styles'
+import { UpupUploader } from 'upup-react-file-uploader'
+import 'upup-react-file-uploader/styles'
 import { ConfigContext } from '../state/ConfigContext'
 import { useEventLog } from '../state/EventLogContext'
 

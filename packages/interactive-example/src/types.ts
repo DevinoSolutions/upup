@@ -1,4 +1,4 @@
-import type { UpupUploaderProps } from '@upup/react'
+import type { UpupUploaderProps } from 'upup-react-file-uploader'
 
 export type CategoryId =
     | 'upload'

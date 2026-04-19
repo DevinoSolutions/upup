@@ -314,7 +314,7 @@ export type UpupUploaderProps = {
          */
         bundle?: import('@upup/shared').LocaleBundle
         /**
-         * Full locale pack (e.g. import { fr_FR } from '@upup/react/locales'),
+         * Full locale pack (e.g. import { fr_FR } from 'upup-react-file-uploader/locales'),
          * or a BCP-47 locale code string (e.g. 'ar-SA') for lang/dir only.
          */
         locale?: Translations | string

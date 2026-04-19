@@ -4,8 +4,8 @@ import { generateCode } from '../code/generateCode'
 describe('generateCode', () => {
     it('renders minimal config with just provider', () => {
         const out = generateCode({ provider: 'backblaze' as any })
-        expect(out).toContain("import { UpupUploader } from '@upup/react'")
-        expect(out).toContain("import '@upup/react/styles'")
+        expect(out).toContain("import { UpupUploader } from 'upup-react-file-uploader'")
+        expect(out).toContain("import 'upup-react-file-uploader/styles'")
         expect(out).toContain('export default function App()')
         expect(out).toContain('<UpupUploader')
         expect(out).toContain('provider="backblaze"')

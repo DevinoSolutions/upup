@@ -1,7 +1,8 @@
 {
-  "name": "@upup/react",
+  "name": "upup-react-file-uploader",
   "version": "2.0.0",
-  "private": false,
+  "description": "React file uploader with cloud-drive sources, resumable uploads, image editor, theming, and ICU i18n.",
+  "repository": "https://github.com/DevinoSolutions/upup",
   "license": "MIT",
   "type": "module",
   "exports": {
@@ -35,8 +36,6 @@
     "@azure/msal-browser": "^3.30.0",
     "@microsoft/microsoft-graph-client": "^3.0.7",
     "@tanstack/react-virtual": "^3.13.23",
-    "@upup/core": "workspace:*",
-    "@upup/shared": "workspace:*",
     "clsx": "^2.1.1",
     "dropbox": "^10.34.0",
     "framer-motion": "^12.0.6",
@@ -79,6 +78,8 @@
   "devDependencies": {
     "@tailwindcss/container-queries": "^0.1.1",
     "@testing-library/react": "^16.0.1",
+    "@upup/core": "workspace:*",
+    "@upup/shared": "workspace:*",
     "@testing-library/user-event": "^14.6.1",
     "@types/jest-axe": "^3.5.9",
     "@types/pako": "^2.0.4",
