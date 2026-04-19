@@ -1,8 +1,8 @@
 'use client'
-import { DropboxFile, DropboxRoot } from 'dropbox'
 import { useCallback, useState } from 'react'
 import { t } from '../shared/i18n'
 import { useRootContext } from '../context/RootContext'
+import type { DropboxFile, DropboxRoot } from './dropbox-types'
 
 /**
  * @description Helper function to format API response items

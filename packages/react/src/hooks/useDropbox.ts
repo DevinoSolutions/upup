@@ -1,8 +1,8 @@
 'use client'
-import { DropboxFile, DropboxRoot, DropboxUser } from 'dropbox'
 import { useCallback, useEffect, useState } from 'react'
 import { useRootContext } from '../context/RootContext'
 import { useDropboxAuth } from './useDropboxAuth'
+import type { DropboxFile, DropboxRoot, DropboxUser } from './dropbox-types'
 
 const formatFileItem = (entry: any): DropboxFile => ({
     id: entry.id,
@@ -146,6 +146,9 @@ export function useDropbox() {
                 console.error('Dropbox API error:', error)
                 // v2: emit Dropbox API error via UpupCore
                 core?.emit('dropbox-api-error', { error })
+                // Surface to the consumer-facing onError callback so UI
+                // feedback (toasts, banners) can react.
+                onError?.(error instanceof Error ? error.message : String(error))
                 throw error
             }
         },
@@ -220,6 +223,7 @@ export function useDropbox() {
                     console.error('Error initializing Dropbox data:', error)
                     // v2: emit Dropbox init error via UpupCore
                     core?.emit('dropbox-init-error', { error })
+                    onError?.(error instanceof Error ? error.message : String(error))
                 }
             })()
         }

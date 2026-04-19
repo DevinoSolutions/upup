@@ -1,9 +1,9 @@
 'use client'
-// @ts-expect-error typings incomplete
-import { Dropbox, DropboxUser } from 'dropbox'
+import { Dropbox } from 'dropbox'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useRootContext } from '../context/RootContext'
 import { createSecureStorage } from '../lib/storageHelper'
+import type { DropboxUser } from './dropbox-types'
 
 const TOKEN_KEY = 'dropbox_access_token'
 const REFRESH_KEY = 'dropbox_refresh_token'
