@@ -86,6 +86,10 @@ type ContextProps = Required<
 export interface IRootContext {
     /** v2: UpupCore instance — coexists with v1 engine */
     core: UpupCore | null
+    /** v2.2: 'client' (default) or 'server' — picks the upload mode. */
+    mode: 'client' | 'server'
+    /** v2.2: Resolved base URL where `@upup/server`'s `createHandler()` is mounted. */
+    serverUrl?: string
     inputRef: RefObject<HTMLInputElement | null>
     activeAdapter?: UploadAdapter
     setActiveAdapter: Dispatch<SetStateAction<UploadAdapter | undefined>>

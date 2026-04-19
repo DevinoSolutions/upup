@@ -6,8 +6,22 @@ import useOneDrive from '../hooks/useOneDrive'
 import useOneDriveUploader from '../hooks/useOneDriveUploader'
 import DriveAuthFallback from './shared/DriveAuthFallback'
 import DriveBrowser from './shared/DriveBrowser'
+import ServerModeDriveUploader from './ServerModeDriveUploader'
 
 export default function OneDriveUploader() {
+    const { mode, oneDriveConfigs, setActiveAdapter } = useRootContext()
+    if (mode === 'server') {
+        return (
+            <ServerModeDriveUploader
+                provider="onedrive"
+                onBack={() => setActiveAdapter(undefined)}
+            />
+        )
+    }
+    return <ClientOneDriveUploader />
+}
+
+function ClientOneDriveUploader() {
     const { oneDriveConfigs } = useRootContext()
     const {
         user,

@@ -122,6 +122,7 @@ export default function useRootProvider({
     onDoneClicked = () => {},
     onPrepareFiles,
     provider,
+    mode = 'client',
     tokenEndpoint,
     uploadEndpoint,
     serverUrl,
@@ -1173,6 +1174,8 @@ export default function useRootProvider({
 
     return {
         core: coreRef.current,
+        mode,
+        serverUrl: resolvedServerUrl,
         inputRef,
         activeAdapter,
         setActiveAdapter,

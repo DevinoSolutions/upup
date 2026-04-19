@@ -247,6 +247,14 @@ export type UpupUploaderProps = {
     tokenEndpoint?: string
 
     // ── v2 DX aliases (preferred) ────────────────────────────
+    /**
+     * Upload mode. `'client'` (default) = browser talks to storage
+     * directly; server only signs URLs. `'server'` = browser talks only
+     * to `serverUrl`, which proxies drive APIs + storage writes. Pick
+     * `'server'` when you can't expose OAuth client secrets to the
+     * browser or when you need server-side compliance/scanning.
+     */
+    mode?: 'client' | 'server'
     /** v2: Shorthand source list. e.g. sources={['local','camera','google_drive']} */
     sources?: UploadSource[]
     /** v2: Alias for tokenEndpoint */

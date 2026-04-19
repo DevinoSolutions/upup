@@ -6,8 +6,22 @@ import useGoogleDrive from '../hooks/useGoogleDrive'
 import useGoogleDriveUploader from '../hooks/useGoogleDriveUploader'
 import DriveAuthFallback from './shared/DriveAuthFallback'
 import DriveBrowser from './shared/DriveBrowser'
+import ServerModeDriveUploader from './ServerModeDriveUploader'
 
 export default function GoogleDriveUploader() {
+    const { mode, setActiveAdapter } = useRootContext()
+    if (mode === 'server') {
+        return (
+            <ServerModeDriveUploader
+                provider="google-drive"
+                onBack={() => setActiveAdapter(undefined)}
+            />
+        )
+    }
+    return <ClientGoogleDriveUploader />
+}
+
+function ClientGoogleDriveUploader() {
     const { googleDriveConfigs } = useRootContext()
     const {
         user,

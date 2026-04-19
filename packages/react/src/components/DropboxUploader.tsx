@@ -1,10 +1,25 @@
 'use client'
 import React, { useEffect } from 'react'
+import { useRootContext } from '../context/RootContext'
 import { useDropbox } from '../hooks/useDropbox'
 import useDropboxUploader from '../hooks/useDropboxUploader'
 import DriveBrowser from './shared/DriveBrowser'
+import ServerModeDriveUploader from './ServerModeDriveUploader'
 
 export default function DropboxUploader() {
+    const { mode, setActiveAdapter } = useRootContext()
+    if (mode === 'server') {
+        return (
+            <ServerModeDriveUploader
+                provider="dropbox"
+                onBack={() => setActiveAdapter(undefined)}
+            />
+        )
+    }
+    return <ClientDropboxUploader />
+}
+
+function ClientDropboxUploader() {
     const {
         user,
         dropboxFiles: driveFiles,
