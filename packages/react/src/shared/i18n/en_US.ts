@@ -81,6 +81,10 @@ export const en_US: Translations = {
     logOut: 'Log out',
     search: 'Search',
 
+    // ── DriveAuthFallback ─────────────────────────────────────
+    authenticatePrompt: 'Authenticate with {{provider}} to select files for upload',
+    signInWith: 'Sign in with {{provider}}',
+
     // ── UrlUploader ───────────────────────────────────────────
     enterFileUrl: 'Enter file url',
     fetch: 'Fetch',

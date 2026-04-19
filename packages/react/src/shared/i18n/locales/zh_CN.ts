@@ -64,6 +64,8 @@ export const zh_CN: Translations = {
 
     logOut: '退出登录',
     search: '搜索',
+    authenticatePrompt: '使用 {{provider}} 进行身份验证以选择要上传的文件',
+    signInWith: '使用 {{provider}} 登录',
 
     enterFileUrl: '输入文件链接',
     fetch: '获取',

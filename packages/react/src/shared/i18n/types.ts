@@ -99,6 +99,12 @@ export type Translations = {
     logOut: string
     search: string
 
+    // ── DriveAuthFallback ─────────────────────────────────────
+    /** "Authenticate with {{provider}} to select files for upload" */
+    authenticatePrompt: string
+    /** "Sign in with {{provider}}" */
+    signInWith: string
+
     // ── UrlUploader ───────────────────────────────────────────
     enterFileUrl: string
     fetch: string

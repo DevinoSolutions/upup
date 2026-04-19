@@ -64,6 +64,8 @@ export const de_DE: Translations = {
 
     logOut: 'Abmelden',
     search: 'Suchen',
+    authenticatePrompt: 'Mit {{provider}} authentifizieren, um Dateien zum Hochladen auszuwählen',
+    signInWith: 'Mit {{provider}} anmelden',
 
     enterFileUrl: 'Datei-URL eingeben',
     fetch: 'Abrufen',

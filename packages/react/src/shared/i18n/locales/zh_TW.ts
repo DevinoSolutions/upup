@@ -64,6 +64,8 @@ export const zh_TW: Translations = {
 
     logOut: '登出',
     search: '搜尋',
+    authenticatePrompt: '使用 {{provider}} 進行驗證以選擇要上傳的檔案',
+    signInWith: '使用 {{provider}} 登入',
 
     enterFileUrl: '輸入檔案連結',
     fetch: '取得',

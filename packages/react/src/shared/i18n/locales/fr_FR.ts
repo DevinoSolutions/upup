@@ -65,6 +65,8 @@ export const fr_FR: Translations = {
 
     logOut: 'Déconnexion',
     search: 'Rechercher',
+    authenticatePrompt: 'Authentifiez-vous avec {{provider}} pour sélectionner des fichiers à téléverser',
+    signInWith: 'Se connecter avec {{provider}}',
 
     enterFileUrl: "Entrez l'URL du fichier",
     fetch: 'Récupérer',

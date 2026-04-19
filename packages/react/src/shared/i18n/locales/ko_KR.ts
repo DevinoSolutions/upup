@@ -65,6 +65,8 @@ export const ko_KR: Translations = {
 
     logOut: '로그아웃',
     search: '검색',
+    authenticatePrompt: '{{provider}}로 인증하여 업로드할 파일을 선택하세요',
+    signInWith: '{{provider}}로 로그인',
 
     enterFileUrl: '파일 URL 입력',
     fetch: '가져오기',

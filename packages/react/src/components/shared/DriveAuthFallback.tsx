@@ -1,6 +1,7 @@
 import React from 'react'
 import { useRootContext } from '../../context/RootContext'
 import { cn } from '../../lib/tailwind'
+import { t } from '../../shared/i18n'
 import AdapterViewContainer from './AdapterViewContainer'
 
 type Props = {
@@ -14,6 +15,7 @@ export default function DriveAuthFallback({
 }: Readonly<Props>) {
     const {
         props: { dark, classNames },
+        translations: tr,
     } = useRootContext()
 
     return (
@@ -29,7 +31,7 @@ export default function DriveAuthFallback({
                         classNames.adapterView,
                     )}
                 >
-                    Authenticate with {providerName} to select files for upload
+                    {t(tr.authenticatePrompt, { provider: providerName })}
                 </p>
                 <button
                     type="button"
@@ -42,7 +44,7 @@ export default function DriveAuthFallback({
                     )}
                     onClick={onRetry}
                 >
-                    Sign in with {providerName}
+                    {t(tr.signInWith, { provider: providerName })}
                 </button>
             </div>
         </AdapterViewContainer>

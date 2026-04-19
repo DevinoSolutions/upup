@@ -65,6 +65,8 @@ export const ar_SA: Translations = {
 
     logOut: 'تسجيل الخروج',
     search: 'بحث',
+    authenticatePrompt: 'قم بالمصادقة مع {{provider}} لاختيار الملفات للرفع',
+    signInWith: 'تسجيل الدخول بواسطة {{provider}}',
 
     enterFileUrl: 'أدخل رابط الملف',
     fetch: 'جلب',

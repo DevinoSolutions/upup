@@ -65,6 +65,8 @@ export const es_ES: Translations = {
 
     logOut: 'Cerrar sesión',
     search: 'Buscar',
+    authenticatePrompt: 'Autentícate con {{provider}} para seleccionar archivos para subir',
+    signInWith: 'Iniciar sesión con {{provider}}',
 
     enterFileUrl: 'Ingresa la URL del archivo',
     fetch: 'Obtener',

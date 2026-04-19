@@ -67,6 +67,8 @@ export const ja_JP: Translations = {
 
     logOut: 'ログアウト',
     search: '検索',
+    authenticatePrompt: '{{provider}}で認証してアップロードするファイルを選択してください',
+    signInWith: '{{provider}}でサインイン',
 
     enterFileUrl: 'ファイルのURLを入力',
     fetch: '取得',
