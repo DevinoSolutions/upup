@@ -12,8 +12,20 @@ export const advancedCategory: CategoryDefinition = {
     description: 'Only needed if you run your own backend or cloud-drive app',
     entries: [
         {
+            id: 'mode',
+            label: 'Mode',
+            description: 'Client = browser ↔ storage directly. Server = browser talks only to your @upup/server mount; server proxies drive APIs + storage writes.',
+            primitive: 'enum',
+            defaultValue: 'client',
+            options: {
+                options: ['client', 'server'],
+                layout: 'segmented',
+            },
+        },
+        {
             id: 'tokenEndpoint',
             label: 'Token endpoint',
+            description: 'Client Mode only. Where the uploader POSTs to get a presigned URL.',
             primitive: 'string',
             defaultValue: '',
             options: { placeholder: '/api/upload-token' },
@@ -21,6 +33,7 @@ export const advancedCategory: CategoryDefinition = {
         {
             id: 'serverUrl',
             label: 'Server URL',
+            description: 'Server Mode: base path where @upup/server\'s createHandler() is mounted.',
             primitive: 'string',
             defaultValue: '',
             options: { placeholder: '/api/upup' },

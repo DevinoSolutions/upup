@@ -12,6 +12,53 @@ Dates use `YYYY-MM-DD`.
 
 ---
 
+## [Unreleased] — planned v2.2.0
+
+Adds Server Mode end-to-end. Client Mode (v2.0 / v2.1) is unchanged
+and remains the default — no migration required.
+
+### Added
+
+- **`mode` prop on `<UpupUploader>`.** Accepts `'client'` (default) or
+  `'server'`. In Server Mode the uploader talks only to the consumer's
+  `serverUrl`; drive APIs and storage writes are proxied through
+  `@upup/server`.
+- **`@upup/server` Server Mode surface.** `createHandler()` now
+  implements the 3 TODO routes from v2.1: `/auth/:provider/cb`
+  (OAuth code exchange for Google, Microsoft, Dropbox, Box),
+  `/files/:provider` (list with search + folder navigation, normalised
+  `{ id, name, size, mimeType, isFolder, modifiedAt }`),
+  `/files/:provider/transfer` (streams drive → S3, switches to
+  multipart at `multipartThreshold` — default 100 MB).
+- **`InMemoryTokenStore`** — TTL-aware reference token store. Three
+  string-in-string-out methods; swap for Redis / KV / DynamoDB in
+  production.
+- **`getUserId` config hook** — resolves the authenticated user per
+  request for OAuth state scoping and token persistence.
+- **`box` provider slot** in `createHandler` config. Server Mode lists
+  and transfers Box files through Box's Content API (`api.box.com/2.0`).
+- **`ServerModeDriveUploader` React component** — uses our picker UI
+  for all 4 drives in Server Mode, handles re-auth popups via
+  `postMessage` back to the opener window.
+- **Guides: `docs/guides/modes.md` + `docs/guides/server-mode-setup.md`.**
+  One-page setup for Next.js App Router + Redis-style token store.
+
+### Security
+
+- No OAuth refresh tokens are persisted by default. Access-token
+  expiry returns `401 { reauth: true }`; the client surfaces its
+  existing "Sign in" state. Shorter blast radius than long-lived
+  refresh tokens in an untrusted store.
+
+### Notes
+
+- Server Mode is strictly opt-in. `mode="client"` matches v2.0 / v2.1
+  behaviour byte-for-byte.
+- `@upup/server` remains Node-only and has no runtime entry in the
+  React package's dist — your client bundle stays free of AWS SDKs.
+
+---
+
 ## [Unreleased] — planned v2.1.0
 
 This release removes four legacy v1 props and stitches up the last
