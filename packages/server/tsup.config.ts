@@ -14,5 +14,7 @@ export default defineConfig({
   clean: true,
   target: 'node18',
   platform: 'node',
-  external: ['@upup/core', '@upup/shared'],
+  // Bundle workspace packages into the published artifact so consumers
+  // install one thing. Matches upup-react-file-uploader's strategy.
+  noExternal: ['@upup/core', '@upup/shared'],
 })

@@ -1,12 +1,18 @@
 # Changelog
 
-All notable changes to this project are documented here. **One npm
-package ships from this repo**: `upup-react-file-uploader` (sources at
-`packages/react`; the legacy `packages/upup` v1 codebase was retired
-in v2.1). Internal workspace packages (`@upup/core`, `@upup/shared`,
-`@upup/server`) still exist as private sources of modular testability
-but are bundled into the published artifact — consumers install one
-thing and get the whole engine.
+All notable changes to this project are documented here. **Two npm
+packages ship from this repo** (as of v2.2):
+
+- `upup-react-file-uploader` (sources at `packages/react`) — the
+  client/browser runtime. Always required.
+- `@upup/server` (sources at `packages/server`) — optional Node-side
+  handler for Server Mode (`mode="server"`). Client Mode consumers do
+  not install this.
+
+Internal workspace packages `@upup/core` and `@upup/shared` remain
+private sources of modular testability but are bundled into both
+published artifacts — consumers never install them directly. The
+legacy `packages/upup` v1 codebase was retired in v2.1.
 
 Dates use `YYYY-MM-DD`.
 

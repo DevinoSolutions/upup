@@ -1,6 +1,6 @@
 {
   "name": "upup-react-file-uploader",
-  "version": "2.0.0",
+  "version": "2.2.0",
   "description": "React file uploader with cloud-drive sources, resumable uploads, image editor, theming, and ICU i18n.",
   "repository": "https://github.com/DevinoSolutions/upup",
   "license": "MIT",
@@ -27,7 +27,9 @@
     "dev": "tsup --watch",
     "test": "vitest run",
     "test:watch": "vitest",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "release": "pnpm run build && pnpm publish --access public --no-git-checks",
+    "test-release": "pnpm run build && pnpm publish --dry-run --access public --no-git-checks"
   },
   "files": [
     "dist"
