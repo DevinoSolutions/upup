@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test'
 
 // All restriction tests use /?scenario=restrictions which configures:
-//   accept="image/*"  limit=2  maxFileSize=50KB  minFileSize=1KB
+//   accept="image/*"  maxFiles=2  maxFileSize=50KB  minFileSize=1KB
 
 const VALID_IMAGE = {
     name: 'photo.png',
