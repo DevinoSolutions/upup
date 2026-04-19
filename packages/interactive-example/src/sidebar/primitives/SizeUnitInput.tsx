@@ -21,7 +21,8 @@ export function SizeUnitInput({
     defaultUnit?: typeof UNITS[number]
     placeholder?: string
 }) {
-    const id = useId()
+    const groupId = useId()
+    const inputId = useId()
     const { value, set } = useConfig(propId)
     const current = (value ?? {}) as { size?: number; unit?: string }
     const size = current.size ?? ''
@@ -40,12 +41,14 @@ export function SizeUnitInput({
 
     return (
         <div className="upup-ie-field">
-            <span id={id} className="upup-ie-field-label">{label}</span>
-            <div className="upup-ie-size-unit" role="group" aria-labelledby={id}>
+            <span id={groupId} className="upup-ie-field-label">{label}</span>
+            <div className="upup-ie-size-unit" role="group" aria-labelledby={groupId}>
                 <input
+                    id={inputId}
                     className="upup-ie-size-unit-input"
                     type="number"
                     min={0}
+                    aria-label={`${label} — size`}
                     value={size === undefined ? '' : size}
                     placeholder={placeholder ?? String(defaultSize)}
                     onChange={(e) => {

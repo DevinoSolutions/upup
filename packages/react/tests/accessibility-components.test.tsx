@@ -262,3 +262,36 @@ describe('axe — AdapterView (SourceView)', () => {
         expect(results).toHaveNoViolations()
     })
 })
+
+describe('axe — MainBoxHeader (header slot)', () => {
+    it('has no violations with files loaded', async () => {
+        const { container } = renderUploader()
+        const input = container.querySelector(
+            '[data-testid="upup-file-input"]',
+        ) as HTMLInputElement
+
+        const file = new File(
+            [new Uint8Array(1024).fill(0x42)],
+            'header-test.txt',
+            { type: 'text/plain' },
+        )
+        stubFileInput(input, [file])
+
+        await waitFor(() => {
+            const h = container.querySelector('[data-upup-slot="header"]')
+            if (!h) throw new Error('header slot not rendered yet')
+        })
+
+        const results = await scanSlot(container, 'header', {
+            rules: {
+                // Header buttons live inline with the headline; intentional.
+                'nested-interactive': { enabled: false },
+            },
+        })
+        expect(results).toHaveNoViolations()
+    })
+})
+
+// Note: DriveAuthFallback a11y is covered at the live-browser level via the
+// Playwright adapters.spec.ts auth-prompt specs. In jsdom the Google Drive
+// SDK never loads, so the fallback route isn't reachable from a unit test.
