@@ -43,35 +43,46 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Check if current package version still needs publishing
+      - name: Check if current package versions still need publishing
         if: github.ref == 'refs/heads/master' && steps.changesets.outputs.hasChangesets == 'false'
         id: package_meta
         shell: bash
         run: |
-          NAME=$(node -p "require('./packages/upup/package.json').name")
-          VERSION=$(node -p "require('./packages/upup/package.json').version")
-          echo "name=$NAME" >> "$GITHUB_OUTPUT"
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          if npm view "$NAME@$VERSION" version >/dev/null 2>&1; then
-            echo "needs_publish=false" >> "$GITHUB_OUTPUT"
+          # React package (always published)
+          REACT_NAME=$(node -p "require('./packages/react/package.json').name")
+          REACT_VERSION=$(node -p "require('./packages/react/package.json').version")
+          echo "react_name=$REACT_NAME" >> "$GITHUB_OUTPUT"
+          echo "react_version=$REACT_VERSION" >> "$GITHUB_OUTPUT"
+          if npm view "$REACT_NAME@$REACT_VERSION" version >/dev/null 2>&1; then
+            echo "react_needs_publish=false" >> "$GITHUB_OUTPUT"
           else
-            echo "needs_publish=true" >> "$GITHUB_OUTPUT"
+            echo "react_needs_publish=true" >> "$GITHUB_OUTPUT"
+          fi
+          # Server package (Server Mode, v2.2+)
+          SERVER_NAME=$(node -p "require('./packages/server/package.json').name")
+          SERVER_VERSION=$(node -p "require('./packages/server/package.json').version")
+          echo "server_name=$SERVER_NAME" >> "$GITHUB_OUTPUT"
+          echo "server_version=$SERVER_VERSION" >> "$GITHUB_OUTPUT"
+          if npm view "$SERVER_NAME@$SERVER_VERSION" version >/dev/null 2>&1; then
+            echo "server_needs_publish=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "server_needs_publish=true" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Publish to npm
-        if: github.ref == 'refs/heads/master' && steps.changesets.outputs.hasChangesets == 'false' && steps.package_meta.outputs.needs_publish == 'true'
+        if: github.ref == 'refs/heads/master' && steps.changesets.outputs.hasChangesets == 'false' && (steps.package_meta.outputs.react_needs_publish == 'true' || steps.package_meta.outputs.server_needs_publish == 'true')
         run: pnpm run release
 
       - name: Dry-run release on dev
         if: github.ref == 'refs/heads/dev'
-        run: pnpm --filter upup-react-file-uploader run test-release
+        run: pnpm run test-release
 
-      - name: Create GitHub Release
-        if: github.ref == 'refs/heads/master' && steps.changesets.outputs.hasChangesets == 'false' && steps.package_meta.outputs.needs_publish == 'true'
+      - name: Create GitHub Release (react package)
+        if: github.ref == 'refs/heads/master' && steps.changesets.outputs.hasChangesets == 'false' && steps.package_meta.outputs.react_needs_publish == 'true'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ steps.package_meta.outputs.name }}@${{ steps.package_meta.outputs.version }}
-          name: ${{ steps.package_meta.outputs.name }}@${{ steps.package_meta.outputs.version }}
+          tag_name: ${{ steps.package_meta.outputs.react_name }}@${{ steps.package_meta.outputs.react_version }}
+          name: ${{ steps.package_meta.outputs.react_name }}@${{ steps.package_meta.outputs.react_version }}
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

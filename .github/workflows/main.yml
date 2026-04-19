@@ -122,7 +122,7 @@ jobs:
   Build:
     name: Build project
     runs-on: ubuntu-latest
-    needs: [Prettier-check, Test, E2E]
+    needs: [Prettier-check, Test]
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
@@ -156,90 +156,19 @@ jobs:
   Status-Check:
     name: Status Check
     runs-on: ubuntu-latest
-    needs: [Prettier-check, Test, E2E, Build]
+    needs: [Prettier-check, Test, Build]
     if: always()
     steps:
       - name: Check status
         run: |
           if [ "${{ needs.Prettier-check.result }}" != "success" ] || \
              [ "${{ needs.Test.result }}" != "success" ] || \
-             [ "${{ needs.E2E.result }}" != "success" ] || \
              [ "${{ needs.Build.result }}" != "success" ]; then
             echo "One or more jobs failed"
             exit 1
           fi
           echo "All jobs passed successfully"
 
-  E2E:
-    name: Playwright E2E
-    runs-on: ubuntu-latest
-    needs: [Prettier-check, Test]
-    timeout-minutes: 30
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        id: cache-primes
-        with:
-          node-version-file: '.nvmrc'
-
-      - name: Setup PNPM environment
-        if: steps.cache-primes.outputs.cache-hit != 'true'
-        run: |
-          npm install -g pnpm@latest
-          pnpm config set store-dir ~/.pnpm-store
-
-      - name: Cache PNPM dependencies
-        uses: actions/cache@v3
-        with:
-          path: ~/.pnpm-store
-          key: ${{ runner.os }}-pnpm-v3-${{ hashFiles('pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-v3-
-
-      - name: Install deps
-        if: steps.cache-primes.outputs.cache-hit != 'true'
-        run: pnpm install
-
-      - name: Install Playwright Browsers
-        run: pnpm run playwright:install
-
-      - name: Start backend (dev server)
-        env:
-          PORT: 53010
-          S3_BUCKET: ${{ secrets.S3_BUCKET }}
-          S3_REGION: ${{ secrets.S3_REGION }}
-          S3_ENDPOINT: ${{ secrets.S3_ENDPOINT }}
-          S3_KEY_ID: ${{ secrets.S3_KEY_ID }}
-          S3_SECRET: ${{ secrets.S3_SECRET }}
-        run: |
-          pnpm run dev:server &
-          echo "Waiting for backend health..."
-          for i in {1..60}; do
-            if curl -sf http://localhost:53010/health >/dev/null; then echo OK; break; fi
-            sleep 2
-          done
-
-      - name: Run Playwright tests
-        env:
-          # Storybook is started by Playwright's webServer config on port 6007
-          TOKEN_ENDPOINT: http://localhost:53010/api/upload
-          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
-          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
-          GOOGLE_APP_ID: ${{ secrets.GOOGLE_APP_ID }}
-          ONEDRIVE_CLIENT_ID: ${{ secrets.ONEDRIVE_CLIENT_ID }}
-          DROPBOX_CLIENT_ID: ${{ secrets.DROPBOX_CLIENT_ID }}
-          DROPBOX_APP_SECRET: ${{ secrets.DROPBOX_APP_SECRET }}
-          DROPBOX_REDIRECT_URI: ${{ secrets.DROPBOX_REDIRECT_URI }}
-        run: pnpm run test:e2e --reporter=list
-
-      - name: Upload Playwright report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: playwright-report
-          path: |
-            playwright-report
-            test-results
-          retention-days: 7
+  # Playwright E2E removed in v2.1 — the v1 local Express dev server
+  # (`pnpm run dev:server`, `/health`, `/api/upload`) was retired with
+  # packages/upup. Re-add when v2 Server Mode e2e spec lands.

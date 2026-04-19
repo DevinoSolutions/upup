@@ -21,14 +21,11 @@
     "prettier-write": "pnpm --filter upup-react-file-uploader exec prettier --write \"src/**/*.{ts,tsx}\"",
     "docs:build": "pnpm --filter docs run build",
     "start": "pnpm run docs:build && pnpm --filter @upup/landing run start",
-    "dev:server": "pnpm --filter upup-react-file-uploader exec node server/index.js",
     "test": "turbo run test",
-    "test:coverage": "pnpm --filter upup-react-file-uploader exec jest --coverage --coverageDirectory ../../coverage",
-    "test:e2e": "pnpm --filter upup-react-file-uploader run test:e2e",
-    "test:e2e:ui": "pnpm --filter upup-react-file-uploader run test:e2e:ui",
+    "test:coverage": "pnpm --filter upup-react-file-uploader exec vitest run --coverage --coverage.reportsDirectory=../../coverage",
     "typecheck": "turbo run typecheck",
-    "playwright:install": "pnpm --filter upup-react-file-uploader run playwright:install",
-    "release": "pnpm --filter upup-react-file-uploader run release"
+    "release": "pnpm --filter upup-react-file-uploader run release && pnpm --filter @upup/server run release",
+    "test-release": "pnpm --filter upup-react-file-uploader run test-release && pnpm --filter @upup/server run test-release"
   },
   "devDependencies": {
     "@changesets/cli": "^2.30.0",
