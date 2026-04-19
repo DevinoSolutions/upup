@@ -38,7 +38,7 @@ function RestrictionsDemo() {
     <UpupUploader
       uploadEndpoint="/api/upload"
       accept="image/*"
-      limit={2}
+      maxFiles={2}
       maxFileSize={{ size: 50, unit: 'KB' }}
       minFileSize={{ size: 1, unit: 'KB' }}
       onRestrictionFailed={(file, reason) => console.log('Rejected:', file.name, reason)}

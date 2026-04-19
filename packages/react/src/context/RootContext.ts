@@ -96,7 +96,7 @@ export interface IRootContext {
     lang: string
     dir: 'ltr' | 'rtl'
     /** Per-slot className overrides from theme.slots */
-    themeSlots?: import('@upup/shared').UpupThemeSlots
+    themeSlots?: import('@upup/shared').DeepPartialSlots
 
     files: Map<string, FileWithParams>
     setFiles: (newFiles: File[]) => void

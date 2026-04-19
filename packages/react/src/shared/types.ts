@@ -232,10 +232,13 @@ export type UpupUploaderProps = {
     }
     /** v2: Theme configuration. mode replaces `dark`, tokens/slots replace `classNames`. */
     theme?: {
-        mode?: 'light' | 'dark'
+        mode?: 'light' | 'dark' | 'system'
         tokens?: Record<string, unknown>
-        /** Per-slot className overrides — merged additively on top of built-in classes */
-        slots?: import('@upup/shared').UpupThemeSlots
+        /**
+         * Per-slot className overrides — each override is optional and merged
+         * additively on top of the built-in classes via flattenSlotsToClassNames.
+         */
+        slots?: import('@upup/shared').DeepPartialSlots
     }
 
     // ── v1 Props (still supported) ───────────────────────────

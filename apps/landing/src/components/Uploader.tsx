@@ -71,28 +71,42 @@ export default function Uploader({
     // Get the current theme
     const currentTheme = theme || "blue";
 
-    // Custom class names for theming - these will use global CSS classes
-    const customClassNames = {
-        // Soft pastel backgrounds for containers
-        containerMini: `uploader-container-mini-${currentTheme} `,
-        containerFull: `uploader-container-full-${currentTheme}`,
-        // Darker backgrounds for other elements
-        fileListContainer: `uploader-file-list-${currentTheme}`,
-        driveBody: `uploader-drive-body-${currentTheme}`,
-        adapterView: `uploader-adapter-view-${currentTheme}`,
-        // Button and interactive elements
-        uploadButton: `uploader-btn-${currentTheme}`,
-        uploadDoneButton: `uploader-btn-${currentTheme}`,
-        adapterButton: `uploader-adapter-${currentTheme}`,
-        progressBar: `uploader-progress-${currentTheme}`,
-        progressBarInner: `uploader-progress-${currentTheme}`,
-        filePreviewButton: `uploader-preview-${currentTheme}`,
-        containerAddMoreButton: `uploader-add-${currentTheme}`,
-        driveAddFilesButton: `uploader-btn-${currentTheme}`,
-        urlFetchButton: `uploader-btn-${currentTheme}`,
-        cameraAddButton: `uploader-btn-${currentTheme}`,
-        adapterButtonIcon:`uploader-file-list-${currentTheme}`,
-        adapterButtonText: `uploader-preview-${currentTheme}`,
+    // Per-slot class overrides — v2 nested shape fed through theme.slots.
+    const customSlots = {
+        uploader: {
+            container: `uploader-container-full-${currentTheme}`,
+        },
+        fileList: {
+            root: `uploader-file-list-${currentTheme}`,
+            uploadButton: `uploader-btn-${currentTheme}`,
+            doneButton: `uploader-btn-${currentTheme}`,
+            addMoreButton: `uploader-add-${currentTheme}`,
+        },
+        sourceSelector: {
+            adapterButton: `uploader-adapter-${currentTheme}`,
+            adapterButtonIcon: `uploader-file-list-${currentTheme}`,
+            adapterButtonText: `uploader-preview-${currentTheme}`,
+        },
+        sourceView: {
+            root: `uploader-adapter-view-${currentTheme}`,
+        },
+        driveBrowser: {
+            body: `uploader-drive-body-${currentTheme}`,
+            addFilesButton: `uploader-btn-${currentTheme}`,
+        },
+        filePreview: {
+            previewButton: `uploader-preview-${currentTheme}`,
+        },
+        progressBar: {
+            track: `uploader-progress-${currentTheme}`,
+            fill: `uploader-progress-${currentTheme}`,
+        },
+        urlUploader: {
+            fetchButton: `uploader-btn-${currentTheme}`,
+        },
+        cameraUploader: {
+            addButton: `uploader-btn-${currentTheme}`,
+        },
     };
 
     return (
@@ -103,13 +117,12 @@ export default function Uploader({
           tokenEndpoint={customFields.tokenEndpoint}
           uploadAdapters={uploadAdapters}
           driveConfigs={customFields.driveConfigs}
-          theme={{ mode: isDarkMode ? 'dark' : 'light' }}
+          theme={{ mode: isDarkMode ? 'dark' : 'light', slots: customSlots }}
           mini={mini}
           allowPreview={allowPreview}
           imageCompression={shouldCompress}
           imageEditor={imageEditor}
           maxFileSize={{ size: fileSizeLimit, unit: "MB" }}
-          classNames={customClassNames}
           maxRetries={maxRetries}
           resumable={{ mode: "multipart" }}
           localePack={localePack}

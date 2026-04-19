@@ -53,24 +53,41 @@ export default function Uploader({
 
   const currentTheme = theme || "blue";
 
-  const customClassNames = {
-    containerMini: `uploader-container-mini-${currentTheme} `,
-    containerFull: `uploader-container-full-${currentTheme}`,
-    fileListContainer: `uploader-file-list-${currentTheme}`,
-    driveBody: `uploader-drive-body-${currentTheme}`,
-    adapterView: `uploader-adapter-view-${currentTheme}`,
-    uploadButton: `uploader-btn-${currentTheme}`,
-    uploadDoneButton: `uploader-btn-${currentTheme}`,
-    adapterButton: `uploader-adapter-${currentTheme}`,
-    progressBar: `uploader-progress-${currentTheme}`,
-    progressBarInner: `uploader-progress-${currentTheme}`,
-    filePreviewButton: `uploader-preview-${currentTheme}`,
-    containerAddMoreButton: `uploader-add-${currentTheme}`,
-    driveAddFilesButton: `uploader-btn-${currentTheme}`,
-    urlFetchButton: `uploader-btn-${currentTheme}`,
-    cameraAddButton: `uploader-btn-${currentTheme}`,
-    adapterButtonIcon: `uploader-file-list-${currentTheme}`,
-    adapterButtonText: `uploader-preview-${currentTheme}`,
+  const customSlots = {
+    uploader: {
+      container: `uploader-container-full-${currentTheme}`,
+    },
+    fileList: {
+      root: `uploader-file-list-${currentTheme}`,
+      uploadButton: `uploader-btn-${currentTheme}`,
+      doneButton: `uploader-btn-${currentTheme}`,
+      addMoreButton: `uploader-add-${currentTheme}`,
+    },
+    sourceSelector: {
+      adapterButton: `uploader-adapter-${currentTheme}`,
+      adapterButtonIcon: `uploader-file-list-${currentTheme}`,
+      adapterButtonText: `uploader-preview-${currentTheme}`,
+    },
+    sourceView: {
+      root: `uploader-adapter-view-${currentTheme}`,
+    },
+    driveBrowser: {
+      body: `uploader-drive-body-${currentTheme}`,
+      addFilesButton: `uploader-btn-${currentTheme}`,
+    },
+    filePreview: {
+      previewButton: `uploader-preview-${currentTheme}`,
+    },
+    progressBar: {
+      track: `uploader-progress-${currentTheme}`,
+      fill: `uploader-progress-${currentTheme}`,
+    },
+    urlUploader: {
+      fetchButton: `uploader-btn-${currentTheme}`,
+    },
+    cameraUploader: {
+      addButton: `uploader-btn-${currentTheme}`,
+    },
   };
 
   return (
@@ -97,13 +114,12 @@ export default function Uploader({
             clientId: process.env.NEXT_PUBLIC_DROPBOX_CLIENT_ID || "",
           },
         }}
-        theme={{ mode: isDarkMode ? "dark" : "light" }}
+        theme={{ mode: isDarkMode ? "dark" : "light", slots: customSlots }}
         mini={mini}
         allowPreview={allowPreview}
         imageCompression={shouldCompress}
         imageEditor={imageEditor}
         maxFileSize={{ size: fileSizeLimit, unit: "MB" }}
-        classNames={customClassNames}
         maxRetries={maxRetries}
         i18n={localePack ? { locale: localePack } : undefined}
         onFilesUploadComplete={(files) => {
