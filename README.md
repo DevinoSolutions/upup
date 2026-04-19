@@ -32,22 +32,30 @@ Works with **Next.js**, **Vite**, **Remix**, **Gatsby**, and any React framework
 - 🔄 **Resumable chunked uploads** — upload large files reliably with presigned URLs
 - 🖼 **File upload with preview** — image, video, and document previews before uploading
 - 📁 **Multiple file upload** — batch upload with file size limit validation
-- ☁️ **Multi-cloud support** — S3, Azure Blob, Google Drive, OneDrive, DigitalOcean Spaces, Backblaze B2
-- ⚙️ **Server-side helpers** — tiny Node.js utilities for presigned URL generation (S3 & Azure)
-- 🎨 **Fully customizable** — themes, styles, and components you can override
+- ☁️ **Multi-cloud support** — S3, R2, Wasabi, MinIO, GCS, Azure Blob, Google Drive, OneDrive, Dropbox, Box, DigitalOcean Spaces, Backblaze B2
+- 🔀 **Two modes** — **Client Mode** (browser ↔ storage direct, default) or **Server Mode** (`@upup/server` proxies drive APIs + storage writes for compliance / credential isolation)
+- 🎨 **Fully themeable** — `theme.slots` targets every rendered element, 9 locale packs, full ICU i18n
 - 📦 **TypeScript-first** — full type definitions out of the box
 
 ## Install
 
 ```bash
-npm i upup-react-file-uploader     # or yarn add / pnpm add / bun install
+# Client Mode (default) — one package
+npm i upup-react-file-uploader
+
+# Server Mode — add the Node-side handler
+npm i upup-react-file-uploader @upup/server
 ```
 
-> Note for local development: current localization examples use `localePack` for full locale packs and `translations` for per-key overrides. If you tested unpublished builds that used `locale`, update those examples to `localePack`. See [`packages/upup/CHANGELOG.md#unreleased`](packages/upup/CHANGELOG.md#unreleased) for the current 2.x release notes.
+Styles are in a separate import so consumers without Tailwind get the same look:
 
-`pnpm dev` launches the landing page and documentation in watch mode via Turborepo while the package builds in watch mode for local consumption. All services use ports defined in `local-dev/.env.ports` to avoid conflicts with other projects.
+```tsx
+import "upup-react-file-uploader/styles";
+```
 
-### Frontend (React / Next.js / Vite / Remix)
+See [CHANGELOG.md](CHANGELOG.md) for the full v2.1 / v2.2 notes.
+
+### Client Mode — Frontend (React / Next.js / Vite / Remix)
 
 ```tsx
 "use client";
@@ -65,35 +73,41 @@ export default function Uploader() {
 }
 ```
 
-### Backend (Next.js API / Express / NestJS)
+### Server Mode — one handler, any framework
 
-```tsx
-import { s3GeneratePresignedUrl } from "upup-react-file-uploader/server";
+Server Mode routes browser traffic through your server. Your credentials never reach the client; drive OAuth tokens live server-side in a `tokenStore` you control.
 
-export async function POST(req: Request) {
-  const body = await req.json();
-  const { provider, customProps, enableAutoCorsConfig ...fileParams } = body;
+```ts
+// app/api/upup/[...route]/route.ts  (Next.js App Router)
+import { createHandler, InMemoryTokenStore } from "@upup/server";
 
-  const presignedData = await s3GeneratePresignedUrl({
-    origin: req.headers.get("origin") as string,
-    provider,
-    fileParams,
-    bucketName: process.env.S3_BUCKET_NAME!,
-    s3ClientConfig: {
-      region: process.env.S3_REGION,
-      credentials: {
-        accessKeyId: process.env.S3_KEY_ID!,
-        secretAccessKey: process.env.S3_SECRET_KEY!,
-      },
-    },
-    enableAutoCorsConfig,
-  });
+const handler = createHandler({
+  storage: {
+    type: "aws",
+    bucket: process.env.S3_BUCKET!,
+    region: process.env.S3_REGION!,
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  },
+  providers: {
+    googleDrive: { clientId: process.env.GOOGLE_CLIENT_ID!, clientSecret: process.env.GOOGLE_CLIENT_SECRET! },
+    dropbox:     { appKey:   process.env.DROPBOX_APP_KEY!,  appSecret:    process.env.DROPBOX_APP_SECRET! },
+  },
+  tokenStore: new InMemoryTokenStore(), // swap for Redis/KV/DynamoDB in prod
+  getUserId: async (req) => (await getSession(req))?.userId ?? null,
+});
 
-  return Response.json(presignedData);
-}
+export const GET = handler;
+export const POST = handler;
 ```
 
-> **Full documentation & examples → [useupup.com/documentation/docs/getting-started](https://useupup.com/documentation/docs/getting-started)**
+```tsx
+<UpupUploader mode="server" serverUrl="/api/upup" provider="aws" />
+```
+
+Adapters for Express, Fastify, Hono, and Next.js are published as subpath exports (`@upup/server/express`, `/fastify`, `/hono`, `/next`).
+
+> **Full docs → [useupup.com/documentation](https://useupup.com/documentation/docs/getting-started)** · **Mode comparison → [`apps/docs/docs/guides/modes.md`](apps/docs/docs/guides/modes.md)** · **Server Mode setup → [`apps/docs/docs/guides/server-mode-setup.md`](apps/docs/docs/guides/server-mode-setup.md)**
 
 ## Battle-tested in Production
 
@@ -102,9 +116,9 @@ export async function POST(req: Request) {
 
 ## Contributing
 
-We love PRs! Please see [CONTRIBUTING](packages/upup/CONTRIBUTING.md) and adhere to our [Code of Conduct](packages/upup/CODE_OF_CONDUCT.md).
+We love PRs! Please see [CONTRIBUTING.md](CONTRIBUTING.md) and adhere to our [Code of Conduct](CODE_OF_CONDUCT.md).
 
-Found a vulnerability? Check our [Security Policy](packages/upup/SECURITY.md).
+Found a vulnerability? Check our [Security Policy](SECURITY.md).
 
 ---
 
@@ -114,11 +128,15 @@ This repo is a monorepo managed with [pnpm workspaces](https://pnpm.io/workspace
 
 ```
 upup/
-├── packages/upup/      # The published npm package (upup-react-file-uploader)
-├── apps/landing/       # Next.js marketing site at useupup.com
-├── apps/docs/          # Docusaurus documentation site
-├── local-dev/          # Port config & local dev helpers
-└── turbo.json          # Build pipeline configuration
+├── packages/react/              # upup-react-file-uploader (published)
+├── packages/server/             # @upup/server (published, optional)
+├── packages/core/               # @upup/core (private, bundled into both)
+├── packages/shared/             # @upup/shared (private, bundled into both)
+├── packages/interactive-example/# In-browser playground
+├── apps/landing/                # Next.js marketing site at useupup.com
+├── apps/docs/                   # Docusaurus documentation site
+├── local-dev/                   # Port config & local dev helpers
+└── turbo.json                   # Build pipeline configuration
 ```
 
 ### Getting Started (Development)
@@ -127,24 +145,23 @@ upup/
 git clone https://github.com/DevinoSolutions/upup.git
 cd upup
 pnpm install
-pnpm dev          # runs landing + docs + package watcher via Turborepo
+pnpm dev          # runs landing + docs + playground + package watchers via Turborepo
 ```
 
 ### Commands
 
-| Command                                      | Description                          |
-| -------------------------------------------- | ------------------------------------ |
-| `pnpm dev`                                   | Run everything in watch mode         |
-| `pnpm dev:package`                           | Storybook + local mock server        |
-| `pnpm build`                                 | Build all (package → docs → landing) |
-| `pnpm lint` / `pnpm test` / `pnpm typecheck` | Workspace-wide pipelines             |
+| Command                                      | Description                           |
+| -------------------------------------------- | ------------------------------------- |
+| `pnpm dev`                                   | Run everything in watch mode          |
+| `pnpm build`                                 | Build all packages + apps             |
+| `pnpm test`                                  | Run vitest across the workspace       |
+| `pnpm typecheck`                             | `tsc --noEmit` in every package       |
 
 ### Publishing
 
 ```bash
-pnpm changeset
-pnpm changeset version
-pnpm --filter upup-react-file-uploader run release
+# From the repo root — publishes both npm packages
+pnpm -r --filter upup-react-file-uploader --filter @upup/server publish --access public
 ```
 
 ---
