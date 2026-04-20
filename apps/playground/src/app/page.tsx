@@ -6,11 +6,13 @@ import Toast from "@/components/Toast";
 export default function Home() {
   return (
     <div className="container mx-auto" style={{ padding: 24, maxWidth: 1400 }}>
-      <h1 style={{ fontSize: 24, fontWeight: 700, marginBottom: 16 }}>
-        upup Playground
-      </h1>
+      <p className="text-sm text-gray-600 dark:text-gray-400" style={{ marginBottom: 16, maxWidth: 720 }}>
+        Tweak props on the left, see the uploader update on the right.
+        Switch to the <strong>Code</strong> tab for a copy-pasteable snippet, or
+        share your config with <strong>Copy permalink</strong>.
+      </p>
       <InteractiveExample
-        defaultExpanded={['upload', 'appearance']}
+        defaultExpanded={['upload']}
       />
       <Toast />
     </div>

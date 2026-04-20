@@ -62,6 +62,15 @@ const UndoIcon: PresetIcon = (p) => (
     </svg>
 )
 
+const ServerIcon: PresetIcon = (p) => (
+    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"
+        strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round" {...p}>
+        <rect x="3" y="4" width="18" height="6" rx="1" />
+        <rect x="3" y="14" width="18" height="6" rx="1" />
+        <path d="M7 7h.01M7 17h.01" />
+    </svg>
+)
+
 // Keep snapshots lean — only the props that differ. Provider is left to
 // whatever the user has chosen so presets don't clobber that setting.
 const PRESETS: Preset[] = [
@@ -117,6 +126,17 @@ const PRESETS: Preset[] = [
         icon: MoonIcon,
         config: {
             theme: { mode: 'dark' },
+        } as UpupConfig,
+    },
+    {
+        id: 'server-mode',
+        label: 'Server Mode',
+        description: 'Proxy drives + storage through @upup/server — secrets stay on your backend',
+        icon: ServerIcon,
+        config: {
+            mode: 'server',
+            serverUrl: '/api/upup',
+            sources: ['local', 'google_drive', 'onedrive', 'dropbox', 'box'],
         } as UpupConfig,
     },
 ]
