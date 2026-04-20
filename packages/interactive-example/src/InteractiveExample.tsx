@@ -80,7 +80,7 @@ function PermalinkButton() {
     const ctx = useContext(ConfigContext)
     async function copyLink() {
         if (!ctx) return
-        const url = buildPermalink(ctx.config)
+        const url = buildPermalink(ctx.config, ctx.defaults)
         try {
             await navigator.clipboard.writeText(url)
         } catch {
@@ -99,7 +99,7 @@ function UrlSync() {
     useEffect(() => {
         if (!ctx) return
         const handle = setTimeout(() => {
-            writeConfigToUrl(ctx.config)
+            writeConfigToUrl(ctx.config, ctx.defaults)
         }, 250)
         return () => clearTimeout(handle)
     }, [ctx?.config])

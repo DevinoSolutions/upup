@@ -5,7 +5,10 @@ import { generateCode } from './generateCode'
 export function CodeTab() {
     const ctx = useContext(ConfigContext)
     const [copied, setCopied] = useState(false)
-    const code = useMemo(() => (ctx ? generateCode(ctx.config) : ''), [ctx?.config])
+    const code = useMemo(
+        () => (ctx ? generateCode(ctx.config, ctx.defaults) : ''),
+        [ctx?.config, ctx?.defaults],
+    )
 
     async function handleCopy() {
         try {

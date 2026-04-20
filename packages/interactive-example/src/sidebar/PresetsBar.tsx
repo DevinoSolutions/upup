@@ -145,8 +145,10 @@ export function PresetsBar() {
     const ctx = useContext(ConfigContext)
     if (!ctx) return null
 
-    const apply = (preset: Preset) => ctx.setConfig({ ...preset.config })
-    const reset = () => ctx.setConfig({})
+    // Merge preset over declared defaults so unrelated fields stay aligned
+    // with the component's true defaults (sidebar + preview + code agree).
+    const apply = (preset: Preset) => ctx.setConfig({ ...ctx.defaults, ...preset.config })
+    const reset = () => ctx.setConfig({ ...ctx.defaults })
 
     return (
         <div className="upup-ie-presets" role="group" aria-label="Configuration presets">

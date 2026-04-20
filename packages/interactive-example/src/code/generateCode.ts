@@ -8,6 +8,23 @@ function indent(s: string, n: number): string {
         .join('\n')
 }
 
+function deepEqual(a: unknown, b: unknown): boolean {
+    if (Object.is(a, b)) return true
+    if (typeof a !== typeof b) return false
+    if (a === null || b === null) return false
+    if (Array.isArray(a) && Array.isArray(b)) {
+        if (a.length !== b.length) return false
+        return a.every((x, i) => deepEqual(x, b[i]))
+    }
+    if (typeof a === 'object' && typeof b === 'object') {
+        const ka = Object.keys(a as Record<string, unknown>)
+        const kb = Object.keys(b as Record<string, unknown>)
+        if (ka.length !== kb.length) return false
+        return ka.every((k) => deepEqual((a as any)[k], (b as any)[k]))
+    }
+    return false
+}
+
 function renderObjectLiteral(value: unknown, depth = 1): string {
     if (value === null || typeof value !== 'object') {
         if (typeof value === 'string') return `'${value.replace(/'/g, "\\'")}'`
@@ -48,12 +65,16 @@ function renderProp(key: string, value: unknown): string | null {
     return `${key}={${renderObjectLiteral(value, 1)}}`
 }
 
-export function generateCode(config: UpupConfig): string {
+export function generateCode(config: UpupConfig, defaults: UpupConfig = {}): string {
     const events = (config as any).events as Record<string, boolean> | undefined
     const configWithoutEvents: Record<string, unknown> = { ...config }
     delete (configWithoutEvents as any).events
 
+    // Drop any top-level prop whose value deep-equals the declared default —
+    // keeps the copy-pasteable snippet lean: only what the user changed from
+    // the component's built-in defaults appears in the output.
     const propLines = Object.entries(configWithoutEvents)
+        .filter(([k, v]) => !deepEqual(v, (defaults as Record<string, unknown>)[k]))
         .map(([k, v]) => renderProp(k, v))
         .filter((s): s is string => s != null)
 

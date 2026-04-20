@@ -10,10 +10,10 @@ export function readConfigFromUrl(): UpupConfig {
     return deserialize(token)
 }
 
-export function writeConfigToUrl(config: UpupConfig): void {
+export function writeConfigToUrl(config: UpupConfig, defaults: UpupConfig = {}): void {
     if (typeof window === 'undefined') return
     const params = new URLSearchParams(window.location.search)
-    const token = serialize(config)
+    const token = serialize(config, defaults)
     if (token) {
         params.set('c', token)
     } else {
@@ -24,9 +24,9 @@ export function writeConfigToUrl(config: UpupConfig): void {
     window.history.replaceState(null, '', url)
 }
 
-export function buildPermalink(config: UpupConfig): string {
+export function buildPermalink(config: UpupConfig, defaults: UpupConfig = {}): string {
     if (typeof window === 'undefined') return ''
-    const token = serialize(config)
+    const token = serialize(config, defaults)
     if (!token) return `${window.location.origin}${window.location.pathname}`
     return `${window.location.origin}${window.location.pathname}?c=${token}`
 }
