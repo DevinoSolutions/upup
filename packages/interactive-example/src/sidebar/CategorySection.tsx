@@ -1,6 +1,6 @@
 import React, { useState, useContext } from 'react'
 import { ConfigContext } from '../state/ConfigContext'
-import type { CategoryDefinition, ToggleEntry } from '../types'
+import type { CategoryDefinition, ToggleEntry, UpupConfig } from '../types'
 import {
     BoolToggle,
     NumberInput,
@@ -13,7 +13,39 @@ import {
 } from './primitives'
 import { SOURCE_META, type SourceMeta } from '../icons/source-meta'
 
-function renderEntry(entry: ToggleEntry) {
+/**
+ * Map each cloud-drive source id to the `cloudDrives.*` config path that
+ * must hold a clientId for that drive to work. Used to grey out tiles when
+ * the host env never provided credentials.
+ */
+const DRIVE_CREDENTIAL_PATHS: Record<string, string> = {
+    google_drive: 'cloudDrives.googleDrive.clientId',
+    onedrive: 'cloudDrives.oneDrive.clientId',
+    dropbox: 'cloudDrives.dropbox.clientId',
+    box: 'cloudDrives.box.clientId',
+}
+
+function readPath(obj: unknown, path: string): unknown {
+    let cur: any = obj
+    for (const k of path.split('.')) {
+        if (cur == null) return undefined
+        cur = cur[k]
+    }
+    return cur
+}
+
+function computeUnavailableSources(config: UpupConfig): Record<string, string> {
+    const out: Record<string, string> = {}
+    for (const [source, path] of Object.entries(DRIVE_CREDENTIAL_PATHS)) {
+        const clientId = readPath(config, path)
+        if (!clientId || typeof clientId !== 'string' || clientId.trim() === '') {
+            out[source] = 'Client ID and secret not provided. Set the corresponding NEXT_PUBLIC_*_CLIENT_ID env var (or fill Advanced → self-host → cloud drive section) to enable this source.'
+        }
+    }
+    return out
+}
+
+function renderEntry(entry: ToggleEntry, config: UpupConfig) {
     switch (entry.primitive) {
         case 'bool':
             return <BoolToggle key={entry.id} propId={entry.id} label={entry.label} description={entry.description} />
@@ -22,7 +54,7 @@ function renderEntry(entry: ToggleEntry) {
         case 'enum':
             return <EnumSelect key={entry.id} propId={entry.id} label={entry.label} description={entry.description} options={(entry.options?.options as string[]) ?? []} layout={entry.options?.layout as 'segmented' | 'select' | undefined} defaultValue={entry.defaultValue as string | undefined} />
         case 'multi':
-            return <MultiSelect key={entry.id} propId={entry.id} label={entry.label} options={(entry.options?.options as string[]) ?? []} meta={entry.id === 'sources' ? SOURCE_META : (entry.options?.meta as Record<string, SourceMeta> | undefined)} />
+            return <MultiSelect key={entry.id} propId={entry.id} label={entry.label} options={(entry.options?.options as string[]) ?? []} meta={entry.id === 'sources' ? SOURCE_META : (entry.options?.meta as Record<string, SourceMeta> | undefined)} unavailable={entry.id === 'sources' ? computeUnavailableSources(config) : undefined} />
         case 'string':
             return <StringInput key={entry.id} propId={entry.id} label={entry.label} description={entry.description} placeholder={entry.options?.placeholder as string | undefined} />
         case 'nested':
@@ -34,18 +66,40 @@ function renderEntry(entry: ToggleEntry) {
     }
 }
 
+function shallowEqual(a: unknown, b: unknown): boolean {
+    if (Object.is(a, b)) return true
+    if (Array.isArray(a) && Array.isArray(b)) {
+        if (a.length !== b.length) return false
+        return a.every((x, i) => Object.is(x, b[i]))
+    }
+    return false
+}
+
+/**
+ * Count entries whose current value meaningfully diverges from the declared
+ * default. With defaults seeded into the config (so sidebar/preview/code
+ * agree on the out-of-the-box state), a "N set" counter that simply
+ * enumerates non-undefined values would always report the full category
+ * — useless. This version reports "what the user has changed".
+ */
 function countSet(config: unknown, entries: ToggleEntry[]): number {
     let count = 0
     for (const entry of entries) {
+        if (entry.primitive === 'nested') continue
         const path = entry.id.split('.')
         let cur: any = config
         for (const k of path) {
             if (cur == null) { cur = undefined; break }
             cur = cur[k]
         }
-        if (cur !== undefined && cur !== null && cur !== '' && (!Array.isArray(cur) || cur.length > 0)) {
-            count++
-        }
+        const isEmpty =
+            cur === undefined ||
+            cur === null ||
+            cur === '' ||
+            (Array.isArray(cur) && cur.length === 0)
+        if (isEmpty) continue
+        if (shallowEqual(cur, entry.defaultValue)) continue
+        count++
     }
     return count
 }
@@ -69,17 +123,17 @@ export function CategorySection({
             </button>
             {open && (
                 <div className="upup-ie-category-body">
-                    {renderBody(category.entries)}
+                    {renderBody(category.entries, ctx?.config ?? {})}
                 </div>
             )}
         </section>
     )
 }
 
-function renderBody(entries: ToggleEntry[]) {
+function renderBody(entries: ToggleEntry[], config: UpupConfig) {
     // Flat render when no entry declares a group
     if (!entries.some((e) => e.group)) {
-        return entries.map(renderEntry)
+        return entries.map((e) => renderEntry(e, config))
     }
     // Grouped render — preserves input order while inserting subheaders
     const groups: Array<{ label: string | null; items: ToggleEntry[] }> = []
@@ -92,7 +146,7 @@ function renderBody(entries: ToggleEntry[]) {
     return groups.map((g, idx) => (
         <React.Fragment key={g.label ?? `__ungrouped-${idx}`}>
             {g.label && <div className="upup-ie-group-heading">{g.label}</div>}
-            {g.items.map(renderEntry)}
+            {g.items.map((e) => renderEntry(e, config))}
         </React.Fragment>
     ))
 }

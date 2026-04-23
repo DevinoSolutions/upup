@@ -24,13 +24,29 @@ describe('useConfig', () => {
         expect(screen.getByTestId('value').textContent).toBe('"s3"')
     })
 
-    it('returns undefined when path has no initial value', () => {
+    it('returns undefined when path has no declared default and no user value', () => {
+        // ConfigProvider seeds from buildDefaultConfig() so fields with a
+        // declared defaultValue come back as that default. maxFileSize is
+        // declared as undefined (no default) so the path genuinely resolves
+        // to undefined — the original "no initial value" contract for entries
+        // that opt out of seeding.
+        render(
+            <ConfigProvider initialConfig={{}}>
+                <Probe path="maxFileSize" />
+            </ConfigProvider>,
+        )
+        expect(screen.getByTestId('value').textContent).toBe('')
+    })
+
+    it('falls back to declared default when path has no user value', () => {
+        // `provider` declares default 'aws' — reading it from an otherwise
+        // empty config still returns 'aws' because the seed injects it.
         render(
             <ConfigProvider initialConfig={{}}>
                 <Probe path="provider" />
             </ConfigProvider>,
         )
-        expect(screen.getByTestId('value').textContent).toBe('')
+        expect(screen.getByTestId('value').textContent).toBe('"aws"')
     })
 
     it('updates value when set() is called', () => {

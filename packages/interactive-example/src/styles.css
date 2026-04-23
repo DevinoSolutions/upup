@@ -717,6 +717,25 @@ html.dark .upup-ie-focus:not([data-theme="light"]),
     box-shadow: 0 0 0 1px var(--ie-accent) inset;
 }
 
+.upup-ie-source-tile[data-unavailable] {
+    opacity: 0.4;
+    cursor: not-allowed;
+    background: var(--ie-input-bg);
+    border-color: var(--ie-input-border);
+    box-shadow: none;
+    filter: grayscale(0.6);
+}
+
+.upup-ie-source-tile[data-unavailable]:hover {
+    border-color: var(--ie-input-border);
+    background: var(--ie-input-bg);
+}
+
+.upup-ie-multiselect-item[data-unavailable] {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
 .upup-ie-source-tile:focus-visible {
     outline: 2px solid var(--ie-accent);
     outline-offset: 2px;
