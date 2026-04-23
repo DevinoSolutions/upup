@@ -78,18 +78,31 @@ function renderEntry(entry: ToggleEntry) {
 
 function PermalinkButton() {
     const ctx = useContext(ConfigContext)
+    const [status, setStatus] = useState<'idle' | 'copied' | 'error'>('idle')
     async function copyLink() {
         if (!ctx) return
         const url = buildPermalink(ctx.config, ctx.defaults)
         try {
             await navigator.clipboard.writeText(url)
+            setStatus('copied')
         } catch {
-            // silently ignore
+            setStatus('error')
         }
+        setTimeout(() => setStatus('idle'), 1500)
     }
+    const label =
+        status === 'copied' ? 'Copied!' :
+        status === 'error' ? 'Copy failed' :
+        'Copy permalink'
     return (
-        <button type="button" onClick={copyLink} className="upup-ie-permalink">
-            Copy permalink
+        <button
+            type="button"
+            onClick={copyLink}
+            className="upup-ie-permalink"
+            data-status={status === 'idle' ? undefined : status}
+            aria-live="polite"
+        >
+            {label}
         </button>
     )
 }

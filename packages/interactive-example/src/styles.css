@@ -464,11 +464,31 @@ html.dark .upup-ie-focus:not([data-theme="light"]),
 }
 
 .upup-ie-eventlog-empty {
-    margin: 0;
-    padding: 18px 16px;
+    padding: 18px 16px 14px;
     font-size: 12px;
     color: var(--ie-fg-muted);
     line-height: 1.5;
+}
+
+.upup-ie-eventlog-empty p {
+    margin: 0 0 12px;
+}
+
+/* Ghosted "here is what fired events would look like" preview. Muted so it
+   reads as a placeholder, not real data. */
+.upup-ie-eventlog-list-sample {
+    max-height: none;
+    overflow: visible;
+    border-top: 1px dashed var(--ie-card-border);
+    padding-top: 6px;
+    opacity: 0.55;
+    pointer-events: none;
+    user-select: none;
+}
+
+.upup-ie-eventlog-list-sample .upup-ie-eventlog-row {
+    border-bottom: none;
+    padding: 4px 0;
 }
 
 .upup-ie-eventlog-list {
@@ -911,6 +931,18 @@ html.dark .upup-ie-focus:not([data-theme="light"]),
     border-color: var(--ie-accent);
     color: var(--ie-accent);
     background: var(--ie-accent-soft);
+}
+
+.upup-ie-permalink[data-status="copied"] {
+    border-color: #16a34a;
+    color: #16a34a;
+    background: rgba(22, 163, 74, 0.08);
+}
+
+.upup-ie-permalink[data-status="error"] {
+    border-color: #dc2626;
+    color: #dc2626;
+    background: rgba(220, 38, 38, 0.08);
 }
 
 .upup-ie-tabs-body {

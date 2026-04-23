@@ -72,10 +72,35 @@ export function EventLogPanel() {
                 </button>
             </div>
             {log.entries.length === 0 ? (
-                <p className="upup-ie-eventlog-empty">
-                    Toggle an event in the sidebar and interact with the uploader —
-                    every fired event will appear here with its arguments.
-                </p>
+                <div className="upup-ie-eventlog-empty">
+                    <p>
+                        Toggle an event in the <strong>Events</strong> category and interact
+                        with the uploader — every fired event lands here with its arguments.
+                    </p>
+                    <ul
+                        className="upup-ie-eventlog-list upup-ie-eventlog-list-sample"
+                        aria-hidden="true"
+                    >
+                        <li className="upup-ie-eventlog-row">
+                            <span className="upup-ie-eventlog-time">00:00:00.000</span>
+                            <span className="upup-ie-eventlog-name">onFilesSelected</span>
+                            <span className="upup-ie-eventlog-args">
+                                [File("resume.pdf", 82312B, application/pdf)]
+                            </span>
+                        </li>
+                        <li className="upup-ie-eventlog-row">
+                            <span className="upup-ie-eventlog-time">00:00:00.412</span>
+                            <span className="upup-ie-eventlog-name">onUploadStart</span>
+                        </li>
+                        <li className="upup-ie-eventlog-row">
+                            <span className="upup-ie-eventlog-time">00:00:01.933</span>
+                            <span className="upup-ie-eventlog-name">onFileUploadComplete</span>
+                            <span className="upup-ie-eventlog-args">
+                                {'{ key: "abc-resume.pdf", publicUrl: "https://…" }'}
+                            </span>
+                        </li>
+                    </ul>
+                </div>
             ) : (
                 <ul ref={listRef} className="upup-ie-eventlog-list">
                     {log.entries.map((e) => (
