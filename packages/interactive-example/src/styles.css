@@ -738,17 +738,38 @@ html.dark .upup-ie-focus:not([data-theme="light"]),
 }
 
 .upup-ie-source-tile[data-unavailable] {
-    opacity: 0.4;
-    cursor: not-allowed;
+    opacity: 0.45;
     background: var(--ie-input-bg);
     border-color: var(--ie-input-border);
     box-shadow: none;
-    filter: grayscale(0.6);
+    filter: grayscale(0.7);
+}
+
+/* Disabled + currently selected: dashed accent border keeps the "this
+   IS in your config, it just can't work without credentials" signal. */
+.upup-ie-source-tile[data-unavailable][data-active] {
+    border-style: dashed;
+    border-color: var(--ie-accent);
+    background: color-mix(in srgb, var(--ie-accent-soft) 50%, transparent);
+}
+
+.upup-ie-source-tile[data-unavailable][aria-disabled="true"] {
+    cursor: not-allowed;
+}
+
+/* Disabled + selected is still toggleable-off, so keep the pointer. */
+.upup-ie-source-tile[data-unavailable]:not([aria-disabled="true"]) {
+    cursor: pointer;
 }
 
 .upup-ie-source-tile[data-unavailable]:hover {
     border-color: var(--ie-input-border);
     background: var(--ie-input-bg);
+}
+
+.upup-ie-source-tile[data-unavailable][data-active]:hover {
+    border-color: var(--ie-accent);
+    background: color-mix(in srgb, var(--ie-accent-soft) 60%, transparent);
 }
 
 .upup-ie-multiselect-item[data-unavailable] {

@@ -28,8 +28,14 @@ export function MultiSelect({
     const selected = Array.isArray(value) ? (value as string[]) : []
 
     function toggle(opt: string) {
-        if (unavailable?.[opt]) return
-        const next = selected.includes(opt)
+        const isSelected = selected.includes(opt)
+        const isDisabled = Boolean(unavailable?.[opt])
+        // Disabled options that aren't currently selected are no-ops — the
+        // user can't opt into a source that lacks credentials. Disabled +
+        // selected options stay toggleable OFF so users who don't want a
+        // drive in their config can still remove it.
+        if (isDisabled && !isSelected) return
+        const next = isSelected
             ? selected.filter((s) => s !== opt)
             : [...selected, opt]
         set(next.length === 0 ? undefined : next)
@@ -46,16 +52,16 @@ export function MultiSelect({
                         const labelText = entry?.label ?? o
                         const reason = unavailable?.[o]
                         const isDisabled = Boolean(reason)
-                        const active = selected.includes(o) && !isDisabled
+                        const isSelected = selected.includes(o)
                         return (
                             <button
                                 key={o}
                                 type="button"
                                 className="upup-ie-source-tile"
-                                data-active={active || undefined}
+                                data-active={isSelected || undefined}
                                 data-unavailable={isDisabled || undefined}
-                                aria-pressed={active}
-                                aria-disabled={isDisabled || undefined}
+                                aria-pressed={isSelected}
+                                aria-disabled={isDisabled && !isSelected ? true : undefined}
                                 title={reason ?? labelText}
                                 onClick={() => toggle(o)}
                             >
@@ -78,6 +84,7 @@ export function MultiSelect({
                 {options.map((o) => {
                     const reason = unavailable?.[o]
                     const isDisabled = Boolean(reason)
+                    const isSelected = selected.includes(o)
                     return (
                         <label
                             key={o}
@@ -87,8 +94,8 @@ export function MultiSelect({
                         >
                             <input
                                 type="checkbox"
-                                checked={selected.includes(o) && !isDisabled}
-                                disabled={isDisabled}
+                                checked={isSelected}
+                                disabled={isDisabled && !isSelected}
                                 onChange={() => toggle(o)}
                             />
                             <span>{o}</span>

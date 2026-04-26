@@ -43,4 +43,38 @@ describe('generateCode', () => {
         expect(out).toContain("onError={(arg) => console.log('onError', arg)}")
         expect(out).toContain("onFileUploadComplete={(arg) => console.log('onFileUploadComplete', arg)}")
     })
+
+    it('recursively omits nested defaults — only the diverging leaf appears', () => {
+        const config = {
+            theme: {
+                mode: 'system',
+                tokens: { color: { primary: '' } },
+                slots: { uploader: { container: 'ring-4' } },
+            },
+        } as any
+        const defaults = {
+            theme: {
+                mode: 'system',
+                tokens: { color: { primary: '' } },
+            },
+        } as any
+        const out = generateCode(config, defaults)
+        expect(out).toContain("container: 'ring-4'")
+        expect(out).not.toMatch(/mode:\s*'system'/)
+        expect(out).not.toMatch(/primary:\s*''/)
+    })
+
+    it('omits a top-level key entirely when every nested leaf matches the default', () => {
+        const config = {
+            theme: { mode: 'system', tokens: { color: { primary: '' } } },
+            provider: 'aws',
+        } as any
+        const defaults = {
+            theme: { mode: 'system', tokens: { color: { primary: '' } } },
+            provider: 'aws',
+        } as any
+        const out = generateCode(config, defaults)
+        expect(out).not.toContain('theme')
+        expect(out).not.toContain('provider')
+    })
 })

@@ -57,4 +57,23 @@ describe('serialize / deserialize round-trip', () => {
         expect(warnSpy).toHaveBeenCalled()
         warnSpy.mockRestore()
     })
+
+    it('recursively strips nested defaults so the permalink only carries the diverging leaf', () => {
+        const defaults = {
+            theme: { mode: 'system', tokens: { color: { primary: '' } } },
+        } as any
+        const config = {
+            theme: {
+                mode: 'system',
+                tokens: { color: { primary: '' } },
+                slots: { uploader: { container: 'ring-4' } },
+            },
+        } as any
+        const token = serialize(config, defaults)
+        expect(token).not.toBe('')
+        const restored = deserialize(token) as any
+        expect(restored).toEqual({
+            theme: { slots: { uploader: { container: 'ring-4' } } },
+        })
+    })
 })

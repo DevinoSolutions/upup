@@ -25,6 +25,30 @@ function deepEqual(a: unknown, b: unknown): boolean {
     return false
 }
 
+function isPlainObject(v: unknown): v is Record<string, unknown> {
+    return typeof v === 'object' && v !== null && !Array.isArray(v)
+}
+
+// Recursively strip keys that match their declared default. For nested
+// plain objects we descend so setting one leaf (e.g. theme.slots.X) doesn't
+// pull sibling defaults (theme.mode, theme.tokens) into the output.
+function diffAgainstDefaults(
+    value: unknown,
+    defaultValue: unknown,
+): { omit: true } | { omit: false; value: unknown } {
+    if (deepEqual(value, defaultValue)) return { omit: true }
+    if (isPlainObject(value) && isPlainObject(defaultValue)) {
+        const out: Record<string, unknown> = {}
+        for (const [k, v] of Object.entries(value)) {
+            const res = diffAgainstDefaults(v, defaultValue[k])
+            if (!res.omit) out[k] = res.value
+        }
+        if (Object.keys(out).length === 0) return { omit: true }
+        return { omit: false, value: out }
+    }
+    return { omit: false, value }
+}
+
 function renderObjectLiteral(value: unknown, depth = 1): string {
     if (value === null || typeof value !== 'object') {
         if (typeof value === 'string') return `'${value.replace(/'/g, "\\'")}'`
@@ -70,12 +94,13 @@ export function generateCode(config: UpupConfig, defaults: UpupConfig = {}): str
     const configWithoutEvents: Record<string, unknown> = { ...config }
     delete (configWithoutEvents as any).events
 
-    // Drop any top-level prop whose value deep-equals the declared default —
-    // keeps the copy-pasteable snippet lean: only what the user changed from
-    // the component's built-in defaults appears in the output.
+    // Drop every key whose value matches the declared default, descending into
+    // nested objects so setting one leaf doesn't drag sibling defaults along.
     const propLines = Object.entries(configWithoutEvents)
-        .filter(([k, v]) => !deepEqual(v, (defaults as Record<string, unknown>)[k]))
-        .map(([k, v]) => renderProp(k, v))
+        .map(([k, v]) => {
+            const res = diffAgainstDefaults(v, (defaults as Record<string, unknown>)[k])
+            return res.omit ? null : renderProp(k, res.value)
+        })
         .filter((s): s is string => s != null)
 
     const eventLines: string[] = []

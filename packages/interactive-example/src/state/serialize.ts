@@ -30,16 +30,37 @@ function deepEqual(a: unknown, b: unknown): boolean {
     return false
 }
 
+function isPlainObject(v: unknown): v is Record<string, unknown> {
+    return typeof v === 'object' && v !== null && !Array.isArray(v)
+}
+
+function diffAgainstDefaults(
+    value: unknown,
+    defaultValue: unknown,
+): { omit: true } | { omit: false; value: unknown } {
+    if (deepEqual(value, defaultValue)) return { omit: true }
+    if (isPlainObject(value) && isPlainObject(defaultValue)) {
+        const out: Record<string, unknown> = {}
+        for (const [k, v] of Object.entries(value)) {
+            const res = diffAgainstDefaults(v, defaultValue[k])
+            if (!res.omit) out[k] = res.value
+        }
+        if (Object.keys(out).length === 0) return { omit: true }
+        return { omit: false, value: out }
+    }
+    return { omit: false, value }
+}
+
 /**
- * Strip any top-level key whose value deep-equals the declared default.
- * Keeps permalinks short — users only pay URL length for what they changed.
+ * Strip every key whose value matches its declared default, descending into
+ * nested objects. Keeps permalinks short — users only pay URL length for what
+ * they actually changed, even when the change is a single nested leaf.
  */
 function omitDefaults(config: UpupConfig, defaults: UpupConfig): UpupConfig {
     const out: Record<string, unknown> = {}
     for (const [k, v] of Object.entries(config)) {
-        if (!deepEqual(v, (defaults as Record<string, unknown>)[k])) {
-            out[k] = v
-        }
+        const res = diffAgainstDefaults(v, (defaults as Record<string, unknown>)[k])
+        if (!res.omit) out[k] = res.value
     }
     return out as UpupConfig
 }
