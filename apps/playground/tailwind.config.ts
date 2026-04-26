@@ -3,8 +3,21 @@
 module.exports = {
     darkMode: 'class',
     content: [
-        './src/**/*.{js,jsx,ts,tsx,css}'
+        './src/**/*.{js,jsx,ts,tsx,css}',
+        // Pull preset class strings out of the playground primitives package
+        // so Tailwind compiles them into the bundle. Without this, slot
+        // override presets (and any class strings written into config at
+        // runtime) wouldn't appear in the compiled CSS, and applying them
+        // to the uploader would render no visible change.
+        '../../packages/interactive-example/src/**/*.{ts,tsx}',
     ],
+    // upup-react-file-uploader's preflight resets `border: 0` on every
+    // descendant of `.upup-scope` (selector specificity 0,1,1). Without
+    // !important on our utilities, slot-override classes like `.border`
+    // (specificity 0,1,0) lose the cascade and render no visible change.
+    // Marking utilities important lets the playground demo actually
+    // demo — without affecting the published package.
+    important: true,
     theme: {
         extend: {
             keyframes: {
