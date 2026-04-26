@@ -1,9 +1,11 @@
 import type { CategoryDefinition } from '../types'
+import { Crop } from 'lucide-react'
 
 export const editorCategory: CategoryDefinition = {
     id: 'editor',
     label: 'Editor',
     description: 'Image editor configuration',
+    icon: Crop,
     entries: [
         {
             id: 'imageEditor.enabled',

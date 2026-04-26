@@ -20,7 +20,7 @@ describe('category manifest', () => {
     })
 
     it('every entry has a recognized primitive kind', () => {
-        const kinds = new Set(['bool', 'number', 'enum', 'multi', 'string', 'nested', 'size-unit', 'color'])
+        const kinds = new Set(['bool', 'number', 'enum', 'multi', 'string', 'nested', 'size-unit', 'color', 'combo'])
         for (const entry of allEntries()) {
             expect(kinds.has(entry.primitive)).toBe(true)
         }

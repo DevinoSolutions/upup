@@ -1,5 +1,6 @@
 import type { CategoryDefinition } from '../types'
 import { CLOUD_DRIVE_META } from '../icons/source-meta'
+import { Server } from 'lucide-react'
 
 /**
  * Opt-in integrations most visitors won't touch on a first look.
@@ -10,6 +11,7 @@ export const advancedCategory: CategoryDefinition = {
     id: 'advanced',
     label: 'Advanced — self-host',
     description: 'Only needed if you run your own backend or cloud-drive app',
+    icon: Server,
     entries: [
         {
             id: 'mode',

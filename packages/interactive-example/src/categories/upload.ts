@@ -1,9 +1,11 @@
 import type { CategoryDefinition } from '../types'
+import { Upload } from 'lucide-react'
 
 export const uploadCategory: CategoryDefinition = {
     id: 'upload',
     label: 'Upload',
     description: 'Strategy and execution',
+    icon: Upload,
     entries: [
         {
             id: 'provider',

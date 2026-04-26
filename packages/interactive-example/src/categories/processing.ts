@@ -1,9 +1,11 @@
 import type { CategoryDefinition } from '../types'
+import { Wand2 } from 'lucide-react'
 
 export const processingCategory: CategoryDefinition = {
     id: 'processing',
     label: 'Processing',
     description: 'Pipeline steps before upload',
+    icon: Wand2,
     entries: [
         {
             id: 'imageCompression',

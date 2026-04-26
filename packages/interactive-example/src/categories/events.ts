@@ -1,4 +1,5 @@
 import type { CategoryDefinition, ToggleEntry } from '../types'
+import { Activity } from 'lucide-react'
 
 // Event prop names on UpupUploaderProps grouped by lifecycle. Each toggle
 // wires both the EventLog panel and a console logger as the callback
@@ -64,5 +65,6 @@ export const eventsCategory: CategoryDefinition = {
     id: 'events',
     label: 'Events',
     description: 'Log UpupUploader callbacks live as you interact with the preview',
+    icon: Activity,
     entries,
 }

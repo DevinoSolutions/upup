@@ -1,9 +1,11 @@
 import type { CategoryDefinition } from '../types'
+import { LayoutGrid } from 'lucide-react'
 
 export const sourcesCategory: CategoryDefinition = {
     id: 'sources',
     label: 'Sources',
     description: 'Which adapters are enabled',
+    icon: LayoutGrid,
     entries: [
         {
             id: 'sources',

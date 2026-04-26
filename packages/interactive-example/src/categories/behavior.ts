@@ -1,9 +1,11 @@
 import type { CategoryDefinition } from '../types'
+import { SlidersHorizontal } from 'lucide-react'
 
 export const behaviorCategory: CategoryDefinition = {
     id: 'behavior',
     label: 'Behavior',
     description: 'UX and interaction modes',
+    icon: SlidersHorizontal,
     entries: [
         {
             id: 'mini',

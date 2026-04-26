@@ -10,8 +10,11 @@ import {
     NestedConfig,
     SizeUnitInput,
     ColorInput,
+    ComboInput,
+    type ComboPreset,
 } from './primitives'
 import { SOURCE_META, type SourceMeta } from '../icons/source-meta'
+import { ENUM_META_BY_PROP } from '../icons/provider-meta'
 
 /**
  * Map each cloud-drive source id to the `cloudDrives.*` config path that
@@ -52,7 +55,7 @@ function renderEntry(entry: ToggleEntry, config: UpupConfig) {
         case 'number':
             return <NumberInput key={entry.id} propId={entry.id} label={entry.label} description={entry.description} min={entry.options?.min as number | undefined} max={entry.options?.max as number | undefined} step={entry.options?.step as number | undefined} defaultValue={entry.defaultValue as number | undefined} display={entry.options?.display as 'slider' | 'number' | undefined} />
         case 'enum':
-            return <EnumSelect key={entry.id} propId={entry.id} label={entry.label} description={entry.description} options={(entry.options?.options as string[]) ?? []} layout={entry.options?.layout as 'segmented' | 'select' | undefined} defaultValue={entry.defaultValue as string | undefined} />
+            return <EnumSelect key={entry.id} propId={entry.id} label={entry.label} description={entry.description} options={(entry.options?.options as string[]) ?? []} layout={entry.options?.layout as 'segmented' | 'select' | undefined} defaultValue={entry.defaultValue as string | undefined} meta={ENUM_META_BY_PROP[entry.id]} />
         case 'multi':
             return <MultiSelect key={entry.id} propId={entry.id} label={entry.label} options={(entry.options?.options as string[]) ?? []} meta={entry.id === 'sources' ? SOURCE_META : (entry.options?.meta as Record<string, SourceMeta> | undefined)} unavailable={entry.id === 'sources' ? computeUnavailableSources(config) : undefined} />
         case 'string':
@@ -63,6 +66,8 @@ function renderEntry(entry: ToggleEntry, config: UpupConfig) {
             return <SizeUnitInput key={entry.id} propId={entry.id} label={entry.label} defaultSize={entry.options?.defaultSize as number | undefined} defaultUnit={entry.options?.defaultUnit as 'B' | 'KB' | 'MB' | 'GB' | undefined} />
         case 'color':
             return <ColorInput key={entry.id} propId={entry.id} label={entry.label} placeholder={entry.options?.placeholder as string | undefined} defaultValue={entry.defaultValue as string | undefined} />
+        case 'combo':
+            return <ComboInput key={entry.id} propId={entry.id} label={entry.label} description={entry.description} placeholder={entry.options?.placeholder as string | undefined} presets={(entry.options?.presets as ComboPreset[]) ?? []} />
     }
 }
 
@@ -114,10 +119,12 @@ export function CategorySection({
     const ctx = useContext(ConfigContext)
     const [open, setOpen] = useState(defaultExpanded)
     const setCount = ctx ? countSet(ctx.config, category.entries) : 0
+    const Icon = category.icon
     return (
         <section className="upup-ie-category" data-open={open}>
             <button type="button" className="upup-ie-category-header" onClick={() => setOpen((v) => !v)}>
                 <span className="upup-ie-category-chevron">{open ? '▾' : '▸'}</span>
+                {Icon ? <span className="upup-ie-category-icon" aria-hidden="true"><Icon /></span> : null}
                 <span className="upup-ie-category-label">{category.label}</span>
                 <span className="upup-ie-category-count">{setCount > 0 ? `${setCount} set` : ''}</span>
             </button>

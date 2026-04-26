@@ -1,3 +1,4 @@
+import type React from 'react'
 import type { UpupUploaderProps } from 'upup-react-file-uploader'
 
 export type CategoryId =
@@ -24,6 +25,7 @@ export type PrimitiveKind =
     | 'nested'
     | 'size-unit'
     | 'color'
+    | 'combo'
 
 export type ToggleEntry = {
     id: PropId
@@ -42,6 +44,8 @@ export type CategoryDefinition = {
     label: string
     description?: string
     entries: ToggleEntry[]
+    /** Optional lucide-style icon shown in the category header. */
+    icon?: React.FC
 }
 
 export type UpupConfig = Partial<UpupUploaderProps>
