@@ -180,9 +180,11 @@ Walked every category in Chrome DevTools against http://localhost:53004. Finding
 | `theme.tokens.color.primary` | ✅ partial | `--upup-color-primary` CSS var updates instantly. ⚠️ `--upup-color-primary-hover` and `--upup-color-border-active` do NOT auto-derive — picking red leaves cyan hover/border. Upstream concern. |
 | `i18n.locale=ar-SA` | ✅ shipped fix | Was broken — string locale only flipped RTL, strings stayed English. Added `localePack` resolution in `UploaderPreview.tsx` so the playground passes the matching pack alongside the locale string. Now flips both copy AND direction. |
 | `i18n.fallbackLocale` | ✅ | Same lookup applied. |
-| `accept` filter | ✅ | Picking "Images" sets `accept="image/*"` on the underlying `<input type="file">`. |
+| `accept` filter | ✅ | Picking "Images" sets `accept="image/*"` on the underlying `<input type="file">`. There is **no** separate denylist prop in the API. |
 | `maxFiles` | ✅ | Dropzone copy "up to N files" updates immediately. |
-| `maxFileSize` etc. | 🤷 | Wired (writes `{size,unit}` object); error-display verification needs over-limit file. |
+| `maxFileSize` | ✅ partial | Echoes in dropzone footer ("Max N GB files are allowed"). Validation rejection on oversized picks needs a real file. |
+| `minFileSize` | ⚠️ silent | Wired correctly to the prop, but the uploader's UI **does not echo it** in the dropzone copy. Only fires `onRestrictionFailed` when a too-small file is picked. Playground description now states this explicitly. |
+| `maxTotalFileSize` | ⚠️ silent | Same — wired but never stated upfront. Fires `onRestrictionFailed` when the sum exceeds the limit. Playground description tightened. |
 | `cloudDrives.*` env-seed grey-out | ✅ | google_drive / oneDrive / dropbox / box tiles render `data-unavailable=true` with the env-var hint title when no clientId is set. |
 | `events.onIntegrationClick` | ✅ | Toggled on → clicked My Device tile → `23:10:42.815 onIntegrationClick "INTERNAL"` row appeared in EventLog. Same wiring path covers the other 21 events. |
 | `processing.*` (6 bools) | ✅ | All 6 toggles serialize through to the UpupUploader code snippet (verified via Code tab). Visible pipeline run needs a real file. |

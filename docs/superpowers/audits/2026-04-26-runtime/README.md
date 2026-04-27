@@ -96,6 +96,17 @@ These slot presets only render once a file is in the queue. Programmatic injecti
 
 These all use the same `flattenSlotsToClassNames()` plumbing as `theme.slots.uploader.container`, which **was** verified visually in the earlier slot-fix work (Sharp ring preset → `ring-2 ring-slate-300 rounded-md` rendered on the uploader frame). The slot mechanism is proven on at least 3 of 8 slots (`uploader.container`, `urlUploader.fetchButton`, `sourceView.header`); the remaining 4 share the same wiring and need a real file drop in a manual session to confirm visually.
 
+## 14 — Limits · intro banner + clearer per-field descriptions
+
+![limits with intro](./14-limits-with-intro.png)
+
+User-spotted issue I missed in the first pass. The dropzone footer only echoes `maxFileSize` (e.g. "Max 6 GB files are allowed") — `minFileSize` and `maxTotalFileSize` set the prop but the uploader doesn't state them upfront, they only surface as `onRestrictionFailed` when a non-conforming file is picked. There is **no** denylist prop on the API; `accept` is the only allowlist mechanism.
+
+Playground updates:
+- Limits category gets an intro banner: "Only Accept and Max files are echoed in the dropzone copy plus the file picker filter. Min file size, Max total file size, and the upper bound on Max file size are enforced silently."
+- `accept` description now states the allowlist scope and that there is no separate denylist.
+- `minFileSize` and `maxTotalFileSize` descriptions explicitly call out validation-only behaviour.
+
 ## 13 — Behavior · showBranding=false (now actually hides)
 
 ![showBranding off fixed](./13-showBranding-false-fixed.png)
