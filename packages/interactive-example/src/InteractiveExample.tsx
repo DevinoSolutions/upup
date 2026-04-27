@@ -1,5 +1,5 @@
 'use client'
-import React, { useContext, useEffect, useMemo, useState } from 'react'
+import React, { useContext, useEffect, useState } from 'react'
 import { ConfigProvider, ConfigContext } from './state/ConfigContext'
 import { EventLogProvider } from './state/EventLogContext'
 import { Sidebar } from './sidebar/Sidebar'
@@ -119,6 +119,26 @@ function UrlSync() {
     return null
 }
 
+/**
+ * Mount-only consumer: pulls config out of `?c=` after hydration and merges
+ * it into the live config. Reading the URL during render would diverge SSR
+ * (no window) from the client (full URL), and React's recovery from that
+ * hydration mismatch was breaking interactivity in the playground.
+ */
+function UrlBootstrap() {
+    const ctx = useContext(ConfigContext)
+    useEffect(() => {
+        if (!ctx) return
+        const fromUrl = readConfigFromUrl()
+        if (Object.keys(fromUrl).length === 0) return
+        ctx.setConfig((prev) => ({ ...prev, ...fromUrl }))
+        // Empty deps — bootstrap exactly once on mount. Subsequent URL writes
+        // are owned by UrlSync.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
+    return null
+}
+
 function Shell({
     defaultExpanded,
     showCodeTab,
@@ -189,14 +209,14 @@ export function InteractiveExample({
     previewWidth = 'auto',
     disableUrlSync = false,
 }: InteractiveExampleProps = {}) {
-    const merged = useMemo(() => {
-        const fromUrl = disableUrlSync ? {} : readConfigFromUrl()
-        return { ...fromUrl, ...(initialConfig ?? {}) }
-    }, [disableUrlSync, initialConfig])
-
+    // First render must be identical on server and client — only host-passed
+    // initialConfig is folded in here. URL config is bootstrapped post-mount
+    // by UrlBootstrap, so SSR HTML and the client's first render agree even
+    // when the URL carries a ?c= permalink.
     return (
-        <ConfigProvider initialConfig={merged}>
+        <ConfigProvider initialConfig={initialConfig}>
             <EventLogProvider>
+                {!disableUrlSync && <UrlBootstrap />}
                 {!disableUrlSync && <UrlSync />}
                 {focus && focus.length > 0 ? (
                     <FocusMode focus={focus} previewWidth={previewWidth} />
