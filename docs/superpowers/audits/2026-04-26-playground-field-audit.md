@@ -170,19 +170,37 @@ Status as of 2026-04-26 commit:
 | 13 | Intro banners on Processing + Events | ✅ shipped — verified rendered |
 | —  | Bonus: `advanced.mode` segmented labels humanized | ✅ shipped — "Client (browser → storage)" / "Server (browser → @upup/server)" |
 
-# Verifications still owed (browser-only, no code change planned)
+# Runtime verification pass (2026-04-26)
 
-These are runtime-effect checks. The code path is unchanged from before this commit — switching a toggle writes the prop; whether the prop has a visible effect is owned by `upup-react-file-uploader`. List below for the next pass:
+Walked every category in Chrome DevTools against http://localhost:53004. Findings:
 
-- `theme.mode` — does light/dark/system actually flip uploader colours?
-- `theme.tokens.color.primary` — does the color picker repaint the upload button?
-- `i18n.locale=ar-SA` — does picking it switch dropzone copy to Arabic AND flip text direction to RTL?
-- `events.*` — toggle one, drop a file, does its row land in the EventLog panel?
-- `cloudDrives.*` env-seed — do `NEXT_PUBLIC_*_CLIENT_ID` env vars populate the Advanced fields and ungrey the source tiles?
-- `behavior.{mini, disableDragDrop, allowPreview, showBranding, isProcessing}` — visible change in preview for each
-- `processing.*` — toggle one, pick a file, does the pipeline step actually run? (Needs a real file — mostly observable via DevTools network panel)
-- `accept` filter — pick "Images" preset, click Browse, does the OS picker filter?
-- `maxFiles` / `maxFileSize` — does the dropzone copy/error display update?
-- All `theme.slots.*` presets that need a file pick (fileList.root, uploadButton, deleteButton, progressBar.fill, sourceView.header, urlUploader.fetchButton)
+| Field | Status | Notes |
+|---|---|---|
+| `theme.mode` light/dark/system | ✅ | `data-theme` attr on UpupThemeProvider flips correctly. System resolves via `prefers-color-scheme`. |
+| `theme.tokens.color.primary` | ✅ partial | `--upup-color-primary` CSS var updates instantly. ⚠️ `--upup-color-primary-hover` and `--upup-color-border-active` do NOT auto-derive — picking red leaves cyan hover/border. Upstream concern. |
+| `i18n.locale=ar-SA` | ✅ shipped fix | Was broken — string locale only flipped RTL, strings stayed English. Added `localePack` resolution in `UploaderPreview.tsx` so the playground passes the matching pack alongside the locale string. Now flips both copy AND direction. |
+| `i18n.fallbackLocale` | ✅ | Same lookup applied. |
+| `accept` filter | ✅ | Picking "Images" sets `accept="image/*"` on the underlying `<input type="file">`. |
+| `maxFiles` | ✅ | Dropzone copy "up to N files" updates immediately. |
+| `maxFileSize` etc. | 🤷 | Wired (writes `{size,unit}` object); error-display verification needs over-limit file. |
+| `cloudDrives.*` env-seed grey-out | ✅ | google_drive / oneDrive / dropbox / box tiles render `data-unavailable=true` with the env-var hint title when no clientId is set. |
+| `events.onIntegrationClick` | ✅ | Toggled on → clicked My Device tile → `23:10:42.815 onIntegrationClick "INTERNAL"` row appeared in EventLog. Same wiring path covers the other 21 events. |
+| `processing.*` (6 bools) | ✅ | All 6 toggles serialize through to the UpupUploader code snippet (verified via Code tab). Visible pipeline run needs a real file. |
+| `behavior.mini` | ✅ | Frame collapses 480px → 280px, sources hidden, branding hidden. |
+| `behavior.disableDragDrop` | ❌ removed | **Dead prop in upup-react-file-uploader@2.2.0** — declared in types but never destructured/consumed. Removed from playground. |
+| `behavior.showBranding=false` | ⚠️ upstream bug | `data-testid="upup-branding"` div remains in DOM despite the false prop. Upstream `<ShouldRender if={!mini && showBranding !== false}>` should hide it; needs investigation in upup-react-file-uploader. |
+| `behavior.isProcessing` | ⚠️ context-only | Only renders the loading overlay inside FileList — invisible without queued files. Description updated to make this clear. |
+| `behavior.allowPreview` | 🤷 | Default true; effect needs file pick (thumbnail next to queued file). |
+| `behavior.enablePaste` | 🤷 | Wires to Ctrl+V handler; needs paste interaction to confirm. |
+| `theme.slots.uploader.container` | ✅ | Verified previously (Sharp ring → ring-2). |
+| `theme.slots.{fileList.*, filePreview.*, progressBar.*, sourceView.header, urlUploader.fetchButton}` | 🤷 | Same wiring as the verified slot. Visible effect requires a file pick / drive picker open. |
 
-These are all "🤷" rows in the audit table — the toggle wires correctly, but the visible effect needs a real interaction to confirm. They are flagged for the next browser-driven verification pass.
+Code changes from this pass:
+- `UploaderPreview.tsx` — resolve `i18n.locale` / `i18n.fallbackLocale` strings to packs and pass via `localePack` so the uploader's resolver actually swaps copy.
+- `categories/behavior.ts` — drop dead `disableDragDrop` entry; tighten `isProcessing` description.
+
+Items still ⚠️ flagged that need upstream fixes in upup-react-file-uploader@2.2.0:
+1. `theme.tokens.color.primary` — picking the base primary should also derive primary-hover and border-active.
+2. `behavior.showBranding=false` — branding footer not honoring the prop.
+
+These are out of scope for the playground; the playground wires the prop correctly.
