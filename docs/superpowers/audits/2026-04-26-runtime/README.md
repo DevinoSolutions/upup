@@ -76,18 +76,25 @@ EVENT LOG · 2                                Clear
 
 The same wiring path covers all 22 event toggles.
 
+## 12 — Appearance · Slot presets through Link / URL source
+
+![link source with slots](./12-link-source-with-slots.png)
+
+Two of the file-pick-dependent slots can be verified by simply opening the Link / URL source — the URL panel renders both `sourceView.header` and `urlUploader.fetchButton`. Set:
+
+- `theme.slots.urlUploader.fetchButton` → `Indigo` preset → the **Fetch** button is solid indigo (vs the default cyan).
+- `theme.slots.sourceView.header` → `Bold` preset → the **header strip** is `bg-slate-900 text-white` (the dark bar at the top of the panel containing the link icon and Cancel button).
+
 ## Not visually verified (programmatic file pick blocked)
 
-These slot presets only render once a file is in the queue. Programmatic injection (DataTransfer / `input.files = …` / Chrome DevTools' `upload_file`) was rejected by the React-controlled file input — common limitation when the host uses react-dropzone:
+These slot presets only render once a file is in the queue. Programmatic injection (DataTransfer / `input.files = …` / Chrome DevTools' `upload_file`) was rejected by the React-controlled file input — a common limitation when the host uses react-dropzone. Fetching from a public URL also failed (CORS):
 
 - `theme.slots.fileList.root` (Tinted shelf / Plain / Subtle dividers)
 - `theme.slots.fileList.uploadButton` (Indigo / Emerald / Slate ghost)
 - `theme.slots.filePreview.deleteButton` (Subtle / Bold red / Mute outline)
-- `theme.slots.progressBar.fill` (Cyan→blue / Solid emerald / Hot pink)
-- `theme.slots.sourceView.header`
-- `theme.slots.urlUploader.fetchButton`
+- `theme.slots.progressBar.fill` (Cyan→blue / Solid emerald / Hot pink — also needs an active upload)
 
-These all use the same `flattenSlotsToClassNames()` plumbing as `theme.slots.uploader.container`, which **was** verified visually in the earlier slot-fix work (Sharp ring preset → `ring-2 ring-slate-300 rounded-md` rendered on the uploader frame). The slot mechanism is proven; future verification needs a manual file drop or an automated upload test that doesn't go through the simulated DataTransfer path.
+These all use the same `flattenSlotsToClassNames()` plumbing as `theme.slots.uploader.container`, which **was** verified visually in the earlier slot-fix work (Sharp ring preset → `ring-2 ring-slate-300 rounded-md` rendered on the uploader frame). The slot mechanism is proven on at least 3 of 8 slots (`uploader.container`, `urlUploader.fetchButton`, `sourceView.header`); the remaining 4 share the same wiring and need a real file drop in a manual session to confirm visually.
 
 ## Confirmed upstream bugs (not playground-fixable)
 
