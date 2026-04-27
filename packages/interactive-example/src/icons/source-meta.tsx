@@ -13,7 +13,12 @@ import {
 
 export type SourceMeta = {
     label: string
-    Icon: React.FC
+    /**
+     * Optional. When omitted, EnumSelect falls back to plain segmented or
+     * select rendering and just uses the humanised `label` instead of
+     * promoting the option to a brand tile.
+     */
+    Icon?: React.FC
 }
 
 /**

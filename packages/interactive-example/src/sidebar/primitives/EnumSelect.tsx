@@ -41,7 +41,14 @@ export function EnumSelect({
     // opts into 'select'. Long lists (locales etc.) stay as a <select>.
     const resolvedLayout = layout ?? (options.length > 0 && options.length <= 6 ? 'segmented' : 'select')
 
-    if (meta) {
+    // Tile mode (with brand SVG / lucide icons) is reserved for option sets
+    // where every choice has visual iconography to anchor on. Label-only
+    // meta (e.g. humanised locale names, "When 1 image" for autoOpen) keeps
+    // the standard segmented/select layout but uses meta[o].label instead
+    // of the raw option string.
+    const useTileLayout = !!meta && options.some((o) => !!meta[o]?.Icon)
+
+    if (useTileLayout && meta) {
         // Brand-tile renderer mirrors the MultiSelect grid so the sidebar
         // speaks one visual language for any option set with iconography.
         return (
@@ -86,6 +93,7 @@ export function EnumSelect({
                     {options.map((o) => {
                         const active = visual === o
                         const isDefaultFallback = !current && defaultValue === o
+                        const labelText = meta?.[o]?.label ?? o
                         return (
                             <button
                                 key={o}
@@ -97,7 +105,7 @@ export function EnumSelect({
                                 className="upup-ie-segmented-option"
                                 onClick={() => set(current === o ? undefined : o)}
                             >
-                                {o}
+                                {labelText}
                             </button>
                         )
                     })}
@@ -117,7 +125,7 @@ export function EnumSelect({
                 <option value="">—</option>
                 {options.map((o) => (
                     <option key={o} value={o}>
-                        {o}
+                        {meta?.[o]?.label ?? o}
                     </option>
                 ))}
             </select>

@@ -285,6 +285,20 @@ html.dark .upup-ie-focus:not([data-theme="light"]),
     gap: 14px;
 }
 
+/* Banner copy rendered above a category's entries — used to set context
+   for sections (Processing, Events) whose toggles only fire during a real
+   file pickup so a reader doesn't expect immediate visual feedback. */
+.upup-ie-category-intro {
+    margin: 0;
+    padding: 10px 12px;
+    font-size: 12px;
+    line-height: 1.45;
+    color: var(--ie-fg-muted);
+    background: var(--ie-card-bg);
+    border: 1px solid var(--ie-border);
+    border-radius: var(--ie-radius-md);
+}
+
 /* ── Boolean toggle: iOS-style switch ──────────────────── */
 
 .upup-ie-toggle {

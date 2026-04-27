@@ -22,13 +22,6 @@ export const behaviorCategory: CategoryDefinition = {
             defaultValue: false,
         },
         {
-            id: 'allowFolderUpload',
-            label: 'Allow folder upload',
-            description: 'Show a Select folder option in the source picker',
-            primitive: 'bool',
-            defaultValue: false,
-        },
-        {
             id: 'disableDragDrop',
             label: 'Disable drag & drop',
             description: 'Hide the drop zone; user must use the browse button',

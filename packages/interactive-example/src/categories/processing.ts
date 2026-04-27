@@ -6,6 +6,7 @@ export const processingCategory: CategoryDefinition = {
     label: 'Processing',
     description: 'Pipeline steps before upload',
     icon: Wand2,
+    intro: 'These run during file pickup. Toggle one, then pick or drop a file in the preview to see it fire — the sidebar update alone won\'t change anything visible until a file is added.',
     entries: [
         {
             id: 'imageCompression',

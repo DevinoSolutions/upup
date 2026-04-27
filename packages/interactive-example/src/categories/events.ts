@@ -66,5 +66,6 @@ export const eventsCategory: CategoryDefinition = {
     label: 'Events',
     description: 'Log UpupUploader callbacks live as you interact with the preview',
     icon: Activity,
+    intro: 'Toggle a callback then drag, paste, or pick a file in the preview — every fired event lands in the Event Log panel below with its arguments.',
     entries,
 }

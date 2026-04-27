@@ -10,6 +10,7 @@ export function NumberInput({
     step = 1,
     defaultValue,
     display,
+    format,
     description,
 }: {
     propId: string
@@ -21,6 +22,12 @@ export function NumberInput({
     defaultValue?: number
     /** 'slider' renders a range input with a live readout (for 0-1 style props). */
     display?: 'number' | 'slider'
+    /**
+     * 'percent' renders the slider readout as `Math.round(v*100) + '%'` so a
+     * 0-1 value is visually anchored to a 0–100% range without changing what
+     * gets stored on the underlying numeric prop.
+     */
+    format?: 'percent'
     description?: string
 }) {
     const id = useId()
@@ -46,7 +53,13 @@ export function NumberInput({
 
     if (display === 'slider' && min != null && max != null) {
         const sliderValue = value == null ? (defaultValue ?? min) : Number(value)
-        const readout = value == null ? '—' : String(value)
+        const numericValue = value == null ? null : Number(value)
+        const readout =
+            numericValue == null
+                ? '—'
+                : format === 'percent'
+                    ? `${Math.round(numericValue * 100)}%`
+                    : String(numericValue)
         return (
             <div className="upup-ie-field">
                 <FieldLabel label={label} description={description} />

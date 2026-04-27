@@ -15,6 +15,7 @@ import {
 } from './primitives'
 import { SOURCE_META, type SourceMeta } from '../icons/source-meta'
 import { ENUM_META_BY_PROP } from '../icons/provider-meta'
+import { isVisible, readPath as readPathShared } from '../state/propPath'
 
 /**
  * Map each cloud-drive source id to the `cloudDrives.*` config path that
@@ -28,14 +29,8 @@ const DRIVE_CREDENTIAL_PATHS: Record<string, string> = {
     box: 'cloudDrives.box.clientId',
 }
 
-function readPath(obj: unknown, path: string): unknown {
-    let cur: any = obj
-    for (const k of path.split('.')) {
-        if (cur == null) return undefined
-        cur = cur[k]
-    }
-    return cur
-}
+// Local alias kept so the rest of this file's call sites stay clean.
+const readPath = readPathShared
 
 function computeUnavailableSources(config: UpupConfig): Record<string, string> {
     const out: Record<string, string> = {}
@@ -49,11 +44,12 @@ function computeUnavailableSources(config: UpupConfig): Record<string, string> {
 }
 
 function renderEntry(entry: ToggleEntry, config: UpupConfig) {
+    if (!isVisible(entry.visibleWhen, config)) return null
     switch (entry.primitive) {
         case 'bool':
             return <BoolToggle key={entry.id} propId={entry.id} label={entry.label} description={entry.description} />
         case 'number':
-            return <NumberInput key={entry.id} propId={entry.id} label={entry.label} description={entry.description} min={entry.options?.min as number | undefined} max={entry.options?.max as number | undefined} step={entry.options?.step as number | undefined} defaultValue={entry.defaultValue as number | undefined} display={entry.options?.display as 'slider' | 'number' | undefined} />
+            return <NumberInput key={entry.id} propId={entry.id} label={entry.label} description={entry.description} min={entry.options?.min as number | undefined} max={entry.options?.max as number | undefined} step={entry.options?.step as number | undefined} defaultValue={entry.defaultValue as number | undefined} display={entry.options?.display as 'slider' | 'number' | undefined} format={entry.options?.format as 'percent' | undefined} />
         case 'enum':
             return <EnumSelect key={entry.id} propId={entry.id} label={entry.label} description={entry.description} options={(entry.options?.options as string[]) ?? []} layout={entry.options?.layout as 'segmented' | 'select' | undefined} defaultValue={entry.defaultValue as string | undefined} meta={ENUM_META_BY_PROP[entry.id]} />
         case 'multi':
@@ -63,7 +59,7 @@ function renderEntry(entry: ToggleEntry, config: UpupConfig) {
         case 'nested':
             return <NestedConfig key={entry.id} parentPath={entry.id} label={entry.label} fields={(entry.options?.fields as ToggleEntry[]) ?? []} legendIcon={entry.options?.legendIcon as React.FC | undefined} />
         case 'size-unit':
-            return <SizeUnitInput key={entry.id} propId={entry.id} label={entry.label} defaultSize={entry.options?.defaultSize as number | undefined} defaultUnit={entry.options?.defaultUnit as 'B' | 'KB' | 'MB' | 'GB' | undefined} />
+            return <SizeUnitInput key={entry.id} propId={entry.id} label={entry.label} defaultSize={entry.options?.defaultSize as number | undefined} defaultUnit={entry.options?.defaultUnit as 'B' | 'KB' | 'MB' | 'GB' | undefined} serialize={entry.options?.serialize as 'object' | 'bytes' | undefined} />
         case 'color':
             return <ColorInput key={entry.id} propId={entry.id} label={entry.label} placeholder={entry.options?.placeholder as string | undefined} defaultValue={entry.defaultValue as string | undefined} />
         case 'combo':
@@ -130,6 +126,9 @@ export function CategorySection({
             </button>
             {open && (
                 <div className="upup-ie-category-body">
+                    {category.intro ? (
+                        <p className="upup-ie-category-intro">{category.intro}</p>
+                    ) : null}
                     {renderBody(category.entries, ctx?.config ?? {})}
                 </div>
             )}

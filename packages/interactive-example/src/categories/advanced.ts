@@ -27,18 +27,20 @@ export const advancedCategory: CategoryDefinition = {
         {
             id: 'tokenEndpoint',
             label: 'Token endpoint',
-            description: 'Client Mode only. Where the uploader POSTs to get a presigned URL.',
+            description: 'Where the uploader POSTs to get a presigned URL.',
             primitive: 'string',
             defaultValue: '',
             options: { placeholder: '/api/upload-token' },
+            visibleWhen: { propId: 'mode', equals: 'client' },
         },
         {
             id: 'serverUrl',
             label: 'Server URL',
-            description: 'Server Mode: base path where @upup/server\'s createHandler() is mounted.',
+            description: 'Base path where @upup/server\'s createHandler() is mounted.',
             primitive: 'string',
             defaultValue: '',
             options: { placeholder: '/api/upup' },
+            visibleWhen: { propId: 'mode', equals: 'server' },
         },
         {
             id: 'apiKey',

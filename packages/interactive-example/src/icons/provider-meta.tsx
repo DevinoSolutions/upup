@@ -52,13 +52,52 @@ const THEME_MODE_META: Record<string, SourceMeta> = {
     system: { label: "System", Icon: lucide(Monitor, "#64748B") },
 }
 
+// Label-only meta — no Icon means EnumSelect keeps the standard segmented
+// or select layout but substitutes meta[option].label for the raw enum
+// value. Used to humanise jargon like "single" → "When 1 image".
+const EDITOR_DISPLAY_META: Record<string, SourceMeta> = {
+    inline: { label: "Inline (in dropzone)" },
+    modal: { label: "Modal overlay" },
+}
+
+const EDITOR_AUTO_OPEN_META: Record<string, SourceMeta> = {
+    never: { label: "Never" },
+    single: { label: "When 1 image is added" },
+    always: { label: "Always" },
+}
+
+const ADVANCED_MODE_META: Record<string, SourceMeta> = {
+    client: { label: "Client (browser → storage)" },
+    server: { label: "Server (browser → @upup/server)" },
+}
+
+// Locale option labels. Renders in a <select> (>6 options auto-picks
+// select layout) with the humanised name shown in lieu of the BCP-47 code.
+const LOCALE_META: Record<string, SourceMeta> = {
+    "en-US": { label: "English (US)" },
+    "ar-SA": { label: "العربية (Arabic)" },
+    "de-DE": { label: "Deutsch (German)" },
+    "es-ES": { label: "Español (Spanish)" },
+    "fr-FR": { label: "Français (French)" },
+    "ja-JP": { label: "日本語 (Japanese)" },
+    "ko-KR": { label: "한국어 (Korean)" },
+    "zh-CN": { label: "简体中文 (Chinese, Simplified)" },
+    "zh-TW": { label: "繁體中文 (Chinese, Traditional)" },
+}
+
 /**
  * Lookup table keyed by full propId path. CategorySection / NestedConfig
  * consult this when an EnumSelect should render as branded tiles instead
- * of plain segmented buttons.
+ * of plain segmented buttons — or simply substitute humanised labels when
+ * the meta entries omit Icon.
  */
 export const ENUM_META_BY_PROP: Record<string, Record<string, SourceMeta>> = {
     provider: PROVIDER_META,
     "resumable.mode": RESUMABLE_MODE_META,
     "theme.mode": THEME_MODE_META,
+    "imageEditor.display": EDITOR_DISPLAY_META,
+    "imageEditor.autoOpen": EDITOR_AUTO_OPEN_META,
+    mode: ADVANCED_MODE_META,
+    "i18n.locale": LOCALE_META,
+    "i18n.fallbackLocale": LOCALE_META,
 }
