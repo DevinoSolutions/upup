@@ -37,7 +37,7 @@ export function NestedConfig({
                 const fullPath = `${parentPath}.${f.id}`
                 switch (f.primitive) {
                     case 'bool':
-                        return <BoolToggle key={f.id} propId={fullPath} label={f.label} description={f.description} />
+                        return <BoolToggle key={f.id} propId={fullPath} label={f.label} description={f.description} defaultValue={f.defaultValue as boolean | undefined} />
                     case 'number':
                         return <NumberInput key={f.id} propId={fullPath} label={f.label} description={f.description} min={f.options?.min as number | undefined} max={f.options?.max as number | undefined} step={f.options?.step as number | undefined} defaultValue={f.defaultValue as number | undefined} display={f.options?.display as 'slider' | 'number' | undefined} format={f.options?.format as 'percent' | undefined} />
                     case 'size-unit':

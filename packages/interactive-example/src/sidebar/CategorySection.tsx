@@ -47,7 +47,7 @@ function renderEntry(entry: ToggleEntry, config: UpupConfig) {
     if (!isVisible(entry.visibleWhen, config)) return null
     switch (entry.primitive) {
         case 'bool':
-            return <BoolToggle key={entry.id} propId={entry.id} label={entry.label} description={entry.description} />
+            return <BoolToggle key={entry.id} propId={entry.id} label={entry.label} description={entry.description} defaultValue={entry.defaultValue as boolean | undefined} />
         case 'number':
             return <NumberInput key={entry.id} propId={entry.id} label={entry.label} description={entry.description} min={entry.options?.min as number | undefined} max={entry.options?.max as number | undefined} step={entry.options?.step as number | undefined} defaultValue={entry.defaultValue as number | undefined} display={entry.options?.display as 'slider' | 'number' | undefined} format={entry.options?.format as 'percent' | undefined} />
         case 'enum':

@@ -188,7 +188,7 @@ Walked every category in Chrome DevTools against http://localhost:53004. Finding
 | `processing.*` (6 bools) | ✅ | All 6 toggles serialize through to the UpupUploader code snippet (verified via Code tab). Visible pipeline run needs a real file. |
 | `behavior.mini` | ✅ | Frame collapses 480px → 280px, sources hidden, branding hidden. |
 | `behavior.disableDragDrop` | ❌ removed | **Dead prop in upup-react-file-uploader@2.2.0** — declared in types but never destructured/consumed. Removed from playground. |
-| `behavior.showBranding=false` | ⚠️ upstream bug | `data-testid="upup-branding"` div remains in DOM despite the false prop. Upstream `<ShouldRender if={!mini && showBranding !== false}>` should hide it; needs investigation in upup-react-file-uploader. |
+| `behavior.showBranding=false` | ✅ fixed in playground | Was misdiagnosed as upstream — actually a BoolToggle bug. Unchecking a default-true prop wrote `undefined` instead of `false`, so the uploader's destructure default `= true` always won. Fixed by taking `defaultValue` and writing the explicit boolean only when it diverges. Branding div now correctly removed from DOM on uncheck. |
 | `behavior.isProcessing` | ⚠️ context-only | Only renders the loading overlay inside FileList — invisible without queued files. Description updated to make this clear. |
 | `behavior.allowPreview` | 🤷 | Default true; effect needs file pick (thumbnail next to queued file). |
 | `behavior.enablePaste` | 🤷 | Wires to Ctrl+V handler; needs paste interaction to confirm. |
@@ -201,6 +201,5 @@ Code changes from this pass:
 
 Items still ⚠️ flagged that need upstream fixes in upup-react-file-uploader@2.2.0:
 1. `theme.tokens.color.primary` — picking the base primary should also derive primary-hover and border-active.
-2. `behavior.showBranding=false` — branding footer not honoring the prop.
 
-These are out of scope for the playground; the playground wires the prop correctly.
+(`behavior.showBranding=false` was misdiagnosed as upstream — see audit row; fixed in BoolToggle on the playground side.)

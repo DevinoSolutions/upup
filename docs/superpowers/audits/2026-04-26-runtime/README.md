@@ -96,9 +96,16 @@ These slot presets only render once a file is in the queue. Programmatic injecti
 
 These all use the same `flattenSlotsToClassNames()` plumbing as `theme.slots.uploader.container`, which **was** verified visually in the earlier slot-fix work (Sharp ring preset → `ring-2 ring-slate-300 rounded-md` rendered on the uploader frame). The slot mechanism is proven on at least 3 of 8 slots (`uploader.container`, `urlUploader.fetchButton`, `sourceView.header`); the remaining 4 share the same wiring and need a real file drop in a manual session to confirm visually.
 
-## Confirmed upstream bugs (not playground-fixable)
+## 13 — Behavior · showBranding=false (now actually hides)
 
-1. **`theme.tokens.color.primary` doesn't auto-derive its variants.** Picking red updates `--upup-color-primary` but `--upup-color-primary-hover` and `--upup-color-border-active` keep their cyan defaults.
-2. **`behavior.showBranding=false` not honored.** The `<div data-testid="upup-branding">` stays in the DOM regardless of the prop value.
+![showBranding off fixed](./13-showBranding-false-fixed.png)
 
-These are filed as upstream concerns in `upup-react-file-uploader@2.2.0`.
+This was originally flagged as an upstream bug. Closer inspection showed the bug was on the **playground** side: `BoolToggle` collapsed `false` → `undefined` on uncheck, so for default-true props (`showBranding`, `allowPreview`, etc.) the user's "off" toggle never actually wrote `false` to config — the uploader's destructure default `showBranding = true` always took over.
+
+Fix in [BoolToggle.tsx](../../packages/interactive-example/src/sidebar/primitives/BoolToggle.tsx): take the entry's `defaultValue` and write the explicit boolean only when it diverges from the default. Toggling back to the default still clears the entry to `undefined` so the URL/code snippet stays minimal. Verified visually — the "Built by devino" footer is now gone when the user unchecks the toggle.
+
+This same fix unblocks `behavior.allowPreview` (default true) and any future default-true bools.
+
+## Confirmed upstream bug (not playground-fixable)
+
+**`theme.tokens.color.primary` doesn't auto-derive its variants.** Picking red updates `--upup-color-primary` but `--upup-color-primary-hover` and `--upup-color-border-active` keep their cyan defaults. This is a token-derivation choice in `upup-react-file-uploader`'s `tokensToVars` helper — the playground hands the chosen color through correctly.
