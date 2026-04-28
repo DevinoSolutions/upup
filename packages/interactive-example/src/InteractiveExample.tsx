@@ -1,6 +1,6 @@
 'use client'
-import React, { useContext, useEffect, useState } from 'react'
-import { ConfigProvider, ConfigContext } from './state/ConfigContext'
+import React, { useState } from 'react'
+import { ConfigProvider } from './state/ConfigContext'
 import { EventLogProvider } from './state/EventLogContext'
 import { Sidebar } from './sidebar/Sidebar'
 import { UploaderPreview } from './preview/UploaderPreview'
@@ -15,11 +15,6 @@ import {
     StringInput,
     NestedConfig,
 } from './sidebar/primitives'
-import {
-    readConfigFromUrl,
-    writeConfigToUrl,
-    buildPermalink,
-} from './state/url-sync'
 import type { InteractiveExampleProps, ToggleEntry } from './types'
 
 function renderEntry(entry: ToggleEntry) {
@@ -76,69 +71,6 @@ function renderEntry(entry: ToggleEntry) {
     }
 }
 
-function PermalinkButton() {
-    const ctx = useContext(ConfigContext)
-    const [status, setStatus] = useState<'idle' | 'copied' | 'error'>('idle')
-    async function copyLink() {
-        if (!ctx) return
-        const url = buildPermalink(ctx.config, ctx.defaults)
-        try {
-            await navigator.clipboard.writeText(url)
-            setStatus('copied')
-        } catch {
-            setStatus('error')
-        }
-        setTimeout(() => setStatus('idle'), 1500)
-    }
-    const label =
-        status === 'copied' ? 'Copied!' :
-        status === 'error' ? 'Copy failed' :
-        'Copy permalink'
-    return (
-        <button
-            type="button"
-            onClick={copyLink}
-            className="upup-ie-permalink"
-            data-status={status === 'idle' ? undefined : status}
-            aria-live="polite"
-        >
-            {label}
-        </button>
-    )
-}
-
-function UrlSync() {
-    const ctx = useContext(ConfigContext)
-    useEffect(() => {
-        if (!ctx) return
-        const handle = setTimeout(() => {
-            writeConfigToUrl(ctx.config, ctx.defaults)
-        }, 250)
-        return () => clearTimeout(handle)
-    }, [ctx?.config])
-    return null
-}
-
-/**
- * Mount-only consumer: pulls config out of `?c=` after hydration and merges
- * it into the live config. Reading the URL during render would diverge SSR
- * (no window) from the client (full URL), and React's recovery from that
- * hydration mismatch was breaking interactivity in the playground.
- */
-function UrlBootstrap() {
-    const ctx = useContext(ConfigContext)
-    useEffect(() => {
-        if (!ctx) return
-        const fromUrl = readConfigFromUrl()
-        if (Object.keys(fromUrl).length === 0) return
-        ctx.setConfig((prev) => ({ ...prev, ...fromUrl }))
-        // Empty deps — bootstrap exactly once on mount. Subsequent URL writes
-        // are owned by UrlSync.
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [])
-    return null
-}
-
 function Shell({
     defaultExpanded,
     showCodeTab,
@@ -170,8 +102,6 @@ function Shell({
                             Code
                         </button>
                     )}
-                    <span className="upup-ie-tabs-spacer" />
-                    <PermalinkButton />
                 </div>
                 <div className="upup-ie-tabs-body">
                     {tab === 'preview' && <UploaderPreview width={previewWidth} />}
@@ -207,17 +137,10 @@ export function InteractiveExample({
     focus,
     initialConfig,
     previewWidth = 'auto',
-    disableUrlSync = false,
 }: InteractiveExampleProps = {}) {
-    // First render must be identical on server and client — only host-passed
-    // initialConfig is folded in here. URL config is bootstrapped post-mount
-    // by UrlBootstrap, so SSR HTML and the client's first render agree even
-    // when the URL carries a ?c= permalink.
     return (
         <ConfigProvider initialConfig={initialConfig}>
             <EventLogProvider>
-                {!disableUrlSync && <UrlBootstrap />}
-                {!disableUrlSync && <UrlSync />}
                 {focus && focus.length > 0 ? (
                     <FocusMode focus={focus} previewWidth={previewWidth} />
                 ) : (

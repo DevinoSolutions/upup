@@ -77,5 +77,4 @@ export type InteractiveExampleProps = {
     focus?: PropId[]
     initialConfig?: UpupConfig
     previewWidth?: number | 'auto'
-    disableUrlSync?: boolean
 }

@@ -965,41 +965,6 @@ html.dark .upup-ie-focus:not([data-theme="light"]),
     font-weight: 600;
 }
 
-.upup-ie-tabs-spacer {
-    flex: 1;
-}
-
-.upup-ie-permalink {
-    appearance: none;
-    background: transparent;
-    border: 1px solid var(--ie-card-border);
-    color: var(--ie-fg-muted);
-    padding: 6px 14px;
-    border-radius: 8px;
-    font-family: inherit;
-    font-size: 12px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.15s ease;
-}
-
-.upup-ie-permalink:hover {
-    border-color: var(--ie-accent);
-    color: var(--ie-accent);
-    background: var(--ie-accent-soft);
-}
-
-.upup-ie-permalink[data-status="copied"] {
-    border-color: #16a34a;
-    color: #16a34a;
-    background: rgba(22, 163, 74, 0.08);
-}
-
-.upup-ie-permalink[data-status="error"] {
-    border-color: #dc2626;
-    color: #dc2626;
-    background: rgba(220, 38, 38, 0.08);
-}
 
 .upup-ie-tabs-body {
     background: var(--ie-card-bg);

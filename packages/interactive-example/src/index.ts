@@ -1,13 +1,6 @@
 export { InteractiveExample, default } from './InteractiveExample'
 export { ConfigProvider, ConfigContext } from './state/ConfigContext'
 export { useConfig } from './state/useConfig'
-export { serialize } from './state/serialize'
-export { deserialize } from './state/deserialize'
-export {
-    readConfigFromUrl,
-    writeConfigToUrl,
-    buildPermalink,
-} from './state/url-sync'
 export { categories, allEntries, findEntry } from './categories'
 export { Sidebar } from './sidebar/Sidebar'
 export { CategorySection } from './sidebar/CategorySection'
