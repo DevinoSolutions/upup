@@ -67,7 +67,10 @@ function renderObjectLiteral(value: unknown, depth = 1): string {
     return (
         '{\n' +
         entries
-            .map(([k, v]) => indent(`${k}: ${renderObjectLiteral(v, depth + 1)}`, 2))
+            .map(([k, v]) => {
+                const safeKey = /^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(k) ? k : `'${k}'`
+                return indent(`${safeKey}: ${renderObjectLiteral(v, depth + 1)}`, 2)
+            })
             .join(',\n') +
         '\n}'
     )
@@ -76,14 +79,16 @@ function renderObjectLiteral(value: unknown, depth = 1): string {
 function isMeaningful(value: unknown): boolean {
     if (value === undefined || value === null || value === '') return false
     if (Array.isArray(value) && value.length === 0) return false
-    if (typeof value === 'object' && Object.keys(value).length === 0) return false
+    if (typeof value === 'object' && !Array.isArray(value)) {
+        return Object.values(value as Record<string, unknown>).some((v) => isMeaningful(v))
+    }
     return true
 }
 
 function renderProp(key: string, value: unknown): string | null {
     if (!isMeaningful(value)) return null
     if (value === true) return key
-    if (value === false) return null
+    if (value === false) return `${key}={false}`
     if (typeof value === 'string') return `${key}="${value.replace(/"/g, '&quot;')}"`
     if (typeof value === 'number') return `${key}={${value}}`
     return `${key}={${renderObjectLiteral(value, 1)}}`

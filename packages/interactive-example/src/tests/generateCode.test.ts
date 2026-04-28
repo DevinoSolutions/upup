@@ -64,6 +64,26 @@ describe('generateCode', () => {
         expect(out).not.toMatch(/primary:\s*''/)
     })
 
+    it('renders explicit false as {false}', () => {
+        const out = generateCode({ showBranding: false } as any, { showBranding: true } as any)
+        expect(out).toContain('showBranding={false}')
+    })
+
+    it('omits objects where all values are undefined', () => {
+        const out = generateCode({ resumable: { mode: undefined } } as any)
+        expect(out).not.toContain('resumable')
+    })
+
+    it('quotes object keys that contain dots or special characters', () => {
+        const out = generateCode({
+            theme: { slots: { 'uploader.container': 'ring-4' } },
+            i18n: { overrides: { 'common.upload': 'Send' } },
+        } as any)
+        expect(out).toContain("'uploader.container': 'ring-4'")
+        expect(out).toContain("'common.upload': 'Send'")
+        expect(out).not.toContain('uploader.container:')
+    })
+
     it('omits a top-level key entirely when every nested leaf matches the default', () => {
         const config = {
             theme: { mode: 'system', tokens: { color: { primary: '' } } },
