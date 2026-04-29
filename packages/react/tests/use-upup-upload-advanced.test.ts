@@ -104,7 +104,7 @@ describe('useUpupUpload — combined options', () => {
         const { result } = renderHook(() =>
             useUpupUpload({
                 provider: 'S3' as const,
-                accept: 'text/plain',
+                allowedFileTypes: 'text/plain',
                 maxFileSize: { size: 100, unit: 'B' },
                 limit: 5,
                 onBeforeFileAdded: cb,

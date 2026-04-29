@@ -27,7 +27,7 @@ describe('UpupCore — smoke tests', () => {
             serverUrl: 'https://api.test',
             apiKey: 'key',
             uploadEndpoint: '/upload',
-            accept: 'image/*',
+            allowedFileTypes: 'image/*',
             limit: 5,
             maxFileSize: { size: 10, unit: 'MB' },
             minFileSize: { size: 1, unit: 'KB' },
@@ -137,7 +137,7 @@ describe('UpupCore — smoke tests', () => {
 
     // ── Validation ──
     it('validateFiles is read-only', async () => {
-        const core = new UpupCore({ accept: 'text/plain' })
+        const core = new UpupCore({ allowedFileTypes: 'text/plain' })
         await core.addFiles([makeFile('keep.txt')])
         const results = await core.validateFiles([makeFile('check.txt')])
         expect(results).toHaveLength(1)

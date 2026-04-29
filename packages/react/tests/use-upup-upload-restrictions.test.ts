@@ -31,7 +31,7 @@ describe('useUpupUpload — restrictions enforcement', () => {
 
     it('rejects files not matching accept', async () => {
         const { result } = renderHook(() =>
-            useUpupUpload({ provider: 'S3' as const, accept: 'image/*' }),
+            useUpupUpload({ provider: 'S3' as const, allowedFileTypes: 'image/*' }),
         )
         await act(async () => {
             try {
@@ -43,7 +43,7 @@ describe('useUpupUpload — restrictions enforcement', () => {
 
     it('accepts files matching accept', async () => {
         const { result } = renderHook(() =>
-            useUpupUpload({ provider: 'S3' as const, accept: 'text/plain' }),
+            useUpupUpload({ provider: 'S3' as const, allowedFileTypes: 'text/plain' }),
         )
         await act(async () => {
             await result.current.addFiles([makeFile('ok.txt', 10, 'text/plain')])

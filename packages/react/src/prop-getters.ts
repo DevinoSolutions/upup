@@ -9,7 +9,7 @@ import type {
 export interface PropGetterDeps {
   addFiles: (files: File[]) => Promise<void> | void
   status: string
-  accept: string | undefined
+  allowedFileTypes: string | undefined
   multiple: boolean
   isDragging: boolean
   setIsDragging: (v: boolean) => void
@@ -30,7 +30,7 @@ export function createPropGetters(deps: PropGetterDeps) {
   const {
     addFiles,
     status,
-    accept,
+    allowedFileTypes,
     multiple,
     isDragging,
     setIsDragging,
@@ -109,7 +109,7 @@ export function createPropGetters(deps: PropGetterDeps) {
       ...overrides,
       type: 'file' as const,
       multiple,
-      accept,
+      accept: allowedFileTypes,
       onChange: composeEventHandlers(onChange, overrides.onChange as any),
       style: { display: 'none' as const },
       tabIndex: -1,

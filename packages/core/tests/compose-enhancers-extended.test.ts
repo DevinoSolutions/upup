@@ -33,9 +33,9 @@ describe('composeEnhancers — extended', () => {
     it('preserves options not touched by enhancers', () => {
         const addRetries: CoreEnhancer = (opts) => ({ ...opts, maxRetries: 5 })
         const composed = composeEnhancers(addRetries)
-        const result = composed({ provider: 'aws', accept: 'image/*' })
+        const result = composed({ provider: 'aws', allowedFileTypes: 'image/*' })
         expect(result.provider).toBe('aws')
-        expect(result.accept).toBe('image/*')
+        expect(result.allowedFileTypes).toBe('image/*')
         expect(result.maxRetries).toBe(5)
     })
 
@@ -67,10 +67,10 @@ describe('composeEnhancers — extended', () => {
             (opts) => ({ ...opts, maxRetries: 3, autoUpload: false }),
             (opts) => ({ ...opts, provider: opts.provider || 'aws' }),
         )
-        const result = withDefaults({ accept: 'image/*' })
+        const result = withDefaults({ allowedFileTypes: 'image/*' })
         expect(result.maxRetries).toBe(3)
         expect(result.autoUpload).toBe(false)
         expect(result.provider).toBe('aws')
-        expect(result.accept).toBe('image/*')
+        expect(result.allowedFileTypes).toBe('image/*')
     })
 })

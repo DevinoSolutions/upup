@@ -5,7 +5,7 @@ function makeDeps(overrides: Partial<Parameters<typeof createPropGetters>[0]> = 
     return {
         addFiles: vi.fn(),
         status: 'idle',
-        accept: undefined as string | undefined,
+        allowedFileTypes: undefined as string | undefined,
         multiple: true,
         isDragging: false,
         setIsDragging: vi.fn(),
@@ -67,7 +67,7 @@ describe('getInputProps — edge cases', () => {
     })
 
     it('accept is passed through when set', () => {
-        const { getInputProps } = createPropGetters(makeDeps({ accept: 'image/*,.pdf' }))
+        const { getInputProps } = createPropGetters(makeDeps({ allowedFileTypes: 'image/*,.pdf' }))
         expect(getInputProps().accept).toBe('image/*,.pdf')
     })
 

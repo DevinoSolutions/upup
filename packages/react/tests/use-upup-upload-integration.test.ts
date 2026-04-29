@@ -17,7 +17,7 @@ describe('useUpupUpload — capstone integration', () => {
         const { result, unmount } = renderHook(() =>
             useUpupUpload({
                 provider: 'S3' as const,
-                accept: 'text/plain',
+                allowedFileTypes: 'text/plain',
                 limit: 5,
                 plugins: [{
                     name: 'lifecycle-tracker',
@@ -104,7 +104,7 @@ describe('useUpupUpload — capstone integration', () => {
         const { result } = renderHook(() =>
             useUpupUpload({
                 provider: 'S3' as const,
-                accept: 'text/plain',
+                allowedFileTypes: 'text/plain',
                 maxFileSize: { size: 50, unit: 'B' },
                 limit: 2,
                 plugins: [{

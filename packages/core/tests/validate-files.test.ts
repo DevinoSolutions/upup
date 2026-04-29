@@ -4,7 +4,7 @@ import { UpupCore } from '../src/core'
 describe('UpupCore.validateFiles', () => {
   it('should return valid results for acceptable files', async () => {
     const core = new UpupCore({
-      accept: 'text/plain',
+      allowedFileTypes: 'text/plain',
       maxFileSize: { size: 1, unit: 'MB' },
     })
 
@@ -21,7 +21,7 @@ describe('UpupCore.validateFiles', () => {
 
   it('should return invalid result for wrong file type', async () => {
     const core = new UpupCore({
-      accept: 'text/plain',
+      allowedFileTypes: 'text/plain',
     })
 
     const f1 = new File(['hello'], 'test.png', { type: 'image/png' })
@@ -52,7 +52,7 @@ describe('UpupCore.validateFiles', () => {
 
   it('should validate multiple files independently', async () => {
     const core = new UpupCore({
-      accept: 'text/plain',
+      allowedFileTypes: 'text/plain',
       maxFileSize: { size: 5, unit: 'B' },
     })
 

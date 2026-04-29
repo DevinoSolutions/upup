@@ -15,7 +15,7 @@ describe('useUpupUpload — end-to-end smoke test', () => {
         const { result, unmount } = renderHook(() =>
             useUpupUpload({
                 provider: 'S3' as const,
-                accept: 'text/plain',
+                allowedFileTypes: 'text/plain',
                 limit: 5,
                 maxFileSize: { size: 1, unit: 'MB' },
                 onFileAdded,
@@ -91,7 +91,7 @@ describe('useUpupUpload — end-to-end smoke test', () => {
         const { result } = renderHook(() =>
             useUpupUpload({
                 provider: 'S3' as const,
-                accept: 'text/plain',
+                allowedFileTypes: 'text/plain',
                 maxFileSize: { size: 50, unit: 'B' },
                 limit: 2,
             }),

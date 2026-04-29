@@ -10,7 +10,7 @@ const makeFile = (name: string, size = 10, type = 'text/plain') =>
 describe('useUpupUpload — core.validateFiles access', () => {
     it('validates a good file as valid', async () => {
         const { result } = renderHook(() =>
-            useUpupUpload({ ...opts, accept: 'text/plain' }),
+            useUpupUpload({ ...opts, allowedFileTypes: 'text/plain' }),
         )
         const results = await result.current.core.validateFiles([
             makeFile('ok.txt', 10, 'text/plain'),
@@ -21,7 +21,7 @@ describe('useUpupUpload — core.validateFiles access', () => {
 
     it('validates a bad file type as invalid', async () => {
         const { result } = renderHook(() =>
-            useUpupUpload({ ...opts, accept: 'text/plain' }),
+            useUpupUpload({ ...opts, allowedFileTypes: 'text/plain' }),
         )
         const results = await result.current.core.validateFiles([
             makeFile('bad.png', 10, 'image/png'),

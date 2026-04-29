@@ -124,7 +124,7 @@ export class UpupCore {
       if (r.maxTotalFileSize && !options.maxTotalFileSize) this.options.maxTotalFileSize = r.maxTotalFileSize
       if (r.maxNumberOfFiles != null && !options.limit) this.options.limit = r.maxNumberOfFiles
       if (r.minNumberOfFiles != null && !options.minFiles) this.options.minFiles = r.minNumberOfFiles
-      if (r.allowedFileTypes && !options.accept) this.options.accept = r.allowedFileTypes.join(',')
+      if (r.allowedFileTypes && !options.allowedFileTypes) this.options.allowedFileTypes = r.allowedFileTypes.join(',')
     }
 
     // Merge cloudDrives into flat options (flat takes precedence)
@@ -142,7 +142,7 @@ export class UpupCore {
     }
 
     this.fileManager = new FileManager({
-      accept: this.options.accept,
+      allowedFileTypes: this.options.allowedFileTypes,
       limit: this.options.limit,
       minFiles: this.options.minFiles,
       maxFileSize: this.options.maxFileSize,
@@ -341,7 +341,7 @@ export class UpupCore {
     for (const file of files) {
       const errors: Array<{ code: string; message: string }> = []
 
-      if (this.options.accept && !matchesAccept(file, this.options.accept)) {
+      if (this.options.allowedFileTypes && !matchesAccept(file, this.options.allowedFileTypes)) {
         errors.push({
           code: UpupErrorCode.TYPE_MISMATCH,
           message: `File type "${file.type}" is not accepted`,

@@ -5,7 +5,7 @@ function makeDeps(overrides: Partial<Parameters<typeof createPropGetters>[0]> = 
     return {
         addFiles: vi.fn(),
         status: 'idle',
-        accept: undefined as string | undefined,
+        allowedFileTypes: undefined as string | undefined,
         multiple: true,
         isDragging: false,
         setIsDragging: vi.fn(),

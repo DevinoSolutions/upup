@@ -9,7 +9,7 @@ const makeFile = (name: string, size: number, type: string) =>
 // ─────────────────────────────────────────────
 describe('UpupCore.validateFiles — extended', () => {
     it('returns valid for file matching wildcard accept', async () => {
-        const core = new UpupCore({ accept: 'image/*' })
+        const core = new UpupCore({ allowedFileTypes: 'image/*' })
         const results = await core.validateFiles([makeFile('photo.jpg', 100, 'image/jpeg')])
         expect(results[0].valid).toBe(true)
         core.destroy()
@@ -31,7 +31,7 @@ describe('UpupCore.validateFiles — extended', () => {
     })
 
     it('validates against both accept and maxFileSize simultaneously', async () => {
-        const core = new UpupCore({ accept: 'text/plain', maxFileSize: { size: 10, unit: 'B' } })
+        const core = new UpupCore({ allowedFileTypes: 'text/plain', maxFileSize: { size: 10, unit: 'B' } })
 
         const goodFile = makeFile('ok.txt', 5, 'text/plain')
         const wrongType = makeFile('bad.png', 5, 'image/png')
@@ -73,7 +73,7 @@ describe('UpupCore.validateFiles — extended', () => {
     })
 
     it('accepts extension-based accept (.pdf)', async () => {
-        const core = new UpupCore({ accept: '.pdf' })
+        const core = new UpupCore({ allowedFileTypes: '.pdf' })
         const results = await core.validateFiles([
             makeFile('report.pdf', 10, 'application/pdf'),
         ])
@@ -82,7 +82,7 @@ describe('UpupCore.validateFiles — extended', () => {
     })
 
     it('rejects file not matching extension-based accept', async () => {
-        const core = new UpupCore({ accept: '.pdf' })
+        const core = new UpupCore({ allowedFileTypes: '.pdf' })
         const results = await core.validateFiles([
             makeFile('photo.jpg', 10, 'image/jpeg'),
         ])
@@ -91,7 +91,7 @@ describe('UpupCore.validateFiles — extended', () => {
     })
 
     it('errors array has correct structure', async () => {
-        const core = new UpupCore({ accept: 'text/plain' })
+        const core = new UpupCore({ allowedFileTypes: 'text/plain' })
         const results = await core.validateFiles([makeFile('bad.png', 10, 'image/png')])
         const error = results[0].errors[0]
         expect(error).toHaveProperty('code')

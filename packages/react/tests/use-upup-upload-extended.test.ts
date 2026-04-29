@@ -73,7 +73,7 @@ describe('useUpupUpload — extended', () => {
     })
 
     it('getInputProps passes accept option', () => {
-        const { result } = renderHook(() => useUpupUpload({ ...opts, accept: 'image/*' }))
+        const { result } = renderHook(() => useUpupUpload({ ...opts, allowedFileTypes: 'image/*' }))
         const props = result.current.getInputProps()
         expect(props.accept).toBe('image/*')
     })

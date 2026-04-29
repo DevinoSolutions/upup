@@ -54,34 +54,34 @@ describe('Restrictions — minFileSize', () => {
 // ─────────────────────────────────────────────
 describe('Restrictions — accept types', () => {
     it('rejects file with wrong MIME type', async () => {
-        const core = new UpupCore({ accept: 'image/png' })
+        const core = new UpupCore({ allowedFileTypes: 'image/png' })
         await expect(core.addFiles([makeFile('doc.txt', 10, 'text/plain')])).rejects.toThrow()
         core.destroy()
     })
 
     it('accepts file matching MIME type', async () => {
-        const core = new UpupCore({ accept: 'text/plain' })
+        const core = new UpupCore({ allowedFileTypes: 'text/plain' })
         await core.addFiles([makeFile('doc.txt', 10, 'text/plain')])
         expect(core.files.size).toBe(1)
         core.destroy()
     })
 
     it('accepts file matching wildcard MIME (image/*)', async () => {
-        const core = new UpupCore({ accept: 'image/*' })
+        const core = new UpupCore({ allowedFileTypes: 'image/*' })
         await core.addFiles([makeFile('photo.jpg', 10, 'image/jpeg')])
         expect(core.files.size).toBe(1)
         core.destroy()
     })
 
     it('accepts file matching extension (.pdf)', async () => {
-        const core = new UpupCore({ accept: '.pdf' })
+        const core = new UpupCore({ allowedFileTypes: '.pdf' })
         await core.addFiles([makeFile('report.pdf', 10, 'application/pdf')])
         expect(core.files.size).toBe(1)
         core.destroy()
     })
 
     it('accepts from comma-separated accept list', async () => {
-        const core = new UpupCore({ accept: 'image/png, text/plain, .pdf' })
+        const core = new UpupCore({ allowedFileTypes: 'image/png, text/plain, .pdf' })
         await core.addFiles([makeFile('doc.txt', 10, 'text/plain')])
         expect(core.files.size).toBe(1)
         core.destroy()

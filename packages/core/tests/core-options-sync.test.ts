@@ -39,9 +39,9 @@ describe('UpupCore — updateOptions sync behavior', () => {
     })
 
     it('syncs accept at runtime', () => {
-        const core = new UpupCore({ accept: 'image/*' })
-        core.updateOptions({ accept: 'text/plain,.pdf' })
-        expect(core.options.accept).toBe('text/plain,.pdf')
+        const core = new UpupCore({ allowedFileTypes: 'image/*' })
+        core.updateOptions({ allowedFileTypes: 'text/plain,.pdf' })
+        expect(core.options.allowedFileTypes).toBe('text/plain,.pdf')
         core.destroy()
     })
 

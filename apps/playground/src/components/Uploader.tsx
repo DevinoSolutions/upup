@@ -42,7 +42,7 @@ export default function Uploader({
   fileSizeLimit = 25,
   maxRetries,
   localePack,
-  imageEditor = false,
+  imageEditor = true,
 }: Readonly<Props>) {
   const { isDarkMode } = useContext(ThemeContext);
 

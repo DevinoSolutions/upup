@@ -151,7 +151,7 @@ export function useUpupUpload(options: UseUpupUploadOptions): UseUpupUploadRetur
   const propGetters = createPropGetters({
     addFiles: (files) => core.addFiles(files),
     status: core.status,
-    accept: options.accept as string | undefined,
+    allowedFileTypes: options.allowedFileTypes as string | undefined,
     multiple: options.limit !== 1,
     isDragging,
     setIsDragging,

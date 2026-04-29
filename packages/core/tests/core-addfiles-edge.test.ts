@@ -72,7 +72,7 @@ describe('UpupCore.addFiles — maxTotalFileSize', () => {
 // ─────────────────────────────────────────────
 describe('UpupCore.addFiles — mixed valid/invalid in batch', () => {
     it('rejects entire batch when one file is invalid', async () => {
-        const core = new UpupCore({ accept: 'text/plain' })
+        const core = new UpupCore({ allowedFileTypes: 'text/plain' })
         // Adding a mix — behavior depends on implementation
         await expect(
             core.addFiles([makeFile('ok.txt', 10, 'text/plain'), makeFile('bad.png', 10, 'image/png')]),
@@ -81,7 +81,7 @@ describe('UpupCore.addFiles — mixed valid/invalid in batch', () => {
     })
 
     it('accepts all files when all match accept', async () => {
-        const core = new UpupCore({ accept: 'text/plain' })
+        const core = new UpupCore({ allowedFileTypes: 'text/plain' })
         await core.addFiles([
             makeFile('a.txt', 10, 'text/plain'),
             makeFile('b.txt', 10, 'text/plain'),

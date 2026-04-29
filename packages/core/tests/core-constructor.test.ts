@@ -58,9 +58,9 @@ describe('UpupCore constructor — restrictions merging', () => {
         core.destroy()
     })
 
-    it('maps restrictions.allowedFileTypes to options.accept', () => {
+    it('maps restrictions.allowedFileTypes to options.allowedFileTypes', () => {
         const core = new UpupCore({ restrictions: { allowedFileTypes: ['image/*', '.pdf'] } })
-        expect(core.options.accept).toBe('image/*,.pdf')
+        expect(core.options.allowedFileTypes).toBe('image/*,.pdf')
         core.destroy()
     })
 

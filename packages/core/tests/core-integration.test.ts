@@ -69,7 +69,7 @@ describe('UpupCore — integration lifecycle', () => {
 
     it('add → validateFiles does not mutate file list', async () => {
         const core = new UpupCore({
-            accept: 'text/plain',
+            allowedFileTypes: 'text/plain',
             maxFileSize: { size: 100, unit: 'B' },
         })
         await core.addFiles([makeFile('ok.txt', 5, 'text/plain')])

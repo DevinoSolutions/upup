@@ -8,7 +8,7 @@ import {
 } from '@upup/shared'
 
 export interface FileManagerOptions {
-  accept?: string
+  allowedFileTypes?: string
   limit?: number
   minFiles?: number
   maxFileSize?: MaxFileSizeObject
@@ -83,7 +83,7 @@ export class FileManager {
         }
       }
 
-      if (this.options.accept && !matchesAccept(nativeFile, this.options.accept)) {
+      if (this.options.allowedFileTypes && !matchesAccept(nativeFile, this.options.allowedFileTypes)) {
         throw new UpupValidationError(
           `File type "${nativeFile.type}" is not accepted`,
           UpupErrorCode.TYPE_MISMATCH,

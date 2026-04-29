@@ -24,7 +24,7 @@ describe('FileManager', () => {
   })
 
   it('enforces accept filter', async () => {
-    const fm = new FileManager({ accept: 'image/*' })
+    const fm = new FileManager({ allowedFileTypes: 'image/*' })
     await expect(fm.addFiles([makeNativeFile('doc.pdf', 100, 'application/pdf')])).rejects.toThrow()
   })
 
