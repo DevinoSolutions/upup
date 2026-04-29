@@ -9,8 +9,8 @@ function setup(presets = [{ label: 'Images', value: 'image/*' }]) {
     return render(
         <ConfigProvider initialConfig={{}}>
             <ComboInput
-                propId="accept"
-                label="Accept"
+                propId="allowedFileTypes"
+                label="Allowed file types"
                 placeholder="image/*"
                 presets={presets}
             />
@@ -22,7 +22,7 @@ describe('ComboInput', () => {
     it('renders the input + chevron trigger', () => {
         setup()
         expect(screen.getByPlaceholderText('image/*')).toBeTruthy()
-        expect(screen.getByRole('button', { name: /accept presets/i })).toBeTruthy()
+        expect(screen.getByRole('button', { name: /allowed file types presets/i })).toBeTruthy()
     })
 
     it('typing writes the value to config (free text path)', async () => {
@@ -38,7 +38,7 @@ describe('ComboInput', () => {
             { label: 'Images', value: 'image/*' },
             { label: 'Videos', value: 'video/*' },
         ])
-        await user.click(screen.getByRole('button', { name: /accept presets/i }))
+        await user.click(screen.getByRole('button', { name: /allowed file types presets/i }))
         // The role="option" is on the LI, but the click handler lives on the
         // inner button — click the button directly so it actually fires.
         const videos = screen.getByRole('button', { name: /videos/i })

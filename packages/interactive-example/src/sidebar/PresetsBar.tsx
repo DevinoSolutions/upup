@@ -80,7 +80,7 @@ const PRESETS: Preset[] = [
         description: 'Accept images, browse from device or camera',
         icon: PhotoIcon,
         config: {
-            accept: 'image/*',
+            allowedFileTypes: 'images',
             maxFiles: 10,
             sources: ['local', 'camera'],
         },
@@ -113,7 +113,7 @@ const PRESETS: Preset[] = [
         description: 'Opens the built-in image editor per file',
         icon: EditIcon,
         config: {
-            accept: 'image/*',
+            allowedFileTypes: 'images',
             maxFiles: 5,
             sources: ['local', 'camera'],
             imageEditor: { enabled: true, display: 'modal', autoOpen: 'single' },

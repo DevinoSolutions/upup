@@ -1,4 +1,4 @@
-import React, { useId } from 'react'
+import React, { useId, useState } from 'react'
 import { useConfig } from '../../state/useConfig'
 import { FieldLabel } from './FieldLabel'
 import type { SourceMeta } from '../../icons/source-meta'
@@ -11,76 +11,82 @@ export function EnumSelect({
     defaultValue,
     description,
     meta,
+    expandAfter,
 }: {
     propId: string
     label: string
     options: string[]
     layout?: 'segmented' | 'select'
-    /**
-     * Declared default — displayed as active when the user hasn't made an
-     * explicit choice yet. Clicking an option still writes the explicit
-     * value to config; unsetting brings this visual default back.
-     */
     defaultValue?: string
     description?: string
-    /**
-     * Optional per-option icon + humanised label. When present the options
-     * render as brand tiles instead of plain segmented buttons — used for
-     * storage providers, resumable modes, and theme mode.
-     */
     meta?: Record<string, SourceMeta>
+    expandAfter?: number
 }) {
     const id = useId()
     const { value, set } = useConfig(propId)
+    const [expanded, setExpanded] = useState(false)
     const current = typeof value === 'string' ? value : ''
-    // Fall back to the declared default purely for display. The config still
-    // stores `undefined` until the user actively chooses.
     const visual = current || (defaultValue ?? '')
 
-    // Auto-pick segmented for short option lists unless the entry explicitly
-    // opts into 'select'. Long lists (locales etc.) stay as a <select>.
     const resolvedLayout = layout ?? (options.length > 0 && options.length <= 6 ? 'segmented' : 'select')
 
-    // Tile mode (with brand SVG / lucide icons) is reserved for option sets
-    // where every choice has visual iconography to anchor on. Label-only
-    // meta (e.g. humanised locale names, "When 1 image" for autoOpen) keeps
-    // the standard segmented/select layout but uses meta[o].label instead
-    // of the raw option string.
     const useTileLayout = !!meta && options.some((o) => !!meta[o]?.Icon)
 
     if (useTileLayout && meta) {
-        // Brand-tile renderer mirrors the MultiSelect grid so the sidebar
-        // speaks one visual language for any option set with iconography.
+        const hasOverflow = expandAfter != null && options.length > expandAfter
+        const primary = hasOverflow ? options.slice(0, expandAfter) : options
+        const overflow = hasOverflow ? options.slice(expandAfter) : []
+
+        const renderTile = (o: string) => {
+            const entry = meta[o]
+            const Icon = entry?.Icon
+            const labelText = entry?.label ?? o
+            const active = visual === o
+            const isDefaultFallback = !current && defaultValue === o
+            return (
+                <button
+                    key={o}
+                    type="button"
+                    role="radio"
+                    aria-checked={active}
+                    data-active={active || undefined}
+                    data-default-fallback={isDefaultFallback || undefined}
+                    className="upup-ie-source-tile"
+                    title={labelText}
+                    onClick={() => set(current === o ? undefined : o)}
+                >
+                    {Icon ? (
+                        <span className="upup-ie-source-tile-icon"><Icon /></span>
+                    ) : null}
+                    <span className="upup-ie-source-tile-label">{labelText}</span>
+                </button>
+            )
+        }
+
         return (
             <div className="upup-ie-field" role="radiogroup" aria-labelledby={id}>
                 <FieldLabel id={id} label={label} description={description} />
                 <div className="upup-ie-source-grid">
-                    {options.map((o) => {
-                        const entry = meta[o]
-                        const Icon = entry?.Icon
-                        const labelText = entry?.label ?? o
-                        const active = visual === o
-                        const isDefaultFallback = !current && defaultValue === o
-                        return (
-                            <button
-                                key={o}
-                                type="button"
-                                role="radio"
-                                aria-checked={active}
-                                data-active={active || undefined}
-                                data-default-fallback={isDefaultFallback || undefined}
-                                className="upup-ie-source-tile"
-                                title={labelText}
-                                onClick={() => set(current === o ? undefined : o)}
-                            >
-                                {Icon ? (
-                                    <span className="upup-ie-source-tile-icon"><Icon /></span>
-                                ) : null}
-                                <span className="upup-ie-source-tile-label">{labelText}</span>
-                            </button>
-                        )
-                    })}
+                    {primary.map(renderTile)}
                 </div>
+                {overflow.length > 0 && (
+                    <>
+                        <div className="upup-ie-expand-wrap" data-expanded={expanded || undefined}>
+                            <div className="upup-ie-expand-inner">
+                                <div className="upup-ie-source-grid">
+                                    {overflow.map(renderTile)}
+                                </div>
+                            </div>
+                        </div>
+                        <button
+                            type="button"
+                            className="upup-ie-expand-toggle"
+                            onClick={() => setExpanded((v) => !v)}
+                        >
+                            {expanded ? 'Show less' : `See more (${overflow.length})`}
+                        </button>
+                    </>
+                )}
             </div>
         )
     }

@@ -14,8 +14,9 @@ export const uploadCategory: CategoryDefinition = {
             primitive: 'enum',
             defaultValue: 'aws',
             options: {
-                options: ['aws', 'backblaze', 'digitalocean', 'r2', 'wasabi', 'minio', 'gcs', 'azure'],
+                options: ['aws', 'gcs', 'azure', 'r2', 'digitalocean', 'backblaze', 'supabase', 'wasabi', 'minio', 'hetzner', 'linode', 'vultr', 'upcloud', 'scaleway', 'ovhcloud', 'alibaba', 'oracle', 'contabo', 'storj', 'idrive', 'ceph'],
                 layout: 'segmented',
+                expandAfter: 9,
             },
         },
         {

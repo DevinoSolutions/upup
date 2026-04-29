@@ -860,6 +860,49 @@ html.dark .upup-ie-focus:not([data-theme="light"]),
     height: 18px;
 }
 
+/* ── Expandable tile overflow (see more / show less) ───── */
+
+.upup-ie-expand-wrap {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 0.35s ease;
+}
+
+.upup-ie-expand-wrap[data-expanded] {
+    grid-template-rows: 1fr;
+}
+
+.upup-ie-expand-inner {
+    overflow: hidden;
+}
+
+.upup-ie-expand-toggle {
+    appearance: none;
+    background: transparent;
+    border: 1px solid var(--ie-input-border);
+    color: var(--ie-fg-muted);
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 6px 14px;
+    border-radius: var(--ie-radius-pill);
+    cursor: pointer;
+    transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+    align-self: center;
+    margin-top: 2px;
+}
+
+.upup-ie-expand-toggle:hover {
+    border-color: var(--ie-accent);
+    color: var(--ie-accent);
+    background: var(--ie-accent-soft);
+}
+
+.upup-ie-expand-toggle:focus-visible {
+    outline: 2px solid var(--ie-accent);
+    outline-offset: 2px;
+}
+
 /* ── Multi-select (sources, etc.) ──────────────────────── */
 
 .upup-ie-multiselect {

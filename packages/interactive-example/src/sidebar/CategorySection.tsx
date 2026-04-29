@@ -51,7 +51,7 @@ function renderEntry(entry: ToggleEntry, config: UpupConfig) {
         case 'number':
             return <NumberInput key={entry.id} propId={entry.id} label={entry.label} description={entry.description} min={entry.options?.min as number | undefined} max={entry.options?.max as number | undefined} step={entry.options?.step as number | undefined} defaultValue={entry.defaultValue as number | undefined} display={entry.options?.display as 'slider' | 'number' | undefined} format={entry.options?.format as 'percent' | undefined} />
         case 'enum':
-            return <EnumSelect key={entry.id} propId={entry.id} label={entry.label} description={entry.description} options={(entry.options?.options as string[]) ?? []} layout={entry.options?.layout as 'segmented' | 'select' | undefined} defaultValue={entry.defaultValue as string | undefined} meta={ENUM_META_BY_PROP[entry.id]} />
+            return <EnumSelect key={entry.id} propId={entry.id} label={entry.label} description={entry.description} options={(entry.options?.options as string[]) ?? []} layout={entry.options?.layout as 'segmented' | 'select' | undefined} defaultValue={entry.defaultValue as string | undefined} meta={ENUM_META_BY_PROP[entry.id]} expandAfter={entry.options?.expandAfter as number | undefined} />
         case 'multi':
             return <MultiSelect key={entry.id} propId={entry.id} label={entry.label} options={(entry.options?.options as string[]) ?? []} meta={entry.id === 'sources' ? SOURCE_META : (entry.options?.meta as Record<string, SourceMeta> | undefined)} unavailable={entry.id === 'sources' ? computeUnavailableSources(config) : undefined} />
         case 'string':
