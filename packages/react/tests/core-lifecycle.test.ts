@@ -4,11 +4,11 @@ import { UploadStatus } from '@upup/shared'
 
 describe('UpupCore.updateOptions', () => {
   it('updates accept option', () => {
-    const core = new UpupCore({ uploadEndpoint: '/test', accept: 'image/*' })
-    expect(core.options.accept).toBe('image/*')
+    const core = new UpupCore({ uploadEndpoint: '/test', allowedFileTypes: 'image/*' })
+    expect(core.options.allowedFileTypes).toBe('image/*')
 
-    core.updateOptions({ accept: '.pdf,.doc' })
-    expect(core.options.accept).toBe('.pdf,.doc')
+    core.updateOptions({ allowedFileTypes: '.pdf,.doc' })
+    expect(core.options.allowedFileTypes).toBe('.pdf,.doc')
   })
 
   it('updates limit option', () => {
@@ -34,7 +34,7 @@ describe('UpupCore.updateOptions', () => {
   it('preserves existing options when updating partial', () => {
     const core = new UpupCore({
       uploadEndpoint: '/test',
-      accept: 'image/*',
+      allowedFileTypes: 'image/*',
       limit: 5,
       maxRetries: 3,
     })
@@ -42,7 +42,7 @@ describe('UpupCore.updateOptions', () => {
     core.updateOptions({ limit: 10 })
 
     expect(core.options.uploadEndpoint).toBe('/test')
-    expect(core.options.accept).toBe('image/*')
+    expect(core.options.allowedFileTypes).toBe('image/*')
     expect(core.options.limit).toBe(10)
     expect(core.options.maxRetries).toBe(3)
   })

@@ -17,7 +17,7 @@ function handleSelectedFilesUpdate(prevFiles: GoogleFile[], file: GoogleFile) {
 export default function useGoogleDriveUploader(token?: Token) {
     const {
         core,
-        props: { onError, accept },
+        props: { onError, allowedFileTypes },
         googleDriveConfigs,
         setActiveAdapter,
         setFiles,
@@ -137,7 +137,7 @@ export default function useGoogleDriveUploader(token?: Token) {
         setShowLoader(true)
         setDownloadProgress(0)
         try {
-            const filtered = files.filter(f => isDriveFileAccepted(f, accept))
+            const filtered = files.filter(f => isDriveFileAccepted(f, allowedFileTypes))
             const downloadedFiles = (await downloadFiles(filtered)).filter(
                 Boolean,
             )

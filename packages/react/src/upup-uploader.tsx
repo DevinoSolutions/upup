@@ -3,7 +3,6 @@
 import React, { forwardRef, useImperativeHandle } from 'react'
 import { TbLoader } from 'react-icons/tb'
 import { devinoDark, devinoLight, logoDark, logoLight } from './assets/logos'
-import { t } from './shared/i18n'
 import { FileWithParams, UpupUploaderProps } from './shared/types'
 import DefaultLoaderIcon from './components/DefaultLoaderIcon'
 import ImageEditorInline from './components/ImageEditorInline'
@@ -107,26 +106,6 @@ export default forwardRef<UpupUploaderRef, UpupUploaderProps>(
                                         },
                                     )}
                                 />
-                            </ShouldRender>
-                            <ShouldRender if={providerValues.props.limit > 1}>
-                                <p
-                                    id="drop-instructions"
-                                    className={cn(
-                                        'upup-text-xs upup-leading-5 upup-text-[#6D6D6D] md:upup-text-sm',
-                                        {
-                                            'upup-text-gray-300 dark:upup-text-gray-300':
-                                                providerValues.props.dark,
-                                        },
-                                    )}
-                                >
-                                    {t(
-                                        providerValues.translations
-                                            .addDocumentsHere,
-                                        {
-                                            limit: providerValues.props.limit,
-                                        },
-                                    )}
-                                </p>
                             </ShouldRender>
                             <MainBox />
 

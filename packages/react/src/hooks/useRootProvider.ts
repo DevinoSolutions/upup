@@ -11,6 +11,7 @@ import {
     TbTrash,
 } from 'react-icons/tb'
 import { en_US, mergeTranslations, t } from '../shared/i18n'
+import { resolveAccept } from '../shared/lib/acceptPresets'
 import checkFileType from '../shared/lib/checkFileType'
 import {
     FileWithParams,
@@ -73,7 +74,7 @@ function getDir(i18nLocale: string | object | undefined): 'ltr' | 'rtl' {
 }
 
 export default function useRootProvider({
-    accept: acceptProp = '*',
+    allowedFileTypes: acceptProp = '*',
     mini = false,
     theme,
     maxFiles,
@@ -166,7 +167,7 @@ export default function useRootProvider({
     const maxFileSize = maxFileSizeProp ?? restrictions?.maxFileSize ?? { size: 1, unit: 'GB' as const } // 1 GB default
     const minFileSize = minFileSizeProp ?? restrictions?.minFileSize
     const maxTotalFileSize = maxTotalFileSizeProp ?? restrictions?.maxTotalFileSize
-    const accept = restrictions?.allowedFileTypes ? restrictions.allowedFileTypes.join(',') : acceptProp
+    const accept = resolveAccept(restrictions?.allowedFileTypes ? restrictions.allowedFileTypes.join(',') : acceptProp)
     // allowFolderUpload → showSelectFolderButton alias
     const showSelectFolderButton = allowFolderUpload || showSelectFolderButtonProp
     // onFileRemoved → onFileRemove alias (v2 naming)
@@ -198,7 +199,7 @@ export default function useRootProvider({
         coreRef.current = new UpupCore({
             uploadEndpoint: resolvedEndpoint || undefined,
             provider,
-            accept,
+            allowedFileTypes: accept,
             limit: resolvedLimit,
             maxFileSize,
             minFileSize,
@@ -322,7 +323,7 @@ export default function useRootProvider({
             serverUrl,
             apiKey,
             uploadEndpoint: resolvedEndpoint || undefined,
-            accept,
+            allowedFileTypes: accept,
             limit: resolvedLimit,
             maxFileSize,
             minFileSize,
@@ -474,12 +475,12 @@ export default function useRootProvider({
         if (typeof imageEditorProp === 'object' && imageEditorProp !== null) {
             return {
                 ...imageEditorProp,
-                enabled: imageEditorProp.enabled ?? false,
+                enabled: imageEditorProp.enabled ?? true,
                 autoOpen: imageEditorProp.autoOpen ?? 'never',
                 display: imageEditorProp.display ?? 'inline',
             }
         }
-        return { enabled: false, autoOpen: 'never', display: 'inline' }
+        return { enabled: true, autoOpen: 'never', display: 'inline' }
     }, [imageEditorProp])
 
     const openImageEditor = useCallback(
@@ -925,7 +926,7 @@ export default function useRootProvider({
                     tokenEndpoint: resolvedEndpoint,
                     constraints: {
                         multiple,
-                        accept,
+                        accept: accept,
                         maxFileSize:
                             maxFileSize?.size && maxFileSize?.unit
                                 ? sizeToBytes(
@@ -1232,7 +1233,7 @@ export default function useRootProvider({
             onFilesDrop,
             enablePaste,
             uploadAdapters: resolvedAdapters,
-            accept,
+            allowedFileTypes: accept,
             maxFileSize,
             limit,
             isProcessing,

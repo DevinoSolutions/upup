@@ -11,7 +11,7 @@ type BoxFolder = BoxItem & { children?: BoxItem[] }
 export default function useBoxUploader(token?: string) {
     const {
         core,
-        props: { onError, accept },
+        props: { onError, allowedFileTypes },
         setActiveAdapter,
         setFiles,
         translations,

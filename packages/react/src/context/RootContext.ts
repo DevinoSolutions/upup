@@ -50,7 +50,6 @@ type ContextProps = Required<
     Pick<
         UpupUploaderProps,
         | 'uploadAdapters'
-        | 'accept'
         | 'isProcessing'
         | 'allowPreview'
         | 'mini'
@@ -69,6 +68,8 @@ type ContextProps = Required<
     >
 > &
     Pick<UpupUploaderProps, 'maxFileSize' | 'maxRetries' | 'resumable'> & {
+        /** Resolved allowedFileTypes string (presets already expanded by resolveAccept). */
+        allowedFileTypes: string
         /** Derived from `maxFiles ?? restrictions?.maxNumberOfFiles ?? 10`. */
         limit: number
         /** Derived from `theme?.mode === 'dark'`. */

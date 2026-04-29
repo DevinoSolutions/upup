@@ -47,7 +47,7 @@ export default function useOneDriveUploader(graphClient?: Client) {
         core,
         setFiles,
         setActiveAdapter,
-        props: { onError, accept },
+        props: { onError, allowedFileTypes },
         translations,
     } = useRootContext()
     const [isClickLoading, setIsClickLoading] = useState<boolean>()
@@ -209,9 +209,9 @@ export default function useOneDriveUploader(graphClient?: Client) {
         setDownloadProgress(0)
         try {
             const filtered = files.filter(f => {
-                if (!accept || accept === '*') return true
+                if (!allowedFileTypes || allowedFileTypes === '*') return true
                 const ext = f.name.split('.').pop() || ''
-                return accept.includes(ext)
+                return allowedFileTypes.includes(ext)
             })
             const downloadedFiles = (await downloadFiles(filtered)).filter(
                 Boolean,

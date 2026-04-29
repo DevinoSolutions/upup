@@ -71,12 +71,12 @@ export default function DriveBrowser({
     ...rest
 }: Readonly<Props>) {
     const {
-        props: { accept, dark, classNames },
+        props: { allowedFileTypes, dark, classNames },
         translations: tr,
     } = useRootContext()
     const [searchTerm, setSearchTerm] = useState('')
     const items = (path[path.length - 1]?.children as Array<any>)?.filter(
-        item => filterItems(item, accept),
+        item => filterItems(item, allowedFileTypes),
     )
     const displayedItems = useMemo(
         () => searchDriveFiles<any>(items, searchTerm) || [],

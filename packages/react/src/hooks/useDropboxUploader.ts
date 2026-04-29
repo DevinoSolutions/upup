@@ -53,7 +53,7 @@ const getDownloadUrl = async (
 export default function useDropboxUploader(token?: string) {
     const {
         core,
-        props: { onError, accept },
+        props: { onError, allowedFileTypes },
         setActiveAdapter,
         setFiles,
         translations,
@@ -244,9 +244,9 @@ export default function useDropboxUploader(token?: string) {
             setDownloadProgress(0)
             try {
                 const filtered = files.filter(f => {
-                    if (!accept || accept === '*') return true
+                    if (!allowedFileTypes || allowedFileTypes === '*') return true
                     const ext = f.name.split('.').pop() || ''
-                    return accept.includes(ext)
+                    return allowedFileTypes.includes(ext)
                 })
                 const downloadedFiles = (
                     await downloadFiles(filtered, token)
@@ -269,7 +269,7 @@ export default function useDropboxUploader(token?: string) {
                 setDownloadProgress(0)
             }
         },
-        [accept, core, downloadFiles, onError, setActiveAdapter, setFiles, token],
+        [allowedFileTypes, core, downloadFiles, onError, setActiveAdapter, setFiles, token],
     )
 
     const onSelectCurrentFolder = useCallback(async () => {
