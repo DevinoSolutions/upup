@@ -200,40 +200,7 @@ export default memo(function ImageEditorInline(props: Props) {
                 />
             )}
 
-            {/* Header — Cancel / Title / (Save is handled by Filerobot) */}
-            <div
-                className={cn(
-                    'upup-flex upup-items-center upup-justify-between upup-border-b upup-px-4 upup-py-2',
-                    dark
-                        ? 'upup-border-gray-700 upup-bg-[#232323]'
-                        : 'upup-border-gray-200 upup-bg-white',
-                )}
-            >
-                <button
-                    type="button"
-                    className={cn(
-                        'upup-text-sm upup-font-semibold upup-transition-colors',
-                        dark
-                            ? 'upup-text-[#30C5F7] hover:upup-text-[#6DD8FB]'
-                            : 'upup-text-blue-600 hover:upup-text-blue-800',
-                    )}
-                    onClick={onClose}
-                >
-                    Cancel
-                </button>
-                <span
-                    className={cn(
-                        'upup-text-sm upup-font-semibold',
-                        dark ? 'upup-text-gray-100' : 'upup-text-gray-900',
-                    )}
-                >
-                    Editing {file.name}
-                </span>
-                {/* Save is handled by Filerobot's built-in save button */}
-                <span className="upup-w-14" />
-            </div>
-
-            {/* Editor body */}
+            {/* Filerobot provides its own top bar with save / close */}
             <div className="upup-relative upup-flex-1 upup-overflow-hidden">
                 {loadError && (
                     <div className="upup-flex upup-h-full upup-items-center upup-justify-center upup-p-8">

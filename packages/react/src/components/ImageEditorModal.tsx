@@ -74,7 +74,6 @@ export default memo(function ImageEditorModal(props: Props) {
     const { file, onClose, onSave } = props
     const {
         props: { dark, imageEditor: editorConfig },
-        translations: tr,
     } = useRootContext()
 
     const overlayRef = useRef<HTMLDivElement>(null)
@@ -264,35 +263,7 @@ export default memo(function ImageEditorModal(props: Props) {
                         />
                     )}
 
-                    {/* Header */}
-                    <div
-                        className={cn(
-                            'upup-flex upup-items-center upup-justify-between upup-border-b upup-px-4 upup-py-3',
-                            dark
-                                ? 'upup-border-gray-700 upup-text-gray-200'
-                                : 'upup-border-gray-200 upup-text-gray-800',
-                        )}
-                    >
-                        <h2 className="upup-text-sm upup-font-medium">
-                            Edit image — {file.name}
-                        </h2>
-                        <button
-                            type="button"
-                            aria-label={tr.closeEditor}
-                            className={cn(
-                                'upup-flex upup-h-7 upup-w-7 upup-items-center upup-justify-center upup-rounded-full',
-                                'upup-text-lg upup-leading-none upup-transition-colors',
-                                dark
-                                    ? 'upup-text-gray-400 hover:upup-bg-gray-700 hover:upup-text-gray-200'
-                                    : 'upup-text-gray-500 hover:upup-bg-gray-100 hover:upup-text-gray-800',
-                            )}
-                            onClick={onClose}
-                        >
-                            ×
-                        </button>
-                    </div>
-
-                    {/* Editor body */}
+                    {/* Filerobot provides its own top bar with save / close */}
                     <div className="upup-relative upup-flex-1 upup-overflow-hidden">
                         {loadError && (
                             <div className="upup-flex upup-h-full upup-items-center upup-justify-center upup-p-8">

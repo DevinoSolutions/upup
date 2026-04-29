@@ -170,8 +170,15 @@ export function getFilerobotTheme(dark: boolean): FilerobotTheme {
  * not consistently respect the provided theme palette.
  */
 export function getImageEditorCssOverrides(dark: boolean): string {
+    const common = `
+        /* Fill container */
+        .FIE_root {
+            height: 100% !important;
+        }
+    `
+
     return dark
-        ? `
+        ? common + `
         /* Input background & border overrides (hardcoded in @scaleflex/ui) */
         [data-upup-theme='dark'] .SfxInput-Base {
             background-color: #2d2d2d !important;
@@ -236,7 +243,7 @@ export function getImageEditorCssOverrides(dark: boolean): string {
             opacity: 1 !important;
         }
         `
-        : `
+        : common + `
         [data-upup-theme='light'] .FIE_topbar-save-button,
         [data-upup-theme='light'] .FIE_watermark-add-button {
             background-color: #2563eb !important;
