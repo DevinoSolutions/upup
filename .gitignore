@@ -41,3 +41,9 @@ storybook-static
 
 # Brainstorm companion sessions
 .superpowers/
+
+# Audit screenshots and working snapshots (kept local, not in repo)
+docs/superpowers/audits/*.png
+docs/superpowers/audits/**/*.png
+docs/superpowers/audits/verbose-snapshot.txt
+tmp-*.txt
