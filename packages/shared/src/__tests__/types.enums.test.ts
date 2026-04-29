@@ -92,9 +92,9 @@ describe('StorageProvider', () => {
     it('defines BackBlaze with value "backblaze"', () => expect(StorageProvider.BackBlaze).toBe('backblaze'))
     it('defines DigitalOcean with value "digitalocean"', () => expect(StorageProvider.DigitalOcean).toBe('digitalocean'))
 
-    it('has 4 distinct values', () => {
+    it('has 21 distinct values', () => {
         const vals = Object.values(StorageProvider)
-        expect(new Set(vals).size).toBe(4)
+        expect(new Set(vals).size).toBe(21)
     })
 
     it('all values are lowercase strings', () => {
