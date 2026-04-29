@@ -177,9 +177,9 @@ describe('UpupProvider', () => {
         expect(UpupProvider.GCS).toBe('gcs')
     })
 
-    it('has 8 distinct values', () => {
+    it('has 21 distinct values', () => {
         const vals = Object.values(UpupProvider)
-        expect(new Set(vals).size).toBe(8)
+        expect(new Set(vals).size).toBe(21)
     })
 
     it('all values are lowercase strings', () => {

@@ -1,7 +1,6 @@
 'use client'
 import React, { useCallback } from 'react'
 import { TbUpload } from 'react-icons/tb'
-import { plural, t } from '../shared/i18n'
 import { useRootContext } from '../context/RootContext'
 import useAdapterSelector from '../hooks/useAdapterSelector'
 import { cn } from '../lib/tailwind'
@@ -12,7 +11,7 @@ export default function AdapterSelector() {
         core,
         props: {
             mini,
-            accept,
+            allowedFileTypes,
             multiple,
             limit,
             maxFileSize,
@@ -26,6 +25,25 @@ export default function AdapterSelector() {
         inputRef,
         setFiles,
     } = useRootContext()
+
+    const constraintParts: string[] = []
+    if (allowedFileTypes && allowedFileTypes !== '*/*' && allowedFileTypes !== '*') {
+        const humanized = allowedFileTypes
+            .split(',')
+            .map((s) => s.trim())
+            .map((m) => {
+                if (m.startsWith('.')) return m
+                const [type, sub] = m.split('/')
+                if (sub === '*') return type.charAt(0).toUpperCase() + type.slice(1) + 's'
+                return sub.toUpperCase()
+            })
+            .join(', ')
+        constraintParts.push(humanized + ' only')
+    }
+    if (limit > 1) constraintParts.push(`up to ${limit} files`)
+    if (maxFileSize?.size && maxFileSize?.unit)
+        constraintParts.push(`${maxFileSize.size} ${maxFileSize.unit} max`)
+    const constraintLine = constraintParts.join(', ')
     const { chosenAdapters, handleAdapterClick, handleInputFileChange } =
         useAdapterSelector()
 
@@ -189,7 +207,7 @@ export default function AdapterSelector() {
             </ShouldRender>
             <input
                 type="file"
-                accept={accept}
+                accept={allowedFileTypes}
                 className="upup-hidden"
                 data-testid="upup-file-input"
                 aria-hidden="true"
@@ -282,24 +300,19 @@ export default function AdapterSelector() {
                             </>
                         )}
                     </div>
-                    <p
-                        className={cn(
-                            'upup-text-center upup-text-xs upup-text-[#6D6D6D] md:upup-text-sm',
-                            {
-                                'upup-text-gray-300 dark:upup-text-gray-300':
-                                    dark,
-                            },
-                        )}
-                    >
-                        {maxFileSize?.size && maxFileSize?.unit && (
-                            <>
-                                {t(plural(tr, 'maxFileSizeAllowed', limit), {
-                                    size: maxFileSize.size,
-                                    unit: maxFileSize.unit,
-                                })}
-                            </>
-                        )}
-                    </p>
+                    {constraintLine && (
+                        <p
+                            className={cn(
+                                'upup-text-center upup-text-xs upup-text-[#6D6D6D] md:upup-text-sm',
+                                {
+                                    'upup-text-gray-300 dark:upup-text-gray-300':
+                                        dark,
+                                },
+                            )}
+                        >
+                            {constraintLine}
+                        </p>
+                    )}
                 </div>
             )}
         </div>

@@ -84,6 +84,10 @@ export {
 // ── i18n ─────────────────────────────────────────────────
 export { en_US } from './shared/i18n'
 
+// ── Accept presets ──────────────────────────────────────
+export { ACCEPT_PRESETS, resolveAccept } from './shared/lib/acceptPresets'
+export type { AcceptPreset, AcceptPresetDefinition } from './shared/lib/acceptPresets'
+
 // ── Theme ────────────────────────────────────────────────
 export { UpupThemeProvider } from './theme'
 

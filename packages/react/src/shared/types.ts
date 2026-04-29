@@ -63,6 +63,32 @@ export enum UpupProvider {
     MinIO = 'minio',
     /** Google Cloud Storage via its S3-compatible interoperability mode */
     GCS = 'gcs',
+    /** Supabase Storage (S3-compatible) */
+    Supabase = 'supabase',
+    /** Hetzner Object Storage (S3-compatible) */
+    Hetzner = 'hetzner',
+    /** Linode / Akamai Object Storage (S3-compatible) */
+    Linode = 'linode',
+    /** Vultr Object Storage (S3-compatible) */
+    Vultr = 'vultr',
+    /** UpCloud Object Storage (S3-compatible) */
+    UpCloud = 'upcloud',
+    /** Scaleway Object Storage (S3-compatible) */
+    Scaleway = 'scaleway',
+    /** OVHcloud Object Storage (S3-compatible) */
+    OVHcloud = 'ovhcloud',
+    /** Alibaba Cloud OSS (S3-compatible) */
+    Alibaba = 'alibaba',
+    /** Oracle Cloud Object Storage (S3-compatible) */
+    Oracle = 'oracle',
+    /** Contabo Object Storage (S3-compatible) */
+    Contabo = 'contabo',
+    /** Storj decentralized cloud storage (S3-compatible) */
+    Storj = 'storj',
+    /** IDrive e2 object storage (S3-compatible) */
+    IDrive = 'idrive',
+    /** Ceph RADOS Gateway self-hosted storage (S3-compatible) */
+    Ceph = 'ceph',
 }
 
 type MaxFileSizeObject = {
@@ -321,7 +347,8 @@ export type UpupUploaderProps = {
     maxConcurrentUploads?: number
     /** v2: Enable crash recovery — saves upload state to IndexedDB for resume after page refresh */
     crashRecovery?: boolean
-    accept?: string
+    /** File type filter — MIME patterns, extensions, or preset names (e.g. "images", "documents"). */
+    allowedFileTypes?: string | string[]
     allowPreview?: boolean
     /** v2: Show/hide the upup branding footer. Default true. */
     showBranding?: boolean

@@ -17,6 +17,8 @@ import {
 } from '../components/Icons'
 import OneDriveUploader from '../components/OneDriveUploader'
 import UrlUploader from '../components/UrlUploader'
+import AudioUploader from '../components/AudioUploader'
+import ScreenCaptureUploader from '../components/ScreenCaptureUploader'
 
 /** Translation key used for each adapter's display name */
 export const adapterNameKeys: Record<UploadAdapter, keyof Translations> = {
@@ -78,12 +80,12 @@ export const uploadAdapterObject = {
         id: UploadAdapter.AUDIO,
         nameKey: 'audio' as keyof Translations,
         Icon: AudioIcon,
-        Component: undefined, // TODO: AudioUploader component
+        Component: AudioUploader,
     },
     [UploadAdapter.SCREEN]: {
         id: UploadAdapter.SCREEN,
         nameKey: 'screenCapture' as keyof Translations,
         Icon: ScreenCastIcon,
-        Component: undefined, // TODO: ScreenCaptureUploader component
+        Component: ScreenCaptureUploader,
     },
 }

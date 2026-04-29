@@ -58,12 +58,12 @@ describe('uploadAdapterObject', () => {
         expect(uploadAdapterObject[UploadAdapter.INTERNAL].Component).toBeUndefined()
     })
 
-    it('AUDIO entry has undefined Component (not yet implemented)', () => {
-        expect(uploadAdapterObject[UploadAdapter.AUDIO].Component).toBeUndefined()
+    it('AUDIO entry has a Component', () => {
+        expect(uploadAdapterObject[UploadAdapter.AUDIO].Component).toBeDefined()
     })
 
-    it('SCREEN entry has undefined Component (not yet implemented)', () => {
-        expect(uploadAdapterObject[UploadAdapter.SCREEN].Component).toBeUndefined()
+    it('SCREEN entry has a Component', () => {
+        expect(uploadAdapterObject[UploadAdapter.SCREEN].Component).toBeDefined()
     })
 
     it('GOOGLE_DRIVE entry has a Component', () => {
