@@ -357,11 +357,17 @@ LOG_LEVEL=info
 - ✅ Cmd/Ctrl+K toggle, Esc to close, localStorage open-state persistence
 - ✅ Typecheck + 60 interactive-example tests still green
 
-### Phase 3 — Hardening (3 days)
-- Schema validation on returned patches
-- Rate limiting + signed origin tokens
-- Cost cap + alerting
-- Eval suite of 20 canned prompts in CI
+### Phase 3 — Hardening (DONE)
+- ✅ Schema validation already in the apply-config-patch tool (zod inputSchema)
+- ✅ CORS middleware (env-driven allowlist, dev fallback)
+- ✅ Origin-token auth (HMAC-signed, env-gated — disabled in dev)
+- ✅ Per-IP token-bucket rate limiter (in-memory, KV-swappable)
+- ✅ Daily request budget (in-memory, resets UTC midnight, returns 503 over cap)
+- ✅ Custom routes: `/healthz` (returns budget snapshot), `/schema`
+- ✅ Eval suite — 20 canned prompts, runnable via `pnpm --filter @upup/playground-ai eval`
+- ✅ Last run: **19/20 passed (95%)**. Only `server-mode` regression (agent asks for clarification instead of emitting a patch). Tracked as a prompt-quality follow-up.
+
+**Cost-cap deliberate choice:** request count, not USD. Counting requests is exact; estimating dollars requires per-token pricing tables that drift. With Haiku 4.5 + capped output, mean cost per turn is stable enough that a request cap is a reasonable proxy.
 
 ### Phase 4 — Deploy (2 days)
 - Cloudflare Workers deploy

@@ -73,9 +73,7 @@ export function useMastraChat({ baseUrl, agentId, onPatch }: UseMastraChatOption
                 // tool-result hand-off. The Mastra response shape we rely on
                 // here was verified end-to-end during Phase 1 smoke tests.
                 const agent = client.getAgent(agentId)
-                const response: any = await agent.generate({
-                    messages: [{ role: 'user', content: trimmed }],
-                })
+                const response: any = await agent.generate(trimmed)
 
                 const text: string = response?.text ?? ''
                 const patches: AssistantPatchEvent[] = []

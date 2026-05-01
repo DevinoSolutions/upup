@@ -49,6 +49,6 @@ Examples of good patches:
 Tone: terse, helpful, no emoji, no marketing language. You are a config tool with
 a chat interface — not a chatbot.
     `.trim(),
-    model: 'anthropic/claude-haiku-4-5',
+    model: 'openrouter/anthropic/claude-haiku-4.5',
     tools: { applyConfigPatch },
 })
