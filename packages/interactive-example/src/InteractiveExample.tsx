@@ -6,6 +6,7 @@ import { Sidebar } from './sidebar/Sidebar'
 import { UploaderPreview } from './preview/UploaderPreview'
 import { EventLogPanel } from './preview/EventLogPanel'
 import { CodeTab } from './code/CodeTab'
+import { AssistantPanel } from './ai/AssistantPanel'
 import { findEntry } from './categories'
 import {
     BoolToggle,
@@ -137,6 +138,7 @@ export function InteractiveExample({
     focus,
     initialConfig,
     previewWidth = 'auto',
+    aiAssistant,
 }: InteractiveExampleProps = {}) {
     return (
         <ConfigProvider initialConfig={initialConfig}>
@@ -148,6 +150,12 @@ export function InteractiveExample({
                         defaultExpanded={defaultExpanded}
                         showCodeTab={showCodeTab}
                         previewWidth={previewWidth}
+                    />
+                )}
+                {aiAssistant?.enabled !== false && (
+                    <AssistantPanel
+                        mastraBaseUrl={aiAssistant?.mastraBaseUrl}
+                        agentId={aiAssistant?.agentId}
                     />
                 )}
             </EventLogProvider>

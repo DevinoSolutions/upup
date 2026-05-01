@@ -1,9 +1,11 @@
-# Playground AI: Mastra + CopilotKit wiring plan
+# Playground AI: Mastra agent wiring plan
 
 **Date:** 2026-04-30
-**Status:** Drafted, not implemented
+**Status:** Phase 1 + Phase 2 implemented (commits `5fe5ce4`, pending Phase 2 commit)
 **Owner:** Amin
 **Effort estimate:** 1–2 weeks
+
+> **Plan correction (2026-04-30, Phase 2):** dropped CopilotKit. CopilotKit's chat UI expects a CopilotKit *runtime* between the playground and the LLM, which would mean either deploying their hosted runtime or running our own CopilotKit Node service in front of Mastra. That's an extra hop with no payoff for our use case. Instead, the playground talks straight to Mastra via `@mastra/client-js` and renders a small custom chat UI. Same UX, fewer moving parts, no third runtime. The agent + tool design from Phase 1 is unchanged.
 
 ## Goal
 
@@ -109,19 +111,20 @@ Validate every emitted patch against the schema *before* it leaves the server. R
 
 ---
 
-## 2. Playground side: CopilotKit integration
+## 2. Playground side: AssistantPanel + Mastra client SDK
 
-### Component placement
+### Component placement (as implemented)
 
 ```
 packages/interactive-example/src/
   ai/
-    CopilotPanel.tsx               # NEW — chat UI, mounts CopilotKit provider
-    useUpupCopilot.ts              # NEW — wires useCopilotAction handlers to ConfigContext
-    promptSeeds.ts                 # Suggested first messages ("images only, max 10MB", etc.)
+    AssistantPanel.tsx             # Slide-over chat UI + "Ask AI" trigger button
+    useMastraChat.ts               # Hook talking to Mastra via @mastra/client-js
+    promptSeeds.ts                 # Three preset starter prompts
   state/
-    ConfigContext.tsx              # Existing — gains a setConfigPatch(patch) action
-  InteractiveExample.tsx           # Mounts CopilotPanel as a collapsible right rail
+    ConfigContext.tsx              # Existing — gained setConfigPatch(patch) action
+  InteractiveExample.tsx           # Mounts <AssistantPanel/> below the existing Shell
+  styles.css                       # Slide-over + trigger styles appended
 ```
 
 ### UX placement — full breakdown
@@ -239,23 +242,27 @@ These rotate per session so repeat visitors see variety.
 
 The playground is a config tool, not a conversation app. The chat should feel like a power-user shortcut, not the centerpiece.
 
-### `useCopilotAction` wiring
+### Hand-off wiring
+
+Mastra owns the agent + the apply-config-patch tool. The playground side just consumes the response:
 
 ```ts
-useCopilotAction({
-  name: "applyConfigPatch",
-  description: "Apply a partial UpupConfig patch to the live playground.",
-  parameters: [{ name: "patch", type: "object" }, { name: "explanation", type: "string" }],
-  handler: ({ patch, explanation }) => {
-    ctx.setConfigPatch(patch)        // merges into ConfigContext
-    return { applied: true, summary: explanation }
-  },
+// useMastraChat.ts — abridged
+const response = await client.getAgent('playground-agent').generate({
+  messages: [{ role: 'user', content: trimmed }],
 })
+
+for (const step of response.steps ?? []) {
+  for (const r of step.toolResults ?? []) {
+    if (r.toolName !== 'apply-config-patch') continue
+    onPatch(r.result) // → ctx.setConfigPatch(r.result.patch)
+  }
+}
 ```
 
-`ConfigContext` already has `setConfig(full)`; add `setConfigPatch(partial)` that does `{ ...current, ...patch }` with deep-merge for nested keys (`theme`, `imageEditor`, `resumable`).
+`ConfigContext` gained a `setConfigPatch(partial)` action that deep-merges the known nested keys (`theme`, `imageEditor`, `resumable`) and shallow-merges everything else.
 
-The CopilotKit `<CopilotChat>` component handles streaming, message history, and the action invocation lifecycle.
+Phase 2 uses `.generate()` (one round-trip per turn) instead of `.stream()` (token-by-token) — patches arrive in seconds either way and the simpler API removed a class of version-specific bugs in Mastra's stream chunk types. Streaming can come back if/when latency becomes a real complaint.
 
 ### What the user sees
 
@@ -340,12 +347,15 @@ LOG_LEVEL=info
 - Local dev: `pnpm --filter @upup/playground-ai dev` boots on localhost:3001
 - Manual smoke test via curl
 
-### Phase 2 — Playground wiring (3 days)
-- CopilotPanel component, mounted in InteractiveExample as collapsible right rail
-- `useUpupCopilot` hook wires the action to ConfigContext
-- `setConfigPatch` deep-merge added to ConfigContext
-- Preset prompts seeded
-- E2E happy path: type prompt → see sidebar update
+### Phase 2 — Playground wiring (DONE)
+- ✅ `@mastra/client-js` installed in interactive-example
+- ✅ `setConfigPatch` deep-merge added to ConfigContext
+- ✅ `useMastraChat` hook + `AssistantPanel` slide-over (custom UI, no CopilotKit)
+- ✅ Three preset prompts seeded (`Photos only, max 10MB` / `Add Google Drive and Dropbox` / `Make it dark with rounded corners`)
+- ✅ Slide-over + trigger styles match existing playground tokens
+- ✅ Mounted in `InteractiveExample` behind an `aiAssistant` prop (default on)
+- ✅ Cmd/Ctrl+K toggle, Esc to close, localStorage open-state persistence
+- ✅ Typecheck + 60 interactive-example tests still green
 
 ### Phase 3 — Hardening (3 days)
 - Schema validation on returned patches

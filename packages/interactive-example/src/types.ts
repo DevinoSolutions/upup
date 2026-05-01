@@ -77,4 +77,14 @@ export type InteractiveExampleProps = {
     focus?: PropId[]
     initialConfig?: UpupConfig
     previewWidth?: number | 'auto'
+    /**
+     * AI assistant panel that turns natural-language requests into config
+     * patches. Off when `enabled: false`. The panel talks to a Mastra agent
+     * — point at the Mastra dev/prod URL via `mastraBaseUrl`.
+     */
+    aiAssistant?: {
+        enabled?: boolean
+        mastraBaseUrl?: string
+        agentId?: string
+    }
 }
