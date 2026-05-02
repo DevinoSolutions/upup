@@ -76,14 +76,20 @@ function Shell({
     defaultExpanded,
     showCodeTab,
     previewWidth,
+    aiAssistant,
 }: {
     defaultExpanded: NonNullable<InteractiveExampleProps['defaultExpanded']>
     showCodeTab: boolean
     previewWidth: number | 'auto'
+    aiAssistant?: InteractiveExampleProps['aiAssistant']
 }) {
     const [tab, setTab] = useState<'preview' | 'code'>('preview')
+    const aiEnabled = aiAssistant?.enabled !== false
     return (
-        <div className="upup-ie-shell">
+        <div
+            className={`upup-ie-shell${aiEnabled ? ' has-ai' : ''}`}
+            data-ai={aiEnabled ? 'on' : 'off'}
+        >
             <Sidebar defaultExpanded={defaultExpanded} />
             <div className="upup-ie-main">
                 <div className="upup-ie-tabs">
@@ -110,6 +116,12 @@ function Shell({
                 </div>
                 {tab === 'preview' && <EventLogPanel />}
             </div>
+            {aiEnabled && (
+                <AssistantPanel
+                    mastraBaseUrl={aiAssistant?.mastraBaseUrl}
+                    agentId={aiAssistant?.agentId}
+                />
+            )}
         </div>
     )
 }
@@ -150,12 +162,7 @@ export function InteractiveExample({
                         defaultExpanded={defaultExpanded}
                         showCodeTab={showCodeTab}
                         previewWidth={previewWidth}
-                    />
-                )}
-                {aiAssistant?.enabled !== false && (
-                    <AssistantPanel
-                        mastraBaseUrl={aiAssistant?.mastraBaseUrl}
-                        agentId={aiAssistant?.agentId}
+                        aiAssistant={aiAssistant}
                     />
                 )}
             </EventLogProvider>

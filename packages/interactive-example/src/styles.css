@@ -97,16 +97,76 @@ html.dark .upup-ie-focus:not([data-theme="light"]),
 
 .upup-ie-shell {
     display: grid;
-    grid-template-columns: 340px 1fr;
-    gap: 24px;
+    grid-template-columns: 320px minmax(0, 1fr);
+    gap: 20px;
     align-items: start;
+}
+
+/* When the AI panel is mounted, switch to a three-column layout. The
+   sidebar and AI panel cap their height so they sit flush with the
+   preview card, scrolling internally. */
+.upup-ie-shell.has-ai {
+    grid-template-columns: 320px minmax(0, 1fr) 380px;
 }
 
 .upup-ie-sidebar {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 14px;
     min-width: 0;
+    max-height: var(--ie-side-height, calc(100vh - 160px));
+    overflow-y: auto;
+    padding-right: 4px;
+}
+
+/* Sidebar tier toggle (Simple / Advanced) — pinned at the top. */
+.upup-ie-tier-toggle {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+    padding: 4px;
+    background: var(--ie-card-bg);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 0.8px solid var(--ie-card-border);
+    border-radius: var(--ie-radius-pill);
+}
+
+.upup-ie-tier-toggle button {
+    background: transparent;
+    border: none;
+    color: var(--ie-fg-muted);
+    padding: 6px 10px;
+    border-radius: var(--ie-radius-pill);
+    font: 500 12px var(--ie-font);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: background 0.12s ease, color 0.12s ease;
+}
+
+.upup-ie-tier-toggle button:hover {
+    color: var(--ie-fg);
+}
+
+.upup-ie-tier-toggle button.is-active {
+    background: var(--ie-popover-bg);
+    color: var(--ie-fg);
+    box-shadow: var(--ie-card-shadow);
+}
+
+.upup-ie-tier-count {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: var(--ie-radius-pill);
+    background: var(--ie-accent-soft);
+    color: var(--ie-accent-strong);
 }
 
 /* ── Presets bar (top of sidebar) ──────────────────────── */
@@ -1269,16 +1329,12 @@ html.dark .upup-ie-preview-placeholder,
     }
 }
 
-/* ── AI Assistant ─────────────────────────────────────────
-   Right slide-over panel. Closed by default; trigger button lives in
-   the top-right corner of the playground. Cmd/Ctrl+K toggles.
+/* ── AI Assistant (inline column) ─────────────────────────
+   Lives as a third column inside .upup-ie-shell.has-ai. Always
+   visible — no slide-over, no trigger button. Tokens duplicated here
+   so the panel stays themed even if a consumer mounts it outside the
+   shell wrapper. */
 
-   Tokens are duplicated here because the trigger/panel mount as
-   siblings of .upup-ie-shell (not inside it), so they don't inherit
-   the shell-scoped custom properties. Without these fallbacks the
-   panel renders transparent and its content bleeds onto the page. */
-
-.upup-ie-ai-trigger,
 .upup-ie-ai-panel {
     --ie-fg: #1f2937;
     --ie-fg-muted: #6b7280;
@@ -1292,15 +1348,25 @@ html.dark .upup-ie-preview-placeholder,
     --ie-accent-soft: rgba(59, 130, 246, 0.12);
     --ie-accent-strong: #1d4ed8;
     --ie-accent-fg: #ffffff;
+    --ie-radius-card: 16px;
     --ie-radius-input: 8px;
     --ie-radius-pill: 999px;
     --ie-card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
     --ie-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: var(--ie-popover-bg);
+    color: var(--ie-fg);
+    font-family: var(--ie-font);
+    border: 0.8px solid var(--ie-card-border);
+    border-radius: var(--ie-radius-card);
+    box-shadow: var(--ie-card-shadow);
+    display: grid;
+    grid-template-rows: auto 1fr auto auto;
+    max-height: var(--ie-side-height, calc(100vh - 160px));
+    min-height: 360px;
+    overflow: hidden;
 }
 
-html.dark .upup-ie-ai-trigger,
 html.dark .upup-ie-ai-panel,
-[data-theme="dark"] .upup-ie-ai-trigger,
 [data-theme="dark"] .upup-ie-ai-panel {
     --ie-fg: #f3f4f6;
     --ie-fg-muted: #9ca3af;
@@ -1316,7 +1382,6 @@ html.dark .upup-ie-ai-panel,
 }
 
 @media (prefers-color-scheme: dark) {
-    html:not(.light):not([data-theme="light"]) .upup-ie-ai-trigger,
     html:not(.light):not([data-theme="light"]) .upup-ie-ai-panel {
         --ie-fg: #f3f4f6;
         --ie-fg-muted: #9ca3af;
@@ -1332,74 +1397,11 @@ html.dark .upup-ie-ai-panel,
     }
 }
 
-.upup-ie-ai-trigger {
-    position: fixed;
-    top: 16px;
-    right: 16px;
-    z-index: 200;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 6px 12px;
-    border-radius: var(--ie-radius-pill);
-    border: 1px solid var(--ie-card-border);
-    background: var(--ie-card-bg);
-    backdrop-filter: blur(6px);
-    color: var(--ie-fg);
-    font: 500 12px var(--ie-font);
-    cursor: pointer;
-    box-shadow: var(--ie-card-shadow);
-    transition: background 0.15s ease;
-}
-
-.upup-ie-ai-trigger:hover {
-    background: var(--ie-card-bg-hover);
-}
-
-.upup-ie-ai-trigger svg {
-    color: var(--ie-accent);
-}
-
-.upup-ie-ai-backdrop {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.18);
-    z-index: 250;
-    animation: upup-ie-ai-fade 0.18s ease-out;
-}
-
-@keyframes upup-ie-ai-fade {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}
-
-.upup-ie-ai-panel {
-    position: fixed;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    width: min(420px, 95vw);
-    z-index: 300;
-    display: grid;
-    grid-template-rows: auto 1fr auto auto;
-    background: var(--ie-popover-bg);
-    border-left: 1px solid var(--ie-card-border);
-    box-shadow: -8px 0 24px rgba(0, 0, 0, 0.12);
-    transform: translateX(100%);
-    transition: transform 0.22s cubic-bezier(0.4, 0, 0.2, 1);
-    color: var(--ie-fg);
-    font-family: var(--ie-font);
-}
-
-.upup-ie-ai-panel.is-open {
-    transform: translateX(0);
-}
-
 .upup-ie-ai-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 12px 16px;
+    padding: 10px 14px;
     border-bottom: 1px solid var(--ie-card-border);
 }
 
@@ -1410,16 +1412,11 @@ html.dark .upup-ie-ai-panel,
     color: var(--ie-fg);
 }
 
-.upup-ie-ai-header-actions {
-    display: flex;
-    gap: 4px;
-}
-
 .upup-ie-ai-header-btn {
     background: transparent;
     border: none;
     color: var(--ie-fg-muted);
-    font-size: 14px;
+    font-size: 12px;
     line-height: 1;
     padding: 4px 8px;
     border-radius: var(--ie-radius-input);
@@ -1433,7 +1430,7 @@ html.dark .upup-ie-ai-panel,
 
 .upup-ie-ai-messages {
     overflow-y: auto;
-    padding: 16px;
+    padding: 14px;
     display: flex;
     flex-direction: column;
     gap: 12px;
@@ -1489,7 +1486,7 @@ html.dark .upup-ie-ai-panel,
     color: var(--ie-accent-fg);
     padding: 8px 12px;
     border-radius: 14px 14px 4px 14px;
-    max-width: 85%;
+    max-width: 90%;
 }
 
 .upup-ie-ai-msg-assistant .upup-ie-ai-msg-text {
@@ -1526,7 +1523,7 @@ html.dark .upup-ie-ai-panel,
 }
 
 .upup-ie-ai-error {
-    margin: 0 16px 8px;
+    margin: 0 14px 8px;
     padding: 8px 12px;
     background: rgba(239, 68, 68, 0.12);
     border: 1px solid rgba(239, 68, 68, 0.4);
@@ -1539,7 +1536,7 @@ html.dark .upup-ie-ai-panel,
     display: grid;
     grid-template-columns: 1fr auto;
     gap: 8px;
-    padding: 12px 16px;
+    padding: 10px 14px 14px;
     border-top: 1px solid var(--ie-card-border);
     background: var(--ie-popover-bg);
 }
@@ -1575,26 +1572,39 @@ html.dark .upup-ie-ai-panel,
     cursor: not-allowed;
 }
 
-@media (max-width: 640px) {
-    .upup-ie-ai-panel {
-        width: 100vw;
-        border-left: none;
+@media (max-width: 1100px) {
+    /* Stack AI panel under the preview when the viewport gets tight. */
+    .upup-ie-shell.has-ai {
+        grid-template-columns: 320px minmax(0, 1fr);
     }
-    .upup-ie-ai-trigger {
-        bottom: 16px;
-        top: auto;
-        right: 16px;
+    .upup-ie-ai-panel {
+        grid-column: 1 / -1;
+        max-height: 480px;
+    }
+}
+
+@media (max-width: 900px) {
+    /* Single-column on small viewports (was the original responsive rule). */
+    .upup-ie-shell,
+    .upup-ie-shell.has-ai,
+    .upup-ie-focus {
+        grid-template-columns: 1fr;
+    }
+    .upup-ie-sidebar {
+        position: static;
+        max-height: none;
+        overflow: visible;
+    }
+    .upup-ie-tier-toggle {
+        position: static;
+    }
+    .upup-ie-ai-panel {
+        max-height: 480px;
     }
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .upup-ie-ai-panel {
-        transition: none;
-    }
     .upup-ie-ai-cursor {
-        animation: none;
-    }
-    .upup-ie-ai-backdrop {
         animation: none;
     }
 }

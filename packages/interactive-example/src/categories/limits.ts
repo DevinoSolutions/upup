@@ -72,6 +72,7 @@ const acceptPresetOptions = [
 ]
 
 export const limitsCategory: CategoryDefinition = {
+    tier: 'simple',
     id: 'limits',
     label: 'Limits',
     description: 'File count and size validation',

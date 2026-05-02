@@ -67,6 +67,13 @@ export type CategoryDefinition = {
      * reader doesn't expect a visible reaction in the preview.
      */
     intro?: string
+    /**
+     * `'simple'` categories are visible at all times; `'advanced'` (default)
+     * are hidden behind the Simple/Advanced toggle in the sidebar header.
+     * Use `'simple'` for fields a first-time visitor should be able to
+     * understand and tweak without reading docs.
+     */
+    tier?: 'simple' | 'advanced'
 }
 
 export type UpupConfig = Partial<UpupUploaderProps>

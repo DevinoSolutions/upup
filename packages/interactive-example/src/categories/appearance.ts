@@ -2,6 +2,7 @@ import type { CategoryDefinition } from '../types'
 import { Palette } from 'lucide-react'
 
 export const appearanceCategory: CategoryDefinition = {
+    tier: 'simple',
     id: 'appearance',
     label: 'Appearance',
     description: 'Theme mode, tokens, and per-slot overrides',

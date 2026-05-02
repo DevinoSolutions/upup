@@ -2,6 +2,7 @@ import type { CategoryDefinition } from '../types'
 import { Upload } from 'lucide-react'
 
 export const uploadCategory: CategoryDefinition = {
+    tier: 'simple',
     id: 'upload',
     label: 'Upload',
     description: 'Strategy and execution',
