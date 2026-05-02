@@ -52,7 +52,7 @@ A standalone Node app, separate from `packages/interactive-example`. Lives in `a
 
 ```
 apps/mastra/
-  package.json                     # mastra-app, private
+  package.json                     # name: "mastra", private
   tsconfig.json
   .env.example
   .gitignore
