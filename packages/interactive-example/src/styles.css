@@ -1271,7 +1271,66 @@ html.dark .upup-ie-preview-placeholder,
 
 /* ── AI Assistant ─────────────────────────────────────────
    Right slide-over panel. Closed by default; trigger button lives in
-   the top-right corner of the playground. Cmd/Ctrl+K toggles. */
+   the top-right corner of the playground. Cmd/Ctrl+K toggles.
+
+   Tokens are duplicated here because the trigger/panel mount as
+   siblings of .upup-ie-shell (not inside it), so they don't inherit
+   the shell-scoped custom properties. Without these fallbacks the
+   panel renders transparent and its content bleeds onto the page. */
+
+.upup-ie-ai-trigger,
+.upup-ie-ai-panel {
+    --ie-fg: #1f2937;
+    --ie-fg-muted: #6b7280;
+    --ie-card-bg: rgba(255, 255, 255, 0.5);
+    --ie-card-bg-hover: rgba(255, 255, 255, 0.8);
+    --ie-card-border: rgba(229, 231, 235, 0.7);
+    --ie-popover-bg: #ffffff;
+    --ie-input-bg: rgba(255, 255, 255, 0.6);
+    --ie-input-border: rgba(209, 213, 219, 0.7);
+    --ie-accent: #3b82f6;
+    --ie-accent-soft: rgba(59, 130, 246, 0.12);
+    --ie-accent-strong: #1d4ed8;
+    --ie-accent-fg: #ffffff;
+    --ie-radius-input: 8px;
+    --ie-radius-pill: 999px;
+    --ie-card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+    --ie-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+html.dark .upup-ie-ai-trigger,
+html.dark .upup-ie-ai-panel,
+[data-theme="dark"] .upup-ie-ai-trigger,
+[data-theme="dark"] .upup-ie-ai-panel {
+    --ie-fg: #f3f4f6;
+    --ie-fg-muted: #9ca3af;
+    --ie-card-bg: rgba(31, 41, 55, 0.6);
+    --ie-card-bg-hover: rgba(31, 41, 55, 0.85);
+    --ie-card-border: rgba(55, 65, 81, 0.7);
+    --ie-popover-bg: #1f2937;
+    --ie-input-bg: rgba(17, 24, 39, 0.7);
+    --ie-input-border: rgba(55, 65, 81, 0.7);
+    --ie-accent: #60a5fa;
+    --ie-accent-soft: rgba(96, 165, 250, 0.16);
+    --ie-accent-strong: #93c5fd;
+}
+
+@media (prefers-color-scheme: dark) {
+    html:not(.light):not([data-theme="light"]) .upup-ie-ai-trigger,
+    html:not(.light):not([data-theme="light"]) .upup-ie-ai-panel {
+        --ie-fg: #f3f4f6;
+        --ie-fg-muted: #9ca3af;
+        --ie-card-bg: rgba(31, 41, 55, 0.6);
+        --ie-card-bg-hover: rgba(31, 41, 55, 0.85);
+        --ie-card-border: rgba(55, 65, 81, 0.7);
+        --ie-popover-bg: #1f2937;
+        --ie-input-bg: rgba(17, 24, 39, 0.7);
+        --ie-input-border: rgba(55, 65, 81, 0.7);
+        --ie-accent: #60a5fa;
+        --ie-accent-soft: rgba(96, 165, 250, 0.16);
+        --ie-accent-strong: #93c5fd;
+    }
+}
 
 .upup-ie-ai-trigger {
     position: fixed;

@@ -13,7 +13,12 @@ export function corsMiddleware() {
     const raw = process.env.ALLOWED_ORIGINS?.trim()
     const allowList = raw
         ? raw.split(',').map((s) => s.trim()).filter(Boolean)
-        : ['http://localhost:5173', 'http://localhost:3000', 'http://localhost:4321']
+        : [
+              'http://localhost:5173',
+              'http://localhost:3000',
+              'http://localhost:4321',
+              'http://localhost:53004', // apps/playground (PLAYGROUND_PORT in local-dev/.env.ports)
+          ]
 
     return async (c: Context, next: Next) => {
         const origin = c.req.header('origin') ?? ''
