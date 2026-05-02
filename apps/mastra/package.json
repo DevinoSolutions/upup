@@ -1,9 +1,9 @@
 {
-  "name": "@upup/playground-ai",
+  "name": "@upup/mastra",
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Mastra agent that turns natural language into UpupConfig patches for the interactive playground.",
+  "description": "Mastra app for the upup monorepo. Hosts agents/tools — currently the interactive-playground assistant; future agents land here.",
   "scripts": {
     "dev": "mastra dev",
     "build": "mastra build",

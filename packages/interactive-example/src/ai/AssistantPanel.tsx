@@ -6,7 +6,7 @@ import { PROMPT_SEEDS } from './promptSeeds'
 type AssistantPanelProps = {
     /** Where the Mastra dev/prod server lives. Default: localhost dev. */
     mastraBaseUrl?: string
-    /** Agent id registered in apps/playground-ai. */
+    /** Agent id registered in apps/mastra. */
     agentId?: string
 }
 

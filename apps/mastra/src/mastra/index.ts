@@ -8,7 +8,7 @@ import { healthzRoute } from './routes/healthz.js'
 import { schemaRoute } from './routes/schema.js'
 
 /**
- * The Mastra instance for @upup/playground-ai.
+ * The Mastra instance for @upup/mastra.
  *
  * Mastra owns the HTTP server (Hono under the hood) and exposes registered
  * agents at /api/agents/<agentId>/{generate,stream,...}. We layer on:

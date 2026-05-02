@@ -25,7 +25,7 @@ If users ask for code editing later, revisit. Don't build it speculatively.
 
 ```
 ┌────────────────────────────────────────┐         ┌──────────────────────────┐
-│ packages/interactive-example           │         │ apps/playground-ai       │
+│ packages/interactive-example           │         │ apps/mastra       │
 │   ┌──────────────────────────────────┐ │         │   (Mastra app)           │
 │   │ CopilotPanel (chat UI)           │ │  HTTP   │                          │
 │   │   useCopilotAction(...)          │ ├────────▶│   POST /chat             │
@@ -42,7 +42,7 @@ Single source of truth stays `ConfigContext`. The AI proposes patches; the playg
 
 ---
 
-## 1. `apps/playground-ai/` (Mastra app)
+## 1. `apps/mastra/` (Mastra app)
 
 A standalone Node app, separate from `packages/interactive-example`. Lives in `apps/` because it ships independently and is hosted separately.
 
@@ -51,8 +51,8 @@ A standalone Node app, separate from `packages/interactive-example`. Lives in `a
 ### Structure (as scaffolded)
 
 ```
-apps/playground-ai/
-  package.json                     # @upup/playground-ai, private
+apps/mastra/
+  package.json                     # @upup/mastra, private
   tsconfig.json
   .env.example
   .gitignore
@@ -307,7 +307,7 @@ The endpoint is public-facing and calls a paid LLM. Without protection it's a fo
 
 Alternative: **Fly.io** or **Render** if the Mastra version we use needs Node APIs not available on Workers. Pick at implementation time based on Mastra's edge-compat status.
 
-### Env vars (`apps/playground-ai/.env.example`)
+### Env vars (`apps/mastra/.env.example`)
 
 ```
 ANTHROPIC_API_KEY=
@@ -342,9 +342,9 @@ LOG_LEVEL=info
 ## 5. Phased delivery
 
 ### Phase 1 — Skeleton (3 days)
-- `apps/playground-ai/` scaffolding, Hono server, `/healthz` only
+- `apps/mastra/` scaffolding, Hono server, `/healthz` only
 - Mastra agent with `applyConfigPatch` tool, schema embedded, no validation yet
-- Local dev: `pnpm --filter @upup/playground-ai dev` boots on localhost:3001
+- Local dev: `pnpm --filter @upup/mastra dev` boots on localhost:3001
 - Manual smoke test via curl
 
 ### Phase 2 — Playground wiring (DONE)
@@ -364,7 +364,7 @@ LOG_LEVEL=info
 - ✅ Per-IP token-bucket rate limiter (in-memory, KV-swappable)
 - ✅ Daily request budget (in-memory, resets UTC midnight, returns 503 over cap)
 - ✅ Custom routes: `/healthz` (returns budget snapshot), `/schema`
-- ✅ Eval suite — 20 canned prompts, runnable via `pnpm --filter @upup/playground-ai eval`
+- ✅ Eval suite — 20 canned prompts, runnable via `pnpm --filter @upup/mastra eval`
 - ✅ Last run: **20/20 passed (100%)**. The earlier `server-mode` failure turned out to be a schema bug — `serverUrl: z.string().url()` rejected relative paths like `/api/upup` even though the playground accepts them. Loosened to `z.string().min(1)` since the playground proxies through the same origin in many setups.
 
 **Cost-cap deliberate choice:** request count, not USD. Counting requests is exact; estimating dollars requires per-token pricing tables that drift. With Haiku 4.5 + capped output, mean cost per turn is stable enough that a request cap is a reasonable proxy.
