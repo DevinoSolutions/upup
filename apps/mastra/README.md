@@ -1,4 +1,4 @@
-# @upup/mastra
+# mastra-app
 
 The Mastra app for the upup monorepo. Hosts agents, tools, middleware, and
 custom routes shared across the project. Currently this means the
@@ -18,7 +18,7 @@ for the original plan.
 cp .env.example .env
 # fill in OPENROUTER_API_KEY (default model is openrouter/anthropic/claude-haiku-4.5)
 pnpm install
-pnpm --filter @upup/mastra dev
+pnpm --filter mastra-app dev
 ```
 
 This starts the Mastra dev server on `http://localhost:4111` and Mastra Studio
@@ -36,7 +36,7 @@ curl http://localhost:4111/api/agents/playground-agent/generate \
 
 ```bash
 # In another terminal while `dev` is running:
-pnpm --filter @upup/mastra eval
+pnpm --filter mastra-app eval
 ```
 
 20 canned prompts; exits non-zero if the fail rate exceeds

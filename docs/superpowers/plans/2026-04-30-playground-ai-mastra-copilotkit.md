@@ -52,7 +52,7 @@ A standalone Node app, separate from `packages/interactive-example`. Lives in `a
 
 ```
 apps/mastra/
-  package.json                     # @upup/mastra, private
+  package.json                     # mastra-app, private
   tsconfig.json
   .env.example
   .gitignore
@@ -344,7 +344,7 @@ LOG_LEVEL=info
 ### Phase 1 — Skeleton (3 days)
 - `apps/mastra/` scaffolding, Hono server, `/healthz` only
 - Mastra agent with `applyConfigPatch` tool, schema embedded, no validation yet
-- Local dev: `pnpm --filter @upup/mastra dev` boots on localhost:3001
+- Local dev: `pnpm --filter mastra-app dev` boots on localhost:3001
 - Manual smoke test via curl
 
 ### Phase 2 — Playground wiring (DONE)
@@ -364,7 +364,7 @@ LOG_LEVEL=info
 - ✅ Per-IP token-bucket rate limiter (in-memory, KV-swappable)
 - ✅ Daily request budget (in-memory, resets UTC midnight, returns 503 over cap)
 - ✅ Custom routes: `/healthz` (returns budget snapshot), `/schema`
-- ✅ Eval suite — 20 canned prompts, runnable via `pnpm --filter @upup/mastra eval`
+- ✅ Eval suite — 20 canned prompts, runnable via `pnpm --filter mastra-app eval`
 - ✅ Last run: **20/20 passed (100%)**. The earlier `server-mode` failure turned out to be a schema bug — `serverUrl: z.string().url()` rejected relative paths like `/api/upup` even though the playground accepts them. Loosened to `z.string().min(1)` since the playground proxies through the same origin in many setups.
 
 **Cost-cap deliberate choice:** request count, not USD. Counting requests is exact; estimating dollars requires per-token pricing tables that drift. With Haiku 4.5 + capped output, mean cost per turn is stable enough that a request cap is a reasonable proxy.

@@ -4,8 +4,8 @@ import { EVAL_CASES, type EvalCase } from './canned-prompts.js'
 /**
  * Run the canned-prompt eval against a running Mastra server.
  *
- *   pnpm --filter @upup/mastra dev      # in another terminal
- *   pnpm --filter @upup/mastra eval
+ *   pnpm --filter mastra-app dev      # in another terminal
+ *   pnpm --filter mastra-app eval
  *
  * Exits 0 when all cases pass, non-zero otherwise. Suitable for CI as a
  * regression gate — break the agent, the build fails.
