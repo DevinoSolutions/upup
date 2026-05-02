@@ -78,15 +78,23 @@ export function useMastraChat({ baseUrl, agentId, onPatch }: UseMastraChatOption
                 const text: string = response?.text ?? ''
                 const patches: AssistantPatchEvent[] = []
 
-                // Tool results land on either response.toolResults (top-level)
-                // or under steps[i].toolResults depending on Mastra version.
+                // Mastra reports the same tool result in two places —
+                // response.toolResults (top-level) AND response.steps[i].toolResults.
+                // Dedupe by toolCallId so a single agent call doesn't produce
+                // two "Applied" chips. If the agent genuinely called the tool
+                // more than once in a turn, distinct toolCallIds preserve each.
+                const seen = new Set<string>()
                 const collect = (results: any[] | undefined) => {
                     if (!Array.isArray(results)) return
                     for (const r of results) {
+                        const id: string | undefined = r?.toolCallId ?? r?.payload?.toolCallId
+                        if (id && seen.has(id)) continue
                         const name = r?.toolName ?? r?.payload?.toolName
                         if (name !== 'apply-config-patch' && name !== 'applyConfigPatch') continue
                         const data = r?.result ?? r?.payload?.result
-                        if (data?.patch) patches.push(data as AssistantPatchEvent)
+                        if (!data?.patch) continue
+                        if (id) seen.add(id)
+                        patches.push(data as AssistantPatchEvent)
                     }
                 }
                 collect(response?.toolResults)

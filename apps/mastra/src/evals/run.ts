@@ -25,13 +25,20 @@ async function runOne(client: MastraClient, c: EvalCase): Promise<EvalResult> {
         const response: any = await agent.generate(c.prompt)
 
         const patches: Record<string, unknown>[] = []
+        // Same dedupe logic as useMastraChat — Mastra reports the same tool
+        // result in both response.toolResults and response.steps[].toolResults.
+        const seen = new Set<string>()
         const collect = (results: any[] | undefined) => {
             if (!Array.isArray(results)) return
             for (const r of results) {
+                const id: string | undefined = r?.toolCallId ?? r?.payload?.toolCallId
+                if (id && seen.has(id)) continue
                 const name = r?.toolName ?? r?.payload?.toolName
                 if (name !== 'apply-config-patch' && name !== 'applyConfigPatch') continue
                 const data = r?.result ?? r?.payload?.result
-                if (data?.patch) patches.push(data.patch)
+                if (!data?.patch) continue
+                if (id) seen.add(id)
+                patches.push(data.patch)
             }
         }
         collect(response?.toolResults)
