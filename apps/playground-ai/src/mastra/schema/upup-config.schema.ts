@@ -69,7 +69,9 @@ export const UpupConfigSchema = z
     .object({
         provider: Provider.optional(),
         mode: z.enum(['client', 'server']).optional(),
-        serverUrl: z.string().url().optional(),
+        // Absolute URL OR relative path — the playground accepts both
+        // (relative paths are common when proxying through the same origin).
+        serverUrl: z.string().min(1).optional(),
 
         allowedFileTypes: z.string().optional(),
         maxFileSize: SizeValue.optional(),

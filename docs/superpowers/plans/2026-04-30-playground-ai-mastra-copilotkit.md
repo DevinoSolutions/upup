@@ -365,7 +365,7 @@ LOG_LEVEL=info
 - ✅ Daily request budget (in-memory, resets UTC midnight, returns 503 over cap)
 - ✅ Custom routes: `/healthz` (returns budget snapshot), `/schema`
 - ✅ Eval suite — 20 canned prompts, runnable via `pnpm --filter @upup/playground-ai eval`
-- ✅ Last run: **19/20 passed (95%)**. Only `server-mode` regression (agent asks for clarification instead of emitting a patch). Tracked as a prompt-quality follow-up.
+- ✅ Last run: **20/20 passed (100%)**. The earlier `server-mode` failure turned out to be a schema bug — `serverUrl: z.string().url()` rejected relative paths like `/api/upup` even though the playground accepts them. Loosened to `z.string().min(1)` since the playground proxies through the same origin in many setups.
 
 **Cost-cap deliberate choice:** request count, not USD. Counting requests is exact; estimating dollars requires per-token pricing tables that drift. With Haiku 4.5 + capped output, mean cost per turn is stable enough that a request cap is a reasonable proxy.
 
