@@ -1,5 +1,5 @@
 'use client'
-import React, { useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { ConfigProvider } from './state/ConfigContext'
 import { EventLogProvider } from './state/EventLogContext'
 import { Sidebar } from './sidebar/Sidebar'
@@ -87,13 +87,36 @@ function Shell({
 }) {
     const [tab, setTab] = useState<'preview' | 'code' | 'events'>('preview')
     const aiEnabled = aiAssistant?.enabled !== false
+
+    // Measure the main column so the sidebar + AI panel can match its height
+    // (CSS can't size one grid column by another's intrinsic content). We
+    // expose the value as a CSS custom property and the columns read it.
+    const mainRef = useRef<HTMLDivElement>(null)
+    const [colHeight, setColHeight] = useState<number | null>(null)
+    useEffect(() => {
+        const el = mainRef.current
+        if (!el || typeof ResizeObserver === 'undefined') return
+        const ro = new ResizeObserver((entries) => {
+            for (const e of entries) {
+                setColHeight(Math.round(e.contentRect.height))
+            }
+        })
+        ro.observe(el)
+        return () => ro.disconnect()
+    }, [])
+
+    const shellStyle: React.CSSProperties | undefined = colHeight
+        ? ({ ['--ie-side-height' as any]: `${colHeight}px` })
+        : undefined
+
     return (
         <div
             className={`upup-ie-shell${aiEnabled ? ' has-ai' : ''}`}
             data-ai={aiEnabled ? 'on' : 'off'}
+            style={shellStyle}
         >
             <Sidebar defaultExpanded={defaultExpanded} />
-            <div className="upup-ie-main">
+            <div ref={mainRef} className="upup-ie-main">
                 <div className="upup-ie-tabs">
                     <button
                         type="button"

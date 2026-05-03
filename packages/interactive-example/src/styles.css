@@ -114,7 +114,10 @@ html.dark .upup-ie-focus:not([data-theme="light"]),
     flex-direction: column;
     gap: 14px;
     min-width: 0;
-    max-height: var(--ie-side-height, calc(100vh - 160px));
+    /* Locked to the main column's measured height (set by the Shell
+       via a ResizeObserver). Falls back to a viewport-based cap when
+       the JS hasn't measured yet (initial render, SSR). */
+    height: var(--ie-side-height, calc(100vh - 160px));
     overflow-y: auto;
     padding-right: 4px;
 }
@@ -1361,7 +1364,9 @@ html.dark .upup-ie-preview-placeholder,
     box-shadow: var(--ie-card-shadow);
     display: grid;
     grid-template-rows: auto 1fr auto auto;
-    max-height: var(--ie-side-height, calc(100vh - 160px));
+    /* Same height anchor as the sidebar — both columns line up flush
+       with the main column's bottom edge. */
+    height: var(--ie-side-height, calc(100vh - 160px));
     min-height: 360px;
     overflow: hidden;
 }
