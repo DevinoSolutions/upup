@@ -81,6 +81,8 @@ export type UpupConfig = Partial<UpupUploaderProps>
 export type InteractiveExampleProps = {
     defaultExpanded?: CategoryId[]
     showCodeTab?: boolean
+    /** Show the Events tab next to Preview/Code. Default true. */
+    showEventsTab?: boolean
     focus?: PropId[]
     initialConfig?: UpupConfig
     previewWidth?: number | 'auto'

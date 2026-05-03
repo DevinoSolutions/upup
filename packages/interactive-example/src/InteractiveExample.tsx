@@ -75,15 +75,17 @@ function renderEntry(entry: ToggleEntry) {
 function Shell({
     defaultExpanded,
     showCodeTab,
+    showEventsTab,
     previewWidth,
     aiAssistant,
 }: {
     defaultExpanded: NonNullable<InteractiveExampleProps['defaultExpanded']>
     showCodeTab: boolean
+    showEventsTab: boolean
     previewWidth: number | 'auto'
     aiAssistant?: InteractiveExampleProps['aiAssistant']
 }) {
-    const [tab, setTab] = useState<'preview' | 'code'>('preview')
+    const [tab, setTab] = useState<'preview' | 'code' | 'events'>('preview')
     const aiEnabled = aiAssistant?.enabled !== false
     return (
         <div
@@ -109,12 +111,21 @@ function Shell({
                             Code
                         </button>
                     )}
+                    {showEventsTab && (
+                        <button
+                            type="button"
+                            className={tab === 'events' ? 'is-active' : ''}
+                            onClick={() => setTab('events')}
+                        >
+                            Events
+                        </button>
+                    )}
                 </div>
                 <div className="upup-ie-tabs-body">
                     {tab === 'preview' && <UploaderPreview width={previewWidth} />}
                     {tab === 'code' && showCodeTab && <CodeTab />}
+                    {tab === 'events' && showEventsTab && <EventLogPanel />}
                 </div>
-                {tab === 'preview' && <EventLogPanel />}
             </div>
             {aiEnabled && (
                 <AssistantPanel
@@ -147,6 +158,7 @@ function FocusMode({
 export function InteractiveExample({
     defaultExpanded = [],
     showCodeTab = true,
+    showEventsTab = true,
     focus,
     initialConfig,
     previewWidth = 'auto',
@@ -161,6 +173,7 @@ export function InteractiveExample({
                     <Shell
                         defaultExpanded={defaultExpanded}
                         showCodeTab={showCodeTab}
+                        showEventsTab={showEventsTab}
                         previewWidth={previewWidth}
                         aiAssistant={aiAssistant}
                     />
