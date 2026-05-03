@@ -122,6 +122,14 @@ html.dark .upup-ie-focus:not([data-theme="light"]),
     padding-right: 4px;
 }
 
+/* Each child must keep its intrinsic height. Without this the flex
+   container shrinks every child to fit the column, hiding their
+   overflow visually but reporting scrollHeight === clientHeight, so
+   the sidebar's overflow-y:auto would never trigger a scrollbar. */
+.upup-ie-sidebar > * {
+    flex-shrink: 0;
+}
+
 /* Sidebar tier toggle (Simple / Advanced) — pinned at the top. */
 .upup-ie-tier-toggle {
     position: sticky;
@@ -1326,9 +1334,13 @@ html.dark .upup-ie-preview-placeholder,
     .upup-ie-focus {
         grid-template-columns: 1fr;
     }
+    /* Sidebar keeps its internal scroll even when stacked — the user can
+       still browse all categories without the page itself growing huge.
+       We deliberately ignore --ie-side-height here because at narrow
+       viewports the main column grows to fit the preview's wrapped
+       layout, which would defeat the cap. */
     .upup-ie-sidebar {
-        position: static;
-        max-height: none;
+        height: 60vh;
     }
 }
 
@@ -1589,22 +1601,18 @@ html.dark .upup-ie-ai-panel,
 }
 
 @media (max-width: 900px) {
-    /* Single-column on small viewports (was the original responsive rule). */
+    /* Single-column on small viewports. Each column keeps its own
+       internal scroll so the user can browse without the page itself
+       becoming enormous. Using a fixed 60vh here (not the variable)
+       so the main column's wrapped layout doesn't defeat the cap. */
     .upup-ie-shell,
     .upup-ie-shell.has-ai,
     .upup-ie-focus {
         grid-template-columns: 1fr;
     }
-    .upup-ie-sidebar {
-        position: static;
-        max-height: none;
-        overflow: visible;
-    }
-    .upup-ie-tier-toggle {
-        position: static;
-    }
+    .upup-ie-sidebar,
     .upup-ie-ai-panel {
-        max-height: 480px;
+        height: 60vh;
     }
 }
 
