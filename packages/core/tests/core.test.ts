@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import { UpupCore } from '../src/core'
-import { UploadStatus } from '@upup/shared'
+import { UploadStatus } from '@upup/core'
 import type { UpupPlugin } from '../src/plugin'
 
 const makeNativeFile = (name = 'test.jpg', size = 1024, type = 'image/jpeg'): File => {

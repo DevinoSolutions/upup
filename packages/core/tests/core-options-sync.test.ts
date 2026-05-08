@@ -24,10 +24,10 @@ describe('UpupCore — updateOptions sync behavior', () => {
         core.destroy()
     })
 
-    it('syncs apiKey at runtime', () => {
-        const core = new UpupCore({ apiKey: 'old-key' })
-        core.updateOptions({ apiKey: 'new-key' })
-        expect(core.options.apiKey).toBe('new-key')
+    it('does not infer serverUrl from apiKey-like legacy input at runtime', () => {
+        const core = new UpupCore({} as any)
+        core.updateOptions({ apiKey: 'new-key' } as any)
+        expect(core.options.serverUrl).toBeUndefined()
         core.destroy()
     })
 
@@ -45,10 +45,33 @@ describe('UpupCore — updateOptions sync behavior', () => {
         core.destroy()
     })
 
+    it('applies synced accept rules to future file additions', async () => {
+        const core = new UpupCore({ allowedFileTypes: 'image/*' })
+        core.updateOptions({ allowedFileTypes: 'text/plain' })
+
+        await core.addFiles([new File(['hello'], 'hello.txt', { type: 'text/plain' })])
+
+        expect(core.files.size).toBe(1)
+        core.destroy()
+    })
+
     it('syncs limit at runtime', () => {
         const core = new UpupCore({ limit: 5 })
         core.updateOptions({ limit: 10 })
         expect(core.options.limit).toBe(10)
+        core.destroy()
+    })
+
+    it('applies synced limit to future file additions', async () => {
+        const core = new UpupCore({ limit: 1 })
+        core.updateOptions({ limit: 2 })
+
+        await core.addFiles([
+            new File(['a'], 'a.txt', { type: 'text/plain' }),
+            new File(['b'], 'b.txt', { type: 'text/plain' }),
+        ])
+
+        expect(core.files.size).toBe(2)
         core.destroy()
     })
 
@@ -78,13 +101,11 @@ describe('UpupCore — updateOptions sync behavior', () => {
         core.updateOptions({
             provider: 'aws',
             serverUrl: 'https://api.test',
-            apiKey: 'key-123',
             maxRetries: 5,
             autoUpload: true,
         })
         expect(core.options.provider).toBe('aws')
         expect(core.options.serverUrl).toBe('https://api.test')
-        expect(core.options.apiKey).toBe('key-123')
         expect(core.options.maxRetries).toBe(5)
         expect(core.options.autoUpload).toBe(true)
         core.destroy()

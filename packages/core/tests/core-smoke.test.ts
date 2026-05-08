@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import { UpupCore } from '../src/core'
-import { UploadStatus } from '@upup/shared'
+import { UploadStatus } from '@upup/core'
 
 const makeFile = (name: string, size = 10) =>
     new File(['x'.repeat(size)], name, { type: 'text/plain' })
@@ -25,8 +25,6 @@ describe('UpupCore — smoke tests', () => {
         const core = new UpupCore({
             provider: 'aws',
             serverUrl: 'https://api.test',
-            apiKey: 'key',
-            uploadEndpoint: '/upload',
             allowedFileTypes: 'image/*',
             limit: 5,
             maxFileSize: { size: 10, unit: 'MB' },
@@ -70,22 +68,6 @@ describe('UpupCore — smoke tests', () => {
         core.reorderFiles([...ids].reverse())
         expect(core.files.size).toBe(3)
         expect([...core.files.keys()]).toEqual([...ids].reverse())
-        core.destroy()
-    })
-
-    // ── Sync methods ──
-    it('syncFilesFromExternal replaces files', async () => {
-        const core = new UpupCore({})
-        await core.addFiles([makeFile('orig.txt')])
-        core.syncFilesFromExternal(new Map())
-        expect(core.files.size).toBe(0)
-        core.destroy()
-    })
-
-    it('syncStatusFromExternal sets status', () => {
-        const core = new UpupCore({})
-        core.syncStatusFromExternal(UploadStatus.SUCCESSFUL)
-        expect(core.status).toBe(UploadStatus.SUCCESSFUL)
         core.destroy()
     })
 
@@ -196,7 +178,7 @@ describe('UpupCore — smoke tests', () => {
         core.use({ name: 'tmp', setup: (c) => {
             (c as any).pluginManager.registerExtension('tmp', { v: 1 })
         }})
-        core.syncStatusFromExternal(UploadStatus.UPLOADING)
+        core.pause()
 
         core.destroy()
         expect(core.files.size).toBe(0)

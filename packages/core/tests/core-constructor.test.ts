@@ -2,17 +2,17 @@ import { describe, it, expect } from 'vitest'
 import { UpupCore } from '../src/core'
 
 // ─────────────────────────────────────────────
-// apiKey → serverUrl auto-set
+// Legacy hosted apiKey behavior
 // ─────────────────────────────────────────────
-describe('UpupCore constructor — apiKey auto-URL', () => {
-    it('sets serverUrl when apiKey is provided and serverUrl is not', () => {
-        const core = new UpupCore({ apiKey: 'key_123' })
-        expect(core.options.serverUrl).toBe('https://api.upup.dev/v1')
+describe('UpupCore constructor — no implicit hosted apiKey URL', () => {
+    it('does not set serverUrl from apiKey-like legacy input', () => {
+        const core = new UpupCore({ apiKey: 'key_123' } as any)
+        expect(core.options.serverUrl).toBeUndefined()
         core.destroy()
     })
 
-    it('does not override an explicit serverUrl', () => {
-        const core = new UpupCore({ apiKey: 'key_123', serverUrl: 'https://custom.api' })
+    it('keeps an explicit serverUrl', () => {
+        const core = new UpupCore({ apiKey: 'key_123', serverUrl: 'https://custom.api' } as any)
         expect(core.options.serverUrl).toBe('https://custom.api')
         core.destroy()
     })

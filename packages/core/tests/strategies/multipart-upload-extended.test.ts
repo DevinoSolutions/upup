@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { MultipartUpload } from '../../src/strategies/multipart-upload'
-import type { CredentialStrategy } from '@upup/shared'
+import type { CredentialStrategy } from '@upup/core'
 
 function makeCredentials(): CredentialStrategy {
     return {

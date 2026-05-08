@@ -3,7 +3,7 @@ import {
   type CredentialStrategy,
   type FileMetadata,
   type PresignedUrlResponse,
-} from '@upup/shared'
+} from '../contracts'
 
 export class TokenEndpointCredentials implements CredentialStrategy {
   private url: string
@@ -25,6 +25,7 @@ export class TokenEndpointCredentials implements CredentialStrategy {
         name: file.name,
         size: file.size,
         type: file.type,
+        metadata: file.metadata ?? {},
       }),
     })
 

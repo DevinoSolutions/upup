@@ -3,7 +3,7 @@ import {
   type UploadStrategy,
   type UploadCredentials,
   type UploadResult,
-} from '@upup/shared'
+} from '../contracts'
 
 export class DirectUpload implements UploadStrategy {
   async upload(
@@ -28,6 +28,7 @@ export class DirectUpload implements UploadStrategy {
           resolve({
             key: credentials.key,
             publicUrl: credentials.publicUrl,
+            downloadUrl: credentials.downloadUrl,
           })
         } else {
           reject(
@@ -50,6 +51,9 @@ export class DirectUpload implements UploadStrategy {
       options.signal.addEventListener('abort', () => xhr.abort())
 
       xhr.open('PUT', credentials.uploadUrl)
+      for (const [key, value] of Object.entries(credentials.uploadHeaders ?? {})) {
+        xhr.setRequestHeader(key, value)
+      }
 
       xhr.send(file)
     })

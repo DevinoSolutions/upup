@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import { UpupCore } from '../src/core'
-import { UploadStatus } from '@upup/shared'
+import { UploadStatus } from '@upup/core'
 
 /**
  * Catalog test: ensures every documented UpupCore event can be emitted
@@ -12,7 +12,7 @@ describe('UpupCore — event catalog', () => {
         'ready', 'destroyed', 'options-updated',
         // Files
         'files-added', 'file-removed', 'files-cleared', 'files-set',
-        'files-reordered', 'files-synced', 'files-replaced',
+        'files-reordered', 'files-replaced',
         'file-replaced', 'file-rejected',
         // Upload flow
         'upload-start', 'upload-progress', 'upload-success',
@@ -20,7 +20,7 @@ describe('UpupCore — event catalog', () => {
         'upload-pause', 'upload-resume', 'upload-cancel',
         'file-upload-start', 'retry',
         // State
-        'state-change', 'status-synced',
+        'state-change',
         'snapshot-restored', 'crash-recovery-restored',
         // Restrictions
         'restriction-failed',
@@ -33,7 +33,7 @@ describe('UpupCore — event catalog', () => {
         'file-preview-open', 'file-preview-close',
         // Image editor
         'image-editor-open', 'image-editor-save', 'image-editor-cancel',
-        // State bridges
+        // UI and integration telemetry
         'view-mode-change', 'theme-change', 'locale-change',
         'limit-change', 'adding-more', 'adapter-change',
         'source-change', 'total-progress-change',

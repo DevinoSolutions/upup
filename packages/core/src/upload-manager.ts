@@ -4,7 +4,7 @@ import {
   type UploadStrategy,
   type UploadFile,
   type UploadResult,
-} from '@upup/shared'
+} from './contracts'
 
 export class UpupUploadBatchError extends Error {
   readonly errors: { file: UploadFile; error: Error }[]
@@ -18,6 +18,10 @@ export class UpupUploadBatchError extends Error {
 export interface UploadManagerOptions {
   credentials: CredentialStrategy
   uploadStrategy: UploadStrategy
+  resolveUploadStrategy?: (file: UploadFile) => {
+    uploadStrategy: UploadStrategy
+    presign: boolean
+  }
   maxConcurrentUploads: number
   maxRetries?: number
   fastAbortThreshold?: number
@@ -25,6 +29,7 @@ export interface UploadManagerOptions {
     response: { status: number; headers: Record<string, string>; body: unknown },
   ) => boolean | Promise<boolean>
   onProgress: (fileId: string, loaded: number, total: number) => void
+  onFileStart?: (file: UploadFile) => void
   onFileComplete: (file: UploadFile, result: UploadResult) => void
   onFileError?: (file: UploadFile, error: Error) => void
 }
@@ -82,9 +87,9 @@ export class UploadManager {
       }
     })
 
-    if (errors.length > 0 && results.length === 0 && !this.options.onFileError) {
+    if (errors.length > 0) {
       throw new UpupUploadBatchError(
-        `All ${errors.length} file upload(s) failed`,
+        `${errors.length} file upload(s) failed`,
         errors,
       )
     }
@@ -103,13 +108,26 @@ export class UploadManager {
       }
 
       try {
-        const presigned = await credentials.getPresignedUrl({
+        this.options.onFileStart?.(file)
+        const plan = this.options.resolveUploadStrategy?.(file) ?? {
+          uploadStrategy,
+          presign: true,
+        }
+        const fileMetadata = {
           name: file.name,
           size: file.size,
           type: file.type,
-        })
+          metadata: file.metadata ?? {},
+        }
+        const presigned = plan.presign
+          ? await credentials.getPresignedUrl(fileMetadata)
+          : {
+              key: file.id,
+              uploadUrl: '',
+              expiresIn: 0,
+            }
 
-        const result = await uploadStrategy.upload(file as unknown as File, presigned, {
+        const result = await plan.uploadStrategy.upload(file as unknown as File, presigned, {
           onProgress: (loaded, total) => this.options.onProgress(file.id, loaded, total),
           signal: this.abortController.signal,
         })

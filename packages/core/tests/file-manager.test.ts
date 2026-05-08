@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import { FileManager } from '../src/file-manager'
-import type { UploadFile } from '@upup/shared'
+import type { UploadFile } from '@upup/core'
 
 const makeNativeFile = (name = 'test.jpg', size = 1024, type = 'image/jpeg'): File => {
   return new File(['x'.repeat(size)], name, { type })
@@ -17,10 +17,19 @@ describe('FileManager', () => {
     expect(result[0].id).not.toBe(result[1].id)
   })
 
-  it('enforces file limit', async () => {
+  it('rejects the whole batch when it exceeds the remaining file limit', async () => {
     const fm = new FileManager({ limit: 2 })
     await fm.addFiles([makeNativeFile('a.jpg')])
-    await expect(fm.addFiles([makeNativeFile('b.jpg'), makeNativeFile('c.jpg')])).rejects.toThrow()
+    await expect(
+      fm.addFiles([makeNativeFile('b.jpg'), makeNativeFile('c.jpg')]),
+    ).rejects.toThrow()
+    expect([...fm.getFiles().values()]).toHaveLength(1)
+  })
+
+  it('rejects file additions when no slots remain', async () => {
+    const fm = new FileManager({ limit: 1 })
+    await fm.addFiles([makeNativeFile('a.jpg')])
+    await expect(fm.addFiles([makeNativeFile('b.jpg')])).rejects.toThrow()
   })
 
   it('enforces accept filter', async () => {
@@ -77,5 +86,47 @@ describe('FileManager', () => {
     const files = [...fm.getFiles().values()]
     expect(files).toHaveLength(1)
     expect(files[0].name).toBe('new.jpg')
+  })
+
+  it('keeps existing files when setFiles validation fails', async () => {
+    const fm = new FileManager({ allowedFileTypes: 'image/*' })
+    await fm.addFiles([makeNativeFile('old.jpg')])
+    await expect(fm.setFiles([makeNativeFile('doc.pdf', 100, 'application/pdf')])).rejects.toThrow()
+    const files = [...fm.getFiles().values()]
+    expect(files).toHaveLength(1)
+    expect(files[0].name).toBe('old.jpg')
+  })
+
+  it('revalidates files returned from onBeforeFileAdded', async () => {
+    const fm = new FileManager({
+      allowedFileTypes: 'image/*',
+      onBeforeFileAdded: () => makeNativeFile('doc.pdf', 100, 'application/pdf'),
+    })
+    await expect(fm.addFiles([makeNativeFile('original.jpg')])).rejects.toThrow()
+    expect(fm.getFiles().size).toBe(0)
+  })
+
+  it('revokes object URLs on remove, replace, and clear', async () => {
+    const createObjectURL = vi.spyOn(URL, 'createObjectURL').mockImplementation(
+      file => `blob:test-${(file as File).name}`,
+    )
+    const revokeObjectURL = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {})
+
+    const fm = new FileManager({})
+    const [removed] = await fm.addFiles([makeNativeFile('remove.jpg')])
+    fm.removeFile(removed.id)
+    expect(revokeObjectURL).toHaveBeenCalledWith('blob:test-remove.jpg')
+
+    const [replaced] = await fm.addFiles([makeNativeFile('replace-old.jpg')])
+    fm.replaceFile(replaced.id, makeNativeFile('replace-new.jpg'))
+    expect(revokeObjectURL).toHaveBeenCalledWith('blob:test-replace-old.jpg')
+
+    await fm.addFiles([makeNativeFile('clear.jpg')])
+    fm.removeAll()
+    expect(revokeObjectURL).toHaveBeenCalledWith('blob:test-replace-new.jpg')
+    expect(revokeObjectURL).toHaveBeenCalledWith('blob:test-clear.jpg')
+
+    createObjectURL.mockRestore()
+    revokeObjectURL.mockRestore()
   })
 })

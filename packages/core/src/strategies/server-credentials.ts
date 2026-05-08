@@ -6,12 +6,11 @@ import {
   type MultipartInitResponse,
   type MultipartSignPartResponse,
   type MultipartCompleteResponse,
-} from '@upup/shared'
+} from '../contracts'
 
 export interface ServerCredentialsOptions {
   serverUrl: string
   headers?: Record<string, string>
-  apiKey?: string
 }
 
 export class ServerCredentials implements CredentialStrategy {
@@ -23,9 +22,6 @@ export class ServerCredentials implements CredentialStrategy {
     this.headers = {
       'Content-Type': 'application/json',
       ...options.headers,
-    }
-    if (options.apiKey) {
-      this.headers['x-api-key'] = options.apiKey
     }
   }
 
@@ -51,6 +47,7 @@ export class ServerCredentials implements CredentialStrategy {
       name: file.name,
       size: file.size,
       type: file.type,
+      metadata: file.metadata ?? {},
     })
   }
 
@@ -59,6 +56,7 @@ export class ServerCredentials implements CredentialStrategy {
       name: file.name,
       size: file.size,
       type: file.type,
+      metadata: file.metadata ?? {},
     })
   }
 

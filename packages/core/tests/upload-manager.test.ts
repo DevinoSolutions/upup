@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { UploadManager, type UploadManagerOptions } from '../src/upload-manager'
-import type { CredentialStrategy, UploadStrategy, UploadFile } from '@upup/shared'
+import type { CredentialStrategy, UploadStrategy, UploadFile } from '@upup/core'
 
 // Helper to create a minimal UploadFile using a plain object
 function makeFile(id: string, name: string): UploadFile {
@@ -149,7 +149,7 @@ describe('UploadManager', () => {
   })
 
   it('retries on retryable UpupNetworkError', async () => {
-    const { UpupNetworkError } = await import('@upup/shared')
+    const { UpupNetworkError } = await import('@upup/core')
 
     let callCount = 0
     const flakyUpload = vi.fn().mockImplementation(async () => {
@@ -172,8 +172,8 @@ describe('UploadManager', () => {
     expect(flakyUpload).toHaveBeenCalledTimes(3)
   })
 
-  it('calls onFileError and continues with other files when a file fails permanently', async () => {
-    const { UpupNetworkError } = await import('@upup/shared')
+  it('calls onFileError, completes other files, then throws a batch error', async () => {
+    const { UpupNetworkError } = await import('@upup/core')
 
     let callIdx = 0
     const partialFailUpload = vi.fn().mockImplementation(async () => {
@@ -190,12 +190,34 @@ describe('UploadManager', () => {
     })
 
     const files = [makeFile('f1', 'a.txt'), makeFile('f2', 'b.txt')]
-    const results = await manager.uploadAll(files)
+    await expect(manager.uploadAll(files)).rejects.toMatchObject({
+      name: 'UpupUploadBatchError',
+      errors: expect.arrayContaining([
+        expect.objectContaining({ file: files[0] }),
+      ]),
+    })
 
     expect(onFileError).toHaveBeenCalledTimes(1)
     expect(onFileComplete).toHaveBeenCalledTimes(1)
-    // Results only contain successful uploads
-    expect(results).toHaveLength(1)
+  })
+
+  it('can skip presign when a resolver selects a self-contained strategy', async () => {
+    const uploadWithoutPresign = vi.fn().mockResolvedValue(mockUploadResult)
+    const manager = makeManager({
+      resolveUploadStrategy: () => ({
+        uploadStrategy: { upload: uploadWithoutPresign },
+        presign: false,
+      }),
+    })
+
+    await manager.uploadAll([makeFile('f1', 'a.txt')])
+
+    expect(mockCredentials.getPresignedUrl).not.toHaveBeenCalled()
+    expect(uploadWithoutPresign).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ uploadUrl: '' }),
+      expect.anything(),
+    )
   })
 
   it('uses isSuccessfulCall for custom success detection', async () => {
@@ -216,7 +238,12 @@ describe('UploadManager', () => {
     const manager = makeManager({ isSuccessfulCall, maxRetries: 0 })
     const files = [makeFile('f1', 'a.txt')]
 
-    await manager.uploadAll(files)
+    await expect(manager.uploadAll(files)).rejects.toMatchObject({
+      name: 'UpupUploadBatchError',
+      errors: expect.arrayContaining([
+        expect.objectContaining({ file: files[0] }),
+      ]),
+    })
 
     expect(onFileError).toHaveBeenCalledTimes(1)
     expect(onFileComplete).toHaveBeenCalledTimes(0)

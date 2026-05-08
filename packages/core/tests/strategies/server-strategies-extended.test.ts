@@ -53,7 +53,7 @@ describe('ServerOAuth — getFileMetadata', () => {
                 }),
         })
         const oauth = new ServerOAuth({ serverUrl: 'https://api.example.com' })
-        const meta = await oauth.getFileMetadata('google_drive', 'f1', 'tok')
+        const meta = await oauth.getFileMetadata('googleDrive', 'f1', 'tok')
 
         expect(meta.name).toBe('photo.jpg')
         expect(mockFetch).toHaveBeenCalledWith(
@@ -85,7 +85,7 @@ describe('ServerOAuth — listFiles edge cases', () => {
             json: () => Promise.resolve({}),
         })
         const oauth = new ServerOAuth({ serverUrl: 'https://api.example.com' })
-        const files = await oauth.listFiles('onedrive', '/', 'tok')
+        const files = await oauth.listFiles('oneDrive', '/', 'tok')
         expect(files).toEqual([])
     })
 
@@ -128,7 +128,7 @@ describe('ServerTransfer — constructor', () => {
             serverUrl: 'https://api.example.com',
             headers: { 'X-Tenant': 'acme' },
         })
-        await transfer.transfer('onedrive', 'f1')
+        await transfer.transfer('oneDrive', 'f1')
         expect(mockFetch).toHaveBeenCalledWith(
             expect.any(String),
             expect.objectContaining({
@@ -137,13 +137,13 @@ describe('ServerTransfer — constructor', () => {
         )
     })
 
-    it('maps google_drive to google-drive slug', async () => {
+    it('maps googleDrive to google-drive slug', async () => {
         mockFetch.mockResolvedValue({
             ok: true,
             json: () => Promise.resolve({ provider: 'google-drive', fileId: 'g1', status: 'ok' }),
         })
         const transfer = new ServerTransfer({ serverUrl: 'https://api.example.com' })
-        await transfer.transfer('google_drive', 'g1')
+        await transfer.transfer('googleDrive', 'g1')
         expect(mockFetch).toHaveBeenCalledWith(
             expect.stringContaining('/files/google-drive/transfer'),
             expect.any(Object),

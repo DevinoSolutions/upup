@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import { deduplicateStep } from '../../src/steps/deduplicate'
-import type { UploadFile, PipelineContext } from '@upup/shared'
+import type { UploadFile, PipelineContext } from '@upup/core'
 
 function makeFile(id: string, name: string, size = 100): UploadFile {
     return {

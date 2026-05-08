@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import { UpupCore } from '../src/core'
-import { UploadStatus } from '@upup/shared'
+import { UploadStatus } from '@upup/core'
 
 const makeFile = (name: string) =>
     new File(['x'], name, { type: 'text/plain' })
@@ -9,7 +9,7 @@ describe('UpupCore — snapshot extended', () => {
     it('getSnapshot captures current files and status', async () => {
         const core = new UpupCore({})
         await core.addFiles([makeFile('a.txt'), makeFile('b.txt')])
-        core.syncStatusFromExternal(UploadStatus.UPLOADING)
+        core.resume()
 
         const snap = core.getSnapshot()
         expect(snap.files).toHaveLength(2)
@@ -37,7 +37,7 @@ describe('UpupCore — snapshot extended', () => {
     it('restore then getSnapshot round-trips consistently', async () => {
         const core = new UpupCore({})
         await core.addFiles([makeFile('x.txt'), makeFile('y.txt')])
-        core.syncStatusFromExternal(UploadStatus.SUCCESSFUL)
+        core.pause()
         const snap1 = core.getSnapshot()
 
         const core2 = new UpupCore({})
@@ -45,7 +45,7 @@ describe('UpupCore — snapshot extended', () => {
         const snap2 = core2.getSnapshot()
 
         expect(snap2.files).toHaveLength(snap1.files.length)
-        expect(snap2.status).toBe(snap1.status)
+        expect(snap2.status).toBe(UploadStatus.PAUSED)
         core.destroy()
         core2.destroy()
     })
@@ -53,7 +53,7 @@ describe('UpupCore — snapshot extended', () => {
     it('restore overwrites previous state completely', async () => {
         const core = new UpupCore({})
         await core.addFiles([makeFile('old.txt')])
-        core.syncStatusFromExternal(UploadStatus.FAILED)
+        core.pause()
 
         const newSnap = {
             files: [] as [string, any][],

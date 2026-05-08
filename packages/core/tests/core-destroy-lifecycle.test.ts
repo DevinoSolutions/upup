@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import { UpupCore } from '../src/core'
-import { UploadStatus } from '@upup/shared'
+import { UploadStatus } from '@upup/core'
 
 const makeFile = (name: string) =>
     new File(['x'], name, { type: 'text/plain' })
@@ -16,7 +16,7 @@ describe('UpupCore — destroy lifecycle', () => {
 
     it('resets status to IDLE on destroy', () => {
         const core = new UpupCore({})
-        core.syncStatusFromExternal(UploadStatus.UPLOADING)
+        core.pause()
         core.destroy()
         expect(core.status).toBe(UploadStatus.IDLE)
     })

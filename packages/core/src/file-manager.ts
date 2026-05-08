@@ -5,7 +5,7 @@ import {
   UploadStatus,
   type UploadFile,
   type MaxFileSizeObject,
-} from '@upup/shared'
+} from './contracts'
 
 export interface FileManagerOptions {
   allowedFileTypes?: string
@@ -24,13 +24,56 @@ function generateFileId(): string {
   return `upup-${Date.now()}-${++fileIdCounter}`
 }
 
+async function computeContentHash(file: File): Promise<string> {
+  const buffer = await file.arrayBuffer()
+  const bytes = new Uint8Array(buffer)
+
+  if (typeof crypto !== 'undefined' && crypto.subtle) {
+    const hashBuffer = await crypto.subtle.digest('SHA-256', buffer)
+    return Array.from(new Uint8Array(hashBuffer))
+      .map(b => b.toString(16).padStart(2, '0'))
+      .join('')
+  }
+
+  let hash = 0x811c9dc5
+  for (const byte of bytes) {
+    hash ^= byte
+    hash = Math.imul(hash, 0x01000193)
+  }
+  return `fnv1a-${(hash >>> 0).toString(16).padStart(8, '0')}`
+}
+
+function storedContentHash(file: UploadFile): string | undefined {
+  const metadata = file.metadata as Record<string, unknown> | undefined
+  return (
+    (typeof metadata?.originalContentHash === 'string' ? metadata.originalContentHash : undefined) ??
+    (typeof metadata?.checksum === 'string' ? metadata.checksum : undefined) ??
+    file.checksumSHA256 ??
+    file.fileHash ??
+    undefined
+  )
+}
+
+function applyContentHash(file: UploadFile, hash: string): UploadFile {
+  file.fileHash = hash
+  file.metadata = {
+    ...file.metadata,
+    originalContentHash: hash,
+  }
+  return file
+}
+
 export function fileSizeInBytes(size: MaxFileSizeObject): number {
   const units: Record<string, number> = { B: 1, KB: 1024, MB: 1024 ** 2, GB: 1024 ** 3 }
   return size.size * (units[size.unit] ?? 1)
 }
 
 export function matchesAccept(file: File, accept: string): boolean {
-  const types = accept.split(',').map(t => t.trim())
+  const types = accept.split(',').map(t => t.trim()).filter(Boolean)
+  if (types.length === 0 || types.some(type => type === '*' || type === '*/*')) {
+    return true
+  }
+
   return types.some(type => {
     if (type.endsWith('/*')) {
       return file.type.startsWith(type.replace('/*', '/'))
@@ -43,12 +86,16 @@ export function matchesAccept(file: File, accept: string): boolean {
 }
 
 function nativeToUploadFile(file: File, source: FileSource = FileSource.LOCAL): UploadFile {
+  const url = typeof URL !== 'undefined' && typeof URL.createObjectURL === 'function'
+    ? URL.createObjectURL(file)
+    : undefined
+
   return Object.assign(file, {
     id: generateFileId(),
     source,
     status: UploadStatus.IDLE,
     metadata: {},
-    url: undefined,
+    url,
     relativePath: undefined,
     key: undefined,
     etag: undefined,
@@ -56,6 +103,17 @@ function nativeToUploadFile(file: File, source: FileSource = FileSource.LOCAL): 
     checksumSHA256: undefined,
     thumbnail: undefined,
   }) as UploadFile
+}
+
+function revokeObjectUrl(file?: UploadFile): void {
+  if (
+    file?.url &&
+    file.url.startsWith('blob:') &&
+    typeof URL !== 'undefined' &&
+    typeof URL.revokeObjectURL === 'function'
+  ) {
+    URL.revokeObjectURL(file.url)
+  }
 }
 
 export class FileManager {
@@ -66,79 +124,137 @@ export class FileManager {
     this.options = options
   }
 
+  updateOptions(options: Partial<FileManagerOptions>): void {
+    this.options = {
+      ...this.options,
+      ...options,
+    }
+  }
+
   getFiles(): Map<string, UploadFile> {
     return this.files
   }
 
-  async addFiles(nativeFiles: File[]): Promise<UploadFile[]> {
-    const accepted: UploadFile[] = []
+  private validateFile(file: File): void {
+    if (this.options.allowedFileTypes && !matchesAccept(file, this.options.allowedFileTypes)) {
+      throw new UpupValidationError(
+        `File type "${file.type}" is not accepted`,
+        UpupErrorCode.TYPE_MISMATCH,
+        file,
+      )
+    }
 
+    if (this.options.maxFileSize) {
+      const maxBytes = fileSizeInBytes(this.options.maxFileSize)
+      if (file.size > maxBytes) {
+        throw new UpupValidationError(
+          `File "${file.name}" exceeds maximum size`,
+          UpupErrorCode.FILE_TOO_LARGE,
+          file,
+        )
+      }
+    }
+
+    if (this.options.minFileSize) {
+      const minBytes = fileSizeInBytes(this.options.minFileSize)
+      if (file.size < minBytes) {
+        throw new UpupValidationError(
+          `File "${file.name}" is below minimum size`,
+          UpupErrorCode.FILE_TOO_SMALL,
+          file,
+        )
+      }
+    }
+  }
+
+  private async collectAcceptedFiles(nativeFiles: File[]): Promise<File[]> {
+    const accepted: File[] = []
     for (const nativeFile of nativeFiles) {
+      let candidate = nativeFile
       if (this.options.onBeforeFileAdded) {
         const result = await this.options.onBeforeFileAdded(nativeFile)
         if (result === false) continue
         if (result instanceof File) {
-          accepted.push(nativeToUploadFile(result))
-          continue
+          candidate = result
         }
       }
 
-      if (this.options.allowedFileTypes && !matchesAccept(nativeFile, this.options.allowedFileTypes)) {
-        throw new UpupValidationError(
-          `File type "${nativeFile.type}" is not accepted`,
-          UpupErrorCode.TYPE_MISMATCH,
-          nativeFile,
-        )
-      }
+      this.validateFile(candidate)
+      accepted.push(candidate)
+    }
+    return accepted
+  }
 
-      if (this.options.maxFileSize) {
-        const maxBytes = fileSizeInBytes(this.options.maxFileSize)
-        if (nativeFile.size > maxBytes) {
-          throw new UpupValidationError(
-            `File "${nativeFile.name}" exceeds maximum size`,
-            UpupErrorCode.FILE_TOO_LARGE,
-            nativeFile,
-          )
-        }
-      }
-
-      if (this.options.minFileSize) {
-        const minBytes = fileSizeInBytes(this.options.minFileSize)
-        if (nativeFile.size < minBytes) {
-          throw new UpupValidationError(
-            `File "${nativeFile.name}" is below minimum size`,
-            UpupErrorCode.FILE_TOO_SMALL,
-            nativeFile,
-          )
-        }
-      }
-
-      accepted.push(nativeToUploadFile(nativeFile))
+  private async deduplicateByContent(
+    nativeFiles: File[],
+    existingFiles: Iterable<UploadFile>,
+  ): Promise<Array<{ file: File; hash?: string }>> {
+    if (!this.options.contentDeduplication) {
+      return nativeFiles.map(file => ({ file }))
     }
 
+    const seen = new Set<string>()
+    for (const existing of existingFiles) {
+      const nativeExisting = existing as unknown as File
+      const hash = storedContentHash(existing) ?? (
+        typeof nativeExisting.arrayBuffer === 'function'
+          ? await computeContentHash(nativeExisting)
+          : undefined
+      )
+      if (hash) {
+        applyContentHash(existing, hash)
+        seen.add(hash)
+      }
+    }
+
+    const accepted: Array<{ file: File; hash: string }> = []
+    for (const file of nativeFiles) {
+      const hash = await computeContentHash(file)
+      if (seen.has(hash)) continue
+      seen.add(hash)
+      accepted.push({ file, hash })
+    }
+
+    return accepted
+  }
+
+  private assertBatchFits(files: File[], existingFiles: Iterable<UploadFile>, fallbackFile?: File): void {
+    if (files.length === 0) return
+
+    const existing = [...existingFiles]
     if (this.options.limit) {
-      const totalAfter = this.files.size + accepted.length
-      if (totalAfter > this.options.limit) {
+      const remainingSlots = this.options.limit - existing.length
+      if (remainingSlots <= 0 || files.length > remainingSlots) {
         throw new UpupValidationError(
-          `Adding ${accepted.length} files would exceed the limit of ${this.options.limit}`,
+          `Adding ${files.length} files would exceed the limit of ${this.options.limit}`,
           UpupErrorCode.LIMIT_EXCEEDED,
-          nativeFiles[0],
+          files[0] ?? fallbackFile!,
         )
       }
     }
 
     if (this.options.maxTotalFileSize) {
       const maxTotal = fileSizeInBytes(this.options.maxTotalFileSize)
-      const currentTotal = [...this.files.values()].reduce((sum, f) => sum + f.size, 0)
-      const newTotal = accepted.reduce((sum, f) => sum + f.size, 0)
+      const currentTotal = existing.reduce((sum, f) => sum + f.size, 0)
+      const newTotal = files.reduce((sum, f) => sum + f.size, 0)
       if (currentTotal + newTotal > maxTotal) {
         throw new UpupValidationError(
           'Total file size exceeds maximum',
           UpupErrorCode.TOTAL_SIZE_EXCEEDED,
-          nativeFiles[0],
+          files[0] ?? fallbackFile!,
         )
       }
     }
+  }
+
+  async addFiles(nativeFiles: File[]): Promise<UploadFile[]> {
+    const acceptedNativeFiles = await this.collectAcceptedFiles(nativeFiles)
+    const dedupedFiles = await this.deduplicateByContent(acceptedNativeFiles, this.files.values())
+    this.assertBatchFits(dedupedFiles.map(item => item.file), this.files.values(), nativeFiles[0])
+    const accepted = dedupedFiles.map(({ file, hash }) => {
+      const uploadFile = nativeToUploadFile(file)
+      return hash ? applyContentHash(uploadFile, hash) : uploadFile
+    })
 
     for (const file of accepted) {
       this.files.set(file.id, file)
@@ -149,25 +265,51 @@ export class FileManager {
 
   removeFile(id: string): UploadFile | undefined {
     const file = this.files.get(id)
-    this.files.delete(id)
+    if (file) {
+      revokeObjectUrl(file)
+      this.files.delete(id)
+    }
     return file
   }
 
+  replaceFile(id: string, file: File | UploadFile): UploadFile {
+    const current = this.files.get(id)
+    if (!current) {
+      throw new Error(`replaceFile: unknown file ID "${id}"`)
+    }
+    const next = 'metadata' in file && 'source' in file && 'status' in file
+      ? Object.assign(file, { id }) as UploadFile
+      : Object.assign(nativeToUploadFile(file as File, current.source), { id }) as UploadFile
+    if (current.url !== next.url) {
+      revokeObjectUrl(current)
+    }
+    this.files.set(id, next)
+    return next
+  }
+
   removeAll(): void {
+    for (const file of this.files.values()) {
+      revokeObjectUrl(file)
+    }
     this.files.clear()
   }
 
   async setFiles(nativeFiles: File[]): Promise<UploadFile[]> {
-    this.files.clear()
-    return this.addFiles(nativeFiles)
-  }
-
-  /** Replace internal file map with pre-validated files from an external source (e.g. React v1 layer). */
-  syncFromExternal(files: Map<string, UploadFile>): void {
-    this.files.clear()
-    for (const [id, file] of files) {
-      this.files.set(id, file)
+    const acceptedNativeFiles = await this.collectAcceptedFiles(nativeFiles)
+    const dedupedFiles = await this.deduplicateByContent(acceptedNativeFiles, [])
+    this.assertBatchFits(dedupedFiles.map(item => item.file), [], nativeFiles[0])
+    const accepted = dedupedFiles.map(({ file, hash }) => {
+      const uploadFile = nativeToUploadFile(file)
+      return hash ? applyContentHash(uploadFile, hash) : uploadFile
+    })
+    for (const file of this.files.values()) {
+      revokeObjectUrl(file)
     }
+    this.files.clear()
+    for (const file of accepted) {
+      this.files.set(file.id, file)
+    }
+    return accepted
   }
 
   reorderFiles(fileIds: string[]): void {

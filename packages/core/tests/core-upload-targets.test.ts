@@ -1,0 +1,91 @@
+import { afterEach, describe, it, expect, vi } from 'vitest'
+import { UpupCore } from '../src/core'
+
+function makeUploadXhr(captureBody: (body: unknown) => void) {
+  const listeners: Record<string, Array<() => void>> = {}
+  return {
+    status: 200,
+    statusText: 'OK',
+    open: vi.fn(),
+    setRequestHeader: vi.fn(),
+    send: vi.fn((body: unknown) => {
+      captureBody(body)
+    }),
+    abort: vi.fn(),
+    upload: {
+      addEventListener: vi.fn(),
+    },
+    addEventListener: vi.fn((event: string, cb: () => void) => {
+      listeners[event] = listeners[event] ?? []
+      listeners[event].push(cb)
+    }),
+    triggerLoad: () => listeners.load?.forEach(cb => cb()),
+  }
+}
+
+describe('UpupCore upload target resolution', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  it('keeps local-only selection valid but rejects upload without a target', async () => {
+    const core = new UpupCore({})
+    await core.addFiles([new File(['hello'], 'hello.txt', { type: 'text/plain' })])
+
+    expect(core.files.size).toBe(1)
+    await expect(core.upload()).rejects.toMatchObject({
+      name: 'UpupConfigError',
+      code: 'NO_UPLOAD_TARGET',
+    })
+  })
+
+  it('rejects ambiguous upload targets', async () => {
+    const core = new UpupCore({
+      uploadEndpoint: '/api/presign',
+      serverUrl: '/api/upup',
+    })
+    await core.addFiles([new File(['hello'], 'hello.txt', { type: 'text/plain' })])
+
+    await expect(core.upload()).rejects.toMatchObject({
+      name: 'UpupConfigError',
+      code: 'AMBIGUOUS_UPLOAD_TARGET',
+    })
+  })
+
+  it('preserves the native File instance through upload status transitions', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () =>
+      new Response(JSON.stringify({
+        key: 'uploads/hello.txt',
+        uploadUrl: 'https://storage.example/hello.txt',
+        publicUrl: 'https://cdn.example/hello.txt',
+        expiresIn: 3600,
+      }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    ))
+
+    let sentBody: unknown
+    const xhr = makeUploadXhr((body) => {
+      sentBody = body
+    })
+    vi.stubGlobal('XMLHttpRequest', function () {
+      return xhr
+    })
+
+    const file = new File(['hello'], 'hello.txt', { type: 'text/plain' })
+    const core = new UpupCore({ uploadEndpoint: '/api/presign' })
+    await core.addFiles([file])
+
+    const uploadPromise = core.upload()
+    await vi.waitFor(() => {
+      expect(xhr.send).toHaveBeenCalled()
+    })
+    xhr.triggerLoad()
+    await uploadPromise
+
+    expect(sentBody).toBe(file)
+    expect(sentBody).toBeInstanceOf(File)
+    expect(core.files.values().next().value).toBeInstanceOf(File)
+  })
+})

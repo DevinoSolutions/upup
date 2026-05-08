@@ -21,7 +21,7 @@ describe('ServerTransfer', () => {
     })
 
     const transfer = new ServerTransfer({ serverUrl: 'https://api.example.com' })
-    const result = await transfer.transfer('google_drive', 'file-123')
+    const result = await transfer.transfer('googleDrive', 'file-123')
 
     expect(mockFetch).toHaveBeenCalledWith(
       'https://api.example.com/files/google-drive/transfer',
@@ -34,7 +34,7 @@ describe('ServerTransfer', () => {
     expect(result.status).toBe('pending')
   })
 
-  it('sends apiKey header', async () => {
+  it('sends explicit auth headers', async () => {
     mockFetch.mockResolvedValue({
       ok: true,
       json: () => Promise.resolve({ provider: 'dropbox', fileId: 'f1', status: 'ok' }),
@@ -42,7 +42,7 @@ describe('ServerTransfer', () => {
 
     const transfer = new ServerTransfer({
       serverUrl: 'https://api.example.com',
-      apiKey: 'key_abc',
+      headers: { 'x-api-key': 'key_abc' },
     })
     await transfer.transfer('dropbox', 'f1')
 
@@ -61,7 +61,7 @@ describe('ServerTransfer', () => {
     })
 
     const transfer = new ServerTransfer({ serverUrl: 'https://api.example.com' })
-    await transfer.transfer('onedrive', 'f2', {
+    await transfer.transfer('oneDrive', 'f2', {
       token: 'tok',
       fileName: 'report.docx',
     })
@@ -83,7 +83,7 @@ describe('ServerTransfer', () => {
 
     const transfer = new ServerTransfer({ serverUrl: 'https://api.example.com' })
     await expect(
-      transfer.transfer('google_drive', 'bad-file'),
+      transfer.transfer('googleDrive', 'bad-file'),
     ).rejects.toThrow('File transfer failed')
   })
 })

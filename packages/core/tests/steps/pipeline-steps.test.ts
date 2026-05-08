@@ -3,7 +3,7 @@ import { compressStep } from '../../src/steps/compress'
 import { exifStep } from '../../src/steps/exif'
 import { gzipStep } from '../../src/steps/gzip'
 import { heicStep } from '../../src/steps/heic'
-import type { UploadFile } from '@upup/shared'
+import type { UploadFile } from '@upup/core'
 
 // Minimal UploadFile stub
 function makeFile(name: string, type: string): UploadFile {

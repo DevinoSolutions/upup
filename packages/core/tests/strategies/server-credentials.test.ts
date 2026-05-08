@@ -39,7 +39,7 @@ describe('ServerCredentials', () => {
           headers: expect.objectContaining({
             'Content-Type': 'application/json',
           }),
-          body: JSON.stringify({ name: 'test.png', size: 1024, type: 'image/png' }),
+          body: JSON.stringify({ name: 'test.png', size: 1024, type: 'image/png', metadata: {} }),
         }),
       )
       expect(result).toEqual(presigned)
@@ -67,10 +67,10 @@ describe('ServerCredentials', () => {
       )
     })
 
-    it('includes apiKey as x-api-key header when provided', async () => {
+    it('allows x-api-key through explicit headers', async () => {
       strategy = new ServerCredentials({
         serverUrl: baseUrl,
-        apiKey: 'key_abc',
+        headers: { 'x-api-key': 'key_abc' },
       })
       mockFetch.mockResolvedValueOnce({
         ok: true,
@@ -125,7 +125,12 @@ describe('ServerCredentials', () => {
         `${baseUrl}/multipart/init`,
         expect.objectContaining({
           method: 'POST',
-          body: JSON.stringify({ name: 'big.zip', size: 100_000_000, type: 'application/zip' }),
+          body: JSON.stringify({
+            name: 'big.zip',
+            size: 100_000_000,
+            type: 'application/zip',
+            metadata: {},
+          }),
         }),
       )
       expect(result).toEqual(initResult)

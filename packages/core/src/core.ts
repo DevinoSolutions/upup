@@ -1,4 +1,4 @@
-import { UploadStatus, UpupErrorCode, createTranslator, enUS, type UploadFile, type PipelineStep, type PipelineContext, type LocaleBundle, type UpupLocaleCode, type UpupMessages } from '@upup/shared'
+import { UploadStatus, UpupConfigError, UpupErrorCode, createTranslator, enUS, type UploadFile, type PipelineStep, type PipelineContext, type LocaleBundle, type UpupLocaleCode, type ResumableUploadOptions } from './contracts'
 import { EventEmitter } from './events'
 import { PluginManager, type UpupPlugin, type ExtensionMethods } from './plugin'
 import { FileManager, type FileManagerOptions, fileSizeInBytes, matchesAccept } from './file-manager'
@@ -7,13 +7,15 @@ import { UploadManager } from './upload-manager'
 import { TokenEndpointCredentials } from './strategies/token-endpoint'
 import { ServerCredentials } from './strategies/server-credentials'
 import { DirectUpload } from './strategies/direct-upload'
+import { MultipartUpload } from './strategies/multipart-upload'
+import { TusUpload } from './strategies/tus-upload'
 import { CrashRecoveryManager, IndexedDBStorage } from './crash-recovery'
 import { WorkerPool } from './worker-pool'
 
 export interface Restrictions {
-  maxFileSize?: import('@upup/shared').MaxFileSizeObject
-  minFileSize?: import('@upup/shared').MaxFileSizeObject
-  maxTotalFileSize?: import('@upup/shared').MaxFileSizeObject
+  maxFileSize?: import('./contracts').MaxFileSizeObject
+  minFileSize?: import('./contracts').MaxFileSizeObject
+  maxTotalFileSize?: import('./contracts').MaxFileSizeObject
   maxNumberOfFiles?: number
   minNumberOfFiles?: number
   allowedFileTypes?: string[]
@@ -40,13 +42,22 @@ export interface CloudDrivesConfig {
   dropbox?: DropboxConfig
 }
 
+export interface UpupCorsConfig {
+  dangerouslyAutoConfigure?: boolean
+  allowedOrigins: string[]
+  allowedMethods?: string[]
+  allowedHeaders?: string[]
+  maxAgeSeconds?: number
+}
+
 export interface CoreOptions extends FileManagerOptions {
   uploadEndpoint?: string
   serverUrl?: string
-  apiKey?: string
   provider?: string
+  mode?: 'client' | 'server'
   plugins?: UpupPlugin[]
   pipeline?: PipelineStep[]
+  resumable?: ResumableUploadOptions
   heicConversion?: boolean
   stripExifData?: boolean
   imageCompression?: boolean | object
@@ -63,17 +74,15 @@ export interface CoreOptions extends FileManagerOptions {
   oneDriveConfigs?: Record<string, unknown>
   dropboxConfigs?: Record<string, unknown>
   boxConfigs?: Record<string, unknown>
-  driveConfigs?: Record<string, unknown>
-  meta?: Record<string, unknown>
+  metadata?: Record<string, unknown>
+  cors?: UpupCorsConfig
   /**
    * i18n configuration. Accepts either:
-   * - a full LocaleBundle (`import { enUS } from '@upup/shared'`)
+   * - a full LocaleBundle (`import { enUS } from './contracts'`)
    * - a BCP 47 locale code string (e.g. `'fr-FR'`) — consumers are
    *   responsible for resolving codes to bundles via `i18n.loadLocale`.
    */
   locale?: LocaleBundle | UpupLocaleCode
-  /** Per-namespace message overrides merged on top of `locale.messages`. */
-  translations?: Partial<UpupMessages>
   restrictions?: Restrictions
   cloudDrives?: CloudDrivesConfig
   enableWorkers?: boolean
@@ -106,15 +115,13 @@ export class UpupCore {
   private crashRecovery: CrashRecoveryManager | null = null
   private workerPool?: WorkerPool
   private fileOverrides = new Map<string, Partial<UploadOptions>>()
+  private pauseRequested = false
+  private cancelRequested = false
+  private destroyed = false
   options: CoreOptions
 
   constructor(options: CoreOptions) {
     this.options = { ...options }
-
-    // When apiKey is set and serverUrl is not, auto-set to managed endpoint
-    if (this.options.apiKey && !this.options.serverUrl) {
-      this.options.serverUrl = 'https://api.upup.dev/v1'
-    }
 
     // Merge restrictions into flat options (flat takes precedence)
     if (options.restrictions) {
@@ -264,29 +271,44 @@ export class UpupCore {
     this.emitter.emit('files-set', { count: this.files.size })
   }
 
-  /**
-   * Sync the core's internal file state from an external source (e.g. React v1 layer).
-   * Bypasses validation — the caller is responsible for ensuring files are valid.
-   */
-  syncFilesFromExternal(files: Map<string, UploadFile>): void {
-    this.fileManager.syncFromExternal(files)
-    // v2: emit so consumers can observe external file-state synchronisation
-    this.emitter.emit('files-synced', { count: files.size })
-  }
-
-  /**
-   * Sync the core's status from an external source (e.g. React v1 layer).
-   * Keeps core.status in sync without triggering core's own state transitions.
-   */
-  syncStatusFromExternal(status: UploadStatus): void {
-    this._status = status
-    // v2: emit so consumers can observe external status synchronisation
-    this.emitter.emit('status-synced', { status })
-  }
-
   /** Update options after construction (e.g. when React props change). */
   updateOptions(partial: Partial<CoreOptions>): void {
     Object.assign(this.options, partial)
+
+    if (partial.restrictions) {
+      const r = partial.restrictions
+      if (r.maxFileSize && !('maxFileSize' in partial)) this.options.maxFileSize = r.maxFileSize
+      if (r.minFileSize && !('minFileSize' in partial)) this.options.minFileSize = r.minFileSize
+      if (r.maxTotalFileSize && !('maxTotalFileSize' in partial)) this.options.maxTotalFileSize = r.maxTotalFileSize
+      if (r.maxNumberOfFiles != null && !('limit' in partial)) this.options.limit = r.maxNumberOfFiles
+      if (r.minNumberOfFiles != null && !('minFiles' in partial)) this.options.minFiles = r.minNumberOfFiles
+      if (r.allowedFileTypes && !('allowedFileTypes' in partial)) this.options.allowedFileTypes = r.allowedFileTypes.join(',')
+    }
+
+    if (partial.cloudDrives) {
+      const cd = partial.cloudDrives
+      if (cd.googleDrive) {
+        this.options.googleDriveConfigs = cd.googleDrive as unknown as Record<string, unknown>
+      }
+      if (cd.oneDrive) {
+        this.options.oneDriveConfigs = cd.oneDrive as unknown as Record<string, unknown>
+      }
+      if (cd.dropbox) {
+        this.options.dropboxConfigs = cd.dropbox as unknown as Record<string, unknown>
+      }
+    }
+
+    this.fileManager.updateOptions({
+      allowedFileTypes: this.options.allowedFileTypes,
+      limit: this.options.limit,
+      minFiles: this.options.minFiles,
+      maxFileSize: this.options.maxFileSize,
+      minFileSize: this.options.minFileSize,
+      maxTotalFileSize: this.options.maxTotalFileSize,
+      contentDeduplication: this.options.contentDeduplication,
+      onBeforeFileAdded: this.options.onBeforeFileAdded,
+    })
+
     // v2: emit so consumers can observe option changes at runtime
     this.emitter.emit('options-updated', { partial })
   }
@@ -335,6 +357,151 @@ export class UpupCore {
     return steps
   }
 
+  private hasUploadTarget(): boolean {
+    return Boolean(
+      this.options.uploadEndpoint ||
+      this.options.serverUrl ||
+      this.options.resumable?.protocol === 'tus',
+    )
+  }
+
+  private createUploadManager(): UploadManager {
+    const tusOptions =
+      this.options.resumable?.protocol === 'tus'
+        ? this.options.resumable
+        : null
+    const configuredTargetCount = [
+      this.options.uploadEndpoint,
+      this.options.serverUrl,
+      tusOptions?.endpoint,
+    ].filter(Boolean).length
+
+    if (configuredTargetCount > 1) {
+      throw new UpupConfigError(
+        'Configure exactly one upload target: uploadEndpoint, serverUrl, or resumable.protocol="tus" with endpoint.',
+        'AMBIGUOUS_UPLOAD_TARGET',
+      )
+    }
+
+    const credentials = this.options.serverUrl
+      ? new ServerCredentials({
+          serverUrl: this.options.serverUrl,
+        })
+      : this.options.uploadEndpoint
+        ? new TokenEndpointCredentials({
+            url: this.options.uploadEndpoint,
+          })
+        : {
+            getPresignedUrl: async () => {
+              throw new UpupConfigError('Tus uploads do not use presigned upload URLs.')
+            },
+          }
+    const directUpload = new DirectUpload()
+    const tusUpload = tusOptions ? new TusUpload(tusOptions) : null
+    const multipartUpload =
+      this.options.resumable?.protocol === 'multipart'
+        ? new MultipartUpload({
+            credentials,
+            chunkSizeBytes: this.options.resumable.chunkSizeBytes,
+          })
+        : null
+    const multipartThreshold =
+      this.options.resumable?.protocol === 'multipart'
+        ? this.options.resumable.thresholdBytes ?? 5 * 1024 * 1024
+        : Number.POSITIVE_INFINITY
+
+    return new UploadManager({
+      credentials,
+      uploadStrategy: directUpload,
+      resolveUploadStrategy: (file) => {
+        if (tusUpload) {
+          return { uploadStrategy: tusUpload, presign: false }
+        }
+        const shouldUseMultipart = Boolean(
+          multipartUpload && file.size >= multipartThreshold,
+        )
+        return shouldUseMultipart
+          ? { uploadStrategy: multipartUpload!, presign: false }
+          : { uploadStrategy: directUpload, presign: true }
+      },
+      maxConcurrentUploads: this.options.maxConcurrentUploads ?? 3,
+      maxRetries: this.options.maxRetries,
+      fastAbortThreshold: this.options.fastAbortThreshold,
+      isSuccessfulCall: this.options.isSuccessfulCall,
+      onFileStart: (file) => {
+        const uploading = Object.assign(file, { status: UploadStatus.UPLOADING }) as UploadFile
+        this.files.set(file.id, uploading)
+        this.emitter.emit('file-upload-start', { file: uploading })
+        this.emitter.emit('state-change', { files: this.files })
+      },
+      onProgress: (fileId, loaded, total) => {
+        this.emitter.emit('upload-progress', { fileId, loaded, total })
+        this.emitter.emit('state-change', { progress: this.progress })
+      },
+      onFileComplete: (file, result) => {
+        const updated = Object.assign(file, { key: result.key, status: UploadStatus.SUCCESSFUL }) as UploadFile
+        this.files.set(file.id, updated)
+        this.emitter.emit('upload-success', { file: updated, result })
+        this.emitter.emit('state-change', { files: this.files })
+      },
+      onFileError: (file, error) => {
+        const failed = Object.assign(file, { status: UploadStatus.FAILED }) as UploadFile
+        this.files.set(file.id, failed)
+        this.emitter.emit('upload-error', { file: failed, error })
+        this.emitter.emit('state-change', { files: this.files })
+      },
+    })
+  }
+
+  private markFilesReady(files: UploadFile[]): UploadFile[] {
+    return files.map(file => {
+      const overrides = this.fileOverrides.get(file.id)
+      const ready = Object.assign(file, {
+        status: UploadStatus.READY,
+        metadata: {
+          ...file.metadata,
+          ...this.options.metadata,
+          ...overrides?.metadata,
+        },
+      }) as UploadFile
+      this.files.set(file.id, ready)
+      return ready
+    })
+  }
+
+  private updatePendingFileStatuses(status: UploadStatus): void {
+    for (const file of this.files.values()) {
+      if (
+        file.key == null &&
+        (
+          file.status === UploadStatus.READY ||
+          file.status === UploadStatus.UPLOADING ||
+          file.status === UploadStatus.PROCESSING ||
+        file.status === UploadStatus.PAUSED
+      )
+    ) {
+        Object.assign(file, { status })
+        this.files.set(file.id, file)
+      }
+    }
+  }
+
+  private async uploadFiles(files: UploadFile[]): Promise<UploadFile[]> {
+    const targetFiles = this.markFilesReady(files)
+    this.emitter.emit('state-change', { files: this.files })
+
+    if (!this.hasUploadTarget()) {
+      throw new UpupConfigError(
+        'No upload target configured. Use selected files directly for local-only flows, or configure uploadEndpoint, serverUrl, or an external Tus endpoint before calling upload().',
+      )
+    }
+
+    this.uploadManager = this.createUploadManager()
+    await this.uploadManager.uploadAll(targetFiles)
+    this.uploadManager = null
+    return [...this.files.values()]
+  }
+
   async validateFiles(files: File[]): Promise<ValidationResult[]> {
     const results: ValidationResult[] = []
 
@@ -379,6 +546,9 @@ export class UpupCore {
   }
 
   async upload(): Promise<UploadFile[]> {
+    this.pauseRequested = false
+    this.cancelRequested = false
+    this.destroyed = false
     this._status = UploadStatus.PROCESSING
     this.emitter.emit('upload-start', {})
     this.emitter.emit('state-change', { status: this._status })
@@ -408,51 +578,45 @@ export class UpupCore {
     this._status = UploadStatus.UPLOADING
     this.emitter.emit('state-change', { status: this._status })
 
-    // Only run actual uploads if credentials/endpoint are configured
-    if (this.options.uploadEndpoint || this.options.serverUrl) {
-      const credentials = this.options.apiKey
-        ? new ServerCredentials({
-            serverUrl: this.options.serverUrl!,
-            apiKey: this.options.apiKey,
-          })
-        : new TokenEndpointCredentials({
-            url: this.options.uploadEndpoint ?? `${this.options.serverUrl}/presign`,
-          })
-      const uploadStrategy = new DirectUpload()
+    try {
+      // Only run actual uploads if credentials/endpoint are configured
+      await this.uploadFiles([...this.files.values()])
 
-      this.uploadManager = new UploadManager({
-        credentials,
-        uploadStrategy,
-        maxConcurrentUploads: this.options.maxConcurrentUploads ?? 3,
-        maxRetries: this.options.maxRetries,
-        fastAbortThreshold: this.options.fastAbortThreshold,
-        isSuccessfulCall: this.options.isSuccessfulCall,
-        onProgress: (fileId, loaded, total) => {
-          this.emitter.emit('upload-progress', { fileId, loaded, total })
-          this.emitter.emit('state-change', { progress: this.progress })
-        },
-        onFileComplete: (file, result) => {
-          // Update the file with its key from the result
-          const updated = { ...file, key: result.key } as UploadFile
-          this.files.set(file.id, updated)
-          this.emitter.emit('upload-success', { file: updated, result })
-          this.emitter.emit('state-change', { files: this.files })
-        },
-        onFileError: (file, error) => {
-          this.emitter.emit('upload-error', { file, error })
-        },
-      })
+      this._status = UploadStatus.SUCCESSFUL
+      this._error = null
+      this.emitter.emit('upload-all-complete', [...this.files.values()])
+      this.emitter.emit('state-change', { status: this._status })
+      this.crashRecovery?.clear().catch(() => {})
 
-      await this.uploadManager.uploadAll([...this.files.values()])
+      return [...this.files.values()]
+    } catch (error) {
+      const err = error instanceof Error ? error : new Error(String(error))
       this.uploadManager = null
+      if (this.pauseRequested) {
+        this._status = UploadStatus.PAUSED
+        this._error = null
+        this.emitter.emit('state-change', { status: this._status })
+        return [...this.files.values()]
+      }
+      if (this.cancelRequested || this.destroyed) {
+        this._status = UploadStatus.IDLE
+        this._error = null
+        this.emitter.emit('state-change', { status: this._status })
+        return [...this.files.values()]
+      }
+      this._status = UploadStatus.FAILED
+      this._error = err
+      this.options.onError?.(err)
+      this.emitter.emit('upload-error', { error: err })
+      this.emitter.emit('state-change', { status: this._status, error: err })
+      throw err
     }
+  }
 
-    this._status = UploadStatus.SUCCESSFUL
-    this.emitter.emit('upload-all-complete', [...this.files.values()])
-    this.emitter.emit('state-change', { status: this._status })
-    this.crashRecovery?.clear().catch(() => {})
-
-    return [...this.files.values()]
+  replaceFile(id: string, file: File | UploadFile): void {
+    const next = this.fileManager.replaceFile(id, file)
+    this.emitter.emit('file-replaced', { file: next })
+    this.emitter.emit('state-change', { files: this.files })
   }
 
   /**
@@ -463,8 +627,11 @@ export class UpupCore {
    */
   pause(): void {
     if (this.uploadManager) {
-      this.uploadManager.pause()
+      this.pauseRequested = true
+      this.uploadManager.abort()
+      this.uploadManager = null
     }
+    this.updatePendingFileStatuses(UploadStatus.PAUSED)
     this._status = UploadStatus.PAUSED
     this.emitter.emit('upload-pause', {})
     this.emitter.emit('state-change', { status: this._status })
@@ -475,35 +642,81 @@ export class UpupCore {
    * complete successfully (those without a `key` set).
    */
   resume(): void {
+    this.pauseRequested = false
     this._status = UploadStatus.UPLOADING
     this.emitter.emit('upload-resume', {})
     this.emitter.emit('state-change', { status: this._status })
 
-    // Re-upload files that were not completed
-    if (this.uploadManager) {
-      const incomplete = [...this.files.values()].filter(f => f.key == null)
-      if (incomplete.length > 0) {
-        this.uploadManager.uploadAll(incomplete).catch((err) => {
-          this._status = UploadStatus.FAILED
-          this.emitter.emit('error', { error: err })
+    const incomplete = [...this.files.values()].filter(f => f.key == null)
+    if (incomplete.length > 0 && this.hasUploadTarget()) {
+      this.uploadFiles(incomplete)
+        .then(() => {
+          const allComplete = [...this.files.values()].every(file => file.key != null)
+          this._status = allComplete ? UploadStatus.SUCCESSFUL : UploadStatus.IDLE
           this.emitter.emit('state-change', { status: this._status })
         })
-      }
+        .catch((err) => {
+          if (this.pauseRequested || this.cancelRequested || this.destroyed) return
+          this._status = UploadStatus.FAILED
+          this._error = err instanceof Error ? err : new Error(String(err))
+          this.emitter.emit('error', { error: this._error })
+          this.emitter.emit('state-change', { status: this._status, error: this._error })
+        })
     }
   }
 
   cancel(): void {
+    this.cancelRequested = true
     if (this.uploadManager) {
       this.uploadManager.abort()
       this.uploadManager = null
     }
+    this.updatePendingFileStatuses(UploadStatus.IDLE)
     this._status = UploadStatus.IDLE
+    this._error = null
     this.emitter.emit('upload-cancel', {})
     this.emitter.emit('state-change', { status: this._status })
   }
 
-  retry(_fileId?: string): void {
-    this.emitter.emit('retry', { fileId: _fileId })
+  async retry(fileId?: string): Promise<UploadFile[]> {
+    this.emitter.emit('retry', { fileId })
+
+    const target = fileId
+      ? this.files.get(fileId)
+      : undefined
+    const files = fileId
+      ? (target ? [target] : [])
+      : [...this.files.values()].filter(file => file.key == null || file.status === UploadStatus.FAILED)
+
+    if (files.length === 0) {
+      return [...this.files.values()]
+    }
+
+    this._status = UploadStatus.UPLOADING
+    this._error = null
+    this.emitter.emit('upload-start', { retry: true, fileId })
+    this.emitter.emit('state-change', { status: this._status })
+
+    try {
+      const uploaded = await this.uploadFiles(files)
+      const allComplete = [...this.files.values()].every(file => file.key != null)
+      this._status = allComplete ? UploadStatus.SUCCESSFUL : UploadStatus.IDLE
+      if (allComplete) {
+        this.emitter.emit('upload-all-complete', [...this.files.values()])
+        this.crashRecovery?.clear().catch(() => {})
+      }
+      this.emitter.emit('state-change', { status: this._status })
+      return uploaded
+    } catch (error) {
+      const err = error instanceof Error ? error : new Error(String(error))
+      this.uploadManager = null
+      this._status = UploadStatus.FAILED
+      this._error = err
+      this.options.onError?.(err)
+      this.emitter.emit('upload-error', { error: err })
+      this.emitter.emit('state-change', { status: this._status, error: err })
+      throw err
+    }
   }
 
   on(event: string, handler: (...args: unknown[]) => void): () => void {
@@ -514,7 +727,7 @@ export class UpupCore {
     this.emitter.off(event, handler)
   }
 
-  /** Emit an event externally (used by React layer to bridge v1 callbacks). */
+  /** Emit a custom integration event through the core event bus. */
   emit(event: string, data?: unknown): void {
     this.emitter.emit(event, data)
   }
@@ -555,6 +768,9 @@ export class UpupCore {
   }
 
   destroy(): void {
+    this.destroyed = true
+    this.uploadManager?.abort()
+    this.uploadManager = null
     // v2: emit before clearing listeners so teardown handlers fire
     this.emitter.emit('destroyed', {})
     this.workerPool?.destroy()

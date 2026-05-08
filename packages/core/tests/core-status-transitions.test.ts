@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { UpupCore } from '../src/core'
-import { UploadStatus } from '@upup/shared'
+import { UploadStatus } from '@upup/core'
 
 const makeCore = () =>
     new UpupCore({ provider: 'aws', uploadEndpoint: '/api/upload' })
@@ -53,15 +53,6 @@ describe('UpupCore — status transitions', () => {
         core.destroy()
     })
 
-    it('syncStatusFromExternal sets any status', () => {
-        const core = makeCore()
-        for (const s of [UploadStatus.IDLE, UploadStatus.UPLOADING, UploadStatus.PAUSED, UploadStatus.SUCCESSFUL, UploadStatus.FAILED]) {
-            core.syncStatusFromExternal(s)
-            expect(core.status).toBe(s)
-        }
-        core.destroy()
-    })
-
     it('destroy resets to IDLE', () => {
         const core = makeCore()
         core.pause()
@@ -72,9 +63,9 @@ describe('UpupCore — status transitions', () => {
 
     it('retry does not change status', () => {
         const core = makeCore()
-        core.syncStatusFromExternal(UploadStatus.FAILED)
+        core.pause()
         core.retry()
-        expect(core.status).toBe(UploadStatus.FAILED)
+        expect(core.status).toBe(UploadStatus.PAUSED)
         core.destroy()
     })
 

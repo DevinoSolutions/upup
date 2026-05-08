@@ -3,7 +3,7 @@ import { compressStep } from '../../src/steps/compress'
 import { exifStep } from '../../src/steps/exif'
 import { gzipStep } from '../../src/steps/gzip'
 import { heicStep } from '../../src/steps/heic'
-import type { UploadFile, PipelineContext } from '@upup/shared'
+import type { UploadFile, PipelineContext } from '@upup/core'
 
 function makeFile(name: string, type: string): UploadFile {
     const f = new File(['x'], name, { type })

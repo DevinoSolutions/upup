@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import { hashStep } from '../../src/steps/hash'
-import type { UploadFile, PipelineContext } from '@upup/shared'
+import type { UploadFile, PipelineContext } from '@upup/core'
 
 function makeFile(content: string, id = 'f1'): UploadFile {
     const file = new File([content], 'test.txt', { type: 'text/plain' })

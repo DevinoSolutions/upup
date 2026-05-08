@@ -1,9 +1,8 @@
-import { UpupNetworkError, type CloudProvider } from '@upup/shared'
+import { UpupNetworkError, type CloudProvider } from '../contracts'
 
 export interface ServerTransferOptions {
   serverUrl: string
   headers?: Record<string, string>
-  apiKey?: string
 }
 
 export interface TransferResult {
@@ -28,19 +27,18 @@ export class ServerTransfer {
       'Content-Type': 'application/json',
       ...options.headers,
     }
-    if (options.apiKey) {
-      this.headers['x-api-key'] = options.apiKey
-    }
   }
 
   private providerSlug(provider: CloudProvider): string {
     switch (provider) {
-      case 'google_drive':
+      case 'googleDrive':
         return 'google-drive'
-      case 'onedrive':
+      case 'oneDrive':
         return 'onedrive'
       case 'dropbox':
         return 'dropbox'
+      case 'box':
+        return 'box'
       default:
         return provider
     }

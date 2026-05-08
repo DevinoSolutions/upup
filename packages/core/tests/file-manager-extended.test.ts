@@ -38,6 +38,16 @@ describe('fileSizeInBytes', () => {
 // matchesAccept
 // ─────────────────────────────────────────────
 describe('matchesAccept', () => {
+    it('accepts any file for bare wildcard', () => {
+        const f = makeFile('notes.txt', 100, 'text/plain')
+        expect(matchesAccept(f, '*')).toBe(true)
+    })
+
+    it('accepts any file for MIME wildcard', () => {
+        const f = makeFile('notes.txt', 100, 'text/plain')
+        expect(matchesAccept(f, '*/*')).toBe(true)
+    })
+
     it('accepts exact MIME type match', () => {
         const f = makeFile('img.png', 100, 'image/png')
         expect(matchesAccept(f, 'image/png')).toBe(true)
@@ -145,29 +155,6 @@ describe('FileManager — removeFile return value', () => {
 })
 
 // ─────────────────────────────────────────────
-// syncFromExternal
-// ─────────────────────────────────────────────
-describe('FileManager — syncFromExternal', () => {
-    it('replaces internal files with the given map', async () => {
-        const fm = new FileManager({})
-        await fm.addFiles([makeFile('original.txt')])
-        const external = new Map<string, any>([
-            ['ext-1', makeFile('synced.txt')],
-        ])
-        fm.syncFromExternal(external)
-        expect(fm.getFiles().size).toBe(1)
-        expect(fm.getFiles().get('ext-1')?.name).toBe('synced.txt')
-    })
-
-    it('clears existing files on sync', async () => {
-        const fm = new FileManager({})
-        await fm.addFiles([makeFile('old.txt'), makeFile('also-old.txt')])
-        fm.syncFromExternal(new Map())
-        expect(fm.getFiles().size).toBe(0)
-    })
-})
-
-// ─────────────────────────────────────────────
 // onBeforeFileAdded returning a modified File
 // ─────────────────────────────────────────────
 describe('FileManager — onBeforeFileAdded returns File', () => {
@@ -178,5 +165,44 @@ describe('FileManager — onBeforeFileAdded returns File', () => {
         })
         const result = await fm.addFiles([makeFile('original.txt')])
         expect(result[0].name).toBe('renamed.txt')
+    })
+})
+
+// ─────────────────────────────────────────────
+// contentDeduplication
+// ─────────────────────────────────────────────
+describe('FileManager — contentDeduplication', () => {
+    it('skips duplicate content in the same batch', async () => {
+        const fm = new FileManager({ contentDeduplication: true })
+        const content = 'same bytes'
+        const result = await fm.addFiles([
+            new File([content], 'a.txt', { type: 'text/plain' }),
+            new File([content], 'b.txt', { type: 'text/plain' }),
+        ])
+
+        expect(result).toHaveLength(1)
+        expect(fm.getFiles().size).toBe(1)
+        expect(result[0].fileHash).toBeDefined()
+        expect(result[0].metadata?.originalContentHash).toBe(result[0].fileHash)
+    })
+
+    it('skips duplicate content against existing files', async () => {
+        const fm = new FileManager({ contentDeduplication: true })
+        await fm.addFiles([new File(['same bytes'], 'first.txt', { type: 'text/plain' })])
+        const result = await fm.addFiles([new File(['same bytes'], 'second.txt', { type: 'text/plain' })])
+
+        expect(result).toHaveLength(0)
+        expect(fm.getFiles().size).toBe(1)
+    })
+
+    it('keeps different content even when size matches', async () => {
+        const fm = new FileManager({ contentDeduplication: true })
+        const result = await fm.addFiles([
+            new File(['abc'], 'a.txt', { type: 'text/plain' }),
+            new File(['xyz'], 'b.txt', { type: 'text/plain' }),
+        ])
+
+        expect(result).toHaveLength(2)
+        expect(fm.getFiles().size).toBe(2)
     })
 })

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { DirectUpload } from '../../src/strategies/direct-upload'
-import { UpupNetworkError } from '@upup/shared'
+import { UpupNetworkError } from '@upup/core'
 
 // ─────────────────────────────────────────────
 // Fake XHR factory
@@ -47,7 +47,7 @@ function makeAbortController() {
 }
 
 const FILE = new File(['hello'], 'hello.txt', { type: 'text/plain' })
-const CREDENTIALS = { url: 'https://s3.example.com/upload', key: 'uploads/hello.txt' }
+const CREDENTIALS = { uploadUrl: 'https://s3.example.com/upload', key: 'uploads/hello.txt', expiresIn: 3600 }
 
 // ─────────────────────────────────────────────
 // Constructor / shape
@@ -102,6 +102,23 @@ describe('DirectUpload — success', () => {
         fakeXhr._triggerLoad()
         const result = await promise
         expect(result.publicUrl).toBe('https://cdn.example.com/hello.txt')
+    })
+
+    it('sends signed upload headers when present', async () => {
+        const controller = makeAbortController()
+        const creds = {
+            ...CREDENTIALS,
+            uploadHeaders: { 'Content-Type': 'text/plain', 'x-amz-meta-test': 'yes' },
+        }
+        const uploader = new DirectUpload()
+        const promise = uploader.upload(FILE, creds, {
+            onProgress: vi.fn(),
+            signal: controller.signal,
+        })
+        fakeXhr._triggerLoad()
+        await promise
+        expect(fakeXhr.setRequestHeader).toHaveBeenCalledWith('Content-Type', 'text/plain')
+        expect(fakeXhr.setRequestHeader).toHaveBeenCalledWith('x-amz-meta-test', 'yes')
     })
 
     it('calls onProgress when XHR upload progress fires', async () => {

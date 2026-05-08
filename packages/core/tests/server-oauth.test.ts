@@ -11,17 +11,17 @@ describe('ServerOAuth', () => {
 
   it('returns the auth URL for a provider', async () => {
     const oauth = new ServerOAuth({ serverUrl: 'https://api.example.com' })
-    const url = await oauth.getAuthUrl('google_drive')
+    const url = await oauth.getAuthUrl('googleDrive')
     expect(url).toBe('https://api.example.com/auth/google-drive')
   })
 
   it('maps provider slugs correctly', async () => {
     const oauth = new ServerOAuth({ serverUrl: 'https://api.example.com' })
-    expect(await oauth.getAuthUrl('onedrive')).toBe('https://api.example.com/auth/onedrive')
+    expect(await oauth.getAuthUrl('oneDrive')).toBe('https://api.example.com/auth/onedrive')
     expect(await oauth.getAuthUrl('dropbox')).toBe('https://api.example.com/auth/dropbox')
   })
 
-  it('sends apiKey header on handleCallback', async () => {
+  it('sends explicit auth headers on handleCallback', async () => {
     mockFetch.mockResolvedValue({
       ok: true,
       json: () => Promise.resolve({ accessToken: 'tok', refreshToken: 'ref' }),
@@ -29,9 +29,9 @@ describe('ServerOAuth', () => {
 
     const oauth = new ServerOAuth({
       serverUrl: 'https://api.example.com',
-      apiKey: 'key_123',
+      headers: { 'x-api-key': 'key_123' },
     })
-    await oauth.handleCallback('google_drive', { code: 'abc' })
+    await oauth.handleCallback('googleDrive', { code: 'abc' })
 
     expect(mockFetch).toHaveBeenCalledWith(
       expect.stringContaining('/auth/google-drive/cb?code=abc'),
@@ -50,7 +50,7 @@ describe('ServerOAuth', () => {
 
     const oauth = new ServerOAuth({ serverUrl: 'https://api.example.com' })
     await expect(
-      oauth.handleCallback('google_drive', { code: 'bad' }),
+      oauth.handleCallback('googleDrive', { code: 'bad' }),
     ).rejects.toThrow('OAuth callback failed')
   })
 

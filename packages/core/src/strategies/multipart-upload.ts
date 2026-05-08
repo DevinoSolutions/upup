@@ -5,7 +5,7 @@ import {
   type UploadResult,
   type CredentialStrategy,
   type MultipartPart,
-} from '@upup/shared'
+} from '../contracts'
 
 export interface MultipartUploadOptions {
   credentials: CredentialStrategy
@@ -88,6 +88,7 @@ export class MultipartUpload implements UploadStrategy {
         // Upload the chunk
         const response = await fetch(signed.uploadUrl, {
           method: 'PUT',
+          headers: signed.uploadHeaders,
           body: chunk,
           signal: options.signal,
         })
@@ -136,6 +137,7 @@ export class MultipartUpload implements UploadStrategy {
       return {
         key: result.key,
         publicUrl: result.publicUrl,
+        downloadUrl: result.downloadUrl,
         etag: result.etag,
       }
     } catch (error) {

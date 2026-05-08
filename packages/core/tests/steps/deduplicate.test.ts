@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { deduplicateStep } from '../../src/steps/deduplicate'
-import type { UploadFile, PipelineContext } from '@upup/shared'
+import type { UploadFile, PipelineContext } from '@upup/core'
 
 const makeFile = (id: string, content: string, name: string): UploadFile => {
   const file = new File([content], name, { type: 'text/plain' })
