@@ -22,7 +22,7 @@ type Props = {
     fileSize?: number
     slotClasses: InternalFlatClassNames
     allowPreview: boolean
-    translations: Translations
+    labels: Translations
 }
 
 export default memo(
@@ -35,7 +35,7 @@ export default memo(
         fileSize,
         slotClasses,
         allowPreview,
-        translations: tr,
+        labels: tr,
     }: Props) {
         const extension = useMemo(
             () => fileGetExtension(fileType, fileName),

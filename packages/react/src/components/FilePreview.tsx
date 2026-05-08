@@ -51,6 +51,7 @@ export default memo(function FilePreview(props: Props) {
             icons: { FileDeleteIcon },
             allowPreview,
             imageEditor,
+            isDarkTheme,
         },
         files,
         themeSlots,
@@ -116,6 +117,7 @@ export default memo(function FilePreview(props: Props) {
                         [slotClasses.fileThumbnailSingle!]:
                             slotClasses.fileThumbnailSingle && files.size === 1,
                     },
+                    themeSlots?.filePreview?.thumbnail,
                 )}
                 style={
                     isImage ? { backgroundImage: `url(${fileUrl})` } : undefined
@@ -132,7 +134,7 @@ export default memo(function FilePreview(props: Props) {
                             fileSize={fileSize}
                             allowPreview={allowPreview}
                             slotClasses={slotClasses}
-                            translations={tr}
+                            labels={tr}
                         />
                     </div>
                 </ShouldRender>
@@ -173,6 +175,7 @@ export default memo(function FilePreview(props: Props) {
                         'upup-ring-1 upup-ring-black/5',
                         'disabled:upup-cursor-not-allowed disabled:upup-opacity-50',
                         slotClasses.fileDeleteButton,
+                        themeSlots?.filePreview?.deleteButton,
                     )}
                     onClick={onHandleFileRemove}
                     type="button"
@@ -191,16 +194,32 @@ export default memo(function FilePreview(props: Props) {
             </div>
 
             <div className="upup-mt-1 upup-px-0.5">
-                <div className="upup-truncate upup-text-[13px] upup-font-normal upup-leading-tight upup-text-white">
+                <div
+                    className={cn(
+                        'upup-truncate upup-text-[13px] upup-font-normal upup-leading-tight upup-text-gray-900',
+                        { 'upup-text-white': isDarkTheme },
+                        themeSlots?.filePreview?.name,
+                    )}
+                >
                     {fileName}
                 </div>
-                <div className="upup-mt-0.5 upup-text-[11px] upup-leading-tight upup-text-gray-400">
+                <div
+                    className={cn(
+                        'upup-mt-0.5 upup-text-[11px] upup-leading-tight upup-text-gray-500',
+                        { 'upup-text-gray-400': isDarkTheme },
+                        themeSlots?.filePreview?.size,
+                    )}
+                >
                     {formatFileSize(fileSize, tr)}
                 </div>
                 {allowPreview && canPreview && (
                     <button
                         type="button"
-                        className="upup-mt-1 upup-text-[11px] upup-font-normal upup-leading-tight upup-text-[#4A9EFF] upup-transition-all hover:upup-text-blue-300 hover:upup-underline"
+                        className={cn(
+                            'upup-mt-1 upup-text-[11px] upup-font-normal upup-leading-tight upup-text-[#2563eb] upup-transition-all hover:upup-text-blue-700 hover:upup-underline',
+                            { 'upup-text-[#4A9EFF] hover:upup-text-blue-300': isDarkTheme },
+                            themeSlots?.filePreview?.previewButton,
+                        )}
                         onClick={onRequestPreview}
                     >
                         {tr.clickToPreview}
