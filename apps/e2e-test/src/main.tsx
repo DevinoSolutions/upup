@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import ReactDOM from 'react-dom/client'
 import './upup.css'
-import { UpupUploader, useUpupUpload } from 'upup-react-file-uploader'
+import { UpupUploader, useUpupUpload } from '@upup/react'
 
 /** Headless hook demo — v2 feature, custom UI built from scratch */
 function HeadlessDemo() {
@@ -82,7 +82,7 @@ function App() {
           provider="backblaze"
           maxFiles={99}
           uploadEndpoint="/api/upload"
-          sources={['local', 'google_drive', 'onedrive', 'dropbox', 'url', 'camera', 'microphone', 'screen']}
+          sources={['local', 'googleDrive', 'oneDrive', 'dropbox', 'url', 'camera', 'microphone', 'screen']}
           theme={{ mode: tab }}
           maxFileSize={{ size: 999, unit: 'MB' }}
           minFileSize={{ size: 1, unit: 'KB' }}

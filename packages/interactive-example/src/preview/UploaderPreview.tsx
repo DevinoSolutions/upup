@@ -1,36 +1,38 @@
 'use client'
-import React, { useContext, useEffect, useState } from 'react'
-import { UpupUploader } from 'upup-react-file-uploader'
-import 'upup-react-file-uploader/styles'
+import React, { useContext, useEffect, useMemo, useState } from 'react'
+import { UpupUploader } from '@upup/react'
+import '@upup/react/styles'
 import {
-    en_US,
-    ar_SA,
-    de_DE,
-    es_ES,
-    fr_FR,
-    ja_JP,
-    ko_KR,
-    zh_CN,
-    zh_TW,
-} from 'upup-react-file-uploader/locales'
+    enUS,
+    arSA,
+    deDE,
+    esES,
+    frFR,
+    jaJP,
+    koKR,
+    zhCN,
+    zhTW,
+    type LocaleBundle,
+} from '@upup/core'
 import { ConfigContext } from '../state/ConfigContext'
 import { useEventLog } from '../state/EventLogContext'
+import type { UpupConfig } from '../types'
 
 // String → locale-pack lookup. The uploader's i18n contract is: pass an
 // object as `i18n.locale` to actually substitute strings; passing a string
 // only flips the text direction. The playground's locale enum stores a
 // string for sharable/permalink configs, so we resolve it here before
 // handing the prop off to UpupUploader.
-const LOCALE_PACKS: Record<string, unknown> = {
-    'en-US': en_US,
-    'ar-SA': ar_SA,
-    'de-DE': de_DE,
-    'es-ES': es_ES,
-    'fr-FR': fr_FR,
-    'ja-JP': ja_JP,
-    'ko-KR': ko_KR,
-    'zh-CN': zh_CN,
-    'zh-TW': zh_TW,
+const LOCALE_PACKS: Record<string, LocaleBundle> = {
+    'en-US': enUS,
+    'ar-SA': arSA,
+    'de-DE': deDE,
+    'es-ES': esES,
+    'fr-FR': frFR,
+    'ja-JP': jaJP,
+    'ko-KR': koKR,
+    'zh-CN': zhCN,
+    'zh-TW': zhTW,
 }
 
 function useMounted(): boolean {
@@ -84,11 +86,20 @@ function resolvePageTheme(): boolean {
 function eventLoggers(
     flags: Record<string, boolean> | undefined,
     record: ((name: string, args: unknown[]) => void) | undefined,
-): Record<string, (...args: unknown[]) => void> {
+): Record<string, (...args: unknown[]) => unknown> {
     if (!flags) return {}
-    const out: Record<string, (...args: unknown[]) => void> = {}
+    const out: Record<string, (...args: unknown[]) => unknown> = {}
     for (const [name, enabled] of Object.entries(flags)) {
         if (!enabled) continue
+        if (name === 'onPrepareFiles') {
+            out[name] = (files: unknown, ...args: unknown[]) => {
+                record?.(name, [files, ...args])
+                // eslint-disable-next-line no-console
+                console.log('[upup]', name, files, ...args)
+                return files
+            }
+            continue
+        }
         out[name] = (...args: unknown[]) => {
             record?.(name, args)
             // eslint-disable-next-line no-console
@@ -96,6 +107,49 @@ function eventLoggers(
         }
     }
     return out
+}
+
+function parseOrigins(value: unknown): string[] | undefined {
+    if (Array.isArray(value)) {
+        return value.filter((item): item is string => typeof item === 'string' && item.trim() !== '')
+    }
+    if (typeof value !== 'string') return undefined
+    const origins = value
+        .split(/[,\n]/)
+        .map((item) => item.trim())
+        .filter(Boolean)
+    return origins.length > 0 ? origins : undefined
+}
+
+function normalizeRuntimeConfig(config: Record<string, unknown>): UpupConfig {
+    const out: Record<string, unknown> = { ...config }
+    const resumable = out.resumable as Record<string, unknown> | undefined
+    const usesTusEndpoint =
+        resumable &&
+        typeof resumable === 'object' &&
+        !Array.isArray(resumable) &&
+        resumable.protocol === 'tus' &&
+        typeof resumable.endpoint === 'string' &&
+        resumable.endpoint.trim() !== ''
+
+    if (usesTusEndpoint) {
+        delete out.uploadEndpoint
+        delete out.serverUrl
+    } else if (out.mode === 'server') {
+        delete out.uploadEndpoint
+    } else {
+        delete out.serverUrl
+    }
+
+    if (out.cors && typeof out.cors === 'object' && !Array.isArray(out.cors)) {
+        const cors = { ...(out.cors as Record<string, unknown>) }
+        const origins = parseOrigins(cors.allowedOrigins)
+        if (origins) cors.allowedOrigins = origins
+        else delete cors.allowedOrigins
+        out.cors = cors
+    }
+
+    return out as UpupConfig
 }
 
 export function UploaderPreview({ width = 'auto' }: { width?: number | 'auto' }) {
@@ -117,18 +171,26 @@ export function UploaderPreview({ width = 'auto' }: { width?: number | 'auto' })
 
     // Keep the string `i18n.locale` so the uploader's lang/dir computation
     // (RTL for ar/he/fa, BCP-47 lang attribute) keeps working on permalinks.
-    // Pass the matching pack as the separate `localePack` prop so the
-    // strings actually switch — the uploader's resolver picks localePack
-    // when i18n.locale is a string, falling back to en_US otherwise.
     const localeStr = typeof i18n?.locale === 'string' ? i18n.locale : undefined
-    const localePack = localeStr ? LOCALE_PACKS[localeStr] : undefined
+    const localeBundle = localeStr ? LOCALE_PACKS[localeStr] : undefined
+    const fallbackStr = typeof i18n?.fallbackLocale === 'string' ? i18n.fallbackLocale : undefined
+    const fallbackBundle = fallbackStr ? LOCALE_PACKS[fallbackStr] : undefined
+    const resolvedI18n = {
+        ...i18n,
+        ...(localeBundle ? { locale: localeBundle } : {}),
+        ...(fallbackBundle ? { fallbackLocale: fallbackBundle } : {}),
+    }
 
-    const handlers = eventLoggers(events, log?.record)
+    const handlers = useMemo(
+        () => eventLoggers(events, log?.record),
+        [events, log?.record],
+    )
+    const runtimeConfig = normalizeRuntimeConfig(rest)
     const style = width === 'auto' ? undefined : { width: `${width}px`, maxWidth: '100%' }
     return (
         <div className="upup-ie-preview" style={style} suppressHydrationWarning>
             {mounted ? (
-                <UpupUploader provider="s3" serverUrl="" {...rest} {...handlers} theme={effectiveTheme} i18n={i18n} localePack={localePack as any} />
+                <UpupUploader provider="aws" serverUrl="" {...runtimeConfig} {...handlers} theme={effectiveTheme} i18n={resolvedI18n} />
             ) : (
                 <div className="upup-ie-preview-placeholder" aria-hidden="true" />
             )}

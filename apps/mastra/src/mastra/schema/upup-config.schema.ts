@@ -15,11 +15,11 @@ const SizeValue = z.object({ size: z.number().nonnegative(), unit: SizeUnit })
 const Source = z.enum([
     'local',
     'camera',
-    'audio',
+    'microphone',
     'screen',
     'url',
-    'google_drive',
-    'onedrive',
+    'googleDrive',
+    'oneDrive',
     'dropbox',
     'box',
 ])
@@ -49,14 +49,15 @@ const Provider = z.enum([
 ])
 
 const Theme = z.object({
-    mode: z.enum(['light', 'dark', 'auto']).optional(),
+    mode: z.enum(['light', 'dark', 'system']).optional(),
     primary: z.string().optional(),
     radius: z.enum(['none', 'sm', 'md', 'lg', 'xl', 'full']).optional(),
 })
 
 const Resumable = z.object({
-    mode: z.enum(['multipart', 'tus']).optional(),
+    protocol: z.enum(['multipart', 'tus']).optional(),
     chunkSizeBytes: z.number().int().positive().optional(),
+    endpoint: z.string().optional(),
 })
 
 const ImageEditor = z.object({
@@ -109,10 +110,10 @@ export function renderSchemaForPrompt(): string {
             maxFiles: 'positive integer',
             maxRetries: 'non-negative integer',
             sources: 'array of: ' + Source.options.join(', '),
-            resumable: '{ mode: multipart|tus, chunkSizeBytes?: number }',
+            resumable: '{ protocol: multipart|tus, chunkSizeBytes?: number, endpoint?: string }',
             imageEditor:
                 '{ enabled?: boolean, display?: inline|modal, autoOpen?: never|single|all }',
-            theme: '{ mode?: light|dark|auto, primary?: hex, radius?: none|sm|md|lg|xl|full }',
+            theme: '{ mode?: light|dark|system, primary?: hex, radius?: none|sm|md|lg|xl|full }',
             showBranding: 'boolean',
             locale: 'BCP-47 tag (e.g. en-US, fr-FR)',
         },

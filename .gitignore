@@ -14,6 +14,7 @@ apps/landing/public/documentation
 coverage
 playwright-report
 storybook-static
+.tmp/
 
 # Logs
 *.log

@@ -116,7 +116,7 @@ const LOCALE_META: Record<string, SourceMeta> = {
  */
 export const ENUM_META_BY_PROP: Record<string, Record<string, SourceMeta>> = {
     provider: PROVIDER_META,
-    "resumable.mode": RESUMABLE_MODE_META,
+    "resumable.protocol": RESUMABLE_MODE_META,
     "theme.mode": THEME_MODE_META,
     "imageEditor.display": EDITOR_DISPLAY_META,
     "imageEditor.autoOpen": EDITOR_AUTO_OPEN_META,

@@ -2,29 +2,41 @@
 
 import React, {useContext} from "react";
 
-import {UpupUploader, UpupProvider, UploadAdapter, Translations} from 'upup-react-file-uploader'
+import {UpupUploader} from '@upup/react'
+import type {LocaleBundle} from '@upup/core'
 
-import "upup-react-file-uploader/styles";
+import "@upup/react/styles";
 import {ThemeContext} from "@/lib/contexts";
 import {toast} from "react-toastify";
 
 const customFields = {
-    tokenEndpoint: process.env.NEXT_PUBLIC_BASE_URL 
+    uploadEndpoint: process.env.NEXT_PUBLIC_BASE_URL
         ? process.env.NEXT_PUBLIC_BASE_URL + "/api/getPresignedUrl"
         : "/api/getPresignedUrl", // fallback to relative path
-    driveConfigs: {
+    cloudDrives: {
         googleDrive: {
-            google_client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "",
-            google_api_key: process.env.NEXT_PUBLIC_GOOGLE_API_KEY || "",
-            google_app_id: process.env.NEXT_PUBLIC_GOOGLE_APP_ID || "",
+            clientId: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "",
+            apiKey: process.env.NEXT_PUBLIC_GOOGLE_API_KEY || "",
+            appId: process.env.NEXT_PUBLIC_GOOGLE_APP_ID || "",
         },
         oneDrive: {
-            onedrive_client_id: process.env.NEXT_PUBLIC_ONEDRIVE_CLIENT_ID || "",
+            clientId: process.env.NEXT_PUBLIC_ONEDRIVE_CLIENT_ID || "",
         },
         dropbox: {
-            dropbox_client_id: process.env.NEXT_PUBLIC_DROPBOX_CLIENT_ID || "",
+            clientId: process.env.NEXT_PUBLIC_DROPBOX_CLIENT_ID || "",
         },
     },
+};
+
+const adapterToSource: Record<string, string> = {
+    INTERNAL: "local",
+    GOOGLE_DRIVE: "googleDrive",
+    ONE_DRIVE: "oneDrive",
+    LINK: "url",
+    CAMERA: "camera",
+    DROPBOX: "dropbox",
+    AUDIO: "microphone",
+    SCREEN_CAPTURE: "screen",
 };
 
 interface Props {
@@ -36,7 +48,7 @@ interface Props {
     shouldCompress?: boolean;
     fileSizeLimit?: number; // in MB
     maxRetries?: number;
-    localePack?: Translations;
+    locale?: LocaleBundle;
     imageEditor?: boolean;
 }
 
@@ -49,24 +61,15 @@ export default function Uploader({
                                      shouldCompress = false,
                                      fileSizeLimit = 25,
                                      maxRetries,
-                                     localePack,
+                                     locale,
                                      imageEditor = false,
                                  }: Readonly<Props>) {
     // Detect dark mode using Tailwind's class strategy
     const {isDarkMode} = useContext(ThemeContext)
 
-    // Convert string array to UploadAdapter enum values
-    const uploadAdapters = enabledAdapters.map(adapter => {
-        switch(adapter) {
-            case "INTERNAL": return UploadAdapter.INTERNAL;
-            case "GOOGLE_DRIVE": return UploadAdapter.GOOGLE_DRIVE;
-            case "ONE_DRIVE": return UploadAdapter.ONE_DRIVE;
-            case "LINK": return UploadAdapter.LINK;
-            case "CAMERA": return UploadAdapter.CAMERA;
-            case "DROPBOX": return UploadAdapter.DROPBOX;
-            default: return UploadAdapter.INTERNAL;
-        }
-    });
+    const sources = enabledAdapters
+        .map(adapter => adapterToSource[adapter])
+        .filter(Boolean) as any[];
 
     // Get the current theme
     const currentTheme = theme || "blue";
@@ -112,11 +115,11 @@ export default function Uploader({
     return (
       <div className="flex justify-center items-center w-full h-full lg:min-h-[auto] min-h-[70vh]">
         <UpupUploader
-          provider={UpupProvider.BackBlaze}
+          provider="backblaze"
           maxFiles={limit}
-          tokenEndpoint={customFields.tokenEndpoint}
-          uploadAdapters={uploadAdapters}
-          driveConfigs={customFields.driveConfigs}
+          uploadEndpoint={customFields.uploadEndpoint}
+          sources={sources}
+          cloudDrives={customFields.cloudDrives}
           theme={{ mode: isDarkMode ? 'dark' : 'light', slots: customSlots }}
           mini={mini}
           allowPreview={allowPreview}
@@ -124,8 +127,8 @@ export default function Uploader({
           imageEditor={imageEditor}
           maxFileSize={{ size: fileSizeLimit, unit: "MB" }}
           maxRetries={maxRetries}
-          resumable={{ mode: "multipart" }}
-          localePack={localePack}
+          resumable={{ protocol: "multipart" }}
+          i18n={locale ? { locale } : undefined}
           onFilesUploadComplete={(files) => {
             console.log("Files uploaded successfully:", files);
             toast.success("Files uploaded successfully!");

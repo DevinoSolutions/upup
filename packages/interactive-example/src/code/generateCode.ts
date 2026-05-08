@@ -1,5 +1,34 @@
 import type { UpupConfig } from '../types'
 
+type RawCode = { __upupRawCode: string }
+
+const LOCALE_EXPORTS: Record<string, string> = {
+    'en-US': 'enUS',
+    'ar-SA': 'arSA',
+    'de-DE': 'deDE',
+    'es-ES': 'esES',
+    'fr-FR': 'frFR',
+    'ja-JP': 'jaJP',
+    'ko-KR': 'koKR',
+    'zh-CN': 'zhCN',
+    'zh-TW': 'zhTW',
+}
+
+const LOCALE_IMPORTS = new Set(Object.values(LOCALE_EXPORTS))
+
+function raw(code: string): RawCode {
+    return { __upupRawCode: code }
+}
+
+function isRawCode(value: unknown): value is RawCode {
+    return (
+        typeof value === 'object' &&
+        value !== null &&
+        '__upupRawCode' in value &&
+        typeof (value as RawCode).__upupRawCode === 'string'
+    )
+}
+
 function indent(s: string, n: number): string {
     const pad = ' '.repeat(n)
     return s
@@ -50,6 +79,7 @@ function diffAgainstDefaults(
 }
 
 function renderObjectLiteral(value: unknown, depth = 1): string {
+    if (isRawCode(value)) return value.__upupRawCode
     if (value === null || typeof value !== 'object') {
         if (typeof value === 'string') return `'${value.replace(/'/g, "\\'")}'`
         return JSON.stringify(value)
@@ -87,6 +117,7 @@ function isMeaningful(value: unknown): boolean {
 
 function renderProp(key: string, value: unknown): string | null {
     if (!isMeaningful(value)) return null
+    if (isRawCode(value)) return `${key}={${value.__upupRawCode}}`
     if (value === true) return key
     if (value === false) return `${key}={false}`
     if (typeof value === 'string') return `${key}="${value.replace(/"/g, '&quot;')}"`
@@ -94,16 +125,94 @@ function renderProp(key: string, value: unknown): string | null {
     return `${key}={${renderObjectLiteral(value, 1)}}`
 }
 
+function collectCoreImports(value: unknown, imports: Set<string>): void {
+    if (isRawCode(value)) {
+        if (LOCALE_IMPORTS.has(value.__upupRawCode)) imports.add(value.__upupRawCode)
+        return
+    }
+
+    if (Array.isArray(value)) {
+        value.forEach((item) => collectCoreImports(item, imports))
+        return
+    }
+
+    if (isPlainObject(value)) {
+        Object.values(value).forEach((item) => collectCoreImports(item, imports))
+    }
+}
+
+function parseOrigins(value: unknown): string[] | undefined {
+    if (Array.isArray(value)) {
+        return value.filter((item): item is string => typeof item === 'string' && item.trim() !== '')
+    }
+    if (typeof value !== 'string') return undefined
+    const origins = value
+        .split(/[,\n]/)
+        .map((item) => item.trim())
+        .filter(Boolean)
+    return origins.length > 0 ? origins : undefined
+}
+
+function normalizeForCode(config: UpupConfig): { config: UpupConfig; coreImports: string[] } {
+    const out: Record<string, unknown> = { ...config }
+    const coreImports = new Set<string>()
+    const resumable = out.resumable as Record<string, unknown> | undefined
+    const usesTusEndpoint =
+        resumable &&
+        typeof resumable === 'object' &&
+        !Array.isArray(resumable) &&
+        resumable.protocol === 'tus' &&
+        typeof resumable.endpoint === 'string' &&
+        resumable.endpoint.trim() !== ''
+
+    if (usesTusEndpoint) {
+        delete out.uploadEndpoint
+        delete out.serverUrl
+    } else if (out.mode === 'server') {
+        delete out.uploadEndpoint
+    } else {
+        delete out.serverUrl
+    }
+
+    const i18n = out.i18n as Record<string, unknown> | undefined
+    if (i18n && typeof i18n === 'object' && !Array.isArray(i18n)) {
+        const nextI18n = { ...i18n }
+        for (const key of ['locale', 'fallbackLocale'] as const) {
+            const value = nextI18n[key]
+            if (typeof value === 'string' && LOCALE_EXPORTS[value]) {
+                nextI18n[key] = raw(LOCALE_EXPORTS[value])
+                coreImports.add(LOCALE_EXPORTS[value])
+            }
+        }
+        out.i18n = nextI18n
+    }
+
+    const cors = out.cors as Record<string, unknown> | undefined
+    if (cors && typeof cors === 'object' && !Array.isArray(cors)) {
+        const nextCors = { ...cors }
+        const origins = parseOrigins(nextCors.allowedOrigins)
+        if (origins) nextCors.allowedOrigins = origins
+        else delete nextCors.allowedOrigins
+        out.cors = nextCors
+    }
+
+    return { config: out as UpupConfig, coreImports: [...coreImports].sort() }
+}
+
 export function generateCode(config: UpupConfig, defaults: UpupConfig = {}): string {
-    const events = (config as any).events as Record<string, boolean> | undefined
-    const configWithoutEvents: Record<string, unknown> = { ...config }
+    const normalized = normalizeForCode(config)
+    const normalizedDefaults = normalizeForCode(defaults)
+    const events = (normalized.config as any).events as Record<string, boolean> | undefined
+    const configWithoutEvents: Record<string, unknown> = { ...normalized.config }
     delete (configWithoutEvents as any).events
+    const coreImports = new Set<string>()
 
     // Drop every key whose value matches the declared default, descending into
     // nested objects so setting one leaf doesn't drag sibling defaults along.
     const propLines = Object.entries(configWithoutEvents)
         .map(([k, v]) => {
-            const res = diffAgainstDefaults(v, (defaults as Record<string, unknown>)[k])
+            const res = diffAgainstDefaults(v, (normalizedDefaults.config as Record<string, unknown>)[k])
+            if (!res.omit) collectCoreImports(res.value, coreImports)
             return res.omit ? null : renderProp(k, res.value)
         })
         .filter((s): s is string => s != null)
@@ -112,16 +221,25 @@ export function generateCode(config: UpupConfig, defaults: UpupConfig = {}): str
     if (events) {
         for (const [handler, on] of Object.entries(events)) {
             if (on) {
-                eventLines.push(`${handler}={(arg) => console.log('${handler}', arg)}`)
+                if (handler === 'onPrepareFiles') {
+                    eventLines.push(`${handler}={(files, ...args) => { console.log('${handler}', files, ...args); return files }}`)
+                } else {
+                    eventLines.push(`${handler}={(...args) => console.log('${handler}', ...args)}`)
+                }
             }
         }
     }
 
     const allLines = [...propLines, ...eventLines]
     const propsBlock = allLines.length === 0 ? '' : '\n' + indent(allLines.join('\n'), 6)
+    const coreImportNames = [...coreImports].sort()
+    const coreImport = coreImportNames.length > 0
+        ? `import { ${coreImportNames.join(', ')} } from '@upup/core'\n`
+        : ''
 
-    return `import { UpupUploader } from 'upup-react-file-uploader'
-import 'upup-react-file-uploader/styles'
+    return `import { UpupUploader } from '@upup/react'
+import '@upup/react/styles'
+${coreImport}
 
 export default function App() {
   return (

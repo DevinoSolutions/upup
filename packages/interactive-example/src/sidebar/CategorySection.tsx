@@ -23,8 +23,8 @@ import { isVisible, readPath as readPathShared } from '../state/propPath'
  * the host env never provided credentials.
  */
 const DRIVE_CREDENTIAL_PATHS: Record<string, string> = {
-    google_drive: 'cloudDrives.googleDrive.clientId',
-    onedrive: 'cloudDrives.oneDrive.clientId',
+    googleDrive: 'cloudDrives.googleDrive.clientId',
+    oneDrive: 'cloudDrives.oneDrive.clientId',
     dropbox: 'cloudDrives.dropbox.clientId',
     box: 'cloudDrives.box.clientId',
 }

@@ -72,13 +72,12 @@ test.describe('File count restriction', () => {
         await expect(page.locator('[data-testid="upup-file-item"]')).toHaveCount(2)
     })
 
-    test('stops at the limit when more files are added than allowed', async ({ page }) => {
+    test('rejects a batch when more files are added than allowed', async ({ page }) => {
         await page.setInputFiles('[data-testid="upup-file-input"]', [
             { name: 'img1.png', mimeType: 'image/png', buffer: Buffer.alloc(2 * 1024, 0x89) },
             { name: 'img2.png', mimeType: 'image/png', buffer: Buffer.alloc(2 * 1024, 0x89) },
             { name: 'img3.png', mimeType: 'image/png', buffer: Buffer.alloc(2 * 1024, 0x89) },
         ])
-        // Only 2 should be in the list (limit=2)
-        await expect(page.locator('[data-testid="upup-file-item"]')).toHaveCount(2)
+        await expect(page.locator('[data-testid="upup-file-item"]')).toHaveCount(0)
     })
 })

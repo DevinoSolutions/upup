@@ -4,8 +4,8 @@ import { generateCode } from '../code/generateCode'
 describe('generateCode', () => {
     it('renders minimal config with just provider', () => {
         const out = generateCode({ provider: 'backblaze' as any })
-        expect(out).toContain("import { UpupUploader } from 'upup-react-file-uploader'")
-        expect(out).toContain("import 'upup-react-file-uploader/styles'")
+        expect(out).toContain("import { UpupUploader } from '@upup/react'")
+        expect(out).toContain("import '@upup/react/styles'")
         expect(out).toContain('export default function App()')
         expect(out).toContain('<UpupUploader')
         expect(out).toContain('provider="backblaze"')
@@ -38,10 +38,11 @@ describe('generateCode', () => {
 
     it('emits onX handlers as console.log stubs when events toggles are set', () => {
         const out = generateCode({
-            events: { onError: true, onFileUploadComplete: true } as any,
+            events: { onError: true, onFileUploadComplete: true, onPrepareFiles: true } as any,
         } as any)
-        expect(out).toContain("onError={(arg) => console.log('onError', arg)}")
-        expect(out).toContain("onFileUploadComplete={(arg) => console.log('onFileUploadComplete', arg)}")
+        expect(out).toContain("onError={(...args) => console.log('onError', ...args)}")
+        expect(out).toContain("onFileUploadComplete={(...args) => console.log('onFileUploadComplete', ...args)}")
+        expect(out).toContain("onPrepareFiles={(files, ...args) => { console.log('onPrepareFiles', files, ...args); return files }}")
     })
 
     it('recursively omits nested defaults — only the diverging leaf appears', () => {
@@ -70,7 +71,7 @@ describe('generateCode', () => {
     })
 
     it('omits objects where all values are undefined', () => {
-        const out = generateCode({ resumable: { mode: undefined } } as any)
+        const out = generateCode({ resumable: { protocol: undefined } } as any)
         expect(out).not.toContain('resumable')
     })
 
@@ -96,5 +97,73 @@ describe('generateCode', () => {
         const out = generateCode(config, defaults)
         expect(out).not.toContain('theme')
         expect(out).not.toContain('provider')
+    })
+
+    it('imports locale bundles for copy-pasteable i18n config', () => {
+        const out = generateCode({
+            i18n: { locale: 'ar-SA', fallbackLocale: 'fr-FR' },
+        } as any, {
+            i18n: { locale: 'en-US', fallbackLocale: 'en-US' },
+        } as any)
+
+        expect(out).toContain("import { arSA, frFR } from '@upup/core'")
+        expect(out).toContain('locale: arSA')
+        expect(out).toContain('fallbackLocale: frFR')
+        expect(out).not.toContain("locale: 'ar-SA'")
+    })
+
+    it('does not import locale bundles that were removed by default diffing', () => {
+        const out = generateCode({
+            uploadEndpoint: '/api/upup-mock/presign',
+            i18n: { locale: 'en-US', fallbackLocale: 'en-US' },
+        } as any, {
+            i18n: { locale: 'en-US', fallbackLocale: 'en-US' },
+        } as any)
+
+        expect(out).toContain('uploadEndpoint="/api/upup-mock/presign"')
+        expect(out).not.toContain("from '@upup/core'")
+        expect(out).not.toContain('i18n=')
+    })
+
+    it('renders comma-separated CORS origins as an array', () => {
+        const out = generateCode({
+            cors: {
+                dangerouslyAutoConfigure: true,
+                allowedOrigins: 'http://localhost:3000, https://example.com',
+            },
+        } as any)
+
+        expect(out).toContain('dangerouslyAutoConfigure: true')
+        expect(out).toContain('allowedOrigins: [')
+        expect(out).toContain("'http://localhost:3000'")
+        expect(out).toContain("'https://example.com'")
+    })
+
+    it('does not keep hidden client endpoint when server mode is selected', () => {
+        const out = generateCode({
+            mode: 'server',
+            uploadEndpoint: '/api/upup-mock/presign',
+            serverUrl: '/api/upup',
+        } as any)
+
+        expect(out).toContain('mode="server"')
+        expect(out).toContain('serverUrl="/api/upup"')
+        expect(out).not.toContain('uploadEndpoint')
+    })
+
+    it('does not keep presign or server endpoints when an external tus endpoint is selected', () => {
+        const out = generateCode({
+            uploadEndpoint: '/api/upup-mock/presign',
+            serverUrl: '/api/upup',
+            resumable: {
+                protocol: 'tus',
+                endpoint: '/api/upup-mock/tus',
+            },
+        } as any)
+
+        expect(out).toContain("protocol: 'tus'")
+        expect(out).toContain("endpoint: '/api/upup-mock/tus'")
+        expect(out).not.toContain('uploadEndpoint')
+        expect(out).not.toContain('serverUrl')
     })
 })

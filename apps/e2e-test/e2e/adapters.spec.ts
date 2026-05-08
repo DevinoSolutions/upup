@@ -22,7 +22,7 @@ test.describe('Adapter switching', () => {
     })
 
     test('Link adapter shows URL input', async ({ page }) => {
-        await page.click('[data-testid="upup-source-link"]')
+        await page.click('[data-testid="upup-source-url"]')
         await expect(page.getByPlaceholder('Enter file url')).toBeVisible()
         await expect(page.getByRole('button', { name: 'Fetch' })).toBeVisible()
     })
@@ -33,12 +33,12 @@ test.describe('Adapter switching', () => {
     })
 
     test('Google Drive adapter shows auth prompt', async ({ page }) => {
-        await page.click('[data-testid="upup-source-google_drive"]')
+        await page.click('[data-testid="upup-source-googleDrive"]')
         await expect(page.locator('[data-upup-slot="google-drive-uploader"]')).toBeVisible()
     })
 
     test('OneDrive adapter shows auth prompt', async ({ page }) => {
-        await page.click('[data-testid="upup-source-one_drive"]')
+        await page.click('[data-testid="upup-source-oneDrive"]')
         await expect(page.locator('[data-upup-slot="onedrive-uploader"]')).toBeVisible()
     })
 
@@ -48,7 +48,7 @@ test.describe('Adapter switching', () => {
     })
 
     test('Cancel button returns to main view', async ({ page }) => {
-        await page.click('[data-testid="upup-source-link"]')
+        await page.click('[data-testid="upup-source-url"]')
         await expect(page.getByPlaceholder('Enter file url')).toBeVisible()
         await page.getByText('Cancel').click()
         await expect(page.locator('[data-testid="upup-dropzone"]')).toBeVisible()
@@ -67,7 +67,7 @@ test.describe('URL upload', () => {
             })
         })
         await page.goto('/')
-        await page.click('[data-testid="upup-source-link"]')
+        await page.click('[data-testid="upup-source-url"]')
         await page.fill('[placeholder="Enter file url"]', 'https://example.com/sample.txt')
         await page.click('button:has-text("Fetch")')
         await expect(page.locator('[data-testid="upup-file-item"]')).toBeVisible({ timeout: 5000 })

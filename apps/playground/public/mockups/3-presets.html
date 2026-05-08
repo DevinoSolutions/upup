@@ -39,7 +39,7 @@
                     <div class="mk-presets-title">Start with a preset</div>
                     <div class="mk-presets">
                         <button class="mk-preset active"><span class="dot"></span>S3 minimal</button>
-                        <button class="mk-preset"><span class="dot"></span>Managed mode</button>
+                        <button class="mk-preset"><span class="dot"></span>Client upload</button>
                         <button class="mk-preset"><span class="dot"></span>Multi-cloud</button>
                         <button class="mk-preset"><span class="dot"></span>Mini</button>
                         <button class="mk-preset"><span class="dot"></span>UI slots</button>
@@ -58,9 +58,9 @@
                     <div class="mk-card-header"><span class="mk-card-dot"></span><span class="mk-card-title">Upload</span><span class="mk-card-count">4</span></div>
                     <div class="mk-card-body">
                         <div class="mk-field"><span class="mk-label">Provider</span><select class="mk-select" id="preview-provider"><option>s3</option></select></div>
-                        <div class="mk-field"><span class="mk-label">Token endpoint</span><input class="mk-input" id="preview-token" value="/api/upload-token" /></div>
+                        <div class="mk-field"><span class="mk-label">Upload endpoint</span><input class="mk-input" id="preview-token" value="/api/upup-mock/presign" /></div>
                         <div class="mk-field"><span class="mk-label">Server URL</span><input class="mk-input" id="preview-server" value="/api/upup" /></div>
-                        <div class="mk-field"><span class="mk-label">API key (managed mode)</span><input class="mk-input" id="preview-apikey" placeholder="" /></div>
+                        <div class="mk-field"><span class="mk-label">CORS origins</span><input class="mk-input" id="preview-apikey" placeholder="http://localhost:3000" /></div>
                     </div>
                 </div>
                 <div class="mk-card">
@@ -87,27 +87,27 @@
         const PRESETS = {
             'S3 minimal': {
                 summary: "sets <span class='k'>provider: 's3'</span>, <span class='k'>serverUrl: '/api/upup'</span>, <span class='k'>accept: '*'</span>. Everything else left on defaults.",
-                values: { provider: 's3', token: '/api/upload-token', server: '/api/upup', apikey: '', mini: false }
+                values: { provider: 's3', token: '/api/upup-mock/presign', server: '/api/upup', apikey: '', mini: false }
             },
-            'Managed mode': {
-                summary: "switches to our hosted backend — no <span class='k'>serverUrl</span> needed, just an <span class='k'>apiKey</span>. Good for zero-backend demos.",
-                values: { provider: 's3', token: '', server: '', apikey: 'upup_live_••••••••', mini: false }
+            'Client upload': {
+                summary: "uses <span class='k'>uploadEndpoint</span> so the browser can upload with short-lived credentials. Leave both endpoints blank for local file collection only.",
+                values: { provider: 's3', token: '/api/upup-mock/presign', server: '', apikey: 'http://localhost:3000', mini: false }
             },
             'Multi-cloud': {
-                summary: "enables <span class='k'>s3</span>, <span class='k'>googleDrive</span>, <span class='k'>oneDrive</span>, <span class='k'>dropbox</span>, <span class='k'>box</span> adapters together.",
-                values: { provider: 's3', token: '/api/upload-token', server: '/api/upup', apikey: '', mini: false }
+                summary: "enables <span class='k'>local</span>, <span class='k'>url</span>, <span class='k'>googleDrive</span>, <span class='k'>oneDrive</span>, <span class='k'>dropbox</span>, and <span class='k'>box</span> sources together.",
+                values: { provider: 's3', token: '/api/upup-mock/presign', server: '/api/upup', apikey: '', mini: false }
             },
             'Mini': {
-                summary: "compact 280×280 uploader for inline use — sets <span class='k'>mini: true</span> and trims the adapter list to My Device + Camera.",
-                values: { provider: 's3', token: '/api/upload-token', server: '/api/upup', apikey: '', mini: true }
+                summary: "compact 280×280 uploader for inline use — sets <span class='k'>mini: true</span> and trims <span class='k'>sources</span> to local + camera.",
+                values: { provider: 's3', token: '/api/upup-mock/presign', server: '/api/upup', apikey: '', mini: true }
             },
             'UI slots': {
-                summary: "demonstrates the <span class='k'>classNames</span> slots — custom styling for the drop zone, buttons, and file rows.",
-                values: { provider: 's3', token: '/api/upload-token', server: '/api/upup', apikey: '', mini: false }
+                summary: "demonstrates <span class='k'>theme.slots</span> — custom styling for the drop zone, buttons, and file rows.",
+                values: { provider: 's3', token: '/api/upup-mock/presign', server: '/api/upup', apikey: '', mini: false }
             },
             'Processing pipeline': {
                 summary: "wires up <span class='k'>processingEndpoint</span> + SSE for post-upload transforms (thumbnails, virus scan, metadata).",
-                values: { provider: 's3', token: '/api/upload-token', server: '/api/upup', apikey: '', mini: false }
+                values: { provider: 's3', token: '/api/upup-mock/presign', server: '/api/upup', apikey: '', mini: false }
             }
         };
 

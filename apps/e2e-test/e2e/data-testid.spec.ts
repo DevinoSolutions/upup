@@ -26,11 +26,11 @@ test.describe('data-testid selectors', () => {
   })
 
   test('source buttons have data-testid', async ({ page }) => {
-    await expect(page.locator('[data-testid="upup-source-internal"]')).toHaveCount(1)
-    await expect(page.locator('[data-testid="upup-source-google_drive"]')).toHaveCount(1)
-    await expect(page.locator('[data-testid="upup-source-one_drive"]')).toHaveCount(1)
+    await expect(page.locator('[data-testid="upup-source-local"]')).toHaveCount(1)
+    await expect(page.locator('[data-testid="upup-source-googleDrive"]')).toHaveCount(1)
+    await expect(page.locator('[data-testid="upup-source-oneDrive"]')).toHaveCount(1)
     await expect(page.locator('[data-testid="upup-source-dropbox"]')).toHaveCount(1)
-    await expect(page.locator('[data-testid="upup-source-link"]')).toHaveCount(1)
+    await expect(page.locator('[data-testid="upup-source-url"]')).toHaveCount(1)
     await expect(page.locator('[data-testid="upup-source-camera"]')).toHaveCount(1)
   })
 })

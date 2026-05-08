@@ -13,10 +13,10 @@ export default function HeroSection() {
     const [selectedManager, setSelectedManager] = useState("npm");
 
     const packageManagers = useMemo(() => [
-        {id: "npm", name: "npm", command: "npm install upup-react-file-uploader"},
-        {id: "pnpm", name: "pnpm", command: "pnpm add upup-react-file-uploader"},
-        {id: "yarn", name: "Yarn", command: "yarn add upup-react-file-uploader"},
-        {id: "bun", name: "Bun", command: "bun add upup-react-file-uploader"},
+        {id: "npm", name: "npm", command: "npm install @upup/react"},
+        {id: "pnpm", name: "pnpm", command: "pnpm add @upup/react"},
+        {id: "yarn", name: "Yarn", command: "yarn add @upup/react"},
+        {id: "bun", name: "Bun", command: "bun add @upup/react"},
     ], []);
 
     const currentCommand = useMemo(() => {

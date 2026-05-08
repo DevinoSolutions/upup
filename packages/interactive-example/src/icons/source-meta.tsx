@@ -9,7 +9,7 @@ import {
     CameraIcon,
     AudioIcon,
     ScreenCastIcon,
-} from 'upup-react-file-uploader'
+} from '@upup/react'
 
 export type SourceMeta = {
     label: string
@@ -28,8 +28,8 @@ export type SourceMeta = {
  */
 export const SOURCE_META: Record<string, SourceMeta> = {
     local: { label: 'My device', Icon: MyDeviceIcon },
-    google_drive: { label: 'Google Drive', Icon: GoogleDriveIcon },
-    onedrive: { label: 'OneDrive', Icon: OneDriveIcon },
+    googleDrive: { label: 'Google Drive', Icon: GoogleDriveIcon },
+    oneDrive: { label: 'OneDrive', Icon: OneDriveIcon },
     dropbox: { label: 'Dropbox', Icon: DropBoxIcon },
     box: { label: 'Box', Icon: BoxIcon },
     url: { label: 'Link / URL', Icon: LinkIcon },

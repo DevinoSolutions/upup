@@ -56,8 +56,8 @@ export const uploadCategory: CategoryDefinition = {
             options: {
                 fields: [
                     {
-                        id: 'mode',
-                        label: 'Mode',
+                        id: 'protocol',
+                        label: 'Protocol',
                         primitive: 'enum',
                         defaultValue: 'multipart',
                         options: {
@@ -80,7 +80,7 @@ export const uploadCategory: CategoryDefinition = {
                         primitive: 'string',
                         defaultValue: '',
                         options: { placeholder: 'https://tus.example.com/files' },
-                        visibleWhen: { propId: 'resumable.mode', equals: 'tus' },
+                        visibleWhen: { propId: 'resumable.protocol', equals: 'tus' },
                     },
                 ],
             },

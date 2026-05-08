@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useRef, useState } from 'react'
 import { MastraClient } from '@mastra/client-js'
 import type { UpupConfig } from '../types'
+import { getLocalAssistantPatch } from './localAssistant'
 
 type ChatRole = 'user' | 'assistant'
 
@@ -58,6 +59,23 @@ export function useMastraChat({ baseUrl, agentId, onPatch }: UseMastraChatOption
 
             setError(null)
             const userMsg: ChatMessage = { id: newId(), role: 'user', text: trimmed }
+
+            const localPatch = getLocalAssistantPatch(trimmed)
+            if (localPatch) {
+                onPatch(localPatch)
+                setMessages((prev) => [
+                    ...prev,
+                    userMsg,
+                    {
+                        id: newId(),
+                        role: 'assistant',
+                        text: localPatch.explanation,
+                        patches: [localPatch],
+                    },
+                ])
+                return
+            }
+
             const asstId = newId()
             const asstMsg: ChatMessage = { id: asstId, role: 'assistant', text: '', pending: true }
 

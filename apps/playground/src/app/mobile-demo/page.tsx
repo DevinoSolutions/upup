@@ -2,29 +2,38 @@
 
 import Uploader from "@/components/Uploader";
 import { useSearchParams } from "next/navigation";
-import type { Translations } from "upup-react-file-uploader";
 import {
-  en_US,
-  ja_JP,
-  zh_CN,
-  zh_TW,
-  fr_FR,
-  ar_SA,
-  de_DE,
-  es_ES,
-  ko_KR,
-} from "upup-react-file-uploader/locales";
+  enUS,
+  jaJP,
+  zhCN,
+  zhTW,
+  frFR,
+  arSA,
+  deDE,
+  esES,
+  koKR,
+  type LocaleBundle,
+} from "@upup/core";
 
-const LOCALE_MAP: Record<string, Translations> = {
-  en_US,
-  ja_JP,
-  zh_CN,
-  zh_TW,
-  fr_FR,
-  ar_SA,
-  de_DE,
-  es_ES,
-  ko_KR,
+const LOCALE_MAP: Record<string, LocaleBundle> = {
+  "en-US": enUS,
+  "ja-JP": jaJP,
+  "zh-CN": zhCN,
+  "zh-TW": zhTW,
+  "fr-FR": frFR,
+  "ar-SA": arSA,
+  "de-DE": deDE,
+  "es-ES": esES,
+  "ko-KR": koKR,
+  enUS,
+  jaJP,
+  zhCN,
+  zhTW,
+  frFR,
+  arSA,
+  deDE,
+  esES,
+  koKR,
 };
 import { Suspense, useEffect } from "react";
 
@@ -76,8 +85,8 @@ function MobileDemoContent() {
   const darkMode = searchParams.get("darkMode") === "true";
   const autoRetryEnabled = searchParams.get("autoRetryEnabled") === "true";
   const autoRetryCount = parseInt(searchParams.get("autoRetryCount") || "3");
-  const language = searchParams.get("language") || "en_US";
-  const locale = LOCALE_MAP[language] ?? en_US;
+  const language = searchParams.get("language") || "en-US";
+  const locale = LOCALE_MAP[language] ?? enUS;
 
   // Apply dark mode immediately
   useEffect(() => {
@@ -115,7 +124,7 @@ function MobileDemoContent() {
         imageEditor={imageEditor}
         fileSizeLimit={fileSizeLimit}
         maxRetries={autoRetryEnabled ? autoRetryCount : undefined}
-        localePack={locale}
+        locale={locale}
       />
     </div>
   );
@@ -125,7 +134,7 @@ export default function MobileDemoPage() {
   return (
     <>
       {/* Hide navbar with CSS and handle dark mode */}
-      <style jsx global>{`
+      <style>{`
         nav,
         [data-playground-header] {
           display: none !important;

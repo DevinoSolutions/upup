@@ -1,4 +1,6 @@
 'use client'
+
+import { useEffect, useMemo, useState } from "react";
 import { InteractiveExample } from "@upup/interactive-example";
 import "@upup/interactive-example/styles";
 import Toast from "@/components/Toast";
@@ -28,8 +30,41 @@ function cloudDrivesFromEnv() {
   return Object.keys(out).length > 0 ? out : undefined;
 }
 
+type SearchParams = Record<string, string | string[] | undefined>;
+
+function getSearchParam(params: SearchParams, key: string): string | undefined {
+  const value = params[key];
+  return Array.isArray(value) ? value[0] : value;
+}
+
+function mockUploadEndpoint(params: SearchParams): string {
+  const failure = getSearchParam(params, "mockFailure");
+  const run = getSearchParam(params, "mockRun");
+  const qs = new URLSearchParams();
+  if (failure) qs.set("fail", failure);
+  if (run) qs.set("run", run);
+  const suffix = qs.toString();
+  return `/api/upup-mock/presign${suffix ? `?${suffix}` : ""}`;
+}
+
+function paramsFromSearch(search: string): SearchParams {
+  return Object.fromEntries(new URLSearchParams(search));
+}
+
 export default function Home() {
+  const [search, setSearch] = useState("");
+  useEffect(() => {
+    setSearch(window.location.search);
+  }, []);
+  const params = useMemo(() => paramsFromSearch(search), [search]);
   const cloudDrives = cloudDrivesFromEnv();
+  const uploadEndpoint =
+    process.env.NEXT_PUBLIC_UPUP_UPLOAD_ENDPOINT ?? mockUploadEndpoint(params);
+  const initialConfig = {
+    uploadEndpoint,
+    ...(cloudDrives ? { cloudDrives } : {}),
+  } as never;
+
   return (
     <div className="container mx-auto" style={{ padding: 24, maxWidth: 1400 }}>
       <p className="text-sm text-gray-600 dark:text-gray-400" style={{ marginBottom: 16, maxWidth: 720 }}>
@@ -37,8 +72,9 @@ export default function Home() {
         to the <strong>Code</strong> tab for a copy-pasteable snippet.
       </p>
       <InteractiveExample
+        key={uploadEndpoint}
         defaultExpanded={['upload']}
-        initialConfig={cloudDrives ? { cloudDrives } as never : undefined}
+        initialConfig={initialConfig}
       />
       <Toast />
     </div>

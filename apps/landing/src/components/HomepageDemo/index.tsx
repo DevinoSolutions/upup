@@ -24,9 +24,18 @@ import {
 } from "react-icons/fa";
 import { SiDropbox, SiGoogledrive } from "react-icons/si";
 import { GrOnedrive } from "react-icons/gr";
-import type { Translations } from 'upup-react-file-uploader';
-import { en_US } from 'upup-react-file-uploader';
-import { ar_SA, de_DE, es_ES, fr_FR, ja_JP, ko_KR, zh_CN, zh_TW } from 'upup-react-file-uploader/locales';
+import {
+  arSA,
+  deDE,
+  enUS,
+  esES,
+  frFR,
+  jaJP,
+  koKR,
+  zhCN,
+  zhTW,
+  type LocaleBundle,
+} from '@upup/core';
 import Uploader from "@/components/Uploader";
 import { Tooltip } from 'react-tooltip';
 import 'react-tooltip/dist/react-tooltip.css';
@@ -84,16 +93,16 @@ const UPLOAD_ADAPTERS = [
 ];
 
 // Available languages for the locale selector
-const LANGUAGES: { code: string; label: string; locale: Translations }[] = [
-  { code: 'en_US', label: 'English', locale: en_US },
-  { code: 'fr_FR', label: 'Français', locale: fr_FR },
-  { code: 'de_DE', label: 'Deutsch', locale: de_DE },
-  { code: 'es_ES', label: 'Español', locale: es_ES },
-  { code: 'ja_JP', label: '日本語', locale: ja_JP },
-  { code: 'ko_KR', label: '한국어', locale: ko_KR },
-  { code: 'zh_CN', label: '简体中文', locale: zh_CN },
-  { code: 'zh_TW', label: '繁體中文', locale: zh_TW },
-  { code: 'ar_SA', label: 'العربية', locale: ar_SA },
+const LANGUAGES: { code: string; label: string; locale: LocaleBundle }[] = [
+  { code: 'en-US', label: 'English', locale: enUS },
+  { code: 'fr-FR', label: 'Français', locale: frFR },
+  { code: 'de-DE', label: 'Deutsch', locale: deDE },
+  { code: 'es-ES', label: 'Español', locale: esES },
+  { code: 'ja-JP', label: '日本語', locale: jaJP },
+  { code: 'ko-KR', label: '한국어', locale: koKR },
+  { code: 'zh-CN', label: '简体中文', locale: zhCN },
+  { code: 'zh-TW', label: '繁體中文', locale: zhTW },
+  { code: 'ar-SA', label: 'العربية', locale: arSA },
 ];
 
 export default function HomepageDemo() {
@@ -108,7 +117,7 @@ export default function HomepageDemo() {
   const [imageEditor, setImageEditor] = useState(false);
   const [autoRetryEnabled, setAutoRetryEnabled] = useState(false);
   const [autoRetryCount, setAutoRetryCount] = useState(3);
-  const [selectedLanguage, setSelectedLanguage] = useState('en_US');
+  const [selectedLanguage, setSelectedLanguage] = useState('en-US');
   const [fileSizeValue, setFileSizeValue] = useState(25); // Default 25
   const [fileSizeUnit, setFileSizeUnit] = useState(1024 * 1024); // Default MB
   const [restrictionsEnabled, setRestrictionsEnabled] = useState(false); // New state for restrictions toggle
@@ -179,7 +188,7 @@ export default function HomepageDemo() {
       className="py-24 px-6 relative overflow-hidden rounded-xl"
     >
       {/* Add custom CSS for color themes and mobile simulation */}
-      <style jsx>{`
+      <style>{`
         .theme-blue {
           background-color: #3b82f6;
         }
@@ -745,7 +754,7 @@ export default function HomepageDemo() {
                       imageEditor={imageEditor}
                       fileSizeLimit={restrictionsEnabled ? fileSizeLimit : 999}
                       maxRetries={autoRetryEnabled ? autoRetryCount : undefined}
-                      localePack={
+                      locale={
                         LANGUAGES.find((l) => l.code === selectedLanguage)
                           ?.locale
                       }

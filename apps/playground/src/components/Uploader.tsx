@@ -2,16 +2,17 @@
 
 import React, { useContext } from "react";
 
-import { UpupUploader, type Translations } from "upup-react-file-uploader";
-import "upup-react-file-uploader/styles";
+import { UpupUploader } from "@upup/react";
+import "@upup/react/styles";
+import type { LocaleBundle } from "@upup/core";
 import { ThemeContext } from "@/lib/contexts";
 import { toast } from "react-toastify";
 
 // v2 source mapping — human-readable strings
 const adapterToSource: Record<string, string> = {
   INTERNAL: "local",
-  GOOGLE_DRIVE: "google_drive",
-  ONE_DRIVE: "onedrive",
+  GOOGLE_DRIVE: "googleDrive",
+  ONE_DRIVE: "oneDrive",
   LINK: "url",
   CAMERA: "camera",
   DROPBOX: "dropbox",
@@ -28,7 +29,7 @@ interface Props {
   shouldCompress?: boolean;
   fileSizeLimit?: number;
   maxRetries?: number;
-  localePack?: Translations;
+  locale?: LocaleBundle;
   imageEditor?: boolean;
 }
 
@@ -41,7 +42,7 @@ export default function Uploader({
   shouldCompress = false,
   fileSizeLimit = 25,
   maxRetries,
-  localePack,
+  locale,
   imageEditor = true,
 }: Readonly<Props>) {
   const { isDarkMode } = useContext(ThemeContext);
@@ -52,6 +53,12 @@ export default function Uploader({
     .filter(Boolean) as any[];
 
   const currentTheme = theme || "blue";
+  const useRealStorage =
+    process.env.NEXT_PUBLIC_UPUP_USE_REAL_STORAGE === "true";
+  const serverUrl =
+    process.env.NEXT_PUBLIC_BASE_URL
+      ? process.env.NEXT_PUBLIC_BASE_URL + "/api/upup"
+      : "/api/upup";
 
   const customSlots = {
     uploader: {
@@ -95,11 +102,8 @@ export default function Uploader({
       <UpupUploader
         provider="backblaze"
         maxFiles={limit}
-        serverUrl={
-          process.env.NEXT_PUBLIC_BASE_URL
-            ? process.env.NEXT_PUBLIC_BASE_URL + "/api/upup"
-            : "/api/upup"
-        }
+        serverUrl={useRealStorage ? serverUrl : undefined}
+        uploadEndpoint={useRealStorage ? undefined : "/api/upup-mock/presign"}
         sources={sources}
         cloudDrives={{
           googleDrive: {
@@ -121,7 +125,7 @@ export default function Uploader({
         imageEditor={imageEditor}
         maxFileSize={{ size: fileSizeLimit, unit: "MB" }}
         maxRetries={maxRetries}
-        i18n={localePack ? { locale: localePack } : undefined}
+        i18n={locale ? { locale } : undefined}
         onFilesUploadComplete={(files) => {
           console.log("Files uploaded successfully:", files);
           toast.success("Files uploaded successfully!");

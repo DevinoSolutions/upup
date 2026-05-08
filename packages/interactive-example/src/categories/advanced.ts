@@ -25,12 +25,12 @@ export const advancedCategory: CategoryDefinition = {
             },
         },
         {
-            id: 'tokenEndpoint',
-            label: 'Token endpoint',
+            id: 'uploadEndpoint',
+            label: 'Upload endpoint',
             description: 'Where the uploader POSTs to get a presigned URL.',
             primitive: 'string',
             defaultValue: '',
-            options: { placeholder: '/api/upload-token' },
+            options: { placeholder: '/api/upup-mock/presign' },
             visibleWhen: { propId: 'mode', equals: 'client' },
         },
         {
@@ -41,18 +41,6 @@ export const advancedCategory: CategoryDefinition = {
             defaultValue: '',
             options: { placeholder: '/api/upup' },
             visibleWhen: { propId: 'mode', equals: 'server' },
-        },
-        {
-            id: 'apiKey',
-            label: 'API key (managed mode)',
-            primitive: 'string',
-            defaultValue: '',
-        },
-        {
-            id: 'uploadEndpoint',
-            label: 'Upload endpoint',
-            primitive: 'string',
-            defaultValue: '',
         },
         {
             id: 'processingEndpoint',
@@ -70,11 +58,17 @@ export const advancedCategory: CategoryDefinition = {
             options: { min: 1_000, max: 600_000 },
         },
         {
-            id: 'enableAutoCorsConfig',
-            label: 'Auto-configure S3 CORS',
-            description: 'Auto-patch the bucket CORS on first use. Requires IAM permission on the backend.',
-            primitive: 'bool',
-            defaultValue: false,
+            id: 'cors',
+            label: 'CORS',
+            description: 'Quick setup for storage CORS. dangerouslyAutoConfigure can mutate bucket config.',
+            primitive: 'nested',
+            defaultValue: undefined,
+            options: {
+                fields: [
+                    { id: 'dangerouslyAutoConfigure', label: 'Dangerously auto-configure', primitive: 'bool', defaultValue: false },
+                    { id: 'allowedOrigins', label: 'Allowed origins', primitive: 'string', defaultValue: '' },
+                ],
+            },
         },
         {
             id: 'cloudDrives.googleDrive',

@@ -55,16 +55,16 @@
 
                         <div class="mk-field">
                             <div class="mk-field-head">
-                                <span class="mk-label">Token endpoint</span>
+                                <span class="mk-label">Upload endpoint</span>
                                 <button class="mk-info" tabindex="0">i</button>
                                 <div class="mk-popover">
                                     <span class="mk-popover-arrow"></span>
-                                    <h4>tokenEndpoint</h4>
-                                    <p>Your backend URL that returns short-lived presigned URLs or direct-upload tokens. Leave blank in managed mode.</p>
+                                    <h4>uploadEndpoint</h4>
+                                    <p>Your backend URL that returns short-lived upload credentials for client-hosted uploads. Leave blank for local file collection only.</p>
                                     <a href="#">Open docs →</a>
                                 </div>
                             </div>
-                            <input class="mk-input" value="/api/upload-token" />
+                            <input class="mk-input" value="/api/upup-mock/presign" />
                         </div>
 
                         <div class="mk-field">
@@ -83,16 +83,16 @@
 
                         <div class="mk-field">
                             <div class="mk-field-head">
-                                <span class="mk-label">API key (managed mode)</span>
+                                <span class="mk-label">CORS</span>
                                 <button class="mk-info">i</button>
                                 <div class="mk-popover">
                                     <span class="mk-popover-arrow"></span>
-                                    <h4>apiKey</h4>
-                                    <p>Required only in managed mode. Swap the token endpoint for a key and we'll handle presigning ourselves.</p>
+                                    <h4>cors.dangerouslyAutoConfigure</h4>
+                                    <p>Convenience-only CORS setup for quick local storage testing. Production apps should configure explicit origins and methods.</p>
                                     <a href="#">Open docs →</a>
                                 </div>
                             </div>
-                            <input class="mk-input" placeholder="upup_live_..." />
+                            <input class="mk-input" placeholder="allowedOrigins: ['http://localhost:3000']" />
                         </div>
                     </div>
                 </div>

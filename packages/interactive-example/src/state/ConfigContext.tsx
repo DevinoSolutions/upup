@@ -21,7 +21,15 @@ type ConfigContextValue = {
 
 export const ConfigContext = createContext<ConfigContextValue | null>(null)
 
-const DEEP_MERGE_KEYS = new Set(['theme', 'imageEditor', 'resumable'])
+const DEEP_MERGE_KEYS = new Set([
+    'theme',
+    'imageEditor',
+    'resumable',
+    'i18n',
+    'cors',
+    'cloudDrives',
+    'folderUpload',
+])
 
 function applyPatch(prev: UpupConfig, patch: Partial<UpupConfig>): UpupConfig {
     const next: any = { ...prev }

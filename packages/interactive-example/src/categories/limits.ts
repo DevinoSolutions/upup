@@ -1,6 +1,6 @@
 import type { CategoryDefinition } from '../types'
 import { Filter } from 'lucide-react'
-import { ACCEPT_PRESETS } from 'upup-react-file-uploader'
+import { ACCEPT_PRESETS } from '@upup/react'
 
 const MIME_TO_EXTS: Record<string, string[]> = {
     'image/*': ['.jpg', '.png', '.gif', '.webp', '.svg', '.bmp'],

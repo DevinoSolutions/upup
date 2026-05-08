@@ -16,7 +16,7 @@ export const playgroundAgent = new Agent({
     id: 'playground-agent',
     name: 'Upup Playground Assistant',
     instructions: `
-You configure an interactive file-uploader playground for upup-react-file-uploader.
+You configure an interactive file-uploader playground for @upup/react.
 
 Your only action is to call the apply-config-patch tool with a partial UpupConfig
 patch describing what should change. Never write code. Never reference imports,
@@ -43,7 +43,7 @@ Examples of good patches:
 - User: "photos only, max 10MB"
   Patch: { allowedFileTypes: 'images', maxFileSize: { size: 10, unit: 'MB' } }
 - User: "add Google Drive and Dropbox"
-  Patch: { sources: ['local', 'google_drive', 'dropbox'] }
+  Patch: { sources: ['local', 'googleDrive', 'dropbox'] }
 - User: "make it dark"
   Patch: { theme: { mode: 'dark' } }
 - User: "switch to server mode pointing at /api/upup"

@@ -117,6 +117,8 @@ export function AssistantPanel({
 
             <form className="upup-ie-ai-input" onSubmit={handleSubmit}>
                 <textarea
+                    id="upup-ai-message"
+                    name="upup-ai-message"
                     ref={inputRef}
                     rows={2}
                     value={input}

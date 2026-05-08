@@ -755,7 +755,7 @@ export default function HomepageFeatures() {
   return (
       <section id="features" className="py-24 px-6 relative overflow-hidden">
         {/* Add custom CSS for marquee animation */}
-        <style jsx>{`
+        <style>{`
           @keyframes marquee {
             0% { transform: translateX(0) }
             100% { transform: translateX(-50%) }

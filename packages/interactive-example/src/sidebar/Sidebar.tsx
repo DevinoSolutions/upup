@@ -8,17 +8,20 @@ const TIER_KEY = 'upup-ie:sidebar-tier'
 
 export function Sidebar({ defaultExpanded }: { defaultExpanded: CategoryId[] }) {
     const expandedSet = new Set(defaultExpanded)
-
-    const [tier, setTier] = useState<Tier>(() => {
-        if (typeof window === 'undefined') return 'simple'
-        const saved = window.localStorage.getItem(TIER_KEY)
-        return saved === 'advanced' ? 'advanced' : 'simple'
-    })
+    const [tier, setTier] = useState<Tier>('simple')
+    const [hasLoadedSavedTier, setHasLoadedSavedTier] = useState(false)
 
     useEffect(() => {
         if (typeof window === 'undefined') return
+        const saved = window.localStorage.getItem(TIER_KEY)
+        setTier(saved === 'advanced' ? 'advanced' : 'simple')
+        setHasLoadedSavedTier(true)
+    }, [])
+
+    useEffect(() => {
+        if (typeof window === 'undefined' || !hasLoadedSavedTier) return
         window.localStorage.setItem(TIER_KEY, tier)
-    }, [tier])
+    }, [hasLoadedSavedTier, tier])
 
     const visible = categories.filter((c) =>
         tier === 'advanced' ? true : c.tier === 'simple',

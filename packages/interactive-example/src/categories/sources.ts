@@ -14,10 +14,6 @@ export const sourcesCategory: CategoryDefinition = {
             primitive: 'multi',
             defaultValue: [
                 'local',
-                'google_drive',
-                'onedrive',
-                'dropbox',
-                'box',
                 'url',
                 'camera',
                 'microphone',
@@ -26,8 +22,8 @@ export const sourcesCategory: CategoryDefinition = {
             options: {
                 options: [
                     'local',
-                    'google_drive',
-                    'onedrive',
+                    'googleDrive',
+                    'oneDrive',
                     'dropbox',
                     'box',
                     'url',
@@ -38,10 +34,16 @@ export const sourcesCategory: CategoryDefinition = {
             },
         },
         {
-            id: 'showSelectFolderButton',
-            label: 'Show "Select folder" button',
-            primitive: 'bool',
-            defaultValue: false,
+            id: 'folderUpload',
+            label: 'Folder upload',
+            primitive: 'nested',
+            defaultValue: undefined,
+            options: {
+                fields: [
+                    { id: 'enabled', label: 'Allow folders', primitive: 'bool', defaultValue: false },
+                    { id: 'showPickerButton', label: 'Show folder button', primitive: 'bool', defaultValue: false },
+                ],
+            },
         },
     ],
 }
