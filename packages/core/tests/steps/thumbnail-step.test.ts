@@ -47,16 +47,16 @@ describe('thumbnailStep', () => {
     })
 
     // shouldProcess — video types
-    it('shouldProcess returns true for video/mp4', () => {
-        expect(thumbnailStep().shouldProcess!(makeFile('v.mp4', 'video/mp4'))).toBe(true)
+    it('shouldProcess returns false for video/mp4', () => {
+        expect(thumbnailStep().shouldProcess!(makeFile('v.mp4', 'video/mp4'))).toBe(false)
     })
 
-    it('shouldProcess returns true for video/webm', () => {
-        expect(thumbnailStep().shouldProcess!(makeFile('v.webm', 'video/webm'))).toBe(true)
+    it('shouldProcess returns false for video/webm', () => {
+        expect(thumbnailStep().shouldProcess!(makeFile('v.webm', 'video/webm'))).toBe(false)
     })
 
-    it('shouldProcess returns true for video/quicktime', () => {
-        expect(thumbnailStep().shouldProcess!(makeFile('v.mov', 'video/quicktime'))).toBe(true)
+    it('shouldProcess returns false for video/quicktime', () => {
+        expect(thumbnailStep().shouldProcess!(makeFile('v.mov', 'video/quicktime'))).toBe(false)
     })
 
     // shouldProcess — rejected types

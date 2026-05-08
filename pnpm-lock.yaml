@@ -393,6 +393,9 @@ importers:
 
   packages/core:
     dependencies:
+      heic2any:
+        specifier: ^0.0.4
+        version: 0.0.4
       intl-messageformat:
         specifier: ^11.2.0
         version: 11.2.0
@@ -491,9 +494,6 @@ importers:
       framer-motion:
         specifier: ^12.0.6
         version: 12.35.0(@emotion/is-prop-valid@1.4.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
-      heic2any:
-        specifier: ^0.0.4
-        version: 0.0.4
       konva:
         specifier: ^9.0.0
         version: 9.3.6

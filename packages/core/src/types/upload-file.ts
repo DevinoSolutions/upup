@@ -8,6 +8,11 @@ export type UploadFileMetadata = {
   thumbnailUrl?: string
   checksum?: string
   originalContentHash?: string
+  originalSize?: number
+  processedSize?: number
+  compressed?: boolean
+  exifStripped?: boolean
+  heicConverted?: boolean
 }
 
 export type UploadFile = File & {

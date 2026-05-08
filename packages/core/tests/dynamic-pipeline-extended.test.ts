@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import { UpupCore } from '../src/core'
+import { FileSource, UploadStatus } from '../src/contracts'
 
 function getStepNames(core: UpupCore): string[] {
     const engine = (core as any).pipelineEngine
@@ -98,6 +99,43 @@ describe('Dynamic pipeline — explicit pipeline', () => {
         ]
         const core = new UpupCore({ pipeline: steps })
         expect(getStepNames(core)).toEqual(['first', 'second', 'third'])
+        core.destroy()
+    })
+
+    it('marks upload failed when a pipeline step throws', async () => {
+        const onError = vi.fn()
+        const uploadError = vi.fn()
+        const core = new UpupCore({
+            onError,
+            pipeline: [
+                {
+                    name: 'explode',
+                    process: vi.fn(async () => {
+                        throw new Error('pipeline boom')
+                    }),
+                },
+            ],
+        })
+        core.on('upload-error', uploadError)
+        await core.addFiles([
+            Object.assign(new File(['x'], 'photo.jpg', { type: 'image/jpeg' }), {
+                id: 'photo',
+                source: FileSource.LOCAL,
+                status: UploadStatus.IDLE,
+                metadata: {},
+            }),
+        ])
+
+        await expect(core.upload()).rejects.toThrow('pipeline boom')
+
+        expect(core.status).toBe(UploadStatus.FAILED)
+        expect([...core.files.values()]).toHaveLength(1)
+        expect([...core.files.values()][0]!.status).toBe(UploadStatus.FAILED)
+        expect(core.error?.message).toBe('pipeline boom')
+        expect(onError).toHaveBeenCalledWith(expect.objectContaining({ message: 'pipeline boom' }))
+        expect(uploadError).toHaveBeenCalledWith(expect.objectContaining({
+            error: expect.objectContaining({ message: 'pipeline boom' }),
+        }))
         core.destroy()
     })
 })

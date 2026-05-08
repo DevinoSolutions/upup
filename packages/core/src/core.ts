@@ -486,6 +486,15 @@ export class UpupCore {
     }
   }
 
+  private markUnsuccessfulFilesFailed(): void {
+    for (const file of this.files.values()) {
+      if (file.key == null && file.status !== UploadStatus.SUCCESSFUL) {
+        Object.assign(file, { status: UploadStatus.FAILED })
+        this.files.set(file.id, file)
+      }
+    }
+  }
+
   private async uploadFiles(files: UploadFile[]): Promise<UploadFile[]> {
     const targetFiles = this.markFilesReady(files)
     this.emitter.emit('state-change', { files: this.files })
@@ -553,32 +562,32 @@ export class UpupCore {
     this.emitter.emit('upload-start', {})
     this.emitter.emit('state-change', { status: this._status })
 
-    // Build auto-pipeline lazily from boolean options if no explicit pipeline
-    if (!this.pipelineEngine) {
-      const autoSteps = await this.buildAutoPipeline()
-      if (autoSteps.length > 0) {
-        this.pipelineEngine = new PipelineEngine(autoSteps)
-      }
-    }
-
-    if (this.pipelineEngine) {
-      const translator = createTranslator({ bundle: enUS })
-      const context: PipelineContext = {
-        files: this.files,
-        options: this.options as Record<string, unknown>,
-        emit: (event, data) => this.emitter.emit(event, data),
-        t: (key: string, vars?: Record<string, unknown>) => translator(key as Parameters<typeof translator>[0], vars),
-      }
-      const processed = await this.pipelineEngine.processAll([...this.files.values()], context)
-      for (const file of processed) {
-        this.files.set(file.id, file)
-      }
-    }
-
-    this._status = UploadStatus.UPLOADING
-    this.emitter.emit('state-change', { status: this._status })
-
     try {
+      // Build auto-pipeline lazily from boolean options if no explicit pipeline
+      if (!this.pipelineEngine) {
+        const autoSteps = await this.buildAutoPipeline()
+        if (autoSteps.length > 0) {
+          this.pipelineEngine = new PipelineEngine(autoSteps)
+        }
+      }
+
+      if (this.pipelineEngine) {
+        const translator = createTranslator({ bundle: enUS })
+        const context: PipelineContext = {
+          files: this.files,
+          options: this.options as Record<string, unknown>,
+          emit: (event, data) => this.emitter.emit(event, data),
+          t: (key: string, vars?: Record<string, unknown>) => translator(key as Parameters<typeof translator>[0], vars),
+        }
+        const processed = await this.pipelineEngine.processAll([...this.files.values()], context)
+        for (const file of processed) {
+          this.files.set(file.id, file)
+        }
+      }
+
+      this._status = UploadStatus.UPLOADING
+      this.emitter.emit('state-change', { status: this._status })
+
       // Only run actual uploads if credentials/endpoint are configured
       await this.uploadFiles([...this.files.values()])
 
@@ -606,9 +615,10 @@ export class UpupCore {
       }
       this._status = UploadStatus.FAILED
       this._error = err
+      this.markUnsuccessfulFilesFailed()
       this.options.onError?.(err)
       this.emitter.emit('upload-error', { error: err })
-      this.emitter.emit('state-change', { status: this._status, error: err })
+      this.emitter.emit('state-change', { status: this._status, error: err, files: this.files })
       throw err
     }
   }

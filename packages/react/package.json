@@ -37,7 +37,6 @@
     "clsx": "^2.1.1",
     "dropbox": "^10.34.0",
     "framer-motion": "^12.0.6",
-    "heic2any": "^0.0.4",
     "load-script": "^2.0.0",
     "pako": "^2.1.0",
     "react-icons": "^5.5.0",

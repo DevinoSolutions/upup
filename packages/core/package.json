@@ -92,6 +92,7 @@
     "test-release": "pnpm run build && pnpm publish --dry-run --access public --no-git-checks"
   },
   "dependencies": {
+    "heic2any": "^0.0.4",
     "intl-messageformat": "^11.2.0",
     "tus-js-client": "^4.3.1"
   },
