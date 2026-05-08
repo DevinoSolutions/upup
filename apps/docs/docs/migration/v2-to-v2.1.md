@@ -145,11 +145,11 @@ class maps, switch to `DeepPartialSlots` (re-exported from the same
 package):
 
 ```diff
-- import type { UpupUploaderPropsClassNames } from 'upup-react-file-uploader'
-+ import type { DeepPartialSlots } from 'upup-react-file-uploader'
+- import type { UpupUploaderPropsClassNames } from '@upup/react'
++ import type { DeepPartialSlots } from '@upup/react'
 ```
 
-Everything you need now lives under the single `upup-react-file-uploader`
+Everything you need now lives under the single `@upup/react`
 install — the v2.0.0 split across `@upup/react`, `@upup/shared`, `@upup/core`
 has been collapsed. The former sub-packages are still workspace modules
 internally but aren't published.
@@ -164,7 +164,7 @@ untouched.
 ## CoreOptions typing
 
 Consumers using the headless `UpupCore` class (re-exported from
-`upup-react-file-uploader`) who pass `locale` or `translations`
+`@upup/react`) who pass `locale` or `translations`
 directly will see tighter types:
 
 ```diff
@@ -194,7 +194,7 @@ See `packages/shared/src/theme/slots.ts` for the canonical
 - `urlUploader`, `cameraUploader`, `audioUploader`,
   `screenCaptureUploader` — per-adapter panels
 - `driveBrowser` — Google Drive / OneDrive / Dropbox / Box file pickers
-- `driveAuthFallback` — the "sign in with {provider}" fallback screen
+- `driveAuthFallback` — the "sign in with `{provider}`" fallback screen
 - `filePreviewPortal` — the full-size preview dialog
 - `imageEditor` — the built-in image editor modal
 

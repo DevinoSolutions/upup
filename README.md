@@ -8,9 +8,9 @@
 
 <p align="center">
   <a href="https://github.com/DevinoSolutions/upup/actions/workflows/publish.yml"><img src="https://github.com/DevinoSolutions/upup/actions/workflows/publish.yml/badge.svg?branch=master" alt="CI" /></a>
-  <a href="https://www.npmjs.com/package/upup-react-file-uploader"><img src="https://img.shields.io/npm/v/upup-react-file-uploader" alt="npm version" /></a>
-  <a href="https://www.npmjs.com/package/upup-react-file-uploader"><img src="https://img.shields.io/npm/dw/upup-react-file-uploader" alt="npm downloads" /></a>
-  <a href="https://bundlephobia.com/package/upup-react-file-uploader"><img src="https://img.shields.io/bundlephobia/minzip/upup-react-file-uploader" alt="bundle size" /></a>
+  <a href="https://www.npmjs.com/package/@upup/react"><img src="https://img.shields.io/npm/v/@upup/react" alt="npm version" /></a>
+  <a href="https://www.npmjs.com/package/@upup/react"><img src="https://img.shields.io/npm/dw/@upup/react" alt="npm downloads" /></a>
+  <a href="https://bundlephobia.com/package/@upup/react"><img src="https://img.shields.io/bundlephobia/minzip/@upup/react" alt="bundle size" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT" /></a>
   <a href="https://discord.gg/ny5WUE9ayc"><img src="https://img.shields.io/discord/1299099371647930502?label=discord&logo=discord&logoColor=white&color=5865F2" alt="Discord" /></a>
 </p>
@@ -41,16 +41,16 @@ Works with **Next.js**, **Vite**, **Remix**, **Gatsby**, and any React framework
 
 ```bash
 # Client Mode (default) — one package
-npm i upup-react-file-uploader
+npm i @upup/react
 
 # Server Mode — add the Node-side handler
-npm i upup-react-file-uploader @upup/server
+npm i @upup/react @upup/server
 ```
 
 Styles are in a separate import so consumers without Tailwind get the same look:
 
 ```tsx
-import "upup-react-file-uploader/styles";
+import "@upup/react/styles";
 ```
 
 See [CHANGELOG.md](CHANGELOG.md) for the full v2.1 / v2.2 notes.
@@ -60,14 +60,14 @@ See [CHANGELOG.md](CHANGELOG.md) for the full v2.1 / v2.2 notes.
 ```tsx
 "use client";
 
-import { UpupUploader, UpupProvider } from "upup-react-file-uploader";
-import "upup-react-file-uploader/styles";
+import { UpupUploader } from "@upup/react";
+import "@upup/react/styles";
 
 export default function Uploader() {
   return (
     <UpupUploader
-      provider={UpupProvider.AWS}
-      tokenEndpoint="/api/upload-token"
+      provider="aws"
+      uploadEndpoint="/api/upload-token"
     />
   );
 }
@@ -128,10 +128,9 @@ This repo is a monorepo managed with [pnpm workspaces](https://pnpm.io/workspace
 
 ```
 upup/
-├── packages/react/              # upup-react-file-uploader (published)
-├── packages/server/             # @upup/server (published, optional)
-├── packages/core/               # @upup/core (private, bundled into both)
-├── packages/shared/             # @upup/shared (private, bundled into both)
+├── packages/core/               # @upup/core (published contracts + workflow engine)
+├── packages/react/              # @upup/react (published React/browser host)
+├── packages/server/             # @upup/server (published server host)
 ├── packages/interactive-example/# In-browser playground
 ├── apps/landing/                # Next.js marketing site at useupup.com
 ├── apps/docs/                   # Docusaurus documentation site
@@ -160,14 +159,14 @@ pnpm dev          # runs landing + docs + playground + package watchers via Turb
 ### Publishing
 
 ```bash
-# From the repo root — publishes both npm packages
-pnpm -r --filter upup-react-file-uploader --filter @upup/server publish --access public
+# From the repo root — publishes all public packages in dependency order
+pnpm -r --filter @upup/core --filter @upup/server --filter @upup/react publish --access public
 ```
 
 ---
 
 <p align="center">
-  <a href="https://discord.gg/ny5WUE9ayc">💬 Discord</a> · <a href="https://github.com/DevinoSolutions/upup/issues">🐛 Issues</a> · <a href="https://www.npmjs.com/package/upup-react-file-uploader">📦 npm</a> · <a href="https://useupup.com">🌐 Website</a>
+  <a href="https://discord.gg/ny5WUE9ayc">💬 Discord</a> · <a href="https://github.com/DevinoSolutions/upup/issues">🐛 Issues</a> · <a href="https://www.npmjs.com/package/@upup/react">📦 npm</a> · <a href="https://useupup.com">🌐 Website</a>
 </p>
 
 <p align="center">

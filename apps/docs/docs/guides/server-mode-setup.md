@@ -14,7 +14,7 @@ registration.
 ## 1. Install
 
 ```sh
-pnpm add upup-react-file-uploader @upup/server
+pnpm add @upup/react @upup/server
 ```
 
 `@upup/server` is the Node-side handler. The React package has no

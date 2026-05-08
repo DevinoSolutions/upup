@@ -49,7 +49,7 @@ You can configure automatic retries for failed uploads using the [`maxRetries`](
 ```tsx
 <UpupUploader
   provider={UpupProvider.AWS}
-  tokenEndpoint="/api/upload-token"
+  uploadEndpoint="/api/upload-token"
   maxRetries={3} // Automatically retry failed uploads up to 3 times
 />
 ```
@@ -58,7 +58,7 @@ When `maxRetries` is not set, a manual **"Retry Upload"** button appears in the 
 
 ### Resumable Upload Recovery
 
-When [resumable multipart uploads](/docs/resumable-uploads.md) are enabled (`resumable={{ mode: 'multipart' }}`), error recovery is enhanced:
+When [resumable multipart uploads](/docs/resumable-uploads.md) are enabled (`resumable={{ protocol: 'multipart' }}`), error recovery is enhanced:
 
 - On failure, the progress bar **preserves** the current progress instead of resetting to zero
 - The retry button shows **"Resume Upload"** instead of "Retry Upload"

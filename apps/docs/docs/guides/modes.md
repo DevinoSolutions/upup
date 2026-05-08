@@ -4,13 +4,14 @@ sidebar_position: 1
 
 # Client Mode vs Server Mode
 
-`upup-react-file-uploader` ships with two upload modes. Pick one with
-the `mode` prop. The default is `'client'` — existing consumers need
-no changes.
+`@upup/react` supports local-only collection plus two upload hosts. `mode`
+controls where upload/provider operations run, not whether users can select
+local files.
 
 ```tsx
-<UpupUploader mode="client" ... />   // default
-<UpupUploader mode="server" serverUrl="/api/upup" ... />
+<UpupUploader />                                 // local file collection only
+<UpupUploader uploadEndpoint="/api/upload" />    // client-hosted upload flow
+<UpupUploader mode="server" serverUrl="/api/upup" />
 ```
 
 ## Client Mode
@@ -61,7 +62,7 @@ storage credentials.
 
 | Concern | Client Mode | Server Mode |
 |---|---|---|
-| Prop | `tokenEndpoint` | `serverUrl` |
+| Upload target | `uploadEndpoint` | `serverUrl` |
 | OAuth client ID | Shipped to browser | Server-only |
 | OAuth client secret | Not used | Server-only, required |
 | Drive API calls | Browser → provider | Server → provider |
@@ -79,5 +80,6 @@ The differences are strictly on the wire, not on the API surface.
 
 ## Migration
 
-There is none — `mode` is opt-in. `mode="client"` is the default and
-matches v2.0 / v2.1 behaviour exactly.
+If neither `uploadEndpoint` nor `serverUrl` is configured, the uploader stays
+in local file collection mode and calling `upload()` returns a typed no-target
+error.

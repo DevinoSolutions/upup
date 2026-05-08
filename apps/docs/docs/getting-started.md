@@ -4,188 +4,76 @@ sidebar_position: 1
 
 # Getting Started
 
-Upup is an open-source, free-to-use **React & TypeScript file upload library** that works with **Next.js, Vite, Remix, Gatsby** and any React framework. It handles your file upload needs with seamless DigitalOcean Spaces, Amazon S3, Backblaze, Microsoft Azure Blob Storage, Google Drive, and OneDrive integrations.
-
-## Installation
-
-Install upup with your favourite package manager
-
-### npm
+Install the React package and styles:
 
 ```bash
-npm install upup-react-file-uploader
+npm i @upup/react
 ```
-
-### yarn
-
-```bash
-yarn add upup-react-file-uploader
-```
-
-### pnpm
-
-```bash
-pnpm add upup-react-file-uploader
-```
-
-### bun
-
-```bash
-bun install upup-react-file-uploader
-```
-
-## Logic Diagram
-
-This logic diagram explains how the client and server parts of the upup package works
-
-```mermaid
-sequenceDiagram
-    participant Client as Client (UpupUploader)
-    participant Server as Node.js Server
-    participant Cloud as Cloud Storage (S3/Azure/etc)
-
-    Client->>Server: POST to tokenEndpoint with file metadata
-    Note right of Server: Uses s3GeneratePresignedUrl/azureGenerateSasUrl<br/>(src/index.node.ts:1-4)
-    Server-->>Client: Returns presigned URL + upload key
-
-    Client->>Cloud: PUT/POST file directly using presigned URL
-    Cloud-->>Client: Upload confirmation
-
-    loop Progress Updates
-        Client->>Client: Track upload progress<br/>(useRootProvider.ts:199-222)
-        Client-->>Client: Update filesProgressMap<br/>(src/frontend/hooks/useRootProvider.ts:203-210)
-    end
-
-    Client->>Server: Finalize upload (optional)
-    Server-->>Client: Confirm storage metadata
-
-    Note over Client,Cloud: Handles multiple adapters<br/>(Google Drive, OneDrive etc)<br/>via separate flows (useOneDriveUploader.ts:1-132)
-```
-
-## Usage
-
-The example below shows a minimal configuration for AWS S3 upload, using the [UpupUploader](/docs/category/upupuploader) client component and the [`s3GeneratePresignedUrl`](/docs/api-reference/s3-generate-presigned-url.md) utility. For full code examples check these [docs](/docs/code-examples.md)
-
-### Client Side
 
 ```tsx
-import { UpupUploader, UpupProvider } from "upup-react-file-uploader";
-import 'upup-react-file-uploader/styles'
-
-export default function Uploader() {
-  return (
-    <UpupUploader
-      provider={UpupProvider.AWS} // assuming we are uploading to AWS
-      tokenEndpoint="http://<path_to_your_server>/api/upload-token" // Path to your server route that calls our exported upload utilities
-    />
-  );
-}
+import { UpupUploader } from '@upup/react'
+import '@upup/react/styles'
 ```
 
-:::note
+## Local File Collection
 
-The [`UpupUploader`](/docs/category/upupuploader) must be placed in a client component. i.e For Next.js add the `use client` directive at the top of the example `Uploader` component
-
-:::
-
-Then use it in your application:
+With no upload target, Upup lets users select files and gives you `File`
+objects through callbacks and hooks.
 
 ```tsx
-import Uploader from "<path_to_your_uploader_component>";
-
-export default function App() {
-  return <Uploader />;
-}
+<UpupUploader
+  sources={['local', 'url']}
+  onFilesSelected={(files) => {
+    console.log(files)
+  }}
+/>
 ```
 
-:::info
+Calling `upload()` without a target returns a typed no-target error.
 
-[`provider`](/docs/api-reference/upupuploader/required-props.md#provider) and [`tokenEndpoint`](/docs/api-reference/upupuploader/required-props.md#tokenendpoint) are the only required props for the UpupUploader component. For a full list of component props, check out these [docs](/docs/category/upupuploader).
+## Client Uploads
 
-:::
+Use `uploadEndpoint` when your app signs upload URLs and the browser uploads
+bytes directly to storage.
 
-### Server Side
+```tsx
+<UpupUploader
+  provider="aws"
+  uploadEndpoint="/api/upload-token"
+  metadata={{ projectId: 'p_123' }}
+/>
+```
 
-:::warning
+## Server Uploads
 
-The example below is the minimal required configuration for **AWS** S3 upload. For uploading to other services see these [docs](/docs/code-examples.md)
-:::
+Use `@upup/server` when provider OAuth, token storage, storage credentials,
+or transfer policy should live server-side.
 
-:::tip CORS Configuration
-For the upload to work without errors, it is important to:
+```bash
+npm i @upup/react @upup/server
+```
 
-1. Manually configure CORS using our [credentials guide](/docs/credentials-configuration.md#server-side-configurations), OR
-2. Enabling `enableAutoCorsConfig` with properly restricted credentials
-:::
+```tsx
+<UpupUploader
+  provider="aws"
+  mode="server"
+  serverUrl="/api/upup"
+/>
+```
 
 ```ts
-import { s3GeneratePresignedUrl } from "upup-react-file-uploader/server";
+import { createHandler, InMemoryTokenStore } from '@upup/server'
 
-app.post("/api/upload-token", async (req, res) => {
-  try {
-    const { provider, customProps, enableAutoCorsConfig, ...fileParams } =
-      req.body; // The request body sent from the `UpupUploader` client component
-    const origin = req.headers["origin"]; // The origin of your client application
+const handler = createHandler({
+  storage: {
+    type: 'aws',
+    bucket: process.env.S3_BUCKET!,
+    region: process.env.S3_REGION!,
+  },
+  tokenStore: new InMemoryTokenStore(),
+  getUserId: async () => 'user_123',
+})
 
-    // Generate presigned URL
-    const presignedData = await s3GeneratePresignedUrl({
-      origin: origin as string,
-      provider,
-      fileParams,
-      bucketName: process.env.AWS_BUCKET_NAME as string,
-      s3ClientConfig: {
-        region: process.env.AWS_REGION as string,
-        credentials: {
-          accessKeyId: process.env.AWS_ACCESS_KEY_ID as string,
-          secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY as string,
-        },
-      },
-      enableAutoCorsConfig,
-    });
-
-    return res.status(200).json({
-      data: presignedData,
-      message: "Upload successful!",
-      error: false,
-    });
-  } catch (error) {
-    return res.status(500).json({
-      message: (error as Error).message,
-      error: true,
-    });
-  }
-});
+export const GET = handler
+export const POST = handler
 ```
-
-### Important Note
-
-It is important to note that while it is possible to:
-
-- Implement your own custom logic on the client and use the server utilities provided by this component on the server OR
-- Use the `UpupUploader` React component on the client and implement your own custom server logic to handle uploads,
-
-For best performance and minimal overhead, we advise that you use both the [`UpupUploader`](/docs/category/upupuploader) React component together with the server utilities, like [`s3GeneratePresignedUrl`](/docs/api-reference/s3-generate-presigned-url.md)
-
-The full list of exported server utility functions include:
-
-- [`s3GeneratePresignedUrl`](/docs/api-reference/s3-generate-presigned-url.md): for S3-compatible Uploads: like AWS, Digital Ocean, Backblaze
-- [`azureGenerateSasUrl`](/docs/api-reference/azure-generate-sas-url.md): for Azure Blob Uploads only
-- `s3InitiateMultipartUpload`: Initiate a resumable multipart upload session
-- `s3GeneratePresignedPartUrl`: Generate a presigned URL for a single upload part
-- `s3ListMultipartParts`: List all uploaded parts for a multipart upload
-- `s3CompleteMultipartUpload`: Complete a multipart upload by assembling parts
-- `s3AbortMultipartUpload`: Abort an in-progress multipart upload
-
-For resumable multipart upload setup, see the [Resumable Uploads guide](/docs/resumable-uploads.md).
-
-:::info
-
-For a full list of values sent by the React component to the server, check out these [docs](/docs/api-reference/upupuploader/required-props.md#tokenendpoint).
-
-:::
-
-## Advanced Usage
-
-### Programmatic Control
-
-For more advanced use cases, you can control the upload process programmatically using the component's [ref API](/docs/api-reference/upupuploader/ref-api.md)
