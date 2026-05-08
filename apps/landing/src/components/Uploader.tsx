@@ -28,22 +28,11 @@ const customFields = {
     },
 };
 
-const adapterToSource: Record<string, string> = {
-    INTERNAL: "local",
-    GOOGLE_DRIVE: "googleDrive",
-    ONE_DRIVE: "oneDrive",
-    LINK: "url",
-    CAMERA: "camera",
-    DROPBOX: "dropbox",
-    AUDIO: "microphone",
-    SCREEN_CAPTURE: "screen",
-};
-
 interface Props {
     limit: number;
     mini: boolean;
     theme?: string;
-    enabledAdapters?: string[];
+    sources?: string[];
     allowPreview?: boolean;
     shouldCompress?: boolean;
     fileSizeLimit?: number; // in MB
@@ -56,7 +45,7 @@ export default function Uploader({
                                      limit,
                                      mini,
                                      theme = "blue",
-                                     enabledAdapters = ["INTERNAL", "GOOGLE_DRIVE", "ONE_DRIVE", "LINK", "CAMERA"],
+                                     sources = ["local", "googleDrive", "oneDrive", "url", "camera"],
                                      allowPreview = true,
                                      shouldCompress = false,
                                      fileSizeLimit = 25,
@@ -66,10 +55,6 @@ export default function Uploader({
                                  }: Readonly<Props>) {
     // Detect dark mode using Tailwind's class strategy
     const {isDarkMode} = useContext(ThemeContext)
-
-    const sources = enabledAdapters
-        .map(adapter => adapterToSource[adapter])
-        .filter(Boolean) as any[];
 
     // Get the current theme
     const currentTheme = theme || "blue";
@@ -118,7 +103,7 @@ export default function Uploader({
           provider="backblaze"
           maxFiles={limit}
           uploadEndpoint={customFields.uploadEndpoint}
-          sources={sources}
+          sources={sources as any}
           cloudDrives={customFields.cloudDrives}
           theme={{ mode: isDarkMode ? 'dark' : 'light', slots: customSlots }}
           mini={mini}

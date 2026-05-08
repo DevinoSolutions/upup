@@ -75,9 +75,7 @@ function MobileDemoContent() {
   const limit = parseInt(searchParams.get("limit") || "99");
   const mini = searchParams.get("mini") === "true";
   const theme = searchParams.get("theme") || "blue";
-  const enabledAdapters = searchParams.get("enabledAdapters")?.split(",") || [
-    "INTERNAL",
-  ];
+  const sources = searchParams.get("sources")?.split(",") || ["local"];
   const allowPreview = searchParams.get("allowPreview") !== "false";
   const shouldCompress = searchParams.get("shouldCompress") === "true";
   const imageEditor = searchParams.get("imageEditor") === "true";
@@ -118,7 +116,7 @@ function MobileDemoContent() {
         limit={limit}
         mini={mini}
         theme={theme}
-        enabledAdapters={enabledAdapters}
+        sources={sources}
         allowPreview={allowPreview}
         shouldCompress={shouldCompress}
         imageEditor={imageEditor}

@@ -83,7 +83,7 @@ export const languageCategory: CategoryDefinition = {
                     {
                         id: 'header.filesSelected',
                         label: 'header.filesSelected',
-                        description: 'Status header above the file list. Use {n} for the count.',
+                        description: 'Status header above the file list. Use ICU {count, plural, ...} for the count.',
                         primitive: 'combo',
                         defaultValue: '',
                         options: {

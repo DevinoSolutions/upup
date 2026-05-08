@@ -82,14 +82,14 @@ const COLOR_THEMES = {
   }
 };
 
-// Upload adapter options
-const UPLOAD_ADAPTERS = [
-  { value: "INTERNAL", label: "Local Files", icon: FaCloud },
-  { value: "GOOGLE_DRIVE", label: "Google Drive", icon: SiGoogledrive },
-  { value: "ONE_DRIVE", label: "OneDrive", icon: GrOnedrive },
-  { value: "LINK", label: "URL Links", icon: FaGlobe },
-  { value: "CAMERA", label: "Camera", icon: FaCamera },
-  { value: "DROPBOX", label: "Dropbox", icon: SiDropbox }
+// Upload source options
+const UPLOAD_SOURCES = [
+  { value: "local", label: "Local Files", icon: FaCloud },
+  { value: "googleDrive", label: "Google Drive", icon: SiGoogledrive },
+  { value: "oneDrive", label: "OneDrive", icon: GrOnedrive },
+  { value: "url", label: "URL Links", icon: FaGlobe },
+  { value: "camera", label: "Camera", icon: FaCamera },
+  { value: "dropbox", label: "Dropbox", icon: SiDropbox }
 ];
 
 // Available languages for the locale selector
@@ -111,7 +111,7 @@ export default function HomepageDemo() {
   const [mobileMode, setMobileMode] = useState(false);
   const [limit, setLimit] = useState(UPUP_LIMIT_DEFAULT);
   const [selectedTheme, setSelectedTheme] = useState("blue");
-  const [enabledAdapters, setEnabledAdapters] = useState(["INTERNAL", "GOOGLE_DRIVE", "ONE_DRIVE", "LINK", "CAMERA"]);
+  const [sources, setSources] = useState(["local", "googleDrive", "oneDrive", "url", "camera"]);
   const [allowPreview, setAllowPreview] = useState(true);
   const [shouldCompress, setShouldCompress] = useState(false);
   const [imageEditor, setImageEditor] = useState(false);
@@ -133,7 +133,7 @@ export default function HomepageDemo() {
       limit: (restrictionsEnabled ? limit : 99).toString(),
       mini: mini.toString(),
       theme: selectedTheme,
-      enabledAdapters: enabledAdapters.join(','),
+      sources: sources.join(','),
       allowPreview: allowPreview.toString(),
       shouldCompress: shouldCompress.toString(),
       imageEditor: imageEditor.toString(),
@@ -160,7 +160,7 @@ export default function HomepageDemo() {
       }
       setCurrentIframeUrl(newUrl);
     }
-  }, [mini, selectedTheme, enabledAdapters, allowPreview, shouldCompress, imageEditor, autoRetryEnabled, autoRetryCount, restrictionsEnabled, limit, fileSizeValue, fileSizeUnit, isDarkMode, mobileMode, selectedLanguage]);
+  }, [mini, selectedTheme, sources, allowPreview, shouldCompress, imageEditor, autoRetryEnabled, autoRetryCount, restrictionsEnabled, limit, fileSizeValue, fileSizeUnit, isDarkMode, mobileMode, selectedLanguage]);
 
   const handleMiniChange: ChangeEventHandler<HTMLInputElement> = useCallback(
       (e) => {
@@ -174,11 +174,11 @@ export default function HomepageDemo() {
     setSelectedTheme(theme);
   }, []);
 
-  const handleAdapterToggle = useCallback((adapter: string) => {
-    setEnabledAdapters(prev =>
-        prev.includes(adapter)
-            ? prev.filter(a => a !== adapter)
-            : [...prev, adapter]
+  const handleSourceToggle = useCallback((source: string) => {
+    setSources(prev =>
+        prev.includes(source)
+            ? prev.filter(item => item !== source)
+            : [...prev, source]
     );
   }, []);
 
@@ -500,26 +500,26 @@ export default function HomepageDemo() {
                 </div>
 
                 <div className="flex gap-1.5">
-                  {UPLOAD_ADAPTERS.map((adapter) => (
+                  {UPLOAD_SOURCES.map((source) => (
                     <button
-                      key={adapter.value}
+                      key={source.value}
                       onClick={() =>
-                        !mini && handleAdapterToggle(adapter.value)
+                        !mini && handleSourceToggle(source.value)
                       }
                       disabled={mini}
                       className={`w-8 h-8 rounded-lg border-2 transition-all duration-200 flex items-center justify-center ${
                         mini
                           ? "border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 cursor-not-allowed"
-                          : enabledAdapters.includes(adapter.value)
+                          : sources.includes(source.value)
                           ? "border-primary bg-primary/10 dark:bg-primary-dark/10"
                           : "border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600"
                       }`}
                     >
-                      <adapter.icon
+                      <source.icon
                         className={`w-4 h-4 ${
                           mini
                             ? "text-gray-400 dark:text-gray-600"
-                            : enabledAdapters.includes(adapter.value)
+                            : sources.includes(source.value)
                             ? "text-primary dark:text-primary-dark"
                             : "text-gray-600 dark:text-gray-400"
                         }`}
@@ -748,7 +748,7 @@ export default function HomepageDemo() {
                       limit={restrictionsEnabled ? limit : 99}
                       mini={mini}
                       theme={selectedTheme}
-                      enabledAdapters={enabledAdapters}
+                      sources={sources}
                       allowPreview={allowPreview}
                       shouldCompress={shouldCompress}
                       imageEditor={imageEditor}

@@ -5,7 +5,7 @@ export const sourcesCategory: CategoryDefinition = {
     tier: 'simple',
     id: 'sources',
     label: 'Sources',
-    description: 'Which adapters are enabled',
+    description: 'Which sources are enabled',
     icon: LayoutGrid,
     entries: [
         {

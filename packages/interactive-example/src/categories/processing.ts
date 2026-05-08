@@ -18,7 +18,7 @@ export const processingCategory: CategoryDefinition = {
         {
             id: 'thumbnailGenerator',
             label: 'Generate thumbnails',
-            description: 'Emit a lightweight preview alongside each image/video upload',
+            description: 'Emit a lightweight preview alongside each image upload',
             primitive: 'bool',
             defaultValue: false,
         },

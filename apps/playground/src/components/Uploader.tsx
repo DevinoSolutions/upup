@@ -8,23 +8,11 @@ import type { LocaleBundle } from "@upup/core";
 import { ThemeContext } from "@/lib/contexts";
 import { toast } from "react-toastify";
 
-// v2 source mapping — human-readable strings
-const adapterToSource: Record<string, string> = {
-  INTERNAL: "local",
-  GOOGLE_DRIVE: "googleDrive",
-  ONE_DRIVE: "oneDrive",
-  LINK: "url",
-  CAMERA: "camera",
-  DROPBOX: "dropbox",
-  AUDIO: "microphone",
-  SCREEN_CAPTURE: "screen",
-};
-
 interface Props {
   limit: number;
   mini: boolean;
   theme?: string;
-  enabledAdapters?: string[];
+  sources?: string[];
   allowPreview?: boolean;
   shouldCompress?: boolean;
   fileSizeLimit?: number;
@@ -37,7 +25,7 @@ export default function Uploader({
   limit,
   mini,
   theme = "blue",
-  enabledAdapters = ["INTERNAL", "GOOGLE_DRIVE", "ONE_DRIVE", "LINK", "CAMERA"],
+  sources = ["local", "googleDrive", "oneDrive", "url", "camera"],
   allowPreview = true,
   shouldCompress = false,
   fileSizeLimit = 25,
@@ -46,11 +34,6 @@ export default function Uploader({
   imageEditor = true,
 }: Readonly<Props>) {
   const { isDarkMode } = useContext(ThemeContext);
-
-  // v2: convert adapter strings to source shorthand
-  const sources = enabledAdapters
-    .map((a) => adapterToSource[a])
-    .filter(Boolean) as any[];
 
   const currentTheme = theme || "blue";
   const useRealStorage =
@@ -104,7 +87,7 @@ export default function Uploader({
         maxFiles={limit}
         serverUrl={useRealStorage ? serverUrl : undefined}
         uploadEndpoint={useRealStorage ? undefined : "/api/upup-mock/presign"}
-        sources={sources}
+        sources={sources as any}
         cloudDrives={{
           googleDrive: {
             clientId: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "",

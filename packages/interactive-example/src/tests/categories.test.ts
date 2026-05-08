@@ -42,4 +42,25 @@ describe('category manifest', () => {
             }
         }
     })
+
+    it('does not expose stale v1 API names or old message placeholders in sidebar copy', () => {
+        const staleTerms = [
+            'ProviderSDK',
+            'FileWithParams',
+            'UploadAdapter',
+            'uploadAdapters',
+            'driveConfigs',
+            'localePack',
+            'translations',
+            'classNames',
+            'tokenEndpoint',
+            'upup-react-file-uploader',
+            'Use {n}',
+        ]
+        const haystack = JSON.stringify(categories)
+
+        for (const term of staleTerms) {
+            expect(haystack).not.toContain(term)
+        }
+    })
 })
