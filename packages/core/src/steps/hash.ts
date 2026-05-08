@@ -1,4 +1,4 @@
-import type { PipelineStep, PipelineContext, UploadFile } from '@upup/shared'
+import type { PipelineStep, PipelineContext, UploadFile } from '../contracts'
 
 async function computeSHA256(buffer: ArrayBuffer): Promise<string> {
   const hashBuffer = await crypto.subtle.digest('SHA-256', buffer)

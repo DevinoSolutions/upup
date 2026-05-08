@@ -1,5 +1,6 @@
+export * from './contracts'
 export { UpupCore } from './core'
-export type { CoreOptions, UploadOptions, ValidationResult, Restrictions, CloudDrivesConfig } from './core'
+export type { CoreOptions, UploadOptions, ValidationResult, Restrictions, CloudDrivesConfig, UpupCorsConfig } from './core'
 export { EventEmitter } from './events'
 export { PluginManager } from './plugin'
 export type { UpupPlugin, ExtensionMethods } from './plugin'

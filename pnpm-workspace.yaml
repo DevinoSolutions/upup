@@ -1,3 +1,6 @@
 packages:
   - apps/*
-  - packages/*
+  - packages/core
+  - packages/react
+  - packages/server
+  - packages/interactive-example

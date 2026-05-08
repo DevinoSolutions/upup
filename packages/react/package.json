@@ -1,5 +1,5 @@
 {
-  "name": "upup-react-file-uploader",
+  "name": "@upup/react",
   "version": "2.2.0",
   "description": "React file uploader with cloud-drive sources, resumable uploads, image editor, theming, and ICU i18n.",
   "repository": "https://github.com/DevinoSolutions/upup",
@@ -11,11 +11,6 @@
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
     },
-    "./locales": {
-      "types": "./dist/locales/index.d.ts",
-      "import": "./dist/locales/index.js",
-      "require": "./dist/locales/index.cjs"
-    },
     "./styles": "./dist/tailwind-prefixed.css"
   },
   "main": "./dist/index.cjs",
@@ -24,7 +19,7 @@
   "scripts": {
     "build": "tsup && pnpm run build:css",
     "build:css": "postcss src/tailwind.css -o ./dist/tailwind-prefixed.css",
-    "dev": "tsup --watch",
+    "dev": "tsup --watch --onSuccess \"pnpm run build:css\"",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
@@ -35,6 +30,7 @@
     "dist"
   ],
   "dependencies": {
+    "@upup/core": "workspace:*",
     "@azure/msal-browser": "^3.30.0",
     "@microsoft/microsoft-graph-client": "^3.0.7",
     "@tanstack/react-virtual": "^3.13.23",
@@ -63,8 +59,6 @@
   "devDependencies": {
     "@tailwindcss/container-queries": "^0.1.1",
     "@testing-library/react": "^16.0.1",
-    "@upup/core": "workspace:*",
-    "@upup/shared": "workspace:*",
     "@testing-library/user-event": "^14.6.1",
     "@types/jest-axe": "^3.5.9",
     "@types/pako": "^2.0.4",

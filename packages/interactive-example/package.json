@@ -16,8 +16,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "upup-react-file-uploader": "workspace:*",
-    "@upup/shared": "workspace:*",
+    "@upup/core": "workspace:*",
+    "@upup/react": "workspace:*",
     "@mastra/client-js": "latest",
     "clsx": "^2.1.1",
     "lucide-react": "^0.503.0",

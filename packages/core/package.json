@@ -1,7 +1,6 @@
 {
   "name": "@upup/core",
-  "version": "2.0.0",
-  "private": true,
+  "version": "2.2.0",
   "license": "MIT",
   "type": "module",
   "sideEffects": false,
@@ -10,6 +9,31 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
+    },
+    "./contracts": {
+      "types": "./dist/contracts.d.ts",
+      "import": "./dist/contracts.js",
+      "require": "./dist/contracts.cjs"
+    },
+    "./i18n": {
+      "types": "./dist/i18n/index.d.ts",
+      "import": "./dist/i18n/index.js",
+      "require": "./dist/i18n/index.cjs"
+    },
+    "./theme": {
+      "types": "./dist/theme/index.d.ts",
+      "import": "./dist/theme/index.js",
+      "require": "./dist/theme/index.cjs"
+    },
+    "./strategies": {
+      "types": "./dist/strategies/index.d.ts",
+      "import": "./dist/strategies/index.js",
+      "require": "./dist/strategies/index.cjs"
+    },
+    "./strategies/tus-upload": {
+      "types": "./dist/strategies/tus-upload.d.ts",
+      "import": "./dist/strategies/tus-upload.js",
+      "require": "./dist/strategies/tus-upload.cjs"
     },
     "./pipeline": {
       "types": "./dist/pipeline/index.d.ts",
@@ -63,10 +87,13 @@
     "dev": "tsup --watch",
     "test": "vitest run",
     "test:watch": "vitest",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "release": "pnpm run build && pnpm publish --access public --no-git-checks",
+    "test-release": "pnpm run build && pnpm publish --dry-run --access public --no-git-checks"
   },
   "dependencies": {
-    "@upup/shared": "workspace:*"
+    "intl-messageformat": "^11.2.0",
+    "tus-js-client": "^4.3.1"
   },
   "devDependencies": {
     "rollup": "^4.60.0",

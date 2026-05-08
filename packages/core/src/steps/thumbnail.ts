@@ -1,4 +1,4 @@
-import type { PipelineStep, PipelineContext, UploadFile } from '@upup/shared'
+import type { PipelineStep, PipelineContext, UploadFile } from '../contracts'
 
 export interface ThumbnailGeneratorOptions {
   width?: number

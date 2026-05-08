@@ -1,4 +1,4 @@
-import type { RuntimeAdapter } from '@upup/shared'
+import type { RuntimeAdapter } from '../contracts'
 
 export const BrowserRuntime: RuntimeAdapter = {
   async computeHash(data: ArrayBuffer): Promise<string> {

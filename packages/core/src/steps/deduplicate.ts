@@ -4,7 +4,7 @@ import {
   type PipelineStep,
   type PipelineContext,
   type UploadFile,
-} from '@upup/shared'
+} from '../contracts'
 
 export function deduplicateStep(): PipelineStep {
   return {
