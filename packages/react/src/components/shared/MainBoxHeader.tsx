@@ -21,8 +21,8 @@ export default function MainBoxHeader({ handleCancel }: Readonly<Props>) {
             mini,
             limit,
             isProcessing,
-            dark,
-            classNames,
+            isDarkTheme: dark,
+            slotClasses,
             icons: { ContainerAddMoreIcon },
         },
         upload: { uploadStatus },
@@ -45,7 +45,7 @@ export default function MainBoxHeader({ handleCancel }: Readonly<Props>) {
                 {
                     'upup-bg-white/5 dark:upup-bg-white/5': dark,
                 },
-                classNames.containerHeader,
+                slotClasses.containerHeader,
             )}
         >
             <button
@@ -54,7 +54,7 @@ export default function MainBoxHeader({ handleCancel }: Readonly<Props>) {
                     {
                         'upup-text-[#30C5F7] dark:upup-text-[#30C5F7]': dark,
                     },
-                    classNames.containerCancelButton,
+                    slotClasses.containerCancelButton,
                 )}
                 onClick={handleCancel}
                 disabled={isUploading || isProcessing}
@@ -99,7 +99,7 @@ export default function MainBoxHeader({ handleCancel }: Readonly<Props>) {
                                 'upup-text-[#30C5F7] dark:upup-text-[#30C5F7]':
                                     dark,
                             },
-                            classNames.containerAddMoreButton,
+                            slotClasses.containerAddMoreButton,
                         )}
                         onClick={() => setIsAddingMore(true)}
                         disabled={isUploading || isProcessing}

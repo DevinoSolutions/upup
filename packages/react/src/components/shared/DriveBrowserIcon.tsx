@@ -18,13 +18,15 @@ export default function DriveBrowserIcon({
     file: OneDriveFile | GoogleFile
 }) {
     const {
-        props: { dark },
+        props: { isDarkTheme: dark },
     } = useRootContext()
     const isFolder = Boolean(
         (file as OneDriveFile).isFolder || (file as GoogleFile).children,
     )
     const src =
-        'isFolder' in file ? file.thumbnails?.small.url : file.thumbnailLink
+        'isFolder' in file
+            ? (file as OneDriveFile).thumbnails?.small?.url
+            : (file as GoogleFile).thumbnailLink
 
     if (isFolder)
         return (

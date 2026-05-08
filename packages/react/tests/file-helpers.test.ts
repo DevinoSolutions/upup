@@ -10,7 +10,7 @@ import {
     fileIs3D,
     PREVIEW_MAX_TEXT_SIZE,
 } from '../src/lib/file'
-import { FileWithParams } from '../src/shared/types'
+import type { UploadFile } from '@upup/core'
 
 let urlCounter = 0
 beforeEach(() => {
@@ -26,7 +26,7 @@ beforeEach(() => {
 // fileAppendParams
 // ─────────────────────────────────────────────
 describe('fileAppendParams', () => {
-    it('returns a FileWithParams', () => {
+    it('returns an UploadFile', () => {
         const f = new File(['data'], 'test.txt', { type: 'text/plain' })
         const result = fileAppendParams(f)
         expect(result).toBeInstanceOf(File)
@@ -76,24 +76,24 @@ describe('fileAppendParams', () => {
 // ─────────────────────────────────────────────
 describe('revokeFileUrl', () => {
     it('calls revokeObjectURL for blob URLs', () => {
-        const f = { url: 'blob:some-url' } as FileWithParams
+        const f = { url: 'blob:some-url' } as UploadFile
         revokeFileUrl(f)
         expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:some-url')
     })
 
     it('does not call revokeObjectURL for non-blob URLs', () => {
-        const f = { url: 'https://example.com/file.png' } as FileWithParams
+        const f = { url: 'https://example.com/file.png' } as UploadFile
         revokeFileUrl(f)
         expect(URL.revokeObjectURL).not.toHaveBeenCalled()
     })
 
     it('does not throw when url is undefined', () => {
-        const f = {} as FileWithParams
+        const f = {} as UploadFile
         expect(() => revokeFileUrl(f)).not.toThrow()
     })
 
     it('does not throw when url is empty string', () => {
-        const f = { url: '' } as FileWithParams
+        const f = { url: '' } as UploadFile
         expect(() => revokeFileUrl(f)).not.toThrow()
     })
 })

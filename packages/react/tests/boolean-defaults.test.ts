@@ -28,33 +28,33 @@ describe('boolean prop defaults', () => {
     expect(autoUpload).toBe(true)
   })
 
-  // allowFolderUpload → showSelectFolderButton alias
-  it('allowFolderUpload maps to showSelectFolderButton', () => {
-    const allowFolderUpload = true
-    const showSelectFolderButtonProp = false
-    // Simulates: const showSelectFolderButton = allowFolderUpload || showSelectFolderButtonProp
-    const showSelectFolderButton = allowFolderUpload || showSelectFolderButtonProp
-    expect(showSelectFolderButton).toBe(true)
+  it('folderUpload.enabled shows the picker button by default', () => {
+    const folderUpload: { enabled?: boolean; showPickerButton?: boolean } = { enabled: true }
+    const folderPickerButtonVisible = folderUpload.showPickerButton ?? folderUpload.enabled ?? false
+    expect(folderPickerButtonVisible).toBe(true)
   })
 
-  it('showSelectFolderButton is false when both aliases are false/undefined', () => {
-    const allowFolderUpload = undefined
-    const showSelectFolderButtonProp = false
-    const showSelectFolderButton = allowFolderUpload || showSelectFolderButtonProp
-    expect(showSelectFolderButton).toBe(false)
+  it('folderUpload.showPickerButton can hide the picker while folder upload remains enabled', () => {
+    const folderUpload: { enabled?: boolean; showPickerButton?: boolean } = {
+      enabled: true,
+      showPickerButton: false,
+    }
+    const folderPickerButtonVisible = folderUpload.showPickerButton ?? folderUpload.enabled ?? false
+    expect(folderPickerButtonVisible).toBe(false)
   })
 
-  it('showSelectFolderButton is true from v1 prop alone', () => {
-    const allowFolderUpload = undefined
-    const showSelectFolderButtonProp = true
-    const showSelectFolderButton = allowFolderUpload || showSelectFolderButtonProp
-    expect(showSelectFolderButton).toBe(true)
+  it('folderUpload.showPickerButton can show the picker without enabling drag folder traversal', () => {
+    const folderUpload: { enabled?: boolean; showPickerButton?: boolean } = {
+      enabled: false,
+      showPickerButton: true,
+    }
+    const folderPickerButtonVisible = folderUpload.showPickerButton ?? folderUpload.enabled ?? false
+    expect(folderPickerButtonVisible).toBe(true)
   })
 
-  // enableAutoCorsConfig defaults to false
-  it('enableAutoCorsConfig defaults to false', () => {
-    const props: { enableAutoCorsConfig?: boolean } = {}
-    const enableAutoCorsConfig = props.enableAutoCorsConfig ?? false
-    expect(enableAutoCorsConfig).toBe(false)
+  it('dangerous CORS auto-config is off unless explicitly configured', () => {
+    const props: { cors?: { dangerouslyAutoConfigure?: boolean; allowedOrigins: string[] } } = {}
+    const dangerouslyAutoConfigure = props.cors?.dangerouslyAutoConfigure ?? false
+    expect(dangerouslyAutoConfigure).toBe(false)
   })
 })

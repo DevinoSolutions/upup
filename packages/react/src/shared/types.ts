@@ -1,18 +1,33 @@
 import { FC } from 'react'
 import type { Translations } from './i18n/types'
+import type {
+    FileSource,
+    LocaleBundle,
+    MaxFileSizeObject,
+    MultipartAbortResponse,
+    MultipartCompleteResponse,
+    MultipartInitResponse,
+    MultipartListPartsResponse,
+    MultipartPart,
+    MultipartSignPartResponse,
+    PartialMessages,
+    PresignedUrlResponse,
+    ResumableUploadOptions,
+    StorageProvider,
+    UploadFile,
+} from '@upup/core'
 
 export type { Translations }
-
-export enum UploadAdapter {
-    INTERNAL = 'INTERNAL',
-    GOOGLE_DRIVE = 'GOOGLE_DRIVE',
-    ONE_DRIVE = 'ONE_DRIVE',
-    DROPBOX = 'DROPBOX',
-    BOX = 'BOX',
-    LINK = 'LINK',
-    CAMERA = 'CAMERA',
-    AUDIO = 'AUDIO',
-    SCREEN = 'SCREEN',
+export type {
+    MaxFileSizeObject,
+    MultipartAbortResponse,
+    MultipartCompleteResponse,
+    MultipartInitResponse,
+    MultipartListPartsResponse,
+    MultipartPart,
+    MultipartSignPartResponse,
+    PresignedUrlResponse,
+    ResumableUploadOptions,
 }
 
 export type GoogleDriveConfigs = {
@@ -36,65 +51,6 @@ export type BoxConfigs = {
     box_redirect_uri?: string
 }
 
-/**
- * Storage providers the uploader recognises by name.
- *
- * Every value except `Azure` is **S3-compatible** — the client uses the
- * same presigned-URL flow for all of them. The string is forwarded to
- * your `tokenEndpoint` / `serverUrl` so your server knows which SDK +
- * endpoint to use when signing requests.
- *
- * Azure is a distinct protocol (Block Blob uploads via SAS URLs).
- */
-export enum UpupProvider {
-    /** Amazon S3 */
-    AWS = 'aws',
-    /** Microsoft Azure Blob Storage (separate protocol) */
-    Azure = 'azure',
-    /** Backblaze B2 (S3-compatible) */
-    BackBlaze = 'backblaze',
-    /** DigitalOcean Spaces (S3-compatible) */
-    DigitalOcean = 'digitalocean',
-    /** Cloudflare R2 (S3-compatible) */
-    CloudflareR2 = 'r2',
-    /** Wasabi Hot Cloud Storage (S3-compatible) */
-    Wasabi = 'wasabi',
-    /** MinIO self-hosted object storage (S3-compatible) */
-    MinIO = 'minio',
-    /** Google Cloud Storage via its S3-compatible interoperability mode */
-    GCS = 'gcs',
-    /** Supabase Storage (S3-compatible) */
-    Supabase = 'supabase',
-    /** Hetzner Object Storage (S3-compatible) */
-    Hetzner = 'hetzner',
-    /** Linode / Akamai Object Storage (S3-compatible) */
-    Linode = 'linode',
-    /** Vultr Object Storage (S3-compatible) */
-    Vultr = 'vultr',
-    /** UpCloud Object Storage (S3-compatible) */
-    UpCloud = 'upcloud',
-    /** Scaleway Object Storage (S3-compatible) */
-    Scaleway = 'scaleway',
-    /** OVHcloud Object Storage (S3-compatible) */
-    OVHcloud = 'ovhcloud',
-    /** Alibaba Cloud OSS (S3-compatible) */
-    Alibaba = 'alibaba',
-    /** Oracle Cloud Object Storage (S3-compatible) */
-    Oracle = 'oracle',
-    /** Contabo Object Storage (S3-compatible) */
-    Contabo = 'contabo',
-    /** Storj decentralized cloud storage (S3-compatible) */
-    Storj = 'storj',
-    /** IDrive e2 object storage (S3-compatible) */
-    IDrive = 'idrive',
-    /** Ceph RADOS Gateway self-hosted storage (S3-compatible) */
-    Ceph = 'ceph',
-}
-
-type MaxFileSizeObject = {
-    size: number
-    unit: 'B' | 'KB' | 'MB' | 'GB' | 'TB' | 'PB' | 'EB' | 'ZB' | 'YB'
-}
 
 /**
  * Configuration for the optional image editor.
@@ -160,11 +116,11 @@ export type ImageEditorOptions = {
         | 'Image'
     )[]
     /** Callback fired when the editor modal opens. */
-    onOpen?: (file: FileWithParams) => void
+    onOpen?: (file: UploadFile) => void
     /** Callback fired when the user cancels editing. */
-    onCancel?: (file: FileWithParams) => void
+    onCancel?: (file: UploadFile) => void
     /** Callback fired after the user saves an edit. */
-    onSave?: (editedFile: FileWithParams, originalFile: FileWithParams) => void
+    onSave?: (editedFile: UploadFile, originalFile: UploadFile) => void
 }
 
 /** Resolved image editor config with all defaults applied. */
@@ -172,71 +128,6 @@ export type ResolvedImageEditorOptions = Required<
     Pick<ImageEditorOptions, 'enabled' | 'autoOpen' | 'display'>
 > &
     Omit<ImageEditorOptions, 'enabled' | 'autoOpen' | 'display'>
-
-export type UpupUploaderPropsClassNames = {
-    fileIcon?: string
-    containerMini?: string
-    containerFull?: string
-    containerHeader?: string
-    containerCancelButton?: string
-    containerAddMoreButton?: string
-
-    adapterButtonList?: string
-    adapterButton?: string
-    adapterButtonIcon?: string
-    adapterButtonText?: string
-
-    adapterViewHeader?: string
-    adapterViewCancelButton?: string
-    adapterView?: string
-    driveLoading?: string
-
-    driveHeader?: string
-    driveLogoutButton?: string
-    driveSearchContainer?: string
-    driveSearchInput?: string
-    driveBody?: string
-    driveItemContainerDefault?: string
-    driveItemContainerSelected?: string
-    driveItemContainerInner?: string
-    driveItemInnerText?: string
-    driveFooter?: string
-    driveAddFilesButton?: string
-    driveCancelFilesButton?: string
-
-    urlInput?: string
-    urlFetchButton?: string
-
-    cameraPreviewContainer?: string
-    cameraDeleteButton?: string
-    cameraCaptureButton?: string
-    cameraRotateButton?: string
-    cameraAddButton?: string
-
-    fileListContainer?: string
-    fileListContainerInnerSingle?: string
-    fileListContainerInnerMultiple?: string
-    fileListFooter?: string
-
-    filePreviewPortal?: string
-    fileItemSingle?: string
-    fileItemMultiple?: string
-    fileThumbnailSingle?: string
-    fileThumbnailMultiple?: string
-    fileInfo?: string
-    fileName?: string
-    fileSize?: string
-    filePreviewButton?: string
-    fileDeleteButton?: string
-
-    uploadButton?: string
-    uploadDoneButton?: string
-
-    progressBarContainer?: string
-    progressBar?: string
-    progressBarInner?: string
-    progressBarText?: string
-}
 
 export type UpupUploaderPropsIcons = {
     ContainerAddMoreIcon?: FC<{ className?: string }>
@@ -250,18 +141,29 @@ export type UpupUploaderPropsIcons = {
     LoaderIcon?: FC<{ className?: string }>
 }
 
-/** Shorthand source names for v2 DX */
-export type UploadSource = 'local' | 'camera' | 'url' | 'google_drive' | 'onedrive' | 'dropbox' | 'microphone' | 'screen'
+/** Canonical source IDs accepted by the uploader. */
+export type UploadSource =
+    | FileSource
+    | 'local'
+    | 'url'
+    | 'camera'
+    | 'microphone'
+    | 'screen'
+    | 'googleDrive'
+    | 'oneDrive'
+    | 'dropbox'
+    | 'box'
 
 export type UpupUploaderProps = {
     // Required Props
     /**
-     * Storage provider. Accepts the UpupProvider enum or any of the string
-     * literals. All S3-compatible providers share the same client code
-     * path; the string is forwarded to your server-side presigning code.
+     * Storage provider. Accepts StorageProvider values from `@upup/core`
+     * or matching string literals. All S3-compatible providers share the
+     * same client code path; the string is forwarded to your server-side
+     * presigning code.
      */
     provider:
-        | UpupProvider
+        | StorageProvider
         | 'aws'
         | 'azure'
         | 'backblaze'
@@ -270,7 +172,6 @@ export type UpupUploaderProps = {
         | 'wasabi'
         | 'minio'
         | 'gcs'
-    tokenEndpoint?: string
 
     // ── v2 DX aliases (preferred) ────────────────────────────
     /**
@@ -281,14 +182,12 @@ export type UpupUploaderProps = {
      * browser or when you need server-side compliance/scanning.
      */
     mode?: 'client' | 'server'
-    /** v2: Shorthand source list. e.g. sources={['local','camera','google_drive']} */
+    /** Source list. e.g. sources={['local','camera','googleDrive']} */
     sources?: UploadSource[]
-    /** v2: Alias for tokenEndpoint */
+    /** Endpoint returning presigned upload URLs. */
     uploadEndpoint?: string
-    /** v2: Server URL for @upup/server handler (replaces tokenEndpoint in server mode) */
+    /** Server URL for @upup/server handler. */
     serverUrl?: string
-    /** v2: API key for upup managed service — no server setup needed */
-    apiKey?: string
     /** v2: Alias for limit */
     maxFiles?: number
     /** v2: Unified file restrictions object */
@@ -299,7 +198,7 @@ export type UpupUploaderProps = {
         maxNumberOfFiles?: number
         allowedFileTypes?: string[]
     }
-    /** v2: Theme configuration. mode replaces `dark`, tokens/slots replace `classNames`. */
+    /** v2: Theme configuration. mode replaces `dark`, tokens/slots replace flat styling overrides. */
     theme?: {
         mode?: 'light' | 'dark' | 'system'
         tokens?: Record<string, unknown>
@@ -307,27 +206,28 @@ export type UpupUploaderProps = {
          * Per-slot className overrides — each override is optional and merged
          * additively on top of the built-in classes via flattenSlotsToClassNames.
          */
-        slots?: import('@upup/shared').DeepPartialSlots
+        slots?: import('@upup/core').DeepPartialSlots
     }
 
-    // ── v1 Props (still supported) ───────────────────────────
-    showSelectFolderButton?: boolean
-    enableAutoCorsConfig?: boolean
-    /** @deprecated Use `sources` instead */
-    uploadAdapters?: UploadAdapter[]
-    /** v2: Cloud drive configurations with cleaner keys */
+    /** Folder upload configuration. */
+    folderUpload?: {
+        enabled?: boolean
+        showPickerButton?: boolean
+    }
+    /** CORS configuration. `dangerouslyAutoConfigure` can mutate storage CORS and should only be used for quick setup. */
+    cors?: {
+        dangerouslyAutoConfigure?: boolean
+        allowedOrigins: string[]
+        allowedMethods?: string[]
+        allowedHeaders?: string[]
+        maxAgeSeconds?: number
+    }
+    /** Cloud drive configurations. */
     cloudDrives?: {
         googleDrive?: { clientId: string; apiKey: string; appId: string }
         oneDrive?: { clientId: string; redirectUri?: string }
         dropbox?: { clientId: string; redirectUri?: string }
         box?: { clientId: string; redirectUri?: string }
-    }
-    /** @deprecated Use `cloudDrives` instead */
-    driveConfigs?: {
-        googleDrive?: GoogleDriveConfigs
-        oneDrive?: OneDriveConfigs
-        dropbox?: DropboxConfigs
-        box?: BoxConfigs
     }
     /** v2: Enable automatic image compression before upload. */
     imageCompression?: boolean
@@ -352,8 +252,6 @@ export type UpupUploaderProps = {
     allowPreview?: boolean
     /** v2: Show/hide the upup branding footer. Default true. */
     showBranding?: boolean
-    /** v2: Allow selecting entire folders (directory upload). Adds "select a folder" button. */
-    allowFolderUpload?: boolean
     /** v2: Disable drag-and-drop (keep browse/click functional). Default false. */
     disableDragDrop?: boolean
     /** v2: Additional CSS class name applied to the root container */
@@ -369,44 +267,46 @@ export type UpupUploaderProps = {
     maxTotalFileSize?: MaxFileSizeObject
     /** Optional image editor. Pass `true` for defaults or an `ImageEditorOptions` object. */
     imageEditor?: boolean | ImageEditorOptions
-    customProps?: object
+    metadata?: Record<string, unknown>
     maxRetries?: number
     resumable?: ResumableUploadOptions
     icons?: UpupUploaderPropsIcons
 
     // i18n / Localisation
-    /** v2: i18n configuration. Accepts a locale pack or per-key overrides. */
+    /** i18n configuration. Uses ICU locale bundles from `@upup/core`. */
     i18n?: {
         /**
-         * ICU-enabled locale bundle from `@upup/shared/i18n` (e.g. `import { enUS } from '@upup/shared'`).
+         * ICU-enabled locale bundle from `@upup/core/i18n` (e.g. `import { enUS } from '@upup/core'`).
          * When provided, enables ICU pluralization, namespaced key overrides, and runtime locale switching.
          * Takes precedence over `locale`.
          */
-        bundle?: import('@upup/shared').LocaleBundle
+        bundle?: LocaleBundle
         /**
-         * Full locale pack (e.g. import { fr_FR } from 'upup-react-file-uploader/locales'),
-         * or a BCP-47 locale code string (e.g. 'ar-SA') for lang/dir only.
+         * Locale bundle (e.g. `frFR`) or a BCP-47 locale code string
+         * (e.g. 'ar-SA') for lang/dir only.
          */
-        locale?: Translations | string
+        locale?: LocaleBundle | string
+        /**
+         * Optional fallback locale bundle/code used when the active bundle is
+         * missing a message key. String codes are for playground/codegen
+         * convenience; pass bundles for translated fallback content.
+         */
+        fallbackLocale?: LocaleBundle | string
         /** Per-key overrides merged on top of the locale */
-        overrides?: Partial<Translations>
+        overrides?: PartialMessages
     }
-    /** @deprecated Use `i18n.locale` instead */
-    localePack?: Translations
-    /** @deprecated Use `i18n.overrides` instead */
-    translations?: Partial<Translations>
 
     // Event Handlers
-    onFilesSelected?: (files: FileWithParams[]) => void
+    onFilesSelected?: (files: UploadFile[]) => void
     onDoneClicked?: () => void
-    onPrepareFiles?: (files: FileWithParams[]) => Promise<FileWithParams[]>
-    onFileClick?: (file: FileWithParams) => void
+    onPrepareFiles?: (files: UploadFile[]) => Promise<UploadFile[]>
+    onFileClick?: (file: UploadFile) => void
     onIntegrationClick?: (integrationType: string) => void
-    onFileUploadStart?: (file: FileWithParams) => void
-    onFileUploadComplete?: (file: FileWithParams, key: string) => void
-    onFilesUploadComplete?: (fileWithParams: FileWithParams[]) => void
+    onFileUploadStart?: (file: UploadFile) => void
+    onFileUploadComplete?: (file: UploadFile, key: string) => void
+    onFilesUploadComplete?: (files: UploadFile[]) => void
     onFileUploadProgress?: (
-        file: FileWithParams,
+        file: UploadFile,
         {
             loaded,
             total,
@@ -414,15 +314,15 @@ export type UpupUploaderProps = {
         }: { loaded: number; total: number; percentage: number },
     ) => void
     onFilesUploadProgress?: (completedFiles: number, totalFiles: number) => void
-    onFileRemove?: (file: FileWithParams) => void
+    onFileRemove?: (file: UploadFile) => void
     /** v2: Called once when the batch upload starts */
     onUploadStart?: () => void
     /** v2: Called when all uploads complete or fail */
-    onUploadComplete?: (files: FileWithParams[]) => void
+    onUploadComplete?: (files: UploadFile[]) => void
     /** v2: Called whenever upload status changes (idle → uploading → complete/failed) */
     onStatusChange?: (status: string) => void
     /** v2: Alias for onFileRemove with v2 naming */
-    onFileRemoved?: (file: FileWithParams) => void
+    onFileRemoved?: (file: UploadFile) => void
     onFilesDragOver?: (files: File[]) => void
     onFilesDragLeave?: (files: File[]) => void
     onFilesDrop?: (files: File[]) => void
@@ -440,16 +340,9 @@ export type UpupUploaderProps = {
      *  Use this to wait for server-side processing (virus scan, transcoding, etc.). */
     processingEndpoint?: string
     /** v2: Called when the server sends a processing-complete SSE event for a file. */
-    onFileProcessed?: (file: FileWithParams, data: Record<string, unknown>) => void
+    onFileProcessed?: (file: UploadFile, data: Record<string, unknown>) => void
     /** v2: Max milliseconds to wait for the server SSE event before closing. Default 60000. */
     processingTimeout?: number
-}
-
-export type PresignedUrlResponse = {
-    key: string
-    publicUrl: string
-    uploadUrl: string
-    expiresIn: number
 }
 
 export enum UploadErrorType {
@@ -481,82 +374,3 @@ export class UploadError extends Error {
     }
 }
 
-export type FileWithParams = File & {
-    id: string
-    url: string
-    key?: string
-    fileHash?: string | undefined
-    thumbnail?: {
-        file: File
-        key?: string
-    }
-}
-
-export type FileWithProgress = FileWithParams & { progress: number }
-
-/**
- * Options for resumable uploads.
- * Currently supports 'multipart' mode for S3-compatible providers.
- * 'tus' mode is reserved for future implementation.
- */
-export type ResumableUploadOptions =
-    | {
-          mode: 'multipart'
-          /** Part size in bytes. Minimum 5 MiB, clamped automatically. */
-          chunkSizeBytes?: number
-          /** Persist upload sessions in localStorage for cross-refresh resume. Default: true */
-          persist?: boolean
-      }
-    | {
-          mode: 'tus'
-          /** Tus server endpoint (not implemented yet) */
-          endpoint: string
-      }
-
-/**
- * Response from tokenEndpoint for multipart:init action
- */
-export type MultipartInitResponse = {
-    key: string
-    uploadId: string
-    partSize: number
-    expiresIn: number
-}
-
-/**
- * Response from tokenEndpoint for multipart:signPart action
- */
-export type MultipartSignPartResponse = {
-    uploadUrl: string
-    expiresIn: number
-}
-
-/**
- * A single uploaded part reference
- */
-export type MultipartPart = {
-    partNumber: number
-    eTag: string
-}
-
-/**
- * Response from tokenEndpoint for multipart:listParts action
- */
-export type MultipartListPartsResponse = {
-    parts: MultipartPart[]
-}
-
-/**
- * Response from tokenEndpoint for multipart:complete action
- */
-export type MultipartCompleteResponse = {
-    key: string
-    publicUrl: string
-}
-
-/**
- * Response from tokenEndpoint for multipart:abort action
- */
-export type MultipartAbortResponse = {
-    ok: true
-}

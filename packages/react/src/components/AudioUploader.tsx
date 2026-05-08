@@ -10,7 +10,7 @@ export default function AudioUploader() {
     const {
         setFiles,
         setActiveAdapter,
-        props: { dark },
+        props: { isDarkTheme: dark },
     } = useRootContext()
 
     const [state, setState] = useState<RecordingState>('idle')

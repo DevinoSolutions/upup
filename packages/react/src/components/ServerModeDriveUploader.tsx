@@ -29,7 +29,7 @@ export default function ServerModeDriveUploader({
     'data-upup-slot': dataUpupSlot = `drive-browser-${provider}`,
 }: Readonly<Props>) {
     const {
-        props: { dark },
+        props: { isDarkTheme: dark },
     } = useRootContext()
     const { state, search, setSearch, refresh, transfer, startAuth } =
         useServerModeDrive(provider)
@@ -99,6 +99,8 @@ export default function ServerModeDriveUploader({
                         </span>
                         <input
                             type="search"
+                            name="upup-drive-search"
+                            aria-label="Search"
                             value={search}
                             onChange={e => {
                                 setSearch(e.target.value)

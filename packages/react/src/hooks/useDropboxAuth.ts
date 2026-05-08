@@ -178,9 +178,16 @@ export function useDropboxAuth(cfg?: DropboxConfigs) {
 
         /* -------- poll loop -------- */
         pollRef.current = setInterval(async () => {
-            if (!winRef.current) return // safety
-            addBusyOverlay(winRef.current)
             try {
+                if (!winRef.current) return // safety
+
+                try {
+                    addBusyOverlay(winRef.current)
+                } catch {
+                    // The Dropbox auth window is cross-origin until it redirects
+                    // back to the app. That state is expected while polling.
+                }
+
                 /* if user manually closed it – stop */
                 if (winRef.current.closed) {
                     clearInterval(pollRef.current!)
@@ -220,7 +227,14 @@ export function useDropboxAuth(cfg?: DropboxConfigs) {
                 winRef.current.close()
             } catch (e) {
                 /* cross-origin while still on dropbox or exchange error */
-                if ((e as Error).message?.includes('Failed to read')) return
+                const message = (e as Error).message ?? ''
+                if (
+                    message.includes('Failed to read') ||
+                    message.includes('cross-origin') ||
+                    message.includes('Cross-Origin-Opener-Policy') ||
+                    message.includes('Permission denied')
+                )
+                    return
                 console.error('[DBX-AUTH] poll/error', e)
                 // v2: emit poll error via UpupCore
                 core?.emit('dropbox-auth-poll-error', { error: e })

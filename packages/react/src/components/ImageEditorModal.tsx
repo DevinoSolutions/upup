@@ -9,7 +9,7 @@ import React, {
     useState,
 } from 'react'
 import { createPortal } from 'react-dom'
-import { FileWithParams } from '../shared/types'
+import type { UploadFile } from '@upup/core'
 import { useRootContext } from '../context/RootContext'
 import {
     getFilerobotTheme,
@@ -18,7 +18,7 @@ import {
 import { cn } from '../lib/tailwind'
 
 type Props = {
-    file: FileWithParams
+    file: UploadFile
     onClose: () => void
     onSave: (editedImageData: string, mimeType?: string) => void
 }
@@ -73,7 +73,7 @@ type FilerobotEditorProps = {
 export default memo(function ImageEditorModal(props: Props) {
     const { file, onClose, onSave } = props
     const {
-        props: { dark, imageEditor: editorConfig },
+        props: { isDarkTheme: dark, imageEditor: editorConfig },
     } = useRootContext()
 
     const overlayRef = useRef<HTMLDivElement>(null)
@@ -299,7 +299,7 @@ export default memo(function ImageEditorModal(props: Props) {
                                 shouldForwardProp={shouldForwardProp}
                             >
                                 <EditorComponent
-                                    source={file.url}
+                                    source={file.url ?? ''}
                                     onSave={handleEditorSave}
                                     onClose={onClose}
                                     savingPixelRatio={4}

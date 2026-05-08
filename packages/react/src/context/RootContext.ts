@@ -5,18 +5,21 @@ import {
     SetStateAction,
     useContext,
 } from 'react'
-import type { UpupCore } from '@upup/core'
+import type {
+    FileSource,
+    InternalFlatClassNames,
+    UpupCore,
+    UploadFile,
+    UpupThemeMode,
+} from '@upup/core'
 import {
     BoxConfigs,
     DropboxConfigs,
-    FileWithParams,
     GoogleDriveConfigs,
     OneDriveConfigs,
     ResolvedImageEditorOptions,
     Translations,
-    UploadAdapter,
     UpupUploaderProps,
-    UpupUploaderPropsClassNames,
     UpupUploaderPropsIcons,
 } from '../shared/types'
 import { FilesProgressMap } from '../hooks/useRootProvider'
@@ -35,7 +38,8 @@ type ContextUpload = {
     setUploadStatus: Dispatch<SetStateAction<UploadStatus>>
     totalProgress: number
     filesProgressMap: FilesProgressMap
-    proceedUpload: () => Promise<FileWithParams[] | undefined>
+    proceedUpload: () => Promise<UploadFile[] | undefined>
+    retryUpload: (fileId?: string) => Promise<UploadFile[] | undefined>
     /** Current upload speed in bytes/sec (rolling average) */
     uploadSpeed: number
     /** Estimated seconds remaining */
@@ -49,7 +53,7 @@ type ContextUpload = {
 type ContextProps = Required<
     Pick<
         UpupUploaderProps,
-        | 'uploadAdapters'
+        | 'sources'
         | 'isProcessing'
         | 'allowPreview'
         | 'mini'
@@ -61,7 +65,6 @@ type ContextProps = Required<
         | 'enablePaste'
         | 'onError'
         | 'icons'
-        | 'showSelectFolderButton'
         | 'showBranding'
         | 'className'
         | 'style'
@@ -72,13 +75,13 @@ type ContextProps = Required<
         allowedFileTypes: string
         /** Derived from `maxFiles ?? restrictions?.maxNumberOfFiles ?? 10`. */
         limit: number
-        /** Derived from `theme?.mode === 'dark'`. */
-        dark: boolean
-        /**
-         * Flat slot className map consumed by internal components.
-         * Populated from `theme.slots` via `flattenSlotsToClassNames()`.
-         */
-        classNames: UpupUploaderPropsClassNames
+        /** Effective theme mode after resolving `theme.mode: "system"`. */
+        themeMode: Exclude<UpupThemeMode, 'system'>
+        /** Internal convenience flag derived from `themeMode`. */
+        isDarkTheme: boolean
+        folderPickerButtonVisible: boolean
+        /** Internal projection of public `theme.slots` for component slots. */
+        slotClasses: InternalFlatClassNames
         multiple: boolean
         icons: Required<UpupUploaderPropsIcons>
         imageEditor: ResolvedImageEditorOptions
@@ -92,24 +95,24 @@ export interface IRootContext {
     /** v2.2: Resolved base URL where `@upup/server`'s `createHandler()` is mounted. */
     serverUrl?: string
     inputRef: RefObject<HTMLInputElement | null>
-    activeAdapter?: UploadAdapter
-    setActiveAdapter: Dispatch<SetStateAction<UploadAdapter | undefined>>
+    activeAdapter?: FileSource
+    setActiveAdapter: Dispatch<SetStateAction<FileSource | undefined>>
 
     translations: Translations
     /** ICU-capable translator — present when `i18n.bundle` is supplied */
-    translator?: import('@upup/shared').Translator
+    translator?: import('@upup/core').Translator
     lang: string
     dir: 'ltr' | 'rtl'
     /** Per-slot className overrides from theme.slots */
-    themeSlots?: import('@upup/shared').DeepPartialSlots
+    themeSlots?: import('@upup/core').DeepPartialSlots
 
-    files: Map<string, FileWithParams>
+    files: Map<string, UploadFile>
     setFiles: (newFiles: File[]) => void
-    dynamicallyReplaceFiles: (files: File[] | FileWithParams[]) => void
+    dynamicallyReplaceFiles: (files: File[] | UploadFile[]) => void
     resetState: () => void
     dynamicUpload: (
-        files: File[] | FileWithParams[],
-    ) => Promise<FileWithParams[] | undefined>
+        files: File[] | UploadFile[],
+    ) => Promise<UploadFile[] | undefined>
     isAddingMore: boolean
     setIsAddingMore: Dispatch<SetStateAction<boolean>>
 
@@ -125,11 +128,11 @@ export interface IRootContext {
     handlePause: () => void
     handleResume: () => void
 
-    editingFile: FileWithParams | null
-    openImageEditor: (file: FileWithParams) => void
+    editingFile: UploadFile | null
+    openImageEditor: (file: UploadFile) => void
     closeImageEditor: () => void
     saveImageEdit: (editedImageData: string, mimeType?: string) => void
-    replaceFile: (fileId: string, newFile: FileWithParams) => void
+    replaceFile: (fileId: string, newFile: UploadFile) => void
 
     oneDriveConfigs?: OneDriveConfigs
     googleDriveConfigs?: GoogleDriveConfigs

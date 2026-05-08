@@ -129,7 +129,7 @@ export type Translations = {
     networkErrorDuringUpload: string
     missingRequiredConfiguration: string
     invalidProvider: string
-    invalidTokenEndpoint: string
+    invalidUploadEndpoint: string
     maxFileSizeMustBeGreater: string
     invalidAcceptFormat: string
     unauthorizedAccess: string

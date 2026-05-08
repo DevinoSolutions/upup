@@ -1,20 +1,20 @@
 'use client'
 import React, { MouseEventHandler, memo, useCallback, useState } from 'react'
-import { FileWithParams } from '../shared/types'
+import type { UploadFile } from '@upup/core'
 import { useRootContext } from '../context/RootContext'
 import { cn } from '../lib/tailwind'
 import FilePreview from './FilePreview'
 import FilePreviewPortal from './FilePreviewPortal'
 
 type Props = {
-    file: FileWithParams
+    file: UploadFile
 }
 
 export default memo(function FileItem({ file }: Props) {
     const {
         core,
         files,
-        props: { classNames, onFileClick },
+        props: { slotClasses, onFileClick },
     } = useRootContext()
     const [showPreviewPortal, setShowPreviewPortal] = useState(false)
     const [canPreview, setCanPreview] = useState(false)
@@ -30,6 +30,11 @@ export default memo(function FileItem({ file }: Props) {
         // v2: emit file-preview-open via UpupCore
         core?.emit('file-preview-open', { fileId: file.id, fileName: file.name })
     }, [core, file.id, file.name])
+    const closePreviewPortal = useCallback(() => {
+        setShowPreviewPortal(false)
+        // v2: emit file-preview-close via UpupCore
+        core?.emit('file-preview-close', { fileId: file.id, fileName: file.name })
+    }, [core, file.id, file.name])
 
     return (
         <div
@@ -38,18 +43,18 @@ export default memo(function FileItem({ file }: Props) {
             className={cn(
                 'upup-relative upup-flex upup-flex-1 upup-flex-col upup-items-start upup-gap-1 upup-bg-transparent',
                 {
-                    [classNames.fileItemMultiple!]:
-                        classNames.fileItemMultiple && files.size > 1,
-                    [classNames.fileItemSingle!]:
-                        classNames.fileItemSingle && files.size === 1,
+                    [slotClasses.fileItemMultiple!]:
+                        slotClasses.fileItemMultiple && files.size > 1,
+                    [slotClasses.fileItemSingle!]:
+                        slotClasses.fileItemSingle && files.size === 1,
                 },
             )}
         >
             <FilePreview
                 fileName={file.name}
-                fileType={file.type}
+                fileType={file.type ?? ''}
                 fileId={file.id}
-                fileUrl={file.url}
+                fileUrl={file.url ?? ''}
                 fileSize={file.size}
                 canPreview={canPreview}
                 setCanPreview={setCanPreview}
@@ -60,13 +65,9 @@ export default memo(function FileItem({ file }: Props) {
             {canPreview && showPreviewPortal && (
                 <FilePreviewPortal
                     onStopPropagation={handleStopPropagation}
-                    onClick={() => {
-                        setShowPreviewPortal(false)
-                        // v2: emit file-preview-close via UpupCore
-                        core?.emit('file-preview-close', { fileId: file.id, fileName: file.name })
-                    }}
-                    fileType={file.type}
-                    fileUrl={file.url}
+                    onClose={closePreviewPortal}
+                    fileType={file.type ?? ''}
+                    fileUrl={file.url ?? ''}
                     fileName={file.name}
                     fileSize={file.size}
                 />

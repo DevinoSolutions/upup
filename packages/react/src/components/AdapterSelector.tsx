@@ -4,6 +4,7 @@ import { TbUpload } from 'react-icons/tb'
 import { useRootContext } from '../context/RootContext'
 import useAdapterSelector from '../hooks/useAdapterSelector'
 import { cn } from '../lib/tailwind'
+import { plural, t } from '../shared/i18n'
 import ShouldRender from './shared/ShouldRender'
 
 export default function AdapterSelector() {
@@ -15,9 +16,9 @@ export default function AdapterSelector() {
             multiple,
             limit,
             maxFileSize,
-            dark,
-            classNames,
-            showSelectFolderButton,
+            isDarkTheme: dark,
+            slotClasses,
+            folderPickerButtonVisible,
         },
         translations: tr,
         isAddingMore,
@@ -40,11 +41,18 @@ export default function AdapterSelector() {
             .join(', ')
         constraintParts.push(humanized + ' only')
     }
-    if (limit > 1) constraintParts.push(`up to ${limit} files`)
+    if (limit > 1) {
+        constraintParts.push(t(tr.addDocumentsHere, { limit }))
+    }
     if (maxFileSize?.size && maxFileSize?.unit)
-        constraintParts.push(`${maxFileSize.size} ${maxFileSize.unit} max`)
+        constraintParts.push(
+            t(plural(tr, 'maxFileSizeAllowed', limit), {
+                size: maxFileSize.size,
+                unit: maxFileSize.unit,
+            }),
+        )
     const constraintLine = constraintParts.join(', ')
-    const { chosenAdapters, handleAdapterClick, handleInputFileChange } =
+    const { chosenSources, handleAdapterClick, handleInputFileChange } =
         useAdapterSelector()
 
     const handleBrowseFilesClick = useCallback(() => {
@@ -121,7 +129,7 @@ export default function AdapterSelector() {
                         {
                             'upup-bg-white/5 dark:upup-bg-white/5': dark,
                         },
-                        classNames.containerHeader,
+                        slotClasses.containerHeader,
                     )}
                 >
                     <button
@@ -131,7 +139,7 @@ export default function AdapterSelector() {
                                 'upup-text-[#30C5F7] dark:upup-text-[#30C5F7]':
                                     dark,
                             },
-                            classNames.containerCancelButton,
+                            slotClasses.containerCancelButton,
                         )}
                         onClick={() => setIsAddingMore(false)}
                     >
@@ -167,21 +175,21 @@ export default function AdapterSelector() {
                 <div
                     className={cn(
                         'upup-flex upup-w-full upup-flex-col upup-justify-center upup-gap-1 md:upup-flex-row md:upup-flex-wrap md:upup-items-center md:upup-gap-[30px] md:upup-px-[30px]',
-                        classNames.adapterButtonList,
+                        slotClasses.adapterButtonList,
                     )}
                 >
-                    {chosenAdapters.map(({ Icon, id, name }) => (
+                    {chosenSources.map(({ Icon, id, name }) => (
                         <button
                             key={id}
                             type="button"
-                            data-testid={`upup-source-${id.toLowerCase()}`}
+                            data-testid={`upup-source-${id}`}
                             className={cn(
                                 'upup-group upup-flex upup-items-center upup-gap-[6px] upup-border-b upup-border-gray-200 upup-px-2 upup-py-1 md:upup-flex-col md:upup-justify-center md:upup-rounded-lg md:upup-border-none md:upup-p-0',
                                 {
                                     'upup-border-[#6D6D6D] dark:upup-border-[#6D6D6D]':
                                         dark,
                                 },
-                                classNames.adapterButton,
+                                slotClasses.adapterButton,
                             )}
                             onKeyDown={e => {
                                 if (e.key === 'Enter') e.preventDefault()
@@ -196,7 +204,7 @@ export default function AdapterSelector() {
                                         'upup-text-gray-300 dark:upup-text-gray-300':
                                             dark,
                                     },
-                                    classNames.adapterButtonText,
+                                    slotClasses.adapterButtonText,
                                 )}
                             >
                                 {name}
@@ -207,6 +215,7 @@ export default function AdapterSelector() {
             </ShouldRender>
             <input
                 type="file"
+                name="upup-files"
                 accept={allowedFileTypes}
                 className="upup-hidden"
                 data-testid="upup-file-input"
@@ -270,7 +279,7 @@ export default function AdapterSelector() {
                         >
                             {tr.browseFiles}
                         </button>
-                        {showSelectFolderButton && (
+                        {folderPickerButtonVisible && (
                             <>
                                 <span
                                     className={cn(

@@ -3,7 +3,8 @@
 import React, { forwardRef, useImperativeHandle } from 'react'
 import { TbLoader } from 'react-icons/tb'
 import { devinoDark, devinoLight, logoDark, logoLight } from './assets/logos'
-import { FileWithParams, UpupUploaderProps } from './shared/types'
+import type { UploadFile } from '@upup/core'
+import { UpupUploaderProps } from './shared/types'
 import DefaultLoaderIcon from './components/DefaultLoaderIcon'
 import ImageEditorInline from './components/ImageEditorInline'
 import ImageEditorModal from './components/ImageEditorModal'
@@ -18,16 +19,16 @@ import { UpupThemeProvider } from './theme'
 export type UpupUploaderRef = {
     useUpload(): {
         error?: string
-        files: FileWithParams[]
+        files: UploadFile[]
         loading: boolean
         progress: number
-        upload(): Promise<FileWithParams[] | undefined>
+        upload(): Promise<UploadFile[] | undefined>
         resetState(): void
         dynamicUpload(
-            files: File[] | FileWithParams[],
-        ): Promise<FileWithParams[] | undefined>
+            files: File[] | UploadFile[],
+        ): Promise<UploadFile[] | undefined>
         setFiles(newFiles: File[]): void
-        dynamicallyReplaceFiles(files: File[] | FileWithParams[]): void
+        dynamicallyReplaceFiles(files: File[] | UploadFile[]): void
     }
 }
 
@@ -75,20 +76,20 @@ export default forwardRef<UpupUploaderRef, UpupUploaderProps>(
                             aria-labelledby="drop-instructions"
                             className={cn(
                                 `upup-shadow-wrapper upup-relative ${
-                                    providerValues.props.dark
+                                    providerValues.props.themeMode === 'dark'
                                         ? 'upup-bg-[#232323]'
                                         : 'upup-bg-white'
                                 } upup-flex upup-h-full upup-w-full upup-select-none upup-flex-col upup-gap-3 upup-overflow-hidden upup-rounded-2xl upup-px-5 upup-py-4`,
                                 {
-                                    [providerValues.props.classNames
+                                    [providerValues.props.slotClasses
                                         .containerFull!]:
-                                        providerValues.props.classNames
+                                        providerValues.props.slotClasses
                                             .containerFull &&
                                         !providerValues.props.mini,
 
-                                    [providerValues.props.classNames
+                                    [providerValues.props.slotClasses
                                         .containerMini!]:
-                                        providerValues.props.classNames
+                                        providerValues.props.slotClasses
                                             .containerMini &&
                                         providerValues.props.mini,
                                 },
@@ -102,7 +103,7 @@ export default forwardRef<UpupUploaderRef, UpupUploaderProps>(
                                         'upup-absolute upup-right-5 upup-animate-spin upup-text-xs upup-text-xs upup-leading-5 upup-text-[#0E2ADD] md:upup-text-xl',
                                         {
                                             'upup-text-[#59D1F9] dark:upup-text-[#59D1F9]':
-                                                providerValues.props.dark,
+                                                providerValues.props.themeMode === 'dark',
                                         },
                                     )}
                                 />
@@ -136,7 +137,7 @@ export default forwardRef<UpupUploaderRef, UpupUploaderProps>(
                                         className="upup-flex upup-items-center upup-gap-[5px]"
                                     >
                                         <ShouldRender
-                                            if={providerValues.props.dark}
+                                            if={providerValues.props.themeMode === 'dark'}
                                         >
                                             <img
                                                 src={logoDark}
@@ -146,7 +147,7 @@ export default forwardRef<UpupUploaderRef, UpupUploaderProps>(
                                             />
                                         </ShouldRender>
                                         <ShouldRender
-                                            if={!providerValues.props.dark}
+                                            if={providerValues.props.themeMode !== 'dark'}
                                         >
                                             <img
                                                 src={logoLight}
@@ -168,7 +169,8 @@ export default forwardRef<UpupUploaderRef, UpupUploaderProps>(
                                                 {
                                                     'upup-text-gray-300 dark:upup-text-gray-300':
                                                         providerValues.props
-                                                            .dark,
+                                                            .themeMode ===
+                                                        'dark',
                                                 },
                                             )}
                                         >
@@ -178,7 +180,7 @@ export default forwardRef<UpupUploaderRef, UpupUploaderProps>(
                                             }{' '}
                                         </span>
                                         <ShouldRender
-                                            if={providerValues.props.dark}
+                                            if={providerValues.props.themeMode === 'dark'}
                                         >
                                             <img
                                                 src={devinoDark}
@@ -188,7 +190,7 @@ export default forwardRef<UpupUploaderRef, UpupUploaderProps>(
                                             />
                                         </ShouldRender>
                                         <ShouldRender
-                                            if={!providerValues.props.dark}
+                                            if={providerValues.props.themeMode !== 'dark'}
                                         >
                                             <img
                                                 src={devinoLight}

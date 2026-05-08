@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { renderHook } from '@testing-library/react'
 import { useUpupUpload } from '../src/use-upup-upload'
-import { UploadStatus } from '@upup/shared'
+import { UploadStatus } from '@upup/core'
 
 describe('useUpupUpload — configuration variants', () => {
     it('accepts cloudDrives nested config', () => {
@@ -19,17 +19,16 @@ describe('useUpupUpload — configuration variants', () => {
         expect(result.current.core.options.cloudDrives?.googleDrive?.clientId).toBe('gd-id')
     })
 
-    it('accepts apiKey and auto-sets serverUrl', () => {
+    it('does not infer hosted serverUrl from apiKey-like legacy input', () => {
         const { result } = renderHook(() =>
-            useUpupUpload({ provider: 'S3' as const, apiKey: 'key-123' }),
+            useUpupUpload({ provider: 'S3' as const, apiKey: 'key-123' } as any),
         )
-        expect(result.current.core.options.apiKey).toBe('key-123')
-        expect(result.current.core.options.serverUrl).toBe('https://api.upup.dev/v1')
+        expect(result.current.core.options.serverUrl).toBeUndefined()
     })
 
-    it('explicit serverUrl overrides apiKey auto-URL', () => {
+    it('keeps explicit serverUrl when legacy apiKey-like input is present', () => {
         const { result } = renderHook(() =>
-            useUpupUpload({ provider: 'S3' as const, apiKey: 'key', serverUrl: 'https://custom.api' }),
+            useUpupUpload({ provider: 'S3' as const, apiKey: 'key', serverUrl: 'https://custom.api' } as any),
         )
         expect(result.current.core.options.serverUrl).toBe('https://custom.api')
     })

@@ -19,8 +19,8 @@ export default function CameraUploader() {
         facingMode,
         translations: tr,
         props: {
-            dark,
-            classNames,
+            isDarkTheme: dark,
+            slotClasses,
             icons: { CameraCaptureIcon, CameraDeleteIcon, CameraRotateIcon },
         },
     } = useCameraUploader()
@@ -37,7 +37,7 @@ export default function CameraUploader() {
                                     'upup-bg-white/5 dark:upup-bg-white/5':
                                         dark,
                                 },
-                                classNames.cameraPreviewContainer,
+                                slotClasses.cameraPreviewContainer,
                             )}
                             style={{ backgroundImage: `url(${url})` }}
                         >
@@ -45,7 +45,7 @@ export default function CameraUploader() {
                                 onClick={clearUrl}
                                 className={cn(
                                     'upup-absolute upup--right-2 upup--top-2 upup-z-10 upup-rounded-full upup-bg-[#272727] upup-p-1 upup-text-xl upup-text-[#f5f5f5]',
-                                    classNames.cameraDeleteButton,
+                                    slotClasses.cameraDeleteButton,
                                 )}
                                 type="button"
                             >
@@ -73,7 +73,7 @@ export default function CameraUploader() {
                                     'upup-bg-[#59D1F9] dark:upup-bg-[#59D1F9]':
                                         dark,
                                 },
-                                classNames.cameraCaptureButton,
+                                slotClasses.cameraCaptureButton,
                             )}
                             onClick={capture}
                             type="button"
@@ -86,7 +86,7 @@ export default function CameraUploader() {
                         <button
                             className={cn(
                                 'upup-mt-2 upup-flex upup-w-1/3 upup-flex-col upup-items-center upup-rounded-md upup-bg-gray-500 upup-p-2 upup-text-white upup-transition-all upup-duration-300 hover:upup-bg-gray-600',
-                                classNames.cameraRotateButton,
+                                slotClasses.cameraRotateButton,
                             )}
                             onClick={handleCameraSwitch}
                             type="button"
@@ -112,7 +112,7 @@ export default function CameraUploader() {
                                     'upup-bg-[#59D1F9] dark:upup-bg-[#59D1F9]':
                                         dark,
                                 },
-                                classNames.cameraAddButton,
+                                slotClasses.cameraAddButton,
                             )}
                             onClick={handleFetchImage}
                             type="button"

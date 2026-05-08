@@ -39,6 +39,7 @@ vi.mock('../src/context/RootContext', () => ({
         },
         upload: {
             proceedUpload: vi.fn(),
+            retryUpload: vi.fn(),
             uploadStatus: 'PENDING',
             totalProgress: 0,
             uploadSpeed: 0,
@@ -47,8 +48,9 @@ vi.mock('../src/context/RootContext', () => ({
             totalBytes: 0,
         },
         props: {
-            dark: false,
-            classNames: {},
+            isDarkTheme: false,
+            themeMode: 'light',
+            slotClasses: {},
             isProcessing: false,
             maxRetries: 0,
             resumable: undefined,

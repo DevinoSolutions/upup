@@ -69,6 +69,10 @@ export function useServerModeDrive(provider: ServerModeProvider) {
             } catch (err) {
                 if ((err as Error).name === 'AbortError') return
                 setState({ status: 'error', message: (err as Error).message })
+            } finally {
+                if (abortRef.current === ac) {
+                    abortRef.current = null
+                }
             }
         },
         [serverUrl, provider, folderId, search],

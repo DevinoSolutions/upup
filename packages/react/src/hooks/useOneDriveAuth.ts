@@ -246,41 +246,6 @@ export default function useOneDriveAuth({
         onError,
     ])
 
-    // Modify the auto-login effect
-    useEffect(() => {
-        if (!isInitialized || isAuthenticating || isAuthInProgress || token)
-            return
-
-        let autoLoginTimeout: ReturnType<typeof setTimeout>
-
-        const autoLogin = async () => {
-            // Check for recent logout or existing authentication
-            const hasRecentlyLoggedOut = secureStorage.getItem('recentLogout')
-            const isAuthenticated = secureStorage.getItem('isAuthenticated')
-
-            if (hasRecentlyLoggedOut || isAuthenticated) return
-
-            const accounts = msalInstance?.getAllAccounts() || []
-            if (accounts.length === 0)
-                autoLoginTimeout = setTimeout(() => {
-                    handleSignIn()
-                }, 1000)
-        }
-
-        autoLogin()
-
-        return () => {
-            if (autoLoginTimeout) clearTimeout(autoLoginTimeout)
-        }
-    }, [
-        isInitialized,
-        isAuthenticating,
-        isAuthInProgress,
-        token,
-        handleSignIn,
-        msalInstance,
-    ])
-
     const retryAuth = useCallback(() => {
         setAuthCancelled(false)
         handleSignIn()
@@ -291,6 +256,7 @@ export default function useOneDriveAuth({
         signOut: handleSignOut,
         isInitialized,
         isAuthenticating,
+        isAuthInProgress,
         authCancelled,
         retryAuth,
     }

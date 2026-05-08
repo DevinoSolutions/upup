@@ -1,8 +1,17 @@
 'use client'
+
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { UpupCore } from '@upup/core'
-import { UploadStatus as CoreUploadStatus, createTranslator, flattenSlotsToClassNames } from '@upup/shared'
-import type { Translator } from '@upup/shared'
+import {
+    FileSource,
+    UploadStatus as CoreUploadStatus,
+    createTranslator,
+    enUS,
+    flattenSlotsToClassNames,
+    type LocaleBundle,
+    type Translator,
+    type UploadFile,
+    type UpupThemeMode,
+} from '@upup/core'
 import {
     TbCameraRotate,
     TbCapture,
@@ -10,35 +19,23 @@ import {
     TbPlus,
     TbTrash,
 } from 'react-icons/tb'
-import { en_US, mergeTranslations, t } from '../shared/i18n'
+import type { Translations } from '../shared/i18n/types'
 import { resolveAccept } from '../shared/lib/acceptPresets'
-import checkFileType from '../shared/lib/checkFileType'
 import {
-    FileWithParams,
     ResolvedImageEditorOptions,
-    UploadAdapter,
     UpupUploaderProps,
-    UpupUploaderPropsClassNames,
 } from '../shared/types'
 import { IRootContext, UploadStatus } from '../context/RootContext'
+import { revokeFileUrl, sizeToBytes } from '../lib/file'
 import {
-    checkFileSize,
-    compressFile,
-    fileAppendParams,
-    revokeFileUrl,
-    sizeToBytes,
-} from '../lib/file'
-import {
-    blobToFileWithParams,
+    blobToUploadFile,
     dataURLtoBlob,
-    revokeAndReplace,
 } from '../lib/imageEditorHelpers'
 import {
     fileFingerprint,
     loadSession,
 } from '../lib/resumable/multipartSessionStore'
-import { ProviderSDK } from '../lib/storage/provider'
-import { UploadResult } from '../types/StorageSDK'
+import { useUpupUpload } from '../use-upup-upload'
 import { useSSEProcessing } from './useSSEProcessing'
 
 type FileProgress = {
@@ -49,29 +46,213 @@ type FileProgress = {
 
 export type FilesProgressMap = Record<string, FileProgress>
 
-async function uploadWithRetry(
-    fn: () => Promise<UploadResult>,
-    maxRetries: number,
-): Promise<UploadResult> {
-    for (let attempt = 1; attempt <= maxRetries; attempt++) {
-        try {
-            return await fn()
-        } catch (error) {
-            if (attempt === maxRetries) throw error
-        }
-    }
-    throw new Error('Upload failed after retries')
-}
-
-// RTL locales - defined at module scope to avoid reallocation on every render
 const RTL_LOCALES = new Set(['ar', 'ar-SA', 'he', 'he-IL', 'fa', 'fa-IR', 'ur', 'ur-PK'])
 
-// Compute text direction based on locale language
-function getDir(i18nLocale: string | object | undefined): 'ltr' | 'rtl' {
-    const lang = typeof i18nLocale === 'string' ? i18nLocale : 'en-US'
+function getDir(locale: string | LocaleBundle | undefined): 'ltr' | 'rtl' {
+    if (locale && typeof locale === 'object' && 'dir' in locale) return locale.dir
+    const lang = typeof locale === 'string' ? locale : 'en-US'
     const base = lang.split('-')[0]
     return RTL_LOCALES.has(lang) || RTL_LOCALES.has(base) ? 'rtl' : 'ltr'
 }
+
+function useResolvedThemeMode(mode: UpupThemeMode | undefined): 'light' | 'dark' {
+    const requestedMode = mode ?? 'light'
+    const [systemMode, setSystemMode] = useState<'light' | 'dark'>('light')
+
+    useEffect(() => {
+        if (requestedMode !== 'system') return
+        if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return
+
+        const media = window.matchMedia('(prefers-color-scheme: dark)')
+        const update = () => setSystemMode(media.matches ? 'dark' : 'light')
+        update()
+        media.addEventListener?.('change', update)
+        return () => media.removeEventListener?.('change', update)
+    }, [requestedMode])
+
+    if (requestedMode === 'system') return systemMode
+    return requestedMode
+}
+
+function mapCoreStatus(status: CoreUploadStatus): UploadStatus {
+    switch (status) {
+        case CoreUploadStatus.PROCESSING:
+        case CoreUploadStatus.UPLOADING:
+            return UploadStatus.ONGOING
+        case CoreUploadStatus.PAUSED:
+            return UploadStatus.PAUSED
+        case CoreUploadStatus.SUCCESSFUL:
+            return UploadStatus.SUCCESSFUL
+        case CoreUploadStatus.FAILED:
+            return UploadStatus.FAILED
+        case CoreUploadStatus.IDLE:
+        case CoreUploadStatus.READY:
+        default:
+            return UploadStatus.PENDING
+    }
+}
+
+function flattenLocaleBundle(translator: Translator): Translations {
+    const tr = (key: Parameters<Translator>[0], values?: Record<string, unknown>) =>
+        translator(key, values)
+
+    return {
+        cancel: tr('common.cancel'),
+        done: tr('common.done'),
+        loading: tr('common.loading'),
+        or: tr('common.or'),
+        myDevice: tr('adapters.myDevice'),
+        googleDrive: tr('adapters.googleDrive'),
+        oneDrive: tr('adapters.oneDrive'),
+        dropbox: tr('adapters.dropbox'),
+        box: tr('adapters.box'),
+        link: tr('adapters.link'),
+        camera: tr('adapters.camera'),
+        audio: tr('adapters.audio'),
+        screenCapture: tr('adapters.screenCapture'),
+        dragFileOr: tr('dropzone.dragFilesOr', { count: 1 }),
+        dragFilesOr: tr('dropzone.dragFilesOr', { count: 2 }),
+        browseFiles: tr('dropzone.browseFiles'),
+        selectAFolder: tr('dropzone.selectAFolder'),
+        maxFileSizeAllowed_one: tr('dropzone.maxFileSizeAllowed', {
+            size: '{{size}}',
+            unit: '{{unit}}',
+            count: 1,
+        }),
+        maxFileSizeAllowed_other: tr('dropzone.maxFileSizeAllowed', {
+            size: '{{size}}',
+            unit: '{{unit}}',
+            count: 2,
+        }),
+        addDocumentsHere: tr('dropzone.addDocumentsHere', { limit: '{{limit}}' }),
+        removeAllFiles: tr('header.removeAllFiles'),
+        addingMoreFiles: tr('header.addingMoreFiles'),
+        filesSelected_one: tr('header.filesSelected', { count: 1 }),
+        filesSelected_other: tr('header.filesSelected', { count: 2 }),
+        addMore: tr('header.addMore'),
+        switchToListView: tr('header.switchToListView'),
+        switchToGridView: tr('header.switchToGridView'),
+        dropzoneLabel: tr('dropzone.dropAriaLabel'),
+        uploadFiles_one: tr('fileList.uploadFiles', { count: 1 }),
+        uploadFiles_other: tr('fileList.uploadFiles', { count: 2 }),
+        resumeUpload: tr('fileList.resumeUpload'),
+        retryUpload: tr('fileList.retryUpload'),
+        pauseUpload: tr('fileList.pauseUpload'),
+        paused: tr('fileList.paused'),
+        uploadProgress: tr('fileList.uploadProgress'),
+        removeFile: tr('filePreview.removeFile'),
+        clickToPreview: tr('filePreview.clickToPreview'),
+        editImage: tr('filePreview.editImage'),
+        closeEditor: tr('filePreview.closeEditor'),
+        zeroBytes: tr('filePreview.zeroBytes'),
+        bytes: tr('filePreview.bytes'),
+        kb: tr('filePreview.kb'),
+        mb: tr('filePreview.mb'),
+        gb: tr('filePreview.gb'),
+        tb: tr('filePreview.tb'),
+        previewError: tr('filePreview.previewError', { message: '{{message}}' }),
+        noAcceptedFilesFound: tr('driveBrowser.noAcceptedFilesFound'),
+        selectThisFolder: tr('driveBrowser.selectThisFolder'),
+        addFiles_one: tr('driveBrowser.addFiles', { count: 1 }),
+        addFiles_other: tr('driveBrowser.addFiles', { count: 2 }),
+        logOut: tr('driveBrowser.logOut'),
+        search: tr('driveBrowser.search'),
+        authenticatePrompt: tr('driveBrowser.authenticatePrompt', { provider: '{{provider}}' }),
+        signInWith: tr('driveBrowser.signInWith', { provider: '{{provider}}' }),
+        enterFileUrl: tr('url.enterFileUrl'),
+        fetch: tr('url.fetch'),
+        capture: tr('camera.capture'),
+        switchToCamera: tr('camera.switchToCamera', { side: '{{side}}' }),
+        addImage: tr('camera.addImage'),
+        front: tr('camera.front'),
+        back: tr('camera.back'),
+        poweredBy: tr('branding.poweredBy'),
+        builtBy: tr('branding.builtBy'),
+        multipleFilesNotAllowed: tr('errors.multipleFilesNotAllowed'),
+        failedToGetUploadUrl: tr('errors.failedToGetUploadUrl'),
+        statusError: tr('errors.statusError', {
+            status: '{{status}}',
+            statusText: '{{statusText}}',
+            details: '{{details}}',
+        }),
+        networkErrorDuringUpload: tr('errors.networkErrorDuringUpload', {
+            status: '{{status}}',
+            statusText: '{{statusText}}',
+        }),
+        missingRequiredConfiguration: tr('errors.missingRequiredConfiguration', { missing: '{{missing}}' }),
+        invalidProvider: tr('errors.invalidProvider', {
+            provider: '{{provider}}',
+            validOptions: '{{validOptions}}',
+        }),
+        invalidUploadEndpoint: tr('errors.invalidUploadEndpoint', {
+            uploadEndpoint: '{{uploadEndpoint}}',
+            error: '{{error}}',
+        }),
+        maxFileSizeMustBeGreater: tr('errors.maxFileSizeMustBeGreater'),
+        invalidAcceptFormat: tr('errors.invalidAcceptFormat', { accept: '{{accept}}' }),
+        unauthorizedAccess: tr('errors.unauthorizedAccess'),
+        presignedUrlInvalid: tr('errors.presignedUrlInvalid'),
+        temporaryCredentialsInvalid: tr('errors.temporaryCredentialsInvalid'),
+        corsMisconfigured: tr('errors.corsMisconfigured'),
+        fileTooLarge: tr('errors.fileTooLarge'),
+        invalidFileType: tr('errors.invalidFileType'),
+        storageQuotaExceeded: tr('errors.storageQuotaExceeded'),
+        signedUrlGenerationFailed: tr('errors.signedUrlGenerationFailed'),
+        uploadFailedWithCode: tr('errors.uploadFailedWithCode', { code: '{{code}}' }),
+        uploadFailed: tr('errors.uploadFailed', { message: '{{message}}' }),
+        dropboxSessionExpired: tr('errors.dropboxSessionExpired'),
+        dropboxMissingPermissions: tr('errors.dropboxMissingPermissions'),
+        failedToRefreshExpiredToken: tr('errors.failedToRefreshExpiredToken'),
+        allowedLimitSurpassed: tr('errors.allowedLimitSurpassed'),
+        fileUnsupportedType: tr('errors.fileUnsupportedType', { name: '{{name}}' }),
+        fileTooLargeName: tr('errors.fileTooLargeName', {
+            name: '{{name}}',
+            size: '{{size}}',
+            unit: '{{unit}}',
+        }),
+        fileTooSmallName: tr('errors.fileTooSmallName', {
+            name: '{{name}}',
+            size: '{{size}}',
+            unit: '{{unit}}',
+        }),
+        filePreviouslySelected: tr('errors.filePreviouslySelected', { name: '{{name}}' }),
+        fileWithUrlPreviouslySelected: tr('errors.fileWithUrlPreviouslySelected', { url: '{{url}}' }),
+        errorCompressingFile: tr('errors.errorCompressingFile', { name: '{{name}}' }),
+        clientIdRequired: tr('errors.clientIdRequired'),
+        popupBlocked: tr('errors.popupBlocked'),
+        dropboxClientIdMissing: tr('errors.dropboxClientIdMissing'),
+        dropboxAuthFailed: tr('errors.dropboxAuthFailed'),
+        boxClientIdMissing: tr('errors.boxClientIdMissing'),
+        boxAuthFailed: tr('errors.boxAuthFailed'),
+        boxSessionExpired: tr('errors.boxSessionExpired'),
+        boxNoAccessToken: tr('errors.boxNoAccessToken'),
+        genericErrorDetails: tr('errors.genericErrorDetails', { details: '{{details}}' }),
+        errorProcessingFiles: tr('errors.errorProcessingFiles', { message: '{{message}}' }),
+        errorSelectingFolder: tr('errors.errorSelectingFolder', { message: '{{message}}' }),
+        graphClientNotInitialized: tr('errors.graphClientNotInitialized'),
+        dropboxNoAccessToken: tr('errors.dropboxNoAccessToken'),
+        silentTokenAcquisitionFailed: tr('errors.silentTokenAcquisitionFailed', { details: '{{details}}' }),
+        msalInitializationFailed: tr('errors.msalInitializationFailed', { details: '{{details}}' }),
+        silentTokenAcquisitionProceeding: tr('errors.silentTokenAcquisitionProceeding', { details: '{{details}}' }),
+        signInFailed: tr('errors.signInFailed', { message: '{{message}}' }),
+        handleSignInFailed: tr('errors.handleSignInFailed', { message: '{{message}}' }),
+        signOutFailed: tr('errors.signOutFailed', { message: '{{message}}' }),
+    }
+}
+
+function normalizeSource(source: string): FileSource | undefined {
+    return (Object.values(FileSource) as string[]).includes(source)
+        ? source as FileSource
+        : undefined
+}
+
+const DEFAULT_SOURCES = [
+    FileSource.LOCAL,
+    FileSource.URL,
+    FileSource.CAMERA,
+    FileSource.MICROPHONE,
+    FileSource.SCREEN,
+]
 
 export default function useRootProvider({
     allowedFileTypes: acceptProp = '*',
@@ -80,8 +261,7 @@ export default function useRootProvider({
     maxFiles,
     isProcessing = false,
     allowPreview = true,
-    showSelectFolderButton: showSelectFolderButtonProp = false,
-    allowFolderUpload = false,
+    folderUpload,
     showBranding = true,
     className,
     style,
@@ -90,15 +270,17 @@ export default function useRootProvider({
     maxTotalFileSize: maxTotalFileSizeProp,
     restrictions,
     imageCompression = false,
-    thumbnailGenerator = true,
-    uploadAdapters,
+    thumbnailGenerator = false,
+    checksumVerification = false,
+    heicConversion = false,
+    stripExifData = false,
+    contentDeduplication = false,
+    crashRecovery = false,
     sources,
     onError: errorHandler,
     onWarn: warningHandler,
     icons = {},
     i18n,
-    localePack,
-    translations: translationOverrides,
     onIntegrationClick = () => {},
     onFileClick = () => {},
     onFileRemove: onFileRemoveProp = () => {},
@@ -110,363 +292,162 @@ export default function useRootProvider({
     onFileTypeMismatch = () => {},
     onBeforeFileAdded,
     onRestrictionFailed,
-    enablePaste = true,
+    enablePaste = false,
     autoUpload = false,
     maxConcurrentUploads,
     imageEditor: imageEditorProp,
+    onUploadStart = () => {},
     onFileUploadStart = () => {},
     onFileUploadProgress = () => {},
     onFilesUploadProgress = () => {},
     onFileUploadComplete = () => {},
     onFilesUploadComplete = () => {},
+    onUploadComplete = () => {},
     onFilesSelected = () => {},
     onDoneClicked = () => {},
     onPrepareFiles,
     provider,
-    mode = 'client',
-    tokenEndpoint,
+    mode: modeProp,
     uploadEndpoint,
     serverUrl,
-    apiKey,
     cloudDrives,
-    driveConfigs: driveConfigsProp,
-    customProps,
-    enableAutoCorsConfig = false,
+    metadata,
+    cors,
     maxRetries,
     resumable,
     processingEndpoint,
     onFileProcessed,
     processingTimeout,
 }: UpupUploaderProps): IRootContext {
-    // ── v2 DX aliases ────────────────────────────────────────
-    // sources → uploadAdapters mapping
-    const sourceToAdapter: Record<string, UploadAdapter> = {
-        local: UploadAdapter.INTERNAL,
-        camera: UploadAdapter.CAMERA,
-        url: UploadAdapter.LINK,
-        google_drive: UploadAdapter.GOOGLE_DRIVE,
-        onedrive: UploadAdapter.ONE_DRIVE,
-        dropbox: UploadAdapter.DROPBOX,
-        box: UploadAdapter.BOX,
-        microphone: UploadAdapter.AUDIO,
-        screen: UploadAdapter.SCREEN,
-    }
-    const resolvedAdapters = uploadAdapters
-        ?? (sources ? sources.map(s => sourceToAdapter[s]).filter(Boolean) : [UploadAdapter.INTERNAL, UploadAdapter.LINK, UploadAdapter.CAMERA, UploadAdapter.AUDIO, UploadAdapter.SCREEN])
-    const resolvedLimit = maxFiles ?? restrictions?.maxNumberOfFiles ?? 10
-    // apiKey → managed service, serverUrl → self-hosted server, tokenEndpoint/uploadEndpoint → direct
-    const resolvedServerUrl = serverUrl ?? (apiKey ? 'https://api.upup.dev/v1' : undefined)
-    const resolvedEndpoint = tokenEndpoint ?? uploadEndpoint ?? (resolvedServerUrl ? `${resolvedServerUrl}/presign` : '')
-    const dark = theme?.mode === 'dark'
-    // theme.slots → per-slot className overrides passed through context
-    const themeSlots = theme?.slots
-    // theme.slots → internal flat className map (v1-shape) consumed by
-    // components until they're migrated to read slot paths directly.
-    const resolvedClassNames = flattenSlotsToClassNames(themeSlots)
-    // restrictions → flat props mapping (restrictions takes precedence)
-    const maxFileSize = maxFileSizeProp ?? restrictions?.maxFileSize ?? { size: 1, unit: 'GB' as const } // 1 GB default
-    const minFileSize = minFileSizeProp ?? restrictions?.minFileSize
-    const maxTotalFileSize = maxTotalFileSizeProp ?? restrictions?.maxTotalFileSize
-    const accept = resolveAccept(restrictions?.allowedFileTypes ? restrictions.allowedFileTypes.join(',') : acceptProp)
-    // allowFolderUpload → showSelectFolderButton alias
-    const showSelectFolderButton = allowFolderUpload || showSelectFolderButtonProp
-    // onFileRemoved → onFileRemove alias (v2 naming)
-    const onFileRemove = onFileRemoved ?? onFileRemoveProp
-    // cloudDrives → driveConfigs mapping (cloudDrives has cleaner keys)
-    const driveConfigs = driveConfigsProp ?? (cloudDrives ? {
-        googleDrive: cloudDrives.googleDrive ? {
-            google_client_id: cloudDrives.googleDrive.clientId,
-            google_api_key: cloudDrives.googleDrive.apiKey,
-            google_app_id: cloudDrives.googleDrive.appId,
-        } : undefined,
-        oneDrive: cloudDrives.oneDrive ? {
-            onedrive_client_id: cloudDrives.oneDrive.clientId,
-            redirectUri: cloudDrives.oneDrive.redirectUri,
-        } : undefined,
-        dropbox: cloudDrives.dropbox ? {
-            dropbox_client_id: cloudDrives.dropbox.clientId,
-            dropbox_redirect_uri: cloudDrives.dropbox.redirectUri,
-        } : undefined,
-        box: cloudDrives.box ? {
-            box_client_id: cloudDrives.box.clientId,
-            box_redirect_uri: cloudDrives.box.redirectUri,
-        } : undefined,
-    } : undefined)
-
-    // v2: UpupCore instance — coexists with v1 engine, available via context.core
-    const coreRef = useRef<UpupCore | null>(null)
-    if (typeof window !== 'undefined' && !coreRef.current) {
-        coreRef.current = new UpupCore({
-            uploadEndpoint: resolvedEndpoint || undefined,
-            provider,
-            allowedFileTypes: accept,
-            limit: resolvedLimit,
-            maxFileSize,
-            minFileSize,
-            maxTotalFileSize,
-            maxRetries,
-            onBeforeFileAdded,
-            onError: (err) => onError(typeof err === 'string' ? err : err.message),
-            autoUpload,
-            imageCompression,
-            maxConcurrentUploads,
-            googleDriveConfigs: driveConfigs?.googleDrive as Record<string, unknown> | undefined,
-            oneDriveConfigs: driveConfigs?.oneDrive as Record<string, unknown> | undefined,
-            dropboxConfigs: driveConfigs?.dropbox as Record<string, unknown> | undefined,
-            boxConfigs: driveConfigs?.box as Record<string, unknown> | undefined,
-        })
-    }
-
-    const { connectSSE } = useSSEProcessing({ processingEndpoint, onFileProcessed, processingTimeout })
-
     const inputRef = useRef<HTMLInputElement>(null)
     const [isAddingMore, setIsAddingMore] = useState(false)
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
-    // SSR-safe: always initialize to true so server and client first render match.
-    // Next.js/Node 21+ expose `navigator` globally but `navigator.onLine` is undefined
-    // (falsy), which used to give SSR=false / client=true and trigger a hydration
-    // mismatch. Real browser status is synced in the online/offline effect below.
     const [isOnline, setIsOnline] = useState(true)
-    const [selectedFilesMap, setSelectedFilesMap] = useState<
-        Map<string, FileWithParams>
-    >(new Map())
-    const [activeAdapter, setActiveAdapter] = useState<UploadAdapter>()
-    const [uploadStatus, setUploadStatus] = useState(UploadStatus.PENDING)
-    const [filesProgressMap, setFilesProgressMap] = useState<FilesProgressMap>(
-        {} as FilesProgressMap,
-    )
+    const [activeAdapter, setActiveAdapter] = useState<FileSource>()
+    const [filesProgressMap, setFilesProgressMap] = useState<FilesProgressMap>({})
     const [uploadError, setUploadError] = useState('')
     const [uploadSpeed, setUploadSpeed] = useState(0)
     const [uploadEta, setUploadEta] = useState(0)
     const [uploadedBytes, setUploadedBytes] = useState(0)
     const [totalBytes, setTotalBytes] = useState(0)
-
-    // SDK ref for pause/resume control
-    const sdkRef = useRef<ProviderSDK | null>(null)
-    // Speed tracking refs
+    const [editingFile, setEditingFile] = useState<UploadFile | null>(null)
+    const [editorQueue, setEditorQueue] = useState<UploadFile[]>([])
     const speedSamplesRef = useRef<{ time: number; bytes: number }[]>([])
-    // Ref for totalBytes so progress callback always has the latest value
     const totalBytesRef = useRef(0)
-    const [editingFile, setEditingFile] = useState<FileWithParams | null>(null)
-    const [editorQueue, setEditorQueue] = useState<FileWithParams[]>([])
 
-    // Keep a ref to selectedFilesMap for unmount cleanup
-    const selectedFilesMapRef = useRef(selectedFilesMap)
-    useEffect(() => {
-        selectedFilesMapRef.current = selectedFilesMap
-    }, [selectedFilesMap])
-
-    // Revoke all blob URLs on unmount to prevent memory leaks in SPAs
-    useEffect(() => {
-        return () => {
-            selectedFilesMapRef.current.forEach(file => revokeFileUrl(file))
+    const resolvedSources = sources
+        ? sources.map(source => normalizeSource(source)).filter(Boolean) as FileSource[]
+        : DEFAULT_SOURCES
+    const resolvedLimit = maxFiles ?? restrictions?.maxNumberOfFiles ?? 10
+    const resolvedMode = modeProp ?? (serverUrl && !uploadEndpoint ? 'server' : 'client')
+    const resolvedServerUrl = serverUrl
+    const resolvedEndpoint = uploadEndpoint
+    const themeSlots = theme?.slots
+    const resolvedSlotClasses = flattenSlotsToClassNames(themeSlots)
+    const themeMode = useResolvedThemeMode(theme?.mode)
+    const maxFileSize = maxFileSizeProp ?? restrictions?.maxFileSize ?? { size: 1, unit: 'GB' as const }
+    const minFileSize = minFileSizeProp ?? restrictions?.minFileSize
+    const maxTotalFileSize = maxTotalFileSizeProp ?? restrictions?.maxTotalFileSize
+    const accept = resolveAccept(restrictions?.allowedFileTypes ? restrictions.allowedFileTypes.join(',') : acceptProp)
+    const folderPickerButtonVisible = folderUpload?.showPickerButton ?? folderUpload?.enabled ?? false
+    const emitFileRemoved = useCallback((file: UploadFile) => {
+        onFileRemoveProp(file as never)
+        if (onFileRemoved && onFileRemoved !== onFileRemoveProp) {
+            onFileRemoved(file as never)
         }
-    }, [])
-
-    // v2: destroy UpupCore on unmount to clean up event listeners and worker pool
-    useEffect(() => {
-        return () => {
-            coreRef.current?.destroy()
-            coreRef.current = null
-        }
-    }, [])
-
-    // v2: emit 'ready' event once on mount so consumers know the uploader is initialised
-    useEffect(() => {
-        coreRef.current?.emit('ready', {})
-    }, [])
-
-    // v2: track browser online/offline and emit events via UpupCore (#19 Offline Queue)
-    useEffect(() => {
-        // Sync with the real browser status now that we are on the client. State is
-        // seeded `true` for SSR safety; correct it here before attaching listeners.
-        if (typeof navigator !== 'undefined' && typeof navigator.onLine === 'boolean') {
-            setIsOnline(navigator.onLine)
-        }
-        const handleOnline = () => {
-            setIsOnline(true)
-            coreRef.current?.emit('connection-online', {})
-        }
-        const handleOffline = () => {
-            setIsOnline(false)
-            coreRef.current?.emit('connection-offline', {})
-        }
-        window.addEventListener('online', handleOnline)
-        window.addEventListener('offline', handleOffline)
-        return () => {
-            window.removeEventListener('online', handleOnline)
-            window.removeEventListener('offline', handleOffline)
-        }
-    }, [])
-
-    // v2: sync upload status into UpupCore whenever it changes
-    useEffect(() => {
-        if (!coreRef.current) return
-        const statusMap: Record<string, CoreUploadStatus> = {
-            [UploadStatus.PENDING]: CoreUploadStatus.IDLE,
-            [UploadStatus.ONGOING]: CoreUploadStatus.UPLOADING,
-            [UploadStatus.PAUSED]: CoreUploadStatus.PAUSED,
-            [UploadStatus.SUCCESSFUL]: CoreUploadStatus.SUCCESSFUL,
-            [UploadStatus.FAILED]: CoreUploadStatus.FAILED,
-        }
-        const coreStatus = statusMap[uploadStatus]
-        if (coreStatus) {
-            coreRef.current.syncStatusFromExternal(coreStatus)
-        }
-    }, [uploadStatus])
-
-    // v2: keep UpupCore options in sync when React props change
-    useEffect(() => {
-        if (!coreRef.current) return
-        coreRef.current.updateOptions({
-            provider,
-            serverUrl,
-            apiKey,
-            uploadEndpoint: resolvedEndpoint || undefined,
-            allowedFileTypes: accept,
-            limit: resolvedLimit,
-            maxFileSize,
-            minFileSize,
-            maxTotalFileSize,
-            maxRetries,
-            onBeforeFileAdded,
-            imageCompression,
-            maxConcurrentUploads,
-            autoUpload,
-        })
-    }, [provider, serverUrl, apiKey, resolvedEndpoint, accept, resolvedLimit, maxFileSize, minFileSize, maxTotalFileSize, maxRetries, onBeforeFileAdded, imageCompression, maxConcurrentUploads, autoUpload])
-
-    // v2: emit source-change event when active adapter changes
-    useEffect(() => {
-        if (!coreRef.current || activeAdapter === undefined) return
-        coreRef.current.emit('source-change', { source: activeAdapter })
-    }, [activeAdapter])
-
-    // v2: emit adding-more event when isAddingMore state changes
-    useEffect(() => {
-        if (!coreRef.current) return
-        coreRef.current.emit('adding-more', { isAddingMore })
-    }, [isAddingMore])
-
-    // v2: emit view-mode-change event when grid/list toggle changes
-    useEffect(() => {
-        if (!coreRef.current) return
-        coreRef.current.emit('view-mode-change', { viewMode })
-    }, [viewMode])
-
-    // v2: emit upload-metrics event when aggregate progress state changes
-    useEffect(() => {
-        if (!coreRef.current) return
-        coreRef.current.emit('upload-metrics', {
-            uploadSpeed,
-            uploadEta,
-            uploadedBytes,
-            totalBytes,
-        })
-    }, [uploadSpeed, uploadEta, uploadedBytes, totalBytes])
-
-    // v2: emit editor-queue-change event when image editor queue changes
-    useEffect(() => {
-        if (!coreRef.current) return
-        coreRef.current.emit('editor-queue-change', {
-            queueLength: editorQueue.length,
-            queue: editorQueue,
-        })
-    }, [editorQueue])
-
-    // v2: emit editing-file-change event when the active editing file changes
-    useEffect(() => {
-        if (!coreRef.current) return
-        coreRef.current.emit('editing-file-change', { file: editingFile })
-    }, [editingFile])
-
-    // v2: emit upload-error-change event when uploadError message changes
-    useEffect(() => {
-        if (!coreRef.current) return
-        coreRef.current.emit('upload-error-change', { error: uploadError })
-    }, [uploadError])
-
-    // v2: emit files-count-change event when selected files count changes
-    useEffect(() => {
-        if (!coreRef.current) return
-        coreRef.current.emit('files-count-change', {
-            count: selectedFilesMap.size,
-        })
-    }, [selectedFilesMap.size])
-
-    // v2: emit progress-map-change event when per-file progress state changes
-    useEffect(() => {
-        if (!coreRef.current) return
-        coreRef.current.emit('progress-map-change', { filesProgressMap })
-    }, [filesProgressMap])
-
-    // v2: emit theme-change event when dark/theme prop changes
-    useEffect(() => {
-        if (!coreRef.current) return
-        coreRef.current.emit('theme-change', { dark })
-    }, [dark])
-
-    const limit = useMemo(
-        () => (mini ? 1 : Math.max(resolvedLimit, 1)),
-        [mini, resolvedLimit],
-    )
+    }, [onFileRemoveProp, onFileRemoved])
+    const limit = useMemo(() => (mini ? 1 : Math.max(resolvedLimit, 1)), [mini, resolvedLimit])
     const multiple = useMemo(() => (mini ? false : limit > 1), [limit, mini])
 
-    // i18n prop takes precedence over localePack/translations
-    // i18n.bundle (LocaleBundle) takes precedence over i18n.locale
-    const bundle = i18n?.bundle
-    const i18nLocale = i18n?.locale
-    const resolvedLocale = (typeof i18nLocale === 'object' ? i18nLocale : undefined) ?? localePack ?? en_US
-    const resolvedOverrides = i18n?.overrides ?? translationOverrides
+    const localeCandidate = i18n?.locale as unknown
+    const bundle = i18n?.bundle ?? (
+        localeCandidate &&
+        typeof localeCandidate === 'object' &&
+        'code' in localeCandidate &&
+        'messages' in localeCandidate
+            ? localeCandidate as LocaleBundle
+            : undefined
+    )
+    const fallbackCandidate = i18n?.fallbackLocale as unknown
+    const fallbackBundle = (
+        fallbackCandidate &&
+        typeof fallbackCandidate === 'object' &&
+        'code' in fallbackCandidate &&
+        'messages' in fallbackCandidate
+            ? fallbackCandidate as LocaleBundle
+            : undefined
+    )
+    const translator = useMemo<Translator>(
+        () => createTranslator({
+            bundle: bundle ?? enUS,
+            fallback: fallbackBundle ?? enUS,
+            overrides: i18n?.overrides as never,
+        }),
+        [bundle, fallbackBundle, i18n?.overrides],
+    )
     const translations = useMemo(
-        () => mergeTranslations(resolvedLocale, resolvedOverrides),
-        [resolvedLocale, resolvedOverrides],
+        () => flattenLocaleBundle(translator),
+        [translator],
     )
+    const lang = bundle?.code ?? (typeof i18n?.locale === 'string' ? i18n.locale : 'en-US')
+    const dir = bundle?.dir ?? getDir(i18n?.locale as string | LocaleBundle | undefined)
+    const onError = useCallback((message: string) => {
+        setUploadError(message)
+        errorHandler?.(message)
+    }, [errorHandler])
+    const onWarn = useCallback((message: string) => {
+        warningHandler?.(message)
+    }, [warningHandler])
 
-    // ICU translator — created when i18n.bundle is provided
-    const translator = useMemo<Translator | undefined>(
-        () => (bundle ? createTranslator({ bundle }) : undefined),
-        [bundle],
+    const coreCloudDrives = cloudDrives ? {
+        googleDrive: cloudDrives.googleDrive,
+        oneDrive: cloudDrives.oneDrive ? {
+            clientId: cloudDrives.oneDrive.clientId,
+            authority: cloudDrives.oneDrive.redirectUri,
+        } : undefined,
+        dropbox: cloudDrives.dropbox ? {
+            appKey: cloudDrives.dropbox.clientId,
+        } : undefined,
+    } : undefined
+
+    const upload = useUpupUpload({
+        uploadEndpoint: resolvedEndpoint || undefined,
+        serverUrl: resolvedServerUrl,
+        provider,
+        mode: resolvedMode,
+        allowedFileTypes: accept,
+        limit,
+        maxFileSize,
+        minFileSize,
+        maxTotalFileSize,
+        maxRetries,
+        onBeforeFileAdded,
+        imageCompression,
+        thumbnailGenerator,
+        checksumVerification,
+        heicConversion,
+        stripExifData,
+        contentDeduplication,
+        crashRecovery,
+        maxConcurrentUploads,
+        metadata,
+        cors,
+        resumable,
+        cloudDrives: coreCloudDrives,
+        onError: (err) => onError(typeof err === 'string' ? err : err.message),
+    })
+    const { connectSSE } = useSSEProcessing({
+        processingEndpoint,
+        onFileProcessed: onFileProcessed as never,
+        processingTimeout,
+    })
+    const core = upload.core
+    const files = useMemo(
+        () => new Map(upload.files.map(file => [file.id, file] as const)),
+        [upload.files],
     )
-
-    // RTL support: bundle.code/dir take precedence; fall back to i18n.locale string; default 'en-US'
-    const lang = bundle?.code ?? (typeof i18nLocale === 'string' ? i18nLocale : 'en-US')
-    const dir: 'ltr' | 'rtl' = bundle?.dir ?? getDir(i18nLocale)
-
-    // v2: emit locale-change event when resolved translations change
-    useEffect(() => {
-        if (!coreRef.current) return
-        coreRef.current.emit('locale-change', { locale: resolvedLocale, translations })
-    }, [resolvedLocale, translations])
-
-    // v2: emit limit-change event when the computed file limit changes
-    useEffect(() => {
-        if (!coreRef.current) return
-        coreRef.current.emit('limit-change', { limit, multiple })
-    }, [limit, multiple])
-
-    // v2: emit adapter-change event when the active source/adapter changes
-    useEffect(() => {
-        if (!coreRef.current) return
-        coreRef.current.emit('adapter-change', { adapter: activeAdapter })
-    }, [activeAdapter])
-
-    const totalProgress = useMemo(() => {
-        const filesProgressMapValues = Object.values(filesProgressMap)
-        if (!filesProgressMapValues.length) return 0
-
-        const loadedValues = filesProgressMapValues.reduce(
-            (a, b) => a + (b.loaded / b.total) * 100,
-            0,
-        )
-        return Math.round(loadedValues / filesProgressMapValues.length)
-    }, [filesProgressMap])
-
-    // v2: emit total-progress-change event when aggregate upload progress changes
-    useEffect(() => {
-        if (!coreRef.current) return
-        coreRef.current.emit('total-progress-change', { totalProgress })
-    }, [totalProgress])
+    const uploadStatus = mapCoreStatus(upload.status)
+    const totalProgress = upload.progress.percentage
 
     const resolvedImageEditor = useMemo<ResolvedImageEditorOptions>(() => {
         if (imageEditorProp === true) {
@@ -480,103 +461,161 @@ export default function useRootProvider({
                 display: imageEditorProp.display ?? 'inline',
             }
         }
-        return { enabled: true, autoOpen: 'never', display: 'inline' }
+        return { enabled: false, autoOpen: 'never', display: 'inline' }
     }, [imageEditorProp])
 
-    const openImageEditor = useCallback(
-        (file: FileWithParams) => {
-            setEditingFile(file)
-            resolvedImageEditor.onOpen?.(file)
-            coreRef.current?.emit('image-editor-open', { file })
-        },
-        [resolvedImageEditor],
-    )
+    useEffect(() => {
+        onStatusChange?.(upload.status.toLowerCase())
+    }, [upload.status, onStatusChange])
 
-    const advanceEditorQueue = useCallback(() => {
-        setEditorQueue(prev => {
-            if (prev.length === 0) return prev
-            const [next, ...rest] = prev
-            setTimeout(() => openImageEditor(next), 0)
-            return rest
-        })
-    }, [openImageEditor])
-
-    const closeImageEditor = useCallback(() => {
-        const current = editingFile
-        setEditingFile(null)
-        advanceEditorQueue()
-        if (current) {
-            resolvedImageEditor.onCancel?.(current)
-            coreRef.current?.emit('image-editor-cancel', { file: current })
+    useEffect(() => {
+        if (typeof navigator !== 'undefined' && typeof navigator.onLine === 'boolean') {
+            setIsOnline(navigator.onLine)
         }
-    }, [editingFile, advanceEditorQueue, resolvedImageEditor])
+        const handleOnline = () => {
+            setIsOnline(true)
+            core?.emit('connection-online', {})
+        }
+        const handleOffline = () => {
+            setIsOnline(false)
+            core?.emit('connection-offline', {})
+        }
+        window.addEventListener('online', handleOnline)
+        window.addEventListener('offline', handleOffline)
+        return () => {
+            window.removeEventListener('online', handleOnline)
+            window.removeEventListener('offline', handleOffline)
+        }
+    }, [core])
 
-    const saveImageEdit = useCallback(
-        (editedImageData: string, mimeType?: string) => {
-            if (!editingFile) return
-
-            const original = editingFile
-            const outputMime =
-                mimeType ||
-                resolvedImageEditor.output?.mimeType ||
-                original.type
-            const quality = resolvedImageEditor.output?.quality
-
-            // Convert the base64 / dataURL to a Blob.
-            // If a quality or mimeType override is specified and the data is a
-            // plain dataURL, we re-encode via canvas; otherwise use as-is.
-            let blob: Blob
-            if (
-                (quality !== undefined || outputMime !== original.type) &&
-                editedImageData.startsWith('data:')
-            ) {
-                // Fast path: just decode the dataURL directly with the given mime.
-                const raw = dataURLtoBlob(editedImageData)
-                blob = new Blob([raw], { type: outputMime })
-            } else {
-                blob = dataURLtoBlob(editedImageData)
+    useEffect(() => {
+        if (!core) return
+        const unsubUploadStart = core.on('upload-start', () => {
+            onUploadStart()
+        })
+        const unsubStart = core.on('file-upload-start', (payload: unknown) => {
+            const file = (payload as { file?: UploadFile })?.file
+            if (file) onFileUploadStart(file as never)
+        })
+        const unsubAdded = core.on('files-added', (payload: unknown) => {
+            const added = payload as UploadFile[]
+            if (!Array.isArray(added) || added.length === 0) return
+            onFilesSelected(added as never)
+            if (resolvedImageEditor.enabled) {
+                const images = added.filter(file => file.type.startsWith('image/'))
+                if (resolvedImageEditor.autoOpen === 'single' && images.length === 1) {
+                    setEditorQueue(prev => [...prev, images[0]])
+                }
+                if (resolvedImageEditor.autoOpen === 'always') {
+                    setEditorQueue(prev => [...prev, ...images])
+                }
             }
+            if (autoUpload) {
+                core.emit('auto-upload', { count: added.length })
+                setTimeout(() => { void upload.upload() }, 0)
+            }
+        })
+        const unsubRemoved = core.on('file-removed', (payload: unknown) => {
+            emitFileRemoved(payload as never)
+        })
+        const unsubProgress = core.on('upload-progress', (payload: unknown) => {
+            const progress = payload as { fileId: string; loaded: number; total: number }
+            const file = core.files.get(progress.fileId)
+            setFilesProgressMap(prev => ({
+                ...prev,
+                [progress.fileId]: {
+                    id: progress.fileId,
+                    loaded: progress.loaded,
+                    total: progress.total,
+                },
+            }))
+            const now = Date.now()
+            const nextUploaded = Object.values({
+                ...filesProgressMap,
+                [progress.fileId]: {
+                    id: progress.fileId,
+                    loaded: progress.loaded,
+                    total: progress.total,
+                },
+            }).reduce((sum, item) => sum + item.loaded, 0)
+            setUploadedBytes(nextUploaded)
+            speedSamplesRef.current.push({ time: now, bytes: nextUploaded })
+            speedSamplesRef.current = speedSamplesRef.current.filter(sample => sample.time >= now - 3000)
+            if (speedSamplesRef.current.length >= 2) {
+                const oldest = speedSamplesRef.current[0]
+                const newest = speedSamplesRef.current[speedSamplesRef.current.length - 1]
+                const elapsed = (newest.time - oldest.time) / 1000
+                if (elapsed > 0) {
+                    const speed = Math.max(0, (newest.bytes - oldest.bytes) / elapsed)
+                    setUploadSpeed(speed)
+                    const remaining = totalBytesRef.current - nextUploaded
+                    setUploadEta(speed > 0 ? Math.ceil(remaining / speed) : 0)
+                }
+            }
+            if (file) {
+                onFileUploadProgress(file as never, {
+                    loaded: progress.loaded,
+                    total: progress.total,
+                    percentage: progress.total > 0 ? Math.round((progress.loaded / progress.total) * 100) : 0,
+                })
+            }
+            onFilesUploadProgress(core.progress.completedFiles, core.progress.totalFiles)
+        })
+        const unsubSuccess = core.on('upload-success', (payload: unknown) => {
+            const { file, result } = payload as { file?: UploadFile; result?: { key?: string } }
+            if (file) onFileUploadComplete(file as never, result?.key ?? file.key ?? '')
+        })
+        const unsubComplete = core.on('upload-all-complete', (payload: unknown) => {
+            const completed = payload as UploadFile[]
+            onFilesUploadComplete(completed as never)
+            onUploadComplete(completed as never)
+            completed.forEach(file => connectSSE(file as never))
+        })
+        const unsubError = core.on('upload-error', (payload: unknown) => {
+            const err = (payload as { error?: Error })?.error
+            if (err) onError(err.message)
+        })
+        return () => {
+            unsubUploadStart()
+            unsubStart()
+            unsubAdded()
+            unsubRemoved()
+            unsubProgress()
+            unsubSuccess()
+            unsubComplete()
+            unsubError()
+        }
+    }, [
+        autoUpload,
+        connectSSE,
+        core,
+        filesProgressMap,
+        onError,
+        emitFileRemoved,
+        onFileUploadComplete,
+        onFileUploadProgress,
+        onFileUploadStart,
+        onFilesSelected,
+        onFilesUploadComplete,
+        onFilesUploadProgress,
+        onUploadComplete,
+        onUploadStart,
+        resolvedImageEditor,
+        upload,
+    ])
 
-            const newFile = blobToFileWithParams(
-                blob,
-                original,
-                resolvedImageEditor.output,
-            )
+    useEffect(() => {
+        const total = upload.files.reduce((sum, file) => sum + file.size, 0)
+        setTotalBytes(total)
+        totalBytesRef.current = total
+    }, [upload.files])
 
-            // Replace in the files map, revoking the old blob URL.
-            setSelectedFilesMap(prev => {
-                const updated = revokeAndReplace(prev, original.id, newFile)
-                // v2: sync updated file state into UpupCore
-                coreRef.current?.syncFilesFromExternal(updated as Map<string, any>)
-                return updated
-            })
+    const openImageEditor = useCallback((file: UploadFile) => {
+        setEditingFile(file)
+        resolvedImageEditor.onOpen?.(file as never)
+        core?.emit('image-editor-open', { file })
+    }, [core, resolvedImageEditor])
 
-            resolvedImageEditor.onSave?.(newFile, original)
-            coreRef.current?.emit('image-editor-save', { file: newFile, original })
-
-            setEditingFile(null)
-            advanceEditorQueue()
-        },
-        [editingFile, resolvedImageEditor, advanceEditorQueue],
-    )
-
-    const replaceFile = useCallback(
-        (fileId: string, newFile: FileWithParams) => {
-            setSelectedFilesMap(prev => {
-                const next = new Map(prev)
-                next.set(fileId, newFile)
-                // v2: sync into UpupCore
-                coreRef.current?.syncFilesFromExternal(next as Map<string, any>)
-                return next
-            })
-            // v2: emit file-replaced event so consumers can react to programmatic file swaps
-            coreRef.current?.emit('file-replaced', { fileId, newFile })
-        },
-        [],
-    )
-
-    // Auto-open editor queue processing: when a queue is populated and no
-    // editor is currently open, open the next file.
     useEffect(() => {
         if (editingFile || editorQueue.length === 0) return
         const [next, ...rest] = editorQueue
@@ -584,598 +623,140 @@ export default function useRootProvider({
         openImageEditor(next)
     }, [editingFile, editorQueue, openImageEditor])
 
-    const onError = useCallback(
-        (message: string) => {
-            setUploadError(message)
-
-            if (errorHandler) errorHandler(message)
-        },
-        [errorHandler],
-    )
-
-    const onWarn = useCallback(
-        (message: string) => {
-            if (warningHandler) warningHandler(message)
-            // v2: emit warn event via UpupCore so consumers can listen
-            coreRef.current?.emit('warn', { message })
-        },
-        [warningHandler],
-    )
-    function isFileWithParamsArray(
-        files: File[] | FileWithParams[],
-    ): files is FileWithParams[] {
-        return files.length > 0 && 'id' in files[0]
-    }
-    async function resetState() {
-        setIsAddingMore(false)
-        // v2: emit state-reset before the done/cancel chain clears state
-        coreRef.current?.emit('state-reset', {})
-        handleDone()
-    }
-    async function dynamicUpload(files: File[] | FileWithParams[]) {
-        const filesToUpload = isFileWithParamsArray(files)
-            ? files
-            : files.map(file => fileAppendParams(file))
-        return await proceedUpload(filesToUpload)
-    }
-    function dynamicallyReplaceFiles(files: File[] | FileWithParams[]) {
-        // Revoke old blob URLs to prevent memory leak
-        selectedFilesMap.forEach(file => revokeFileUrl(file))
-
-        const filesMap = new Map<string, FileWithParams>()
-        if (isFileWithParamsArray(files)) {
-            for (const f of files) {
-                filesMap.set(f.id, f)
-            }
-        } else {
-            for (const f of files) {
-                const fileWithParams = fileAppendParams(f)
-                filesMap.set(fileWithParams.id, fileWithParams)
-            }
+    const closeImageEditor = useCallback(() => {
+        const current = editingFile
+        setEditingFile(null)
+        if (current) {
+            resolvedImageEditor.onCancel?.(current as never)
+            core?.emit('image-editor-cancel', { file: current })
         }
-        setSelectedFilesMap(filesMap)
+    }, [core, editingFile, resolvedImageEditor])
 
-        // v2: sync replaced files into UpupCore and emit event
-        if (coreRef.current) {
-            coreRef.current.syncFilesFromExternal(filesMap as Map<string, any>)
-            coreRef.current.emit('files-replaced', { count: filesMap.size })
-        }
-    }
-    const handleSetSelectedFiles = async (newFiles: File[]) => {
-        // Start from existing files to ensure appending behavior.
-        const newFilesMap = new Map(selectedFilesMap)
-        // Track existing URLs (when present) to avoid duplicates across drops.
-        const existingUrls = new Set(
-            Array.from(newFilesMap.values())
-                .map(v => (v as any).url)
-                .filter(Boolean),
-        ) as Set<string>
+    const replaceFile = useCallback((fileId: string, newFile: UploadFile) => {
+        core?.replaceFile(fileId, newFile)
+    }, [core])
 
-        // Collect only the files that are actually accepted and added in this batch.
-        const addedThisBatch: FileWithParams[] = []
+    const saveImageEdit = useCallback((editedImageData: string, mimeType?: string) => {
+        if (!editingFile) return
+        const outputMime = mimeType || resolvedImageEditor.output?.mimeType || editingFile.type
+        const blob = new Blob([dataURLtoBlob(editedImageData)], { type: outputMime })
+        const newFile = blobToUploadFile(blob, editingFile, resolvedImageEditor.output)
+        revokeFileUrl(editingFile as never)
+        core?.replaceFile(editingFile.id, newFile)
+        resolvedImageEditor.onSave?.(newFile as never, editingFile as never)
+        core?.emit('image-editor-save', { file: newFile, original: editingFile })
+        setEditingFile(null)
+    }, [core, editingFile, resolvedImageEditor])
 
-        for (const incoming of newFiles) {
-            // Respect the limit strictly; stop when capacity is reached.
-            if (newFilesMap.size >= limit) {
-                onWarn(translations.allowedLimitSurpassed)
-                onRestrictionFailed?.(incoming, 'LIMIT_EXCEEDED')
-                coreRef.current?.emit('restriction-failed', { file: incoming, reason: 'LIMIT_EXCEEDED' })
-                break
-            }
-
-            // v2: async file filter. Contract:
-            //   false          → skip this file
-            //   File           → use the returned File in place of the original
-            //                    (lets consumers rename, transcode, watermark, etc.)
-            //   undefined/true → accept the original file
-            let file: File = incoming
-            if (onBeforeFileAdded) {
-                const result = await onBeforeFileAdded(file)
-                if (result === false) continue
-                if (result instanceof File) file = result
-            }
-
-            const fileWithParams = fileAppendParams(file)
-
-            if (!checkFileType(accept, file)) {
-                onError(
-                    t(translations.fileUnsupportedType, { name: file.name }),
-                )
-                onFileTypeMismatch(file, accept)
-                onRestrictionFailed?.(file, 'TYPE_MISMATCH')
-                coreRef.current?.emit('restriction-failed', { file, reason: 'TYPE_MISMATCH' })
-                revokeFileUrl(fileWithParams)
-                continue
-            }
-
-            if (
-                maxFileSize?.size &&
-                maxFileSize?.unit &&
-                !checkFileSize(file, maxFileSize)
-            ) {
-                onError(
-                    t(translations.fileTooLargeName, {
-                        name: file.name,
-                        size: String(maxFileSize.size),
-                        unit: String(maxFileSize.unit),
-                    }),
-                )
-                onRestrictionFailed?.(file, 'FILE_TOO_LARGE')
-                coreRef.current?.emit('restriction-failed', { file, reason: 'FILE_TOO_LARGE' })
-                revokeFileUrl(fileWithParams)
-                continue
-            }
-
-            // v2: min file size check
-            if (
-                minFileSize?.size &&
-                minFileSize?.unit &&
-                !checkFileSize(file, minFileSize, 'min')
-            ) {
-                onError(
-                    t(translations.fileTooSmallName, {
-                        name: file.name,
-                        size: String(minFileSize.size),
-                        unit: String(minFileSize.unit),
-                    }),
-                )
-                onRestrictionFailed?.(file, 'FILE_TOO_SMALL')
-                coreRef.current?.emit('restriction-failed', { file, reason: 'FILE_TOO_SMALL' })
-                revokeFileUrl(fileWithParams)
-                continue
-            }
-
-            if (newFilesMap.has(fileWithParams.id)) {
-                onWarn(
-                    t(translations.filePreviouslySelected, { name: file.name }),
-                )
-                // v2: emit restriction-failed for duplicate file
-                coreRef.current?.emit('restriction-failed', { file, reason: 'DUPLICATE' })
-                revokeFileUrl(fileWithParams)
-                continue
-            }
-
-            const fileUrl = (file as any).url as string | undefined
-            if (fileUrl && existingUrls.has(fileUrl)) {
-                onWarn(
-                    t(translations.fileWithUrlPreviouslySelected, {
-                        url: fileUrl,
-                    }),
-                )
-                // v2: emit restriction-failed for duplicate URL
-                coreRef.current?.emit('restriction-failed', { file, reason: 'DUPLICATE' })
-                revokeFileUrl(fileWithParams)
-                continue
-            }
-
-            newFilesMap.set(fileWithParams.id, fileWithParams)
-            addedThisBatch.push(fileWithParams)
-            if (fileUrl) existingUrls.add(fileUrl)
-        }
-
-        // Apply state update once for better performance and atomicity.
-        setSelectedFilesMap(newFilesMap)
-
-        // v2: sync file state into UpupCore's FileManager
-        if (coreRef.current) {
-            coreRef.current.syncFilesFromExternal(newFilesMap as Map<string, any>)
-        }
-
-        // Emit a single selection event for just-added files.
-        if (addedThisBatch.length) onFilesSelected(addedThisBatch)
-
-        // v2: bridge to UpupCore event system
-        if (addedThisBatch.length && coreRef.current) {
-            coreRef.current.emit('files-added', addedThisBatch)
-        }
-
-        // v2: auto-upload immediately after file selection
-        if (autoUpload && addedThisBatch.length) {
-            // v2: emit event so consumers know upload was triggered automatically
-            coreRef.current?.emit('auto-upload', { count: addedThisBatch.length })
-            // Delay slightly to ensure state is committed before upload
-            setTimeout(() => {
-                proceedUpload(Array.from(newFilesMap.values()))
-            }, 0)
-        }
-
-        // Auto-open image editor for newly added images if configured.
-        if (resolvedImageEditor.enabled && addedThisBatch.length) {
-            const newImages = addedThisBatch.filter(f =>
-                f.type.startsWith('image/'),
-            )
-
-            if (newImages.length > 0) {
-                if (
-                    resolvedImageEditor.autoOpen === 'single' &&
-                    newImages.length === 1
-                ) {
-                    openImageEditor(newImages[0])
-                } else if (resolvedImageEditor.autoOpen === 'always') {
-                    // Queue all: first one opens immediately, rest are queued.
-                    const [first, ...rest] = newImages
-                    openImageEditor(first)
-                    if (rest.length) {
-                        setEditorQueue(prev => [...prev, ...rest])
-                    }
+    const handleSetSelectedFiles = useCallback(async (newFiles: File[]) => {
+        try {
+            await upload.addFiles(newFiles)
+        } catch (error) {
+            const message = error instanceof Error ? error.message : String(error)
+            onError(message)
+            const first = newFiles[0]
+            if (first) {
+                if (message.toLowerCase().includes('type')) {
+                    onFileTypeMismatch(first, accept)
+                    onRestrictionFailed?.(first, 'TYPE_MISMATCH')
+                } else if (message.toLowerCase().includes('limit')) {
+                    onRestrictionFailed?.(first, 'LIMIT_EXCEEDED')
+                } else if (message.toLowerCase().includes('below')) {
+                    onRestrictionFailed?.(first, 'FILE_TOO_SMALL')
+                } else if (message.toLowerCase().includes('size')) {
+                    onRestrictionFailed?.(first, 'FILE_TOO_LARGE')
                 }
             }
         }
+    }, [accept, onError, onFileTypeMismatch, onRestrictionFailed, upload])
 
-        setIsAddingMore(false)
-    }
+    const proceedUpload = useCallback(async () => {
+        if (upload.files.length === 0) return undefined
+        setUploadError('')
+        const prepared = onPrepareFiles ? await onPrepareFiles(upload.files as never) : upload.files
+        if (prepared !== upload.files) {
+            await upload.setFiles(prepared as File[])
+        }
+        speedSamplesRef.current = [{ time: Date.now(), bytes: 0 }]
+        return await upload.upload() as never
+    }, [onPrepareFiles, upload])
 
-    const handleFileRemove = useCallback(
-        (fileId: string) => {
-            const file = selectedFilesMap.get(fileId)
-            if (!file) return
+    const retryUpload = useCallback(async (fileId?: string) => {
+        if (upload.files.length === 0) return undefined
+        setUploadError('')
+        speedSamplesRef.current = [{ time: Date.now(), bytes: 0 }]
+        return await upload.retry(fileId) as never
+    }, [upload])
 
-            // Revoke blob URL to prevent memory leak
-            revokeFileUrl(file)
+    const dynamicUpload = useCallback(async (newFiles: File[] | UploadFile[]) => {
+        await upload.setFiles(newFiles as File[])
+        return await upload.upload() as never
+    }, [upload])
 
-            const selectedFilesMapCopy = new Map(selectedFilesMap)
-            selectedFilesMapCopy.delete(fileId)
+    const dynamicallyReplaceFiles = useCallback((newFiles: File[] | UploadFile[]) => {
+        upload.files.forEach(file => revokeFileUrl(file as never))
+        void upload.setFiles(newFiles as File[])
+    }, [upload])
 
-            setSelectedFilesMap(selectedFilesMapCopy)
+    const handleFileRemove = useCallback((fileId: string) => {
+        const file = files.get(fileId)
+        if (file) revokeFileUrl(file as never)
+        upload.removeFile(fileId)
+    }, [files, upload])
 
-            // v2: sync file state into UpupCore's FileManager
-            if (coreRef.current) {
-                coreRef.current.syncFilesFromExternal(selectedFilesMapCopy as Map<string, any>)
-            }
-
-            onFileRemove(file)
-
-            // v2: bridge to UpupCore event system
-            if (coreRef.current) {
-                coreRef.current.emit('file-removed', file)
-            }
-        },
-        [onFileRemove, selectedFilesMap],
-    )
-
-    const compressFiles = useCallback(
-        async (files: FileWithParams[]) => {
-            try {
-                return await Promise.all(
-                    files.map(async oldFile => {
-                        return await compressFile(oldFile)
-                    }),
-                )
-            } catch (error) {
-                files.forEach(file =>
-                    onError(
-                        t(translations.errorCompressingFile, {
-                            name: file.name,
-                        }),
-                    ),
-                )
-                // v2: emit compression error via UpupCore
-                coreRef.current?.emit('compression-error', { error, fileCount: files.length })
-                throw error
-            }
-        },
-        [onError],
-    )
-
-    const handlePrepareFiles = useCallback(
-        async (files: FileWithParams[]) => {
-            // Pre-populate progress from existing multipart sessions
-            const progressMap = files.reduce((a, b) => {
-                let initialLoaded = 0
-                if (resumable?.mode === 'multipart') {
-                    const fp = fileFingerprint(b)
-                    const session = loadSession(fp)
-                    if (session?.uploadedBytes) {
-                        initialLoaded = session.uploadedBytes
-                    }
-                }
-                a[b.id] = {
-                    id: b.id,
-                    loaded: initialLoaded,
-                    total: b.size,
-                }
-                return a
-            }, {} as FilesProgressMap)
-            setFilesProgressMap(progressMap)
-
-            // Set total bytes for ETA calculation
-            const total = files.reduce((sum, f) => sum + f.size, 0)
-            setTotalBytes(total)
-            totalBytesRef.current = total
-            const initialUploaded = Object.values(progressMap).reduce(
-                (sum: number, fp: FileProgress) => sum + fp.loaded,
-                0,
-            )
-            setUploadedBytes(initialUploaded)
-            setUploadSpeed(0)
-            setUploadEta(0)
-            speedSamplesRef.current = []
-
-            const prepared = onPrepareFiles ? await onPrepareFiles(files) : files
-            // v2: emit prepare-files event so consumers can observe the prepared file list
-            if (onPrepareFiles) {
-                coreRef.current?.emit('prepare-files', { count: prepared.length })
-            }
-            return prepared
-        },
-        [onPrepareFiles, resumable],
-    )
-    const proceedUpload = useCallback(
-        async (dynamicFiles: FileWithParams[] | undefined = undefined) => {
-            if (!selectedFilesMap.size && !dynamicFiles) return
-            setUploadStatus(UploadStatus.ONGOING)
-            setUploadError('')
-
-            // v2: bridge to UpupCore event system
-            if (coreRef.current) {
-                coreRef.current.emit('upload-start', {})
-            }
-
-            const sendEvent = !dynamicFiles
-            const selectedFiles = dynamicFiles
-                ? dynamicFiles
-                : Array.from(selectedFilesMap.values())
-            try {
-                const compressedFiles = imageCompression
-                    ? await compressFiles(selectedFiles)
-                    : selectedFiles
-                const processedFiles = await handlePrepareFiles(compressedFiles)
-                // Initialize SDK
-                const sdk = new ProviderSDK({
-                    provider,
-                    tokenEndpoint: resolvedEndpoint,
-                    constraints: {
-                        multiple,
-                        accept: accept,
-                        maxFileSize:
-                            maxFileSize?.size && maxFileSize?.unit
-                                ? sizeToBytes(
-                                      maxFileSize.size,
-                                      maxFileSize.unit,
-                                  )
-                                : undefined,
-                    },
-                    customProps,
-                    enableAutoCorsConfig,
-                    resumable,
-                    translations: translations,
-                })
-
-                // Store SDK ref for pause/resume
-                sdkRef.current = sdk
-                speedSamplesRef.current = [{ time: Date.now(), bytes: 0 }]
-
-                // For multipart resumable uploads, filter out already-uploaded files on retry
-                const filesToUpload =
-                    resumable?.mode === 'multipart'
-                        ? processedFiles.filter(f => !f.key)
-                        : processedFiles
-
-                // Upload files with automatic retries if configured
-                const uploadOptions = {
-                    onFileUploadStart: (...args: Parameters<typeof onFileUploadStart>) => {
-                        onFileUploadStart(...args)
-
-                        // v2: bridge per-file start to UpupCore
-                        if (coreRef.current) {
-                            coreRef.current.emit('file-upload-start', { file: args[0] })
-                        }
-                    },
-                    onFileUploadProgress: (
-                        file: FileWithParams,
-                        progress: {
-                            loaded: number
-                            total: number
-                            percentage: number
-                        },
-                    ) => {
-                        // Skip visual updates while paused so the UI freezes immediately
-                        if (sdkRef.current?.isPaused) return
-
-                        setFilesProgressMap((prev: FilesProgressMap) => ({
-                            ...prev,
-                            [file.id]: {
-                                ...prev[file.id],
-                                loaded: progress.loaded,
-                            },
-                        }))
-
-                        // Update aggregate uploaded bytes for speed/ETA
-                        setFilesProgressMap((prev: FilesProgressMap) => {
-                            const totalLoaded = Object.values(prev).reduce(
-                                (sum: number, fp: FileProgress) =>
-                                    sum + fp.loaded,
-                                0,
-                            )
-                            setUploadedBytes(totalLoaded)
-
-                            // Rolling-average speed calculation (last 3 seconds)
-                            const now = Date.now()
-                            speedSamplesRef.current.push({
-                                time: now,
-                                bytes: totalLoaded,
-                            })
-                            // Keep only samples from last 3 seconds
-                            const cutoff = now - 3000
-                            speedSamplesRef.current =
-                                speedSamplesRef.current.filter(
-                                    (s: { time: number; bytes: number }) =>
-                                        s.time >= cutoff,
-                                )
-
-                            if (speedSamplesRef.current.length >= 2) {
-                                const oldest = speedSamplesRef.current[0]
-                                const newest =
-                                    speedSamplesRef.current[
-                                        speedSamplesRef.current.length - 1
-                                    ]
-                                const elapsed =
-                                    (newest.time - oldest.time) / 1000
-                                if (elapsed > 0) {
-                                    const speed =
-                                        (newest.bytes - oldest.bytes) / elapsed
-                                    setUploadSpeed(Math.max(0, speed))
-
-                                    const remaining =
-                                        totalBytesRef.current - totalLoaded
-                                    if (speed > 0) {
-                                        setUploadEta(
-                                            Math.ceil(remaining / speed),
-                                        )
-                                    }
-                                }
-                            }
-
-                            return prev
-                        })
-
-                        onFileUploadProgress(file, progress)
-
-                        // v2: bridge progress to UpupCore event system
-                        if (coreRef.current) {
-                            coreRef.current.emit('upload-progress', {
-                                fileId: file.id,
-                                loaded: progress.loaded,
-                                total: progress.total,
-                            })
-                        }
-                    },
-                    onFileUploadComplete: (...args: Parameters<typeof onFileUploadComplete>) => {
-                        onFileUploadComplete(...args)
-
-                        // v2: bridge per-file completion to UpupCore
-                        if (coreRef.current) {
-                            coreRef.current.emit('upload-success', { file: args[0] })
-                        }
-                    },
-                    sendEvent,
-                    onError,
-                    onFilesUploadProgress: (completedFiles: number) =>
-                        onFilesUploadProgress(
-                            completedFiles,
-                            processedFiles.length,
-                        ),
-                }
-                const uploadResults = await Promise.all(
-                    filesToUpload.map(file =>
-                        maxRetries
-                            ? uploadWithRetry(
-                                  () => sdk.upload(file, uploadOptions),
-                                  maxRetries,
-                              )
-                            : sdk.upload(file, uploadOptions),
-                    ),
-                )
-                const finalFiles = uploadResults.map((result: any) => result.file)
-                if (sendEvent) onFilesUploadComplete(finalFiles)
-
-                // v2: SSE processing — open a server-sent event connection per file
-                // if `processingEndpoint` is configured (e.g. for post-upload transcoding)
-                finalFiles.forEach(connectSSE)
-
-                // v2: bridge to UpupCore event system
-                if (coreRef.current) {
-                    coreRef.current.emit('upload-all-complete', finalFiles)
-                }
-
-                sdkRef.current = null
-                setUploadStatus(UploadStatus.SUCCESSFUL)
-                return finalFiles
-            } catch (error) {
-                onError((error as Error).message)
-
-                // v2: bridge to UpupCore event system
-                if (coreRef.current) {
-                    coreRef.current.emit('upload-error', { error })
-                }
-
-                sdkRef.current = null
-                setUploadStatus(UploadStatus.FAILED)
-                // Preserve filesProgressMap so progress stays visible alongside the Retry button
-                return
-            }
-        },
-        [
-            selectedFilesMap,
-            imageCompression,
-            compressFiles,
-            handlePrepareFiles,
-            provider,
-            resolvedEndpoint,
-            multiple,
-            accept,
-            maxFileSize?.size,
-            maxFileSize?.unit,
-            customProps,
-            enableAutoCorsConfig,
-            resumable,
-            onFilesUploadComplete,
-            onFileUploadStart,
-            onFileUploadComplete,
-            onError,
-            onFileUploadProgress,
-            onFilesUploadProgress,
-            maxRetries,
-        ],
-    )
     const handleCancel = useCallback(() => {
-        // Abort in-flight upload
-        sdkRef.current?.abort()
-
-        // Best-effort abort multipart uploads on the provider to avoid orphaned uploads
-        if (sdkRef.current && resumable?.mode === 'multipart') {
-            selectedFilesMap.forEach(file => {
-                void sdkRef.current?.abortMultipart(file)
-            })
-        }
-
-        sdkRef.current = null
-
-        // Revoke all blob URLs to prevent memory leak
-        selectedFilesMap.forEach(file => revokeFileUrl(file))
-
-        setUploadStatus(UploadStatus.PENDING)
-        setSelectedFilesMap(new Map())
-
-        // v2: sync cleared state into UpupCore and emit cancel event
-        if (coreRef.current) {
-            coreRef.current.syncFilesFromExternal(new Map())
-            coreRef.current.emit('upload-cancel', {})
-        }
-
+        upload.cancel()
+        upload.files.forEach(file => revokeFileUrl(file as never))
+        upload.removeAll()
         setFilesProgressMap({})
         setUploadSpeed(0)
         setUploadEta(0)
         setUploadedBytes(0)
         setTotalBytes(0)
-    }, [resumable?.mode, selectedFilesMap])
+    }, [upload])
 
     const handlePause = useCallback(() => {
-        sdkRef.current?.pause()
-        setUploadStatus(UploadStatus.PAUSED)
-        // v2: emit pause event via UpupCore
-        coreRef.current?.emit('upload-pause', {})
-    }, [])
+        upload.pause()
+    }, [upload])
 
     const handleResume = useCallback(() => {
-        sdkRef.current?.resume()
-        // Reset speed tracking on resume for accurate ETA
         speedSamplesRef.current = [{ time: Date.now(), bytes: uploadedBytes }]
-        setUploadStatus(UploadStatus.ONGOING)
-        // v2: emit resume event via UpupCore
-        coreRef.current?.emit('upload-resume', {})
-    }, [uploadedBytes])
+        upload.resume()
+    }, [upload, uploadedBytes])
 
     const handleDone = useCallback(() => {
         onDoneClicked()
-        // v2: emit done event before resetting state via handleCancel
-        coreRef.current?.emit('done', {})
+        core?.emit('done', {})
         handleCancel()
-    }, [handleCancel, onDoneClicked])
+    }, [core, handleCancel, onDoneClicked])
+
+    const resetState = useCallback(async () => {
+        setIsAddingMore(false)
+        core?.emit('state-reset', {})
+        handleDone()
+    }, [core, handleDone])
+
+    useEffect(() => {
+        if (!resumable || resumable.protocol !== 'multipart') return
+        const progressMap: FilesProgressMap = {}
+        upload.files.forEach(file => {
+            const session = loadSession(fileFingerprint(file as never))
+            if (session) {
+                progressMap[file.id] = {
+                    id: file.id,
+                    loaded: session.uploadedBytes ?? 0,
+                    total: file.size,
+                }
+            }
+        })
+        if (Object.keys(progressMap).length > 0) {
+            setFilesProgressMap(progressMap)
+        }
+    }, [resumable, upload.files])
 
     return {
-        core: coreRef.current,
-        mode,
+        core,
+        mode: resolvedMode,
         serverUrl: resolvedServerUrl,
         inputRef,
         activeAdapter,
@@ -1190,7 +771,7 @@ export default function useRootProvider({
         lang,
         dir,
         themeSlots,
-        files: selectedFilesMap,
+        files: files as never,
         setFiles: handleSetSelectedFiles,
         dynamicUpload,
         resetState,
@@ -1200,20 +781,35 @@ export default function useRootProvider({
         handlePause,
         handleResume,
         handleFileRemove,
-        editingFile,
-        openImageEditor,
+        editingFile: editingFile as never,
+        openImageEditor: openImageEditor as never,
         closeImageEditor,
         saveImageEdit,
-        replaceFile,
-        oneDriveConfigs: driveConfigs?.oneDrive,
-        googleDriveConfigs: driveConfigs?.googleDrive,
-        dropboxConfigs: driveConfigs?.dropbox,
+        replaceFile: replaceFile as never,
+        oneDriveConfigs: cloudDrives?.oneDrive ? {
+            onedrive_client_id: cloudDrives.oneDrive.clientId,
+            redirectUri: cloudDrives.oneDrive.redirectUri,
+        } : undefined,
+        googleDriveConfigs: cloudDrives?.googleDrive ? {
+            google_client_id: cloudDrives.googleDrive.clientId,
+            google_api_key: cloudDrives.googleDrive.apiKey,
+            google_app_id: cloudDrives.googleDrive.appId,
+        } : undefined,
+        dropboxConfigs: cloudDrives?.dropbox ? {
+            dropbox_client_id: cloudDrives.dropbox.clientId,
+            dropbox_redirect_uri: cloudDrives.dropbox.redirectUri,
+        } : undefined,
+        boxConfigs: cloudDrives?.box ? {
+            box_client_id: cloudDrives.box.clientId,
+            box_redirect_uri: cloudDrives.box.redirectUri,
+        } : undefined,
         upload: {
             totalProgress,
             filesProgressMap,
             proceedUpload,
+            retryUpload,
             uploadStatus,
-            setUploadStatus,
+            setUploadStatus: () => {},
             uploadError,
             uploadSpeed,
             uploadEta,
@@ -1222,7 +818,8 @@ export default function useRootProvider({
         },
         props: {
             mini,
-            dark,
+            themeMode,
+            isDarkTheme: themeMode === 'dark',
             maxRetries,
             resumable,
             onError,
@@ -1232,13 +829,13 @@ export default function useRootProvider({
             onFilesDragLeave,
             onFilesDrop,
             enablePaste,
-            uploadAdapters: resolvedAdapters,
+            sources: resolvedSources,
             allowedFileTypes: accept,
             maxFileSize,
             limit,
             isProcessing,
             allowPreview,
-            showSelectFolderButton,
+            folderPickerButtonVisible,
             showBranding,
             className: className ?? '',
             style: style ?? {},
@@ -1251,7 +848,7 @@ export default function useRootProvider({
                 CameraDeleteIcon: icons.CameraDeleteIcon || TbTrash,
                 LoaderIcon: icons.LoaderIcon || TbLoader,
             },
-            classNames: resolvedClassNames as UpupUploaderPropsClassNames,
+            slotClasses: resolvedSlotClasses,
             imageEditor: resolvedImageEditor,
         },
     }

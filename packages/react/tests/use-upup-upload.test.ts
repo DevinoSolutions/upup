@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { renderHook } from '@testing-library/react'
-import { UploadStatus } from '@upup/shared'
+import { UploadStatus } from '@upup/core'
 import { useUpupUpload } from '../src/use-upup-upload'
 
 // Stub browser APIs not present in jsdom

@@ -8,7 +8,7 @@ export default function AdapterViewContainer({
     ...rest
 }: PropsWithChildren<{ isLoading?: boolean } & HTMLAttributes<HTMLDivElement>>) {
     const {
-        props: { dark, classNames },
+        props: { isDarkTheme: dark, slotClasses },
     } = useRootContext()
 
     return (
@@ -18,10 +18,10 @@ export default function AdapterViewContainer({
                 {
                     'upup-bg-white/10 upup-text-[#FAFAFA] dark:upup-bg-white/10 dark:upup-text-[#FAFAFA]':
                         isLoading && dark,
-                    [classNames.adapterView!]:
-                        !isLoading && classNames.adapterView,
-                    [classNames.driveLoading!]:
-                        isLoading && classNames.driveLoading,
+                    [slotClasses.adapterView!]:
+                        !isLoading && slotClasses.adapterView,
+                    [slotClasses.driveLoading!]:
+                        isLoading && slotClasses.driveLoading,
                 },
             )}
             {...rest}

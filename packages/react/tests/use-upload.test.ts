@@ -5,6 +5,7 @@ import { UploadStatus } from '../src/context/RootContext'
 function makeUploadCtx(overrides: Record<string, unknown> = {}) {
     return {
         proceedUpload: vi.fn(),
+        retryUpload: vi.fn(),
         uploadStatus: UploadStatus.PENDING,
         uploadError: '',
         totalProgress: 0,

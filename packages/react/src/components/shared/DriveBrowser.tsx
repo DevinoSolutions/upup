@@ -71,7 +71,7 @@ export default function DriveBrowser({
     ...rest
 }: Readonly<Props>) {
     const {
-        props: { allowedFileTypes, dark, classNames },
+        props: { allowedFileTypes, isDarkTheme: dark, slotClasses },
         translations: tr,
     } = useRootContext()
     const [searchTerm, setSearchTerm] = useState('')
@@ -108,7 +108,7 @@ export default function DriveBrowser({
                                     'upup-bg-white/10 upup-text-[#fafafa] dark:upup-bg-white/10 dark:upup-text-[#fafafa]':
                                         dark,
                                 },
-                                classNames.driveBody,
+                                slotClasses.driveBody,
                             )}
                         >
                             <ShouldRender if={!!displayedItems.length}>
@@ -156,7 +156,7 @@ export default function DriveBrowser({
                                         'upup-bg-white/5 upup-text-[#fafafa] dark:upup-bg-white/5 dark:upup-text-[#fafafa]':
                                             dark,
                                     },
-                                    classNames.driveFooter,
+                                    slotClasses.driveFooter,
                                 )}
                             >
                                 <ShouldRender if={!!onSelectCurrentFolder}>
@@ -184,7 +184,7 @@ export default function DriveBrowser({
                                             'upup-bg-[#30C5F7] dark:upup-bg-[#30C5F7]':
                                                 dark,
                                         },
-                                        classNames.driveAddFilesButton,
+                                        slotClasses.driveAddFilesButton,
                                     )}
                                     onClick={handleSubmit}
                                     disabled={showLoader}
@@ -205,7 +205,7 @@ export default function DriveBrowser({
                                             'upup-text-[#30C5F7] dark:upup-text-[#30C5F7]':
                                                 dark,
                                         },
-                                        classNames.driveCancelFilesButton,
+                                        slotClasses.driveCancelFilesButton,
                                     )}
                                     onClick={handleCancelDownload}
                                     disabled={showLoader}

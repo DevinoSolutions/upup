@@ -22,6 +22,7 @@ export default function useGoogleDrive(
     const [rawFiles, setRawFiles] = useState<GoogleFile[]>()
     const [token, setToken] = useState<Token>()
     const [authCancelled, setAuthCancelled] = useState(false)
+    const [isAuthReady, setIsAuthReady] = useState(false)
     const tokenClientRef = useRef<{
         requestAccessToken: (opts?: object) => void
     } | null>(null)
@@ -141,8 +142,15 @@ export default function useGoogleDrive(
         const storedTokenStr = secureStorage.getItem('token')
         const storedToken = storedTokenStr ? JSON.parse(storedTokenStr) : null
 
-        if (storedToken && storedToken.expires_in > Date.now())
+        if (storedToken && storedToken.expires_in > Date.now()) {
+            setIsAuthReady(true)
             return setToken(storedToken)
+        }
+
+        if (!google_client_id || !google_api_key) {
+            setIsAuthReady(true)
+            return
+        }
 
         if (gisLoaded) {
             ;(async () => {
@@ -189,10 +197,10 @@ export default function useGoogleDrive(
                     },
                 })
                 tokenClientRef.current = client
-                client.requestAccessToken({})
+                setIsAuthReady(true)
             })()
         }
-    }, [gisLoaded, google_client_id, onError])
+    }, [gisLoaded, google_api_key, google_client_id, onError])
 
     /**
      *  @description Get the user's name and files list when the token is set
@@ -217,9 +225,29 @@ export default function useGoogleDrive(
      * @description Re-trigger the OAuth popup so the user can retry authentication
      */
     const retryAuth = useCallback(() => {
+        if (!google_client_id || !google_api_key) {
+            onError(
+                t(translations.genericErrorDetails, {
+                    details: 'Google Drive clientId and apiKey are required',
+                }),
+            )
+            core?.emit('gdrive-auth-config-error', {
+                reason: 'clientId or apiKey missing',
+            })
+            return
+        }
+
         setAuthCancelled(false)
         tokenClientRef.current?.requestAccessToken({})
-    }, [])
+    }, [core, google_api_key, google_client_id, onError, translations.genericErrorDetails])
 
-    return { user, googleFiles, handleSignOut, token, authCancelled, retryAuth }
+    return {
+        user,
+        googleFiles,
+        handleSignOut,
+        token,
+        authCancelled,
+        retryAuth,
+        isAuthReady,
+    }
 }

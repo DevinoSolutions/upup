@@ -30,14 +30,16 @@ function ClientGoogleDriveUploader() {
         token,
         authCancelled,
         retryAuth,
+        isAuthReady,
     } = useGoogleDrive(googleDriveConfigs)
     const props = useGoogleDriveUploader(token)
 
-    if (authCancelled && !token) {
+    if (!token && (authCancelled || isAuthReady)) {
         return (
             <DriveAuthFallback
                 providerName="Google Drive"
                 onRetry={retryAuth}
+                data-upup-slot="google-drive-uploader"
             />
         )
     }

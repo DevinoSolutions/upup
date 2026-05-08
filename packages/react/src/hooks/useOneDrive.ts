@@ -22,6 +22,7 @@ export default function useOneDrive(clientId = '') {
         signOut,
         isInitialized,
         isAuthenticating,
+        isAuthInProgress,
         authCancelled,
         retryAuth,
     } = useOneDriveAuth({
@@ -127,5 +128,8 @@ export default function useOneDrive(clientId = '') {
         token,
         authCancelled,
         retryAuth,
+        isInitialized,
+        isAuthenticating,
+        isAuthInProgress,
     }
 }

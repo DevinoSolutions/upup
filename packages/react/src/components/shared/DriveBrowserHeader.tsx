@@ -30,7 +30,7 @@ export default function DriveBrowserHeader({
     const {
         setActiveAdapter,
         translations: tr,
-        props: { dark, classNames },
+        props: { isDarkTheme: dark, slotClasses },
     } = useRootContext()
 
     if (!user) return null
@@ -44,7 +44,7 @@ export default function DriveBrowserHeader({
                         'upup-bg-white/5 upup-text-[#FAFAFA] dark:upup-bg-white/5 dark:upup-text-[#FAFAFA]':
                             dark,
                     },
-                    classNames.driveHeader,
+                    slotClasses.driveHeader,
                 )}
             >
                 <ShouldRender if={!!path}>
@@ -102,7 +102,7 @@ export default function DriveBrowserHeader({
                                 'upup-text-[#30C5F7] dark:upup-text-[#30C5F7]':
                                     dark,
                             },
-                            classNames.driveLogoutButton,
+                            slotClasses.driveLogoutButton,
                         )}
                         onClick={() => {
                             handleSignOut()
@@ -122,18 +122,20 @@ export default function DriveBrowserHeader({
                             'upup-bg-white/5 upup-text-[#fafafa] dark:upup-bg-white/5 dark:upup-text-[#fafafa]':
                                 dark,
                         },
-                        classNames.driveSearchContainer,
+                        slotClasses.driveSearchContainer,
                     )}
                 >
                     <input
                         type="search"
+                        name="upup-drive-search"
+                        aria-label={tr.search}
                         className={cn(
                             'upup-h-fit upup-w-full upup-rounded-md upup-bg-black/[0.025] upup-px-3 upup-py-2 upup-pl-8 upup-text-xs upup-outline-none upup-transition-all upup-duration-300',
                             {
                                 'upup-bg-white/5 upup-text-[#6D6D6D] dark:upup-bg-white/5 dark:upup-text-[#6D6D6D]':
                                     dark,
                             },
-                            classNames.driveSearchInput,
+                            slotClasses.driveSearchInput,
                         )}
                         placeholder={tr.search}
                         value={searchTerm}

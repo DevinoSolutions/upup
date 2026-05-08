@@ -7,8 +7,9 @@ import React from 'react'
 vi.mock('../src/context/RootContext', () => ({
   useRootContext: () => ({
     props: {
-      classNames: {},
-      dark: false,
+      slotClasses: {},
+      isDarkTheme: false,
+      themeMode: 'light',
       icons: { LoaderIcon: () => null },
     },
     translations: { uploadProgress: 'Upload progress' },

@@ -47,7 +47,7 @@ export default memo(function FilePreview(props: Props) {
         openImageEditor,
         upload: { filesProgressMap },
         props: {
-            classNames,
+            slotClasses,
             icons: { FileDeleteIcon },
             allowPreview,
             imageEditor,
@@ -111,10 +111,10 @@ export default memo(function FilePreview(props: Props) {
                     'upup-relative upup-h-[145px] upup-w-[145px] upup-overflow-hidden upup-rounded-lg upup-bg-white upup-shadow-sm',
                     'upup-bg-contain upup-bg-center upup-bg-no-repeat',
                     {
-                        [classNames.fileThumbnailMultiple!]:
-                            classNames.fileThumbnailMultiple && files.size > 1,
-                        [classNames.fileThumbnailSingle!]:
-                            classNames.fileThumbnailSingle && files.size === 1,
+                        [slotClasses.fileThumbnailMultiple!]:
+                            slotClasses.fileThumbnailMultiple && files.size > 1,
+                        [slotClasses.fileThumbnailSingle!]:
+                            slotClasses.fileThumbnailSingle && files.size === 1,
                     },
                 )}
                 style={
@@ -131,7 +131,7 @@ export default memo(function FilePreview(props: Props) {
                             fileUrl={fileUrl}
                             fileSize={fileSize}
                             allowPreview={allowPreview}
-                            classNames={classNames}
+                            slotClasses={slotClasses}
                             translations={tr}
                         />
                     </div>
@@ -172,7 +172,7 @@ export default memo(function FilePreview(props: Props) {
                         'hover:upup-bg-white hover:upup-text-red-700',
                         'upup-ring-1 upup-ring-black/5',
                         'disabled:upup-cursor-not-allowed disabled:upup-opacity-50',
-                        classNames.fileDeleteButton,
+                        slotClasses.fileDeleteButton,
                     )}
                     onClick={onHandleFileRemove}
                     type="button"

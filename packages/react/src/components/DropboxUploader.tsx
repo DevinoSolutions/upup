@@ -1,8 +1,9 @@
 'use client'
-import React, { useEffect } from 'react'
+import React from 'react'
 import { useRootContext } from '../context/RootContext'
 import { useDropbox } from '../hooks/useDropbox'
 import useDropboxUploader from '../hooks/useDropboxUploader'
+import DriveAuthFallback from './shared/DriveAuthFallback'
 import DriveBrowser from './shared/DriveBrowser'
 import ServerModeDriveUploader from './ServerModeDriveUploader'
 
@@ -35,13 +36,17 @@ function ClientDropboxUploader() {
         return Promise.resolve()
     }
 
-    useEffect(() => {
-        if (!isAuthenticated && !token && !isLoading) {
-            authenticate()
-        }
-    }, [isAuthenticated, token, isLoading, authenticate])
-
     const props = useDropboxUploader(token)
+
+    if (!isAuthenticated && !token && !isLoading) {
+        return (
+            <DriveAuthFallback
+                providerName="Dropbox"
+                onRetry={authenticate}
+                data-upup-slot="dropbox-uploader"
+            />
+        )
+    }
 
     return (
         <DriveBrowser

@@ -1,4 +1,5 @@
-import { FileWithParams, ImageEditorOptions } from '../shared/types'
+import type { UploadFile } from '@upup/core'
+import { ImageEditorOptions } from '../shared/types'
 import { revokeFileUrl } from './file'
 
 type FilerobotTheme = {
@@ -24,19 +25,19 @@ export function dataURLtoBlob(dataURL: string): Blob {
 }
 
 /**
- * Create a new FileWithParams from a Blob, preserving the identity (`id`)
+ * Create a new UploadFile from a Blob, preserving the identity (`id`)
  * of the original file. A fresh blob URL is created for the new file.
  *
  * @param blob      The edited image blob.
- * @param original  The original FileWithParams being replaced.
+ * @param original  The original UploadFile being replaced.
  * @param output    Optional output settings (mimeType, quality, fileName).
- * @returns A new FileWithParams with the same `id` but updated content.
+ * @returns A new UploadFile with the same `id` but updated content.
  */
-export function blobToFileWithParams(
+export function blobToUploadFile(
     blob: Blob,
-    original: FileWithParams,
+    original: UploadFile,
     output?: ImageEditorOptions['output'],
-): FileWithParams {
+): UploadFile {
     const fileName = output?.fileName
         ? output.fileName(original)
         : original.name
@@ -47,9 +48,12 @@ export function blobToFileWithParams(
     })
 
     // Preserve file identity so the upload pipeline sees the same entry.
-    const fileWithParams = file as FileWithParams
+    const fileWithParams = file as UploadFile
     fileWithParams.id = original.id
     fileWithParams.url = URL.createObjectURL(file)
+    fileWithParams.source = original.source
+    fileWithParams.status = original.status
+    fileWithParams.metadata = original.metadata
     fileWithParams.key = original.key
     fileWithParams.fileHash = original.fileHash
     fileWithParams.thumbnail = original.thumbnail
@@ -58,19 +62,19 @@ export function blobToFileWithParams(
 }
 
 /**
- * Replace a file in a Map<string, FileWithParams>, revoking the old blob URL
+ * Replace a file in a Map<string, UploadFile>, revoking the old blob URL
  * to prevent memory leaks.
  *
  * @param map     The current files map (not mutated — a new Map is returned).
  * @param fileId  The id of the file to replace.
- * @param newFile The replacement FileWithParams.
+ * @param newFile The replacement UploadFile.
  * @returns A new Map with the replaced entry.
  */
 export function revokeAndReplace(
-    map: Map<string, FileWithParams>,
+    map: Map<string, UploadFile>,
     fileId: string,
-    newFile: FileWithParams,
-): Map<string, FileWithParams> {
+    newFile: UploadFile,
+): Map<string, UploadFile> {
     const oldFile = map.get(fileId)
     if (oldFile) {
         revokeFileUrl(oldFile)
@@ -87,8 +91,8 @@ export function revokeAndReplace(
  * Includes extra palette tokens because some editor buttons fall back to
  * incomplete defaults when light-mode tokens are omitted.
  */
-export function getFilerobotTheme(dark: boolean): FilerobotTheme {
-    return dark
+export function getFilerobotTheme(isDarkTheme: boolean): FilerobotTheme {
+    return isDarkTheme
         ? {
               palette: {
                   'bg-secondary': '#1a1a1a',
@@ -169,7 +173,7 @@ export function getFilerobotTheme(dark: boolean): FilerobotTheme {
  * CSS fallbacks for hardcoded editor/library values and button states that do
  * not consistently respect the provided theme palette.
  */
-export function getImageEditorCssOverrides(dark: boolean): string {
+export function getImageEditorCssOverrides(isDarkTheme: boolean): string {
     const common = `
         /* Fill container */
         .FIE_root {
@@ -177,7 +181,7 @@ export function getImageEditorCssOverrides(dark: boolean): string {
         }
     `
 
-    return dark
+    return isDarkTheme
         ? common + `
         /* Input background & border overrides (hardcoded in @scaleflex/ui) */
         [data-upup-theme='dark'] .SfxInput-Base {

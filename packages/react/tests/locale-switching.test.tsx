@@ -2,12 +2,12 @@ import { describe, it, expect } from 'vitest'
 import { render } from '@testing-library/react'
 import React from 'react'
 import { UpupUploader } from '../src'
-import { fr_FR } from '../src/shared/i18n/locales/fr_FR'
+import { frFR } from '@upup/core'
 
 describe('Locale switching', () => {
     it('renders English strings by default', () => {
         const { container } = render(
-            <UpupUploader provider="s3" serverUrl="https://example.com" />,
+            <UpupUploader provider="aws" serverUrl="https://example.com" />,
         )
         // AdapterSelector renders tr.browseFiles — en_US value is 'browse files'
         const text = container.textContent ?? ''
@@ -17,12 +17,12 @@ describe('Locale switching', () => {
     it('renders French strings when locale translations object is provided', () => {
         const { container } = render(
             <UpupUploader
-                provider="s3"
+                provider="aws"
                 serverUrl="https://example.com"
-                // i18n.locale as a Translations object activates the locale content.
+                // i18n.locale as a LocaleBundle activates the locale content.
                 // A string locale code (e.g. 'fr-FR') only sets lang/dir attributes —
                 // it does not auto-load a translation bundle.
-                i18n={{ locale: fr_FR, overrides: {} }}
+                i18n={{ locale: frFR, overrides: {} }}
             />,
         )
         // fr_FR browseFiles = 'parcourir'
@@ -32,13 +32,13 @@ describe('Locale switching', () => {
 
     it('root lang attribute reflects BCP-47 string locale', () => {
         const { container: c1 } = render(
-            <UpupUploader provider="s3" serverUrl="https://example.com" />,
+            <UpupUploader provider="aws" serverUrl="https://example.com" />,
         )
         // Passing a string locale code sets the lang attribute even though
         // it does not auto-load the translation bundle.
         const { container: c2 } = render(
             <UpupUploader
-                provider="s3"
+                provider="aws"
                 serverUrl="https://example.com"
                 i18n={{ locale: 'fr-FR' }}
             />,
@@ -49,10 +49,29 @@ describe('Locale switching', () => {
         expect(root2?.getAttribute('lang')).toBe('fr-FR')
     })
 
+    it('uses fallbackLocale bundle when the active bundle is missing a key', () => {
+        const sparseLocale = {
+            code: 'zz-ZZ',
+            language: 'Sparse',
+            dir: 'ltr',
+            messages: {},
+        } as any
+
+        const { container } = render(
+            <UpupUploader
+                provider="aws"
+                serverUrl="https://example.com"
+                i18n={{ locale: sparseLocale, fallbackLocale: frFR }}
+            />,
+        )
+
+        expect(container.textContent ?? '').toContain('parcourir')
+    })
+
     it('RTL locale sets dir=rtl on root', () => {
         const { container } = render(
             <UpupUploader
-                provider="s3"
+                provider="aws"
                 serverUrl="https://example.com"
                 i18n={{ locale: 'ar-SA' }}
             />,

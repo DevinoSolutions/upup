@@ -31,11 +31,24 @@ function ClientOneDriveUploader() {
         token,
         authCancelled,
         retryAuth,
+        isInitialized,
+        isAuthenticating,
+        isAuthInProgress,
     } = useOneDrive(oneDriveConfigs?.onedrive_client_id)
     const props = useOneDriveUploader(graphClient)
 
-    if (authCancelled && !token) {
-        return <DriveAuthFallback providerName="OneDrive" onRetry={retryAuth} />
+    if (
+        !token &&
+        (authCancelled ||
+            (isInitialized && !isAuthenticating && !isAuthInProgress))
+    ) {
+        return (
+            <DriveAuthFallback
+                providerName="OneDrive"
+                onRetry={retryAuth}
+                data-upup-slot="onedrive-uploader"
+            />
+        )
     }
 
     return (

@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
 import { useSSEProcessing } from '../src/hooks/useSSEProcessing'
-import { FileWithParams } from '../src/shared/types'
+import { FileSource, UploadStatus, type UploadFile } from '@upup/core'
 
 // Minimal EventSource mock
 type Handler = (event: MessageEvent) => void
@@ -24,8 +24,16 @@ class MockEventSource {
     }
 }
 
-function makeFile(key = 'uploads/file.txt'): FileWithParams {
-    return { id: '1', name: 'file.txt', key, url: 'blob:x' } as unknown as FileWithParams
+function makeFile(key = 'uploads/file.txt'): UploadFile {
+    return {
+        id: '1',
+        name: 'file.txt',
+        key,
+        url: 'blob:x',
+        source: FileSource.LOCAL,
+        status: UploadStatus.READY,
+        metadata: {},
+    } as unknown as UploadFile
 }
 
 describe('useSSEProcessing', () => {

@@ -2,7 +2,7 @@
 import { motion } from 'framer-motion'
 import React from 'react'
 import { useRootContext } from '../context/RootContext'
-import { uploadAdapterObject } from '../lib/constants'
+import { uploadSourceObject } from '../lib/constants'
 import { cn } from '../lib/tailwind'
 import MyAnimatePresence from './shared/MyAnimatePresence'
 
@@ -12,11 +12,11 @@ export default function AdapterView() {
         activeAdapter,
         setActiveAdapter,
         translations: tr,
-        props: { mini, dark, classNames },
+        props: { mini, isDarkTheme: dark, slotClasses },
     } = useRootContext()
     const UploadComponent =
-        activeAdapter && uploadAdapterObject[activeAdapter].Component
-    const Icon = activeAdapter && uploadAdapterObject[activeAdapter].Icon
+        activeAdapter && uploadSourceObject[activeAdapter].Component
+    const Icon = activeAdapter && uploadSourceObject[activeAdapter].Icon
 
     if (!UploadComponent || mini || !activeAdapter || !Icon) return null
 
@@ -37,7 +37,7 @@ export default function AdapterView() {
                             'upup-bg-white/5 upup-text-[#FAFAFA] dark:upup-bg-white/5 dark:upup-text-[#FAFAFA]':
                                 dark,
                         },
-                        classNames.adapterViewHeader,
+                        slotClasses.adapterViewHeader,
                     )}
                 >
                     <Icon />
@@ -48,11 +48,10 @@ export default function AdapterView() {
                                 'upup-text-[#30C5F7] dark:upup-text-[#30C5F7]':
                                     dark,
                             },
-                            classNames.adapterViewCancelButton,
+                            slotClasses.adapterViewCancelButton,
                         )}
                         onClick={() => {
-                            // v2: emit adapter-view-cancel event via UpupCore
-                            core?.emit('adapter-view-cancel', { adapterId: activeAdapter })
+                            core?.emit('source-view-cancel', { sourceId: activeAdapter })
                             setActiveAdapter(undefined)
                         }}
                         type="button"

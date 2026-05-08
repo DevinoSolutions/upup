@@ -1,8 +1,9 @@
 'use client'
-import React, { useEffect } from 'react'
+import React from 'react'
 import { useRootContext } from '../context/RootContext'
 import { useBox } from '../hooks/useBox'
 import useBoxUploader from '../hooks/useBoxUploader'
+import DriveAuthFallback from './shared/DriveAuthFallback'
 import DriveBrowser from './shared/DriveBrowser'
 import ServerModeDriveUploader from './ServerModeDriveUploader'
 
@@ -24,13 +25,17 @@ function ClientBoxUploader() {
 
     const handleSignOut = async () => { logout(); return Promise.resolve() }
 
-    useEffect(() => {
-        if (!isAuthenticated && !token && !isLoading) {
-            authenticate()
-        }
-    }, [isAuthenticated, token, isLoading, authenticate])
-
     const props = useBoxUploader(token)
+
+    if (!isAuthenticated && !token && !isLoading) {
+        return (
+            <DriveAuthFallback
+                providerName="Box"
+                onRetry={authenticate}
+                data-upup-slot="box-uploader"
+            />
+        )
+    }
 
     return (
         <DriveBrowser

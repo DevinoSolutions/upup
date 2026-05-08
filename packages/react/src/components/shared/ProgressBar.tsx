@@ -14,7 +14,7 @@ export default forwardRef<HTMLDivElement, Props>(function ProgressBar(
     ref,
 ) {
     const {
-        props: { classNames, dark },
+        props: { slotClasses, isDarkTheme: dark },
         translations: tr,
         upload: { uploadStatus },
         themeSlots,
@@ -32,7 +32,7 @@ export default forwardRef<HTMLDivElement, Props>(function ProgressBar(
                 className={cn(
                     'upup-flex upup-items-center upup-gap-2',
                     className,
-                    classNames.progressBarContainer,
+                    slotClasses.progressBarContainer,
                     themeSlots?.progressBar?.root,
                 )}
                 {...rest}
@@ -41,7 +41,7 @@ export default forwardRef<HTMLDivElement, Props>(function ProgressBar(
                     className={cn(
                         'upup-h-[6px] upup-flex-1 upup-overflow-hidden upup-rounded-[4px] upup-bg-[#F5F5F5]',
                         progressBarClassName,
-                        classNames.progressBar,
+                        slotClasses.progressBar,
                         themeSlots?.progressBar?.track,
                     )}
                 >
@@ -51,7 +51,7 @@ export default forwardRef<HTMLDivElement, Props>(function ProgressBar(
                         }}
                         className={cn(
                             'upup-h-full upup-bg-[#8EA5E7]',
-                            classNames.progressBarInner,
+                            slotClasses.progressBarInner,
                             themeSlots?.progressBar?.fill,
                         )}
                     />
@@ -63,7 +63,7 @@ export default forwardRef<HTMLDivElement, Props>(function ProgressBar(
                             {
                                 'upup-text-white': dark,
                             },
-                            classNames.progressBarText,
+                            slotClasses.progressBarText,
                             themeSlots?.progressBar?.text,
                         )}
                     >

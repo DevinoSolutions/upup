@@ -1,6 +1,7 @@
 import pako from 'pako'
+import { FileSource, UploadStatus, type UploadFile } from '@upup/core'
 import { b64EncodeUnicode } from '../shared/lib/encoder'
-import { FileWithParams, UpupUploaderProps } from '../shared/types'
+import { UpupUploaderProps } from '../shared/types'
 
 /**
  * @param bytes assign keyword depend on size
@@ -47,38 +48,44 @@ export const fileAppendParams = (file: File) => {
     Object.assign(file, {
         id: (file as any).id || b64EncodeUnicode(rel),
         url: (file as any).url || URL.createObjectURL(file),
+        source: (file as any).source || FileSource.LOCAL,
+        status: (file as any).status || UploadStatus.READY,
+        metadata: (file as any).metadata || {},
     })
 
-    return file as FileWithParams
+    return file as UploadFile
 }
 
 /**
  * Revokes a blob URL to free memory. Safe to call on any file URL.
- * @param file - FileWithParams object containing the URL to revoke
+ * @param file - UploadFile object containing the URL to revoke
  */
-export const revokeFileUrl = (file: FileWithParams) => {
+export const revokeFileUrl = (file: UploadFile) => {
     if (file.url?.startsWith('blob:')) {
         URL.revokeObjectURL(file.url)
     }
 }
 
-export async function compressFile(oldFile: FileWithParams) {
+export async function compressFile(oldFile: UploadFile) {
     const buffer = await oldFile.arrayBuffer()
 
     const compressed = new File([pako.gzip(buffer)], oldFile.name + '.gz', {
         type: 'application/octet-stream',
         lastModified: oldFile.lastModified,
     })
-    const newFileWithParams = fileAppendParams(compressed)
-    newFileWithParams.id = oldFile.id
-    newFileWithParams.thumbnail = oldFile.thumbnail
-    newFileWithParams.fileHash = oldFile.fileHash
-    newFileWithParams.key = oldFile.key
+    const newUploadFile = fileAppendParams(compressed)
+    newUploadFile.id = oldFile.id
+    newUploadFile.thumbnail = oldFile.thumbnail
+    newUploadFile.fileHash = oldFile.fileHash
+    newUploadFile.key = oldFile.key
+    newUploadFile.source = oldFile.source
+    newUploadFile.status = oldFile.status
+    newUploadFile.metadata = oldFile.metadata
 
     // Revoke old blob URL to prevent memory leak
     revokeFileUrl(oldFile)
 
-    return newFileWithParams
+    return newUploadFile
 }
 
 export function searchDriveFiles<
@@ -122,13 +129,13 @@ export function searchDriveFiles<
         .slice(0, maxResults)
 }
 
-export function fileGetIsImage(fileType: string) {
-    return fileType.startsWith('image/')
+export function fileGetIsImage(fileType?: string) {
+    return typeof fileType === 'string' && fileType.startsWith('image/')
 }
 
-export function fileGetIsPdf(fileType: string, fileName: string): boolean {
+export function fileGetIsPdf(fileType: string | undefined, fileName?: string): boolean {
     if (fileType === 'application/pdf') return true
-    return fileName.toLowerCase().endsWith('.pdf')
+    return (fileName ?? '').toLowerCase().endsWith('.pdf')
 }
 
 /**
@@ -147,10 +154,10 @@ export const PREVIEW_TEXT_TRUNCATE_LENGTH = 100_000 // ~100 KB of text
 /**
  * Determines whether a file is a text-based file that could be previewed as text.
  */
-export function fileGetIsText(fileType: string, fileName: string): boolean {
+export function fileGetIsText(fileType: string | undefined, fileName?: string): boolean {
     if (!fileType) return false
     if (fileType.startsWith('text/')) return true
-    const lower = fileName.toLowerCase()
+    const lower = (fileName ?? '').toLowerCase()
     return (
         lower.endsWith('.txt') ||
         lower.endsWith('.md') ||
@@ -168,8 +175,8 @@ export function fileGetIsText(fileType: string, fileName: string): boolean {
  * Returns true if a text file is small enough to safely preview inline.
  */
 export function fileCanPreviewText(
-    fileType: string,
-    fileName: string,
+    fileType: string | undefined,
+    fileName: string | undefined,
     fileSize: number | undefined,
 ): boolean {
     if (!fileGetIsText(fileType, fileName)) return false
@@ -177,12 +184,13 @@ export function fileCanPreviewText(
     return fileSize <= PREVIEW_MAX_TEXT_SIZE
 }
 
-export function fileGetExtension(fileType: string, fileName: string) {
+export function fileGetExtension(fileType: string | undefined, fileName?: string) {
+    const safeName = fileName ?? ''
     if (!fileType) {
-        return fileName.split('.').pop()?.toLowerCase() || ''
+        return safeName.split('.').pop()?.toLowerCase() || ''
     }
     const typeSplit = fileType.split('/')
-    const nameSplit = fileName.split('.')
+    const nameSplit = safeName.split('.')
     const lastNamePart = nameSplit[nameSplit.length - 1]?.toLowerCase() || ''
     if (!typeSplit[1]) {
         return lastNamePart

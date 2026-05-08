@@ -26,6 +26,7 @@ export default memo(
         HTMLDivElement,
         HTMLAttributes<HTMLDivElement> & {
             onStopPropagation: MouseEventHandler<HTMLDivElement>
+            onClose: () => void
             fileUrl: string
             fileName: string
             fileType: string
@@ -34,6 +35,7 @@ export default memo(
     >(function FilePreviewPortal(
         {
             onStopPropagation,
+            onClose,
             fileUrl,
             fileName,
             fileType,
@@ -43,7 +45,7 @@ export default memo(
         ref,
     ) {
         const {
-            props: { dark, classNames },
+            props: { isDarkTheme: dark, slotClasses },
             translations: tr,
         } = useRootContext()
         const isImage = useMemo(() => fileGetIsImage(fileType), [fileType])
@@ -66,6 +68,14 @@ export default memo(
         const [textError, setTextError] = useState<string>()
 
         const [isTruncated, setIsTruncated] = useState(false)
+
+        useEffect(() => {
+            const handleKeyDown = (event: KeyboardEvent) => {
+                if (event.key === 'Escape') onClose()
+            }
+            window.addEventListener('keydown', handleKeyDown)
+            return () => window.removeEventListener('keydown', handleKeyDown)
+        }, [onClose])
 
         useEffect(() => {
             let cancelled = false
@@ -136,6 +146,10 @@ export default memo(
                 <div
                     className="upup-fixed upup-inset-0 upup-z-[2147483647] upup-flex upup-items-center upup-justify-center upup-bg-black/40"
                     ref={ref}
+                    role="dialog"
+                    aria-modal="true"
+                    aria-label={fileName}
+                    onClick={onClose}
                     {...restProps}
                 >
                     <div className="upup-relative upup-h-[90vh] upup-w-[90vw] upup-p-4">
@@ -146,10 +160,18 @@ export default memo(
                                     'upup-bg-[#232323] dark:upup-bg-[#232323]':
                                         dark,
                                 },
-                                classNames.filePreviewPortal,
+                                slotClasses.filePreviewPortal,
                             )}
                             onClick={onStopPropagation}
                         >
+                            <button
+                                type="button"
+                                aria-label={tr.cancel}
+                                className="upup-absolute upup-right-3 upup-top-3 upup-z-10 upup-flex upup-size-8 upup-items-center upup-justify-center upup-rounded-full upup-bg-black/70 upup-text-sm upup-font-semibold upup-text-white upup-shadow-sm hover:upup-bg-black focus:upup-outline-none focus:upup-ring-2 focus:upup-ring-white"
+                                onClick={onClose}
+                            >
+                                x
+                            </button>
                             <ShouldRender if={isImage}>
                                 <img
                                     src={fileUrl}

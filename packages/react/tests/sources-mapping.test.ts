@@ -1,44 +1,45 @@
 import { describe, it, expect } from 'vitest'
-import { UploadAdapter } from '../src/shared/types'
+import { FileSource } from '@upup/core'
 
-// Test the source-to-adapter mapping logic used in useRootProvider
-const sourceToAdapter: Record<string, string> = {
-  local: UploadAdapter.INTERNAL,
-  camera: UploadAdapter.CAMERA,
-  url: UploadAdapter.LINK,
-  google_drive: UploadAdapter.GOOGLE_DRIVE,
-  onedrive: UploadAdapter.ONE_DRIVE,
-  dropbox: UploadAdapter.DROPBOX,
-  microphone: UploadAdapter.AUDIO,
-  screen: UploadAdapter.SCREEN,
+const sourceById: Record<string, FileSource> = {
+  local: FileSource.LOCAL,
+  camera: FileSource.CAMERA,
+  url: FileSource.URL,
+  googleDrive: FileSource.GOOGLE_DRIVE,
+  oneDrive: FileSource.ONE_DRIVE,
+  dropbox: FileSource.DROPBOX,
+  box: FileSource.BOX,
+  microphone: FileSource.MICROPHONE,
+  screen: FileSource.SCREEN,
 }
 
-describe('sources → uploadAdapters mapping', () => {
-  it('maps all 8 v2 source names to v1 adapter enums', () => {
-    expect(sourceToAdapter.local).toBe('INTERNAL')
-    expect(sourceToAdapter.camera).toBe('CAMERA')
-    expect(sourceToAdapter.url).toBe('LINK')
-    expect(sourceToAdapter.google_drive).toBe('GOOGLE_DRIVE')
-    expect(sourceToAdapter.onedrive).toBe('ONE_DRIVE')
-    expect(sourceToAdapter.dropbox).toBe('DROPBOX')
-    expect(sourceToAdapter.microphone).toBe('AUDIO')
-    expect(sourceToAdapter.screen).toBe('SCREEN')
+describe('canonical sources', () => {
+  it('maps all canonical source names to FileSource values', () => {
+    expect(sourceById.local).toBe('local')
+    expect(sourceById.camera).toBe('camera')
+    expect(sourceById.url).toBe('url')
+    expect(sourceById.googleDrive).toBe('googleDrive')
+    expect(sourceById.oneDrive).toBe('oneDrive')
+    expect(sourceById.dropbox).toBe('dropbox')
+    expect(sourceById.box).toBe('box')
+    expect(sourceById.microphone).toBe('microphone')
+    expect(sourceById.screen).toBe('screen')
   })
 
-  it('resolves sources array to adapter array', () => {
-    const sources = ['local', 'google_drive', 'camera']
-    const adapters = sources.map(s => sourceToAdapter[s]).filter(Boolean)
-    expect(adapters).toEqual(['INTERNAL', 'GOOGLE_DRIVE', 'CAMERA'])
+  it('resolves sources array to FileSource array', () => {
+    const sources = ['local', 'googleDrive', 'camera']
+    const resolved = sources.map(s => sourceById[s]).filter(Boolean)
+    expect(resolved).toEqual(['local', 'googleDrive', 'camera'])
   })
 
   it('filters unknown sources', () => {
     const sources = ['local', 'invalid_source', 'camera']
-    const adapters = sources.map(s => sourceToAdapter[s]).filter(Boolean)
-    expect(adapters).toEqual(['INTERNAL', 'CAMERA'])
+    const resolved = sources.map(s => sourceById[s]).filter(Boolean)
+    expect(resolved).toEqual(['local', 'camera'])
   })
 
-  it('defaults to INTERNAL + LINK when no sources provided', () => {
-    const defaultAdapters = [UploadAdapter.INTERNAL, UploadAdapter.LINK]
-    expect(defaultAdapters).toEqual(['INTERNAL', 'LINK'])
+  it('defaults include local and url when no sources provided', () => {
+    const defaults = [FileSource.LOCAL, FileSource.URL]
+    expect(defaults).toEqual(['local', 'url'])
   })
 })

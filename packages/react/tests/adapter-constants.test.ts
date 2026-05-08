@@ -1,105 +1,105 @@
 import { describe, it, expect } from 'vitest'
-import { adapterNameKeys, uploadAdapterObject } from '../src/lib/constants'
-import { UploadAdapter } from '../src/shared/types'
+import { FileSource } from '@upup/core'
+import { sourceNameKeys, uploadSourceObject } from '../src/lib/constants'
 
 // ─────────────────────────────────────────────
-// adapterNameKeys
+// sourceNameKeys
 // ─────────────────────────────────────────────
-describe('adapterNameKeys', () => {
-    it('maps INTERNAL to "myDevice"', () => {
-        expect(adapterNameKeys[UploadAdapter.INTERNAL]).toBe('myDevice')
+describe('sourceNameKeys', () => {
+    it('maps local to "myDevice"', () => {
+        expect(sourceNameKeys[FileSource.LOCAL]).toBe('myDevice')
     })
 
-    it('maps GOOGLE_DRIVE to "googleDrive"', () => {
-        expect(adapterNameKeys[UploadAdapter.GOOGLE_DRIVE]).toBe('googleDrive')
+    it('maps googleDrive to "googleDrive"', () => {
+        expect(sourceNameKeys[FileSource.GOOGLE_DRIVE]).toBe('googleDrive')
     })
 
-    it('maps ONE_DRIVE to "oneDrive"', () => {
-        expect(adapterNameKeys[UploadAdapter.ONE_DRIVE]).toBe('oneDrive')
+    it('maps oneDrive to "oneDrive"', () => {
+        expect(sourceNameKeys[FileSource.ONE_DRIVE]).toBe('oneDrive')
     })
 
-    it('maps DROPBOX to "dropbox"', () => {
-        expect(adapterNameKeys[UploadAdapter.DROPBOX]).toBe('dropbox')
+    it('maps dropbox to "dropbox"', () => {
+        expect(sourceNameKeys[FileSource.DROPBOX]).toBe('dropbox')
     })
 
-    it('maps LINK to "link"', () => {
-        expect(adapterNameKeys[UploadAdapter.LINK]).toBe('link')
+    it('maps url to "link"', () => {
+        expect(sourceNameKeys[FileSource.URL]).toBe('link')
     })
 
-    it('maps CAMERA to "camera"', () => {
-        expect(adapterNameKeys[UploadAdapter.CAMERA]).toBe('camera')
+    it('maps camera to "camera"', () => {
+        expect(sourceNameKeys[FileSource.CAMERA]).toBe('camera')
     })
 
-    it('maps AUDIO to "audio"', () => {
-        expect(adapterNameKeys[UploadAdapter.AUDIO]).toBe('audio')
+    it('maps microphone to "audio"', () => {
+        expect(sourceNameKeys[FileSource.MICROPHONE]).toBe('audio')
     })
 
-    it('maps SCREEN to "screenCapture"', () => {
-        expect(adapterNameKeys[UploadAdapter.SCREEN]).toBe('screenCapture')
+    it('maps screen to "screenCapture"', () => {
+        expect(sourceNameKeys[FileSource.SCREEN]).toBe('screenCapture')
     })
 
-    it('covers all 8 UploadAdapter values', () => {
-        const adapterCount = Object.keys(UploadAdapter).length
-        const mappingCount = Object.keys(adapterNameKeys).length
-        expect(mappingCount).toBe(adapterCount)
+    it('covers all FileSource values', () => {
+        const sourceCount = Object.keys(FileSource).length
+        const mappingCount = Object.keys(sourceNameKeys).length
+        expect(mappingCount).toBe(sourceCount)
     })
 })
 
 // ─────────────────────────────────────────────
-// uploadAdapterObject
+// uploadSourceObject
 // ─────────────────────────────────────────────
-describe('uploadAdapterObject', () => {
-    it('has an entry for every UploadAdapter', () => {
-        const adapterCount = Object.keys(UploadAdapter).length
-        expect(Object.keys(uploadAdapterObject).length).toBe(adapterCount)
+describe('uploadSourceObject', () => {
+    it('has an entry for every FileSource', () => {
+        const sourceCount = Object.keys(FileSource).length
+        expect(Object.keys(uploadSourceObject).length).toBe(sourceCount)
     })
 
-    it('INTERNAL entry has undefined Component (device file picker)', () => {
-        expect(uploadAdapterObject[UploadAdapter.INTERNAL].Component).toBeUndefined()
+    it('local entry has undefined Component (device file picker)', () => {
+        expect(uploadSourceObject[FileSource.LOCAL].Component).toBeUndefined()
     })
 
-    it('AUDIO entry has a Component', () => {
-        expect(uploadAdapterObject[UploadAdapter.AUDIO].Component).toBeDefined()
+    it('microphone entry has a Component', () => {
+        expect(uploadSourceObject[FileSource.MICROPHONE].Component).toBeDefined()
     })
 
-    it('SCREEN entry has a Component', () => {
-        expect(uploadAdapterObject[UploadAdapter.SCREEN].Component).toBeDefined()
+    it('screen entry has a Component', () => {
+        expect(uploadSourceObject[FileSource.SCREEN].Component).toBeDefined()
     })
 
-    it('GOOGLE_DRIVE entry has a Component', () => {
-        expect(uploadAdapterObject[UploadAdapter.GOOGLE_DRIVE].Component).toBeDefined()
+    it('googleDrive entry has a Component', () => {
+        expect(uploadSourceObject[FileSource.GOOGLE_DRIVE].Component).toBeDefined()
     })
 
-    it('ONE_DRIVE entry has a Component', () => {
-        expect(uploadAdapterObject[UploadAdapter.ONE_DRIVE].Component).toBeDefined()
+    it('oneDrive entry has a Component', () => {
+        expect(uploadSourceObject[FileSource.ONE_DRIVE].Component).toBeDefined()
     })
 
-    it('DROPBOX entry has a Component', () => {
-        expect(uploadAdapterObject[UploadAdapter.DROPBOX].Component).toBeDefined()
+    it('dropbox entry has a Component', () => {
+        expect(uploadSourceObject[FileSource.DROPBOX].Component).toBeDefined()
     })
 
-    it('LINK entry has a Component', () => {
-        expect(uploadAdapterObject[UploadAdapter.LINK].Component).toBeDefined()
+    it('url entry has a Component', () => {
+        expect(uploadSourceObject[FileSource.URL].Component).toBeDefined()
     })
 
-    it('CAMERA entry has a Component', () => {
-        expect(uploadAdapterObject[UploadAdapter.CAMERA].Component).toBeDefined()
+    it('camera entry has a Component', () => {
+        expect(uploadSourceObject[FileSource.CAMERA].Component).toBeDefined()
     })
 
-    it('each entry id matches its UploadAdapter key', () => {
-        for (const [key, entry] of Object.entries(uploadAdapterObject)) {
+    it('each entry id matches its FileSource key', () => {
+        for (const [key, entry] of Object.entries(uploadSourceObject)) {
             expect(entry.id).toBe(key)
         }
     })
 
-    it('each entry nameKey matches adapterNameKeys', () => {
-        for (const [key, entry] of Object.entries(uploadAdapterObject)) {
-            expect(entry.nameKey).toBe(adapterNameKeys[key as UploadAdapter])
+    it('each entry nameKey matches sourceNameKeys', () => {
+        for (const [key, entry] of Object.entries(uploadSourceObject)) {
+            expect(entry.nameKey).toBe(sourceNameKeys[key as FileSource])
         }
     })
 
     it('each entry has an Icon', () => {
-        for (const entry of Object.values(uploadAdapterObject)) {
+        for (const entry of Object.values(uploadSourceObject)) {
             expect(entry.Icon).toBeDefined()
         }
     })

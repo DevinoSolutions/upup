@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import { UpupCore } from '@upup/core'
-import { UploadStatus } from '@upup/shared'
+import { UploadStatus } from '@upup/core'
 
 describe('UpupCore.updateOptions', () => {
   it('updates accept option', () => {
@@ -100,13 +100,13 @@ describe('UpupCore lifecycle', () => {
     expect(snapshot.files).toEqual([])
   })
 
-  it('apiKey auto-sets serverUrl', () => {
-    const core = new UpupCore({ apiKey: 'test-key' })
-    expect(core.options.serverUrl).toBe('https://api.upup.dev/v1')
+  it('does not infer hosted serverUrl from apiKey-like legacy input', () => {
+    const core = new UpupCore({ apiKey: 'test-key' } as any)
+    expect(core.options.serverUrl).toBeUndefined()
   })
 
-  it('explicit serverUrl overrides apiKey default', () => {
-    const core = new UpupCore({ apiKey: 'test-key', serverUrl: 'https://custom.api' })
+  it('keeps explicit serverUrl when legacy apiKey-like input is present', () => {
+    const core = new UpupCore({ apiKey: 'test-key', serverUrl: 'https://custom.api' } as any)
     expect(core.options.serverUrl).toBe('https://custom.api')
   })
 })

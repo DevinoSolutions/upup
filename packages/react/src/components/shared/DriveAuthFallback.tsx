@@ -7,19 +7,21 @@ import AdapterViewContainer from './AdapterViewContainer'
 type Props = {
     providerName: string
     onRetry: () => void
+    'data-upup-slot'?: string
 }
 
 export default function DriveAuthFallback({
     providerName,
     onRetry,
+    'data-upup-slot': dataUpupSlot = 'drive-auth-fallback',
 }: Readonly<Props>) {
     const {
-        props: { dark, classNames },
+        props: { isDarkTheme: dark, slotClasses },
         translations: tr,
     } = useRootContext()
 
     return (
-        <AdapterViewContainer data-upup-slot="drive-auth-fallback">
+        <AdapterViewContainer data-upup-slot={dataUpupSlot}>
             <div className="upup-flex upup-h-full upup-w-full upup-flex-col upup-items-center upup-justify-center upup-gap-4 upup-p-6 upup-text-center">
                 <p
                     className={cn(
@@ -28,7 +30,7 @@ export default function DriveAuthFallback({
                             'upup-text-[#FAFAFA] dark:upup-text-[#FAFAFA]':
                                 dark,
                         },
-                        classNames.adapterView,
+                        slotClasses.adapterView,
                     )}
                 >
                     {t(tr.authenticatePrompt, { provider: providerName })}

@@ -1,7 +1,7 @@
-import { UpupProvider } from '../../shared/types'
+import type { StorageProvider } from '@upup/core'
 
 export interface MultipartSession {
-    provider: UpupProvider
+    provider: StorageProvider | string
     key: string
     uploadId: string
     partSize: number

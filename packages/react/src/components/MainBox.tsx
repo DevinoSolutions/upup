@@ -18,7 +18,7 @@ export default function MainBox() {
         isOnline,
         inputRef,
         translations: tr,
-        props: { dark },
+        props: { isDarkTheme: dark },
     } = useRootContext()
     const {
         isDragging,

@@ -39,6 +39,7 @@ export default memo(function FileList() {
         translations: tr,
         upload: {
             proceedUpload,
+            retryUpload,
             uploadStatus,
             totalProgress,
             uploadSpeed,
@@ -46,7 +47,7 @@ export default memo(function FileList() {
             uploadedBytes,
             totalBytes,
         },
-        props: { dark, classNames, isProcessing, maxRetries, resumable },
+        props: { isDarkTheme: dark, slotClasses, isProcessing, resumable },
         handleDone,
         handleCancel,
         handlePause,
@@ -94,7 +95,7 @@ export default memo(function FileList() {
                     className={cn(
                         'upup-preview-scroll upup-flex upup-flex-1 upup-flex-col upup-overflow-y-auto upup-bg-black/[0.075] upup-p-3',
                         { 'upup-bg-white/10 dark:upup-bg-white/10': dark },
-                        classNames.fileListContainer,
+                        slotClasses.fileListContainer,
                     )}
                 >
                     {shouldVirtualize ? (
@@ -134,10 +135,10 @@ export default memo(function FileList() {
                                     'md:upup-grid md:upup-gap-y-6': files.size > 1 && viewMode === 'grid',
                                     'md:upup-grid-cols-2': files.size > 1 && viewMode === 'grid',
                                     'upup-flex-1': files.size === 1,
-                                    [classNames.fileListContainerInnerMultiple!]:
-                                        classNames.fileListContainerInnerMultiple && files.size > 1,
-                                    [classNames.fileListContainerInnerSingle!]:
-                                        classNames.fileListContainerInnerSingle && files.size === 1,
+                                    [slotClasses.fileListContainerInnerMultiple!]:
+                                        slotClasses.fileListContainerInnerMultiple && files.size > 1,
+                                    [slotClasses.fileListContainerInnerSingle!]:
+                                        slotClasses.fileListContainerInnerSingle && files.size === 1,
                                 },
                             )}
                         >
@@ -154,7 +155,7 @@ export default memo(function FileList() {
                     {
                         'upup-bg-white/5 dark:upup-bg-white/5': dark,
                     },
-                    classNames.fileListFooter,
+                    slotClasses.fileListFooter,
                 )}
             >
                 {/* FIX: Hide upload button when status is SUCCESSFUL or FAILED */}
@@ -172,10 +173,10 @@ export default memo(function FileList() {
                                 'upup-bg-[#30C5F7] dark:upup-bg-[#30C5F7]':
                                     dark,
                             },
-                            classNames.uploadButton,
+                            slotClasses.uploadButton,
                         )}
                         onClick={() => {
-                            proceedUpload()
+                            void proceedUpload().catch(() => undefined)
                         }}
                         disabled={
                             uploadStatus === UploadStatus.ONGOING ||
@@ -188,22 +189,21 @@ export default memo(function FileList() {
                         })}
                     </button>
                 </ShouldRender>
-                <ShouldRender
-                    if={uploadStatus === UploadStatus.FAILED && !maxRetries}
-                >
+                <ShouldRender if={uploadStatus === UploadStatus.FAILED}>
                     <button
+                        data-testid="upup-retry-btn"
                         className={cn(
                             'upup-disabled:animate-pulse upup-ml-auto upup-rounded-full upup-bg-red-600 upup-px-4 upup-py-2 upup-text-sm upup-font-medium upup-text-white',
                             {
                                 'upup-bg-red-500 dark:upup-bg-red-500': dark,
                             },
-                            classNames.uploadButton,
+                            slotClasses.uploadButton,
                         )}
                         onClick={() => {
-                            proceedUpload()
+                            void retryUpload().catch(() => undefined)
                         }}
                     >
-                        {resumable?.mode === 'multipart'
+                        {resumable?.protocol === 'multipart'
                             ? tr.resumeUpload
                             : tr.retryUpload}
                     </button>
@@ -216,7 +216,7 @@ export default memo(function FileList() {
                                 'upup-bg-[#30C5F7] dark:upup-bg-[#30C5F7]':
                                     dark,
                             },
-                            classNames.uploadDoneButton,
+                            slotClasses.uploadDoneButton,
                         )}
                         onClick={handleDone}
                     >
@@ -227,7 +227,7 @@ export default memo(function FileList() {
                     <div className="upup-flex upup-items-center upup-gap-2">
                         <ShouldRender
                             if={
-                                resumable?.mode === 'multipart' &&
+                                resumable?.protocol === 'multipart' &&
                                 (uploadStatus === UploadStatus.ONGOING ||
                                     uploadStatus === UploadStatus.PAUSED)
                             }

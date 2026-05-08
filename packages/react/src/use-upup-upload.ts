@@ -1,8 +1,8 @@
 'use client'
 
-import { useRef, useState, useEffect } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { UpupCore, type CoreOptions } from '@upup/core'
-import { UploadStatus, type UploadFile, type UpupError } from '@upup/shared'
+import { UploadStatus, type UploadFile, type UpupError } from '@upup/core'
 import type { ExtensionMethods } from '@upup/core'
 import { createPropGetters } from './prop-getters'
 
@@ -22,7 +22,7 @@ export interface UseUpupUploadReturn {
   pause(): void
   resume(): void
   cancel(): void
-  retry(fileId?: string): void
+  retry(fileId?: string): Promise<UploadFile[]>
 
   on(event: string, handler: (...args: unknown[]) => void): () => void
   ext: Record<string, ExtensionMethods>
@@ -41,24 +41,16 @@ export interface UseUpupUploadOptions extends CoreOptions {
   onUploadComplete?: (files: UploadFile[]) => void
 }
 
-/**
- * React hook that wraps `UpupCore` with reactive state updates.
- *
- * **Important:** Options are read once at mount time and are not reactive.
- * Changing `options` after the initial render has no effect. If you need
- * to reconfigure, unmount and remount the component with a new `key`.
- */
 export function useUpupUpload(options: UseUpupUploadOptions): UseUpupUploadReturn {
   const coreRef = useRef<UpupCore | null>(null)
   const [, forceUpdate] = useState(0)
+  const [isDragging, setIsDragging] = useState(false)
 
-  // Lazy initialization — safe during SSR
   if (typeof window !== 'undefined' && !coreRef.current) {
     coreRef.current = new UpupCore(options)
   }
 
   useEffect(() => {
-    // Hydration fallback
     if (!coreRef.current) {
       coreRef.current = new UpupCore(options)
       forceUpdate(n => n + 1)
@@ -95,11 +87,24 @@ export function useUpupUpload(options: UseUpupUploadOptions): UseUpupUploadRetur
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const core = coreRef.current!
+  useEffect(() => {
+    coreRef.current?.updateOptions(options)
+  }, [options])
 
-  // If SSR (core not yet initialized), return defaults
-  if (!core) {
-    return {
+  const fallbackCore = coreRef.current
+  const disableDragAction = fallbackCore?.status === UploadStatus.UPLOADING
+
+  const propGetters = createPropGetters({
+    addFiles: (files) => coreRef.current?.addFiles(files) ?? Promise.resolve(),
+    status: fallbackCore?.status ?? UploadStatus.IDLE,
+    allowedFileTypes: options.allowedFileTypes as string | undefined,
+    multiple: options.limit !== 1,
+    isDragging,
+    setIsDragging,
+    disableDragAction,
+  })
+
+  const fallback = useMemo<UseUpupUploadReturn>(() => ({
       files: [],
       status: UploadStatus.IDLE,
       progress: { totalFiles: 0, completedFiles: 0, percentage: 0 },
@@ -113,50 +118,29 @@ export function useUpupUpload(options: UseUpupUploadOptions): UseUpupUploadRetur
       pause: () => {},
       resume: () => {},
       cancel: () => {},
-      retry: () => {},
+      retry: async () => [],
       on: () => () => {},
       ext: {},
       core: null as unknown as UpupCore,
-      getDropzoneProps: () => ({
-        onDragOver: () => {},
-        onDragLeave: () => {},
-        onDrop: () => {},
-        onPaste: () => {},
-        role: 'region' as const,
-        'aria-label': 'Drop files here or click to browse',
-        'aria-dropeffect': 'none' as const,
-        tabIndex: 0,
-      }),
-      getRootProps: () => ({
-        role: 'application' as const,
-        'aria-label': 'File uploader',
-        'aria-busy': false,
-        'aria-describedby': undefined as string | undefined,
-      }),
-      getInputProps: () => ({
-        type: 'file' as const,
-        multiple: true,
-        accept: undefined as string | undefined,
-        onChange: () => {},
-        style: { display: 'none' as const },
-        tabIndex: -1,
-        'aria-hidden': true as const,
-      }),
-    }
-  }
+      ...propGetters,
+    }), [propGetters])
 
-  const [isDragging, setIsDragging] = useState(false)
-  const disableDragAction = core.status === UploadStatus.UPLOADING
+  const core = coreRef.current
+  const addFiles = useCallback((files: File[]) => coreRef.current?.addFiles(files) ?? Promise.resolve(), [])
+  const removeFile = useCallback((id: string) => coreRef.current?.removeFile(id), [])
+  const removeAll = useCallback(() => coreRef.current?.removeAll(), [])
+  const setFiles = useCallback((files: File[]) => coreRef.current?.setFiles(files) ?? Promise.resolve(), [])
+  const reorderFiles = useCallback((fileIds: string[]) => coreRef.current?.reorderFiles(fileIds), [])
+  const upload = useCallback(() => coreRef.current?.upload() ?? Promise.resolve([]), [])
+  const pause = useCallback(() => coreRef.current?.pause(), [])
+  const resume = useCallback(() => coreRef.current?.resume(), [])
+  const cancel = useCallback(() => coreRef.current?.cancel(), [])
+  const retry = useCallback((fileId?: string) => coreRef.current?.retry(fileId) ?? Promise.resolve([]), [])
+  const on = useCallback((event: string, handler: (...args: unknown[]) => void) => {
+    return coreRef.current?.on(event, handler) ?? (() => {})
+  }, [])
 
-  const propGetters = createPropGetters({
-    addFiles: (files) => core.addFiles(files),
-    status: core.status,
-    allowedFileTypes: options.allowedFileTypes as string | undefined,
-    multiple: options.limit !== 1,
-    isDragging,
-    setIsDragging,
-    disableDragAction,
-  })
+  if (!core) return fallback
 
   return {
     files: [...core.files.values()],
@@ -164,19 +148,19 @@ export function useUpupUpload(options: UseUpupUploadOptions): UseUpupUploadRetur
     progress: core.progress,
     error: core.error as UpupError | null,
 
-    addFiles: (files) => core.addFiles(files),
-    removeFile: (id) => core.removeFile(id),
-    removeAll: () => core.removeAll(),
-    setFiles: (files) => core.setFiles(files),
-    reorderFiles: (fileIds) => core.reorderFiles(fileIds),
+    addFiles,
+    removeFile,
+    removeAll,
+    setFiles,
+    reorderFiles,
 
-    upload: () => core.upload(),
-    pause: () => core.pause(),
-    resume: () => core.resume(),
-    cancel: () => core.cancel(),
-    retry: (fileId) => core.retry(fileId),
+    upload,
+    pause,
+    resume,
+    cancel,
+    retry,
 
-    on: (event, handler) => core.on(event, handler),
+    on,
     ext: core.ext,
 
     core,

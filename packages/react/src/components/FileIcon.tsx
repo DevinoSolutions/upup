@@ -1,5 +1,5 @@
 'use client'
-import React, { forwardRef, JSX, memo, SVGAttributes, SVGProps } from 'react'
+import React, { forwardRef, memo, SVGAttributes } from 'react'
 import {
     TbFile,
     TbFileTypeBmp,
@@ -28,9 +28,7 @@ import {
 import { useRootContext } from '../context/RootContext'
 import { cn } from '../lib/tailwind'
 
-type IconType = (props: SVGProps<SVGSVGElement>) => JSX.Element
-
-const fileTypes: { [key: string]: IconType } = {
+const fileTypes = {
     bmp: TbFileTypeBmp,
     css: TbFileTypeCss,
     csv: TbFileTypeCsv,
@@ -53,7 +51,7 @@ const fileTypes: { [key: string]: IconType } = {
     xls: TbFileTypeXls,
     xml: TbFileTypeXml,
     zip: TbFileTypeZip,
-}
+} as Record<string, unknown>
 
 export default memo(
     forwardRef<
@@ -63,9 +61,9 @@ export default memo(
         } & SVGAttributes<SVGElement>
     >(function FileIcon({ extension = '', className, ...restProps }, ref) {
         const {
-            props: { dark },
+            props: { isDarkTheme: dark },
         } = useRootContext()
-        const IconComponent = fileTypes[extension] || TbFile
+        const IconComponent = (fileTypes[extension] || TbFile) as React.ElementType
         return (
             <IconComponent
                 ref={ref}

@@ -1,7 +1,7 @@
 'use client'
 import React, { Dispatch, SetStateAction, memo, useMemo } from 'react'
+import type { InternalFlatClassNames } from '@upup/core'
 import type { Translations } from '../shared/i18n/types'
-import { UpupUploaderPropsClassNames } from '../shared/types'
 import {
     fileCanPreviewText,
     fileGetExtension,
@@ -20,7 +20,7 @@ type Props = {
     fileName: string
     fileUrl: string
     fileSize?: number
-    classNames: UpupUploaderPropsClassNames
+    slotClasses: InternalFlatClassNames
     allowPreview: boolean
     translations: Translations
 }
@@ -33,7 +33,7 @@ export default memo(
         fileName,
         fileType,
         fileSize,
-        classNames,
+        slotClasses,
         allowPreview,
         translations: tr,
     }: Props) {
@@ -65,7 +65,7 @@ export default memo(
                 <div className="upup-flex upup-flex-col upup-items-center upup-gap-2">
                     <FileIcon
                         extension={extension}
-                        className={classNames.fileIcon}
+                        className={slotClasses.fileIcon}
                     />
                 </div>
             )
@@ -94,7 +94,7 @@ export default memo(
                             {
                                 'md:upup-hidden': allowPreview,
                             },
-                            classNames.fileIcon,
+                            slotClasses.fileIcon,
                         )}
                     />
                     <div

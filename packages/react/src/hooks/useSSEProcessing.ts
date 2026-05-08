@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useRef } from 'react'
-import { FileWithParams } from '../shared/types'
+import type { UploadFile } from '@upup/core'
 
 type Options = {
     processingEndpoint?: string
-    onFileProcessed?: (file: FileWithParams, data: Record<string, unknown>) => void
+    onFileProcessed?: (file: UploadFile, data: Record<string, unknown>) => void
     processingTimeout?: number
 }
 
@@ -22,16 +22,17 @@ export function useSSEProcessing({
     const sourcesRef = useRef<Map<string, EventSource>>(new Map())
 
     const connectSSE = useCallback(
-        (file: FileWithParams) => {
-            if (!processingEndpoint || !onFileProcessed || !file.key) return
+        (file: UploadFile) => {
+            const key = file.key
+            if (!processingEndpoint || !onFileProcessed || !key) return
 
-            const url = `${processingEndpoint}?key=${encodeURIComponent(file.key)}`
+            const url = `${processingEndpoint}?key=${encodeURIComponent(key)}`
             const source = new EventSource(url)
-            sourcesRef.current.set(file.key, source)
+            sourcesRef.current.set(key, source)
 
             const cleanup = () => {
                 source.close()
-                sourcesRef.current.delete(file.key)
+                sourcesRef.current.delete(key)
             }
 
             const timer = setTimeout(cleanup, processingTimeout)

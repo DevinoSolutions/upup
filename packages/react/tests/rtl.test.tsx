@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { render } from '@testing-library/react'
 import { UpupUploader } from '../src'
-import { en_US } from '../src/shared/i18n'
+import { enUS } from '@upup/core'
 
 describe('RTL support', () => {
     it('root has lang="en-US" and dir="ltr" by default', () => {
@@ -39,12 +39,12 @@ describe('RTL support', () => {
         expect(root?.getAttribute('dir')).toBe('ltr')
     })
 
-    it('root has lang="en-US" and dir="ltr" when i18n.locale is a Translations object', () => {
+    it('root has lang="en-US" and dir="ltr" when i18n.locale is a LocaleBundle object', () => {
         const { container } = render(
             <UpupUploader
                 provider="s3"
                 serverUrl="https://example.com"
-                i18n={{ locale: en_US }}
+                i18n={{ locale: enUS }}
             />,
         )
         const root = container.querySelector('[data-upup-slot="root"]')

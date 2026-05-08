@@ -4,7 +4,7 @@ import { UpupUploader } from '../src'
 
 // Verifies the v2 theme.slots API is actually wired through the runtime:
 // passing a className via theme.slots should reach the real DOM.
-// Tier B removed the public `classNames` prop in favour of this path.
+// Tier B removed the old flat styling prop in favour of this path.
 
 describe('theme.slots DOM integration', () => {
   it('applies an sourceSelector.adapterButton slot override to rendered markup', () => {

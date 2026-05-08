@@ -14,8 +14,8 @@ expect.extend(toHaveNoViolations)
 function renderUploader(extra: Partial<React.ComponentProps<typeof UpupUploader>> = {}) {
     return render(
         <UpupUploader
-            provider="s3"
-            serverUrl="https://example.com"
+            provider="aws"
+            uploadEndpoint="/api/upload"
             {...extra}
         />,
     )
@@ -47,8 +47,8 @@ async function scanSlot(
 }
 
 /**
- * Click a source button by its UploadAdapter id (lowercased).
- * Valid ids: internal, google_drive, one_drive, dropbox, box, link, camera.
+ * Click a source button by canonical source id.
+ * Valid ids: local, googleDrive, oneDrive, dropbox, box, url, camera.
  *
  * Pass the same `user` instance across multiple calls in a single test to
  * preserve pointer event continuity.
@@ -107,7 +107,7 @@ describe('axe — AdapterSelector (SourceSelector)', () => {
 describe('axe — UrlUploader', () => {
     it('has no violations after activating Link source', async () => {
         const { container } = renderUploader()
-        await activateSource(container, 'link')
+        await activateSource(container, 'url')
         const results = await scanSlot(container, 'url-uploader')
         expect(results).toHaveNoViolations()
     })
@@ -159,9 +159,9 @@ describe('axe — GoogleDriveUploader', () => {
     // authenticated picker state requires a live OAuth flow and is not covered
     // by this suite.
     it('has no violations in auth-prompt state (missing clientId)', async () => {
-        // google_drive is not in the default sources list; pass it explicitly
-        const { container } = renderUploader({ sources: ['google_drive'] })
-        await activateSource(container, 'google_drive')
+        // googleDrive is not in the default sources list; pass it explicitly
+        const { container } = renderUploader({ sources: ['googleDrive'] })
+        await activateSource(container, 'googleDrive')
         const results = await scanSlot(container, 'google-drive-uploader')
         expect(results).toHaveNoViolations()
     })
@@ -172,9 +172,9 @@ describe('axe — OneDriveUploader', () => {
     // authenticated picker state requires a live OAuth flow and is not covered
     // by this suite.
     it('has no violations in auth-prompt state (missing clientId)', async () => {
-        // onedrive is not in the default sources list; pass it explicitly
-        const { container } = renderUploader({ sources: ['onedrive'] })
-        await activateSource(container, 'one_drive')
+        // oneDrive is not in the default sources list; pass it explicitly
+        const { container } = renderUploader({ sources: ['oneDrive'] })
+        await activateSource(container, 'oneDrive')
         const results = await scanSlot(container, 'onedrive-uploader')
         expect(results).toHaveNoViolations()
     })
@@ -246,7 +246,7 @@ describe('axe — FilePreview', () => {
 describe('axe — AdapterView (SourceView)', () => {
     it('has no violations in header region when any adapter is active', async () => {
         const { container } = renderUploader()
-        await activateSource(container, 'link')
+        await activateSource(container, 'url')
 
         const adapterView = container.querySelector(
             '[data-upup-slot="adapter-view"]',

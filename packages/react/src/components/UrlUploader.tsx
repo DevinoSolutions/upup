@@ -13,8 +13,8 @@ export default function UrlUploader() {
         translations: tr,
         props: {
             icons: { LoaderIcon },
-            dark,
-            classNames,
+            isDarkTheme: dark,
+            slotClasses,
         },
     } = useRootContext()
     const [url, setUrl] = useState('')
@@ -40,6 +40,8 @@ export default function UrlUploader() {
             <form onSubmit={handleFormSubmit} className="upup-px-3 upup-py-2">
                 <input
                     type="url"
+                    name="upup-url"
+                    aria-label={tr.enterFileUrl}
                     placeholder={tr.enterFileUrl}
                     className={cn(
                         'upup-w-full upup-rounded-md upup-border-2 upup-border-[#e0e0e0] upup-bg-transparent upup-px-3 upup-py-2 upup-outline-none',
@@ -47,7 +49,7 @@ export default function UrlUploader() {
                             'upup-border-[#6D6D6D] upup-text-[#6D6D6D] dark:upup-border-[#6D6D6D] dark:upup-text-[#6D6D6D]':
                                 dark,
                         },
-                        classNames.urlInput,
+                        slotClasses.urlInput,
                     )}
                     value={url}
                     onChange={e => setUrl(e.currentTarget.value)}
@@ -59,7 +61,7 @@ export default function UrlUploader() {
                             'upup-disabled:bg-[#6D6D6D] dark:upup-disabled:bg-[#6D6D6D] upup-bg-[#59D1F9] dark:upup-bg-[#59D1F9]':
                                 dark,
                         },
-                        classNames.urlFetchButton,
+                        slotClasses.urlFetchButton,
                     )}
                     type="submit"
                     disabled={!url}

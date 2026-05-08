@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
 import { useIsClient } from '../src/use-is-client'
-import { UploadAdapter } from '../src/shared/types'
+import { FileSource } from '@upup/core'
 
 // ─────────────────────────────────────────────
 // useIsClient
@@ -34,49 +34,49 @@ describe('useIsClient', () => {
 })
 
 // ─────────────────────────────────────────────
-// UploadAdapter enum completeness
+// FileSource enum completeness
 // ─────────────────────────────────────────────
-describe('UploadAdapter enum', () => {
-    it('defines INTERNAL adapter', () => {
-        expect(UploadAdapter.INTERNAL).toBeDefined()
+describe('FileSource enum', () => {
+    it('defines local source', () => {
+        expect(FileSource.LOCAL).toBeDefined()
     })
 
-    it('defines GOOGLE_DRIVE adapter', () => {
-        expect(UploadAdapter.GOOGLE_DRIVE).toBeDefined()
+    it('defines googleDrive source', () => {
+        expect(FileSource.GOOGLE_DRIVE).toBeDefined()
     })
 
-    it('defines ONE_DRIVE adapter', () => {
-        expect(UploadAdapter.ONE_DRIVE).toBeDefined()
+    it('defines oneDrive source', () => {
+        expect(FileSource.ONE_DRIVE).toBeDefined()
     })
 
-    it('defines DROPBOX adapter', () => {
-        expect(UploadAdapter.DROPBOX).toBeDefined()
+    it('defines dropbox source', () => {
+        expect(FileSource.DROPBOX).toBeDefined()
     })
 
-    it('defines LINK adapter', () => {
-        expect(UploadAdapter.LINK).toBeDefined()
+    it('defines url source', () => {
+        expect(FileSource.URL).toBeDefined()
     })
 
-    it('defines CAMERA adapter', () => {
-        expect(UploadAdapter.CAMERA).toBeDefined()
+    it('defines camera source', () => {
+        expect(FileSource.CAMERA).toBeDefined()
     })
 
-    it('defines AUDIO adapter', () => {
-        expect(UploadAdapter.AUDIO).toBeDefined()
+    it('defines microphone source', () => {
+        expect(FileSource.MICROPHONE).toBeDefined()
     })
 
-    it('defines SCREEN adapter', () => {
-        expect(UploadAdapter.SCREEN).toBeDefined()
+    it('defines screen source', () => {
+        expect(FileSource.SCREEN).toBeDefined()
     })
 
-    it('has 9 distinct adapter values', () => {
-        const values = Object.values(UploadAdapter)
+    it('has 9 distinct source values', () => {
+        const values = Object.values(FileSource)
         const unique = new Set(values)
         expect(unique.size).toBe(9)
     })
 
-    it('all adapter values are non-empty strings', () => {
-        for (const val of Object.values(UploadAdapter)) {
+    it('all source values are non-empty strings', () => {
+        for (const val of Object.values(FileSource)) {
             expect(typeof val).toBe('string')
             expect((val as string).length).toBeGreaterThan(0)
         }

@@ -23,7 +23,7 @@ export default function DriveBrowserItem({
     index,
 }: Readonly<DriveBrowserItemProps>) {
     const {
-        props: { dark, classNames },
+        props: { isDarkTheme: dark, slotClasses },
     } = useRootContext()
     const isFolder = Boolean(
         (file as OneDriveFile).isFolder || (file as GoogleFile).children,
@@ -67,12 +67,12 @@ export default function DriveBrowserItem({
                         'upup-font-medium': isFolder,
                         'upup-bg-[#bab4b499]': isFileSelected,
                         'upup-bg-[#e9ecef00]': !isFileSelected,
-                        [classNames.driveItemContainerDefault!]:
+                        [slotClasses.driveItemContainerDefault!]:
                             !isFileSelected &&
-                            classNames.driveItemContainerDefault,
-                        [classNames.driveItemContainerSelected!]:
+                            slotClasses.driveItemContainerDefault,
+                        [slotClasses.driveItemContainerSelected!]:
                             isFileSelected &&
-                            classNames.driveItemContainerSelected,
+                            slotClasses.driveItemContainerSelected,
                     },
                 )}
                 onClick={() => handleClick(file as any)}
@@ -80,7 +80,7 @@ export default function DriveBrowserItem({
                 <div
                     className={cn(
                         'upup-flex upup-items-center upup-gap-2',
-                        classNames.driveItemContainerInner,
+                        slotClasses.driveItemContainerInner,
                     )}
                 >
                     <DriveBrowserIcon file={file} />
@@ -91,7 +91,7 @@ export default function DriveBrowserItem({
                                 'upup-text-[#e0e0e0] dark:upup-text-[#e0e0e0]':
                                     dark,
                             },
-                            classNames.driveItemInnerText,
+                            slotClasses.driveItemInnerText,
                         )}
                     >
                         {file.name}
