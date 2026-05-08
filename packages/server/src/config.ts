@@ -1,4 +1,4 @@
-import type { StorageProvider } from '@upup/shared'
+import type { StorageProvider, UpupCorsConfig } from '@upup/core'
 
 export type UpupServerConfig = {
   storage: {
@@ -36,6 +36,7 @@ export type UpupServerConfig = {
   auth?: (req: Request) => Promise<boolean>
   maxFileSize?: number
   allowedTypes?: string[]
+  cors?: UpupCorsConfig
 
   /**
    * Outbound server→S3 multipart threshold (bytes). Files at or above this

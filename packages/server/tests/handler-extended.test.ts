@@ -121,6 +121,17 @@ describe('handler — hooks.onBeforeUpload', () => {
 // Multipart endpoints
 // ─────────────────────────────────────────────
 describe('handler — multipart', () => {
+    it('applies allowedTypes wildcard validation to multipart init', async () => {
+        const handler = createHandler({ ...config, allowedTypes: ['image/*'] })
+        const req = new Request('http://localhost/multipart/init', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: 'big.zip', size: 50 * 1024 * 1024, type: 'application/zip' }),
+        })
+        const res = await handler(req)
+        expect(res.status).toBe(415)
+    })
+
     it('initiates multipart upload', async () => {
         const handler = createHandler(config)
         const req = new Request('http://localhost/multipart/init', {
@@ -163,6 +174,42 @@ describe('handler — multipart', () => {
         const body = await res.json()
         expect(res.status).toBe(200)
         expect(body.key).toBeDefined()
+    })
+})
+
+describe('handler — CORS', () => {
+    it('responds to OPTIONS with configured CORS headers', async () => {
+        const handler = createHandler({
+            ...config,
+            cors: {
+                allowedOrigins: ['http://localhost:3000'],
+                allowedHeaders: ['Content-Type', 'X-Test'],
+            },
+        })
+        const req = new Request('http://localhost/presign', {
+            method: 'OPTIONS',
+            headers: { origin: 'http://localhost:3000' },
+        })
+        const res = await handler(req)
+
+        expect(res.status).toBe(204)
+        expect(res.headers.get('access-control-allow-origin')).toBe('http://localhost:3000')
+        expect(res.headers.get('access-control-allow-headers')).toContain('X-Test')
+    })
+
+    it('does not reflect disallowed origins', async () => {
+        const handler = createHandler({
+            ...config,
+            cors: { allowedOrigins: ['https://app.example.com'] },
+        })
+        const req = new Request('http://localhost/presign', {
+            method: 'OPTIONS',
+            headers: { origin: 'https://evil.example.com' },
+        })
+        const res = await handler(req)
+
+        expect(res.status).toBe(204)
+        expect(res.headers.get('access-control-allow-origin')).toBeNull()
     })
 })
 

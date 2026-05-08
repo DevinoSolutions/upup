@@ -18,7 +18,7 @@ import type {
   MultipartAbortResponse,
   MultipartListPartsResponse,
   MultipartPart,
-} from '@upup/shared'
+} from '@upup/core'
 import type { UpupServerConfig } from '../config'
 
 const DEFAULT_EXPIRES_IN = 3600
@@ -72,17 +72,22 @@ export async function generatePresignedUrl(
     Bucket: storage.bucket,
     Key: key,
     ContentType: contentType,
-    ContentLength: contentLength,
   })
 
   const uploadUrl = await getSignedUrl(client, command, {
     expiresIn,
-    signableHeaders: new Set(['content-type', 'content-length']),
+    signableHeaders: new Set(['content-type']),
   })
 
-  const publicUrl = await generateSignedPublicUrl(storage, key)
+  const downloadUrl = await generateSignedPublicUrl(storage, key)
 
-  return { key, publicUrl, uploadUrl, expiresIn }
+  return {
+    key,
+    downloadUrl,
+    uploadUrl,
+    uploadHeaders: { 'Content-Type': contentType || 'application/octet-stream' },
+    expiresIn,
+  }
 }
 
 export async function initiateMultipartUpload(
@@ -118,7 +123,6 @@ export async function generatePresignedPartUrl(
   key: string,
   uploadId: string,
   partNumber: number,
-  contentLength: number,
   expiresIn = DEFAULT_EXPIRES_IN,
 ): Promise<MultipartSignPartResponse> {
   const client = createS3Client(storage)
@@ -128,13 +132,9 @@ export async function generatePresignedPartUrl(
     Key: key,
     UploadId: uploadId,
     PartNumber: partNumber,
-    ContentLength: contentLength,
   })
 
-  const uploadUrl = await getSignedUrl(client, command, {
-    expiresIn,
-    signableHeaders: new Set(['content-length']),
-  })
+  const uploadUrl = await getSignedUrl(client, command, { expiresIn })
 
   return { uploadUrl, expiresIn }
 }
@@ -159,9 +159,9 @@ export async function completeMultipartUpload(
   })
 
   const result = await client.send(command)
-  const publicUrl = await generateSignedPublicUrl(storage, key)
+  const downloadUrl = await generateSignedPublicUrl(storage, key)
 
-  return { key, publicUrl, etag: result.ETag }
+  return { key, downloadUrl, etag: result.ETag }
 }
 
 export async function abortMultipartUpload(

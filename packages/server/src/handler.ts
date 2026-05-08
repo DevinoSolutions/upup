@@ -17,42 +17,101 @@ import {
 } from './tokenStore'
 
 export type RouteHandler = (req: Request) => Promise<Response>
+type ResponseHeaders = Record<string, string>
 
-function json(data: unknown, status = 200): Response {
+function corsHeaders(req: Request, config: UpupServerConfig): ResponseHeaders {
+  const cors = config.cors
+  if (!cors) return {}
+
+  const origin = req.headers.get('origin') ?? ''
+  const allowsWildcard = cors.allowedOrigins.includes('*')
+  const allowsOrigin = origin && cors.allowedOrigins.includes(origin)
+  if (!allowsWildcard && !allowsOrigin) return {}
+
+  return {
+    'Access-Control-Allow-Origin': allowsWildcard ? '*' : origin,
+    'Access-Control-Allow-Methods': (cors.allowedMethods ?? ['GET', 'POST', 'OPTIONS']).join(', '),
+    'Access-Control-Allow-Headers': (cors.allowedHeaders ?? ['Content-Type', 'Authorization']).join(', '),
+    'Access-Control-Max-Age': String(cors.maxAgeSeconds ?? 600),
+    'Vary': 'Origin',
+  }
+}
+
+function json(data: unknown, status = 200, headers: ResponseHeaders = {}): Response {
   return new Response(JSON.stringify(data), {
     status,
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...headers },
   })
+}
+
+function matchesAllowedType(type: string, allowedTypes?: string[]): boolean {
+  if (!allowedTypes?.length) return true
+  return allowedTypes.some((allowed) => {
+    if (allowed === type) return true
+    if (allowed.endsWith('/*')) {
+      return type.startsWith(`${allowed.slice(0, -2)}/`)
+    }
+    return false
+  })
+}
+
+async function validateUploadMetadata(
+  req: Request,
+  config: UpupServerConfig,
+  body: FileMetadata,
+  responseHeaders: ResponseHeaders = {},
+): Promise<Response | null> {
+  if (config.maxFileSize && body.size > config.maxFileSize) {
+    return json({ error: 'File too large' }, 413, responseHeaders)
+  }
+
+  if (!matchesAllowedType(body.type, config.allowedTypes)) {
+    return json({ error: 'File type not allowed' }, 415, responseHeaders)
+  }
+
+  if (config.hooks?.onBeforeUpload) {
+    const allowed = await config.hooks.onBeforeUpload(body, req)
+    if (!allowed) {
+      return json({ error: 'Upload rejected' }, 403, responseHeaders)
+    }
+  }
+
+  return null
 }
 
 export function createHandler(config: UpupServerConfig): RouteHandler {
   return async (req: Request): Promise<Response> => {
     const url = new URL(req.url)
     const path = url.pathname
+    const responseHeaders = corsHeaders(req, config)
+
+    if (req.method === 'OPTIONS') {
+      return new Response(null, { status: 204, headers: responseHeaders })
+    }
 
     // Auth check
     if (config.auth) {
       const authorized = await config.auth(req)
       if (!authorized) {
-        return json({ error: 'Unauthorized' }, 401)
+        return json({ error: 'Unauthorized' }, 401, responseHeaders)
       }
     }
 
     // Route matching
     if (req.method === 'POST' && path.endsWith('/presign')) {
-      return handlePresign(req, config)
+      return handlePresign(req, config, responseHeaders)
     }
     if (req.method === 'POST' && path.endsWith('/multipart/init')) {
-      return handleMultipartInit(req, config)
+      return handleMultipartInit(req, config, responseHeaders)
     }
     if (req.method === 'POST' && path.endsWith('/multipart/sign-part')) {
-      return handleMultipartSignPart(req, config)
+      return handleMultipartSignPart(req, config, responseHeaders)
     }
     if (req.method === 'POST' && path.endsWith('/multipart/complete')) {
-      return handleMultipartComplete(req, config)
+      return handleMultipartComplete(req, config, responseHeaders)
     }
     if (req.method === 'POST' && path.endsWith('/multipart/abort')) {
-      return handleMultipartAbort(req, config)
+      return handleMultipartAbort(req, config, responseHeaders)
     }
 
     // OAuth routes: GET /auth/:provider and GET /auth/:provider/cb
@@ -79,27 +138,15 @@ export function createHandler(config: UpupServerConfig): RouteHandler {
       }
     }
 
-    return json({ error: 'Not found' }, 404)
+    return json({ error: 'Not found' }, 404, responseHeaders)
   }
 }
 
-async function handlePresign(req: Request, config: UpupServerConfig): Promise<Response> {
+async function handlePresign(req: Request, config: UpupServerConfig, responseHeaders: ResponseHeaders): Promise<Response> {
   const body = (await req.json()) as FileMetadata
 
-  if (config.maxFileSize && body.size > config.maxFileSize) {
-    return json({ error: 'File too large' }, 413)
-  }
-
-  if (config.allowedTypes?.length && !config.allowedTypes.includes(body.type)) {
-    return json({ error: 'File type not allowed' }, 415)
-  }
-
-  if (config.hooks?.onBeforeUpload) {
-    const allowed = await config.hooks.onBeforeUpload(body, req)
-    if (!allowed) {
-      return json({ error: 'Upload rejected' }, 403)
-    }
-  }
+  const validationError = await validateUploadMetadata(req, config, body, responseHeaders)
+  if (validationError) return validationError
 
   try {
     const result = await generatePresignedUrl(
@@ -108,15 +155,17 @@ async function handlePresign(req: Request, config: UpupServerConfig): Promise<Re
       body.type,
       body.size,
     )
-    return json(result)
+    return json(result, 200, responseHeaders)
   } catch (error) {
-    return json({ error: (error as Error).message }, 500)
+    return json({ error: 'Presign failed' }, 500, responseHeaders)
   }
 }
 
-async function handleMultipartInit(req: Request, config: UpupServerConfig): Promise<Response> {
+async function handleMultipartInit(req: Request, config: UpupServerConfig, responseHeaders: ResponseHeaders): Promise<Response> {
   try {
     const body = (await req.json()) as { name: string; type: string; size: number; chunkSizeBytes?: number }
+    const validationError = await validateUploadMetadata(req, config, body, responseHeaders)
+    if (validationError) return validationError
     const result = await initiateMultipartUpload(
       config.storage,
       body.name,
@@ -125,29 +174,28 @@ async function handleMultipartInit(req: Request, config: UpupServerConfig): Prom
       undefined,
       body.chunkSizeBytes,
     )
-    return json(result)
+    return json(result, 200, responseHeaders)
   } catch (error) {
-    return json({ error: (error as Error).message }, 500)
+    return json({ error: 'Multipart init failed' }, 500, responseHeaders)
   }
 }
 
-async function handleMultipartSignPart(req: Request, config: UpupServerConfig): Promise<Response> {
+async function handleMultipartSignPart(req: Request, config: UpupServerConfig, responseHeaders: ResponseHeaders): Promise<Response> {
   try {
-    const body = (await req.json()) as { key: string; uploadId: string; partNumber: number; contentLength: number }
+    const body = (await req.json()) as { key: string; uploadId: string; partNumber: number }
     const result = await generatePresignedPartUrl(
       config.storage,
       body.key,
       body.uploadId,
       body.partNumber,
-      body.contentLength,
     )
-    return json(result)
+    return json(result, 200, responseHeaders)
   } catch (error) {
-    return json({ error: (error as Error).message }, 500)
+    return json({ error: 'Multipart sign failed' }, 500, responseHeaders)
   }
 }
 
-async function handleMultipartComplete(req: Request, config: UpupServerConfig): Promise<Response> {
+async function handleMultipartComplete(req: Request, config: UpupServerConfig, responseHeaders: ResponseHeaders): Promise<Response> {
   try {
     const body = (await req.json()) as { key: string; uploadId: string; parts: Array<{ partNumber: number; eTag: string }> }
     const result = await completeMultipartUpload(
@@ -156,13 +204,13 @@ async function handleMultipartComplete(req: Request, config: UpupServerConfig): 
       body.uploadId,
       body.parts,
     )
-    return json(result)
+    return json(result, 200, responseHeaders)
   } catch (error) {
-    return json({ error: (error as Error).message }, 500)
+    return json({ error: 'Multipart complete failed' }, 500, responseHeaders)
   }
 }
 
-async function handleMultipartAbort(req: Request, config: UpupServerConfig): Promise<Response> {
+async function handleMultipartAbort(req: Request, config: UpupServerConfig, responseHeaders: ResponseHeaders): Promise<Response> {
   try {
     const body = (await req.json()) as { key: string; uploadId: string }
     const result = await abortMultipartUpload(
@@ -170,9 +218,9 @@ async function handleMultipartAbort(req: Request, config: UpupServerConfig): Pro
       body.key,
       body.uploadId,
     )
-    return json(result)
+    return json(result, 200, responseHeaders)
   } catch (error) {
-    return json({ error: (error as Error).message }, 500)
+    return json({ error: 'Multipart abort failed' }, 500, responseHeaders)
   }
 }
 
