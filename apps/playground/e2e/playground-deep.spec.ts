@@ -26,6 +26,16 @@ function textFile(name = 'playground-note.txt') {
     }
 }
 
+function largeTextFile(name = 'large-playground-note.txt', bytes = 512 * 1024) {
+    const chunk = `${TEXT_CONTENT}\n`
+    const repeats = Math.ceil(bytes / Buffer.byteLength(chunk))
+    return {
+        name,
+        mimeType: 'text/plain',
+        buffer: Buffer.from(chunk.repeat(repeats).slice(0, bytes)),
+    }
+}
+
 function imageFile(name = 'preview-image.png') {
     return {
         name,
@@ -232,6 +242,37 @@ async function dispatchPaste(page: Page, file: ReturnType<typeof imageFile>): Pr
     })
 }
 
+async function mockDisplayMedia(page: Page): Promise<void> {
+    await page.addInitScript(() => {
+        Object.defineProperty(navigator.mediaDevices, 'getDisplayMedia', {
+            configurable: true,
+            value: async () => {
+                const canvas = document.createElement('canvas')
+                canvas.width = 160
+                canvas.height = 90
+                const ctx = canvas.getContext('2d')
+                let frame = 0
+                const draw = () => {
+                    if (!ctx) return
+                    ctx.fillStyle = frame % 2 === 0 ? '#30c5f7' : '#111827'
+                    ctx.fillRect(0, 0, canvas.width, canvas.height)
+                    ctx.fillStyle = '#ffffff'
+                    ctx.font = '20px sans-serif'
+                    ctx.fillText('upup', 50, 52)
+                    frame += 1
+                }
+                draw()
+                const interval = window.setInterval(draw, 100)
+                const stream = canvas.captureStream(10)
+                for (const track of stream.getVideoTracks()) {
+                    track.addEventListener('ended', () => window.clearInterval(interval))
+                }
+                return stream
+            },
+        })
+    })
+}
+
 test.beforeEach(async ({ page }) => {
     const issues: BrowserIssue[] = []
     browserIssues.set(page, issues)
@@ -403,10 +444,10 @@ test('wires every playground category into copy-pasteable generated code', async
     await openCategory(page, 'Language')
     await selectOption(page, 'Language', 'Locale', 'ar-SA')
     await selectOption(page, 'Language', 'Fallback locale', 'fr-FR')
-    await fillNestedTextField(page, 'Language', 'Message overrides (common subset)', 'common.upload', 'Send now')
-    await fillNestedTextField(page, 'Language', 'Message overrides (common subset)', 'common.cancel', 'Stop')
-    await fillNestedTextField(page, 'Language', 'Message overrides (common subset)', 'dropzone.label', 'Add files')
-    await fillNestedTextField(page, 'Language', 'Message overrides (common subset)', 'header.filesSelected', '{n} ready')
+    await fillNestedTextField(page, 'Language', 'Message overrides (visible labels)', 'fileList.uploadFiles', 'Send now')
+    await fillNestedTextField(page, 'Language', 'Message overrides (visible labels)', 'common.cancel', 'Stop')
+    await fillNestedTextField(page, 'Language', 'Message overrides (visible labels)', 'dropzone.browseFiles', 'Add files')
+    await fillNestedTextField(page, 'Language', 'Message overrides (visible labels)', 'header.filesSelected', '{count, plural, one {# ready} other {# ready}}')
 
     await openCategory(page, 'Events')
     for (const checkbox of await category(page, 'Events').getByRole('checkbox').all()) {
@@ -460,10 +501,11 @@ test('wires every playground category into copy-pasteable generated code', async
         "className=\"max-w-xl\"",
         'locale: arSA',
         'fallbackLocale: frFR',
-        "common: {",
-        "upload: 'Send now'",
+        "fileList: {",
+        "uploadFiles: 'Send now'",
         "dropzone: {",
-        "label: 'Add files'",
+        "browseFiles: 'Add files'",
+        "filesSelected: '{count, plural, one {# ready} other {# ready}}'",
         "cloudDrives={{",
         "clientId: 'gd-client'",
         "apiKey: 'gd-key'",
@@ -513,6 +555,24 @@ test('wires every playground category into copy-pasteable generated code', async
     expect(code).not.toContain('serverUrl=')
     expect(code).not.toContain("locale: 'ar-SA'")
     expect(code).not.toContain("fallbackLocale: 'fr-FR'")
+    for (const forbidden of [
+        'upup-react-file-uploader',
+        '@upup/shared',
+        'ProviderSDK',
+        'FileWithParams',
+        'UploadAdapter',
+        'uploadAdapters',
+        'driveConfigs',
+        'localePack',
+        'translations=',
+        'classNames',
+        'dark=',
+        'tokenEndpoint',
+        'syncFilesFromExternal',
+        'syncStatusFromExternal',
+    ]) {
+        expect(code).not.toContain(forbidden)
+    }
 })
 
 test('selects real text and image files, renders file cards, and opens a text preview', async ({ page }, testInfo) => {
@@ -569,6 +629,65 @@ test('opens every default source panel without runtime errors', async ({ page },
     }
 
     await attachScreenshot(page, testInfo, 'default-source-panels-verified')
+})
+
+test('opens every client cloud source panel with v2 cloudDrives config and logs integration clicks', async ({ page }, testInfo) => {
+    await page.route('https://accounts.google.com/gsi/client', async (route) => {
+        await route.fulfill({
+            status: 200,
+            contentType: 'application/javascript',
+            body: `
+                window.google = {
+                    accounts: {
+                        oauth2: {
+                            initTokenClient: function () {
+                                return { requestAccessToken: function () {} };
+                            }
+                        }
+                    }
+                };
+            `,
+        })
+    })
+
+    await openPlayground(page)
+    await openCategory(page, 'Advanced')
+    await fillNestedTextField(page, 'Advanced', 'Google Drive', 'Client ID', 'fake-google-client')
+    await fillNestedTextField(page, 'Advanced', 'Google Drive', 'API Key', 'fake-google-key')
+    await fillNestedTextField(page, 'Advanced', 'Google Drive', 'App ID', 'fake-google-app')
+    await fillNestedTextField(page, 'Advanced', 'OneDrive', 'Client ID', 'fake-onedrive-client')
+    await fillNestedTextField(page, 'Advanced', 'Dropbox', 'Client ID', 'fake-dropbox-client')
+    await fillNestedTextField(page, 'Advanced', 'Box', 'Client ID', 'fake-box-client')
+
+    await openCategory(page, 'Sources')
+    for (const label of ['Google Drive', 'OneDrive', 'Dropbox', 'Box']) {
+        await ensureSourceTile(page, label)
+    }
+
+    await openCategory(page, 'Events')
+    await checkSidebarCheckbox(page, 'Events', 'onIntegrationClick')
+
+    const cloudPanels = [
+        { id: 'googleDrive', name: 'Google Drive', slot: 'google-drive-uploader' },
+        { id: 'oneDrive', name: 'OneDrive', slot: 'onedrive-uploader' },
+        { id: 'dropbox', name: 'Dropbox', slot: 'dropbox-uploader' },
+        { id: 'box', name: 'Box', slot: 'box-uploader' },
+    ]
+
+    for (const panel of cloudPanels) {
+        await page.getByTestId(`upup-source-${panel.id}`).click()
+        await expect(page.locator(`[data-upup-slot="${panel.slot}"]`)).toBeVisible({ timeout: 20_000 })
+        await expect(page.locator(`[data-upup-slot="${panel.slot}"]`)).toContainText(panel.name)
+        await page.getByRole('button', { name: 'Cancel' }).click()
+        await expect(page.getByRole('button', { name: 'Cancel' })).toHaveCount(0)
+    }
+
+    await page.locator('.upup-ie-tabs').getByRole('button', { name: 'Events' }).click()
+    const logList = page.locator('.upup-ie-eventlog-list')
+    for (const source of ['googleDrive', 'oneDrive', 'dropbox', 'box']) {
+        await expect(logList).toContainText(source)
+    }
+    await attachScreenshot(page, testInfo, 'client-cloud-source-panels')
 })
 
 test('runtime feature controls affect folder button, accept filter, editor button, and event log', async ({ page }, testInfo) => {
@@ -633,6 +752,40 @@ test('event toggles log selection, removal aliases, prepare-files, and upload li
     }
 
     await attachScreenshot(page, testInfo, 'event-log-runtime-lifecycle')
+})
+
+test('event log captures file clicks and concrete progress payloads during upload', async ({ page }, testInfo) => {
+    await openPlayground(page, `?mockRun=${uniqueRun('progress-events')}`)
+
+    await openCategory(page, 'Events')
+    for (const label of [
+        'onFileClick',
+        'onFileUploadProgress',
+        'onFilesUploadProgress',
+        'onFilesUploadComplete',
+    ]) {
+        await checkSidebarCheckbox(page, 'Events', label)
+    }
+
+    await selectFiles(page, [largeTextFile('progress-payload.txt')])
+    await page.getByRole('button', { name: /click to preview/i }).click()
+    await expect(page.locator('[data-upup-slot="file-preview-portal"]')).toContainText(TEXT_SENTINEL)
+    await page.keyboard.press('Escape')
+
+    await page.getByTestId('upup-upload-btn').click()
+    await expect(page.getByTestId('upup-root')).toHaveAttribute('data-state', 'successful')
+
+    await page.locator('.upup-ie-tabs').getByRole('button', { name: 'Events' }).click()
+    const logList = page.locator('.upup-ie-eventlog-list')
+    await expect(logList).toContainText('onFileClick')
+    await expect(logList).toContainText('progress-payload.txt')
+    await expect(logList).toContainText('onFileUploadProgress')
+    await expect(logList).toContainText('"loaded":')
+    await expect(logList).toContainText('"total":')
+    await expect(logList).toContainText('"percentage":100')
+    await expect(logList).toContainText('onFilesUploadProgress')
+    await expect(logList).toContainText('onFilesUploadComplete')
+    await attachScreenshot(page, testInfo, 'event-log-progress-payloads')
 })
 
 test('runs the checksum pipeline before deterministic mock upload and records upload events', async ({ page }, testInfo) => {
@@ -739,6 +892,67 @@ test('applies theme, Arabic RTL locale, and opens the URL source panel without r
     await expect(page.locator('input[type="url"]')).toHaveAttribute('placeholder', '\u0623\u062F\u062E\u0644 \u0631\u0627\u0628\u0637 \u0627\u0644\u0645\u0644\u0641')
 
     await attachScreenshot(page, testInfo, 'dark-rtl-url-source')
+})
+
+test('message overrides update visible uploader labels and generated ICU code', async ({ page }, testInfo) => {
+    await openPlayground(page)
+
+    await openCategory(page, 'Language')
+    await fillNestedTextField(
+        page,
+        'Language',
+        'Message overrides (visible labels)',
+        'dropzone.browseFiles',
+        'choose files',
+    )
+    await fillNestedTextField(
+        page,
+        'Language',
+        'Message overrides (visible labels)',
+        'header.filesSelected',
+        '{count, plural, one {# item ready} other {# items ready}}',
+    )
+    await fillNestedTextField(
+        page,
+        'Language',
+        'Message overrides (visible labels)',
+        'fileList.uploadFiles',
+        'Send now',
+    )
+
+    await expect(page.getByTestId('upup-browse-files')).toContainText('choose files')
+    await selectFiles(page, [textFile('message-overrides.txt')])
+    await expect(page.getByTestId('upup-header')).toContainText('1 item ready')
+    await expect(page.getByTestId('upup-upload-btn')).toHaveText('Send now')
+    await attachScreenshot(page, testInfo, 'visible-message-overrides')
+
+    const code = await getGeneratedCode(page)
+    expect(code).toContain("browseFiles: 'choose files'")
+    expect(code).toContain("filesSelected: '{count, plural, one {# item ready} other {# items ready}}'")
+    expect(code).toContain("uploadFiles: 'Send now'")
+})
+
+test('local-only configuration keeps selected File objects usable and omits upload targets from code', async ({ page }, testInfo) => {
+    await openPlayground(page)
+
+    await openCategory(page, 'Advanced')
+    await fillTextField(page, 'Advanced', 'Upload endpoint', '')
+
+    await openCategory(page, 'Events')
+    await checkSidebarCheckbox(page, 'Events', 'onFilesSelected')
+
+    await selectFiles(page, [textFile('local-only-file.txt')])
+    await expect(page.getByTestId('upup-file-list')).toContainText('local-only-file.txt')
+    await expect(page.getByTestId('upup-root')).toHaveAttribute('data-state', 'pending')
+
+    await page.locator('.upup-ie-tabs').getByRole('button', { name: 'Events' }).click()
+    await expect(page.locator('.upup-ie-eventlog-list')).toContainText('onFilesSelected')
+    await expect(page.locator('.upup-ie-eventlog-list')).toContainText('Array(1)')
+
+    const code = await getGeneratedCode(page)
+    expect(code).not.toContain('uploadEndpoint=')
+    expect(code).not.toContain('serverUrl=')
+    await attachScreenshot(page, testInfo, 'local-only-selected-file')
 })
 
 test('skips duplicate file content when content deduplication is enabled in the playground', async ({ page }, testInfo) => {
@@ -965,9 +1179,22 @@ test('waits for playground SSE processing and logs onFileProcessed after upload'
     await openCategory(page, 'Events')
     await checkSidebarCheckbox(page, 'Events', 'onFileProcessed')
 
+    await expect.poll(async () => {
+        const code = await getGeneratedCode(page)
+        return code.includes('processingEndpoint="/api/upup-mock/processing"') &&
+            code.includes('onFileProcessed')
+    }).toBe(true)
+    await page.locator('.upup-ie-tabs').getByRole('button', { name: 'Preview' }).click()
+
+    const processingResponse = page.waitForResponse((response) =>
+        response.url().includes('/api/upup-mock/processing') &&
+        response.status() === 200,
+    )
+
     await selectFiles(page, [textFile('processing-sse.txt')])
     await page.getByTestId('upup-upload-btn').click()
     await expect(page.getByTestId('upup-root')).toHaveAttribute('data-state', 'successful')
+    await processingResponse
 
     await page.locator('.upup-ie-tabs').getByRole('button', { name: 'Events' }).click()
     await expect(page.locator('.upup-ie-eventlog-list')).toContainText('onFileProcessed')
@@ -1104,6 +1331,24 @@ test('camera and microphone capture flows create real queued files with fake bro
     await expect(page.getByTestId('upup-file-item')).toHaveCount(1)
     await expect(page.getByTestId('upup-file-list')).toContainText(/recording-\d+\.(webm|ogg)/)
     await attachScreenshot(page, testInfo, 'microphone-recording-added-file')
+})
+
+test('screen capture source records a mocked display stream and queues the recording', async ({ page }, testInfo) => {
+    await mockDisplayMedia(page)
+    await openPlayground(page)
+
+    await page.getByTestId('upup-source-screen').click()
+    await page.getByRole('button', { name: 'Share Screen' }).click()
+    await expect(page.getByRole('button', { name: 'Stop Recording' })).toBeVisible()
+    await page.waitForTimeout(500)
+    await page.getByRole('button', { name: 'Stop Recording' }).click()
+    await expect(page.getByRole('button', { name: 'Add Recording' })).toBeVisible()
+    await attachScreenshot(page, testInfo, 'screen-capture-recorded')
+
+    await page.getByRole('button', { name: 'Add Recording' }).click()
+    await expect(page.getByTestId('upup-file-item')).toHaveCount(1)
+    await expect(page.getByTestId('upup-file-list')).toContainText(/screen-recording-\d+\.webm/)
+    await attachScreenshot(page, testInfo, 'screen-capture-added-file')
 })
 
 test.describe('mobile playground acceptance', () => {
