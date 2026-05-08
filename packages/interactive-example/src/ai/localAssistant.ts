@@ -83,7 +83,7 @@ export function getLocalAssistantPatch(input: string): AssistantPatchEvent | nul
     }
 
     if (text.includes('french')) {
-        return patch('Switched the UI locale to French.', { locale: 'frFR' } as any)
+        return patch('Switched the UI locale to French.', { i18n: { locale: 'fr-FR' } } as any)
     }
 
     if (text.includes('retry')) {

@@ -29,24 +29,24 @@ export const languageCategory: CategoryDefinition = {
         },
         {
             id: 'i18n.overrides',
-            label: 'Message overrides (common subset)',
+            label: 'Message overrides (visible labels)',
             description: 'Replace the bundled copy on a per-key basis. Pick a tone preset to start, or type your own — everything else falls back to the active locale.',
             primitive: 'nested',
             defaultValue: undefined,
             options: {
                 fields: [
                     {
-                        id: 'common.upload',
-                        label: 'common.upload',
+                        id: 'fileList.uploadFiles',
+                        label: 'fileList.uploadFiles',
                         description: 'Label of the primary upload button.',
                         primitive: 'combo',
                         defaultValue: '',
                         options: {
-                            placeholder: 'Upload',
+                            placeholder: 'Upload {count, plural, one {# file} other {# files}}',
                             presets: [
-                                { label: 'Friendly', value: 'Upload my files' },
+                                { label: 'Friendly', value: 'Upload {count, plural, one {my file} other {my files}}' },
                                 { label: 'Concise', value: 'Upload' },
-                                { label: 'Action', value: 'Send' },
+                                { label: 'Action', value: 'Send now' },
                             ],
                         },
                     },
@@ -66,16 +66,16 @@ export const languageCategory: CategoryDefinition = {
                         },
                     },
                     {
-                        id: 'dropzone.label',
-                        label: 'dropzone.label',
-                        description: 'Empty-state copy inside the drop zone before any files are added.',
+                        id: 'dropzone.browseFiles',
+                        label: 'dropzone.browseFiles',
+                        description: 'Clickable browse label inside the empty drop zone.',
                         primitive: 'combo',
                         defaultValue: '',
                         options: {
-                            placeholder: 'Drop files here or click to browse',
+                            placeholder: 'browse files',
                             presets: [
-                                { label: 'Inviting', value: 'Drop files here or click to browse' },
-                                { label: 'Brief', value: 'Drag files in' },
+                                { label: 'Inviting', value: 'choose files' },
+                                { label: 'Brief', value: 'browse' },
                                 { label: 'Action', value: 'Add files' },
                             ],
                         },
@@ -87,11 +87,11 @@ export const languageCategory: CategoryDefinition = {
                         primitive: 'combo',
                         defaultValue: '',
                         options: {
-                            placeholder: '{n} files ready to upload',
+                            placeholder: '{count, plural, one {# file ready} other {# files ready}}',
                             presets: [
-                                { label: 'Conversational', value: '{n} files ready to upload' },
-                                { label: 'Status', value: '{n} selected' },
-                                { label: 'Brief', value: '{n} files' },
+                                { label: 'Conversational', value: '{count, plural, one {# file ready to upload} other {# files ready to upload}}' },
+                                { label: 'Status', value: '{count, plural, one {# selected} other {# selected}}' },
+                                { label: 'Brief', value: '{count, plural, one {# file} other {# files}}' },
                             ],
                         },
                     },

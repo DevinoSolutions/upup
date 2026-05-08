@@ -29,4 +29,11 @@ describe('getLocalAssistantPatch', () => {
         expect((event?.patch.theme as any)?.mode).toBe('dark')
         expect((event?.patch.theme as any)?.slots?.uploader?.container).toBe('rounded-2xl')
     })
+
+    it('uses the v2 i18n config shape for locale prompts', () => {
+        const event = getLocalAssistantPatch('Switch to French')
+
+        expect((event?.patch.i18n as any)?.locale).toBe('fr-FR')
+        expect((event?.patch as any).locale).toBeUndefined()
+    })
 })
