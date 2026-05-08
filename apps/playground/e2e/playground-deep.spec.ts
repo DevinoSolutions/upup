@@ -584,6 +584,16 @@ test('selects real text and image files, renders file cards, and opens a text pr
     await expect(items.filter({ hasText: 'preview-image.png' })).toBeVisible()
     await expect(items.filter({ hasText: 'playground-note.txt' })).toBeVisible()
 
+    const textItem = items.filter({ hasText: 'playground-note.txt' })
+    const fileNameIsReadableOnLightSurface = await textItem
+        .getByText('playground-note.txt')
+        .evaluate((el) => {
+            const [red = 255, green = 255, blue = 255] =
+                getComputedStyle(el).color.match(/\d+(\.\d+)?/g)?.map(Number) ?? []
+            return red < 160 && green < 160 && blue < 160
+        })
+    expect(fileNameIsReadableOnLightSurface).toBe(true)
+
     const imageThumb = items
         .filter({ hasText: 'preview-image.png' })
         .locator('[data-testid="upup-file-preview"] > div')
@@ -594,7 +604,6 @@ test('selects real text and image files, renders file cards, and opens a text pr
 
     await attachScreenshot(page, testInfo, 'selected-text-and-image')
 
-    const textItem = items.filter({ hasText: 'playground-note.txt' })
     const previewButton = textItem.getByRole('button', { name: /click to preview/i })
     await expect(previewButton).toBeVisible()
     await previewButton.click()
@@ -840,6 +849,40 @@ test('runs the checksum pipeline before deterministic mock upload and records up
     await expect(page.locator('.upup-ie-eventlog-list')).toContainText('onUploadStart')
     await expect(page.locator('.upup-ie-eventlog-list')).toContainText('onFileUploadComplete')
     await expect(page.locator('.upup-ie-eventlog-list')).toContainText('onUploadComplete')
+})
+
+test('runs image processing pipeline steps and sends metadata to the mock presign route', async ({ page }, testInfo) => {
+    await openPlayground(page, `?mockRun=${uniqueRun('image-pipeline')}`)
+
+    await openCategory(page, 'Processing')
+    for (const label of [
+        'Generate thumbnails',
+        'Checksum verification (SHA-256)',
+        'Strip EXIF data',
+    ]) {
+        await checkSidebarCheckbox(page, 'Processing', label)
+    }
+
+    await selectFiles(page, [imageFile('pipeline-image.png')])
+
+    const presignRequest = page.waitForRequest((request) =>
+        request.method() === 'POST' &&
+        request.url().includes('/api/upup-mock/presign'),
+    )
+    await page.getByTestId('upup-upload-btn').click()
+    const request = await presignRequest
+    const body = request.postDataJSON() as {
+        metadata?: Record<string, unknown>
+    }
+
+    expect(body.metadata?.checksum).toMatch(/^[a-f0-9]{64}$/)
+    expect(body.metadata?.originalContentHash).toBe(body.metadata?.checksum)
+    expect(body.metadata?.thumbnailUrl).toMatch(/^data:image\/jpeg;base64,/)
+    expect(body.metadata?.exifStripped).toBe(true)
+    expect(body.metadata?.originalSize).toBeGreaterThan(0)
+    expect(body.metadata?.processedSize).toBeGreaterThan(0)
+    await expect(page.getByTestId('upup-root')).toHaveAttribute('data-state', 'successful')
+    await attachScreenshot(page, testInfo, 'image-pipeline-metadata-upload')
 })
 
 test('shows failure state, visible retry control, then succeeds after one mock failure', async ({ page }, testInfo) => {
