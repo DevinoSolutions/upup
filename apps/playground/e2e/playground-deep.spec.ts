@@ -416,12 +416,17 @@ async function routeMultipartMock(
             if (options.delayMs) {
                 await new Promise(resolve => setTimeout(resolve, options.delayMs))
             }
-            log.partNumbers.push(partNumber)
-            await route.fulfill({
-                status: 200,
-                headers: { ETag: `"part-${partNumber}"` },
-                body: '',
-            })
+            try {
+                await route.fulfill({
+                    status: 200,
+                    headers: { ETag: `"part-${partNumber}"` },
+                    body: '',
+                })
+                log.partNumbers.push(partNumber)
+            } catch {
+                // Slow multipart control tests intentionally abort in-flight
+                // part requests; the browser-side assertions cover the abort.
+            }
         } finally {
             activeParts -= 1
         }
@@ -1192,6 +1197,69 @@ test('retries a multipart upload after one failed part and completes successfull
     expect(multipart.abortBodies.length).toBeGreaterThanOrEqual(1)
     expect(multipart.completeBodies).toHaveLength(1)
     await attachScreenshot(page, testInfo, 'multipart-failed-part-retry-success')
+})
+
+test('pauses, resumes, and cancels slow multipart uploads', async ({ page }, testInfo) => {
+    const multipart = await routeMultipartMock(page, {
+        partSize: 1024 * 1024,
+        delayMs: 1_200,
+    })
+
+    await openPlayground(page, `?mockRun=${uniqueRun('multipart-controls')}`)
+    await openCategory(page, 'Advanced')
+    await clickRadio(page, 'Advanced', 'server')
+    await fillTextField(page, 'Advanced', 'Server URL', '/api/upup-multipart')
+
+    await openCategory(page, 'Upload')
+    await clickRadio(page, 'Upload', 'tus')
+    await clickRadio(page, 'Upload', 'multipart')
+    await setSizeUnit(page, 'Upload', 'Chunk size', '1', 'MB')
+    await setNumber(page, 'Max retries', '0')
+
+    await selectFiles(page, [generatedFile('multipart-pause-resume.txt', 6 * 1024 * 1024)])
+    await page.getByTestId('upup-upload-btn').click()
+    await expect(page.getByTestId('upup-root')).toHaveAttribute('data-state', 'ongoing')
+    await expect(page.getByTestId('upup-upload-pause-toggle')).toHaveAttribute('aria-label', 'Pause')
+    await expect(page.getByTestId('upup-upload-cancel-btn')).toBeVisible()
+    await expect.poll(() => multipart.signBodies.length).toBeGreaterThan(0)
+    await attachScreenshot(page, testInfo, 'multipart-controls-ongoing')
+
+    await page.getByTestId('upup-upload-pause-toggle').click()
+    await expect(page.getByTestId('upup-root')).toHaveAttribute('data-state', 'paused')
+    await expect(page.getByTestId('upup-upload-pause-toggle')).toHaveAttribute('aria-label', 'Resume')
+    await expect(page.getByTestId('upup-root')).toContainText('Paused')
+    const signCountWhilePaused = multipart.signBodies.length
+    await page.waitForTimeout(500)
+    expect(multipart.signBodies.length).toBe(signCountWhilePaused)
+    await expect.poll(() => multipart.abortBodies.length).toBeGreaterThanOrEqual(1)
+    await attachScreenshot(page, testInfo, 'multipart-controls-paused')
+
+    await page.getByTestId('upup-upload-pause-toggle').click()
+    await expect(page.getByTestId('upup-root')).toHaveAttribute('data-state', 'ongoing')
+    await expect(page.getByTestId('upup-upload-pause-toggle')).toHaveAttribute('aria-label', 'Pause')
+    await attachScreenshot(page, testInfo, 'multipart-controls-resumed')
+
+    await expect(page.getByTestId('upup-root')).toHaveAttribute('data-state', 'successful')
+    expect(multipart.initBodies.length).toBeGreaterThanOrEqual(2)
+    expect(multipart.completeBodies).toHaveLength(1)
+    await attachScreenshot(page, testInfo, 'multipart-controls-resume-success')
+
+    await page.getByRole('button', { name: 'Done' }).click()
+    await expect(page.getByTestId('upup-file-item')).toHaveCount(0)
+
+    const abortCountBeforeCancel = multipart.abortBodies.length
+    await selectFiles(page, [generatedFile('multipart-cancel.txt', 6 * 1024 * 1024)])
+    await page.getByTestId('upup-upload-btn').click()
+    await expect(page.getByTestId('upup-root')).toHaveAttribute('data-state', 'ongoing')
+    await expect(page.getByTestId('upup-upload-cancel-btn')).toBeVisible()
+    await expect.poll(() => multipart.initBodies.length).toBeGreaterThanOrEqual(3)
+    await attachScreenshot(page, testInfo, 'multipart-controls-cancel-ongoing')
+
+    await page.getByTestId('upup-upload-cancel-btn').click()
+    await expect(page.getByTestId('upup-file-item')).toHaveCount(0)
+    await expect(page.getByTestId('upup-root')).toHaveAttribute('data-state', 'pending')
+    await expect.poll(() => multipart.abortBodies.length).toBeGreaterThan(abortCountBeforeCancel)
+    await attachScreenshot(page, testInfo, 'multipart-controls-cancelled')
 })
 
 test('runs image processing pipeline steps and sends metadata to the mock presign route', async ({ page }, testInfo) => {

@@ -40,7 +40,7 @@ This file covers the gaps left after `apps/playground/e2e/playground-deep.spec.t
 | REC-01 | Real storage provider smoke | TODO | Live-gated release smoke plus deterministic MinIO/local S3-compatible e2e. |
 | REC-02 | Signed upload headers | DONE | Presign returns `uploadHeaders`; browser PUT sends them. |
 | REC-03 | Multipart threshold/chunking | DONE | Large file chooses multipart and sends all parts. |
-| REC-04 | Multipart pause/resume/cancel | TODO | Visible controls and network pause/resume/cancel behavior. |
+| REC-04 | Multipart pause/resume/cancel | DONE | Visible controls and network pause/resume/cancel behavior. |
 | REC-05 | Multipart failed-part retry | DONE | Failed part retries within `maxRetries` and succeeds visibly. |
 | REC-06 | Crash recovery reload | TODO | IndexedDB queue/session survives reload and resumes. |
 | REC-07 | Concurrent upload cap | DONE | Multiple slow files never exceed `maxConcurrentUploads`. |

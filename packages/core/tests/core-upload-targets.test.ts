@@ -11,7 +11,7 @@ function makeUploadXhr(captureBody: (body: unknown) => void) {
     send: vi.fn((body: unknown) => {
       captureBody(body)
     }),
-    abort: vi.fn(),
+    abort: vi.fn(() => listeners.abort?.forEach(cb => cb())),
     upload: {
       addEventListener: vi.fn(),
     },
@@ -87,5 +87,41 @@ describe('UpupCore upload target resolution', () => {
     expect(sentBody).toBe(file)
     expect(sentBody).toBeInstanceOf(File)
     expect(core.files.values().next().value).toBeInstanceOf(File)
+  })
+
+  it('does not resurrect files after cancel and removeAll during an active upload', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () =>
+      new Response(JSON.stringify({
+        key: 'uploads/cancelled.txt',
+        uploadUrl: 'https://storage.example/cancelled.txt',
+        publicUrl: 'https://cdn.example/cancelled.txt',
+        expiresIn: 3600,
+      }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    ))
+
+    const xhr = makeUploadXhr(() => {})
+    vi.stubGlobal('XMLHttpRequest', function () {
+      return xhr
+    })
+
+    const core = new UpupCore({ uploadEndpoint: '/api/presign', maxRetries: 0 })
+    await core.addFiles([new File(['hello'], 'cancelled.txt', { type: 'text/plain' })])
+
+    const uploadPromise = core.upload()
+    await vi.waitFor(() => {
+      expect(xhr.send).toHaveBeenCalled()
+    })
+
+    core.cancel()
+    core.removeAll()
+    expect(xhr.abort).toHaveBeenCalled()
+    expect(core.files.size).toBe(0)
+
+    await uploadPromise
+    expect(core.files.size).toBe(0)
+    core.destroy()
   })
 })

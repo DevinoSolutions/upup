@@ -2,7 +2,7 @@
 import { useVirtualizer } from '@tanstack/react-virtual'
 import { motion } from 'framer-motion'
 import React, { memo, useRef } from 'react'
-import { TbPlayerPauseFilled, TbPlayerPlayFilled } from 'react-icons/tb'
+import { TbPlayerPauseFilled, TbPlayerPlayFilled, TbX } from 'react-icons/tb'
 import { plural, t } from '../shared/i18n'
 import { UploadStatus, useRootContext } from '../context/RootContext'
 import { cn } from '../lib/tailwind'
@@ -233,6 +233,7 @@ export default memo(function FileList() {
                             }
                         >
                             <button
+                                data-testid="upup-upload-pause-toggle"
                                 className={cn(
                                     'upup-flex upup-h-7 upup-w-7 upup-items-center upup-justify-center upup-rounded-full upup-bg-gray-200 upup-text-gray-700 upup-transition-colors hover:upup-bg-gray-300',
                                     {
@@ -245,6 +246,11 @@ export default memo(function FileList() {
                                         ? handleResume
                                         : handlePause
                                 }
+                                aria-label={
+                                    uploadStatus === UploadStatus.PAUSED
+                                        ? tr.resumeUpload
+                                        : tr.pauseUpload
+                                }
                                 title={
                                     uploadStatus === UploadStatus.PAUSED
                                         ? tr.resumeUpload
@@ -256,6 +262,21 @@ export default memo(function FileList() {
                                 ) : (
                                     <TbPlayerPauseFilled size={14} />
                                 )}
+                            </button>
+                            <button
+                                data-testid="upup-upload-cancel-btn"
+                                className={cn(
+                                    'upup-flex upup-h-7 upup-w-7 upup-items-center upup-justify-center upup-rounded-full upup-bg-red-100 upup-text-red-700 upup-transition-colors hover:upup-bg-red-200',
+                                    {
+                                        'upup-bg-red-500/20 upup-text-red-100 hover:upup-bg-red-500/30':
+                                            dark,
+                                    },
+                                )}
+                                onClick={handleCancel}
+                                aria-label={tr.cancel}
+                                title={tr.cancel}
+                            >
+                                <TbX size={14} />
                             </button>
                         </ShouldRender>
                         <ProgressBar

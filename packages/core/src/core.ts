@@ -439,12 +439,24 @@ export class UpupCore {
         this.emitter.emit('state-change', { progress: this.progress })
       },
       onFileComplete: (file, result) => {
+        if (
+          this.pauseRequested ||
+          this.cancelRequested ||
+          this.destroyed ||
+          !this.files.has(file.id)
+        ) return
         const updated = Object.assign(file, { key: result.key, status: UploadStatus.SUCCESSFUL }) as UploadFile
         this.files.set(file.id, updated)
         this.emitter.emit('upload-success', { file: updated, result })
         this.emitter.emit('state-change', { files: this.files })
       },
       onFileError: (file, error) => {
+        if (
+          this.pauseRequested ||
+          this.cancelRequested ||
+          this.destroyed ||
+          !this.files.has(file.id)
+        ) return
         const failed = Object.assign(file, { status: UploadStatus.FAILED }) as UploadFile
         this.files.set(file.id, failed)
         this.emitter.emit('upload-error', { file: failed, error })
