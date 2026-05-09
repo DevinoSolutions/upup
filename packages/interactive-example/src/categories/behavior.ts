@@ -22,6 +22,13 @@ export const behaviorCategory: CategoryDefinition = {
             defaultValue: false,
         },
         {
+            id: 'disableDragDrop',
+            label: 'Disable drag and drop',
+            description: 'Keep browse/source buttons active but ignore dragged files.',
+            primitive: 'bool',
+            defaultValue: false,
+        },
+        {
             id: 'allowPreview',
             label: 'Allow file preview',
             description: 'Show a thumbnail preview next to each queued file. Visible after you pick a file.',

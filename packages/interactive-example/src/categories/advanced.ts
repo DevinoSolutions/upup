@@ -58,6 +58,19 @@ export const advancedCategory: CategoryDefinition = {
             options: { min: 1_000, max: 600_000 },
         },
         {
+            id: 'metadata',
+            label: 'Upload metadata',
+            description: 'Static metadata merged into every upload payload.',
+            primitive: 'nested',
+            defaultValue: undefined,
+            options: {
+                fields: [
+                    { id: 'traceId', label: 'Trace ID', primitive: 'string', defaultValue: '' },
+                    { id: 'tenantId', label: 'Tenant ID', primitive: 'string', defaultValue: '' },
+                ],
+            },
+        },
+        {
             id: 'cors',
             label: 'CORS',
             description: 'Quick setup for storage CORS. dangerouslyAutoConfigure can mutate bucket config.',
