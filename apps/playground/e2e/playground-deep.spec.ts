@@ -1,3 +1,6 @@
+import { mkdirSync, writeFileSync } from 'node:fs'
+import { join } from 'node:path'
+
 import { expect, test, type Locator, type Page, type TestInfo } from '@playwright/test'
 
 type BrowserIssue = {
@@ -7,6 +10,7 @@ type BrowserIssue = {
 
 const browserIssues = new WeakMap<Page, BrowserIssue[]>()
 const allowExpectedMockFailure = new WeakSet<Page>()
+const allowExpectedResourceFailure = new WeakSet<Page>()
 
 const TEXT_SENTINEL = 'PLAYGROUND_TEXT_PREVIEW_SENTINEL'
 const TEXT_CONTENT = [
@@ -49,6 +53,22 @@ function smallBinaryFile(name = 'tiny.bin') {
         name,
         mimeType: 'application/octet-stream',
         buffer: Buffer.from([1, 2, 3, 4]),
+    }
+}
+
+function generatedFile(name: string, bytes: number, mimeType = 'text/plain') {
+    const chunk = Buffer.from(`Upup generated fixture for ${name}\n`)
+    const chunks: Buffer[] = []
+    let remaining = bytes
+    while (remaining > 0) {
+        const next = chunk.subarray(0, Math.min(chunk.length, remaining))
+        chunks.push(next)
+        remaining -= next.length
+    }
+    return {
+        name,
+        mimeType,
+        buffer: Buffer.concat(chunks),
     }
 }
 
@@ -273,6 +293,143 @@ async function mockDisplayMedia(page: Page): Promise<void> {
     })
 }
 
+type MultipartMockLog = {
+    initBodies: Array<Record<string, unknown>>
+    signBodies: Array<Record<string, unknown>>
+    completeBodies: Array<Record<string, unknown>>
+    abortBodies: Array<Record<string, unknown>>
+    partNumbers: number[]
+    failedParts: number[]
+    badResponses: Array<{ status: number; url: string }>
+    maxActiveParts: number
+}
+
+async function routeMultipartMock(
+    page: Page,
+    options: {
+        partSize?: number
+        failPartOnce?: number
+        delayMs?: number
+    } = {},
+): Promise<MultipartMockLog> {
+    const log: MultipartMockLog = {
+        initBodies: [],
+        signBodies: [],
+        completeBodies: [],
+        abortBodies: [],
+        partNumbers: [],
+        failedParts: [],
+        badResponses: [],
+        maxActiveParts: 0,
+    }
+    let uploadCounter = 0
+    let activeParts = 0
+    let failedOnce = false
+    const partSize = options.partSize ?? 1024 * 1024
+
+    page.on('response', (response) => {
+        if (
+            response.url().includes('/api/upup-multipart/') &&
+            response.status() >= 400
+        ) {
+            log.badResponses.push({
+                status: response.status(),
+                url: response.url(),
+            })
+        }
+    })
+
+    await page.route('**/api/upup-multipart/multipart/init', async (route) => {
+        const body = JSON.parse(route.request().postData() ?? '{}')
+        log.initBodies.push(body)
+        uploadCounter += 1
+        await route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify({
+                key: `multipart/${uploadCounter}-${body.name ?? 'file.bin'}`,
+                uploadId: `upload-${uploadCounter}`,
+                partSize,
+                expiresIn: 3600,
+            }),
+        })
+    })
+
+    await page.route('**/api/upup-multipart/multipart/sign-part', async (route) => {
+        const body = JSON.parse(route.request().postData() ?? '{}')
+        log.signBodies.push(body)
+        const requestUrl = new URL(route.request().url())
+        const partNumber = Number(body.partNumber)
+        await route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify({
+                uploadUrl: `${requestUrl.origin}/api/upup-multipart/part/${body.uploadId}/${partNumber}`,
+                uploadHeaders: { 'x-upup-part-number': String(partNumber) },
+                expiresIn: 3600,
+            }),
+        })
+    })
+
+    await page.route('**/api/upup-multipart/multipart/complete', async (route) => {
+        const body = JSON.parse(route.request().postData() ?? '{}')
+        log.completeBodies.push(body)
+        await route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify({
+                key: body.key,
+                publicUrl: `/api/upup-multipart/public/${body.key}`,
+                etag: '"multipart-complete"',
+            }),
+        })
+    })
+
+    await page.route('**/api/upup-multipart/multipart/abort', async (route) => {
+        log.abortBodies.push(JSON.parse(route.request().postData() ?? '{}'))
+        await route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify({ ok: true }),
+        })
+    })
+
+    await page.route('**/api/upup-multipart/part/**', async (route) => {
+        const partNumber = Number(route.request().headers()['x-upup-part-number'] ?? '0')
+        activeParts += 1
+        log.maxActiveParts = Math.max(log.maxActiveParts, activeParts)
+        try {
+            if (
+                options.failPartOnce &&
+                partNumber === options.failPartOnce &&
+                !failedOnce
+            ) {
+                failedOnce = true
+                log.failedParts.push(partNumber)
+                await route.fulfill({
+                    status: 503,
+                    contentType: 'application/json',
+                    body: JSON.stringify({ error: 'Mock multipart part failure' }),
+                })
+                return
+            }
+            if (options.delayMs) {
+                await new Promise(resolve => setTimeout(resolve, options.delayMs))
+            }
+            log.partNumbers.push(partNumber)
+            await route.fulfill({
+                status: 200,
+                headers: { ETag: `"part-${partNumber}"` },
+                body: '',
+            })
+        } finally {
+            activeParts -= 1
+        }
+    })
+
+    return log
+}
+
 test.beforeEach(async ({ page }) => {
     const issues: BrowserIssue[] = []
     browserIssues.set(page, issues)
@@ -292,6 +449,7 @@ test.beforeEach(async ({ page }) => {
         if (url.startsWith('blob:')) return
         if (url.includes('/api/upup-mock/processing') && request.failure()?.errorText === 'net::ERR_ABORTED') return
         if (url.includes('/api/upup-server-mock/files/') && request.failure()?.errorText === 'net::ERR_ABORTED') return
+        if (url.includes('/api/upup-multipart/part/') && request.failure()?.errorText === 'net::ERR_ABORTED') return
         issues.push({
             source: 'requestfailed',
             text: `${request.method()} ${url}: ${request.failure()?.errorText ?? 'failed'}`,
@@ -305,6 +463,13 @@ test.afterEach(async ({ page }) => {
             allowExpectedMockFailure.has(page) &&
             issue.source === 'console' &&
             issue.text.includes('503')
+        ) {
+            return false
+        }
+        if (
+            allowExpectedResourceFailure.has(page) &&
+            issue.source === 'console' &&
+            issue.text.includes('404 (Not Found)')
         ) {
             return false
         }
@@ -797,6 +962,49 @@ test('event log captures file clicks and concrete progress payloads during uploa
     await attachScreenshot(page, testInfo, 'event-log-progress-payloads')
 })
 
+test('limits concurrent direct uploads and shows live byte speed details', async ({ page }, testInfo) => {
+    let activePuts = 0
+    let maxActivePuts = 0
+    const completedPuts: string[] = []
+
+    await page.route('**/api/upup-mock/object/**', async (route) => {
+        if (route.request().method() !== 'PUT') {
+            await route.continue()
+            return
+        }
+        activePuts += 1
+        maxActivePuts = Math.max(maxActivePuts, activePuts)
+        try {
+            await new Promise(resolve => setTimeout(resolve, 900))
+            completedPuts.push(route.request().url())
+            await route.fulfill({ status: 200, body: '' })
+        } finally {
+            activePuts -= 1
+        }
+    })
+
+    await openPlayground(page, `?mockRun=${uniqueRun('concurrency')}`)
+    await openCategory(page, 'Upload')
+    await setNumber(page, 'Max concurrent uploads', '2')
+
+    await selectFiles(page, [
+        generatedFile('concurrent-1.txt', 512 * 1024),
+        generatedFile('concurrent-2.txt', 512 * 1024),
+        generatedFile('concurrent-3.txt', 512 * 1024),
+        generatedFile('concurrent-4.txt', 512 * 1024),
+        generatedFile('concurrent-5.txt', 512 * 1024),
+    ])
+    await page.getByTestId('upup-upload-btn').click()
+    await expect(page.getByTestId('upup-root')).toHaveAttribute('data-state', 'ongoing')
+    await expect(page.getByTestId('upup-root')).toContainText(/\bof\b/)
+    await attachScreenshot(page, testInfo, 'concurrency-upload-ongoing')
+
+    await expect(page.getByTestId('upup-root')).toHaveAttribute('data-state', 'successful')
+    expect(maxActivePuts).toBeLessThanOrEqual(2)
+    expect(completedPuts).toHaveLength(5)
+    await attachScreenshot(page, testInfo, 'concurrency-upload-success')
+})
+
 test('runs the checksum pipeline before deterministic mock upload and records upload events', async ({ page }, testInfo) => {
     await openPlayground(page, `?mockRun=${uniqueRun('success')}`)
     await openCategory(page, 'Processing')
@@ -849,6 +1057,141 @@ test('runs the checksum pipeline before deterministic mock upload and records up
     await expect(page.locator('.upup-ie-eventlog-list')).toContainText('onUploadStart')
     await expect(page.locator('.upup-ie-eventlog-list')).toContainText('onFileUploadComplete')
     await expect(page.locator('.upup-ie-eventlog-list')).toContainText('onUploadComplete')
+})
+
+test('sends presigned uploadHeaders on direct browser PUT uploads', async ({ page }, testInfo) => {
+    const putHeaders: string[] = []
+
+    await page.route('**/api/upup-mock/presign**', async (route) => {
+        const requestUrl = new URL(route.request().url())
+        await route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify({
+                key: 'signed-headers/signed-headers.txt',
+                uploadUrl: `${requestUrl.origin}/api/upup-mock/object/signed-headers/signed-headers.txt`,
+                publicUrl: `${requestUrl.origin}/api/upup-mock/object/signed-headers/signed-headers.txt`,
+                uploadHeaders: {
+                    'x-upup-test-header': 'signed-value',
+                },
+                expiresIn: 3600,
+            }),
+        })
+    })
+
+    await page.route('**/api/upup-mock/object/signed-headers/**', async (route) => {
+        const header = route.request().headers()['x-upup-test-header'] ?? ''
+        putHeaders.push(header)
+        await route.fulfill({
+            status: header === 'signed-value' ? 200 : 400,
+            contentType: 'application/json',
+            body: JSON.stringify({ ok: header === 'signed-value' }),
+        })
+    })
+
+    await openPlayground(page, `?mockRun=${uniqueRun('signed-headers')}`)
+    await selectFiles(page, [textFile('signed-headers.txt')])
+    await page.getByTestId('upup-upload-btn').click()
+    await expect(page.getByTestId('upup-root')).toHaveAttribute('data-state', 'successful')
+
+    expect(putHeaders).toEqual(['signed-value'])
+    await attachScreenshot(page, testInfo, 'signed-upload-headers-success')
+})
+
+test('merges playground upload metadata into presign payloads and generated code', async ({ page }, testInfo) => {
+    const presignBodies: Array<Record<string, any>> = []
+    page.on('request', (request) => {
+        if (request.method() !== 'POST') return
+        if (!request.url().includes('/api/upup-mock/presign')) return
+        presignBodies.push(JSON.parse(request.postData() ?? '{}'))
+    })
+
+    await openPlayground(page, `?mockRun=${uniqueRun('metadata')}`)
+    await openCategory(page, 'Advanced')
+    await fillNestedTextField(page, 'Advanced', 'Upload metadata', 'Trace ID', 'trace-rec-25')
+    await fillNestedTextField(page, 'Advanced', 'Upload metadata', 'Tenant ID', 'tenant-alpha')
+
+    await selectFiles(page, [textFile('metadata-payload.txt')])
+    await page.getByTestId('upup-upload-btn').click()
+    await expect(page.getByTestId('upup-root')).toHaveAttribute('data-state', 'successful')
+
+    expect(presignBodies).toHaveLength(1)
+    expect(presignBodies[0].metadata).toMatchObject({
+        traceId: 'trace-rec-25',
+        tenantId: 'tenant-alpha',
+    })
+    const code = await getGeneratedCode(page)
+    expect(code).toContain('metadata')
+    expect(code).toContain("traceId: 'trace-rec-25'")
+    expect(code).toContain("tenantId: 'tenant-alpha'")
+    await attachScreenshot(page, testInfo, 'metadata-presign-payload')
+})
+
+test('routes large server-mode uploads through multipart init, parts, and complete', async ({ page }, testInfo) => {
+    const multipart = await routeMultipartMock(page, { partSize: 1024 * 1024 })
+    const directObjectRequests: string[] = []
+    page.on('request', (request) => {
+        if (request.method() === 'PUT' && request.url().includes('/api/upup-mock/object/')) {
+            directObjectRequests.push(request.url())
+        }
+    })
+
+    await openPlayground(page, `?mockRun=${uniqueRun('multipart-threshold')}`)
+    await openCategory(page, 'Advanced')
+    await clickRadio(page, 'Advanced', 'server')
+    await fillTextField(page, 'Advanced', 'Server URL', '/api/upup-multipart')
+
+    await openCategory(page, 'Upload')
+    await clickRadio(page, 'Upload', 'tus')
+    await clickRadio(page, 'Upload', 'multipart')
+    await setSizeUnit(page, 'Upload', 'Chunk size', '1', 'MB')
+
+    await selectFiles(page, [generatedFile('multipart-threshold.txt', 6 * 1024 * 1024)])
+    await page.getByTestId('upup-upload-btn').click()
+    await expect.poll(async () => ({
+        state: await page.getByTestId('upup-root').getAttribute('data-state'),
+        badResponses: multipart.badResponses,
+    })).toMatchObject({ state: 'successful' })
+
+    expect(multipart.initBodies).toHaveLength(1)
+    expect(multipart.signBodies.map(body => body.partNumber)).toEqual([1, 2, 3, 4, 5, 6])
+    expect(multipart.partNumbers.sort((a, b) => a - b)).toEqual([1, 2, 3, 4, 5, 6])
+    expect(multipart.completeBodies).toHaveLength(1)
+    expect((multipart.completeBodies[0].parts as Array<{ partNumber: number }>).map(part => part.partNumber)).toEqual([1, 2, 3, 4, 5, 6])
+    expect(directObjectRequests).toEqual([])
+    await attachScreenshot(page, testInfo, 'multipart-threshold-complete')
+})
+
+test('retries a multipart upload after one failed part and completes successfully', async ({ page }, testInfo) => {
+    allowExpectedMockFailure.add(page)
+    const multipart = await routeMultipartMock(page, {
+        partSize: 1024 * 1024,
+        failPartOnce: 2,
+    })
+
+    await openPlayground(page, `?mockRun=${uniqueRun('multipart-retry')}`)
+    await openCategory(page, 'Advanced')
+    await clickRadio(page, 'Advanced', 'server')
+    await fillTextField(page, 'Advanced', 'Server URL', '/api/upup-multipart')
+
+    await openCategory(page, 'Upload')
+    await clickRadio(page, 'Upload', 'tus')
+    await clickRadio(page, 'Upload', 'multipart')
+    await setSizeUnit(page, 'Upload', 'Chunk size', '1', 'MB')
+    await setNumber(page, 'Max retries', '1')
+
+    await selectFiles(page, [generatedFile('multipart-retry.txt', 6 * 1024 * 1024)])
+    await page.getByTestId('upup-upload-btn').click()
+    await expect.poll(async () => ({
+        state: await page.getByTestId('upup-root').getAttribute('data-state'),
+        badResponses: multipart.badResponses,
+    })).toMatchObject({ state: 'successful' })
+
+    expect(multipart.failedParts).toEqual([2])
+    expect(multipart.initBodies.length).toBeGreaterThanOrEqual(2)
+    expect(multipart.abortBodies.length).toBeGreaterThanOrEqual(1)
+    expect(multipart.completeBodies).toHaveLength(1)
+    await attachScreenshot(page, testInfo, 'multipart-failed-part-retry-success')
 })
 
 test('runs image processing pipeline steps and sends metadata to the mock presign route', async ({ page }, testInfo) => {
@@ -1122,6 +1465,64 @@ test('drag/drop and paste flows add real files and report the expected callbacks
     await expect(logList).toContainText('onFilesSelected')
 })
 
+test('folder upload preserves relative paths in upload metadata', async ({ page }, testInfo) => {
+    const folderRoot = testInfo.outputPath('folder-fixture')
+    mkdirSync(join(folderRoot, 'photos', '2026'), { recursive: true })
+    mkdirSync(join(folderRoot, 'docs'), { recursive: true })
+    writeFileSync(join(folderRoot, 'photos', '2026', 'a.txt'), 'A')
+    writeFileSync(join(folderRoot, 'photos', '2026', 'b.txt'), 'B')
+    writeFileSync(join(folderRoot, 'docs', 'readme.txt'), 'Readme')
+
+    const presignBodies: Array<Record<string, any>> = []
+    page.on('request', (request) => {
+        if (request.method() !== 'POST') return
+        if (!request.url().includes('/api/upup-mock/presign')) return
+        presignBodies.push(JSON.parse(request.postData() ?? '{}'))
+    })
+
+    await openPlayground(page, `?mockRun=${uniqueRun('folder-paths')}`)
+    await openCategory(page, 'Sources')
+    await checkSidebarCheckbox(page, 'Sources', 'Allow folders')
+    await checkSidebarCheckbox(page, 'Sources', 'Show folder button')
+    await expect(page.getByRole('button', { name: /select a folder/i })).toBeVisible()
+
+    await page.getByTestId('upup-file-input').evaluate((input) => {
+        const fileInput = input as HTMLInputElement
+        fileInput.setAttribute('webkitdirectory', 'true')
+        fileInput.setAttribute('directory', 'true')
+    })
+    await page.getByTestId('upup-file-input').setInputFiles(folderRoot)
+
+    await expect(page.getByTestId('upup-file-item')).toHaveCount(3)
+    await attachScreenshot(page, testInfo, 'folder-upload-files-selected')
+
+    await page.getByTestId('upup-upload-btn').click()
+    await expect(page.getByTestId('upup-root')).toHaveAttribute('data-state', 'successful')
+
+    const relativePaths = presignBodies
+        .map(body => String(body.metadata?.relativePath ?? ''))
+        .filter(Boolean)
+        .sort()
+    expect(relativePaths).toHaveLength(3)
+    expect(relativePaths.some(path => path.endsWith('docs/readme.txt'))).toBe(true)
+    expect(relativePaths.some(path => path.endsWith('photos/2026/a.txt'))).toBe(true)
+    expect(relativePaths.some(path => path.endsWith('photos/2026/b.txt'))).toBe(true)
+    await attachScreenshot(page, testInfo, 'folder-upload-success')
+})
+
+test('disable drag and drop ignores dropped files while browse remains usable', async ({ page }, testInfo) => {
+    await openPlayground(page)
+    await openCategory(page, 'Behavior')
+    await checkSidebarCheckbox(page, 'Behavior', 'Disable drag and drop')
+
+    await dispatchDrop(page, textFile('ignored-dragged-file.txt'))
+    await expect(page.getByTestId('upup-file-item')).toHaveCount(0)
+
+    await selectFiles(page, [textFile('browse-still-works.txt')])
+    await expect(page.getByTestId('upup-file-list')).toContainText('browse-still-works.txt')
+    await attachScreenshot(page, testInfo, 'disable-drag-drop-browse-still-works')
+})
+
 test('fetches a real file through the URL source and uploads it through the mock endpoint', async ({ page }, testInfo) => {
     await page.route('**/upup-url-source-image.png', async (route) => {
         await route.fulfill({
@@ -1179,6 +1580,66 @@ test('fetches a playground mock-object URL source without request errors', async
     await expect(page.getByTestId('upup-file-list')).toContainText('source.txt')
     await expect.poll(() => objectStatuses).toEqual([200])
     await attachScreenshot(page, testInfo, 'url-source-mock-object-file')
+})
+
+test('URL source surfaces fetch errors and safely derives fallback filenames', async ({ page }, testInfo) => {
+    allowExpectedResourceFailure.add(page)
+    await page.route('**/url-source-404.txt', async (route) => {
+        await route.fulfill({
+            status: 404,
+            contentType: 'text/plain',
+            body: 'missing',
+        })
+    })
+    await page.route('**/url-source-no-content-type', async (route) => {
+        await route.fulfill({
+            status: 200,
+            headers: {},
+            body: 'no content type',
+        })
+    })
+    await page.route('**/url-source-disposition', async (route) => {
+        await route.fulfill({
+            status: 200,
+            headers: {
+                'content-type': 'text/plain',
+                'content-disposition': 'attachment; filename="bad<name?.txt"',
+            },
+            body: 'safe filename',
+        })
+    })
+
+    await openPlayground(page)
+    await openCategory(page, 'Events')
+    await checkSidebarCheckbox(page, 'Events', 'onError')
+
+    await page.getByTestId('upup-source-url').click()
+    await expect(page.getByTestId('upup-url-uploader')).toBeVisible()
+    await page.locator('input[type="url"]').fill(new URL('/url-source-404.txt', page.url()).toString())
+    await page.getByRole('button', { name: 'Fetch' }).click()
+    await expect(page.getByTestId('upup-file-item')).toHaveCount(0)
+    await page.locator('.upup-ie-tabs').getByRole('button', { name: 'Events' }).click()
+    await expect(page.locator('.upup-ie-eventlog-list')).toContainText('onError')
+    await expect(page.locator('.upup-ie-eventlog-list')).toContainText('Failed to fetch URL: 404')
+    await attachScreenshot(page, testInfo, 'url-source-404-error-log')
+
+    await page.locator('.upup-ie-tabs').getByRole('button', { name: 'Preview' }).click()
+    if (await page.locator('input[type="url"]').count() === 0) {
+        await page.getByTestId('upup-source-url').click()
+    }
+    await page.locator('input[type="url"]').fill(new URL('/url-source-no-content-type', page.url()).toString())
+    await page.getByRole('button', { name: 'Fetch' }).click()
+    await expect(page.getByTestId('upup-file-list')).toContainText('url-source-no-content-type')
+
+    await page.getByTestId('upup-file-remove').click()
+    await expect(page.getByTestId('upup-file-item')).toHaveCount(0)
+    await page.getByTestId('upup-source-url').click()
+    await page.locator('input[type="url"]').fill(new URL('/url-source-disposition', page.url()).toString())
+    await page.getByRole('button', { name: 'Fetch' }).click()
+    await expect(page.getByTestId('upup-file-list')).toContainText('bad_name_.txt')
+    await expect(page.getByTestId('upup-file-list')).not.toContainText('<')
+    await expect(page.getByTestId('upup-file-list')).not.toContainText('?')
+    await attachScreenshot(page, testInfo, 'url-source-safe-filenames')
 })
 
 test('runs external tus uploads without also keeping the playground presign endpoint', async ({ page }, testInfo) => {
@@ -1243,6 +1704,29 @@ test('waits for playground SSE processing and logs onFileProcessed after upload'
     await expect(page.locator('.upup-ie-eventlog-list')).toContainText('onFileProcessed')
     await expect(page.locator('.upup-ie-eventlog-list')).toContainText('processed')
     await attachScreenshot(page, testInfo, 'sse-processing-event-log')
+})
+
+test('surfaces playground SSE processing timeout through onError without processed event', async ({ page }, testInfo) => {
+    await openPlayground(page, `?mockRun=${uniqueRun('sse-timeout')}`)
+
+    await openCategory(page, 'Advanced')
+    await fillTextField(page, 'Advanced', 'Processing endpoint (SSE)', '/api/upup-mock/processing?hang=1')
+    await setNumber(page, 'Processing timeout (ms)', '1000')
+
+    await openCategory(page, 'Events')
+    await checkSidebarCheckbox(page, 'Events', 'onFileProcessed')
+    await checkSidebarCheckbox(page, 'Events', 'onError')
+
+    await selectFiles(page, [textFile('processing-timeout.txt')])
+    await page.getByTestId('upup-upload-btn').click()
+    await expect(page.getByTestId('upup-root')).toHaveAttribute('data-state', 'successful')
+
+    await page.locator('.upup-ie-tabs').getByRole('button', { name: 'Events' }).click()
+    const logList = page.locator('.upup-ie-eventlog-list')
+    await expect(logList).toContainText('onError')
+    await expect(logList).toContainText('Processing timed out')
+    await expect(logList).not.toContainText('onFileProcessed')
+    await attachScreenshot(page, testInfo, 'sse-processing-timeout-error-log')
 })
 
 test('server-mode cloud drive browser lists, selects, and transfers a mocked file', async ({ page }, testInfo) => {
@@ -1414,3 +1898,44 @@ test.describe('mobile playground acceptance', () => {
         await attachScreenshot(page, testInfo, 'mobile-upload-success', true)
     })
 })
+
+const mobileViewports = [
+    { name: 'small-phone', width: 320, height: 568 },
+    { name: 'landscape-phone', width: 844, height: 390 },
+    { name: 'tablet', width: 768, height: 1024 },
+]
+
+for (const viewport of mobileViewports) {
+    test.describe(`mobile breadth ${viewport.name}`, () => {
+        test.use({ viewport: { width: viewport.width, height: viewport.height } })
+
+        test('keeps source panels, retry state, and RTL layout usable without horizontal overflow', async ({ page }, testInfo) => {
+            await openPlayground(page, `?mockFailure=once&mockRun=${uniqueRun(`mobile-${viewport.name}`)}`)
+            allowExpectedMockFailure.add(page)
+            await setNumber(page, 'Max retries', '0')
+
+            await openCategory(page, 'Language')
+            await category(page, 'Language')
+                .getByRole('combobox', { name: /^Locale\b/ })
+                .selectOption('ar-SA')
+            await expect(page.getByTestId('upup-root')).toHaveAttribute('dir', 'rtl')
+
+            await page.getByTestId('upup-source-url').scrollIntoViewIfNeeded()
+            await page.getByTestId('upup-source-url').click()
+            await expect(page.getByTestId('upup-url-uploader')).toBeVisible()
+            await page.getByRole('button', { name: /إلغاء|Cancel/ }).click()
+
+            await selectFiles(page, [textFile(`mobile-${viewport.name}.txt`)])
+            await page.getByTestId('upup-upload-btn').scrollIntoViewIfNeeded()
+            await page.getByTestId('upup-upload-btn').click()
+            await expect(page.getByTestId('upup-root')).toHaveAttribute('data-state', 'failed')
+            await expect(page.getByTestId('upup-retry-btn')).toBeVisible()
+
+            const horizontalOverflow = await page.evaluate(() =>
+                Math.max(document.documentElement.scrollWidth, document.body.scrollWidth) - window.innerWidth,
+            )
+            expect(horizontalOverflow).toBeLessThanOrEqual(2)
+            await attachScreenshot(page, testInfo, `mobile-${viewport.name}-rtl-retry`, true)
+        })
+    })
+}
