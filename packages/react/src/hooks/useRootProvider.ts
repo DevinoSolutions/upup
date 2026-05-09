@@ -263,6 +263,7 @@ export default function useRootProvider({
     allowPreview = true,
     folderUpload,
     showBranding = true,
+    disableDragDrop = false,
     className,
     style,
     maxFileSize: maxFileSizeProp,
@@ -439,6 +440,7 @@ export default function useRootProvider({
     const { connectSSE } = useSSEProcessing({
         processingEndpoint,
         onFileProcessed: onFileProcessed as never,
+        onError: (err) => onError(err.message),
         processingTimeout,
     })
     const core = upload.core
@@ -837,6 +839,7 @@ export default function useRootProvider({
             allowPreview,
             folderPickerButtonVisible,
             showBranding,
+            disableDragDrop,
             className: className ?? '',
             style: style ?? {},
             multiple,

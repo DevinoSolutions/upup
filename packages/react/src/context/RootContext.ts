@@ -68,6 +68,7 @@ type ContextProps = Required<
         | 'showBranding'
         | 'className'
         | 'style'
+        | 'disableDragDrop'
     >
 > &
     Pick<UpupUploaderProps, 'maxFileSize' | 'maxRetries' | 'resumable'> & {

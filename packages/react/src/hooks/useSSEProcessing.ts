@@ -4,7 +4,20 @@ import type { UploadFile } from '@upup/core'
 type Options = {
     processingEndpoint?: string
     onFileProcessed?: (file: UploadFile, data: Record<string, unknown>) => void
+    onError?: (error: Error) => void
     processingTimeout?: number
+}
+
+function withProcessingKey(endpoint: string, key: string): string {
+    const hashIndex = endpoint.indexOf('#')
+    const beforeHash = hashIndex >= 0 ? endpoint.slice(0, hashIndex) : endpoint
+    const hash = hashIndex >= 0 ? endpoint.slice(hashIndex) : ''
+    const queryIndex = beforeHash.indexOf('?')
+    const path = queryIndex >= 0 ? beforeHash.slice(0, queryIndex) : beforeHash
+    const query = queryIndex >= 0 ? beforeHash.slice(queryIndex + 1) : ''
+    const params = new URLSearchParams(query)
+    params.set('key', key)
+    return `${path}?${params.toString()}${hash}`
 }
 
 /**
@@ -17,6 +30,7 @@ type Options = {
 export function useSSEProcessing({
     processingEndpoint,
     onFileProcessed,
+    onError,
     processingTimeout = 60_000,
 }: Options) {
     const sourcesRef = useRef<Map<string, EventSource>>(new Map())
@@ -26,8 +40,7 @@ export function useSSEProcessing({
             const key = file.key
             if (!processingEndpoint || !onFileProcessed || !key) return
 
-            const url = `${processingEndpoint}?key=${encodeURIComponent(key)}`
-            const source = new EventSource(url)
+            const source = new EventSource(withProcessingKey(processingEndpoint, key))
             sourcesRef.current.set(key, source)
 
             const cleanup = () => {
@@ -35,7 +48,10 @@ export function useSSEProcessing({
                 sourcesRef.current.delete(key)
             }
 
-            const timer = setTimeout(cleanup, processingTimeout)
+            const timer = setTimeout(() => {
+                onError?.(new Error(`Processing timed out for ${key}`))
+                cleanup()
+            }, processingTimeout)
 
             source.onmessage = (event) => {
                 clearTimeout(timer)
@@ -51,10 +67,11 @@ export function useSSEProcessing({
 
             source.onerror = () => {
                 clearTimeout(timer)
+                onError?.(new Error(`Processing stream failed for ${key}`))
                 cleanup()
             }
         },
-        [processingEndpoint, onFileProcessed, processingTimeout],
+        [processingEndpoint, onFileProcessed, onError, processingTimeout],
     )
 
     // Close all open connections on unmount

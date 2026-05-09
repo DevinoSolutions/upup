@@ -9,7 +9,7 @@ export default function useMainBox() {
         activeAdapter,
         isAddingMore,
         upload: { uploadStatus },
-        props: { onFilesDragOver, onFilesDragLeave, onFilesDrop, isProcessing, enablePaste },
+        props: { onFilesDragOver, onFilesDragLeave, onFilesDrop, isProcessing, enablePaste, disableDragDrop },
         setFiles,
     } = useRootContext()
     const [isDragging, setIsDragging] = useState(false)
@@ -25,8 +25,8 @@ export default function useMainBox() {
     )
 
     const disableDragAction = useMemo(
-        () => activeAdapter ?? uploadStatus === UploadStatus.ONGOING,
-        [activeAdapter, uploadStatus],
+        () => disableDragDrop || activeAdapter || uploadStatus === UploadStatus.ONGOING,
+        [activeAdapter, disableDragDrop, uploadStatus],
     )
 
     const handleDragOver: DragEventHandler<HTMLDivElement> = useCallback(
@@ -42,7 +42,7 @@ export default function useMainBox() {
             // v2: emit drag-over event via UpupCore
             core?.emit('drag-over', {})
         },
-        [disableDragAction, onFilesDragOver, isProcessing],
+        [core, disableDragAction, onFilesDragOver, isProcessing],
     )
 
     const handleDragLeave: DragEventHandler<HTMLDivElement> = useCallback(
@@ -57,7 +57,7 @@ export default function useMainBox() {
             // v2: emit drag-leave event via UpupCore
             core?.emit('drag-leave', {})
         },
-        [disableDragAction, onFilesDragLeave, isProcessing],
+        [core, disableDragAction, onFilesDragLeave, isProcessing],
     )
 
     const handleDrop: DragEventHandler<HTMLDivElement> = useCallback(
@@ -173,7 +173,7 @@ export default function useMainBox() {
 
             setIsDragging(false)
         },
-        [disableDragAction, onFilesDrop, setFiles, isProcessing],
+        [core, disableDragAction, onFilesDrop, setFiles, isProcessing],
     )
 
     // v2: clipboard paste support

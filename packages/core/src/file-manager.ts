@@ -89,14 +89,36 @@ function nativeToUploadFile(file: File, source: FileSource = FileSource.LOCAL): 
   const url = typeof URL !== 'undefined' && typeof URL.createObjectURL === 'function'
     ? URL.createObjectURL(file)
     : undefined
+  const extendedFile = file as File & {
+    relativePath?: string
+    webkitRelativePath?: string
+    metadata?: Record<string, unknown>
+  }
+  const relativePath =
+    typeof extendedFile.relativePath === 'string' &&
+    extendedFile.relativePath.trim() !== ''
+      ? extendedFile.relativePath
+      : typeof extendedFile.webkitRelativePath === 'string' &&
+          extendedFile.webkitRelativePath.trim() !== ''
+        ? extendedFile.webkitRelativePath
+        : undefined
+  const existingMetadata =
+    extendedFile.metadata &&
+    typeof extendedFile.metadata === 'object' &&
+    !Array.isArray(extendedFile.metadata)
+      ? extendedFile.metadata
+      : {}
 
   return Object.assign(file, {
     id: generateFileId(),
     source,
     status: UploadStatus.IDLE,
-    metadata: {},
+    metadata: {
+      ...existingMetadata,
+      ...(relativePath ? { relativePath } : {}),
+    },
     url,
-    relativePath: undefined,
+    relativePath,
     key: undefined,
     etag: undefined,
     fileHash: undefined,

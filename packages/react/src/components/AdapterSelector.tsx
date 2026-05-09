@@ -78,8 +78,27 @@ export default function AdapterSelector() {
                             ? `${path}/${entry.name}`
                             : entry.name
                         if (entry.kind === 'file') {
-                            const file = await entry.getFile()
-                            ;(file as any).webkitRelativePath = newPath
+                            const pickedFile = await entry.getFile()
+                            const file = new File(
+                                [await pickedFile.arrayBuffer()],
+                                pickedFile.name,
+                                {
+                                    type: pickedFile.type,
+                                    lastModified: pickedFile.lastModified,
+                                },
+                            )
+                            try {
+                                Object.defineProperty(file, 'webkitRelativePath', {
+                                    value: newPath,
+                                    configurable: true,
+                                })
+                                Object.defineProperty(file, 'relativePath', {
+                                    value: newPath,
+                                    configurable: true,
+                                })
+                            } catch {
+                                ;(file as any).relativePath = newPath
+                            }
                             files.push(file)
                         } else if (entry.kind === 'directory') {
                             await getFiles(entry, newPath)
@@ -95,7 +114,11 @@ export default function AdapterSelector() {
                         inputRef.current.value = ''
                     }
                 }
-            } catch {
+            } catch (error) {
+                const name = error instanceof DOMException ? error.name : ''
+                if (name !== 'AbortError') {
+                    throw error
+                }
                 // User cancelled, do nothing.
             }
         } else {

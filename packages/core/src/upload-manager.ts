@@ -113,11 +113,18 @@ export class UploadManager {
           uploadStrategy,
           presign: true,
         }
+        const currentMetadata = (file.metadata ?? {}) as Record<string, unknown>
+        const metadata = {
+          ...currentMetadata,
+          ...(file.relativePath && currentMetadata.relativePath == null
+            ? { relativePath: file.relativePath }
+            : {}),
+        }
         const fileMetadata = {
           name: file.name,
           size: file.size,
           type: file.type,
-          metadata: file.metadata ?? {},
+          metadata,
         }
         const presigned = plan.presign
           ? await credentials.getPresignedUrl(fileMetadata)
