@@ -1,4 +1,3 @@
-import { motion } from 'framer-motion'
 import { GoogleFile, Root, User } from 'google'
 import { MicrosoftUser, OneDriveFile, OneDriveRoot } from 'microsoft'
 import React, {
@@ -16,7 +15,6 @@ import { cn } from '../../lib/tailwind'
 import AdapterViewContainer from './AdapterViewContainer'
 import DriveBrowserHeader from './DriveBrowserHeader'
 import DriveBrowserItem from './DriveBrowserItem'
-import MyAnimatePresence from './MyAnimatePresence'
 import ShouldRender from './ShouldRender'
 
 type Props = {
@@ -113,7 +111,7 @@ export default function DriveBrowser({
                         >
                             <ShouldRender if={!!displayedItems.length}>
                                 <ul className="upup-p-2">
-                                    {displayedItems.map((file, index) => {
+                                    {displayedItems.map(file => {
                                         return (
                                             <DriveBrowserItem
                                                 key={file.id}
@@ -123,7 +121,6 @@ export default function DriveBrowser({
                                                         ? () => {}
                                                         : handleClick
                                                 }
-                                                index={index}
                                                 selectedFiles={selectedFiles}
                                             />
                                         )
@@ -143,77 +140,70 @@ export default function DriveBrowser({
                     <ShouldRender
                         if={!!selectedFiles.length || !!onSelectCurrentFolder}
                     >
-                        <MyAnimatePresence>
-                            <motion.div
-                                key="drive-browser"
-                                initial={{ y: '100%', height: 0 }}
-                                animate={{ y: '0%', height: 'auto' }}
-                                exit={{ y: '100%', height: 0 }}
-                                transition={{ duration: 0.2 }}
-                                className={cn(
-                                    'upup-flex upup-origin-bottom upup-items-center upup-justify-start upup-gap-4 upup-bg-black/[0.025] upup-px-3 upup-py-2',
-                                    {
-                                        'upup-bg-white/5 upup-text-[#fafafa] dark:upup-bg-white/5 dark:upup-text-[#fafafa]':
-                                            dark,
-                                    },
-                                    slotClasses.driveFooter,
-                                )}
-                            >
-                                <ShouldRender if={!!onSelectCurrentFolder}>
-                                    <button
-                                        className={cn(
-                                            'upup-rounded-md upup-bg-transparent upup-px-3 upup-py-2 upup-text-sm upup-font-medium upup-text-blue-600 upup-transition-all upup-duration-300',
-                                            {
-                                                'upup-text-[#30C5F7] dark:upup-text-[#30C5F7]':
-                                                    dark,
-                                            },
-                                        )}
-                                        onClick={() =>
-                                            onSelectCurrentFolder?.()
-                                        }
-                                        disabled={showLoader}
-                                    >
-                                        {tr.selectThisFolder}
-                                    </button>
-                                </ShouldRender>
+                        <div
+                            className={cn(
+                                'upup-flex upup-origin-bottom upup-items-center upup-justify-start upup-gap-4 upup-bg-black/[0.025] upup-px-3 upup-py-2',
+                                {
+                                    'upup-bg-white/5 upup-text-[#fafafa] dark:upup-bg-white/5 dark:upup-text-[#fafafa]':
+                                        dark,
+                                },
+                                slotClasses.driveFooter,
+                            )}
+                        >
+                            <ShouldRender if={!!onSelectCurrentFolder}>
                                 <button
                                     className={cn(
-                                        'upup-rounded-md upup-bg-blue-600 upup-px-3 upup-py-2 upup-text-sm upup-font-medium upup-text-white upup-transition-all upup-duration-300',
-                                        {
-                                            'upup-animate-pulse': showLoader,
-                                            'upup-bg-[#30C5F7] dark:upup-bg-[#30C5F7]':
-                                                dark,
-                                        },
-                                        slotClasses.driveAddFilesButton,
-                                    )}
-                                    onClick={handleSubmit}
-                                    disabled={showLoader}
-                                >
-                                    {t(
-                                        plural(
-                                            tr,
-                                            'addFiles',
-                                            selectedFiles.length,
-                                        ),
-                                        { count: selectedFiles.length },
-                                    )}
-                                </button>
-                                <button
-                                    className={cn(
-                                        'upup-ml-auto upup-rounded-md upup-p-1 upup-text-sm upup-text-blue-600 upup-transition-all upup-duration-300',
+                                        'upup-rounded-md upup-bg-transparent upup-px-3 upup-py-2 upup-text-sm upup-font-medium upup-text-blue-600 upup-transition-all upup-duration-300',
                                         {
                                             'upup-text-[#30C5F7] dark:upup-text-[#30C5F7]':
                                                 dark,
                                         },
-                                        slotClasses.driveCancelFilesButton,
                                     )}
-                                    onClick={handleCancelDownload}
+                                    onClick={() =>
+                                        onSelectCurrentFolder?.()
+                                    }
                                     disabled={showLoader}
                                 >
-                                    {tr.cancel}
+                                    {tr.selectThisFolder}
                                 </button>
-                            </motion.div>
-                        </MyAnimatePresence>
+                            </ShouldRender>
+                            <button
+                                className={cn(
+                                    'upup-rounded-md upup-bg-blue-600 upup-px-3 upup-py-2 upup-text-sm upup-font-medium upup-text-white upup-transition-all upup-duration-300',
+                                    {
+                                        'upup-animate-pulse': showLoader,
+                                        'upup-bg-[#30C5F7] dark:upup-bg-[#30C5F7]':
+                                            dark,
+                                    },
+                                    slotClasses.driveAddFilesButton,
+                                )}
+                                onClick={handleSubmit}
+                                disabled={showLoader}
+                            >
+                                {t(
+                                    plural(
+                                        tr,
+                                        'addFiles',
+                                        selectedFiles.length,
+                                    ),
+                                    { count: selectedFiles.length },
+                                )}
+                            </button>
+                            <button
+                                className={cn(
+                                    'upup-ml-auto upup-rounded-md upup-p-1 upup-text-sm upup-text-blue-600 upup-transition-all upup-duration-300',
+                                    {
+                                        'upup-text-[#30C5F7] dark:upup-text-[#30C5F7]':
+                                            dark,
+                                    },
+                                    slotClasses.driveCancelFilesButton,
+                                )}
+                                onClick={handleCancelDownload}
+                                disabled={showLoader}
+                            >
+                                {tr.cancel}
+                            </button>
+                        </div>
                     </ShouldRender>
                 </div>
             </ShouldRender>

@@ -1,4 +1,3 @@
-'use client'
 import React, { useCallback } from 'react'
 import { TbUpload } from 'react-icons/tb'
 import { useRootContext } from '../context/RootContext'

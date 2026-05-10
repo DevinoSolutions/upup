@@ -1,9 +1,6 @@
 import type { Translations } from '../shared/i18n/types'
 import { FileSource } from '@upup/core'
-import BoxUploader from '../components/BoxUploader'
-import CameraUploader from '../components/CameraUploader'
-import DropboxUploader from '../components/DropboxUploader'
-import GoogleDriveUploader from '../components/GoogleDriveUploader'
+import { lazy } from 'react'
 import {
     AudioIcon,
     BoxIcon,
@@ -15,10 +12,15 @@ import {
     OneDriveIcon,
     ScreenCastIcon,
 } from '../components/Icons'
-import OneDriveUploader from '../components/OneDriveUploader'
 import UrlUploader from '../components/UrlUploader'
-import AudioUploader from '../components/AudioUploader'
-import ScreenCaptureUploader from '../components/ScreenCaptureUploader'
+
+const AudioUploader = lazy(() => import('../components/AudioUploader'))
+const BoxUploader = lazy(() => import('../components/BoxUploader'))
+const CameraUploader = lazy(() => import('../components/CameraUploader'))
+const DropboxUploader = lazy(() => import('../components/DropboxUploader'))
+const GoogleDriveUploader = lazy(() => import('../components/GoogleDriveUploader'))
+const OneDriveUploader = lazy(() => import('../components/OneDriveUploader'))
+const ScreenCaptureUploader = lazy(() => import('../components/ScreenCaptureUploader'))
 
 /** Translation key used for each adapter's display name */
 export const sourceNameKeys: Record<FileSource, keyof Translations> = {

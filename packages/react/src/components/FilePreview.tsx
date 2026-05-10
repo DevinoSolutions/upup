@@ -1,4 +1,3 @@
-'use client'
 import React, {
     Dispatch,
     HTMLAttributes,

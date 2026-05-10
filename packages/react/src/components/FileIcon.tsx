@@ -1,4 +1,3 @@
-'use client'
 import React, { forwardRef, memo, SVGAttributes } from 'react'
 import {
     TbFile,

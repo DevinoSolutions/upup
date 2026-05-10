@@ -1,4 +1,3 @@
-'use client'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { useRootContext } from '../context/RootContext'
 import { cn } from '../lib/tailwind'

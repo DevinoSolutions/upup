@@ -1,4 +1,3 @@
-'use client'
 import { ChangeEventHandler, useCallback, useMemo } from 'react'
 import { FileSource } from '@upup/core'
 import { useRootContext } from '../context/RootContext'

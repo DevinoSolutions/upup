@@ -1,4 +1,3 @@
-'use client'
 import { GoogleFile, Root, Token } from 'google'
 import { useState } from 'react'
 import { t } from '../shared/i18n'

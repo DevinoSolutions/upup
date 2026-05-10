@@ -1,4 +1,3 @@
-'use client'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useRootContext } from '../context/RootContext'
 import { createSecureStorage } from '../lib/storageHelper'

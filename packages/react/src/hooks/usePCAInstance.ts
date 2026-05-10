@@ -1,4 +1,3 @@
-'use client'
 import { PublicClientApplication } from '@azure/msal-browser'
 import { useEffect, useState } from 'react'
 import { useRootContext } from '../context/RootContext'

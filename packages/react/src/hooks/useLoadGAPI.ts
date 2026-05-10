@@ -1,4 +1,3 @@
-'use client'
 import load from 'load-script'
 import { useEffect, useState } from 'react'
 

@@ -1,6 +1,4 @@
-'use client'
 import { useVirtualizer } from '@tanstack/react-virtual'
-import { motion } from 'framer-motion'
 import React, { memo, useRef } from 'react'
 import { TbPlayerPauseFilled, TbPlayerPlayFilled, TbX } from 'react-icons/tb'
 import { plural, t } from '../shared/i18n'
@@ -8,7 +6,6 @@ import { UploadStatus, useRootContext } from '../context/RootContext'
 import { cn } from '../lib/tailwind'
 import FileItem from './FileItem'
 import MainBoxHeader from './shared/MainBoxHeader'
-import MyAnimatePresence from './shared/MyAnimatePresence'
 import ProgressBar from './shared/ProgressBar'
 import ShouldRender from './shared/ShouldRender'
 
@@ -89,66 +86,64 @@ export default memo(function FileList() {
         >
             <MainBoxHeader handleCancel={handleCancel} />
 
-            <MyAnimatePresence>
-                <motion.div
-                    ref={scrollRef}
-                    className={cn(
-                        'upup-preview-scroll upup-flex upup-flex-1 upup-flex-col upup-overflow-y-auto upup-bg-black/[0.075] upup-p-3',
-                        { 'upup-bg-white/10 dark:upup-bg-white/10': dark },
-                        slotClasses.fileListContainer,
-                    )}
-                >
-                    {shouldVirtualize ? (
-                        // Virtualized list: only renders visible FileItems
-                        <div
-                            data-upup-slot="file-list-virtual"
-                            style={{ height: virtualizer.getTotalSize(), position: 'relative' }}
-                            className={cn(
-                                isProcessing && 'upup-pointer-events-none upup-opacity-75',
-                                'upup-font-[Arial,Helvetica,sans-serif]',
-                            )}
-                        >
-                            {virtualizer.getVirtualItems().map(virtualItem => (
-                                <div
-                                    key={virtualItem.key}
-                                    data-index={virtualItem.index}
-                                    ref={virtualizer.measureElement}
-                                    style={{
-                                        position: 'absolute',
-                                        top: 0,
-                                        left: 0,
-                                        width: '100%',
-                                        transform: `translateY(${virtualItem.start}px)`,
-                                        paddingBottom: 12,
-                                    }}
-                                >
-                                    <FileItem file={sortedFiles[virtualItem.index]} />
-                                </div>
-                            ))}
-                        </div>
-                    ) : (
-                        // Standard rendering for small lists and grid mode
-                        <div
-                            className={cn(
-                                `${isProcessing && 'upup-pointer-events-none upup-opacity-75'} upup-flex upup-flex-col upup-gap-3 upup-font-[Arial,Helvetica,sans-serif]`,
-                                {
-                                    'md:upup-grid md:upup-gap-y-6': files.size > 1 && viewMode === 'grid',
-                                    'md:upup-grid-cols-2': files.size > 1 && viewMode === 'grid',
-                                    'upup-flex-1': files.size === 1,
-                                    [slotClasses.fileListContainerInnerMultiple!]:
-                                        slotClasses.fileListContainerInnerMultiple && files.size > 1,
-                                    [slotClasses.fileListContainerInnerSingle!]:
-                                        slotClasses.fileListContainerInnerSingle && files.size === 1,
-                                },
-                            )}
-                        >
-                            {sortedFiles.map(file => (
-                                <FileItem key={file.id} file={file} />
-                            ))}
-                        </div>
-                    )}
-                </motion.div>
-            </MyAnimatePresence>
+            <div
+                ref={scrollRef}
+                className={cn(
+                    'upup-preview-scroll upup-flex upup-flex-1 upup-flex-col upup-overflow-y-auto upup-bg-black/[0.075] upup-p-3',
+                    { 'upup-bg-white/10 dark:upup-bg-white/10': dark },
+                    slotClasses.fileListContainer,
+                )}
+            >
+                {shouldVirtualize ? (
+                    // Virtualized list: only renders visible FileItems
+                    <div
+                        data-upup-slot="file-list-virtual"
+                        style={{ height: virtualizer.getTotalSize(), position: 'relative' }}
+                        className={cn(
+                            isProcessing && 'upup-pointer-events-none upup-opacity-75',
+                            'upup-font-[Arial,Helvetica,sans-serif]',
+                        )}
+                    >
+                        {virtualizer.getVirtualItems().map(virtualItem => (
+                            <div
+                                key={virtualItem.key}
+                                data-index={virtualItem.index}
+                                ref={virtualizer.measureElement}
+                                style={{
+                                    position: 'absolute',
+                                    top: 0,
+                                    left: 0,
+                                    width: '100%',
+                                    transform: `translateY(${virtualItem.start}px)`,
+                                    paddingBottom: 12,
+                                }}
+                            >
+                                <FileItem file={sortedFiles[virtualItem.index]} />
+                            </div>
+                        ))}
+                    </div>
+                ) : (
+                    // Standard rendering for small lists and grid mode
+                    <div
+                        className={cn(
+                            `${isProcessing && 'upup-pointer-events-none upup-opacity-75'} upup-flex upup-flex-col upup-gap-3 upup-font-[Arial,Helvetica,sans-serif]`,
+                            {
+                                'md:upup-grid md:upup-gap-y-6': files.size > 1 && viewMode === 'grid',
+                                'md:upup-grid-cols-2': files.size > 1 && viewMode === 'grid',
+                                'upup-flex-1': files.size === 1,
+                                [slotClasses.fileListContainerInnerMultiple!]:
+                                    slotClasses.fileListContainerInnerMultiple && files.size > 1,
+                                [slotClasses.fileListContainerInnerSingle!]:
+                                    slotClasses.fileListContainerInnerSingle && files.size === 1,
+                            },
+                        )}
+                    >
+                        {sortedFiles.map(file => (
+                            <FileItem key={file.id} file={file} />
+                        ))}
+                    </div>
+                )}
+            </div>
             <div
                 className={cn(
                     'upup-shadow-top upup-flex upup-items-center upup-gap-3 upup-rounded-b-lg upup-bg-black/[0.025] upup-px-3 upup-py-2',

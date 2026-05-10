@@ -1,13 +1,16 @@
 'use client'
 
-import React, { forwardRef, useImperativeHandle } from 'react'
+import React, {
+    forwardRef,
+    lazy,
+    Suspense,
+    useImperativeHandle,
+} from 'react'
 import { TbLoader } from 'react-icons/tb'
 import { devinoDark, devinoLight, logoDark, logoLight } from './assets/logos'
 import type { UploadFile } from '@upup/core'
 import { UpupUploaderProps } from './shared/types'
 import DefaultLoaderIcon from './components/DefaultLoaderIcon'
-import ImageEditorInline from './components/ImageEditorInline'
-import ImageEditorModal from './components/ImageEditorModal'
 import MainBox from './components/MainBox'
 import ShouldRender from './components/shared/ShouldRender'
 import RootContext from './context/RootContext'
@@ -15,6 +18,9 @@ import useRootProvider from './hooks/useRootProvider'
 import useUpload from './hooks/useUpload'
 import { cn } from './lib/tailwind'
 import { UpupThemeProvider } from './theme'
+
+const ImageEditorInline = lazy(() => import('./components/ImageEditorInline'))
+const ImageEditorModal = lazy(() => import('./components/ImageEditorModal'))
 
 export type UpupUploaderRef = {
     useUpload(): {
@@ -114,13 +120,21 @@ export default forwardRef<UpupUploaderRef, UpupUploaderProps>(
                             {providerValues.editingFile &&
                                 providerValues.props.imageEditor.display ===
                                     'inline' && (
-                                    <ImageEditorInline
-                                        file={providerValues.editingFile}
-                                        onClose={
-                                            providerValues.closeImageEditor
+                                    <Suspense
+                                        fallback={
+                                            <div className="upup-absolute upup-inset-0 upup-z-[9999] upup-flex upup-items-center upup-justify-center upup-bg-white/80 dark:upup-bg-black/60">
+                                                <DefaultLoaderIcon />
+                                            </div>
                                         }
-                                        onSave={providerValues.saveImageEdit}
-                                    />
+                                    >
+                                        <ImageEditorInline
+                                            file={providerValues.editingFile}
+                                            onClose={
+                                                providerValues.closeImageEditor
+                                            }
+                                            onSave={providerValues.saveImageEdit}
+                                        />
+                                    </Suspense>
                                 )}
 
                             <ShouldRender if={!providerValues.props.mini && providerValues.props.showBranding !== false}>
@@ -207,11 +221,19 @@ export default forwardRef<UpupUploaderRef, UpupUploaderProps>(
                 </div>
                 {providerValues.editingFile &&
                     providerValues.props.imageEditor.display === 'modal' && (
-                        <ImageEditorModal
-                            file={providerValues.editingFile}
-                            onClose={providerValues.closeImageEditor}
-                            onSave={providerValues.saveImageEdit}
-                        />
+                        <Suspense
+                            fallback={
+                                <div className="upup-scope upup-fixed upup-inset-0 upup-z-[2147483647] upup-flex upup-items-center upup-justify-center upup-bg-black/60">
+                                    <DefaultLoaderIcon />
+                                </div>
+                            }
+                        >
+                            <ImageEditorModal
+                                file={providerValues.editingFile}
+                                onClose={providerValues.closeImageEditor}
+                                onSave={providerValues.saveImageEdit}
+                            />
+                        </Suspense>
                     )}
             </RootContext.Provider>
             </UpupThemeProvider>

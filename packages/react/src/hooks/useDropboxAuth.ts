@@ -1,4 +1,3 @@
-'use client'
 import { Dropbox } from 'dropbox'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useRootContext } from '../context/RootContext'

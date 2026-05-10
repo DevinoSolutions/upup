@@ -1,4 +1,3 @@
-'use client'
 import { IRootContext, UploadStatus } from '../context/RootContext'
 
 export default function useUpload({

@@ -1,4 +1,3 @@
-'use client'
 import { useCallback, useEffect, useState } from 'react'
 import { useRootContext } from '../context/RootContext'
 import { useDropboxAuth } from './useDropboxAuth'

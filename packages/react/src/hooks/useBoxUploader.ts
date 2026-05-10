@@ -1,4 +1,3 @@
-'use client'
 import { useCallback, useState } from 'react'
 import { t } from '../shared/i18n'
 import { useRootContext } from '../context/RootContext'

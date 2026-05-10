@@ -1,4 +1,3 @@
-'use client'
 import React, { MouseEventHandler, memo, useCallback, useState } from 'react'
 import type { UploadFile } from '@upup/core'
 import { useRootContext } from '../context/RootContext'

@@ -1,4 +1,3 @@
-'use client'
 import React, { FormEventHandler, useState } from 'react'
 import { useRootContext } from '../context/RootContext'
 import useFetchFileByUrl from '../hooks/useFetchFileByUrl'
