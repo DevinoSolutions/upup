@@ -24,6 +24,7 @@ This file covers the gaps left after `apps/playground/e2e/playground-deep.spec.t
 - Theme slot overrides.
 - Camera, microphone, screen source happy paths.
 - Crash recovery reload with IndexedDB restore, explicit resume, and recovery cleanup.
+- Package smoke consumer for packed `@upup/core`, `@upup/server`, and `@upup/react` tarballs.
 - One mobile 390x844 local upload pass.
 
 ## Recording Rules
@@ -59,7 +60,7 @@ This file covers the gaps left after `apps/playground/e2e/playground-deep.spec.t
 | REC-19 | Image editor save/apply | PARTIAL | Modal lazy-load/dismiss covered; crop/rotate/save replacement still needed. |
 | REC-20 | Accessibility/keyboard | TODO | Keyboard-only flows and axe pass for panels/modals/RTL/mobile. |
 | REC-21 | Visual baselines | PARTIAL | Screenshots are attached across flows; reviewed visual snapshots still needed. |
-| REC-22 | Package smoke consumer | TODO | Packed `@upup/core`, `@upup/server`, `@upup/react` install/typecheck. |
+| REC-22 | Package smoke consumer | DONE | Packed `@upup/core`, `@upup/server`, `@upup/react` install/typecheck/build. |
 | REC-23 | SSR hydration smoke | TODO | Production SSR app hydrates uploader without mismatch. |
 | REC-24 | Mobile breadth | PARTIAL | 320px, landscape, tablet, RTL/source/retry covered; editor panel still needed. |
 | REC-25 | Less-traveled props | PARTIAL | `disableDragDrop`, `style`, `metadata`, `onWarn` generation covered; icons and pause/resume/cancel events still needed. |
@@ -510,10 +511,11 @@ Assertions:
 Coverage target: published package shape works without workspace links.
 
 Steps:
-1. Run package builds.
-2. `pnpm pack` `@upup/core`, `@upup/server`, `@upup/react`.
-3. Install tarballs into a temp Vite/Next consumer.
-4. Typecheck imports:
+1. Run `pnpm run smoke:packages`.
+2. The script runs package builds.
+3. The script packs `@upup/core`, `@upup/server`, `@upup/react`.
+4. The script installs tarballs into a temp Vite consumer without workspace links.
+5. The script typechecks imports:
    - `@upup/core`
    - `@upup/core/i18n`
    - `@upup/core/theme`
@@ -523,9 +525,10 @@ Steps:
    - `@upup/react/styles`
 
 Assertions:
-- No workspace-only path leaks.
-- No missing peer dependency warnings in basic React usage beyond expected peers.
+- Packed package manifests do not contain `workspace:` dependencies.
+- Consumer lockfile does not contain `workspace:` dependencies.
 - Consumer typecheck passes.
+- Consumer production build passes.
 
 ### REC-23 SSR Hydration Smoke
 

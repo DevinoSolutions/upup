@@ -154,24 +154,15 @@ export type UploadSource =
     | 'dropbox'
     | 'box'
 
+export type UploadProvider = StorageProvider | (string & {})
+
 export type UpupUploaderProps = {
-    // Required Props
     /**
-     * Storage provider. Accepts StorageProvider values from `@upup/core`
-     * or matching string literals. All S3-compatible providers share the
-     * same client code path; the string is forwarded to your server-side
-     * presigning code.
+     * Storage provider. Optional for local-only selection and generic
+     * uploadEndpoint/serverUrl flows. When provided, accepts core provider
+     * enum values plus custom provider ids forwarded to user/server code.
      */
-    provider:
-        | StorageProvider
-        | 'aws'
-        | 'azure'
-        | 'backblaze'
-        | 'digitalocean'
-        | 'r2'
-        | 'wasabi'
-        | 'minio'
-        | 'gcs'
+    provider?: UploadProvider
 
     // ── v2 DX aliases (preferred) ────────────────────────────
     /**

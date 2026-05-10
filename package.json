@@ -23,6 +23,7 @@
     "start": "pnpm run docs:build && pnpm --filter @upup/landing run start",
     "test": "turbo run test",
     "test:coverage": "pnpm --filter @upup/react exec vitest run --coverage --coverage.reportsDirectory=../../coverage",
+    "smoke:packages": "node scripts/package-smoke-consumer.mjs",
     "typecheck": "turbo run typecheck",
     "release": "pnpm --filter @upup/core run release && pnpm --filter @upup/server run release && pnpm --filter @upup/react run release",
     "test-release": "pnpm --filter @upup/core run test-release && pnpm --filter @upup/server run test-release && pnpm --filter @upup/react run test-release"
