@@ -12,7 +12,6 @@ export default defineConfig({
     'react-dom',
     '@upup/core',
     'react-filerobot-image-editor',
-    'filerobot-image-editor',
     'react-konva',
     'konva',
     'styled-components',

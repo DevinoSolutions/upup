@@ -12,6 +12,8 @@ Remove public `@upup/shared`. Move its contracts, errors, protocols, i18n bundle
 
 `mode?: 'client' | 'server'` stays. It means where provider/upload operations run. It does not mean local versus upload. If no upload target exists, Upup is local file collection only.
 
+`@upup/react` targets React 19 for v2-clean. Do not advertise React 18 support again unless the optional editor/provider dependency graph is split or otherwise tested against React 18 without peer conflicts.
+
 ## Public API
 
 - Keep `sources`: `local`, `url`, `camera`, `microphone`, `screen`, `googleDrive`, `oneDrive`, `dropbox`, `box`.
@@ -68,7 +70,7 @@ Remove public `@upup/shared`. Move its contracts, errors, protocols, i18n bundle
 - Harden URL source: check `response.ok`, handle missing content type/extension, and avoid invalid generated filenames.
 - Remove old public React subcomponent exports or make them intentionally private/internal.
 - Fix release/install smoke so packed packages install without local overrides.
-- Move image editor/provider heavy dependencies out of the default install path; avoid React 19 peer warnings in basic usage.
+- Move image editor/provider heavy dependencies out of the default install path; until then, keep the React package dependency graph React 19-compatible and free of React 18 peer conflicts.
 
 ## Docs, Apps, Release
 
