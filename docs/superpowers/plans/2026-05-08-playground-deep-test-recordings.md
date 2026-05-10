@@ -23,6 +23,7 @@ This file covers the gaps left after `apps/playground/e2e/playground-deep.spec.t
 - Mocked server-mode Google Drive list/select/transfer.
 - Theme slot overrides.
 - Camera, microphone, screen source happy paths.
+- Crash recovery reload with IndexedDB restore, explicit resume, and recovery cleanup.
 - One mobile 390x844 local upload pass.
 
 ## Recording Rules
@@ -42,7 +43,7 @@ This file covers the gaps left after `apps/playground/e2e/playground-deep.spec.t
 | REC-03 | Multipart threshold/chunking | DONE | Large file chooses multipart and sends all parts. |
 | REC-04 | Multipart pause/resume/cancel | DONE | Visible controls and network pause/resume/cancel behavior. |
 | REC-05 | Multipart failed-part retry | DONE | Failed part retries within `maxRetries` and succeeds visibly. |
-| REC-06 | Crash recovery reload | TODO | IndexedDB queue/session survives reload and resumes. |
+| REC-06 | Crash recovery reload | DONE | IndexedDB queue/session survives reload and resumes. |
 | REC-07 | Concurrent upload cap | DONE | Multiple slow files never exceed `maxConcurrentUploads`. |
 | REC-08 | Speed and ETA | PARTIAL | Long upload renders progress/byte totals; explicit ETA assertion still needed. |
 | REC-09 | Folder upload payloads | DONE | Nested folder selection preserves `relativePath`. |
@@ -187,13 +188,14 @@ Steps:
 5. Wait for ongoing state.
 6. Reload the page.
 7. Confirm previous file/session rehydrates.
-8. Resume or allow upload to continue to success.
+8. Resume upload explicitly and allow it to complete.
 
 Assertions:
 - IndexedDB contains the recovery record before reload.
 - File appears after reload without reselecting.
-- Upload reaches successful or offers an explicit resume action.
-- Screenshot: `rec-06-recovered-after-reload`.
+- Restored uploader enters paused state with a visible resume action.
+- Upload reaches successful after resume and clears the recovery record.
+- Screenshots: `crash-recovery-before-reload`, `crash-recovery-restored-paused`, `crash-recovery-resumed-success`.
 
 ### REC-07 Concurrent Upload Cap
 

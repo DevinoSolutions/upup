@@ -1,4 +1,4 @@
-import { UploadStatus, UpupConfigError, UpupErrorCode, createTranslator, enUS, type UploadFile, type PipelineStep, type PipelineContext, type LocaleBundle, type UpupLocaleCode, type ResumableUploadOptions } from './contracts'
+import { FileSource, UploadStatus, UpupConfigError, UpupErrorCode, createTranslator, enUS, type UploadFile, type PipelineStep, type PipelineContext, type LocaleBundle, type UpupLocaleCode, type ResumableUploadOptions } from './contracts'
 import { EventEmitter } from './events'
 import { PluginManager, type UpupPlugin, type ExtensionMethods } from './plugin'
 import { FileManager, type FileManagerOptions, fileSizeInBytes, matchesAccept } from './file-manager'
@@ -9,7 +9,7 @@ import { ServerCredentials } from './strategies/server-credentials'
 import { DirectUpload } from './strategies/direct-upload'
 import { MultipartUpload } from './strategies/multipart-upload'
 import { TusUpload } from './strategies/tus-upload'
-import { CrashRecoveryManager, IndexedDBStorage } from './crash-recovery'
+import { CrashRecoveryManager, IndexedDBStorage, type PersistentStorage } from './crash-recovery'
 import { WorkerPool } from './worker-pool'
 
 export interface Restrictions {
@@ -50,6 +50,10 @@ export interface UpupCorsConfig {
   maxAgeSeconds?: number
 }
 
+export interface CrashRecoveryOptions {
+  storage?: PersistentStorage
+}
+
 export interface CoreOptions extends FileManagerOptions {
   uploadEndpoint?: string
   serverUrl?: string
@@ -68,7 +72,7 @@ export interface CoreOptions extends FileManagerOptions {
   autoUpload?: boolean
   fastAbortThreshold?: number
   isSuccessfulCall?: (response: { status: number; headers: Record<string, string>; body: unknown }) => boolean | Promise<boolean>
-  crashRecovery?: boolean | object
+  crashRecovery?: boolean | CrashRecoveryOptions
   onError?: (error: string | Error) => void
   googleDriveConfigs?: Record<string, unknown>
   oneDriveConfigs?: Record<string, unknown>
@@ -104,6 +108,29 @@ export type UploadOptions = {
   metadata?: Record<string, string>
 }
 
+type CrashRecoveryFileSnapshot = {
+  file: File
+  id: string
+  name: string
+  type: string
+  lastModified?: number
+  source: UploadFile['source']
+  status: UploadStatus
+  metadata: UploadFile['metadata']
+  url?: string
+  relativePath?: string
+  key?: string
+  etag?: string
+  fileHash?: string
+  checksumSHA256?: string
+  thumbnail?: UploadFile['thumbnail']
+}
+
+type CoreCrashRecoverySnapshot = {
+  files: [string, CrashRecoveryFileSnapshot | UploadFile][]
+  status: UploadStatus
+}
+
 export class UpupCore {
   private emitter = new EventEmitter()
   private pluginManager = new PluginManager()
@@ -113,6 +140,7 @@ export class UpupCore {
   private _status: UploadStatus = UploadStatus.IDLE
   private _error: Error | null = null
   private crashRecovery: CrashRecoveryManager | null = null
+  private crashRecoveryUnsubscribe: (() => void) | null = null
   private workerPool?: WorkerPool
   private fileOverrides = new Map<string, Partial<UploadOptions>>()
   private pauseRequested = false
@@ -170,12 +198,7 @@ export class UpupCore {
       }
     }
 
-    if (options.crashRecovery) {
-      this.crashRecovery = new CrashRecoveryManager(new IndexedDBStorage())
-      this.on('state-change', () => {
-        this.crashRecovery?.save(this.getSnapshot()).catch(() => {})
-      })
-    }
+    this.configureCrashRecovery(options.crashRecovery)
 
     if (options.enableWorkers) {
       this.workerPool = new WorkerPool({
@@ -205,6 +228,160 @@ export class UpupCore {
       completedFiles: completed,
       percentage: total > 0 ? Math.round((completed / total) * 100) : 0,
     }
+  }
+
+  private configureCrashRecovery(crashRecovery: CoreOptions['crashRecovery']): void {
+    if (!crashRecovery || this.crashRecovery) return
+
+    const crashOptions =
+      typeof crashRecovery === 'object' && crashRecovery !== null
+        ? crashRecovery
+        : {}
+    this.crashRecovery = new CrashRecoveryManager(crashOptions.storage ?? new IndexedDBStorage())
+    this.crashRecoveryUnsubscribe = this.on('state-change', () => {
+      if (this.destroyed || this.files.size === 0) return
+      if (this._status === UploadStatus.SUCCESSFUL) {
+        this.crashRecovery?.clear().catch(() => {})
+        return
+      }
+      this.crashRecovery?.save(this.getCrashRecoverySnapshot()).catch(() => {})
+    })
+  }
+
+  private disableCrashRecovery(): void {
+    const manager = this.crashRecovery
+    this.crashRecoveryUnsubscribe?.()
+    this.crashRecoveryUnsubscribe = null
+    this.crashRecovery = null
+    manager?.clear().catch(() => {})
+  }
+
+  private getCrashRecoverySnapshot(): CoreCrashRecoverySnapshot {
+    return {
+      files: [...this.files.entries()].map(([id, file]) => [
+        id,
+        this.toCrashRecoveryFileSnapshot(id, file),
+      ]),
+      status: this._status,
+    }
+  }
+
+  private toCrashRecoveryFileSnapshot(id: string, file: UploadFile): CrashRecoveryFileSnapshot {
+    const snapshot: CrashRecoveryFileSnapshot = {
+      file,
+      id: file.id ?? id,
+      name: file.name,
+      type: file.type,
+      lastModified: file.lastModified,
+      source: file.source ?? FileSource.LOCAL,
+      status: file.status ?? UploadStatus.IDLE,
+      metadata: file.metadata ?? {},
+    }
+
+    if (file.url && !file.url.startsWith('blob:')) {
+      snapshot.url = file.url
+    }
+
+    for (const key of ['relativePath', 'key', 'etag', 'fileHash', 'checksumSHA256'] as const) {
+      if (file[key] !== undefined) {
+        Object.assign(snapshot, { [key]: file[key] })
+      }
+    }
+    if (file.thumbnail) {
+      snapshot.thumbnail = file.thumbnail
+    }
+
+    return snapshot
+  }
+
+  private reviveCrashRecoverySnapshot(snapshot: unknown): { files: [string, UploadFile][]; status: UploadStatus } | null {
+    if (!this.isRecord(snapshot) || !Array.isArray(snapshot.files)) {
+      return null
+    }
+
+    const status = this.isUploadStatus(snapshot.status) ? snapshot.status : UploadStatus.IDLE
+    const files = snapshot.files
+      .map((entry, index): [string, UploadFile] | null => {
+        if (!Array.isArray(entry) || entry.length < 2) return null
+        const id = typeof entry[0] === 'string' ? entry[0] : `recovered-${index}`
+        const file = this.reviveCrashRecoveryFile(id, entry[1], status)
+        return file ? [id, file] : null
+      })
+      .filter((entry): entry is [string, UploadFile] => entry != null)
+
+    return { files, status }
+  }
+
+  private reviveCrashRecoveryFile(id: string, value: unknown, fallbackStatus: UploadStatus): UploadFile | null {
+    const isFileLike = typeof File !== 'undefined' && value instanceof File
+    const wrappedBlob = this.isRecord(value) && typeof Blob !== 'undefined' && value.file instanceof Blob
+      ? value.file
+      : null
+    const props = this.isRecord(value) && wrappedBlob ? value : this.isRecord(value) ? value : {}
+    const nameFromProps = typeof props.name === 'string' && props.name.trim() !== ''
+      ? props.name
+      : undefined
+    const file = wrappedBlob
+      ? this.toRecoverableFile(wrappedBlob, nameFromProps ?? id, props)
+      : isFileLike
+        ? value as File
+        : null
+    if (!file) return null
+
+    const metadata = this.isRecord(props.metadata)
+      ? props.metadata as UploadFile['metadata']
+      : {}
+    const uploadStatus = this.isUploadStatus(props.status) ? props.status : fallbackStatus
+    const source = Object.values(FileSource).includes(props.source as FileSource)
+      ? props.source as FileSource
+      : FileSource.LOCAL
+    const uploadFile = Object.assign(file, {
+      id: typeof props.id === 'string' ? props.id : id,
+      source,
+      status: uploadStatus,
+      metadata,
+    }) as UploadFile
+    const url = typeof props.url === 'string' && !props.url.startsWith('blob:')
+      ? props.url
+      : this.createObjectUrl(file)
+    if (url) {
+      uploadFile.url = url
+    }
+
+    for (const key of ['relativePath', 'key', 'etag', 'fileHash', 'checksumSHA256'] as const) {
+      if (typeof props[key] === 'string') {
+        Object.assign(uploadFile, { [key]: props[key] })
+      }
+    }
+    if (this.isRecord(props.thumbnail)) {
+      uploadFile.thumbnail = props.thumbnail as UploadFile['thumbnail']
+    }
+
+    return uploadFile
+  }
+
+  private createObjectUrl(file: File): string | undefined {
+    return typeof URL !== 'undefined' && typeof URL.createObjectURL === 'function'
+      ? URL.createObjectURL(file)
+      : undefined
+  }
+
+  private toRecoverableFile(blob: Blob, name: string, props: Record<string, unknown>): File | null {
+    if (typeof File === 'undefined') return null
+    if (blob instanceof File && blob.name) {
+      return blob
+    }
+    const type = typeof props.type === 'string' ? props.type : blob.type
+    const lastModified = typeof props.lastModified === 'number' ? props.lastModified : Date.now()
+    return new File([blob], name, { type, lastModified })
+  }
+
+  private isRecord(value: unknown): value is Record<string, unknown> {
+    return typeof value === 'object' && value !== null
+  }
+
+  private isUploadStatus(value: unknown): value is UploadStatus {
+    return Object.values(UploadStatus).includes(value as UploadStatus)
   }
 
   use(plugin: UpupPlugin): this {
@@ -259,6 +436,7 @@ export class UpupCore {
   removeAll(): void {
     this.fileManager.removeAll()
     this.fileOverrides.clear()
+    this.crashRecovery?.clear().catch(() => {})
     this.emitter.emit('state-change', { files: this.files })
     // v2: dedicated event so consumers know all files were cleared at once
     this.emitter.emit('files-cleared', {})
@@ -273,6 +451,7 @@ export class UpupCore {
 
   /** Update options after construction (e.g. when React props change). */
   updateOptions(partial: Partial<CoreOptions>): void {
+    const hadCrashRecovery = this.crashRecovery != null
     Object.assign(this.options, partial)
 
     if (partial.restrictions) {
@@ -308,6 +487,14 @@ export class UpupCore {
       contentDeduplication: this.options.contentDeduplication,
       onBeforeFileAdded: this.options.onBeforeFileAdded,
     })
+
+    if ('crashRecovery' in partial) {
+      if (partial.crashRecovery) {
+        this.configureCrashRecovery(partial.crashRecovery)
+      } else if (hadCrashRecovery) {
+        this.disableCrashRecovery()
+      }
+    }
 
     // v2: emit so consumers can observe option changes at runtime
     this.emitter.emit('options-updated', { partial })
@@ -776,8 +963,30 @@ export class UpupCore {
   async restoreFromCrashRecovery(): Promise<boolean> {
     if (!this.crashRecovery) return false
     const snapshot = await this.crashRecovery.restore()
-    if (snapshot && typeof snapshot === 'object' && 'files' in snapshot) {
-      this.restore(snapshot as { files: [string, UploadFile][]; status: UploadStatus })
+    const restored = this.reviveCrashRecoverySnapshot(snapshot)
+    if (restored && restored.files.length > 0) {
+      const wasActive =
+        restored.status === UploadStatus.PROCESSING ||
+        restored.status === UploadStatus.UPLOADING
+      const normalized = {
+        files: restored.files.map(([id, file]) => {
+          if (
+            wasActive &&
+            file.key == null &&
+            (
+              file.status === UploadStatus.PROCESSING ||
+              file.status === UploadStatus.UPLOADING ||
+              file.status === UploadStatus.READY ||
+              file.status === UploadStatus.IDLE
+            )
+          ) {
+            return [id, Object.assign(file, { status: UploadStatus.PAUSED })] as [string, UploadFile]
+          }
+          return [id, file] as [string, UploadFile]
+        }),
+        status: wasActive ? UploadStatus.PAUSED : restored.status,
+      }
+      this.restore(normalized)
       // v2: emit dedicated event so consumers know crash recovery was applied
       this.emitter.emit('crash-recovery-restored', {})
       return true
@@ -795,12 +1004,13 @@ export class UpupCore {
     this.uploadManager = null
     // v2: emit before clearing listeners so teardown handlers fire
     this.emitter.emit('destroyed', {})
+    this.crashRecoveryUnsubscribe?.()
+    this.crashRecoveryUnsubscribe = null
     this.workerPool?.destroy()
     this.fileOverrides.clear()
     this.emitter.removeAllListeners()
     this.pluginManager.destroy()
     this.fileManager.removeAll()
-    this.crashRecovery?.clear().catch(() => {})
     this._status = UploadStatus.IDLE
     this._error = null
   }

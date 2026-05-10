@@ -335,6 +335,7 @@ export default function useRootProvider({
     const [editorQueue, setEditorQueue] = useState<UploadFile[]>([])
     const speedSamplesRef = useRef<{ time: number; bytes: number }[]>([])
     const totalBytesRef = useRef(0)
+    const crashRecoveryRestoreRef = useRef(false)
 
     const resolvedSources = sources
         ? sources.map(source => normalizeSource(source)).filter(Boolean) as FileSource[]
@@ -444,6 +445,12 @@ export default function useRootProvider({
         processingTimeout,
     })
     const core = upload.core
+    useEffect(() => {
+        if (!crashRecovery || crashRecoveryRestoreRef.current) return
+        crashRecoveryRestoreRef.current = true
+        void core.restoreFromCrashRecovery().catch(() => undefined)
+    }, [core, crashRecovery])
+
     const files = useMemo(
         () => new Map(upload.files.map(file => [file.id, file] as const)),
         [upload.files],

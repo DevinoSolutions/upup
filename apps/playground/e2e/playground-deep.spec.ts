@@ -223,6 +223,55 @@ async function attachScreenshot(page: Page, testInfo: TestInfo, name: string, fu
     await testInfo.attach(name, { path, contentType: 'image/png' })
 }
 
+async function readCrashRecoverySnapshot(page: Page): Promise<any> {
+    return page.evaluate(() => new Promise((resolve) => {
+        const request = indexedDB.open('upup-crash-recovery', 1)
+        request.onerror = () => resolve(null)
+        request.onupgradeneeded = () => {
+            request.result.createObjectStore('upup-store')
+        }
+        request.onsuccess = () => {
+            const db = request.result
+            const tx = db.transaction('upup-store', 'readonly')
+            const store = tx.objectStore('upup-store')
+            const getRequest = store.get('upup-crash-recovery')
+            getRequest.onerror = () => {
+                db.close()
+                resolve(null)
+            }
+            getRequest.onsuccess = () => {
+                const result = getRequest.result ?? null
+                tx.oncomplete = () => db.close()
+                tx.onerror = () => db.close()
+                resolve(result)
+            }
+        }
+    }))
+}
+
+async function clearCrashRecoverySnapshot(page: Page): Promise<void> {
+    await page.evaluate(() => new Promise<void>((resolve) => {
+        const request = indexedDB.open('upup-crash-recovery', 1)
+        request.onerror = () => resolve()
+        request.onupgradeneeded = () => {
+            request.result.createObjectStore('upup-store')
+        }
+        request.onsuccess = () => {
+            const db = request.result
+            const tx = db.transaction('upup-store', 'readwrite')
+            tx.objectStore('upup-store').delete('upup-crash-recovery')
+            tx.oncomplete = () => {
+                db.close()
+                resolve()
+            }
+            tx.onerror = () => {
+                db.close()
+                resolve()
+            }
+        }
+    }))
+}
+
 async function selectFiles(page: Page, files: ReturnType<typeof textFile>[]): Promise<void> {
     await page.getByTestId('upup-file-input').setInputFiles(files)
     await expect(page.getByTestId('upup-file-list')).toBeVisible()
@@ -302,6 +351,7 @@ type MultipartMockLog = {
     failedParts: number[]
     badResponses: Array<{ status: number; url: string }>
     maxActiveParts: number
+    setDelayMs: (delayMs: number) => void
 }
 
 async function routeMultipartMock(
@@ -312,6 +362,7 @@ async function routeMultipartMock(
         delayMs?: number
     } = {},
 ): Promise<MultipartMockLog> {
+    let delayMs = options.delayMs ?? 0
     const log: MultipartMockLog = {
         initBodies: [],
         signBodies: [],
@@ -321,6 +372,9 @@ async function routeMultipartMock(
         failedParts: [],
         badResponses: [],
         maxActiveParts: 0,
+        setDelayMs: (nextDelayMs) => {
+            delayMs = nextDelayMs
+        },
     }
     let uploadCounter = 0
     let activeParts = 0
@@ -413,8 +467,8 @@ async function routeMultipartMock(
                 })
                 return
             }
-            if (options.delayMs) {
-                await new Promise(resolve => setTimeout(resolve, options.delayMs))
+            if (delayMs) {
+                await new Promise(resolve => setTimeout(resolve, delayMs))
             }
             try {
                 await route.fulfill({
@@ -1260,6 +1314,81 @@ test('pauses, resumes, and cancels slow multipart uploads', async ({ page }, tes
     await expect(page.getByTestId('upup-root')).toHaveAttribute('data-state', 'pending')
     await expect.poll(() => multipart.abortBodies.length).toBeGreaterThan(abortCountBeforeCancel)
     await attachScreenshot(page, testInfo, 'multipart-controls-cancelled')
+})
+
+test('restores a crash recovery upload after reload and resumes to success', async ({ page }, testInfo) => {
+    const multipart = await routeMultipartMock(page, {
+        partSize: 1024 * 1024,
+        delayMs: 10_000,
+    })
+
+    await openPlayground(page, `?mockRun=${uniqueRun('crash-recovery')}`)
+    await clearCrashRecoverySnapshot(page)
+    await openCategory(page, 'Advanced')
+    await clickRadio(page, 'Advanced', 'server')
+    await fillTextField(page, 'Advanced', 'Server URL', '/api/upup-multipart')
+
+    await openCategory(page, 'Upload')
+    await checkSidebarCheckbox(page, 'Upload', 'Crash recovery (IndexedDB)')
+    await clickRadio(page, 'Upload', 'tus')
+    await clickRadio(page, 'Upload', 'multipart')
+    await setSizeUnit(page, 'Upload', 'Chunk size', '1', 'MB')
+    await setNumber(page, 'Max retries', '0')
+
+    await selectFiles(page, [generatedFile('crash-recovery-resume.txt', 6 * 1024 * 1024)])
+    await page.getByTestId('upup-upload-btn').click()
+    await expect(page.getByTestId('upup-root')).toHaveAttribute('data-state', 'ongoing')
+    await expect.poll(async () => {
+        const snapshot = await readCrashRecoverySnapshot(page)
+        const status = snapshot?.status
+        const file = snapshot?.files?.[0]?.[1]
+        const name = file?.name ?? file?.file?.name
+        const ready = Array.isArray(snapshot?.files) &&
+            snapshot.files.length === 1 &&
+            name === 'crash-recovery-resume.txt' &&
+            (status === 'PROCESSING' || status === 'UPLOADING')
+        return ready
+            ? 'ready'
+            : JSON.stringify({
+                snapshotType: Object.prototype.toString.call(snapshot),
+                keys: snapshot && typeof snapshot === 'object' ? Object.keys(snapshot) : [],
+                fileCount: Array.isArray(snapshot?.files) ? snapshot.files.length : 0,
+                status,
+                fileKeys: file && typeof file === 'object' ? Object.keys(file) : [],
+                name,
+            })
+    }, { timeout: 20_000 }).toBe('ready')
+    await expect.poll(() => multipart.signBodies.length).toBeGreaterThan(0)
+    await attachScreenshot(page, testInfo, 'crash-recovery-before-reload')
+
+    multipart.setDelayMs(25)
+    await page.reload()
+    await expect(page.getByRole('heading', { name: 'Upup Playground' })).toBeVisible()
+    await expect(page.getByTestId('upup-root')).toBeVisible()
+
+    await openCategory(page, 'Advanced')
+    await clickRadio(page, 'Advanced', 'server')
+    await fillTextField(page, 'Advanced', 'Server URL', '/api/upup-multipart')
+
+    await openCategory(page, 'Upload')
+    await clickRadio(page, 'Upload', 'tus')
+    await clickRadio(page, 'Upload', 'multipart')
+    await setSizeUnit(page, 'Upload', 'Chunk size', '1', 'MB')
+    await setNumber(page, 'Max retries', '0')
+    await checkSidebarCheckbox(page, 'Upload', 'Crash recovery (IndexedDB)')
+
+    await expect(page.getByTestId('upup-file-list')).toContainText('crash-recovery-resume.txt')
+    await expect(page.getByTestId('upup-root')).toHaveAttribute('data-state', 'paused')
+    await expect(page.getByTestId('upup-upload-pause-toggle')).toHaveAttribute('aria-label', 'Resume')
+    await attachScreenshot(page, testInfo, 'crash-recovery-restored-paused')
+
+    await page.getByTestId('upup-upload-pause-toggle').click()
+    await expect(page.getByTestId('upup-root')).toHaveAttribute('data-state', 'ongoing')
+    await expect(page.getByTestId('upup-root')).toHaveAttribute('data-state', 'successful')
+    expect(multipart.initBodies.length).toBeGreaterThanOrEqual(2)
+    expect(multipart.completeBodies).toHaveLength(1)
+    await expect.poll(async () => readCrashRecoverySnapshot(page)).toBeNull()
+    await attachScreenshot(page, testInfo, 'crash-recovery-resumed-success')
 })
 
 test('runs image processing pipeline steps and sends metadata to the mock presign route', async ({ page }, testInfo) => {

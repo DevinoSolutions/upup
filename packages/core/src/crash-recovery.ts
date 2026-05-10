@@ -59,6 +59,8 @@ export class IndexedDBStorage implements PersistentStorage {
         const request = store.get(key)
         request.onsuccess = () => resolve(request.result)
         request.onerror = () => reject(request.error)
+        tx.oncomplete = () => db.close()
+        tx.onerror = () => db.close()
       })
     } catch {
       return undefined
@@ -74,6 +76,8 @@ export class IndexedDBStorage implements PersistentStorage {
         const request = store.put(value, key)
         request.onsuccess = () => resolve()
         request.onerror = () => reject(request.error)
+        tx.oncomplete = () => db.close()
+        tx.onerror = () => db.close()
       })
     } catch {
       // Silently fail — crash recovery is best-effort
@@ -89,6 +93,8 @@ export class IndexedDBStorage implements PersistentStorage {
         const request = store.delete(key)
         request.onsuccess = () => resolve()
         request.onerror = () => reject(request.error)
+        tx.oncomplete = () => db.close()
+        tx.onerror = () => db.close()
       })
     } catch {
       // Silently fail
