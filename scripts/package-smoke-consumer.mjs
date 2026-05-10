@@ -5,6 +5,7 @@ import {
   readdirSync,
   readFileSync,
   rmSync,
+  statSync,
   writeFileSync,
 } from 'node:fs'
 import { dirname, extname, isAbsolute, join, relative, resolve } from 'node:path'
@@ -15,6 +16,9 @@ const smokeRoot = join(repoRoot, '.tmp', 'pack-smoke')
 const tarballDir = join(smokeRoot, 'tarballs')
 const consumerDir = join(smokeRoot, 'consumer')
 const pnpmExecPath = process.env.npm_execpath
+const kib = 1024
+const consumerEntryChunkBudget = 450 * kib
+const consumerOptionalChunkBudget = 1600 * kib
 
 function assertInsideRepo(target) {
   const rel = relative(repoRoot, resolve(target))
@@ -78,6 +82,68 @@ function assertPackedPackageHasNoWorkspaceDeps(tarballPath) {
   }
   if (result.stdout.includes('workspace:')) {
     throw new Error(`Packed package leaks workspace dependency protocol: ${tarballPath}`)
+  }
+}
+
+function assertFileSizeAtMost(filePath, limit, label) {
+  const { size } = statSync(filePath)
+  if (size > limit) {
+    throw new Error(`${label} is ${(size / kib).toFixed(1)} KiB, above ${(limit / kib).toFixed(1)} KiB`)
+  }
+}
+
+function assertConsumerBundleShape() {
+  const distDir = join(consumerDir, 'dist')
+  const assetsDir = join(distDir, 'assets')
+  const manifestPath = join(distDir, '.vite', 'manifest.json')
+  const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'))
+  const manifestText = JSON.stringify(manifest)
+  if (manifestText.includes('@smithy') || manifestText.includes('@aws-sdk')) {
+    throw new Error('Consumer browser bundle unexpectedly includes server/AWS modules')
+  }
+
+  const entries = Object.values(manifest).filter(entry => entry.isEntry)
+  if (entries.length !== 1) {
+    throw new Error(`Expected one consumer entry chunk, found ${entries.length}`)
+  }
+
+  assertFileSizeAtMost(
+    join(distDir, entries[0].file),
+    consumerEntryChunkBudget,
+    'Consumer entry chunk',
+  )
+
+  const assetNames = readdirSync(assetsDir).filter(name => name.endsWith('.js'))
+  const requiredLazyChunks = [
+    'AudioUploader',
+    'BoxUploader',
+    'CameraUploader',
+    'DropboxUploader',
+    'GoogleDriveUploader',
+    'ImageEditorInline',
+    'ImageEditorModal',
+    'OneDriveUploader',
+    'ScreenCaptureUploader',
+    'heic2any',
+  ]
+
+  for (const chunkName of requiredLazyChunks) {
+    if (!assetNames.some(name => name.includes(chunkName))) {
+      throw new Error(`Expected package smoke build to emit lazy chunk containing ${chunkName}`)
+    }
+  }
+
+  for (const assetName of assetNames) {
+    const assetPath = join(assetsDir, assetName)
+    const assetText = readFileSync(assetPath, 'utf8')
+    if (/^['"]use client['"];?/m.test(assetText)) {
+      throw new Error(`Consumer bundle contains leaked use client directive: ${assetName}`)
+    }
+    assertFileSizeAtMost(
+      assetPath,
+      consumerOptionalChunkBudget,
+      `Consumer JS asset ${assetName}`,
+    )
   }
 }
 
@@ -169,11 +235,34 @@ writeFileSync(join(consumerDir, 'index.html'), [
   '',
 ].join('\n'))
 
+writeFileSync(join(consumerDir, 'vite.config.ts'), `import { defineConfig } from 'vite'
+
+export default defineConfig({
+  build: {
+    manifest: true,
+    chunkSizeWarningLimit: 1600,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          const normalizedId = id.replaceAll('\\\\', '/')
+          if (
+            normalizedId.includes('/node_modules/react/') ||
+            normalizedId.includes('/node_modules/react-dom/') ||
+            normalizedId.includes('/node_modules/scheduler/')
+          ) {
+            return 'react-vendor'
+          }
+        },
+      },
+    },
+  },
+})
+`)
+
 writeFileSync(join(consumerDir, 'src', 'main.tsx'), `import React from 'react'
 import { createRoot } from 'react-dom/client'
 import {
   FileSource,
-  StorageProvider,
   UpupUploader,
   type UpupUploaderProps,
 } from '@upup/react'
@@ -187,26 +276,11 @@ import {
 } from '@upup/core'
 import { arSA } from '@upup/core/i18n'
 import { resolveTheme, tokensToVars } from '@upup/core/theme'
-import { createHandler, InMemoryTokenStore, type UpupServerConfig } from '@upup/server'
-import { createUpupHandler } from '@upup/server/next'
 
 const core = new UpupCore({ restrictions: { maxNumberOfFiles: 2 } })
 const translator = createTranslator({ bundle: enUS, fallback: arSA })
 const theme = resolveTheme({ mode: 'light' })
 const vars = tokensToVars(theme.tokens)
-const tokenStore = new InMemoryTokenStore()
-
-const serverConfig: UpupServerConfig = {
-  storage: {
-    type: StorageProvider.AWS,
-    bucket: 'smoke',
-    region: 'us-east-1',
-  },
-  tokenStore,
-}
-
-const routeHandler = createHandler(serverConfig)
-const nextHandler = createUpupHandler(serverConfig)
 
 const props: UpupUploaderProps = {
   sources: [FileSource.LOCAL, FileSource.URL],
@@ -218,7 +292,7 @@ const props: UpupUploaderProps = {
   },
 }
 
-console.log(Boolean(core), Boolean(routeHandler), Boolean(nextHandler.POST), Object.keys(vars).length)
+console.log(Boolean(core), Object.keys(vars).length)
 
 function App() {
   return <UpupUploader {...props} />
@@ -227,9 +301,31 @@ function App() {
 createRoot(document.getElementById('root')!).render(<App />)
 `)
 
+writeFileSync(join(consumerDir, 'src', 'server-smoke.ts'), `import { StorageProvider } from '@upup/core'
+import { createHandler, InMemoryTokenStore, type UpupServerConfig } from '@upup/server'
+import { createUpupHandler } from '@upup/server/next'
+
+const tokenStore = new InMemoryTokenStore()
+
+const serverConfig: UpupServerConfig = {
+  storage: {
+    type: StorageProvider.AWS,
+    bucket: 'smoke',
+    region: 'us-east-1',
+  },
+  tokenStore,
+}
+
+export const serverSmoke = {
+  routeHandler: createHandler(serverConfig),
+  nextHandler: createUpupHandler(serverConfig),
+}
+`)
+
 runPnpm(['--ignore-workspace', 'install', '--no-frozen-lockfile'], consumerDir)
 runPnpm(['--ignore-workspace', 'run', 'typecheck'], consumerDir)
 runPnpm(['--ignore-workspace', 'run', 'build'], consumerDir)
+assertConsumerBundleShape()
 
 const lockfile = join(consumerDir, 'pnpm-lock.yaml')
 if (existsSync(lockfile) && readFileSync(lockfile, 'utf8').includes('workspace:')) {
