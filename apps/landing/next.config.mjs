@@ -1,3 +1,9 @@
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const repoRoot = join(__dirname, '../..');
+
 /** @type {import('next').NextConfig} */
 const isDev = process.env.NODE_ENV !== 'production';
 
@@ -14,6 +20,9 @@ const nextConfig = {
         : undefined,
     transpilePackages: ['@stackblitz/sdk'],
     trailingSlash: true,
+    turbopack: {
+        root: repoRoot,
+    },
     async rewrites() {
         if (isDev) {
             return {
