@@ -17,7 +17,7 @@
         "../landing/public/documentation/**"
       ]
     },
-    "landing#build": {
+    "@upup/landing#build": {
       "dependsOn": ["docs#build"]
     },
     "playground#build": {},

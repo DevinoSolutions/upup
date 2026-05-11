@@ -149,10 +149,11 @@ package):
 + import type { DeepPartialSlots } from '@upup/react'
 ```
 
-Everything you need now lives under the single `@upup/react`
-install — the v2.0.0 split across `@upup/react`, `@upup/shared`, `@upup/core`
-has been collapsed. The former sub-packages are still workspace modules
-internally but aren't published.
+The public package set is now `@upup/react`, `@upup/core`, and
+`@upup/server`. React UI types are re-exported from `@upup/react`;
+headless contracts, i18n bundles, and theme contracts live in
+`@upup/core`; route handlers and framework adapters live in
+`@upup/server`. The former public `@upup/shared` package is removed.
 
 ## Events — no change
 
@@ -163,9 +164,8 @@ untouched.
 
 ## CoreOptions typing
 
-Consumers using the headless `UpupCore` class (re-exported from
-`@upup/react`) who pass `locale` or `translations`
-directly will see tighter types:
+Consumers using the headless `UpupCore` class from `@upup/core` who
+pass `locale` or `translations` directly will see tighter types:
 
 ```diff
   new UpupCore({
@@ -180,8 +180,8 @@ directly will see tighter types:
 
 ## Full slot map reference
 
-See `packages/shared/src/theme/slots.ts` for the canonical
-`UpupThemeSlots` interface. The top-level keys are:
+See `@upup/core/theme` for the canonical `UpupThemeSlots` interface.
+The top-level keys are:
 
 - `uploader` — outer wrapper / container
 - `dropZone` — the drop target itself
