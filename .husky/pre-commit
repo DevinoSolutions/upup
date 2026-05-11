@@ -1,4 +1,4 @@
 #!/usr/bin/env sh
-pnpm --filter @upup/shared run test
 pnpm --filter @upup/core run test
 pnpm --filter @upup/react run test
+pnpm --filter @upup/server run test

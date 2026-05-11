@@ -1,11 +1,15 @@
-import { describe, it, expect } from 'vitest'
-import { render, fireEvent, waitFor } from '@testing-library/react'
+import { afterEach, describe, it, expect } from 'vitest'
+import { cleanup, render, fireEvent, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { axe, toHaveNoViolations, type JestAxeConfigureOptions } from 'jest-axe'
 import React from 'react'
 import { UpupUploader } from '../src'
 
 expect.extend(toHaveNoViolations)
+
+afterEach(() => {
+    cleanup()
+})
 
 /**
  * Render <UpupUploader> with the minimum props needed across the suite.
