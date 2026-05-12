@@ -1,30 +1,32 @@
 import React, { useCallback } from 'react'
 import { TbUpload } from 'react-icons/tb'
-import { useRootContext } from '../context/RootContext'
+import { formatUiMessage as t, pluralUiMessage as plural } from '@upup/core'
+import {
+    useUploaderFiles,
+    useUploaderI18n,
+    useUploaderOptions,
+    useUploaderRuntime,
+    useUploaderTheme,
+    useUploaderView,
+} from '../context/RootContext'
 import useAdapterSelector from '../hooks/useAdapterSelector'
 import { cn } from '../lib/tailwind'
-import { plural, t } from '../shared/i18n'
 import ShouldRender from './shared/ShouldRender'
 
 export default function AdapterSelector() {
+    const { core, inputRef } = useUploaderRuntime()
+    const { translations: tr } = useUploaderI18n()
+    const { isAddingMore, setIsAddingMore } = useUploaderView()
+    const { setFiles } = useUploaderFiles()
+    const { isDark: dark, slotOverrides: slotClasses } = useUploaderTheme()
     const {
-        core,
-        props: {
-            mini,
-            allowedFileTypes,
-            multiple,
-            limit,
-            maxFileSize,
-            isDarkTheme: dark,
-            slotClasses,
-            folderPickerButtonVisible,
-        },
-        translations: tr,
-        isAddingMore,
-        setIsAddingMore,
-        inputRef,
-        setFiles,
-    } = useRootContext()
+        mini,
+        allowedFileTypes,
+        multiple,
+        limit,
+        maxFileSize,
+        folderPickerButtonVisible,
+    } = useUploaderOptions()
 
     const constraintParts: string[] = []
     if (allowedFileTypes && allowedFileTypes !== '*/*' && allowedFileTypes !== '*') {

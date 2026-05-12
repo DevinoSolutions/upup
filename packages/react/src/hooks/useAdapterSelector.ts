@@ -1,17 +1,20 @@
 import { ChangeEventHandler, useCallback, useMemo } from 'react'
 import { FileSource } from '@upup/core'
-import { useRootContext } from '../context/RootContext'
+import {
+    useUploaderFiles,
+    useUploaderI18n,
+    useUploaderOptions,
+    useUploaderRuntime,
+    useUploaderSource,
+} from '../context/RootContext'
 import { uploadSourceObject } from '../lib/constants'
 
 export default function useAdapterSelector() {
-    const {
-        core,
-        inputRef,
-        setActiveAdapter,
-        setFiles,
-        translations,
-        props: { sources, onIntegrationClick },
-    } = useRootContext()
+    const { core, inputRef } = useUploaderRuntime()
+    const { setActiveAdapter } = useUploaderSource()
+    const { setFiles } = useUploaderFiles()
+    const { translations } = useUploaderI18n()
+    const { sources, onIntegrationClick } = useUploaderOptions()
 
     const chosenSources = useMemo(
         () =>

@@ -1,6 +1,11 @@
 import React, { MouseEventHandler, memo, useCallback, useState } from 'react'
 import type { UploadFile } from '@upup/core'
-import { useRootContext } from '../context/RootContext'
+import {
+    useUploaderFiles,
+    useUploaderOptions,
+    useUploaderRuntime,
+    useUploaderTheme,
+} from '../context/RootContext'
 import { cn } from '../lib/tailwind'
 import FilePreview from './FilePreview'
 import FilePreviewPortal from './FilePreviewPortal'
@@ -10,11 +15,10 @@ type Props = {
 }
 
 export default memo(function FileItem({ file }: Props) {
-    const {
-        core,
-        files,
-        props: { slotClasses, onFileClick },
-    } = useRootContext()
+    const { core } = useUploaderRuntime()
+    const { files } = useUploaderFiles()
+    const { onFileClick } = useUploaderOptions()
+    const { slotOverrides: slotClasses } = useUploaderTheme()
     const [showPreviewPortal, setShowPreviewPortal] = useState(false)
     const [canPreview, setCanPreview] = useState(false)
 

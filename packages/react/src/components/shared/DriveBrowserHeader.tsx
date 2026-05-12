@@ -2,7 +2,11 @@ import { Root, User } from 'google'
 import { MicrosoftUser, OneDriveRoot } from 'microsoft'
 import React, { Dispatch, SetStateAction } from 'react'
 import { TbSearch, TbUser } from 'react-icons/tb'
-import { useRootContext } from '../../context/RootContext'
+import {
+    useUploaderI18n,
+    useUploaderSource,
+    useUploaderTheme,
+} from '../../context/RootContext'
 import { cn } from '../../lib/tailwind'
 import ShouldRender from './ShouldRender'
 
@@ -27,11 +31,9 @@ export default function DriveBrowserHeader({
     onSearch,
     searchTerm,
 }: Readonly<Props>) {
-    const {
-        setActiveAdapter,
-        translations: tr,
-        props: { isDarkTheme: dark, slotClasses },
-    } = useRootContext()
+    const { setActiveAdapter } = useUploaderSource()
+    const { translations: tr } = useUploaderI18n()
+    const { isDark: dark, slotOverrides: slotClasses } = useUploaderTheme()
 
     if (!user) return null
 

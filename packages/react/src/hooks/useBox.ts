@@ -1,5 +1,9 @@
 import { useCallback, useEffect, useState } from 'react'
-import { useRootContext } from '../context/RootContext'
+import {
+    useUploaderOptions,
+    useUploaderRuntime,
+    useUploaderSource,
+} from '../context/RootContext'
 import { useBoxAuth } from './useBoxAuth'
 
 type BoxUser = { name: string; email: string }
@@ -9,11 +13,9 @@ type BoxFolder = BoxItem & { children?: BoxItem[] }
 const BOX_API = 'https://api.box.com/2.0'
 
 export function useBox() {
-    const {
-        core,
-        props: { onError },
-        boxConfigs,
-    } = useRootContext()
+    const { core } = useUploaderRuntime()
+    const { onError } = useUploaderOptions()
+    const { boxConfigs } = useUploaderSource()
 
     const { isAuthenticated, token, isLoading, authenticate, logout, refreshAccessToken, refreshToken } = useBoxAuth(boxConfigs as any)
 

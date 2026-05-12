@@ -25,18 +25,28 @@ vi.mock('../src/context/RootContext', () => ({
         SUCCESSFUL: 'SUCCESSFUL',
         FAILED: 'FAILED',
     },
-    useRootContext: () => ({
+    useUploaderView: () => ({
         isAddingMore: false,
+        viewMode: _viewMode,
+    }),
+    useUploaderSource: () => ({
         activeAdapter: null,
+    }),
+    useUploaderFiles: () => ({
         files: makeFilesMap(_fileCount),
+    }),
+    useUploaderI18n: () => ({
         translations: {
-            uploadFiles: 'Upload {count} file',
-            uploadFilesPlural: 'Upload {count} files',
+            uploadFiles_one: 'Upload {{count}} file',
+            uploadFiles_other: 'Upload {{count}} files',
             done: 'Done',
             retryUpload: 'Retry',
             resumeUpload: 'Resume',
             pauseUpload: 'Pause',
+            cancel: 'Cancel',
         },
+    }),
+    useUploaderUploadControls: () => ({
         upload: {
             proceedUpload: vi.fn(),
             retryUpload: vi.fn(),
@@ -47,19 +57,20 @@ vi.mock('../src/context/RootContext', () => ({
             uploadedBytes: 0,
             totalBytes: 0,
         },
-        props: {
-            isDarkTheme: false,
-            themeMode: 'light',
-            slotClasses: {},
-            isProcessing: false,
-            maxRetries: 0,
-            resumable: undefined,
-        },
         handleDone: vi.fn(),
         handleCancel: vi.fn(),
         handlePause: vi.fn(),
         handleResume: vi.fn(),
-        viewMode: _viewMode,
+    }),
+    useUploaderOptions: () => ({
+        isProcessing: false,
+        maxRetries: 0,
+        resumable: undefined,
+    }),
+    useUploaderTheme: () => ({
+        isDark: false,
+        slotOverrides: {},
+        slots: undefined,
     }),
 }))
 

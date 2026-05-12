@@ -1,6 +1,12 @@
 import { useCallback, useState } from 'react'
-import { t } from '../shared/i18n'
-import { useRootContext } from '../context/RootContext'
+import { formatUiMessage as t } from '@upup/core'
+import {
+    useUploaderFiles,
+    useUploaderI18n,
+    useUploaderOptions,
+    useUploaderRuntime,
+    useUploaderSource,
+} from '../context/RootContext'
 import type { DropboxFile, DropboxRoot } from './dropbox-types'
 
 /**
@@ -50,13 +56,11 @@ const getDownloadUrl = async (
 }
 
 export default function useDropboxUploader(token?: string) {
-    const {
-        core,
-        props: { onError, allowedFileTypes },
-        setActiveAdapter,
-        setFiles,
-        translations,
-    } = useRootContext()
+    const { core } = useUploaderRuntime()
+    const { onError, allowedFileTypes } = useUploaderOptions()
+    const { setActiveAdapter } = useUploaderSource()
+    const { setFiles } = useUploaderFiles()
+    const { translations } = useUploaderI18n()
     const [path, setPath] = useState<DropboxRoot[]>([])
     const [selectedFiles, setSelectedFiles] = useState<DropboxFile[]>([])
     const [showLoader, setShowLoader] = useState(false)
@@ -103,7 +107,7 @@ export default function useDropboxUploader(token?: string) {
                 setIsClickLoading(false)
             }
         },
-        [token, onError],
+        [core, onError, token],
     )
 
     /**
@@ -158,7 +162,7 @@ export default function useDropboxUploader(token?: string) {
                 return
             }
         },
-        [onError],
+        [core, onError],
     )
 
     const downloadFiles = useCallback(
@@ -181,7 +185,7 @@ export default function useDropboxUploader(token?: string) {
 
             return await Promise.all(promises)
         },
-        [downloadFile, onError],
+        [core, downloadFile, onError, translations],
     )
 
     /**
@@ -219,11 +223,13 @@ export default function useDropboxUploader(token?: string) {
         }
     }, [
         downloadFiles,
+        core,
         onError,
         selectedFiles,
         setActiveAdapter,
         setFiles,
         token,
+        translations,
     ])
 
     /**
@@ -268,7 +274,16 @@ export default function useDropboxUploader(token?: string) {
                 setDownloadProgress(0)
             }
         },
-        [allowedFileTypes, core, downloadFiles, onError, setActiveAdapter, setFiles, token],
+        [
+            allowedFileTypes,
+            core,
+            downloadFiles,
+            onError,
+            setActiveAdapter,
+            setFiles,
+            token,
+            translations,
+        ],
     )
 
     const onSelectCurrentFolder = useCallback(async () => {
@@ -339,7 +354,7 @@ export default function useDropboxUploader(token?: string) {
             // v2: emit folder select error via UpupCore
             core?.emit('dropbox-folder-select-error', { error })
         }
-    }, [core, handleSubmitWithFiles, onError, path, token])
+    }, [core, handleSubmitWithFiles, onError, path, token, translations])
 
     return {
         path,

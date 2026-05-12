@@ -1,6 +1,5 @@
 import React, { Dispatch, SetStateAction, memo, useMemo } from 'react'
-import type { InternalFlatClassNames } from '@upup/core'
-import type { Translations } from '../shared/i18n/types'
+import type { InternalFlatClassNames, Translations } from '@upup/core'
 import {
     fileCanPreviewText,
     fileGetExtension,

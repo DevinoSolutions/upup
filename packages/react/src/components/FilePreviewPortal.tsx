@@ -8,8 +8,8 @@ import React, {
     useState,
 } from 'react'
 import { createPortal } from 'react-dom'
-import { t } from '../shared/i18n'
-import { useRootContext } from '../context/RootContext'
+import { formatUiMessage as t } from '@upup/core'
+import { useUploaderI18n, useUploaderTheme } from '../context/RootContext'
 import {
     fileGetIsImage,
     fileGetIsPdf,
@@ -43,10 +43,8 @@ export default memo(
         },
         ref,
     ) {
-        const {
-            props: { isDarkTheme: dark, slotClasses },
-            translations: tr,
-        } = useRootContext()
+        const { isDark: dark, slotOverrides: slotClasses } = useUploaderTheme()
+        const { translations: tr } = useUploaderI18n()
         const isImage = useMemo(() => fileGetIsImage(fileType), [fileType])
         const isPdf = useMemo(() => fileGetIsPdf(fileType, fileName), [fileType, fileName])
         const isText = useMemo(

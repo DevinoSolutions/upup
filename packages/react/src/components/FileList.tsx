@@ -1,8 +1,17 @@
 import { useVirtualizer } from '@tanstack/react-virtual'
 import React, { memo, useRef } from 'react'
 import { TbPlayerPauseFilled, TbPlayerPlayFilled, TbX } from 'react-icons/tb'
-import { plural, t } from '../shared/i18n'
-import { UploadStatus, useRootContext } from '../context/RootContext'
+import { formatUiMessage as t, pluralUiMessage as plural } from '@upup/core'
+import {
+    UploadStatus,
+    useUploaderFiles,
+    useUploaderI18n,
+    useUploaderOptions,
+    useUploaderSource,
+    useUploaderTheme,
+    useUploaderUploadControls,
+    useUploaderView,
+} from '../context/RootContext'
 import { cn } from '../lib/tailwind'
 import FileItem from './FileItem'
 import MainBoxHeader from './shared/MainBoxHeader'
@@ -29,11 +38,11 @@ function formatEta(seconds: number): string {
 }
 
 export default memo(function FileList() {
+    const { isAddingMore, viewMode } = useUploaderView()
+    const { activeAdapter } = useUploaderSource()
+    const { files } = useUploaderFiles()
+    const { translations: tr } = useUploaderI18n()
     const {
-        isAddingMore,
-        activeAdapter,
-        files,
-        translations: tr,
         upload: {
             proceedUpload,
             retryUpload,
@@ -44,14 +53,13 @@ export default memo(function FileList() {
             uploadedBytes,
             totalBytes,
         },
-        props: { isDarkTheme: dark, slotClasses, isProcessing, resumable },
         handleDone,
         handleCancel,
         handlePause,
         handleResume,
-        viewMode,
-        themeSlots,
-    } = useRootContext()
+    } = useUploaderUploadControls()
+    const { isProcessing, resumable } = useUploaderOptions()
+    const { isDark: dark, slotOverrides: slotClasses, slots: themeSlots } = useUploaderTheme()
 
     const scrollRef = useRef<HTMLDivElement>(null)
 

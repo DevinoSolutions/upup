@@ -1,5 +1,5 @@
 import React from 'react'
-import { useRootContext } from '../context/RootContext'
+import { useUploaderRuntime, useUploaderSource } from '../context/RootContext'
 import useGoogleDrive from '../hooks/useGoogleDrive'
 
 import useGoogleDriveUploader from '../hooks/useGoogleDriveUploader'
@@ -8,7 +8,8 @@ import DriveBrowser from './shared/DriveBrowser'
 import ServerModeDriveUploader from './ServerModeDriveUploader'
 
 export default function GoogleDriveUploader() {
-    const { mode, setActiveAdapter } = useRootContext()
+    const { mode } = useUploaderRuntime()
+    const { setActiveAdapter } = useUploaderSource()
     if (mode === 'server') {
         return (
             <ServerModeDriveUploader
@@ -21,7 +22,7 @@ export default function GoogleDriveUploader() {
 }
 
 function ClientGoogleDriveUploader() {
-    const { googleDriveConfigs } = useRootContext()
+    const { googleDriveConfigs } = useUploaderSource()
     const {
         user,
         googleFiles: driveFiles,

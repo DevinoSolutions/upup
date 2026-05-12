@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { useRootContext } from '../context/RootContext'
+import { useUploaderTheme } from '../context/RootContext'
 import {
     useServerModeDrive,
     type ServerDriveFile,
@@ -28,9 +28,7 @@ export default function ServerModeDriveUploader({
     onBack,
     'data-upup-slot': dataUpupSlot = `drive-browser-${provider}`,
 }: Readonly<Props>) {
-    const {
-        props: { isDarkTheme: dark },
-    } = useRootContext()
+    const { isDark: dark } = useUploaderTheme()
     const { state, search, setSearch, refresh, transfer, startAuth } =
         useServerModeDrive(provider)
     const [selected, setSelected] = useState<Set<string>>(new Set())

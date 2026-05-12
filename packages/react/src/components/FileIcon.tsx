@@ -24,7 +24,7 @@ import {
     TbFileTypeXml,
     TbFileTypeZip,
 } from 'react-icons/tb'
-import { useRootContext } from '../context/RootContext'
+import { useUploaderTheme } from '../context/RootContext'
 import { cn } from '../lib/tailwind'
 
 const fileTypes = {
@@ -59,9 +59,7 @@ export default memo(
             extension?: string
         } & SVGAttributes<SVGElement>
     >(function FileIcon({ extension = '', className, ...restProps }, ref) {
-        const {
-            props: { isDarkTheme: dark },
-        } = useRootContext()
+        const { isDark: dark } = useUploaderTheme()
         const IconComponent = (fileTypes[extension] || TbFile) as React.ElementType
         return (
             <IconComponent

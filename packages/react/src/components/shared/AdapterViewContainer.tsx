@@ -1,5 +1,5 @@
 import React, { HTMLAttributes, PropsWithChildren } from 'react'
-import { useRootContext } from '../../context/RootContext'
+import { useUploaderTheme } from '../../context/RootContext'
 import { cn } from '../../lib/tailwind'
 
 export default function AdapterViewContainer({
@@ -7,9 +7,7 @@ export default function AdapterViewContainer({
     isLoading = false,
     ...rest
 }: PropsWithChildren<{ isLoading?: boolean } & HTMLAttributes<HTMLDivElement>>) {
-    const {
-        props: { isDarkTheme: dark, slotClasses },
-    } = useRootContext()
+    const { isDark: dark, slotOverrides: slotClasses } = useUploaderTheme()
 
     return (
         <div data-testid="upup-adapter-view"

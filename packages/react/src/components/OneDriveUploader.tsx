@@ -1,5 +1,5 @@
 import React from 'react'
-import { useRootContext } from '../context/RootContext'
+import { useUploaderRuntime, useUploaderSource } from '../context/RootContext'
 import useOneDrive from '../hooks/useOneDrive'
 
 import useOneDriveUploader from '../hooks/useOneDriveUploader'
@@ -8,7 +8,8 @@ import DriveBrowser from './shared/DriveBrowser'
 import ServerModeDriveUploader from './ServerModeDriveUploader'
 
 export default function OneDriveUploader() {
-    const { mode, oneDriveConfigs, setActiveAdapter } = useRootContext()
+    const { mode } = useUploaderRuntime()
+    const { setActiveAdapter } = useUploaderSource()
     if (mode === 'server') {
         return (
             <ServerModeDriveUploader
@@ -21,7 +22,7 @@ export default function OneDriveUploader() {
 }
 
 function ClientOneDriveUploader() {
-    const { oneDriveConfigs } = useRootContext()
+    const { oneDriveConfigs } = useUploaderSource()
     const {
         user,
         oneDriveFiles: driveFiles,

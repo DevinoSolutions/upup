@@ -1,5 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { useRootContext } from '../context/RootContext'
+import {
+    useUploaderI18n,
+    useUploaderOptions,
+    useUploaderRuntime,
+} from '../context/RootContext'
 import { createSecureStorage } from '../lib/storageHelper'
 
 const TOKEN_KEY = 'box_access_token'
@@ -29,11 +33,9 @@ const b64url = (ab: ArrayBuffer) =>
         .replace(/=+$/, '')
 
 export function useBoxAuth(cfg?: BoxConfigs) {
-    const {
-        core,
-        props: { onError },
-        translations,
-    } = useRootContext()
+    const { core } = useUploaderRuntime()
+    const { onError } = useUploaderOptions()
+    const { translations } = useUploaderI18n()
 
     const [token, setTok] = useState<string>()
     const [rtok, setRtok] = useState<string>()

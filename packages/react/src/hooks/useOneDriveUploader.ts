@@ -1,8 +1,14 @@
 import { Client } from '@microsoft/microsoft-graph-client'
 import { OneDriveFile, OneDriveRoot } from 'microsoft'
 import { useState } from 'react'
-import { t } from '../shared/i18n'
-import { useRootContext } from '../context/RootContext'
+import { formatUiMessage as t } from '@upup/core'
+import {
+    useUploaderFiles,
+    useUploaderI18n,
+    useUploaderOptions,
+    useUploaderRuntime,
+    useUploaderSource,
+} from '../context/RootContext'
 
 const formatFileItem = (item: any) => ({
     id: item.id,
@@ -42,13 +48,11 @@ const getDownloadUrl = async (file: OneDriveFile, graphClient: Client) => {
 }
 
 export default function useOneDriveUploader(graphClient?: Client) {
-    const {
-        core,
-        setFiles,
-        setActiveAdapter,
-        props: { onError, allowedFileTypes },
-        translations,
-    } = useRootContext()
+    const { core } = useUploaderRuntime()
+    const { onError, allowedFileTypes } = useUploaderOptions()
+    const { setActiveAdapter } = useUploaderSource()
+    const { setFiles } = useUploaderFiles()
+    const { translations } = useUploaderI18n()
     const [isClickLoading, setIsClickLoading] = useState<boolean>()
     const [path, setPath] = useState<OneDriveRoot[]>([])
     const [selectedFiles, setSelectedFiles] = useState<OneDriveFile[]>([])

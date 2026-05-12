@@ -8,8 +8,15 @@ import React, {
     useMemo,
 } from 'react'
 
-import type { Translations } from '../shared/i18n/types'
-import { useRootContext } from '../context/RootContext'
+import type { Translations } from '@upup/core'
+import {
+    useUploaderEditor,
+    useUploaderFiles,
+    useUploaderI18n,
+    useUploaderOptions,
+    useUploaderTheme,
+    useUploaderUploadControls,
+} from '../context/RootContext'
 import { fileCanPreviewText, fileGetIsImage, fileGetIsPdf, fileGetIsText } from '../lib/file'
 import { cn } from '../lib/tailwind'
 import FilePreviewThumbnail from './FilePreviewThumbnail'
@@ -40,21 +47,20 @@ export default memo(function FilePreview(props: Props) {
         ...restProps
     } = props
 
+    const { handleFileRemove, files } = useUploaderFiles()
+    const { translations: tr } = useUploaderI18n()
+    const { openImageEditor } = useUploaderEditor()
+    const { upload: { filesProgressMap } } = useUploaderUploadControls()
     const {
-        handleFileRemove,
-        translations: tr,
-        openImageEditor,
-        upload: { filesProgressMap },
-        props: {
-            slotClasses,
-            icons: { FileDeleteIcon },
-            allowPreview,
-            imageEditor,
-            isDarkTheme,
-        },
-        files,
-        themeSlots,
-    } = useRootContext()
+        icons: { FileDeleteIcon },
+        allowPreview,
+        imageEditor,
+    } = useUploaderOptions()
+    const {
+        isDark: isDarkTheme,
+        slotOverrides: slotClasses,
+        slots: themeSlots,
+    } = useUploaderTheme()
 
     const isImage = useMemo(() => fileGetIsImage(fileType), [fileType])
     const isPdf = useMemo(() => fileGetIsPdf(fileType, fileName), [fileType, fileName])

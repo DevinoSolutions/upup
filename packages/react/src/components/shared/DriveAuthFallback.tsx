@@ -1,7 +1,7 @@
 import React from 'react'
-import { useRootContext } from '../../context/RootContext'
+import { formatUiMessage as t } from '@upup/core'
+import { useUploaderI18n, useUploaderTheme } from '../../context/RootContext'
 import { cn } from '../../lib/tailwind'
-import { t } from '../../shared/i18n'
 import AdapterViewContainer from './AdapterViewContainer'
 
 type Props = {
@@ -15,10 +15,8 @@ export default function DriveAuthFallback({
     onRetry,
     'data-upup-slot': dataUpupSlot = 'drive-auth-fallback',
 }: Readonly<Props>) {
-    const {
-        props: { isDarkTheme: dark, slotClasses },
-        translations: tr,
-    } = useRootContext()
+    const { isDark: dark, slotOverrides: slotClasses } = useUploaderTheme()
+    const { translations: tr } = useUploaderI18n()
 
     return (
         <AdapterViewContainer data-upup-slot={dataUpupSlot}>

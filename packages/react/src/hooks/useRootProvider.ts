@@ -5,7 +5,9 @@ import {
     UploadStatus as CoreUploadStatus,
     createTranslator,
     enUS,
+    flattenTranslatorToUiTranslations,
     flattenSlotsToClassNames,
+    resolveTheme,
     type LocaleBundle,
     type Translator,
     type UploadFile,
@@ -18,7 +20,6 @@ import {
     TbPlus,
     TbTrash,
 } from 'react-icons/tb'
-import type { Translations } from '../shared/i18n/types'
 import { resolveAccept } from '../shared/lib/acceptPresets'
 import {
     ResolvedImageEditorOptions,
@@ -91,154 +92,6 @@ function mapCoreStatus(status: CoreUploadStatus): UploadStatus {
     }
 }
 
-function flattenLocaleBundle(translator: Translator): Translations {
-    const tr = (key: Parameters<Translator>[0], values?: Record<string, unknown>) =>
-        translator(key, values)
-
-    return {
-        cancel: tr('common.cancel'),
-        done: tr('common.done'),
-        loading: tr('common.loading'),
-        or: tr('common.or'),
-        myDevice: tr('adapters.myDevice'),
-        googleDrive: tr('adapters.googleDrive'),
-        oneDrive: tr('adapters.oneDrive'),
-        dropbox: tr('adapters.dropbox'),
-        box: tr('adapters.box'),
-        link: tr('adapters.link'),
-        camera: tr('adapters.camera'),
-        audio: tr('adapters.audio'),
-        screenCapture: tr('adapters.screenCapture'),
-        dragFileOr: tr('dropzone.dragFilesOr', { count: 1 }),
-        dragFilesOr: tr('dropzone.dragFilesOr', { count: 2 }),
-        browseFiles: tr('dropzone.browseFiles'),
-        selectAFolder: tr('dropzone.selectAFolder'),
-        maxFileSizeAllowed_one: tr('dropzone.maxFileSizeAllowed', {
-            size: '{{size}}',
-            unit: '{{unit}}',
-            count: 1,
-        }),
-        maxFileSizeAllowed_other: tr('dropzone.maxFileSizeAllowed', {
-            size: '{{size}}',
-            unit: '{{unit}}',
-            count: 2,
-        }),
-        addDocumentsHere: tr('dropzone.addDocumentsHere', { limit: '{{limit}}' }),
-        removeAllFiles: tr('header.removeAllFiles'),
-        addingMoreFiles: tr('header.addingMoreFiles'),
-        filesSelected_one: tr('header.filesSelected', { count: 1 }),
-        filesSelected_other: tr('header.filesSelected', { count: 2 }),
-        addMore: tr('header.addMore'),
-        switchToListView: tr('header.switchToListView'),
-        switchToGridView: tr('header.switchToGridView'),
-        dropzoneLabel: tr('dropzone.dropAriaLabel'),
-        uploadFiles_one: tr('fileList.uploadFiles', { count: 1 }),
-        uploadFiles_other: tr('fileList.uploadFiles', { count: 2 }),
-        resumeUpload: tr('fileList.resumeUpload'),
-        retryUpload: tr('fileList.retryUpload'),
-        pauseUpload: tr('fileList.pauseUpload'),
-        paused: tr('fileList.paused'),
-        uploadProgress: tr('fileList.uploadProgress'),
-        removeFile: tr('filePreview.removeFile'),
-        clickToPreview: tr('filePreview.clickToPreview'),
-        editImage: tr('filePreview.editImage'),
-        closeEditor: tr('filePreview.closeEditor'),
-        zeroBytes: tr('filePreview.zeroBytes'),
-        bytes: tr('filePreview.bytes'),
-        kb: tr('filePreview.kb'),
-        mb: tr('filePreview.mb'),
-        gb: tr('filePreview.gb'),
-        tb: tr('filePreview.tb'),
-        previewError: tr('filePreview.previewError', { message: '{{message}}' }),
-        noAcceptedFilesFound: tr('driveBrowser.noAcceptedFilesFound'),
-        selectThisFolder: tr('driveBrowser.selectThisFolder'),
-        addFiles_one: tr('driveBrowser.addFiles', { count: 1 }),
-        addFiles_other: tr('driveBrowser.addFiles', { count: 2 }),
-        logOut: tr('driveBrowser.logOut'),
-        search: tr('driveBrowser.search'),
-        authenticatePrompt: tr('driveBrowser.authenticatePrompt', { provider: '{{provider}}' }),
-        signInWith: tr('driveBrowser.signInWith', { provider: '{{provider}}' }),
-        enterFileUrl: tr('url.enterFileUrl'),
-        fetch: tr('url.fetch'),
-        capture: tr('camera.capture'),
-        switchToCamera: tr('camera.switchToCamera', { side: '{{side}}' }),
-        addImage: tr('camera.addImage'),
-        front: tr('camera.front'),
-        back: tr('camera.back'),
-        poweredBy: tr('branding.poweredBy'),
-        builtBy: tr('branding.builtBy'),
-        multipleFilesNotAllowed: tr('errors.multipleFilesNotAllowed'),
-        failedToGetUploadUrl: tr('errors.failedToGetUploadUrl'),
-        statusError: tr('errors.statusError', {
-            status: '{{status}}',
-            statusText: '{{statusText}}',
-            details: '{{details}}',
-        }),
-        networkErrorDuringUpload: tr('errors.networkErrorDuringUpload', {
-            status: '{{status}}',
-            statusText: '{{statusText}}',
-        }),
-        missingRequiredConfiguration: tr('errors.missingRequiredConfiguration', { missing: '{{missing}}' }),
-        invalidProvider: tr('errors.invalidProvider', {
-            provider: '{{provider}}',
-            validOptions: '{{validOptions}}',
-        }),
-        invalidUploadEndpoint: tr('errors.invalidUploadEndpoint', {
-            uploadEndpoint: '{{uploadEndpoint}}',
-            error: '{{error}}',
-        }),
-        maxFileSizeMustBeGreater: tr('errors.maxFileSizeMustBeGreater'),
-        invalidAcceptFormat: tr('errors.invalidAcceptFormat', { accept: '{{accept}}' }),
-        unauthorizedAccess: tr('errors.unauthorizedAccess'),
-        presignedUrlInvalid: tr('errors.presignedUrlInvalid'),
-        temporaryCredentialsInvalid: tr('errors.temporaryCredentialsInvalid'),
-        corsMisconfigured: tr('errors.corsMisconfigured'),
-        fileTooLarge: tr('errors.fileTooLarge'),
-        invalidFileType: tr('errors.invalidFileType'),
-        storageQuotaExceeded: tr('errors.storageQuotaExceeded'),
-        signedUrlGenerationFailed: tr('errors.signedUrlGenerationFailed'),
-        uploadFailedWithCode: tr('errors.uploadFailedWithCode', { code: '{{code}}' }),
-        uploadFailed: tr('errors.uploadFailed', { message: '{{message}}' }),
-        dropboxSessionExpired: tr('errors.dropboxSessionExpired'),
-        dropboxMissingPermissions: tr('errors.dropboxMissingPermissions'),
-        failedToRefreshExpiredToken: tr('errors.failedToRefreshExpiredToken'),
-        allowedLimitSurpassed: tr('errors.allowedLimitSurpassed'),
-        fileUnsupportedType: tr('errors.fileUnsupportedType', { name: '{{name}}' }),
-        fileTooLargeName: tr('errors.fileTooLargeName', {
-            name: '{{name}}',
-            size: '{{size}}',
-            unit: '{{unit}}',
-        }),
-        fileTooSmallName: tr('errors.fileTooSmallName', {
-            name: '{{name}}',
-            size: '{{size}}',
-            unit: '{{unit}}',
-        }),
-        filePreviouslySelected: tr('errors.filePreviouslySelected', { name: '{{name}}' }),
-        fileWithUrlPreviouslySelected: tr('errors.fileWithUrlPreviouslySelected', { url: '{{url}}' }),
-        errorCompressingFile: tr('errors.errorCompressingFile', { name: '{{name}}' }),
-        clientIdRequired: tr('errors.clientIdRequired'),
-        popupBlocked: tr('errors.popupBlocked'),
-        dropboxClientIdMissing: tr('errors.dropboxClientIdMissing'),
-        dropboxAuthFailed: tr('errors.dropboxAuthFailed'),
-        boxClientIdMissing: tr('errors.boxClientIdMissing'),
-        boxAuthFailed: tr('errors.boxAuthFailed'),
-        boxSessionExpired: tr('errors.boxSessionExpired'),
-        boxNoAccessToken: tr('errors.boxNoAccessToken'),
-        genericErrorDetails: tr('errors.genericErrorDetails', { details: '{{details}}' }),
-        errorProcessingFiles: tr('errors.errorProcessingFiles', { message: '{{message}}' }),
-        errorSelectingFolder: tr('errors.errorSelectingFolder', { message: '{{message}}' }),
-        graphClientNotInitialized: tr('errors.graphClientNotInitialized'),
-        dropboxNoAccessToken: tr('errors.dropboxNoAccessToken'),
-        silentTokenAcquisitionFailed: tr('errors.silentTokenAcquisitionFailed', { details: '{{details}}' }),
-        msalInitializationFailed: tr('errors.msalInitializationFailed', { details: '{{details}}' }),
-        silentTokenAcquisitionProceeding: tr('errors.silentTokenAcquisitionProceeding', { details: '{{details}}' }),
-        signInFailed: tr('errors.signInFailed', { message: '{{message}}' }),
-        handleSignInFailed: tr('errors.handleSignInFailed', { message: '{{message}}' }),
-        signOutFailed: tr('errors.signOutFailed', { message: '{{message}}' }),
-    }
-}
-
 function normalizeSource(source: string): FileSource | undefined {
     return (Object.values(FileSource) as string[]).includes(source)
         ? source as FileSource
@@ -252,6 +105,10 @@ const DEFAULT_SOURCES = [
     FileSource.MICROPHONE,
     FileSource.SCREEN,
 ]
+
+const EMPTY_THEME_SLOTS = {}
+const EMPTY_STYLE = {}
+const DEFAULT_MAX_FILE_SIZE = { size: 1, unit: 'GB' as const }
 
 export default function useRootProvider({
     allowedFileTypes: acceptProp = '*',
@@ -336,17 +193,27 @@ export default function useRootProvider({
     const totalBytesRef = useRef(0)
     const crashRecoveryRestoreRef = useRef(false)
 
-    const resolvedSources = sources
-        ? sources.map(source => normalizeSource(source)).filter(Boolean) as FileSource[]
-        : DEFAULT_SOURCES
+    const resolvedSources = useMemo(
+        () => sources
+            ? sources.map(source => normalizeSource(source)).filter(Boolean) as FileSource[]
+            : DEFAULT_SOURCES,
+        [sources],
+    )
     const resolvedLimit = maxFiles ?? restrictions?.maxNumberOfFiles ?? 10
     const resolvedMode = modeProp ?? (serverUrl && !uploadEndpoint ? 'server' : 'client')
     const resolvedServerUrl = serverUrl
     const resolvedEndpoint = uploadEndpoint
-    const themeSlots = theme?.slots
-    const resolvedSlotClasses = flattenSlotsToClassNames(themeSlots)
     const themeMode = useResolvedThemeMode(theme?.mode)
-    const maxFileSize = maxFileSizeProp ?? restrictions?.maxFileSize ?? { size: 1, unit: 'GB' as const }
+    const resolvedTheme = useMemo(
+        () => resolveTheme({ ...(theme ?? {}), mode: themeMode }),
+        [theme, themeMode],
+    )
+    const themeSlots = resolvedTheme.slots
+    const resolvedSlotClasses = useMemo(
+        () => flattenSlotsToClassNames(themeSlots),
+        [themeSlots],
+    )
+    const maxFileSize = maxFileSizeProp ?? restrictions?.maxFileSize ?? DEFAULT_MAX_FILE_SIZE
     const minFileSize = minFileSizeProp ?? restrictions?.minFileSize
     const maxTotalFileSize = maxTotalFileSizeProp ?? restrictions?.maxTotalFileSize
     const accept = resolveAccept(restrictions?.allowedFileTypes ? restrictions.allowedFileTypes.join(',') : acceptProp)
@@ -387,7 +254,7 @@ export default function useRootProvider({
         [bundle, fallbackBundle, i18n?.overrides],
     )
     const translations = useMemo(
-        () => flattenLocaleBundle(translator),
+        () => flattenTranslatorToUiTranslations(translator),
         [translator],
     )
     const lang = bundle?.code ?? (typeof i18n?.locale === 'string' ? i18n.locale : 'en-US')
@@ -471,6 +338,52 @@ export default function useRootProvider({
         }
         return { enabled: false, autoOpen: 'never', display: 'inline' }
     }, [imageEditorProp])
+    const resolvedIcons = useMemo(() => ({
+        ContainerAddMoreIcon: icons.ContainerAddMoreIcon || TbPlus,
+        FileDeleteIcon: icons.FileDeleteIcon || TbTrash,
+        CameraCaptureIcon: icons.CameraCaptureIcon || TbCapture,
+        CameraRotateIcon: icons.CameraRotateIcon || TbCameraRotate,
+        CameraDeleteIcon: icons.CameraDeleteIcon || TbTrash,
+        LoaderIcon: icons.LoaderIcon || TbLoader,
+    }), [
+        icons.CameraCaptureIcon,
+        icons.CameraDeleteIcon,
+        icons.CameraRotateIcon,
+        icons.ContainerAddMoreIcon,
+        icons.FileDeleteIcon,
+        icons.LoaderIcon,
+    ])
+    const oneDriveConfigs = useMemo(() => cloudDrives?.oneDrive ? {
+        onedrive_client_id: cloudDrives.oneDrive.clientId,
+        redirectUri: cloudDrives.oneDrive.redirectUri,
+    } : undefined, [
+        cloudDrives?.oneDrive?.clientId,
+        cloudDrives?.oneDrive?.redirectUri,
+    ])
+    const googleDriveConfigs = useMemo(() => cloudDrives?.googleDrive ? {
+        google_client_id: cloudDrives.googleDrive.clientId,
+        google_api_key: cloudDrives.googleDrive.apiKey,
+        google_app_id: cloudDrives.googleDrive.appId,
+    } : undefined, [
+        cloudDrives?.googleDrive?.apiKey,
+        cloudDrives?.googleDrive?.appId,
+        cloudDrives?.googleDrive?.clientId,
+    ])
+    const dropboxConfigs = useMemo(() => cloudDrives?.dropbox ? {
+        dropbox_client_id: cloudDrives.dropbox.clientId,
+        dropbox_redirect_uri: cloudDrives.dropbox.redirectUri,
+    } : undefined, [
+        cloudDrives?.dropbox?.clientId,
+        cloudDrives?.dropbox?.redirectUri,
+    ])
+    const boxConfigs = useMemo(() => cloudDrives?.box ? {
+        box_client_id: cloudDrives.box.clientId,
+        box_redirect_uri: cloudDrives.box.redirectUri,
+    } : undefined, [
+        cloudDrives?.box?.clientId,
+        cloudDrives?.box?.redirectUri,
+    ])
+    const resolvedStyle = style ?? EMPTY_STYLE
 
     useEffect(() => {
         onStatusChange?.(upload.status.toLowerCase())
@@ -778,7 +691,14 @@ export default function useRootProvider({
         translator,
         lang,
         dir,
-        themeSlots,
+        theme: {
+            themeMode: resolvedTheme.mode as 'light' | 'dark',
+            isDark: resolvedTheme.mode === 'dark',
+            tokens: resolvedTheme.tokens,
+            resolved: resolvedTheme as typeof resolvedTheme & { mode: 'light' | 'dark' },
+            slotOverrides: resolvedSlotClasses,
+            slots: themeSlots ?? EMPTY_THEME_SLOTS,
+        },
         files: files as never,
         setFiles: handleSetSelectedFiles,
         dynamicUpload,
@@ -794,23 +714,10 @@ export default function useRootProvider({
         closeImageEditor,
         saveImageEdit,
         replaceFile: replaceFile as never,
-        oneDriveConfigs: cloudDrives?.oneDrive ? {
-            onedrive_client_id: cloudDrives.oneDrive.clientId,
-            redirectUri: cloudDrives.oneDrive.redirectUri,
-        } : undefined,
-        googleDriveConfigs: cloudDrives?.googleDrive ? {
-            google_client_id: cloudDrives.googleDrive.clientId,
-            google_api_key: cloudDrives.googleDrive.apiKey,
-            google_app_id: cloudDrives.googleDrive.appId,
-        } : undefined,
-        dropboxConfigs: cloudDrives?.dropbox ? {
-            dropbox_client_id: cloudDrives.dropbox.clientId,
-            dropbox_redirect_uri: cloudDrives.dropbox.redirectUri,
-        } : undefined,
-        boxConfigs: cloudDrives?.box ? {
-            box_client_id: cloudDrives.box.clientId,
-            box_redirect_uri: cloudDrives.box.redirectUri,
-        } : undefined,
+        oneDriveConfigs,
+        googleDriveConfigs,
+        dropboxConfigs,
+        boxConfigs,
         upload: {
             totalProgress,
             filesProgressMap,
@@ -826,8 +733,6 @@ export default function useRootProvider({
         },
         props: {
             mini,
-            themeMode,
-            isDarkTheme: themeMode === 'dark',
             maxRetries,
             resumable,
             onError,
@@ -847,17 +752,9 @@ export default function useRootProvider({
             showBranding,
             disableDragDrop,
             className: className ?? '',
-            style: style ?? {},
+            style: resolvedStyle,
             multiple,
-            icons: {
-                ContainerAddMoreIcon: icons.ContainerAddMoreIcon || TbPlus,
-                FileDeleteIcon: icons.FileDeleteIcon || TbTrash,
-                CameraCaptureIcon: icons.CameraCaptureIcon || TbCapture,
-                CameraRotateIcon: icons.CameraRotateIcon || TbCameraRotate,
-                CameraDeleteIcon: icons.CameraDeleteIcon || TbTrash,
-                LoaderIcon: icons.LoaderIcon || TbLoader,
-            },
-            slotClasses: resolvedSlotClasses,
+            icons: resolvedIcons,
             imageEditor: resolvedImageEditor,
         },
     }

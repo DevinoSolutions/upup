@@ -1,7 +1,15 @@
 import React, { useMemo } from 'react'
 import { TbLayoutGrid, TbLayoutList } from 'react-icons/tb'
-import { plural, t } from '../../shared/i18n'
-import { UploadStatus, useRootContext } from '../../context/RootContext'
+import { formatUiMessage as t, pluralUiMessage as plural } from '@upup/core'
+import {
+    UploadStatus,
+    useUploaderFiles,
+    useUploaderI18n,
+    useUploaderOptions,
+    useUploaderTheme,
+    useUploaderUploadControls,
+    useUploaderView,
+} from '../../context/RootContext'
 import { cn } from '../../lib/tailwind'
 import ShouldRender from './ShouldRender'
 
@@ -10,23 +18,17 @@ type Props = {
 }
 
 export default function MainBoxHeader({ handleCancel }: Readonly<Props>) {
+    const { files } = useUploaderFiles()
+    const { setIsAddingMore, isAddingMore, viewMode, setViewMode } = useUploaderView()
+    const { translations: tr } = useUploaderI18n()
     const {
-        files,
-        setIsAddingMore,
-        isAddingMore,
-        viewMode,
-        setViewMode,
-        translations: tr,
-        props: {
-            mini,
-            limit,
-            isProcessing,
-            isDarkTheme: dark,
-            slotClasses,
-            icons: { ContainerAddMoreIcon },
-        },
-        upload: { uploadStatus },
-    } = useRootContext()
+        mini,
+        limit,
+        isProcessing,
+        icons: { ContainerAddMoreIcon },
+    } = useUploaderOptions()
+    const { isDark: dark, slotOverrides: slotClasses } = useUploaderTheme()
+    const { upload: { uploadStatus } } = useUploaderUploadControls()
     const isUploading = uploadStatus === UploadStatus.ONGOING
     const isLimitReached = limit === files.size
     const cancelText = useMemo(

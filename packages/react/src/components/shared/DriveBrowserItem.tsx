@@ -1,7 +1,7 @@
 import { GoogleFile, Root } from 'google'
 import { OneDriveFile } from 'microsoft'
 import React from 'react'
-import { useRootContext } from '../../context/RootContext'
+import { useUploaderTheme } from '../../context/RootContext'
 import { cn } from '../../lib/tailwind'
 import DriveBrowserIcon from './DriveBrowserIcon'
 
@@ -18,9 +18,7 @@ export default function DriveBrowserItem({
     selectedFiles,
     handleClick,
 }: Readonly<DriveBrowserItemProps>) {
-    const {
-        props: { isDarkTheme: dark, slotClasses },
-    } = useRootContext()
+    const { isDark: dark, slotOverrides: slotClasses } = useUploaderTheme()
     const isFolder = Boolean(
         (file as OneDriveFile).isFolder || (file as GoogleFile).children,
     )

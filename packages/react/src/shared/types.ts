@@ -1,5 +1,4 @@
 import { FC } from 'react'
-import type { Translations } from './i18n/types'
 import type {
     FileSource,
     LocaleBundle,
@@ -14,7 +13,9 @@ import type {
     PresignedUrlResponse,
     ResumableUploadOptions,
     StorageProvider,
+    Translations,
     UploadFile,
+    UpupThemeConfig,
 } from '@upup/core'
 
 export type { Translations }
@@ -190,15 +191,7 @@ export type UpupUploaderProps = {
         allowedFileTypes?: string[]
     }
     /** v2: Theme configuration. mode replaces `dark`, tokens/slots replace flat styling overrides. */
-    theme?: {
-        mode?: 'light' | 'dark' | 'system'
-        tokens?: Record<string, unknown>
-        /**
-         * Per-slot className overrides — each override is optional and merged
-         * additively on top of the built-in classes via flattenSlotsToClassNames.
-         */
-        slots?: import('@upup/core').DeepPartialSlots
-    }
+    theme?: UpupThemeConfig
 
     /** Folder upload configuration. */
     folderUpload?: {

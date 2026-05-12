@@ -9,7 +9,7 @@ import React, {
 } from 'react'
 import { createPortal } from 'react-dom'
 import type { UploadFile } from '@upup/core'
-import { useRootContext } from '../context/RootContext'
+import { useUploaderOptions, useUploaderTheme } from '../context/RootContext'
 import {
     getFilerobotTheme,
     getImageEditorCssOverrides,
@@ -71,9 +71,8 @@ type FilerobotEditorProps = {
  */
 export default memo(function ImageEditorModal(props: Props) {
     const { file, onClose, onSave } = props
-    const {
-        props: { isDarkTheme: dark, imageEditor: editorConfig },
-    } = useRootContext()
+    const { imageEditor: editorConfig } = useUploaderOptions()
+    const { isDark: dark } = useUploaderTheme()
 
     const overlayRef = useRef<HTMLDivElement>(null)
     const previousFocusRef = useRef<Element | null>(null)

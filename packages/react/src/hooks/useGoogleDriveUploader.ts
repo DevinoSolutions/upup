@@ -1,7 +1,13 @@
 import { GoogleFile, Root, Token } from 'google'
 import { useState } from 'react'
-import { t } from '../shared/i18n'
-import { useRootContext } from '../context/RootContext'
+import { formatUiMessage as t } from '@upup/core'
+import {
+    useUploaderFiles,
+    useUploaderI18n,
+    useUploaderOptions,
+    useUploaderRuntime,
+    useUploaderSource,
+} from '../context/RootContext'
 import {
     getWorkspaceExportInfo,
     isDriveFileAccepted,
@@ -14,14 +20,11 @@ function handleSelectedFilesUpdate(prevFiles: GoogleFile[], file: GoogleFile) {
 }
 
 export default function useGoogleDriveUploader(token?: Token) {
-    const {
-        core,
-        props: { onError, allowedFileTypes },
-        googleDriveConfigs,
-        setActiveAdapter,
-        setFiles,
-        translations,
-    } = useRootContext()
+    const { core } = useUploaderRuntime()
+    const { onError, allowedFileTypes } = useUploaderOptions()
+    const { googleDriveConfigs, setActiveAdapter } = useUploaderSource()
+    const { setFiles } = useUploaderFiles()
+    const { translations } = useUploaderI18n()
     const [path, setPath] = useState<Root[]>([])
     const [selectedFiles, setSelectedFiles] = useState<GoogleFile[]>([])
     const [showLoader, setShowLoader] = useState(false)

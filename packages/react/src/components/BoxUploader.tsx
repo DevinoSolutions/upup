@@ -1,5 +1,5 @@
 import React from 'react'
-import { useRootContext } from '../context/RootContext'
+import { useUploaderRuntime, useUploaderSource } from '../context/RootContext'
 import { useBox } from '../hooks/useBox'
 import useBoxUploader from '../hooks/useBoxUploader'
 import DriveAuthFallback from './shared/DriveAuthFallback'
@@ -7,7 +7,8 @@ import DriveBrowser from './shared/DriveBrowser'
 import ServerModeDriveUploader from './ServerModeDriveUploader'
 
 export default function BoxUploader() {
-    const { mode, setActiveAdapter } = useRootContext()
+    const { mode } = useUploaderRuntime()
+    const { setActiveAdapter } = useUploaderSource()
     if (mode === 'server') {
         return (
             <ServerModeDriveUploader

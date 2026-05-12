@@ -39,17 +39,20 @@ async function scanSlot(
     overrides: JestAxeConfigureOptions = {},
 ) {
     let node: HTMLElement | null = null
-    await waitFor(() => {
-        node = container.querySelector(
-            `[data-upup-slot="${slot}"]`,
-        ) as HTMLElement | null
-        if (!node) {
-            throw new Error(
-                `scanSlot: no element with data-upup-slot="${slot}" found. ` +
-                    `Did the component render? Check activation steps.`,
-            )
-        }
-    })
+    await waitFor(
+        () => {
+            node = container.querySelector(
+                `[data-upup-slot="${slot}"]`,
+            ) as HTMLElement | null
+            if (!node) {
+                throw new Error(
+                    `scanSlot: no element with data-upup-slot="${slot}" found. ` +
+                        `Did the component render? Check activation steps.`,
+                )
+            }
+        },
+        { timeout: 5000 },
+    )
     return axe(node, overrides)
 }
 

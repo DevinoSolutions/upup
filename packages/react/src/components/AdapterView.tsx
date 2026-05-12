@@ -1,17 +1,21 @@
 import React, { Suspense } from 'react'
-import { useRootContext } from '../context/RootContext'
+import {
+    useUploaderI18n,
+    useUploaderOptions,
+    useUploaderRuntime,
+    useUploaderSource,
+    useUploaderTheme,
+} from '../context/RootContext'
 import { uploadSourceObject } from '../lib/constants'
 import { cn } from '../lib/tailwind'
 import DefaultLoaderIcon from './DefaultLoaderIcon'
 
 export default function AdapterView() {
-    const {
-        core,
-        activeAdapter,
-        setActiveAdapter,
-        translations: tr,
-        props: { mini, isDarkTheme: dark, slotClasses },
-    } = useRootContext()
+    const { core } = useUploaderRuntime()
+    const { activeAdapter, setActiveAdapter } = useUploaderSource()
+    const { translations: tr } = useUploaderI18n()
+    const { mini } = useUploaderOptions()
+    const { isDark: dark, slotOverrides: slotClasses } = useUploaderTheme()
     const UploadComponent =
         activeAdapter && uploadSourceObject[activeAdapter].Component
     const Icon = activeAdapter && uploadSourceObject[activeAdapter].Icon

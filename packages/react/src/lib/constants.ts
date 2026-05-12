@@ -1,4 +1,4 @@
-import type { Translations } from '../shared/i18n/types'
+import type { Translations } from '@upup/core'
 import { FileSource } from '@upup/core'
 import { lazy } from 'react'
 import {

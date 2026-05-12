@@ -1,6 +1,6 @@
 import React from 'react'
 import Webcam from 'react-webcam'
-import { t } from '../shared/i18n'
+import { formatUiMessage as t } from '@upup/core'
 import useCameraUploader from '../hooks/useCameraUploader'
 import { cn } from '../lib/tailwind'
 import AdapterViewContainer from './shared/AdapterViewContainer'
@@ -17,11 +17,8 @@ export default function CameraUploader() {
         webcamRef,
         facingMode,
         translations: tr,
-        props: {
-            isDarkTheme: dark,
-            slotClasses,
-            icons: { CameraCaptureIcon, CameraDeleteIcon, CameraRotateIcon },
-        },
+        props: { icons: { CameraCaptureIcon, CameraDeleteIcon, CameraRotateIcon } },
+        theme: { isDark: dark, slotOverrides: slotClasses },
     } = useCameraUploader()
 
     return (

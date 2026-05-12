@@ -1,16 +1,18 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
-import { useRootContext } from '../context/RootContext'
+import {
+    useUploaderFiles,
+    useUploaderSource,
+    useUploaderTheme,
+} from '../context/RootContext'
 import { cn } from '../lib/tailwind'
 import AdapterViewContainer from './shared/AdapterViewContainer'
 
 type RecordingState = 'idle' | 'recording' | 'recorded'
 
 export default function ScreenCaptureUploader() {
-    const {
-        setFiles,
-        setActiveAdapter,
-        props: { isDarkTheme: dark },
-    } = useRootContext()
+    const { setFiles } = useUploaderFiles()
+    const { setActiveAdapter } = useUploaderSource()
+    const { isDark: dark } = useUploaderTheme()
 
     const [state, setState] = useState<RecordingState>('idle')
     const [duration, setDuration] = useState(0)

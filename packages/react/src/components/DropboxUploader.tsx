@@ -1,5 +1,5 @@
 import React from 'react'
-import { useRootContext } from '../context/RootContext'
+import { useUploaderRuntime, useUploaderSource } from '../context/RootContext'
 import { useDropbox } from '../hooks/useDropbox'
 import useDropboxUploader from '../hooks/useDropboxUploader'
 import DriveAuthFallback from './shared/DriveAuthFallback'
@@ -7,7 +7,8 @@ import DriveBrowser from './shared/DriveBrowser'
 import ServerModeDriveUploader from './ServerModeDriveUploader'
 
 export default function DropboxUploader() {
-    const { mode, setActiveAdapter } = useRootContext()
+    const { mode } = useUploaderRuntime()
+    const { setActiveAdapter } = useUploaderSource()
     if (mode === 'server') {
         return (
             <ServerModeDriveUploader

@@ -1,21 +1,23 @@
 import React, { FormEventHandler, useState } from 'react'
-import { useRootContext } from '../context/RootContext'
+import {
+    useUploaderFiles,
+    useUploaderI18n,
+    useUploaderOptions,
+    useUploaderRuntime,
+    useUploaderSource,
+    useUploaderTheme,
+} from '../context/RootContext'
 import useFetchFileByUrl from '../hooks/useFetchFileByUrl'
 import { cn } from '../lib/tailwind'
 import AdapterViewContainer from './shared/AdapterViewContainer'
 
 export default function UrlUploader() {
-    const {
-        core,
-        setFiles,
-        setActiveAdapter,
-        translations: tr,
-        props: {
-            icons: { LoaderIcon },
-            isDarkTheme: dark,
-            slotClasses,
-        },
-    } = useRootContext()
+    const { core } = useUploaderRuntime()
+    const { setFiles } = useUploaderFiles()
+    const { setActiveAdapter } = useUploaderSource()
+    const { translations: tr } = useUploaderI18n()
+    const { icons: { LoaderIcon } } = useUploaderOptions()
+    const { isDark: dark, slotOverrides: slotClasses } = useUploaderTheme()
     const [url, setUrl] = useState('')
     const { loading, fetchImage } = useFetchFileByUrl()
 

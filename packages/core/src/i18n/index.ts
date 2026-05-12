@@ -24,5 +24,12 @@ export type {
 export { createTranslator, type TranslatorOptions } from './create-translator'
 export { buildFallbackChain, resolveMessage } from './resolve-locale'
 export { LOCALE_META, normalizeBcp47, type LocaleMeta } from './locale-meta'
+export {
+    flattenTranslatorToUiTranslations,
+    formatUiMessage,
+    pluralUiMessage,
+    type Translations,
+    type UiTranslations,
+} from './ui-translations'
 
 export { mergeTranslations, plural, t } from './utils'

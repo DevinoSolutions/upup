@@ -11,8 +11,12 @@ import {
     useEffect,
     useState,
 } from 'react'
-import { t } from '../shared/i18n'
-import { useRootContext } from '../context/RootContext'
+import { formatUiMessage as t } from '@upup/core'
+import {
+    useUploaderI18n,
+    useUploaderOptions,
+    useUploaderRuntime,
+} from '../context/RootContext'
 import { createSecureStorage } from '../lib/storageHelper'
 
 type Props = {
@@ -28,11 +32,9 @@ export default function useOneDriveAuth({
     setUser,
     setOneDriveFiles,
 }: Props) {
-    const {
-        core,
-        props: { onError },
-        translations,
-    } = useRootContext()
+    const { core } = useUploaderRuntime()
+    const { onError } = useUploaderOptions()
+    const { translations } = useUploaderI18n()
     const [token, setToken] = useState<MicrosoftToken>()
     const [isInitialized, setIsInitialized] = useState(false)
     const [isAuthenticating, setIsAuthenticating] = useState(false)
@@ -90,7 +92,7 @@ export default function useOneDriveAuth({
         }
 
         initialize()
-    }, [isInitialized, msalInstance, onError])
+    }, [core, isInitialized, msalInstance, onError, translations])
 
     const signIn =
         useCallback(async (): Promise<AuthenticationResult | null> => {
@@ -157,7 +159,9 @@ export default function useOneDriveAuth({
             isInitialized,
             isAuthenticating,
             isAuthInProgress,
+            core,
             onError,
+            translations,
         ])
 
     const handleSignIn = useCallback(async () => {
@@ -191,7 +195,15 @@ export default function useOneDriveAuth({
             setToken(undefined)
             secureStorage.removeItem('isAuthenticated')
         }
-    }, [isInitialized, isAuthenticating, isAuthInProgress, signIn, onError])
+    }, [
+        core,
+        isInitialized,
+        isAuthenticating,
+        isAuthInProgress,
+        onError,
+        signIn,
+        translations,
+    ])
 
     const handleSignOut = useCallback(async () => {
         if (!msalInstance || !isInitialized || isAuthInProgress) return
@@ -240,6 +252,8 @@ export default function useOneDriveAuth({
         msalInstance,
         isInitialized,
         isAuthInProgress,
+        core,
+        translations,
         setUser,
         setOneDriveFiles,
         onError,

@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react'
 import { v4 as uuid } from 'uuid'
-import { useRootContext } from '../context/RootContext'
+import { useUploaderOptions, useUploaderRuntime } from '../context/RootContext'
 
 const MIME_EXTENSION_MAP: Record<string, string> = {
     'application/json': 'json',
@@ -75,10 +75,8 @@ export function deriveFetchedFileName(url: string, response: Response, blob: Blo
 }
 
 export default function useFetchFileByUrl() {
-    const {
-        core,
-        props: { onError },
-    } = useRootContext()
+    const { core } = useUploaderRuntime()
+    const { onError } = useUploaderOptions()
     const [loading, setLoading] = useState(false)
 
     const fetchImage = useCallback(
@@ -108,7 +106,7 @@ export default function useFetchFileByUrl() {
                 setLoading(false)
             }
         },
-        [loading, onError],
+        [core, loading, onError],
     )
 
     return { loading, fetchImage }

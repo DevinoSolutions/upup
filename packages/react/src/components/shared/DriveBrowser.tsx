@@ -7,8 +7,12 @@ import React, {
     useMemo,
     useState,
 } from 'react'
-import { plural, t } from '../../shared/i18n'
-import { useRootContext } from '../../context/RootContext'
+import { formatUiMessage as t, pluralUiMessage as plural } from '@upup/core'
+import {
+    useUploaderI18n,
+    useUploaderOptions,
+    useUploaderTheme,
+} from '../../context/RootContext'
 import { searchDriveFiles } from '../../lib/file'
 import { isDriveFileAccepted } from '../../lib/googleDriveUtils'
 import { cn } from '../../lib/tailwind'
@@ -68,10 +72,9 @@ export default function DriveBrowser({
     'data-upup-slot': dataUpupSlot = 'drive-browser',
     ...rest
 }: Readonly<Props>) {
-    const {
-        props: { allowedFileTypes, isDarkTheme: dark, slotClasses },
-        translations: tr,
-    } = useRootContext()
+    const { allowedFileTypes } = useUploaderOptions()
+    const { isDark: dark, slotOverrides: slotClasses } = useUploaderTheme()
+    const { translations: tr } = useUploaderI18n()
     const [searchTerm, setSearchTerm] = useState('')
     const items = (path[path.length - 1]?.children as Array<any>)?.filter(
         item => filterItems(item, allowedFileTypes),

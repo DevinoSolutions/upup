@@ -1,6 +1,12 @@
 import { useCallback, useState } from 'react'
-import { t } from '../shared/i18n'
-import { useRootContext } from '../context/RootContext'
+import { formatUiMessage as t } from '@upup/core'
+import {
+    useUploaderFiles,
+    useUploaderI18n,
+    useUploaderOptions,
+    useUploaderRuntime,
+    useUploaderSource,
+} from '../context/RootContext'
 
 const BOX_API = 'https://api.box.com/2.0'
 
@@ -8,13 +14,11 @@ type BoxItem = { id: string; name: string; type: string; size?: number; isFolder
 type BoxFolder = BoxItem & { children?: BoxItem[] }
 
 export default function useBoxUploader(token?: string) {
-    const {
-        core,
-        props: { onError, allowedFileTypes },
-        setActiveAdapter,
-        setFiles,
-        translations,
-    } = useRootContext()
+    const { core } = useUploaderRuntime()
+    const { onError, allowedFileTypes } = useUploaderOptions()
+    const { setActiveAdapter } = useUploaderSource()
+    const { setFiles } = useUploaderFiles()
+    const { translations } = useUploaderI18n()
 
     const [path, setPath] = useState<BoxFolder[]>([])
     const [selectedFiles, setSelectedFiles] = useState<BoxItem[]>([])

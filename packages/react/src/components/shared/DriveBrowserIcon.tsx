@@ -3,7 +3,7 @@ import { OneDriveFile } from 'microsoft'
 import React, { ReactEventHandler } from 'react'
 import { TbFile, TbFolder } from 'react-icons/tb'
 import { b64EncodeUnicode } from '../../shared/lib/encoder'
-import { useRootContext } from '../../context/RootContext'
+import { useUploaderTheme } from '../../context/RootContext'
 import { cn } from '../../lib/tailwind'
 
 const handleImgError: ReactEventHandler<HTMLImageElement> = e => {
@@ -17,9 +17,7 @@ export default function DriveBrowserIcon({
 }: {
     file: OneDriveFile | GoogleFile
 }) {
-    const {
-        props: { isDarkTheme: dark },
-    } = useRootContext()
+    const { isDark: dark } = useUploaderTheme()
     const isFolder = Boolean(
         (file as OneDriveFile).isFolder || (file as GoogleFile).children,
     )

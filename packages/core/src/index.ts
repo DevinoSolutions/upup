@@ -1,4 +1,6 @@
 export * from './contracts'
+export * from './i18n'
+export * from './theme'
 export { UpupCore } from './core'
 export type { CoreOptions, UploadOptions, ValidationResult, Restrictions, CloudDrivesConfig, UpupCorsConfig } from './core'
 export { EventEmitter } from './events'

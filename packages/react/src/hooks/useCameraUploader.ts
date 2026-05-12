@@ -1,6 +1,13 @@
 import { MouseEventHandler, useRef, useState } from 'react'
 import Webcam from 'react-webcam'
-import { useRootContext } from '../context/RootContext'
+import {
+    useUploaderFiles,
+    useUploaderI18n,
+    useUploaderOptions,
+    useUploaderRuntime,
+    useUploaderSource,
+    useUploaderTheme,
+} from '../context/RootContext'
 import useFetchFileByUrl from './useFetchFileByUrl'
 
 export enum FacingMode {
@@ -9,7 +16,12 @@ export enum FacingMode {
 }
 
 export default function useCameraUploader() {
-    const { core, setFiles, setActiveAdapter, translations, props } = useRootContext()
+    const { core } = useUploaderRuntime()
+    const { setFiles } = useUploaderFiles()
+    const { setActiveAdapter } = useUploaderSource()
+    const { translations } = useUploaderI18n()
+    const props = useUploaderOptions()
+    const theme = useUploaderTheme()
     const { fetchImage } = useFetchFileByUrl()
     const webcamRef = useRef<Webcam>(null)
     const [url, setUrl] = useState('')
@@ -58,5 +70,6 @@ export default function useCameraUploader() {
         newCameraSide,
         translations,
         props,
+        theme,
     }
 }

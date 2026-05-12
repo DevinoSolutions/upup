@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { useRootContext } from '../context/RootContext'
+import { useUploaderRuntime } from '../context/RootContext'
 
 export type ServerDriveFile = {
     id: string
@@ -25,7 +25,7 @@ type ListState =
     | { status: 'error'; message: string }
 
 export function useServerModeDrive(provider: ServerModeProvider) {
-    const { serverUrl } = useRootContext()
+    const { serverUrl } = useUploaderRuntime()
     const [state, setState] = useState<ListState>({ status: 'idle' })
     const [folderId, setFolderId] = useState<string | undefined>(undefined)
     const [search, setSearch] = useState<string>('')

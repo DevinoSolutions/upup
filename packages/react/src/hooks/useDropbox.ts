@@ -1,5 +1,10 @@
 import { useCallback, useEffect, useState } from 'react'
-import { useRootContext } from '../context/RootContext'
+import {
+    useUploaderI18n,
+    useUploaderOptions,
+    useUploaderRuntime,
+    useUploaderSource,
+} from '../context/RootContext'
 import { useDropboxAuth } from './useDropboxAuth'
 import type { DropboxFile, DropboxRoot, DropboxUser } from './dropbox-types'
 
@@ -13,12 +18,10 @@ const formatFileItem = (entry: any): DropboxFile => ({
 })
 
 export function useDropbox() {
-    const {
-        core,
-        props: { onError },
-        dropboxConfigs,
-        translations,
-    } = useRootContext()
+    const { core } = useUploaderRuntime()
+    const { onError } = useUploaderOptions()
+    const { dropboxConfigs } = useUploaderSource()
+    const { translations } = useUploaderI18n()
 
     const {
         isAuthenticated,

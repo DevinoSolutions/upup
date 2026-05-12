@@ -1,16 +1,21 @@
 import { ClipboardEventHandler, DragEventHandler, useCallback, useMemo, useState } from 'react'
-import { UploadStatus, useRootContext } from '../context/RootContext'
+import {
+    UploadStatus,
+    useUploaderFiles,
+    useUploaderOptions,
+    useUploaderRuntime,
+    useUploaderSource,
+    useUploaderUploadControls,
+    useUploaderView,
+} from '../context/RootContext'
 
 export default function useMainBox() {
-    const {
-        core,
-        files,
-        activeAdapter,
-        isAddingMore,
-        upload: { uploadStatus },
-        props: { onFilesDragOver, onFilesDragLeave, onFilesDrop, isProcessing, enablePaste, disableDragDrop },
-        setFiles,
-    } = useRootContext()
+    const { core } = useUploaderRuntime()
+    const { files, setFiles } = useUploaderFiles()
+    const { activeAdapter } = useUploaderSource()
+    const { isAddingMore } = useUploaderView()
+    const { upload: { uploadStatus } } = useUploaderUploadControls()
+    const { onFilesDragOver, onFilesDragLeave, onFilesDrop, isProcessing, enablePaste, disableDragDrop } = useUploaderOptions()
     const [isDragging, setIsDragging] = useState(false)
 
     const absoluteIsDragging = useMemo(
@@ -201,7 +206,7 @@ export default function useMainBox() {
                 core?.emit('paste', { files: pastedFiles })
             }
         },
-        [enablePaste, isProcessing, setFiles],
+        [core, enablePaste, isProcessing, setFiles],
     )
 
     return {

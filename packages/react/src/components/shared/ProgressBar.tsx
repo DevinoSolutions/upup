@@ -1,5 +1,10 @@
 import React, { forwardRef, HTMLAttributes } from 'react'
-import { useRootContext, UploadStatus } from '../../context/RootContext'
+import {
+    UploadStatus,
+    useUploaderI18n,
+    useUploaderTheme,
+    useUploaderUploadControls,
+} from '../../context/RootContext'
 import { cn } from '../../lib/tailwind'
 import ShouldRender from './ShouldRender'
 
@@ -13,12 +18,9 @@ export default forwardRef<HTMLDivElement, Props>(function ProgressBar(
     { progress, className, progressBarClassName, showValue = false, ...rest },
     ref,
 ) {
-    const {
-        props: { slotClasses, isDarkTheme: dark },
-        translations: tr,
-        upload: { uploadStatus },
-        themeSlots,
-    } = useRootContext()
+    const { isDark: dark, slotOverrides: slotClasses, slots: themeSlots } = useUploaderTheme()
+    const { translations: tr } = useUploaderI18n()
+    const { upload: { uploadStatus } } = useUploaderUploadControls()
     return (
         <ShouldRender if={!!progress || uploadStatus === UploadStatus.ONGOING}>
             <div data-testid="upup-progress-bar"

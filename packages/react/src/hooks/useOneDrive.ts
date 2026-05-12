@@ -3,15 +3,16 @@ import { Client } from '@microsoft/microsoft-graph-client'
 import { AuthCodeMSALBrowserAuthenticationProvider } from '@microsoft/microsoft-graph-client/authProviders/authCodeMsalBrowser/index.js'
 import { MicrosoftUser, OneDriveRoot } from 'microsoft'
 import { useEffect, useState } from 'react'
-import { useRootContext } from '../context/RootContext'
+import {
+    useUploaderOptions,
+    useUploaderRuntime,
+} from '../context/RootContext'
 import useOneDriveAuth from './useOneDriveAuth'
 import usePCAInstance from './usePCAInstance'
 
 export default function useOneDrive(clientId = '') {
-    const {
-        core,
-        props: { onError },
-    } = useRootContext()
+    const { core } = useUploaderRuntime()
+    const { onError } = useUploaderOptions()
     const [user, setUser] = useState<MicrosoftUser>()
     const [oneDriveFiles, setOneDriveFiles] = useState<OneDriveRoot>()
     const [graphClient, setGraphClient] = useState<Client>()
@@ -117,7 +118,7 @@ export default function useOneDrive(clientId = '') {
         }
 
         initialize()
-    }, [graphClient, onError])
+    }, [core, graphClient, onError])
 
     return {
         user,

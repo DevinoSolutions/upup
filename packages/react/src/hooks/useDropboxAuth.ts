@@ -1,6 +1,10 @@
 import { Dropbox } from 'dropbox'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { useRootContext } from '../context/RootContext'
+import {
+    useUploaderI18n,
+    useUploaderOptions,
+    useUploaderRuntime,
+} from '../context/RootContext'
 import { createSecureStorage } from '../lib/storageHelper'
 import type { DropboxUser } from './dropbox-types'
 
@@ -59,11 +63,9 @@ const b64url = (ab: ArrayBuffer) =>
 
 /* ─────────── React hook ─────────── */
 export function useDropboxAuth(cfg?: DropboxConfigs) {
-    const {
-        core,
-        props: { onError },
-        translations,
-    } = useRootContext()
+    const { core } = useUploaderRuntime()
+    const { onError } = useUploaderOptions()
+    const { translations } = useUploaderI18n()
 
     const [token, setTok] = useState<string>()
     const [rtok, setRtok] = useState<string>()

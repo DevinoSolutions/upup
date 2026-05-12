@@ -1,6 +1,13 @@
 
 import React from 'react'
-import { useRootContext } from '../context/RootContext'
+import {
+    useUploaderFiles,
+    useUploaderI18n,
+    useUploaderRuntime,
+    useUploaderSource,
+    useUploaderTheme,
+    useUploaderView,
+} from '../context/RootContext'
 import useMainBox from '../hooks/useMainBox'
 import { cn } from '../lib/tailwind'
 import AdapterSelector from './AdapterSelector'
@@ -8,15 +15,12 @@ import AdapterView from './AdapterView'
 import FileList from './FileList'
 import ShouldRender from './shared/ShouldRender'
 export default function MainBox() {
-    const {
-        files,
-        activeAdapter,
-        isAddingMore,
-        isOnline,
-        inputRef,
-        translations: tr,
-        props: { isDarkTheme: dark },
-    } = useRootContext()
+    const { files } = useUploaderFiles()
+    const { activeAdapter } = useUploaderSource()
+    const { isAddingMore } = useUploaderView()
+    const { isOnline, inputRef } = useUploaderRuntime()
+    const { translations: tr } = useUploaderI18n()
+    const { isDark: dark } = useUploaderTheme()
     const {
         isDragging,
         absoluteIsDragging,

@@ -1,8 +1,12 @@
 import { GoogleFile, Root, Token, User } from 'google'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { t } from '../shared/i18n'
+import { formatUiMessage as t } from '@upup/core'
 import { GoogleDriveConfigs } from '../shared/types'
-import { useRootContext } from '../context/RootContext'
+import {
+    useUploaderI18n,
+    useUploaderOptions,
+    useUploaderRuntime,
+} from '../context/RootContext'
 import { createSecureStorage } from '../lib/storageHelper'
 import useLoadGAPI from './useLoadGAPI'
 
@@ -11,11 +15,9 @@ export default function useGoogleDrive(
     googleConfigs = {} as GoogleDriveConfigs,
 ) {
     const { google_client_id, google_api_key } = googleConfigs
-    const {
-        core,
-        props: { onError },
-        translations,
-    } = useRootContext()
+    const { core } = useUploaderRuntime()
+    const { onError } = useUploaderOptions()
+    const { translations } = useUploaderI18n()
     const [user, setUser] = useState<User>()
     const [googleFiles, setGoogleFiles] = useState<Root>()
     const [rawFiles, setRawFiles] = useState<GoogleFile[]>()

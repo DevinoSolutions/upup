@@ -1,13 +1,15 @@
 import { PublicClientApplication } from '@azure/msal-browser'
 import { useEffect, useState } from 'react'
-import { useRootContext } from '../context/RootContext'
+import {
+    useUploaderI18n,
+    useUploaderOptions,
+    useUploaderRuntime,
+} from '../context/RootContext'
 
 const usePCAInstance = (clientId: string) => {
-    const {
-        core,
-        props: { onError },
-        translations,
-    } = useRootContext()
+    const { core } = useUploaderRuntime()
+    const { onError } = useUploaderOptions()
+    const { translations } = useUploaderI18n()
     const [msalInstance, setMsalInstance] = useState<PublicClientApplication>()
     const [isInitializing, setIsInitializing] = useState(true)
 
@@ -63,7 +65,7 @@ const usePCAInstance = (clientId: string) => {
         return () => {
             mounted = false
         }
-    }, [clientId, msalInstance, onError])
+    }, [clientId, core, msalInstance, onError, translations])
 
     return {
         msalInstance,

@@ -2,18 +2,22 @@ import { describe, it, expect, vi } from 'vitest'
 import { render } from '@testing-library/react'
 import React from 'react'
 
-// ProgressBar uses useRootContext — mock it so we can render standalone
-// ShouldRender also calls useRootContext and needs icons.LoaderIcon
+// ProgressBar reads focused uploader contexts; mock the slices needed to
+// render it standalone.
 vi.mock('../src/context/RootContext', () => ({
-  useRootContext: () => ({
-    props: {
-      slotClasses: {},
-      isDarkTheme: false,
-      themeMode: 'light',
-      icons: { LoaderIcon: () => null },
-    },
+  useUploaderTheme: () => ({
+    isDark: false,
+    slotOverrides: {},
+    slots: undefined,
+  }),
+  useUploaderI18n: () => ({
     translations: { uploadProgress: 'Upload progress' },
+  }),
+  useUploaderUploadControls: () => ({
     upload: { uploadStatus: 'PENDING' },
+  }),
+  useUploaderOptions: () => ({
+    icons: { LoaderIcon: () => null },
   }),
   UploadStatus: { ONGOING: 'ONGOING' },
 }))
