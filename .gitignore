@@ -15,6 +15,7 @@ coverage
 playwright-report
 storybook-static
 .tmp/
+graphify-out/
 
 # Logs
 *.log
