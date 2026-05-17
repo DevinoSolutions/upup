@@ -553,6 +553,29 @@ test('renders the real playground shell, uploader, source controls, and generate
     await attachScreenshot(page, testInfo, 'desktop-shell-code')
 })
 
+test('defaults the playground and uploader controls to system theme', async ({ page }, testInfo) => {
+    await page.emulateMedia({ colorScheme: 'dark' })
+    await page.addInitScript(() => {
+        window.localStorage.removeItem('theme')
+        window.localStorage.setItem('upup-ie:sidebar-tier', 'advanced')
+    })
+
+    await page.goto('/')
+    await expect(page.getByRole('heading', { name: 'Upup Playground' })).toBeVisible()
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'system')
+    await expect(page.locator('html')).toHaveClass(/dark/)
+
+    await openCategory(page, 'Appearance')
+    await expect(category(page, 'Appearance').getByRole('radio', { name: /system/i }).first())
+        .toHaveAttribute('aria-checked', 'true')
+    await expect.poll(() => page.evaluate(() => window.localStorage.getItem('theme'))).toBeNull()
+
+    await page.locator('.upup-ie-tabs').getByRole('button', { name: 'Code' }).click()
+    const code = await getGeneratedCode(page)
+    expect(code).not.toContain("mode: 'system'")
+    await attachScreenshot(page, testInfo, 'system-theme-default', true)
+})
+
 test('assistant canned prompts apply deterministic local patches without Mastra', async ({ page }, testInfo) => {
     await openPlayground(page, `?mockRun=${uniqueRun('assistant-fallback')}`)
 
@@ -617,8 +640,8 @@ test('wires every playground category into copy-pasteable generated code', async
     for (const label of ['Google Drive', 'OneDrive', 'Dropbox', 'Box']) {
         await ensureSourceTile(page, label)
     }
-    await checkSidebarCheckbox(page, 'Sources', 'Allow folders')
-    await checkSidebarCheckbox(page, 'Sources', 'Show folder button')
+    await checkSidebarCheckbox(page, 'Sources', 'Allow folder drag/drop')
+    await checkSidebarCheckbox(page, 'Sources', 'Show Select Folder button')
 
     await openCategory(page, 'Limits')
     await fillTextField(page, 'Limits', 'Allowed file types', 'images')
@@ -698,8 +721,8 @@ test('wires every playground category into copy-pasteable generated code', async
         "'http://localhost:3000'",
         "'https://example.com'",
         'folderUpload={{',
-        'enabled: true',
-        'showPickerButton: true',
+        'allowDrop: true',
+        'showSelectFolderButton: true',
         "allowedFileTypes=\"images\"",
         'maxFiles={2}',
         'maxFileSize={{',
@@ -720,7 +743,6 @@ test('wires every playground category into copy-pasteable generated code', async
         'allowPreview={false}',
         'showBranding={false}',
         'isProcessing',
-        "mode: 'system'",
         "primary: '#ff0066'",
         "className=\"max-w-xl\"",
         'locale: arSA',
@@ -927,8 +949,8 @@ test('runtime feature controls affect folder button, accept filter, editor butto
     await openPlayground(page, `?mockRun=${uniqueRun('feature-runtime')}`)
 
     await openCategory(page, 'Sources')
-    await checkSidebarCheckbox(page, 'Sources', 'Allow folders')
-    await checkSidebarCheckbox(page, 'Sources', 'Show folder button')
+    await checkSidebarCheckbox(page, 'Sources', 'Allow folder drag/drop')
+    await checkSidebarCheckbox(page, 'Sources', 'Show Select Folder button')
     await expect(page.getByRole('button', { name: /select a folder/i })).toBeVisible()
 
     await openCategory(page, 'Limits')
@@ -1054,7 +1076,7 @@ test('limits concurrent direct uploads and shows live byte speed details', async
         generatedFile('concurrent-5.txt', 512 * 1024),
     ])
     await page.getByTestId('upup-upload-btn').click()
-    await expect(page.getByTestId('upup-root')).toHaveAttribute('data-state', 'ongoing')
+    await expect(page.getByTestId('upup-root')).toHaveAttribute('data-state', 'uploading')
     await expect(page.getByTestId('upup-root')).toContainText(/\bof\b/)
     await attachScreenshot(page, testInfo, 'concurrency-upload-ongoing')
 
@@ -1101,7 +1123,7 @@ test('runs the checksum pipeline before deterministic mock upload and records up
     await attachScreenshot(page, testInfo, 'upload-ready')
 
     await page.getByTestId('upup-upload-btn').click()
-    await expect(page.getByTestId('upup-root')).toHaveAttribute('data-state', 'ongoing')
+    await expect(page.getByTestId('upup-root')).toHaveAttribute('data-state', 'uploading')
     await attachScreenshot(page, testInfo, 'upload-in-progress')
     await expect(page.getByTestId('upup-root')).toHaveAttribute('data-state', 'successful')
     await attachScreenshot(page, testInfo, 'upload-success')
@@ -1272,7 +1294,7 @@ test('pauses, resumes, and cancels slow multipart uploads', async ({ page }, tes
 
     await selectFiles(page, [generatedFile('multipart-pause-resume.txt', 6 * 1024 * 1024)])
     await page.getByTestId('upup-upload-btn').click()
-    await expect(page.getByTestId('upup-root')).toHaveAttribute('data-state', 'ongoing')
+    await expect(page.getByTestId('upup-root')).toHaveAttribute('data-state', 'uploading')
     await expect(page.getByTestId('upup-upload-pause-toggle')).toHaveAttribute('aria-label', 'Pause')
     await expect(page.getByTestId('upup-upload-cancel-btn')).toBeVisible()
     await expect.poll(() => multipart.signBodies.length).toBeGreaterThan(0)
@@ -1289,7 +1311,7 @@ test('pauses, resumes, and cancels slow multipart uploads', async ({ page }, tes
     await attachScreenshot(page, testInfo, 'multipart-controls-paused')
 
     await page.getByTestId('upup-upload-pause-toggle').click()
-    await expect(page.getByTestId('upup-root')).toHaveAttribute('data-state', 'ongoing')
+    await expect(page.getByTestId('upup-root')).toHaveAttribute('data-state', 'uploading')
     await expect(page.getByTestId('upup-upload-pause-toggle')).toHaveAttribute('aria-label', 'Pause')
     await attachScreenshot(page, testInfo, 'multipart-controls-resumed')
 
@@ -1304,14 +1326,14 @@ test('pauses, resumes, and cancels slow multipart uploads', async ({ page }, tes
     const abortCountBeforeCancel = multipart.abortBodies.length
     await selectFiles(page, [generatedFile('multipart-cancel.txt', 6 * 1024 * 1024)])
     await page.getByTestId('upup-upload-btn').click()
-    await expect(page.getByTestId('upup-root')).toHaveAttribute('data-state', 'ongoing')
+    await expect(page.getByTestId('upup-root')).toHaveAttribute('data-state', 'uploading')
     await expect(page.getByTestId('upup-upload-cancel-btn')).toBeVisible()
     await expect.poll(() => multipart.initBodies.length).toBeGreaterThanOrEqual(3)
     await attachScreenshot(page, testInfo, 'multipart-controls-cancel-ongoing')
 
     await page.getByTestId('upup-upload-cancel-btn').click()
     await expect(page.getByTestId('upup-file-item')).toHaveCount(0)
-    await expect(page.getByTestId('upup-root')).toHaveAttribute('data-state', 'pending')
+    await expect(page.getByTestId('upup-root')).toHaveAttribute('data-state', 'idle')
     await expect.poll(() => multipart.abortBodies.length).toBeGreaterThan(abortCountBeforeCancel)
     await attachScreenshot(page, testInfo, 'multipart-controls-cancelled')
 })
@@ -1337,7 +1359,7 @@ test('restores a crash recovery upload after reload and resumes to success', asy
 
     await selectFiles(page, [generatedFile('crash-recovery-resume.txt', 6 * 1024 * 1024)])
     await page.getByTestId('upup-upload-btn').click()
-    await expect(page.getByTestId('upup-root')).toHaveAttribute('data-state', 'ongoing')
+    await expect(page.getByTestId('upup-root')).toHaveAttribute('data-state', 'uploading')
     await expect.poll(async () => {
         const snapshot = await readCrashRecoverySnapshot(page)
         const status = snapshot?.status
@@ -1383,7 +1405,7 @@ test('restores a crash recovery upload after reload and resumes to success', asy
     await attachScreenshot(page, testInfo, 'crash-recovery-restored-paused')
 
     await page.getByTestId('upup-upload-pause-toggle').click()
-    await expect(page.getByTestId('upup-root')).toHaveAttribute('data-state', 'ongoing')
+    await expect(page.getByTestId('upup-root')).toHaveAttribute('data-state', 'uploading')
     await expect(page.getByTestId('upup-root')).toHaveAttribute('data-state', 'successful')
     expect(multipart.initBodies.length).toBeGreaterThanOrEqual(2)
     expect(multipart.completeBodies).toHaveLength(1)
@@ -1526,7 +1548,7 @@ test('local-only configuration keeps selected File objects usable and omits uplo
 
     await selectFiles(page, [textFile('local-only-file.txt')])
     await expect(page.getByTestId('upup-file-list')).toContainText('local-only-file.txt')
-    await expect(page.getByTestId('upup-root')).toHaveAttribute('data-state', 'pending')
+    await expect(page.getByTestId('upup-root')).toHaveAttribute('data-state', 'idle')
 
     await page.locator('.upup-ie-tabs').getByRole('button', { name: 'Events' }).click()
     await expect(page.locator('.upup-ie-eventlog-list')).toContainText('onFilesSelected')
@@ -1615,7 +1637,7 @@ test('auto upload, mini mode, preview-off, branding-off, and done reset work tog
 
     await page.getByRole('button', { name: 'Done' }).click()
     await expect(page.getByTestId('upup-file-item')).toHaveCount(0)
-    await expect(page.getByTestId('upup-root')).toHaveAttribute('data-state', 'pending')
+    await expect(page.getByTestId('upup-root')).toHaveAttribute('data-state', 'idle')
 
     await page.locator('.upup-ie-tabs').getByRole('button', { name: 'Events' }).click()
     const logList = page.locator('.upup-ie-eventlog-list')
@@ -1662,6 +1684,70 @@ test('drag/drop and paste flows add real files and report the expected callbacks
     await expect(logList).toContainText('onFilesSelected')
 })
 
+test('folder drop and Select Folder button controls are configured independently', async ({ page }, testInfo) => {
+    await openPlayground(page, `?mockRun=${uniqueRun('folder-controls')}`)
+    await openCategory(page, 'Sources')
+
+    await checkSidebarCheckbox(page, 'Sources', 'Allow folder drag/drop')
+    await expect(page.getByRole('button', { name: /select a folder/i })).toHaveCount(0)
+
+    let code = await getGeneratedCode(page)
+    expect(code).toContain('folderUpload={{')
+    expect(code).toContain('allowDrop: true')
+    expect(code).not.toContain('showSelectFolderButton: true')
+
+    await page.locator('.upup-ie-tabs').getByRole('button', { name: 'Preview' }).click()
+    await checkSidebarCheckbox(page, 'Sources', 'Show Select Folder button')
+    await expect(page.getByRole('button', { name: /select a folder/i })).toBeVisible()
+    code = await getGeneratedCode(page)
+    expect(code).toContain('allowDrop: true')
+    expect(code).toContain('showSelectFolderButton: true')
+    await attachScreenshot(page, testInfo, 'folder-controls-independent')
+})
+
+test('Select Folder button queues files from the browser directory picker', async ({ page }, testInfo) => {
+    await page.addInitScript(() => {
+        const fileHandle = (name: string, contents: string) => ({
+            kind: 'file',
+            name,
+            getFile: async () => new File([contents], name, { type: 'text/plain' }),
+        })
+        const nestedDirectory = {
+            kind: 'directory',
+            name: 'nested',
+            values: async function* () {
+                yield fileHandle('nested-picked.txt', 'nested')
+            },
+        }
+        Object.defineProperty(window, 'showDirectoryPicker', {
+            configurable: true,
+            value: async () => ({
+                values: async function* () {
+                    yield fileHandle('root-picked.txt', 'root')
+                    yield nestedDirectory
+                },
+            }),
+        })
+    })
+
+    await openPlayground(page, `?mockRun=${uniqueRun('select-folder')}`)
+    await openCategory(page, 'Sources')
+    await checkSidebarCheckbox(page, 'Sources', 'Show Select Folder button')
+    await expect(page.getByRole('button', { name: /select a folder/i })).toBeVisible()
+
+    let code = await getGeneratedCode(page)
+    expect(code).toContain('showSelectFolderButton: true')
+    expect(code).not.toContain('allowDrop: true')
+    expect(code).not.toContain('showPickerButton')
+
+    await page.locator('.upup-ie-tabs').getByRole('button', { name: 'Preview' }).click()
+    await page.getByRole('button', { name: /select a folder/i }).click()
+    await expect(page.getByTestId('upup-file-item')).toHaveCount(2)
+    await expect(page.getByText('root-picked.txt')).toBeVisible()
+    await expect(page.getByText('nested-picked.txt')).toBeVisible()
+    await attachScreenshot(page, testInfo, 'select-folder-button-picked-files')
+})
+
 test('folder upload preserves relative paths in upload metadata', async ({ page }, testInfo) => {
     const folderRoot = testInfo.outputPath('folder-fixture')
     mkdirSync(join(folderRoot, 'photos', '2026'), { recursive: true })
@@ -1679,8 +1765,8 @@ test('folder upload preserves relative paths in upload metadata', async ({ page 
 
     await openPlayground(page, `?mockRun=${uniqueRun('folder-paths')}`)
     await openCategory(page, 'Sources')
-    await checkSidebarCheckbox(page, 'Sources', 'Allow folders')
-    await checkSidebarCheckbox(page, 'Sources', 'Show folder button')
+    await checkSidebarCheckbox(page, 'Sources', 'Allow folder drag/drop')
+    await checkSidebarCheckbox(page, 'Sources', 'Show Select Folder button')
     await expect(page.getByRole('button', { name: /select a folder/i })).toBeVisible()
 
     await page.getByTestId('upup-file-input').evaluate((input) => {
