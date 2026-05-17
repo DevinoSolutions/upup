@@ -1,4 +1,4 @@
-import { GoogleFile } from 'google'
+import { type DriveFile } from '@upup/core'
 
 /**
  * Mapping of Google Workspace mimeTypes to their Office Open XML export formats.
@@ -53,7 +53,7 @@ export function getWorkspaceExportInfo(mimeType: string) {
  * - Workspace files: the export extension (docx / xlsx / pptx).
  * - Non-Workspace files: the extension extracted from the filename.
  */
-export function getDriveEffectiveExtension(file: GoogleFile): string {
+export function getDriveEffectiveExtension(file: DriveFile): string {
     const exportInfo = getWorkspaceExportInfo(file.mimeType)
     if (exportInfo) return exportInfo.extension
     return (file.name.split('.').pop() || '').toLowerCase()
@@ -72,7 +72,7 @@ export function getDriveEffectiveExtension(file: GoogleFile): string {
  * For Workspace files the effective extension and exportMimeType are used.
  * For non-Workspace files the filename extension and file.mimeType are used.
  */
-export function isDriveFileAccepted(file: GoogleFile, accept: string): boolean {
+export function isDriveFileAccepted(file: DriveFile, accept: string): boolean {
     if (!accept || accept === '*') return true
 
     const effectiveExt = getDriveEffectiveExtension(file)

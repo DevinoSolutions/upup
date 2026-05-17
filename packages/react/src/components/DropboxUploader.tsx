@@ -48,11 +48,11 @@ function ClientDropboxUploader() {
 
     return (
         <DriveBrowser
-            driveFiles={driveFiles as any}
+            driveFiles={driveFiles}
             user={user}
             handleSignOut={handleSignOut}
             data-upup-slot="dropbox-uploader"
-            {...(uploaderProps as any)}
+            {...uploaderProps}
         />
     )
 }

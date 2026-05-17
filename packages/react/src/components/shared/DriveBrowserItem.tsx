@@ -1,16 +1,13 @@
-import { GoogleFile, Root } from 'google'
-import { OneDriveFile } from 'microsoft'
 import React from 'react'
+import { type DriveFile } from '@upup/core'
 import { useUploaderTheme } from '../../context/RootContext'
 import { cn } from '../../lib/tailwind'
 import DriveBrowserIcon from './DriveBrowserIcon'
 
 type DriveBrowserItemProps = {
-    file: OneDriveFile | GoogleFile
-    handleClick:
-        | ((file: OneDriveFile) => Promise<void>)
-        | ((file: GoogleFile | Root) => void)
-    selectedFiles: OneDriveFile[] | GoogleFile[]
+    file: DriveFile
+    handleClick: (file: DriveFile) => void | Promise<void>
+    selectedFiles: DriveFile[]
 }
 
 export default function DriveBrowserItem({
@@ -19,10 +16,8 @@ export default function DriveBrowserItem({
     handleClick,
 }: Readonly<DriveBrowserItemProps>) {
     const { isDark: dark, slotOverrides: slotClasses } = useUploaderTheme()
-    const isFolder = Boolean(
-        (file as OneDriveFile).isFolder || (file as GoogleFile).children,
-    )
-    const isFileSelected = (selectedFiles as Array<any>).filter(
+    const isFolder = file.isFolder
+    const isFileSelected = selectedFiles.filter(
         f => f.id === file.id,
     ).length
 
@@ -43,7 +38,7 @@ export default function DriveBrowserItem({
                         slotClasses.driveItemContainerSelected,
                 },
             )}
-            onClick={() => handleClick(file as any)}
+            onClick={() => handleClick(file)}
         >
             <div
                 className={cn(

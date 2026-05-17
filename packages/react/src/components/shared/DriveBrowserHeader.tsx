@@ -1,6 +1,5 @@
-import { Root, User } from 'google'
-import { MicrosoftUser, OneDriveRoot } from 'microsoft'
 import React, { Dispatch, SetStateAction } from 'react'
+import { type DriveFolder, type DriveUser } from '@upup/core'
 import { TbSearch, TbUser } from 'react-icons/tb'
 import {
     useUploaderI18n,
@@ -11,15 +10,13 @@ import { cn } from '../../lib/tailwind'
 import ShouldRender from './ShouldRender'
 
 type Props = {
-    path: Root[] | OneDriveRoot[]
-    setPath:
-        | Dispatch<SetStateAction<Array<Root>>>
-        | Dispatch<SetStateAction<Array<OneDriveRoot>>>
+    path: DriveFolder[]
+    setPath: Dispatch<SetStateAction<DriveFolder[]>>
     handleSignOut: () => Promise<void>
     showSearch: boolean
     searchTerm: string
     onSearch: Dispatch<SetStateAction<string>>
-    user?: MicrosoftUser | User
+    user?: DriveUser
 }
 
 export default function DriveBrowserHeader({
@@ -51,7 +48,7 @@ export default function DriveBrowserHeader({
             >
                 <ShouldRender if={!!path}>
                     <div className="upup-flex upup-items-center upup-gap-1">
-                        {(path as Array<any>).map((p, i) => (
+                        {path.map((p, i) => (
                             <p
                                 key={p.id}
                                 className={cn(
@@ -67,7 +64,7 @@ export default function DriveBrowserHeader({
                                         i === path.length - 1 ? 'none' : 'auto',
                                 }}
                                 onClick={() =>
-                                    setPath((prev: Array<any>) =>
+                                    setPath(prev =>
                                         prev.slice(0, i + 1),
                                     )
                                 }

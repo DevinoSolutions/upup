@@ -47,7 +47,7 @@ function ClientGoogleDriveUploader() {
             user={user}
             handleSignOut={handleSignOut}
             data-upup-slot="google-drive-uploader"
-            {...(uploaderProps as any)}
+            {...uploaderProps}
         />
     )
 }

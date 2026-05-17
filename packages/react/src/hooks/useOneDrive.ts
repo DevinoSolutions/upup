@@ -1,33 +1,21 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { OneDrivePlugin, type DriveFile } from '@upup/core'
+import { OneDrivePlugin, type DriveFile, type DriveFolder, type DriveUser } from '@upup/core'
 import {
     useUploaderFiles,
     useUploaderRuntime,
     useUploaderSource,
 } from '../context/RootContext'
 
-interface OneDriveUser {
-    name: string
-    email: string
-}
-
-interface OneDriveRoot {
-    id: string
-    name: string
-    isFolder: true
-    children: DriveFile[]
-}
-
 export default function useOneDrive() {
     const { core } = useUploaderRuntime()
     const { oneDriveConfigs, setActiveAdapter } = useUploaderSource()
     const { setFiles } = useUploaderFiles()
 
-    const [user, setUser] = useState<OneDriveUser>()
-    const [oneDriveFiles, setOneDriveFiles] = useState<OneDriveRoot>()
+    const [user, setUser] = useState<DriveUser>()
+    const [oneDriveFiles, setOneDriveFiles] = useState<DriveFolder>()
     const [isAuthenticated, setIsAuthenticated] = useState(false)
     const [isLoading, setIsLoading] = useState(true)
-    const [path, setPath] = useState<OneDriveRoot[]>([])
+    const [path, setPath] = useState<DriveFolder[]>([])
     const [selectedFiles, setSelectedFiles] = useState<DriveFile[]>([])
     const [showLoader, setShowLoader] = useState(false)
     const [downloadProgress, setDownloadProgress] = useState(0)
@@ -59,7 +47,7 @@ export default function useOneDrive() {
 
         const unsubs = [
             core.on('onedrive:authenticated', (payload: unknown) => {
-                const data = payload as { user?: OneDriveUser }
+                const data = payload as { user?: DriveUser }
                 if (data.user) setUser(data.user)
                 setIsAuthenticated(true)
                 setIsLoading(false)
@@ -79,9 +67,12 @@ export default function useOneDrive() {
             }),
             core.on('onedrive:files-loaded', (payload: unknown) => {
                 const data = payload as { files: DriveFile[]; folderId: string }
-                const root: OneDriveRoot = {
+                const root: DriveFolder = {
                     id: data.folderId || 'root',
                     name: data.folderId === 'root' || !data.folderId ? 'OneDrive' : data.folderId,
+                    path: '',
+                    size: 0,
+                    mimeType: '',
                     isFolder: true,
                     children: data.files,
                 }

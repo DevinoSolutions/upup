@@ -1,34 +1,21 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { DropboxPlugin, type DriveFile } from '@upup/core'
+import { DropboxPlugin, type DriveFile, type DriveFolder, type DriveUser } from '@upup/core'
 import {
     useUploaderFiles,
     useUploaderRuntime,
     useUploaderSource,
 } from '../context/RootContext'
 
-interface DropboxUser {
-    name: string
-    email: string
-}
-
-interface DropboxRoot {
-    id: string
-    name: string
-    isFolder: true
-    path_display?: string
-    children: DriveFile[]
-}
-
 export function useDropbox() {
     const { core } = useUploaderRuntime()
     const { dropboxConfigs, setActiveAdapter } = useUploaderSource()
     const { setFiles } = useUploaderFiles()
 
-    const [user, setUser] = useState<DropboxUser>()
-    const [dropboxFiles, setDropboxFiles] = useState<DropboxRoot>()
+    const [user, setUser] = useState<DriveUser>()
+    const [dropboxFiles, setDropboxFiles] = useState<DriveFolder>()
     const [isAuthenticated, setIsAuthenticated] = useState(false)
     const [isLoading, setIsLoading] = useState(true)
-    const [path, setPath] = useState<DropboxRoot[]>([])
+    const [path, setPath] = useState<DriveFolder[]>([])
     const [selectedFiles, setSelectedFiles] = useState<DriveFile[]>([])
     const [showLoader, setShowLoader] = useState(false)
     const [downloadProgress, setDownloadProgress] = useState(0)
@@ -56,7 +43,7 @@ export function useDropbox() {
 
         const unsubs = [
             core.on('dropbox:authenticated', (payload: unknown) => {
-                const data = payload as { user?: DropboxUser }
+                const data = payload as { user?: DriveUser }
                 if (data.user) setUser(data.user)
                 setIsAuthenticated(true)
                 setIsLoading(false)
@@ -76,11 +63,13 @@ export function useDropbox() {
             }),
             core.on('dropbox:files-loaded', (payload: unknown) => {
                 const data = payload as { files: DriveFile[]; path: string }
-                const root: DropboxRoot = {
+                const root: DriveFolder = {
                     id: data.path || 'root',
                     name: data.path ? data.path.split('/').pop() || 'Dropbox' : 'Dropbox',
+                    path: data.path || '',
+                    size: 0,
+                    mimeType: '',
                     isFolder: true,
-                    path_display: data.path,
                     children: data.files,
                 }
                 setDropboxFiles(root)
@@ -167,7 +156,7 @@ export function useDropbox() {
         setDownloadProgress(0)
 
         try {
-            const currentPath = dropboxFiles.path_display || ''
+            const currentPath = dropboxFiles.path || ''
             const allFiles = await plugin.loadAllFilesInFolder(currentPath)
             const fileOnly = allFiles.filter(f => !f.isFolder)
             if (fileOnly.length > 0) {

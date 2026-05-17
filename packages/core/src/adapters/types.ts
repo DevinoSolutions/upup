@@ -9,6 +9,16 @@ export type DriveFile = {
     modifiedAt?: string
 }
 
+export type DriveFolder = DriveFile & {
+    children: DriveFile[]
+}
+
+export type DriveUser = {
+    name: string
+    email?: string
+    picture?: string
+}
+
 export type AdapterState = 'idle' | 'authenticating' | 'authenticated' | 'browsing' | 'session-expired'
 
 export type AdapterEventMap = {

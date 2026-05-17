@@ -1,33 +1,21 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { BoxPlugin, type DriveFile } from '@upup/core'
+import { BoxPlugin, type DriveFile, type DriveFolder, type DriveUser } from '@upup/core'
 import {
     useUploaderFiles,
     useUploaderRuntime,
     useUploaderSource,
 } from '../context/RootContext'
 
-interface BoxUser {
-    name: string
-    email: string
-}
-
-interface BoxRoot {
-    id: string
-    name: string
-    isFolder: true
-    children: DriveFile[]
-}
-
 export function useBox() {
     const { core } = useUploaderRuntime()
     const { boxConfigs, setActiveAdapter } = useUploaderSource()
     const { setFiles } = useUploaderFiles()
 
-    const [user, setUser] = useState<BoxUser>()
-    const [boxFiles, setBoxFiles] = useState<BoxRoot>()
+    const [user, setUser] = useState<DriveUser>()
+    const [boxFiles, setBoxFiles] = useState<DriveFolder>()
     const [isAuthenticated, setIsAuthenticated] = useState(false)
     const [isLoading, setIsLoading] = useState(true)
-    const [path, setPath] = useState<BoxRoot[]>([])
+    const [path, setPath] = useState<DriveFolder[]>([])
     const [selectedFiles, setSelectedFiles] = useState<DriveFile[]>([])
     const [showLoader, setShowLoader] = useState(false)
     const [downloadProgress, setDownloadProgress] = useState(0)
@@ -55,7 +43,7 @@ export function useBox() {
 
         const unsubs = [
             core.on('box:authenticated', (payload: unknown) => {
-                const data = payload as { user?: BoxUser }
+                const data = payload as { user?: DriveUser }
                 if (data.user) setUser(data.user)
                 setIsAuthenticated(true)
                 setIsLoading(false)
@@ -75,9 +63,12 @@ export function useBox() {
             }),
             core.on('box:files-loaded', (payload: unknown) => {
                 const data = payload as { files: DriveFile[]; folderId: string }
-                const root: BoxRoot = {
+                const root: DriveFolder = {
                     id: data.folderId || '0',
                     name: data.folderId === '0' || !data.folderId ? 'Box' : data.folderId,
+                    path: '',
+                    size: 0,
+                    mimeType: '',
                     isFolder: true,
                     children: data.files,
                 }

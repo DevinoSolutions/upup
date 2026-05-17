@@ -1,6 +1,5 @@
-import { GoogleFile } from 'google'
-import { OneDriveFile } from 'microsoft'
 import React, { ReactEventHandler } from 'react'
+import { type DriveFile } from '@upup/core'
 import { TbFile, TbFolder } from 'react-icons/tb'
 import { b64EncodeUnicode } from '../../shared/lib/encoder'
 import { useUploaderTheme } from '../../context/RootContext'
@@ -15,16 +14,11 @@ const handleImgError: ReactEventHandler<HTMLImageElement> = e => {
 export default function DriveBrowserIcon({
     file,
 }: {
-    file: OneDriveFile | GoogleFile
+    file: DriveFile
 }) {
     const { isDark: dark } = useUploaderTheme()
-    const isFolder = Boolean(
-        (file as OneDriveFile).isFolder || (file as GoogleFile).children,
-    )
-    const src =
-        'isFolder' in file
-            ? (file as OneDriveFile).thumbnails?.small?.url
-            : (file as GoogleFile).thumbnailLink
+    const isFolder = file.isFolder
+    const src = file.thumbnail
 
     if (isFolder)
         return (

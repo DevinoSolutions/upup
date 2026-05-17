@@ -1,5 +1,3 @@
-import { GoogleFile, Root, User } from 'google'
-import { MicrosoftUser, OneDriveFile, OneDriveRoot } from 'microsoft'
 import React, {
     Dispatch,
     SetStateAction,
@@ -7,14 +5,19 @@ import React, {
     useMemo,
     useState,
 } from 'react'
-import { formatUiMessage as t, pluralUiMessage as plural } from '@upup/core'
+import {
+    type DriveFile,
+    type DriveFolder,
+    type DriveUser,
+    formatUiMessage as t,
+    pluralUiMessage as plural,
+} from '@upup/core'
 import {
     useUploaderI18n,
     useUploaderOptions,
     useUploaderTheme,
 } from '../../context/RootContext'
 import { searchDriveFiles } from '../../lib/file'
-import { isDriveFileAccepted } from '../../lib/googleDriveUtils'
 import { cn } from '../../lib/tailwind'
 import AdapterViewContainer from './AdapterViewContainer'
 import DriveBrowserHeader from './DriveBrowserHeader'
@@ -23,17 +26,13 @@ import ShouldRender from './ShouldRender'
 
 type Props = {
     isClickLoading?: boolean
-    driveFiles?: OneDriveRoot | Root
-    path: Root[] | OneDriveRoot[]
-    setPath:
-        | Dispatch<SetStateAction<Array<Root>>>
-        | Dispatch<SetStateAction<Array<OneDriveRoot>>>
-    user?: MicrosoftUser | User
+    driveFiles?: DriveFolder
+    path: DriveFolder[]
+    setPath: Dispatch<SetStateAction<DriveFolder[]>>
+    user?: DriveUser
     handleSignOut: () => Promise<void>
-    handleClick:
-        | ((file: OneDriveFile) => Promise<void>)
-        | ((file: GoogleFile | Root) => void)
-    selectedFiles: OneDriveFile[] | GoogleFile[]
+    handleClick: (file: DriveFile) => void | Promise<void>
+    selectedFiles: DriveFile[]
     showLoader: boolean
     handleSubmit: () => Promise<void>
     handleCancelDownload: () => void
@@ -41,21 +40,15 @@ type Props = {
     'data-upup-slot'?: string
 }
 
-function filterItems(item: OneDriveFile | GoogleFile, accept: string) {
-    const isFolder = Boolean(
-        (item as OneDriveFile).isFolder || (item as GoogleFile).children,
-    )
-    if (isFolder) return true
+function filterItems(item: DriveFile, accept: string) {
+    if (item.isFolder) return true
     if (!accept || accept === '*') return true
-
-    // GoogleFile has mimeType directly on the object
-    const isGoogleFile = 'mimeType' in item && !('isFolder' in item)
-    if (isGoogleFile) {
-        return isDriveFileAccepted(item as GoogleFile, accept)
-    }
-
-    // OneDrive: keep existing extension-based check
-    return accept.includes(item.name.split('.').pop()!)
+    return accept.split(',').some(pattern => {
+        const p = pattern.trim()
+        if (p.startsWith('.')) return item.name.endsWith(p)
+        if (p.endsWith('/*')) return item.mimeType.startsWith(p.replace('/*', '/'))
+        return item.mimeType === p
+    })
 }
 
 export default function DriveBrowser({
@@ -76,17 +69,17 @@ export default function DriveBrowser({
     const { isDark: dark, slotOverrides: slotClasses } = useUploaderTheme()
     const { translations: tr } = useUploaderI18n()
     const [searchTerm, setSearchTerm] = useState('')
-    const items = (path[path.length - 1]?.children as Array<any>)?.filter(
+    const items = path[path.length - 1]?.children?.filter(
         item => filterItems(item, allowedFileTypes),
     )
     const displayedItems = useMemo(
-        () => searchDriveFiles<any>(items, searchTerm) || [],
+        () => searchDriveFiles(items, searchTerm) || [],
         [searchTerm, items],
     )
     const isLoading = isClickLoading || !driveFiles
 
     useEffect(() => {
-        if (driveFiles) setPath([driveFiles as any])
+        if (driveFiles) setPath([driveFiles])
     }, [driveFiles, setPath])
 
     return (
