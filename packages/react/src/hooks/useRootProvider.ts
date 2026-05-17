@@ -8,6 +8,7 @@ import {
     flattenTranslatorToUiTranslations,
     flattenSlotsToClassNames,
     resolveTheme,
+    type FilesProgressMap,
     type LocaleBundle,
     type Translator,
     type UploadFile,
@@ -37,14 +38,6 @@ import {
 } from '../lib/resumable/multipartSessionStore'
 import { useUpupUpload } from '../use-upup-upload'
 import { useSSEProcessing } from './useSSEProcessing'
-
-type FileProgress = {
-    id: string
-    loaded: number
-    total: number
-}
-
-export type FilesProgressMap = Record<string, FileProgress>
 
 const RTL_LOCALES = new Set(['ar', 'ar-SA', 'he', 'he-IL', 'fa', 'fa-IR', 'ur', 'ur-PK'])
 

@@ -36,3 +36,4 @@ export {
   fileIs3D,
   searchDriveFiles,
 } from './file-utils'
+export type { FileProgress, FilesProgressMap } from './file-utils'

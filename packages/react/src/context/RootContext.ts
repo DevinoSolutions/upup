@@ -12,6 +12,7 @@ import {
 import type {
     DeepPartialSlots,
     FileSource,
+    FilesProgressMap,
     InternalFlatClassNames,
     Translations,
     Translator,
@@ -31,7 +32,6 @@ import {
     UpupUploaderProps,
     UpupUploaderPropsIcons,
 } from '../shared/types'
-import { FilesProgressMap } from '../hooks/useRootProvider'
 
 export { UploadStatus }
 

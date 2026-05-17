@@ -132,6 +132,14 @@ export function fileIs3D(ext: string) {
     return threeDExtensions.includes(ext.toLowerCase())
 }
 
+export type FileProgress = {
+    id: string
+    loaded: number
+    total: number
+}
+
+export type FilesProgressMap = Record<string, FileProgress>
+
 export function searchDriveFiles<
     T extends {
         name: string
