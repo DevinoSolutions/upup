@@ -1,248 +1,293 @@
-import { GoogleFile, Root, Token, User } from 'google'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { formatUiMessage as t } from '@upup/core'
-import { GoogleDriveConfigs } from '../shared/types'
+import { GoogleDrivePlugin, type DriveFile } from '@upup/core'
+import { GoogleFile, Root, Token, User } from 'google'
 import {
-    useUploaderI18n,
-    useUploaderOptions,
+    useUploaderFiles,
     useUploaderRuntime,
+    useUploaderSource,
 } from '../context/RootContext'
-import { createSecureStorage } from '../lib/storageHelper'
 import useLoadGAPI from './useLoadGAPI'
 
-const secureStorage = createSecureStorage()
-export default function useGoogleDrive(
-    googleConfigs = {} as GoogleDriveConfigs,
-) {
-    const { google_client_id, google_api_key } = googleConfigs
+// ── Google Drive root wraps files for the DriveBrowser tree ──
+
+interface GoogleDriveRoot {
+    id: string
+    name: string
+    children: GoogleFile[]
+}
+
+export function useGoogleDrive() {
     const { core } = useUploaderRuntime()
-    const { onError } = useUploaderOptions()
-    const { translations } = useUploaderI18n()
+    const { googleDriveConfigs, setActiveAdapter } = useUploaderSource()
+    const { setFiles } = useUploaderFiles()
+
     const [user, setUser] = useState<User>()
-    const [googleFiles, setGoogleFiles] = useState<Root>()
-    const [rawFiles, setRawFiles] = useState<GoogleFile[]>()
+    const [googleFiles, setGoogleFiles] = useState<GoogleDriveRoot>()
     const [token, setToken] = useState<Token>()
     const [authCancelled, setAuthCancelled] = useState(false)
     const [isAuthReady, setIsAuthReady] = useState(false)
+    const [path, setPath] = useState<Root[]>([])
+    const [selectedFiles, setSelectedFiles] = useState<GoogleFile[]>([])
+    const [showLoader, setShowLoader] = useState(false)
+    const [downloadProgress, setDownloadProgress] = useState(0)
+    const [isClickLoading, setIsClickLoading] = useState(false)
+
+    const pluginRef = useRef<GoogleDrivePlugin | null>(null)
     const tokenClientRef = useRef<{
         requestAccessToken: (opts?: object) => void
     } | null>(null)
 
-    const fetchDrive = useCallback(
-        async (url: string) => {
-            return await fetch(url, {
-                method: 'GET',
-                headers: {
-                    Authorization: `Bearer ${token?.access_token}`,
-                },
-            })
-        },
-        [token],
-    )
-
     const { gisLoaded } = useLoadGAPI()
 
-    /**
-     * @description Get the list of files from Google Drive
-     * @returns {Promise<void>}
-     *
-     */
-    const getFilesList = useCallback(async () => {
-        const response = await fetchDrive(
-            `https://www.googleapis.com/drive/v3/files?fields=files(fileExtension,id,mimeType,name,parents,size,thumbnailLink)&key=${google_api_key}`,
-        )
-        const data = await response.json()
-        if (data.error) {
-            onError(data.error)
-            // v2: emit gdrive API error via UpupCore
-            core?.emit('gdrive-api-error', { error: data.error })
-            return
-        }
-        setRawFiles(data.files)
-    }, [fetchDrive, google_api_key, onError])
-
-    /**
-     * @description Get the user's name from Google Drive
-     * @returns {Promise<void>}
-     */
-    const getUserName = useCallback(async () => {
-        const response = await fetchDrive(
-            `https://www.googleapis.com/oauth2/v3/userinfo`,
-        )
-        const data = await response.json()
-        setUser(data)
-    }, [fetchDrive])
-
-    const handleSignOut = async () => {
-        // const google = await window.google
-        // google.accounts.id.revoke()
-        secureStorage.removeItem('token')
-        setUser(undefined)
-        setGoogleFiles(undefined)
-        // v2: emit gdrive-sign-out event via UpupCore
-        core?.emit('gdrive-sign-out', {})
-    }
-
-    /**
-     * @description Organize the files into a tree structure
-     * @returns {void}
-     */
-    const organizeFiles = useCallback(() => {
-        if (!rawFiles) return
-
-        // Create a set for easy lookup of file IDs
-        const fileIds = new Set(rawFiles.map(f => f.id))
-
-        // Filter files to find ones that have no parents within rawFiles
-        const organizedFiles: GoogleFile[] = rawFiles.filter(
-            f => !(f.parents && fileIds.has(f.parents[0])),
-        )
-
-        // Create a mapping of parent IDs to their direct children
-        const parentIdToChildrenMap: { [key: string]: GoogleFile[] } = {}
-
-        rawFiles.forEach(file => {
-            if (file.parents) {
-                file.parents.forEach(parentId => {
-                    if (!parentIdToChildrenMap[parentId]) {
-                        parentIdToChildrenMap[parentId] = []
-                    }
-                    parentIdToChildrenMap[parentId].push(file)
-                })
-            }
-        })
-
-        /**
-         * @description Recursively add children to the tree structure
-         * @param {GoogleFile} file
-         * @returns {void}
-         */
-        const recurse = (file: GoogleFile) => {
-            const children = parentIdToChildrenMap[file.id]
-            if (children && children.length) {
-                file.children = children
-                children.forEach(recurse) // recursive call for each child
-            }
-        }
-
-        // Assign children for each top-level file in organizedFiles and build the tree recursively
-        organizedFiles.forEach(recurse)
-
-        setGoogleFiles({
-            id: 'root-drive',
-            name: 'Drive',
-            children: organizedFiles,
-        })
-    }, [rawFiles])
+    // ── Plugin setup + event subscriptions ──
 
     useEffect(() => {
-        /**
-         * @description Initialize the Google Drive API
-         * @returns {Promise<void>}
-         */
-        const storedTokenStr = secureStorage.getItem('token')
-        const storedToken = storedTokenStr ? JSON.parse(storedTokenStr) : null
+        if (!core) return
+        const plugin = core.getPlugin?.('google-drive') as GoogleDrivePlugin | undefined
+        if (!plugin) return
+        pluginRef.current = plugin
 
-        if (storedToken && storedToken.expires_in > Date.now()) {
-            setIsAuthReady(true)
-            return setToken(storedToken)
+        // Try restoring session from sessionStorage
+        const restored = plugin.restoreSession()
+        if (restored) {
+            const fakeToken: Token = {
+                access_token: plugin.getAccessToken() || '',
+                expires_in: 3600,
+            }
+            setToken(fakeToken)
+
+            void (async () => {
+                try {
+                    const userInfo = await plugin.getUserInfo()
+                    if (userInfo) setUser(userInfo as User)
+                } catch {
+                    // non-critical
+                }
+                await plugin.loadFiles()
+            })()
         }
 
-        if (!google_client_id || !google_api_key) {
-            setIsAuthReady(true)
-            return
-        }
-
-        if (gisLoaded) {
-            ;(async () => {
-                const google = await window.google
-                const client = google.accounts.oauth2.initTokenClient({
-                    client_id: google_client_id,
-                    scope: 'https://www.googleapis.com/auth/drive.readonly https://www.googleapis.com/auth/userinfo.profile',
-                    ux_mode: 'popup',
-                    callback(tokenResponse: Token) {
-                        if (!tokenResponse?.error) {
-                            setAuthCancelled(false)
-                            secureStorage.setItem(
-                                'token',
-                                JSON.stringify({
-                                    ...tokenResponse,
-                                    expires_in:
-                                        Date.now() +
-                                        (tokenResponse.expires_in - 20) * 1000,
-                                }),
-                            )
-                            // v2: emit gdrive-auth-success event via UpupCore
-                            core?.emit('gdrive-auth-success', { token: tokenResponse })
-                            return setToken(tokenResponse)
-                        } else {
-                            onError(
-                                t(translations.genericErrorDetails, {
-                                    details: String(tokenResponse?.error ?? ''),
-                                }),
-                            )
-                            // v2: emit gdrive auth error via UpupCore
-                            core?.emit('gdrive-auth-error', { error: tokenResponse?.error })
-                        }
-                    },
-                    error_callback(error: { type: string; message?: string }) {
-                        // Fired when popup is closed or blocked by the user
-                        setAuthCancelled(true)
-                        onError(
-                            t(translations.genericErrorDetails, {
-                                details: error.message || error.type,
-                            }),
-                        )
-                        // v2: emit gdrive auth popup error via UpupCore
-                        core?.emit('gdrive-auth-popup-error', { error })
-                    },
-                })
-                tokenClientRef.current = client
+        const unsubs = [
+            core.on('google-drive:authenticated', (payload: unknown) => {
+                const data = payload as { user?: User }
+                if (data.user) setUser(data.user)
                 setIsAuthReady(true)
-            })()
-        }
-    }, [gisLoaded, google_api_key, google_client_id, onError])
+            }),
+            core.on('google-drive:signed-out', () => {
+                setUser(undefined)
+                setGoogleFiles(undefined)
+                setToken(undefined)
+                setPath([])
+                setSelectedFiles([])
+            }),
+            core.on('google-drive:session-expired', () => {
+                setUser(undefined)
+                setGoogleFiles(undefined)
+                setToken(undefined)
+                setPath([])
+            }),
+            core.on('google-drive:files-loaded', (payload: unknown) => {
+                const data = payload as { files: DriveFile[]; folderId: string }
+                // Map core DriveFile[] to GoogleFile[] for DriveBrowser compatibility
+                const gFiles: GoogleFile[] = data.files.map(f => ({
+                    id: f.id,
+                    name: f.name,
+                    mimeType: f.mimeType,
+                    size: f.size,
+                    thumbnailLink: f.thumbnail,
+                    children: f.isFolder ? [] : undefined,
+                }))
+                const root: GoogleDriveRoot = {
+                    id: data.folderId || 'root',
+                    name: data.folderId === 'root' ? 'Drive' : data.folderId,
+                    children: gFiles,
+                }
+                setGoogleFiles(root)
+                setIsClickLoading(false)
+            }),
+            core.on('google-drive:state-change', (payload: unknown) => {
+                const data = payload as { state: string }
+                if (data.state === 'browsing') {
+                    setIsClickLoading(true)
+                }
+            }),
+            core.on('google-drive:error', () => {
+                setIsClickLoading(false)
+                setShowLoader(false)
+            }),
+        ]
 
-    /**
-     *  @description Get the user's name and files list when the token is set
-     */
+        return () => { unsubs.forEach(u => u()) }
+    }, [core])
+
+    // ── GIS initialization (loads Google Identity Services popup) ──
+
     useEffect(() => {
-        if (token) {
-            ;(async () => {
-                await getUserName()
-                await getFilesList()
-            })()
-        }
-    }, [getFilesList, getUserName, token])
-
-    /**
-     * @description Organize the files into a tree structure when the raw files are set
-     */
-    useEffect(() => {
-        organizeFiles()
-    }, [organizeFiles])
-
-    /**
-     * @description Re-trigger the OAuth popup so the user can retry authentication
-     */
-    const retryAuth = useCallback(() => {
+        if (!gisLoaded || !googleDriveConfigs) return
+        const { google_client_id, google_api_key } = googleDriveConfigs
         if (!google_client_id || !google_api_key) {
-            onError(
-                t(translations.genericErrorDetails, {
-                    details: 'Google Drive clientId and apiKey are required',
-                }),
-            )
-            core?.emit('gdrive-auth-config-error', {
-                reason: 'clientId or apiKey missing',
-            })
+            setIsAuthReady(true)
             return
         }
 
+        // If we already have a plugin with a valid session, skip GIS init
+        if (pluginRef.current?.isAuthenticated()) {
+            setIsAuthReady(true)
+            return
+        }
+
+        void (async () => {
+            const google = await window.google
+            const client = google.accounts.oauth2.initTokenClient({
+                client_id: google_client_id,
+                scope: 'https://www.googleapis.com/auth/drive.readonly https://www.googleapis.com/auth/userinfo.profile',
+                ux_mode: 'popup',
+                callback(tokenResponse: Token) {
+                    if (!tokenResponse?.error) {
+                        setAuthCancelled(false)
+                        const newToken: Token = {
+                            ...tokenResponse,
+                            expires_in: Date.now() + (tokenResponse.expires_in - 20) * 1000,
+                        }
+                        setToken(newToken)
+
+                        // Delegate to plugin
+                        const plugin = pluginRef.current
+                        if (plugin) {
+                            void plugin.authenticate(
+                                tokenResponse.access_token,
+                                tokenResponse.expires_in,
+                            ).then(() => plugin.loadFiles())
+                        }
+                    }
+                },
+                error_callback(_error: { type: string; message?: string }) {
+                    setAuthCancelled(true)
+                },
+            })
+            tokenClientRef.current = client
+            setIsAuthReady(true)
+        })()
+    }, [gisLoaded, googleDriveConfigs])
+
+    // ── Actions ──
+
+    const handleSignOut = useCallback(async () => {
+        pluginRef.current?.signOut()
+        setToken(undefined)
+    }, [])
+
+    const retryAuth = useCallback(() => {
+        if (!googleDriveConfigs?.google_client_id || !googleDriveConfigs?.google_api_key) return
         setAuthCancelled(false)
         tokenClientRef.current?.requestAccessToken({})
-    }, [core, google_api_key, google_client_id, onError, translations.genericErrorDetails])
+    }, [googleDriveConfigs])
+
+    const handleClick = useCallback((file: GoogleFile | Root) => {
+        const plugin = pluginRef.current
+        if (!plugin) return
+
+        if ('children' in file) {
+            // It's a folder — navigate into it
+            setIsClickLoading(true)
+            if (googleFiles) {
+                setPath(prev => [...prev, googleFiles as Root])
+            }
+            void plugin.loadFiles(file.id)
+        } else {
+            setSelectedFiles(prev =>
+                prev.some(f => f.id === file.id)
+                    ? prev.filter(f => f.id !== file.id)
+                    : [...prev, file as GoogleFile],
+            )
+        }
+    }, [googleFiles])
+
+    const handleSubmit = useCallback(async () => {
+        const plugin = pluginRef.current
+        if (!plugin || selectedFiles.length === 0) return
+
+        setShowLoader(true)
+        setDownloadProgress(0)
+
+        try {
+            // Convert GoogleFile[] to DriveFile[] for plugin
+            const driveFiles: DriveFile[] = selectedFiles.map(f => ({
+                id: f.id,
+                name: f.name,
+                path: '',
+                size: typeof f.size === 'string' ? parseInt(f.size, 10) : (f.size || 0),
+                mimeType: f.mimeType || '',
+                isFolder: false,
+            }))
+
+            const downloaded = await plugin.downloadFiles(driveFiles)
+            if (downloaded.length > 0) {
+                setFiles(downloaded)
+            }
+            setSelectedFiles([])
+            setActiveAdapter(undefined)
+        } catch {
+            // Error handled via plugin event
+        } finally {
+            setShowLoader(false)
+            setDownloadProgress(0)
+        }
+    }, [selectedFiles, setFiles, setActiveAdapter])
+
+    const handleCancelDownload = useCallback(() => {
+        setSelectedFiles([])
+        setDownloadProgress(0)
+    }, [])
+
+    const onSelectCurrentFolder = useCallback(async () => {
+        const plugin = pluginRef.current
+        if (!plugin) return
+
+        const current = path[path.length - 1]
+        if (!current) return
+
+        setShowLoader(true)
+        setDownloadProgress(0)
+
+        try {
+            // Collect all leaf files from the current folder
+            const files: GoogleFile[] = []
+            const walk = (node: GoogleFile | Root) => {
+                if ('children' in node && Array.isArray(node.children)) {
+                    node.children.forEach(child => walk(child as GoogleFile))
+                } else {
+                    files.push(node as GoogleFile)
+                }
+            }
+            walk(current)
+
+            if (files.length > 0) {
+                const driveFiles: DriveFile[] = files.map(f => ({
+                    id: f.id,
+                    name: f.name,
+                    path: '',
+                    size: typeof f.size === 'string' ? parseInt(f.size, 10) : (f.size || 0),
+                    mimeType: f.mimeType || '',
+                    isFolder: false,
+                }))
+                const downloaded = await plugin.downloadFiles(driveFiles)
+                if (downloaded.length > 0) {
+                    setFiles(downloaded)
+                }
+            }
+            setSelectedFiles([])
+            setActiveAdapter(undefined)
+        } catch {
+            // Error handled via plugin event
+        } finally {
+            setShowLoader(false)
+            setDownloadProgress(0)
+        }
+    }, [path, setFiles, setActiveAdapter])
 
     return {
+        // From old useGoogleDrive
         user,
         googleFiles,
         handleSignOut,
@@ -250,5 +295,18 @@ export default function useGoogleDrive(
         authCancelled,
         retryAuth,
         isAuthReady,
+        // From old useGoogleDriveUploader
+        path,
+        setPath,
+        handleClick,
+        selectedFiles,
+        showLoader,
+        handleSubmit,
+        downloadProgress,
+        handleCancelDownload,
+        onSelectCurrentFolder,
+        isClickLoading,
     }
 }
+
+export default useGoogleDrive

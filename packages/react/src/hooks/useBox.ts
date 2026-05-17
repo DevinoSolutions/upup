@@ -1,72 +1,206 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { BoxPlugin, type DriveFile } from '@upup/core'
 import {
-    useUploaderOptions,
+    useUploaderFiles,
     useUploaderRuntime,
     useUploaderSource,
 } from '../context/RootContext'
-import { useBoxAuth } from './useBoxAuth'
 
-type BoxUser = { name: string; email: string }
-type BoxItem = { id: string; name: string; type: 'file' | 'folder'; size?: number; isFolder: boolean }
-type BoxFolder = BoxItem & { children?: BoxItem[] }
+interface BoxUser {
+    name: string
+    email: string
+}
 
-const BOX_API = 'https://api.box.com/2.0'
+interface BoxRoot {
+    id: string
+    name: string
+    isFolder: true
+    children: DriveFile[]
+}
 
 export function useBox() {
     const { core } = useUploaderRuntime()
-    const { onError } = useUploaderOptions()
-    const { boxConfigs } = useUploaderSource()
-
-    const { isAuthenticated, token, isLoading, authenticate, logout, refreshAccessToken, refreshToken } = useBoxAuth(boxConfigs as any)
+    const { boxConfigs, setActiveAdapter } = useUploaderSource()
+    const { setFiles } = useUploaderFiles()
 
     const [user, setUser] = useState<BoxUser>()
-    const [boxFiles, setBoxFiles] = useState<BoxFolder>()
+    const [boxFiles, setBoxFiles] = useState<BoxRoot>()
+    const [isAuthenticated, setIsAuthenticated] = useState(false)
+    const [isLoading, setIsLoading] = useState(true)
+    const [path, setPath] = useState<BoxRoot[]>([])
+    const [selectedFiles, setSelectedFiles] = useState<DriveFile[]>([])
+    const [showLoader, setShowLoader] = useState(false)
+    const [downloadProgress, setDownloadProgress] = useState(0)
+    const [isClickLoading, setIsClickLoading] = useState(false)
 
-    const fetchBox = useCallback(async (url: string, isRetry = false): Promise<Response> => {
-        const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } })
-        if (res.status === 401 && !isRetry && refreshToken) {
-            const newToken = await refreshAccessToken(refreshToken)
-            if (newToken) return fetchBox(url, true)
-        }
-        return res
-    }, [token, refreshToken, refreshAccessToken])
-
-    const getUserInfo = useCallback(async () => {
-        try {
-            const res = await fetchBox(`${BOX_API}/users/me`)
-            if (!res.ok) return
-            const data = await res.json()
-            setUser({ name: data.name, email: data.login })
-        } catch (e) {
-            core?.emit('box-user-info-error', { error: e })
-        }
-    }, [fetchBox, core])
-
-    const fetchRootContents = useCallback(async () => {
-        try {
-            const res = await fetchBox(`${BOX_API}/folders/0/items?fields=id,name,type,size&limit=1000`)
-            if (!res.ok) throw new Error(`Box API error ${res.status}`)
-            const data = await res.json()
-            const items: BoxItem[] = (data.entries || []).map((e: any) => ({
-                id: e.id,
-                name: e.name,
-                type: e.type,
-                size: e.size,
-                isFolder: e.type === 'folder',
-            }))
-            setBoxFiles({ id: '0', name: 'Box', type: 'folder', isFolder: true, children: items })
-            core?.emit('box-files-loaded', { count: items.length })
-        } catch (e) {
-            onError(`Failed to fetch Box files: ${(e as Error).message}`)
-        }
-    }, [fetchBox, onError, core])
+    const pluginRef = useRef<BoxPlugin | null>(null)
 
     useEffect(() => {
-        if (token && isAuthenticated && !isLoading) {
-            getUserInfo()
-            fetchRootContents()
-        }
-    }, [token, isAuthenticated, isLoading, getUserInfo, fetchRootContents])
+        if (!core) return
+        const plugin = core.getPlugin?.('box') as BoxPlugin | undefined
+        if (!plugin) return
+        pluginRef.current = plugin
 
-    return { user, boxFiles, token, isAuthenticated, isLoading, authenticate, logout }
+        const restored = plugin.restoreSession()
+        setIsAuthenticated(restored)
+        setIsLoading(false)
+
+        if (restored) {
+            void (async () => {
+                const userInfo = await plugin.getUserInfo()
+                if (userInfo) setUser(userInfo)
+                await plugin.loadFiles('0')
+            })()
+        }
+
+        const unsubs = [
+            core.on('box:authenticated', (payload: unknown) => {
+                const data = payload as { user?: BoxUser }
+                if (data.user) setUser(data.user)
+                setIsAuthenticated(true)
+                setIsLoading(false)
+            }),
+            core.on('box:signed-out', () => {
+                setUser(undefined)
+                setBoxFiles(undefined)
+                setIsAuthenticated(false)
+                setPath([])
+                setSelectedFiles([])
+            }),
+            core.on('box:session-expired', () => {
+                setUser(undefined)
+                setBoxFiles(undefined)
+                setIsAuthenticated(false)
+                setPath([])
+            }),
+            core.on('box:files-loaded', (payload: unknown) => {
+                const data = payload as { files: DriveFile[]; folderId: string }
+                const root: BoxRoot = {
+                    id: data.folderId || '0',
+                    name: data.folderId === '0' || !data.folderId ? 'Box' : data.folderId,
+                    isFolder: true,
+                    children: data.files,
+                }
+                setBoxFiles(root)
+                setIsClickLoading(false)
+            }),
+            core.on('box:state-change', (payload: unknown) => {
+                const data = payload as { state: string }
+                setIsLoading(data.state === 'authenticating' || data.state === 'browsing')
+            }),
+            core.on('box:error', () => {
+                setIsClickLoading(false)
+                setShowLoader(false)
+            }),
+        ]
+
+        return () => { unsubs.forEach(u => u()) }
+    }, [core])
+
+    const authenticate = useCallback(async () => {
+        const plugin = pluginRef.current
+        if (!plugin) return
+        setIsLoading(true)
+        await plugin.authenticateViaPopup()
+        if (plugin.isAuthenticated()) {
+            await plugin.loadFiles('0')
+        }
+    }, [])
+
+    const logout = useCallback(() => {
+        pluginRef.current?.signOut()
+    }, [])
+
+    const handleClick = useCallback(async (file: DriveFile) => {
+        const plugin = pluginRef.current
+        if (!plugin) return
+
+        if (file.isFolder) {
+            setIsClickLoading(true)
+            if (boxFiles) {
+                setPath(prev => [...prev, boxFiles])
+            }
+            await plugin.loadFiles(file.id)
+        } else {
+            setSelectedFiles(prev =>
+                prev.some(f => f.id === file.id)
+                    ? prev.filter(f => f.id !== file.id)
+                    : [...prev, file],
+            )
+        }
+    }, [boxFiles])
+
+    const handleSubmit = useCallback(async () => {
+        const plugin = pluginRef.current
+        if (!plugin || selectedFiles.length === 0) return
+
+        setShowLoader(true)
+        setDownloadProgress(0)
+
+        try {
+            const downloaded = await plugin.downloadFiles(selectedFiles)
+            if (downloaded.length > 0) {
+                setFiles(downloaded)
+            }
+            setSelectedFiles([])
+            setActiveAdapter(undefined)
+        } catch {
+            // Error handled via event
+        } finally {
+            setShowLoader(false)
+            setDownloadProgress(0)
+        }
+    }, [selectedFiles, setFiles, setActiveAdapter])
+
+    const handleCancelDownload = useCallback(() => {
+        setSelectedFiles([])
+        setDownloadProgress(0)
+    }, [])
+
+    const onSelectCurrentFolder = useCallback(async () => {
+        const plugin = pluginRef.current
+        if (!plugin || !boxFiles) return
+
+        setShowLoader(true)
+        setDownloadProgress(0)
+
+        try {
+            const folderId = boxFiles.id || '0'
+            const allFiles = await plugin.loadAllFilesInFolder(folderId)
+            const fileOnly = allFiles.filter(f => !f.isFolder)
+            if (fileOnly.length > 0) {
+                const downloaded = await plugin.downloadFiles(fileOnly)
+                if (downloaded.length > 0) {
+                    setFiles(downloaded)
+                }
+            }
+            setSelectedFiles([])
+            setActiveAdapter(undefined)
+        } catch {
+            // Error handled via event
+        } finally {
+            setShowLoader(false)
+            setDownloadProgress(0)
+        }
+    }, [boxFiles, setFiles, setActiveAdapter])
+
+    return {
+        user,
+        boxFiles,
+        logout,
+        authenticate,
+        token: isAuthenticated ? 'active' : undefined,
+        isAuthenticated,
+        isLoading,
+        path,
+        setPath,
+        isClickLoading,
+        handleClick,
+        selectedFiles,
+        showLoader,
+        handleSubmit,
+        downloadProgress,
+        handleCancelDownload,
+        onSelectCurrentFolder,
+    }
 }

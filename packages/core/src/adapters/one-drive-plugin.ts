@@ -526,6 +526,31 @@ export class OneDrivePlugin implements AdapterPlugin {
         return results
     }
 
+    // ── File operations: load all files in folder recursively ──
+
+    async loadAllFilesInFolder(folderId: string): Promise<DriveFile[]> {
+        const allFiles: DriveFile[] = []
+
+        try {
+            const { files } = await this.loadFiles(folderId)
+            for (const file of files) {
+                if (file.isFolder) {
+                    const nested = await this.loadAllFilesInFolder(file.id)
+                    allFiles.push(...nested)
+                } else {
+                    allFiles.push(file)
+                }
+            }
+            return allFiles
+        } catch (err) {
+            this.emitter?.emit('onedrive:error', {
+                error: err instanceof Error ? err : new Error(String(err)),
+                action: 'loadAllFilesInFolder',
+            })
+            throw err
+        }
+    }
+
     // ── User profile ──
 
     async getUserInfo(): Promise<{ name: string; email: string }> {

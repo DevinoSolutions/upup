@@ -1,8 +1,6 @@
 import React from 'react'
 import { useUploaderRuntime, useUploaderSource } from '../context/RootContext'
 import useGoogleDrive from '../hooks/useGoogleDrive'
-
-import useGoogleDriveUploader from '../hooks/useGoogleDriveUploader'
 import DriveAuthFallback from './shared/DriveAuthFallback'
 import DriveBrowser from './shared/DriveBrowser'
 import ServerModeDriveUploader from './ServerModeDriveUploader'
@@ -22,7 +20,6 @@ export default function GoogleDriveUploader() {
 }
 
 function ClientGoogleDriveUploader() {
-    const { googleDriveConfigs } = useUploaderSource()
     const {
         user,
         googleFiles: driveFiles,
@@ -31,8 +28,8 @@ function ClientGoogleDriveUploader() {
         authCancelled,
         retryAuth,
         isAuthReady,
-    } = useGoogleDrive(googleDriveConfigs)
-    const props = useGoogleDriveUploader(token)
+        ...uploaderProps
+    } = useGoogleDrive()
 
     if (!token && (authCancelled || isAuthReady)) {
         return (
@@ -50,7 +47,7 @@ function ClientGoogleDriveUploader() {
             user={user}
             handleSignOut={handleSignOut}
             data-upup-slot="google-drive-uploader"
-            {...props}
+            {...(uploaderProps as any)}
         />
     )
 }

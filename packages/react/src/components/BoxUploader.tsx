@@ -1,7 +1,6 @@
 import React from 'react'
 import { useUploaderRuntime, useUploaderSource } from '../context/RootContext'
 import { useBox } from '../hooks/useBox'
-import useBoxUploader from '../hooks/useBoxUploader'
 import DriveAuthFallback from './shared/DriveAuthFallback'
 import DriveBrowser from './shared/DriveBrowser'
 import ServerModeDriveUploader from './ServerModeDriveUploader'
@@ -21,11 +20,21 @@ export default function BoxUploader() {
 }
 
 function ClientBoxUploader() {
-    const { user, boxFiles, token, isAuthenticated, isLoading, authenticate, logout } = useBox()
+    const {
+        user,
+        boxFiles: driveFiles,
+        logout,
+        token,
+        isAuthenticated,
+        authenticate,
+        isLoading,
+        ...uploaderProps
+    } = useBox()
 
-    const handleSignOut = async () => { logout(); return Promise.resolve() }
-
-    const props = useBoxUploader(token)
+    const handleSignOut = async () => {
+        logout()
+        return Promise.resolve()
+    }
 
     if (!isAuthenticated && !token && !isLoading) {
         return (
@@ -39,11 +48,11 @@ function ClientBoxUploader() {
 
     return (
         <DriveBrowser
-            driveFiles={boxFiles as any}
+            driveFiles={driveFiles as any}
             user={user}
             handleSignOut={handleSignOut}
             data-upup-slot="box-uploader"
-            {...(props as any)}
+            {...(uploaderProps as any)}
         />
     )
 }

@@ -1,135 +1,211 @@
-import { InteractionType } from '@azure/msal-browser'
-import { Client } from '@microsoft/microsoft-graph-client'
-import { AuthCodeMSALBrowserAuthenticationProvider } from '@microsoft/microsoft-graph-client/authProviders/authCodeMsalBrowser/index.js'
-import { MicrosoftUser, OneDriveRoot } from 'microsoft'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { OneDrivePlugin, type DriveFile } from '@upup/core'
 import {
-    useUploaderOptions,
+    useUploaderFiles,
     useUploaderRuntime,
+    useUploaderSource,
 } from '../context/RootContext'
-import useOneDriveAuth from './useOneDriveAuth'
-import usePCAInstance from './usePCAInstance'
 
-export default function useOneDrive(clientId = '') {
+interface OneDriveUser {
+    name: string
+    email: string
+}
+
+interface OneDriveRoot {
+    id: string
+    name: string
+    isFolder: true
+    children: DriveFile[]
+}
+
+export default function useOneDrive() {
     const { core } = useUploaderRuntime()
-    const { onError } = useUploaderOptions()
-    const [user, setUser] = useState<MicrosoftUser>()
-    const [oneDriveFiles, setOneDriveFiles] = useState<OneDriveRoot>()
-    const [graphClient, setGraphClient] = useState<Client>()
-    const { msalInstance } = usePCAInstance(clientId)
-    const {
-        token,
-        signOut,
-        isInitialized,
-        isAuthenticating,
-        isAuthInProgress,
-        authCancelled,
-        retryAuth,
-    } = useOneDriveAuth({
-        msalInstance,
-        setUser,
-        setOneDriveFiles,
-    })
+    const { oneDriveConfigs, setActiveAdapter } = useUploaderSource()
+    const { setFiles } = useUploaderFiles()
 
-    // Initialize Graph client when we have both msalInstance and token
+    const [user, setUser] = useState<OneDriveUser>()
+    const [oneDriveFiles, setOneDriveFiles] = useState<OneDriveRoot>()
+    const [isAuthenticated, setIsAuthenticated] = useState(false)
+    const [isLoading, setIsLoading] = useState(true)
+    const [path, setPath] = useState<OneDriveRoot[]>([])
+    const [selectedFiles, setSelectedFiles] = useState<DriveFile[]>([])
+    const [showLoader, setShowLoader] = useState(false)
+    const [downloadProgress, setDownloadProgress] = useState(0)
+    const [isClickLoading, setIsClickLoading] = useState(false)
+
+    const pluginRef = useRef<OneDrivePlugin | null>(null)
+
     useEffect(() => {
-        const isReady = token && isInitialized && !isAuthenticating
-        if (!isReady || !msalInstance) {
-            setGraphClient(undefined)
-            return
+        if (!core) return
+        const plugin = core.getPlugin?.('one-drive') as OneDrivePlugin | undefined
+        if (!plugin) return
+        pluginRef.current = plugin
+
+        const restored = plugin.restoreSession()
+        setIsAuthenticated(restored)
+        setIsLoading(false)
+
+        if (restored) {
+            void (async () => {
+                try {
+                    const userInfo = await plugin.getUserInfo()
+                    if (userInfo) setUser(userInfo)
+                } catch {
+                    // Profile fetch is non-critical
+                }
+                await plugin.loadFiles()
+            })()
         }
+
+        const unsubs = [
+            core.on('onedrive:authenticated', (payload: unknown) => {
+                const data = payload as { user?: OneDriveUser }
+                if (data.user) setUser(data.user)
+                setIsAuthenticated(true)
+                setIsLoading(false)
+            }),
+            core.on('onedrive:signed-out', () => {
+                setUser(undefined)
+                setOneDriveFiles(undefined)
+                setIsAuthenticated(false)
+                setPath([])
+                setSelectedFiles([])
+            }),
+            core.on('onedrive:session-expired', () => {
+                setUser(undefined)
+                setOneDriveFiles(undefined)
+                setIsAuthenticated(false)
+                setPath([])
+            }),
+            core.on('onedrive:files-loaded', (payload: unknown) => {
+                const data = payload as { files: DriveFile[]; folderId: string }
+                const root: OneDriveRoot = {
+                    id: data.folderId || 'root',
+                    name: data.folderId === 'root' || !data.folderId ? 'OneDrive' : data.folderId,
+                    isFolder: true,
+                    children: data.files,
+                }
+                setOneDriveFiles(root)
+                setIsClickLoading(false)
+            }),
+            core.on('onedrive:state-change', (payload: unknown) => {
+                const data = payload as { state: string }
+                setIsLoading(data.state === 'authenticating' || data.state === 'browsing')
+            }),
+            core.on('onedrive:error', () => {
+                setIsClickLoading(false)
+                setShowLoader(false)
+            }),
+        ]
+
+        return () => { unsubs.forEach(u => u()) }
+    }, [core])
+
+    const authenticate = useCallback(async () => {
+        const plugin = pluginRef.current
+        if (!plugin) return
+        setIsLoading(true)
+        await plugin.authenticateViaPopup()
+        if (plugin.isAuthenticated()) {
+            await plugin.loadFiles()
+        }
+    }, [])
+
+    const signOut = useCallback(() => {
+        pluginRef.current?.signOut()
+    }, [])
+
+    const handleClick = useCallback(async (file: DriveFile) => {
+        const plugin = pluginRef.current
+        if (!plugin) return
+
+        if (file.isFolder) {
+            setIsClickLoading(true)
+            if (oneDriveFiles) {
+                setPath(prev => [...prev, oneDriveFiles])
+            }
+            await plugin.loadFiles(file.id)
+        } else {
+            setSelectedFiles(prev =>
+                prev.some(f => f.id === file.id)
+                    ? prev.filter(f => f.id !== file.id)
+                    : [...prev, file],
+            )
+        }
+    }, [oneDriveFiles])
+
+    const handleSubmit = useCallback(async () => {
+        const plugin = pluginRef.current
+        if (!plugin || selectedFiles.length === 0) return
+
+        setShowLoader(true)
+        setDownloadProgress(0)
 
         try {
-            const accounts = msalInstance.getAllAccounts()
-            if (accounts.length === 0) throw new Error('No accounts found')
-
-            const authProvider = new AuthCodeMSALBrowserAuthenticationProvider(
-                msalInstance,
-                {
-                    account: accounts[0],
-                    scopes: [
-                        'user.read',
-                        'files.read.all',
-                        'files.readwrite.all',
-                    ],
-                    interactionType: InteractionType.Popup,
-                },
-            )
-
-            const client = Client.initWithMiddleware({
-                authProvider,
-            })
-
-            setGraphClient(client)
-            // v2: emit onedrive-graph-ready event via UpupCore
-            core?.emit('onedrive-graph-ready', {})
-        } catch (error) {
-            onError(
-                `Error initializing Graph client: ${(error as Error)?.message}`,
-            )
-            // v2: emit graph client init error via UpupCore
-            core?.emit('onedrive-graph-error', { error })
-            setGraphClient(undefined)
-        }
-    }, [core, msalInstance, token, isInitialized, isAuthenticating, onError])
-
-    // Fetch user profile and files when Graph client is ready
-    useEffect(() => {
-        if (!graphClient) return
-
-        const initialize = async () => {
-            try {
-                const profile = await graphClient.api('/me').get()
-                setUser({ name: profile.displayName, mail: profile.mail })
-
-                const filesResponse = await graphClient
-                    .api('/me/drive/root/children')
-                    .select(
-                        'id,name,folder,file,thumbnails,@microsoft.graph.downloadUrl',
-                    )
-                    .expand('thumbnails')
-                    .get()
-
-                const files = filesResponse.value.map((item: any) => ({
-                    id: item.id,
-                    name: item.name,
-                    isFolder: !!item.folder,
-                    children: item.folder ? [] : undefined,
-                    thumbnails: item.thumbnails?.[0] || null,
-                    '@microsoft.graph.downloadUrl':
-                        item['@microsoft.graph.downloadUrl'],
-                    file: item.file,
-                }))
-
-                setOneDriveFiles({
-                    id: 'root',
-                    name: 'OneDrive',
-                    isFolder: true,
-                    children: files,
-                })
-            } catch (error) {
-                onError(
-                    'Error fetching profile or file list:' +
-                        (error as Error)?.message,
-                )
-                // v2: emit OneDrive init error via UpupCore
-                core?.emit('onedrive-init-error', { error })
+            const downloaded = await plugin.downloadFiles(selectedFiles)
+            if (downloaded.length > 0) {
+                setFiles(downloaded)
             }
+            setSelectedFiles([])
+            setActiveAdapter(undefined)
+        } catch {
+            // Error handled via event
+        } finally {
+            setShowLoader(false)
+            setDownloadProgress(0)
         }
+    }, [selectedFiles, setFiles, setActiveAdapter])
 
-        initialize()
-    }, [core, graphClient, onError])
+    const handleCancelDownload = useCallback(() => {
+        setSelectedFiles([])
+        setDownloadProgress(0)
+    }, [])
+
+    const onSelectCurrentFolder = useCallback(async () => {
+        const plugin = pluginRef.current
+        if (!plugin || !oneDriveFiles) return
+
+        setShowLoader(true)
+        setDownloadProgress(0)
+
+        try {
+            const folderId = oneDriveFiles.id || 'root'
+            const allFiles = await plugin.loadAllFilesInFolder(folderId)
+            const fileOnly = allFiles.filter(f => !f.isFolder)
+            if (fileOnly.length > 0) {
+                const downloaded = await plugin.downloadFiles(fileOnly)
+                if (downloaded.length > 0) {
+                    setFiles(downloaded)
+                }
+            }
+            setSelectedFiles([])
+            setActiveAdapter(undefined)
+        } catch {
+            // Error handled via event
+        } finally {
+            setShowLoader(false)
+            setDownloadProgress(0)
+        }
+    }, [oneDriveFiles, setFiles, setActiveAdapter])
 
     return {
         user,
         oneDriveFiles,
         signOut,
-        graphClient,
-        token,
-        authCancelled,
-        retryAuth,
-        isInitialized,
-        isAuthenticating,
-        isAuthInProgress,
+        signIn: authenticate,
+        authenticate,
+        token: isAuthenticated ? 'active' : undefined,
+        isAuthenticated,
+        isLoading,
+        path,
+        setPath,
+        isClickLoading,
+        handleClick,
+        selectedFiles,
+        showLoader,
+        handleSubmit,
+        downloadProgress,
+        handleCancelDownload,
+        onSelectCurrentFolder,
     }
 }

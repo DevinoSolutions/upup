@@ -428,6 +428,15 @@ export class BoxPlugin implements AdapterPlugin {
         return this.accessToken
     }
 
+    async getUserInfo(): Promise<{ name: string; email: string } | null> {
+        if (!this.isAuthenticated()) return null
+        try {
+            return await this.fetchUserProfile()
+        } catch {
+            return null
+        }
+    }
+
     // ── File operations: list folder ──
 
     async loadFiles(
@@ -493,6 +502,31 @@ export class BoxPlugin implements AdapterPlugin {
         }
 
         return results
+    }
+
+    // ── File operations: load all files in folder recursively ──
+
+    async loadAllFilesInFolder(folderId: string): Promise<DriveFile[]> {
+        const allFiles: DriveFile[] = []
+
+        try {
+            const { files } = await this.loadFiles(folderId)
+            for (const file of files) {
+                if (file.isFolder) {
+                    const nested = await this.loadAllFilesInFolder(file.id)
+                    allFiles.push(...nested)
+                } else {
+                    allFiles.push(file)
+                }
+            }
+            return allFiles
+        } catch (err) {
+            this.emitter?.emit('box:error', {
+                error: err instanceof Error ? err : new Error(String(err)),
+                action: 'loadAllFilesInFolder',
+            })
+            throw err
+        }
     }
 
     // ── File operations: search ──
