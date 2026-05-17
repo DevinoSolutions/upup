@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
     FileSource,
-    UploadStatus as CoreUploadStatus,
+    UploadStatus,
     createTranslator,
     enUS,
     flattenTranslatorToUiTranslations,
@@ -25,7 +25,7 @@ import {
     ResolvedImageEditorOptions,
     UpupUploaderProps,
 } from '../shared/types'
-import { IRootContext, UploadStatus } from '../context/RootContext'
+import { IRootContext } from '../context/RootContext'
 import { revokeFileUrl, sizeToBytes } from '../lib/file'
 import {
     blobToUploadFile,
@@ -72,24 +72,6 @@ function useResolvedThemeMode(mode: UpupThemeMode | undefined): 'light' | 'dark'
 
     if (requestedMode === 'system') return systemMode
     return requestedMode
-}
-
-function mapCoreStatus(status: CoreUploadStatus): UploadStatus {
-    switch (status) {
-        case CoreUploadStatus.PROCESSING:
-        case CoreUploadStatus.UPLOADING:
-            return UploadStatus.ONGOING
-        case CoreUploadStatus.PAUSED:
-            return UploadStatus.PAUSED
-        case CoreUploadStatus.SUCCESSFUL:
-            return UploadStatus.SUCCESSFUL
-        case CoreUploadStatus.FAILED:
-            return UploadStatus.FAILED
-        case CoreUploadStatus.IDLE:
-        case CoreUploadStatus.READY:
-        default:
-            return UploadStatus.PENDING
-    }
 }
 
 function normalizeSource(source: string): FileSource | undefined {
@@ -217,7 +199,8 @@ export default function useRootProvider({
     const minFileSize = minFileSizeProp ?? restrictions?.minFileSize
     const maxTotalFileSize = maxTotalFileSizeProp ?? restrictions?.maxTotalFileSize
     const accept = resolveAccept(restrictions?.allowedFileTypes ? restrictions.allowedFileTypes.join(',') : acceptProp)
-    const folderPickerButtonVisible = folderUpload?.showPickerButton ?? folderUpload?.enabled ?? false
+    const folderUploadAllowDrop = folderUpload?.allowDrop ?? false
+    const folderPickerButtonVisible = folderUpload?.showSelectFolderButton ?? false
     const emitFileRemoved = useCallback((file: UploadFile) => {
         onFileRemoveProp(file as never)
         if (onFileRemoved && onFileRemoved !== onFileRemoveProp) {
@@ -321,7 +304,7 @@ export default function useRootProvider({
         () => new Map(upload.files.map(file => [file.id, file] as const)),
         [upload.files],
     )
-    const uploadStatus = mapCoreStatus(upload.status)
+    const uploadStatus = upload.status
     const totalProgress = upload.progress.percentage
 
     const resolvedImageEditor = useMemo<ResolvedImageEditorOptions>(() => {
@@ -741,6 +724,7 @@ export default function useRootProvider({
             onFilesDragOver,
             onFilesDragLeave,
             onFilesDrop,
+            onWarn,
             enablePaste,
             sources: resolvedSources,
             allowedFileTypes: accept,
@@ -748,6 +732,7 @@ export default function useRootProvider({
             limit,
             isProcessing,
             allowPreview,
+            folderUploadAllowDrop,
             folderPickerButtonVisible,
             showBranding,
             disableDragDrop,

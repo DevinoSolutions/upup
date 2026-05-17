@@ -1,12 +1,12 @@
 import { describe, it, expect, vi } from 'vitest'
 import useUpload from '../src/hooks/useUpload'
-import { UploadStatus } from '../src/context/RootContext'
+import { UploadStatus } from '@upup/core'
 
 function makeUploadCtx(overrides: Record<string, unknown> = {}) {
     return {
         proceedUpload: vi.fn(),
         retryUpload: vi.fn(),
-        uploadStatus: UploadStatus.PENDING,
+        uploadStatus: UploadStatus.IDLE,
         uploadError: '',
         totalProgress: 0,
         filesProgressMap: {},
@@ -42,9 +42,9 @@ describe('useUpload', () => {
         expect(result.upload).toBe(fn)
     })
 
-    it('loading is true when uploadStatus is ONGOING', () => {
+    it('loading is true when uploadStatus is UPLOADING', () => {
         const result = useUpload({
-            upload: makeUploadCtx({ uploadStatus: UploadStatus.ONGOING }),
+            upload: makeUploadCtx({ uploadStatus: UploadStatus.UPLOADING }),
             files: new Map(),
             setFiles: vi.fn(),
             dynamicallyReplaceFiles: vi.fn(),
@@ -54,9 +54,9 @@ describe('useUpload', () => {
         expect(result.loading).toBe(true)
     })
 
-    it('loading is false when uploadStatus is PENDING', () => {
+    it('loading is false when uploadStatus is IDLE', () => {
         const result = useUpload({
-            upload: makeUploadCtx({ uploadStatus: UploadStatus.PENDING }),
+            upload: makeUploadCtx({ uploadStatus: UploadStatus.IDLE }),
             files: new Map(),
             setFiles: vi.fn(),
             dynamicallyReplaceFiles: vi.fn(),

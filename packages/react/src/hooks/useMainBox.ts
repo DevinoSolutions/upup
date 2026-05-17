@@ -1,6 +1,5 @@
 import { ClipboardEventHandler, DragEventHandler, useCallback, useMemo, useState } from 'react'
 import {
-    UploadStatus,
     useUploaderFiles,
     useUploaderOptions,
     useUploaderRuntime,
@@ -8,6 +7,8 @@ import {
     useUploaderUploadControls,
     useUploaderView,
 } from '../context/RootContext'
+import { isUploadActive } from '../lib/status-helpers'
+import { collectDroppedFiles } from '../lib/folderDrop'
 
 export default function useMainBox() {
     const { core } = useUploaderRuntime()
@@ -15,7 +16,16 @@ export default function useMainBox() {
     const { activeAdapter } = useUploaderSource()
     const { isAddingMore } = useUploaderView()
     const { upload: { uploadStatus } } = useUploaderUploadControls()
-    const { onFilesDragOver, onFilesDragLeave, onFilesDrop, isProcessing, enablePaste, disableDragDrop } = useUploaderOptions()
+    const {
+        onFilesDragOver,
+        onFilesDragLeave,
+        onFilesDrop,
+        onWarn,
+        isProcessing,
+        enablePaste,
+        disableDragDrop,
+        folderUploadAllowDrop,
+    } = useUploaderOptions()
     const [isDragging, setIsDragging] = useState(false)
 
     const absoluteIsDragging = useMemo(
@@ -29,7 +39,7 @@ export default function useMainBox() {
     )
 
     const disableDragAction = useMemo(
-        () => disableDragDrop || activeAdapter || uploadStatus === UploadStatus.ONGOING,
+        () => disableDragDrop || activeAdapter || isUploadActive(uploadStatus),
         [activeAdapter, disableDragDrop, uploadStatus],
     )
 
@@ -69,105 +79,22 @@ export default function useMainBox() {
             if (disableDragAction || isProcessing) return
             e.preventDefault()
 
-            const dt = e.dataTransfer
-            const items = Array.from(dt.items || [])
-            let droppedFiles: File[] = []
-            // Attempt directory-aware traversal using File System Access API or webkit entries
-            const supportsEntries = (items[0] as any)?.webkitGetAsEntry
-            if (supportsEntries) {
-                const traverse = async (entry: any): Promise<File[]> => {
-                    if (entry.isFile) {
-                        return await new Promise<File[]>((resolve, reject) => {
-                            entry.file((file: File) => {
-                                try {
-                                    // Attach synthetic relativePath so UI can build a tree
-                                    const path =
-                                        entry.fullPath || `/${file.name}`
-                                    Object.defineProperty(
-                                        file,
-                                        'relativePath',
-                                        {
-                                            value: path.replace(/^\//, ''),
-                                            configurable: true,
-                                            enumerable: false,
-                                            writable: false,
-                                        },
-                                    )
-                                } catch {
-                                    // noop
-                                }
-                                resolve([file])
-                            }, reject)
-                        })
-                    } else if (entry.isDirectory) {
-                        const reader = entry.createReader()
-                        const entries: any[] = await new Promise(
-                            (resolve, reject) => {
-                                reader.readEntries(resolve, reject)
-                            },
-                        )
-                        const all = await Promise.all(entries.map(traverse))
-                        return all.flat()
-                    }
-                    return []
-                }
-                const filesArrays = await Promise.all(
-                    items
-                        .map(it => (it as any).webkitGetAsEntry?.())
-                        .filter(Boolean)
-                        .map(traverse),
+            const {
+                files: droppedFiles,
+                skippedDirectory,
+            } = await collectDroppedFiles(e.dataTransfer, folderUploadAllowDrop)
+
+            if (skippedDirectory) {
+                onWarn(
+                    droppedFiles.length > 0
+                        ? 'Dropped folders were ignored because folderUpload.allowDrop is disabled.'
+                        : 'Folder drop is disabled. Enable folderUpload.allowDrop to accept dropped folders.',
                 )
-                droppedFiles = filesArrays.flat()
-                // Fallback: webkitGetAsEntry returns null for programmatic DataTransfer
-                // (e.g. in tests), so fall through to dt.files if we got nothing
+                core?.emit('folder-drop-blocked', { acceptedFiles: droppedFiles.length })
                 if (droppedFiles.length === 0) {
-                    droppedFiles = Array.from(dt.files)
+                    setIsDragging(false)
+                    return
                 }
-            } else if ('getAsFileSystemHandle' in (items[0] || ({} as any))) {
-                // Newer FS Access API (optional; broad browser support not guaranteed)
-                const traverseHandle = async (
-                    h: any,
-                    path = '',
-                ): Promise<File[]> => {
-                    if (h.kind === 'file') {
-                        const file = await h.getFile()
-                        try {
-                            Object.defineProperty(file, 'relativePath', {
-                                value: path + file.name,
-                                configurable: true,
-                                enumerable: false,
-                                writable: false,
-                            })
-                        } catch {
-                            // noop
-                        }
-                        return [file]
-                    } else if (h.kind === 'directory') {
-                        const out: File[] = []
-                        for await (const [name, child] of h.entries()) {
-                            out.push(
-                                ...(await traverseHandle(
-                                    child,
-                                    path + name + '/',
-                                )),
-                            )
-                        }
-                        return out
-                    }
-                    return []
-                }
-                const handles = await Promise.all(
-                    items.map(
-                        async it => await (it as any).getAsFileSystemHandle?.(),
-                    ),
-                )
-                const all = await Promise.all(
-                    handles.filter(Boolean).map((h: any) => traverseHandle(h)),
-                )
-                droppedFiles = all.flat()
-            } else {
-                // Fallback: plain files (most browsers will already include nested files when a folder is dropped in Chromium)
-                droppedFiles = Array.from(dt.files)
             }
 
             onFilesDrop(droppedFiles)
@@ -177,7 +104,7 @@ export default function useMainBox() {
 
             setIsDragging(false)
         },
-        [core, disableDragAction, onFilesDrop, setFiles, isProcessing],
+        [core, disableDragAction, folderUploadAllowDrop, onFilesDrop, onWarn, setFiles, isProcessing],
     )
 
     // v2: clipboard paste support

@@ -2,8 +2,8 @@ import { useVirtualizer } from '@tanstack/react-virtual'
 import React, { memo, useRef } from 'react'
 import { TbPlayerPauseFilled, TbPlayerPlayFilled, TbX } from 'react-icons/tb'
 import { formatUiMessage as t, pluralUiMessage as plural } from '@upup/core'
+import { UploadStatus } from '@upup/core'
 import {
-    UploadStatus,
     useUploaderFiles,
     useUploaderI18n,
     useUploaderOptions,
@@ -12,6 +12,7 @@ import {
     useUploaderUploadControls,
     useUploaderView,
 } from '../context/RootContext'
+import { isUploadActive } from '../lib/status-helpers'
 import { cn } from '../lib/tailwind'
 import FileItem from './FileItem'
 import MainBoxHeader from './shared/MainBoxHeader'
@@ -182,7 +183,7 @@ export default memo(function FileList() {
                             void proceedUpload().catch(() => undefined)
                         }}
                         disabled={
-                            uploadStatus === UploadStatus.ONGOING ||
+                            isUploadActive(uploadStatus) ||
                             uploadStatus === UploadStatus.PAUSED ||
                             isProcessing
                         }
@@ -231,7 +232,7 @@ export default memo(function FileList() {
                         <ShouldRender
                             if={
                                 resumable?.protocol === 'multipart' &&
-                                (uploadStatus === UploadStatus.ONGOING ||
+                                (isUploadActive(uploadStatus) ||
                                     uploadStatus === UploadStatus.PAUSED)
                             }
                         >
@@ -291,7 +292,7 @@ export default memo(function FileList() {
                     </div>
                     <ShouldRender
                         if={
-                            (uploadStatus === UploadStatus.ONGOING ||
+                            (isUploadActive(uploadStatus) ||
                                 uploadStatus === UploadStatus.PAUSED) &&
                             totalBytes > 0
                         }
@@ -312,7 +313,7 @@ export default memo(function FileList() {
                             </span>
                             <ShouldRender
                                 if={
-                                    uploadStatus === UploadStatus.ONGOING &&
+                                    isUploadActive(uploadStatus) &&
                                     uploadEta > 0
                                 }
                             >

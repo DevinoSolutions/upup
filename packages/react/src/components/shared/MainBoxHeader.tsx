@@ -2,7 +2,6 @@ import React, { useMemo } from 'react'
 import { TbLayoutGrid, TbLayoutList } from 'react-icons/tb'
 import { formatUiMessage as t, pluralUiMessage as plural } from '@upup/core'
 import {
-    UploadStatus,
     useUploaderFiles,
     useUploaderI18n,
     useUploaderOptions,
@@ -10,6 +9,7 @@ import {
     useUploaderUploadControls,
     useUploaderView,
 } from '../../context/RootContext'
+import { isUploadActive } from '../../lib/status-helpers'
 import { cn } from '../../lib/tailwind'
 import ShouldRender from './ShouldRender'
 
@@ -29,7 +29,7 @@ export default function MainBoxHeader({ handleCancel }: Readonly<Props>) {
     } = useUploaderOptions()
     const { isDark: dark, slotOverrides: slotClasses } = useUploaderTheme()
     const { upload: { uploadStatus } } = useUploaderUploadControls()
-    const isUploading = uploadStatus === UploadStatus.ONGOING
+    const isUploading = isUploadActive(uploadStatus)
     const isLimitReached = limit === files.size
     const cancelText = useMemo(
         () => (isAddingMore ? tr.cancel : tr.removeAllFiles),

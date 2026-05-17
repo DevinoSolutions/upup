@@ -21,6 +21,7 @@ import type {
     UpupThemeMode,
     UpupThemeTokens,
 } from '@upup/core'
+import { UploadStatus } from '@upup/core'
 import {
     BoxConfigs,
     DropboxConfigs,
@@ -32,13 +33,7 @@ import {
 } from '../shared/types'
 import { FilesProgressMap } from '../hooks/useRootProvider'
 
-export enum UploadStatus {
-    PENDING = 'PENDING',
-    ONGOING = 'ONGOING',
-    PAUSED = 'PAUSED',
-    SUCCESSFUL = 'SUCCESSFUL',
-    FAILED = 'FAILED',
-}
+export { UploadStatus }
 
 export type ContextUpload = {
     uploadStatus: UploadStatus
@@ -66,6 +61,7 @@ export type ContextProps = Required<
         | 'onFilesDragOver'
         | 'onFilesDragLeave'
         | 'onFilesDrop'
+        | 'onWarn'
         | 'enablePaste'
         | 'onError'
         | 'icons'
@@ -78,6 +74,7 @@ export type ContextProps = Required<
     Pick<UpupUploaderProps, 'maxFileSize' | 'maxRetries' | 'resumable'> & {
         allowedFileTypes: string
         limit: number
+        folderUploadAllowDrop: boolean
         folderPickerButtonVisible: boolean
         multiple: boolean
         icons: Required<UpupUploaderPropsIcons>
@@ -285,6 +282,7 @@ export function RootContextProvider({
         value.props.disableDragDrop,
         value.props.enablePaste,
         value.props.folderPickerButtonVisible,
+        value.props.folderUploadAllowDrop,
         value.props.icons,
         value.props.imageEditor,
         value.props.isProcessing,
@@ -298,6 +296,7 @@ export function RootContextProvider({
         value.props.onFilesDragLeave,
         value.props.onFilesDragOver,
         value.props.onFilesDrop,
+        value.props.onWarn,
         value.props.onIntegrationClick,
         value.props.resumable,
         value.props.showBranding,

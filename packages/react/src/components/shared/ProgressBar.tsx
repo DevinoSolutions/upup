@@ -1,10 +1,10 @@
 import React, { forwardRef, HTMLAttributes } from 'react'
 import {
-    UploadStatus,
     useUploaderI18n,
     useUploaderTheme,
     useUploaderUploadControls,
 } from '../../context/RootContext'
+import { isUploadActive } from '../../lib/status-helpers'
 import { cn } from '../../lib/tailwind'
 import ShouldRender from './ShouldRender'
 
@@ -22,7 +22,7 @@ export default forwardRef<HTMLDivElement, Props>(function ProgressBar(
     const { translations: tr } = useUploaderI18n()
     const { upload: { uploadStatus } } = useUploaderUploadControls()
     return (
-        <ShouldRender if={!!progress || uploadStatus === UploadStatus.ONGOING}>
+        <ShouldRender if={!!progress || isUploadActive(uploadStatus)}>
             <div data-testid="upup-progress-bar"
                 data-upup-slot="progress-bar"
                 ref={ref}

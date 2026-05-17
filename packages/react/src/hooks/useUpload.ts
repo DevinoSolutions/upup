@@ -1,4 +1,5 @@
-import { IRootContext, UploadStatus } from '../context/RootContext'
+import { IRootContext } from '../context/RootContext'
+import { isUploadActive } from '../lib/status-helpers'
 
 export default function useUpload({
     upload,
@@ -21,7 +22,7 @@ export default function useUpload({
 
     return {
         upload: proceedUpload,
-        loading: uploadStatus === UploadStatus.ONGOING,
+        loading: isUploadActive(uploadStatus!),
         error: uploadError,
         progress: totalProgress,
         files: Array.from(files.values()).map(file => {
