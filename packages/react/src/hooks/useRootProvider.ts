@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
     FileSource,
+    LOCALE_META,
     UploadStatus,
     createTranslator,
     enUS,
@@ -39,13 +40,13 @@ import {
 import { useUpupUpload } from '../use-upup-upload'
 import { useSSEProcessing } from './useSSEProcessing'
 
-const RTL_LOCALES = new Set(['ar', 'ar-SA', 'he', 'he-IL', 'fa', 'fa-IR', 'ur', 'ur-PK'])
-
 function getDir(locale: string | LocaleBundle | undefined): 'ltr' | 'rtl' {
     if (locale && typeof locale === 'object' && 'dir' in locale) return locale.dir
-    const lang = typeof locale === 'string' ? locale : 'en-US'
-    const base = lang.split('-')[0]
-    return RTL_LOCALES.has(lang) || RTL_LOCALES.has(base) ? 'rtl' : 'ltr'
+    const code = typeof locale === 'string' ? locale : 'en-US'
+    const base = code.split('-')[0]
+    const meta = LOCALE_META[code]
+        ?? Object.values(LOCALE_META).find(m => m.code.startsWith(base + '-'))
+    return meta?.dir ?? 'ltr'
 }
 
 function useResolvedThemeMode(mode: UpupThemeMode | undefined): 'light' | 'dark' {
