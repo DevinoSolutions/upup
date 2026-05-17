@@ -9,6 +9,10 @@ import {
     flattenTranslatorToUiTranslations,
     flattenSlotsToClassNames,
     resolveTheme,
+    DropboxPlugin,
+    GoogleDrivePlugin,
+    BoxPlugin,
+    OneDrivePlugin,
     type FilesProgressMap,
     type LocaleBundle,
     type Translator,
@@ -363,6 +367,48 @@ export default function useRootProvider({
         cloudDrives?.box?.clientId,
         cloudDrives?.box?.redirectUri,
     ])
+
+    const adapterPluginsRef = useRef<Array<{ destroy(): void }>>([])
+    useEffect(() => {
+        if (!core) return
+        adapterPluginsRef.current.forEach(p => p.destroy())
+        adapterPluginsRef.current = []
+
+        const plugins: Array<{ destroy(): void }> = []
+
+        if (googleDriveConfigs) {
+            const plugin = new GoogleDrivePlugin()
+            plugin.configure(googleDriveConfigs)
+            try { core.use(plugin) } catch { /* already registered */ }
+            plugins.push(plugin)
+        }
+        if (dropboxConfigs) {
+            const plugin = new DropboxPlugin()
+            plugin.configure(dropboxConfigs)
+            try { core.use(plugin) } catch { /* already registered */ }
+            plugins.push(plugin)
+        }
+        if (boxConfigs) {
+            const plugin = new BoxPlugin()
+            plugin.configure(boxConfigs)
+            try { core.use(plugin) } catch { /* already registered */ }
+            plugins.push(plugin)
+        }
+        if (oneDriveConfigs) {
+            const plugin = new OneDrivePlugin()
+            plugin.configure(oneDriveConfigs)
+            try { core.use(plugin) } catch { /* already registered */ }
+            plugins.push(plugin)
+        }
+
+        adapterPluginsRef.current = plugins
+
+        return () => {
+            plugins.forEach(p => p.destroy())
+            adapterPluginsRef.current = []
+        }
+    }, [core, googleDriveConfigs, dropboxConfigs, boxConfigs, oneDriveConfigs])
+
     const resolvedStyle = style ?? EMPTY_STYLE
 
     useEffect(() => {
