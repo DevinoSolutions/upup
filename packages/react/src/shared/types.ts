@@ -16,9 +16,19 @@ import type {
     Translations,
     UploadFile,
     UpupThemeConfig,
+    GoogleDriveConfigs,
+    OneDriveConfigs,
+    DropboxConfigs,
+    BoxConfigs,
 } from '@upup/core'
 
 export type { Translations }
+export type {
+    GoogleDriveConfigs,
+    OneDriveConfigs,
+    DropboxConfigs,
+    BoxConfigs,
+}
 export type {
     MaxFileSizeObject,
     MultipartAbortResponse,
@@ -29,27 +39,6 @@ export type {
     MultipartSignPartResponse,
     PresignedUrlResponse,
     ResumableUploadOptions,
-}
-
-export type GoogleDriveConfigs = {
-    google_api_key: string
-    google_app_id: string
-    google_client_id: string
-}
-
-export type OneDriveConfigs = {
-    onedrive_client_id: string
-    redirectUri?: string
-}
-
-export type DropboxConfigs = {
-    dropbox_client_id?: string
-    dropbox_redirect_uri?: string
-}
-
-export type BoxConfigs = {
-    box_client_id?: string
-    box_redirect_uri?: string
 }
 
 
@@ -195,8 +184,10 @@ export type UpupUploaderProps = {
 
     /** Folder upload configuration. */
     folderUpload?: {
-        enabled?: boolean
-        showPickerButton?: boolean
+        /** Traverse directories when a user drops a folder onto the uploader. */
+        allowDrop?: boolean
+        /** Show a "Select folder" action in the local device source. */
+        showSelectFolderButton?: boolean
     }
     /** CORS configuration. `dangerouslyAutoConfigure` can mutate storage CORS and should only be used for quick setup. */
     cors?: {
