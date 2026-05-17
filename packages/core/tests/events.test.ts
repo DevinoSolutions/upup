@@ -7,9 +7,9 @@ describe('EventEmitter', () => {
     const handler = vi.fn()
 
     emitter.on('test', handler)
-    emitter.emit('test', 'arg1', 'arg2')
+    emitter.emit('test', { arg1: 'val1', arg2: 'val2' })
 
-    expect(handler).toHaveBeenCalledWith('arg1', 'arg2')
+    expect(handler).toHaveBeenCalledWith({ arg1: 'val1', arg2: 'val2' })
   })
 
   it('returns an unsubscribe function from on()', () => {

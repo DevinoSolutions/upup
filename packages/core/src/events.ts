@@ -1,25 +1,32 @@
-type EventHandler = (...args: unknown[]) => void
+export type EventHandler<T = unknown> = (payload: T) => void
 
-export class EventEmitter {
-  private handlers = new Map<string, Set<EventHandler>>()
+export class EventEmitter<TEvents extends object = Record<string, unknown>> {
+  private handlers = new Map<string, Set<EventHandler<unknown>>>()
 
-  on(event: string, handler: EventHandler): () => void {
+  on<K extends string & keyof TEvents>(
+    event: K,
+    handler: EventHandler<TEvents[K]>,
+  ): () => void
+  on(event: string, handler: EventHandler<unknown>): () => void
+  on(event: string, handler: EventHandler<unknown>): () => void {
     if (!this.handlers.has(event)) {
       this.handlers.set(event, new Set())
     }
-    this.handlers.get(event)!.add(handler)
-    return () => this.off(event, handler)
+    this.handlers.get(event)!.add(handler as EventHandler<unknown>)
+    return () => this.off(event, handler as EventHandler<unknown>)
   }
 
-  off(event: string, handler: EventHandler): void {
+  off(event: string, handler: EventHandler<unknown>): void {
     this.handlers.get(event)?.delete(handler)
   }
 
-  emit(event: string, ...args: unknown[]): void {
+  emit<K extends string & keyof TEvents>(event: K, payload: TEvents[K]): void
+  emit(event: string, payload?: unknown): void
+  emit(event: string, payload?: unknown): void {
     const handlers = this.handlers.get(event)
     if (handlers) {
       for (const handler of handlers) {
-        handler(...args)
+        handler(payload)
       }
     }
   }

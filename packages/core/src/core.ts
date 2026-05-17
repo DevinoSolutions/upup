@@ -7,7 +7,8 @@ import { FileSource } from './types/file-source'
 import type { ResumableUploadOptions } from './types/upload-protocols'
 import type { UploadFile } from './types/upload-file'
 import { UploadStatus } from './types/upload-status'
-import { EventEmitter } from './events'
+import { EventEmitter, type EventHandler } from './events'
+import type { CoreEvents } from './types/core-events'
 import { PluginManager, type UpupPlugin, type ExtensionMethods } from './plugin'
 import { FileManager, type FileManagerOptions, fileSizeInBytes, matchesAccept } from './file-manager'
 import { PipelineEngine } from './pipeline/engine'
@@ -140,7 +141,7 @@ type CoreCrashRecoverySnapshot = {
 }
 
 export class UpupCore {
-  private emitter = new EventEmitter()
+  private emitter = new EventEmitter<CoreEvents>()
   private pluginManager = new PluginManager()
   private fileManager: FileManager
   private pipelineEngine: PipelineEngine | null = null
@@ -936,17 +937,20 @@ export class UpupCore {
     }
   }
 
-  on(event: string, handler: (...args: unknown[]) => void): () => void {
-    return this.emitter.on(event, handler)
+  on<K extends string & keyof CoreEvents>(event: K, handler: (payload: CoreEvents[K]) => void): () => void
+  on(event: string, handler: (payload: unknown) => void): () => void
+  on(event: string, handler: (payload: unknown) => void): () => void {
+    return this.emitter.on(event as string, handler as EventHandler<unknown>)
   }
 
-  off(event: string, handler: (...args: unknown[]) => void): void {
-    this.emitter.off(event, handler)
+  off(event: string, handler: (payload: unknown) => void): void {
+    this.emitter.off(event, handler as EventHandler<unknown>)
   }
 
-  /** Emit a custom integration event through the core event bus. */
+  emit<K extends string & keyof CoreEvents>(event: K, payload: CoreEvents[K]): void
+  emit(event: string, data?: unknown): void
   emit(event: string, data?: unknown): void {
-    this.emitter.emit(event, data)
+    this.emitter.emit(event as string, data)
   }
 
   getSnapshot(): { files: [string, UploadFile][]; status: UploadStatus } {

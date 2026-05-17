@@ -2,20 +2,20 @@ import { describe, it, expect, vi } from 'vitest'
 import { EventEmitter } from '../src/events'
 
 describe('EventEmitter — extended', () => {
-    it('handler receives multiple arguments', () => {
+    it('handler receives single payload object', () => {
         const emitter = new EventEmitter()
         const handler = vi.fn()
         emitter.on('multi-arg', handler)
-        emitter.emit('multi-arg', 'a', 'b', 'c')
-        expect(handler).toHaveBeenCalledWith('a', 'b', 'c')
+        emitter.emit('multi-arg', { a: 1, b: 2, c: 3 })
+        expect(handler).toHaveBeenCalledWith({ a: 1, b: 2, c: 3 })
     })
 
-    it('handler receives zero arguments', () => {
+    it('handler receives undefined when emitted without payload', () => {
         const emitter = new EventEmitter()
         const handler = vi.fn()
         emitter.on('no-arg', handler)
         emitter.emit('no-arg')
-        expect(handler).toHaveBeenCalledWith()
+        expect(handler).toHaveBeenCalledWith(undefined)
     })
 
     it('same handler registered twice only fires once per emit', () => {
