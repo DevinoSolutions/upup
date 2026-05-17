@@ -53,7 +53,6 @@ export default function useMainBox() {
 
             const files = Array.from(e.dataTransfer.files)
             onFilesDragOver(files)
-            // v2: emit drag-over event via UpupCore
             core?.emit('drag-over', {})
         },
         [core, disableDragAction, onFilesDragOver, isProcessing],
@@ -68,7 +67,6 @@ export default function useMainBox() {
 
             const files = Array.from(e.dataTransfer.files)
             onFilesDragLeave(files)
-            // v2: emit drag-leave event via UpupCore
             core?.emit('drag-leave', {})
         },
         [core, disableDragAction, onFilesDragLeave, isProcessing],
@@ -99,7 +97,6 @@ export default function useMainBox() {
 
             onFilesDrop(droppedFiles)
             setFiles(droppedFiles)
-            // v2: emit drop event via UpupCore
             core?.emit('drop', { files: droppedFiles })
 
             setIsDragging(false)
@@ -107,7 +104,6 @@ export default function useMainBox() {
         [core, disableDragAction, folderUploadAllowDrop, onFilesDrop, onWarn, setFiles, isProcessing],
     )
 
-    // v2: clipboard paste support
     const handlePaste: ClipboardEventHandler<HTMLDivElement> = useCallback(
         e => {
             if (!enablePaste || isProcessing) return
@@ -129,7 +125,6 @@ export default function useMainBox() {
             if (pastedFiles.length > 0) {
                 e.preventDefault()
                 setFiles(pastedFiles)
-                // v2: emit paste event via UpupCore
                 core?.emit('paste', { files: pastedFiles })
             }
         },

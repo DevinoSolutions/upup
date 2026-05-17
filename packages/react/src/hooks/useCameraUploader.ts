@@ -37,7 +37,6 @@ export default function useCameraUploader() {
         if (!url) return
 
         setUrl(url)
-        // v2: emit camera-capture event via UpupCore
         core?.emit('camera-capture', { dataUrl: url })
     }
 
@@ -47,7 +46,6 @@ export default function useCameraUploader() {
             setFiles([file])
             setUrl('')
             setActiveAdapter(undefined)
-            // v2: emit camera-confirm event via UpupCore when photo is accepted
             core?.emit('camera-confirm', { file })
         }
     }

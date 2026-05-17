@@ -96,7 +96,6 @@ export default function useFetchFileByUrl() {
                     type: blob.type,
                 })
 
-                // v2: emit url-fetch event via UpupCore
                 core?.emit('url-fetch', { file })
                 return file
             } catch (error) {

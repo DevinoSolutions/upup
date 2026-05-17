@@ -23,7 +23,6 @@ export default function UrlUploader() {
 
     const handleFormSubmit: FormEventHandler<HTMLFormElement> = async e => {
         e.preventDefault()
-        // v2: emit url-submit event via UpupCore when the user triggers a URL fetch
         core?.emit('url-submit', { url })
         const file = await fetchImage(url)
         if (file) {

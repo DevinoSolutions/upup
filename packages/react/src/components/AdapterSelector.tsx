@@ -62,7 +62,6 @@ export default function AdapterSelector() {
             inputRef.current.removeAttribute('directory')
         }
         openFilePicker()
-        // v2: emit browse-files event via UpupCore
         core?.emit('browse-files', {})
     }, [core, inputRef, openFilePicker])
 
@@ -112,7 +111,6 @@ export default function AdapterSelector() {
                 await getFiles(directoryHandle as unknown as IterableDirHandle)
                 if (files.length > 0) {
                     setFiles(files)
-                    // v2: emit folder-select event via UpupCore
                     core?.emit('folder-select', { count: files.length })
                     if (inputRef.current) {
                         inputRef.current.value = ''
@@ -132,7 +130,6 @@ export default function AdapterSelector() {
                 inputRef.current.setAttribute('directory', 'true')
             }
             openFilePicker()
-            // v2: emit folder-select event via UpupCore (fallback path)
             core?.emit('folder-select', { count: 0 })
         }
     }, [core, inputRef, openFilePicker, setFiles])

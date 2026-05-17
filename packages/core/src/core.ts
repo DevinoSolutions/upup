@@ -451,14 +451,12 @@ export class UpupCore {
     this.fileOverrides.clear()
     this.crashRecovery?.clear().catch(() => {})
     this.emitter.emit('state-change', { files: this.files })
-    // v2: dedicated event so consumers know all files were cleared at once
     this.emitter.emit('files-cleared', {})
   }
 
   async setFiles(files: File[]): Promise<void> {
     await this.fileManager.setFiles(files)
     this.emitter.emit('state-change', { files: this.files })
-    // v2: dedicated event so consumers can observe programmatic file replacement
     this.emitter.emit('files-set', { count: this.files.size })
   }
 
@@ -509,14 +507,12 @@ export class UpupCore {
       }
     }
 
-    // v2: emit so consumers can observe option changes at runtime
     this.emitter.emit('options-updated', { partial })
   }
 
   reorderFiles(fileIds: string[]): void {
     this.fileManager.reorderFiles(fileIds)
     this.emitter.emit('state-change', { files: this.files })
-    // v2: emit dedicated event so consumers can react specifically to reordering
     this.emitter.emit('files-reordered', { fileIds })
   }
 
@@ -972,7 +968,6 @@ export class UpupCore {
     }
     this._status = snapshot.status
     this.emitter.emit('state-change', { files: this.files, status: this._status })
-    // v2: emit dedicated event so consumers know a snapshot was applied
     this.emitter.emit('snapshot-restored', { count: snapshot.files.length, status: snapshot.status })
   }
 
@@ -1003,7 +998,6 @@ export class UpupCore {
         status: wasActive ? UploadStatus.PAUSED : restored.status,
       }
       this.restore(normalized)
-      // v2: emit dedicated event so consumers know crash recovery was applied
       this.emitter.emit('crash-recovery-restored', {})
       return true
     }
@@ -1018,7 +1012,6 @@ export class UpupCore {
     this.destroyed = true
     this.uploadManager?.abort()
     this.uploadManager = null
-    // v2: emit before clearing listeners so teardown handlers fire
     this.emitter.emit('destroyed', {})
     this.crashRecoveryUnsubscribe?.()
     this.crashRecoveryUnsubscribe = null
