@@ -145,7 +145,12 @@ function Shell({
                     )}
                 </div>
                 <div className="upup-ie-tabs-body">
-                    {tab === 'preview' && <UploaderPreview width={previewWidth} />}
+                    {/* Always render UploaderPreview so the uploader stays mounted
+                        across tab switches (SSE processors, upload state, etc.
+                        survive). Hide it visually when another tab is active. */}
+                    <div style={tab === 'preview' ? undefined : { display: 'none' }}>
+                        <UploaderPreview width={previewWidth} />
+                    </div>
                     {tab === 'code' && showCodeTab && <CodeTab />}
                     {tab === 'events' && showEventsTab && <EventLogPanel />}
                 </div>
