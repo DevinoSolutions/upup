@@ -1,3 +1,4 @@
+import type React from 'react'
 import type {
   DragEventHandler,
   ClipboardEventHandler,
@@ -74,10 +75,10 @@ export function createPropGetters(deps: PropGetterDeps) {
     }
 
     return {
-      onDragOver: composeEventHandlers(onDragOver, overrides.onDragOver as any),
-      onDragLeave: composeEventHandlers(onDragLeave, overrides.onDragLeave as any),
-      onDrop: composeEventHandlers(onDrop, overrides.onDrop as any),
-      onPaste: composeEventHandlers(onPaste, overrides.onPaste as any),
+      onDragOver: composeEventHandlers<React.DragEvent<HTMLElement>>(onDragOver, overrides.onDragOver),
+      onDragLeave: composeEventHandlers<React.DragEvent<HTMLElement>>(onDragLeave, overrides.onDragLeave),
+      onDrop: composeEventHandlers<React.DragEvent<HTMLElement>>(onDrop, overrides.onDrop),
+      onPaste: composeEventHandlers<React.ClipboardEvent<HTMLElement>>(onPaste, overrides.onPaste),
       role: 'region' as const,
       'aria-label': 'Drop files here or click to browse',
       'aria-dropeffect': (isDragging ? 'copy' : 'none') as 'copy' | 'none',
@@ -110,7 +111,7 @@ export function createPropGetters(deps: PropGetterDeps) {
       type: 'file' as const,
       multiple,
       accept: allowedFileTypes,
-      onChange: composeEventHandlers(onChange, overrides.onChange as any),
+      onChange: composeEventHandlers<React.ChangeEvent<HTMLInputElement>>(onChange, overrides.onChange),
       style: { display: 'none' as const },
       tabIndex: -1,
       'aria-hidden': true as const,

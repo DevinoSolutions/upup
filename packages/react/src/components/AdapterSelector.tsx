@@ -67,13 +67,14 @@ export default function AdapterSelector() {
     }, [core, inputRef, openFilePicker])
 
     const handleSelectFolderClick = useCallback(async () => {
-        const anyWindow = window as any
-        if (anyWindow.showDirectoryPicker) {
+        const fsWindow = window as Window & { showDirectoryPicker?: () => Promise<FileSystemDirectoryHandle> }
+        if (fsWindow.showDirectoryPicker) {
             try {
-                const directoryHandle = await anyWindow.showDirectoryPicker()
+                const directoryHandle = await fsWindow.showDirectoryPicker()
                 const files: File[] = []
 
-                async function getFiles(dirHandle: any, path = '') {
+                type IterableDirHandle = { values(): AsyncIterableIterator<FileSystemHandle & { kind: string; getFile: () => Promise<File> }> }
+                async function getFiles(dirHandle: IterableDirHandle, path = '') {
                     for await (const entry of dirHandle.values()) {
                         const newPath = path
                             ? `${path}/${entry.name}`
@@ -100,15 +101,15 @@ export default function AdapterSelector() {
                                     writable: true,
                                 })
                             } catch {
-                                ;(file as any).relativePath = newPath
+                                Object.assign(file, { relativePath: newPath })
                             }
                             files.push(file)
                         } else if (entry.kind === 'directory') {
-                            await getFiles(entry, newPath)
+                            await getFiles(entry as unknown as IterableDirHandle, newPath)
                         }
                     }
                 }
-                await getFiles(directoryHandle)
+                await getFiles(directoryHandle as unknown as IterableDirHandle)
                 if (files.length > 0) {
                     setFiles(files)
                     // v2: emit folder-select event via UpupCore

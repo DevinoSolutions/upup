@@ -65,8 +65,8 @@ export default memo(function FileList() {
     const scrollRef = useRef<HTMLDivElement>(null)
 
     const sortedFiles = Array.from(files.values()).sort((a, b) => {
-        const pa = (a as any).relativePath || (a as any).webkitRelativePath || a.name
-        const pb = (b as any).relativePath || (b as any).webkitRelativePath || b.name
+        const pa = a.relativePath || a.name
+        const pb = b.relativePath || b.name
         return pa.localeCompare(pb) || a.name.localeCompare(b.name)
     })
 
