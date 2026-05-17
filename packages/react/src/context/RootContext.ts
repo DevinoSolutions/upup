@@ -85,7 +85,9 @@ export type ContextRuntime = {
     core: UpupCore | null
     mode: 'client' | 'server'
     serverUrl?: string
+    /** @deprecated Use openFilePicker() instead */
     inputRef: RefObject<HTMLInputElement | null>
+    openFilePicker: () => void
     isOnline: boolean
 }
 
@@ -193,8 +195,9 @@ export function RootContextProvider({
         mode: value.mode,
         serverUrl: value.serverUrl,
         inputRef: value.inputRef,
+        openFilePicker: value.openFilePicker,
         isOnline: value.isOnline,
-    }), [value.core, value.inputRef, value.isOnline, value.mode, value.serverUrl])
+    }), [value.core, value.inputRef, value.isOnline, value.mode, value.openFilePicker, value.serverUrl])
 
     const source = useMemo<ContextSource>(() => ({
         activeAdapter: value.activeAdapter,

@@ -153,6 +153,9 @@ export default function useRootProvider({
     processingTimeout,
 }: UpupUploaderProps): IRootContext {
     const inputRef = useRef<HTMLInputElement>(null)
+    const openFilePicker = useCallback(() => {
+        inputRef.current?.click()
+    }, [])
     const [isAddingMore, setIsAddingMore] = useState(false)
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
     const [isOnline, setIsOnline] = useState(true)
@@ -657,6 +660,7 @@ export default function useRootProvider({
         mode: resolvedMode,
         serverUrl: resolvedServerUrl,
         inputRef,
+        openFilePicker,
         activeAdapter,
         setActiveAdapter,
         isAddingMore,

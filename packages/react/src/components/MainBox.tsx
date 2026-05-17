@@ -18,7 +18,7 @@ export default function MainBox() {
     const { files } = useUploaderFiles()
     const { activeAdapter } = useUploaderSource()
     const { isAddingMore } = useUploaderView()
-    const { isOnline, inputRef } = useUploaderRuntime()
+    const { isOnline, inputRef, openFilePicker } = useUploaderRuntime()
     const { translations: tr } = useUploaderI18n()
     const { isDark: dark } = useUploaderTheme()
     const {
@@ -45,8 +45,8 @@ export default function MainBox() {
                     if (inputRef.current) {
                         inputRef.current.removeAttribute('webkitdirectory')
                         inputRef.current.removeAttribute('directory')
-                        inputRef.current.click()
                     }
+                    openFilePicker()
                 }
             }}
             className={cn(

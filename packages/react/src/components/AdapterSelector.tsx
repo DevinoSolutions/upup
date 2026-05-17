@@ -14,7 +14,7 @@ import { cn } from '../lib/tailwind'
 import ShouldRender from './shared/ShouldRender'
 
 export default function AdapterSelector() {
-    const { core, inputRef } = useUploaderRuntime()
+    const { core, inputRef, openFilePicker } = useUploaderRuntime()
     const { translations: tr } = useUploaderI18n()
     const { isAddingMore, setIsAddingMore } = useUploaderView()
     const { setFiles } = useUploaderFiles()
@@ -60,11 +60,11 @@ export default function AdapterSelector() {
         if (inputRef.current) {
             inputRef.current.removeAttribute('webkitdirectory')
             inputRef.current.removeAttribute('directory')
-            inputRef.current.click()
         }
+        openFilePicker()
         // v2: emit browse-files event via UpupCore
         core?.emit('browse-files', {})
-    }, [core, inputRef])
+    }, [core, inputRef, openFilePicker])
 
     const handleSelectFolderClick = useCallback(async () => {
         const anyWindow = window as any
@@ -92,10 +92,12 @@ export default function AdapterSelector() {
                                 Object.defineProperty(file, 'webkitRelativePath', {
                                     value: newPath,
                                     configurable: true,
+                                    writable: true,
                                 })
                                 Object.defineProperty(file, 'relativePath', {
                                     value: newPath,
                                     configurable: true,
+                                    writable: true,
                                 })
                             } catch {
                                 ;(file as any).relativePath = newPath
@@ -127,12 +129,12 @@ export default function AdapterSelector() {
             if (inputRef.current) {
                 inputRef.current.setAttribute('webkitdirectory', 'true')
                 inputRef.current.setAttribute('directory', 'true')
-                inputRef.current.click()
             }
+            openFilePicker()
             // v2: emit folder-select event via UpupCore (fallback path)
             core?.emit('folder-select', { count: 0 })
         }
-    }, [core, inputRef, setFiles])
+    }, [core, inputRef, openFilePicker, setFiles])
 
     return (
         <div
