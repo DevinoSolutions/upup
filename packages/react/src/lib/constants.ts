@@ -14,6 +14,8 @@ import {
 } from '../components/Icons'
 import UrlUploader from '../components/UrlUploader'
 
+export { sourceNameKeys } from './source-metadata'
+
 const AudioUploader = lazy(() => import('../components/AudioUploader'))
 const BoxUploader = lazy(() => import('../components/BoxUploader'))
 const CameraUploader = lazy(() => import('../components/CameraUploader'))
@@ -21,19 +23,6 @@ const DropboxUploader = lazy(() => import('../components/DropboxUploader'))
 const GoogleDriveUploader = lazy(() => import('../components/GoogleDriveUploader'))
 const OneDriveUploader = lazy(() => import('../components/OneDriveUploader'))
 const ScreenCaptureUploader = lazy(() => import('../components/ScreenCaptureUploader'))
-
-/** Translation key used for each adapter's display name */
-export const sourceNameKeys: Record<FileSource, keyof Translations> = {
-    [FileSource.LOCAL]: 'myDevice',
-    [FileSource.GOOGLE_DRIVE]: 'googleDrive',
-    [FileSource.ONE_DRIVE]: 'oneDrive',
-    [FileSource.DROPBOX]: 'dropbox',
-    [FileSource.BOX]: 'box',
-    [FileSource.URL]: 'link',
-    [FileSource.CAMERA]: 'camera',
-    [FileSource.MICROPHONE]: 'audio',
-    [FileSource.SCREEN]: 'screenCapture',
-}
 
 export const uploadSourceObject = {
     [FileSource.LOCAL]: {
