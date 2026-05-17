@@ -19,7 +19,6 @@ import { DirectUpload } from './strategies/direct-upload'
 import { MultipartUpload } from './strategies/multipart-upload'
 import { TusUpload } from './strategies/tus-upload'
 import { CrashRecoveryManager, IndexedDBStorage, type PersistentStorage } from './crash-recovery'
-import { WorkerPool } from './worker-pool'
 
 export interface Restrictions {
   maxFileSize?: import('./contracts').MaxFileSizeObject
@@ -98,8 +97,6 @@ export interface CoreOptions extends FileManagerOptions {
   locale?: LocaleBundle | UpupLocaleCode
   restrictions?: Restrictions
   cloudDrives?: CloudDrivesConfig
-  enableWorkers?: boolean
-  workerPoolSize?: number
 }
 
 export type ValidationResult = {
@@ -150,7 +147,6 @@ export class UpupCore {
   private _error: Error | null = null
   private crashRecovery: CrashRecoveryManager | null = null
   private crashRecoveryUnsubscribe: (() => void) | null = null
-  private workerPool?: WorkerPool
   private fileOverrides = new Map<string, Partial<UploadOptions>>()
   private pauseRequested = false
   private cancelRequested = false
@@ -209,11 +205,6 @@ export class UpupCore {
 
     this.configureCrashRecovery(options.crashRecovery)
 
-    if (options.enableWorkers) {
-      this.workerPool = new WorkerPool({
-        maxWorkers: options.workerPoolSize,
-      })
-    }
   }
 
   get files(): Map<string, UploadFile> {
@@ -1015,7 +1006,6 @@ export class UpupCore {
     this.emitter.emit('destroyed', {})
     this.crashRecoveryUnsubscribe?.()
     this.crashRecoveryUnsubscribe = null
-    this.workerPool?.destroy()
     this.fileOverrides.clear()
     this.emitter.removeAllListeners()
     this.pluginManager.destroy()
