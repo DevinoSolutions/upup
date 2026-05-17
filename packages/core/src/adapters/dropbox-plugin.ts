@@ -442,6 +442,15 @@ export class DropboxPlugin implements AdapterPlugin {
         return this.accessToken
     }
 
+    async getUserInfo(): Promise<{ name: string; email: string } | null> {
+        if (!this.isAuthenticated()) return null
+        try {
+            return await this.fetchUserProfile()
+        } catch {
+            return null
+        }
+    }
+
     // ── File operations: list folder ──
 
     async loadFiles(

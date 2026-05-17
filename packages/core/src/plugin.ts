@@ -26,6 +26,10 @@ export class PluginManager {
     this.extensions.set(name, methods)
   }
 
+  getPlugin(name: string): UpupPlugin | undefined {
+    return this.plugins.get(name)
+  }
+
   getExtension(name: string): ExtensionMethods | undefined {
     return this.extensions.get(name)
   }

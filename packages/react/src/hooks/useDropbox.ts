@@ -1,244 +1,208 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { DropboxPlugin, type DriveFile } from '@upup/core'
 import {
-    useUploaderI18n,
-    useUploaderOptions,
+    useUploaderFiles,
     useUploaderRuntime,
     useUploaderSource,
 } from '../context/RootContext'
-import { useDropboxAuth } from './useDropboxAuth'
-import type { DropboxFile, DropboxRoot, DropboxUser } from './dropbox-types'
 
-const formatFileItem = (entry: any): DropboxFile => ({
-    id: entry.id,
-    name: entry.name,
-    path_display: entry.path_display,
-    isFolder: entry['.tag'] === 'folder',
-    size: entry.size,
-    thumbnailLink: null,
-})
+interface DropboxUser {
+    name: string
+    email: string
+}
+
+interface DropboxRoot {
+    id: string
+    name: string
+    isFolder: true
+    path_display?: string
+    children: DriveFile[]
+}
 
 export function useDropbox() {
     const { core } = useUploaderRuntime()
-    const { onError } = useUploaderOptions()
-    const { dropboxConfigs } = useUploaderSource()
-    const { translations } = useUploaderI18n()
-
-    const {
-        isAuthenticated,
-        token,
-        refreshToken,
-        isLoading,
-        authenticate,
-        logout,
-        refreshAccessToken,
-    } = useDropboxAuth(dropboxConfigs)
+    const { dropboxConfigs, setActiveAdapter } = useUploaderSource()
+    const { setFiles } = useUploaderFiles()
 
     const [user, setUser] = useState<DropboxUser>()
     const [dropboxFiles, setDropboxFiles] = useState<DropboxRoot>()
+    const [isAuthenticated, setIsAuthenticated] = useState(false)
+    const [isLoading, setIsLoading] = useState(true)
+    const [path, setPath] = useState<DropboxRoot[]>([])
+    const [selectedFiles, setSelectedFiles] = useState<DriveFile[]>([])
+    const [showLoader, setShowLoader] = useState(false)
+    const [downloadProgress, setDownloadProgress] = useState(0)
+    const [isClickLoading, setIsClickLoading] = useState(false)
 
-    // Check if user needs to re-authenticate to get refresh token
-    const needsReauth = isAuthenticated && token && !refreshToken
+    const pluginRef = useRef<DropboxPlugin | null>(null)
 
-    /**
-     * Utility function to make authenticated requests to Dropbox API with automatic token refresh
-     */
-    const fetchDropbox = useCallback(
-        async (
-            url: string,
-            method = 'POST',
-            body: object | null = {},
-            isRetry = false,
-        ) => {
-            try {
-                const headers: Record<string, string> = {
-                    Authorization: `Bearer ${token}`,
-                }
-
-                const requestOptions: RequestInit = {
-                    method,
-                    headers,
-                }
-
-                if (body !== null) {
-                    headers['Content-Type'] = 'application/json'
-                    requestOptions.body = JSON.stringify(body)
-                }
-
-                const response = await fetch(url, requestOptions)
-
-                if (!response.ok) {
-                    const errorText = await response.text()
-                    let errorMessage = `Dropbox API error (${response.status})`
-
-                    try {
-                        const errorJson = JSON.parse(errorText)
-                        errorMessage = errorJson.error_summary || errorMessage
-
-                        // Handle expired token by attempting refresh
-                        if (
-                            response.status === 401 &&
-                            errorMessage.includes('expired_access_token') &&
-                            refreshToken &&
-                            !isRetry
-                        ) {
-                            const newAccessToken =
-                                await refreshAccessToken(refreshToken)
-
-                            if (newAccessToken) {
-                                return fetchDropbox(url, method, body, true)
-                            } else {
-                                throw new Error(
-                                    translations.failedToRefreshExpiredToken,
-                                )
-                            }
-                        }
-
-                        // If token is expired but no refresh token available, prompt re-auth
-                        if (
-                            response.status === 401 &&
-                            errorMessage.includes('expired_access_token') &&
-                            !refreshToken
-                        ) {
-                            onError(translations.dropboxSessionExpired)
-                            // v2: emit session-expired via UpupCore
-                            core?.emit('dropbox-session-expired', { reason: 'expired_access_token' })
-                            logout()
-                            throw new Error(
-                                'Token expired - re-authentication required',
-                            )
-                        }
-
-                        if (errorMessage.includes('missing_scope')) {
-                            errorMessage =
-                                translations.dropboxMissingPermissions
-                        }
-                    } catch {
-                        // If we can't parse the error, but it's a 401, still try to refresh
-                        if (
-                            response.status === 401 &&
-                            refreshToken &&
-                            !isRetry
-                        ) {
-                            const newAccessToken =
-                                await refreshAccessToken(refreshToken)
-
-                            if (newAccessToken) {
-                                return fetchDropbox(url, method, body, true)
-                            }
-                        } else if (response.status === 401 && !refreshToken) {
-                            onError(translations.dropboxSessionExpired)
-                            // v2: emit session-expired via UpupCore
-                            core?.emit('dropbox-session-expired', { reason: '401_no_refresh' })
-                            logout()
-                            throw new Error(
-                                'Token expired - re-authentication required',
-                            )
-                        }
-
-                        errorMessage = errorText
-                            ? `${errorMessage}: ${errorText}`
-                            : errorMessage
-                    }
-
-                    throw new Error(errorMessage)
-                }
-
-                return response
-            } catch (error) {
-                console.error('Dropbox API error:', error)
-                // v2: emit Dropbox API error via UpupCore
-                core?.emit('dropbox-api-error', { error })
-                // Surface to the consumer-facing onError callback so UI
-                // feedback (toasts, banners) can react.
-                onError?.(error instanceof Error ? error.message : String(error))
-                throw error
-            }
-        },
-        [token, refreshToken, refreshAccessToken, onError, logout],
-    )
-
-    /**
-     * Get the user's information from Dropbox
-     */
-    const getUserInfo = useCallback(async () => {
-        try {
-            const response = await fetchDropbox(
-                'https://api.dropboxapi.com/2/users/get_current_account',
-                'POST',
-                null,
-            )
-            const data = await response.json()
-            setUser({
-                name: data.name.display_name,
-                email: data.email,
-            })
-        } catch (error) {
-            onError(`Failed to fetch user info: ${(error as Error).message}`)
-            // v2: emit user info fetch error via UpupCore
-            core?.emit('dropbox-user-info-error', { error })
-        }
-    }, [core, fetchDropbox, onError])
-
-    /**
-     * Get the list of files from Dropbox root
-     */
-    const fetchRootContents = useCallback(async () => {
-        try {
-            const response = await fetchDropbox(
-                'https://api.dropboxapi.com/2/files/list_folder',
-                'POST',
-                {
-                    path: '',
-                    recursive: false,
-                    include_media_info: true,
-                    include_deleted: false,
-                    include_has_explicit_shared_members: false,
-                },
-            )
-
-            const data = await response.json()
-            const files = data.entries.map(formatFileItem)
-
-            setDropboxFiles({
-                id: 'root',
-                name: 'Dropbox',
-                isFolder: true,
-                children: files,
-            })
-            // v2: emit dropbox-files-loaded event via UpupCore
-            core?.emit('dropbox-files-loaded', { count: files.length })
-        } catch (error) {
-            onError(`Failed to fetch file list: ${(error as Error).message}`)
-        }
-    }, [core, fetchDropbox, onError])
-
-    /**
-     * Initialize user data and files when authentication is complete
-     */
     useEffect(() => {
-        if (token && isAuthenticated && !isLoading) {
-            ;(async () => {
-                try {
-                    await getUserInfo()
-                    await fetchRootContents()
-                } catch (error) {
-                    console.error('Error initializing Dropbox data:', error)
-                    // v2: emit Dropbox init error via UpupCore
-                    core?.emit('dropbox-init-error', { error })
-                    onError?.(error instanceof Error ? error.message : String(error))
-                }
+        if (!core) return
+        const plugin = core.getPlugin?.('dropbox') as DropboxPlugin | undefined
+        if (!plugin) return
+        pluginRef.current = plugin
+
+        const restored = plugin.restoreSession()
+        setIsAuthenticated(restored)
+        setIsLoading(false)
+
+        if (restored) {
+            void (async () => {
+                const userInfo = await plugin.getUserInfo()
+                if (userInfo) setUser(userInfo)
+                await plugin.loadFiles('')
             })()
         }
-    }, [token, isAuthenticated, isLoading, getUserInfo, fetchRootContents])
+
+        const unsubs = [
+            core.on('dropbox:authenticated', (payload: unknown) => {
+                const data = payload as { user?: DropboxUser }
+                if (data.user) setUser(data.user)
+                setIsAuthenticated(true)
+                setIsLoading(false)
+            }),
+            core.on('dropbox:signed-out', () => {
+                setUser(undefined)
+                setDropboxFiles(undefined)
+                setIsAuthenticated(false)
+                setPath([])
+                setSelectedFiles([])
+            }),
+            core.on('dropbox:session-expired', () => {
+                setUser(undefined)
+                setDropboxFiles(undefined)
+                setIsAuthenticated(false)
+                setPath([])
+            }),
+            core.on('dropbox:files-loaded', (payload: unknown) => {
+                const data = payload as { files: DriveFile[]; path: string }
+                const root: DropboxRoot = {
+                    id: data.path || 'root',
+                    name: data.path ? data.path.split('/').pop() || 'Dropbox' : 'Dropbox',
+                    isFolder: true,
+                    path_display: data.path,
+                    children: data.files,
+                }
+                setDropboxFiles(root)
+                setIsClickLoading(false)
+            }),
+            core.on('dropbox:state-change', (payload: unknown) => {
+                const data = payload as { state: string }
+                setIsLoading(data.state === 'authenticating' || data.state === 'browsing')
+            }),
+            core.on('dropbox:error', () => {
+                setIsClickLoading(false)
+                setShowLoader(false)
+            }),
+        ]
+
+        return () => { unsubs.forEach(u => u()) }
+    }, [core])
+
+    const authenticate = useCallback(async () => {
+        const plugin = pluginRef.current
+        if (!plugin) return
+        setIsLoading(true)
+        await plugin.authenticateViaPopup()
+        if (plugin.isAuthenticated()) {
+            await plugin.loadFiles('')
+        }
+    }, [])
+
+    const logout = useCallback(() => {
+        pluginRef.current?.signOut()
+    }, [])
+
+    const handleClick = useCallback(async (file: DriveFile) => {
+        const plugin = pluginRef.current
+        if (!plugin) return
+
+        if (file.isFolder) {
+            setIsClickLoading(true)
+            if (dropboxFiles) {
+                setPath(prev => [...prev, dropboxFiles])
+            }
+            await plugin.loadFiles(file.path)
+        } else {
+            setSelectedFiles(prev =>
+                prev.some(f => f.id === file.id)
+                    ? prev.filter(f => f.id !== file.id)
+                    : [...prev, file],
+            )
+        }
+    }, [dropboxFiles])
+
+    const handleSubmit = useCallback(async () => {
+        const plugin = pluginRef.current
+        if (!plugin || selectedFiles.length === 0) return
+
+        setShowLoader(true)
+        setDownloadProgress(0)
+
+        try {
+            const downloaded = await plugin.downloadFiles(selectedFiles)
+            if (downloaded.length > 0) {
+                setFiles(downloaded)
+            }
+            setSelectedFiles([])
+            setActiveAdapter(undefined)
+        } catch {
+            // Error handled via event
+        } finally {
+            setShowLoader(false)
+            setDownloadProgress(0)
+        }
+    }, [selectedFiles, setFiles, setActiveAdapter])
+
+    const handleCancelDownload = useCallback(() => {
+        setSelectedFiles([])
+        setDownloadProgress(0)
+    }, [])
+
+    const onSelectCurrentFolder = useCallback(async () => {
+        const plugin = pluginRef.current
+        if (!plugin || !dropboxFiles) return
+
+        setShowLoader(true)
+        setDownloadProgress(0)
+
+        try {
+            const currentPath = dropboxFiles.path_display || ''
+            const allFiles = await plugin.loadAllFilesInFolder(currentPath)
+            const fileOnly = allFiles.filter(f => !f.isFolder)
+            if (fileOnly.length > 0) {
+                const downloaded = await plugin.downloadFiles(fileOnly)
+                if (downloaded.length > 0) {
+                    setFiles(downloaded)
+                }
+            }
+            setSelectedFiles([])
+            setActiveAdapter(undefined)
+        } catch {
+            // Error handled via event
+        } finally {
+            setShowLoader(false)
+            setDownloadProgress(0)
+        }
+    }, [dropboxFiles, setFiles, setActiveAdapter])
 
     return {
         user,
         dropboxFiles,
         logout,
         authenticate,
-        token,
+        token: isAuthenticated ? 'active' : undefined,
         isAuthenticated,
         isLoading,
-        needsReauth,
+        path,
+        setPath,
+        isClickLoading,
+        handleClick,
+        selectedFiles,
+        showLoader,
+        handleSubmit,
+        downloadProgress,
+        handleCancelDownload,
+        onSelectCurrentFolder,
     }
 }

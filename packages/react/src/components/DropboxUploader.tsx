@@ -1,7 +1,6 @@
 import React from 'react'
 import { useUploaderRuntime, useUploaderSource } from '../context/RootContext'
 import { useDropbox } from '../hooks/useDropbox'
-import useDropboxUploader from '../hooks/useDropboxUploader'
 import DriveAuthFallback from './shared/DriveAuthFallback'
 import DriveBrowser from './shared/DriveBrowser'
 import ServerModeDriveUploader from './ServerModeDriveUploader'
@@ -29,14 +28,13 @@ function ClientDropboxUploader() {
         isAuthenticated,
         authenticate,
         isLoading,
+        ...uploaderProps
     } = useDropbox()
 
     const handleSignOut = async () => {
         logout()
         return Promise.resolve()
     }
-
-    const props = useDropboxUploader(token)
 
     if (!isAuthenticated && !token && !isLoading) {
         return (
@@ -54,7 +52,7 @@ function ClientDropboxUploader() {
             user={user}
             handleSignOut={handleSignOut}
             data-upup-slot="dropbox-uploader"
-            {...(props as any)}
+            {...(uploaderProps as any)}
         />
     )
 }

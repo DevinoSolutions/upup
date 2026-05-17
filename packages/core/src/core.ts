@@ -403,6 +403,10 @@ export class UpupCore {
     this.pluginManager.registerExtension(name, methods)
   }
 
+  getPlugin(name: string): UpupPlugin | undefined {
+    return this.pluginManager.getPlugin(name)
+  }
+
   getExtension(name: string): ExtensionMethods | undefined {
     return this.pluginManager.getExtension(name)
   }
