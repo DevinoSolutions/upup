@@ -22,3 +22,17 @@ export type { PersistentStorage } from './crash-recovery'
 export type { GoogleDriveConfigs, OneDriveConfigs, DropboxConfigs, BoxConfigs } from './adapters/configs'
 export type { DroppedFilesResult } from './folder-drop'
 export { collectDroppedFiles } from './folder-drop'
+export {
+  bytesToSize,
+  sizeToBytes,
+  checkFileSize,
+  PREVIEW_MAX_TEXT_SIZE,
+  PREVIEW_TEXT_TRUNCATE_LENGTH,
+  fileGetIsImage,
+  fileGetIsPdf,
+  fileGetIsText,
+  fileCanPreviewText,
+  fileGetExtension,
+  fileIs3D,
+  searchDriveFiles,
+} from './file-utils'
