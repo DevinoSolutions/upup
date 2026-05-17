@@ -42,3 +42,4 @@ export {
   searchDriveFiles,
 } from './file-utils'
 export type { FileProgress, FilesProgressMap } from './file-utils'
+export { SSEProcessor } from './sse-processor'
