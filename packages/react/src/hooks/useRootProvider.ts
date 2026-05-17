@@ -203,9 +203,9 @@ export default function useRootProvider({
     const folderUploadAllowDrop = folderUpload?.allowDrop ?? false
     const folderPickerButtonVisible = folderUpload?.showSelectFolderButton ?? false
     const emitFileRemoved = useCallback((file: UploadFile) => {
-        onFileRemoveProp(file as never)
+        onFileRemoveProp(file)
         if (onFileRemoved && onFileRemoved !== onFileRemoveProp) {
-            onFileRemoved(file as never)
+            onFileRemoved(file)
         }
     }, [onFileRemoveProp, onFileRemoved])
     const limit = useMemo(() => (mini ? 1 : Math.max(resolvedLimit, 1)), [mini, resolvedLimit])
@@ -233,7 +233,7 @@ export default function useRootProvider({
         () => createTranslator({
             bundle: bundle ?? enUS,
             fallback: fallbackBundle ?? enUS,
-            overrides: i18n?.overrides as never,
+            overrides: i18n?.overrides,
         }),
         [bundle, fallbackBundle, i18n?.overrides],
     )
@@ -290,7 +290,7 @@ export default function useRootProvider({
     })
     const { connectSSE } = useSSEProcessing({
         processingEndpoint,
-        onFileProcessed: onFileProcessed as never,
+        onFileProcessed,
         onError: (err) => onError(err.message),
         processingTimeout,
     })
@@ -440,14 +440,12 @@ export default function useRootProvider({
         const unsubUploadStart = core.on('upload-start', () => {
             onUploadStart()
         })
-        const unsubStart = core.on('file-upload-start', (payload: unknown) => {
-            const file = (payload as { file?: UploadFile })?.file
-            if (file) onFileUploadStart(file as never)
+        const unsubStart = core.on('file-upload-start', ({ file }) => {
+            onFileUploadStart(file)
         })
-        const unsubAdded = core.on('files-added', (payload: unknown) => {
-            const added = payload as UploadFile[]
+        const unsubAdded = core.on('files-added', (added) => {
             if (!Array.isArray(added) || added.length === 0) return
-            onFilesSelected(added as never)
+            onFilesSelected(added)
             if (resolvedImageEditor.enabled) {
                 const images = added.filter(file => file.type.startsWith('image/'))
                 if (resolvedImageEditor.autoOpen === 'single' && images.length === 1) {
@@ -462,11 +460,10 @@ export default function useRootProvider({
                 setTimeout(() => { void upload.upload() }, 0)
             }
         })
-        const unsubRemoved = core.on('file-removed', (payload: unknown) => {
-            emitFileRemoved(payload as never)
+        const unsubRemoved = core.on('file-removed', (file) => {
+            emitFileRemoved(file)
         })
-        const unsubProgress = core.on('upload-progress', (payload: unknown) => {
-            const progress = payload as { fileId: string; loaded: number; total: number }
+        const unsubProgress = core.on('upload-progress', (progress) => {
             const file = core.files.get(progress.fileId)
             setFilesProgressMap(prev => ({
                 ...prev,
@@ -500,7 +497,7 @@ export default function useRootProvider({
                 }
             }
             if (file) {
-                onFileUploadProgress(file as never, {
+                onFileUploadProgress(file, {
                     loaded: progress.loaded,
                     total: progress.total,
                     percentage: progress.total > 0 ? Math.round((progress.loaded / progress.total) * 100) : 0,
@@ -508,19 +505,16 @@ export default function useRootProvider({
             }
             onFilesUploadProgress(core.progress.completedFiles, core.progress.totalFiles)
         })
-        const unsubSuccess = core.on('upload-success', (payload: unknown) => {
-            const { file, result } = payload as { file?: UploadFile; result?: { key?: string } }
-            if (file) onFileUploadComplete(file as never, result?.key ?? file.key ?? '')
+        const unsubSuccess = core.on('upload-success', ({ file, result }) => {
+            onFileUploadComplete(file, result?.key ?? file.key ?? '')
         })
-        const unsubComplete = core.on('upload-all-complete', (payload: unknown) => {
-            const completed = payload as UploadFile[]
-            onFilesUploadComplete(completed as never)
-            onUploadComplete(completed as never)
-            completed.forEach(file => connectSSE(file as never))
+        const unsubComplete = core.on('upload-all-complete', (completed) => {
+            onFilesUploadComplete(completed)
+            onUploadComplete(completed)
+            completed.forEach(file => connectSSE(file))
         })
-        const unsubError = core.on('upload-error', (payload: unknown) => {
-            const err = (payload as { error?: Error })?.error
-            if (err) onError(err.message)
+        const unsubError = core.on('upload-error', ({ error }) => {
+            onError(error.message)
         })
         return () => {
             unsubUploadStart()
@@ -559,7 +553,7 @@ export default function useRootProvider({
 
     const openImageEditor = useCallback((file: UploadFile) => {
         setEditingFile(file)
-        resolvedImageEditor.onOpen?.(file as never)
+        resolvedImageEditor.onOpen?.(file)
         core?.emit('image-editor-open', { file })
     }, [core, resolvedImageEditor])
 
@@ -574,7 +568,7 @@ export default function useRootProvider({
         const current = editingFile
         setEditingFile(null)
         if (current) {
-            resolvedImageEditor.onCancel?.(current as never)
+            resolvedImageEditor.onCancel?.(current)
             core?.emit('image-editor-cancel', { file: current })
         }
     }, [core, editingFile, resolvedImageEditor])
@@ -588,9 +582,9 @@ export default function useRootProvider({
         const outputMime = mimeType || resolvedImageEditor.output?.mimeType || editingFile.type
         const blob = new Blob([dataURLtoBlob(editedImageData)], { type: outputMime })
         const newFile = blobToUploadFile(blob, editingFile, resolvedImageEditor.output)
-        revokeFileUrl(editingFile as never)
+        revokeFileUrl(editingFile)
         core?.replaceFile(editingFile.id, newFile)
-        resolvedImageEditor.onSave?.(newFile as never, editingFile as never)
+        resolvedImageEditor.onSave?.(newFile, editingFile)
         core?.emit('image-editor-save', { file: newFile, original: editingFile })
         setEditingFile(null)
     }, [core, editingFile, resolvedImageEditor])
@@ -620,40 +614,40 @@ export default function useRootProvider({
     const proceedUpload = useCallback(async () => {
         if (upload.files.length === 0) return undefined
         setUploadError('')
-        const prepared = onPrepareFiles ? await onPrepareFiles(upload.files as never) : upload.files
+        const prepared = onPrepareFiles ? await onPrepareFiles(upload.files) : upload.files
         if (prepared !== upload.files) {
             await upload.setFiles(prepared as File[])
         }
         speedSamplesRef.current = [{ time: Date.now(), bytes: 0 }]
-        return await upload.upload() as never
+        return await upload.upload()
     }, [onPrepareFiles, upload])
 
     const retryUpload = useCallback(async (fileId?: string) => {
         if (upload.files.length === 0) return undefined
         setUploadError('')
         speedSamplesRef.current = [{ time: Date.now(), bytes: 0 }]
-        return await upload.retry(fileId) as never
+        return await upload.retry(fileId)
     }, [upload])
 
     const dynamicUpload = useCallback(async (newFiles: File[] | UploadFile[]) => {
         await upload.setFiles(newFiles as File[])
-        return await upload.upload() as never
+        return await upload.upload()
     }, [upload])
 
     const dynamicallyReplaceFiles = useCallback((newFiles: File[] | UploadFile[]) => {
-        upload.files.forEach(file => revokeFileUrl(file as never))
+        upload.files.forEach(file => revokeFileUrl(file))
         void upload.setFiles(newFiles as File[])
     }, [upload])
 
     const handleFileRemove = useCallback((fileId: string) => {
         const file = files.get(fileId)
-        if (file) revokeFileUrl(file as never)
+        if (file) revokeFileUrl(file)
         upload.removeFile(fileId)
     }, [files, upload])
 
     const handleCancel = useCallback(() => {
         upload.cancel()
-        upload.files.forEach(file => revokeFileUrl(file as never))
+        upload.files.forEach(file => revokeFileUrl(file))
         upload.removeAll()
         setFilesProgressMap({})
         setUploadSpeed(0)
@@ -687,7 +681,7 @@ export default function useRootProvider({
         if (!resumable || resumable.protocol !== 'multipart') return
         const progressMap: FilesProgressMap = {}
         upload.files.forEach(file => {
-            const session = loadSession(fileFingerprint(file as never))
+            const session = loadSession(fileFingerprint(file))
             if (session) {
                 progressMap[file.id] = {
                     id: file.id,
@@ -726,7 +720,7 @@ export default function useRootProvider({
             slotOverrides: resolvedSlotClasses,
             slots: themeSlots ?? EMPTY_THEME_SLOTS,
         },
-        files: files as never,
+        files,
         setFiles: handleSetSelectedFiles,
         dynamicUpload,
         resetState,
@@ -736,11 +730,11 @@ export default function useRootProvider({
         handlePause,
         handleResume,
         handleFileRemove,
-        editingFile: editingFile as never,
-        openImageEditor: openImageEditor as never,
+        editingFile,
+        openImageEditor,
         closeImageEditor,
         saveImageEdit,
-        replaceFile: replaceFile as never,
+        replaceFile,
         oneDriveConfigs,
         googleDriveConfigs,
         dropboxConfigs,

@@ -938,9 +938,9 @@ export class UpupCore {
   }
 
   on<K extends string & keyof CoreEvents>(event: K, handler: (payload: CoreEvents[K]) => void): () => void
-  on(event: string, handler: (payload: unknown) => void): () => void
+  on<K extends string>(event: K, handler: (payload: unknown) => void): () => void
   on(event: string, handler: (payload: unknown) => void): () => void {
-    return this.emitter.on(event as string, handler as EventHandler<unknown>)
+    return this.emitter.on(event, handler as EventHandler<unknown>)
   }
 
   off(event: string, handler: (payload: unknown) => void): void {
@@ -948,9 +948,9 @@ export class UpupCore {
   }
 
   emit<K extends string & keyof CoreEvents>(event: K, payload: CoreEvents[K]): void
-  emit(event: string, data?: unknown): void
+  emit<K extends string>(event: K, data?: unknown): void
   emit(event: string, data?: unknown): void {
-    this.emitter.emit(event as string, data)
+    this.emitter.emit(event, data)
   }
 
   getSnapshot(): { files: [string, UploadFile][]; status: UploadStatus } {
