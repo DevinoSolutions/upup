@@ -46,38 +46,37 @@ export function useUpupUpload(options: UseUpupUploadOptions): UseUpupUploadRetur
   const [, forceUpdate] = useState(0)
   const [isDragging, setIsDragging] = useState(false)
 
-  if (typeof window !== 'undefined' && !coreRef.current) {
-    coreRef.current = new UpupCore(options)
-  }
+  // Callback refs — always hold latest callbacks, avoiding stale closures
+  const onFileAddedRef = useRef(options.onFileAdded)
+  const onFileRemovedRef = useRef(options.onFileRemoved)
+  const onUploadProgressRef = useRef(options.onUploadProgress)
+  const onUploadCompleteRef = useRef(options.onUploadComplete)
+
+  // Sync refs every render (intentionally no deps)
+  useEffect(() => {
+    onFileAddedRef.current = options.onFileAdded
+    onFileRemovedRef.current = options.onFileRemoved
+    onUploadProgressRef.current = options.onUploadProgress
+    onUploadCompleteRef.current = options.onUploadComplete
+  })
 
   useEffect(() => {
-    if (!coreRef.current) {
-      coreRef.current = new UpupCore(options)
-      forceUpdate(n => n + 1)
-    }
-
-    const core = coreRef.current
+    const core = new UpupCore(options)
+    coreRef.current = core
+    forceUpdate(n => n + 1)
 
     // Subscribe to state changes to trigger re-renders
     const unsub = core.on('state-change', () => {
       forceUpdate(n => n + 1)
     })
 
-    // Wire convenience callbacks
-    const unsubCallbacks: Array<() => void> = []
-
-    if (options.onFileAdded) {
-      unsubCallbacks.push(core.on('files-added', options.onFileAdded as (...args: unknown[]) => void))
-    }
-    if (options.onFileRemoved) {
-      unsubCallbacks.push(core.on('file-removed', options.onFileRemoved as (...args: unknown[]) => void))
-    }
-    if (options.onUploadProgress) {
-      unsubCallbacks.push(core.on('upload-progress', options.onUploadProgress as (...args: unknown[]) => void))
-    }
-    if (options.onUploadComplete) {
-      unsubCallbacks.push(core.on('upload-all-complete', options.onUploadComplete as (...args: unknown[]) => void))
-    }
+    // Wire convenience callbacks through refs for freshness
+    const unsubCallbacks: Array<() => void> = [
+      core.on('files-added', (...args: unknown[]) => onFileAddedRef.current?.(...args as [UploadFile[]])),
+      core.on('file-removed', (...args: unknown[]) => onFileRemovedRef.current?.(...args as [UploadFile])),
+      core.on('upload-progress', (...args: unknown[]) => onUploadProgressRef.current?.(...args as [{ fileId: string; loaded: number; total: number }])),
+      core.on('upload-all-complete', (...args: unknown[]) => onUploadCompleteRef.current?.(...args as [UploadFile[]])),
+    ]
 
     return () => {
       unsub()
