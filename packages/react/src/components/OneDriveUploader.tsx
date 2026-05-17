@@ -1,8 +1,6 @@
 import React from 'react'
 import { useUploaderRuntime, useUploaderSource } from '../context/RootContext'
 import useOneDrive from '../hooks/useOneDrive'
-
-import useOneDriveUploader from '../hooks/useOneDriveUploader'
 import DriveAuthFallback from './shared/DriveAuthFallback'
 import DriveBrowser from './shared/DriveBrowser'
 import ServerModeDriveUploader from './ServerModeDriveUploader'
@@ -22,30 +20,27 @@ export default function OneDriveUploader() {
 }
 
 function ClientOneDriveUploader() {
-    const { oneDriveConfigs } = useUploaderSource()
     const {
         user,
         oneDriveFiles: driveFiles,
-        signOut: handleSignOut,
-        graphClient,
+        signOut,
         token,
-        authCancelled,
-        retryAuth,
-        isInitialized,
-        isAuthenticating,
-        isAuthInProgress,
-    } = useOneDrive(oneDriveConfigs?.onedrive_client_id)
-    const props = useOneDriveUploader(graphClient)
+        isAuthenticated,
+        authenticate,
+        isLoading,
+        ...uploaderProps
+    } = useOneDrive()
 
-    if (
-        !token &&
-        (authCancelled ||
-            (isInitialized && !isAuthenticating && !isAuthInProgress))
-    ) {
+    const handleSignOut = async () => {
+        signOut()
+        return Promise.resolve()
+    }
+
+    if (!isAuthenticated && !token && !isLoading) {
         return (
             <DriveAuthFallback
                 providerName="OneDrive"
-                onRetry={retryAuth}
+                onRetry={authenticate}
                 data-upup-slot="onedrive-uploader"
             />
         )
@@ -53,11 +48,11 @@ function ClientOneDriveUploader() {
 
     return (
         <DriveBrowser
-            driveFiles={driveFiles}
+            driveFiles={driveFiles as any}
             user={user}
             handleSignOut={handleSignOut}
             data-upup-slot="onedrive-uploader"
-            {...props}
+            {...(uploaderProps as any)}
         />
     )
 }
