@@ -33,4 +33,6 @@ export interface OrchestratorCallbacks {
     onFilesUploadComplete?: (files: UploadFile[]) => void
     onFileRemoved?: (file: UploadFile) => void
     onFileDrop?: (files: File[]) => void
+    onDoneClicked?: () => void
+    onPrepareFiles?: (files: UploadFile[]) => Promise<UploadFile[] | File[]> | UploadFile[] | File[]
 }

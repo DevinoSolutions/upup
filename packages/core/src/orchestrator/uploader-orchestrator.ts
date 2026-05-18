@@ -103,6 +103,72 @@ export class UploaderOrchestrator {
         this.setState({ files: next })
     }
 
+    // ── Upload control methods ──────────────────────────────────────
+
+    /** Trigger upload for all current files. Calls onPrepareFiles if provided. */
+    async proceedUpload(): Promise<UploadFile[] | undefined> {
+        const currentFiles = [...this.state.files.values()]
+        if (currentFiles.length === 0) return undefined
+        this.setState({ uploadError: '' })
+
+        const prepared = this.callbacks.onPrepareFiles
+            ? await this.callbacks.onPrepareFiles(currentFiles)
+            : currentFiles
+
+        // If onPrepareFiles returned different files, replace them in core
+        if (prepared !== currentFiles) {
+            this.core.removeAll()
+            await this.core.addFiles(prepared as File[])
+        }
+
+        return await this.core.upload()
+    }
+
+    /** Retry upload for a specific file or all failed files. */
+    async retryUpload(fileId?: string): Promise<UploadFile[] | undefined> {
+        if (this.state.files.size === 0) return undefined
+        this.setState({ uploadError: '' })
+        return await this.core.retry(fileId)
+    }
+
+    /** Cancel in-progress upload, revoke blob URLs, clear all files and progress. */
+    handleCancel(): void {
+        this.core.cancel()
+        this.state.files.forEach(file => revokeFileUrl(file))
+        this.core.removeAll()
+        this.setState({
+            filesProgressMap: {},
+            uploadSpeed: 0,
+            uploadEta: 0,
+            uploadedBytes: 0,
+            totalBytes: 0,
+        })
+    }
+
+    /** Pause in-progress upload. */
+    handlePause(): void {
+        this.core.pause()
+    }
+
+    /** Resume paused upload. */
+    handleResume(): void {
+        this.core.resume()
+    }
+
+    /** Mark upload as done: invoke callback, emit event, then cancel/clear. */
+    handleDone(): void {
+        this.callbacks.onDoneClicked?.()
+        this.core.emit('done', {})
+        this.handleCancel()
+    }
+
+    /** Full state reset: clear isAddingMore, emit state-reset, then handleDone. */
+    resetState(): void {
+        this.setState({ isAddingMore: false })
+        this.core.emit('state-reset', {})
+        this.handleDone()
+    }
+
     // ── Lifecycle ────────────────────────────────────────────────────
 
     init(): void {
