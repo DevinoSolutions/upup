@@ -7,8 +7,7 @@ import {
     useUploaderUploadControls,
     useUploaderView,
 } from '../context/RootContext'
-import { isUploadActive } from '@upup/core'
-import { collectDroppedFiles } from '../lib/folderDrop'
+import { isUploadActive, collectDroppedFiles } from '@upup/core'
 
 export default function useMainBox() {
     const { core } = useUploaderRuntime()

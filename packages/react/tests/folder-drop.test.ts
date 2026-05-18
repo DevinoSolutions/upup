@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { collectDroppedFiles } from '../src/lib/folderDrop'
+import { collectDroppedFiles } from '@upup/core'
 
 function fileEntry(file: File, fullPath = `/${file.name}`) {
     return {
