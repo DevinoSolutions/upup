@@ -34,13 +34,16 @@ export type {
 
 export type {
   UpupUploaderProps,
-  ImageEditorOptions,
-  ResolvedImageEditorOptions,
   UpupUploaderPropsIcons,
-  UploadSource,
-  UploadProvider,
 } from './shared/types'
 
 // Re-export core types consumers need
 export { FileSource, StorageProvider, UploadStatus } from '@upup/core'
-export type { UploadFile, CoreOptions } from '@upup/core'
+export type {
+  UploadFile,
+  CoreOptions,
+  ImageEditorOptions,
+  ResolvedImageEditorOptions,
+  UploadSource,
+  UploadProvider,
+} from '@upup/core'

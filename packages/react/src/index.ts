@@ -15,12 +15,16 @@ export { FileSource, StorageProvider } from '@upup/core'
 
 // ── React types ──────────────────────────────────────────
 export type {
+    ImageEditorOptions,
+    ResolvedImageEditorOptions,
+    UploadSource,
+    UploadProvider,
     GoogleDriveConfigs,
     OneDriveConfigs,
     DropboxConfigs,
-    ImageEditorOptions,
     ResumableUploadOptions,
-    UploadSource,
+} from '@upup/core'
+export type {
     UpupUploaderProps,
     UpupUploaderPropsIcons,
 } from './shared/types'

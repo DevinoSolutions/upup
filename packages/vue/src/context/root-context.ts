@@ -13,12 +13,11 @@ import type {
     UpupThemeTokens,
 } from '@upup/core'
 import { UploadStatus } from '@upup/core'
+import type { MaxFileSizeObject, ResumableUploadOptions } from '@upup/core'
 import type {
     ResolvedImageEditorOptions,
     UpupUploaderProps,
     UpupUploaderPropsIcons,
-    MaxFileSizeObject,
-    ResumableUploadOptions,
 } from '../shared/types'
 
 export { UploadStatus }

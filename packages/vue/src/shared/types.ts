@@ -1,93 +1,22 @@
 import type { Component } from 'vue'
 import type {
-    FileSource,
+    ImageEditorOptions,
     LocaleBundle,
     MaxFileSizeObject,
-    MultipartAbortResponse,
-    MultipartCompleteResponse,
-    MultipartInitResponse,
-    MultipartListPartsResponse,
-    MultipartPart,
-    MultipartSignPartResponse,
     PartialMessages,
-    PresignedUrlResponse,
     ResumableUploadOptions,
-    StorageProvider,
-    Translations,
     UploadFile,
+    UploadProvider,
+    UploadSource,
     UpupThemeConfig,
-    GoogleDriveConfigs,
-    OneDriveConfigs,
-    DropboxConfigs,
-    BoxConfigs,
 } from '@upup/core'
 
-export type { Translations }
 export type {
-    GoogleDriveConfigs,
-    OneDriveConfigs,
-    DropboxConfigs,
-    BoxConfigs,
-}
-export type {
-    MaxFileSizeObject,
-    MultipartAbortResponse,
-    MultipartCompleteResponse,
-    MultipartInitResponse,
-    MultipartListPartsResponse,
-    MultipartPart,
-    MultipartSignPartResponse,
-    PresignedUrlResponse,
-    ResumableUploadOptions,
-}
-
-/**
- * Configuration for the optional image editor.
- */
-export type ImageEditorOptions = {
-    enabled?: boolean
-    display?: 'inline' | 'modal'
-    autoOpen?: 'never' | 'single' | 'always'
-    output?: {
-        mimeType?: string
-        quality?: number
-        fileName?: (original: File) => string
-    }
-    tabs?: (
-        | 'Adjust'
-        | 'Annotate'
-        | 'Filters'
-        | 'Finetune'
-        | 'Resize'
-        | 'Watermark'
-    )[]
-    tools?: (
-        | 'Crop'
-        | 'Rotate'
-        | 'Flip'
-        | 'Brightness'
-        | 'Contrast'
-        | 'HSV'
-        | 'Blur'
-        | 'Text'
-        | 'Line'
-        | 'Rect'
-        | 'Ellipse'
-        | 'Polygon'
-        | 'Pen'
-        | 'Arrow'
-        | 'Image'
-    )[]
-    onOpen?: (file: UploadFile) => void
-    onCancel?: (file: UploadFile) => void
-    onSave?: (editedFile: UploadFile, originalFile: UploadFile) => void
-}
-
-/** Resolved image editor config with all defaults applied. */
-export type ResolvedImageEditorOptions = Required<
-    Pick<ImageEditorOptions, 'enabled' | 'autoOpen' | 'display'>
-> &
-    Omit<ImageEditorOptions, 'enabled' | 'autoOpen' | 'display'>
+    ImageEditorOptions,
+    ResolvedImageEditorOptions,
+    UploadSource,
+    UploadProvider,
+} from '@upup/core'
 
 export type UpupUploaderPropsIcons = {
     ContainerAddMoreIcon?: Component
@@ -97,21 +26,6 @@ export type UpupUploaderPropsIcons = {
     CameraRotateIcon?: Component
     LoaderIcon?: Component
 }
-
-/** Canonical source IDs accepted by the uploader. */
-export type UploadSource =
-    | FileSource
-    | 'local'
-    | 'url'
-    | 'camera'
-    | 'microphone'
-    | 'screen'
-    | 'googleDrive'
-    | 'oneDrive'
-    | 'dropbox'
-    | 'box'
-
-export type UploadProvider = StorageProvider | (string & {})
 
 export type UpupUploaderProps = {
     provider?: UploadProvider

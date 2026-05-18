@@ -23,12 +23,14 @@ import type {
     UpupThemeTokens,
 } from '@upup/core'
 import { UploadStatus } from '@upup/core'
-import {
+import type {
     BoxConfigs,
     DropboxConfigs,
     GoogleDriveConfigs,
     OneDriveConfigs,
     ResolvedImageEditorOptions,
+} from '@upup/core'
+import type {
     UpupUploaderProps,
     UpupUploaderPropsIcons,
 } from '../shared/types'
