@@ -1,5 +1,5 @@
 import { ref, onMounted, onUnmounted } from 'vue'
-import { OneDrivePlugin, type DriveFile, type DriveFolder, type DriveUser } from '@upup/core'
+import { OneDrivePlugin, bindAdapterEvents, type DriveFile, type DriveFolder, type DriveUser } from '@upup/core'
 import {
     useUploaderFiles,
     useUploaderRuntime,
@@ -22,7 +22,7 @@ export function useOneDrive() {
     const isClickLoading = ref(false)
 
     let plugin: OneDrivePlugin | null = null
-    const unsubs: Array<() => void> = []
+    let cleanup: (() => void) | null = null
 
     onMounted(() => {
         if (!core) return
@@ -46,27 +46,27 @@ export function useOneDrive() {
             })()
         }
 
-        unsubs.push(
-            core.on('onedrive:authenticated', (payload: unknown) => {
+        cleanup = bindAdapterEvents(core, 'onedrive', {
+            onAuthenticated: (payload: unknown) => {
                 const data = payload as { user?: DriveUser }
                 if (data.user) user.value = data.user
                 isAuthenticated.value = true
                 isLoading.value = false
-            }),
-            core.on('onedrive:signed-out', () => {
+            },
+            onSignedOut: () => {
                 user.value = undefined
                 oneDriveFiles.value = undefined
                 isAuthenticated.value = false
                 path.value = []
                 selectedFiles.value = []
-            }),
-            core.on('onedrive:session-expired', () => {
+            },
+            onSessionExpired: () => {
                 user.value = undefined
                 oneDriveFiles.value = undefined
                 isAuthenticated.value = false
                 path.value = []
-            }),
-            core.on('onedrive:files-loaded', (payload: unknown) => {
+            },
+            onFilesLoaded: (payload: unknown) => {
                 const data = payload as { files: DriveFile[]; folderId: string }
                 const root: DriveFolder = {
                     id: data.folderId || 'root',
@@ -79,19 +79,19 @@ export function useOneDrive() {
                 }
                 oneDriveFiles.value = root
                 isClickLoading.value = false
-            }),
-            core.on('onedrive:state-change', (payload: unknown) => {
+            },
+            onStateChange: (payload: unknown) => {
                 const data = payload as { state: string }
                 isLoading.value = data.state === 'authenticating' || data.state === 'browsing'
-            }),
-            core.on('onedrive:error', () => {
+            },
+            onError: () => {
                 isClickLoading.value = false
                 showLoader.value = false
-            }),
-        )
+            },
+        })
     })
 
-    onUnmounted(() => { unsubs.forEach(u => u()) })
+    onUnmounted(() => { cleanup?.() })
 
     async function authenticate() {
         if (!plugin) return

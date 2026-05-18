@@ -1,5 +1,5 @@
 import { ref, watch, onMounted, onUnmounted } from 'vue'
-import { GoogleDrivePlugin, type DriveFile, type DriveFolder, type DriveUser } from '@upup/core'
+import { GoogleDrivePlugin, bindAdapterEvents, type DriveFile, type DriveFolder, type DriveUser } from '@upup/core'
 import {
     useUploaderFiles,
     useUploaderRuntime,
@@ -27,7 +27,7 @@ export function useGoogleDrive() {
 
     let plugin: GoogleDrivePlugin | null = null
     let tokenClient: { requestAccessToken: (opts?: object) => void } | null = null
-    const unsubs: Array<() => void> = []
+    let cleanup: (() => void) | null = null
 
     const { gisLoaded } = useLoadGAPI()
 
@@ -59,26 +59,26 @@ export function useGoogleDrive() {
             })()
         }
 
-        unsubs.push(
-            core.on('google-drive:authenticated', (payload: unknown) => {
+        cleanup = bindAdapterEvents(core, 'google-drive', {
+            onAuthenticated: (payload: unknown) => {
                 const data = payload as { user?: DriveUser }
                 if (data.user) user.value = data.user
                 isAuthReady.value = true
-            }),
-            core.on('google-drive:signed-out', () => {
+            },
+            onSignedOut: () => {
                 user.value = undefined
                 googleFiles.value = undefined
                 token.value = undefined
                 path.value = []
                 selectedFiles.value = []
-            }),
-            core.on('google-drive:session-expired', () => {
+            },
+            onSessionExpired: () => {
                 user.value = undefined
                 googleFiles.value = undefined
                 token.value = undefined
                 path.value = []
-            }),
-            core.on('google-drive:files-loaded', (payload: unknown) => {
+            },
+            onFilesLoaded: (payload: unknown) => {
                 const data = payload as { files: DriveFile[]; folderId: string }
                 const root: DriveFolder = {
                     id: data.folderId || 'root',
@@ -91,21 +91,21 @@ export function useGoogleDrive() {
                 }
                 googleFiles.value = root
                 isClickLoading.value = false
-            }),
-            core.on('google-drive:state-change', (payload: unknown) => {
+            },
+            onStateChange: (payload: unknown) => {
                 const data = payload as { state: string }
                 if (data.state === 'browsing') {
                     isClickLoading.value = true
                 }
-            }),
-            core.on('google-drive:error', () => {
+            },
+            onError: () => {
                 isClickLoading.value = false
                 showLoader.value = false
-            }),
-        )
+            },
+        })
     })
 
-    onUnmounted(() => { unsubs.forEach(u => u()) })
+    onUnmounted(() => { cleanup?.() })
 
     // ── GIS initialization (loads Google Identity Services popup) ──
 

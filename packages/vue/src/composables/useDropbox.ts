@@ -1,5 +1,5 @@
 import { ref, onMounted, onUnmounted } from 'vue'
-import { DropboxPlugin, type DriveFile, type DriveFolder, type DriveUser } from '@upup/core'
+import { DropboxPlugin, bindAdapterEvents, type DriveFile, type DriveFolder, type DriveUser } from '@upup/core'
 import {
     useUploaderFiles,
     useUploaderRuntime,
@@ -22,7 +22,7 @@ export function useDropbox() {
     const isClickLoading = ref(false)
 
     let plugin: DropboxPlugin | null = null
-    const unsubs: Array<() => void> = []
+    let cleanup: (() => void) | null = null
 
     onMounted(() => {
         if (!core) return
@@ -42,27 +42,27 @@ export function useDropbox() {
             })()
         }
 
-        unsubs.push(
-            core.on('dropbox:authenticated', (payload: unknown) => {
+        cleanup = bindAdapterEvents(core, 'dropbox', {
+            onAuthenticated: (payload: unknown) => {
                 const data = payload as { user?: DriveUser }
                 if (data.user) user.value = data.user
                 isAuthenticated.value = true
                 isLoading.value = false
-            }),
-            core.on('dropbox:signed-out', () => {
+            },
+            onSignedOut: () => {
                 user.value = undefined
                 dropboxFiles.value = undefined
                 isAuthenticated.value = false
                 path.value = []
                 selectedFiles.value = []
-            }),
-            core.on('dropbox:session-expired', () => {
+            },
+            onSessionExpired: () => {
                 user.value = undefined
                 dropboxFiles.value = undefined
                 isAuthenticated.value = false
                 path.value = []
-            }),
-            core.on('dropbox:files-loaded', (payload: unknown) => {
+            },
+            onFilesLoaded: (payload: unknown) => {
                 const data = payload as { files: DriveFile[]; path: string }
                 const root: DriveFolder = {
                     id: data.path || 'root',
@@ -75,19 +75,19 @@ export function useDropbox() {
                 }
                 dropboxFiles.value = root
                 isClickLoading.value = false
-            }),
-            core.on('dropbox:state-change', (payload: unknown) => {
+            },
+            onStateChange: (payload: unknown) => {
                 const data = payload as { state: string }
                 isLoading.value = data.state === 'authenticating' || data.state === 'browsing'
-            }),
-            core.on('dropbox:error', () => {
+            },
+            onError: () => {
                 isClickLoading.value = false
                 showLoader.value = false
-            }),
-        )
+            },
+        })
     })
 
-    onUnmounted(() => { unsubs.forEach(u => u()) })
+    onUnmounted(() => { cleanup?.() })
 
     async function authenticate() {
         if (!plugin) return

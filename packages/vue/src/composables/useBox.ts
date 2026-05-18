@@ -1,5 +1,5 @@
 import { ref, onMounted, onUnmounted } from 'vue'
-import { BoxPlugin, type DriveFile, type DriveFolder, type DriveUser } from '@upup/core'
+import { BoxPlugin, bindAdapterEvents, type DriveFile, type DriveFolder, type DriveUser } from '@upup/core'
 import {
     useUploaderFiles,
     useUploaderRuntime,
@@ -22,7 +22,7 @@ export function useBox() {
     const isClickLoading = ref(false)
 
     let plugin: BoxPlugin | null = null
-    const unsubs: Array<() => void> = []
+    let cleanup: (() => void) | null = null
 
     onMounted(() => {
         if (!core) return
@@ -42,27 +42,27 @@ export function useBox() {
             })()
         }
 
-        unsubs.push(
-            core.on('box:authenticated', (payload: unknown) => {
+        cleanup = bindAdapterEvents(core, 'box', {
+            onAuthenticated: (payload: unknown) => {
                 const data = payload as { user?: DriveUser }
                 if (data.user) user.value = data.user
                 isAuthenticated.value = true
                 isLoading.value = false
-            }),
-            core.on('box:signed-out', () => {
+            },
+            onSignedOut: () => {
                 user.value = undefined
                 boxFiles.value = undefined
                 isAuthenticated.value = false
                 path.value = []
                 selectedFiles.value = []
-            }),
-            core.on('box:session-expired', () => {
+            },
+            onSessionExpired: () => {
                 user.value = undefined
                 boxFiles.value = undefined
                 isAuthenticated.value = false
                 path.value = []
-            }),
-            core.on('box:files-loaded', (payload: unknown) => {
+            },
+            onFilesLoaded: (payload: unknown) => {
                 const data = payload as { files: DriveFile[]; folderId: string }
                 const root: DriveFolder = {
                     id: data.folderId || '0',
@@ -75,19 +75,19 @@ export function useBox() {
                 }
                 boxFiles.value = root
                 isClickLoading.value = false
-            }),
-            core.on('box:state-change', (payload: unknown) => {
+            },
+            onStateChange: (payload: unknown) => {
                 const data = payload as { state: string }
                 isLoading.value = data.state === 'authenticating' || data.state === 'browsing'
-            }),
-            core.on('box:error', () => {
+            },
+            onError: () => {
                 isClickLoading.value = false
                 showLoader.value = false
-            }),
-        )
+            },
+        })
     })
 
-    onUnmounted(() => { unsubs.forEach(u => u()) })
+    onUnmounted(() => { cleanup?.() })
 
     async function authenticate() {
         if (!plugin) return
