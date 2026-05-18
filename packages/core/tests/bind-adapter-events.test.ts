@@ -1,0 +1,78 @@
+import { describe, it, expect, vi } from 'vitest'
+import { bindAdapterEvents } from '../src/adapters/bind-adapter-events'
+
+function createMockCore() {
+    const listeners = new Map<string, Function>()
+    return {
+        on: vi.fn((event: string, cb: Function) => {
+            listeners.set(event, cb)
+            return () => listeners.delete(event)
+        }),
+        _emit(event: string, payload?: unknown) {
+            listeners.get(event)?.(payload)
+        },
+    }
+}
+
+describe('bindAdapterEvents', () => {
+    it('subscribes to all 6 standard adapter events', () => {
+        const core = createMockCore()
+        const callbacks = {
+            onAuthenticated: vi.fn(),
+            onSignedOut: vi.fn(),
+            onSessionExpired: vi.fn(),
+            onFilesLoaded: vi.fn(),
+            onStateChange: vi.fn(),
+            onError: vi.fn(),
+        }
+        bindAdapterEvents(core as any, 'box', callbacks)
+        expect(core.on).toHaveBeenCalledTimes(6)
+        expect(core.on).toHaveBeenCalledWith('box:authenticated', expect.any(Function))
+        expect(core.on).toHaveBeenCalledWith('box:error', expect.any(Function))
+    })
+
+    it('forwards event payloads to callbacks', () => {
+        const core = createMockCore()
+        const callbacks = {
+            onAuthenticated: vi.fn(),
+            onSignedOut: vi.fn(),
+            onSessionExpired: vi.fn(),
+            onFilesLoaded: vi.fn(),
+            onStateChange: vi.fn(),
+            onError: vi.fn(),
+        }
+        bindAdapterEvents(core as any, 'box', callbacks)
+        core._emit('box:authenticated', { user: { name: 'Test' } })
+        expect(callbacks.onAuthenticated).toHaveBeenCalledWith({ user: { name: 'Test' } })
+    })
+
+    it('returns cleanup function that unsubscribes all', () => {
+        const core = createMockCore()
+        const callbacks = {
+            onAuthenticated: vi.fn(),
+            onSignedOut: vi.fn(),
+            onSessionExpired: vi.fn(),
+            onFilesLoaded: vi.fn(),
+            onStateChange: vi.fn(),
+            onError: vi.fn(),
+        }
+        const cleanup = bindAdapterEvents(core as any, 'box', callbacks)
+        cleanup()
+        core._emit('box:authenticated', { user: { name: 'Test' } })
+        expect(callbacks.onAuthenticated).not.toHaveBeenCalled()
+    })
+
+    it('works with any provider prefix', () => {
+        const core = createMockCore()
+        const callbacks = {
+            onAuthenticated: vi.fn(),
+            onSignedOut: vi.fn(),
+            onSessionExpired: vi.fn(),
+            onFilesLoaded: vi.fn(),
+            onStateChange: vi.fn(),
+            onError: vi.fn(),
+        }
+        bindAdapterEvents(core as any, 'google-drive', callbacks)
+        expect(core.on).toHaveBeenCalledWith('google-drive:authenticated', expect.any(Function))
+    })
+})
