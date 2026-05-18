@@ -6,7 +6,7 @@
     "build": "turbo run build",
     "build:landing": "turbo run build --filter=@upup/landing",
     "build:docs": "turbo run build --filter=docs",
-    "build:package": "pnpm --filter @upup/core run build && pnpm --filter @upup/server run build && pnpm --filter @upup/react run build",
+    "build:package": "pnpm --filter @upup/core run build && pnpm --filter @upup/server run build && pnpm --filter @upup/react run build && pnpm --filter @upup/vue run build",
     "clean": "turbo run clean",
     "dev": "dotenv -e local-dev/.env.ports -- concurrently \"pnpm run dev:apps\" \"pnpm run dev:package-watch\"",
     "dev:apps": "turbo run dev --parallel --filter=@upup/landing --filter=docs --filter=@upup/playground",
@@ -25,8 +25,8 @@
     "test:coverage": "pnpm --filter @upup/react exec vitest run --coverage --coverage.reportsDirectory=../../coverage",
     "smoke:packages": "node scripts/package-smoke-consumer.mjs",
     "typecheck": "turbo run typecheck",
-    "release": "pnpm --filter @upup/core run release && pnpm --filter @upup/server run release && pnpm --filter @upup/react run release",
-    "test-release": "pnpm --filter @upup/core run test-release && pnpm --filter @upup/server run test-release && pnpm --filter @upup/react run test-release"
+    "release": "pnpm --filter @upup/core run release && pnpm --filter @upup/server run release && pnpm --filter @upup/react run release && pnpm --filter @upup/vue run release",
+    "test-release": "pnpm --filter @upup/core run test-release && pnpm --filter @upup/server run test-release && pnpm --filter @upup/react run test-release && pnpm --filter @upup/vue run test-release"
   },
   "devDependencies": {
     "@changesets/cli": "^2.30.0",
