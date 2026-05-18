@@ -3,6 +3,7 @@ import type { UpupUploaderProps } from './shared/types'
 import useRootProvider from './composables/useRootProvider'
 import { provideRootContext } from './context/root-context'
 import MainBox from './components/MainBox.vue'
+import ImageEditorStub from './components/ImageEditorStub.vue'
 
 const props = defineProps<UpupUploaderProps>()
 const ctx = useRootProvider(props)
@@ -30,6 +31,7 @@ function onInputChange(e: Event) {
         <slot>
             <MainBox />
         </slot>
+        <ImageEditorStub v-if="ctx.props.imageEditor.enabled" />
         <input
             ref="ctx.inputRef"
             type="file"
