@@ -8,7 +8,7 @@ import {
     useUploaderTheme,
 } from '../context/root-context'
 import { uploadSourceObject } from '../lib/constants'
-import { cn } from '../lib/tailwind'
+import { cn } from '@upup/core'
 import DefaultLoaderIcon from './DefaultLoaderIcon.vue'
 
 const { core } = useUploaderRuntime()

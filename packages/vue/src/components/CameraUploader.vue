@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import { onMounted, watch } from 'vue'
-import { formatUiMessage as t } from '@upup/core'
+import { formatUiMessage as t, cn } from '@upup/core'
 import useCameraUploader from '../composables/useCameraUploader'
-import { cn } from '../lib/tailwind'
 import AdapterViewContainer from './shared/AdapterViewContainer.vue'
 import ShouldRender from './shared/ShouldRender.vue'
 

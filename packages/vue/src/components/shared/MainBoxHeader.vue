@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { formatUiMessage as t, pluralUiMessage as plural } from '@upup/core'
+import { formatUiMessage as t, pluralUiMessage as plural, isUploadActive, cn } from '@upup/core'
 import {
     useUploaderFiles,
     useUploaderI18n,
@@ -9,8 +9,6 @@ import {
     useUploaderUploadControls,
     useUploaderView,
 } from '../../context/root-context'
-import { isUploadActive } from '../../lib/status-helpers'
-import { cn } from '../../lib/tailwind'
 import { LayoutGridIcon, LayoutListIcon } from '../Icons'
 import ShouldRender from './ShouldRender.vue'
 

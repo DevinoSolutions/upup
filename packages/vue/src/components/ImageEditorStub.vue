@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useUploaderEditor, useUploaderTheme } from '../context/root-context'
-import { cn } from '../lib/tailwind'
+import { cn } from '@upup/core'
 
 const { editingFile, closeImageEditor } = useUploaderEditor()
 const { slotOverrides } = useUploaderTheme()

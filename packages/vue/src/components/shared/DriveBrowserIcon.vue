@@ -1,8 +1,6 @@
 <script setup lang="ts">
-import { type DriveFile } from '@upup/core'
+import { type DriveFile, cn, b64EncodeUnicode } from '@upup/core'
 import { useUploaderTheme } from '../../context/root-context'
-import { cn } from '../../lib/tailwind'
-import { b64EncodeUnicode } from '../../shared/lib/encoder'
 import { FileIconSvg, FolderIcon } from '../Icons'
 
 const props = defineProps<{ file: DriveFile }>()

@@ -13,7 +13,7 @@ import {
     useUploaderTheme,
 } from '../../context/root-context'
 import { searchDriveFiles } from '../../lib/file'
-import { cn } from '../../lib/tailwind'
+import { cn } from '@upup/core'
 import AdapterViewContainer from './AdapterViewContainer.vue'
 import DriveBrowserHeader from './DriveBrowserHeader.vue'
 import DriveBrowserItem from './DriveBrowserItem.vue'

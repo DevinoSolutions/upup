@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from 'vue'
-import { formatUiMessage as t } from '@upup/core'
+import { formatUiMessage as t, cn } from '@upup/core'
 import { useUploaderI18n, useUploaderTheme } from '../context/root-context'
 import {
     fileGetIsImage,
@@ -9,7 +9,6 @@ import {
     PREVIEW_MAX_TEXT_SIZE,
     PREVIEW_TEXT_TRUNCATE_LENGTH,
 } from '../lib/file'
-import { cn } from '../lib/tailwind'
 import ShouldRender from './shared/ShouldRender.vue'
 
 const props = defineProps<{

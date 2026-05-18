@@ -13,7 +13,7 @@ import {
     ScreenCastIcon,
 } from '../components/Icons'
 
-export { sourceNameKeys } from './source-metadata'
+export { sourceNameKeys } from '@upup/core'
 
 const AudioUploader = defineAsyncComponent(() => import('../components/AudioUploader.vue'))
 const BoxUploader = defineAsyncComponent(() => import('../components/BoxUploader.vue'))

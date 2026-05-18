@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useUploaderTheme } from '../context/root-context'
-import { cn } from '../lib/tailwind'
+import { cn } from '@upup/core'
 import { FileIconSvg } from './Icons'
 
 const props = withDefaults(

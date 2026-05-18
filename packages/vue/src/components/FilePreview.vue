@@ -10,7 +10,7 @@ import {
     useUploaderUploadControls,
 } from '../context/root-context'
 import { fileCanPreviewText, fileGetIsImage, fileGetIsPdf, fileGetIsText } from '../lib/file'
-import { cn } from '../lib/tailwind'
+import { cn } from '@upup/core'
 import FilePreviewThumbnail from './FilePreviewThumbnail.vue'
 import ProgressBar from './shared/ProgressBar.vue'
 import ShouldRender from './shared/ShouldRender.vue'

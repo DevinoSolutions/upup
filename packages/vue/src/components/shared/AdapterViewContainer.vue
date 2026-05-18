@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useUploaderTheme } from '../../context/root-context'
-import { cn } from '../../lib/tailwind'
+import { cn } from '@upup/core'
 
 withDefaults(defineProps<{ isLoading?: boolean }>(), { isLoading: false })
 

@@ -1,5 +1,4 @@
-import { FileSource, UploadStatus, type UploadFile } from '@upup/core'
-import { b64EncodeUnicode } from '../shared/lib/encoder'
+import { FileSource, UploadStatus, type UploadFile, b64EncodeUnicode } from '@upup/core'
 
 export {
     bytesToSize,

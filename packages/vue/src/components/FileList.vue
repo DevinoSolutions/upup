@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useVirtualizer } from '@tanstack/vue-virtual'
-import { formatUiMessage as t, pluralUiMessage as plural, UploadStatus } from '@upup/core'
+import { formatUiMessage as t, pluralUiMessage as plural, UploadStatus, isUploadActive, cn } from '@upup/core'
 import {
     useUploaderFiles,
     useUploaderI18n,
@@ -11,8 +11,6 @@ import {
     useUploaderUploadControls,
     useUploaderView,
 } from '../context/root-context'
-import { isUploadActive } from '../lib/status-helpers'
-import { cn } from '../lib/tailwind'
 import { PlayerPauseFilledIcon, PlayerPlayFilledIcon, XIcon } from './Icons'
 import FileItem from './FileItem.vue'
 import MainBoxHeader from './shared/MainBoxHeader.vue'

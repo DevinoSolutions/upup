@@ -5,7 +5,7 @@ import {
     useUploaderSource,
     useUploaderTheme,
 } from '../../context/root-context'
-import { cn } from '../../lib/tailwind'
+import { cn } from '@upup/core'
 import { SearchIcon, UserIcon } from '../Icons'
 import ShouldRender from './ShouldRender.vue'
 

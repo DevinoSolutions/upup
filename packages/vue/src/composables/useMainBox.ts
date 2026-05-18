@@ -7,7 +7,7 @@ import {
     useUploaderUploadControls,
     useUploaderView,
 } from '../context/root-context'
-import { isUploadActive } from '../lib/status-helpers'
+import { isUploadActive } from '@upup/core'
 import { collectDroppedFiles } from '../lib/folderDrop'
 
 export default function useMainBox() {

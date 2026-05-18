@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { formatUiMessage as t, pluralUiMessage as plural } from '@upup/core'
+import { formatUiMessage as t, pluralUiMessage as plural, cn } from '@upup/core'
 import {
     useUploaderFiles,
     useUploaderI18n,
@@ -10,7 +10,6 @@ import {
     useUploaderView,
 } from '../context/root-context'
 import useAdapterSelector from '../composables/useAdapterSelector'
-import { cn } from '../lib/tailwind'
 import { UploadIcon } from './Icons'
 import ShouldRender from './shared/ShouldRender.vue'
 

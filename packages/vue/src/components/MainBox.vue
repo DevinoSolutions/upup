@@ -8,7 +8,7 @@ import {
     useUploaderView,
 } from '../context/root-context'
 import useMainBox from '../composables/useMainBox'
-import { cn } from '../lib/tailwind'
+import { cn } from '@upup/core'
 import AdapterSelector from './AdapterSelector.vue'
 import AdapterView from './AdapterView.vue'
 import FileList from './FileList.vue'

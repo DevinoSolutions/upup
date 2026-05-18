@@ -4,8 +4,7 @@ import {
     useUploaderTheme,
     useUploaderUploadControls,
 } from '../../context/root-context'
-import { isUploadActive } from '../../lib/status-helpers'
-import { cn } from '../../lib/tailwind'
+import { isUploadActive, cn } from '@upup/core'
 import ShouldRender from './ShouldRender.vue'
 
 const props = withDefaults(

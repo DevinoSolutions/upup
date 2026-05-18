@@ -9,7 +9,7 @@ import {
 import AdapterViewContainer from './shared/AdapterViewContainer.vue'
 import DriveAuthFallback from './shared/DriveAuthFallback.vue'
 import ShouldRender from './shared/ShouldRender.vue'
-import { cn } from '../lib/tailwind'
+import { cn } from '@upup/core'
 
 const props = withDefaults(defineProps<{
     provider: ServerModeProvider

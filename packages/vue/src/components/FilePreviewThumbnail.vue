@@ -8,7 +8,7 @@ import {
     fileGetIsText,
     fileIs3D,
 } from '../lib/file'
-import { cn } from '../lib/tailwind'
+import { cn } from '@upup/core'
 import FileIcon from './FileIcon.vue'
 import ShouldRender from './shared/ShouldRender.vue'
 

@@ -17,8 +17,8 @@ import {
     type Translator,
     type UploadFile,
     type UpupThemeMode,
+    resolveAccept,
 } from '@upup/core'
-import { resolveAccept } from '../shared/lib/acceptPresets'
 import type {
     ResolvedImageEditorOptions,
     UpupUploaderProps,

@@ -5,7 +5,7 @@ import {
     useUploaderSource,
     useUploaderTheme,
 } from '../context/root-context'
-import { cn } from '../lib/tailwind'
+import { cn } from '@upup/core'
 import AdapterViewContainer from './shared/AdapterViewContainer.vue'
 
 type RecordingState = 'idle' | 'recording' | 'recorded'

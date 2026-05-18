@@ -9,7 +9,7 @@ import {
     useUploaderTheme,
 } from '../context/root-context'
 import useFetchFileByUrl from '../composables/useFetchFileByUrl'
-import { cn } from '../lib/tailwind'
+import { cn } from '@upup/core'
 import AdapterViewContainer from './shared/AdapterViewContainer.vue'
 
 const { core } = useUploaderRuntime()

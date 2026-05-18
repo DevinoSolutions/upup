@@ -1,7 +1,6 @@
 <script setup lang="ts">
-import { formatUiMessage as t } from '@upup/core'
+import { formatUiMessage as t, cn } from '@upup/core'
 import { useUploaderI18n, useUploaderTheme } from '../../context/root-context'
-import { cn } from '../../lib/tailwind'
 import AdapterViewContainer from './AdapterViewContainer.vue'
 
 const props = withDefaults(defineProps<{

@@ -7,7 +7,7 @@ import {
     useUploaderRuntime,
     useUploaderTheme,
 } from '../context/root-context'
-import { cn } from '../lib/tailwind'
+import { cn } from '@upup/core'
 import FilePreview from './FilePreview.vue'
 import FilePreviewPortal from './FilePreviewPortal.vue'
 
