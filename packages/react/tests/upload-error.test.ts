@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { UploadError, UploadErrorType } from '../src/shared/types'
+import { UploadError, UploadErrorType } from '@upup/core'
 
 // ─────────────────────────────────────────────
 // Construction — defaults

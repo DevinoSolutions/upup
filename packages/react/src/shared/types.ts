@@ -11,13 +11,6 @@ import type {
     UpupThemeConfig,
 } from '@upup/core'
 
-export type {
-    ImageEditorOptions,
-    ResolvedImageEditorOptions,
-    UploadSource,
-    UploadProvider,
-} from '@upup/core'
-
 export type UpupUploaderPropsIcons = {
     ContainerAddMoreIcon?: FC<{ className?: string }>
 
@@ -204,5 +197,4 @@ export type UpupUploaderProps = {
     processingTimeout?: number
 }
 
-export { UploadErrorType, UploadError } from '@upup/core'
 

@@ -19,10 +19,8 @@ import {
     type UpupThemeMode,
     resolveAccept,
 } from '@upup/core'
-import type {
-    ResolvedImageEditorOptions,
-    UpupUploaderProps,
-} from '../shared/types'
+import type { ResolvedImageEditorOptions } from '@upup/core'
+import type { UpupUploaderProps } from '../shared/types'
 import type { IRootContext } from '../context/root-context'
 import { revokeFileUrl } from '@upup/core'
 import {

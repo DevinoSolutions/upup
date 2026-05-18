@@ -27,10 +27,8 @@ import {
     TbPlus,
     TbTrash,
 } from 'react-icons/tb'
-import {
-    ResolvedImageEditorOptions,
-    UpupUploaderProps,
-} from '../shared/types'
+import type { ResolvedImageEditorOptions } from '@upup/core'
+import { UpupUploaderProps } from '../shared/types'
 import { IRootContext } from '../context/RootContext'
 import { revokeFileUrl, sizeToBytes } from '../lib/file'
 import {

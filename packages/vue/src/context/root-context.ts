@@ -14,8 +14,8 @@ import type {
 } from '@upup/core'
 import { UploadStatus } from '@upup/core'
 import type { MaxFileSizeObject, ResumableUploadOptions } from '@upup/core'
+import type { ResolvedImageEditorOptions } from '@upup/core'
 import type {
-    ResolvedImageEditorOptions,
     UpupUploaderProps,
     UpupUploaderPropsIcons,
 } from '../shared/types'
