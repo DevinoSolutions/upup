@@ -1,9 +1,17 @@
 <script setup lang="ts">
-// Stub: Google Drive uploader will be implemented in a future task
+import { useUploaderRuntime, useUploaderSource } from '../context/root-context'
+import ClientGoogleDriveUploader from './ClientGoogleDriveUploader.vue'
+import ServerModeDriveUploader from './ServerModeDriveUploader.vue'
+
+const { mode } = useUploaderRuntime()
+const { setActiveAdapter } = useUploaderSource()
 </script>
 
 <template>
-    <div data-upup-slot="google-drive-uploader">
-        <!-- Google Drive uploader placeholder -->
-    </div>
+    <ServerModeDriveUploader
+        v-if="mode === 'server'"
+        provider="google-drive"
+        :on-back="() => setActiveAdapter(undefined)"
+    />
+    <ClientGoogleDriveUploader v-else />
 </template>

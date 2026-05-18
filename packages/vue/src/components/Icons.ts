@@ -418,6 +418,89 @@ export const LayoutListIcon = defineComponent({
     },
 })
 
+/** TbFolder equivalent */
+export const FolderIcon = defineComponent({
+    name: 'FolderIcon',
+    props: { class: { type: String, default: '' } },
+    setup(props) {
+        return () =>
+            h(
+                'svg',
+                {
+                    xmlns: 'http://www.w3.org/2000/svg',
+                    width: '24',
+                    height: '24',
+                    viewBox: '0 0 24 24',
+                    fill: 'none',
+                    stroke: 'currentColor',
+                    'stroke-width': '2',
+                    'stroke-linecap': 'round',
+                    'stroke-linejoin': 'round',
+                    class: props.class,
+                },
+                [
+                    h('path', { d: 'M5 4h4l3 3h7a2 2 0 0 1 2 2v8a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-11a2 2 0 0 1 2 -2' }),
+                ],
+            )
+    },
+})
+
+/** TbSearch equivalent */
+export const SearchIcon = defineComponent({
+    name: 'SearchIcon',
+    props: { class: { type: String, default: '' } },
+    setup(props) {
+        return () =>
+            h(
+                'svg',
+                {
+                    xmlns: 'http://www.w3.org/2000/svg',
+                    width: '24',
+                    height: '24',
+                    viewBox: '0 0 24 24',
+                    fill: 'none',
+                    stroke: 'currentColor',
+                    'stroke-width': '2',
+                    'stroke-linecap': 'round',
+                    'stroke-linejoin': 'round',
+                    class: props.class,
+                },
+                [
+                    h('circle', { cx: '10', cy: '10', r: '7' }),
+                    h('line', { x1: '21', y1: '21', x2: '15', y2: '15' }),
+                ],
+            )
+    },
+})
+
+/** TbUser equivalent */
+export const UserIcon = defineComponent({
+    name: 'UserIcon',
+    props: { class: { type: String, default: '' } },
+    setup(props) {
+        return () =>
+            h(
+                'svg',
+                {
+                    xmlns: 'http://www.w3.org/2000/svg',
+                    width: '24',
+                    height: '24',
+                    viewBox: '0 0 24 24',
+                    fill: 'none',
+                    stroke: 'currentColor',
+                    'stroke-width': '2',
+                    'stroke-linecap': 'round',
+                    'stroke-linejoin': 'round',
+                    class: props.class,
+                },
+                [
+                    h('path', { d: 'M12 7m-4 0a4 4 0 1 0 8 0a4 4 0 1 0 -8 0' }),
+                    h('path', { d: 'M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2' }),
+                ],
+            )
+    },
+})
+
 /** TbFile equivalent */
 export const FileIconSvg = defineComponent({
     name: 'FileIconSvg',

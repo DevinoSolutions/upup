@@ -33,6 +33,7 @@
     "@tanstack/vue-virtual": "^3.13.0",
     "@upup/core": "workspace:*",
     "clsx": "^2.1.1",
+    "load-script": "^2.0.0",
     "tailwind-merge": "^3.6.0"
   },
   "peerDependencies": {
