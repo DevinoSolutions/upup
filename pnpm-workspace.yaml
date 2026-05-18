@@ -2,5 +2,6 @@ packages:
   - apps/*
   - packages/core
   - packages/react
+  - packages/vue
   - packages/server
   - packages/interactive-example
