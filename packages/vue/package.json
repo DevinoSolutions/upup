@@ -17,7 +17,7 @@
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
-    "build": "tsup && pnpm run build:css",
+    "build": "tsup && vue-tsc --declaration --emitDeclarationOnly --outDir dist && pnpm run build:css",
     "build:css": "postcss src/tailwind.css -o ./dist/tailwind-prefixed.css",
     "dev": "tsup --watch --onSuccess \"pnpm run build:css\"",
     "test": "vitest run",
@@ -26,10 +26,12 @@
     "release": "pnpm run build && pnpm publish --access public --no-git-checks",
     "test-release": "pnpm run build && pnpm publish --dry-run --access public --no-git-checks"
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "dependencies": {
-    "@upup/core": "workspace:*",
     "@tanstack/vue-virtual": "^3.13.0",
+    "@upup/core": "workspace:*",
     "clsx": "^2.1.1",
     "tailwind-merge": "^3.6.0"
   },
@@ -38,8 +40,8 @@
   },
   "devDependencies": {
     "@tailwindcss/container-queries": "^0.1.1",
-    "@vue/test-utils": "^2.4.6",
     "@vitejs/plugin-vue": "^5.0.0",
+    "@vue/test-utils": "^2.4.6",
     "autoprefixer": "^10.4.20",
     "jsdom": "22.1.0",
     "postcss": "^8.5.2",
@@ -48,6 +50,7 @@
     "tailwindcss": "^3.4.17",
     "tsup": "^8.4.0",
     "typescript": "^5.3.2",
+    "unplugin-vue": "^7.2.0",
     "vitest": "^4.1.2",
     "vue": "^3.4.0",
     "vue-tsc": "^2.0.0"
