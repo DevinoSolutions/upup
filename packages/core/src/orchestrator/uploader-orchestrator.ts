@@ -5,6 +5,7 @@ import type { UpupCore } from '../core'
 import type { OrchestratorState, OrchestratorCallbacks } from './types'
 import { fileAppendParams, revokeFileUrl } from '../utils/file-helpers'
 import { dataURLtoBlob, blobToUploadFile, revokeAndReplace } from '../utils/image-helpers'
+import type { UploadResult } from '../contracts-strategies'
 
 export class UploaderOrchestrator {
     private state: OrchestratorState
@@ -246,13 +247,184 @@ export class UploaderOrchestrator {
 
     // ── Lifecycle ────────────────────────────────────────────────────
 
+    private speedSamples: { time: number; bytes: number }[] = []
+
     init(): void {
-        // Will be filled in subsequent tasks
+        // ── upload-start ────────────────────────────────────────
+        this.unsubs.push(
+            this.core.on('upload-start', () => {
+                this.setState({ uploadStatus: UploadStatus.UPLOADING })
+                this.callbacks.onUploadStart?.()
+            }),
+        )
+
+        // ── file-upload-start ───────────────────────────────────
+        this.unsubs.push(
+            this.core.on('file-upload-start', (payload: { file: UploadFile }) => {
+                this.callbacks.onFileUploadStart?.(payload.file)
+            }),
+        )
+
+        // ── files-added ─────────────────────────────────────────
+        this.unsubs.push(
+            this.core.on('files-added', (added: UploadFile[]) => {
+                if (!Array.isArray(added) || added.length === 0) return
+
+                // Merge into state map
+                const next = new Map(this.state.files)
+                for (const file of added) {
+                    next.set(file.id, file)
+                }
+
+                // Track total bytes
+                const totalBytes = [...next.values()].reduce((sum, f) => sum + f.size, 0)
+                this.setState({ files: next, totalBytes })
+
+                this.callbacks.onFilesSelected?.(added)
+
+                // Image editor auto-open
+                const editorOpts = this.callbacks.imageEditorOptions
+                if (editorOpts?.enabled) {
+                    const images = added.filter(file => file.type.startsWith('image/'))
+                    if (editorOpts.autoOpen === 'single' && images.length === 1) {
+                        this.enqueueForEditor([images[0]])
+                    }
+                    if (editorOpts.autoOpen === 'always' && images.length > 0) {
+                        this.enqueueForEditor(images)
+                    }
+                }
+
+                // Auto-upload
+                if (this.callbacks.autoUpload) {
+                    this.core.emit('auto-upload', { count: added.length })
+                    setTimeout(() => { void this.core.upload() }, 0)
+                }
+            }),
+        )
+
+        // ── file-removed ────────────────────────────────────────
+        this.unsubs.push(
+            this.core.on('file-removed', (file: UploadFile) => {
+                this.callbacks.onFileRemoved?.(file)
+            }),
+        )
+
+        // ── upload-progress ─────────────────────────────────────
+        this.unsubs.push(
+            this.core.on('upload-progress', (progress: { fileId: string; loaded: number; total: number }) => {
+                const nextProgressMap = {
+                    ...this.state.filesProgressMap,
+                    [progress.fileId]: {
+                        id: progress.fileId,
+                        loaded: progress.loaded,
+                        total: progress.total,
+                    },
+                }
+
+                const now = Date.now()
+                const nextUploaded = Object.values(nextProgressMap)
+                    .reduce((sum, item) => sum + item.loaded, 0)
+
+                // Speed / ETA calculation
+                this.speedSamples.push({ time: now, bytes: nextUploaded })
+                this.speedSamples = this.speedSamples.filter(s => s.time >= now - 3000)
+
+                let speed = this.state.uploadSpeed
+                let eta = this.state.uploadEta
+                if (this.speedSamples.length >= 2) {
+                    const oldest = this.speedSamples[0]
+                    const newest = this.speedSamples[this.speedSamples.length - 1]
+                    const elapsed = (newest.time - oldest.time) / 1000
+                    if (elapsed > 0) {
+                        speed = Math.max(0, (newest.bytes - oldest.bytes) / elapsed)
+                        const remaining = this.state.totalBytes - nextUploaded
+                        eta = speed > 0 ? Math.ceil(remaining / speed) : 0
+                    }
+                }
+
+                this.setState({
+                    filesProgressMap: nextProgressMap,
+                    uploadedBytes: nextUploaded,
+                    uploadSpeed: speed,
+                    uploadEta: eta,
+                })
+
+                // Per-file callback
+                const file = this.state.files.get(progress.fileId)
+                if (file) {
+                    this.callbacks.onFileUploadProgress?.(file, {
+                        loaded: progress.loaded,
+                        total: progress.total,
+                        percentage: progress.total > 0
+                            ? Math.round((progress.loaded / progress.total) * 100)
+                            : 0,
+                    })
+                }
+
+                // Aggregate callback
+                this.callbacks.onFilesUploadProgress?.(
+                    this.core.progress.completedFiles,
+                    this.core.progress.totalFiles,
+                )
+            }),
+        )
+
+        // ── upload-success (per file) ───────────────────────────
+        this.unsubs.push(
+            this.core.on('upload-success', (payload: { file: UploadFile; result: UploadResult }) => {
+                this.callbacks.onFileUploadComplete?.(
+                    payload.file,
+                    payload.result?.key ?? (payload.file as UploadFile & { key?: string }).key ?? '',
+                )
+            }),
+        )
+
+        // ── upload-all-complete ─────────────────────────────────
+        this.unsubs.push(
+            this.core.on('upload-all-complete', (completed: UploadFile[]) => {
+                this.setState({ uploadStatus: UploadStatus.SUCCESSFUL })
+                this.callbacks.onFilesUploadComplete?.(completed)
+                this.callbacks.onUploadComplete?.(completed)
+            }),
+        )
+
+        // ── upload-error ────────────────────────────────────────
+        this.unsubs.push(
+            this.core.on('upload-error', (payload: { error: Error; file?: UploadFile }) => {
+                const message = payload.error.message
+                this.setState({ uploadStatus: UploadStatus.FAILED, uploadError: message })
+                this.callbacks.onError?.(message)
+            }),
+        )
+
+        // ── online/offline detection ────────────────────────────
+        if (typeof globalThis.window !== 'undefined' && typeof globalThis.window.addEventListener === 'function') {
+            const handleOnline = () => {
+                this.setState({ isOnline: true })
+                this.core.emit('connection-online', {})
+            }
+            const handleOffline = () => {
+                this.setState({ isOnline: false })
+                this.core.emit('connection-offline', {})
+            }
+            globalThis.window.addEventListener('online', handleOnline)
+            globalThis.window.addEventListener('offline', handleOffline)
+            this.unsubs.push(() => {
+                globalThis.window.removeEventListener('online', handleOnline)
+                globalThis.window.removeEventListener('offline', handleOffline)
+            })
+
+            // Set initial value
+            if (typeof navigator !== 'undefined' && typeof navigator.onLine === 'boolean') {
+                this.setState({ isOnline: navigator.onLine })
+            }
+        }
     }
 
     destroy(): void {
         this.unsubs.forEach(u => u())
         this.unsubs = []
+        this.speedSamples = []
         this.listeners.clear()
     }
 }

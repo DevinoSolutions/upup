@@ -19,7 +19,28 @@ function createMockCore() {
         emit: vi.fn(),
         replaceFile: vi.fn(),
         getPlugin: vi.fn(),
+        files: new Map(),
+        progress: { totalFiles: 0, completedFiles: 0, percentage: 0 },
     } as any
+}
+
+/**
+ * Create a mock core where `on` captures handlers by event name,
+ * so tests can simulate events via `handlers[eventName](payload)`.
+ */
+function createMockCoreWithHandlers() {
+    const handlers: Record<string, (payload: any) => void> = {}
+    const unsubs: Array<() => void> = []
+    const core = {
+        ...createMockCore(),
+        on: vi.fn((event: string, handler: (payload: any) => void) => {
+            handlers[event] = handler
+            const unsub = vi.fn()
+            unsubs.push(unsub)
+            return unsub
+        }),
+    }
+    return { core, handlers, unsubs }
 }
 
 /** Create a minimal UploadFile for testing. */
@@ -1034,6 +1055,352 @@ describe('UploaderOrchestrator', () => {
 
             expect(after).not.toBe(before)
             expect(after.files).not.toBe(before.files)
+        })
+    })
+
+    // ── Lifecycle (init / destroy) ──────────────────────────────────
+
+    describe('init', () => {
+        it('subscribes to all expected core events', () => {
+            const core = createMockCore()
+            const orch = new UploaderOrchestrator(core, {})
+            orch.init()
+
+            const subscribedEvents = (core.on as ReturnType<typeof vi.fn>).mock.calls.map(
+                (call: any[]) => call[0],
+            )
+            expect(subscribedEvents).toContain('upload-start')
+            expect(subscribedEvents).toContain('file-upload-start')
+            expect(subscribedEvents).toContain('files-added')
+            expect(subscribedEvents).toContain('file-removed')
+            expect(subscribedEvents).toContain('upload-progress')
+            expect(subscribedEvents).toContain('upload-success')
+            expect(subscribedEvents).toContain('upload-all-complete')
+            expect(subscribedEvents).toContain('upload-error')
+        })
+
+        describe('upload-start handler', () => {
+            it('sets uploadStatus to UPLOADING and calls onUploadStart', () => {
+                const { core, handlers } = createMockCoreWithHandlers()
+                const onUploadStart = vi.fn()
+                const orch = new UploaderOrchestrator(core, { onUploadStart })
+                orch.init()
+
+                handlers['upload-start']({})
+
+                expect(orch.getSnapshot().uploadStatus).toBe(UploadStatus.UPLOADING)
+                expect(onUploadStart).toHaveBeenCalledTimes(1)
+            })
+        })
+
+        describe('file-upload-start handler', () => {
+            it('calls onFileUploadStart with the file', () => {
+                const { core, handlers } = createMockCoreWithHandlers()
+                const onFileUploadStart = vi.fn()
+                const orch = new UploaderOrchestrator(core, { onFileUploadStart })
+                orch.init()
+
+                const file = createUploadFile({ name: 'test.txt' })
+                handlers['file-upload-start']({ file })
+
+                expect(onFileUploadStart).toHaveBeenCalledWith(file)
+            })
+        })
+
+        describe('files-added handler', () => {
+            it('merges added files into state', () => {
+                const { core, handlers } = createMockCoreWithHandlers()
+                const orch = new UploaderOrchestrator(core, {})
+                orch.init()
+
+                const file1 = createUploadFile({ name: 'a.txt', id: 'a' })
+                const file2 = createUploadFile({ name: 'b.txt', id: 'b' })
+                handlers['files-added']([file1, file2])
+
+                expect(orch.getSnapshot().files.size).toBe(2)
+                expect(orch.getSnapshot().files.get('a')).toBe(file1)
+                expect(orch.getSnapshot().files.get('b')).toBe(file2)
+            })
+
+            it('calls onFilesSelected callback', () => {
+                const { core, handlers } = createMockCoreWithHandlers()
+                const onFilesSelected = vi.fn()
+                const orch = new UploaderOrchestrator(core, { onFilesSelected })
+                orch.init()
+
+                const files = [createUploadFile({ name: 'a.txt', id: 'a' })]
+                handlers['files-added'](files)
+
+                expect(onFilesSelected).toHaveBeenCalledWith(files)
+            })
+
+            it('skips empty arrays', () => {
+                const { core, handlers } = createMockCoreWithHandlers()
+                const onFilesSelected = vi.fn()
+                const orch = new UploaderOrchestrator(core, { onFilesSelected })
+                orch.init()
+
+                handlers['files-added']([])
+
+                expect(onFilesSelected).not.toHaveBeenCalled()
+                expect(orch.getSnapshot().files.size).toBe(0)
+            })
+
+            it('enqueues images for editor when autoOpen is always', () => {
+                const { core, handlers } = createMockCoreWithHandlers()
+                const orch = new UploaderOrchestrator(core, {
+                    imageEditorOptions: { enabled: true, autoOpen: 'always', display: 'inline' },
+                })
+                orch.init()
+
+                const img = createUploadFile({ name: 'photo.png', id: 'img1', type: 'image/png' })
+                const txt = createUploadFile({ name: 'doc.txt', id: 'txt1', type: 'text/plain' })
+                handlers['files-added']([img, txt])
+
+                // Image should be opened in editor (auto-opened from queue)
+                expect(orch.getSnapshot().editingFile).toBe(img)
+            })
+
+            it('enqueues single image for editor when autoOpen is single', () => {
+                const { core, handlers } = createMockCoreWithHandlers()
+                const orch = new UploaderOrchestrator(core, {
+                    imageEditorOptions: { enabled: true, autoOpen: 'single', display: 'inline' },
+                })
+                orch.init()
+
+                const img = createUploadFile({ name: 'photo.png', id: 'img1', type: 'image/png' })
+                handlers['files-added']([img])
+
+                expect(orch.getSnapshot().editingFile).toBe(img)
+            })
+
+            it('does not auto-open when autoOpen is single but multiple images added', () => {
+                const { core, handlers } = createMockCoreWithHandlers()
+                const orch = new UploaderOrchestrator(core, {
+                    imageEditorOptions: { enabled: true, autoOpen: 'single', display: 'inline' },
+                })
+                orch.init()
+
+                const img1 = createUploadFile({ name: 'a.png', id: 'a', type: 'image/png' })
+                const img2 = createUploadFile({ name: 'b.png', id: 'b', type: 'image/png' })
+                handlers['files-added']([img1, img2])
+
+                // Nothing opened because 2 images with 'single' mode
+                expect(orch.getSnapshot().editingFile).toBeNull()
+            })
+
+            it('triggers auto-upload when enabled', () => {
+                vi.useFakeTimers()
+                const { core, handlers } = createMockCoreWithHandlers()
+                core.upload = vi.fn().mockResolvedValue([])
+                const orch = new UploaderOrchestrator(core, { autoUpload: true })
+                orch.init()
+
+                const file = createUploadFile({ name: 'a.txt', id: 'a' })
+                handlers['files-added']([file])
+
+                expect(core.emit).toHaveBeenCalledWith('auto-upload', { count: 1 })
+
+                vi.runAllTimers()
+                expect(core.upload).toHaveBeenCalled()
+                vi.useRealTimers()
+            })
+
+            it('updates totalBytes when files are added', () => {
+                const { core, handlers } = createMockCoreWithHandlers()
+                const orch = new UploaderOrchestrator(core, {})
+                orch.init()
+
+                const file = createUploadFile({ name: 'a.txt', id: 'a' })
+                handlers['files-added']([file])
+
+                expect(orch.getSnapshot().totalBytes).toBe(file.size)
+            })
+        })
+
+        describe('file-removed handler', () => {
+            it('calls onFileRemoved callback', () => {
+                const { core, handlers } = createMockCoreWithHandlers()
+                const onFileRemoved = vi.fn()
+                const orch = new UploaderOrchestrator(core, { onFileRemoved })
+                orch.init()
+
+                const file = createUploadFile({ name: 'removed.txt' })
+                handlers['file-removed'](file)
+
+                expect(onFileRemoved).toHaveBeenCalledWith(file)
+            })
+        })
+
+        describe('upload-progress handler', () => {
+            it('updates filesProgressMap and uploadedBytes', () => {
+                const { core, handlers } = createMockCoreWithHandlers()
+                core.progress = { totalFiles: 1, completedFiles: 0, percentage: 50 }
+                const orch = new UploaderOrchestrator(core, {})
+                orch.init()
+
+                handlers['upload-progress']({ fileId: 'f1', loaded: 500, total: 1000 })
+
+                const state = orch.getSnapshot()
+                expect(state.filesProgressMap['f1']).toEqual({
+                    id: 'f1',
+                    loaded: 500,
+                    total: 1000,
+                })
+                expect(state.uploadedBytes).toBe(500)
+            })
+
+            it('calls onFileUploadProgress with progress info', () => {
+                const { core, handlers } = createMockCoreWithHandlers()
+                core.progress = { totalFiles: 1, completedFiles: 0, percentage: 50 }
+                const onFileUploadProgress = vi.fn()
+                const orch = new UploaderOrchestrator(core, { onFileUploadProgress })
+                orch.init()
+
+                // Seed a file so the handler can find it
+                const file = createUploadFile({ name: 'a.txt', id: 'f1' })
+                orch.addFiles([]) // ensure files map exists
+                handlers['files-added']([file])
+
+                handlers['upload-progress']({ fileId: 'f1', loaded: 300, total: 1000 })
+
+                expect(onFileUploadProgress).toHaveBeenCalledWith(
+                    file,
+                    { loaded: 300, total: 1000, percentage: 30 },
+                )
+            })
+
+            it('calls onFilesUploadProgress with core progress', () => {
+                const { core, handlers } = createMockCoreWithHandlers()
+                core.progress = { totalFiles: 2, completedFiles: 1, percentage: 50 }
+                const onFilesUploadProgress = vi.fn()
+                const orch = new UploaderOrchestrator(core, { onFilesUploadProgress })
+                orch.init()
+
+                handlers['upload-progress']({ fileId: 'f1', loaded: 500, total: 1000 })
+
+                expect(onFilesUploadProgress).toHaveBeenCalledWith(1, 2)
+            })
+        })
+
+        describe('upload-success handler', () => {
+            it('calls onFileUploadComplete with file and key', () => {
+                const { core, handlers } = createMockCoreWithHandlers()
+                const onFileUploadComplete = vi.fn()
+                const orch = new UploaderOrchestrator(core, { onFileUploadComplete })
+                orch.init()
+
+                const file = createUploadFile({ name: 'a.txt' })
+                handlers['upload-success']({ file, result: { key: 'uploads/a.txt' } })
+
+                expect(onFileUploadComplete).toHaveBeenCalledWith(file, 'uploads/a.txt')
+            })
+
+            it('falls back to file.key when result has no key', () => {
+                const { core, handlers } = createMockCoreWithHandlers()
+                const onFileUploadComplete = vi.fn()
+                const orch = new UploaderOrchestrator(core, { onFileUploadComplete })
+                orch.init()
+
+                const file = Object.assign(
+                    createUploadFile({ name: 'a.txt' }),
+                    { key: 'fallback-key' },
+                )
+                handlers['upload-success']({ file, result: {} })
+
+                expect(onFileUploadComplete).toHaveBeenCalledWith(file, 'fallback-key')
+            })
+        })
+
+        describe('upload-all-complete handler', () => {
+            it('sets uploadStatus to DONE', () => {
+                const { core, handlers } = createMockCoreWithHandlers()
+                const orch = new UploaderOrchestrator(core, {})
+                orch.init()
+
+                handlers['upload-all-complete']([])
+
+                expect(orch.getSnapshot().uploadStatus).toBe(UploadStatus.SUCCESSFUL)
+            })
+
+            it('calls onFilesUploadComplete and onUploadComplete', () => {
+                const { core, handlers } = createMockCoreWithHandlers()
+                const onFilesUploadComplete = vi.fn()
+                const onUploadComplete = vi.fn()
+                const orch = new UploaderOrchestrator(core, { onFilesUploadComplete, onUploadComplete })
+                orch.init()
+
+                const files = [createUploadFile({ name: 'a.txt' })]
+                handlers['upload-all-complete'](files)
+
+                expect(onFilesUploadComplete).toHaveBeenCalledWith(files)
+                expect(onUploadComplete).toHaveBeenCalledWith(files)
+            })
+        })
+
+        describe('upload-error handler', () => {
+            it('sets uploadStatus to ERROR and uploadError message', () => {
+                const { core, handlers } = createMockCoreWithHandlers()
+                const orch = new UploaderOrchestrator(core, {})
+                orch.init()
+
+                handlers['upload-error']({ error: new Error('Network failure') })
+
+                expect(orch.getSnapshot().uploadStatus).toBe(UploadStatus.FAILED)
+                expect(orch.getSnapshot().uploadError).toBe('Network failure')
+            })
+
+            it('calls onError callback', () => {
+                const { core, handlers } = createMockCoreWithHandlers()
+                const onError = vi.fn()
+                const orch = new UploaderOrchestrator(core, { onError })
+                orch.init()
+
+                handlers['upload-error']({ error: new Error('Timeout') })
+
+                expect(onError).toHaveBeenCalledWith('Timeout')
+            })
+        })
+    })
+
+    describe('destroy', () => {
+        it('calls all unsubscribe functions from init', () => {
+            const { core, unsubs } = createMockCoreWithHandlers()
+            const orch = new UploaderOrchestrator(core, {})
+            orch.init()
+
+            const unsubCount = unsubs.length
+            expect(unsubCount).toBeGreaterThan(0)
+
+            orch.destroy()
+
+            unsubs.forEach(unsub => {
+                expect(unsub).toHaveBeenCalled()
+            })
+        })
+
+        it('clears listeners after destroy', () => {
+            const core = createMockCore()
+            const orch = new UploaderOrchestrator(core, {})
+            const listener = vi.fn()
+            orch.subscribe(listener)
+            orch.init()
+
+            orch.destroy()
+
+            // After destroy, state should still be readable but listeners cleared
+            expect(orch.getSnapshot().files.size).toBe(0)
+        })
+
+        it('is safe to call multiple times', () => {
+            const core = createMockCore()
+            const orch = new UploaderOrchestrator(core, {})
+            orch.init()
+
+            orch.destroy()
+            orch.destroy() // should not throw
+
+            expect(orch.getSnapshot().uploadStatus).toBe(UploadStatus.IDLE)
         })
     })
 })
