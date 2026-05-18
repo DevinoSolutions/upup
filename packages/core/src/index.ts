@@ -168,6 +168,7 @@ export { SSEProcessor } from './sse-processor'
 // ── Orchestrator ─────────────────────────────────────────
 export { UploaderOrchestrator } from './orchestrator/uploader-orchestrator'
 export type { OrchestratorState, OrchestratorCallbacks, UploadProgressInfo } from './orchestrator/types'
+export { getDir, normalizeSource, DEFAULT_SOURCES, DEFAULT_MAX_FILE_SIZE } from './orchestrator/helpers'
 
 // ── Shared utilities ─────────────────────────────────────
 export { ACCEPT_PRESETS, resolveAccept } from './utils/accept-presets'

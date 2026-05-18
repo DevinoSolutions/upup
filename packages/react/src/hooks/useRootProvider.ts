@@ -2,7 +2,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
     FileSource,
-    LOCALE_META,
     UploadStatus,
     createTranslator,
     enUS,
@@ -14,6 +13,10 @@ import {
     GoogleDrivePlugin,
     BoxPlugin,
     OneDrivePlugin,
+    getDir,
+    normalizeSource,
+    DEFAULT_SOURCES,
+    DEFAULT_MAX_FILE_SIZE,
     type FilesProgressMap,
     type LocaleBundle,
     type Translator,
@@ -42,15 +45,6 @@ import {
 import { useUpupUpload } from '../use-upup-upload'
 import { useSSEProcessing } from './useSSEProcessing'
 
-function getDir(locale: string | LocaleBundle | undefined): 'ltr' | 'rtl' {
-    if (locale && typeof locale === 'object' && 'dir' in locale) return locale.dir
-    const code = typeof locale === 'string' ? locale : 'en-US'
-    const base = code.split('-')[0]
-    const meta = LOCALE_META[code]
-        ?? Object.values(LOCALE_META).find(m => m.code.startsWith(base + '-'))
-    return meta?.dir ?? 'ltr'
-}
-
 function useResolvedThemeMode(mode: UpupThemeMode | undefined): 'light' | 'dark' {
     const requestedMode = mode ?? 'light'
     const [systemMode, setSystemMode] = useState<'light' | 'dark'>('light')
@@ -70,23 +64,8 @@ function useResolvedThemeMode(mode: UpupThemeMode | undefined): 'light' | 'dark'
     return requestedMode
 }
 
-function normalizeSource(source: string): FileSource | undefined {
-    return (Object.values(FileSource) as string[]).includes(source)
-        ? source as FileSource
-        : undefined
-}
-
-const DEFAULT_SOURCES = [
-    FileSource.LOCAL,
-    FileSource.URL,
-    FileSource.CAMERA,
-    FileSource.MICROPHONE,
-    FileSource.SCREEN,
-]
-
 const EMPTY_THEME_SLOTS = {}
 const EMPTY_STYLE = {}
-const DEFAULT_MAX_FILE_SIZE = { size: 1, unit: 'GB' as const }
 
 export default function useRootProvider({
     allowedFileTypes: acceptProp = '*',
