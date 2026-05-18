@@ -1,4 +1,15 @@
 // ── Types (from ./types/) ────────────────────────────────────
+export type {
+    BaseContextUpload,
+    BaseContextRuntime,
+    BaseContextSource,
+    BaseContextI18n,
+    BaseContextFiles,
+    BaseContextUploadControls,
+    BaseContextView,
+    BaseContextEditor,
+    BaseContextTheme,
+} from './types/context-shapes'
 export type { UploadFileMetadata, UploadFile, UploadFileWithProgress } from './types/upload-file'
 export type { FileUploadResult } from './types/upload-result'
 export { FileSource } from './types/file-source'
