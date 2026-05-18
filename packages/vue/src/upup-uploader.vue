@@ -2,6 +2,7 @@
 import type { UpupUploaderProps } from './shared/types'
 import useRootProvider from './composables/useRootProvider'
 import { provideRootContext } from './context/root-context'
+import MainBox from './components/MainBox.vue'
 
 const props = defineProps<UpupUploaderProps>()
 const ctx = useRootProvider(props)
@@ -27,8 +28,7 @@ function onInputChange(e: Event) {
         :dir="ctx.dir"
     >
         <slot>
-            <!-- MainBox will go here in next task -->
-            <div data-testid="upup-placeholder">upup-vue mounted</div>
+            <MainBox />
         </slot>
         <input
             ref="ctx.inputRef"
