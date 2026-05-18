@@ -165,6 +165,10 @@ export {
 export type { FileProgress, FilesProgressMap } from './file-utils'
 export { SSEProcessor } from './sse-processor'
 
+// ── Orchestrator ─────────────────────────────────────────
+export { UploaderOrchestrator } from './orchestrator/uploader-orchestrator'
+export type { OrchestratorState, OrchestratorCallbacks } from './orchestrator/types'
+
 // ── Shared utilities ─────────────────────────────────────
 export { ACCEPT_PRESETS, resolveAccept } from './utils/accept-presets'
 export type { AcceptPreset, AcceptPresetDefinition } from './utils/accept-presets'
