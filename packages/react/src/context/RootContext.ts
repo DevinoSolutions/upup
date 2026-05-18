@@ -10,26 +10,19 @@ import {
     type ReactNode,
 } from 'react'
 import type {
-    DeepPartialSlots,
+    BaseContextUpload,
+    BaseContextRuntime,
+    BaseContextSource,
+    BaseContextI18n,
+    BaseContextFiles,
+    BaseContextUploadControls,
+    BaseContextView,
+    BaseContextEditor,
+    BaseContextTheme,
     FileSource,
-    FilesProgressMap,
-    InternalFlatClassNames,
-    Translations,
-    Translator,
-    UpupCore,
-    UploadFile,
-    UpupResolvedTheme,
-    UpupThemeMode,
-    UpupThemeTokens,
-} from '@upup/core'
-import { UploadStatus } from '@upup/core'
-import type {
-    BoxConfigs,
-    DropboxConfigs,
-    GoogleDriveConfigs,
-    OneDriveConfigs,
     ResolvedImageEditorOptions,
 } from '@upup/core'
+import { UploadStatus } from '@upup/core'
 import type {
     UpupUploaderProps,
     UpupUploaderPropsIcons,
@@ -37,18 +30,8 @@ import type {
 
 export { UploadStatus }
 
-export type ContextUpload = {
-    uploadStatus: UploadStatus
-    uploadError?: string
+export type ContextUpload = BaseContextUpload & {
     setUploadStatus: Dispatch<SetStateAction<UploadStatus>>
-    totalProgress: number
-    filesProgressMap: FilesProgressMap
-    proceedUpload: () => Promise<UploadFile[] | undefined>
-    retryUpload: (fileId?: string) => Promise<UploadFile[] | undefined>
-    uploadSpeed: number
-    uploadEta: number
-    uploadedBytes: number
-    totalBytes: number
 }
 
 export type ContextProps = Required<
@@ -83,76 +66,31 @@ export type ContextProps = Required<
         imageEditor: ResolvedImageEditorOptions
     }
 
-export type ContextRuntime = {
-    core: UpupCore | null
-    mode: 'client' | 'server'
-    serverUrl?: string
+export type ContextRuntime = BaseContextRuntime & {
     /** @deprecated Use openFilePicker() instead */
     inputRef: RefObject<HTMLInputElement | null>
-    openFilePicker: () => void
-    isOnline: boolean
 }
 
-export type ContextSource = {
-    activeAdapter?: FileSource
+export type ContextSource = Omit<BaseContextSource, 'setActiveAdapter'> & {
     setActiveAdapter: Dispatch<SetStateAction<FileSource | undefined>>
-    oneDriveConfigs?: OneDriveConfigs
-    googleDriveConfigs?: GoogleDriveConfigs
-    dropboxConfigs?: DropboxConfigs
-    boxConfigs?: BoxConfigs
 }
 
-export type ContextI18n = {
-    translations: Translations
-    translator?: Translator
-    lang: string
-    dir: 'ltr' | 'rtl'
-}
+export type ContextI18n = BaseContextI18n
 
-export type ContextFiles = {
-    files: Map<string, UploadFile>
-    setFiles: (newFiles: File[]) => void
-    dynamicallyReplaceFiles: (files: File[] | UploadFile[]) => void
-    resetState: () => void
-    dynamicUpload: (files: File[] | UploadFile[]) => Promise<UploadFile[] | undefined>
-    handleFileRemove: (fileId: string) => void
-}
+export type ContextFiles = BaseContextFiles
 
-export type ContextUploadControls = {
+export type ContextUploadControls = Omit<BaseContextUploadControls, 'upload'> & {
     upload: ContextUpload
-    handleDone: () => void
-    handleCancel: () => void
-    handlePause: () => void
-    handleResume: () => void
 }
 
-export type ContextView = {
-    isAddingMore: boolean
+export type ContextView = Omit<BaseContextView, 'setIsAddingMore' | 'setViewMode'> & {
     setIsAddingMore: Dispatch<SetStateAction<boolean>>
-    viewMode: 'grid' | 'list'
     setViewMode: Dispatch<SetStateAction<'grid' | 'list'>>
 }
 
-export type ContextEditor = {
-    editingFile: UploadFile | null
-    openImageEditor: (file: UploadFile) => void
-    closeImageEditor: () => void
-    saveImageEdit: (editedImageData: string, mimeType?: string) => void
-    replaceFile: (fileId: string, newFile: UploadFile) => void
-}
+export type ContextEditor = BaseContextEditor
 
-type ReactResolvedTheme = Omit<UpupResolvedTheme, 'mode'> & {
-    mode: Exclude<UpupThemeMode, 'system'>
-}
-
-export type ContextTheme = {
-    themeMode: Exclude<UpupThemeMode, 'system'>
-    isDark: boolean
-    tokens: UpupThemeTokens
-    resolved: ReactResolvedTheme
-    slotOverrides: InternalFlatClassNames
-    slots: DeepPartialSlots
-}
+export type ContextTheme = BaseContextTheme
 
 export interface IRootContext extends
     ContextRuntime,

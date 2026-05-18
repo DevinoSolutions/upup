@@ -1,20 +1,17 @@
 import { inject, provide, type InjectionKey, type Ref } from 'vue'
 import type {
-    FileSource,
-    FilesProgressMap,
-    InternalFlatClassNames,
-    DeepPartialSlots,
-    Translations,
-    Translator,
-    UpupCore,
-    UploadFile,
-    UpupResolvedTheme,
-    UpupThemeMode,
-    UpupThemeTokens,
+    BaseContextUpload,
+    BaseContextRuntime,
+    BaseContextSource,
+    BaseContextI18n,
+    BaseContextFiles,
+    BaseContextUploadControls,
+    BaseContextView,
+    BaseContextEditor,
+    BaseContextTheme,
+    ResolvedImageEditorOptions,
 } from '@upup/core'
 import { UploadStatus } from '@upup/core'
-import type { MaxFileSizeObject, ResumableUploadOptions } from '@upup/core'
-import type { ResolvedImageEditorOptions } from '@upup/core'
 import type {
     UpupUploaderProps,
     UpupUploaderPropsIcons,
@@ -24,88 +21,27 @@ export { UploadStatus }
 
 // ─── Context type shapes ───────────────────────────────────
 
-export type ContextUpload = {
-    uploadStatus: UploadStatus
-    uploadError?: string
-    totalProgress: number
-    filesProgressMap: FilesProgressMap
-    proceedUpload: () => Promise<UploadFile[] | undefined>
-    retryUpload: (fileId?: string) => Promise<UploadFile[] | undefined>
-    uploadSpeed: number
-    uploadEta: number
-    uploadedBytes: number
-    totalBytes: number
-}
+export type ContextUpload = BaseContextUpload
 
-export type ContextRuntime = {
-    core: UpupCore | null
-    mode: 'client' | 'server'
-    serverUrl?: string
+export type ContextRuntime = BaseContextRuntime & {
     inputRef: Ref<HTMLInputElement | null>
-    openFilePicker: () => void
-    isOnline: boolean
 }
 
-export type ContextSource = {
-    activeAdapter?: FileSource
-    setActiveAdapter: (adapter: FileSource | undefined) => void
-    oneDriveConfigs?: Record<string, string | undefined>
-    googleDriveConfigs?: Record<string, string>
-    dropboxConfigs?: Record<string, string | undefined>
-    boxConfigs?: Record<string, string | undefined>
-}
+export type ContextSource = BaseContextSource
 
-export type ContextI18n = {
-    translations: Translations
-    translator?: Translator
-    lang: string
-    dir: 'ltr' | 'rtl'
-}
+export type ContextI18n = BaseContextI18n
 
-export type ContextFiles = {
-    files: Map<string, UploadFile>
-    setFiles: (newFiles: File[]) => void
-    dynamicallyReplaceFiles: (files: File[] | UploadFile[]) => void
-    resetState: () => void
-    dynamicUpload: (files: File[] | UploadFile[]) => Promise<UploadFile[] | undefined>
-    handleFileRemove: (fileId: string) => void
-}
+export type ContextFiles = BaseContextFiles
 
-export type ContextUploadControls = {
+export type ContextUploadControls = Omit<BaseContextUploadControls, 'upload'> & {
     upload: ContextUpload
-    handleDone: () => void
-    handleCancel: () => void
-    handlePause: () => void
-    handleResume: () => void
 }
 
-export type ContextView = {
-    isAddingMore: boolean
-    setIsAddingMore: (value: boolean) => void
-    viewMode: 'grid' | 'list'
-    setViewMode: (mode: 'grid' | 'list') => void
-}
+export type ContextView = BaseContextView
 
-export type ContextEditor = {
-    editingFile: UploadFile | null
-    openImageEditor: (file: UploadFile) => void
-    closeImageEditor: () => void
-    saveImageEdit: (editedImageData: string, mimeType?: string) => void
-    replaceFile: (fileId: string, newFile: UploadFile) => void
-}
+export type ContextEditor = BaseContextEditor
 
-type VueResolvedTheme = Omit<UpupResolvedTheme, 'mode'> & {
-    mode: Exclude<UpupThemeMode, 'system'>
-}
-
-export type ContextTheme = {
-    themeMode: Exclude<UpupThemeMode, 'system'>
-    isDark: boolean
-    tokens: UpupThemeTokens
-    resolved: VueResolvedTheme
-    slotOverrides: InternalFlatClassNames
-    slots: DeepPartialSlots
-}
+export type ContextTheme = BaseContextTheme
 
 export type ContextProps = Required<
     Pick<
