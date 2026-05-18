@@ -945,6 +945,47 @@ test('opens every client cloud source panel with v2 cloudDrives config and logs 
     await attachScreenshot(page, testInfo, 'client-cloud-source-panels')
 })
 
+test('cloud adapter auth fallback shows sign-in button with provider name and renders without errors', async ({ page }, testInfo) => {
+    await openPlayground(page)
+    await openCategory(page, 'Advanced')
+    await fillNestedTextField(page, 'Advanced', 'Google Drive', 'Client ID', 'fake-gd')
+    await fillNestedTextField(page, 'Advanced', 'Google Drive', 'API Key', 'fake-key')
+    await fillNestedTextField(page, 'Advanced', 'Google Drive', 'App ID', 'fake-app')
+    await fillNestedTextField(page, 'Advanced', 'Dropbox', 'Client ID', 'fake-dbx')
+    await fillNestedTextField(page, 'Advanced', 'OneDrive', 'Client ID', 'fake-od')
+    await fillNestedTextField(page, 'Advanced', 'Box', 'Client ID', 'fake-box')
+
+    await openCategory(page, 'Sources')
+    for (const label of ['Google Drive', 'OneDrive', 'Dropbox', 'Box']) {
+        await ensureSourceTile(page, label)
+    }
+
+    const adapters = [
+        { id: 'googleDrive', name: 'Google Drive', slot: 'google-drive-uploader' },
+        { id: 'oneDrive', name: 'OneDrive', slot: 'onedrive-uploader' },
+        { id: 'dropbox', name: 'Dropbox', slot: 'dropbox-uploader' },
+        { id: 'box', name: 'Box', slot: 'box-uploader' },
+    ]
+
+    for (const adapter of adapters) {
+        await page.getByTestId(`upup-source-${adapter.id}`).click()
+        const panel = page.locator(`[data-upup-slot="${adapter.slot}"]`)
+        await expect(panel).toBeVisible({ timeout: 20_000 })
+
+        // Auth fallback should show sign-in button with provider name
+        const signInBtn = panel.getByRole('button', { name: new RegExp(adapter.name, 'i') })
+        await expect(signInBtn).toBeVisible()
+        await attachScreenshot(page, testInfo, `auth-fallback-${adapter.id}`)
+
+        // No error overlay or React error boundary should appear
+        await expect(page.locator('[data-nextjs-error]')).toHaveCount(0)
+
+        // Navigate back
+        await page.getByRole('button', { name: 'Cancel' }).click()
+        await expect(page.getByRole('button', { name: 'Cancel' })).toHaveCount(0)
+    }
+})
+
 test('runtime feature controls affect folder button, accept filter, editor button, and event log', async ({ page }, testInfo) => {
     await openPlayground(page, `?mockRun=${uniqueRun('feature-runtime')}`)
 
