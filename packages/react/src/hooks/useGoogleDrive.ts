@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { GoogleDrivePlugin, type DriveFile, type DriveFolder, type DriveUser } from '@upup/core'
+import { bindAdapterEvents, GoogleDrivePlugin, type DriveFile, type DriveFolder, type DriveUser } from '@upup/core'
 
 type GisToken = { access_token: string; expires_in: number; error?: string }
 import {
@@ -60,26 +60,26 @@ export function useGoogleDrive() {
             })()
         }
 
-        const unsubs = [
-            core.on('google-drive:authenticated', (payload: unknown) => {
+        const cleanup = bindAdapterEvents(core, 'google-drive', {
+            onAuthenticated: (payload: unknown) => {
                 const data = payload as { user?: DriveUser }
                 if (data.user) setUser(data.user)
                 setIsAuthReady(true)
-            }),
-            core.on('google-drive:signed-out', () => {
+            },
+            onSignedOut: () => {
                 setUser(undefined)
                 setGoogleFiles(undefined)
                 setToken(undefined)
                 setPath([])
                 setSelectedFiles([])
-            }),
-            core.on('google-drive:session-expired', () => {
+            },
+            onSessionExpired: () => {
                 setUser(undefined)
                 setGoogleFiles(undefined)
                 setToken(undefined)
                 setPath([])
-            }),
-            core.on('google-drive:files-loaded', (payload: unknown) => {
+            },
+            onFilesLoaded: (payload: unknown) => {
                 const data = payload as { files: DriveFile[]; folderId: string }
                 const root: DriveFolder = {
                     id: data.folderId || 'root',
@@ -92,20 +92,20 @@ export function useGoogleDrive() {
                 }
                 setGoogleFiles(root)
                 setIsClickLoading(false)
-            }),
-            core.on('google-drive:state-change', (payload: unknown) => {
+            },
+            onStateChange: (payload: unknown) => {
                 const data = payload as { state: string }
                 if (data.state === 'browsing') {
                     setIsClickLoading(true)
                 }
-            }),
-            core.on('google-drive:error', () => {
+            },
+            onError: () => {
                 setIsClickLoading(false)
                 setShowLoader(false)
-            }),
-        ]
+            },
+        })
 
-        return () => { unsubs.forEach(u => u()) }
+        return cleanup
     }, [core])
 
     // ── GIS initialization (loads Google Identity Services popup) ──

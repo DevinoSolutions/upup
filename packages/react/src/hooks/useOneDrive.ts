@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { OneDrivePlugin, type DriveFile, type DriveFolder, type DriveUser } from '@upup/core'
+import { bindAdapterEvents, OneDrivePlugin, type DriveFile, type DriveFolder, type DriveUser } from '@upup/core'
 import {
     useUploaderFiles,
     useUploaderRuntime,
@@ -45,27 +45,27 @@ export default function useOneDrive() {
             })()
         }
 
-        const unsubs = [
-            core.on('onedrive:authenticated', (payload: unknown) => {
+        const cleanup = bindAdapterEvents(core, 'onedrive', {
+            onAuthenticated: (payload: unknown) => {
                 const data = payload as { user?: DriveUser }
                 if (data.user) setUser(data.user)
                 setIsAuthenticated(true)
                 setIsLoading(false)
-            }),
-            core.on('onedrive:signed-out', () => {
+            },
+            onSignedOut: () => {
                 setUser(undefined)
                 setOneDriveFiles(undefined)
                 setIsAuthenticated(false)
                 setPath([])
                 setSelectedFiles([])
-            }),
-            core.on('onedrive:session-expired', () => {
+            },
+            onSessionExpired: () => {
                 setUser(undefined)
                 setOneDriveFiles(undefined)
                 setIsAuthenticated(false)
                 setPath([])
-            }),
-            core.on('onedrive:files-loaded', (payload: unknown) => {
+            },
+            onFilesLoaded: (payload: unknown) => {
                 const data = payload as { files: DriveFile[]; folderId: string }
                 const root: DriveFolder = {
                     id: data.folderId || 'root',
@@ -78,18 +78,18 @@ export default function useOneDrive() {
                 }
                 setOneDriveFiles(root)
                 setIsClickLoading(false)
-            }),
-            core.on('onedrive:state-change', (payload: unknown) => {
+            },
+            onStateChange: (payload: unknown) => {
                 const data = payload as { state: string }
                 setIsLoading(data.state === 'authenticating' || data.state === 'browsing')
-            }),
-            core.on('onedrive:error', () => {
+            },
+            onError: () => {
                 setIsClickLoading(false)
                 setShowLoader(false)
-            }),
-        ]
+            },
+        })
 
-        return () => { unsubs.forEach(u => u()) }
+        return cleanup
     }, [core])
 
     const authenticate = useCallback(async () => {

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { BoxPlugin, type DriveFile, type DriveFolder, type DriveUser } from '@upup/core'
+import { bindAdapterEvents, BoxPlugin, type DriveFile, type DriveFolder, type DriveUser } from '@upup/core'
 import {
     useUploaderFiles,
     useUploaderRuntime,
@@ -41,27 +41,27 @@ export function useBox() {
             })()
         }
 
-        const unsubs = [
-            core.on('box:authenticated', (payload: unknown) => {
+        const cleanup = bindAdapterEvents(core, 'box', {
+            onAuthenticated: (payload: unknown) => {
                 const data = payload as { user?: DriveUser }
                 if (data.user) setUser(data.user)
                 setIsAuthenticated(true)
                 setIsLoading(false)
-            }),
-            core.on('box:signed-out', () => {
+            },
+            onSignedOut: () => {
                 setUser(undefined)
                 setBoxFiles(undefined)
                 setIsAuthenticated(false)
                 setPath([])
                 setSelectedFiles([])
-            }),
-            core.on('box:session-expired', () => {
+            },
+            onSessionExpired: () => {
                 setUser(undefined)
                 setBoxFiles(undefined)
                 setIsAuthenticated(false)
                 setPath([])
-            }),
-            core.on('box:files-loaded', (payload: unknown) => {
+            },
+            onFilesLoaded: (payload: unknown) => {
                 const data = payload as { files: DriveFile[]; folderId: string }
                 const root: DriveFolder = {
                     id: data.folderId || '0',
@@ -74,18 +74,18 @@ export function useBox() {
                 }
                 setBoxFiles(root)
                 setIsClickLoading(false)
-            }),
-            core.on('box:state-change', (payload: unknown) => {
+            },
+            onStateChange: (payload: unknown) => {
                 const data = payload as { state: string }
                 setIsLoading(data.state === 'authenticating' || data.state === 'browsing')
-            }),
-            core.on('box:error', () => {
+            },
+            onError: () => {
                 setIsClickLoading(false)
                 setShowLoader(false)
-            }),
-        ]
+            },
+        })
 
-        return () => { unsubs.forEach(u => u()) }
+        return cleanup
     }, [core])
 
     const authenticate = useCallback(async () => {

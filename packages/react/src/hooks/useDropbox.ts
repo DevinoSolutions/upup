@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { DropboxPlugin, type DriveFile, type DriveFolder, type DriveUser } from '@upup/core'
+import { bindAdapterEvents, DropboxPlugin, type DriveFile, type DriveFolder, type DriveUser } from '@upup/core'
 import {
     useUploaderFiles,
     useUploaderRuntime,
@@ -41,27 +41,27 @@ export function useDropbox() {
             })()
         }
 
-        const unsubs = [
-            core.on('dropbox:authenticated', (payload: unknown) => {
+        const cleanup = bindAdapterEvents(core, 'dropbox', {
+            onAuthenticated: (payload: unknown) => {
                 const data = payload as { user?: DriveUser }
                 if (data.user) setUser(data.user)
                 setIsAuthenticated(true)
                 setIsLoading(false)
-            }),
-            core.on('dropbox:signed-out', () => {
+            },
+            onSignedOut: () => {
                 setUser(undefined)
                 setDropboxFiles(undefined)
                 setIsAuthenticated(false)
                 setPath([])
                 setSelectedFiles([])
-            }),
-            core.on('dropbox:session-expired', () => {
+            },
+            onSessionExpired: () => {
                 setUser(undefined)
                 setDropboxFiles(undefined)
                 setIsAuthenticated(false)
                 setPath([])
-            }),
-            core.on('dropbox:files-loaded', (payload: unknown) => {
+            },
+            onFilesLoaded: (payload: unknown) => {
                 const data = payload as { files: DriveFile[]; path: string }
                 const root: DriveFolder = {
                     id: data.path || 'root',
@@ -74,18 +74,18 @@ export function useDropbox() {
                 }
                 setDropboxFiles(root)
                 setIsClickLoading(false)
-            }),
-            core.on('dropbox:state-change', (payload: unknown) => {
+            },
+            onStateChange: (payload: unknown) => {
                 const data = payload as { state: string }
                 setIsLoading(data.state === 'authenticating' || data.state === 'browsing')
-            }),
-            core.on('dropbox:error', () => {
+            },
+            onError: () => {
                 setIsClickLoading(false)
                 setShowLoader(false)
-            }),
-        ]
+            },
+        })
 
-        return () => { unsubs.forEach(u => u()) }
+        return cleanup
     }, [core])
 
     const authenticate = useCallback(async () => {
