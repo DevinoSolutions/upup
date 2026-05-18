@@ -4,6 +4,7 @@ import type { UploadFile } from '../types/upload-file'
 import type { UpupCore } from '../core'
 import type { OrchestratorState, OrchestratorCallbacks } from './types'
 import { fileAppendParams, revokeFileUrl } from '../utils/file-helpers'
+import { dataURLtoBlob, blobToUploadFile, revokeAndReplace } from '../utils/image-helpers'
 
 export class UploaderOrchestrator {
     private state: OrchestratorState
@@ -167,6 +168,80 @@ export class UploaderOrchestrator {
         this.setState({ isAddingMore: false })
         this.core.emit('state-reset', {})
         this.handleDone()
+    }
+
+    // ── Image editor methods ────────────────────────────────────────
+
+    /** Open the image editor for a given file. Invokes onOpen callback and emits event. */
+    openImageEditor(file: UploadFile): void {
+        this.setState({ editingFile: file })
+        this.callbacks.imageEditorOptions?.onOpen?.(file)
+        this.core.emit('image-editor-open', { file })
+    }
+
+    /**
+     * Close the image editor without saving. Invokes onCancel callback.
+     * If the editor queue is non-empty, the next file is automatically opened.
+     */
+    closeImageEditor(): void {
+        const current = this.state.editingFile
+        this.setState({ editingFile: null })
+        if (current) {
+            this.callbacks.imageEditorOptions?.onCancel?.(current)
+            this.core.emit('image-editor-cancel', { file: current })
+        }
+        this.processEditorQueue()
+    }
+
+    /**
+     * Save an edited image. Converts the data URL to a blob, creates a new
+     * UploadFile preserving the original's identity, replaces it in state
+     * and core, then invokes the onSave callback.
+     */
+    saveImageEdit(editedImageData: string, mimeType?: string): void {
+        const editing = this.state.editingFile
+        if (!editing) return
+
+        const opts = this.callbacks.imageEditorOptions
+        const outputMime = mimeType || opts?.output?.mimeType || editing.type
+        const blob = new Blob([dataURLtoBlob(editedImageData)], { type: outputMime })
+        const newFile = blobToUploadFile(blob, editing, opts?.output)
+
+        // Replace in orchestrator state (revokes old blob URL)
+        const nextFiles = revokeAndReplace(this.state.files, editing.id, newFile)
+        this.setState({ files: nextFiles, editingFile: null })
+
+        // Replace in core so the upload pipeline sees the edited file
+        this.core.replaceFile(editing.id, newFile)
+
+        opts?.onSave?.(newFile, editing)
+        this.core.emit('image-editor-save', { file: newFile, original: editing })
+        this.processEditorQueue()
+    }
+
+    /** Replace a single file in state by id (revokes old blob URL). Also replaces in core. */
+    replaceFile(fileId: string, newFile: UploadFile): void {
+        const nextFiles = revokeAndReplace(this.state.files, fileId, newFile)
+        this.setState({ files: nextFiles })
+        this.core.replaceFile(fileId, newFile)
+    }
+
+    /** Enqueue files for auto-opening in the image editor. */
+    enqueueForEditor(files: UploadFile[]): void {
+        if (files.length === 0) return
+        this.setState({ editorQueue: [...this.state.editorQueue, ...files] })
+        // If nothing is currently being edited, process the queue immediately
+        if (!this.state.editingFile) {
+            this.processEditorQueue()
+        }
+    }
+
+    /** Pop the next file from the editor queue and open it. */
+    private processEditorQueue(): void {
+        if (this.state.editingFile || this.state.editorQueue.length === 0) return
+        const [next, ...rest] = this.state.editorQueue
+        this.setState({ editorQueue: rest })
+        this.openImageEditor(next)
     }
 
     // ── Lifecycle ────────────────────────────────────────────────────

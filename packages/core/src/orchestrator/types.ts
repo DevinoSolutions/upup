@@ -2,6 +2,7 @@ import type { UploadFile } from '../types/upload-file'
 import type { UploadStatus } from '../types/upload-status'
 import type { FileSource } from '../types/file-source'
 import type { FilesProgressMap } from '../file-utils'
+import type { ResolvedImageEditorOptions } from '../types/image-editor'
 
 export interface OrchestratorState {
     files: Map<string, UploadFile>
@@ -35,4 +36,5 @@ export interface OrchestratorCallbacks {
     onFileDrop?: (files: File[]) => void
     onDoneClicked?: () => void
     onPrepareFiles?: (files: UploadFile[]) => Promise<UploadFile[] | File[]> | UploadFile[] | File[]
+    imageEditorOptions?: ResolvedImageEditorOptions
 }
