@@ -28,27 +28,18 @@ describe('boolean prop defaults', () => {
     expect(autoUpload).toBe(true)
   })
 
-  it('folderUpload.enabled shows the picker button by default', () => {
-    const folderUpload: { enabled?: boolean; showPickerButton?: boolean } = { enabled: true }
-    const folderPickerButtonVisible = folderUpload.showPickerButton ?? folderUpload.enabled ?? false
-    expect(folderPickerButtonVisible).toBe(true)
-  })
-
-  it('folderUpload.showPickerButton can hide the picker while folder upload remains enabled', () => {
-    const folderUpload: { enabled?: boolean; showPickerButton?: boolean } = {
-      enabled: true,
-      showPickerButton: false,
-    }
-    const folderPickerButtonVisible = folderUpload.showPickerButton ?? folderUpload.enabled ?? false
+  it('folderUpload.allowDrop does not show the picker button by default', () => {
+    const folderUpload: { allowDrop?: boolean; showSelectFolderButton?: boolean } = { allowDrop: true }
+    const folderPickerButtonVisible = folderUpload.showSelectFolderButton ?? false
     expect(folderPickerButtonVisible).toBe(false)
   })
 
-  it('folderUpload.showPickerButton can show the picker without enabling drag folder traversal', () => {
-    const folderUpload: { enabled?: boolean; showPickerButton?: boolean } = {
-      enabled: false,
-      showPickerButton: true,
+  it('folderUpload.showSelectFolderButton controls the picker independently from folder drop', () => {
+    const folderUpload: { allowDrop?: boolean; showSelectFolderButton?: boolean } = {
+      allowDrop: false,
+      showSelectFolderButton: true,
     }
-    const folderPickerButtonVisible = folderUpload.showPickerButton ?? folderUpload.enabled ?? false
+    const folderPickerButtonVisible = folderUpload.showSelectFolderButton ?? false
     expect(folderPickerButtonVisible).toBe(true)
   })
 

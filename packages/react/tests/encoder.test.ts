@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { b64EncodeUnicode } from '../src/shared/lib/encoder'
+import { b64EncodeUnicode } from '@upup/core'
 
 // ─────────────────────────────────────────────
 // b64EncodeUnicode

@@ -1,6 +1,6 @@
 import React, { HTMLAttributes, PropsWithChildren } from 'react'
 import { useUploaderTheme } from '../../context/RootContext'
-import { cn } from '../../lib/tailwind'
+import { cn } from '@upup/core'
 
 export default function AdapterViewContainer({
     children,

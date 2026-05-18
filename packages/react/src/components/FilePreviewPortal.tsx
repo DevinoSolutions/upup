@@ -8,7 +8,7 @@ import React, {
     useState,
 } from 'react'
 import { createPortal } from 'react-dom'
-import { formatUiMessage as t } from '@upup/core'
+import { cn, formatUiMessage as t } from '@upup/core'
 import { useUploaderI18n, useUploaderTheme } from '../context/RootContext'
 import {
     fileGetIsImage,
@@ -17,7 +17,6 @@ import {
     PREVIEW_MAX_TEXT_SIZE,
     PREVIEW_TEXT_TRUNCATE_LENGTH,
 } from '../lib/file'
-import { cn } from '../lib/tailwind'
 import ShouldRender from './shared/ShouldRender'
 
 export default memo(

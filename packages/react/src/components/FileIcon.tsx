@@ -25,7 +25,7 @@ import {
     TbFileTypeZip,
 } from 'react-icons/tb'
 import { useUploaderTheme } from '../context/RootContext'
-import { cn } from '../lib/tailwind'
+import { cn } from '@upup/core'
 
 const fileTypes = {
     bmp: TbFileTypeBmp,

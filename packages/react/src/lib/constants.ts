@@ -14,7 +14,7 @@ import {
 } from '../components/Icons'
 import UrlUploader from '../components/UrlUploader'
 
-export { sourceNameKeys } from './source-metadata'
+export { sourceNameKeys } from '@upup/core'
 
 const AudioUploader = lazy(() => import('../components/AudioUploader'))
 const BoxUploader = lazy(() => import('../components/BoxUploader'))

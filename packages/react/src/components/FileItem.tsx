@@ -1,4 +1,5 @@
 import React, { MouseEventHandler, memo, useCallback, useState } from 'react'
+import { cn } from '@upup/core'
 import type { UploadFile } from '@upup/core'
 import {
     useUploaderFiles,
@@ -6,7 +7,6 @@ import {
     useUploaderRuntime,
     useUploaderTheme,
 } from '../context/RootContext'
-import { cn } from '../lib/tailwind'
 import FilePreview from './FilePreview'
 import FilePreviewPortal from './FilePreviewPortal'
 

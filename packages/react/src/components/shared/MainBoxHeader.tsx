@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react'
 import { TbLayoutGrid, TbLayoutList } from 'react-icons/tb'
-import { formatUiMessage as t, pluralUiMessage as plural } from '@upup/core'
+import { cn, formatUiMessage as t, isUploadActive, pluralUiMessage as plural } from '@upup/core'
 import {
     useUploaderFiles,
     useUploaderI18n,
@@ -9,8 +9,6 @@ import {
     useUploaderUploadControls,
     useUploaderView,
 } from '../../context/RootContext'
-import { isUploadActive } from '../../lib/status-helpers'
-import { cn } from '../../lib/tailwind'
 import ShouldRender from './ShouldRender'
 
 type Props = {

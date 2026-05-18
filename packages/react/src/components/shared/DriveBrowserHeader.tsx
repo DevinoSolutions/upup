@@ -1,12 +1,11 @@
 import React, { Dispatch, SetStateAction } from 'react'
-import { type DriveFolder, type DriveUser } from '@upup/core'
+import { cn, type DriveFolder, type DriveUser } from '@upup/core'
 import { TbSearch, TbUser } from 'react-icons/tb'
 import {
     useUploaderI18n,
     useUploaderSource,
     useUploaderTheme,
 } from '../../context/RootContext'
-import { cn } from '../../lib/tailwind'
 import ShouldRender from './ShouldRender'
 
 type Props = {

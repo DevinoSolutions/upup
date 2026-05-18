@@ -1,6 +1,5 @@
 import pako from 'pako'
-import { FileSource, UploadStatus, type UploadFile } from '@upup/core'
-import { b64EncodeUnicode } from '../shared/lib/encoder'
+import { b64EncodeUnicode, FileSource, UploadStatus, type UploadFile } from '@upup/core'
 
 export {
     bytesToSize,

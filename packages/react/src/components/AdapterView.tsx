@@ -7,7 +7,7 @@ import {
     useUploaderTheme,
 } from '../context/RootContext'
 import { uploadSourceObject } from '../lib/constants'
-import { cn } from '../lib/tailwind'
+import { cn } from '@upup/core'
 import DefaultLoaderIcon from './DefaultLoaderIcon'
 
 export default function AdapterView() {

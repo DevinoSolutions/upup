@@ -29,7 +29,6 @@ describe('@upup/react public exports', () => {
   })
 
   it('keeps utilities that are intentionally public', () => {
-    expect(typeof ReactPackage.cn).toBe('function')
     expect(ReactPackage.UpupThemeProvider).toBeDefined()
     expect(ReactPackage.ACCEPT_PRESETS).toBeDefined()
   })

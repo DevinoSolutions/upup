@@ -9,6 +9,7 @@ import {
     type DriveFile,
     type DriveFolder,
     type DriveUser,
+    cn,
     formatUiMessage as t,
     pluralUiMessage as plural,
 } from '@upup/core'
@@ -18,7 +19,6 @@ import {
     useUploaderTheme,
 } from '../../context/RootContext'
 import { searchDriveFiles } from '../../lib/file'
-import { cn } from '../../lib/tailwind'
 import AdapterViewContainer from './AdapterViewContainer'
 import DriveBrowserHeader from './DriveBrowserHeader'
 import DriveBrowserItem from './DriveBrowserItem'

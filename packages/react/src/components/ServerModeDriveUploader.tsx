@@ -8,7 +8,7 @@ import {
 import AdapterViewContainer from './shared/AdapterViewContainer'
 import DriveAuthFallback from './shared/DriveAuthFallback'
 import ShouldRender from './shared/ShouldRender'
-import { cn } from '../lib/tailwind'
+import { cn } from '@upup/core'
 
 type Props = {
     provider: ServerModeProvider

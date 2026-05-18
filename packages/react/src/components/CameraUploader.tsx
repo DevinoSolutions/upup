@@ -1,8 +1,7 @@
 import React from 'react'
 import Webcam from 'react-webcam'
-import { formatUiMessage as t } from '@upup/core'
+import { cn, formatUiMessage as t } from '@upup/core'
 import useCameraUploader from '../hooks/useCameraUploader'
-import { cn } from '../lib/tailwind'
 import AdapterViewContainer from './shared/AdapterViewContainer'
 import ShouldRender from './shared/ShouldRender'
 

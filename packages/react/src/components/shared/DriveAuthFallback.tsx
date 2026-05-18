@@ -1,7 +1,6 @@
 import React from 'react'
-import { formatUiMessage as t } from '@upup/core'
+import { cn, formatUiMessage as t } from '@upup/core'
 import { useUploaderI18n, useUploaderTheme } from '../../context/RootContext'
-import { cn } from '../../lib/tailwind'
 import AdapterViewContainer from './AdapterViewContainer'
 
 type Props = {

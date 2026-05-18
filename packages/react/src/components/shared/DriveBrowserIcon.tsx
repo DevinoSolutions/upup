@@ -1,9 +1,7 @@
 import React, { ReactEventHandler } from 'react'
-import { type DriveFile } from '@upup/core'
+import { b64EncodeUnicode, cn, type DriveFile } from '@upup/core'
 import { TbFile, TbFolder } from 'react-icons/tb'
-import { b64EncodeUnicode } from '../../shared/lib/encoder'
 import { useUploaderTheme } from '../../context/RootContext'
-import { cn } from '../../lib/tailwind'
 
 const handleImgError: ReactEventHandler<HTMLImageElement> = e => {
     const svg = `<svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M14 3v4a1 1 0 0 0 1 1h4"></path><path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2z"></path></svg>`

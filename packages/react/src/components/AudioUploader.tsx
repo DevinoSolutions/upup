@@ -4,7 +4,7 @@ import {
     useUploaderSource,
     useUploaderTheme,
 } from '../context/RootContext'
-import { cn } from '../lib/tailwind'
+import { cn } from '@upup/core'
 import AdapterViewContainer from './shared/AdapterViewContainer'
 
 type RecordingState = 'idle' | 'recording' | 'recorded'

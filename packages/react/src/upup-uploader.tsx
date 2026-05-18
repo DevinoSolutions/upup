@@ -8,6 +8,7 @@ import React, {
 } from 'react'
 import { TbLoader } from 'react-icons/tb'
 import { devinoDark, devinoLight, logoDark, logoLight } from './assets/logos'
+import { cn } from '@upup/core'
 import type { UploadFile } from '@upup/core'
 import { UpupUploaderProps } from './shared/types'
 import DefaultLoaderIcon from './components/DefaultLoaderIcon'
@@ -16,7 +17,6 @@ import ShouldRender from './components/shared/ShouldRender'
 import { RootContextProvider } from './context/RootContext'
 import useRootProvider from './hooks/useRootProvider'
 import useUpload from './hooks/useUpload'
-import { cn } from './lib/tailwind'
 import { UpupThemeProvider } from './theme'
 
 const ImageEditorInline = lazy(() => import('./components/ImageEditorInline'))

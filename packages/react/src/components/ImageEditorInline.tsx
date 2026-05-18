@@ -7,13 +7,13 @@ import React, {
     useRef,
     useState,
 } from 'react'
+import { cn } from '@upup/core'
 import type { UploadFile } from '@upup/core'
 import { useUploaderOptions, useUploaderTheme } from '../context/RootContext'
 import {
     getFilerobotTheme,
     getImageEditorCssOverrides,
 } from '../lib/imageEditorHelpers'
-import { cn } from '../lib/tailwind'
 
 type Props = {
     file: UploadFile

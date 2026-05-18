@@ -1,7 +1,7 @@
 import { useVirtualizer } from '@tanstack/react-virtual'
 import React, { memo, useRef } from 'react'
 import { TbPlayerPauseFilled, TbPlayerPlayFilled, TbX } from 'react-icons/tb'
-import { formatUiMessage as t, pluralUiMessage as plural } from '@upup/core'
+import { cn, formatUiMessage as t, isUploadActive, pluralUiMessage as plural } from '@upup/core'
 import { UploadStatus } from '@upup/core'
 import {
     useUploaderFiles,
@@ -12,8 +12,6 @@ import {
     useUploaderUploadControls,
     useUploaderView,
 } from '../context/RootContext'
-import { isUploadActive } from '../lib/status-helpers'
-import { cn } from '../lib/tailwind'
 import FileItem from './FileItem'
 import MainBoxHeader from './shared/MainBoxHeader'
 import ProgressBar from './shared/ProgressBar'

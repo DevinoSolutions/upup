@@ -8,6 +8,7 @@ import {
     enUS,
     flattenTranslatorToUiTranslations,
     flattenSlotsToClassNames,
+    resolveAccept,
     resolveTheme,
     DropboxPlugin,
     GoogleDrivePlugin,
@@ -26,7 +27,6 @@ import {
     TbPlus,
     TbTrash,
 } from 'react-icons/tb'
-import { resolveAccept } from '../shared/lib/acceptPresets'
 import {
     ResolvedImageEditorOptions,
     UpupUploaderProps,

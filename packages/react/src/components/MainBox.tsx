@@ -9,7 +9,7 @@ import {
     useUploaderView,
 } from '../context/RootContext'
 import useMainBox from '../hooks/useMainBox'
-import { cn } from '../lib/tailwind'
+import { cn } from '@upup/core'
 import AdapterSelector from './AdapterSelector'
 import AdapterView from './AdapterView'
 import FileList from './FileList'

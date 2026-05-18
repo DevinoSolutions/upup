@@ -1,7 +1,6 @@
 import React from 'react'
-import { type DriveFile } from '@upup/core'
+import { cn, type DriveFile } from '@upup/core'
 import { useUploaderTheme } from '../../context/RootContext'
-import { cn } from '../../lib/tailwind'
 import DriveBrowserIcon from './DriveBrowserIcon'
 
 type DriveBrowserItemProps = {

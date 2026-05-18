@@ -1,5 +1,5 @@
 import { IRootContext } from '../context/RootContext'
-import { isUploadActive } from '../lib/status-helpers'
+import { isUploadActive } from '@upup/core'
 
 export default function useUpload({
     upload,

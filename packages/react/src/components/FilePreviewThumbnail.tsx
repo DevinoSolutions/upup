@@ -1,4 +1,5 @@
 import React, { Dispatch, SetStateAction, memo, useMemo } from 'react'
+import { cn } from '@upup/core'
 import type { InternalFlatClassNames, Translations } from '@upup/core'
 import {
     fileCanPreviewText,
@@ -7,7 +8,6 @@ import {
     fileGetIsText,
     fileIs3D,
 } from '../lib/file'
-import { cn } from '../lib/tailwind'
 import FileIcon from './FileIcon'
 import ShouldRender from './shared/ShouldRender'
 

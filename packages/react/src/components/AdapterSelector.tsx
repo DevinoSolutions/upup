@@ -1,6 +1,6 @@
 import React, { useCallback } from 'react'
 import { TbUpload } from 'react-icons/tb'
-import { formatUiMessage as t, pluralUiMessage as plural } from '@upup/core'
+import { cn, formatUiMessage as t, pluralUiMessage as plural } from '@upup/core'
 import {
     useUploaderFiles,
     useUploaderI18n,
@@ -10,7 +10,6 @@ import {
     useUploaderView,
 } from '../context/RootContext'
 import useAdapterSelector from '../hooks/useAdapterSelector'
-import { cn } from '../lib/tailwind'
 import ShouldRender from './shared/ShouldRender'
 
 export default function AdapterSelector() {

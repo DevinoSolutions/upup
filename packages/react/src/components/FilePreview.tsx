@@ -8,6 +8,7 @@ import React, {
     useMemo,
 } from 'react'
 
+import { cn } from '@upup/core'
 import type { Translations } from '@upup/core'
 import {
     useUploaderEditor,
@@ -18,7 +19,6 @@ import {
     useUploaderUploadControls,
 } from '../context/RootContext'
 import { fileCanPreviewText, fileGetIsImage, fileGetIsPdf, fileGetIsText } from '../lib/file'
-import { cn } from '../lib/tailwind'
 import FilePreviewThumbnail from './FilePreviewThumbnail'
 import ProgressBar from './shared/ProgressBar'
 import ShouldRender from './shared/ShouldRender'

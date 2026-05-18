@@ -28,9 +28,6 @@ export type {
 // ── v2 core contract re-exports ───────────────────────
 export type { UploadFile, UploadFileWithProgress, UploadStatus, UpupThemeSlots, DeepPartialSlots, UpupSlotPath } from '@upup/core'
 
-// ── Utilities ───────────────────────────────────────────
-export { cn } from './lib/tailwind'
-
 // ── Brand icons (authentic colours, matches uploader adapter buttons) ──
 export {
     MyDeviceIcon,
@@ -45,8 +42,8 @@ export {
 } from './components/Icons'
 
 // ── Accept presets ──────────────────────────────────────
-export { ACCEPT_PRESETS, resolveAccept } from './shared/lib/acceptPresets'
-export type { AcceptPreset, AcceptPresetDefinition } from './shared/lib/acceptPresets'
+export { ACCEPT_PRESETS, resolveAccept } from '@upup/core'
+export type { AcceptPreset, AcceptPresetDefinition } from '@upup/core'
 
 // ── Theme ────────────────────────────────────────────────
 export { UpupThemeProvider } from './theme'

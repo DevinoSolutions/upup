@@ -4,8 +4,7 @@ import {
     useUploaderTheme,
     useUploaderUploadControls,
 } from '../../context/RootContext'
-import { isUploadActive } from '../../lib/status-helpers'
-import { cn } from '../../lib/tailwind'
+import { cn, isUploadActive } from '@upup/core'
 import ShouldRender from './ShouldRender'
 
 type Props = {

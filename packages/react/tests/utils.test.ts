@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { cn } from '../src/lib/tailwind'
-import { b64EncodeUnicode } from '../src/shared/lib/encoder'
+import { cn, b64EncodeUnicode } from '@upup/core'
 
 describe('cn() — tailwind class merge utility', () => {
   it('merges simple class names', () => {
