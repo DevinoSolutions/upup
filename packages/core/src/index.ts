@@ -52,6 +52,7 @@ export { b64EncodeUnicode } from './utils/encoder'
 export { fileAppendParams, revokeFileUrl } from './utils/file-helpers'
 export { cn } from './utils/tailwind'
 export { sourceNameKeys } from './utils/source-metadata'
+export { dataURLtoBlob, blobToUploadFile, revokeAndReplace } from './utils/image-helpers'
 export {
     saveSession,
     loadSession,
@@ -61,3 +62,7 @@ export {
     fileFingerprint,
 } from './utils/multipart-session-store'
 export type { MultipartSession } from './utils/multipart-session-store'
+export {
+    MIME_EXTENSION_MAP, sanitizeFileName, extensionFromMime,
+    fileNameFromContentDisposition, deriveFetchedFileName,
+} from './utils/fetch-helpers'
