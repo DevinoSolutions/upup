@@ -22,6 +22,7 @@ const DropboxUploader = defineAsyncComponent(() => import('../components/Dropbox
 const GoogleDriveUploader = defineAsyncComponent(() => import('../components/GoogleDriveUploader.vue'))
 const OneDriveUploader = defineAsyncComponent(() => import('../components/OneDriveUploader.vue'))
 const ScreenCaptureUploader = defineAsyncComponent(() => import('../components/ScreenCaptureUploader.vue'))
+const UrlUploader = defineAsyncComponent(() => import('../components/UrlUploader.vue'))
 
 export const uploadSourceObject: Record<string, {
     id: FileSource
@@ -63,7 +64,7 @@ export const uploadSourceObject: Record<string, {
         id: FileSource.URL,
         nameKey: 'link' as keyof Translations,
         Icon: LinkIcon,
-        Component: undefined, // UrlUploader will be added later
+        Component: UrlUploader,
     },
     [FileSource.CAMERA]: {
         id: FileSource.CAMERA,
