@@ -49,5 +49,15 @@ export { ACCEPT_PRESETS, resolveAccept } from './utils/accept-presets'
 export type { AcceptPreset, AcceptPresetDefinition } from './utils/accept-presets'
 export { isUploadActive, isUploadIdle } from './utils/status-helpers'
 export { b64EncodeUnicode } from './utils/encoder'
+export { fileAppendParams, revokeFileUrl } from './utils/file-helpers'
 export { cn } from './utils/tailwind'
 export { sourceNameKeys } from './utils/source-metadata'
+export {
+    saveSession,
+    loadSession,
+    removeSession,
+    updateSessionProgress,
+    clearAllSessions,
+    fileFingerprint,
+} from './utils/multipart-session-store'
+export type { MultipartSession } from './utils/multipart-session-store'

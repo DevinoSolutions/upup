@@ -8,7 +8,7 @@ import {
     fileGetIsText,
     PREVIEW_MAX_TEXT_SIZE,
     PREVIEW_TEXT_TRUNCATE_LENGTH,
-} from '../lib/file'
+} from '@upup/core'
 import ShouldRender from './shared/ShouldRender.vue'
 
 const props = defineProps<{

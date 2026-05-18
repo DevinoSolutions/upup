@@ -7,7 +7,7 @@ import {
     removeSession,
     clearAllSessions,
     MultipartSession,
-} from '../src/lib/resumable/multipartSessionStore'
+} from '@upup/core'
 
 const STORAGE_PREFIX = 'upup_mp_'
 

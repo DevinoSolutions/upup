@@ -7,7 +7,7 @@ import {
     fileGetIsPdf,
     fileGetIsText,
     fileIs3D,
-} from '../lib/file'
+} from '@upup/core'
 import { cn } from '@upup/core'
 import FileIcon from './FileIcon.vue'
 import ShouldRender from './shared/ShouldRender.vue'

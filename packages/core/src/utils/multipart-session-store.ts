@@ -1,4 +1,4 @@
-import type { StorageProvider } from '@upup/core'
+import type { StorageProvider } from '../types/storage-provider'
 
 export interface MultipartSession {
     provider: StorageProvider | string

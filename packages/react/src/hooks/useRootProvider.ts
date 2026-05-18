@@ -40,7 +40,7 @@ import {
 import {
     fileFingerprint,
     loadSession,
-} from '../lib/resumable/multipartSessionStore'
+} from '@upup/core'
 import { useUpupUpload } from '../use-upup-upload'
 import { useSSEProcessing } from './useSSEProcessing'
 

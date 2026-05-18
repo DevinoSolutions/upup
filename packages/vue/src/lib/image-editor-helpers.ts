@@ -1,6 +1,6 @@
 import type { UploadFile } from '@upup/core'
 import type { ImageEditorOptions } from '../shared/types'
-import { revokeFileUrl } from './file'
+import { revokeFileUrl } from '@upup/core'
 
 /**
  * Convert a data-URL (base64 or plain) string to a Blob.

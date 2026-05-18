@@ -24,7 +24,7 @@ import type {
     UpupUploaderProps,
 } from '../shared/types'
 import type { IRootContext } from '../context/root-context'
-import { revokeFileUrl } from '../lib/file'
+import { revokeFileUrl } from '@upup/core'
 import {
     blobToUploadFile,
     dataURLtoBlob,
@@ -32,7 +32,7 @@ import {
 import {
     fileFingerprint,
     loadSession,
-} from '../lib/resumable/multipartSessionStore'
+} from '@upup/core'
 import { useUpupUpload } from '../use-upup-upload'
 import { useSSEProcessing } from './useSSEProcessing'
 
