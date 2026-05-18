@@ -1,7 +1,8 @@
-import { ref, computed, watch, onMounted, onUnmounted, defineComponent, type Ref } from 'vue'
+import { ref, shallowRef, computed, watch, onMounted, onUnmounted, defineComponent, type Ref } from 'vue'
 import {
     FileSource,
     UploadStatus,
+    UploaderOrchestrator,
     createTranslator,
     enUS,
     flattenTranslatorToUiTranslations,
@@ -15,25 +16,17 @@ import {
     normalizeSource,
     DEFAULT_SOURCES,
     DEFAULT_MAX_FILE_SIZE,
-    type FilesProgressMap,
+    revokeFileUrl,
+    resolveAccept,
+    type OrchestratorCallbacks,
+    type OrchestratorState,
     type LocaleBundle,
     type Translator,
     type UploadFile,
-    type UpupThemeMode,
-    resolveAccept,
 } from '@upup/core'
 import type { ResolvedImageEditorOptions } from '@upup/core'
 import type { UpupUploaderProps } from '../shared/types'
 import type { IRootContext } from '../context/root-context'
-import { revokeFileUrl } from '@upup/core'
-import {
-    blobToUploadFile,
-    dataURLtoBlob,
-} from '../lib/image-editor-helpers'
-import {
-    fileFingerprint,
-    loadSession,
-} from '@upup/core'
 import { useUpupUpload } from '../use-upup-upload'
 import { useSSEProcessing } from './useSSEProcessing'
 
@@ -112,28 +105,7 @@ export default function useRootProvider(props: UpupUploaderProps): IRootContext 
         processingTimeout,
     } = props
 
-    // ── Refs ─────────────────────────────────────────────────────
-    const inputRef: Ref<HTMLInputElement | null> = ref(null)
-    const isAddingMore = ref(false)
-    const viewMode = ref<'grid' | 'list'>('grid')
-    const isOnline = ref(true)
-    const activeAdapter = ref<FileSource>()
-    const filesProgressMap = ref<FilesProgressMap>({})
-    const uploadError = ref('')
-    const uploadSpeed = ref(0)
-    const uploadEta = ref(0)
-    const uploadedBytes = ref(0)
-    const totalBytes = ref(0)
-    const editingFile = ref<UploadFile | null>(null)
-    const editorQueue = ref<UploadFile[]>([])
-
-    // Non-reactive refs (mutable state not needing template rendering)
-    let speedSamples: { time: number; bytes: number }[] = []
-    let totalBytesRaw = 0
-    let crashRecoveryRestored = false
-    let adapterPlugins: Array<{ destroy(): void }> = []
-
-    // ── Computed ─────────────────────────────────────────────────
+    // ── Resolved props ──────────────────────────────────────────
     const resolvedSources = computed(() =>
         sources
             ? sources.map(source => normalizeSource(source)).filter(Boolean) as FileSource[]
@@ -143,8 +115,168 @@ export default function useRootProvider(props: UpupUploaderProps): IRootContext 
     const resolvedMode = modeProp ?? (serverUrl && !uploadEndpoint ? 'server' : 'client')
     const resolvedServerUrl = serverUrl
     const resolvedEndpoint = uploadEndpoint
+    const maxFileSize = maxFileSizeProp ?? restrictions?.maxFileSize ?? DEFAULT_MAX_FILE_SIZE
+    const minFileSize = minFileSizeProp ?? restrictions?.minFileSize
+    const maxTotalFileSize = maxTotalFileSizeProp ?? restrictions?.maxTotalFileSize
+    const accept = resolveAccept(
+        restrictions?.allowedFileTypes ? restrictions.allowedFileTypes.join(',') : acceptProp,
+    )
+    const folderUploadAllowDrop = folderUpload?.allowDrop ?? false
+    const folderPickerButtonVisible = folderUpload?.showSelectFolderButton ?? false
+    const limit = computed(() => (mini ? 1 : Math.max(resolvedLimit, 1)))
+    const multiple = computed(() => (mini ? false : limit.value > 1))
 
-    // Theme mode with system detection
+    const resolvedImageEditor = computed<ResolvedImageEditorOptions>(() => {
+        if (imageEditorProp === true) {
+            return { enabled: true, autoOpen: 'never', display: 'inline' }
+        }
+        if (typeof imageEditorProp === 'object' && imageEditorProp !== null) {
+            return {
+                ...imageEditorProp,
+                enabled: imageEditorProp.enabled ?? true,
+                autoOpen: imageEditorProp.autoOpen ?? 'never',
+                display: imageEditorProp.display ?? 'inline',
+            }
+        }
+        return { enabled: false, autoOpen: 'never', display: 'inline' }
+    })
+
+    // ── Core (via useUpupUpload) ────────────────────────────────
+    const coreCloudDrives = cloudDrives ? {
+        googleDrive: cloudDrives.googleDrive,
+        oneDrive: cloudDrives.oneDrive ? {
+            clientId: cloudDrives.oneDrive.clientId,
+            authority: cloudDrives.oneDrive.redirectUri,
+        } : undefined,
+        dropbox: cloudDrives.dropbox ? {
+            appKey: cloudDrives.dropbox.clientId,
+        } : undefined,
+    } : undefined
+
+    function onError(message: string) {
+        errorHandler?.(message)
+    }
+
+    function onWarn(message: string) {
+        warningHandler?.(message)
+    }
+
+    const upload = useUpupUpload({
+        uploadEndpoint: resolvedEndpoint || undefined,
+        serverUrl: resolvedServerUrl,
+        provider,
+        mode: resolvedMode,
+        allowedFileTypes: accept,
+        limit: limit.value,
+        maxFileSize,
+        minFileSize,
+        maxTotalFileSize,
+        maxRetries,
+        onBeforeFileAdded,
+        imageCompression,
+        thumbnailGenerator,
+        checksumVerification,
+        heicConversion,
+        stripExifData,
+        contentDeduplication,
+        crashRecovery,
+        maxConcurrentUploads,
+        metadata,
+        cors,
+        resumable,
+        cloudDrives: coreCloudDrives,
+        onError: (err) => onError(typeof err === 'string' ? err : (err as Error).message),
+    })
+    const core = upload.core
+
+    // ── SSE processing ──────────────────────────────────────────
+    const { connectSSE } = useSSEProcessing({
+        processingEndpoint,
+        onFileProcessed,
+        onError: (err) => onError(err.message),
+        processingTimeout,
+    })
+
+    // ── Orchestrator callbacks (always fresh via getter proxy) ───
+    const callbackRefs: OrchestratorCallbacks = {
+        onError,
+        onWarn,
+        onUploadStart,
+        onFileUploadStart,
+        onFileUploadProgress,
+        onFilesUploadProgress,
+        onFileUploadComplete,
+        onFilesUploadComplete: (...args: Parameters<NonNullable<OrchestratorCallbacks['onFilesUploadComplete']>>) => {
+            onFilesUploadComplete(...args)
+            // SSE connection after upload complete
+            const completed = args[0]
+            if (Array.isArray(completed)) {
+                completed.forEach(file => connectSSE(file))
+            }
+        },
+        onUploadComplete,
+        onFilesSelected,
+        onDoneClicked,
+        onPrepareFiles,
+        onFileRemoved: (file: UploadFile) => {
+            onFileRemoveProp(file)
+            if (onFileRemovedProp && onFileRemovedProp !== onFileRemoveProp) {
+                onFileRemovedProp(file)
+            }
+        },
+        imageEditorOptions: resolvedImageEditor.value,
+        autoUpload,
+    }
+
+    // Wrap callbacks so they always call the latest ref (Vue doesn't
+    // have stale closure issues like React, but the getter proxy pattern
+    // keeps things consistent with the React rewrite)
+    const proxiedCallbacks: OrchestratorCallbacks = {
+        get onError() { return callbackRefs.onError },
+        get onWarn() { return callbackRefs.onWarn },
+        get onUploadStart() { return callbackRefs.onUploadStart },
+        get onFileUploadStart() { return callbackRefs.onFileUploadStart },
+        get onFileUploadProgress() { return callbackRefs.onFileUploadProgress },
+        get onFilesUploadProgress() { return callbackRefs.onFilesUploadProgress },
+        get onFileUploadComplete() { return callbackRefs.onFileUploadComplete },
+        get onFilesUploadComplete() { return callbackRefs.onFilesUploadComplete },
+        get onUploadComplete() { return callbackRefs.onUploadComplete },
+        get onFilesSelected() { return callbackRefs.onFilesSelected },
+        get onDoneClicked() { return callbackRefs.onDoneClicked },
+        get onPrepareFiles() { return callbackRefs.onPrepareFiles },
+        get onFileRemoved() { return callbackRefs.onFileRemoved },
+        get imageEditorOptions() { return resolvedImageEditor.value },
+        get autoUpload() { return callbackRefs.autoUpload },
+    }
+
+    // ── Orchestrator (created once, bound to core) ──────────────
+    const orch = new UploaderOrchestrator(core, proxiedCallbacks)
+
+    // ── Subscribe to orchestrator state (Vue pattern) ───────────
+    const state = shallowRef<OrchestratorState>(orch.getSnapshot())
+    const unsub = orch.subscribe(() => {
+        state.value = orch.getSnapshot()
+    })
+
+    // ── Orchestrator lifecycle ───────────────────────────────────
+    onMounted(() => {
+        orch.init()
+    })
+
+    onUnmounted(() => {
+        orch.destroy()
+        unsub()
+    })
+
+    // ── Crash recovery ──────────────────────────────────────────
+    let crashRecoveryRestored = false
+    onMounted(() => {
+        if (!crashRecovery || crashRecoveryRestored) return
+        crashRecoveryRestored = true
+        void core.restoreFromCrashRecovery().catch(() => undefined)
+    })
+
+    // ── Theme resolution (framework-specific) ───────────────────
     const requestedThemeMode = themeProp?.mode ?? 'light'
     const systemMode = ref<'light' | 'dark'>('light')
 
@@ -159,18 +291,19 @@ export default function useRootProvider(props: UpupUploaderProps): IRootContext 
     const themeSlots = computed(() => resolvedTheme.value.slots)
     const resolvedSlotClasses = computed(() => flattenSlotsToClassNames(themeSlots.value))
 
-    const maxFileSize = maxFileSizeProp ?? restrictions?.maxFileSize ?? DEFAULT_MAX_FILE_SIZE
-    const minFileSize = minFileSizeProp ?? restrictions?.minFileSize
-    const maxTotalFileSize = maxTotalFileSizeProp ?? restrictions?.maxTotalFileSize
-    const accept = resolveAccept(
-        restrictions?.allowedFileTypes ? restrictions.allowedFileTypes.join(',') : acceptProp,
-    )
-    const folderUploadAllowDrop = folderUpload?.allowDrop ?? false
-    const folderPickerButtonVisible = folderUpload?.showSelectFolderButton ?? false
-    const limit = computed(() => (mini ? 1 : Math.max(resolvedLimit, 1)))
-    const multiple = computed(() => (mini ? false : limit.value > 1))
+    onMounted(() => {
+        if (requestedThemeMode !== 'system') return
+        if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return
 
-    // ── I18n ─────────────────────────────────────────────────────
+        const media = window.matchMedia('(prefers-color-scheme: dark)')
+        const update = () => { systemMode.value = media.matches ? 'dark' : 'light' }
+        update()
+        media.addEventListener?.('change', update)
+
+        onUnmounted(() => media.removeEventListener?.('change', update))
+    })
+
+    // ── I18n resolution (framework-specific) ────────────────────
     const localeCandidate = i18n?.locale as unknown
     const bundle = i18n?.bundle ?? (
         localeCandidate &&
@@ -202,28 +335,17 @@ export default function useRootProvider(props: UpupUploaderProps): IRootContext 
     const lang = bundle?.code ?? (typeof i18n?.locale === 'string' ? i18n.locale : 'en-US')
     const dir = bundle?.dir ?? getDir(i18n?.locale as string | LocaleBundle | undefined)
 
-    // ── Error / warn wrappers ────────────────────────────────────
-    function onError(message: string) {
-        uploadError.value = message
-        errorHandler?.(message)
-    }
+    // ── Icons resolution (framework-specific) ───────────────────
+    const resolvedIcons = computed(() => ({
+        ContainerAddMoreIcon: icons.ContainerAddMoreIcon ?? EmptyIcon,
+        FileDeleteIcon: icons.FileDeleteIcon ?? EmptyIcon,
+        CameraCaptureIcon: icons.CameraCaptureIcon ?? EmptyIcon,
+        CameraRotateIcon: icons.CameraRotateIcon ?? EmptyIcon,
+        CameraDeleteIcon: icons.CameraDeleteIcon ?? EmptyIcon,
+        LoaderIcon: icons.LoaderIcon ?? EmptyIcon,
+    }))
 
-    function onWarn(message: string) {
-        warningHandler?.(message)
-    }
-
-    // ── Cloud drive configs ──────────────────────────────────────
-    const coreCloudDrives = cloudDrives ? {
-        googleDrive: cloudDrives.googleDrive,
-        oneDrive: cloudDrives.oneDrive ? {
-            clientId: cloudDrives.oneDrive.clientId,
-            authority: cloudDrives.oneDrive.redirectUri,
-        } : undefined,
-        dropbox: cloudDrives.dropbox ? {
-            appKey: cloudDrives.dropbox.clientId,
-        } : undefined,
-    } : undefined
-
+    // ── Cloud drive configs (framework-specific) ────────────────
     const oneDriveConfigs = computed(() => cloudDrives?.oneDrive ? {
         onedrive_client_id: cloudDrives.oneDrive.clientId,
         redirectUri: cloudDrives.oneDrive.redirectUri,
@@ -242,126 +364,61 @@ export default function useRootProvider(props: UpupUploaderProps): IRootContext 
         box_redirect_uri: cloudDrives.box.redirectUri,
     } : undefined)
 
-    // ── Upload core ──────────────────────────────────────────────
-    const upload = useUpupUpload({
-        uploadEndpoint: resolvedEndpoint || undefined,
-        serverUrl: resolvedServerUrl,
-        provider,
-        mode: resolvedMode,
-        allowedFileTypes: accept,
-        limit: limit.value,
-        maxFileSize,
-        minFileSize,
-        maxTotalFileSize,
-        maxRetries,
-        onBeforeFileAdded,
-        imageCompression,
-        thumbnailGenerator,
-        checksumVerification,
-        heicConversion,
-        stripExifData,
-        contentDeduplication,
-        crashRecovery,
-        maxConcurrentUploads,
-        metadata,
-        cors,
-        resumable,
-        cloudDrives: coreCloudDrives,
-        onError: (err) => onError(typeof err === 'string' ? err : (err as Error).message),
-    })
+    // ── Plugin registration (cloud drives) ──────────────────────
+    let adapterPlugins: Array<{ destroy(): void }> = []
 
-    const { connectSSE } = useSSEProcessing({
-        processingEndpoint,
-        onFileProcessed,
-        onError: (err) => onError(err.message),
-        processingTimeout,
-    })
+    onMounted(() => {
+        if (!core) return
+        adapterPlugins.forEach(p => p.destroy())
+        adapterPlugins = []
 
-    const core = upload.core
+        const plugins: Array<{ destroy(): void }> = []
 
-    // ── Files map ────────────────────────────────────────────────
-    const files = computed(() =>
-        new Map((upload.files.value ?? []).map(file => [file.id, file] as const)),
-    )
-    const uploadStatus = computed(() => upload.status.value ?? UploadStatus.IDLE)
-    const totalProgress = computed(() => upload.progress.value?.percentage ?? 0)
-
-    // ── Image editor ─────────────────────────────────────────────
-    const resolvedImageEditor = computed<ResolvedImageEditorOptions>(() => {
-        if (imageEditorProp === true) {
-            return { enabled: true, autoOpen: 'never', display: 'inline' }
+        if (googleDriveConfigs.value) {
+            const plugin = new GoogleDrivePlugin()
+            plugin.configure(googleDriveConfigs.value)
+            try { core.use(plugin) } catch { /* already registered */ }
+            plugins.push(plugin)
         }
-        if (typeof imageEditorProp === 'object' && imageEditorProp !== null) {
-            return {
-                ...imageEditorProp,
-                enabled: imageEditorProp.enabled ?? true,
-                autoOpen: imageEditorProp.autoOpen ?? 'never',
-                display: imageEditorProp.display ?? 'inline',
-            }
+        if (dropboxConfigs.value) {
+            const plugin = new DropboxPlugin()
+            plugin.configure(dropboxConfigs.value)
+            try { core.use(plugin) } catch { /* already registered */ }
+            plugins.push(plugin)
         }
-        return { enabled: false, autoOpen: 'never', display: 'inline' }
+        if (boxConfigs.value) {
+            const plugin = new BoxPlugin()
+            plugin.configure(boxConfigs.value)
+            try { core.use(plugin) } catch { /* already registered */ }
+            plugins.push(plugin)
+        }
+        if (oneDriveConfigs.value) {
+            const plugin = new OneDrivePlugin()
+            plugin.configure(oneDriveConfigs.value)
+            try { core.use(plugin) } catch { /* already registered */ }
+            plugins.push(plugin)
+        }
+
+        adapterPlugins = plugins
+
+        onUnmounted(() => {
+            adapterPlugins.forEach(p => p.destroy())
+            adapterPlugins = []
+        })
     })
 
-    // ── Icons (Vue Component stubs — real icons added later) ─────
-    const resolvedIcons = computed(() => ({
-        ContainerAddMoreIcon: icons.ContainerAddMoreIcon ?? EmptyIcon,
-        FileDeleteIcon: icons.FileDeleteIcon ?? EmptyIcon,
-        CameraCaptureIcon: icons.CameraCaptureIcon ?? EmptyIcon,
-        CameraRotateIcon: icons.CameraRotateIcon ?? EmptyIcon,
-        CameraDeleteIcon: icons.CameraDeleteIcon ?? EmptyIcon,
-        LoaderIcon: icons.LoaderIcon ?? EmptyIcon,
-    }))
+    // ── Status change callback ──────────────────────────────────
+    watch(() => state.value.uploadStatus, (newStatus) => {
+        if (newStatus) onStatusChange?.(newStatus.toLowerCase())
+    })
 
-    const resolvedStyle = style ?? EMPTY_STYLE
-
-    // ── Functions ────────────────────────────────────────────────
+    // ── Input ref (Vue-specific) ────────────────────────────────
+    const inputRef: Ref<HTMLInputElement | null> = ref(null)
     function openFilePicker() {
         inputRef.value?.click()
     }
 
-    function setActiveAdapterFn(adapter: FileSource | undefined) {
-        activeAdapter.value = adapter
-    }
-
-    function emitFileRemoved(file: UploadFile) {
-        onFileRemoveProp(file)
-        if (onFileRemovedProp && onFileRemovedProp !== onFileRemoveProp) {
-            onFileRemovedProp(file)
-        }
-    }
-
-    function openImageEditor(file: UploadFile) {
-        editingFile.value = file
-        resolvedImageEditor.value.onOpen?.(file)
-        core?.emit('image-editor-open', { file })
-    }
-
-    function closeImageEditor() {
-        const current = editingFile.value
-        editingFile.value = null
-        if (current) {
-            resolvedImageEditor.value.onCancel?.(current)
-            core?.emit('image-editor-cancel', { file: current })
-        }
-    }
-
-    function replaceFile(fileId: string, newFile: UploadFile) {
-        core?.replaceFile(fileId, newFile)
-    }
-
-    function saveImageEdit(editedImageData: string, mimeType?: string) {
-        const current = editingFile.value
-        if (!current) return
-        const outputMime = mimeType || resolvedImageEditor.value.output?.mimeType || current.type
-        const blob = new Blob([dataURLtoBlob(editedImageData)], { type: outputMime })
-        const newFile = blobToUploadFile(blob, current, resolvedImageEditor.value.output)
-        revokeFileUrl(current)
-        core?.replaceFile(current.id, newFile)
-        resolvedImageEditor.value.onSave?.(newFile, current)
-        core?.emit('image-editor-save', { file: newFile, original: current })
-        editingFile.value = null
-    }
-
+    // ── File operations (delegate to core via useUpupUpload) ────
     async function handleSetSelectedFiles(newFiles: File[]) {
         try {
             await upload.addFiles(newFiles)
@@ -384,23 +441,10 @@ export default function useRootProvider(props: UpupUploaderProps): IRootContext 
         }
     }
 
-    async function proceedUpload() {
-        const currentFiles = upload.files.value ?? []
-        if (currentFiles.length === 0) return undefined
-        uploadError.value = ''
-        const prepared = onPrepareFiles ? await onPrepareFiles(currentFiles) : currentFiles
-        if (prepared !== currentFiles) {
-            await upload.setFiles(prepared as File[])
-        }
-        speedSamples = [{ time: Date.now(), bytes: 0 }]
-        return await upload.upload()
-    }
-
-    async function retryUpload(fileId?: string) {
-        if ((upload.files.value ?? []).length === 0) return undefined
-        uploadError.value = ''
-        speedSamples = [{ time: Date.now(), bytes: 0 }]
-        return await upload.retry(fileId)
+    function handleFileRemove(fileId: string) {
+        const file = state.value.files.get(fileId)
+        if (file) revokeFileUrl(file)
+        upload.removeFile(fileId)
     }
 
     async function dynamicUpload(newFiles: File[] | UploadFile[]) {
@@ -409,25 +453,30 @@ export default function useRootProvider(props: UpupUploaderProps): IRootContext 
     }
 
     function dynamicallyReplaceFiles(newFiles: File[] | UploadFile[]) {
-        ;(upload.files.value ?? []).forEach(file => revokeFileUrl(file))
+        upload.files.value?.forEach(file => revokeFileUrl(file))
         void upload.setFiles(newFiles as File[])
     }
 
-    function handleFileRemove(fileId: string) {
-        const file = files.value.get(fileId)
-        if (file) revokeFileUrl(file)
-        upload.removeFile(fileId)
+    // ── Upload controls (delegate to orchestrator + core) ───────
+    async function proceedUpload() {
+        if ((upload.files.value ?? []).length === 0) return undefined
+        const prepared = onPrepareFiles ? await onPrepareFiles(upload.files.value ?? []) : (upload.files.value ?? [])
+        if (prepared !== (upload.files.value ?? [])) {
+            await upload.setFiles(prepared as File[])
+        }
+        return await upload.upload()
+    }
+
+    async function retryUpload(fileId?: string) {
+        if ((upload.files.value ?? []).length === 0) return undefined
+        return await upload.retry(fileId)
     }
 
     function handleCancel() {
         upload.cancel()
         ;(upload.files.value ?? []).forEach(file => revokeFileUrl(file))
         upload.removeAll()
-        filesProgressMap.value = {}
-        uploadSpeed.value = 0
-        uploadEta.value = 0
-        uploadedBytes.value = 0
-        totalBytes.value = 0
+        orch.handleCancel()
     }
 
     function handlePause() {
@@ -435,7 +484,6 @@ export default function useRootProvider(props: UpupUploaderProps): IRootContext 
     }
 
     function handleResume() {
-        speedSamples = [{ time: Date.now(), bytes: uploadedBytes.value }]
         upload.resume()
     }
 
@@ -446,239 +494,27 @@ export default function useRootProvider(props: UpupUploaderProps): IRootContext 
     }
 
     function resetState() {
-        isAddingMore.value = false
+        orch.setIsAddingMore(false)
         core?.emit('state-reset', {})
         handleDone()
     }
 
-    // ── Lifecycle: system theme detection ────────────────────────
-    onMounted(() => {
-        if (requestedThemeMode !== 'system') return
-        if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return
+    const resolvedStyle = style ?? EMPTY_STYLE
 
-        const media = window.matchMedia('(prefers-color-scheme: dark)')
-        const update = () => { systemMode.value = media.matches ? 'dark' : 'light' }
-        update()
-        media.addEventListener?.('change', update)
-
-        onUnmounted(() => media.removeEventListener?.('change', update))
-    })
-
-    // ── Lifecycle: crash recovery ────────────────────────────────
-    onMounted(() => {
-        if (!crashRecovery || crashRecoveryRestored) return
-        crashRecoveryRestored = true
-        void core.restoreFromCrashRecovery().catch(() => undefined)
-    })
-
-    // ── Lifecycle: online/offline ────────────────────────────────
-    onMounted(() => {
-        if (typeof navigator !== 'undefined' && typeof navigator.onLine === 'boolean') {
-            isOnline.value = navigator.onLine
-        }
-        const handleOnline = () => {
-            isOnline.value = true
-            core?.emit('connection-online', {})
-        }
-        const handleOffline = () => {
-            isOnline.value = false
-            core?.emit('connection-offline', {})
-        }
-        window.addEventListener('online', handleOnline)
-        window.addEventListener('offline', handleOffline)
-
-        onUnmounted(() => {
-            window.removeEventListener('online', handleOnline)
-            window.removeEventListener('offline', handleOffline)
-        })
-    })
-
-    // ── Lifecycle: core event subscriptions ──────────────────────
-    onMounted(() => {
-        if (!core) return
-
-        const unsubs: Array<() => void> = []
-
-        unsubs.push(core.on('upload-start', () => {
-            onUploadStart()
-        }))
-        unsubs.push(core.on('file-upload-start', ({ file }) => {
-            onFileUploadStart(file)
-        }))
-        unsubs.push(core.on('files-added', (added) => {
-            if (!Array.isArray(added) || added.length === 0) return
-            onFilesSelected(added)
-            if (resolvedImageEditor.value.enabled) {
-                const images = added.filter((file: UploadFile) => file.type.startsWith('image/'))
-                if (resolvedImageEditor.value.autoOpen === 'single' && images.length === 1) {
-                    editorQueue.value = [...editorQueue.value, images[0]]
-                }
-                if (resolvedImageEditor.value.autoOpen === 'always') {
-                    editorQueue.value = [...editorQueue.value, ...images]
-                }
-            }
-            if (autoUpload) {
-                core.emit('auto-upload', { count: added.length })
-                setTimeout(() => { void upload.upload() }, 0)
-            }
-        }))
-        unsubs.push(core.on('file-removed', (file) => {
-            emitFileRemoved(file)
-        }))
-        unsubs.push(core.on('upload-progress', (progress) => {
-            const file = core.files.get(progress.fileId)
-            filesProgressMap.value = {
-                ...filesProgressMap.value,
-                [progress.fileId]: {
-                    id: progress.fileId,
-                    loaded: progress.loaded,
-                    total: progress.total,
-                },
-            }
-            const now = Date.now()
-            const nextUploaded = Object.values(filesProgressMap.value)
-                .reduce((sum, item) => sum + item.loaded, 0)
-            uploadedBytes.value = nextUploaded
-            speedSamples.push({ time: now, bytes: nextUploaded })
-            speedSamples = speedSamples.filter(sample => sample.time >= now - 3000)
-            if (speedSamples.length >= 2) {
-                const oldest = speedSamples[0]
-                const newest = speedSamples[speedSamples.length - 1]
-                const elapsed = (newest.time - oldest.time) / 1000
-                if (elapsed > 0) {
-                    const speed = Math.max(0, (newest.bytes - oldest.bytes) / elapsed)
-                    uploadSpeed.value = speed
-                    const remaining = totalBytesRaw - nextUploaded
-                    uploadEta.value = speed > 0 ? Math.ceil(remaining / speed) : 0
-                }
-            }
-            if (file) {
-                onFileUploadProgress(file, {
-                    loaded: progress.loaded,
-                    total: progress.total,
-                    percentage: progress.total > 0 ? Math.round((progress.loaded / progress.total) * 100) : 0,
-                })
-            }
-            onFilesUploadProgress(core.progress.completedFiles, core.progress.totalFiles)
-        }))
-        unsubs.push(core.on('upload-success', ({ file, result }) => {
-            onFileUploadComplete(file, result?.key ?? file.key ?? '')
-        }))
-        unsubs.push(core.on('upload-all-complete', (completed) => {
-            onFilesUploadComplete(completed)
-            onUploadComplete(completed)
-            completed.forEach((file: UploadFile) => connectSSE(file))
-        }))
-        unsubs.push(core.on('upload-error', ({ error }) => {
-            onError(error.message)
-        }))
-
-        onUnmounted(() => {
-            unsubs.forEach(u => u())
-        })
-    })
-
-    // ── Lifecycle: adapter plugins ───────────────────────────────
-    onMounted(() => {
-        if (!core) return
-
-        function registerPlugins() {
-            adapterPlugins.forEach(p => p.destroy())
-            adapterPlugins = []
-
-            const plugins: Array<{ destroy(): void }> = []
-
-            if (googleDriveConfigs.value) {
-                const plugin = new GoogleDrivePlugin()
-                plugin.configure(googleDriveConfigs.value)
-                try { core.use(plugin) } catch { /* already registered */ }
-                plugins.push(plugin)
-            }
-            if (dropboxConfigs.value) {
-                const plugin = new DropboxPlugin()
-                plugin.configure(dropboxConfigs.value)
-                try { core.use(plugin) } catch { /* already registered */ }
-                plugins.push(plugin)
-            }
-            if (boxConfigs.value) {
-                const plugin = new BoxPlugin()
-                plugin.configure(boxConfigs.value)
-                try { core.use(plugin) } catch { /* already registered */ }
-                plugins.push(plugin)
-            }
-            if (oneDriveConfigs.value) {
-                const plugin = new OneDrivePlugin()
-                plugin.configure(oneDriveConfigs.value)
-                try { core.use(plugin) } catch { /* already registered */ }
-                plugins.push(plugin)
-            }
-
-            adapterPlugins = plugins
-        }
-
-        registerPlugins()
-
-        onUnmounted(() => {
-            adapterPlugins.forEach(p => p.destroy())
-            adapterPlugins = []
-        })
-    })
-
-    // ── Watch: status changes ────────────────────────────────────
-    watch(uploadStatus, (newStatus) => {
-        if (newStatus) onStatusChange?.(newStatus.toLowerCase())
-    })
-
-    // ── Watch: total bytes tracking ──────────────────────────────
-    watch(upload.files, (fileList) => {
-        const list = fileList ?? []
-        const total = list.reduce((sum, file) => sum + file.size, 0)
-        totalBytes.value = total
-        totalBytesRaw = total
-    })
-
-    // ── Watch: editor queue processing ───────────────────────────
-    watch([editingFile, editorQueue], ([editing, queue]) => {
-        if (editing || !queue || queue.length === 0) return
-        const [next, ...rest] = queue
-        editorQueue.value = rest
-        openImageEditor(next)
-    })
-
-    // ── Watch: resumable progress pre-population ─────────────────
-    watch(upload.files, (fileList) => {
-        if (!resumable || resumable.protocol !== 'multipart') return
-        const list = fileList ?? []
-        const progressMap: FilesProgressMap = {}
-        list.forEach(file => {
-            const session = loadSession(fileFingerprint(file))
-            if (session) {
-                progressMap[file.id] = {
-                    id: file.id,
-                    loaded: session.uploadedBytes ?? 0,
-                    total: file.size,
-                }
-            }
-        })
-        if (Object.keys(progressMap).length > 0) {
-            filesProgressMap.value = progressMap
-        }
-    })
-
-    // ── Return IRootContext ───────────────────────────────────────
+    // ── Assemble IRootContext ────────────────────────────────────
     return {
         core,
         mode: resolvedMode,
         serverUrl: resolvedServerUrl,
         inputRef,
         openFilePicker,
-        activeAdapter: activeAdapter.value,
-        setActiveAdapter: setActiveAdapterFn,
-        isAddingMore: isAddingMore.value,
-        setIsAddingMore: (v: boolean) => { isAddingMore.value = v },
-        viewMode: viewMode.value,
-        setViewMode: (m: 'grid' | 'list') => { viewMode.value = m },
-        isOnline: isOnline.value,
+        activeAdapter: state.value.activeAdapter,
+        setActiveAdapter: (adapter: FileSource | undefined) => orch.setActiveAdapter(adapter),
+        isAddingMore: state.value.isAddingMore,
+        setIsAddingMore: (v: boolean) => orch.setIsAddingMore(v),
+        viewMode: state.value.viewMode,
+        setViewMode: (m: 'grid' | 'list') => orch.setViewMode(m),
+        isOnline: state.value.isOnline,
         translations: translations.value,
         translator: translator.value,
         lang,
@@ -691,7 +527,7 @@ export default function useRootProvider(props: UpupUploaderProps): IRootContext 
             slotOverrides: resolvedSlotClasses.value,
             slots: themeSlots.value ?? EMPTY_THEME_SLOTS,
         },
-        files: files.value,
+        files: state.value.files,
         setFiles: handleSetSelectedFiles,
         dynamicUpload,
         resetState,
@@ -701,26 +537,26 @@ export default function useRootProvider(props: UpupUploaderProps): IRootContext 
         handlePause,
         handleResume,
         handleFileRemove,
-        editingFile: editingFile.value,
-        openImageEditor,
-        closeImageEditor,
-        saveImageEdit,
-        replaceFile,
+        editingFile: state.value.editingFile,
+        openImageEditor: (file: UploadFile) => orch.openImageEditor(file),
+        closeImageEditor: () => orch.closeImageEditor(),
+        saveImageEdit: (editedImageData: string, mimeType?: string) => orch.saveImageEdit(editedImageData, mimeType),
+        replaceFile: (fileId: string, newFile: UploadFile) => orch.replaceFile(fileId, newFile),
         oneDriveConfigs: oneDriveConfigs.value,
         googleDriveConfigs: googleDriveConfigs.value,
         dropboxConfigs: dropboxConfigs.value,
         boxConfigs: boxConfigs.value,
         upload: {
-            totalProgress: totalProgress.value,
-            filesProgressMap: filesProgressMap.value,
+            totalProgress: state.value.totalProgress,
+            filesProgressMap: state.value.filesProgressMap,
             proceedUpload,
             retryUpload,
-            uploadStatus: uploadStatus.value,
-            uploadError: uploadError.value,
-            uploadSpeed: uploadSpeed.value,
-            uploadEta: uploadEta.value,
-            uploadedBytes: uploadedBytes.value,
-            totalBytes: totalBytes.value,
+            uploadStatus: state.value.uploadStatus,
+            uploadError: state.value.uploadError,
+            uploadSpeed: state.value.uploadSpeed,
+            uploadEta: state.value.uploadEta,
+            uploadedBytes: state.value.uploadedBytes,
+            totalBytes: state.value.totalBytes,
         },
         props: {
             mini,
