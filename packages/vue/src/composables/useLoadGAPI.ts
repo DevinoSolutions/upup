@@ -1,17 +1,16 @@
+import { loadGoogleIdentityServices } from '@upup/core'
 import { ref, onMounted } from 'vue'
-import load from 'load-script'
 
 /**
- * Loads the Google Identity Services API script.
+ * Loads the Google Identity Services API.
  */
 export default function useLoadGAPI() {
     const gisLoaded = ref(false)
 
     onMounted(() => {
-        if (gisLoaded.value) return
-        load('https://accounts.google.com/gsi/client', (err: Error | null) => {
-            if (!err) gisLoaded.value = true
-        })
+        loadGoogleIdentityServices()
+            .then(() => { gisLoaded.value = true })
+            .catch(() => {/* silently ignore — caller checks gisLoaded */})
     })
 
     return { gisLoaded }

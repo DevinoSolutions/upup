@@ -1,24 +1,17 @@
-import load from 'load-script'
+import { loadGoogleIdentityServices } from '@upup/core'
 import { useEffect, useState } from 'react'
 
 /**
- * This hook loads the Google API and the Google Identity Services API
- *
+ * Loads the Google Identity Services API.
  */
 export default function useLoadGAPI() {
     const [gisLoaded, setGisLoaded] = useState<boolean>(false)
 
     useEffect(() => {
-        /**
-         *  Load the Google Identity Services API
-         */
-        load('https://accounts.google.com/gsi/client', async err => {
-            if (!err) setGisLoaded(true)
-        })
-    }, [gisLoaded])
+        loadGoogleIdentityServices()
+            .then(() => setGisLoaded(true))
+            .catch(() => {/* silently ignore — caller checks gisLoaded */})
+    }, [])
 
-    /**
-     * Return the gdriveApiLoaded and gisLoaded
-     */
     return { gisLoaded }
 }

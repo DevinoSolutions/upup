@@ -95,6 +95,7 @@
     "clsx": "^2.1.1",
     "heic2any": "^0.0.4",
     "intl-messageformat": "^11.2.0",
+    "load-script": "^2.0.0",
     "tailwind-merge": "^3.6.0",
     "tus-js-client": "^4.3.1"
   },

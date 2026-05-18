@@ -66,3 +66,4 @@ export {
     MIME_EXTENSION_MAP, sanitizeFileName, extensionFromMime,
     fileNameFromContentDisposition, deriveFetchedFileName,
 } from './utils/fetch-helpers'
+export { loadGoogleIdentityServices } from './utils/load-gapi'
