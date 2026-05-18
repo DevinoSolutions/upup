@@ -43,3 +43,11 @@ export {
 } from './file-utils'
 export type { FileProgress, FilesProgressMap } from './file-utils'
 export { SSEProcessor } from './sse-processor'
+
+// ── Shared utilities ─────────────────────────────────────
+export { ACCEPT_PRESETS, resolveAccept } from './utils/accept-presets'
+export type { AcceptPreset, AcceptPresetDefinition } from './utils/accept-presets'
+export { isUploadActive, isUploadIdle } from './utils/status-helpers'
+export { b64EncodeUnicode } from './utils/encoder'
+export { cn } from './utils/tailwind'
+export { sourceNameKeys } from './utils/source-metadata'
