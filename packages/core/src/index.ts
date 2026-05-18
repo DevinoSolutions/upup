@@ -1,6 +1,114 @@
-export * from './contracts'
-export * from './i18n'
-export * from './theme'
+// ── Types (from ./types/) ────────────────────────────────────
+export type { UploadFileMetadata, UploadFile, UploadFileWithProgress } from './types/upload-file'
+export type { FileUploadResult } from './types/upload-result'
+export { FileSource } from './types/file-source'
+export { StorageProvider } from './types/storage-provider'
+export { UploadStatus } from './types/upload-status'
+export type {
+  PresignedUrlResponse,
+  MultipartInitResponse,
+  MultipartSignPartResponse,
+  MultipartPart,
+  MultipartListPartsResponse,
+  MultipartCompleteResponse,
+  MultipartAbortResponse,
+  MaxFileSizeObject,
+  ResumableUploadOptions,
+  CrashRecoveryOptions,
+} from './types/upload-protocols'
+export type {
+  ImageEditorOptions,
+  ResolvedImageEditorOptions,
+  ImageCompressionOptions,
+  ThumbnailGeneratorOptions,
+} from './types/image-editor'
+export type { UploaderClassNames } from './types/class-names'
+
+// ── Errors ───────────────────────────────────────────────────
+export {
+  UpupErrorCode,
+  UpupError,
+  UpupAuthError,
+  UpupNetworkError,
+  UpupValidationError,
+  UpupQuotaError,
+  UpupStorageError,
+  UpupConfigError,
+  UploadErrorType,
+  UploadError,
+} from './errors'
+export type { RestrictionFailedReason } from './errors'
+
+// ── Contract interfaces (strategies + pipeline) ──────────────
+export type {
+  FileMetadata,
+  UploadCredentials,
+  UploadResult,
+  ProgressInfo,
+  OAuthTokens,
+  RemoteFile,
+  CloudProvider,
+  CredentialStrategy,
+  OAuthStrategy,
+  UploadStrategy,
+  RuntimeAdapter,
+} from './contracts-strategies'
+export type { PipelineStep, PipelineContext } from './contracts-pipeline'
+
+// ── i18n ─────────────────────────────────────────────────────
+export { enUS } from './i18n/locales/en-US'
+export { arSA } from './i18n/locales/ar-SA'
+export { deDE } from './i18n/locales/de-DE'
+export { esES } from './i18n/locales/es-ES'
+export { frFR } from './i18n/locales/fr-FR'
+export { jaJP } from './i18n/locales/ja-JP'
+export { koKR } from './i18n/locales/ko-KR'
+export { zhCN } from './i18n/locales/zh-CN'
+export { zhTW } from './i18n/locales/zh-TW'
+export type {
+  UpupMessages,
+  LocaleBundle,
+  UpupLocaleCode,
+  FlatMessageKey,
+  PartialMessages,
+  MessageNamespace,
+  Translator,
+} from './i18n/types'
+export { createTranslator } from './i18n/create-translator'
+export type { TranslatorOptions } from './i18n/create-translator'
+export { buildFallbackChain, resolveMessage } from './i18n/resolve-locale'
+export { LOCALE_META, normalizeBcp47 } from './i18n/locale-meta'
+export type { LocaleMeta } from './i18n/locale-meta'
+export {
+  flattenTranslatorToUiTranslations,
+  formatUiMessage,
+  pluralUiMessage,
+} from './i18n/ui-translations'
+export type { Translations, UiTranslations } from './i18n/ui-translations'
+export { mergeTranslations, plural, t } from './i18n/utils'
+
+// ── Theme ────────────────────────────────────────────────────
+export type {
+  UpupColorTokens,
+  UpupRadiusTokens,
+  UpupShadowTokens,
+  UpupSpacingTokens,
+  UpupThemeTokens,
+  UpupThemeMode,
+  UpupThemeConfig,
+  UpupResolvedTheme,
+  DeepPartial,
+} from './theme/types'
+export { lightPreset, darkPreset } from './theme/presets'
+export { resolveTheme } from './theme/resolve-theme'
+export { UPUP_VAR_PREFIX, tokensToVars, tokensToVarRefs } from './theme/vars'
+export type {
+  UpupThemeSlots,
+  UpupSlotPath,
+  DeepPartialSlots,
+  InternalFlatClassNames,
+} from './theme/slots'
+export { flattenSlotsToClassNames } from './theme/slots'
 export { UpupCore } from './core'
 export type { CoreOptions, UploadOptions, ValidationResult, Restrictions, CloudDrivesConfig, UpupCorsConfig } from './core'
 export { EventEmitter } from './events'
