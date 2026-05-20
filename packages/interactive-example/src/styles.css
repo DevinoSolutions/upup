@@ -42,6 +42,39 @@
     font-family: var(--ie-font);
     font-size: 14px;
     line-height: 1.5;
+    scrollbar-color: color-mix(in srgb, var(--ie-accent) 48%, transparent) transparent;
+    scrollbar-width: thin;
+}
+
+.upup-ie-shell *,
+.upup-ie-focus * {
+    scrollbar-color: color-mix(in srgb, var(--ie-accent) 48%, transparent) transparent;
+    scrollbar-width: thin;
+}
+
+.upup-ie-shell *::-webkit-scrollbar,
+.upup-ie-focus *::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+.upup-ie-shell *::-webkit-scrollbar-track,
+.upup-ie-focus *::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.upup-ie-shell *::-webkit-scrollbar-thumb,
+.upup-ie-focus *::-webkit-scrollbar-thumb {
+    background: color-mix(in srgb, var(--ie-accent) 42%, transparent);
+    border: 3px solid transparent;
+    border-radius: var(--ie-radius-pill);
+    background-clip: padding-box;
+}
+
+.upup-ie-shell *::-webkit-scrollbar-thumb:hover,
+.upup-ie-focus *::-webkit-scrollbar-thumb:hover {
+    background: color-mix(in srgb, var(--ie-accent) 62%, transparent);
+    background-clip: padding-box;
 }
 
 /* Dark theme — explicit (ancestor html.dark, [data-theme="dark"] ancestor, or [data-theme="dark"] on self) */
@@ -715,12 +748,12 @@ html.dark .upup-ie-focus:not([data-theme="light"]),
 .upup-ie-segmented {
     display: flex;
     flex-wrap: wrap;
-    gap: 4px;
-    padding: 4px;
+    gap: 3px;
+    padding: 3px;
     background: var(--ie-input-bg);
     border: 1px solid var(--ie-input-border);
     border-radius: var(--ie-radius-input);
-    min-height: 38px;
+    min-height: 30px;
 }
 
 .upup-ie-segmented-option {
@@ -728,9 +761,10 @@ html.dark .upup-ie-focus:not([data-theme="light"]),
     background: transparent;
     border: 0;
     color: var(--ie-fg);
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 500;
-    padding: 6px 10px;
+    line-height: 1.2;
+    padding: 4px 8px;
     border-radius: calc(var(--ie-radius-input) - 2px);
     cursor: pointer;
     transition: background 0.15s ease, color 0.15s ease;
@@ -812,7 +846,7 @@ html.dark .upup-ie-focus:not([data-theme="light"]),
 .upup-ie-source-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(88px, 1fr));
-    gap: 6px;
+    gap: 4px;
 }
 
 .upup-ie-source-tile {
@@ -821,15 +855,17 @@ html.dark .upup-ie-focus:not([data-theme="light"]),
     border: 1px solid var(--ie-input-border);
     color: var(--ie-fg);
     border-radius: var(--ie-radius-input);
-    padding: 10px 6px;
+    min-height: 36px;
+    padding: 5px 6px;
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     align-items: center;
-    gap: 6px;
+    justify-content: flex-start;
+    gap: 5px;
     cursor: pointer;
     transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
     font: inherit;
-    text-align: center;
+    text-align: left;
 }
 
 .upup-ie-source-tile:hover {
@@ -890,23 +926,29 @@ html.dark .upup-ie-focus:not([data-theme="light"]),
 
 .upup-ie-source-tile-icon {
     display: flex;
-    width: 32px;
-    height: 32px;
+    width: 16px;
+    height: 16px;
     align-items: center;
     justify-content: center;
     line-height: 0;
+    flex: 0 0 16px;
 }
 
 .upup-ie-source-tile-icon svg {
-    width: 28px;
-    height: 28px;
+    width: 16px;
+    height: 16px;
 }
 
 .upup-ie-source-tile-label {
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 500;
-    line-height: 1.25;
+    line-height: 1.1;
     color: var(--ie-fg);
+    min-width: 0;
+    flex: 1 1 auto;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 /* Legend-with-icon (cloud drive credential blocks) */
@@ -941,10 +983,17 @@ html.dark .upup-ie-focus:not([data-theme="light"]),
 
 .upup-ie-expand-wrap[data-expanded] {
     grid-template-rows: 1fr;
+    margin-top: 4px;
 }
 
 .upup-ie-expand-inner {
     overflow: hidden;
+    min-height: 0;
+    width: 100%;
+}
+
+.upup-ie-expand-inner > .upup-ie-source-grid {
+    width: 100%;
 }
 
 .upup-ie-expand-toggle {

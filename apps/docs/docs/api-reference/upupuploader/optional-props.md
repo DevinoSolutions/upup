@@ -13,7 +13,7 @@ These are the stable v2-clean optional props.
 | `i18n` | `i18n={{ locale: frFR, overrides: { browseFiles: 'choisir des fichiers' } }}` |
 | `theme` | `theme={{ mode: 'dark', slots: { root: '...' } }}` |
 | `metadata` | `metadata={{ projectId: 'p_123' }}` |
-| `folderUpload` | `folderUpload={{ enabled: true, showPickerButton: true }}` |
+| `folderUpload` | `folderUpload={{ allowDrop: true, showSelectFolderButton: true }}` |
 | `cors` | `cors={{ dangerouslyAutoConfigure: true, allowedOrigins: ['http://localhost:3000'] }}` |
 | `maxRetries` | `maxRetries={3}` |
 | `resumable` | `resumable={{ protocol: 'multipart', thresholdBytes: 5 * 1024 * 1024 }}` |
@@ -99,10 +99,10 @@ import { frFR } from '@upup/core/i18n'
 
 ## `folderUpload`
 
-`enabled` controls folder traversal. `showPickerButton` controls whether the folder picker button is visible.
+`allowDrop` controls folder traversal when a user drops a directory onto the uploader. `showSelectFolderButton` controls whether the My Device source shows an explicit Select Folder action.
 
 ```tsx
-<UpupUploader folderUpload={{ enabled: true, showPickerButton: true }} />
+<UpupUploader folderUpload={{ allowDrop: true, showSelectFolderButton: true }} />
 ```
 
 ## `cors`

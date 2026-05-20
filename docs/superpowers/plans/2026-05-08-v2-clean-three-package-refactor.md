@@ -27,7 +27,7 @@ Remove public `@upup/shared`. Move its contracts, errors, protocols, i18n bundle
 - Server mode owns sensitive OAuth secrets, provider downloads, storage writes, auth, and compliance workflows.
 - Replace loose/old props:
   - `customProps` -> `metadata`
-  - `showSelectFolderButton` and `allowFolderUpload` -> `folderUpload={{ enabled, showPickerButton }}`
+  - `showSelectFolderButton` and `allowFolderUpload` -> `folderUpload={{ allowDrop, showSelectFolderButton }}`
   - `enableAutoCorsConfig` -> `cors={{ dangerouslyAutoConfigure, allowedOrigins, allowedMethods?, allowedHeaders?, maxAgeSeconds? }}`
 - Remove from the stable runtime API: `tokenEndpoint`, `ProviderSDK`, `FileWithParams`, `UploadAdapter`, `uploadAdapters`, `driveConfigs`, `localePack`, flat `translations`, `classNames`, `dark`, bridge-only core sync APIs, and implicit hosted-service `apiKey`.
 

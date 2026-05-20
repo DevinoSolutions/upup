@@ -153,6 +153,21 @@ function parseOrigins(value: unknown): string[] | undefined {
     return origins.length > 0 ? origins : undefined
 }
 
+function normalizeFolderUpload(value: unknown): Record<string, unknown> | undefined {
+    if (!value || typeof value !== 'object' || Array.isArray(value)) return undefined
+    const rawFolder = value as Record<string, unknown>
+    const folder: Record<string, unknown> = { ...rawFolder }
+    if (folder.allowDrop === undefined && typeof rawFolder.enabled === 'boolean') {
+        folder.allowDrop = rawFolder.enabled
+    }
+    if (folder.showSelectFolderButton === undefined && typeof rawFolder.showPickerButton === 'boolean') {
+        folder.showSelectFolderButton = rawFolder.showPickerButton
+    }
+    delete folder.enabled
+    delete folder.showPickerButton
+    return folder
+}
+
 function normalizeForCode(config: UpupConfig): { config: UpupConfig; coreImports: string[] } {
     const out: Record<string, unknown> = { ...config }
     const coreImports = new Set<string>()
@@ -195,6 +210,9 @@ function normalizeForCode(config: UpupConfig): { config: UpupConfig; coreImports
         else delete nextCors.allowedOrigins
         out.cors = nextCors
     }
+
+    const folderUpload = normalizeFolderUpload(out.folderUpload)
+    if (folderUpload) out.folderUpload = folderUpload
 
     return { config: out as UpupConfig, coreImports: [...coreImports].sort() }
 }

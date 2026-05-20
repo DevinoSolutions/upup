@@ -19,6 +19,10 @@ function setPath(obj: UpupConfig, path: string, value: unknown): UpupConfig {
         cursor = cursor[k]
     }
     cursor[keys[keys.length - 1]] = value
+    if (keys[0] === 'folderUpload' && next.folderUpload && typeof next.folderUpload === 'object') {
+        delete next.folderUpload.enabled
+        delete next.folderUpload.showPickerButton
+    }
     return next
 }
 

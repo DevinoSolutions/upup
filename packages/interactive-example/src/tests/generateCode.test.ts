@@ -139,6 +139,23 @@ describe('generateCode', () => {
         expect(out).toContain("'https://example.com'")
     })
 
+    it('normalizes stale folder upload aliases out of generated code', () => {
+        const out = generateCode({
+            folderUpload: {
+                enabled: true,
+                showPickerButton: true,
+                allowDrop: true,
+                showSelectFolderButton: true,
+            },
+        } as any)
+
+        expect(out).toContain('folderUpload={{')
+        expect(out).toContain('allowDrop: true')
+        expect(out).toContain('showSelectFolderButton: true')
+        expect(out).not.toContain('enabled')
+        expect(out).not.toContain('showPickerButton')
+    })
+
     it('does not keep hidden client endpoint when server mode is selected', () => {
         const out = generateCode({
             mode: 'server',

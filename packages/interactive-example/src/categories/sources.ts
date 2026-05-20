@@ -35,13 +35,25 @@ export const sourcesCategory: CategoryDefinition = {
         },
         {
             id: 'folderUpload',
-            label: 'Folder upload',
+            label: 'Folder sources',
             primitive: 'nested',
             defaultValue: undefined,
             options: {
                 fields: [
-                    { id: 'enabled', label: 'Allow folders', primitive: 'bool', defaultValue: false },
-                    { id: 'showPickerButton', label: 'Show folder button', primitive: 'bool', defaultValue: false },
+                    {
+                        id: 'allowDrop',
+                        label: 'Allow folder drag/drop',
+                        description: 'Traverse directories when a user drops a folder onto the uploader.',
+                        primitive: 'bool',
+                        defaultValue: false,
+                    },
+                    {
+                        id: 'showSelectFolderButton',
+                        label: 'Show Select Folder button',
+                        description: 'Show a Select Folder action in the My Device source.',
+                        primitive: 'bool',
+                        defaultValue: false,
+                    },
                 ],
             },
         },

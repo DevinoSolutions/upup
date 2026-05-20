@@ -245,8 +245,8 @@ Mock requirement:
 
 Steps:
 1. Open `/`.
-2. Enable Sources `Folder upload.Allow folders`.
-3. Enable Sources `Folder upload.Show folder button`.
+2. Enable Sources `Folder sources.Allow folder drag/drop`.
+3. Enable Sources `Folder sources.Show Select Folder button`.
 4. Select or drop files:
    - `photos/2026/a.jpg`
    - `photos/2026/b.jpg`

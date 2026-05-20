@@ -12,7 +12,7 @@ export const appearanceCategory: CategoryDefinition = {
             id: 'theme.mode',
             label: 'Theme mode',
             primitive: 'enum',
-            defaultValue: 'light',
+            defaultValue: 'system',
             options: { options: ['light', 'dark', 'system'], layout: 'segmented' },
         },
         {

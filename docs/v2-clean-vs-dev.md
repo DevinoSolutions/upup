@@ -43,7 +43,8 @@ The branch started by copying the stable v1 React UI on top of the already-solid
 | `restrictions` | Unified API for file constraints (replaces scattered props) |
 | `minFileSize` | Minimum file size in bytes |
 | `maxTotalFileSize` | Cap on total selected file size |
-| `allowFolderUpload` | Alias for `showSelectFolderButton` |
+| `folderUpload.allowDrop` | Allows directory traversal when folders are dropped |
+| `folderUpload.showSelectFolderButton` | Shows the explicit Select Folder action |
 | `maxFiles` | DX alias |
 
 ### Theme / Appearance
