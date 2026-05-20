@@ -97,6 +97,21 @@ describe('FileManager', () => {
     expect(files[0].name).toBe('old.jpg')
   })
 
+  it('accepts files with read-only relativePath metadata', async () => {
+    const fm = new FileManager({})
+    const file = makeNativeFile('nested.jpg')
+    Object.defineProperty(file, 'relativePath', {
+      value: 'folder/nested.jpg',
+      configurable: false,
+      writable: false,
+    })
+
+    const [added] = await fm.addFiles([file])
+
+    expect(added.relativePath).toBe('folder/nested.jpg')
+    expect(added.metadata?.relativePath).toBe('folder/nested.jpg')
+  })
+
   it('revalidates files returned from onBeforeFileAdded', async () => {
     const fm = new FileManager({
       allowedFileTypes: 'image/*',

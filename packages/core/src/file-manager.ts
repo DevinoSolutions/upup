@@ -109,7 +109,7 @@ function nativeToUploadFile(file: File, source: FileSource = FileSource.LOCAL): 
       ? extendedFile.metadata
       : {}
 
-  return Object.assign(file, {
+  const uploadFile = Object.assign(file, {
     id: generateFileId(),
     source,
     status: UploadStatus.IDLE,
@@ -118,13 +118,32 @@ function nativeToUploadFile(file: File, source: FileSource = FileSource.LOCAL): 
       ...(relativePath ? { relativePath } : {}),
     },
     url,
-    relativePath,
     key: undefined,
     etag: undefined,
     fileHash: undefined,
     checksumSHA256: undefined,
     thumbnail: undefined,
   }) as UploadFile
+
+  if (relativePath) {
+    try {
+      Object.defineProperty(uploadFile, 'relativePath', {
+        value: relativePath,
+        configurable: true,
+        enumerable: false,
+        writable: true,
+      })
+    } catch {
+      try {
+        uploadFile.relativePath = relativePath
+      } catch {
+        // Some File-like objects expose read-only path metadata. Preserve it
+        // through metadata and avoid failing file admission.
+      }
+    }
+  }
+
+  return uploadFile
 }
 
 function revokeObjectUrl(file?: UploadFile): void {
