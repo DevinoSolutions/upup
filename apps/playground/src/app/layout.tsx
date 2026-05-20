@@ -72,10 +72,14 @@ export default function RootLayout({
                 function setTheme() {
                   if (themeSet) return;
                   const savedTheme = localStorage.getItem('theme');
+                  const preference = savedTheme === 'light' || savedTheme === 'dark' || savedTheme === 'system'
+                    ? savedTheme
+                    : 'system';
                   const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-                  const theme = savedTheme || (prefersDark ? 'dark' : 'light');
-                  document.documentElement.className = theme;
-                  localStorage.setItem('theme', theme);
+                  const theme = preference === 'system' ? (prefersDark ? 'dark' : 'light') : preference;
+                  document.documentElement.classList.remove('light', 'dark');
+                  document.documentElement.classList.add(theme);
+                  document.documentElement.setAttribute('data-theme', preference);
                   document.documentElement.setAttribute('data-theme-ready', 'true');
                   themeSet = true;
                 }
@@ -87,7 +91,9 @@ export default function RootLayout({
                 }
               } catch (e) {
                 try {
-                  document.documentElement.className = 'light';
+                  document.documentElement.classList.remove('light', 'dark');
+                  document.documentElement.classList.add('light');
+                  document.documentElement.setAttribute('data-theme', 'system');
                   document.documentElement.setAttribute('data-theme-ready', 'true');
                 } catch (fallbackError) {
                   console.warn('Theme setting failed:', fallbackError);

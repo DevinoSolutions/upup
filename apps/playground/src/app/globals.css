@@ -33,7 +33,51 @@
 }
 html {
   scroll-behavior: smooth;
+  scrollbar-color: rgb(59 130 246 / 45%) transparent;
+  scrollbar-width: thin;
 }
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+html::-webkit-scrollbar-track,
+body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+html::-webkit-scrollbar-thumb,
+body::-webkit-scrollbar-thumb {
+  background: rgb(59 130 246 / 38%);
+  border: 3px solid transparent;
+  border-radius: 999px;
+  background-clip: padding-box;
+}
+
+html::-webkit-scrollbar-thumb:hover,
+body::-webkit-scrollbar-thumb:hover {
+  background: rgb(59 130 246 / 60%);
+  background-clip: padding-box;
+}
+
+html.dark {
+  scrollbar-color: rgb(96 165 250 / 55%) rgb(15 23 42 / 30%);
+}
+
+html.dark::-webkit-scrollbar-thumb,
+html.dark body::-webkit-scrollbar-thumb {
+  background: rgb(96 165 250 / 48%);
+  background-clip: padding-box;
+}
+
+html.dark::-webkit-scrollbar-thumb:hover,
+html.dark body::-webkit-scrollbar-thumb:hover {
+  background: rgb(96 165 250 / 68%);
+  background-clip: padding-box;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
