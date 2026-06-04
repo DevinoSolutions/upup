@@ -1,0 +1,23 @@
+/* src/brand.css — Geist font + brand background, mirroring the playground. */
+@font-face {
+  font-family: "Geist";
+  src: local("Geist");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  --upup-sb-bg: #ffffff;
+  --upup-sb-fg: #171717;
+}
+.dark {
+  --upup-sb-bg: #0a0a0a;
+  --upup-sb-fg: #ededed;
+}
+
+body.sb-show-main {
+  background: var(--upup-sb-bg);
+  color: var(--upup-sb-fg);
+  font-family: "Geist", Arial, Helvetica, sans-serif;
+}
