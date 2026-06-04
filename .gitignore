@@ -34,6 +34,9 @@ graphify-out/
 # Claude Code
 .claude/
 
+# Storybook
+apps/*/storybook-static
+
 # Misc
 *.tgz
 
