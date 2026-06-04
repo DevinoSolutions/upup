@@ -13,7 +13,7 @@ function render(args: Record<string, unknown>) {
   return <UpupUploader {...(props as UpupUploaderProps)} />
 }
 
-const meta: Meta<typeof UpupUploader> = {
+const meta: Meta<UpupUploaderProps> = {
   title: 'React/Uploader',
   component: UpupUploader,
   argTypes: uploaderArgTypes,
@@ -23,7 +23,7 @@ const meta: Meta<typeof UpupUploader> = {
 }
 export default meta
 
-type Story = StoryObj<typeof UpupUploader>
+type Story = StoryObj<UpupUploaderProps>
 
 export const Playground: Story = {}
 
