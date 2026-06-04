@@ -3,6 +3,8 @@
 // UpupUploaderProps exactly (packages/react|vue/src/shared/types.ts).
 // MAINTENANCE: when the uploader gains a user-facing prop, add it here.
 
+import { cloudDrivesFromEnv } from './cloudDrives'
+
 const cat = (category: string) => ({ table: { category } })
 
 export const VIRTUAL_ARGS = ['themeMode', 'primaryColor'] as const
@@ -28,6 +30,10 @@ export const uploaderArgTypes: Record<string, unknown> = {
     ...cat('Sources'),
   },
   enablePaste: { control: 'boolean', ...cat('Sources') },
+  // Cloud-drive OAuth credentials (Google Drive / OneDrive / Dropbox / Box),
+  // sourced from VITE_* env vars in render — not an interactive control.
+  // See packages/storybook-config/src/cloudDrives.ts.
+  cloudDrives: { control: false, description: 'OAuth configs from VITE_* env vars; see cloudDrives.ts.', ...cat('Sources') },
 
   // ── Limits ──────────────────────────────────────────────
   maxFiles: { control: { type: 'number', min: 1, max: 50 }, ...cat('Limits') },
@@ -85,4 +91,8 @@ export const uploaderDefaultArgs: Record<string, unknown> = {
   // explicit mode renders identically in both. Users can still pick system/light.)
   themeMode: 'dark',
   primaryColor: '',
+  // Wire cloud-drive OAuth from VITE_* env vars (empty → the real "Sign in"
+  // screen; populated → working OAuth). Present on every story so any cloud
+  // source renders its adapter instead of an empty "not ready" panel.
+  cloudDrives: cloudDrivesFromEnv(),
 }
