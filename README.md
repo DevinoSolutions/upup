@@ -21,9 +21,9 @@
 
 ---
 
-**Upup** is a free, open-source **React & TypeScript file upload library** that gives you a production-ready drag-and-drop **dropzone**, **file picker**, **upload button**, **progress bar**, and **retry logic** — all in a single component. Upload images, videos, and multiple large files to **AWS S3**, **Azure Blob**, **Google Drive**, **OneDrive**, **DigitalOcean Spaces**, **Backblaze B2**, and more using **presigned URLs** and **resumable chunked uploads**.
+**Upup** is a free, open-source **TypeScript file upload library** that gives you a production-ready drag-and-drop **dropzone**, **file picker**, **upload button**, **progress bar**, and **retry logic** across React, Vue, Next.js, Preact, Solid, Svelte, Qwik, Angular, and vanilla JavaScript. Upload images, videos, and multiple large files to **AWS S3**, **Azure Blob**, **Google Drive**, **OneDrive**, **DigitalOcean Spaces**, **Backblaze B2**, and more using **presigned URLs** and **resumable chunked uploads**.
 
-Works with **Next.js**, **Vite**, **Remix**, **Gatsby**, and any React framework.
+Use the framework package that matches your app, or use `@upup/core` directly for custom integrations.
 
 ## Features
 
@@ -40,8 +40,16 @@ Works with **Next.js**, **Vite**, **Remix**, **Gatsby**, and any React framework
 ## Install
 
 ```bash
-# Client Mode (default) — one package
+# Client Mode (default) — choose your frontend host
 npm i @upup/react
+npm i @upup/vue
+npm i @upup/next
+npm i @upup/vanilla
+npm i @upup/preact
+npm i @upup/solid
+npm i @upup/svelte
+npm i @upup/qwik
+npm i @upup/angular
 
 # Server Mode — add the Node-side handler
 npm i @upup/react @upup/server
@@ -129,11 +137,19 @@ This repo is a monorepo managed with [pnpm workspaces](https://pnpm.io/workspace
 ```
 upup/
 ├── packages/core/               # @upup/core (published contracts + workflow engine)
-├── packages/react/              # @upup/react (published React/browser host)
+├── packages/react/              # @upup/react
+├── packages/vue/                # @upup/vue
+├── packages/next/               # @upup/next
+├── packages/vanilla/            # @upup/vanilla
+├── packages/preact/             # @upup/preact
+├── packages/solid/              # @upup/solid
+├── packages/svelte/             # @upup/svelte
+├── packages/qwik/               # @upup/qwik
+├── packages/angular/            # @upup/angular
 ├── packages/server/             # @upup/server (published server host)
-├── packages/interactive-example/# In-browser playground
 ├── apps/landing/                # Next.js marketing site at useupup.com
 ├── apps/docs/                   # Docusaurus documentation site
+├── apps/storybook/              # Composed package Storybook QA hub
 ├── local-dev/                   # Port config & local dev helpers
 └── turbo.json                   # Build pipeline configuration
 ```
@@ -144,7 +160,7 @@ upup/
 git clone https://github.com/DevinoSolutions/upup.git
 cd upup
 pnpm install
-pnpm dev          # runs landing + docs + playground + package watchers via Turborepo
+pnpm dev          # runs landing + docs + package watchers via Turborepo
 ```
 
 ### Commands
@@ -160,7 +176,7 @@ pnpm dev          # runs landing + docs + playground + package watchers via Turb
 
 ```bash
 # From the repo root — publishes all public packages in dependency order
-pnpm -r --filter @upup/core --filter @upup/server --filter @upup/react publish --access public
+pnpm run release
 ```
 
 ---

@@ -4,6 +4,7 @@ import {
     type DriveFile,
     type DriveFolder,
     type DriveUser,
+    driveFileMatchesAccept,
     formatUiMessage as t,
     pluralUiMessage as plural,
 } from '@upup/core'
@@ -43,20 +44,9 @@ const { isDark: dark, slotOverrides: slotClasses } = useUploaderTheme()
 const { translations: tr } = useUploaderI18n()
 const searchTerm = ref('')
 
-function filterItems(item: DriveFile, accept: string) {
-    if (item.isFolder) return true
-    if (!accept || accept === '*') return true
-    return accept.split(',').some(pattern => {
-        const p = pattern.trim()
-        if (p.startsWith('.')) return item.name.endsWith(p)
-        if (p.endsWith('/*')) return item.mimeType.startsWith(p.replace('/*', '/'))
-        return item.mimeType === p
-    })
-}
-
 const items = computed(() =>
     props.path[props.path.length - 1]?.children?.filter(
-        item => filterItems(item, allowedFileTypes),
+        item => driveFileMatchesAccept(item, allowedFileTypes),
     ),
 )
 

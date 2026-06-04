@@ -1,4 +1,4 @@
-import { ref, shallowRef, computed, watch, onMounted, onUnmounted, defineComponent, type Ref } from 'vue'
+import { ref, shallowRef, computed, watch, onMounted, onUnmounted, defineComponent, reactive, type Ref } from 'vue'
 import {
     FileSource,
     UploadStatus,
@@ -253,9 +253,21 @@ export default function useRootProvider(props: UpupUploaderProps): IRootContext 
     const orch = new UploaderOrchestrator(core, proxiedCallbacks)
 
     // ── Subscribe to orchestrator state (Vue pattern) ───────────
-    const state = shallowRef<OrchestratorState>(orch.getSnapshot())
+    function toReactiveFiles(nextFiles: Map<string, UploadFile>) {
+        return reactive(new Map(nextFiles)) as Map<string, UploadFile>
+    }
+
+    const initialSnapshot = orch.getSnapshot()
+    const state = shallowRef<OrchestratorState>({
+        ...initialSnapshot,
+        files: toReactiveFiles(initialSnapshot.files),
+    })
     const unsub = orch.subscribe(() => {
-        state.value = orch.getSnapshot()
+        const snapshot = orch.getSnapshot()
+        state.value = {
+            ...snapshot,
+            files: toReactiveFiles(snapshot.files),
+        }
     })
 
     // ── Orchestrator lifecycle ───────────────────────────────────
@@ -442,9 +454,7 @@ export default function useRootProvider(props: UpupUploaderProps): IRootContext 
     }
 
     function handleFileRemove(fileId: string) {
-        const file = state.value.files.get(fileId)
-        if (file) revokeFileUrl(file)
-        upload.removeFile(fileId)
+        orch.removeFile(fileId)
     }
 
     async function dynamicUpload(newFiles: File[] | UploadFile[]) {
@@ -508,26 +518,28 @@ export default function useRootProvider(props: UpupUploaderProps): IRootContext 
         serverUrl: resolvedServerUrl,
         inputRef,
         openFilePicker,
-        activeAdapter: state.value.activeAdapter,
+        get activeAdapter() { return state.value.activeAdapter },
         setActiveAdapter: (adapter: FileSource | undefined) => orch.setActiveAdapter(adapter),
-        isAddingMore: state.value.isAddingMore,
+        get isAddingMore() { return state.value.isAddingMore },
         setIsAddingMore: (v: boolean) => orch.setIsAddingMore(v),
-        viewMode: state.value.viewMode,
+        get viewMode() { return state.value.viewMode },
         setViewMode: (m: 'grid' | 'list') => orch.setViewMode(m),
-        isOnline: state.value.isOnline,
-        translations: translations.value,
-        translator: translator.value,
+        get isOnline() { return state.value.isOnline },
+        get translations() { return translations.value },
+        get translator() { return translator.value },
         lang,
         dir,
-        theme: {
-            themeMode: themeMode.value,
-            isDark: themeMode.value === 'dark',
-            tokens: resolvedTheme.value.tokens,
-            resolved: resolvedTheme.value as typeof resolvedTheme.value & { mode: 'light' | 'dark' },
-            slotOverrides: resolvedSlotClasses.value,
-            slots: themeSlots.value ?? EMPTY_THEME_SLOTS,
+        get theme() {
+            return {
+                themeMode: themeMode.value,
+                isDark: themeMode.value === 'dark',
+                tokens: resolvedTheme.value.tokens,
+                resolved: resolvedTheme.value as typeof resolvedTheme.value & { mode: 'light' | 'dark' },
+                slotOverrides: resolvedSlotClasses.value,
+                slots: themeSlots.value ?? EMPTY_THEME_SLOTS,
+            }
         },
-        files: state.value.files,
+        get files() { return state.value.files },
         setFiles: handleSetSelectedFiles,
         dynamicUpload,
         resetState,
@@ -537,54 +549,58 @@ export default function useRootProvider(props: UpupUploaderProps): IRootContext 
         handlePause,
         handleResume,
         handleFileRemove,
-        editingFile: state.value.editingFile,
+        get editingFile() { return state.value.editingFile },
         openImageEditor: (file: UploadFile) => orch.openImageEditor(file),
         closeImageEditor: () => orch.closeImageEditor(),
         saveImageEdit: (editedImageData: string, mimeType?: string) => orch.saveImageEdit(editedImageData, mimeType),
         replaceFile: (fileId: string, newFile: UploadFile) => orch.replaceFile(fileId, newFile),
-        oneDriveConfigs: oneDriveConfigs.value,
-        googleDriveConfigs: googleDriveConfigs.value,
-        dropboxConfigs: dropboxConfigs.value,
-        boxConfigs: boxConfigs.value,
-        upload: {
-            totalProgress: state.value.totalProgress,
-            filesProgressMap: state.value.filesProgressMap,
-            proceedUpload,
-            retryUpload,
-            uploadStatus: state.value.uploadStatus,
-            uploadError: state.value.uploadError,
-            uploadSpeed: state.value.uploadSpeed,
-            uploadEta: state.value.uploadEta,
-            uploadedBytes: state.value.uploadedBytes,
-            totalBytes: state.value.totalBytes,
+        get oneDriveConfigs() { return oneDriveConfigs.value },
+        get googleDriveConfigs() { return googleDriveConfigs.value },
+        get dropboxConfigs() { return dropboxConfigs.value },
+        get boxConfigs() { return boxConfigs.value },
+        get upload() {
+            return {
+                totalProgress: state.value.totalProgress,
+                filesProgressMap: state.value.filesProgressMap,
+                proceedUpload,
+                retryUpload,
+                uploadStatus: state.value.uploadStatus,
+                uploadError: state.value.uploadError,
+                uploadSpeed: state.value.uploadSpeed,
+                uploadEta: state.value.uploadEta,
+                uploadedBytes: state.value.uploadedBytes,
+                totalBytes: state.value.totalBytes,
+            }
         },
-        props: {
-            mini,
-            maxRetries,
-            resumable,
-            onError,
-            onIntegrationClick,
-            onFileClick,
-            onFilesDragOver,
-            onFilesDragLeave,
-            onFilesDrop,
-            onWarn,
-            enablePaste,
-            sources: resolvedSources.value,
-            allowedFileTypes: accept,
-            maxFileSize,
-            limit: limit.value,
-            isProcessing,
-            allowPreview,
-            folderUploadAllowDrop,
-            folderPickerButtonVisible,
-            showBranding,
-            disableDragDrop,
-            className: className ?? '',
-            style: resolvedStyle,
-            multiple: multiple.value,
-            icons: resolvedIcons.value,
-            imageEditor: resolvedImageEditor.value,
+        get props() {
+            return {
+                mini,
+                maxRetries,
+                resumable,
+                onError,
+                onIntegrationClick,
+                onFileClick,
+                onFilesDragOver,
+                onFilesDragLeave,
+                onFilesDrop,
+                onWarn,
+                enablePaste,
+                sources: resolvedSources.value,
+                allowedFileTypes: accept,
+                maxFileSize,
+                limit: limit.value,
+                isProcessing,
+                allowPreview,
+                folderUploadAllowDrop,
+                folderPickerButtonVisible,
+                showBranding,
+                disableDragDrop,
+                className: className ?? '',
+                style: resolvedStyle,
+                multiple: multiple.value,
+                icons: resolvedIcons.value,
+                imageEditor: resolvedImageEditor.value,
+            }
         },
-    }
+    } as IRootContext
 }

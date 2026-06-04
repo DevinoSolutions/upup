@@ -13,9 +13,9 @@ import useAdapterSelector from '../composables/useAdapterSelector'
 import { UploadIcon } from './Icons'
 import ShouldRender from './shared/ShouldRender.vue'
 
-const { core, inputRef, openFilePicker } = useUploaderRuntime()
+const runtimeCtx = useUploaderRuntime()
 const { translations: tr } = useUploaderI18n()
-const { isAddingMore, setIsAddingMore } = useUploaderView()
+const viewCtx = useUploaderView()
 const { setFiles } = useUploaderFiles()
 const { isDark: dark, slotOverrides: slotClasses } = useUploaderTheme()
 const {
@@ -60,12 +60,12 @@ const { chosenSources, handleAdapterClick, handleInputFileChange } =
     useAdapterSelector()
 
 function handleBrowseFilesClick() {
-    if (inputRef.value) {
-        inputRef.value.removeAttribute('webkitdirectory')
-        inputRef.value.removeAttribute('directory')
+    if (runtimeCtx.inputRef.value) {
+        runtimeCtx.inputRef.value.removeAttribute('webkitdirectory')
+        runtimeCtx.inputRef.value.removeAttribute('directory')
     }
-    openFilePicker()
-    core?.emit('browse-files', {})
+    runtimeCtx.openFilePicker()
+    runtimeCtx.core?.emit('browse-files', {})
 }
 
 async function handleSelectFolderClick() {
@@ -105,20 +105,20 @@ async function handleSelectFolderClick() {
             await getFiles(directoryHandle as unknown as IterableDirHandle)
             if (collectedFiles.length > 0) {
                 setFiles(collectedFiles)
-                core?.emit('folder-select', { count: collectedFiles.length })
-                if (inputRef.value) inputRef.value.value = ''
+                runtimeCtx.core?.emit('folder-select', { count: collectedFiles.length })
+                if (runtimeCtx.inputRef.value) runtimeCtx.inputRef.value.value = ''
             }
         } catch (error) {
             const name = error instanceof DOMException ? error.name : ''
             if (name !== 'AbortError') throw error
         }
     } else {
-        if (inputRef.value) {
-            inputRef.value.setAttribute('webkitdirectory', 'true')
-            inputRef.value.setAttribute('directory', 'true')
+        if (runtimeCtx.inputRef.value) {
+            runtimeCtx.inputRef.value.setAttribute('webkitdirectory', 'true')
+            runtimeCtx.inputRef.value.setAttribute('directory', 'true')
         }
-        openFilePicker()
-        core?.emit('folder-select', { count: 0 })
+        runtimeCtx.openFilePicker()
+        runtimeCtx.core?.emit('folder-select', { count: 0 })
     }
 }
 
@@ -133,12 +133,12 @@ function onSourceKeydown(e: KeyboardEvent) {
         :class="cn(
             'upup-relative upup-flex upup-h-full upup-gap-3 upup-rounded-lg',
             {
-                'upup-flex-col': isAddingMore,
-                'upup-flex-col-reverse upup-items-center upup-justify-center md:upup-flex-col md:upup-gap-14': !isAddingMore,
+                'upup-flex-col': viewCtx.isAddingMore,
+                'upup-flex-col-reverse upup-items-center upup-justify-center md:upup-flex-col md:upup-gap-14': !viewCtx.isAddingMore,
             },
         )"
     >
-        <ShouldRender :if="isAddingMore">
+        <ShouldRender :if="viewCtx.isAddingMore">
             <div
                 :class="cn(
                     'upup-shadow-bottom upup-flex upup-w-full upup-items-center upup-rounded-t-lg upup-bg-black/[0.025] upup-px-3 upup-py-2',
@@ -152,7 +152,7 @@ function onSourceKeydown(e: KeyboardEvent) {
                         { 'upup-text-[#30C5F7] dark:upup-text-[#30C5F7]': dark },
                         slotClasses.containerCancelButton,
                     )"
-                    @click="setIsAddingMore(false)"
+                    @click="viewCtx.setIsAddingMore(false)"
                 >
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -219,10 +219,8 @@ function onSourceKeydown(e: KeyboardEvent) {
             name="upup-files"
             :accept="allowedFileTypes"
             class="upup-hidden"
-            data-testid="upup-file-input"
             aria-hidden="true"
             :tabindex="-1"
-            :ref="(el) => { if (inputRef) { /* inputRef handled by parent */ } }"
             :multiple="multiple"
             @change="handleInputFileChange"
         />

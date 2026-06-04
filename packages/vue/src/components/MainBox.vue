@@ -14,10 +14,10 @@ import AdapterView from './AdapterView.vue'
 import FileList from './FileList.vue'
 import ShouldRender from './shared/ShouldRender.vue'
 
-const { files } = useUploaderFiles()
-const { activeAdapter } = useUploaderSource()
-const { isAddingMore } = useUploaderView()
-const { isOnline, inputRef, openFilePicker } = useUploaderRuntime()
+const filesCtx = useUploaderFiles()
+const sourceCtx = useUploaderSource()
+const viewCtx = useUploaderView()
+const runtimeCtx = useUploaderRuntime()
 const { translations: tr } = useUploaderI18n()
 const { isDark: dark } = useUploaderTheme()
 const {
@@ -33,11 +33,11 @@ const {
 function onKeyDown(e: KeyboardEvent) {
     if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault()
-        if (inputRef.value) {
-            inputRef.value.removeAttribute('webkitdirectory')
-            inputRef.value.removeAttribute('directory')
+        if (runtimeCtx.inputRef.value) {
+            runtimeCtx.inputRef.value.removeAttribute('webkitdirectory')
+            runtimeCtx.inputRef.value.removeAttribute('directory')
         }
-        openFilePicker()
+        runtimeCtx.openFilePicker()
     }
 }
 </script>
@@ -66,7 +66,7 @@ function onKeyDown(e: KeyboardEvent) {
         @drop="handleDrop"
         @paste="handlePaste"
     >
-        <ShouldRender :if="!isOnline">
+        <ShouldRender :if="!runtimeCtx.isOnline">
             <div
                 :class="cn(
                     'upup-absolute upup-inset-x-0 upup-top-0 upup-z-20 upup-px-3 upup-py-1.5 upup-text-center upup-text-xs upup-font-medium upup-text-white upup-bg-yellow-500',
@@ -76,10 +76,10 @@ function onKeyDown(e: KeyboardEvent) {
                 No internet connection — uploads will resume when you reconnect.
             </div>
         </ShouldRender>
-        <ShouldRender :if="!!activeAdapter">
+        <ShouldRender :if="!!sourceCtx.activeAdapter">
             <AdapterView />
         </ShouldRender>
-        <ShouldRender :if="!activeAdapter && (isAddingMore || !files.size)">
+        <ShouldRender :if="!sourceCtx.activeAdapter && (viewCtx.isAddingMore || !filesCtx.files.size)">
             <AdapterSelector />
         </ShouldRender>
         <FileList />

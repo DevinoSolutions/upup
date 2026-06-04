@@ -1,9 +1,9 @@
-import HomepageDemo from "@/components/HomepageDemo";
 import HomepageFeatures from "@/components/HomepageFeatures";
 import FeedbackSection from "@/components/FeedbackSection";
 import Toast from "@/components/Toast";
 import HeroSection from "@/components/HomepageHero";
 import StackBlitzDemoSection from "@/components/StackBlitzDemoSection";
+import LandingDemo from "@/features/demo";
 
 export const metadata = {
     title: "Upup – React Drag & Drop File Upload | npm Package",
@@ -18,7 +18,7 @@ export default function Home() {
     return (
         <div className="container mx-auto">
             <HeroSection />
-            <HomepageDemo />
+            <LandingDemo />
             <HomepageFeatures />
             <StackBlitzDemoSection />
             <FeedbackSection />

@@ -1,4 +1,5 @@
 import type { MaxFileSizeObject } from './contracts'
+import { getGoogleWorkspaceExportInfo } from './adapters/google-workspace'
 
 /**
  * @param bytes assign keyword depend on size
@@ -130,6 +131,55 @@ export function fileIs3D(ext: string) {
         'm3',
     ]
     return threeDExtensions.includes(ext.toLowerCase())
+}
+
+type DriveAcceptFile = {
+    name: string
+    mimeType?: string
+    isFolder?: boolean
+}
+
+export function getDriveEffectiveExtension(file: DriveAcceptFile): string {
+    const exportInfo = getGoogleWorkspaceExportInfo(file.mimeType)
+    if (exportInfo) return exportInfo.ext
+
+    return (file.name.split('.').pop() || '').toLowerCase()
+}
+
+export function driveFileMatchesAccept(
+    file: DriveAcceptFile,
+    accept: string,
+): boolean {
+    if (file.isFolder) return true
+
+    const tokens = accept
+        .split(',')
+        .map(token => token.trim().toLowerCase())
+        .filter(Boolean)
+
+    if (tokens.length === 0 || tokens.some(token => token === '*' || token === '*/*')) {
+        return true
+    }
+
+    const effectiveExt = getDriveEffectiveExtension(file)
+    const exportInfo = getGoogleWorkspaceExportInfo(file.mimeType)
+    const effectiveMime = (exportInfo?.exportMime ?? file.mimeType ?? '').toLowerCase()
+
+    return tokens.some(token => {
+        if (token.includes('/')) {
+            if (token.endsWith('/*')) {
+                const mainType = token.slice(0, token.indexOf('/'))
+                return effectiveMime.startsWith(`${mainType}/`)
+            }
+            return effectiveMime === token
+        }
+
+        if (token.startsWith('.')) {
+            return effectiveExt === token.slice(1)
+        }
+
+        return effectiveExt === token
+    })
 }
 
 export type FileProgress = {

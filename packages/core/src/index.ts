@@ -13,6 +13,7 @@ export type {
 export type { UploadFileMetadata, UploadFile, UploadFileWithProgress } from './types/upload-file'
 export type { FileUploadResult } from './types/upload-result'
 export { FileSource } from './types/file-source'
+export { FacingMode } from './types/facing-mode'
 export { StorageProvider } from './types/storage-provider'
 export { UploadStatus } from './types/upload-status'
 export type {
@@ -160,6 +161,8 @@ export {
   fileCanPreviewText,
   fileGetExtension,
   fileIs3D,
+  getDriveEffectiveExtension,
+  driveFileMatchesAccept,
   searchDriveFiles,
 } from './file-utils'
 export type { FileProgress, FilesProgressMap } from './file-utils'

@@ -64,7 +64,7 @@ export default function UrlUploader() {
                         slotClasses.urlFetchButton,
                     )}
                     type="submit"
-                    disabled={!url}
+                    disabled={!url || loading}
                 >
                     {loading ? <LoaderIcon /> : tr.fetch}
                 </button>

@@ -2,6 +2,11 @@ import type { EventEmitter } from '../events'
 import type { AdapterPlugin } from './plugin'
 import type { GoogleDriveConfigs } from './configs'
 import type { DriveFile, AdapterState } from './types'
+import {
+    getGoogleWorkspaceExportInfo,
+    getGoogleWorkspaceExportUrl,
+    isGoogleWorkspaceFile,
+} from './google-workspace'
 
 // ── Session storage keys ──
 const SK_ACCESS = 'upup_gdrive_access_token'
@@ -10,45 +15,6 @@ const SK_EXPIRY = 'upup_gdrive_token_expiry'
 // ── Google API endpoints ──
 const FILES_URL = 'https://www.googleapis.com/drive/v3/files'
 const USER_INFO_URL = 'https://www.googleapis.com/oauth2/v3/userinfo'
-
-// ── Google Workspace export mapping ──
-
-const WORKSPACE_EXPORT_MAP: Record<
-    string,
-    { exportMime: string; ext: string; docType: string }
-> = {
-    'application/vnd.google-apps.document': {
-        exportMime:
-            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        ext: 'docx',
-        docType: 'document',
-    },
-    'application/vnd.google-apps.spreadsheet': {
-        exportMime:
-            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        ext: 'xlsx',
-        docType: 'spreadsheets',
-    },
-    'application/vnd.google-apps.presentation': {
-        exportMime:
-            'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-        ext: 'pptx',
-        docType: 'presentation',
-    },
-    'application/vnd.google-apps.drawing': {
-        exportMime: 'image/png',
-        ext: 'png',
-        docType: 'drawings',
-    },
-}
-
-// ── Format mapping for export URLs ──
-const FORMAT_MAP: Record<string, string> = {
-    docx: 'docx',
-    xlsx: 'xlsx',
-    pptx: 'pptx',
-    png: 'png',
-}
 
 // ── Storage helpers (guarded for SSR) ──
 
@@ -80,17 +46,6 @@ function storageDel(key: string): void {
 }
 
 // ── Helpers ──
-
-function isWorkspaceFile(mimeType: string): boolean {
-    return mimeType in WORKSPACE_EXPORT_MAP
-}
-
-function getExportUrl(fileId: string, mimeType: string): string | null {
-    const mapping = WORKSPACE_EXPORT_MAP[mimeType]
-    if (!mapping) return null
-    const format = FORMAT_MAP[mapping.ext]
-    return `https://docs.google.com/${mapping.docType}/d/${fileId}/export?format=${format}`
-}
 
 function mapGoogleEntry(entry: Record<string, unknown>): DriveFile {
     const mimeType = (entry.mimeType as string) ?? ''
@@ -333,7 +288,7 @@ export class GoogleDrivePlugin implements AdapterPlugin {
     // ── File operations: download single file ──
 
     async downloadFile(driveFile: DriveFile): Promise<File | null> {
-        if (isWorkspaceFile(driveFile.mimeType)) {
+        if (isGoogleWorkspaceFile(driveFile.mimeType)) {
             return this.downloadWorkspaceFile(driveFile)
         }
         return this.downloadRegularFile(driveFile)
@@ -366,10 +321,10 @@ export class GoogleDrivePlugin implements AdapterPlugin {
     private async downloadWorkspaceFile(
         driveFile: DriveFile,
     ): Promise<File | null> {
-        const exportUrl = getExportUrl(driveFile.id, driveFile.mimeType)
+        const exportUrl = getGoogleWorkspaceExportUrl(driveFile.id, driveFile.mimeType)
         if (!exportUrl) return null
 
-        const mapping = WORKSPACE_EXPORT_MAP[driveFile.mimeType]
+        const mapping = getGoogleWorkspaceExportInfo(driveFile.mimeType)
         if (!mapping) return null
 
         const res = await this.apiRequest(exportUrl, { method: 'GET' })

@@ -7,6 +7,12 @@ let gisPromise: Promise<void> | null = null
  * Cached — only loads once per page lifecycle.
  */
 export function loadGoogleIdentityServices(): Promise<void> {
+    if (typeof window !== 'undefined') {
+        const google = (window as Window & { google?: any }).google
+        if (google?.accounts?.oauth2?.initTokenClient) {
+            return Promise.resolve()
+        }
+    }
     if (gisPromise) return gisPromise
     gisPromise = new Promise((resolve, reject) => {
         load('https://accounts.google.com/gsi/client', (err) => {

@@ -6,13 +6,21 @@ Running several projects side by side (for example `shorty` and `upup`) quickly 
 
 For UpUp we use the `53000` range:
 
-| Service / Tool            | Env var(s)                   | Default | Notes |
-| ------------------------- | ---------------------------- | ------- | ----- |
-| Landing (Next.js)         | `PORT` / `LANDING_PORT`      | 53000   | Next reads `PORT`. We also copy it into `LANDING_PORT` for reference. |
-| Documentation (Docusaurus)| `PORT` / `DOCS_PORT`         | 53002   | Docusaurus reads `PORT`; `DOCS_PORT` just documents the assignment. |
-| Playground (Next.js)      | `PLAYGROUND_PORT`            | 53004   | Standalone `@upup/playground` app. Auto-picks next free port if reserved (e.g. Windows Hyper-V holds 53088–53187). |
-| Dev upload backend        | `UPUP_DEV_SERVER_PORT`       | 53010   | Used when running `packages/upup/server`. |
-| Storybook (component lib) | `STORYBOOK_PORT`             | 53050   | Optional, only when you run `pnpm --filter @upup/react storybook`. |
+| Service / Tool             | Env var(s)              | Default | Notes |
+| -------------------------- | ----------------------- | ------- | ----- |
+| Landing (Next.js)          | `PORT` / `LANDING_PORT` | 53000   | Next reads `PORT`. We also copy it into `LANDING_PORT` for reference. |
+| Documentation (Docusaurus) | `PORT` / `DOCS_PORT`    | 53002   | Docusaurus reads `PORT`; `DOCS_PORT` just documents the assignment. |
+| Dev upload backend         | `UPUP_DEV_SERVER_PORT`  | 53010   | Used when running `packages/upup/server`. |
+| Storybook hub              | n/a                     | 6006    | Composes the package Storybooks. `pnpm dev` opens this hub. |
+| React Storybook            | n/a                     | 6007    | Package QA Storybook. |
+| Vue Storybook              | n/a                     | 6008    | Package QA Storybook. |
+| Vanilla Storybook          | n/a                     | 6009    | Package QA Storybook. |
+| Preact Storybook           | n/a                     | 6010    | Package QA Storybook. |
+| Solid Storybook            | n/a                     | 6011    | Package QA Storybook. |
+| Svelte Storybook           | n/a                     | 6012    | Package QA Storybook. |
+| Qwik Storybook             | n/a                     | 6013    | Package QA Storybook. |
+| Angular Storybook          | n/a                     | 6014    | Package QA Storybook. |
+| Next.js Storybook          | n/a                     | 6015    | Package QA Storybook. |
 
 Feel free to extend this list as new local services are added—just stay inside the same range so it is obvious which project owns a given port.
 
@@ -32,11 +40,11 @@ local-dev/
 # install deps
 pnpm install
 
-# start everything (landing + docs + playground + package watcher)
+# start everything (landing + docs + package watcher + Storybook hub)
 pnpm dev
 ```
 
-The root `pnpm dev` command automatically loads `local-dev/.env.ports`, so both the landing app and the docs boot on their reserved ports. If you want to override any value, create a local copy (e.g. `local-dev/.env.ports.local`) and export it before running the scripts, or temporarily set the env var in your shell.
+The root `pnpm dev` command automatically loads `local-dev/.env.ports`, starts the landing app, docs, package watchers, and all package Storybooks, then opens the composed Storybook hub at `http://localhost:6006`. If you want to override any value, create a local copy (e.g. `local-dev/.env.ports.local`) and export it before running the scripts, or temporarily set the env var in your shell.
 
 ### Individual apps
 
@@ -47,8 +55,11 @@ pnpm --filter @upup/landing dev
 # docs only
 pnpm --filter docs dev
 
-# component package storybook
-pnpm --filter @upup/react storybook -- --port $STORYBOOK_PORT
+# all package Storybooks plus composed hub, without opening a browser
+pnpm storybook
+
+# all package Storybooks plus composed hub, opening the browser
+pnpm storybook:open
 ```
 
 Each script reads from `local-dev/.env.ports`, so as soon as the file is present you no longer need to pass `--port` manually (the example above just shows how to keep overrides explicit).

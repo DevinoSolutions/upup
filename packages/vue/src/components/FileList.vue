@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useVirtualizer } from '@tanstack/vue-virtual'
-import { formatUiMessage as t, pluralUiMessage as plural, UploadStatus, isUploadActive, cn } from '@upup/core'
+import { formatUiMessage as t, pluralUiMessage as plural, UploadStatus, isUploadActive, cn, type UploadFile } from '@upup/core'
 import {
     useUploaderFiles,
     useUploaderI18n,
@@ -36,46 +36,51 @@ function formatEta(seconds: number): string {
     return `${s}s left`
 }
 
-const { isAddingMore, viewMode } = useUploaderView()
-const { activeAdapter } = useUploaderSource()
-const { files } = useUploaderFiles()
+const viewCtx = useUploaderView()
+const sourceCtx = useUploaderSource()
+const filesCtx = useUploaderFiles()
 const { translations: tr } = useUploaderI18n()
-const {
-    upload: {
-        proceedUpload,
-        retryUpload,
-        uploadStatus,
-        totalProgress,
-        uploadSpeed,
-        uploadEta,
-        uploadedBytes,
-        totalBytes,
-    },
-    handleDone,
-    handleCancel,
-    handlePause,
-    handleResume,
-} = useUploaderUploadControls()
+const uploadControlsCtx = useUploaderUploadControls()
 const { isProcessing, resumable } = useUploaderOptions()
 const { isDark: dark, slotOverrides: slotClasses, slots: themeSlots } = useUploaderTheme()
 
 const scrollRef = ref<HTMLDivElement | null>(null)
 
-const sortedFiles = computed(() =>
-    Array.from(files.values()).sort((a, b) => {
+function getSortedFiles() {
+    const files = filesCtx.files
+    const entries = Array.from(files.entries())
+    return entries.map(([, file]) => file).sort((a, b) => {
         const pa = a.relativePath || a.name
         const pb = b.relativePath || b.name
         return pa.localeCompare(pb) || a.name.localeCompare(b.name)
-    }),
-)
+    })
+}
+
+function getFileAt(index: number): UploadFile {
+    const file = getSortedFiles()[index]
+    if (!file) {
+        throw new Error(`Missing file at index ${index}`)
+    }
+    return file
+}
+
+function fileKey(file: UploadFile): string {
+    return [
+        file.id,
+        file.relativePath,
+        file.name,
+        file.size,
+        file.type,
+    ].filter(Boolean).join(':')
+}
 
 const shouldVirtualize = computed(
-    () => sortedFiles.value.length >= VIRTUAL_SCROLL_THRESHOLD && viewMode !== 'grid',
+    () => filesCtx.files.size >= VIRTUAL_SCROLL_THRESHOLD && viewCtx.viewMode !== 'grid',
 )
 
 const virtualizer = useVirtualizer(
     computed(() => ({
-        count: sortedFiles.value.length,
+        count: filesCtx.files.size,
         getScrollElement: () => scrollRef.value,
         estimateSize: () => ESTIMATED_ITEM_HEIGHT,
         overscan: 5,
@@ -87,11 +92,11 @@ const virtualItems = computed(() => virtualizer.value.getVirtualItems())
 const totalSize = computed(() => virtualizer.value.getTotalSize())
 
 function onUploadClick() {
-    void proceedUpload().catch(() => undefined)
+    void uploadControlsCtx.upload.proceedUpload().catch(() => undefined)
 }
 
 function onRetryClick() {
-    void retryUpload().catch(() => undefined)
+    void uploadControlsCtx.upload.retryUpload().catch(() => undefined)
 }
 </script>
 
@@ -101,11 +106,11 @@ function onRetryClick() {
         data-upup-slot="file-list"
         :class="cn(
             'upup-relative upup-flex upup-h-full upup-flex-col upup-rounded-lg upup-shadow',
-            { 'upup-hidden': isAddingMore || activeAdapter || !files.size },
+            { 'upup-hidden': viewCtx.isAddingMore || sourceCtx.activeAdapter || !filesCtx.files.size },
             themeSlots?.fileList?.root,
         )"
     >
-        <MainBoxHeader :handle-cancel="handleCancel" />
+        <MainBoxHeader :handle-cancel="uploadControlsCtx.handleCancel" />
 
         <div
             ref="scrollRef"
@@ -138,7 +143,7 @@ function onRetryClick() {
                         paddingBottom: '12px',
                     }"
                 >
-                    <FileItem :file="sortedFiles[virtualItem.index]" />
+                    <FileItem :file="getFileAt(virtualItem.index)" />
                 </div>
             </div>
 
@@ -148,19 +153,19 @@ function onRetryClick() {
                 :class="cn(
                     `${isProcessing ? 'upup-pointer-events-none upup-opacity-75' : ''} upup-flex upup-flex-col upup-gap-3 upup-font-[Arial,Helvetica,sans-serif]`,
                     {
-                        'md:upup-grid md:upup-gap-y-6': files.size > 1 && viewMode === 'grid',
-                        'md:upup-grid-cols-2': files.size > 1 && viewMode === 'grid',
-                        'upup-flex-1': files.size === 1,
+                        'md:upup-grid md:upup-gap-y-6': filesCtx.files.size > 1 && viewCtx.viewMode === 'grid',
+                        'md:upup-grid-cols-2': filesCtx.files.size > 1 && viewCtx.viewMode === 'grid',
+                        'upup-flex-1': filesCtx.files.size === 1,
                         [slotClasses.fileListContainerInnerMultiple!]:
-                            slotClasses.fileListContainerInnerMultiple && files.size > 1,
+                            slotClasses.fileListContainerInnerMultiple && filesCtx.files.size > 1,
                         [slotClasses.fileListContainerInnerSingle!]:
-                            slotClasses.fileListContainerInnerSingle && files.size === 1,
+                            slotClasses.fileListContainerInnerSingle && filesCtx.files.size === 1,
                     },
                 )"
             >
                 <FileItem
-                    v-for="file in sortedFiles"
-                    :key="file.id"
+                    v-for="file in getSortedFiles()"
+                    :key="fileKey(file)"
                     :file="file"
                 />
             </div>
@@ -174,7 +179,7 @@ function onRetryClick() {
             )"
         >
             <ShouldRender
-                :if="uploadStatus !== UploadStatus.SUCCESSFUL && uploadStatus !== UploadStatus.FAILED"
+                :if="uploadControlsCtx.upload.uploadStatus !== UploadStatus.SUCCESSFUL && uploadControlsCtx.upload.uploadStatus !== UploadStatus.FAILED"
             >
                 <button
                     data-testid="upup-upload-btn"
@@ -184,12 +189,12 @@ function onRetryClick() {
                         slotClasses.uploadButton,
                     )"
                     @click="onUploadClick"
-                    :disabled="isUploadActive(uploadStatus) || uploadStatus === UploadStatus.PAUSED || isProcessing"
+                    :disabled="isUploadActive(uploadControlsCtx.upload.uploadStatus) || uploadControlsCtx.upload.uploadStatus === UploadStatus.PAUSED || isProcessing"
                 >
-                    {{ t(plural(tr, 'uploadFiles', files.size), { count: files.size }) }}
+                    {{ t(plural(tr, 'uploadFiles', filesCtx.files.size), { count: filesCtx.files.size }) }}
                 </button>
             </ShouldRender>
-            <ShouldRender :if="uploadStatus === UploadStatus.FAILED">
+            <ShouldRender :if="uploadControlsCtx.upload.uploadStatus === UploadStatus.FAILED">
                 <button
                     data-testid="upup-retry-btn"
                     :class="cn(
@@ -202,14 +207,14 @@ function onRetryClick() {
                     {{ resumable?.protocol === 'multipart' ? tr.resumeUpload : tr.retryUpload }}
                 </button>
             </ShouldRender>
-            <ShouldRender :if="uploadStatus === UploadStatus.SUCCESSFUL">
+            <ShouldRender :if="uploadControlsCtx.upload.uploadStatus === UploadStatus.SUCCESSFUL">
                 <button
                     :class="cn(
                         'upup-disabled:animate-pulse upup-ml-auto upup-rounded-lg upup-bg-blue-600 upup-px-3 upup-py-2 upup-text-sm upup-font-medium upup-text-white',
                         { 'upup-bg-[#30C5F7] dark:upup-bg-[#30C5F7]': dark },
                         slotClasses.uploadDoneButton,
                     )"
-                    @click="handleDone"
+                    @click="uploadControlsCtx.handleDone"
                 >
                     {{ tr.done }}
                 </button>
@@ -219,7 +224,7 @@ function onRetryClick() {
                     <ShouldRender
                         :if="
                             resumable?.protocol === 'multipart' &&
-                            (isUploadActive(uploadStatus) || uploadStatus === UploadStatus.PAUSED)
+                            (isUploadActive(uploadControlsCtx.upload.uploadStatus) || uploadControlsCtx.upload.uploadStatus === UploadStatus.PAUSED)
                         "
                     >
                         <button
@@ -228,11 +233,11 @@ function onRetryClick() {
                                 'upup-flex upup-h-7 upup-w-7 upup-items-center upup-justify-center upup-rounded-full upup-bg-gray-200 upup-text-gray-700 upup-transition-colors hover:upup-bg-gray-300',
                                 { 'upup-bg-white/10 upup-text-white hover:upup-bg-white/20': dark },
                             )"
-                            @click="uploadStatus === UploadStatus.PAUSED ? handleResume() : handlePause()"
-                            :aria-label="uploadStatus === UploadStatus.PAUSED ? tr.resumeUpload : tr.pauseUpload"
-                            :title="uploadStatus === UploadStatus.PAUSED ? tr.resumeUpload : tr.pauseUpload"
+                            @click="uploadControlsCtx.upload.uploadStatus === UploadStatus.PAUSED ? uploadControlsCtx.handleResume() : uploadControlsCtx.handlePause()"
+                            :aria-label="uploadControlsCtx.upload.uploadStatus === UploadStatus.PAUSED ? tr.resumeUpload : tr.pauseUpload"
+                            :title="uploadControlsCtx.upload.uploadStatus === UploadStatus.PAUSED ? tr.resumeUpload : tr.pauseUpload"
                         >
-                            <PlayerPlayFilledIcon v-if="uploadStatus === UploadStatus.PAUSED" :size="14" />
+                            <PlayerPlayFilledIcon v-if="uploadControlsCtx.upload.uploadStatus === UploadStatus.PAUSED" :size="14" />
                             <PlayerPauseFilledIcon v-else :size="14" />
                         </button>
                         <button
@@ -241,7 +246,7 @@ function onRetryClick() {
                                 'upup-flex upup-h-7 upup-w-7 upup-items-center upup-justify-center upup-rounded-full upup-bg-red-100 upup-text-red-700 upup-transition-colors hover:upup-bg-red-200',
                                 { 'upup-bg-red-500/20 upup-text-red-100 hover:upup-bg-red-500/30': dark },
                             )"
-                            @click="handleCancel"
+                            @click="uploadControlsCtx.handleCancel"
                             :aria-label="tr.cancel"
                             :title="tr.cancel"
                         >
@@ -251,12 +256,12 @@ function onRetryClick() {
                     <ProgressBar
                         class="upup-flex-1"
                         progress-bar-class-name="upup-rounded"
-                        :progress="totalProgress"
+                        :progress="uploadControlsCtx.upload.totalProgress"
                         :show-value="true"
                     />
                 </div>
                 <ShouldRender
-                    :if="(isUploadActive(uploadStatus) || uploadStatus === UploadStatus.PAUSED) && totalBytes > 0"
+                    :if="(isUploadActive(uploadControlsCtx.upload.uploadStatus) || uploadControlsCtx.upload.uploadStatus === UploadStatus.PAUSED) && uploadControlsCtx.upload.totalBytes > 0"
                 >
                     <div
                         :class="cn(
@@ -265,15 +270,15 @@ function onRetryClick() {
                         )"
                     >
                         <span>
-                            {{ formatBytes(uploadedBytes) }} of {{ formatBytes(totalBytes) }}
-                            <template v-if="uploadSpeed > 0">
-                                &middot; {{ formatBytes(uploadSpeed) }}/s
+                            {{ formatBytes(uploadControlsCtx.upload.uploadedBytes) }} of {{ formatBytes(uploadControlsCtx.upload.totalBytes) }}
+                            <template v-if="uploadControlsCtx.upload.uploadSpeed > 0">
+                                &middot; {{ formatBytes(uploadControlsCtx.upload.uploadSpeed) }}/s
                             </template>
                         </span>
-                        <ShouldRender :if="isUploadActive(uploadStatus) && uploadEta > 0">
-                            <span>{{ formatEta(uploadEta) }}</span>
+                        <ShouldRender :if="isUploadActive(uploadControlsCtx.upload.uploadStatus) && uploadControlsCtx.upload.uploadEta > 0">
+                            <span>{{ formatEta(uploadControlsCtx.upload.uploadEta) }}</span>
                         </ShouldRender>
-                        <ShouldRender :if="uploadStatus === UploadStatus.PAUSED">
+                        <ShouldRender :if="uploadControlsCtx.upload.uploadStatus === UploadStatus.PAUSED">
                             <span>{{ tr.paused }}</span>
                         </ShouldRender>
                     </div>

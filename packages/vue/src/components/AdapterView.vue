@@ -11,26 +11,26 @@ import { uploadSourceObject } from '../lib/constants'
 import { cn } from '@upup/core'
 import DefaultLoaderIcon from './DefaultLoaderIcon.vue'
 
-const { core } = useUploaderRuntime()
-const { activeAdapter, setActiveAdapter } = useUploaderSource()
+const runtimeCtx = useUploaderRuntime()
+const sourceCtx = useUploaderSource()
 const { translations: tr } = useUploaderI18n()
 const { mini } = useUploaderOptions()
 const { isDark: dark, slotOverrides: slotClasses } = useUploaderTheme()
 
 const uploadComponent = computed(
-    () => activeAdapter && uploadSourceObject[activeAdapter]?.Component,
+    () => sourceCtx.activeAdapter && uploadSourceObject[sourceCtx.activeAdapter]?.Component,
 )
 const adapterIcon = computed(
-    () => activeAdapter && uploadSourceObject[activeAdapter]?.Icon,
+    () => sourceCtx.activeAdapter && uploadSourceObject[sourceCtx.activeAdapter]?.Icon,
 )
 
 const shouldRender = computed(
-    () => !!uploadComponent.value && !mini && !!activeAdapter && !!adapterIcon.value,
+    () => !!uploadComponent.value && !mini && !!sourceCtx.activeAdapter && !!adapterIcon.value,
 )
 
 function handleCancel() {
-    core?.emit('source-view-cancel', { sourceId: activeAdapter })
-    setActiveAdapter(undefined)
+    runtimeCtx.core?.emit('source-view-cancel', { sourceId: sourceCtx.activeAdapter })
+    sourceCtx.setActiveAdapter(undefined)
 }
 </script>
 

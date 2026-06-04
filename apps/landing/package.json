@@ -31,8 +31,7 @@
     "three": "^0.178.0",
     "@upup/core": "workspace:*",
     "@upup/react": "workspace:*",
-    "@upup/server": "workspace:*",
-    "@upup/interactive-example": "workspace:*"
+    "@upup/server": "workspace:*"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

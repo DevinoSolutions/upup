@@ -1,5 +1,6 @@
 import { MouseEventHandler, useRef, useState } from 'react'
 import Webcam from 'react-webcam'
+import { FacingMode } from '@upup/core'
 import {
     useUploaderFiles,
     useUploaderI18n,
@@ -10,10 +11,7 @@ import {
 } from '../context/RootContext'
 import useFetchFileByUrl from './useFetchFileByUrl'
 
-export enum FacingMode {
-    Environment = 'environment',
-    User = 'user',
-}
+export { FacingMode }
 
 export default function useCameraUploader() {
     const { core } = useUploaderRuntime()

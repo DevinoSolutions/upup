@@ -16,7 +16,7 @@ const props = defineProps<{
 }>()
 
 const { core } = useUploaderRuntime()
-const { files } = useUploaderFiles()
+const filesCtx = useUploaderFiles()
 const { onFileClick } = useUploaderOptions()
 const { slotOverrides: slotClasses } = useUploaderTheme()
 
@@ -45,8 +45,8 @@ function onStopPropagation(e: MouseEvent) {
         :class="cn(
             'upup-relative upup-flex upup-flex-1 upup-flex-col upup-items-start upup-gap-1 upup-bg-transparent',
             {
-                [slotClasses.fileItemMultiple!]: slotClasses.fileItemMultiple && files.size > 1,
-                [slotClasses.fileItemSingle!]: slotClasses.fileItemSingle && files.size === 1,
+                [slotClasses.fileItemMultiple!]: slotClasses.fileItemMultiple && filesCtx.files.size > 1,
+                [slotClasses.fileItemSingle!]: slotClasses.fileItemSingle && filesCtx.files.size === 1,
             },
         )"
     >

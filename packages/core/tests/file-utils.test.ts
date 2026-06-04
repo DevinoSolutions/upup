@@ -10,6 +10,8 @@ import {
     fileCanPreviewText,
     fileGetExtension,
     fileIs3D,
+    getDriveEffectiveExtension,
+    driveFileMatchesAccept,
     searchDriveFiles,
 } from '../src/file-utils'
 
@@ -77,6 +79,62 @@ describe('fileIs3D', () => {
     it('detects .glb', () => expect(fileIs3D('glb')).toBe(true))
     it('rejects .png', () => expect(fileIs3D('png')).toBe(false))
     it('is case-insensitive', () => expect(fileIs3D('GLB')).toBe(true))
+})
+
+describe('getDriveEffectiveExtension', () => {
+    it('uses Google Workspace export extensions', () => {
+        expect(
+            getDriveEffectiveExtension({
+                name: 'My Doc',
+                mimeType: 'application/vnd.google-apps.document',
+            }),
+        ).toBe('docx')
+        expect(
+            getDriveEffectiveExtension({
+                name: 'Budget',
+                mimeType: 'application/vnd.google-apps.spreadsheet',
+            }),
+        ).toBe('xlsx')
+        expect(
+            getDriveEffectiveExtension({
+                name: 'Pitch',
+                mimeType: 'application/vnd.google-apps.presentation',
+            }),
+        ).toBe('pptx')
+    })
+
+    it('falls back to filename extension for regular drive files', () => {
+        expect(getDriveEffectiveExtension({ name: 'Photo.JPG', mimeType: 'image/jpeg' })).toBe('jpg')
+    })
+})
+
+describe('driveFileMatchesAccept', () => {
+    const pdf = { name: 'report.pdf', mimeType: 'application/pdf' }
+    const png = { name: 'photo.png', mimeType: 'image/png' }
+    const doc = { name: 'My Doc', mimeType: 'application/vnd.google-apps.document' }
+
+    it('always includes folders', () => {
+        expect(driveFileMatchesAccept({ name: 'Folder', mimeType: 'folder', isFolder: true }, 'image/*')).toBe(true)
+    })
+
+    it('matches exact MIME, wildcard MIME, and extensions', () => {
+        expect(driveFileMatchesAccept(pdf, 'application/pdf')).toBe(true)
+        expect(driveFileMatchesAccept(png, 'image/*')).toBe(true)
+        expect(driveFileMatchesAccept(pdf, '.pdf')).toBe(true)
+        expect(driveFileMatchesAccept(pdf, 'pdf')).toBe(true)
+        expect(driveFileMatchesAccept(pdf, '.png')).toBe(false)
+    })
+
+    it('matches Google Workspace files by exported MIME and extension', () => {
+        expect(driveFileMatchesAccept(doc, '.docx')).toBe(true)
+        expect(
+            driveFileMatchesAccept(
+                doc,
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            ),
+        ).toBe(true)
+        expect(driveFileMatchesAccept(doc, 'image/*')).toBe(false)
+    })
 })
 
 describe('searchDriveFiles', () => {

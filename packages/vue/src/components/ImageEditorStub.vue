@@ -2,13 +2,13 @@
 import { useUploaderEditor, useUploaderTheme } from '../context/root-context'
 import { cn } from '@upup/core'
 
-const { editingFile, closeImageEditor } = useUploaderEditor()
+const editorCtx = useUploaderEditor()
 const { slotOverrides } = useUploaderTheme()
 </script>
 
 <template>
   <div
-    v-if="editingFile"
+    v-if="editorCtx.editingFile"
     :class="cn(
       'upup-fixed upup-inset-0 upup-z-50 upup-flex upup-items-center upup-justify-center upup-bg-black/50',
       slotOverrides['image-editor']
@@ -25,12 +25,12 @@ const { slotOverrides } = useUploaderTheme()
         Image editing is coming soon for Vue. The file has been added as-is.
       </p>
       <p class="upup-text-xs upup-text-gray-400 upup-mb-6">
-        {{ editingFile.name }}
+        {{ editorCtx.editingFile.name }}
       </p>
       <button
         class="upup-px-4 upup-py-2 upup-bg-blue-500 upup-text-white upup-rounded-md upup-hover:bg-blue-600 upup-transition-colors"
         data-testid="upup-image-editor-close"
-        @click="closeImageEditor"
+        @click="editorCtx.closeImageEditor"
       >
         Close
       </button>

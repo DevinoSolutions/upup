@@ -30,10 +30,10 @@ const emit = defineEmits<{
     click: []
 }>()
 
-const { handleFileRemove, files } = useUploaderFiles()
+const filesCtx = useUploaderFiles()
 const { translations: tr } = useUploaderI18n()
 const { openImageEditor } = useUploaderEditor()
-const { upload: { filesProgressMap } } = useUploaderUploadControls()
+const uploadControlsCtx = useUploaderUploadControls()
 const {
     icons: { FileDeleteIcon },
     allowPreview,
@@ -54,8 +54,8 @@ const canPreviewText = computed(() =>
 
 const progress = computed(() =>
     Math.floor(
-        (filesProgressMap[props.fileId]?.loaded /
-            filesProgressMap[props.fileId]?.total) *
+        (uploadControlsCtx.upload.filesProgressMap[props.fileId]?.loaded /
+            uploadControlsCtx.upload.filesProgressMap[props.fileId]?.total) *
             100,
     ),
 )
@@ -75,12 +75,12 @@ watch(
 
 function onHandleFileRemove(e: MouseEvent) {
     e.stopPropagation()
-    handleFileRemove(props.fileId)
+    filesCtx.handleFileRemove(props.fileId)
 }
 
 function onHandleEditImage(e: MouseEvent) {
     e.stopPropagation()
-    const file = files.get(props.fileId)
+    const file = filesCtx.files.get(props.fileId)
     if (file) openImageEditor(file)
 }
 
@@ -109,8 +109,8 @@ function updateCanPreview(val: boolean) {
                 'upup-relative upup-h-[145px] upup-w-[145px] upup-overflow-hidden upup-rounded-lg upup-bg-white upup-shadow-sm',
                 'upup-bg-contain upup-bg-center upup-bg-no-repeat',
                 {
-                    [slotClasses.fileThumbnailMultiple!]: slotClasses.fileThumbnailMultiple && files.size > 1,
-                    [slotClasses.fileThumbnailSingle!]: slotClasses.fileThumbnailSingle && files.size === 1,
+                    [slotClasses.fileThumbnailMultiple!]: slotClasses.fileThumbnailMultiple && filesCtx.files.size > 1,
+                    [slotClasses.fileThumbnailSingle!]: slotClasses.fileThumbnailSingle && filesCtx.files.size === 1,
                 },
                 themeSlots?.filePreview?.thumbnail,
             )"

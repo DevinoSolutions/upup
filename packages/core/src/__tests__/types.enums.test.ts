@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { UploadStatus } from '../types/upload-status'
 import { FileSource } from '../types/file-source'
+import { FacingMode } from '../types/facing-mode'
 import { StorageProvider } from '../types/storage-provider'
 
 // ─────────────────────────────────────────────
@@ -52,6 +53,19 @@ describe('FileSource', () => {
             expect(typeof v).toBe('string')
             expect(v.length).toBeGreaterThan(0)
         }
+    })
+})
+
+// ─────────────────────────────────────────────
+// FacingMode
+// ─────────────────────────────────────────────
+describe('FacingMode', () => {
+    it('defines Environment', () => expect(FacingMode.Environment).toBe('environment'))
+    it('defines User', () => expect(FacingMode.User).toBe('user'))
+
+    it('has 2 distinct values', () => {
+        const vals = Object.values(FacingMode)
+        expect(new Set(vals).size).toBe(2)
     })
 })
 

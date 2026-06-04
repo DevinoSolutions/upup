@@ -10,11 +10,11 @@ import {
 import { isUploadActive, collectDroppedFiles } from '@upup/core'
 
 export default function useMainBox() {
-    const { core } = useUploaderRuntime()
-    const { files, setFiles } = useUploaderFiles()
-    const { activeAdapter } = useUploaderSource()
-    const { isAddingMore } = useUploaderView()
-    const { upload: { uploadStatus } } = useUploaderUploadControls()
+    const runtimeCtx = useUploaderRuntime()
+    const filesCtx = useUploaderFiles()
+    const sourceCtx = useUploaderSource()
+    const viewCtx = useUploaderView()
+    const uploadCtx = useUploaderUploadControls()
     const {
         onFilesDragOver,
         onFilesDragLeave,
@@ -29,15 +29,15 @@ export default function useMainBox() {
     const isDragging = ref(false)
 
     const absoluteIsDragging = computed(
-        () => isDragging.value && !activeAdapter,
+        () => isDragging.value && !sourceCtx.activeAdapter,
     )
 
     const absoluteHasBorder = computed(
-        () => (!files.size || isAddingMore || isDragging.value) && !activeAdapter,
+        () => (!filesCtx.files.size || viewCtx.isAddingMore || isDragging.value) && !sourceCtx.activeAdapter,
     )
 
     const disableDragAction = computed(
-        () => disableDragDrop || activeAdapter || isUploadActive(uploadStatus),
+        () => disableDragDrop || sourceCtx.activeAdapter || isUploadActive(uploadCtx.upload.uploadStatus),
     )
 
     function handleDragOver(e: DragEvent) {
@@ -49,7 +49,7 @@ export default function useMainBox() {
 
         const droppedFiles = Array.from(e.dataTransfer?.files || [])
         onFilesDragOver(droppedFiles)
-        core?.emit('drag-over', {})
+        runtimeCtx.core?.emit('drag-over', {})
     }
 
     function handleDragLeave(e: DragEvent) {
@@ -60,7 +60,7 @@ export default function useMainBox() {
 
         const droppedFiles = Array.from(e.dataTransfer?.files || [])
         onFilesDragLeave(droppedFiles)
-        core?.emit('drag-leave', {})
+        runtimeCtx.core?.emit('drag-leave', {})
     }
 
     async function handleDrop(e: DragEvent) {
@@ -83,7 +83,7 @@ export default function useMainBox() {
                     ? 'Dropped folders were ignored because folderUpload.allowDrop is disabled.'
                     : 'Folder drop is disabled. Enable folderUpload.allowDrop to accept dropped folders.',
             )
-            core?.emit('folder-drop-blocked', { acceptedFiles: droppedFiles.length })
+            runtimeCtx.core?.emit('folder-drop-blocked', { acceptedFiles: droppedFiles.length })
             if (droppedFiles.length === 0) {
                 isDragging.value = false
                 return
@@ -91,8 +91,8 @@ export default function useMainBox() {
         }
 
         onFilesDrop(droppedFiles)
-        setFiles(droppedFiles)
-        core?.emit('drop', { files: droppedFiles })
+        filesCtx.setFiles(droppedFiles)
+        runtimeCtx.core?.emit('drop', { files: droppedFiles })
 
         isDragging.value = false
     }
@@ -115,8 +115,8 @@ export default function useMainBox() {
         }
         if (pastedFiles.length > 0) {
             e.preventDefault()
-            setFiles(pastedFiles)
-            core?.emit('paste', { files: pastedFiles })
+            filesCtx.setFiles(pastedFiles)
+            runtimeCtx.core?.emit('paste', { files: pastedFiles })
         }
     }
 

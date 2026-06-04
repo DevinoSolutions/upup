@@ -19,11 +19,11 @@ const props = withDefaults(
 
 const { isDark: dark, slotOverrides: slotClasses, slots: themeSlots } = useUploaderTheme()
 const { translations: tr } = useUploaderI18n()
-const { upload: { uploadStatus } } = useUploaderUploadControls()
+const uploadControlsCtx = useUploaderUploadControls()
 </script>
 
 <template>
-    <ShouldRender :if="!!props.progress || isUploadActive(uploadStatus)">
+    <ShouldRender :if="!!props.progress || isUploadActive(uploadControlsCtx.upload.uploadStatus)">
         <div
             data-testid="upup-progress-bar"
             data-upup-slot="progress-bar"

@@ -3,5 +3,11 @@ packages:
   - packages/core
   - packages/react
   - packages/vue
+  - packages/vanilla
+  - packages/next
+  - packages/preact
+  - packages/solid
+  - packages/svelte
+  - packages/qwik
+  - packages/angular
   - packages/server
-  - packages/interactive-example

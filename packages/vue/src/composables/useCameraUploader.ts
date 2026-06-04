@@ -1,4 +1,5 @@
 import { computed, onUnmounted, ref } from 'vue'
+import { FacingMode } from '@upup/core'
 import {
     useUploaderFiles,
     useUploaderI18n,
@@ -8,10 +9,7 @@ import {
     useUploaderTheme,
 } from '../context/root-context'
 
-export enum FacingMode {
-    Environment = 'environment',
-    User = 'user',
-}
+export { FacingMode }
 
 export default function useCameraUploader() {
     const { core } = useUploaderRuntime()

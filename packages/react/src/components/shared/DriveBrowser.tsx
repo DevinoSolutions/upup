@@ -10,6 +10,7 @@ import {
     type DriveFolder,
     type DriveUser,
     cn,
+    driveFileMatchesAccept,
     formatUiMessage as t,
     pluralUiMessage as plural,
 } from '@upup/core'
@@ -40,17 +41,6 @@ type Props = {
     'data-upup-slot'?: string
 }
 
-function filterItems(item: DriveFile, accept: string) {
-    if (item.isFolder) return true
-    if (!accept || accept === '*') return true
-    return accept.split(',').some(pattern => {
-        const p = pattern.trim()
-        if (p.startsWith('.')) return item.name.endsWith(p)
-        if (p.endsWith('/*')) return item.mimeType.startsWith(p.replace('/*', '/'))
-        return item.mimeType === p
-    })
-}
-
 export default function DriveBrowser({
     isClickLoading = false,
     driveFiles,
@@ -70,7 +60,7 @@ export default function DriveBrowser({
     const { translations: tr } = useUploaderI18n()
     const [searchTerm, setSearchTerm] = useState('')
     const items = path[path.length - 1]?.children?.filter(
-        item => filterItems(item, allowedFileTypes),
+        item => driveFileMatchesAccept(item, allowedFileTypes),
     )
     const displayedItems = useMemo(
         () => searchDriveFiles(items, searchTerm) || [],

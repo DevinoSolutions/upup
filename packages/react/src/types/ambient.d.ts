@@ -1,7 +1,3 @@
-declare module 'uuid' {
-    export function v4(): string
-}
-
 declare module 'google' {
     export type GoogleFile = {
         id: string

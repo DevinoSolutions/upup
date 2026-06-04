@@ -61,7 +61,7 @@ async function handleFormSubmit(e: Event) {
                     slotClasses.urlFetchButton,
                 )"
                 type="submit"
-                :disabled="!url"
+                :disabled="!url || loading"
             >
                 <component :is="LoaderIcon" v-if="loading" />
                 <template v-else>{{ tr.fetch }}</template>

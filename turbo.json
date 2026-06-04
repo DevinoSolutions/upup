@@ -20,7 +20,6 @@
     "@upup/landing#build": {
       "dependsOn": ["docs#build"]
     },
-    "playground#build": {},
     "dev": {
       "cache": false,
       "persistent": true
