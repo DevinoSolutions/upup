@@ -79,6 +79,10 @@ export const uploaderDefaultArgs: Record<string, unknown> = {
   maxFiles: 10,
   mini: false,
   showBranding: true,
-  themeMode: 'system',
+  // Default to explicit 'dark' to mirror the playground's dark default look.
+  // (React resolves 'system' synchronously via re-render; Vue's resolved theme
+  // is a non-reactive snapshot, so 'system' diverges between the two — an
+  // explicit mode renders identically in both. Users can still pick system/light.)
+  themeMode: 'dark',
   primaryColor: '',
 }
