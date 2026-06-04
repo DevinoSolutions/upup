@@ -20,7 +20,10 @@ export const uploaderArgTypes: Record<string, unknown> = {
   // ── Sources ─────────────────────────────────────────────
   sources: {
     control: { type: 'multi-select' },
-    options: ['local', 'camera', 'url', 'googleDrive', 'oneDrive', 'dropbox', 'box'],
+    // Full UploadSource union, ordered to mirror the playground's source picker
+    // (packages/interactive-example/src/categories/sources.ts). microphone=Audio,
+    // screen=Screen Capture.
+    options: ['local', 'googleDrive', 'oneDrive', 'dropbox', 'box', 'url', 'camera', 'microphone', 'screen'],
     description: 'Values must match the UploadSource union from @upup/core.',
     ...cat('Sources'),
   },
@@ -70,7 +73,9 @@ export const uploaderDefaultArgs: Record<string, unknown> = {
   autoUpload: false,
   maxConcurrentUploads: 3,
   maxRetries: 3,
-  sources: ['local', 'camera'],
+  // Mirror the playground's default source set (My Device, Link, Camera, Audio,
+  // Screen Capture) so the Playground story matches the playground preview.
+  sources: ['local', 'url', 'camera', 'microphone', 'screen'],
   maxFiles: 10,
   mini: false,
   showBranding: true,
