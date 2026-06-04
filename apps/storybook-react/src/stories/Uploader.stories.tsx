@@ -30,3 +30,11 @@ export const Playground: Story = {}
 export const Basic: Story = {
   args: { sources: ['local'], showBranding: false, maxFiles: 1 },
 }
+
+export const Smoke: Story = {
+  play: async ({ canvasElement }) => {
+    if (!canvasElement.querySelector('.upup-scope')) {
+      throw new Error('Smoke: uploader (.upup-scope) did not mount')
+    }
+  },
+}
