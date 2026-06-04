@@ -1,0 +1,47 @@
+{
+  "name": "@upup/qwik",
+  "version": "2.2.0",
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": [
+    "./dist/styles.css"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./styles": "./dist/styles.css"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup && node ./scripts/copy-styles.cjs",
+    "build-storybook": "storybook build -o storybook-static",
+    "dev": "tsup --watch --onSuccess \"node ./scripts/copy-styles.cjs\"",
+    "storybook": "storybook dev -p 6013 --no-open",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "release": "pnpm run build && pnpm publish --access public --no-git-checks",
+    "test-release": "pnpm run build && pnpm publish --dry-run --access public --no-git-checks"
+  },
+  "dependencies": {
+    "@upup/core": "workspace:*",
+    "@upup/vanilla": "workspace:*"
+  },
+  "peerDependencies": {
+    "@builder.io/qwik": "^1.0.0"
+  },
+  "devDependencies": {
+    "@builder.io/qwik": "^1.20.0",
+    "jsdom": "22.1.0",
+    "storybook-framework-qwik": "^0.6.1",
+    "tsup": "^8.4.0",
+    "typescript": "^5.3.2",
+    "vitest": "^4.1.2"
+  }
+}
+

@@ -1,0 +1,61 @@
+{
+  "name": "@upup/angular",
+  "version": "2.2.0",
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": [
+    "./dist/styles.css"
+  ],
+  "main": "./dist/fesm2022/upup-angular.mjs",
+  "module": "./dist/fesm2022/upup-angular.mjs",
+  "types": "./dist/types/upup-angular.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/types/upup-angular.d.ts",
+      "default": "./dist/fesm2022/upup-angular.mjs"
+    },
+    "./styles": "./dist/styles.css"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "ng-packagr -p ng-package.json && node ./scripts/copy-styles.cjs",
+    "build-storybook": "ng run upup-angular:build-storybook",
+    "storybook": "ng run upup-angular:storybook",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "release": "pnpm run build && pnpm publish --access public --no-git-checks",
+    "test-release": "pnpm run build && pnpm publish --dry-run --access public --no-git-checks"
+  },
+  "dependencies": {
+    "@upup/core": "workspace:*",
+    "@upup/vanilla": "workspace:*",
+    "tslib": "^2.8.1"
+  },
+  "peerDependencies": {
+    "@angular/common": ">=18.0.0 <22.0.0",
+    "@angular/core": ">=18.0.0 <22.0.0"
+  },
+  "devDependencies": {
+    "@angular-devkit/architect": "^0.2102.13",
+    "@angular-devkit/build-angular": "^21.2.13",
+    "@angular-devkit/core": "^21.2.13",
+    "@angular/animations": "^21.2.15",
+    "@angular/cli": "^21.2.13",
+    "@angular/common": "^21.2.15",
+    "@angular/compiler": "^21.2.15",
+    "@angular/compiler-cli": "^21.2.15",
+    "@angular/core": "^21.2.15",
+    "@angular/platform-browser": "^21.2.15",
+    "@angular/platform-browser-dynamic": "^21.2.15",
+    "@storybook/angular": "^10.4.1",
+    "ng-packagr": "^21.2.3",
+    "rxjs": "^7.8.2",
+    "typescript": "^5.9.3",
+    "vite": "^8.0.13",
+    "vitest": "^4.1.2",
+    "zone.js": "^0.16.2"
+  }
+}

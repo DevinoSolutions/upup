@@ -1,0 +1,63 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Upup QA/Overview" />
+
+# Upup Storybook QA
+
+This hub composes the framework Storybooks that render the actual package implementations.
+
+- React stories render `@upup/react` package source.
+- Vue stories render `@upup/vue` package source.
+- Landing remains the polished marketing demo and should not be treated as framework QA.
+
+## Story Taxonomy
+
+Use matching story paths across frameworks:
+
+| Path | Purpose |
+| --- | --- |
+| `Uploader/Basic` | Default local uploader render |
+| `Uploader/Restrictions` | File type, size, and count restrictions |
+| `Uploader/Theme/Light` | Light theme render |
+| `Uploader/Theme/Dark` | Dark theme render |
+| `Uploader/I18n/RTL` | RTL locale render |
+| `Uploader/I18n/MessageOverrides` | ICU message override render |
+| `Uploader/UploadFlow/Success` | Mocked direct upload success |
+| `Uploader/UploadFlow/Failure` | Mocked upload failure and retry state |
+| `Uploader/UploadFlow/Progress` | Slow mocked upload progress |
+| `Uploader/ServerMode/Success` | Server-mode success path |
+| `Uploader/ServerMode/Error` | Server-mode error path |
+| `Uploader/Sources/Local` | Local source only |
+| `Uploader/Sources/URL` | URL source only |
+| `Uploader/Sources/URLFetchSuccess` | URL source fetches a deterministic fixture |
+| `Uploader/Sources/Camera` | Camera source only |
+| `Uploader/Sources/AllServerSources` | Full source selector in server mode |
+| `Uploader/Sources/ServerGoogleDrive` | Mocked server-mode cloud listing |
+| `Uploader/Processing/Success` | Post-upload processing success |
+| `Uploader/Processing/Failure` | Post-upload processing failure |
+| `Uploader/Processing/Timeout` | Post-upload processing timeout |
+| `Uploader/Behavior/*` | Local-only, auto upload, mini, paste, folder, and drag/drop controls |
+
+## Feature Support Matrix
+
+| Feature | React | Vue | Vanilla |
+| --- | --- | --- | --- |
+| Local upload | yes | yes | planned |
+| Server mode | yes | partial | planned |
+| Cloud drives | yes | partial | planned |
+| Image editor | yes | no | no |
+| Camera | yes | partial | planned |
+| I18n/RTL | yes | yes | planned |
+
+## Mocking Direction
+
+The package Storybooks install deterministic browser-side mocks for:
+
+- presign success and failure
+- upload progress and upload failure
+- server-mode cloud-drive listing and transfer
+- URL source fixture fetches
+- processing SSE success, failure, and timeout
+- camera and screen-capture media streams
+
+These mocks are Storybook-only infrastructure. They are not shared with landing and do not create a playground core package.

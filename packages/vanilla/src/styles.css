@@ -1,0 +1,141 @@
+.upup-vanilla {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 720px;
+  font-family:
+    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+  color: #111827;
+}
+
+.upup-vanilla *,
+.upup-vanilla *::before,
+.upup-vanilla *::after {
+  box-sizing: border-box;
+}
+
+.upup-vanilla[data-theme="dark"] {
+  color: #f9fafb;
+}
+
+.upup-vanilla__panel {
+  display: grid;
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.upup-vanilla[data-theme="dark"] .upup-vanilla__panel {
+  border-color: #374151;
+  background: #111827;
+}
+
+.upup-vanilla__dropzone {
+  display: grid;
+  gap: 10px;
+  min-height: 160px;
+  padding: 18px;
+  border: 1px dashed #94a3b8;
+  border-radius: 8px;
+  background: #f8fafc;
+  text-align: center;
+}
+
+.upup-vanilla__dropzone[data-dragging="true"] {
+  border-color: #0284c7;
+  background: #e0f2fe;
+}
+
+.upup-vanilla[data-theme="dark"] .upup-vanilla__dropzone {
+  border-color: #475569;
+  background: #0f172a;
+}
+
+.upup-vanilla__actions,
+.upup-vanilla__url,
+.upup-vanilla__file {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.upup-vanilla__url input {
+  min-width: 180px;
+  flex: 1 1 220px;
+}
+
+.upup-vanilla__files {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.upup-vanilla__file {
+  justify-content: space-between;
+  padding: 10px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.upup-vanilla[data-theme="dark"] .upup-vanilla__file {
+  border-color: #374151;
+  background: #1f2937;
+}
+
+.upup-vanilla__file-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.upup-vanilla__muted {
+  color: #64748b;
+  font-size: 13px;
+}
+
+.upup-vanilla button,
+.upup-vanilla input {
+  min-height: 36px;
+  border-radius: 8px;
+  font: inherit;
+}
+
+.upup-vanilla button {
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: inherit;
+  cursor: pointer;
+  padding: 0 12px;
+}
+
+.upup-vanilla button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.upup-vanilla input {
+  border: 1px solid #cbd5e1;
+  padding: 0 10px;
+}
+
+.upup-vanilla__primary {
+  border-color: #0284c7 !important;
+  background: #0284c7 !important;
+  color: #ffffff !important;
+}
+
+.upup-vanilla__error {
+  color: #dc2626;
+  font-size: 13px;
+}
+

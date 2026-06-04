@@ -1,0 +1,58 @@
+{
+  "name": "@upup/next",
+  "version": "2.2.0",
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./client": {
+      "types": "./dist/client.d.ts",
+      "import": "./dist/client.js",
+      "require": "./dist/client.cjs"
+    },
+    "./server": {
+      "types": "./dist/server.d.ts",
+      "import": "./dist/server.js",
+      "require": "./dist/server.cjs"
+    },
+    "./styles": "./dist/styles.css"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup && node ./scripts/copy-styles.cjs",
+    "build-storybook": "storybook build -o storybook-static",
+    "dev": "tsup --watch --onSuccess \"node ./scripts/copy-styles.cjs\"",
+    "storybook": "storybook dev -p 6015 --no-open",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "release": "pnpm run build && pnpm publish --access public --no-git-checks",
+    "test-release": "pnpm run build && pnpm publish --dry-run --access public --no-git-checks"
+  },
+  "dependencies": {
+    "@upup/core": "workspace:*",
+    "@upup/react": "workspace:*",
+    "@upup/server": "workspace:*"
+  },
+  "peerDependencies": {
+    "next": ">=15.0.0 || >=16.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@storybook/nextjs-vite": "^10.4.1",
+    "next": "16.1.6",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "tsup": "^8.4.0",
+    "typescript": "^5.3.2",
+    "vitest": "^4.1.2"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "name": "@upup/storybook",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build-storybook": "storybook build -o storybook-static",
+    "storybook": "storybook dev -p 6006 --no-open",
+    "storybook:open": "storybook dev -p 6006"
+  }
+}

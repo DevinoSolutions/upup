@@ -1,0 +1,49 @@
+{
+  "$schema": "../../node_modules/@angular/cli/lib/config/schema.json",
+  "version": 1,
+  "newProjectRoot": "projects",
+  "projects": {
+    "upup-angular": {
+      "projectType": "library",
+      "root": "",
+      "sourceRoot": "src",
+      "prefix": "upup",
+      "architect": {
+        "build": {
+          "builder": "@angular-devkit/build-angular:application",
+          "options": {
+            "outputPath": "dist/storybook-app",
+            "index": "src/storybook-index.html",
+            "browser": "src/storybook-main.ts",
+            "polyfills": ["zone.js"],
+            "tsConfig": "tsconfig.storybook.json",
+            "assets": [],
+            "styles": ["../vanilla/src/styles.css"],
+            "scripts": []
+          }
+        },
+        "storybook": {
+          "builder": "@storybook/angular:start-storybook",
+          "options": {
+            "browserTarget": "upup-angular:build",
+            "configDir": ".storybook",
+            "port": 6014,
+            "host": "127.0.0.1",
+            "compodoc": false,
+            "ci": true,
+            "open": false
+          }
+        },
+        "build-storybook": {
+          "builder": "@storybook/angular:build-storybook",
+          "options": {
+            "browserTarget": "upup-angular:build",
+            "configDir": ".storybook",
+            "compodoc": false,
+            "outputDir": "storybook-static"
+          }
+        }
+      }
+    }
+  }
+}
