@@ -5,3 +5,4 @@ packages:
   - packages/vue
   - packages/server
   - packages/interactive-example
+  - packages/storybook-config
