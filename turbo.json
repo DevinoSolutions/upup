@@ -21,6 +21,14 @@
       "dependsOn": ["docs#build"]
     },
     "playground#build": {},
+    "build-storybook": {
+      "dependsOn": ["^build"],
+      "outputs": ["storybook-static/**"]
+    },
+    "@upup/storybook-react#build-storybook": {
+      "dependsOn": ["^build", "@upup/storybook-vue#build-storybook"],
+      "outputs": ["storybook-static/**"]
+    },
     "dev": {
       "cache": false,
       "persistent": true
