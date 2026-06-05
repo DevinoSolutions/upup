@@ -27,7 +27,7 @@ const {
 } = useUploaderOptions()
 const { isDark: dark, slotOverrides: slotClasses } = useUploaderTheme()
 const { upload: { uploadStatus } } = useUploaderUploadControls()
-const isUploading = computed(() => isUploadActive(uploadStatus))
+const isUploading = computed(() => isUploadActive(uploadStatus.value))
 const isLimitReached = computed(() => limit === files.value.size)
 const cancelText = computed(() =>
     isAddingMore.value ? tr.cancel : tr.removeAllFiles,

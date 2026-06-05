@@ -54,8 +54,8 @@ const canPreviewText = computed(() =>
 
 const progress = computed(() =>
     Math.floor(
-        (filesProgressMap[props.fileId]?.loaded /
-            filesProgressMap[props.fileId]?.total) *
+        (filesProgressMap.value[props.fileId]?.loaded /
+            filesProgressMap.value[props.fileId]?.total) *
             100,
     ),
 )

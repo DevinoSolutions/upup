@@ -26,7 +26,7 @@ function onInputChange(e: Event) {
         :style="props.style"
         data-testid="upup-root"
         data-upup-slot="root"
-        :data-state="ctx.upload.uploadStatus?.toLowerCase() ?? 'idle'"
+        :data-state="ctx.upload.uploadStatus.value?.toLowerCase() ?? 'idle'"
         :lang="ctx.lang"
         :dir="ctx.dir"
     >

@@ -13,6 +13,7 @@ import type {
     UploadFile,
     UpupThemeMode,
     ResolvedImageEditorOptions,
+    FilesProgressMap,
 } from '@upup/core'
 import { UploadStatus } from '@upup/core'
 import type {
@@ -24,7 +25,17 @@ export { UploadStatus }
 
 // ─── Context type shapes ───────────────────────────────────
 
-export type ContextUpload = BaseContextUpload
+// Reactive so upload progress / status changes reach consumers post-mount.
+export type ContextUpload = Omit<BaseContextUpload, 'uploadStatus' | 'uploadError' | 'totalProgress' | 'filesProgressMap' | 'uploadSpeed' | 'uploadEta' | 'uploadedBytes' | 'totalBytes'> & {
+    uploadStatus: ComputedRef<UploadStatus>
+    uploadError: ComputedRef<string | undefined>
+    totalProgress: ComputedRef<number>
+    filesProgressMap: ComputedRef<FilesProgressMap>
+    uploadSpeed: ComputedRef<number>
+    uploadEta: ComputedRef<number>
+    uploadedBytes: ComputedRef<number>
+    totalBytes: ComputedRef<number>
+}
 
 export type ContextRuntime = BaseContextRuntime & {
     inputRef: Ref<HTMLInputElement | null>

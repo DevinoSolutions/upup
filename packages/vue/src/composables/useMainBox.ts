@@ -37,7 +37,7 @@ export default function useMainBox() {
     )
 
     const disableDragAction = computed(
-        () => disableDragDrop || activeAdapter.value || isUploadActive(uploadStatus),
+        () => disableDragDrop || activeAdapter.value || isUploadActive(uploadStatus.value),
     )
 
     function handleDragOver(e: DragEvent) {
