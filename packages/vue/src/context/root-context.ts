@@ -1,4 +1,4 @@
-import { inject, provide, type InjectionKey, type Ref } from 'vue'
+import { inject, provide, type ComputedRef, type InjectionKey, type Ref } from 'vue'
 import type {
     BaseContextUpload,
     BaseContextRuntime,
@@ -9,6 +9,7 @@ import type {
     BaseContextView,
     BaseContextEditor,
     BaseContextTheme,
+    FileSource,
     ResolvedImageEditorOptions,
 } from '@upup/core'
 import { UploadStatus } from '@upup/core'
@@ -27,7 +28,11 @@ export type ContextRuntime = BaseContextRuntime & {
     inputRef: Ref<HTMLInputElement | null>
 }
 
-export type ContextSource = BaseContextSource
+// Vue exposes activeAdapter as a reactive ComputedRef (React uses a plain value
+// + re-render). Consumers read it via `.value` in script; templates auto-unwrap.
+export type ContextSource = Omit<BaseContextSource, 'activeAdapter'> & {
+    activeAdapter: ComputedRef<FileSource | undefined>
+}
 
 export type ContextI18n = BaseContextI18n
 

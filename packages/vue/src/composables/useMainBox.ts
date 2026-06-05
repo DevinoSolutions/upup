@@ -29,15 +29,15 @@ export default function useMainBox() {
     const isDragging = ref(false)
 
     const absoluteIsDragging = computed(
-        () => isDragging.value && !activeAdapter,
+        () => isDragging.value && !activeAdapter.value,
     )
 
     const absoluteHasBorder = computed(
-        () => (!files.size || isAddingMore || isDragging.value) && !activeAdapter,
+        () => (!files.size || isAddingMore || isDragging.value) && !activeAdapter.value,
     )
 
     const disableDragAction = computed(
-        () => disableDragDrop || activeAdapter || isUploadActive(uploadStatus),
+        () => disableDragDrop || activeAdapter.value || isUploadActive(uploadStatus),
     )
 
     function handleDragOver(e: DragEvent) {

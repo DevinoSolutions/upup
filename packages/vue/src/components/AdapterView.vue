@@ -18,18 +18,18 @@ const { mini } = useUploaderOptions()
 const { isDark: dark, slotOverrides: slotClasses } = useUploaderTheme()
 
 const uploadComponent = computed(
-    () => activeAdapter && uploadSourceObject[activeAdapter]?.Component,
+    () => activeAdapter.value && uploadSourceObject[activeAdapter.value]?.Component,
 )
 const adapterIcon = computed(
-    () => activeAdapter && uploadSourceObject[activeAdapter]?.Icon,
+    () => activeAdapter.value && uploadSourceObject[activeAdapter.value]?.Icon,
 )
 
 const shouldRender = computed(
-    () => !!uploadComponent.value && !mini && !!activeAdapter && !!adapterIcon.value,
+    () => !!uploadComponent.value && !mini && !!activeAdapter.value && !!adapterIcon.value,
 )
 
 function handleCancel() {
-    core?.emit('source-view-cancel', { sourceId: activeAdapter })
+    core?.emit('source-view-cancel', { sourceId: activeAdapter.value })
     setActiveAdapter(undefined)
 }
 </script>

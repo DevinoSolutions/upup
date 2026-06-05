@@ -508,7 +508,10 @@ export default function useRootProvider(props: UpupUploaderProps): IRootContext 
         serverUrl: resolvedServerUrl,
         inputRef,
         openFilePicker,
-        activeAdapter: state.value.activeAdapter,
+        // Reactive so consumers (AdapterView/MainBox/FileList) re-render when the
+        // active adapter changes. A plain `state.value.activeAdapter` snapshot here
+        // froze it at undefined, so clicking a cloud-drive tile never opened its view.
+        activeAdapter: computed(() => state.value.activeAdapter),
         setActiveAdapter: (adapter: FileSource | undefined) => orch.setActiveAdapter(adapter),
         isAddingMore: state.value.isAddingMore,
         setIsAddingMore: (v: boolean) => orch.setIsAddingMore(v),
