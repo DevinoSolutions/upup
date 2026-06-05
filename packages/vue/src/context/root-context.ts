@@ -37,8 +37,9 @@ export type ContextUpload = Omit<BaseContextUpload, 'uploadStatus' | 'uploadErro
     totalBytes: ComputedRef<number>
 }
 
-export type ContextRuntime = BaseContextRuntime & {
+export type ContextRuntime = Omit<BaseContextRuntime, 'isOnline'> & {
     inputRef: Ref<HTMLInputElement | null>
+    isOnline: ComputedRef<boolean>
 }
 
 // Vue exposes activeAdapter as a reactive ComputedRef (React uses a plain value

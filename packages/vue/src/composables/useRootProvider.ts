@@ -517,7 +517,7 @@ export default function useRootProvider(props: UpupUploaderProps): IRootContext 
         setIsAddingMore: (v: boolean) => orch.setIsAddingMore(v),
         viewMode: computed(() => state.value.viewMode),
         setViewMode: (m: 'grid' | 'list') => orch.setViewMode(m),
-        isOnline: state.value.isOnline,
+        isOnline: computed(() => state.value.isOnline),
         translations: translations.value,
         translator: translator.value,
         lang,
