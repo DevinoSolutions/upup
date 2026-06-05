@@ -33,7 +33,7 @@ export default function useMainBox() {
     )
 
     const absoluteHasBorder = computed(
-        () => (!files.size || isAddingMore || isDragging.value) && !activeAdapter.value,
+        () => (!files.value.size || isAddingMore.value || isDragging.value) && !activeAdapter.value,
     )
 
     const disableDragAction = computed(

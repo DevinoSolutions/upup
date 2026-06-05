@@ -28,13 +28,13 @@ const {
 const { isDark: dark, slotOverrides: slotClasses } = useUploaderTheme()
 const { upload: { uploadStatus } } = useUploaderUploadControls()
 const isUploading = computed(() => isUploadActive(uploadStatus))
-const isLimitReached = computed(() => limit === files.size)
+const isLimitReached = computed(() => limit === files.value.size)
 const cancelText = computed(() =>
-    isAddingMore ? tr.cancel : tr.removeAllFiles,
+    isAddingMore.value ? tr.cancel : tr.removeAllFiles,
 )
 
 function toggleViewMode() {
-    setViewMode(viewMode === 'grid' ? 'list' : 'grid')
+    setViewMode(viewMode.value === 'grid' ? 'list' : 'grid')
 }
 </script>
 

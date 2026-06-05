@@ -80,7 +80,7 @@ function onHandleFileRemove(e: MouseEvent) {
 
 function onHandleEditImage(e: MouseEvent) {
     e.stopPropagation()
-    const file = files.get(props.fileId)
+    const file = files.value.get(props.fileId)
     if (file) openImageEditor(file)
 }
 

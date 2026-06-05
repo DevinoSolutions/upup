@@ -62,7 +62,7 @@ const { isDark: dark, slotOverrides: slotClasses, slots: themeSlots } = useUploa
 const scrollRef = ref<HTMLDivElement | null>(null)
 
 const sortedFiles = computed(() =>
-    Array.from(files.values()).sort((a, b) => {
+    Array.from(files.value.values()).sort((a, b) => {
         const pa = a.relativePath || a.name
         const pb = b.relativePath || b.name
         return pa.localeCompare(pb) || a.name.localeCompare(b.name)
@@ -70,7 +70,7 @@ const sortedFiles = computed(() =>
 )
 
 const shouldVirtualize = computed(
-    () => sortedFiles.value.length >= VIRTUAL_SCROLL_THRESHOLD && viewMode !== 'grid',
+    () => sortedFiles.value.length >= VIRTUAL_SCROLL_THRESHOLD && viewMode.value !== 'grid',
 )
 
 const virtualizer = useVirtualizer(

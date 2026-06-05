@@ -10,6 +10,8 @@ import type {
     BaseContextEditor,
     BaseContextTheme,
     FileSource,
+    UploadFile,
+    UpupThemeMode,
     ResolvedImageEditorOptions,
 } from '@upup/core'
 import { UploadStatus } from '@upup/core'
@@ -36,17 +38,31 @@ export type ContextSource = Omit<BaseContextSource, 'activeAdapter'> & {
 
 export type ContextI18n = BaseContextI18n
 
-export type ContextFiles = BaseContextFiles
+// Reactive so the file list / dropzone re-render as files are added or removed.
+export type ContextFiles = Omit<BaseContextFiles, 'files'> & {
+    files: ComputedRef<Map<string, UploadFile>>
+}
 
 export type ContextUploadControls = Omit<BaseContextUploadControls, 'upload'> & {
     upload: ContextUpload
 }
 
-export type ContextView = BaseContextView
+// Reactive so view switching (add-more, grid/list) reaches consumers post-mount.
+export type ContextView = Omit<BaseContextView, 'isAddingMore' | 'viewMode'> & {
+    isAddingMore: ComputedRef<boolean>
+    viewMode: ComputedRef<'grid' | 'list'>
+}
 
-export type ContextEditor = BaseContextEditor
+// Reactive so opening/closing the image editor re-renders consumers.
+export type ContextEditor = Omit<BaseContextEditor, 'editingFile'> & {
+    editingFile: ComputedRef<UploadFile | null>
+}
 
-export type ContextTheme = BaseContextTheme
+// Mode-driven theme fields are reactive so `themeMode:'system'` resolves live.
+export type ContextTheme = Omit<BaseContextTheme, 'themeMode' | 'isDark'> & {
+    themeMode: ComputedRef<Exclude<UpupThemeMode, 'system'>>
+    isDark: ComputedRef<boolean>
+}
 
 export type ContextProps = Required<
     Pick<
