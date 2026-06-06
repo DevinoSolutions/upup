@@ -3,11 +3,10 @@ import {
     FileSource,
     UploadStatus,
     UploaderOrchestrator,
+    ThemeStore,
     createTranslator,
     enUS,
     flattenTranslatorToUiTranslations,
-    flattenSlotsToClassNames,
-    resolveTheme,
     DropboxPlugin,
     GoogleDrivePlugin,
     BoxPlugin,
@@ -33,7 +32,6 @@ import { useSSEProcessing } from './useSSEProcessing'
 /** Empty component placeholder for icons until Vue SVG icons are added */
 const EmptyIcon = defineComponent({ render: () => null })
 
-const EMPTY_THEME_SLOTS = {}
 const EMPTY_STYLE: Record<string, string> = {}
 
 export default function useRootProvider(props: UpupUploaderProps): IRootContext {
@@ -276,31 +274,20 @@ export default function useRootProvider(props: UpupUploaderProps): IRootContext 
         void core.restoreFromCrashRecovery().catch(() => undefined)
     })
 
-    // ── Theme resolution (framework-specific) ───────────────────
-    const requestedThemeMode = themeProp?.mode ?? 'light'
-    const systemMode = ref<'light' | 'dark'>('light')
-
-    const themeMode = computed<'light' | 'dark'>(() => {
-        if (requestedThemeMode === 'system') return systemMode.value
-        return requestedThemeMode
-    })
-
-    const resolvedTheme = computed(() =>
-        resolveTheme({ ...(themeProp ?? {}), mode: themeMode.value }),
-    )
-    const themeSlots = computed(() => resolvedTheme.value.slots)
-    const resolvedSlotClasses = computed(() => flattenSlotsToClassNames(themeSlots.value))
+    // ── Theme resolution (headless: @upup/core ThemeStore) ──────
+    const themeStore = new ThemeStore(themeProp)
+    const themeState = shallowRef(themeStore.getSnapshot())
+    let unsubTheme: (() => void) | null = null
 
     onMounted(() => {
-        if (requestedThemeMode !== 'system') return
-        if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return
-
-        const media = window.matchMedia('(prefers-color-scheme: dark)')
-        const update = () => { systemMode.value = media.matches ? 'dark' : 'light' }
-        update()
-        media.addEventListener?.('change', update)
-
-        onUnmounted(() => media.removeEventListener?.('change', update))
+        unsubTheme = themeStore.subscribe(() => {
+            themeState.value = themeStore.getSnapshot()
+        })
+        themeStore.init()
+    })
+    onUnmounted(() => {
+        themeStore.destroy()
+        unsubTheme?.()
     })
 
     // ── I18n resolution (framework-specific) ────────────────────
@@ -523,14 +510,15 @@ export default function useRootProvider(props: UpupUploaderProps): IRootContext 
         lang,
         dir,
         theme: {
-            // Mode-driven fields are reactive so `themeMode:'system'` resolves live
-            // (matchMedia changes propagate) instead of freezing at provide-time.
-            themeMode: computed(() => themeMode.value),
-            isDark: computed(() => themeMode.value === 'dark'),
-            tokens: resolvedTheme.value.tokens,
-            resolved: resolvedTheme.value as typeof resolvedTheme.value & { mode: 'light' | 'dark' },
-            slotOverrides: resolvedSlotClasses.value,
-            slots: themeSlots.value ?? EMPTY_THEME_SLOTS,
+            // themeMode/isDark stay reactive so `themeMode:'system'` resolves live;
+            // tokens/resolved/slotOverrides remain provide-time snapshots (unchanged
+            // contract). The resolution itself now lives in core's ThemeStore.
+            themeMode: computed(() => themeState.value.themeMode),
+            isDark: computed(() => themeState.value.isDark),
+            tokens: themeState.value.tokens,
+            resolved: themeState.value.resolved,
+            slotOverrides: themeState.value.slotOverrides,
+            slots: themeState.value.slots,
         },
         files: computed(() => state.value.files),
         setFiles: handleSetSelectedFiles,
