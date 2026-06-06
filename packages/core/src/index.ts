@@ -121,6 +121,8 @@ export type {
   InternalFlatClassNames,
 } from './theme/slots'
 export { flattenSlotsToClassNames } from './theme/slots'
+export { ThemeStore } from './theme/theme-store'
+export type { ThemeStoreState } from './theme/theme-store'
 export { UpupCore } from './core'
 export type { CoreOptions, UploadOptions, ValidationResult, Restrictions, CloudDrivesConfig, UpupCorsConfig } from './core'
 export { EventEmitter } from './events'
@@ -146,6 +148,24 @@ export { DropboxPlugin } from './adapters/dropbox-plugin'
 export { GoogleDrivePlugin } from './adapters/google-drive-plugin'
 export { BoxPlugin } from './adapters/box-plugin'
 export { OneDrivePlugin } from './adapters/one-drive-plugin'
+export { AdapterBrowserController } from './adapters/adapter-browser-controller'
+export type {
+    AdapterBrowserState,
+    AdapterBrowserCallbacks,
+    DriveBrowserPlugin,
+} from './adapters/adapter-browser-controller'
+export {
+    GOOGLE_DRIVE_DESCRIPTOR,
+    ONE_DRIVE_DESCRIPTOR,
+    DROPBOX_DESCRIPTOR,
+    BOX_DESCRIPTOR,
+} from './adapters/drive-browser-descriptors'
+export type {
+    AdapterProviderDescriptor,
+    AdapterAuthKind,
+    AdapterFolderKey,
+    AdapterSelectFolderStrategy,
+} from './adapters/drive-browser-descriptors'
 export type { DroppedFilesResult } from './folder-drop'
 export { collectDroppedFiles } from './folder-drop'
 export {
