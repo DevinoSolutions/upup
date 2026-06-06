@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { EventEmitter } from '../src'
+import { UpupCore } from '../src/core'
 import { DropboxPlugin } from '../src/adapters/dropbox-plugin'
 import { GoogleDrivePlugin } from '../src/adapters/google-drive-plugin'
 import { BoxPlugin } from '../src/adapters/box-plugin'
@@ -41,5 +42,27 @@ describe('adapter plugin stubs', () => {
             p.init(emitter)
             p.destroy()
         })
+    })
+
+    // Regression: registering an adapter plugin via core.use() must wire its
+    // event emitter to core's bus. Without this, every adapter event
+    // (e.g. 'google-drive:files-loaded') is silently dropped — the React/Vue
+    // drive browser fetched files (HTTP 200) but stayed stuck on the spinner
+    // because onFilesLoaded never fired.
+    it('core.use() wires an adapter plugin emitter so its events reach core.on()', () => {
+        const core = new UpupCore({})
+        const plugin = new GoogleDrivePlugin()
+        plugin.configure({ google_api_key: 'k', google_app_id: 'a', google_client_id: 'c' })
+        core.use(plugin)
+
+        let signedOut = false
+        core.on('google-drive:signed-out', () => {
+            signedOut = true
+        })
+
+        // signOut() emits 'google-drive:signed-out' through the plugin's emitter
+        plugin.signOut()
+
+        expect(signedOut).toBe(true)
     })
 })

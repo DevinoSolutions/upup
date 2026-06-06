@@ -10,6 +10,7 @@ import { UploadStatus } from './types/upload-status'
 import { EventEmitter, type EventHandler } from './events'
 import type { CoreEvents } from './types/core-events'
 import { PluginManager, type UpupPlugin, type ExtensionMethods } from './plugin'
+import type { AdapterPlugin } from './adapters/plugin'
 import { FileManager, type FileManagerOptions, fileSizeInBytes, matchesAccept } from './file-manager'
 import { PipelineEngine } from './pipeline/engine'
 import { UploadManager } from './upload-manager'
@@ -386,6 +387,15 @@ export class UpupCore {
 
   use(plugin: UpupPlugin): this {
     this.pluginManager.register(plugin, this)
+    // Adapter plugins (Google Drive, Dropbox, OneDrive, Box) emit their events
+    // through an emitter handed to them via init(). Wire it to core's event bus
+    // here so events like 'google-drive:files-loaded' actually reach core.on()
+    // subscribers. Without this, adapters fetch successfully but every event is
+    // silently dropped — e.g. the drive browser stays stuck on its spinner.
+    const adapter = plugin as Partial<AdapterPlugin>
+    if (typeof adapter.init === 'function') {
+      adapter.init(this.emitter as unknown as EventEmitter)
+    }
     this.emitter.emit('plugin-registered', { name: plugin.name })
     return this
   }
