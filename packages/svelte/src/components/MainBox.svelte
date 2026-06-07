@@ -3,8 +3,8 @@
   import useMainBox from '../composables/useMainBox'
   import { cn } from '@upup/core'
   import ShouldRender from './shared/ShouldRender.svelte'
-  // TODO(Task 10): import AdapterView from './AdapterView.svelte'
-  // TODO(Task 10): import AdapterSelector from './AdapterSelector.svelte'
+  import AdapterView from './AdapterView.svelte'
+  import AdapterSelector from './AdapterSelector.svelte'
   import FileList from './FileList.svelte'
 
   const { files } = useUploaderFiles()
@@ -53,7 +53,7 @@
       No internet connection — uploads will resume when you reconnect.
     </div>
   </ShouldRender>
-  <!-- TODO(Task 10): <ShouldRender if={!!$activeAdapter}><AdapterView /></ShouldRender> -->
-  <!-- TODO(Task 10): <ShouldRender if={!$activeAdapter && ($isAddingMore || !$files.size)}><AdapterSelector /></ShouldRender> -->
+  <ShouldRender if={!!$activeAdapter}><AdapterView /></ShouldRender>
+  <ShouldRender if={!$activeAdapter && ($isAddingMore || !$files.size)}><AdapterSelector /></ShouldRender>
   <FileList />
 </div>

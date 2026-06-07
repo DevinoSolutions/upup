@@ -16,18 +16,10 @@ import {
 export { sourceNameKeys } from '@upup/core'
 
 const AudioUploader = () => import('../components/AudioUploader.svelte')
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-expect-error – BoxUploader.svelte added in a later task; remove this directive when it lands
 const BoxUploader = () => import('../components/BoxUploader.svelte')
 const CameraUploader = () => import('../components/CameraUploader.svelte')
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-expect-error – DropboxUploader.svelte added in a later task; remove this directive when it lands
 const DropboxUploader = () => import('../components/DropboxUploader.svelte')
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-expect-error – GoogleDriveUploader.svelte added in a later task; remove this directive when it lands
 const GoogleDriveUploader = () => import('../components/GoogleDriveUploader.svelte')
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-expect-error – OneDriveUploader.svelte added in a later task; remove this directive when it lands
 const OneDriveUploader = () => import('../components/OneDriveUploader.svelte')
 const ScreenCaptureUploader = () => import('../components/ScreenCaptureUploader.svelte')
 const UrlUploader = () => import('../components/UrlUploader.svelte')

@@ -1,0 +1,52 @@
+<script lang="ts">
+  import { useOneDrive } from '../composables/useOneDrive'
+  import DriveAuthFallback from './shared/DriveAuthFallback.svelte'
+  import DriveBrowser from './shared/DriveBrowser.svelte'
+
+  const {
+    user,
+    oneDriveFiles: driveFiles,
+    signOut,
+    token,
+    isAuthenticated,
+    authenticate,
+    isLoading,
+    path,
+    setPath,
+    isClickLoading,
+    handleClick,
+    selectedFiles,
+    showLoader,
+    handleSubmit,
+    handleCancelDownload,
+    onSelectCurrentFolder,
+  } = useOneDrive()
+
+  async function handleSignOut() {
+    signOut()
+  }
+</script>
+
+{#if !$isAuthenticated && !$token && !$isLoading}
+  <DriveAuthFallback
+    providerName="OneDrive"
+    onRetry={authenticate}
+    dataUpupSlot="onedrive-uploader"
+  />
+{:else}
+  <DriveBrowser
+    {driveFiles}
+    {user}
+    {handleSignOut}
+    dataUpupSlot="onedrive-uploader"
+    {path}
+    {setPath}
+    {isClickLoading}
+    {handleClick}
+    {selectedFiles}
+    {showLoader}
+    {handleSubmit}
+    {handleCancelDownload}
+    {onSelectCurrentFolder}
+  />
+{/if}
