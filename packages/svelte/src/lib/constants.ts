@@ -15,14 +15,10 @@ import {
 
 export { sourceNameKeys } from '@upup/core'
 
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-expect-error – AudioUploader.svelte added in a later task; remove this directive when it lands
 const AudioUploader = () => import('../components/AudioUploader.svelte')
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-expect-error – BoxUploader.svelte added in a later task; remove this directive when it lands
 const BoxUploader = () => import('../components/BoxUploader.svelte')
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-expect-error – CameraUploader.svelte added in a later task; remove this directive when it lands
 const CameraUploader = () => import('../components/CameraUploader.svelte')
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-expect-error – DropboxUploader.svelte added in a later task; remove this directive when it lands
@@ -33,8 +29,6 @@ const GoogleDriveUploader = () => import('../components/GoogleDriveUploader.svel
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-expect-error – OneDriveUploader.svelte added in a later task; remove this directive when it lands
 const OneDriveUploader = () => import('../components/OneDriveUploader.svelte')
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-expect-error – ScreenCaptureUploader.svelte added in a later task; remove this directive when it lands
 const ScreenCaptureUploader = () => import('../components/ScreenCaptureUploader.svelte')
 const UrlUploader = () => import('../components/UrlUploader.svelte')
 
