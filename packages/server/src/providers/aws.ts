@@ -1,6 +1,4 @@
 import {
-  S3Client,
-  type S3ClientConfig,
   PutObjectCommand,
   GetObjectCommand,
   CreateMultipartUploadCommand,
@@ -20,22 +18,12 @@ import type {
   MultipartPart,
 } from '@upup/core'
 import type { UpupServerConfig } from '../config'
+import { createS3Client } from './s3-client'
 
 const DEFAULT_EXPIRES_IN = 3600
 const DEFAULT_PUBLIC_URL_EXPIRES_IN = 3600 * 24 * 3 // 3 days
 const MIN_PART_SIZE = 5 * 1024 * 1024 // 5 MiB
 const MAX_PARTS = 10_000
-
-function createS3Client(storage: UpupServerConfig['storage']): S3Client {
-  const config: S3ClientConfig = { region: storage.region }
-  if (storage.accessKeyId && storage.secretAccessKey) {
-    config.credentials = {
-      accessKeyId: storage.accessKeyId as string,
-      secretAccessKey: storage.secretAccessKey as string,
-    }
-  }
-  return new S3Client(config)
-}
 
 function computePartSize(fileSize: number, chunkSizeBytes?: number): number {
   let partSize = chunkSizeBytes ?? MIN_PART_SIZE

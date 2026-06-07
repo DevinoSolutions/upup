@@ -1,33 +1,21 @@
 import {
-  S3Client,
-  type S3ClientConfig,
   PutObjectCommand,
   CreateMultipartUploadCommand,
   UploadPartCommand,
   CompleteMultipartUploadCommand,
   AbortMultipartUploadCommand,
+  GetObjectCommand,
 } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
-import { GetObjectCommand } from '@aws-sdk/client-s3'
 import {
   DEFAULT_MULTIPART_THRESHOLD,
   type UpupServerConfig,
   type UploadedFile,
 } from './config'
+import { createS3Client } from './providers/s3-client'
 
 const MIN_PART_SIZE = 5 * 1024 * 1024
 const PUBLIC_URL_EXPIRES_IN = 3600 * 24 * 3
-
-function createS3Client(storage: UpupServerConfig['storage']): S3Client {
-  const config: S3ClientConfig = { region: storage.region }
-  if (storage.accessKeyId && storage.secretAccessKey) {
-    config.credentials = {
-      accessKeyId: storage.accessKeyId as string,
-      secretAccessKey: storage.secretAccessKey as string,
-    }
-  }
-  return new S3Client(config)
-}
 
 async function signedPublicUrl(
   storage: UpupServerConfig['storage'],
