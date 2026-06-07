@@ -39,6 +39,8 @@ export type ContextUpload = Omit<
 export type ContextRuntime = Omit<BaseContextRuntime, 'isOnline'> & {
     /** Register the hidden file <input> (Svelte `bind:this`) so openFilePicker can click it. */
     registerFileInput: (el: HTMLInputElement | null) => void
+    /** Read the registered hidden file <input> (to toggle webkitdirectory/directory or reset value). */
+    getFileInput: () => HTMLInputElement | null
     isOnline: Readable<boolean>
 }
 
@@ -126,6 +128,7 @@ export function provideRootContext(value: IRootContext): void {
         mode: value.mode,
         serverUrl: value.serverUrl,
         registerFileInput: value.registerFileInput,
+        getFileInput: value.getFileInput,
         openFilePicker: value.openFilePicker,
         isOnline: value.isOnline,
     })

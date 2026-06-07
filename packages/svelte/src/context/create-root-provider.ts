@@ -394,6 +394,7 @@ export function createRootProvider(props: UpupUploaderProps): IRootContext {
     // ── Input ref (Svelte: bind:this registration) ──────────────
     let inputEl: HTMLInputElement | null = null
     const registerFileInput = (el: HTMLInputElement | null) => { inputEl = el }
+    const getFileInput = (): HTMLInputElement | null => inputEl
     const openFilePicker = () => inputEl?.click()
 
     // ── File operations (delegate to core via useUpupUpload) ────
@@ -486,6 +487,7 @@ export function createRootProvider(props: UpupUploaderProps): IRootContext {
         mode: resolvedMode,
         serverUrl: resolvedServerUrl,
         registerFileInput,
+        getFileInput,
         openFilePicker,
         // Reactive so consumers (AdapterView/MainBox/FileList) re-render when the
         // active adapter changes.

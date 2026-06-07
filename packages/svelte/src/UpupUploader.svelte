@@ -4,6 +4,7 @@ import type { UpupUploaderProps } from './shared/types'
 import { createRootProvider } from './context/create-root-provider'
 import { provideRootContext } from './context/root-context'
 import ImageEditorStub from './components/ImageEditorStub.svelte'
+import MainBox from './components/MainBox.svelte'
 import { devinoDark, devinoLight, logoDark, logoLight } from './assets/logos'
 
 let props: UpupUploaderProps = $props()
@@ -62,7 +63,7 @@ function onInputChange(e: Event) {
                 },
             )}
         >
-            <!-- MainBox wired in Task 6 -->
+            <MainBox />
 
             {#if ctx.props.imageEditor.enabled}
                 <ImageEditorStub />

@@ -1,0 +1,59 @@
+<script lang="ts">
+  import { useUploaderFiles, useUploaderI18n, useUploaderRuntime, useUploaderSource, useUploaderTheme, useUploaderView } from '../context/root-context'
+  import useMainBox from '../composables/useMainBox'
+  import { cn } from '@upup/core'
+  import ShouldRender from './shared/ShouldRender.svelte'
+  // TODO(Task 10): import AdapterView from './AdapterView.svelte'
+  // TODO(Task 10): import AdapterSelector from './AdapterSelector.svelte'
+  // TODO(Task 9): import FileList from './FileList.svelte'
+
+  const { files } = useUploaderFiles()
+  const { activeAdapter } = useUploaderSource()
+  const { isAddingMore } = useUploaderView()
+  const { isOnline, getFileInput, openFilePicker } = useUploaderRuntime()
+  const { translations: tr } = useUploaderI18n()
+  const { isDark: dark } = useUploaderTheme()
+  const { isDragging, absoluteIsDragging, absoluteHasBorder, handleDragOver, handleDragLeave, handleDrop, handlePaste } = useMainBox()
+
+  function onKeyDown(e: KeyboardEvent) {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault()
+      const el = getFileInput()
+      if (el) {
+        el.removeAttribute('webkitdirectory')
+        el.removeAttribute('directory')
+      }
+      openFilePicker()
+    }
+  }
+</script>
+
+<div
+  data-testid="upup-dropzone"
+  data-upup-slot="main-box"
+  role="button"
+  tabindex={0}
+  aria-label={tr.dropzoneLabel}
+  aria-dropeffect={$isDragging ? 'copy' : 'none'}
+  onkeydown={onKeyDown}
+  ondragover={handleDragOver}
+  ondragleave={handleDragLeave}
+  ondrop={handleDrop}
+  onpaste={handlePaste}
+  class={cn('upup-relative upup-flex-1 upup-overflow-hidden upup-rounded-lg', {
+    'upup-border upup-border-[#1849D6]': $absoluteHasBorder,
+    'upup-border-[#30C5F7] dark:upup-border-[#30C5F7]': $absoluteHasBorder && $dark,
+    'upup-border-dashed': !$isDragging,
+    'upup-bg-[#E7ECFC] upup-backdrop-blur-sm': $absoluteIsDragging && !$dark,
+    'upup-bg-[#045671] upup-backdrop-blur-sm dark:upup-bg-[#045671]': $absoluteIsDragging && $dark,
+  })}
+>
+  <ShouldRender if={!$isOnline}>
+    <div class={cn('upup-absolute upup-inset-x-0 upup-top-0 upup-z-20 upup-px-3 upup-py-1.5 upup-text-center upup-text-xs upup-font-medium upup-text-white upup-bg-yellow-500', { 'upup-bg-yellow-600': $dark })}>
+      No internet connection — uploads will resume when you reconnect.
+    </div>
+  </ShouldRender>
+  <!-- TODO(Task 10): <ShouldRender if={!!$activeAdapter}><AdapterView /></ShouldRender> -->
+  <!-- TODO(Task 10): <ShouldRender if={!$activeAdapter && ($isAddingMore || !$files.size)}><AdapterSelector /></ShouldRender> -->
+  <!-- TODO(Task 9): <FileList /> -->
+</div>
