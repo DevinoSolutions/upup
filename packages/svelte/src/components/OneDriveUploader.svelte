@@ -1,5 +1,17 @@
 <script lang="ts">
+  import { useUploaderRuntime, useUploaderSource } from '../context/root-context'
   import ClientOneDriveUploader from './ClientOneDriveUploader.svelte'
+  import ServerModeDriveUploader from './ServerModeDriveUploader.svelte'
+
+  const { mode } = useUploaderRuntime()
+  const { setActiveAdapter } = useUploaderSource()
 </script>
 
-<ClientOneDriveUploader />
+{#if mode === 'server'}
+  <ServerModeDriveUploader
+    provider="onedrive"
+    onBack={() => setActiveAdapter(undefined)}
+  />
+{:else}
+  <ClientOneDriveUploader />
+{/if}
