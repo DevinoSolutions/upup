@@ -9,7 +9,8 @@ export type UpupServerConfig = {
     secretAccessKey?: string
     /** S3-compatible endpoint (MinIO / Cloudflare R2 / DO Spaces / on-prem). Omit for AWS S3. */
     endpoint?: string
-    /** Path-style addressing. Defaults to true when `endpoint` is set (required by MinIO). */
+    /** Path-style addressing. Defaults to true when `endpoint` is set (required by MinIO).
+     *  Only applies when `endpoint` is set; ignored for native AWS S3. */
     forcePathStyle?: boolean
     [key: string]: unknown
   }

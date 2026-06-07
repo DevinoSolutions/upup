@@ -13,8 +13,8 @@ export function buildS3ClientConfig(
   const config: S3ClientConfig = { region: storage.region }
   if (storage.accessKeyId && storage.secretAccessKey) {
     config.credentials = {
-      accessKeyId: storage.accessKeyId as string,
-      secretAccessKey: storage.secretAccessKey as string,
+      accessKeyId: storage.accessKeyId,
+      secretAccessKey: storage.secretAccessKey,
     }
   }
   if (storage.endpoint) {

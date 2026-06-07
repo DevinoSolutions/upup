@@ -4,11 +4,12 @@ import { buildS3ClientConfig } from '../src/providers/s3-client'
 const base = { type: 'aws', bucket: 'b', region: 'us-east-1' } as const
 
 describe('buildS3ClientConfig', () => {
-  it('sets region only for plain AWS (no endpoint, no forcePathStyle)', () => {
+  it('sets region only for plain AWS (no endpoint, no credentials, no forcePathStyle)', () => {
     const cfg = buildS3ClientConfig({ ...base })
     expect(cfg.region).toBe('us-east-1')
     expect(cfg.endpoint).toBeUndefined()
     expect(cfg.forcePathStyle).toBeUndefined()
+    expect(cfg.credentials).toBeUndefined()
   })
 
   it('includes credentials when accessKeyId + secretAccessKey provided', () => {
@@ -20,8 +21,8 @@ describe('buildS3ClientConfig', () => {
     expect(cfg.credentials).toEqual({ accessKeyId: 'AK', secretAccessKey: 'SK' })
   })
 
-  it('omits credentials when not provided (AWS default chain)', () => {
-    expect(buildS3ClientConfig({ ...base }).credentials).toBeUndefined()
+  it('omits credentials when only one key is provided', () => {
+    expect(buildS3ClientConfig({ ...base, accessKeyId: 'AK' }).credentials).toBeUndefined()
   })
 
   it('sets endpoint and defaults forcePathStyle=true (MinIO)', () => {
