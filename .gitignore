@@ -25,6 +25,7 @@ graphify-out/
 .env.*
 !.env.example
 !local-dev/.env.ports
+!local-dev/.env.minio.example
 
 # Editors
 .DS_Store

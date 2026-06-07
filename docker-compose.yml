@@ -1,0 +1,39 @@
+# Local MinIO (S3-compatible) for the upup real-storage upload-validation milestone.
+# Dev/test only — NOT a production deployment.
+#   Up:   pnpm e2e:minio:up        Down: pnpm e2e:minio:down
+# Env is injected from local-dev/.env.minio by the pnpm scripts (dotenv-cli).
+# To pin for reproducibility, replace `:latest` with a dated RELEASE.* tag.
+services:
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-upupadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-upupadmin123}
+      # Browser CORS for presigned PUT/GET from the storybook origin. "*" is fine locally.
+      MINIO_API_CORS_ALLOW_ORIGIN: ${MINIO_CORS_ORIGINS:-*}
+    volumes:
+      - upup-minio-data:/data
+
+  minio-setup:
+    image: minio/mc:latest
+    depends_on:
+      - minio
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-upupadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-upupadmin123}
+      UPUP_E2E_BUCKET: ${UPUP_E2E_BUCKET:-upup-e2e}
+    entrypoint: >
+      /bin/sh -c "
+      until mc alias set local http://minio:9000 \"$$MINIO_ROOT_USER\" \"$$MINIO_ROOT_PASSWORD\"; do
+        echo 'waiting for minio...'; sleep 1;
+      done &&
+      mc mb --ignore-existing local/\"$$UPUP_E2E_BUCKET\" &&
+      echo \"upup minio ready: bucket=$$UPUP_E2E_BUCKET\"
+      "
+
+volumes:
+  upup-minio-data:

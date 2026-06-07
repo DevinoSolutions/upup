@@ -25,6 +25,10 @@
     "start": "pnpm run docs:build && pnpm --filter @upup/landing run start",
     "test": "turbo run test",
     "test:coverage": "pnpm --filter @upup/react exec vitest run --coverage --coverage.reportsDirectory=../../coverage",
+    "e2e:minio:up": "dotenv -e local-dev/.env.minio -- docker compose up -d",
+    "e2e:minio:down": "docker compose down -v",
+    "e2e:minio:server": "dotenv -e local-dev/.env.minio -- node scripts/upup-e2e-server.mjs",
+    "e2e:minio:test": "dotenv -e local-dev/.env.minio -- pnpm --filter @upup/server exec vitest run tests/integration",
     "smoke:packages": "node scripts/package-smoke-consumer.mjs",
     "typecheck": "turbo run typecheck",
     "release": "pnpm --filter @upup/core run release && pnpm --filter @upup/server run release && pnpm --filter @upup/react run release && pnpm --filter @upup/vue run release",
@@ -32,8 +36,10 @@
   },
   "devDependencies": {
     "@changesets/cli": "^2.30.0",
+    "@upup/server": "workspace:*",
     "concurrently": "^9.2.1",
     "dotenv-cli": "^7.4.2",
+    "express": "^4.21.0",
     "turbo": "2.5.8"
   },
   "pnpm": {
