@@ -5,7 +5,7 @@
   import ShouldRender from './shared/ShouldRender.svelte'
   // TODO(Task 10): import AdapterView from './AdapterView.svelte'
   // TODO(Task 10): import AdapterSelector from './AdapterSelector.svelte'
-  // TODO(Task 9): import FileList from './FileList.svelte'
+  import FileList from './FileList.svelte'
 
   const { files } = useUploaderFiles()
   const { activeAdapter } = useUploaderSource()
@@ -55,5 +55,5 @@
   </ShouldRender>
   <!-- TODO(Task 10): <ShouldRender if={!!$activeAdapter}><AdapterView /></ShouldRender> -->
   <!-- TODO(Task 10): <ShouldRender if={!$activeAdapter && ($isAddingMore || !$files.size)}><AdapterSelector /></ShouldRender> -->
-  <!-- TODO(Task 9): <FileList /> -->
+  <FileList />
 </div>
