@@ -65,9 +65,19 @@ export type ContextEditor = Omit<BaseContextEditor, 'editingFile'> & {
     editingFile: Readable<UploadFile | null>
 }
 
-export type ContextTheme = Omit<BaseContextTheme, 'themeMode' | 'isDark'> & {
+export type ContextTheme = Omit<
+    BaseContextTheme,
+    'themeMode' | 'isDark' | 'tokens' | 'resolved' | 'slotOverrides' | 'slots'
+> & {
     themeMode: Readable<Exclude<UpupThemeMode, 'system'>>
     isDark: Readable<boolean>
+    // Reactive (mirroring React): ThemeStore recomputes these at init() and on
+    // OS dark/light change, so `themeMode:'system'` resolves live instead of
+    // freezing the construction-time (light) values.
+    tokens: Readable<BaseContextTheme['tokens']>
+    resolved: Readable<BaseContextTheme['resolved']>
+    slotOverrides: Readable<BaseContextTheme['slotOverrides']>
+    slots: Readable<BaseContextTheme['slots']>
 }
 
 export type ContextProps = Required<

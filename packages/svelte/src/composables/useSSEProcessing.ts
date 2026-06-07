@@ -1,0 +1,43 @@
+import { onDestroy } from 'svelte'
+import type { UploadFile } from '@upup/core'
+import { SSEProcessor } from '@upup/core'
+
+type Options = {
+    processingEndpoint?: string
+    onFileProcessed?: (file: UploadFile, data: Record<string, unknown>) => void
+    onError?: (error: Error) => void
+    processingTimeout?: number
+}
+
+/**
+ * Manages server-sent event connections opened after each file upload.
+ * When `processingEndpoint` is set, calling `connectSSE(file)` opens an
+ * EventSource at `${processingEndpoint}?key=${file.key}`. The first message
+ * received is parsed as JSON and forwarded to `onFileProcessed`. The
+ * connection is closed automatically on message, error, or timeout.
+ */
+export function useSSEProcessing({
+    processingEndpoint,
+    onFileProcessed,
+    onError,
+    processingTimeout = 60_000,
+}: Options) {
+    const processor = new SSEProcessor()
+
+    onDestroy(() => processor.destroy())
+
+    function connectSSE(file: UploadFile) {
+        const key = file.key
+        if (!processingEndpoint || !onFileProcessed || !key) return
+
+        processor.subscribe(
+            key,
+            processingEndpoint,
+            (data: Record<string, unknown>) => onFileProcessed(file, data),
+            (error: Error) => onError?.(error),
+            processingTimeout,
+        )
+    }
+
+    return { connectSSE }
+}
