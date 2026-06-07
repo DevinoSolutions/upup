@@ -39,3 +39,40 @@ export const Smoke: Story = {
     }
   },
 }
+
+// ── Real storage (MinIO via the @upup/server harness on :53060) ──────────────
+// Opt-in stories for the real-bytes upload milestone. They DISABLE MSW
+// (parameters.msw.handlers = []) and point at the local harness server using
+// `serverUrl` (which selects the ServerCredentials strategy -> POST /presign),
+// clearing the MSW `uploadEndpoint` default.
+// Prereqs (live task): `pnpm e2e:minio:up` + `pnpm e2e:minio:server` running, and
+// storybook started with VITE_GOOGLE_CLIENT_ID set for the Google Drive cases.
+const REAL_SERVER_URL =
+  (import.meta as unknown as { env?: Record<string, string> }).env
+    ?.VITE_UPUP_E2E_SERVER_URL || 'http://localhost:53060'
+
+export const RealUploadClient: Story = {
+  parameters: { msw: { handlers: [] } },
+  args: {
+    serverUrl: REAL_SERVER_URL,
+    uploadEndpoint: undefined,
+    mode: 'client',
+    autoUpload: true,
+    sources: ['local', 'googleDrive'],
+    maxFiles: 3,
+    showBranding: false,
+  },
+}
+
+export const RealUploadServerDrive: Story = {
+  parameters: { msw: { handlers: [] } },
+  args: {
+    serverUrl: REAL_SERVER_URL,
+    uploadEndpoint: undefined,
+    mode: 'server',
+    autoUpload: true,
+    sources: ['googleDrive'],
+    maxFiles: 3,
+    showBranding: false,
+  },
+}
