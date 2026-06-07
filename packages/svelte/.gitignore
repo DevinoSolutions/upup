@@ -2,4 +2,5 @@ dist
 node_modules
 .turbo
 storybook-static
+.svelte-kit
 *.tsbuildinfo
