@@ -21,7 +21,7 @@
     "@storybook/addon-docs": "^9",
     "@storybook/addon-a11y": "^9",
     "@storybook/addon-themes": "^9",
-    "@sveltejs/vite-plugin-svelte": "^5.0.0",
+    "@sveltejs/vite-plugin-svelte": "^6.0.0",
     "msw": "^2.7.0",
     "msw-storybook-addon": "^2.0.4",
     "@tailwindcss/forms": "^0.5.7",
