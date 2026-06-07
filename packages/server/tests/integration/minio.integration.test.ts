@@ -7,12 +7,13 @@
 //   A. presign + direct PUT       (generatePresignedUrl)
 //   B. multipart                  (initiate -> sign-part -> PUT -> complete)
 //   C. server-mode drive transfer (transferDriveFileToS3, stubbed stream)
-import { describe, it, expect, beforeAll } from 'vitest'
+import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import { createHash } from 'node:crypto'
 import {
   S3Client,
   GetObjectCommand,
   ListObjectsV2Command,
+  DeleteObjectsCommand,
 } from '@aws-sdk/client-s3'
 import { buildS3ClientConfig } from '../../src/providers/s3-client'
 import {
@@ -37,6 +38,7 @@ const storage: UpupServerConfig['storage'] = {
 }
 
 const client = new S3Client(buildS3ClientConfig(storage))
+const uploadedKeys: string[] = []
 const sha256 = (buf: Uint8Array) => createHash('sha256').update(buf).digest('hex')
 
 function makeBytes(n: number, seed = 7): Uint8Array {
@@ -71,6 +73,18 @@ describe.skipIf(!RUN)('MinIO real-storage upload validation', () => {
     }
   })
 
+  afterAll(async () => {
+    if (uploadedKeys.length === 0) return
+    await client
+      .send(
+        new DeleteObjectsCommand({
+          Bucket: storage.bucket,
+          Delete: { Objects: uploadedKeys.map((Key) => ({ Key })), Quiet: true },
+        }),
+      )
+      .catch(() => {})
+  })
+
   it('Path A: presign + direct PUT stores matching bytes', async () => {
     const bytes = makeBytes(2048, 1)
     const { key, uploadUrl, uploadHeaders } = await generatePresignedUrl(
@@ -79,6 +93,7 @@ describe.skipIf(!RUN)('MinIO real-storage upload validation', () => {
       'application/octet-stream',
       bytes.byteLength,
     )
+    uploadedKeys.push(key)
     const put = await fetch(uploadUrl, {
       method: 'PUT',
       headers: uploadHeaders,
@@ -89,7 +104,7 @@ describe.skipIf(!RUN)('MinIO real-storage upload validation', () => {
     const stored = await getObjectBytes(key)
     expect(stored.byteLength).toBe(bytes.byteLength)
     expect(sha256(stored)).toBe(sha256(bytes))
-  })
+  }, 30_000)
 
   it('Path B: multipart upload stores matching bytes', async () => {
     const part1 = makeBytes(5 * 1024 * 1024, 2) // 5 MiB (min part size)
@@ -104,6 +119,7 @@ describe.skipIf(!RUN)('MinIO real-storage upload validation', () => {
       'application/octet-stream',
       whole.byteLength,
     )
+    uploadedKeys.push(key)
 
     const parts: { partNumber: number; eTag: string }[] = []
     let partNumber = 1
@@ -127,7 +143,7 @@ describe.skipIf(!RUN)('MinIO real-storage upload validation', () => {
     const stored = await getObjectBytes(key)
     expect(stored.byteLength).toBe(whole.byteLength)
     expect(sha256(stored)).toBe(sha256(whole))
-  })
+  }, 30_000)
 
   it('Path C (single PUT): drive->S3 transfer stores matching bytes', async () => {
     const bytes = makeBytes(2048, 4)
@@ -139,11 +155,13 @@ describe.skipIf(!RUN)('MinIO real-storage upload validation', () => {
       storage,
       multipartThreshold: 100 * 1024 * 1024, // large -> single PUT branch
     })
+    uploadedKeys.push(result.key)
     expect(result.size).toBe(bytes.byteLength)
 
     const stored = await getObjectBytes(result.key)
+    expect(stored.byteLength).toBe(bytes.byteLength)
     expect(sha256(stored)).toBe(sha256(bytes))
-  })
+  }, 30_000)
 
   it('Path C (streaming multipart): drive->S3 transfer stores matching bytes', async () => {
     const bytes = makeBytes(6 * 1024 * 1024, 5) // 6 MiB
@@ -155,10 +173,11 @@ describe.skipIf(!RUN)('MinIO real-storage upload validation', () => {
       storage,
       multipartThreshold: 5 * 1024 * 1024, // small -> streaming multipart branch
     })
+    uploadedKeys.push(result.key)
     expect(result.size).toBe(bytes.byteLength)
 
     const stored = await getObjectBytes(result.key)
     expect(stored.byteLength).toBe(bytes.byteLength)
     expect(sha256(stored)).toBe(sha256(bytes))
-  })
+  }, 30_000)
 })
