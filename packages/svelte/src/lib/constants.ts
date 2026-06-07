@@ -36,8 +36,6 @@ const OneDriveUploader = () => import('../components/OneDriveUploader.svelte')
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-expect-error – ScreenCaptureUploader.svelte added in a later task; remove this directive when it lands
 const ScreenCaptureUploader = () => import('../components/ScreenCaptureUploader.svelte')
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-expect-error – UrlUploader.svelte added in a later task; remove this directive when it lands
 const UrlUploader = () => import('../components/UrlUploader.svelte')
 
 export const uploadSourceObject: Record<string, {
