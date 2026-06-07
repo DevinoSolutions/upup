@@ -3,6 +3,7 @@ packages:
   - packages/core
   - packages/react
   - packages/vue
+  - packages/svelte
   - packages/server
   - packages/interactive-example
   - packages/storybook-config
