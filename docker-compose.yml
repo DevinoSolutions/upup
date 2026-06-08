@@ -2,10 +2,12 @@
 # Dev/test only — NOT a production deployment.
 #   Up:   pnpm e2e:minio:up        Down: pnpm e2e:minio:down
 # Env is injected from local-dev/.env.minio by the pnpm scripts (dotenv-cli).
-# To pin for reproducibility, replace `:latest` with a dated RELEASE.* tag.
+# Images are pinned by digest for reproducibility — the exact versions the
+# upload-validation gate was verified against. To bump: pull :latest, then
+# `docker image inspect minio/minio:latest --format '{{index .RepoDigests 0}}'`.
 services:
   minio:
-    image: minio/minio:latest
+    image: minio/minio@sha256:14cea493d9a34af32f524e538b8346cf79f3321eff8e708c1e2960462bd8936e
     command: server /data --console-address ":9001"
     ports:
       # Host ports default to 9000/9001; override (e.g. in local-dev/.env.minio)
@@ -21,7 +23,7 @@ services:
       - upup-minio-data:/data
 
   minio-setup:
-    image: minio/mc:latest
+    image: minio/mc@sha256:a7fe349ef4bd8521fb8497f55c6042871b2ae640607cf99d9bede5e9bdf11727
     depends_on:
       - minio
     environment:
