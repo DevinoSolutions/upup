@@ -29,6 +29,10 @@
       "dependsOn": ["^build", "@upup/storybook-vue#build-storybook"],
       "outputs": ["storybook-static/**"]
     },
+    "@upup/storybook-vanilla#build-storybook": {
+      "dependsOn": ["^build"],
+      "outputs": ["storybook-static/**"]
+    },
     "dev": {
       "cache": false,
       "persistent": true

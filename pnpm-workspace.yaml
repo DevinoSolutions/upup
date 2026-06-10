@@ -4,6 +4,7 @@ packages:
   - packages/react
   - packages/vue
   - packages/svelte
+  - packages/vanilla
   - packages/server
   - packages/interactive-example
   - packages/storybook-config
