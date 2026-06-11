@@ -5,6 +5,7 @@ packages:
   - packages/vue
   - packages/svelte
   - packages/vanilla
+  - packages/angular
   - packages/server
   - packages/interactive-example
   - packages/storybook-config
