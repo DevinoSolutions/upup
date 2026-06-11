@@ -253,6 +253,7 @@ export function buildRootContext(
     className: options.className ?? '', folderUploadAllowDrop, folderPickerButtonVisible,
     imageEditor: resolvedImageEditor,
     onIntegrationClick: options.onIntegrationClick ?? (() => {}),
+    resumable: options.resumable,
   }
 
   const ctx: RootContext = {

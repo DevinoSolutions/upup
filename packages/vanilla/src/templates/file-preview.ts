@@ -3,9 +3,6 @@ import type { TemplateResult } from 'lit-html'
 import type { UploadFile, Translations } from '@upup/core'
 import {
   fileGetIsImage,
-  fileCanPreviewText,
-  fileGetIsPdf,
-  fileGetIsText,
   cn,
 } from '@upup/core'
 import type { RootContext } from '../lib/types'
@@ -39,16 +36,7 @@ export function filePreview(
   const fileId = file.id
 
   const isImage = fileGetIsImage(fileType)
-  const isPdf = fileGetIsPdf(fileType, fileName)
-  const isText = fileGetIsText(fileType, fileName)
-  const canPreviewText = fileCanPreviewText(fileType, fileName, fileSize)
   const filesSize = ctx.core.files.size
-
-  // Auto-signal canPreview for image/pdf/previewable-text (mirrors svelte $effect)
-  if ((isImage || isPdf || (isText && canPreviewText)) && !state.canPreview) {
-    state.canPreview = true
-    ctx.invalidate()
-  }
 
   const m = ctx.orchestrator.getSnapshot().filesProgressMap[fileId]
   const progress = m ? Math.floor((m.loaded / m.total) * 100) : 0

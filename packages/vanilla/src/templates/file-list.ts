@@ -27,6 +27,26 @@ interface VirtualizerEntry {
 }
 const virtualizers = new WeakMap<RootContext, VirtualizerEntry>()
 
+const scrollEls = new WeakMap<RootContext, HTMLDivElement | null>()
+const scrollRefCbs = new WeakMap<RootContext, (el: Element | undefined) => void>()
+function getScrollRefCb(ctx: RootContext): (el: Element | undefined) => void {
+  let cb = scrollRefCbs.get(ctx)
+  if (!cb) {
+    cb = (el: Element | undefined) => {
+      const next = (el as HTMLDivElement | undefined) ?? null
+      const prev = scrollEls.get(ctx) ?? null
+      if (next === prev) return
+      scrollEls.set(ctx, next)
+      // null -> element (scroll container just mounted): re-render so the virtual branch,
+      // which gates on the now-available element, can engage. Stable cb identity means
+      // lit-html only invokes this on real mount/unmount (no per-render churn / no loop).
+      if (next && !prev) ctx.invalidate()
+    }
+    scrollRefCbs.set(ctx, cb)
+  }
+  return cb
+}
+
 function getVirtualizer(ctx: RootContext, count: number, scrollEl: HTMLDivElement): Virtualizer<HTMLDivElement, HTMLDivElement> {
   const entry = virtualizers.get(ctx)
   if (!entry) {
@@ -58,6 +78,8 @@ export function disposeFileList(ctx: RootContext) {
     entry.unmount()
   }
   virtualizers.delete(ctx)
+  scrollEls.delete(ctx)
+  scrollRefCbs.delete(ctx)
 }
 
 function formatBytes(bytes: number): string {
@@ -69,6 +91,7 @@ function formatBytes(bytes: number): string {
 }
 
 function formatEta(seconds: number): string {
+  if (seconds <= 0 || !isFinite(seconds)) return ''
   const m = Math.floor(seconds / 60)
   const s = seconds % 60
   if (m > 0) return `${m}m ${s}s left`
@@ -98,6 +121,7 @@ export function fileList(ctx: RootContext) {
   const uploading = isUploadActive(uploadStatus)
   const grid = viewMode === 'grid'
   const { isProcessing } = ctx.props
+  const isMultipart = ctx.props.resumable?.protocol === 'multipart'
   const { isDark } = ctx.theme.getSnapshot()
   const slot = ctx.theme.getSnapshot().slotOverrides
   const themeSlots = ctx.theme.getSnapshot().slots
@@ -108,25 +132,7 @@ export function fileList(ctx: RootContext) {
   const uploadedBytes = o.uploadedBytes
   const totalBytes = o.totalBytes
 
-  let scrollElRef: HTMLDivElement | null = null
-
-  // ── Footer: full svelte FileList control set ──────────────────────────────
-  //
-  // svelte's footer renders:
-  //   1. Upload button (when not SUCCESSFUL and not FAILED)
-  //   2. Retry button (when FAILED)
-  //   3. Done button (when SUCCESSFUL)
-  //   4. Pause/resume + Cancel buttons (when multipart resumable && active/paused)
-  //   5. Inline progress bar (flex-1)
-  //   6. Bytes-transferred / speed / ETA text row (when active/paused && totalBytes>0)
-  //
-  // Pause/resume/cancel are gated on `resumable?.protocol === 'multipart'`.
-  // ctx.props does not expose resumable — it's a core-level option not surfaced in RootContextProps.
-  // We access the core's uploadManager options via ctx.core to check this.
-  // Since core.options is the raw CoreOptions, we can read it there. However, it's not typed on
-  // UpupCore's public surface. Instead, we render the pause/cancel group unconditionally when
-  // the upload is active/paused — svelte gates it on multipart; without that signal we fall back to
-  // always showing the group. This is a known delta (reported below).
+  // Pause/resume/cancel gated on multipart resumable (mirrors svelte FileList.svelte).
 
   const onUploadClick = () => { void ctx.proceedUpload().catch(() => undefined) }
   const onRetryClick = () => { void ctx.retryUpload().catch(() => undefined) }
@@ -166,7 +172,7 @@ export function fileList(ctx: RootContext) {
             )}
             @click=${onRetryClick}
           >
-            ${tr.retryUpload}
+            ${isMultipart ? tr.resumeUpload : tr.retryUpload}
           </button>`
         : nothing}
 
@@ -186,7 +192,7 @@ export function fileList(ctx: RootContext) {
 
       <div class="upup-flex upup-flex-1 upup-flex-col upup-gap-1">
         <div class="upup-flex upup-items-center upup-gap-2">
-          ${uploading || uploadStatus === UploadStatus.PAUSED
+          ${isMultipart && (uploading || uploadStatus === UploadStatus.PAUSED)
             ? html`
               <button
                 data-testid="upup-upload-pause-toggle"
@@ -235,6 +241,8 @@ export function fileList(ctx: RootContext) {
       </div>
     </div>`
 
+  const persistedScrollEl = scrollEls.get(ctx) ?? null
+
   return html`
     <div
       class=${cn(
@@ -247,16 +255,16 @@ export function fileList(ctx: RootContext) {
     >
       ${mainBoxHeader(ctx, () => ctx.handleCancel())}
       <div
-        ${ref((el) => { scrollElRef = (el as HTMLDivElement) ?? null })}
+        ${ref(getScrollRefCb(ctx))}
         class=${cn(
           'upup-preview-scroll upup-flex upup-flex-1 upup-flex-col upup-overflow-y-auto upup-bg-black/[0.075] upup-p-3',
           { 'upup-bg-white/10 dark:upup-bg-white/10': isDark },
           slot.fileListContainer,
         )}
       >
-        ${shouldVirtualize && scrollElRef
+        ${shouldVirtualize && persistedScrollEl
           ? (() => {
-              const v = getVirtualizer(ctx, sortedFiles.length, scrollElRef)
+              const v = getVirtualizer(ctx, sortedFiles.length, persistedScrollEl)
               return html`
                 <div
                   data-upup-slot="file-list-virtual"

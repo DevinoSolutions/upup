@@ -13,19 +13,18 @@ import type { RootContext } from '../lib/types'
 import { shouldRender } from './should-render'
 import { XIcon } from './icons'
 
-// Module-level text cache so repeated re-renders of the same portal don't re-fetch
-interface TextState {
+// Text-preview fetch state, stored on the per-file FileItemState cell so it survives
+// re-renders (a fresh args object literal each render would otherwise miss the cache).
+export interface TextState {
   content: string
   loading: boolean
   error: string | undefined
   truncated: boolean
   fetched: boolean
 }
-const textStateMap = new WeakMap<object, TextState>()
 
-async function loadText(key: object, fileUrl: string, isOversized: boolean, ctx: RootContext): Promise<void> {
-  const state = textStateMap.get(key)
-  if (!state || state.fetched || state.loading) return
+async function loadText(state: TextState, fileUrl: string, isOversized: boolean, ctx: RootContext): Promise<void> {
+  if (state.fetched || state.loading) return
   state.loading = true
   ctx.invalidate()
   try {
@@ -68,6 +67,7 @@ export function filePreviewPortal(
     fileSize: number | undefined
     onClose: () => void
     onStopPropagation: (e: MouseEvent) => void
+    cell: { textState?: TextState }
   },
 ): TemplateResult {
   const { fileType, fileUrl, fileName, fileSize, onClose, onStopPropagation } = args
@@ -80,18 +80,10 @@ export function filePreviewPortal(
   const isText = fileGetIsText(fileType, fileName)
   const isOversizedText = isText && fileSize !== undefined && fileSize > PREVIEW_MAX_TEXT_SIZE
 
-  // Text state management (keyed by args object reference — stable per portal open)
-  // We use a fixed key object per portal invocation; since portal re-renders use the same ctx+args
-  // we key by a stable object tied to fileUrl+fileName to avoid stale state
-  const textKey = args
-  if (!textStateMap.has(textKey)) {
-    textStateMap.set(textKey, { content: '', loading: false, error: undefined, truncated: false, fetched: false })
-  }
-  const textState = textStateMap.get(textKey)!
-
-  // Trigger text fetch on first render if applicable
+  // Text state lives on the per-file cell (stable across renders, GC'd with the file).
+  const textState: TextState = (args.cell.textState ??= { content: '', loading: false, error: undefined, truncated: false, fetched: false })
   if (isText && !textState.fetched && !textState.loading && !textState.error) {
-    void loadText(textKey, fileUrl, isOversizedText, ctx)
+    void loadText(textState, fileUrl, isOversizedText, ctx)
   }
 
   const onContentClick = (e: MouseEvent) => {

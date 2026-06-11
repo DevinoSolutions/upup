@@ -1,15 +1,21 @@
 import { html, nothing } from 'lit-html'
 import type { UploadFile } from '@upup/core'
+import { fileGetIsImage, fileGetIsPdf, fileGetIsText, fileCanPreviewText } from '@upup/core'
 import { cn } from '../lib/cn'
 import type { RootContext } from '../lib/types'
 import { filePreview } from './file-preview'
-import { filePreviewPortal } from './file-preview-portal'
+import { filePreviewPortal, type TextState } from './file-preview-portal'
 
-export interface FileItemState { canPreview: boolean; showPreviewPortal: boolean }
+export interface FileItemState { canPreview: boolean; showPreviewPortal: boolean; textState?: TextState }
 const stateMap = new WeakMap<UploadFile, FileItemState>()
+function computeEagerCanPreview(file: UploadFile): boolean {
+  const type = file.type ?? ''
+  const name = file.name
+  return fileGetIsImage(type) || fileGetIsPdf(type, name) || (fileGetIsText(type, name) && fileCanPreviewText(type, name, file.size))
+}
 function stateFor(file: UploadFile): FileItemState {
   let s = stateMap.get(file)
-  if (!s) { s = { canPreview: false, showPreviewPortal: false }; stateMap.set(file, s) }
+  if (!s) { s = { canPreview: computeEagerCanPreview(file), showPreviewPortal: false }; stateMap.set(file, s) }
   return s
 }
 
@@ -30,7 +36,7 @@ export function fileItem(ctx: RootContext, file: UploadFile) {
     >
       ${filePreview(ctx, file, state, { onRequestPreview: openPortal })}
       ${state.canPreview && state.showPreviewPortal
-        ? filePreviewPortal(ctx, { fileType: file.type ?? '', fileUrl: file.url ?? '', fileName: file.name, fileSize: file.size, onClose: closePortal, onStopPropagation: stop })
+        ? filePreviewPortal(ctx, { fileType: file.type ?? '', fileUrl: file.url ?? '', fileName: file.name, fileSize: file.size, onClose: closePortal, onStopPropagation: stop, cell: state })
         : nothing}
     </div>`
 }

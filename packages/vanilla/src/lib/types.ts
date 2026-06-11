@@ -103,6 +103,7 @@ export interface RootContextProps {
   folderPickerButtonVisible: boolean
   imageEditor: ResolvedImageEditorOptions
   onIntegrationClick: (sourceId: string) => void
+  resumable: CoreOptions['resumable']
 }
 
 /** The flat root context every template fn receives. Replicates svelte createRootProvider data without core extraction. */
