@@ -4,7 +4,7 @@ module.exports = {
             prefix: 'upup-',
             darkMode: 'class',
             corePlugins: { preflight: true },
-            content: ['./src/**/*.ts'],
+            content: ['./src/**/*.{ts,css}'],
             theme: {
                 extend: {
                     containers: { cs: '475px' },

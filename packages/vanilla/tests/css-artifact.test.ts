@@ -12,5 +12,8 @@ describe('@upup/vanilla CSS artifact', () => {
     expect(css).toContain('.upup-scope')
     // prefix + scope both applied:
     expect(css).toMatch(/\.upup-scope[^{]*\.upup-/)
+    // Layer-defined classes must survive the content purge:
+    expect(css).toContain('.upup-shadow-wrapper')
+    expect(css).toContain('.upup-preview-scroll')
   })
 })
