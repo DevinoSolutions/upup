@@ -3,6 +3,7 @@ import { buildRootContext } from './context'
 import { createRenderLoop } from './app'
 import { resolveTarget } from './lib/dom'
 import { disposeFileList } from './templates/file-list'
+import { disposeServerDrives } from './templates/server-mode-drive-uploader'
 import type { CreateUploaderOptions, UpupInstance, UploaderSnapshot } from './lib/types'
 
 export function createUploader(
@@ -76,6 +77,7 @@ export function createUploader(
       subscribers.clear()
       built.dispose()
       disposeFileList(ctx)
+      disposeServerDrives(ctx)
       render(nothing, el)
     },
   }
