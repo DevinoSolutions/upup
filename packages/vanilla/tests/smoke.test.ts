@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest'
-import { VANILLA_PACKAGE } from '../src/index'
+import { resolveTarget } from '../src/lib/dom'
 
 describe('@upup/vanilla scaffold', () => {
-  it('exposes the package marker', () => {
-    expect(VANILLA_PACKAGE).toBe('@upup/vanilla')
+  it('resolveTarget is a function', () => {
+    expect(typeof resolveTarget).toBe('function')
   })
 })
