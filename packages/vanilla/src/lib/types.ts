@@ -60,6 +60,11 @@ export interface AdapterController<S = unknown> extends UploaderController<S> {
 }
 
 /** Lazily-instantiated controllers, keyed; the render loop disposes inactive ones on adapter switch. */
+/**
+ * NOTE: The five `import('../controllers/…')` types below reference modules added in Tasks 8–12.
+ * Until those land, `tsc --noEmit` emits 5 expected TS2307 errors — the plan's convergence gate
+ * (Task 12) is where the package typecheck goes green. Do not "fix" by stubbing controllers.
+ */
 export interface ControllerRegistry {
   fileInput: import('../controllers/file-input').FileInputController
   dragDrop: import('../controllers/drag-drop').DragDropController

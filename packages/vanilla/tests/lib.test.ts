@@ -12,6 +12,7 @@ describe('lib/dom resolveTarget', () => {
     document.body.appendChild(div)
     expect(resolveTarget('#mount-here')).toBe(div)
     expect(resolveTarget(div)).toBe(div)
+    div.remove()
   })
 })
 
