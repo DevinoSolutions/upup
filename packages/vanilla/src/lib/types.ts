@@ -49,6 +49,8 @@ export interface CreateUploaderOptions extends Omit<CoreOptions, 'cloudDrives'> 
   onUploadComplete?: (files: UploadFile[]) => void
   /** Called when the user clicks Done (before files are cleared) — mirrors svelte's onDoneClicked prop. */
   onDoneClicked?: () => void
+  /** Called when a source tile is clicked (before the source-click emit) — mirrors svelte's onIntegrationClick prop. */
+  onIntegrationClick?: (sourceId: string) => void
 }
 
 /** Base controller contract. invalidate() is injected at construction by the render loop. */
@@ -100,6 +102,7 @@ export interface RootContextProps {
   folderUploadAllowDrop: boolean
   folderPickerButtonVisible: boolean
   imageEditor: ResolvedImageEditorOptions
+  onIntegrationClick: (sourceId: string) => void
 }
 
 /** The flat root context every template fn receives. Replicates svelte createRootProvider data without core extraction. */

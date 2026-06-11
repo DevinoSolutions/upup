@@ -54,6 +54,7 @@ export function adapterSelector(ctx: RootContext) {
     .map((item) => ({ ...item, name: tr[item.nameKey] }))
 
   function handleAdapterClick(sourceId: FileSource) {
+    ctx.props.onIntegrationClick(sourceId)
     ctx.core.emit('source-click', { sourceId })
     if (sourceId === FileSource.LOCAL) ctx.openFilePicker()
     else ctx.setActiveAdapter(sourceId)

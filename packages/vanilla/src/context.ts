@@ -252,6 +252,7 @@ export function buildRootContext(
     showBranding: options.showBranding ?? true, disableDragDrop: options.disableDragDrop ?? false,
     className: options.className ?? '', folderUploadAllowDrop, folderPickerButtonVisible,
     imageEditor: resolvedImageEditor,
+    onIntegrationClick: options.onIntegrationClick ?? (() => {}),
   }
 
   const ctx: RootContext = {
