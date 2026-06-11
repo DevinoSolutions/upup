@@ -12,7 +12,7 @@
     "dev:apps": "turbo run dev --parallel --filter=@upup/landing --filter=docs --filter=@upup/playground",
     "dev:playground": "pnpm --filter @upup/playground run dev",
     "build:playground": "turbo run build --filter=@upup/playground",
-    "dev:storybook": "concurrently \"pnpm --filter @upup/storybook-vue storybook\" \"pnpm --filter @upup/storybook-react storybook\" \"pnpm --filter @upup/storybook-svelte storybook\"",
+    "dev:storybook": "concurrently \"pnpm --filter @upup/storybook-vue storybook\" \"pnpm --filter @upup/storybook-react storybook\" \"pnpm --filter @upup/storybook-svelte storybook\" \"pnpm --filter @upup/storybook-vanilla storybook\"",
     "build:storybook": "turbo run build-storybook",
     "start:playground": "pnpm --filter @upup/playground run start",
     "dev:package-watch": "pnpm --filter @upup/core run build && concurrently \"pnpm --filter @upup/core run dev\" \"pnpm --filter @upup/server run dev\" \"pnpm --filter @upup/react run dev\"",
