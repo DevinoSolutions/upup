@@ -99,18 +99,23 @@ export class DragDropController implements UploaderController<DragDropSnapshot> 
   }
 
   handlePaste(e: ClipboardEvent) {
-    if (this.disabled || this.deps.props().isProcessing) return
-    if (!this.deps.options.enablePaste) return
+    if (!this.deps.options.enablePaste || this.deps.props().isProcessing) return
     const items = e.clipboardData?.items
     if (!items) return
     const files: File[] = []
     for (const item of Array.from(items)) {
       if (item.kind === 'file') {
         const f = item.getAsFile()
-        if (f) files.push(f)
+        if (f) {
+          const name = f.name === 'image.png' || !f.name
+            ? `pasted-${Date.now()}.${f.type.split('/')[1] || 'png'}`
+            : f.name
+          files.push(new File([f], name, { type: f.type }))
+        }
       }
     }
     if (files.length) {
+      e.preventDefault()
       void this.deps.setFiles(files)
       this.deps.core.emit('paste', { files })
     }
