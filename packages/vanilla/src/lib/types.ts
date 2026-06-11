@@ -51,6 +51,11 @@ export interface CreateUploaderOptions extends Omit<CoreOptions, 'cloudDrives'> 
   onDoneClicked?: () => void
   /** Called when a source tile is clicked (before the source-click emit) — mirrors svelte's onIntegrationClick prop. */
   onIntegrationClick?: (sourceId: string) => void
+  onFilesDragOver?: (files: File[]) => void
+  onFilesDragLeave?: (files: File[]) => void
+  onFilesDrop?: (files: File[]) => void
+  onWarn?: (message: string) => void
+  enablePaste?: boolean
 }
 
 /** Base controller contract. invalidate() is injected at construction by the render loop. */
