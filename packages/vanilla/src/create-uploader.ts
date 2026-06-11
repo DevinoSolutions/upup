@@ -2,6 +2,7 @@ import { render, nothing } from 'lit-html'
 import { buildRootContext } from './context'
 import { createRenderLoop } from './app'
 import { resolveTarget } from './lib/dom'
+import { disposeFileList } from './templates/file-list'
 import type { CreateUploaderOptions, UpupInstance, UploaderSnapshot } from './lib/types'
 
 export function createUploader(
@@ -74,6 +75,7 @@ export function createUploader(
       unsubAll()
       subscribers.clear()
       built.dispose()
+      disposeFileList(ctx)
       render(nothing, el)
     },
   }

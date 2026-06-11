@@ -1,0 +1,79 @@
+import { html, nothing } from 'lit-html'
+import type { TemplateResult } from 'lit-html'
+import {
+  fileGetExtension,
+  fileGetIsPdf,
+  fileGetIsText,
+  fileCanPreviewText,
+  fileIs3D,
+  cn,
+} from '@upup/core'
+import type { RootContext } from '../lib/types'
+import { shouldRender } from './should-render'
+import { fileIcon } from './file-icon'
+
+export function filePreviewThumbnail(
+  ctx: RootContext,
+  args: {
+    canPreview: boolean
+    fileType: string
+    fileName: string
+    fileUrl: string
+    fileSize?: number
+    allowPreview: boolean
+  },
+  onCanPreview: () => void,
+): TemplateResult | typeof nothing {
+  const { canPreview, fileType, fileName, fileUrl, fileSize, allowPreview } = args
+  const slot = ctx.theme.getSnapshot().slotOverrides
+
+  const extension = fileGetExtension(fileType, fileName)
+  const isPdf = fileGetIsPdf(fileType, fileName)
+  const is3D = fileIs3D(extension?.toLowerCase() ?? '')
+  const isText = fileGetIsText(fileType, fileName)
+  const isOversizedText = isText && !fileCanPreviewText(fileType, fileName, fileSize)
+
+  if (isPdf || is3D || isOversizedText) {
+    // PDFs, 3D files, oversized text — static icon only
+    return html`
+      <div class="upup-flex upup-flex-col upup-items-center upup-gap-2">
+        ${fileIcon(ctx, extension ?? '', slot.fileIcon)}
+      </div>`
+  }
+
+  return html`
+    ${shouldRender(!canPreview, () => html`
+      <object
+        data=${fileUrl}
+        width="0%"
+        height="0%"
+        name=${fileName}
+        title=${fileName}
+        type=${fileType}
+        @load=${() => onCanPreview()}
+      >
+        <p>${ctx.translations.loading}</p>
+      </object>
+      ${fileIcon(ctx, extension ?? '')}
+    `)}
+    ${shouldRender(canPreview, () => html`
+      ${fileIcon(ctx, extension ?? '', cn({ 'md:upup-hidden': allowPreview }, slot.fileIcon))}
+      <div
+        class=${cn(
+          `upup-relative upup-hidden upup-h-full upup-w-full ${allowPreview ? 'md:upup-block' : ''}`,
+        )}
+      >
+        <object
+          data=${fileUrl}
+          width="100%"
+          height="100%"
+          name=${fileName}
+          title=${fileName}
+          type=${fileType}
+          class="upup-absolute upup-h-full upup-w-full"
+        >
+          <p>${ctx.translations.loading}</p>
+        </object>
+      </div>
+    `)}`
+}
