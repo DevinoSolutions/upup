@@ -31,6 +31,8 @@ export interface CreateUploaderOptions extends Omit<CoreOptions, 'cloudDrives'> 
   /** svelte UpupUploaderProps.theme passthrough when present (takes precedence over `dark`). */
   theme?: UpupThemeConfig
   sources?: UploadSource[]
+  /** Mirrors svelte UpupUploaderProps.maxFiles — max number of files. Resolution: maxFiles ?? restrictions?.maxNumberOfFiles ?? 10. */
+  maxFiles?: number
   className?: string
   showBranding?: boolean
   disableDragDrop?: boolean
