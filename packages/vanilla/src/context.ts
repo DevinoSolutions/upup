@@ -118,6 +118,7 @@ export function buildRootContext(
     onError,
     onUploadComplete: options.onUploadComplete,
     onFileRemoved: (file: UploadFile) => options.onFileRemoved?.(file),
+    onDoneClicked: options.onDoneClicked,
     imageEditorOptions: resolvedImageEditor,
     autoUpload: (options as { autoUpload?: boolean }).autoUpload ?? false,
   }
@@ -157,10 +158,10 @@ export function buildRootContext(
   // ── Plugin registration (mirrors create-root-provider onMount) ──
   const adapterPlugins: Array<{ destroy(): void }> = []
   function registerPlugins() {
-    if (googleDriveConfigs) { const p = new GoogleDrivePlugin(); p.configure(googleDriveConfigs); try { core.use(p) } catch { /* already registered */ } adapterPlugins.push(p) }
-    if (dropboxConfigs) { const p = new DropboxPlugin(); p.configure(dropboxConfigs); try { core.use(p) } catch { /* already */ } adapterPlugins.push(p) }
-    if (boxConfigs) { const p = new BoxPlugin(); p.configure(boxConfigs); try { core.use(p) } catch { /* already */ } adapterPlugins.push(p) }
-    if (oneDriveConfigs) { const p = new OneDrivePlugin(); p.configure(oneDriveConfigs); try { core.use(p) } catch { /* already */ } adapterPlugins.push(p) }
+    if (googleDriveConfigs) { const p = new GoogleDrivePlugin(); p.configure(googleDriveConfigs); try { core.use(p); adapterPlugins.push(p) } catch { /* already registered */ } }
+    if (dropboxConfigs) { const p = new DropboxPlugin(); p.configure(dropboxConfigs); try { core.use(p); adapterPlugins.push(p) } catch { /* already */ } }
+    if (boxConfigs) { const p = new BoxPlugin(); p.configure(boxConfigs); try { core.use(p); adapterPlugins.push(p) } catch { /* already */ } }
+    if (oneDriveConfigs) { const p = new OneDrivePlugin(); p.configure(oneDriveConfigs); try { core.use(p); adapterPlugins.push(p) } catch { /* already */ } }
   }
 
   // ── File input registration (mirrors create-root-provider inputEl/openFilePicker) ──
@@ -193,7 +194,7 @@ export function buildRootContext(
     core.removeAll()
     orchestrator.handleCancel()
   }
-  function handleDone() { core.emit('done', {}); handleCancel() }
+  function handleDone() { options.onDoneClicked?.(); core.emit('done', {}); handleCancel() }
 
   // ── Controllers registry (lazy per-source; render loop disposes inactive on switch) ──
   let camera: CameraController | null = null

@@ -47,6 +47,8 @@ export interface CreateUploaderOptions extends Omit<CoreOptions, 'cloudDrives'> 
   onFileRemoved?: (file: UploadFile) => void
   onUploadProgress?: (p: { fileId: string; loaded: number; total: number }) => void
   onUploadComplete?: (files: UploadFile[]) => void
+  /** Called when the user clicks Done (before files are cleared) — mirrors svelte's onDoneClicked prop. */
+  onDoneClicked?: () => void
 }
 
 /** Base controller contract. invalidate() is injected at construction by the render loop. */
