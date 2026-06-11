@@ -269,6 +269,7 @@ export function buildRootContext(
     handleResume: () => core.resume(),
     controllers,
     invalidate,
+    onError,
   }
 
   let disposed = false

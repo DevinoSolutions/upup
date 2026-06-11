@@ -146,6 +146,8 @@ export interface RootContext {
   controllers: ControllerRegistry
   /** request a re-render (microtask-coalesced by the render loop). */
   invalidate(): void
+  /** Report a user-facing error message (routed to options.onError). Used by URL fetch + other views. */
+  onError?: (message: string) => void
 }
 
 /** The public instance returned by createUploader. Mirrors svelte UseUpupUploadReturn + lifecycle. */
