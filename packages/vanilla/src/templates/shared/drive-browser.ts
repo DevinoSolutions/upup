@@ -6,8 +6,6 @@ import type { RootContext } from '../../lib/types'
 import { adapterViewContainer } from './adapter-view-container'
 import { driveBrowserHeader } from './drive-browser-header'
 import { driveBrowserItem } from './drive-browser-item'
-import { progressBar } from './progress-bar'
-import { LoaderIcon } from '../icons'
 
 export interface DriveBrowserProps {
   driveFiles: DriveFolder | undefined
@@ -23,7 +21,6 @@ export interface DriveBrowserProps {
   handleSubmit: () => void
   handleCancelDownload: () => void
   onSelectCurrentFolder: () => void
-  downloadProgress: number
 }
 
 // Per-context search state (reset when props key changes)
@@ -53,7 +50,7 @@ export function driveBrowser(ctx: RootContext, props: DriveBrowserProps) {
   const {
     driveFiles, user, handleSignOut, dataUpupSlot, path, setPath,
     isClickLoading, handleClick, selectedFiles, showLoader,
-    handleSubmit, handleCancelDownload, onSelectCurrentFolder, downloadProgress,
+    handleSubmit, handleCancelDownload, onSelectCurrentFolder,
   } = props
 
   const isDark = ctx.theme.getSnapshot().isDark
@@ -94,12 +91,7 @@ export function driveBrowser(ctx: RootContext, props: DriveBrowserProps) {
             slot.driveBody,
           )}
         >
-          ${showLoader ? html`
-            <div class="upup-flex upup-h-full upup-flex-col upup-items-center upup-justify-center">
-              ${LoaderIcon({ class: 'upup-animate-spin upup-text-3xl upup-text-[#6D6D6D]' })}
-            </div>` : nothing}
-
-          ${!showLoader && displayedItems.length > 0 ? html`
+          ${displayedItems.length > 0 ? html`
             <ul class="upup-p-2">
               ${repeat(
                 displayedItems,
@@ -113,7 +105,7 @@ export function driveBrowser(ctx: RootContext, props: DriveBrowserProps) {
               )}
             </ul>` : nothing}
 
-          ${!showLoader && displayedItems.length === 0 ? html`
+          ${displayedItems.length === 0 ? html`
             <div class="upup-flex upup-h-full upup-flex-col upup-items-center upup-justify-center">
               <p class="upup-text-xs upup-opacity-70">
                 ${tr.noAcceptedFilesFound}
