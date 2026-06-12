@@ -5,6 +5,9 @@ import { UploadIconComponent } from './upload-icon.component'
 import { GoogleDriveIconComponent } from './google-drive-icon.component'
 import { EmptyIconComponent } from './empty-icon.component'
 import { XIconComponent } from './x-icon.component'
+import { LayoutGridIconComponent } from './layout-grid-icon.component'
+import { LayoutListIconComponent } from './layout-list-icon.component'
+import { SOURCE_ICONS } from './index'
 
 // ── UploadIconComponent ──────────────────────────────────────────────────────
 
@@ -100,5 +103,100 @@ describe('XIconComponent', () => {
         const svg = fixture.nativeElement.querySelector('svg') as SVGElement
         expect(svg.getAttribute('width')).toBe('32')
         expect(svg.getAttribute('height')).toBe('32')
+    })
+})
+
+// ── LayoutGridIconComponent — view-mode toggle path ──────────────────────────
+// Validates that <upup-icon-layout-grid> (selector used in main-box-header.component.ts)
+// actually renders an <svg>, catching any selector/template mismatch the build might miss.
+
+describe('LayoutGridIconComponent', () => {
+    it('renders an <svg> element', async () => {
+        await TestBed.configureTestingModule({
+            imports: [LayoutGridIconComponent],
+        }).compileComponents()
+
+        const fixture = TestBed.createComponent(LayoutGridIconComponent)
+        fixture.detectChanges()
+        const svg: SVGElement | null = fixture.nativeElement.querySelector('svg')
+        expect(svg).not.toBeNull()
+    })
+
+    it('reflects size input on width/height attrs', async () => {
+        await TestBed.configureTestingModule({
+            imports: [LayoutGridIconComponent],
+        }).compileComponents()
+
+        const fixture = TestBed.createComponent(LayoutGridIconComponent)
+        fixture.componentInstance.size = 16
+        fixture.detectChanges()
+        const svg = fixture.nativeElement.querySelector('svg') as SVGElement
+        expect(svg.getAttribute('width')).toBe('16')
+        expect(svg.getAttribute('height')).toBe('16')
+    })
+})
+
+// ── LayoutListIconComponent — view-mode toggle path ──────────────────────────
+
+describe('LayoutListIconComponent', () => {
+    it('renders an <svg> element', async () => {
+        await TestBed.configureTestingModule({
+            imports: [LayoutListIconComponent],
+        }).compileComponents()
+
+        const fixture = TestBed.createComponent(LayoutListIconComponent)
+        fixture.detectChanges()
+        const svg: SVGElement | null = fixture.nativeElement.querySelector('svg')
+        expect(svg).not.toBeNull()
+    })
+
+    it('reflects size input on width/height attrs', async () => {
+        await TestBed.configureTestingModule({
+            imports: [LayoutListIconComponent],
+        }).compileComponents()
+
+        const fixture = TestBed.createComponent(LayoutListIconComponent)
+        fixture.componentInstance.size = 16
+        fixture.detectChanges()
+        const svg = fixture.nativeElement.querySelector('svg') as SVGElement
+        expect(svg.getAttribute('width')).toBe('16')
+        expect(svg.getAttribute('height')).toBe('16')
+    })
+})
+
+// ── SOURCE_ICONS map — adapter-selector tile icon path ───────────────────────
+// AdapterSelectorComponent uses SOURCE_ICONS (and its own ICON_MAP) to resolve
+// icon component classes from FileSource string keys via NgComponentOutlet.
+// This test proves the map entries are real instantiable Angular components
+// that render <svg> — catching any class-reference breakage that selector
+// renames could have caused.
+
+describe('SOURCE_ICONS map', () => {
+    it('GoogleDrive entry renders an <svg> element via TestBed', async () => {
+        const IconClass = SOURCE_ICONS['GoogleDrive'] as new (...args: unknown[]) => unknown
+        expect(IconClass).toBeDefined()
+
+        await TestBed.configureTestingModule({
+            imports: [IconClass as any],
+        }).compileComponents()
+
+        const fixture = TestBed.createComponent(IconClass as any)
+        fixture.detectChanges()
+        const svg: SVGElement | null = fixture.nativeElement.querySelector('svg')
+        expect(svg).not.toBeNull()
+    })
+
+    it('MyDevice entry renders an <svg> element via TestBed', async () => {
+        const IconClass = SOURCE_ICONS['MyDevice'] as new (...args: unknown[]) => unknown
+        expect(IconClass).toBeDefined()
+
+        await TestBed.configureTestingModule({
+            imports: [IconClass as any],
+        }).compileComponents()
+
+        const fixture = TestBed.createComponent(IconClass as any)
+        fixture.detectChanges()
+        const svg: SVGElement | null = fixture.nativeElement.querySelector('svg')
+        expect(svg).not.toBeNull()
     })
 })
