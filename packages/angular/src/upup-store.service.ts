@@ -29,6 +29,7 @@ import { createSSEProcessing } from './lib/use-sse-processing'
 import { toSignalStore, type SignalStore } from './lib/to-signal-store'
 import type { UpupUploaderProps } from './shared/types'
 
+// Stable sentinel — avoids allocating a new object on every init() when style is not passed.
 const EMPTY_STYLE: Record<string, string> = {}
 
 type OrchSnapshot = ReturnType<UploaderOrchestrator['getSnapshot']>
@@ -655,7 +656,7 @@ export class UpupStore {
         if (this.disposed) return
         this.disposed = true
         this.started = false
-        // cleanups: status-change unsub + SSE dispose + adapter plugin destroys
+        // cleanups: SSE dispose + status-change unsub + adapter plugin destroys
         this.cleanups.forEach(c => c())
         this.cleanups.length = 0
         this.orchState?.dispose()

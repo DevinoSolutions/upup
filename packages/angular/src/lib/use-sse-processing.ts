@@ -23,6 +23,7 @@ export function createSSEProcessing({
     processingTimeout = 60_000,
 }: SSEProcessingOptions): { connectSSE(file: UploadFile): void; dispose(): void } {
     const processor = new SSEProcessor()
+    let disposed = false
 
     function connectSSE(file: UploadFile): void {
         const key = file.key
@@ -38,6 +39,8 @@ export function createSSEProcessing({
     }
 
     function dispose(): void {
+        if (disposed) return
+        disposed = true
         processor.destroy()
     }
 

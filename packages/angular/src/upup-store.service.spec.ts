@@ -12,7 +12,7 @@
  *   7. Cleanups: cleanups array populated with drives/sse/status; safe after dispose.
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
-import { UploadStatus, FileSource } from '@upup/core'
+import { UploadStatus, FileSource, UpupCore, GoogleDrivePlugin } from '@upup/core'
 import { UpupStore } from './upup-store.service'
 
 /** Minimal valid props — all optional fields omitted. */
@@ -317,21 +317,24 @@ describe('UpupStore', () => {
             store.dispose()
         })
 
-        it('core.use is called for GoogleDrivePlugin when config is present', () => {
+        it('core.use registers a GoogleDrivePlugin when googleDrive config present', () => {
+            const useSpy = vi.spyOn(UpupCore.prototype, 'use')
             const store = new UpupStore()
-            store.setConfig({
-                cloudDrives: {
-                    googleDrive: { clientId: 'c', apiKey: 'k', appId: 'a' },
-                },
-            } as any)
-            // Spy before init so we capture the call during init()
-            // We need to stub init so the spy is registered before core is created.
-            // Strategy: init, then verify through the configs (core.use was already called).
-            // Confirm plugin is alive by verifying dispose does not throw.
-            expect(() => {
-                store.init()
-                store.dispose()
-            }).not.toThrow()
+            store.setConfig({ cloudDrives: { googleDrive: { clientId: 'c', apiKey: 'k', appId: 'a' } } } as any)
+            store.init()
+            expect(useSpy).toHaveBeenCalledWith(expect.any(GoogleDrivePlugin))
+            useSpy.mockRestore()
+            store.dispose()
+        })
+
+        it('core.use registers no drive plugin when no cloudDrives configured', () => {
+            const useSpy = vi.spyOn(UpupCore.prototype, 'use')
+            const store = new UpupStore()
+            store.setConfig({} as any)
+            store.init()
+            expect(useSpy).not.toHaveBeenCalledWith(expect.any(GoogleDrivePlugin))
+            useSpy.mockRestore()
+            store.dispose()
         })
     })
 
@@ -358,20 +361,28 @@ describe('UpupStore', () => {
             expect((store as any).cleanups.length).toBe(0)
         })
 
-        it('onStatusChange is called when orch status transitions away from undefined', () => {
+        it('status subscription deduplicates: a repeat notification with unchanged status does not re-emit', () => {
+            // The subscription emits the lowercased uploadStatus whenever it differs from the
+            // last value THIS listener saw. The first observed notification therefore emits the
+            // initial IDLE (whatever triggers it). The honest, deterministic property is the
+            // `s !== lastStatus` guard: once IDLE has been emitted, a further orch notification
+            // that does NOT change uploadStatus (setIsAddingMore) must NOT emit again.
             const onStatusChange = vi.fn()
             const store = new UpupStore()
             store.setConfig({ onStatusChange } as any)
             store.init()
 
-            // Force a status transition by triggering the orch subscriber
-            // setIsAddingMore triggers an orch notification which will fire our subscriber
-            // In practice status starts as IDLE and any state change fires the subscriber
-            // We call handleCancel which triggers orch.handleCancel() → status may change
-            // At minimum, the sub is wired. Verify by checking orch can emit without throw.
-            expect(() => store.setIsAddingMore(true)).not.toThrow()
-            expect(() => store.setIsAddingMore(false)).not.toThrow()
+            // Flush the initial emit deterministically via one orch notification.
+            store.setIsAddingMore(true)
+            const calls = onStatusChange.mock.calls.map(c => c[0])
+            expect(calls.length).toBeGreaterThanOrEqual(1)
+            // Every emit so far is the lowercased IDLE status — no spurious values.
+            for (const arg of calls) expect(arg).toBe('idle')
+            const countAfterFlush = onStatusChange.mock.calls.length
 
+            // A second non-status notification must add NO further call (dedup guard holds).
+            store.setIsAddingMore(false)
+            expect(onStatusChange.mock.calls.length).toBe(countAfterFlush)
             store.dispose()
         })
     })

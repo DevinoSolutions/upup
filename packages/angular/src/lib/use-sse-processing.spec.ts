@@ -167,4 +167,13 @@ describe('createSSEProcessing', () => {
         expect(lastInstance!.close).toHaveBeenCalled()
         dispose()
     })
+
+    it('dispose() is idempotent — second call does not throw', () => {
+        const { connectSSE, dispose } = createSSEProcessing({
+            processingEndpoint: 'https://api.example.com/process',
+            onFileProcessed: vi.fn(),
+        })
+        connectSSE(makeFile('y1'))
+        expect(() => { dispose(); dispose() }).not.toThrow()
+    })
 })
