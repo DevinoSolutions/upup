@@ -1,21 +1,35 @@
-import { Injectable, computed, type Signal } from '@angular/core'
+import { Injectable, computed, signal, type Signal } from '@angular/core'
 import {
     FileSource,
     UploadStatus,
     UploaderOrchestrator,
     ThemeStore,
+    createTranslator,
+    enUS,
+    flattenTranslatorToUiTranslations,
+    GoogleDrivePlugin,
+    DropboxPlugin,
+    BoxPlugin,
+    OneDrivePlugin,
+    getDir,
     normalizeSource,
     DEFAULT_SOURCES,
     DEFAULT_MAX_FILE_SIZE,
     resolveAccept,
     revokeFileUrl,
     type OrchestratorCallbacks,
+    type LocaleBundle,
+    type Translator,
     type UploadFile,
     type ResolvedImageEditorOptions,
+    type UiTranslations,
 } from '@upup/core'
 import { createUpupUpload, type UpupUploadHandle } from './lib/use-upup-upload'
+import { createSSEProcessing } from './lib/use-sse-processing'
 import { toSignalStore, type SignalStore } from './lib/to-signal-store'
 import type { UpupUploaderProps } from './shared/types'
+
+const EMPTY_STYLE: Record<string, string> = {}
 
 type OrchSnapshot = ReturnType<UploaderOrchestrator['getSnapshot']>
 type ThemeSnapshot = ReturnType<ThemeStore['getSnapshot']>
@@ -46,6 +60,55 @@ export class UpupStore {
     /** Set during init(); undefined before init() is called. */
     mode!: 'client' | 'server'
     serverUrl?: string
+
+    // ── i18n (set during init()) ─────────────────────────────────
+    translations!: Signal<UiTranslations>
+    translator!: Translator
+    lang!: string
+    dir!: string
+
+    // ── Cloud drive configs (set during init()) ──────────────────
+    oneDriveConfigs?: { onedrive_client_id: string; redirectUri?: string }
+    googleDriveConfigs?: { google_client_id: string; google_api_key: string; google_app_id: string }
+    dropboxConfigs?: { dropbox_client_id: string; dropbox_redirect_uri?: string }
+    boxConfigs?: { box_client_id: string; box_redirect_uri?: string }
+
+    // ── Resolved UI options aggregate (set during init()) ────────
+    uiProps!: {
+        mini: boolean
+        maxRetries?: number
+        resumable?: UpupUploaderProps['resumable']
+        onError: (message: string) => void
+        onIntegrationClick: (integrationType: string) => void
+        onFileClick: (file: UploadFile) => void
+        onFilesDragOver: (files: File[]) => void
+        onFilesDragLeave: (files: File[]) => void
+        onFilesDrop: (files: File[]) => void
+        onWarn: (message: string) => void
+        enablePaste: boolean
+        sources: FileSource[]
+        allowedFileTypes: string
+        maxFileSize?: UpupUploaderProps['maxFileSize']
+        limit: number
+        isProcessing: boolean
+        allowPreview: boolean
+        folderUploadAllowDrop: boolean
+        folderPickerButtonVisible: boolean
+        showBranding: boolean
+        disableDragDrop: boolean
+        className: string
+        style: Record<string, string>
+        multiple: boolean
+        icons: {
+            ContainerAddMoreIcon: unknown
+            FileDeleteIcon: unknown
+            CameraCaptureIcon: unknown
+            CameraRotateIcon: unknown
+            CameraDeleteIcon: unknown
+            LoaderIcon: unknown
+        }
+        imageEditor: ResolvedImageEditorOptions
+    }
 
     // ── orchState computeds ──────────────────────────────────────
     files!: Signal<OrchSnapshot['files']>
@@ -135,7 +198,26 @@ export class UpupStore {
             cors,
             maxRetries,
             resumable,
-            // Task 6: processingEndpoint, onFileProcessed, processingTimeout
+            processingEndpoint,
+            onFileProcessed,
+            processingTimeout,
+            // UI props needed for uiProps aggregate
+            isProcessing = false,
+            allowPreview = true,
+            folderUpload,
+            showBranding = true,
+            disableDragDrop = false,
+            className,
+            style,
+            icons = {},
+            i18n,
+            onIntegrationClick = () => {},
+            onFileClick = () => {},
+            onStatusChange,
+            onFilesDragOver = () => {},
+            onFilesDragLeave = () => {},
+            onFilesDrop = () => {},
+            enablePaste = false,
         } = this.props ?? {}
 
         // ── Resolved props (mirrors lines ~106–138) ──────────────
@@ -154,7 +236,10 @@ export class UpupStore {
                 ? restrictions.allowedFileTypes.join(',')
                 : (acceptProp as string),
         )
+        const folderUploadAllowDrop = folderUpload?.allowDrop ?? false
+        const folderPickerButtonVisible = folderUpload?.showSelectFolderButton ?? false
         const limit = mini ? 1 : Math.max(resolvedLimit, 1)
+        const multiple = mini ? false : limit > 1
 
         const resolvedImageEditor: ResolvedImageEditorOptions = (() => {
             if (imageEditorProp === true) {
@@ -228,7 +313,14 @@ export class UpupStore {
         this.upload.start()
         this.core = this.upload.core
 
-        // Task 6: useSSEProcessing({ processingEndpoint, onFileProcessed, processingTimeout })
+        // ── SSE processing ───────────────────────────────────────
+        const sse = createSSEProcessing({
+            processingEndpoint,
+            onFileProcessed,
+            onError: (err: Error) => onError(err.message),
+            processingTimeout,
+        })
+        this.cleanups.push(() => sse.dispose())
 
         // ── Orchestrator callbacks (always fresh via getter proxy) ──
         const callbackRefs: OrchestratorCallbacks = {
@@ -241,7 +333,8 @@ export class UpupStore {
             onFileUploadComplete,
             onFilesUploadComplete: (files: UploadFile[]) => {
                 onFilesUploadComplete(files)
-                // Task 6: connectSSE forEach here
+                // SSE connection after upload complete
+                files.forEach(file => sse.connectSSE(file))
             },
             onUploadComplete,
             onFilesSelected,
@@ -315,10 +408,137 @@ export class UpupStore {
         this.orch.init()
         this.themeStore.init()
 
-        // Task 6 will push the status-change + SSE unsubscribers into this.cleanups.
-        // Task 6: onStatusChange subscription here
-        // Task 6: cloud-drive plugin registration (core.use) here
-        // Task 6: i18n/translations resolution here
+        // ── Status-change subscription ───────────────────────────
+        let lastStatus: UploadStatus | undefined
+        const unsub = this.orch.subscribe(() => {
+            const s = this.orch.getSnapshot().uploadStatus
+            if (s && s !== lastStatus) {
+                lastStatus = s
+                onStatusChange?.(String(s).toLowerCase())
+            }
+        })
+        this.cleanups.push(unsub)
+
+        // ── Cloud drive configs ──────────────────────────────────
+        this.oneDriveConfigs = cloudDrives?.oneDrive ? {
+            onedrive_client_id: cloudDrives.oneDrive.clientId,
+            redirectUri: cloudDrives.oneDrive.redirectUri,
+        } : undefined
+        this.googleDriveConfigs = cloudDrives?.googleDrive ? {
+            google_client_id: cloudDrives.googleDrive.clientId,
+            google_api_key: cloudDrives.googleDrive.apiKey,
+            google_app_id: cloudDrives.googleDrive.appId,
+        } : undefined
+        this.dropboxConfigs = cloudDrives?.dropbox ? {
+            dropbox_client_id: cloudDrives.dropbox.clientId,
+            dropbox_redirect_uri: cloudDrives.dropbox.redirectUri,
+        } : undefined
+        this.boxConfigs = cloudDrives?.box ? {
+            box_client_id: cloudDrives.box.clientId,
+            box_redirect_uri: cloudDrives.box.redirectUri,
+        } : undefined
+
+        // ── Cloud drive plugin registration ──────────────────────
+        const adapterPlugins: Array<{ destroy(): void }> = []
+
+        if (this.googleDriveConfigs) {
+            const plugin = new GoogleDrivePlugin()
+            plugin.configure(this.googleDriveConfigs)
+            try { this.core.use(plugin) } catch { /* already registered */ }
+            adapterPlugins.push(plugin)
+        }
+        if (this.dropboxConfigs) {
+            const plugin = new DropboxPlugin()
+            plugin.configure(this.dropboxConfigs)
+            try { this.core.use(plugin) } catch { /* already registered */ }
+            adapterPlugins.push(plugin)
+        }
+        if (this.boxConfigs) {
+            const plugin = new BoxPlugin()
+            plugin.configure(this.boxConfigs)
+            try { this.core.use(plugin) } catch { /* already registered */ }
+            adapterPlugins.push(plugin)
+        }
+        if (this.oneDriveConfigs) {
+            const plugin = new OneDrivePlugin()
+            plugin.configure(this.oneDriveConfigs)
+            try { this.core.use(plugin) } catch { /* already registered */ }
+            adapterPlugins.push(plugin)
+        }
+        this.cleanups.push(() => {
+            adapterPlugins.forEach(p => p.destroy())
+        })
+
+        // ── i18n resolution ──────────────────────────────────────
+        const localeCandidate = i18n?.locale as unknown
+        const bundle = i18n?.bundle ?? (
+            localeCandidate &&
+            typeof localeCandidate === 'object' &&
+            'code' in localeCandidate &&
+            'messages' in localeCandidate
+                ? localeCandidate as LocaleBundle
+                : undefined
+        )
+        const fallbackCandidate = i18n?.fallbackLocale as unknown
+        const fallbackBundle = (
+            fallbackCandidate &&
+            typeof fallbackCandidate === 'object' &&
+            'code' in fallbackCandidate &&
+            'messages' in fallbackCandidate
+                ? fallbackCandidate as LocaleBundle
+                : undefined
+        )
+        this.translator = createTranslator({
+            bundle: bundle ?? enUS,
+            fallback: fallbackBundle ?? enUS,
+            overrides: i18n?.overrides,
+        })
+        const resolvedTranslations = flattenTranslatorToUiTranslations(this.translator)
+        this.translations = signal(resolvedTranslations)
+        this.lang = bundle?.code ?? (typeof i18n?.locale === 'string' ? i18n.locale : 'en-US')
+        this.dir = bundle?.dir ?? getDir(i18n?.locale as string | LocaleBundle | undefined)
+
+        // ── Icons resolution ─────────────────────────────────────
+        // Task 8: default null → EmptyIconComponent for each slot
+        const resolvedIcons = {
+            ContainerAddMoreIcon: icons.ContainerAddMoreIcon ?? null,
+            FileDeleteIcon: icons.FileDeleteIcon ?? null,
+            CameraCaptureIcon: icons.CameraCaptureIcon ?? null,
+            CameraRotateIcon: icons.CameraRotateIcon ?? null,
+            CameraDeleteIcon: icons.CameraDeleteIcon ?? null,
+            LoaderIcon: icons.LoaderIcon ?? null,
+        }
+
+        // ── uiProps aggregate ────────────────────────────────────
+        const resolvedStyle = style ?? EMPTY_STYLE
+        this.uiProps = {
+            mini,
+            maxRetries,
+            resumable,
+            onError: (message: string) => this.onError(message),
+            onIntegrationClick,
+            onFileClick,
+            onFilesDragOver,
+            onFilesDragLeave,
+            onFilesDrop,
+            onWarn: (message: string) => this.onWarn(message),
+            enablePaste,
+            sources: resolvedSources,
+            allowedFileTypes: accept,
+            maxFileSize,
+            limit,
+            isProcessing,
+            allowPreview,
+            folderUploadAllowDrop,
+            folderPickerButtonVisible,
+            showBranding,
+            disableDragDrop,
+            className: className ?? '',
+            style: resolvedStyle,
+            multiple,
+            icons: resolvedIcons,
+            imageEditor: resolvedImageEditor,
+        }
     }
 
     /** Current orchestrator snapshot (synchronous). */
@@ -435,7 +655,7 @@ export class UpupStore {
         if (this.disposed) return
         this.disposed = true
         this.started = false
-        // Task 6 will push the status-change + SSE unsubscribers into this.cleanups.
+        // cleanups: status-change unsub + SSE dispose + adapter plugin destroys
         this.cleanups.forEach(c => c())
         this.cleanups.length = 0
         this.orchState?.dispose()
