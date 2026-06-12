@@ -25,6 +25,11 @@ module.exports = {
             prefix: '.upup-scope',
             transform(prefix, selector, prefixedSelector) {
                 if (selector.startsWith('@')) return selector
+                // Idempotent: never re-prefix an already-scoped selector. The built
+                // dist CSS is re-processed by consumer builds (e.g. @storybook/angular's
+                // postcss-loader resolving this config relative to dist/), which would
+                // otherwise double the `.upup-scope` prefix and break every rule.
+                if (selector.indexOf('.upup-scope') !== -1) return selector
                 return prefixedSelector
             },
         }),

@@ -9,11 +9,11 @@
     "useDefineForClassFields": false,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "noEmit": true,
     "types": []
   },
   "angularCompilerOptions": {
     "strictTemplates": true
   },
-  "include": ["src/**/*.ts", ".storybook/**/*.ts"]
+  "include": ["src/**/*.ts", ".storybook/**/*.ts", "../../packages/storybook-config/src/**/*.ts"],
+  "exclude": ["../../packages/storybook-config/src/**/*.test.ts"]
 }
