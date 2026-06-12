@@ -10,7 +10,9 @@
     "skipLibCheck": true,
     "esModuleInterop": true,
     "noEmit": true,
-    "paths": { "react": ["preact/compat"], "react-dom": ["preact/compat"] }
+    "baseUrl": ".",
+    "paths": { "react": ["node_modules/preact/compat"], "react-dom": ["node_modules/preact/compat"] },
+    "types": ["node"]
   },
   "include": ["src", "tsup.config.ts", "vitest.config.ts"]
 }
