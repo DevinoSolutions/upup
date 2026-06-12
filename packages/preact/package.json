@@ -16,7 +16,7 @@
     "build": "tsup && pnpm run build:css",
     "build:css": "node scripts/copy-styles.mjs",
     "dev": "tsup --watch",
-    "pretest": "tsup",
+    "pretest": "pnpm run build",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
