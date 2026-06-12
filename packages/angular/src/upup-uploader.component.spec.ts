@@ -1,4 +1,5 @@
-import { describe, it, expect, afterEach } from 'vitest'
+import { describe, it, expect, afterEach, vi } from 'vitest'
+import { PLATFORM_ID } from '@angular/core'
 import { TestBed } from '@angular/core/testing'
 import { UpupUploaderComponent } from './upup-uploader.component'
 
@@ -48,5 +49,22 @@ describe('UpupUploaderComponent', () => {
         expect(seen['uploadProgress']).toEqual({ fileId: 'a', loaded: 1, total: 2 })
         expect(seen['uploadAllComplete']).toEqual([file])
         expect((seen['error'] as { error: Error }).error.message).toBe('boom')
+    })
+
+    it('skips store init on the server (SSR-safe)', () => {
+        TestBed.overrideProvider(PLATFORM_ID, { useValue: 'server' })
+        const f = TestBed.createComponent(UpupUploaderComponent)
+        f.componentInstance.config = {} as any
+        f.detectChanges()
+        expect(f.componentInstance['started']).toBe(false) // ngOnInit guard returned early
+    })
+
+    it('disposes the store on destroy', () => {
+        const f = TestBed.createComponent(UpupUploaderComponent)
+        f.componentInstance.config = {} as any
+        f.detectChanges()
+        const disposeSpy = vi.spyOn(f.componentInstance.store, 'dispose')
+        f.destroy()
+        expect(disposeSpy).toHaveBeenCalled()
     })
 })
