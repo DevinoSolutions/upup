@@ -3,11 +3,10 @@
  *   ShouldRenderComponent, ProgressBarComponent, MainBoxHeaderComponent, AdapterViewContainerComponent
  *
  * Store strategy:
- *   - ShouldRender has no store dependency → no store needed.
- *   - ProgressBar, MainBoxHeader, AdapterViewContainer all inject UpupStore.
- *     We provide UpupStore via TestBed.configureTestingModule({ providers: [UpupStore] }),
- *     retrieve it via TestBed.inject(UpupStore), call setConfig({}) + init() to wire signals,
- *     then createComponent and detectChanges.  The store is disposed in afterEach.
+ *   - All four components inject UpupStore (ShouldRender reads icons.LoaderIcon for the
+ *     loader branch — faithful svelte parity). We instantiate a real UpupStore
+ *     (new UpupStore(); setConfig({}); init()) and provide it via
+ *     { provide: UpupStore, useValue: store }. The store is disposed in afterEach.
  *
  * Content-projection tests use inline host components (a @Component wrapper that projects
  * a marker element via <upup-should-render [when]="cond">…</upup-should-render>).
@@ -20,6 +19,7 @@ import { ShouldRenderComponent } from './should-render.component'
 import { ProgressBarComponent } from './progress-bar.component'
 import { MainBoxHeaderComponent } from './main-box-header.component'
 import { AdapterViewContainerComponent } from './adapter-view-container.component'
+import { DefaultLoaderIconComponent } from './icons/default-loader-icon.component'
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -34,7 +34,12 @@ function makeStore(): UpupStore {
 // ── ShouldRender ───────────────────────────────────────────────────────────────
 
 describe('ShouldRenderComponent', () => {
-    it('projects content when when=true', async () => {
+    let store: UpupStore
+
+    afterEach(() => store?.dispose())
+
+    it('projects content when when=true (and not loading)', async () => {
+        store = makeStore()
         @Component({
             standalone: true,
             imports: [ShouldRenderComponent],
@@ -42,7 +47,10 @@ describe('ShouldRenderComponent', () => {
         })
         class Host {}
 
-        await TestBed.configureTestingModule({ imports: [Host] }).compileComponents()
+        await TestBed.configureTestingModule({
+            imports: [Host],
+            providers: [{ provide: UpupStore, useValue: store }],
+        }).compileComponents()
         const fixture = TestBed.createComponent(Host)
         fixture.detectChanges()
         const child = fixture.nativeElement.querySelector('[data-testid="child"]')
@@ -51,6 +59,7 @@ describe('ShouldRenderComponent', () => {
     })
 
     it('renders nothing when when=false', async () => {
+        store = makeStore()
         @Component({
             standalone: true,
             imports: [ShouldRenderComponent],
@@ -58,14 +67,24 @@ describe('ShouldRenderComponent', () => {
         })
         class Host {}
 
-        await TestBed.configureTestingModule({ imports: [Host] }).compileComponents()
+        await TestBed.configureTestingModule({
+            imports: [Host],
+            providers: [{ provide: UpupStore, useValue: store }],
+        }).compileComponents()
         const fixture = TestBed.createComponent(Host)
         fixture.detectChanges()
         const child = fixture.nativeElement.querySelector('[data-testid="child"]')
         expect(child).toBeNull()
     })
 
-    it('renders nothing when isLoading=true even if when=true', async () => {
+    it('renders the configured loader (not content) when isLoading=true', async () => {
+        // Svelte parity: ShouldRender renders `icons.LoaderIcon` on isLoading.
+        // Configure a real loader so we can assert it is rendered; the default
+        // LoaderIcon is EmptyIcon (renders nothing).
+        store = new UpupStore()
+        store.setConfig({ icons: { LoaderIcon: DefaultLoaderIconComponent } } as any)
+        store.init()
+
         @Component({
             standalone: true,
             imports: [ShouldRenderComponent],
@@ -73,14 +92,43 @@ describe('ShouldRenderComponent', () => {
         })
         class Host {}
 
-        await TestBed.configureTestingModule({ imports: [Host] }).compileComponents()
+        await TestBed.configureTestingModule({
+            imports: [Host],
+            providers: [{ provide: UpupStore, useValue: store }],
+        }).compileComponents()
         const fixture = TestBed.createComponent(Host)
         fixture.detectChanges()
+
+        // Loader branch: the DefaultLoaderIcon renders an <svg>; content is suppressed.
         const child = fixture.nativeElement.querySelector('[data-testid="child"]')
         expect(child).toBeNull()
+        const svg = fixture.nativeElement.querySelector('svg')
+        expect(svg).not.toBeNull()
+    })
+
+    it('with default loader (EmptyIcon), isLoading=true renders neither content nor svg', async () => {
+        // Faithful parity: when icons.LoaderIcon defaults to EmptyIcon, the loader
+        // branch renders nothing — but content is still suppressed (isLoading wins).
+        store = makeStore()
+        @Component({
+            standalone: true,
+            imports: [ShouldRenderComponent],
+            template: `<upup-should-render [when]="true" [isLoading]="true"><span data-testid="child">hello</span></upup-should-render>`,
+        })
+        class Host {}
+
+        await TestBed.configureTestingModule({
+            imports: [Host],
+            providers: [{ provide: UpupStore, useValue: store }],
+        }).compileComponents()
+        const fixture = TestBed.createComponent(Host)
+        fixture.detectChanges()
+        expect(fixture.nativeElement.querySelector('[data-testid="child"]')).toBeNull()
+        expect(fixture.nativeElement.querySelector('svg')).toBeNull()
     })
 
     it('defaults to not rendering (when defaults to false)', async () => {
+        store = makeStore()
         @Component({
             standalone: true,
             imports: [ShouldRenderComponent],
@@ -88,7 +136,10 @@ describe('ShouldRenderComponent', () => {
         })
         class Host {}
 
-        await TestBed.configureTestingModule({ imports: [Host] }).compileComponents()
+        await TestBed.configureTestingModule({
+            imports: [Host],
+            providers: [{ provide: UpupStore, useValue: store }],
+        }).compileComponents()
         const fixture = TestBed.createComponent(Host)
         fixture.detectChanges()
         // when defaults to false — content is not projected
@@ -337,7 +388,7 @@ describe('AdapterViewContainerComponent', () => {
         expect(projected.textContent.trim()).toBe('inner')
     })
 
-    it('has data-upup-slot="adapter-view" attribute', async () => {
+    it('defaults data-upup-slot to "adapter-view"', async () => {
         store = makeStore()
         await TestBed.configureTestingModule({
             imports: [AdapterViewContainerComponent],
@@ -349,6 +400,33 @@ describe('AdapterViewContainerComponent', () => {
 
         const el = fixture.nativeElement.querySelector('[data-upup-slot="adapter-view"]')
         expect(el).not.toBeNull()
+    })
+
+    it('reflects a passed slotName onto data-upup-slot (svelte ...rest parity)', async () => {
+        store = makeStore()
+
+        @Component({
+            standalone: true,
+            imports: [AdapterViewContainerComponent],
+            template: `<upup-adapter-view-container slotName="audio-uploader"></upup-adapter-view-container>`,
+        })
+        class Host {}
+
+        await TestBed.configureTestingModule({
+            imports: [Host],
+            providers: [{ provide: UpupStore, useValue: store }],
+        }).compileComponents()
+
+        const fixture = TestBed.createComponent(Host)
+        fixture.detectChanges()
+
+        // The custom slot name is forwarded to the inner div…
+        const el = fixture.nativeElement.querySelector('[data-upup-slot="audio-uploader"]')
+        expect(el).not.toBeNull()
+        // …and the default value is no longer present.
+        expect(fixture.nativeElement.querySelector('[data-upup-slot="adapter-view"]')).toBeNull()
+        // It is still the same adapter-view element.
+        expect(el.getAttribute('data-testid')).toBe('upup-adapter-view')
     })
 
     it('container has base flex classes in classList', async () => {

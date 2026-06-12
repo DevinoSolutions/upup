@@ -10,7 +10,11 @@ import { UpupStore } from '../upup-store.service'
  *   </div>
  *
  * Reads: store.isDark(), store.slotOverrides() for conditional classes.
- * Input: isLoading (boolean, default false) — mirrors the svelte `isLoading` prop.
+ * Inputs:
+ *   - isLoading (boolean, default false) — mirrors the svelte `isLoading` prop.
+ *   - slotName (string, default 'adapter-view') — replicates svelte's `...rest`
+ *     forwarding of `data-upup-slot` (callers pass "audio-uploader",
+ *     "camera-uploader", "url-uploader", drive-browser slots, etc.).
  */
 @Component({
     selector: 'upup-adapter-view-container',
@@ -18,7 +22,7 @@ import { UpupStore } from '../upup-store.service'
     template: `
         <div
             data-testid="upup-adapter-view"
-            data-upup-slot="adapter-view"
+            [attr.data-upup-slot]="slotName"
             [class]="containerClass"
         >
             <ng-content></ng-content>
@@ -29,6 +33,12 @@ export class AdapterViewContainerComponent {
     private store = inject(UpupStore)
 
     @Input() isLoading: boolean = false
+    /**
+     * Per-caller slot name forwarded to the inner div's data-upup-slot — mirrors
+     * svelte AVC's `...rest` spread. Named `slotName` (not `slot`) to avoid the
+     * native `slot` attribute.
+     */
+    @Input() slotName: string = 'adapter-view'
 
     get containerClass(): string {
         const dark = this.store.isDark()
