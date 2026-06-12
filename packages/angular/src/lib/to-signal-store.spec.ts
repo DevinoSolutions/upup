@@ -11,20 +11,27 @@ function fakeStore<S>(initial: S) {
   return store
 }
 
-it('emits the initial snapshot', () => {
-  const { state } = toSignalStore(fakeStore({ n: 1 }))
-  expect(state().n).toBe(1)
-})
-it('updates when the store changes', () => {
-  const s = fakeStore({ n: 1 })
-  const { state } = toSignalStore(s)
-  s._set({ n: 2 })
-  expect(state().n).toBe(2)
-})
-it('dispose unsubscribes', () => {
-  const s = fakeStore({ n: 1 })
-  const { state, dispose } = toSignalStore(s)
-  dispose()
-  s._set({ n: 99 })
-  expect(state().n).toBe(1)
+describe('toSignalStore', () => {
+  it('emits the initial snapshot', () => {
+    const { state } = toSignalStore(fakeStore({ n: 1 }))
+    expect(state().n).toBe(1)
+  })
+  it('updates when the store changes', () => {
+    const s = fakeStore({ n: 1 })
+    const { state } = toSignalStore(s)
+    s._set({ n: 2 })
+    expect(state().n).toBe(2)
+  })
+  it('dispose unsubscribes', () => {
+    const s = fakeStore({ n: 1 })
+    const { state, dispose } = toSignalStore(s)
+    dispose()
+    s._set({ n: 99 })
+    expect(state().n).toBe(1)
+  })
+  it('dispose is idempotent', () => {
+    const s = fakeStore({ n: 1 })
+    const { dispose } = toSignalStore(s)
+    expect(() => { dispose(); dispose() }).not.toThrow()
+  })
 })
