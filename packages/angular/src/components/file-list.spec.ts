@@ -231,6 +231,102 @@ describe('FilePreviewPortalComponent', () => {
         expect(img).not.toBeNull()
         expect(img?.getAttribute('src')).toBe('blob:http://localhost/img')
     })
+
+    it('renders <object> fallback for audio type (non-image/non-pdf/non-text)', async () => {
+        const storeMock = makeStoreMock(new Map())
+
+        await TestBed.configureTestingModule({
+            imports: [FilePreviewPortalComponent],
+            providers: [{ provide: UpupStore, useValue: storeMock }],
+        }).compileComponents()
+
+        const fixture = TestBed.createComponent(FilePreviewPortalComponent)
+        fixture.componentInstance.fileType = 'audio/mpeg'
+        fixture.componentInstance.fileUrl = 'blob:http://localhost/sound'
+        fixture.componentInstance.fileName = 'sound.mp3'
+        fixture.detectChanges()
+
+        const el: HTMLElement = fixture.nativeElement
+        // audio/mpeg is not image, not pdf, not text → 4th branch renders a native <object>
+        const obj = el.querySelector('object') as HTMLObjectElement | null
+        expect(obj).not.toBeNull()
+        expect(obj?.getAttribute('type')).toBe('audio/mpeg')
+        // No <img> / <embed> in this branch
+        expect(el.querySelector('img')).toBeNull()
+        expect(el.querySelector('embed')).toBeNull()
+    })
+
+    it('renders <object> fallback for video type', async () => {
+        const storeMock = makeStoreMock(new Map())
+
+        await TestBed.configureTestingModule({
+            imports: [FilePreviewPortalComponent],
+            providers: [{ provide: UpupStore, useValue: storeMock }],
+        }).compileComponents()
+
+        const fixture = TestBed.createComponent(FilePreviewPortalComponent)
+        fixture.componentInstance.fileType = 'video/webm'
+        fixture.componentInstance.fileUrl = 'blob:http://localhost/clip'
+        fixture.componentInstance.fileName = 'clip.webm'
+        fixture.detectChanges()
+
+        const el: HTMLElement = fixture.nativeElement
+        const obj = el.querySelector('object') as HTMLObjectElement | null
+        expect(obj).not.toBeNull()
+        expect(obj?.getAttribute('type')).toBe('video/webm')
+    })
+})
+
+// ── FilePreviewComponent ──────────────────────────────────────────────────────
+
+describe('FilePreviewComponent', () => {
+    it('applies a background-image style for image files (Fix 1)', async () => {
+        const storeMock = makeStoreMock(new Map())
+
+        await TestBed.configureTestingModule({
+            imports: [FilePreviewComponent],
+            providers: [{ provide: UpupStore, useValue: storeMock }],
+        }).compileComponents()
+
+        const fixture = TestBed.createComponent(FilePreviewComponent)
+        fixture.componentInstance.fileName = 'photo.png'
+        fixture.componentInstance.fileType = 'image/png'
+        fixture.componentInstance.fileId = 'p1'
+        fixture.componentInstance.fileUrl = 'blob:http://localhost/photo'
+        fixture.componentInstance.fileSize = 2048
+        fixture.detectChanges()
+
+        const el: HTMLElement = fixture.nativeElement
+        // The thumbnail wrapper is the first div with the fixed 145px box classes.
+        const wrapper = el.querySelector('.upup-h-\\[145px\\]') as HTMLElement | null
+        expect(wrapper).not.toBeNull()
+        const bg = wrapper?.style.backgroundImage ?? ''
+        expect(bg).toContain('blob:http://localhost/photo')
+    })
+
+    it('applies NO background-image for non-image files (Fix 1)', async () => {
+        const storeMock = makeStoreMock(new Map())
+
+        await TestBed.configureTestingModule({
+            imports: [FilePreviewComponent],
+            providers: [{ provide: UpupStore, useValue: storeMock }],
+        }).compileComponents()
+
+        const fixture = TestBed.createComponent(FilePreviewComponent)
+        fixture.componentInstance.fileName = 'doc.pdf'
+        fixture.componentInstance.fileType = 'application/pdf'
+        fixture.componentInstance.fileId = 'p2'
+        fixture.componentInstance.fileUrl = 'blob:http://localhost/doc'
+        fixture.componentInstance.fileSize = 2048
+        fixture.detectChanges()
+
+        const el: HTMLElement = fixture.nativeElement
+        const wrapper = el.querySelector('.upup-h-\\[145px\\]') as HTMLElement | null
+        expect(wrapper).not.toBeNull()
+        // No background-image set for PDFs
+        const bg = wrapper?.style.backgroundImage ?? ''
+        expect(bg).toBe('')
+    })
 })
 
 // ── FileItemComponent ─────────────────────────────────────────────────────────

@@ -1,4 +1,5 @@
 import { Component, Input, Output, EventEmitter, inject, OnChanges, SimpleChanges, Type } from '@angular/core'
+import { DomSanitizer, type SafeStyle } from '@angular/platform-browser'
 import {
     fileCanPreviewText,
     fileGetIsImage,
@@ -37,7 +38,7 @@ import { FilePreviewThumbnailComponent } from './file-preview-thumbnail.componen
             (click)="onclick.emit($event)"
             (keydown)="onKeyDown($event)"
         >
-            <div [class]="thumbnailWrapperClass">
+            <div [class]="thumbnailWrapperClass" [style]="thumbnailBgStyle">
                 <!-- Thumbnail (image bg or object preview) -->
                 <upup-file-preview-thumbnail
                     [canPreview]="canPreview"
@@ -112,6 +113,7 @@ import { FilePreviewThumbnailComponent } from './file-preview-thumbnail.componen
 })
 export class FilePreviewComponent implements OnChanges {
     readonly store = inject(UpupStore)
+    private sanitizer = inject(DomSanitizer)
 
     @Input() fileName: string = ''
     @Input() fileType: string = ''
@@ -237,8 +239,11 @@ export class FilePreviewComponent implements OnChanges {
         return `${Math.round((bytes / Math.pow(k, i)) * 10) / 10} ${sizes[i]}`
     }
 
-    get thumbnailBgStyle(): string {
-        return this.isImage ? `background-image: url(${this.fileUrl})` : ''
+    get thumbnailBgStyle(): SafeStyle | null {
+        // Mirrors svelte FilePreview.svelte: style={isImage ? `background-image: url(${fileUrl})` : undefined}
+        // Angular's style sanitizer strips url(blob:…) values, so bypass to keep the bg image.
+        if (!this.isImage) return null
+        return this.sanitizer.bypassSecurityTrustStyle(`background-image: url(${this.fileUrl})`)
     }
 
     // ── lifecycle ─────────────────────────────────────────────────────────────

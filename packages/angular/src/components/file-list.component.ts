@@ -214,6 +214,9 @@ export class FileListComponent implements AfterViewInit, OnDestroy {
     private virtualizerCleanup: (() => void) | null = null
     /** Current virtual items — refreshed each render cycle by getVirtualItems(). */
     virtualItems: VirtualItem[] = []
+    /** ngDoCheck change guards — avoid re-sorting + _willUpdate() every CD tick. */
+    private prevVirtCount = -1
+    private prevShouldVirt = false
 
     // ── Derived from store (called in template) ────────────────────────────────
 
@@ -286,6 +289,7 @@ export class FileListComponent implements AfterViewInit, OnDestroy {
             {
                 'md:upup-grid md:upup-gap-y-6': sortedFiles.length > 1 && grid,
                 'md:upup-grid-cols-2': sortedFiles.length > 1 && grid,
+                'upup-flex-1': sortedFiles.length === 1,
             },
             {
                 [slotClasses.fileListContainerInnerMultiple ?? '']: !!slotClasses.fileListContainerInnerMultiple && sortedFiles.length > 1,
@@ -451,26 +455,6 @@ export class FileListComponent implements AfterViewInit, OnDestroy {
         this.cdr.markForCheck()
     }
 
-    /** Update virtualizer when file count or shouldVirtualize changes.
-     *  Called by Angular's change detection cycle — safe to call on every check
-     *  because setOptions + _willUpdate are idempotent for same values. */
-    updateVirtualizer(): void {
-        const v = this.virtualizer
-        if (!v) return
-        const scrollEl = this.scrollContainerRef?.nativeElement
-        if (!scrollEl) return
-        v.setOptions({
-            ...v.options,
-            count: this.sortedFiles.length,
-            getScrollElement: () => scrollEl,
-            estimateSize: () => ESTIMATED_ITEM_HEIGHT,
-            overscan: 5,
-            enabled: this.shouldVirtualize,
-        })
-        v._willUpdate()
-        this.virtualItems = v.getVirtualItems()
-    }
-
     private destroyVirtualizer(): void {
         if (this.virtualizerCleanup) {
             this.virtualizerCleanup()
@@ -480,9 +464,29 @@ export class FileListComponent implements AfterViewInit, OnDestroy {
     }
 
     // ── ngDoCheck: sync virtualizer with current file list ────────────────────
+    // Guarded: only re-runs setOptions + _willUpdate() when the raw file COUNT or
+    // the virtualization GATE actually changed. Computing the gate from the raw
+    // files().size (not the O(n log n) sortedFiles getter) keeps this cheap and
+    // prevents the self-amplifying re-sort-on-every-scroll-tick footgun.
     ngDoCheck(): void {
-        if (this.virtualizer) {
-            this.updateVirtualizer()
-        }
+        const v = this.virtualizer
+        if (!v) return
+        const count = this.store.files().size // raw count, no sort
+        const sv = count >= VIRTUAL_SCROLL_THRESHOLD && this.store.viewMode() !== 'grid'
+        if (count === this.prevVirtCount && sv === this.prevShouldVirt) return
+        this.prevVirtCount = count
+        this.prevShouldVirt = sv
+        const scrollEl = this.scrollContainerRef?.nativeElement
+        if (!scrollEl) return
+        v.setOptions({
+            ...v.options,
+            count,
+            getScrollElement: () => scrollEl,
+            estimateSize: () => ESTIMATED_ITEM_HEIGHT,
+            overscan: 5,
+            enabled: sv,
+        })
+        v._willUpdate()
+        this.virtualItems = v.getVirtualItems()
     }
 }

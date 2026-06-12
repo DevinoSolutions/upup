@@ -96,6 +96,20 @@ const TEXT_PREVIEW_MAX_BYTES = 1024 * 1024 // 1 MB cap — mirrors svelte portal
                                     }
                                 </div>
                             </upup-should-render>
+
+                            <!-- Native <object> fallback for svg/video/audio/etc. -->
+                            <upup-should-render [when]="!isText">
+                                <object
+                                    [data]="safeResourceUrl"
+                                    width="100%"
+                                    height="100%"
+                                    [name]="fileName"
+                                    [title]="fileName"
+                                    [type]="fileType"
+                                >
+                                    <p>{{ translations.loading }}</p>
+                                </object>
+                            </upup-should-render>
                         </upup-should-render>
                     </div>
                 </div>
