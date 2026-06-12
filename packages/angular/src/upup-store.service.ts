@@ -43,7 +43,7 @@ export class UpupStore {
         reason: 'TYPE_MISMATCH' | 'FILE_TOO_LARGE' | 'FILE_TOO_SMALL' | 'LIMIT_EXCEEDED',
     ) => void
 
-    // Resolved scalars set during init()
+    /** Set during init(); undefined before init() is called. */
     mode!: 'client' | 'server'
     serverUrl?: string
 
@@ -271,7 +271,7 @@ export class UpupStore {
             get onDoneClicked() { return callbackRefs.onDoneClicked },
             get onPrepareFiles() { return callbackRefs.onPrepareFiles },
             get onFileRemoved() { return callbackRefs.onFileRemoved },
-            get imageEditorOptions() { return resolvedImageEditor },
+            get imageEditorOptions() { return callbackRefs.imageEditorOptions },
             get autoUpload() { return callbackRefs.autoUpload },
         }
 
@@ -315,6 +315,7 @@ export class UpupStore {
         this.orch.init()
         this.themeStore.init()
 
+        // Task 6 will push the status-change + SSE unsubscribers into this.cleanups.
         // Task 6: onStatusChange subscription here
         // Task 6: cloud-drive plugin registration (core.use) here
         // Task 6: i18n/translations resolution here
@@ -343,6 +344,8 @@ export class UpupStore {
             const message = error instanceof Error ? error.message : String(error)
             this.onError(message)
             const first = newFiles[0]
+            // Keyword heuristic on core's error message (mirrors @upup/svelte + the
+            // other framework packages). Order matters: 'below' is checked before 'size'.
             if (first) {
                 if (message.toLowerCase().includes('type')) {
                     this.onFileTypeMismatch(first, this.accept)
@@ -432,6 +435,7 @@ export class UpupStore {
         if (this.disposed) return
         this.disposed = true
         this.started = false
+        // Task 6 will push the status-change + SSE unsubscribers into this.cleanups.
         this.cleanups.forEach(c => c())
         this.cleanups.length = 0
         this.orchState?.dispose()

@@ -7,7 +7,7 @@
  *   2. Multi-instance isolation: two stores have independent cores and independent state.
  *   3. Idempotent teardown: double-dispose is safe; dispose+re-init does not throw.
  */
-import { describe, it, expect, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { UploadStatus, FileSource } from '@upup/core'
 import { UpupStore } from './upup-store.service'
 
@@ -229,6 +229,68 @@ describe('UpupStore', () => {
             expect(snap).toBeTruthy()
             expect(snap.files).toBeInstanceOf(Map)
             expect(snap.uploadStatus).toBe(UploadStatus.IDLE)
+        })
+    })
+
+    // ── Restriction ladder ───────────────────────────────────────
+    // Locks each branch of handleSetSelectedFiles. The method awaits
+    // this.upload.addFiles(); we reject it with messages containing the
+    // trigger substrings and assert the keyword heuristic maps to the
+    // correct reason. The 'below'-before-'size' test guards branch ORDER.
+
+    describe('restriction ladder', () => {
+        const txt = () => new File([], 'x.txt', { type: 'text/plain' })
+
+        it('type error → TYPE_MISMATCH + onFileTypeMismatch', async () => {
+            const onRestrictionFailed = vi.fn()
+            const onFileTypeMismatch = vi.fn()
+            const s = new UpupStore()
+            s.setConfig({ onRestrictionFailed, onFileTypeMismatch } as any)
+            s.init()
+            vi.spyOn(s['upload'], 'addFiles').mockRejectedValue(new Error('File type not allowed'))
+            await s.handleSetSelectedFiles([txt()])
+            expect(onFileTypeMismatch).toHaveBeenCalled()
+            expect(onRestrictionFailed).toHaveBeenCalledWith(expect.any(File), 'TYPE_MISMATCH')
+            s.dispose()
+        })
+
+        it('limit error → LIMIT_EXCEEDED (no onFileTypeMismatch)', async () => {
+            const onRestrictionFailed = vi.fn()
+            const onFileTypeMismatch = vi.fn()
+            const s = new UpupStore()
+            s.setConfig({ onRestrictionFailed, onFileTypeMismatch } as any)
+            s.init()
+            vi.spyOn(s['upload'], 'addFiles').mockRejectedValue(new Error('Number of files exceeds limit'))
+            await s.handleSetSelectedFiles([txt()])
+            expect(onRestrictionFailed).toHaveBeenCalledWith(expect.any(File), 'LIMIT_EXCEEDED')
+            expect(onFileTypeMismatch).not.toHaveBeenCalled()
+            s.dispose()
+        })
+
+        it("below error → FILE_TOO_SMALL (branch order: 'below' before 'size')", async () => {
+            const onRestrictionFailed = vi.fn()
+            const onFileTypeMismatch = vi.fn()
+            const s = new UpupStore()
+            s.setConfig({ onRestrictionFailed, onFileTypeMismatch } as any)
+            s.init()
+            vi.spyOn(s['upload'], 'addFiles').mockRejectedValue(new Error('File is below the minimum size'))
+            await s.handleSetSelectedFiles([txt()])
+            expect(onRestrictionFailed).toHaveBeenCalledWith(expect.any(File), 'FILE_TOO_SMALL')
+            expect(onFileTypeMismatch).not.toHaveBeenCalled()
+            s.dispose()
+        })
+
+        it('size error → FILE_TOO_LARGE (no onFileTypeMismatch)', async () => {
+            const onRestrictionFailed = vi.fn()
+            const onFileTypeMismatch = vi.fn()
+            const s = new UpupStore()
+            s.setConfig({ onRestrictionFailed, onFileTypeMismatch } as any)
+            s.init()
+            vi.spyOn(s['upload'], 'addFiles').mockRejectedValue(new Error('File exceeds the maximum size'))
+            await s.handleSetSelectedFiles([txt()])
+            expect(onRestrictionFailed).toHaveBeenCalledWith(expect.any(File), 'FILE_TOO_LARGE')
+            expect(onFileTypeMismatch).not.toHaveBeenCalled()
+            s.dispose()
         })
     })
 })
