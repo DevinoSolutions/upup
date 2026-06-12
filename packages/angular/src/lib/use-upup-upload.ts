@@ -24,13 +24,14 @@ export interface UpupUploadHandle {
   resume(): void
   cancel(): void
   retry(fileId?: string): Promise<UploadFile[]>
-  on(event: string, handler: (...args: unknown[]) => void): () => void
+  on(event: string, handler: (payload: unknown) => void): () => void
   ext: Record<string, ExtensionMethods>
   core: UpupCore
   start(): void
   dispose(): void
 }
 
+/** Single-use: after dispose() the underlying UpupCore is destroyed; do not call start() again on the same instance. */
 export function createUpupUpload(options: UseUpupUploadOptions): UpupUploadHandle {
   const core = new UpupCore(options)
   const files = signal<UploadFile[]>([...core.files.values()])
@@ -56,7 +57,7 @@ export function createUpupUpload(options: UseUpupUploadOptions): UpupUploadHandl
     resume: () => core.resume(),
     cancel: () => core.cancel(),
     retry: (id?: string) => core.retry(id),
-    on: (e: string, h: (...args: unknown[]) => void) => core.on(e, h as (payload: unknown) => void),
+    on: (e: string, h: (payload: unknown) => void) => core.on(e, h),
     ext: core.ext,
     core,
 

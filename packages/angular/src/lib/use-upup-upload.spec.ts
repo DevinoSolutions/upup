@@ -66,13 +66,29 @@ describe('createUpupUpload', () => {
     const onAdded = vi.fn()
     const u = createUpupUpload({ ...baseOptions, onFileAdded: onAdded })
     u.start()
+    u.core.emit('files-added', [{ id: 'pre', name: 'pre.txt' }] as any)
+    expect(onAdded).toHaveBeenCalledTimes(1)        // wired before dispose
     u.dispose()
+    u.core.emit('files-added', [{ id: 'post', name: 'post.txt' }] as any)
+    expect(onAdded).toHaveBeenCalledTimes(1)        // still 1 — listener removed
+  })
 
-    // After dispose the listeners are unsubscribed and core.destroy() has run.
-    // Emitting should not reach onAdded (and core's emitter is cleared).
-    // We use the raw emitter on a fresh core ref — but since destroy() removes
-    // all listeners, any emit is a no-op for our handler anyway.
-    // Just verify the callback was never called post-dispose.
-    expect(onAdded).not.toHaveBeenCalled()
+  it('state-change syncs signals from core', () => {
+    const u = createUpupUpload(baseOptions)
+    u.start()
+    u.core.emit('state-change', undefined as any)
+    expect(u.status()).toBe(u.core.status)
+    expect(u.files().length).toBe([...u.core.files.values()].length)
+    u.dispose()
+  })
+
+  it('forwards upload-all-complete to onUploadComplete', () => {
+    const onComplete = vi.fn()
+    const u = createUpupUpload({ ...baseOptions, onUploadComplete: onComplete })
+    u.start()
+    const done = [{ id: 'a', name: 'a.txt' }] as any
+    u.core.emit('upload-all-complete', done)
+    expect(onComplete).toHaveBeenCalledWith(done)
+    u.dispose()
   })
 })
