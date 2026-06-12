@@ -1,0 +1,70 @@
+import { Component, Input, inject } from '@angular/core'
+import { formatUiMessage as t, cn } from '@upup/core'
+import { UpupStore } from '../../upup-store.service'
+import { AdapterViewContainerComponent } from '../adapter-view-container.component'
+
+/**
+ * Angular port of DriveAuthFallback.svelte.
+ *
+ * Renders the "sign in" prompt when a cloud drive is not yet authenticated.
+ * Uses core's `formatUiMessage` (t) with {{provider}} double-brace placeholders —
+ * exactly as svelte does: t(tr.authenticatePrompt, { provider: providerName }).
+ * Single-brace is WRONG; this mirrors the proven svelte pattern.
+ */
+@Component({
+    selector: 'upup-drive-auth-fallback',
+    standalone: true,
+    imports: [AdapterViewContainerComponent],
+    template: `
+        <upup-adapter-view-container [slotName]="slotName">
+            <div class="upup-flex upup-h-full upup-w-full upup-flex-col upup-items-center upup-justify-center upup-gap-4 upup-p-6 upup-text-center">
+                <p [class]="promptClass">{{ authenticatePrompt }}</p>
+                <button
+                    type="button"
+                    [class]="signInButtonClass"
+                    (click)="onRetry()"
+                >
+                    {{ signInLabel }}
+                </button>
+            </div>
+        </upup-adapter-view-container>
+    `,
+})
+export class DriveAuthFallbackComponent {
+    private store = inject(UpupStore)
+
+    @Input({ required: true }) providerName!: string
+    @Input({ required: true }) onRetry!: () => void
+    /** Maps to svelte's dataUpupSlot prop — forwarded to AdapterViewContainer slotName. */
+    @Input() slotName: string = 'drive-auth-fallback'
+
+    /** Resolved i18n string: "Sign in to access {{provider}}" → "Sign in to access Google Drive" */
+    get authenticatePrompt(): string {
+        const tr = this.store.translations()
+        return t(tr.authenticatePrompt, { provider: this.providerName })
+    }
+
+    /** Resolved i18n string: "Sign in with {{provider}}" → "Sign in with Google Drive" */
+    get signInLabel(): string {
+        const tr = this.store.translations()
+        return t(tr.signInWith, { provider: this.providerName })
+    }
+
+    get promptClass(): string {
+        const dark = this.store.isDark()
+        const slotClasses = this.store.slotOverrides()
+        return cn(
+            'upup-text-sm upup-text-[#333]',
+            dark ? 'upup-text-[#FAFAFA] dark:upup-text-[#FAFAFA]' : '',
+            slotClasses.adapterView,
+        )
+    }
+
+    get signInButtonClass(): string {
+        const dark = this.store.isDark()
+        return cn(
+            'upup-rounded-md upup-bg-blue-600 upup-px-4 upup-py-2 upup-text-sm upup-font-medium upup-text-white upup-transition-all upup-duration-300 hover:upup-bg-blue-700',
+            dark ? 'upup-bg-[#30C5F7] hover:upup-bg-[#1eb4e6] dark:upup-bg-[#30C5F7] dark:hover:upup-bg-[#1eb4e6]' : '',
+        )
+    }
+}

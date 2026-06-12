@@ -1,0 +1,218 @@
+import { Component, Input, inject, signal, computed, effect } from '@angular/core'
+import {
+    type DriveFile,
+    type DriveFolder,
+    type DriveUser,
+    formatUiMessage as t,
+    pluralUiMessage as plural,
+    searchDriveFiles,
+    cn,
+} from '@upup/core'
+import { UpupStore } from '../../upup-store.service'
+import { AdapterViewContainerComponent } from '../adapter-view-container.component'
+import { ShouldRenderComponent } from '../should-render.component'
+import { DriveBrowserHeaderComponent } from './drive-browser-header.component'
+import { DriveBrowserItemComponent } from './drive-browser-item.component'
+
+/**
+ * Angular port of DriveBrowser.svelte.
+ *
+ * The main drive file/folder browser. Driven entirely by signals passed as inputs
+ * from a drive service. No business logic: navigate/select/submit all delegate
+ * back to the service via the provided handler functions.
+ *
+ * Preserves data-testid="upup-drive-browser" and data-upup-slot={slotName}.
+ */
+@Component({
+    selector: 'upup-drive-browser',
+    standalone: true,
+    imports: [
+        AdapterViewContainerComponent,
+        ShouldRenderComponent,
+        DriveBrowserHeaderComponent,
+        DriveBrowserItemComponent,
+    ],
+    template: `
+        <upup-adapter-view-container [isLoading]="isLoading()" [slotName]="slotName">
+            <upup-should-render [when]="true" [isLoading]="isLoading()">
+                <div
+                    data-testid="upup-drive-browser"
+                    class="upup-grid upup-h-full upup-w-full upup-grid-rows-[auto,1fr,auto] upup-overflow-auto"
+                >
+                    <!-- Header: breadcrumb + user + search -->
+                    <upup-drive-browser-header
+                        [path]="path()"
+                        [setPath]="setPath"
+                        [handleSignOut]="handleSignOut"
+                        [showSearch]="!!items()?.length"
+                        [searchTerm]="searchTerm()"
+                        [onSearch]="onSearchChange"
+                        [user]="user()"
+                    />
+
+                    <!-- Body: file/folder list or empty message -->
+                    <upup-should-render [when]="!!path()?.length">
+                        <div [class]="bodyClass">
+                            <upup-should-render [when]="!!displayedItems().length">
+                                <ul class="upup-p-2">
+                                    @for (file of displayedItems(); track file.id) {
+                                        <upup-drive-browser-item
+                                            [file]="file"
+                                            [handleClick]="clickHandler"
+                                            [selectedFiles]="selectedFiles()"
+                                        />
+                                    }
+                                </ul>
+                            </upup-should-render>
+                            <upup-should-render [when]="!displayedItems().length">
+                                <div class="upup-flex upup-h-full upup-flex-col upup-items-center upup-justify-center">
+                                    <p class="upup-text-xs upup-opacity-70">{{ tr.noAcceptedFilesFound }}</p>
+                                </div>
+                            </upup-should-render>
+                        </div>
+                    </upup-should-render>
+
+                    <!-- Footer: select folder, add files, cancel -->
+                    <upup-should-render [when]="!!selectedFiles().length || !!onSelectCurrentFolder">
+                        <div [class]="footerClass">
+                            @if (onSelectCurrentFolder) {
+                                <button
+                                    type="button"
+                                    [class]="selectFolderBtnClass"
+                                    [disabled]="showLoader()"
+                                    (click)="onSelectCurrentFolder!()"
+                                >
+                                    {{ tr.selectThisFolder }}
+                                </button>
+                            }
+                            <button
+                                type="button"
+                                [class]="addFilesBtnClass"
+                                [disabled]="showLoader()"
+                                (click)="handleSubmit()"
+                            >
+                                {{ addFilesLabel }}
+                            </button>
+                            <button
+                                type="button"
+                                [class]="cancelBtnClass"
+                                [disabled]="showLoader()"
+                                (click)="handleCancelDownload()"
+                            >
+                                {{ tr.cancel }}
+                            </button>
+                        </div>
+                    </upup-should-render>
+                </div>
+            </upup-should-render>
+        </upup-adapter-view-container>
+    `,
+})
+export class DriveBrowserComponent {
+    private store = inject(UpupStore)
+
+    // ── Inputs from drive service ─────────────────────────────────
+    @Input({ required: true }) driveFiles!: () => DriveFolder | undefined
+    @Input({ required: true }) path!: () => DriveFolder[]
+    @Input({ required: true }) setPath!: (newPath: DriveFolder[]) => void
+    @Input({ required: true }) user!: () => DriveUser | undefined
+    @Input({ required: true }) handleSignOut!: () => void
+    @Input({ required: true }) handleClick!: (file: DriveFile) => void
+    @Input({ required: true }) selectedFiles!: () => DriveFile[]
+    @Input({ required: true }) showLoader!: () => boolean
+    @Input({ required: true }) handleSubmit!: () => Promise<void>
+    @Input({ required: true }) handleCancelDownload!: () => void
+    @Input({ required: true }) isClickLoading!: () => boolean
+    @Input() onSelectCurrentFolder: (() => void) | undefined = undefined
+    /** Maps to svelte's dataUpupSlot prop. */
+    @Input() slotName: string = 'drive-browser'
+
+    // ── Local state ───────────────────────────────────────────────
+    readonly searchTerm = signal('')
+    readonly onSearchChange = (v: string) => { this.searchTerm.set(v) }
+
+    // ── Derived ───────────────────────────────────────────────────
+    readonly isLoading = computed(() => (this.isClickLoading?.() ?? false) || !this.driveFiles?.())
+
+    readonly items = computed(() => {
+        const currentFolder = this.path()?.at(-1)
+        if (!currentFolder?.children) return []
+        const accept = this.store.uiProps.allowedFileTypes
+        return currentFolder.children.filter(item => this.filterItems(item, accept))
+    })
+
+    readonly displayedItems = computed(() =>
+        searchDriveFiles(this.items(), this.searchTerm()) ?? [],
+    )
+
+    get tr() { return this.store.translations() }
+
+    /** Click handler that is a noop when loading (passed to DriveBrowserItem). */
+    get clickHandler(): (file: DriveFile) => void {
+        return (this.isClickLoading?.() || this.showLoader?.()) ? () => { /* disabled */ } : this.handleClick
+    }
+
+    get addFilesLabel(): string {
+        return t(plural(this.tr, 'addFiles', this.selectedFiles().length), { count: this.selectedFiles().length })
+    }
+
+    // ── Class helpers ─────────────────────────────────────────────
+    get bodyClass(): string {
+        const dark = this.store.isDark()
+        const slotClasses = this.store.slotOverrides()
+        return cn(
+            'upup-h-full upup-overflow-y-scroll upup-bg-black/[0.075] upup-pt-2',
+            dark ? 'upup-bg-white/10 upup-text-[#fafafa] dark:upup-bg-white/10 dark:upup-text-[#fafafa]' : '',
+            slotClasses.driveBody,
+        )
+    }
+
+    get footerClass(): string {
+        const dark = this.store.isDark()
+        const slotClasses = this.store.slotOverrides()
+        return cn(
+            'upup-flex upup-origin-bottom upup-items-center upup-gap-2 upup-bg-black/[0.025] upup-px-3 upup-py-2',
+            dark ? 'upup-bg-white/5 upup-text-[#fafafa] dark:upup-bg-white/5 dark:upup-text-[#fafafa]' : '',
+            slotClasses.driveFooter,
+        )
+    }
+
+    get selectFolderBtnClass(): string {
+        const dark = this.store.isDark()
+        return cn(
+            'upup-rounded-md upup-bg-transparent upup-px-3 upup-py-2 upup-text-sm upup-font-medium upup-text-blue-600 upup-transition-all upup-duration-300',
+            dark ? 'upup-text-[#30C5F7] dark:upup-text-[#30C5F7]' : '',
+        )
+    }
+
+    get addFilesBtnClass(): string {
+        const dark = this.store.isDark()
+        const slotClasses = this.store.slotOverrides()
+        return cn(
+            'upup-rounded-md upup-bg-blue-600 upup-px-3 upup-py-2 upup-text-sm upup-font-medium upup-text-white upup-transition-all upup-duration-300',
+            dark ? 'upup-animate-pulse upup-bg-[#30C5F7] dark:upup-bg-[#30C5F7]' : (this.showLoader?.() ? 'upup-animate-pulse' : ''),
+            slotClasses.driveAddFilesButton,
+        )
+    }
+
+    get cancelBtnClass(): string {
+        const dark = this.store.isDark()
+        const slotClasses = this.store.slotOverrides()
+        return cn(
+            'upup-ml-auto upup-rounded-md upup-p-1 upup-text-sm upup-text-blue-600 upup-transition-all upup-duration-300',
+            dark ? 'upup-text-[#30C5F7] dark:upup-text-[#30C5F7]' : '',
+            slotClasses.driveCancelFilesButton,
+        )
+    }
+
+    private filterItems(item: DriveFile, accept: string): boolean {
+        if (item.isFolder) return true
+        if (!accept || accept === '*') return true
+        return accept.split(',').some(pattern => {
+            const p = pattern.trim()
+            if (p.startsWith('.')) return item.name.endsWith(p)
+            if (p.endsWith('/*')) return item.mimeType.startsWith(p.replace('/*', '/'))
+            return item.mimeType === p
+        })
+    }
+}
