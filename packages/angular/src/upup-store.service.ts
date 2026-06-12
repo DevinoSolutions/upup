@@ -28,6 +28,7 @@ import { createUpupUpload, type UpupUploadHandle } from './lib/use-upup-upload'
 import { createSSEProcessing } from './lib/use-sse-processing'
 import { toSignalStore, type SignalStore } from './lib/to-signal-store'
 import type { UpupUploaderProps } from './shared/types'
+import { EmptyIconComponent } from './components/icons/empty-icon.component'
 
 // Stable sentinel — avoids allocating a new object on every init() when style is not passed.
 const EMPTY_STYLE: Record<string, string> = {}
@@ -500,14 +501,13 @@ export class UpupStore {
         this.dir = bundle?.dir ?? getDir(i18n?.locale as string | LocaleBundle | undefined)
 
         // ── Icons resolution ─────────────────────────────────────
-        // Task 8: default null → EmptyIconComponent for each slot
         const resolvedIcons = {
-            ContainerAddMoreIcon: icons.ContainerAddMoreIcon ?? null,
-            FileDeleteIcon: icons.FileDeleteIcon ?? null,
-            CameraCaptureIcon: icons.CameraCaptureIcon ?? null,
-            CameraRotateIcon: icons.CameraRotateIcon ?? null,
-            CameraDeleteIcon: icons.CameraDeleteIcon ?? null,
-            LoaderIcon: icons.LoaderIcon ?? null,
+            ContainerAddMoreIcon: icons.ContainerAddMoreIcon ?? EmptyIconComponent,
+            FileDeleteIcon: icons.FileDeleteIcon ?? EmptyIconComponent,
+            CameraCaptureIcon: icons.CameraCaptureIcon ?? EmptyIconComponent,
+            CameraRotateIcon: icons.CameraRotateIcon ?? EmptyIconComponent,
+            CameraDeleteIcon: icons.CameraDeleteIcon ?? EmptyIconComponent,
+            LoaderIcon: icons.LoaderIcon ?? EmptyIconComponent,
         }
 
         // ── uiProps aggregate ────────────────────────────────────
