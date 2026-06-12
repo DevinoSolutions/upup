@@ -144,9 +144,10 @@ describe('AdapterSelectorComponent', () => {
         expect(fixture.nativeElement.querySelector('[data-testid="upup-source-link"]')).toBeNull()
     })
 
-    it('clicking the googleDrive tile calls store.setActiveAdapter("googleDrive")', async () => {
+    it('clicking the googleDrive tile calls store.setActiveAdapter("googleDrive") and NOT openFilePicker', async () => {
         store = makeStore()
-        const spy = vi.spyOn(store, 'setActiveAdapter')
+        const adapterSpy = vi.spyOn(store, 'setActiveAdapter')
+        const pickerSpy = vi.spyOn(store, 'openFilePicker')
 
         await TestBed.configureTestingModule({
             imports: [AdapterSelectorComponent],
@@ -161,7 +162,72 @@ describe('AdapterSelectorComponent', () => {
         gdTile.click()
         fixture.detectChanges()
 
-        expect(spy).toHaveBeenCalledWith('googleDrive')
+        expect(adapterSpy).toHaveBeenCalledWith('googleDrive')
+        // non-LOCAL source must NOT open the device file picker (svelte branch parity)
+        expect(pickerSpy).not.toHaveBeenCalled()
+    })
+
+    it('clicking the LOCAL tile calls store.openFilePicker() and NOT setActiveAdapter', async () => {
+        store = makeStore()
+        const pickerSpy = vi.spyOn(store, 'openFilePicker')
+        const adapterSpy = vi.spyOn(store, 'setActiveAdapter')
+
+        await TestBed.configureTestingModule({
+            imports: [AdapterSelectorComponent],
+            providers: [{ provide: UpupStore, useValue: store }],
+        }).compileComponents()
+
+        const fixture = TestBed.createComponent(AdapterSelectorComponent)
+        fixture.detectChanges()
+
+        const localTile = fixture.nativeElement.querySelector('[data-testid="upup-source-local"]') as HTMLButtonElement
+        expect(localTile).not.toBeNull()
+        localTile.click()
+        fixture.detectChanges()
+
+        // LOCAL branch opens the device picker, never sets an active adapter (svelte parity)
+        expect(pickerSpy).toHaveBeenCalled()
+        expect(adapterSpy).not.toHaveBeenCalled()
+    })
+
+    it('emits core "source-click" with { sourceId } for a LOCAL click', async () => {
+        store = makeStore()
+        const emitSpy = vi.spyOn(store.core, 'emit')
+
+        await TestBed.configureTestingModule({
+            imports: [AdapterSelectorComponent],
+            providers: [{ provide: UpupStore, useValue: store }],
+        }).compileComponents()
+
+        const fixture = TestBed.createComponent(AdapterSelectorComponent)
+        fixture.detectChanges()
+
+        const localTile = fixture.nativeElement.querySelector('[data-testid="upup-source-local"]') as HTMLButtonElement
+        expect(localTile).not.toBeNull()
+        localTile.click()
+        fixture.detectChanges()
+
+        expect(emitSpy).toHaveBeenCalledWith('source-click', { sourceId: 'local' })
+    })
+
+    it('emits core "source-click" with { sourceId } for a non-LOCAL (googleDrive) click', async () => {
+        store = makeStore()
+        const emitSpy = vi.spyOn(store.core, 'emit')
+
+        await TestBed.configureTestingModule({
+            imports: [AdapterSelectorComponent],
+            providers: [{ provide: UpupStore, useValue: store }],
+        }).compileComponents()
+
+        const fixture = TestBed.createComponent(AdapterSelectorComponent)
+        fixture.detectChanges()
+
+        const gdTile = fixture.nativeElement.querySelector('[data-testid="upup-source-googleDrive"]') as HTMLButtonElement
+        expect(gdTile).not.toBeNull()
+        gdTile.click()
+        fixture.detectChanges()
+
+        expect(emitSpy).toHaveBeenCalledWith('source-click', { sourceId: 'googleDrive' })
     })
 
     it('renders the adapter-selector slot container', async () => {

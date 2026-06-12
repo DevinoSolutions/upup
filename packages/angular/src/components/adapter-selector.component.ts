@@ -44,26 +44,15 @@ interface SourceEntry {
         >
             <div [class]="listClass">
                 @for (source of chosenSources; track source.id) {
-                    @if (source.id !== localSource) {
-                        <button
-                            type="button"
-                            [attr.data-testid]="'upup-source-' + source.id"
-                            [class]="tileClass"
-                            (click)="handleSourceClick(source.id)"
-                        >
-                            <ng-container *ngComponentOutlet="source.iconType"></ng-container>
-                            <span [class]="labelClass">{{ source.label }}</span>
-                        </button>
-                    } @else {
-                        <button
-                            type="button"
-                            [attr.data-testid]="'upup-source-' + source.id"
-                            [class]="tileClass"
-                        >
-                            <ng-container *ngComponentOutlet="source.iconType"></ng-container>
-                            <span [class]="labelClass">{{ source.label }}</span>
-                        </button>
-                    }
+                    <button
+                        type="button"
+                        [attr.data-testid]="'upup-source-' + source.id"
+                        [class]="tileClass"
+                        (click)="handleAdapterClick(source.id)"
+                    >
+                        <ng-container *ngComponentOutlet="source.iconType"></ng-container>
+                        <span [class]="labelClass">{{ source.label }}</span>
+                    </button>
                 }
             </div>
         </div>
@@ -71,7 +60,6 @@ interface SourceEntry {
 })
 export class AdapterSelectorComponent {
     readonly store = inject(UpupStore)
-    readonly localSource = FileSource.LOCAL
 
     private static readonly ICON_MAP: Record<string, new (...args: unknown[]) => unknown> = {
         [FileSource.LOCAL]: MyDeviceIconComponent as new (...args: unknown[]) => unknown,
@@ -138,9 +126,19 @@ export class AdapterSelectorComponent {
         )
     }
 
-    handleSourceClick(sourceId: FileSource): void {
+    /**
+     * Unified tile click handler — 1:1 port of svelte useAdapterSelector.handleAdapterClick:
+     *   onIntegrationClick(sourceId)
+     *   core?.emit('source-click', { sourceId })
+     *   if (sourceId === LOCAL) openFilePicker() else setActiveAdapter(sourceId)
+     * Fires for EVERY source (including LOCAL) — no dead button.
+     */
+    handleAdapterClick(sourceId: FileSource): void {
         this.store.uiProps.onIntegrationClick(sourceId)
-        if (sourceId !== FileSource.LOCAL) {
+        this.store.core?.emit('source-click', { sourceId })
+        if (sourceId === FileSource.LOCAL) {
+            this.store.openFilePicker()
+        } else {
             this.store.setActiveAdapter(sourceId)
         }
     }
