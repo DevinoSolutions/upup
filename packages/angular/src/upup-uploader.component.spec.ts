@@ -67,4 +67,79 @@ describe('UpupUploaderComponent', () => {
         f.destroy()
         expect(disposeSpy).toHaveBeenCalled()
     })
+
+    // ── Root-shell / branding / container / file-input ──────────────────────
+
+    it('renders upup-container section', () => {
+        const f = TestBed.createComponent(UpupUploaderComponent)
+        f.componentInstance.config = {} as any
+        f.detectChanges()
+        expect(
+            (f.nativeElement as HTMLElement).querySelector('[data-testid="upup-container"]'),
+        ).toBeTruthy()
+    })
+
+    it('renders upup-branding when not mini and showBranding is not false', () => {
+        const f = TestBed.createComponent(UpupUploaderComponent)
+        f.componentInstance.config = { showBranding: true } as any
+        f.detectChanges()
+        expect(
+            (f.nativeElement as HTMLElement).querySelector('[data-testid="upup-branding"]'),
+        ).toBeTruthy()
+    })
+
+    it('hides upup-branding when mini=true', () => {
+        const f = TestBed.createComponent(UpupUploaderComponent)
+        f.componentInstance.config = { mini: true } as any
+        f.detectChanges()
+        expect(
+            (f.nativeElement as HTMLElement).querySelector('[data-testid="upup-branding"]'),
+        ).toBeFalsy()
+    })
+
+    it('hides upup-branding when showBranding=false', () => {
+        const f = TestBed.createComponent(UpupUploaderComponent)
+        f.componentInstance.config = { showBranding: false } as any
+        f.detectChanges()
+        expect(
+            (f.nativeElement as HTMLElement).querySelector('[data-testid="upup-branding"]'),
+        ).toBeFalsy()
+    })
+
+    it('renders hidden upup-file-input', () => {
+        const f = TestBed.createComponent(UpupUploaderComponent)
+        f.componentInstance.config = {} as any
+        f.detectChanges()
+        const input = (f.nativeElement as HTMLElement).querySelector('[data-testid="upup-file-input"]') as HTMLInputElement | null
+        expect(input).toBeTruthy()
+        expect(input?.type).toBe('file')
+        expect(input?.style.display).toBe('none')
+    })
+
+    it('onInputChange with files calls store.handleSetSelectedFiles', () => {
+        const f = TestBed.createComponent(UpupUploaderComponent)
+        f.componentInstance.config = {} as any
+        f.detectChanges()
+
+        const handleSetSpy = vi.spyOn(f.componentInstance.store, 'handleSetSelectedFiles').mockResolvedValue(undefined)
+
+        const file = new File(['x'], 'x.txt')
+        const input = document.createElement('input')
+        Object.defineProperty(input, 'files', {
+            value: { length: 1, 0: file, [Symbol.iterator]: function* () { yield file } },
+        })
+        const event = { target: input } as unknown as Event
+        f.componentInstance.onInputChange(event)
+
+        expect(handleSetSpy).toHaveBeenCalled()
+    })
+
+    it('does not render upup-image-editor-stub when imageEditor.enabled is false', () => {
+        const f = TestBed.createComponent(UpupUploaderComponent)
+        f.componentInstance.config = { imageEditor: { enabled: false } } as any
+        f.detectChanges()
+        expect(
+            (f.nativeElement as HTMLElement).querySelector('upup-image-editor-stub'),
+        ).toBeFalsy()
+    })
 })
