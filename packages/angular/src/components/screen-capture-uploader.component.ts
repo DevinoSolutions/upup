@@ -88,6 +88,13 @@ type RecordingState = 'idle' | 'recording' | 'recorded'
                             <span class="upup-h-3 upup-w-3 upup-animate-pulse upup-rounded-full upup-bg-red-500"></span>
                             <span [class]="timerClass">{{ formatTime(duration) }}</span>
                         </div>
+                        <button
+                            type="button"
+                            class="upup-rounded-lg upup-bg-red-500 upup-px-6 upup-py-2.5 upup-text-sm upup-font-medium upup-text-white upup-transition-colors hover:upup-bg-red-600"
+                            (click)="stopRecording()"
+                        >
+                            Stop Recording
+                        </button>
                     }
 
                     <!-- Recorded -->

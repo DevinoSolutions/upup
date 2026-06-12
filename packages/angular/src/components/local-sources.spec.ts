@@ -578,6 +578,63 @@ describe('ScreenCaptureUploaderComponent', () => {
         expect(fixture.componentInstance.recordingState).toBe('recording')
     })
 
+    it('renders a Stop Recording button while recording and clicking it stops recording', async () => {
+        const stream = makeFakeStream()
+        const track = stream.getVideoTracks()[0] as unknown as { onended: null | (() => void); stop: ReturnType<typeof vi.fn> }
+        track.onended = null
+
+        // Must install MediaRecorder before TestBed because jsdom has no native MediaRecorder.
+        const recorderStub = {
+            start: vi.fn(),
+            stop: vi.fn(),
+            ondataavailable: null as null | ((e: BlobEvent) => void),
+            onstop: null as null | (() => void),
+            mimeType: 'video/webm',
+            state: 'recording',
+        }
+        // @ts-expect-error — stub global
+        globalThis.MediaRecorder = function MediaRecorder() { return recorderStub }
+
+        Object.defineProperty(globalThis.navigator, 'mediaDevices', {
+            value: { getDisplayMedia: vi.fn().mockResolvedValue(stream) },
+            configurable: true,
+            writable: true,
+        })
+
+        store = makeStore()
+        await TestBed.configureTestingModule({
+            imports: [ScreenCaptureUploaderComponent],
+            providers: [{ provide: UpupStore, useValue: store }],
+        }).compileComponents()
+
+        const fixture = TestBed.createComponent(ScreenCaptureUploaderComponent)
+        fixture.detectChanges()
+
+        // Enter recording via the real UI button ("Share Screen")
+        const allButtons = Array.from(fixture.nativeElement.querySelectorAll('button')) as HTMLButtonElement[]
+        const shareBtn = allButtons.find(b => b.textContent?.includes('Share Screen'))
+        expect(shareBtn).not.toBeUndefined()
+        shareBtn!.click()
+        await fixture.whenStable()
+        fixture.detectChanges()
+
+        expect(fixture.componentInstance.recordingState).toBe('recording')
+
+        // (a) Stop Recording button is present while recording
+        const recordingButtons = Array.from(fixture.nativeElement.querySelectorAll('button')) as HTMLButtonElement[]
+        const stopBtn = recordingButtons.find(b => b.textContent?.includes('Stop Recording'))
+        expect(stopBtn).not.toBeUndefined()
+
+        // (b) Clicking it stops recording — spy on stopRecording + assert state leaves 'recording'
+        const stopSpy = vi.spyOn(fixture.componentInstance, 'stopRecording')
+        stopBtn!.click()
+        fixture.detectChanges()
+
+        expect(stopSpy).toHaveBeenCalled()
+        expect(recorderStub.stop).toHaveBeenCalled()
+        expect(fixture.componentInstance.recordingState).not.toBe('recording')
+    })
+
     it('retryRecording clears error and calls startRecording', async () => {
         const stream = makeFakeStream()
         const track = stream.getVideoTracks()[0] as unknown as { onended: null | (() => void) }
