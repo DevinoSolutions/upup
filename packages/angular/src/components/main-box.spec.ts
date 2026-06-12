@@ -215,6 +215,7 @@ describe('MainBoxComponent', () => {
         // jsdom doesn't expose ClipboardEvent constructor — use a plain stub
         const pasteEvent = {
             type: 'paste',
+            preventDefault: vi.fn(),
             clipboardData: { items: [item] },
         } as unknown as ClipboardEvent
 
@@ -222,6 +223,56 @@ describe('MainBoxComponent', () => {
 
         expect(handleSetSpy).toHaveBeenCalled()
         expect(emitSpy).toHaveBeenCalledWith('paste', expect.any(Object))
+    })
+
+    it('handlePaste keeps a named file (report.pdf) UNRENAMED', async () => {
+        store = new UpupStore()
+        store.setConfig({ enablePaste: true } as any)
+        store.init()
+        const fixture = await setup(store)
+        const comp = fixture.componentInstance
+
+        const handleSetSpy = vi.spyOn(store, 'handleSetSelectedFiles').mockResolvedValue(undefined)
+        const emitSpy = vi.spyOn(store.core, 'emit')
+
+        const file = new File(['data'], 'report.pdf', { type: 'application/pdf' })
+        const item = { kind: 'file', getAsFile: () => file } as unknown as DataTransferItem
+        const pasteEvent = {
+            type: 'paste',
+            preventDefault: vi.fn(),
+            clipboardData: { items: [item] },
+        } as unknown as ClipboardEvent
+
+        comp.handlePaste(pasteEvent)
+
+        expect(handleSetSpy).toHaveBeenCalled()
+        const passed = handleSetSpy.mock.calls[0][0] as File[]
+        expect(passed[0].name).toBe('report.pdf')
+        expect(emitSpy).toHaveBeenCalledWith('paste', expect.any(Object))
+    })
+
+    it('handlePaste renames an unnamed image.png to pasted-<digits>.png', async () => {
+        store = new UpupStore()
+        store.setConfig({ enablePaste: true } as any)
+        store.init()
+        const fixture = await setup(store)
+        const comp = fixture.componentInstance
+
+        const handleSetSpy = vi.spyOn(store, 'handleSetSelectedFiles').mockResolvedValue(undefined)
+
+        const file = new File(['data'], 'image.png', { type: 'image/png' })
+        const item = { kind: 'file', getAsFile: () => file } as unknown as DataTransferItem
+        const pasteEvent = {
+            type: 'paste',
+            preventDefault: vi.fn(),
+            clipboardData: { items: [item] },
+        } as unknown as ClipboardEvent
+
+        comp.handlePaste(pasteEvent)
+
+        expect(handleSetSpy).toHaveBeenCalled()
+        const passed = handleSetSpy.mock.calls[0][0] as File[]
+        expect(passed[0].name).toMatch(/^pasted-\d+\.png$/)
     })
 
     // ── Keyboard ────────────────────────────────────────────────────────────

@@ -183,19 +183,21 @@ export class MainBoxComponent implements OnDestroy {
             if (item.kind === 'file') {
                 const file = item.getAsFile()
                 if (file) {
-                    const renamed = new File(
-                        [file],
-                        `pasted-${Date.now()}-${file.name || 'file'}`,
-                        { type: file.type },
-                    )
+                    const name =
+                        file.name === 'image.png' || !file.name
+                            ? `pasted-${Date.now()}.${file.type.split('/')[1] || 'png'}`
+                            : file.name
+                    const renamed = new File([file], name, { type: file.type })
                     pastedFiles.push(renamed)
                 }
             }
         }
 
-        if (pastedFiles.length === 0) return
-        void this.store.handleSetSelectedFiles(pastedFiles)
-        this.store.core?.emit('paste', { files: pastedFiles })
+        if (pastedFiles.length > 0) {
+            e.preventDefault()
+            void this.store.handleSetSelectedFiles(pastedFiles)
+            this.store.core?.emit('paste', { files: pastedFiles })
+        }
     }
 
     // ── Keyboard handler ──────────────────────────────────────────────────────
