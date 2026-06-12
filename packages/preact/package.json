@@ -1,0 +1,40 @@
+{
+  "name": "@upup/preact",
+  "version": "2.2.0",
+  "description": "Preact file uploader with cloud-drive sources, resumable uploads, theming, and ICU i18n.",
+  "repository": "https://github.com/DevinoSolutions/upup",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js", "require": "./dist/index.cjs" },
+    "./styles": "./dist/tailwind-prefixed.css"
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsup && pnpm run build:css",
+    "build:css": "node scripts/copy-styles.mjs",
+    "dev": "tsup --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "release": "pnpm run build && pnpm publish --access public --no-git-checks",
+    "test-release": "pnpm run build && pnpm publish --dry-run --access public --no-git-checks"
+  },
+  "files": ["dist"],
+  "dependencies": {
+    "@upup/core": "workspace:*",
+    "@upup/react": "workspace:*",
+    "@types/react": ">=18.0.0"
+  },
+  "peerDependencies": { "preact": "^10.13.0" },
+  "devDependencies": {
+    "@testing-library/preact": "^3.2.4",
+    "jsdom": "22.1.0",
+    "preact": "^10.29.2",
+    "tsup": "^8.4.0",
+    "typescript": "^5.6.0",
+    "vitest": "^4.1.2"
+  }
+}
