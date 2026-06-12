@@ -127,6 +127,14 @@ export class ServerModeDriveService {
         const serverUrl = this.store.serverUrl
         if (!serverUrl) return
 
+        // De-dup: drop any prior re-auth listener before arming a new one (matches @upup/vanilla).
+        // A double-click reauth (before the popup closes) would otherwise accumulate a second
+        // listener and orphan the first until dispose().
+        if (this.authListener) {
+            window.removeEventListener('message', this.authListener)
+            this.authListener = null
+        }
+
         const popup = window.open(
             `${serverUrl}/auth/${this.provider}`,
             'upup-oauth',

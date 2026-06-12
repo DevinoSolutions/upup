@@ -213,3 +213,53 @@ describe('ServerModeDriveService — guard 3: dispose removes window message lis
         expect(removeSpy).toHaveBeenCalledWith('message', handler)
     })
 })
+
+// ── Parity guard: startAuth de-dups the re-auth message listener ──────────────
+
+describe('ServerModeDriveService — startAuth() de-dups the re-auth message listener (vanilla parity)', () => {
+    afterEach(() => { vi.restoreAllMocks(); vi.unstubAllGlobals(); TestBed.resetTestingModule() })
+
+    it('removes the prior message listener before arming a new one on a second startAuth()', async () => {
+        // 401 so state → 'reauth'; window.open mocked so no real popup opens
+        vi.stubGlobal('fetch', vi.fn(async () => new Response('', { status: 401 })))
+        vi.spyOn(window, 'open').mockReturnValue({ closed: false } as Window)
+
+        const addSpy = vi.spyOn(window, 'addEventListener')
+        const removeSpy = vi.spyOn(window, 'removeEventListener')
+
+        TestBed.configureTestingModule({
+            providers: [
+                { provide: UpupStore, useValue: makeStoreMock() },
+                ServerModeDriveService,
+            ],
+        })
+        const svc = TestBed.inject(ServerModeDriveService)
+        svc.init('google-drive')
+        await flush()
+        expect(svc.listState().status).toBe('reauth')
+
+        // First startAuth() arms listener #1
+        svc.startAuth()
+        const firstMsgAdd = addSpy.mock.calls.find(([type]) => type === 'message')
+        expect(firstMsgAdd).toBeTruthy()
+        const firstHandler = firstMsgAdd![1] as EventListenerOrEventListenerObject
+        expect(svc._authListener).toBe(firstHandler)
+
+        // Clear the removeEventListener spy history so we can prove the de-dup on call #2
+        removeSpy.mockClear()
+
+        // Second startAuth() (e.g. a double-click before the popup closes) must FIRST
+        // remove the prior listener, THEN arm a new one — matches vanilla's ordering.
+        svc.startAuth()
+
+        // The first handler must have been removed before the second listener was added
+        expect(removeSpy).toHaveBeenCalledWith('message', firstHandler)
+
+        // _authListener now points to the SECOND handler, not the first
+        const messageAddCalls = addSpy.mock.calls.filter(([type]) => type === 'message')
+        expect(messageAddCalls.length).toBe(2)
+        const secondHandler = messageAddCalls[1][1] as EventListenerOrEventListenerObject
+        expect(secondHandler).not.toBe(firstHandler)
+        expect(svc._authListener).toBe(secondHandler)
+    })
+})
