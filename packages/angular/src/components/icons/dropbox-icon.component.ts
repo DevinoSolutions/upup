@@ -1,7 +1,7 @@
 import { Component } from '@angular/core'
 
 @Component({
-    selector: 'upup-icon-dropbox',
+    selector: 'upup-dropbox-icon',
     standalone: true,
     template: `
         <svg class="upup-text-[#0061fe]" aria-hidden="true" focusable="false" width="32" height="32" viewBox="0 0 32 32">

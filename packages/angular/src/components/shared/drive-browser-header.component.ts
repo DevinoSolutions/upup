@@ -56,7 +56,7 @@ import { UserIconComponent } from '../icons/user-icon.component'
                             [class]="signOutClass"
                             (click)="handleSignOut()"
                         >
-                            {{ tr.signOut }}
+                            {{ tr.logOut }}
                         </button>
                     </div>
                 </div>

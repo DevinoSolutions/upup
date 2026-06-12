@@ -1,4 +1,5 @@
 import { Component, Input, Output, EventEmitter, inject, OnChanges, SimpleChanges, Type } from '@angular/core'
+import { NgComponentOutlet } from '@angular/common'
 import { DomSanitizer, type SafeStyle } from '@angular/platform-browser'
 import {
     fileCanPreviewText,
@@ -26,7 +27,7 @@ import { FilePreviewThumbnailComponent } from './file-preview-thumbnail.componen
 @Component({
     selector: 'upup-file-preview',
     standalone: true,
-    imports: [ShouldRenderComponent, ProgressBarComponent, FilePreviewThumbnailComponent],
+    imports: [ShouldRenderComponent, ProgressBarComponent, FilePreviewThumbnailComponent, NgComponentOutlet],
     template: `
         <div
             class="upup-inline-block"

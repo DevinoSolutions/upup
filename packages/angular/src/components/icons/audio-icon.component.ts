@@ -1,7 +1,7 @@
 import { Component } from '@angular/core'
 
 @Component({
-    selector: 'upup-icon-audio',
+    selector: 'upup-audio-icon',
     standalone: true,
     template: `
         <svg class="upup-text-[#8030a3]" aria-hidden="true" focusable="false" width="32px" height="32px" viewBox="0 0 32 32">

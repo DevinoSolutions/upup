@@ -1,7 +1,7 @@
 import { Component } from '@angular/core'
 
 @Component({
-    selector: 'upup-icon-screencast',
+    selector: 'upup-screencast-icon',
     standalone: true,
     template: `
         <svg class="upup-text-[#2c3e50]" aria-hidden="true" focusable="false" width="32" height="32" viewBox="0 0 32 32">
