@@ -1,7 +1,7 @@
 {
   "name": "@upup/angular",
   "version": "2.2.0",
-  "description": "Angular 17+ standalone file uploader with cloud-drive sources, resumable uploads, theming, and ICU i18n.",
+  "description": "Angular 19+ standalone file uploader with cloud-drive sources, resumable uploads, theming, and ICU i18n.",
   "repository": "https://github.com/DevinoSolutions/upup",
   "license": "MIT",
   "type": "module",
@@ -22,8 +22,8 @@
   },
   "dependencies": { "@tanstack/virtual-core": "^3.13.0", "@upup/core": "workspace:*", "tslib": "^2.6.0" },
   "peerDependencies": {
-    "@angular/common": "^17.0.0 || ^18.0.0 || ^19.0.0",
-    "@angular/core": "^17.0.0 || ^18.0.0 || ^19.0.0",
+    "@angular/common": "^19.0.0",
+    "@angular/core": "^19.0.0",
     "rxjs": "^7.8.0"
   },
   "devDependencies": {
