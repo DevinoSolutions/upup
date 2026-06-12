@@ -34,6 +34,15 @@ export class UpupStore {
     private cleanups: Array<() => void> = []
     private inputEl: HTMLInputElement | null = null
 
+    // Resolved values captured during init() — used by file-op handlers
+    // (mirrors how svelte's create-root-provider closes over them).
+    private accept = ''
+    private onFileTypeMismatch: (file: File, accept: string) => void = () => {}
+    private onRestrictionFailed?: (
+        file: File,
+        reason: 'TYPE_MISMATCH' | 'FILE_TOO_LARGE' | 'FILE_TOO_SMALL' | 'LIMIT_EXCEEDED',
+    ) => void
+
     // Resolved scalars set during init()
     mode!: 'client' | 'server'
     serverUrl?: string
@@ -53,6 +62,7 @@ export class UpupStore {
     uploadEta!: Signal<number>
     uploadedBytes!: Signal<number>
     totalBytes!: Signal<number>
+    editorQueue!: Signal<OrchSnapshot['editorQueue']>
 
     // ── themeState computeds ─────────────────────────────────────
     themeMode!: Signal<ThemeSnapshot['themeMode']>
@@ -65,6 +75,14 @@ export class UpupStore {
     /** Call before init() to provide props. */
     setConfig(props: UpupUploaderProps): void {
         this.props = props
+    }
+
+    // Single error/warn routing (mirrors svelte create-root-provider lines 152-158).
+    private onError(message: string): void {
+        this.props?.onError?.(message)
+    }
+    private onWarn(message: string): void {
+        this.props?.onWarn?.(message)
     }
 
     init(): void {
@@ -90,8 +108,6 @@ export class UpupStore {
             contentDeduplication = false,
             crashRecovery = false,
             sources,
-            onError: errorHandler,
-            onWarn: warningHandler,
             onFileRemove: onFileRemoveProp = () => {},
             onFileRemoved: onFileRemovedProp,
             autoUpload = false,
@@ -108,6 +124,7 @@ export class UpupStore {
             onDoneClicked = () => {},
             onPrepareFiles,
             onBeforeFileAdded,
+            onFileTypeMismatch = () => {},
             onRestrictionFailed,
             provider,
             mode: modeProp,
@@ -158,6 +175,12 @@ export class UpupStore {
         this.mode = resolvedMode as 'client' | 'server'
         this.serverUrl = resolvedServerUrl
 
+        // Capture restriction-handling values for handleSetSelectedFiles
+        // (mirrors svelte closing over accept/onFileTypeMismatch/onRestrictionFailed).
+        this.accept = accept
+        this.onFileTypeMismatch = onFileTypeMismatch
+        this.onRestrictionFailed = onRestrictionFailed
+
         // ── Cloud drives mapping (Task 6 will add plugin registration) ──
         const coreCloudDrives = cloudDrives ? {
             googleDrive: cloudDrives.googleDrive,
@@ -170,13 +193,9 @@ export class UpupStore {
             } : undefined,
         } : undefined
 
-        // ── Helper callbacks ─────────────────────────────────────
-        const onError = (message: string): void => {
-            errorHandler?.(message)
-        }
-        const onWarn = (message: string): void => {
-            warningHandler?.(message)
-        }
+        // ── Helper callbacks (route through the single this.onError/this.onWarn) ──
+        const onError = (message: string): void => this.onError(message)
+        const onWarn = (message: string): void => this.onWarn(message)
 
         // ── Core construction via createUpupUpload ───────────────
         this.upload = createUpupUpload({
@@ -284,6 +303,7 @@ export class UpupStore {
         this.uploadEta = computed(() => this.orchState.state().uploadEta)
         this.uploadedBytes = computed(() => this.orchState.state().uploadedBytes)
         this.totalBytes = computed(() => this.orchState.state().totalBytes)
+        this.editorQueue = computed(() => this.orchState.state().editorQueue)
         this.themeMode = computed(() => this.themeState.state().themeMode)
         this.isDark = computed(() => this.themeState.state().isDark)
         this.tokens = computed(() => this.themeState.state().tokens)
@@ -321,15 +341,18 @@ export class UpupStore {
             await this.upload.addFiles(newFiles)
         } catch (error) {
             const message = error instanceof Error ? error.message : String(error)
-            this.props?.onError?.(message)
+            this.onError(message)
             const first = newFiles[0]
             if (first) {
                 if (message.toLowerCase().includes('type')) {
-                    this.props?.onRestrictionFailed?.(first, 'TYPE_MISMATCH')
-                } else if (message.toLowerCase().includes('small')) {
-                    this.props?.onRestrictionFailed?.(first, 'FILE_TOO_SMALL')
+                    this.onFileTypeMismatch(first, this.accept)
+                    this.onRestrictionFailed?.(first, 'TYPE_MISMATCH')
+                } else if (message.toLowerCase().includes('limit')) {
+                    this.onRestrictionFailed?.(first, 'LIMIT_EXCEEDED')
+                } else if (message.toLowerCase().includes('below')) {
+                    this.onRestrictionFailed?.(first, 'FILE_TOO_SMALL')
                 } else if (message.toLowerCase().includes('size')) {
-                    this.props?.onRestrictionFailed?.(first, 'FILE_TOO_LARGE')
+                    this.onRestrictionFailed?.(first, 'FILE_TOO_LARGE')
                 }
             }
         }

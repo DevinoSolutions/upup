@@ -7,8 +7,8 @@
  *   2. Multi-instance isolation: two stores have independent cores and independent state.
  *   3. Idempotent teardown: double-dispose is safe; dispose+re-init does not throw.
  */
-import { describe, it, expect, beforeEach } from 'vitest'
-import { UploadStatus } from '@upup/core'
+import { describe, it, expect, beforeEach, afterEach } from 'vitest'
+import { UploadStatus, FileSource } from '@upup/core'
 import { UpupStore } from './upup-store.service'
 
 /** Minimal valid props — all optional fields omitted. */
@@ -193,11 +193,9 @@ describe('UpupStore', () => {
             expect(store.getFileInput()).toBeNull()
         })
 
-        it('setActiveAdapter updates activeAdapter signal', () => {
-            import('@upup/core').then(({ FileSource }) => {
-                store.setActiveAdapter(FileSource.LOCAL)
-                expect(store.activeAdapter()).toBe(FileSource.LOCAL)
-            })
+        it('setActiveAdapter updates the activeAdapter signal', () => {
+            store.setActiveAdapter(FileSource.GOOGLE_DRIVE)
+            expect(store.activeAdapter()).toBe(FileSource.GOOGLE_DRIVE)
         })
 
         it('setIsAddingMore updates isAddingMore signal', () => {
