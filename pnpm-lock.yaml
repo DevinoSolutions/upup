@@ -852,7 +852,7 @@ importers:
         version: 5.6.3
       vitest:
         specifier: ^4.1.2
-        version: 4.1.2(@opentelemetry/api@1.9.1)(@types/node@25.3.5)(jsdom@22.1.0)(msw@2.14.6(@types/node@25.3.5)(typescript@5.6.3))(vite@8.0.13(@types/node@25.3.5)(esbuild@0.28.0)(jiti@2.6.1)(less@4.6.4)(sass@1.100.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.1))
+        version: 4.1.2(@opentelemetry/api@1.9.1)(@types/node@25.3.5)(jsdom@22.1.0)(msw@2.14.6(@types/node@25.3.5)(typescript@5.6.3))(vite@8.0.13(@types/node@25.3.5)(esbuild@0.27.7)(jiti@2.6.1)(less@4.6.4)(sass@1.100.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.1))
 
   packages/interactive-example:
     dependencies:
@@ -921,6 +921,9 @@ importers:
       '@testing-library/preact':
         specifier: ^3.2.4
         version: 3.2.4(preact@10.29.2)
+      '@types/node':
+        specifier: '*'
+        version: 20.19.37
       jsdom:
         specifier: 22.1.0
         version: 22.1.0
@@ -935,7 +938,7 @@ importers:
         version: 5.6.3
       vitest:
         specifier: ^4.1.2
-        version: 4.1.2(@opentelemetry/api@1.9.1)(@types/node@25.3.5)(jsdom@22.1.0)(msw@2.14.6(@types/node@25.3.5)(typescript@5.6.3))(vite@8.0.13(@types/node@25.3.5)(esbuild@0.27.7)(jiti@2.6.1)(less@4.6.4)(sass@1.100.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.1))
+        version: 4.1.2(@opentelemetry/api@1.9.1)(@types/node@20.19.37)(jsdom@22.1.0)(msw@2.14.6(@types/node@20.19.37)(typescript@5.6.3))(vite@8.0.13(@types/node@20.19.37)(esbuild@0.28.0)(jiti@2.6.1)(less@4.6.4)(sass@1.100.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.1))
 
   packages/react:
     dependencies:

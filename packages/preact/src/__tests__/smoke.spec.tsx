@@ -5,6 +5,7 @@ import { UpupUploader } from '../index'
 afterEach(cleanup)
 
 test('UpupUploader renders the root shell on Preact via compat', () => {
+  // Intentionally minimal — validates the compat seam, not props.
   render(<UpupUploader />)
   expect(screen.getByTestId('upup-root')).toBeTruthy()
 })

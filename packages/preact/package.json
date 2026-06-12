@@ -32,6 +32,7 @@
   "peerDependencies": { "preact": "^10.13.0" },
   "devDependencies": {
     "@testing-library/preact": "^3.2.4",
+    "@types/node": "*",
     "jsdom": "22.1.0",
     "preact": "^10.29.2",
     "tsup": "^8.4.0",
