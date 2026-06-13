@@ -12,6 +12,6 @@ export interface PipelineContext {
   emit(event: string, data?: unknown): void
   t: (key: string, vars?: Record<string, unknown>) => string
   worker?: {
-    execute<T>(task: { type: string; data: ArrayBuffer }): Promise<T>
+    execute<T>(task: { type: string; data: ArrayBuffer; params?: Record<string, unknown> }): Promise<T>
   }
 }

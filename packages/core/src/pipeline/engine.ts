@@ -3,6 +3,10 @@ import type { PipelineStep, PipelineContext, UploadFile } from '../contracts'
 export class PipelineEngine {
   constructor(private steps: PipelineStep[]) {}
 
+  get stepCount(): number {
+    return this.steps.length
+  }
+
   async process(file: UploadFile, context: PipelineContext): Promise<UploadFile> {
     context.emit('pipeline-start', { fileId: file.id, steps: this.steps.map(s => s.name) })
 
