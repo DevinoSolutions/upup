@@ -38,6 +38,9 @@ graphify-out/
 # Storybook
 apps/*/storybook-static
 
+# Generated Web Worker code (built by packages/core/scripts/build-worker.mjs)
+packages/core/src/worker/pipeline-worker.code.ts
+
 # Misc
 *.tgz
 

@@ -83,7 +83,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsup",
+    "build": "node scripts/build-worker.mjs && tsup",
     "dev": "tsup --watch",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -100,6 +100,7 @@
     "tus-js-client": "^4.3.1"
   },
   "devDependencies": {
+    "esbuild": "^0.25.0",
     "rollup": "^4.60.0",
     "tsup": "^8.4.0",
     "typescript": "^5.3.2",
