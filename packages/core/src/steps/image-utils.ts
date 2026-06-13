@@ -209,3 +209,14 @@ export function cloneUploadFile(original: UploadFile, replacement: File, metadat
     thumbnail: original.thumbnail,
   }) as UploadFile
 }
+
+export function uploadFileFromImageResult(
+  original: UploadFile,
+  result: { bytes: ArrayBuffer; type?: string; name?: string; metadata?: Record<string, unknown> },
+): UploadFile {
+  const file = new File([result.bytes], result.name ?? original.name, {
+    type: result.type || original.type,
+    lastModified: original.lastModified,
+  })
+  return cloneUploadFile(original, file, (result.metadata ?? {}) as Partial<UploadFileMetadata>)
+}
