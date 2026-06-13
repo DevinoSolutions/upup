@@ -93,6 +93,7 @@ export function buildRootContext(
     imageCompression: options.imageCompression,
     thumbnailGenerator: options.thumbnailGenerator,
     checksumVerification: options.checksumVerification,
+    webWorker: options.webWorker,
     heicConversion: options.heicConversion,
     stripExifData: options.stripExifData,
     contentDeduplication: options.contentDeduplication,

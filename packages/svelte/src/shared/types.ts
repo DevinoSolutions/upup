@@ -55,6 +55,8 @@ export type UpupUploaderProps = {
     imageCompression?: boolean
     thumbnailGenerator?: boolean
     checksumVerification?: boolean
+    /** v2: Offload the file pipeline (hash/heic/exif/thumbnail/compress) to a Web Worker. Unset/true = auto; false = main thread. */
+    webWorker?: boolean
     heicConversion?: boolean
     stripExifData?: boolean
     contentDeduplication?: boolean
