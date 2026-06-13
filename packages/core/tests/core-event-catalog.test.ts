@@ -28,7 +28,7 @@ describe('UpupCore — event catalog', () => {
         'adapter-click', 'adapter-view-cancel',
         'browse-files', 'folder-select',
         'drag-over', 'drag-leave', 'drop', 'paste',
-        'url-submit', 'url-fetch',
+        'url-submit', 'url-fetch', 'url-fetch-cancel',
         'camera-capture', 'camera-confirm',
         'file-preview-open', 'file-preview-close',
         // Image editor
