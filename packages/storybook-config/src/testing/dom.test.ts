@@ -57,35 +57,11 @@ describe('dom helpers', () => {
     expect(target.fetch).toBe(fakeFetch) // original restored
   })
 
-  it('feedFile fires both input and change so the file registers in every host', () => {
+  it('feedFile fires change by default and honors an explicit events list', () => {
     const events: string[] = []
     const input = new EventTarget() as unknown as HTMLInputElement
     input.addEventListener('input', (e) => events.push(e.type))
     input.addEventListener('change', (e) => events.push(e.type))
-    const root = {
-      querySelector: (sel: string) =>
-        sel === 'input[type="file"]' ? (input as unknown as Element) : null,
-    } as unknown as ParentNode
-
-    const g = globalThis as { DataTransfer?: unknown }
-    const OrigDataTransfer = g.DataTransfer
-    g.DataTransfer = class {
-      items = { add: (_f: unknown) => {} }
-      files = [] as unknown as FileList
-    }
-    try {
-      feedFile(root, { name: 'sample.png', type: 'image/png' } as File)
-    } finally {
-      g.DataTransfer = OrigDataTransfer
-    }
-
-    expect(events).toEqual(['input', 'change'])
-  })
-
-  it('feedFileUntil re-feeds until the condition holds (preact/compat timing)', async () => {
-    let feeds = 0
-    const input = new EventTarget() as unknown as HTMLInputElement
-    input.addEventListener('change', () => { feeds++ })
     const root = {
       querySelector: (sel: string) =>
         sel === 'input[type="file"]' ? (input as unknown as Element) : null,
@@ -98,15 +74,67 @@ describe('dom helpers', () => {
       files = [] as unknown as FileList
     }
     try {
-      // condition flips true only on/after the 2nd feed → proves re-feeding
-      await feedFileUntil(root, { name: 'x.png' } as File, () => feeds >= 2, { timeout: 2000, interval: 10 })
+      feedFile(root, { name: 'sample.png', type: 'image/png' } as File)
+      expect(events).toEqual(['change'])
+      feedFile(root, { name: 'sample.png', type: 'image/png' } as File, ['input', 'change'])
+      expect(events).toEqual(['change', 'input', 'change'])
     } finally {
       g.DataTransfer = Orig
     }
-    expect(feeds).toBeGreaterThanOrEqual(2)
   })
 
-  it('feedFileUntil throws if the condition never holds', async () => {
+  it('feedFileUntil stops after change when the host registers on it (react/vue/svelte/vanilla)', async () => {
+    const events: string[] = []
+    let registered = false
+    const input = new EventTarget() as unknown as HTMLInputElement
+    input.addEventListener('change', () => { events.push('change'); registered = true })
+    input.addEventListener('input', () => { events.push('input') })
+    const root = {
+      querySelector: (sel: string) =>
+        sel === 'input[type="file"]' ? (input as unknown as Element) : null,
+    } as unknown as ParentNode
+
+    const g = globalThis as { DataTransfer?: unknown }
+    const Orig = g.DataTransfer
+    g.DataTransfer = class {
+      items = { add: (_f: unknown) => {} }
+      files = [] as unknown as FileList
+    }
+    try {
+      await feedFileUntil(root, { name: 'x.png' } as File, () => registered, { timeout: 1000, interval: 10 })
+    } finally {
+      g.DataTransfer = Orig
+    }
+    expect(events).toContain('change')
+    expect(events).not.toContain('input')
+  })
+
+  it('feedFileUntil escalates to input when change does not register (preact/compat)', async () => {
+    const events: string[] = []
+    let registered = false
+    const input = new EventTarget() as unknown as HTMLInputElement
+    input.addEventListener('change', () => { events.push('change') })
+    input.addEventListener('input', () => { events.push('input'); registered = true })
+    const root = {
+      querySelector: (sel: string) =>
+        sel === 'input[type="file"]' ? (input as unknown as Element) : null,
+    } as unknown as ParentNode
+
+    const g = globalThis as { DataTransfer?: unknown }
+    const Orig = g.DataTransfer
+    g.DataTransfer = class {
+      items = { add: (_f: unknown) => {} }
+      files = [] as unknown as FileList
+    }
+    try {
+      await feedFileUntil(root, { name: 'x.png' } as File, () => registered, { timeout: 1000, interval: 10 })
+    } finally {
+      g.DataTransfer = Orig
+    }
+    expect(events).toContain('input')
+  })
+
+  it('feedFileUntil throws if the file never registers', async () => {
     const input = new EventTarget() as unknown as HTMLInputElement
     const root = {
       querySelector: (sel: string) =>
@@ -122,7 +150,7 @@ describe('dom helpers', () => {
     try {
       await expect(
         feedFileUntil(root, { name: 'x.png' } as File, () => false, { timeout: 60, interval: 10 }),
-      ).rejects.toThrow(/feedFileUntil/)
+      ).rejects.toThrow(/did not register/)
     } finally {
       g.DataTransfer = Orig
     }

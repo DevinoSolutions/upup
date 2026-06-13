@@ -53,50 +53,59 @@ export function assertJpegProduced(root: QueryRoot): void {
 }
 
 /**
- * Push a File into the uploader's hidden <input type=file> and fire `change`.
- * Browser-only (uses real DataTransfer) — exercised by the play functions.
+ * Push a File into the uploader's hidden <input type=file> and fire DOM events.
+ * Defaults to `change` only — React/Vue/Svelte/Vanilla all register the file on
+ * `change`, and firing extra events makes some hosts (svelte) re-process the add
+ * and race the pipeline. Pass `['input']` for preact/compat, which backs
+ * `onChange` with the `input` event. Browser-only (uses real DataTransfer).
+ * Prefer `feedFileUntil`, which picks the right event per host automatically.
  */
-export function feedFile(root: ParentNode, file: File): void {
+export function feedFile(
+  root: ParentNode,
+  file: File,
+  events: readonly string[] = ['change'],
+): void {
   const input = root.querySelector('input[type="file"]') as HTMLInputElement | null
   if (!input) throw new Error('feedFile: no input[type="file"] under root')
   const dt = new DataTransfer()
   dt.items.add(file)
   input.files = dt.files
-  // Fire BOTH `input` and `change`. React backs `onChange` on a file input with
-  // the native `change` event, but preact/compat remaps `onChange` to `input` —
-  // a `change`-only dispatch is silently ignored there. Vue/Svelte/Vanilla listen
-  // for `change`. `@upup/core`'s addFiles dedupes by content, so a host that
-  // reacts to both still adds the file exactly once.
-  input.dispatchEvent(new Event('input', { bubbles: true }))
-  input.dispatchEvent(new Event('change', { bubbles: true }))
+  for (const ev of events) input.dispatchEvent(new Event(ev, { bubbles: true }))
 }
 
 /**
- * Feed `file` into the uploader and resolve once `done()` is truthy, RE-FEEDING
- * on each interval until then. Most hosts register the file on the first
- * dispatch, but preact/compat attaches the file input's listener a tick after
- * the element mounts (and may briefly swap the element), so a single early
- * dispatch can be missed. Re-feeding is idempotent: `@upup/core` dedupes by
- * content, so only the first landed feed registers the file. Throws on timeout.
+ * Feed `file` and resolve once `registered()` is truthy (the uploader has taken
+ * the file), trying a different event each attempt until then. Fires `change`
+ * first — React/Vue/Svelte/Vanilla all register on it — then escalates to
+ * `input` for preact/compat, which backs `onChange` with the `input` event and
+ * may wire that listener a tick after the input mounts. We stop the instant the
+ * file registers, so a host that already took the file is never fed a second
+ * event (svelte re-processes one, which races the HEIC pipeline). Throws on
+ * timeout.
  */
 export async function feedFileUntil(
   root: ParentNode,
   file: File,
-  done: () => boolean,
+  registered: () => boolean,
   { timeout = 15000, interval = 300 }: WaitForOptions = {},
 ): Promise<void> {
+  const attempts: readonly string[][] = [['change'], ['input'], ['input', 'change']]
   const start = Date.now()
+  let attempt = 0
   for (;;) {
-    if (done()) return
-    feedFile(root, file)
+    if (registered()) return
+    if (root.querySelector('input[type="file"]')) {
+      feedFile(root, file, attempts[Math.min(attempt, attempts.length - 1)])
+    }
+    attempt++
     const sliceEnd = Date.now() + interval
     while (Date.now() < sliceEnd) {
-      if (done()) return
+      if (registered()) return
       await new Promise((r) => setTimeout(r, 50))
     }
     if (Date.now() - start >= timeout) {
-      if (done()) return
-      throw new Error(`feedFileUntil: condition not met after ${timeout}ms`)
+      if (registered()) return
+      throw new Error(`feedFileUntil: file did not register after ${timeout}ms`)
     }
   }
 }
