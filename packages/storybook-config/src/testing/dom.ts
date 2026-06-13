@@ -62,6 +62,12 @@ export function feedFile(root: ParentNode, file: File): void {
   const dt = new DataTransfer()
   dt.items.add(file)
   input.files = dt.files
+  // Fire BOTH `input` and `change`. React backs `onChange` on a file input with
+  // the native `change` event, but preact/compat remaps `onChange` to `input` —
+  // a `change`-only dispatch is silently ignored there. Vue/Svelte/Vanilla listen
+  // for `change`. `@upup/core`'s addFiles dedupes by content, so a host that
+  // reacts to both still adds the file exactly once.
+  input.dispatchEvent(new Event('input', { bubbles: true }))
   input.dispatchEvent(new Event('change', { bubbles: true }))
 }
 

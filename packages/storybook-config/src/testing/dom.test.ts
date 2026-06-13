@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { waitFor, getRenderedFileNames, isJpegProduced, assertJpegProduced, captureRequests } from './dom'
+import { waitFor, getRenderedFileNames, isJpegProduced, assertJpegProduced, captureRequests, feedFile } from './dom'
 
 function stubRoot(texts: string[]) {
   const nodes = texts.map((t) => ({ textContent: t }))
@@ -55,5 +55,30 @@ describe('dom helpers', () => {
     expect(calls.length).toBe(1) // delegated to the real fetch
     cap.restore()
     expect(target.fetch).toBe(fakeFetch) // original restored
+  })
+
+  it('feedFile fires both input and change so the file registers in every host', () => {
+    const events: string[] = []
+    const input = new EventTarget() as unknown as HTMLInputElement
+    input.addEventListener('input', (e) => events.push(e.type))
+    input.addEventListener('change', (e) => events.push(e.type))
+    const root = {
+      querySelector: (sel: string) =>
+        sel === 'input[type="file"]' ? (input as unknown as Element) : null,
+    } as unknown as ParentNode
+
+    const g = globalThis as { DataTransfer?: unknown }
+    const OrigDataTransfer = g.DataTransfer
+    g.DataTransfer = class {
+      items = { add: (_f: unknown) => {} }
+      files = [] as unknown as FileList
+    }
+    try {
+      feedFile(root, { name: 'sample.png', type: 'image/png' } as File)
+    } finally {
+      g.DataTransfer = OrigDataTransfer
+    }
+
+    expect(events).toEqual(['input', 'change'])
   })
 })
