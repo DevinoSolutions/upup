@@ -71,6 +71,36 @@ export function feedFile(root: ParentNode, file: File): void {
   input.dispatchEvent(new Event('change', { bubbles: true }))
 }
 
+/**
+ * Feed `file` into the uploader and resolve once `done()` is truthy, RE-FEEDING
+ * on each interval until then. Most hosts register the file on the first
+ * dispatch, but preact/compat attaches the file input's listener a tick after
+ * the element mounts (and may briefly swap the element), so a single early
+ * dispatch can be missed. Re-feeding is idempotent: `@upup/core` dedupes by
+ * content, so only the first landed feed registers the file. Throws on timeout.
+ */
+export async function feedFileUntil(
+  root: ParentNode,
+  file: File,
+  done: () => boolean,
+  { timeout = 15000, interval = 300 }: WaitForOptions = {},
+): Promise<void> {
+  const start = Date.now()
+  for (;;) {
+    if (done()) return
+    feedFile(root, file)
+    const sliceEnd = Date.now() + interval
+    while (Date.now() < sliceEnd) {
+      if (done()) return
+      await new Promise((r) => setTimeout(r, 50))
+    }
+    if (Date.now() - start >= timeout) {
+      if (done()) return
+      throw new Error(`feedFileUntil: condition not met after ${timeout}ms`)
+    }
+  }
+}
+
 export interface RequestCapture {
   /** Each captured request as "<url> <stringBody>". */
   entries: string[]

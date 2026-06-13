@@ -5,7 +5,7 @@
 import { buildHeicFile } from '../fixtures/heicSample'
 import { buildPngFile } from '../fixtures/pngSample'
 import { installWorkerProbe, getWorkerSpawnCount, resetWorkerProbe } from './worker-probe'
-import { feedFile, waitFor, captureRequests, type RequestCapture } from './dom'
+import { feedFileUntil, waitFor, captureRequests, type RequestCapture } from './dom'
 
 // The pipeline rewrites the file for upload (HEIC→JPEG) but the rendered tile
 // keeps the original name, so we assert on what was actually uploaded: the
@@ -43,8 +43,7 @@ export const workerHeicPlays: Record<
     const cap = captureRequests()
     try {
       await waitForInput(canvasElement)
-      feedFile(canvasElement, buildHeicFile())
-      await waitFor(() => uploadedJpeg(cap), T)
+      await feedFileUntil(canvasElement, buildHeicFile(), () => uploadedJpeg(cap), T)
     } finally {
       cap.restore()
     }
@@ -55,8 +54,7 @@ export const workerHeicPlays: Record<
     installWorkerProbe()
     try {
       await waitForInput(canvasElement)
-      feedFile(canvasElement, buildPngFile())
-      await waitFor(() => getWorkerSpawnCount() > 0, T)
+      await feedFileUntil(canvasElement, buildPngFile(), () => getWorkerSpawnCount() > 0, T)
       if (getWorkerSpawnCount() < 1) throw new Error('webWorkerOffload: expected a Worker spawn, saw 0')
     } finally {
       resetWorkerProbe()
@@ -69,8 +67,7 @@ export const workerHeicPlays: Record<
     const cap = captureRequests()
     try {
       await waitForInput(canvasElement)
-      feedFile(canvasElement, buildHeicFile())
-      await waitFor(() => uploadedJpeg(cap), T)
+      await feedFileUntil(canvasElement, buildHeicFile(), () => uploadedJpeg(cap), T)
       const spawns = getWorkerSpawnCount()
       if (spawns !== 0) throw new Error(`mainThreadFallback: expected 0 workers, saw ${spawns}`)
     } finally {

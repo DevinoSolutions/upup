@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { waitFor, getRenderedFileNames, isJpegProduced, assertJpegProduced, captureRequests, feedFile } from './dom'
+import { waitFor, getRenderedFileNames, isJpegProduced, assertJpegProduced, captureRequests, feedFile, feedFileUntil } from './dom'
 
 function stubRoot(texts: string[]) {
   const nodes = texts.map((t) => ({ textContent: t }))
@@ -80,5 +80,51 @@ describe('dom helpers', () => {
     }
 
     expect(events).toEqual(['input', 'change'])
+  })
+
+  it('feedFileUntil re-feeds until the condition holds (preact/compat timing)', async () => {
+    let feeds = 0
+    const input = new EventTarget() as unknown as HTMLInputElement
+    input.addEventListener('change', () => { feeds++ })
+    const root = {
+      querySelector: (sel: string) =>
+        sel === 'input[type="file"]' ? (input as unknown as Element) : null,
+    } as unknown as ParentNode
+
+    const g = globalThis as { DataTransfer?: unknown }
+    const Orig = g.DataTransfer
+    g.DataTransfer = class {
+      items = { add: (_f: unknown) => {} }
+      files = [] as unknown as FileList
+    }
+    try {
+      // condition flips true only on/after the 2nd feed → proves re-feeding
+      await feedFileUntil(root, { name: 'x.png' } as File, () => feeds >= 2, { timeout: 2000, interval: 10 })
+    } finally {
+      g.DataTransfer = Orig
+    }
+    expect(feeds).toBeGreaterThanOrEqual(2)
+  })
+
+  it('feedFileUntil throws if the condition never holds', async () => {
+    const input = new EventTarget() as unknown as HTMLInputElement
+    const root = {
+      querySelector: (sel: string) =>
+        sel === 'input[type="file"]' ? (input as unknown as Element) : null,
+    } as unknown as ParentNode
+
+    const g = globalThis as { DataTransfer?: unknown }
+    const Orig = g.DataTransfer
+    g.DataTransfer = class {
+      items = { add: (_f: unknown) => {} }
+      files = [] as unknown as FileList
+    }
+    try {
+      await expect(
+        feedFileUntil(root, { name: 'x.png' } as File, () => false, { timeout: 60, interval: 10 }),
+      ).rejects.toThrow(/feedFileUntil/)
+    } finally {
+      g.DataTransfer = Orig
+    }
   })
 })
