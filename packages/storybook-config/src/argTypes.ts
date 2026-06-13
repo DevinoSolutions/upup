@@ -44,6 +44,7 @@ export const uploaderArgTypes: Record<string, unknown> = {
   thumbnailGenerator: { control: 'boolean', ...cat('Processing') },
   checksumVerification: { control: 'boolean', ...cat('Processing') },
   heicConversion: { control: 'boolean', ...cat('Processing') },
+  webWorker: { control: 'boolean', description: 'Offload the file pipeline (hash/heic/exif/thumbnail/compress) to a Web Worker. Unset/true = auto with transparent main-thread fallback; false = force the main thread.', ...cat('Processing') },
   stripExifData: { control: 'boolean', ...cat('Processing') },
   contentDeduplication: { control: 'boolean', ...cat('Processing') },
 

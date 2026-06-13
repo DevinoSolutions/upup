@@ -32,4 +32,13 @@ describe('uploaderArgTypes', () => {
     expect(VIRTUAL_ARGS).toContain('themeMode')
     expect(VIRTUAL_ARGS).toContain('primaryColor')
   })
+  it('exposes a webWorker boolean control in the Processing category', () => {
+    const ctrl = uploaderArgTypes.webWorker as {
+      control?: unknown
+      table?: { category?: string }
+    }
+    expect(ctrl).toBeDefined()
+    expect(ctrl.control).toBe('boolean')
+    expect(ctrl.table?.category).toBe('Processing')
+  })
 })
