@@ -1,5 +1,6 @@
 import type { PipelineStep, PipelineContext, UploadFile } from '../contracts'
-import { cloneUploadFile } from './image-utils'
+import { cloneUploadFile, uploadFileFromImageResult } from './image-utils'
+import type { WorkerResult } from '../worker/protocol'
 
 function jpegName(name: string): string {
   if (/\.(heic|heif)$/i.test(name)) return name.replace(/\.(heic|heif)$/i, '.jpg')
@@ -13,16 +14,26 @@ export function heicStep(): PipelineStep {
       file.type === 'image/heic' ||
       file.type === 'image/heif' ||
       /\.(heic|heif)$/i.test(file.name),
-    async process(file: UploadFile, _context: PipelineContext): Promise<UploadFile> {
+    async process(file: UploadFile, context: PipelineContext): Promise<UploadFile> {
+      if (context.worker) {
+        try {
+          const result = await context.worker.execute<WorkerResult>({
+            type: 'heic',
+            data: await file.arrayBuffer(),
+            params: { mime: file.type, name: file.name },
+          })
+          if (result.kind === 'image') return uploadFileFromImageResult(file, result)
+        } catch { /* fall through to main thread */ }
+      }
       try {
         const mod = await import('heic2any')
         const convert = mod.default
-        const result = await convert({
+        const heic2anyResult = await convert({
           blob: file,
           toType: 'image/jpeg',
           quality: 0.92,
         })
-        const blob = Array.isArray(result) ? result[0] : result
+        const blob = Array.isArray(heic2anyResult) ? heic2anyResult[0] : heic2anyResult
         if (!(blob instanceof Blob)) return file
         const converted = new File([blob], jpegName(file.name), {
           type: 'image/jpeg',
