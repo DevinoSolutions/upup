@@ -16,9 +16,10 @@ const meta: Meta<typeof UpupUploader> = {
   component: UpupUploader as unknown as Meta<typeof UpupUploader>['component'],
   argTypes: uploaderArgTypes,
   args: uploaderDefaultArgs,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   render: (args) => ({
     Component: UpupUploader,
-    props: buildProps(args as Record<string, unknown>),
+    props: buildProps(args as Record<string, unknown>) as any,
   }),
   parameters: { layout: 'padded' },
 }
