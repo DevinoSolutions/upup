@@ -9,6 +9,11 @@ type DecodedImage = {
 
 type CanvasLike = HTMLCanvasElement | OffscreenCanvas
 
+// With the WebWorker lib enabled, `getContext('2d')` on a `HTMLCanvasElement | OffscreenCanvas`
+// union widens to include `ImageBitmapRenderingContext` (which lacks `drawImage`). We only ever
+// request the '2d' context, so the runtime value is always a 2D context — narrow to it.
+type Ctx2D = CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D
+
 export type EncodeImageOptions = {
   maxWidthOrHeight?: number
   quality?: number
@@ -107,7 +112,7 @@ export async function encodeImageFile(file: UploadFile, options: EncodeImageOpti
   try {
     const dimensions = scaleDimensions(decoded.width, decoded.height, options.maxWidthOrHeight)
     const canvas = createCanvas(dimensions.width, dimensions.height)
-    const ctx = canvas?.getContext('2d')
+    const ctx = canvas?.getContext('2d') as Ctx2D | null
     if (!canvas || !ctx) return null
 
     ctx.drawImage(decoded.source, 0, 0, dimensions.width, dimensions.height)
@@ -165,7 +170,7 @@ export async function createThumbnail(file: UploadFile, options: { width?: numbe
     const width = Math.max(1, Math.round(decoded.width * scale))
     const height = Math.max(1, Math.round(decoded.height * scale))
     const canvas = createCanvas(width, height)
-    const ctx = canvas?.getContext('2d')
+    const ctx = canvas?.getContext('2d') as Ctx2D | null
     if (!canvas || !ctx) return null
 
     ctx.drawImage(decoded.source, 0, 0, width, height)
