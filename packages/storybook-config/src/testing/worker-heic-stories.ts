@@ -5,7 +5,13 @@
 import { buildHeicFile } from '../fixtures/heicSample'
 import { buildPngFile } from '../fixtures/pngSample'
 import { installWorkerProbe, getWorkerSpawnCount, resetWorkerProbe } from './worker-probe'
-import { feedFile, waitFor, isJpegProduced, assertJpegProduced } from './dom'
+import { feedFile, waitFor, captureRequests, type RequestCapture } from './dom'
+
+// The pipeline rewrites the file for upload (HEIC→JPEG) but the rendered tile
+// keeps the original name, so we assert on what was actually uploaded: the
+// presign request body carries the converted name/type/heicConverted flag.
+const uploadedJpeg = (cap: RequestCapture): boolean =>
+  cap.entries.some((e) => /\.jpe?g|image\/jpeg|heicConverted/i.test(e))
 
 export type PlayContext = { canvasElement: HTMLElement }
 
@@ -31,12 +37,17 @@ export const workerHeicPlays: Record<
   'heicConversion' | 'webWorkerOffload' | 'mainThreadFallback',
   (ctx: PlayContext) => Promise<void>
 > = {
-  // 1. HEIC → JPEG on the main thread.
+  // 1. HEIC → JPEG on the main thread. Asserted via the upload payload (the
+  //    converted .jpg is what gets sent), since the tile keeps the original name.
   async heicConversion({ canvasElement }) {
-    await waitForInput(canvasElement)
-    feedFile(canvasElement, buildHeicFile())
-    await waitFor(() => isJpegProduced(canvasElement), T)
-    assertJpegProduced(canvasElement)
+    const cap = captureRequests()
+    try {
+      await waitForInput(canvasElement)
+      feedFile(canvasElement, buildHeicFile())
+      await waitFor(() => uploadedJpeg(cap), T)
+    } finally {
+      cap.restore()
+    }
   },
 
   // 2. Worker offload: a real Worker spawns for the pipeline (PNG → no HEIC dep).
@@ -52,17 +63,18 @@ export const workerHeicPlays: Record<
     }
   },
 
-  // 3. Fallback parity: same HEIC→JPEG output, zero workers.
+  // 3. Fallback parity: same HEIC→JPEG output (via upload payload), zero workers.
   async mainThreadFallback({ canvasElement }) {
     installWorkerProbe()
+    const cap = captureRequests()
     try {
       await waitForInput(canvasElement)
       feedFile(canvasElement, buildHeicFile())
-      await waitFor(() => isJpegProduced(canvasElement), T)
-      assertJpegProduced(canvasElement)
+      await waitFor(() => uploadedJpeg(cap), T)
       const spawns = getWorkerSpawnCount()
       if (spawns !== 0) throw new Error(`mainThreadFallback: expected 0 workers, saw ${spawns}`)
     } finally {
+      cap.restore()
       resetWorkerProbe()
     }
   },

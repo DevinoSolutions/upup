@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { waitFor, getRenderedFileNames, isJpegProduced, assertJpegProduced } from './dom'
+import { waitFor, getRenderedFileNames, isJpegProduced, assertJpegProduced, captureRequests } from './dom'
 
 function stubRoot(texts: string[]) {
   const nodes = texts.map((t) => ({ textContent: t }))
@@ -34,5 +34,26 @@ describe('dom helpers', () => {
 
   it('waitFor rejects on timeout', async () => {
     await expect(waitFor(() => false, { interval: 1, timeout: 10 })).rejects.toThrow(/timed out/)
+  })
+
+  it('captureRequests records fetch url+body, delegates, and restores', async () => {
+    const calls: unknown[][] = []
+    const fakeFetch = ((...args: unknown[]) => {
+      calls.push(args)
+      return Promise.resolve('ok')
+    }) as unknown as typeof fetch
+    const target = { fetch: fakeFetch }
+
+    const cap = captureRequests(target)
+    await (target.fetch as unknown as (u: string, i?: { body?: string }) => Promise<unknown>)(
+      '/api/upup-mock/presign',
+      { body: '{"name":"sample.jpg","type":"image/jpeg","metadata":{"heicConverted":true}}' },
+    )
+
+    expect(cap.entries.some((e) => /sample\.jpg/.test(e))).toBe(true)
+    expect(cap.entries.some((e) => /image\/jpeg/.test(e))).toBe(true)
+    expect(calls.length).toBe(1) // delegated to the real fetch
+    cap.restore()
+    expect(target.fetch).toBe(fakeFetch) // original restored
   })
 })

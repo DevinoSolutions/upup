@@ -64,3 +64,50 @@ export function feedFile(root: ParentNode, file: File): void {
   input.files = dt.files
   input.dispatchEvent(new Event('change', { bubbles: true }))
 }
+
+export interface RequestCapture {
+  /** Each captured request as "<url> <stringBody>". */
+  entries: string[]
+  /** Restore the original `fetch`. Always call this (e.g. in a `finally`). */
+  restore(): void
+}
+
+/**
+ * Wrap `fetch` on `target` to record every request as "<url> <stringBody>".
+ *
+ * This is the cross-framework signal for "what did the uploader actually send".
+ * The uploader's pipeline (e.g. HEIC→JPEG) rewrites the file *for upload* but the
+ * rendered file tile keeps the original name, so the presign request body — which
+ * carries the converted `name`/`type`/`heicConverted` metadata — is the reliable
+ * proof that conversion happened. `@upup/core`'s presign call is a `fetch` in
+ * every framework, so wrapping `fetch` works for all six hosts. Default target is
+ * `globalThis`; pass a stub `{ fetch }` to unit-test.
+ */
+export function captureRequests(
+  target: { fetch: typeof fetch } = globalThis as unknown as { fetch: typeof fetch },
+): RequestCapture {
+  const entries: string[] = []
+  const realFetch = target.fetch
+  target.fetch = function (this: unknown, input: RequestInfo | URL, init?: RequestInit) {
+    try {
+      const url =
+        typeof input === 'string'
+          ? input
+          : input instanceof URL
+            ? input.href
+            : (input as Request).url
+      const body = init && typeof init.body === 'string' ? init.body : ''
+      entries.push(`${url} ${body}`)
+    } catch {
+      /* never let capture break the request */
+    }
+    // eslint-disable-next-line prefer-rest-params
+    return realFetch.apply(this, arguments as unknown as Parameters<typeof fetch>)
+  } as typeof fetch
+  return {
+    entries,
+    restore() {
+      target.fetch = realFetch
+    },
+  }
+}
