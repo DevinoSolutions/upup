@@ -76,6 +76,12 @@ export interface CoreOptions extends FileManagerOptions {
   imageCompression?: boolean | object
   thumbnailGenerator?: boolean | object
   checksumVerification?: boolean
+  /**
+   * Web Worker offload for the file pipeline (hash/heic/exif/thumbnail/compress).
+   * Unset/`true` = auto (workers used when supported, transparent main-thread
+   * fallback otherwise). `false` = force the main thread.
+   */
+  webWorker?: boolean
   maxRetries?: number
   maxConcurrentUploads?: number
   autoUpload?: boolean
@@ -152,6 +158,7 @@ export class UpupCore {
   private pauseRequested = false
   private cancelRequested = false
   private destroyed = false
+  private workerProvider: import('./worker/create-worker-provider').WorkerProvider | null = null
   options: CoreOptions
 
   constructor(options: CoreOptions) {
@@ -554,6 +561,22 @@ export class UpupCore {
     return steps
   }
 
+  private async maybeCreateWorkerProvider(stepCount: number): Promise<import('./worker/create-worker-provider').WorkerProvider | null> {
+    const { isWorkerEligible } = await import('./worker/eligibility')
+    if (!isWorkerEligible(this.options, typeof Worker !== 'undefined', stepCount)) return null
+    try {
+      const [{ PIPELINE_WORKER_CODE }, { createWorkerProvider }, { BrowserRuntime }] = await Promise.all([
+        import('./worker/pipeline-worker.code'),
+        import('./worker/create-worker-provider'),
+        import('./runtime/browser'),
+      ])
+      if (!PIPELINE_WORKER_CODE) return null
+      return createWorkerProvider(PIPELINE_WORKER_CODE, BrowserRuntime)
+    } catch {
+      return null
+    }
+  }
+
   private hasUploadTarget(): boolean {
     return Boolean(
       this.options.uploadEndpoint ||
@@ -782,15 +805,25 @@ export class UpupCore {
 
       if (this.pipelineEngine) {
         const translator = createTranslator({ bundle: enUS })
-        const context: PipelineContext = {
-          files: this.files,
-          options: this.options as Record<string, unknown>,
-          emit: (event, data) => this.emitter.emit(event, data),
-          t: (key: string, vars?: Record<string, unknown>) => translator(key as Parameters<typeof translator>[0], vars),
-        }
-        const processed = await this.pipelineEngine.processAll([...this.files.values()], context)
-        for (const file of processed) {
-          this.files.set(file.id, file)
+        const provider = await this.maybeCreateWorkerProvider(this.pipelineEngine.stepCount)
+        this.workerProvider = provider
+        try {
+          const context: PipelineContext = {
+            files: this.files,
+            options: this.options as Record<string, unknown>,
+            emit: (event, data) => this.emitter.emit(event, data),
+            t: (key: string, vars?: Record<string, unknown>) => translator(key as Parameters<typeof translator>[0], vars),
+            worker: provider
+              ? { execute: <T>(task: { type: string; data: ArrayBuffer; params?: Record<string, unknown> }) => provider.execute<T>(task) }
+              : undefined,
+          }
+          const processed = await this.pipelineEngine.processAll([...this.files.values()], context)
+          for (const file of processed) {
+            this.files.set(file.id, file)
+          }
+        } finally {
+          provider?.terminate()
+          this.workerProvider = null
         }
       }
 
@@ -1013,6 +1046,8 @@ export class UpupCore {
     this.destroyed = true
     this.uploadManager?.abort()
     this.uploadManager = null
+    this.workerProvider?.terminate()
+    this.workerProvider = null
     this.emitter.emit('destroyed', {})
     this.crashRecoveryUnsubscribe?.()
     this.crashRecoveryUnsubscribe = null
