@@ -47,7 +47,7 @@ function outputTypeFor(file: UploadFile, requestedType?: string): string {
   return 'image/jpeg'
 }
 
-function createCanvas(width: number, height: number): CanvasLike | null {
+export function createCanvas(width: number, height: number): CanvasLike | null {
   if (typeof OffscreenCanvas !== 'undefined') {
     return new OffscreenCanvas(width, height)
   }
@@ -58,7 +58,7 @@ function createCanvas(width: number, height: number): CanvasLike | null {
   return canvas
 }
 
-async function canvasToBlob(canvas: CanvasLike, type: string, quality: number): Promise<Blob | null> {
+export async function canvasToBlob(canvas: CanvasLike, type: string, quality: number): Promise<Blob | null> {
   if ('convertToBlob' in canvas && typeof canvas.convertToBlob === 'function') {
     return canvas.convertToBlob({ type, quality })
   }
