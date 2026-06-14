@@ -28,10 +28,34 @@ describe('handleTask', () => {
     }
   })
 
-  it('converts heic via heic2any (mocked) into an image result', async () => {
-    vi.doMock('heic2any', () => ({
-      default: vi.fn(async () => new Blob([new Uint8Array([1, 2, 3, 4])], { type: 'image/jpeg' })),
+  it('converts heic via libheif (mocked) into an image result', async () => {
+    vi.doMock('libheif-js/libheif-wasm/libheif-bundle.mjs', () => ({
+      default: () => Promise.resolve({
+        HeifDecoder: class {
+          decoder = { ptr: 1 }
+          decode() {
+            return [{
+              get_width: () => 2,
+              get_height: () => 2,
+              display: (t: { data: Uint8ClampedArray }, cb: (r: unknown) => void) => cb(t),
+              free: vi.fn(),
+            }]
+          }
+        },
+        heif_context_free: vi.fn(),
+      }),
     }))
+    vi.stubGlobal('OffscreenCanvas', class {
+      width = 0; height = 0
+      constructor(w: number, h: number) { this.width = w; this.height = h }
+      getContext() {
+        return {
+          createImageData: (w: number, h: number) => ({ data: new Uint8ClampedArray(w * h * 4), width: w, height: h }),
+          putImageData: vi.fn(),
+        }
+      }
+      async convertToBlob(opts: { type?: string }) { return new Blob([new Uint8Array([1, 2, 3, 4])], { type: opts.type || 'image/jpeg' }) }
+    })
     const { handleTask: ht } = await import('../../src/worker/handle-task')
     const res = await ht({ id: 5, type: 'heic', data: new ArrayBuffer(8), params: { mime: 'image/heic', name: 'p.heic' } })
     expect(res.ok).toBe(true)
@@ -41,13 +65,26 @@ describe('handleTask', () => {
       expect(res.result.bytes.byteLength).toBe(4)
       expect(res.result.metadata).toMatchObject({ heicConverted: true })
     } else throw new Error('expected image result')
+    vi.unstubAllGlobals()
   })
 
-  it('returns ok:false when heic2any throws', async () => {
-    vi.doMock('heic2any', () => ({ default: vi.fn(async () => { throw new Error('no codec') }) }))
+  it('returns ok:false when libheif decode throws', async () => {
+    vi.doMock('libheif-js/libheif-wasm/libheif-bundle.mjs', () => ({
+      default: () => Promise.resolve({
+        HeifDecoder: class { decoder = { ptr: 1 }; decode() { throw new Error('no codec') } },
+        heif_context_free: vi.fn(),
+      }),
+    }))
+    // Stub a canvas so the helper's backend guard passes and decode() actually runs (and throws).
+    vi.stubGlobal('OffscreenCanvas', class {
+      constructor(_w: number, _h: number) {}
+      getContext() { return { createImageData: () => ({ data: new Uint8ClampedArray(4) }), putImageData: vi.fn() } }
+      async convertToBlob() { return new Blob([]) }
+    })
     const { handleTask: ht } = await import('../../src/worker/handle-task')
     const res = await ht({ id: 6, type: 'heic', data: new ArrayBuffer(8), params: { mime: 'image/heic', name: 'p.heic' } })
     expect(res.ok).toBe(false)
+    vi.unstubAllGlobals()
   })
 
   it('never throws on unknown task type', async () => {

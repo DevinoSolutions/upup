@@ -1,6 +1,7 @@
 import type { WorkerRequest, WorkerResponse, WorkerResult } from './protocol'
 import { encodeImageFile, createThumbnail } from '../steps/image-utils'
 import type { UploadFile } from '../contracts'
+import { heicToJpegBlob } from '../steps/heic-decode'
 
 async function sha256Hex(buffer: ArrayBuffer): Promise<string> {
   const digest = await crypto.subtle.digest('SHA-256', buffer)
@@ -36,11 +37,8 @@ export async function handleTask(req: WorkerRequest): Promise<WorkerResponse> {
       }
 
       case 'heic': {
-        const mod = await import('heic2any')
-        const convert = mod.default
-        const out = await convert({ blob: new Blob([req.data], { type: mime }), toType: 'image/jpeg', quality: 0.92 })
-        const blob = Array.isArray(out) ? out[0] : out
-        if (!(blob instanceof Blob)) return { id: req.id, ok: false, error: 'heic: no blob' }
+        const blob = await heicToJpegBlob(new Blob([req.data], { type: mime }), { quality: 0.92 })
+        if (!blob) return { id: req.id, ok: false, error: 'heic: no decode backend' }
         const bytes = await blob.arrayBuffer()
         return {
           id: req.id, ok: true,
