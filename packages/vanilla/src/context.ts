@@ -172,8 +172,14 @@ export function buildRootContext(
   const openFilePicker = () => inputEl?.click()
 
   // ── File ops + upload controls (delegate to core/orchestrator, mirror svelte handlers) ──
+  // Every UI source (file input, drag-drop, camera, audio, screen, url, drive, folder)
+  // funnels through setFiles. It must route to core.addFiles so the orchestrator's
+  // files-added auto-upload (and state-merge / onFilesSelected) fire — core.setFiles
+  // emits files-set, which auto-upload does not listen for. Mirrors svelte's
+  // handleSetSelectedFiles (create-root-provider.ts) and React's useRootProvider.
+  // True-replace remains available to consumers via instance.core.setFiles.
   async function setFiles(newFiles: File[]) {
-    try { await core.setFiles(newFiles) } catch (e) { onError(e instanceof Error ? e.message : String(e)) }
+    try { await core.addFiles(newFiles) } catch (e) { onError(e instanceof Error ? e.message : String(e)) }
   }
   function handleFileRemove(fileId: string) {
     const file = core.files.get(fileId)

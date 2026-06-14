@@ -35,4 +35,14 @@ describe('buildRootContext', () => {
     expect(onFileAdded).toHaveBeenCalled()
     dispose()
   })
+
+  it('routes ctx.setFiles through core.addFiles so files-added fires (autoUpload parity with svelte/react)', async () => {
+    const { ctx, dispose } = buildRootContext({ sources: ['local'] }, () => {})
+    const filesAdded = vi.fn()
+    ctx.core.on('files-added', filesAdded)
+    await ctx.setFiles([new File(['x'], 'a.txt', { type: 'text/plain' })])
+    expect(filesAdded).toHaveBeenCalledTimes(1)
+    expect(ctx.core.files.size).toBe(1)
+    dispose()
+  })
 })
