@@ -42,7 +42,7 @@ export async function handleTask(req: WorkerRequest): Promise<WorkerResponse> {
         const bytes = await blob.arrayBuffer()
         return {
           id: req.id, ok: true,
-          result: { kind: 'image', bytes, type: 'image/jpeg', name: jpegName(name), metadata: { heicConverted: true, processedSize: bytes.byteLength } },
+          result: { kind: 'image', bytes, type: 'image/jpeg', name: jpegName(name), metadata: { heicConverted: true, originalSize: req.data.byteLength, processedSize: bytes.byteLength } },
         }
       }
 
