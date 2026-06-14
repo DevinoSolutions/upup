@@ -22,11 +22,27 @@ describe('heicStep worker branch', () => {
     expect(out.checksumSHA256).toBe('keep')
   })
 
-  it('falls back to the main thread when the worker throws (node → original file)', async () => {
+  it('falls back to main thread; on decode failure emits error and keeps the original file', async () => {
     const execute = vi.fn(async () => { throw new Error('worker down') })
-    const ctx: PipelineContext = { ...ctxBase, worker: { execute } }
+    const emit = vi.fn()
+    const ctx: PipelineContext = { ...ctxBase, emit, worker: { execute } }
     const file = makeHeic()
+    // No libheif/canvas in node → main-thread heicToJpegBlob returns null → original kept, no error emitted.
     const out = await heicStep().process(file, ctx)
-    expect(out).toBe(file) // main-thread heic returns original on failure
+    expect(out).toBe(file)
+    expect(emit).not.toHaveBeenCalledWith('error', expect.anything())
+  })
+
+  it('emits error (no silent swallow) when conversion throws, still returns original', async () => {
+    vi.resetModules()
+    vi.doMock('../../src/steps/heic-decode', () => ({ heicToJpegBlob: vi.fn(async () => { throw new Error('boom decode') }) }))
+    const { heicStep: step } = await import('../../src/steps/heic')
+    const emit = vi.fn()
+    const ctx: PipelineContext = { ...ctxBase, emit }
+    const file = makeHeic()
+    const out = await step().process(file, ctx)
+    expect(out).toBe(file)
+    expect(emit).toHaveBeenCalledWith('error', expect.objectContaining({ scope: 'heic' }))
+    vi.doUnmock('../../src/steps/heic-decode')
   })
 })

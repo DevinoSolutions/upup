@@ -1,5 +1,6 @@
 import type { PipelineStep, PipelineContext, UploadFile } from '../contracts'
 import { cloneUploadFile, uploadFileFromImageResult } from './image-utils'
+import { heicToJpegBlob } from './heic-decode'
 import type { WorkerResult } from '../worker/protocol'
 
 function jpegName(name: string): string {
@@ -26,15 +27,8 @@ export function heicStep(): PipelineStep {
         } catch { /* fall through to main thread */ }
       }
       try {
-        const mod = await import('heic2any')
-        const convert = mod.default
-        const heic2anyResult = await convert({
-          blob: file,
-          toType: 'image/jpeg',
-          quality: 0.92,
-        })
-        const blob = Array.isArray(heic2anyResult) ? heic2anyResult[0] : heic2anyResult
-        if (!(blob instanceof Blob)) return file
+        const blob = await heicToJpegBlob(file, { quality: 0.92 })
+        if (!blob) return file // no canvas backend (e.g. SSR) — keep original silently
         const converted = new File([blob], jpegName(file.name), {
           type: 'image/jpeg',
           lastModified: file.lastModified,
@@ -44,7 +38,11 @@ export function heicStep(): PipelineStep {
           processedSize: converted.size,
           heicConverted: true,
         })
-      } catch {
+      } catch (err) {
+        // Surface the failure instead of silently uploading the raw HEIC.
+        context.emit('error', { scope: 'heic', name: file.name, message: err instanceof Error ? err.message : String(err) })
+        // eslint-disable-next-line no-console
+        console.error('[upup] HEIC conversion failed for', file.name, err)
         return file
       }
     },

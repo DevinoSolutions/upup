@@ -5,8 +5,21 @@ import { heicStep } from '../../src/steps/heic'
 import { thumbnailStep } from '../../src/steps/thumbnail'
 import { FileSource, UploadStatus, type PipelineContext, type UploadFile } from '@upup/core'
 
-vi.mock('heic2any', () => ({
-    default: vi.fn(async () => new Blob(['jpeg'], { type: 'image/jpeg' })),
+vi.mock('libheif-js/libheif-wasm/libheif-bundle.mjs', () => ({
+    default: () => Promise.resolve({
+        HeifDecoder: class {
+            decoder = { ptr: 1 }
+            decode() {
+                return [{
+                    get_width: () => 4,
+                    get_height: () => 4,
+                    display: (t: { data: Uint8ClampedArray }, cb: (r: unknown) => void) => cb(t),
+                    free: () => {},
+                }]
+            }
+        },
+        heif_context_free: () => {},
+    }),
 }))
 
 const ctx: PipelineContext = {
@@ -44,7 +57,11 @@ function installImageRuntime(blobContent = 'processed-image'): void {
         }
 
         getContext() {
-            return { drawImage: vi.fn() }
+            return {
+                drawImage: vi.fn(),
+                createImageData: (w: number, h: number) => ({ data: new Uint8ClampedArray(w * h * 4), width: w, height: h }),
+                putImageData: vi.fn(),
+            }
         }
 
         async convertToBlob(options: { type?: string }) {
@@ -104,7 +121,8 @@ describe('browser image processing steps', () => {
         expect(result.thumbnail?.file.name).toContain('.thumbnail.jpg')
     })
 
-    it('converts HEIC files to JPEG when heic2any is available', async () => {
+    it('converts HEIC files to JPEG via libheif through canvas', async () => {
+        installImageRuntime('heic-jpeg')
         const original = makeUploadFile('IMG_1000.HEIC', 'image/heic', 'heic payload')
 
         const result = await heicStep().process(original, ctx)
