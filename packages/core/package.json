@@ -80,7 +80,8 @@
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "files": [
-    "dist"
+    "dist",
+    "NOTICE"
   ],
   "scripts": {
     "build": "node scripts/build-worker.mjs && tsup",
@@ -93,7 +94,6 @@
   },
   "dependencies": {
     "clsx": "^2.1.1",
-    "heic2any": "^0.0.4",
     "intl-messageformat": "^11.2.0",
     "libheif-js": "^1.19.8",
     "load-script": "^2.0.0",

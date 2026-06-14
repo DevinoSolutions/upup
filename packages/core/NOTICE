@@ -1,0 +1,8 @@
+@upup/core bundles libheif (via libheif-js) for HEIC/HEIF image decoding.
+
+libheif is licensed under the GNU Lesser General Public License v3.0 (LGPL-3.0).
+Source: https://github.com/strukturag/libheif
+libheif-js: https://github.com/catdad-experiments/libheif-js
+
+The libheif WebAssembly artifact is a separable component and may be replaced
+with a compatible build under the terms of the LGPL-3.0.
