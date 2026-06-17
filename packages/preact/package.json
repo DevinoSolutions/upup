@@ -13,7 +13,7 @@
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
-    "build": "tsup && pnpm run build:css",
+    "build": "node scripts/clean-dist.mjs && tsup && pnpm run build:css",
     "build:css": "node scripts/copy-styles.mjs",
     "dev": "tsup --watch",
     "pretest": "pnpm run build",
