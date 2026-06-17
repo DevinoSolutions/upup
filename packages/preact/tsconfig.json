@@ -14,5 +14,6 @@
     "paths": { "react": ["node_modules/preact/compat"], "react-dom": ["node_modules/preact/compat"] },
     "types": ["node"]
   },
-  "include": ["src", "tsup.config.ts", "vitest.config.ts"]
+  "include": ["src", "tsup.config.ts", "vitest.config.ts"],
+  "exclude": ["src/filerobot-island.tsx"]
 }
