@@ -19,8 +19,15 @@ export default defineConfig({
     dedupe: ['preact'],
     alias: [
       // Map @upup/react to OUR preact-compiled dist instead of react source
-      // This avoids the need to re-apply react→preact/compat aliases in vitest
       { find: '@upup/react', replacement: preactDist },
+      // Render bridge (authored against the react API) under preact/compat in tests,
+      // matching the tsup main-build alias. Does not affect the parity test, which
+      // imports the library's pure-data constants subpath (a different specifier).
+      { find: /^react$/, replacement: 'preact/compat' },
+      { find: /^react-dom$/, replacement: 'preact/compat' },
+      { find: /^react\/jsx-runtime$/, replacement: 'preact/jsx-runtime' },
+      { find: /^react\/jsx-dev-runtime$/, replacement: 'preact/jsx-runtime' },
+      { find: /^react-dom\/client$/, replacement: 'preact/compat' },
     ],
   },
   test: { environment: 'jsdom', globals: true, include: ['src/**/*.spec.{ts,tsx}'] },
