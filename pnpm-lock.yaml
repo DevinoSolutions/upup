@@ -317,6 +317,37 @@ importers:
         specifier: ^5.3.2
         version: 5.6.3
 
+  apps/next-example:
+    dependencies:
+      '@upup/next':
+        specifier: workspace:*
+        version: link:../../packages/next
+      next:
+        specifier: 16.1.6
+        version: 16.1.6(@opentelemetry/api@1.9.1)(@playwright/test@1.58.2)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(sass@1.100.0)
+      react:
+        specifier: ^19.2.0
+        version: 19.2.4
+      react-dom:
+        specifier: ^19.2.0
+        version: 19.2.4(react@19.2.4)
+    devDependencies:
+      '@types/node':
+        specifier: ^20
+        version: 20.19.37
+      '@types/react':
+        specifier: ^19
+        version: 19.2.14
+      '@types/react-dom':
+        specifier: ^19
+        version: 19.2.3(@types/react@19.2.14)
+      dotenv-cli:
+        specifier: ^7.4.2
+        version: 7.4.4
+      typescript:
+        specifier: ^5
+        version: 5.6.3
+
   apps/playground:
     dependencies:
       '@upup/core':

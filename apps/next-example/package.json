@@ -1,0 +1,24 @@
+{
+  "name": "@upup/next-example",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "dotenv -e ../../local-dev/.env.minio -- next dev -p 53070",
+    "build": "next build",
+    "start": "next start -p 53070",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@upup/next": "workspace:*",
+    "next": "16.1.6",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "dotenv-cli": "^7.4.2",
+    "typescript": "^5"
+  }
+}
