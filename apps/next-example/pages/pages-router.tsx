@@ -11,7 +11,7 @@ export default function PagesRouterDemo() {
       <UpupUploader
         mode="server"
         serverUrl="/api/upup-pages"
-        onError={(e) => console.error('[upup] error', e)}
+        onError={(message) => console.error('[upup] error', message)}
         onFilesUploadComplete={(files) => console.log('[upup] complete', files)}
       />
     </main>
