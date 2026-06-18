@@ -10,7 +10,6 @@ import { UpupStore } from '../upup-store.service'
 import { AdapterViewComponent } from './adapter-view.component'
 import { AdapterSelectorComponent } from './adapter-selector.component'
 import { FileListComponent } from './file-list.component'
-import { MainBoxHeaderComponent } from './main-box-header.component'
 
 /**
  * MainBoxComponent — Angular port of MainBox.svelte + useMainBox.ts composable.
@@ -30,11 +29,8 @@ import { MainBoxHeaderComponent } from './main-box-header.component'
         AdapterViewComponent,
         AdapterSelectorComponent,
         FileListComponent,
-        MainBoxHeaderComponent,
     ],
     template: `
-        <upup-main-box-header [handleCancel]="handleCancel" />
-
         <div
             data-testid="upup-dropzone"
             data-upup-slot="main-box"
@@ -112,9 +108,6 @@ export class MainBoxComponent implements OnDestroy {
             { 'upup-bg-yellow-600': this.store.isDark?.() ?? false },
         ),
     )
-
-    // ── handleCancel (passed to MainBoxHeader as @Input) ─────────────────────
-    readonly handleCancel = () => this.store.handleCancel()
 
     // ── Drag handlers (1:1 port of useMainBox.ts) ────────────────────────────
     handleDragOver(e: DragEvent): void {

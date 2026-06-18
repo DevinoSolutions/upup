@@ -69,6 +69,19 @@ describe('MainBoxComponent', () => {
         expect(el.querySelector('upup-file-list')).not.toBeNull()
     })
 
+    it('renders the header only inside file-list, never as a stray top-level header (regression: duplicate visible header when empty)', async () => {
+        store = makeStore()
+        const fixture = await setup(store)
+        const el: HTMLElement = fixture.nativeElement
+        // React/Svelte render MainBoxHeader ONLY inside FileList (which is
+        // hidden via `upup-hidden` when there are no files). A stray header at
+        // the MainBox root would always be visible and show a phantom
+        // "files selected" band in the empty state.
+        const headers = el.querySelectorAll('upup-main-box-header')
+        expect(headers.length).toBe(1)
+        expect(headers[0].closest('upup-file-list')).not.toBeNull()
+    })
+
     it('shows AdapterSelector when no active adapter and no files', async () => {
         store = makeStore()
         const fixture = await setup(store)
