@@ -1,0 +1,58 @@
+{
+  "name": "@upup/next",
+  "version": "2.2.0",
+  "description": "Next.js integration for the upup uploader — App Router + Pages Router handlers, client UI, and serverless-correct config helpers.",
+  "repository": "https://github.com/DevinoSolutions/upup",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./server": {
+      "types": "./dist/server.d.ts",
+      "import": "./dist/server.js",
+      "require": "./dist/server.cjs"
+    },
+    "./styles": "./dist/tailwind-prefixed.css"
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": ["dist"],
+  "scripts": {
+    "build": "node scripts/clean-dist.mjs && tsup && pnpm run build:css",
+    "build:css": "node scripts/copy-styles.mjs",
+    "dev": "tsup --watch",
+    "pretest": "pnpm run build",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "release": "pnpm run build && pnpm publish --access public --no-git-checks",
+    "test-release": "pnpm run build && pnpm publish --dry-run --access public --no-git-checks"
+  },
+  "dependencies": {
+    "@upup/core": "workspace:*",
+    "@upup/react": "workspace:*",
+    "@upup/server": "workspace:*"
+  },
+  "peerDependencies": {
+    "next": ">=14.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "@types/react": ">=18.0.0",
+    "@types/react-dom": ">=18.0.0",
+    "jsdom": "22.1.0",
+    "next": "16.1.6",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "tsup": "^8.4.0",
+    "typescript": "^5.3.2",
+    "vitest": "^4.1.2"
+  }
+}

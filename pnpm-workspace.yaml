@@ -10,3 +10,4 @@ packages:
   - packages/interactive-example
   - packages/storybook-config
   - packages/preact
+  - packages/next
