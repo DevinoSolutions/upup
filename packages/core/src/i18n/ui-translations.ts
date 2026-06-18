@@ -150,6 +150,16 @@ export function flattenTranslatorToUiTranslations(
     const tr = (key: Parameters<Translator>[0], values?: Record<string, unknown>) =>
         translator(key, values)
 
+    // Count-based ICU plurals use `#`, which bakes the number in when the form
+    // is pre-evaluated. Render the "other" form with a sample count, then swap
+    // the rendered digits back to a `{{count}}` placeholder so the renderer can
+    // interpolate the real count at runtime (same convention as the
+    // `{{size}}` / `{{unit}}` placeholders below). `\p{Nd}` covers non-Latin
+    // digit scripts; count: 2 is small enough to never trigger grouping
+    // separators, so the first digit run is always exactly the count.
+    const countPluralOther = (key: Parameters<Translator>[0]) =>
+        tr(key, { count: 2 }).replace(/\p{Nd}+/u, '{{count}}')
+
     return {
         cancel: tr('common.cancel'),
         done: tr('common.done'),
@@ -182,13 +192,13 @@ export function flattenTranslatorToUiTranslations(
         removeAllFiles: tr('header.removeAllFiles'),
         addingMoreFiles: tr('header.addingMoreFiles'),
         filesSelected_one: tr('header.filesSelected', { count: 1 }),
-        filesSelected_other: tr('header.filesSelected', { count: 2 }),
+        filesSelected_other: countPluralOther('header.filesSelected'),
         addMore: tr('header.addMore'),
         switchToListView: tr('header.switchToListView'),
         switchToGridView: tr('header.switchToGridView'),
         dropzoneLabel: tr('dropzone.dropAriaLabel'),
         uploadFiles_one: tr('fileList.uploadFiles', { count: 1 }),
-        uploadFiles_other: tr('fileList.uploadFiles', { count: 2 }),
+        uploadFiles_other: countPluralOther('fileList.uploadFiles'),
         resumeUpload: tr('fileList.resumeUpload'),
         retryUpload: tr('fileList.retryUpload'),
         pauseUpload: tr('fileList.pauseUpload'),
@@ -208,7 +218,7 @@ export function flattenTranslatorToUiTranslations(
         noAcceptedFilesFound: tr('driveBrowser.noAcceptedFilesFound'),
         selectThisFolder: tr('driveBrowser.selectThisFolder'),
         addFiles_one: tr('driveBrowser.addFiles', { count: 1 }),
-        addFiles_other: tr('driveBrowser.addFiles', { count: 2 }),
+        addFiles_other: countPluralOther('driveBrowser.addFiles'),
         logOut: tr('driveBrowser.logOut'),
         search: tr('driveBrowser.search'),
         authenticatePrompt: tr('driveBrowser.authenticatePrompt', { provider: '{{provider}}' }),
