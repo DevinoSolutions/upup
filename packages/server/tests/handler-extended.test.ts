@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import { createHandler } from '../src/handler'
+import { InMemoryTokenStore, setTokens, DEFAULT_USER_ID } from '../src/tokenStore'
 
 vi.mock('../src/providers/aws', () => ({
     generatePresignedUrl: vi.fn().mockResolvedValue({
@@ -210,6 +211,151 @@ describe('handler — CORS', () => {
 
         expect(res.status).toBe(204)
         expect(res.headers.get('access-control-allow-origin')).toBeNull()
+    })
+
+    // Regression: server-mode Drive routes are fetched cross-origin from the
+    // browser, so their actual (non-OPTIONS) responses — including 401 reauth
+    // and success — MUST carry Access-Control-Allow-Origin, or the browser
+    // blocks them and the client sees "Failed to fetch" (never learning it
+    // must re-auth). Caught by live stealth-chrome verification of @upup/next.
+    const serverCors = (tokenStore = new InMemoryTokenStore()) => ({
+        ...config,
+        tokenStore,
+        providers: { googleDrive: { clientId: 'gid', clientSecret: 'gsec' } },
+        cors: { allowedOrigins: ['http://localhost:53052'] },
+    })
+
+    it('sets CORS header on GET /files/:provider 401 reauth response', async () => {
+        const handler = createHandler(serverCors())
+        const res = await handler(
+            new Request('http://localhost/files/google-drive', {
+                method: 'GET',
+                headers: { origin: 'http://localhost:53052' },
+            }),
+        )
+        expect(res.status).toBe(401)
+        expect((await res.json()).reauth).toBe(true)
+        expect(res.headers.get('access-control-allow-origin')).toBe(
+            'http://localhost:53052',
+        )
+        expect(res.headers.get('access-control-allow-credentials')).toBe('true')
+    })
+
+    it('sets CORS header on GET /files/:provider success response', async () => {
+        const store = new InMemoryTokenStore()
+        await setTokens(store, DEFAULT_USER_ID, 'google-drive', {
+            accessToken: 'AT',
+        })
+        const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+            new Response(JSON.stringify({ files: [] }), {
+                status: 200,
+                headers: { 'Content-Type': 'application/json' },
+            }),
+        )
+        const handler = createHandler(serverCors(store))
+        const res = await handler(
+            new Request('http://localhost/files/google-drive', {
+                method: 'GET',
+                headers: { origin: 'http://localhost:53052' },
+            }),
+        )
+        expect(res.status).toBe(200)
+        expect(res.headers.get('access-control-allow-origin')).toBe(
+            'http://localhost:53052',
+        )
+        expect(res.headers.get('access-control-allow-credentials')).toBe('true')
+        fetchSpy.mockRestore()
+    })
+
+    it('sets CORS header on POST /files/:provider/transfer 401 reauth response', async () => {
+        const handler = createHandler(serverCors())
+        const res = await handler(
+            new Request('http://localhost/files/google-drive/transfer', {
+                method: 'POST',
+                headers: {
+                    origin: 'http://localhost:53052',
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ fileId: 'f1' }),
+            }),
+        )
+        expect(res.status).toBe(401)
+        expect(res.headers.get('access-control-allow-origin')).toBe(
+            'http://localhost:53052',
+        )
+        expect(res.headers.get('access-control-allow-credentials')).toBe('true')
+    })
+})
+
+// ─────────────────────────────────────────────
+// OAuth redirect_uri consistency (Workstream D)
+// ─────────────────────────────────────────────
+// The redirect_uri in the token-exchange POST MUST byte-for-byte match the one
+// sent in the initial authorization request, or Google rejects the exchange
+// with `redirect_uri_mismatch`. callbackUrlFor() is invoked from BOTH the
+// /auth/:provider path and the /auth/:provider/cb path, so it must derive the
+// same canonical callback URL from either. Caught live in Workstream D
+// (server-mode Google Drive): consent succeeded but the token exchange failed
+// because the callback path produced a doubled redirect_uri.
+describe('handler — OAuth redirect_uri consistency', () => {
+    const oauthConfig = (tokenStore: InMemoryTokenStore) => ({
+        ...config,
+        tokenStore,
+        providers: { googleDrive: { clientId: 'gid', clientSecret: 'gsec' } },
+    })
+
+    it('uses the same redirect_uri for the auth request and the token exchange', async () => {
+        const store = new InMemoryTokenStore()
+        const handler = createHandler(oauthConfig(store))
+
+        // 1. Authorization request → capture redirect_uri + state from Location.
+        const authRes = await handler(
+            new Request('http://localhost:53060/auth/google-drive', {
+                method: 'GET',
+            }),
+        )
+        expect(authRes.status).toBe(302)
+        const authLocation = new URL(authRes.headers.get('location') as string)
+        const authRedirectUri = authLocation.searchParams.get('redirect_uri')
+        const state = authLocation.searchParams.get('state') as string
+        expect(authRedirectUri).toBe(
+            'http://localhost:53060/auth/google-drive/cb',
+        )
+
+        // 2. Callback → capture redirect_uri sent in the token-exchange POST.
+        let tokenRedirectUri: string | null = null
+        const fetchSpy = vi
+            .spyOn(globalThis, 'fetch')
+            .mockImplementation(async (_input, init) => {
+                const body = init?.body as URLSearchParams | undefined
+                if (
+                    tokenRedirectUri === null &&
+                    body &&
+                    typeof body.get === 'function'
+                ) {
+                    tokenRedirectUri = body.get('redirect_uri')
+                }
+                return new Response(
+                    JSON.stringify({ access_token: 'AT', expires_in: 3600 }),
+                    {
+                        status: 200,
+                        headers: { 'Content-Type': 'application/json' },
+                    },
+                )
+            })
+
+        await handler(
+            new Request(
+                `http://localhost:53060/auth/google-drive/cb?code=AUTHCODE&state=${state}`,
+                { method: 'GET' },
+            ),
+        )
+        fetchSpy.mockRestore()
+
+        expect(tokenRedirectUri).toBe(authRedirectUri)
+        expect(tokenRedirectUri).toBe(
+            'http://localhost:53060/auth/google-drive/cb',
+        )
     })
 })
 

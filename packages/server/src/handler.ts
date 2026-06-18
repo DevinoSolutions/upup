@@ -28,13 +28,23 @@ function corsHeaders(req: Request, config: UpupServerConfig): ResponseHeaders {
   const allowsOrigin = origin && cors.allowedOrigins.includes(origin)
   if (!allowsWildcard && !allowsOrigin) return {}
 
-  return {
-    'Access-Control-Allow-Origin': allowsWildcard ? '*' : origin,
+  const allowOrigin = allowsWildcard ? '*' : origin
+  const headers: ResponseHeaders = {
+    'Access-Control-Allow-Origin': allowOrigin,
     'Access-Control-Allow-Methods': (cors.allowedMethods ?? ['GET', 'POST', 'OPTIONS']).join(', '),
     'Access-Control-Allow-Headers': (cors.allowedHeaders ?? ['Content-Type', 'Authorization']).join(', '),
     'Access-Control-Max-Age': String(cors.maxAgeSeconds ?? 600),
     'Vary': 'Origin',
   }
+  // The cross-framework server-mode drive client fetches with
+  // `credentials: 'include'`. Credentialed CORS requires an explicit origin
+  // (never '*') plus Access-Control-Allow-Credentials, so emit it whenever we
+  // echo a concrete origin. Without it the browser blocks even a readable 401,
+  // surfacing as "Failed to fetch" with no chance to re-auth.
+  if (allowOrigin !== '*') {
+    headers['Access-Control-Allow-Credentials'] = 'true'
+  }
+  return headers
 }
 
 function json(data: unknown, status = 200, headers: ResponseHeaders = {}): Response {
@@ -131,10 +141,10 @@ export function createHandler(config: UpupServerConfig): RouteHandler {
       const provider = filesMatch[1]
       const isTransfer = filesMatch[2] === 'transfer'
       if (req.method === 'POST' && isTransfer) {
-        return handleFileTransfer(req, config, provider)
+        return handleFileTransfer(req, config, provider, responseHeaders)
       }
       if (req.method === 'GET' && !isTransfer) {
-        return handleListFiles(req, config, provider)
+        return handleListFiles(req, config, provider, responseHeaders)
       }
     }
 
@@ -300,7 +310,11 @@ function getProviderMeta(
 
 function callbackUrlFor(req: Request, provider: string): string {
   const url = new URL(req.url)
-  const base = `${url.origin}${url.pathname.replace(/\/auth\/[\w-]+$/, '')}`
+  // Strip the route suffix so this is idempotent across BOTH the auth request
+  // (/auth/:provider) and the callback (/auth/:provider/cb) — otherwise the
+  // token-exchange redirect_uri doubles the path and Google rejects it with
+  // redirect_uri_mismatch. Mirrors the router's own /auth match (line ~128).
+  const base = `${url.origin}${url.pathname.replace(/\/auth\/[\w-]+(?:\/cb)?$/, '')}`
   return `${base}/auth/${provider}/cb`
 }
 
@@ -450,18 +464,20 @@ async function handleListFiles(
   req: Request,
   config: UpupServerConfig,
   provider: string,
+  responseHeaders: ResponseHeaders = {},
 ): Promise<Response> {
   if (!isValidProvider(provider)) {
-    return json({ error: `Unknown provider: ${provider}` }, 400)
+    return json({ error: `Unknown provider: ${provider}` }, 400, responseHeaders)
   }
-  if (!config.tokenStore) return json({ error: 'tokenStore is required' }, 500)
+  if (!config.tokenStore)
+    return json({ error: 'tokenStore is required' }, 500, responseHeaders)
 
   const userId = await resolveUserId(config, req)
-  if (!userId) return json({ error: 'Unauthenticated' }, 401)
+  if (!userId) return json({ error: 'Unauthenticated' }, 401, responseHeaders)
 
   const tokens = await getTokens(config.tokenStore, userId, provider)
   if (!tokens) {
-    return json({ reauth: true, provider }, 401)
+    return json({ reauth: true, provider }, 401, responseHeaders)
   }
 
   const url = new URL(req.url)
@@ -473,13 +489,13 @@ async function handleListFiles(
       folderId,
       search,
     })
-    return json({ provider, files })
+    return json({ provider, files }, 200, responseHeaders)
   } catch (err) {
     if ((err as { status?: number }).status === 401) {
       await deleteTokens(config.tokenStore, userId, provider)
-      return json({ reauth: true, provider }, 401)
+      return json({ reauth: true, provider }, 401, responseHeaders)
     }
-    return json({ error: (err as Error).message }, 500)
+    return json({ error: (err as Error).message }, 500, responseHeaders)
   }
 }
 
@@ -487,17 +503,19 @@ async function handleFileTransfer(
   req: Request,
   config: UpupServerConfig,
   provider: string,
+  responseHeaders: ResponseHeaders = {},
 ): Promise<Response> {
   if (!isValidProvider(provider)) {
-    return json({ error: `Unknown provider: ${provider}` }, 400)
+    return json({ error: `Unknown provider: ${provider}` }, 400, responseHeaders)
   }
-  if (!config.tokenStore) return json({ error: 'tokenStore is required' }, 500)
+  if (!config.tokenStore)
+    return json({ error: 'tokenStore is required' }, 500, responseHeaders)
 
   const userId = await resolveUserId(config, req)
-  if (!userId) return json({ error: 'Unauthenticated' }, 401)
+  if (!userId) return json({ error: 'Unauthenticated' }, 401, responseHeaders)
 
   const tokens = await getTokens(config.tokenStore, userId, provider)
-  if (!tokens) return json({ reauth: true, provider }, 401)
+  if (!tokens) return json({ reauth: true, provider }, 401, responseHeaders)
 
   let body: {
     fileId: string
@@ -508,23 +526,23 @@ async function handleFileTransfer(
   try {
     body = (await req.json()) as typeof body
   } catch {
-    return json({ error: 'Invalid JSON body' }, 400)
+    return json({ error: 'Invalid JSON body' }, 400, responseHeaders)
   }
-  if (!body.fileId) return json({ error: 'Missing fileId' }, 400)
+  if (!body.fileId) return json({ error: 'Missing fileId' }, 400, responseHeaders)
 
   if (
     config.maxFileSize &&
     typeof body.size === 'number' &&
     body.size > config.maxFileSize
   ) {
-    return json({ error: 'File too large' }, 413)
+    return json({ error: 'File too large' }, 413, responseHeaders)
   }
   if (
     config.allowedTypes?.length &&
     body.mimeType &&
     !config.allowedTypes.includes(body.mimeType)
   ) {
-    return json({ error: 'File type not allowed' }, 415)
+    return json({ error: 'File type not allowed' }, 415, responseHeaders)
   }
 
   try {
@@ -545,13 +563,13 @@ async function handleFileTransfer(
     if (config.hooks?.onFileUploaded) {
       await config.hooks.onFileUploaded(result, req)
     }
-    return json({ provider, ...result })
+    return json({ provider, ...result }, 200, responseHeaders)
   } catch (err) {
     if ((err as { status?: number }).status === 401) {
       await deleteTokens(config.tokenStore, userId, provider)
-      return json({ reauth: true, provider }, 401)
+      return json({ reauth: true, provider }, 401, responseHeaders)
     }
-    return json({ error: (err as Error).message }, 500)
+    return json({ error: (err as Error).message }, 500, responseHeaders)
   }
 }
 
