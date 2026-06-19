@@ -103,6 +103,11 @@ test.describe('Paste upload', () => {
     })
 
     test('adds a file via paste event', async ({ page }) => {
+        // Wait for React to wire the dropzone's onPaste handler before dispatching.
+        // The drag-drop test gets this for free via page.dispatchEvent's auto-waiting;
+        // this test dispatches via page.evaluate (no auto-wait), so without this the
+        // paste can fire before the handler is active and silently no-op.
+        await expect(page.locator('[data-testid="upup-dropzone"]')).toBeVisible()
         await page.evaluate(() => {
             // 2 KB to pass minFileSize=1KB
             const file = new File([new Uint8Array(2048).fill(120)], 'pasted.txt', { type: 'text/plain' })

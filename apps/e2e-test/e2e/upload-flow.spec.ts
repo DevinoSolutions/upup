@@ -46,8 +46,8 @@ test.describe('Upload flow — success', () => {
         await page.reload()
     })
 
-    test('root data-state starts as pending', async ({ page }) => {
-        await expect(page.locator('[data-testid="upup-root"]')).toHaveAttribute('data-state', 'pending')
+    test('root data-state starts as idle', async ({ page }) => {
+        await expect(page.locator('[data-testid="upup-root"]')).toHaveAttribute('data-state', 'idle')
     })
 
     test('upload button triggers upload and reaches successful state', async ({ page }) => {
@@ -67,8 +67,8 @@ test.describe('Upload flow — success', () => {
         })
         await page.setInputFiles('[data-testid="upup-file-input"]', TXT_FILE)
         await page.locator('[data-testid="upup-upload-btn"]').click()
-        // Wait for upload to start (data-state="ongoing") then verify progressbar
-        await expect(page.locator('[data-testid="upup-root"]')).toHaveAttribute('data-state', 'ongoing', { timeout: 10000 })
+        // Wait for upload to start (data-state="uploading") then verify progressbar
+        await expect(page.locator('[data-testid="upup-root"]')).toHaveAttribute('data-state', 'uploading', { timeout: 10000 })
         await expect(page.locator('[role="progressbar"]').first()).toBeVisible({ timeout: 3000 })
     })
 })
