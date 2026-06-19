@@ -13,6 +13,7 @@ packages/upup/dist-node
 apps/landing/public/documentation
 coverage
 playwright-report
+test-results/
 storybook-static
 .tmp/
 graphify-out/
