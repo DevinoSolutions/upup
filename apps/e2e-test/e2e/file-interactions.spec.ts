@@ -1,18 +1,5 @@
 import { test, expect } from '@playwright/test'
-
-// All files must be ≥ 1 KB — the test app has minFileSize={{ size: 1, unit: 'KB' }}
-const FILE_2KB = Buffer.alloc(2 * 1024, 'x')
-
-async function clearCrashRecovery(page: import('@playwright/test').Page) {
-    await page.evaluate(() =>
-        new Promise<void>((resolve) => {
-            const req = indexedDB.deleteDatabase('upup-crash-recovery')
-            req.onsuccess = () => resolve()
-            req.onerror = () => resolve()
-            req.onblocked = () => resolve()
-        }),
-    )
-}
+import { FILE_2KB, clearCrashRecovery } from './helpers'
 
 test.describe('File selection via input', () => {
     test.beforeEach(async ({ page }) => {

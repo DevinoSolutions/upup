@@ -1,18 +1,5 @@
 import { test, expect } from '@playwright/test'
-
-// 2 KB — passes minFileSize=1KB in the test app
-const FILE_2KB = Buffer.alloc(2 * 1024, 'x')
-
-async function clearCrashRecovery(page: import('@playwright/test').Page) {
-    await page.evaluate(() =>
-        new Promise<void>((resolve) => {
-            const req = indexedDB.deleteDatabase('upup-crash-recovery')
-            req.onsuccess = () => resolve()
-            req.onerror = () => resolve()
-            req.onblocked = () => resolve()
-        }),
-    )
-}
+import { FILE_2KB, clearCrashRecovery } from './helpers'
 
 test.describe('Adapter switching', () => {
     test.beforeEach(async ({ page }) => {

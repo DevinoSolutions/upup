@@ -1,10 +1,10 @@
 import { test, expect } from '@playwright/test'
+import { FILE_2KB, clearCrashRecovery } from './helpers'
 
-// 2 KB — passes minFileSize=1KB in the test app
 const TXT_FILE = {
     name: 'test.txt',
     mimeType: 'text/plain',
-    buffer: Buffer.alloc(2 * 1024, 'x'),
+    buffer: FILE_2KB,
 }
 
 // Full PresignedUrlResponse shape the SDK expects.
@@ -14,17 +14,6 @@ const PRESIGNED_RESPONSE = {
     key: 'test/test.txt',
     publicUrl: 'http://localhost:3333/api/mock-upload/test.txt',
     expiresIn: 3600,
-}
-
-async function clearCrashRecovery(page: import('@playwright/test').Page) {
-    await page.evaluate(() =>
-        new Promise<void>((resolve) => {
-            const req = indexedDB.deleteDatabase('upup-crash-recovery')
-            req.onsuccess = () => resolve()
-            req.onerror = () => resolve()
-            req.onblocked = () => resolve()
-        }),
-    )
 }
 
 test.describe('Upload flow — success', () => {
