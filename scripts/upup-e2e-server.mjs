@@ -9,8 +9,13 @@ import { createUpupMiddleware } from '@upup/server/express'
 import { InMemoryTokenStore } from '@upup/server'
 
 const PORT = Number(process.env.UPUP_E2E_SERVER_PORT ?? 53060)
+// Comma-separated list so the cross-framework e2e gate can allow all six
+// storybook origins (:53050–:53055) at once. A single value still works.
 const STORYBOOK_ORIGIN =
   process.env.UPUP_E2E_STORYBOOK_ORIGIN ?? 'http://localhost:53052'
+const ALLOWED_ORIGINS = STORYBOOK_ORIGIN.split(',')
+  .map((s) => s.trim())
+  .filter(Boolean)
 
 const required = [
   'UPUP_E2E_BUCKET',
@@ -45,7 +50,7 @@ const config = {
     },
   },
   cors: {
-    allowedOrigins: [STORYBOOK_ORIGIN],
+    allowedOrigins: ALLOWED_ORIGINS,
     allowedMethods: ['GET', 'POST', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
   },
@@ -60,6 +65,6 @@ app.listen(PORT, () => {
   const gd = config.providers.googleDrive.clientId ? 'configured' : 'NOT configured'
   console.log(`[upup-e2e] presign/transfer server: http://localhost:${PORT}`)
   console.log(`[upup-e2e] storage: ${config.storage.endpoint} bucket=${config.storage.bucket}`)
-  console.log(`[upup-e2e] CORS origin: ${STORYBOOK_ORIGIN}`)
+  console.log(`[upup-e2e] CORS origins: ${ALLOWED_ORIGINS.join(', ')}`)
   console.log(`[upup-e2e] google-drive OAuth: ${gd} (redirect http://localhost:${PORT}/auth/google-drive/cb)`)
 })
