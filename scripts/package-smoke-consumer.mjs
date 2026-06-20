@@ -1,4 +1,5 @@
 import { spawnSync } from 'node:child_process'
+import { readTarballEntries } from './lib/tarball.mjs'
 import {
   existsSync,
   mkdirSync,
@@ -71,16 +72,12 @@ function findTarball(packageName) {
 }
 
 function assertPackedPackageHasNoWorkspaceDeps(tarballPath) {
-  const result = spawnSync('tar', ['-xOf', tarballPath, 'package/package.json'], {
-    cwd: repoRoot,
-    encoding: 'utf8',
-    shell: false,
-    windowsHide: true,
-  })
-  if (result.status !== 0) {
-    throw new Error(`Could not inspect ${tarballPath}`)
+  const entries = readTarballEntries(tarballPath)
+  const pkgJson = entries.get('package/package.json')
+  if (!pkgJson) {
+    throw new Error(`Could not find package/package.json in ${tarballPath}`)
   }
-  if (result.stdout.includes('workspace:')) {
+  if (pkgJson.toString('utf8').includes('workspace:')) {
     throw new Error(`Packed package leaks workspace dependency protocol: ${tarballPath}`)
   }
 }
