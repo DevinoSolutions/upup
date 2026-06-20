@@ -41,6 +41,26 @@ export type UpupServerConfig = {
    */
   getUserId?: (req: Request) => Promise<string | null>
 
+  /**
+   * HMAC secret for stateless upload tokens (multipart key/uploadId binding).
+   * REQUIRED. Stable, high-entropy, >=16 chars, shared across all instances.
+   * `createHandler` throws if missing or too short.
+   */
+  uploadTokenSecret?: string
+
+  /**
+   * Override object-key generation. Default namespaces by userId:
+   * `<userId|anon>/<uuid>/<sanitized-filename>`. The client never chooses the key.
+   */
+  keyStrategy?: (ctx: KeyStrategyContext) => string
+
+  /**
+   * Permit drive providers / tokenStore WITHOUT a getUserId resolver, collapsing
+   * every caller into one shared anonymous namespace. Demos only — never in
+   * multi-tenant production. Default false -> createHandler throws.
+   */
+  allowAnonymous?: boolean
+
   hooks?: {
     onBeforeUpload?: (file: FileMetadata, req: Request) => Promise<boolean>
     onFileUploaded?: (file: UploadedFile, req: Request) => Promise<void>

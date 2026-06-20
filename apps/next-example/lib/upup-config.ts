@@ -13,4 +13,8 @@ export const upupConfig: UpupServerConfig = defineUpupConfig({
     secretAccessKey: process.env.MINIO_ROOT_PASSWORD ?? 'upupadmin123',
     forcePathStyle: true,
   },
+  uploadTokenSecret:
+    process.env.UPUP_UPLOAD_TOKEN_SECRET ?? 'next-example-dev-secret-not-for-prod',
+  // Demo app: single shared namespace. Real apps set getUserId instead.
+  allowAnonymous: true,
 })

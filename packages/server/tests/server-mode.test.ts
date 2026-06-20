@@ -24,7 +24,9 @@ vi.mock('../src/providers/aws', () => ({
 
 const baseConfig = (tokenStore = new InMemoryTokenStore()): UpupServerConfig => ({
   storage: { type: 'aws', bucket: 'test-bucket', region: 'us-east-1' },
+  uploadTokenSecret: 'server-mode-secret-0123456789',
   tokenStore,
+  allowAnonymous: true,
   providers: {
     googleDrive: { clientId: 'gid', clientSecret: 'gsec' },
     oneDrive: { clientId: 'mid', clientSecret: 'msec' },

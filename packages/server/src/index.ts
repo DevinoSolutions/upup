@@ -7,6 +7,7 @@ export type {
   OAuthState,
   FileMetadata,
   UploadedFile,
+  KeyStrategyContext,
 } from './config'
 export { DEFAULT_MULTIPART_THRESHOLD } from './config'
 export {

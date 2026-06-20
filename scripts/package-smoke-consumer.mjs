@@ -313,6 +313,8 @@ const serverConfig: UpupServerConfig = {
     bucket: 'smoke',
     region: 'us-east-1',
   },
+  uploadTokenSecret: 'package-smoke-dev-secret-0123456789',
+  allowAnonymous: true,
   tokenStore,
 }
 

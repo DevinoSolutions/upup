@@ -42,6 +42,10 @@ const config = {
     accessKeyId: process.env.MINIO_ROOT_USER,
     secretAccessKey: process.env.MINIO_ROOT_PASSWORD,
   },
+  uploadTokenSecret:
+    process.env.UPUP_E2E_UPLOAD_TOKEN_SECRET ?? 'upup-e2e-dev-secret-not-for-prod',
+  // Single-user dev harness: one shared anonymous namespace is intentional.
+  allowAnonymous: true,
   tokenStore: new InMemoryTokenStore(),
   providers: {
     googleDrive: {

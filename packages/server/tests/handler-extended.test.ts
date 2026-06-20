@@ -30,6 +30,7 @@ vi.mock('../src/providers/aws', () => ({
 
 const config = {
     storage: { type: 'aws', bucket: 'test-bucket', region: 'us-east-1' },
+    uploadTokenSecret: 'handler-ext-secret-0123456789',
 }
 
 // ─────────────────────────────────────────────
@@ -221,6 +222,7 @@ describe('handler — CORS', () => {
     const serverCors = (tokenStore = new InMemoryTokenStore()) => ({
         ...config,
         tokenStore,
+        allowAnonymous: true,
         providers: { googleDrive: { clientId: 'gid', clientSecret: 'gsec' } },
         cors: { allowedOrigins: ['http://localhost:53052'] },
     })
@@ -301,6 +303,7 @@ describe('handler — OAuth redirect_uri consistency', () => {
     const oauthConfig = (tokenStore: InMemoryTokenStore) => ({
         ...config,
         tokenStore,
+        allowAnonymous: true,
         providers: { googleDrive: { clientId: 'gid', clientSecret: 'gsec' } },
     })
 

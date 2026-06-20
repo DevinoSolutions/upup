@@ -21,6 +21,7 @@ const config = {
     bucket: 'test-bucket',
     region: 'us-east-1',
   },
+  uploadTokenSecret: 'handler-test-secret-0123456789',
 }
 
 describe('createHandler', () => {
@@ -72,6 +73,7 @@ describe('createHandler', () => {
 
 const configWithProviders = {
   ...config,
+  allowAnonymous: true,
   providers: {
     googleDrive: { clientId: 'gd-id', clientSecret: 'gd-secret' },
     oneDrive: { clientId: 'od-id', clientSecret: 'od-secret' },

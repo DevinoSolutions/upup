@@ -6,6 +6,7 @@ import {
   completeMultipartUpload,
   abortMultipartUpload,
 } from './providers/aws'
+import { assertUploadTokenSecret } from './uploadToken'
 import {
   generateOAuthState,
   saveOAuthState,
@@ -90,6 +91,22 @@ async function validateUploadMetadata(
 }
 
 export function createHandler(config: UpupServerConfig): RouteHandler {
+  // Secure-by-default: a stable token secret is mandatory (the multipart routes
+  // are always live and issue/verify tokens), and drive/tokenStore use requires
+  // a real identity resolver unless anonymous is explicitly opted into.
+  assertUploadTokenSecret(config.uploadTokenSecret)
+  if (
+    (config.providers || config.tokenStore) &&
+    !config.getUserId &&
+    !config.allowAnonymous
+  ) {
+    throw new Error(
+      '[@upup/server] drive providers / tokenStore require config.getUserId to ' +
+        'scope tokens per user. Set getUserId, or set allowAnonymous:true to ' +
+        'intentionally share ONE anonymous namespace (demos only).',
+    )
+  }
+
   return async (req: Request): Promise<Response> => {
     const url = new URL(req.url)
     const path = url.pathname
