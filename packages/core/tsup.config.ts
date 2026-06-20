@@ -25,5 +25,5 @@ export default defineConfig({
   splitting: true,
   treeshake: true,
   clean: !isWatch,
-  external: [],
+  external: ['libheif-js', 'tus-js-client'],
 })
