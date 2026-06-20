@@ -1,5 +1,6 @@
 import { createCanvas, canvasToBlob } from './image-utils'
 import type { Libheif } from 'libheif-js/libheif-wasm/libheif-bundle.mjs'
+import { UpupError, UpupErrorCode } from '../errors'
 
 type Ctx2D = CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D
 
@@ -9,10 +10,22 @@ type Ctx2D = CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D
 let libheifPromise: Promise<Libheif> | null = null
 
 function loadLibheif(): Promise<Libheif> {
-  libheifPromise ??= import('libheif-js/libheif-wasm/libheif-bundle.mjs').then((m) => {
-    const factory = (m as { default?: () => Promise<Libheif> }).default ?? (m as unknown as () => Promise<Libheif>)
-    return factory()
-  })
+  if (!libheifPromise) {
+    libheifPromise = (async () => {
+      let mod: unknown
+      try {
+        mod = await import('libheif-js/libheif-wasm/libheif-bundle.mjs')
+      } catch {
+        libheifPromise = null // not installed — allow a retry after the user installs it
+        throw new UpupError(
+          'HEIC support requires the optional dependency "libheif-js". Install it: npm i libheif-js',
+          UpupErrorCode.HEIC_CONVERSION_FAILED,
+        )
+      }
+      const factory = (mod as { default?: () => Promise<Libheif> }).default ?? (mod as unknown as () => Promise<Libheif>)
+      return factory()
+    })()
+  }
   return libheifPromise
 }
 

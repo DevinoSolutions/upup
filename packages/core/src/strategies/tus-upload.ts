@@ -1,4 +1,6 @@
 import {
+  UpupError,
+  UpupErrorCode,
   UpupNetworkError,
   type ResumableUploadOptions,
   type UploadCredentials,
@@ -19,7 +21,15 @@ export class TusUpload implements UploadStrategy {
       signal: AbortSignal
     },
   ): Promise<UploadResult> {
-    const tus = await import('tus-js-client')
+    let tus: typeof import('tus-js-client')
+    try {
+      tus = await import('tus-js-client')
+    } catch {
+      throw new UpupError(
+        'Resumable (tus) uploads require the optional dependency "tus-js-client". Install it: npm i tus-js-client',
+        UpupErrorCode.UPLOAD_FAILED,
+      )
+    }
     const fileName = file instanceof File ? file.name : 'blob'
     const fileType = file.type || 'application/octet-stream'
 
