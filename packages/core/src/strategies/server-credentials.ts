@@ -61,25 +61,20 @@ export class ServerCredentials implements CredentialStrategy {
   }
 
   async signPart(params: {
-    key: string
-    uploadId: string
+    token: string
     partNumber: number
   }): Promise<MultipartSignPartResponse> {
     return this.post<MultipartSignPartResponse>('/multipart/sign-part', params)
   }
 
   async completeMultipartUpload(params: {
-    key: string
-    uploadId: string
+    token: string
     parts: { partNumber: number; eTag: string }[]
   }): Promise<MultipartCompleteResponse> {
     return this.post<MultipartCompleteResponse>('/multipart/complete', params)
   }
 
-  async abortMultipartUpload(params: {
-    key: string
-    uploadId: string
-  }): Promise<void> {
+  async abortMultipartUpload(params: { token: string }): Promise<void> {
     await this.post('/multipart/abort', params)
   }
 }

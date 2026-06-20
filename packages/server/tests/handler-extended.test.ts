@@ -134,7 +134,7 @@ describe('handler — multipart', () => {
         expect(res.status).toBe(415)
     })
 
-    it('initiates multipart upload', async () => {
+    it('initiates multipart upload and returns a token', async () => {
         const handler = createHandler(config)
         const req = new Request('http://localhost/multipart/init', {
             method: 'POST',
@@ -146,33 +146,50 @@ describe('handler — multipart', () => {
         expect(res.status).toBe(200)
         expect(body.uploadId).toBeDefined()
         expect(body.key).toBeDefined()
+        expect(typeof body.token).toBe('string')
     })
 
-    it('signs a part', async () => {
+    it('signs a part using the issued token', async () => {
         const handler = createHandler(config)
-        const req = new Request('http://localhost/multipart/sign-part', {
+        const init = await (await handler(new Request('http://localhost/multipart/init', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ key: 'uuid-big.zip', uploadId: 'mp-123', partNumber: 1 }),
-        })
-        const res = await handler(req)
+            body: JSON.stringify({ name: 'big.zip', size: 50 * 1024 * 1024, type: 'application/zip' }),
+        }))).json()
+
+        const res = await handler(new Request('http://localhost/multipart/sign-part', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token: init.token, partNumber: 1 }),
+        }))
         const body = await res.json()
         expect(res.status).toBe(200)
         expect(body.uploadUrl).toBeDefined()
     })
 
-    it('completes multipart upload', async () => {
+    it('rejects sign-part with a forged token (403)', async () => {
         const handler = createHandler(config)
-        const req = new Request('http://localhost/multipart/complete', {
+        const res = await handler(new Request('http://localhost/multipart/sign-part', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                key: 'uuid-big.zip',
-                uploadId: 'mp-123',
-                parts: [{ partNumber: 1, eTag: '"etag1"' }],
-            }),
-        })
-        const res = await handler(req)
+            body: JSON.stringify({ token: 'forged.token', partNumber: 1 }),
+        }))
+        expect(res.status).toBe(403)
+    })
+
+    it('completes multipart upload using the issued token', async () => {
+        const handler = createHandler(config)
+        const init = await (await handler(new Request('http://localhost/multipart/init', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: 'big.zip', size: 50 * 1024 * 1024, type: 'application/zip' }),
+        }))).json()
+
+        const res = await handler(new Request('http://localhost/multipart/complete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token: init.token, parts: [{ partNumber: 1, eTag: '"etag1"' }] }),
+        }))
         const body = await res.json()
         expect(res.status).toBe(200)
         expect(body.key).toBeDefined()

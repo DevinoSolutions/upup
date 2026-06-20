@@ -140,26 +140,15 @@ describe('ServerCredentials', () => {
   describe('signPart', () => {
     it('POSTs to /multipart/sign-part', async () => {
       const signResult = { uploadUrl: 'https://s3/part?signed', expiresIn: 3600 }
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve(signResult),
-      })
+      mockFetch.mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(signResult) })
 
-      const result = await strategy.signPart({
-        key: 'uploads/big.zip',
-        uploadId: 'upload-123',
-        partNumber: 1,
-      })
+      const result = await strategy.signPart({ token: 'tok-1', partNumber: 1 })
 
       expect(mockFetch).toHaveBeenCalledWith(
         `${baseUrl}/multipart/sign-part`,
         expect.objectContaining({
           method: 'POST',
-          body: JSON.stringify({
-            key: 'uploads/big.zip',
-            uploadId: 'upload-123',
-            partNumber: 1,
-          }),
+          body: JSON.stringify({ token: 'tok-1', partNumber: 1 }),
         }),
       )
       expect(result).toEqual(signResult)
@@ -168,32 +157,17 @@ describe('ServerCredentials', () => {
 
   describe('completeMultipartUpload', () => {
     it('POSTs to /multipart/complete', async () => {
-      const completeResult = {
-        key: 'uploads/big.zip',
-        publicUrl: 'https://cdn.example.com/big.zip',
-        etag: '"abc123"',
-      }
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve(completeResult),
-      })
+      const completeResult = { key: 'uploads/big.zip', publicUrl: 'https://cdn.example.com/big.zip', etag: '"abc123"' }
+      mockFetch.mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(completeResult) })
 
       const parts = [{ partNumber: 1, eTag: '"aaa"' }, { partNumber: 2, eTag: '"bbb"' }]
-      const result = await strategy.completeMultipartUpload({
-        key: 'uploads/big.zip',
-        uploadId: 'upload-123',
-        parts,
-      })
+      const result = await strategy.completeMultipartUpload({ token: 'tok-1', parts })
 
       expect(mockFetch).toHaveBeenCalledWith(
         `${baseUrl}/multipart/complete`,
         expect.objectContaining({
           method: 'POST',
-          body: JSON.stringify({
-            key: 'uploads/big.zip',
-            uploadId: 'upload-123',
-            parts,
-          }),
+          body: JSON.stringify({ token: 'tok-1', parts }),
         }),
       )
       expect(result).toEqual(completeResult)
@@ -202,24 +176,15 @@ describe('ServerCredentials', () => {
 
   describe('abortMultipartUpload', () => {
     it('POSTs to /multipart/abort', async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve({ ok: true }),
-      })
+      mockFetch.mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({ ok: true }) })
 
-      await strategy.abortMultipartUpload({
-        key: 'uploads/big.zip',
-        uploadId: 'upload-123',
-      })
+      await strategy.abortMultipartUpload({ token: 'tok-1' })
 
       expect(mockFetch).toHaveBeenCalledWith(
         `${baseUrl}/multipart/abort`,
         expect.objectContaining({
           method: 'POST',
-          body: JSON.stringify({
-            key: 'uploads/big.zip',
-            uploadId: 'upload-123',
-          }),
+          body: JSON.stringify({ token: 'tok-1' }),
         }),
       )
     })

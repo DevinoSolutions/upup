@@ -50,10 +50,10 @@ export type CloudProvider = 'googleDrive' | 'oneDrive' | 'dropbox' | 'box'
 export interface CredentialStrategy {
   getPresignedUrl(file: FileMetadata): Promise<PresignedUrlResponse>
   initMultipartUpload?(file: FileMetadata): Promise<MultipartInitResponse>
-  signPart?(params: { key: string; uploadId: string; partNumber: number }): Promise<MultipartSignPartResponse>
-  completeMultipartUpload?(params: { key: string; uploadId: string; parts: { partNumber: number; eTag: string }[] }): Promise<MultipartCompleteResponse>
-  abortMultipartUpload?(params: { key: string; uploadId: string }): Promise<void>
-  listParts?(params: { key: string; uploadId: string }): Promise<MultipartListPartsResponse>
+  signPart?(params: { token: string; partNumber: number }): Promise<MultipartSignPartResponse>
+  completeMultipartUpload?(params: { token: string; parts: { partNumber: number; eTag: string }[] }): Promise<MultipartCompleteResponse>
+  abortMultipartUpload?(params: { token: string }): Promise<void>
+  listParts?(params: { token: string }): Promise<MultipartListPartsResponse>
 }
 
 export interface OAuthStrategy {

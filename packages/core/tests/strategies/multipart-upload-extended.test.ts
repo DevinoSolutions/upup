@@ -10,6 +10,7 @@ function makeCredentials(): CredentialStrategy {
             uploadId: 'up-1',
             partSize: 5 * 1024 * 1024,
             expiresIn: 3600,
+            token: 'tok-ext',
         }),
         signPart: vi.fn().mockImplementation(async ({ partNumber }) => ({
             uploadUrl: `https://s3/part${partNumber}?signed`,

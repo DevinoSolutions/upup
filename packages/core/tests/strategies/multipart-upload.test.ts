@@ -41,6 +41,7 @@ describe('MultipartUpload', () => {
       uploadId: 'upload-123',
       partSize: 5 * 1024 * 1024,
       expiresIn: 3600,
+      token: 'tok-abc',
     }
     vi.mocked(mockCredentials.initMultipartUpload!).mockResolvedValue(initResponse)
 
@@ -76,8 +77,7 @@ describe('MultipartUpload', () => {
     expect(mockCredentials.signPart).toHaveBeenCalledTimes(3)
     expect(mockFetch).toHaveBeenCalledTimes(3)
     expect(mockCredentials.completeMultipartUpload).toHaveBeenCalledWith({
-      key: 'uploads/big.zip',
-      uploadId: 'upload-123',
+      token: 'tok-abc',
       parts: expect.arrayContaining([
         expect.objectContaining({ partNumber: 1 }),
         expect.objectContaining({ partNumber: 2 }),
@@ -103,6 +103,7 @@ describe('MultipartUpload', () => {
       uploadId: 'upload-123',
       partSize: 5 * 1024 * 1024,
       expiresIn: 3600,
+      token: 'tok-abc',
     })
 
     vi.mocked(mockCredentials.signPart!).mockImplementation(async () => {
@@ -119,10 +120,7 @@ describe('MultipartUpload', () => {
       }),
     ).rejects.toThrow()
 
-    expect(mockCredentials.abortMultipartUpload).toHaveBeenCalledWith({
-      key: 'uploads/big.zip',
-      uploadId: 'upload-123',
-    })
+    expect(mockCredentials.abortMultipartUpload).toHaveBeenCalledWith({ token: 'tok-abc' })
   })
 
   it('throws if credentials lack multipart methods', () => {

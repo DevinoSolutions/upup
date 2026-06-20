@@ -6,7 +6,13 @@ import {
   completeMultipartUpload,
   abortMultipartUpload,
 } from './providers/aws'
-import { assertUploadTokenSecret } from './uploadToken'
+import {
+  assertUploadTokenSecret,
+  signUploadToken,
+  verifyUploadToken,
+  UploadTokenError,
+  DEFAULT_UPLOAD_TOKEN_TTL_SECONDS,
+} from './uploadToken'
 import {
   generateOAuthState,
   saveOAuthState,
@@ -221,7 +227,16 @@ async function handleMultipartInit(req: Request, config: UpupServerConfig, respo
       undefined,
       body.chunkSizeBytes,
     )
-    return json(result, 200, responseHeaders)
+    assertUploadTokenSecret(config.uploadTokenSecret)
+    const token = await signUploadToken(config.uploadTokenSecret, {
+      k: result.key,
+      u: result.uploadId,
+      uid: owner,
+      smin: 0,
+      smax: body.size,
+      exp: Math.floor(Date.now() / 1000) + DEFAULT_UPLOAD_TOKEN_TTL_SECONDS,
+    })
+    return json({ ...result, token }, 200, responseHeaders)
   } catch (error) {
     return json({ error: 'Multipart init failed' }, 500, responseHeaders)
   }
@@ -229,13 +244,16 @@ async function handleMultipartInit(req: Request, config: UpupServerConfig, respo
 
 async function handleMultipartSignPart(req: Request, config: UpupServerConfig, responseHeaders: ResponseHeaders): Promise<Response> {
   try {
-    const body = (await req.json()) as { key: string; uploadId: string; partNumber: number }
-    const result = await generatePresignedPartUrl(
-      config.storage,
-      body.key,
-      body.uploadId,
-      body.partNumber,
-    )
+    assertUploadTokenSecret(config.uploadTokenSecret)
+    const body = (await req.json()) as { token: string; partNumber: number }
+    let payload
+    try {
+      payload = await verifyUploadToken(config.uploadTokenSecret, body.token, Date.now())
+    } catch (e) {
+      if (e instanceof UploadTokenError) return json({ error: 'Invalid upload token' }, 403, responseHeaders)
+      throw e
+    }
+    const result = await generatePresignedPartUrl(config.storage, payload.k, payload.u, body.partNumber)
     return json(result, 200, responseHeaders)
   } catch (error) {
     return json({ error: 'Multipart sign failed' }, 500, responseHeaders)
@@ -244,13 +262,16 @@ async function handleMultipartSignPart(req: Request, config: UpupServerConfig, r
 
 async function handleMultipartComplete(req: Request, config: UpupServerConfig, responseHeaders: ResponseHeaders): Promise<Response> {
   try {
-    const body = (await req.json()) as { key: string; uploadId: string; parts: Array<{ partNumber: number; eTag: string }> }
-    const result = await completeMultipartUpload(
-      config.storage,
-      body.key,
-      body.uploadId,
-      body.parts,
-    )
+    assertUploadTokenSecret(config.uploadTokenSecret)
+    const body = (await req.json()) as { token: string; parts: Array<{ partNumber: number; eTag: string }> }
+    let payload
+    try {
+      payload = await verifyUploadToken(config.uploadTokenSecret, body.token, Date.now())
+    } catch (e) {
+      if (e instanceof UploadTokenError) return json({ error: 'Invalid upload token' }, 403, responseHeaders)
+      throw e
+    }
+    const result = await completeMultipartUpload(config.storage, payload.k, payload.u, body.parts)
     return json(result, 200, responseHeaders)
   } catch (error) {
     return json({ error: 'Multipart complete failed' }, 500, responseHeaders)
@@ -259,12 +280,16 @@ async function handleMultipartComplete(req: Request, config: UpupServerConfig, r
 
 async function handleMultipartAbort(req: Request, config: UpupServerConfig, responseHeaders: ResponseHeaders): Promise<Response> {
   try {
-    const body = (await req.json()) as { key: string; uploadId: string }
-    const result = await abortMultipartUpload(
-      config.storage,
-      body.key,
-      body.uploadId,
-    )
+    assertUploadTokenSecret(config.uploadTokenSecret)
+    const body = (await req.json()) as { token: string }
+    let payload
+    try {
+      payload = await verifyUploadToken(config.uploadTokenSecret, body.token, Date.now())
+    } catch (e) {
+      if (e instanceof UploadTokenError) return json({ error: 'Invalid upload token' }, 403, responseHeaders)
+      throw e
+    }
+    const result = await abortMultipartUpload(config.storage, payload.k, payload.u)
     return json(result, 200, responseHeaders)
   } catch (error) {
     return json({ error: 'Multipart abort failed' }, 500, responseHeaders)

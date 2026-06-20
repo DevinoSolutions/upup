@@ -12,6 +12,8 @@ export type MultipartInitResponse = {
   uploadId: string
   partSize: number
   expiresIn: number
+  /** Opaque server-issued token bound to {key, uploadId, size, expiry}. */
+  token?: string
 }
 
 export type MultipartSignPartResponse = {

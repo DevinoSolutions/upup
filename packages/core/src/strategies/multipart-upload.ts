@@ -55,6 +55,13 @@ export class MultipartUpload implements UploadStrategy {
       type: fileType,
     })
 
+    if (!init.token) {
+      throw new UpupNetworkError(
+        'Multipart init did not return an upload token (server too old or misconfigured)',
+      )
+    }
+    const token = init.token
+
     const partSize = init.partSize || this.chunkSizeBytes
     const totalParts = Math.ceil(fileSize / partSize)
     const completedParts: MultipartPart[] = []
@@ -75,11 +82,7 @@ export class MultipartUpload implements UploadStrategy {
         const chunk = file.slice(start, end)
 
         // Sign the part
-        const signed = await this.credentials.signPart!({
-          key: init.key,
-          uploadId: init.uploadId,
-          partNumber,
-        })
+        const signed = await this.credentials.signPart!({ token, partNumber })
 
         if (options.signal.aborted) {
           throw new UpupNetworkError('Upload aborted')
@@ -129,8 +132,7 @@ export class MultipartUpload implements UploadStrategy {
       completedParts.sort((a, b) => a.partNumber - b.partNumber)
 
       const result = await this.credentials.completeMultipartUpload!({
-        key: init.key,
-        uploadId: init.uploadId,
+        token,
         parts: completedParts,
       })
 
@@ -144,7 +146,7 @@ export class MultipartUpload implements UploadStrategy {
       // Abort on failure
       if (this.credentials.abortMultipartUpload) {
         await this.credentials
-          .abortMultipartUpload({ key: init.key, uploadId: init.uploadId })
+          .abortMultipartUpload({ token })
           .catch(() => {}) // Best-effort abort
       }
       throw error
