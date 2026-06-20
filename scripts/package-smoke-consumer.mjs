@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process'
-import { readTarballEntries } from './lib/tarball.mjs'
+import { readTarballEntries, collectExportTargets } from './lib/tarball.mjs'
 import {
   existsSync,
   mkdirSync,
@@ -82,6 +82,49 @@ function assertPackedPackageHasNoWorkspaceDeps(tarballPath) {
   }
 }
 
+function assertExportsResolvable(tarballPath) {
+  const entries = readTarballEntries(tarballPath)
+  const pkgBytes = entries.get('package/package.json')
+  if (!pkgBytes) throw new Error(`Could not find package/package.json in ${tarballPath}`)
+  const pkg = JSON.parse(pkgBytes.toString('utf8'))
+  if (!pkg.exports) return
+  for (const target of collectExportTargets(pkg.exports)) {
+    if (!entries.has(`package/${target}`)) {
+      throw new Error(`${pkg.name}: exports target ./${target} is missing from the packed tarball`)
+    }
+  }
+}
+
+function assertCorePackageDistShape() {
+  const entries = readTarballEntries(tarballs.core)
+  const distFiles = [...entries.keys()].filter(name => name.startsWith('package/dist/'))
+
+  if (!entries.has('package/dist/pipeline-worker.js')) {
+    throw new Error('core tarball is missing dist/pipeline-worker.js (module worker entry)')
+  }
+  if (distFiles.some(name => /pipeline-worker\.code/.test(name))) {
+    throw new Error('core tarball still ships pipeline-worker.code.* (inlined WASM not removed)')
+  }
+
+  const maxBytes = 500 * kib
+  for (const name of distFiles) {
+    const size = entries.get(name).length
+    if (size > maxBytes) {
+      throw new Error(`core dist file ${name} is ${(size / kib).toFixed(0)} KiB (> ${maxBytes / kib} KiB) — WASM likely inlined`)
+    }
+  }
+
+  const idiomShipped = distFiles
+    .filter(name => name.endsWith('.js'))
+    .some(name => {
+      const text = entries.get(name).toString('utf8')
+      return text.includes('new URL("./pipeline-worker.js"') && text.includes('import.meta.url')
+    })
+  if (!idiomShipped) {
+    throw new Error('core dist does not ship new URL("./pipeline-worker.js", import.meta.url) — worker idiom missing (check tsup target >= es2020)')
+  }
+}
+
 function assertFileSizeAtMost(filePath, limit, label) {
   const { size } = statSync(filePath)
   if (size > limit) {
@@ -121,13 +164,16 @@ function assertConsumerBundleShape() {
     'ImageEditorModal',
     'OneDriveUploader',
     'ScreenCaptureUploader',
-    'heic2any',
   ]
 
   for (const chunkName of requiredLazyChunks) {
     if (!assetNames.some(name => name.includes(chunkName))) {
       throw new Error(`Expected package smoke build to emit lazy chunk containing ${chunkName}`)
     }
+  }
+
+  if (!assetNames.some(name => /pipeline-worker/i.test(name))) {
+    throw new Error('Consumer build did not emit a separate pipeline-worker chunk (worker may be inlined into the entry)')
   }
 
   for (const assetName of assetNames) {
@@ -151,7 +197,19 @@ mkdirSync(join(consumerDir, 'src'), { recursive: true })
 
 runPnpm(['run', 'build:package'])
 
-for (const packageName of ['@upup/core', '@upup/server', '@upup/react']) {
+const allPackages = [
+  '@upup/core',
+  '@upup/server',
+  '@upup/react',
+  '@upup/vue',
+  '@upup/svelte',
+  '@upup/vanilla',
+  '@upup/angular',
+  '@upup/preact',
+  '@upup/next',
+]
+
+for (const packageName of allPackages) {
   runPnpm(['--filter', packageName, 'pack', '--pack-destination', tarballDir])
 }
 
@@ -161,9 +219,13 @@ const tarballs = {
   react: findTarball('@upup/react'),
 }
 
-for (const tarball of Object.values(tarballs)) {
+for (const packageName of allPackages) {
+  const tarball = findTarball(packageName)
   assertPackedPackageHasNoWorkspaceDeps(tarball)
+  assertExportsResolvable(tarball)
 }
+
+assertCorePackageDistShape()
 
 writeFileSync(join(consumerDir, '.npmrc'), [
   'link-workspace-packages=false',
@@ -235,6 +297,11 @@ writeFileSync(join(consumerDir, 'index.html'), [
 writeFileSync(join(consumerDir, 'vite.config.ts'), `import { defineConfig } from 'vite'
 
 export default defineConfig({
+  worker: {
+    // pipeline-worker.js uses {type:'module'} — must emit as ES module chunks
+    // to avoid Vite 7 defaulting to iife (invalid with code-splitting)
+    format: 'es',
+  },
   build: {
     manifest: true,
     chunkSizeWarningLimit: 1600,

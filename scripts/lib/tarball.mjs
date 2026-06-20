@@ -31,7 +31,11 @@ export function readTarballEntries(tarballPath) {
   return entries
 }
 
-/** Flatten a package.json `exports` field to the relative file targets it points at. */
+/**
+ * Flatten a package.json `exports` field to the relative file targets it points at.
+ * Note: glob subpath patterns (e.g. `./*`) are returned literally, not expanded —
+ * callers that assert each target exists should use only static export targets.
+ */
 export function collectExportTargets(exportsField) {
   const targets = []
   const visit = (node) => {
