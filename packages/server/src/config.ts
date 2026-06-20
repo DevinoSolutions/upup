@@ -1,5 +1,14 @@
 import type { StorageProvider, UpupCorsConfig } from '@upup/core'
 
+/** Context passed to a custom keyStrategy. */
+export interface KeyStrategyContext {
+  /** Resolved userId, or null when anonymous. */
+  userId: string | null
+  fileName: string
+  contentType: string
+  size: number
+}
+
 export type UpupServerConfig = {
   storage: {
     type: StorageProvider | string
