@@ -9,6 +9,10 @@ export const { GET, POST, PUT, DELETE } = createUpupHandler({
     secretAccessKey: process.env.S3_SECRET!,
     endpoint: process.env.S3_ENDPOINT!,
   },
+  uploadTokenSecret:
+    process.env.UPUP_UPLOAD_TOKEN_SECRET ?? "playground-dev-secret-not-for-prod",
+  // Demo app: single shared anonymous namespace. Real apps set getUserId instead.
+  allowAnonymous: true,
   providers: {
     googleDrive: {
       clientId: process.env.GOOGLE_CLIENT_ID || "",
