@@ -565,14 +565,15 @@ export class UpupCore {
     const { isWorkerEligible } = await import('./worker/eligibility')
     if (!isWorkerEligible(this.options, typeof Worker !== 'undefined', stepCount)) return null
     try {
-      const [{ PIPELINE_WORKER_CODE }, { createWorkerProvider }, { BrowserRuntime }] = await Promise.all([
-        import('./worker/pipeline-worker.code'),
+      const [{ createWorkerProvider }, { BrowserRuntime }] = await Promise.all([
         import('./worker/create-worker-provider'),
         import('./runtime/browser'),
       ])
-      if (!PIPELINE_WORKER_CODE) return null
-      return createWorkerProvider(PIPELINE_WORKER_CODE, BrowserRuntime)
-    } catch {
+      return createWorkerProvider(BrowserRuntime)
+    } catch (err) {
+      if (typeof process !== 'undefined' && process.env?.NODE_ENV !== 'production') {
+        console.warn('[upup] worker offload unavailable, falling back to main thread', err)
+      }
       return null
     }
   }

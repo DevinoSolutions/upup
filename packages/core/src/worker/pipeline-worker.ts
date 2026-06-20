@@ -1,5 +1,7 @@
-// Worker entry — bundled to an IIFE string by scripts/build-worker.mjs.
-// Not imported by core.ts and not a tsup entry; runs only inside a Web Worker.
+// Worker entry — emitted as a code-split { type: 'module' } chunk by tsup
+// (see tsup.config.ts) and resolved by the consumer bundler via
+// new Worker(new URL('./pipeline-worker.js', import.meta.url)). Runs only
+// inside a Web Worker.
 import { handleTask } from './handle-task'
 
 const ctx = self as unknown as DedicatedWorkerGlobalScope

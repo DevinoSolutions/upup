@@ -84,7 +84,7 @@
     "NOTICE"
   ],
   "scripts": {
-    "build": "node scripts/build-worker.mjs && tsup",
+    "build": "tsup",
     "dev": "tsup --watch",
     "test": "vitest run",
     "test:watch": "vitest",

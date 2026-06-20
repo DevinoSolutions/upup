@@ -15,11 +15,10 @@ interface Pending {
 }
 
 export function createWorkerProvider(
-  code: string,
   runtime: Pick<RuntimeAdapter, 'createWorker'>,
   options: { timeoutMs?: number } = {},
 ): WorkerProvider | null {
-  const worker = runtime.createWorker?.(code) ?? null
+  const worker = runtime.createWorker?.() ?? null
   if (!worker) return null
 
   const timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS

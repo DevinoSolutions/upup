@@ -15,13 +15,11 @@ export const BrowserRuntime: RuntimeAdapter = {
 
   createWorker:
     typeof Worker !== 'undefined'
-      ? (code: string) => {
+      ? () => {
           try {
-            const blob = new Blob([code], { type: 'application/javascript' })
-            const url = URL.createObjectURL(blob)
-            const worker = new Worker(url)
-            URL.revokeObjectURL(url)
-            return worker
+            return new Worker(new URL('./pipeline-worker.js', import.meta.url), {
+              type: 'module',
+            })
           } catch {
             return null
           }

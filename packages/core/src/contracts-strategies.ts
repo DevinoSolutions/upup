@@ -77,7 +77,7 @@ export interface UploadStrategy {
 export interface RuntimeAdapter {
   computeHash(data: ArrayBuffer): Promise<string>
   createImageBitmap?(blob: Blob): Promise<ImageBitmap>
-  createWorker?(code: string): Worker | null
+  createWorker?(): Worker | null
   upload(
     url: string,
     body: Blob | ArrayBuffer,
