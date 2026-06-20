@@ -75,24 +75,66 @@ describe.skipIf(!RUN)('trust model — exploit harness', () => {
     expect(put.ok).toBe(false) // pre-fix: MinIO accepts (200) -> RED
   }, 30_000)
 
-  // S2: completing a multipart with a forged/absent token must be refused (403).
-  it('S2: refuses multipart complete without a valid upload token', async () => {
+  // S2: a tampered token must be refused; a valid token must succeed.
+  it('S2: refuses multipart complete with a forged token (403)', async () => {
     const handler = createHandler(config)
-    const init = await post(handler, '/multipart/init', {
-      name: 's2-victim.bin',
-      size: 8 * 1024 * 1024,
-      type: 'application/octet-stream',
-    })
-    const initBody = await init.json()
-    if (initBody.key) createdKeys.push(initBody.key)
-
-    // Attacker tries to complete at an arbitrary key using the legacy shape.
     const res = await post(handler, '/multipart/complete', {
-      key: 'attacker/evil.bin',
-      uploadId: initBody.uploadId ?? 'forged',
+      token: 'forged.token',
       parts: [],
     })
-    expect(res.status).toBe(403) // pre-fix: 200/500, not 403 -> RED
+    expect(res.status).toBe(403)
+  }, 30_000)
+
+  it('multipart round-trip via the handler stores correct bytes', async () => {
+    const handler = createHandler(config)
+    const part1 = new Uint8Array(5 * 1024 * 1024).fill(7) // 5 MiB
+    const part2 = new Uint8Array(4096).fill(9)
+
+    const init = await (await post(handler, '/multipart/init', {
+      name: 'mp-roundtrip.bin',
+      size: part1.byteLength + part2.byteLength,
+      type: 'application/octet-stream',
+    })).json()
+    createdKeys.push(init.key)
+    expect(typeof init.token).toBe('string')
+
+    const parts: { partNumber: number; eTag: string }[] = []
+    let n = 1
+    for (const chunk of [part1, part2]) {
+      const signed = await (await post(handler, '/multipart/sign-part', {
+        token: init.token,
+        partNumber: n,
+      })).json()
+      const put = await fetch(signed.uploadUrl, { method: 'PUT', body: chunk })
+      expect(put.status).toBe(200)
+      parts.push({ partNumber: n, eTag: put.headers.get('etag') as string })
+      n++
+    }
+
+    const done = await post(handler, '/multipart/complete', { token: init.token, parts })
+    expect(done.status).toBe(200)
+  }, 60_000)
+
+  it('ignores a client-sent key — the token is authoritative', async () => {
+    const handler = createHandler(config)
+    const init = await (await post(handler, '/multipart/init', {
+      name: 'authoritative.bin',
+      size: 8 * 1024 * 1024,
+      type: 'application/octet-stream',
+    })).json()
+    createdKeys.push(init.key)
+
+    // Sign a part with the real token but ALSO send an attacker key in the body.
+    const signed = await post(handler, '/multipart/sign-part', {
+      token: init.token,
+      key: 'attacker/evil.bin',
+      partNumber: 1,
+    })
+    expect(signed.status).toBe(200)
+    const { uploadUrl } = await signed.json()
+    // The presigned part URL must target the token's key, not the attacker key.
+    expect(decodeURIComponent(uploadUrl)).toContain(init.key)
+    expect(decodeURIComponent(uploadUrl)).not.toContain('attacker/evil.bin')
   }, 30_000)
 
   afterAll(async () => {
