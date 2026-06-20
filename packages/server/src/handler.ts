@@ -15,7 +15,9 @@ import {
   getTokens,
   deleteTokens,
   resolveUserId,
+  DEFAULT_USER_ID,
 } from './tokenStore'
+import { defaultKeyStrategy } from './key'
 
 export type RouteHandler = (req: Request) => Promise<Response>
 type ResponseHeaders = Record<string, string>
@@ -175,13 +177,19 @@ async function handlePresign(req: Request, config: UpupServerConfig, responseHea
   const validationError = await validateUploadMetadata(req, config, body, responseHeaders)
   if (validationError) return validationError
 
+  const userId = await resolveUserId(config, req)
+  if (userId === null) return json({ error: 'Unauthenticated' }, 401, responseHeaders)
+  const owner = userId === DEFAULT_USER_ID ? null : userId
+
+  const key = (config.keyStrategy ?? defaultKeyStrategy)({
+    userId: owner,
+    fileName: body.name,
+    contentType: body.type,
+    size: body.size,
+  })
+
   try {
-    const result = await generatePresignedUrl(
-      config.storage,
-      body.name,
-      body.type,
-      body.size,
-    )
+    const result = await generatePresignedUrl(config.storage, key, body.type, body.size)
     return json(result, 200, responseHeaders)
   } catch (error) {
     return json({ error: 'Presign failed' }, 500, responseHeaders)
@@ -193,9 +201,21 @@ async function handleMultipartInit(req: Request, config: UpupServerConfig, respo
     const body = (await req.json()) as { name: string; type: string; size: number; chunkSizeBytes?: number }
     const validationError = await validateUploadMetadata(req, config, body, responseHeaders)
     if (validationError) return validationError
+
+    const userId = await resolveUserId(config, req)
+    if (userId === null) return json({ error: 'Unauthenticated' }, 401, responseHeaders)
+    const owner = userId === DEFAULT_USER_ID ? null : userId
+
+    const key = (config.keyStrategy ?? defaultKeyStrategy)({
+      userId: owner,
+      fileName: body.name,
+      contentType: body.type,
+      size: body.size,
+    })
+
     const result = await initiateMultipartUpload(
       config.storage,
-      body.name,
+      key,
       body.type,
       body.size,
       undefined,

@@ -87,9 +87,10 @@ describe.skipIf(!RUN)('MinIO real-storage upload validation', () => {
 
   it('Path A: presign + direct PUT stores matching bytes', async () => {
     const bytes = makeBytes(2048, 1)
-    const { key, uploadUrl, uploadHeaders } = await generatePresignedUrl(
+    const key = `e2e/path-a-${crypto.randomUUID()}.bin`
+    const { uploadUrl, uploadHeaders } = await generatePresignedUrl(
       storage,
-      'path-a.bin',
+      key,
       'application/octet-stream',
       bytes.byteLength,
     )
@@ -113,9 +114,10 @@ describe.skipIf(!RUN)('MinIO real-storage upload validation', () => {
     whole.set(part1, 0)
     whole.set(part2, part1.byteLength)
 
-    const { key, uploadId } = await initiateMultipartUpload(
+    const key = `e2e/path-b-${crypto.randomUUID()}.bin`
+    const { uploadId } = await initiateMultipartUpload(
       storage,
-      'path-b.bin',
+      key,
       'application/octet-stream',
       whole.byteLength,
     )

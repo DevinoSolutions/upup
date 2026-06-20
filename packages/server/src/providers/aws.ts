@@ -48,23 +48,26 @@ async function generateSignedPublicUrl(
 
 export async function generatePresignedUrl(
   storage: UpupServerConfig['storage'],
-  fileName: string,
+  key: string,
   contentType: string,
   contentLength: number,
   expiresIn = DEFAULT_EXPIRES_IN,
 ): Promise<PresignedUrlResponse> {
   const client = createS3Client(storage)
-  const key = `${crypto.randomUUID()}-${fileName}`
 
   const command = new PutObjectCommand({
     Bucket: storage.bucket,
     Key: key,
     ContentType: contentType,
+    ContentLength: contentLength,
   })
 
   const uploadUrl = await getSignedUrl(client, command, {
     expiresIn,
-    signableHeaders: new Set(['content-type']),
+    // Bind content-length into the signature so the PUT body cannot exceed the
+    // approved size (S1). Browsers/Node set Content-Length from the body; a
+    // larger body changes it and S3 rejects the signature.
+    signableHeaders: new Set(['content-type', 'content-length']),
   })
 
   const downloadUrl = await generateSignedPublicUrl(storage, key)
@@ -80,14 +83,13 @@ export async function generatePresignedUrl(
 
 export async function initiateMultipartUpload(
   storage: UpupServerConfig['storage'],
-  fileName: string,
+  key: string,
   contentType: string,
   fileSize: number,
   expiresIn = DEFAULT_EXPIRES_IN,
   chunkSizeBytes?: number,
 ): Promise<MultipartInitResponse> {
   const client = createS3Client(storage)
-  const key = `${crypto.randomUUID()}-${fileName}`
 
   const command = new CreateMultipartUploadCommand({
     Bucket: storage.bucket,
