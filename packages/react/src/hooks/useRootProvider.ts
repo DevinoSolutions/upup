@@ -18,7 +18,6 @@ import {
     normalizeSource,
     DEFAULT_SOURCES,
     DEFAULT_MAX_FILE_SIZE,
-    ICONS,
     type OrchestratorCallbacks,
     type OrchestratorState,
     type LocaleBundle,
@@ -33,21 +32,18 @@ import {
     TbPlus,
     TbTrash,
 } from 'react-icons/tb'
+import Icon from '../components/Icon'
 import { UpupUploaderProps } from '../shared/types'
 import { IRootContext } from '../context/RootContext'
 import { revokeFileUrl } from '../lib/file'
 import { useUpupUpload } from '../use-upup-upload'
 import { useSSEProcessing } from './useSSEProcessing'
 
-/** Default loader icon — renders the registry 'loader' icon as a React element. */
-const DefaultLoaderIconComponent = () =>
-    createElement('svg', {
-        xmlns: 'http://www.w3.org/2000/svg',
-        viewBox: ICONS['loader'].viewBox,
-        width: ICONS['loader'].defaultSize,
-        height: ICONS['loader'].defaultSize,
-        dangerouslySetInnerHTML: { __html: ICONS['loader'].inner },
-    })
+/** Default loader icon — renders the registry 'loader' glyph via the shared Icon renderer
+ *  (which applies the stroke attrs, so the glyph is visible). Forwards size/class like the
+ *  former react-icons default did. */
+const DefaultLoaderIconComponent = (props: { size?: number; className?: string }) =>
+    createElement(Icon, { name: 'loader', ...props })
 
 function useResolvedThemeMode(mode: UpupThemeMode | undefined): 'light' | 'dark' {
     const requestedMode = mode ?? 'light'
