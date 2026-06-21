@@ -154,6 +154,11 @@ export type {
     AdapterBrowserCallbacks,
     DriveBrowserPlugin,
 } from './adapters/adapter-browser-controller'
+export type { ObservableController } from './controllers/types'
+export { DragDropController } from './controllers/drag-drop-controller'
+export type {
+  DragDropDeps, DragDropOptions, DragDropProps, DragDropSnapshot,
+} from './controllers/drag-drop-controller'
 export {
     GOOGLE_DRIVE_DESCRIPTOR,
     ONE_DRIVE_DESCRIPTOR,
