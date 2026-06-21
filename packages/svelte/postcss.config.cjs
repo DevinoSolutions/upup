@@ -4,7 +4,11 @@ module.exports = {
             prefix: 'upup-',
             darkMode: 'class',
             corePlugins: { preflight: true },
-            content: ['./src/**/*.{svelte,ts,css}'],
+            content: [
+                './src/**/*.{svelte,ts,css}',
+                // Brand-icon color classes (upup-text-[#hex]) live in @upup/core's icon registry.
+                '../core/src/icons/registry.ts',
+            ],
             theme: {
                 extend: {
                     containers: { cs: '475px' },
