@@ -213,3 +213,7 @@ export {
     fileNameFromContentDisposition, deriveFetchedFileName,
 } from './utils/fetch-helpers'
 export { loadGoogleIdentityServices } from './utils/load-gapi'
+
+// ── Icons ─────────────────────────────────────────────────────
+export { ICONS } from './icons/registry'
+export type { IconName, IconDef } from './icons/registry'
