@@ -24,6 +24,7 @@ import type {
 } from '../theme/types'
 import type { InternalFlatClassNames, DeepPartialSlots } from '../theme/slots'
 import type { UpupCore } from '../core'
+import type { UploaderOrchestrator } from '../orchestrator/uploader-orchestrator'
 import type {
     BoxConfigs,
     DropboxConfigs,
@@ -51,6 +52,7 @@ export type BaseContextUpload = {
 
 export type BaseContextRuntime = {
     core: UpupCore | null
+    orchestrator: UploaderOrchestrator | null
     mode: 'client' | 'server'
     serverUrl?: string
     openFilePicker: () => void
