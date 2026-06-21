@@ -1,13 +1,11 @@
 import { Component, Input } from '@angular/core'
+import { IconComponent } from '../icon.component'
 
 @Component({
     selector: 'upup-folder-icon',
     standalone: true,
-    template: `
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" [class]="className">
-            <path d="M5 4h4l3 3h7a2 2 0 0 1 2 2v8a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-11a2 2 0 0 1 2 -2" />
-        </svg>
-    `,
+    imports: [IconComponent],
+    template: `<upup-icon name="folder" [class]="className" />`,
 })
 export class FolderIconComponent {
     @Input('class') className: string = ''
