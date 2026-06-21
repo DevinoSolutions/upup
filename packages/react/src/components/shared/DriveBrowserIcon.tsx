@@ -1,6 +1,6 @@
 import React, { ReactEventHandler } from 'react'
 import { b64EncodeUnicode, cn, type DriveFile } from '@upup/core'
-import { TbFile, TbFolder } from 'react-icons/tb'
+import Icon from '../Icon'
 import { useUploaderTheme } from '../../context/RootContext'
 
 const handleImgError: ReactEventHandler<HTMLImageElement> = e => {
@@ -21,7 +21,8 @@ export default function DriveBrowserIcon({
     if (isFolder)
         return (
             <i className="upup-flex-grow upup-text-lg">
-                <TbFolder
+                <Icon
+                    name="folder"
                     className={cn({
                         'upup-text-[#6D6D6D] dark:upup-text-[#6D6D6D]': dark,
                     })}
@@ -31,7 +32,8 @@ export default function DriveBrowserIcon({
     if (!src)
         return (
             <i className="upup-flex-grow upup-text-lg">
-                <TbFile
+                <Icon
+                    name="file"
                     className={cn({
                         'upup-text-[#6D6D6D] dark:upup-text-[#6D6D6D]': dark,
                     })}

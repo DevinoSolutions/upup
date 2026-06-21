@@ -6,11 +6,11 @@ import React, {
     Suspense,
     useImperativeHandle,
 } from 'react'
-import { TbLoader } from 'react-icons/tb'
 import { devinoDark, devinoLight, logoDark, logoLight } from './assets/logos'
 import { cn } from '@upup/core'
 import type { UploadFile } from '@upup/core'
 import { UpupUploaderProps } from './shared/types'
+import Icon from './components/Icon'
 import DefaultLoaderIcon from './components/DefaultLoaderIcon'
 import MainBox from './components/MainBox'
 import ShouldRender from './components/shared/ShouldRender'
@@ -104,7 +104,8 @@ export default forwardRef<UpupUploaderRef, UpupUploaderProps>(
                             <ShouldRender
                                 if={providerValues.props.isProcessing}
                             >
-                                <TbLoader
+                                <Icon
+                                    name="loader"
                                     className={cn(
                                         'upup-absolute upup-right-5 upup-animate-spin upup-text-xs upup-text-xs upup-leading-5 upup-text-[#0E2ADD] md:upup-text-xl',
                                         {

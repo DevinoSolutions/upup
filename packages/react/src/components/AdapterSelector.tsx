@@ -1,5 +1,5 @@
 import React, { useCallback } from 'react'
-import { TbUpload } from 'react-icons/tb'
+import Icon from './Icon'
 import { cn, formatUiMessage as t, pluralUiMessage as plural } from '@upup/core'
 import {
     useUploaderFiles,
@@ -254,7 +254,8 @@ export default function AdapterSelector() {
                     onClick={handleBrowseFilesClick}
                     className="upup-flex upup-cursor-pointer upup-flex-col upup-items-center upup-justify-center upup-gap-2 upup-rounded-lg upup-p-2"
                 >
-                    <TbUpload
+                    <Icon
+                        name="upload"
                         size={32}
                         className={cn(
                             'upup-h-16 upup-w-16 md:upup-h-20 md:upup-w-20',

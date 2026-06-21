@@ -1,6 +1,6 @@
 import { useVirtualizer } from '@tanstack/react-virtual'
 import React, { memo, useRef } from 'react'
-import { TbPlayerPauseFilled, TbPlayerPlayFilled, TbX } from 'react-icons/tb'
+import Icon from './Icon'
 import { cn, formatUiMessage as t, isUploadActive, pluralUiMessage as plural } from '@upup/core'
 import { UploadStatus } from '@upup/core'
 import {
@@ -260,9 +260,9 @@ export default memo(function FileList() {
                                 }
                             >
                                 {uploadStatus === UploadStatus.PAUSED ? (
-                                    <TbPlayerPlayFilled size={14} />
+                                    <Icon name="player-play" size={14} />
                                 ) : (
-                                    <TbPlayerPauseFilled size={14} />
+                                    <Icon name="player-pause" size={14} />
                                 )}
                             </button>
                             <button
@@ -278,7 +278,7 @@ export default memo(function FileList() {
                                 aria-label={tr.cancel}
                                 title={tr.cancel}
                             >
-                                <TbX size={14} />
+                                <Icon name="x" size={14} />
                             </button>
                         </ShouldRender>
                         <ProgressBar

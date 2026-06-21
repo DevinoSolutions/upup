@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react'
-import { TbLayoutGrid, TbLayoutList } from 'react-icons/tb'
+import Icon from '../Icon'
 import { cn, formatUiMessage as t, isUploadActive, pluralUiMessage as plural } from '@upup/core'
 import {
     useUploaderFiles,
@@ -88,7 +88,7 @@ export default function MainBoxHeader({ handleCancel }: Readonly<Props>) {
                         onClick={() => setViewMode(v => v === 'grid' ? 'list' : 'grid')}
                         title={viewMode === 'grid' ? tr.switchToListView : tr.switchToGridView}
                     >
-                        {viewMode === 'grid' ? <TbLayoutList size={16} /> : <TbLayoutGrid size={16} />}
+                        {viewMode === 'grid' ? <Icon name="layout-list" size={16} /> : <Icon name="layout-grid" size={16} />}
                     </button>
                 </ShouldRender>
                 <ShouldRender if={!isAddingMore && limit > 1 && !isLimitReached}>

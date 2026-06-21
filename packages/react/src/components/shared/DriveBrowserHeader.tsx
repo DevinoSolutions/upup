@@ -1,6 +1,6 @@
 import React, { Dispatch, SetStateAction } from 'react'
 import { cn, type DriveFolder, type DriveUser } from '@upup/core'
-import { TbSearch, TbUser } from 'react-icons/tb'
+import Icon from '../Icon'
 import {
     useUploaderI18n,
     useUploaderSource,
@@ -89,7 +89,7 @@ export default function DriveBrowserHeader({
                             />
                         </ShouldRender>
                         <ShouldRender if={!user.picture}>
-                            <TbUser className="upup-text-xl" />
+                            <Icon name="user" className="upup-text-xl" />
                         </ShouldRender>
                     </div>
 
@@ -139,7 +139,7 @@ export default function DriveBrowserHeader({
                         value={searchTerm}
                         onChange={e => onSearch(e.currentTarget.value)}
                     />
-                    <TbSearch className="upup-absolute upup-left-5 upup-top-1/2 upup--translate-y-1/2 upup-text-[#939393]" />
+                    <Icon name="search" className="upup-absolute upup-left-5 upup-top-1/2 upup--translate-y-1/2 upup-text-[#939393]" />
                 </div>
             </ShouldRender>
         </div>

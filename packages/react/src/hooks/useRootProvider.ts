@@ -1,5 +1,5 @@
 
-import { Dispatch, SetStateAction, useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
+import { createElement, Dispatch, SetStateAction, useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import {
     FileSource,
     UploadStatus,
@@ -18,26 +18,36 @@ import {
     normalizeSource,
     DEFAULT_SOURCES,
     DEFAULT_MAX_FILE_SIZE,
+    ICONS,
     type OrchestratorCallbacks,
     type OrchestratorState,
     type LocaleBundle,
     type Translator,
     type UploadFile,
     type UpupThemeMode,
+    type ResolvedImageEditorOptions,
 } from '@upup/core'
 import {
     TbCameraRotate,
     TbCapture,
-    TbLoader,
     TbPlus,
     TbTrash,
 } from 'react-icons/tb'
-import type { ResolvedImageEditorOptions } from '@upup/core'
 import { UpupUploaderProps } from '../shared/types'
 import { IRootContext } from '../context/RootContext'
 import { revokeFileUrl } from '../lib/file'
 import { useUpupUpload } from '../use-upup-upload'
 import { useSSEProcessing } from './useSSEProcessing'
+
+/** Default loader icon — renders the registry 'loader' icon as a React element. */
+const DefaultLoaderIconComponent = () =>
+    createElement('svg', {
+        xmlns: 'http://www.w3.org/2000/svg',
+        viewBox: ICONS['loader'].viewBox,
+        width: ICONS['loader'].defaultSize,
+        height: ICONS['loader'].defaultSize,
+        dangerouslySetInnerHTML: { __html: ICONS['loader'].inner },
+    })
 
 function useResolvedThemeMode(mode: UpupThemeMode | undefined): 'light' | 'dark' {
     const requestedMode = mode ?? 'light'
@@ -373,7 +383,7 @@ export default function useRootProvider({
         CameraCaptureIcon: icons.CameraCaptureIcon || TbCapture,
         CameraRotateIcon: icons.CameraRotateIcon || TbCameraRotate,
         CameraDeleteIcon: icons.CameraDeleteIcon || TbTrash,
-        LoaderIcon: icons.LoaderIcon || TbLoader,
+        LoaderIcon: icons.LoaderIcon || DefaultLoaderIconComponent,
     }), [
         icons.CameraCaptureIcon,
         icons.CameraDeleteIcon,
