@@ -1,7 +1,7 @@
 import { html, nothing } from 'lit-html'
 import { formatUiMessage as t, pluralUiMessage as plural, isUploadActive, cn } from '@upup/core'
 import type { RootContext } from '../../lib/types'
-import { LayoutListIcon, LayoutGridIcon } from '../icons'
+import { icon } from '../icon'
 
 export function mainBoxHeader(ctx: RootContext, handleCancel: () => void) {
   const mini = ctx.props.mini
@@ -63,7 +63,7 @@ export function mainBoxHeader(ctx: RootContext, handleCancel: () => void) {
               @click=${toggleViewMode}
               title=${viewMode === 'grid' ? tr.switchToListView : tr.switchToGridView}
             >
-              ${viewMode === 'grid' ? LayoutListIcon({ size: 16 }) : LayoutGridIcon({ size: 16 })}
+              ${viewMode === 'grid' ? icon('layout-list', { size: 16 }) : icon('layout-grid', { size: 16 })}
             </button>`
           : nothing}
         ${!isAddingMore && limit > 1 && !isLimitReached

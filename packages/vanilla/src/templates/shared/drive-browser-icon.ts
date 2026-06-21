@@ -2,7 +2,7 @@ import { html, nothing } from 'lit-html'
 import { cn, b64EncodeUnicode } from '@upup/core'
 import type { DriveFile } from '@upup/core'
 import type { RootContext } from '../../lib/types'
-import { FolderIcon, FileIconSvg } from '../icons'
+import { icon } from '../icon'
 
 function handleImgError(e: Event) {
   const img = e.target as HTMLImageElement
@@ -18,14 +18,14 @@ export function driveBrowserIcon(ctx: RootContext, args: { isFolder: boolean; fi
   if (isFolder) {
     return html`
       <i class="upup-flex-grow upup-text-lg">
-        ${FolderIcon({ class: cn({ 'upup-text-[#6D6D6D] dark:upup-text-[#6D6D6D]': isDark }) })}
+        ${icon('folder', { class: cn({ 'upup-text-[#6D6D6D] dark:upup-text-[#6D6D6D]': isDark }) })}
       </i>`
   }
 
   if (!file.thumbnail) {
     return html`
       <i class="upup-flex-grow upup-text-lg">
-        ${FileIconSvg({ class: cn({ 'upup-text-[#6D6D6D] dark:upup-text-[#6D6D6D]': isDark }) })}
+        ${icon('file', { class: cn({ 'upup-text-[#6D6D6D] dark:upup-text-[#6D6D6D]': isDark }) })}
       </i>`
   }
 

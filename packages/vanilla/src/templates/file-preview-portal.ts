@@ -11,7 +11,6 @@ import {
 } from '@upup/core'
 import type { RootContext } from '../lib/types'
 import { shouldRender } from './should-render'
-import { XIcon } from './icons'
 
 // Text-preview fetch state, stored on the per-file FileItemState cell so it survives
 // re-renders (a fresh args object literal each render would otherwise miss the cache).

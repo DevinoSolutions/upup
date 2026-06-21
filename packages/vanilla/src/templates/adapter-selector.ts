@@ -4,7 +4,7 @@ import { formatUiMessage as t, pluralUiMessage as plural, cn, FileSource } from 
 import type { RootContext } from '../lib/types'
 import { shouldRender } from './should-render'
 import { uploadSourceObject } from '../lib/constants'
-import { UploadIcon } from './icons'
+import { icon } from './icon'
 
 export function adapterSelector(ctx: RootContext) {
   const isDark = ctx.theme.getSnapshot().isDark
@@ -223,7 +223,7 @@ export function adapterSelector(ctx: RootContext) {
             @click=${handleBrowseFilesClick}
             class="upup-flex upup-cursor-pointer upup-flex-col upup-items-center upup-justify-center upup-gap-2 upup-rounded-lg upup-p-2"
           >
-            ${UploadIcon({
+            ${icon('upload', {
               size: 32,
               class: cn(
                 'upup-h-16 upup-w-16 md:upup-h-20 md:upup-w-20',

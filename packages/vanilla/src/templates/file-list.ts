@@ -14,7 +14,7 @@ import type { RootContext } from '../lib/types'
 import { fileItem } from './file-item'
 import { mainBoxHeader } from './shared/main-box-header'
 import { progressBar } from './shared/progress-bar'
-import { XIcon, PlayerPlayFilledIcon, PlayerPauseFilledIcon } from './icons'
+import { icon } from './icon'
 
 const VIRTUAL_SCROLL_THRESHOLD = 20
 const ESTIMATED_ITEM_HEIGHT = 76
@@ -204,7 +204,7 @@ export function fileList(ctx: RootContext) {
                 aria-label=${uploadStatus === UploadStatus.PAUSED ? tr.resumeUpload : tr.pauseUpload}
                 title=${uploadStatus === UploadStatus.PAUSED ? tr.resumeUpload : tr.pauseUpload}
               >
-                ${uploadStatus === UploadStatus.PAUSED ? PlayerPlayFilledIcon({ size: 14 }) : PlayerPauseFilledIcon({ size: 14 })}
+                ${uploadStatus === UploadStatus.PAUSED ? icon('player-play', { size: 14 }) : icon('player-pause', { size: 14 })}
               </button>
               <button
                 data-testid="upup-upload-cancel-btn"
@@ -216,7 +216,7 @@ export function fileList(ctx: RootContext) {
                 aria-label=${tr.cancel}
                 title=${tr.cancel}
               >
-                ${XIcon({ size: 14 })}
+                ${icon('x', { size: 14 })}
               </button>`
             : nothing}
           ${progressBar(ctx, { progress: totalProgress, showValue: true, class: 'upup-flex-1', progressBarClassName: 'upup-rounded' })}

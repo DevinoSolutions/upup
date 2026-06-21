@@ -2,7 +2,7 @@ import { html } from 'lit-html'
 import { cn, deriveFetchedFileName } from '@upup/core'
 import type { RootContext } from '../lib/types'
 import { adapterViewContainer } from './shared/adapter-view-container'
-import { LoaderIcon } from './icons'
+import { icon } from './icon'
 
 interface UrlState { url: string; loading: boolean }
 const stateMap = new WeakMap<RootContext, UrlState>()
@@ -68,7 +68,7 @@ export function urlUploader(ctx: RootContext) {
           'upup-disabled:bg-[#6D6D6D] dark:upup-disabled:bg-[#6D6D6D] upup-bg-[#59D1F9] dark:upup-bg-[#59D1F9]': isDark,
         }, slot.urlFetchButton)}
         type="submit" ?disabled=${!s.url}
-      >${s.loading ? LoaderIcon() : tr.fetch}</button>
+      >${s.loading ? icon('loader') : tr.fetch}</button>
     </form>`
 
   return adapterViewContainer(ctx, { dataTestid: 'upup-url-uploader', dataUpupSlot: 'url-uploader' }, inner)

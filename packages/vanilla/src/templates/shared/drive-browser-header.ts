@@ -3,7 +3,7 @@ import { repeat } from 'lit-html/directives/repeat.js'
 import { cn } from '@upup/core'
 import type { DriveFolder } from '@upup/core'
 import type { RootContext } from '../../lib/types'
-import { SearchIcon, UserIcon } from '../icons'
+import { icon } from '../icon'
 
 export function driveBrowserHeader(
   ctx: RootContext,
@@ -60,7 +60,7 @@ export function driveBrowserHeader(
           <div class="upup-relative upup-flex upup-h-8 upup-w-8 upup-items-center upup-justify-center upup-overflow-hidden upup-rounded-full">
             ${user.picture
               ? html`<img alt=${user.name ?? ''} src=${user.picture} class="upup-bg-center upup-object-cover" />`
-              : html`${UserIcon({ class: 'upup-text-xl' })}`}
+              : html`${icon('user', { class: 'upup-text-xl' })}`}
           </div>
           <button
             class=${cn(
@@ -102,7 +102,7 @@ export function driveBrowserHeader(
             .value=${searchTerm}
             @input=${(e: Event) => { onSearch((e.target as HTMLInputElement).value) }}
           />
-          ${SearchIcon({ class: 'upup-absolute upup-left-5 upup-top-1/2 upup--translate-y-1/2 upup-text-[#939393]' })}
+          ${icon('search', { class: 'upup-absolute upup-left-5 upup-top-1/2 upup--translate-y-1/2 upup-text-[#939393]' })}
         </div>` : nothing}
     </div>`
 }
