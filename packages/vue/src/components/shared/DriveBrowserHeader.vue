@@ -6,7 +6,7 @@ import {
     useUploaderTheme,
 } from '../../context/root-context'
 import { cn } from '@upup/core'
-import { SearchIcon, UserIcon } from '../Icons'
+import Icon from '../Icon'
 import ShouldRender from './ShouldRender.vue'
 
 const props = defineProps<{
@@ -71,7 +71,7 @@ const { isDark: dark, slotOverrides: slotClasses } = useUploaderTheme()
                         />
                     </ShouldRender>
                     <ShouldRender :if="!props.user.picture">
-                        <UserIcon class="upup-text-xl" />
+                        <Icon name="user" class="upup-text-xl" />
                     </ShouldRender>
                 </div>
 
@@ -115,7 +115,7 @@ const { isDark: dark, slotOverrides: slotClasses } = useUploaderTheme()
                     :value="props.searchTerm"
                     @input="props.onSearch(($event.target as HTMLInputElement).value)"
                 />
-                <SearchIcon class="upup-absolute upup-left-5 upup-top-1/2 upup--translate-y-1/2 upup-text-[#939393]" />
+                <Icon name="search" class="upup-absolute upup-left-5 upup-top-1/2 upup--translate-y-1/2 upup-text-[#939393]" />
             </div>
         </ShouldRender>
     </div>

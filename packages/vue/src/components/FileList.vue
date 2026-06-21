@@ -11,7 +11,7 @@ import {
     useUploaderUploadControls,
     useUploaderView,
 } from '../context/root-context'
-import { PlayerPauseFilledIcon, PlayerPlayFilledIcon, XIcon } from './Icons'
+import Icon from './Icon'
 import FileItem from './FileItem.vue'
 import MainBoxHeader from './shared/MainBoxHeader.vue'
 import ProgressBar from './shared/ProgressBar.vue'
@@ -232,8 +232,8 @@ function onRetryClick() {
                             :aria-label="uploadStatus === UploadStatus.PAUSED ? tr.resumeUpload : tr.pauseUpload"
                             :title="uploadStatus === UploadStatus.PAUSED ? tr.resumeUpload : tr.pauseUpload"
                         >
-                            <PlayerPlayFilledIcon v-if="uploadStatus === UploadStatus.PAUSED" :size="14" />
-                            <PlayerPauseFilledIcon v-else :size="14" />
+                            <Icon v-if="uploadStatus === UploadStatus.PAUSED" name="player-play" :size="14" />
+                            <Icon v-else name="player-pause" :size="14" />
                         </button>
                         <button
                             data-testid="upup-upload-cancel-btn"
@@ -245,7 +245,7 @@ function onRetryClick() {
                             :aria-label="tr.cancel"
                             :title="tr.cancel"
                         >
-                            <XIcon :size="14" />
+                            <Icon name="x" :size="14" />
                         </button>
                     </ShouldRender>
                     <ProgressBar

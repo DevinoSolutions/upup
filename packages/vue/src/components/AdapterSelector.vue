@@ -10,7 +10,7 @@ import {
     useUploaderView,
 } from '../context/root-context'
 import useAdapterSelector from '../composables/useAdapterSelector'
-import { UploadIcon } from './Icons'
+import Icon from './Icon'
 import ShouldRender from './shared/ShouldRender.vue'
 
 const { core, inputRef, openFilePicker } = useUploaderRuntime()
@@ -233,7 +233,8 @@ function onSourceKeydown(e: KeyboardEvent) {
                 @click="handleBrowseFilesClick"
                 class="upup-flex upup-cursor-pointer upup-flex-col upup-items-center upup-justify-center upup-gap-2 upup-rounded-lg upup-p-2"
             >
-                <UploadIcon
+                <Icon
+                    name="upload"
                     :size="32"
                     :class="cn(
                         'upup-h-16 upup-w-16 md:upup-h-20 md:upup-w-20',

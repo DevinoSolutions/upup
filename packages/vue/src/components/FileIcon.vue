@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 import { useUploaderTheme } from '../context/root-context'
 import { cn } from '@upup/core'
-import { FileIconSvg } from './Icons'
+import Icon from './Icon'
 
 const props = withDefaults(
     defineProps<{
@@ -25,7 +25,7 @@ const iconClass = computed(() =>
 
 <template>
     <div class="upup-flex upup-flex-col upup-items-center upup-gap-0.5">
-        <FileIconSvg :class="iconClass" />
+        <Icon name="file" :class="iconClass" />
         <span
             v-if="extension"
             class="upup-text-[10px] upup-font-medium upup-uppercase upup-text-gray-500"

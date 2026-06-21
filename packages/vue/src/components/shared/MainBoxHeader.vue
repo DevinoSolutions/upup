@@ -9,7 +9,7 @@ import {
     useUploaderUploadControls,
     useUploaderView,
 } from '../../context/root-context'
-import { LayoutGridIcon, LayoutListIcon } from '../Icons'
+import Icon from '../Icon'
 import ShouldRender from './ShouldRender.vue'
 
 const props = defineProps<{
@@ -83,8 +83,8 @@ function toggleViewMode() {
                         @click="toggleViewMode"
                         :title="viewMode === 'grid' ? tr.switchToListView : tr.switchToGridView"
                     >
-                        <LayoutListIcon v-if="viewMode === 'grid'" :size="16" />
-                        <LayoutGridIcon v-else :size="16" />
+                        <Icon v-if="viewMode === 'grid'" name="layout-list" :size="16" />
+                        <Icon v-else name="layout-grid" :size="16" />
                     </button>
                 </ShouldRender>
                 <ShouldRender :if="!isAddingMore && limit > 1 && !isLimitReached">

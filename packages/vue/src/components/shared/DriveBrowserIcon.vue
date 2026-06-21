@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { type DriveFile, cn, b64EncodeUnicode } from '@upup/core'
 import { useUploaderTheme } from '../../context/root-context'
-import { FileIconSvg, FolderIcon } from '../Icons'
+import Icon from '../Icon'
 
 const props = defineProps<{ file: DriveFile }>()
 const { isDark: dark } = useUploaderTheme()
@@ -16,14 +16,16 @@ function handleImgError(e: Event) {
 
 <template>
     <i v-if="props.file.isFolder" class="upup-flex-grow upup-text-lg">
-        <FolderIcon
+        <Icon
+            name="folder"
             :class="cn({
                 'upup-text-[#6D6D6D] dark:upup-text-[#6D6D6D]': dark,
             })"
         />
     </i>
     <i v-else-if="!props.file.thumbnail" class="upup-flex-grow upup-text-lg">
-        <FileIconSvg
+        <Icon
+            name="file"
             :class="cn({
                 'upup-text-[#6D6D6D] dark:upup-text-[#6D6D6D]': dark,
             })"
