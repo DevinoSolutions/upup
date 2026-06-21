@@ -9,7 +9,7 @@
     useUploaderUploadControls,
     useUploaderView,
   } from '../../context/root-context'
-  import { LayoutGridIcon, LayoutListIcon } from '../Icons'
+  import Icon from '../Icon.svelte'
   import ShouldRender from './ShouldRender.svelte'
 
   let { handleCancel }: { handleCancel: () => void } = $props()
@@ -83,9 +83,9 @@
           title={$viewMode === 'grid' ? tr.switchToListView : tr.switchToGridView}
         >
           {#if $viewMode === 'grid'}
-            <LayoutListIcon size={16} />
+            <Icon name="layout-list" size={16} />
           {:else}
-            <LayoutGridIcon size={16} />
+            <Icon name="layout-grid" size={16} />
           {/if}
         </button>
       </ShouldRender>

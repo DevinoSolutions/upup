@@ -1,7 +1,7 @@
 <script lang="ts">
   import { type DriveFile, cn, b64EncodeUnicode } from '@upup/core'
   import { useUploaderTheme } from '../../context/root-context'
-  import { FileIconSvg, FolderIcon } from '../Icons'
+  import Icon from '../Icon.svelte'
 
   const { file }: { file: DriveFile } = $props()
   const { isDark: dark } = useUploaderTheme()
@@ -16,7 +16,8 @@
 
 {#if file.isFolder}
   <i class="upup-flex-grow upup-text-lg">
-    <FolderIcon
+    <Icon
+      name="folder"
       class={cn({
         'upup-text-[#6D6D6D] dark:upup-text-[#6D6D6D]': $dark,
       })}
@@ -24,7 +25,8 @@
   </i>
 {:else if !file.thumbnail}
   <i class="upup-flex-grow upup-text-lg">
-    <FileIconSvg
+    <Icon
+      name="file"
       class={cn({
         'upup-text-[#6D6D6D] dark:upup-text-[#6D6D6D]': $dark,
       })}

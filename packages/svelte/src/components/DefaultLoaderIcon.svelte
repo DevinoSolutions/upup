@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { LoaderIcon } from './Icons'
+  import Icon from './Icon.svelte'
 </script>
 
-<LoaderIcon class="upup-animate-spin upup-text-3xl upup-text-[#6D6D6D]" />
+<Icon name="loader" class="upup-animate-spin upup-text-3xl upup-text-[#6D6D6D]" />

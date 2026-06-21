@@ -5,7 +5,7 @@
     useUploaderSource,
     useUploaderTheme,
   } from '../../context/root-context'
-  import { SearchIcon, UserIcon } from '../Icons'
+  import Icon from '../Icon.svelte'
   import ShouldRender from './ShouldRender.svelte'
 
   const {
@@ -78,7 +78,7 @@
             />
           </ShouldRender>
           <ShouldRender if={!user.picture}>
-            <UserIcon class="upup-text-xl" />
+            <Icon name="user" class="upup-text-xl" />
           </ShouldRender>
         </div>
 
@@ -122,7 +122,7 @@
           value={searchTerm}
           oninput={(e) => onSearch((e.target as HTMLInputElement).value)}
         />
-        <SearchIcon class="upup-absolute upup-left-5 upup-top-1/2 upup--translate-y-1/2 upup-text-[#939393]" />
+        <Icon name="search" class="upup-absolute upup-left-5 upup-top-1/2 upup--translate-y-1/2 upup-text-[#939393]" />
       </div>
     </ShouldRender>
   </div>

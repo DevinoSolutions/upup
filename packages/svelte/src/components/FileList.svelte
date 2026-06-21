@@ -18,7 +18,7 @@
     useUploaderUploadControls,
     useUploaderView,
   } from '../context/root-context'
-  import { PlayerPauseFilledIcon, PlayerPlayFilledIcon, XIcon } from './Icons'
+  import Icon from './Icon.svelte'
   import FileItem from './FileItem.svelte'
   import MainBoxHeader from './shared/MainBoxHeader.svelte'
   import ProgressBar from './shared/ProgressBar.svelte'
@@ -261,9 +261,9 @@
             title={$uploadStatus === UploadStatus.PAUSED ? tr.resumeUpload : tr.pauseUpload}
           >
             {#if $uploadStatus === UploadStatus.PAUSED}
-              <PlayerPlayFilledIcon size={14} />
+              <Icon name="player-play" size={14} />
             {:else}
-              <PlayerPauseFilledIcon size={14} />
+              <Icon name="player-pause" size={14} />
             {/if}
           </button>
           <button
@@ -276,7 +276,7 @@
             aria-label={tr.cancel}
             title={tr.cancel}
           >
-            <XIcon size={14} />
+            <Icon name="x" size={14} />
           </button>
         </ShouldRender>
         <ProgressBar
