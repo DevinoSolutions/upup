@@ -230,6 +230,9 @@ export default function useRootProvider(props: UpupUploaderProps): IRootContext 
 
     // ── Input ref (Vue-specific) ────────────────────────────────
     const inputRef: Ref<HTMLInputElement | null> = ref(null)
+    function openFilePicker() {
+        inputRef.value?.click()
+    }
 
     // ── Icons resolution (framework-specific; Vue uses EmptyIcon stubs) ──────
     const resolvedIcons = computed(() => ({
@@ -250,7 +253,7 @@ export default function useRootProvider(props: UpupUploaderProps): IRootContext 
         mode: resolved.mode,
         serverUrl: resolved.serverUrl,
         inputRef,
-        openFilePicker: root.openFilePicker,
+        openFilePicker,
         // Reactive so consumers re-render when the active adapter changes.
         activeAdapter: computed(() => state.value.activeAdapter),
         setActiveAdapter: (adapter: FileSource | undefined) => root.commands.setActiveAdapter(adapter),
