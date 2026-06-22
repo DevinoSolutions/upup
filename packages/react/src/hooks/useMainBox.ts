@@ -44,6 +44,7 @@ export default function useMainBox() {
     const snapshot = useSyncExternalStore(
         controller?.subscribe ?? NOOP_SUBSCRIBE,
         controller?.getSnapshot ?? getEmptySnapshot,
+        getEmptySnapshot, // getServerSnapshot — required for SSR (renders the empty-state snapshot)
     )
 
     useEffect(() => {
