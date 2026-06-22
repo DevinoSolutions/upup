@@ -4,25 +4,14 @@ import {
     UploadStatus,
     UploaderOrchestrator,
     ThemeStore,
-    createTranslator,
-    enUS,
-    flattenTranslatorToUiTranslations,
-    GoogleDrivePlugin,
-    DropboxPlugin,
-    BoxPlugin,
-    OneDrivePlugin,
-    getDir,
-    normalizeSource,
-    DEFAULT_SOURCES,
-    DEFAULT_MAX_FILE_SIZE,
-    resolveAccept,
-    revokeFileUrl,
-    type OrchestratorCallbacks,
-    type LocaleBundle,
-    type Translator,
+    normalizeRootOptions,
+    createRootController,
+    type RootControllerOptions,
+    type RootController,
     type UploadFile,
-    type ResolvedImageEditorOptions,
     type UiTranslations,
+    type Translator,
+    type ResolvedImageEditorOptions,
 } from '@upup/core'
 import { createUpupUpload, type UpupUploadHandle } from './lib/use-upup-upload'
 import { createSSEProcessing } from './lib/use-sse-processing'
@@ -40,19 +29,17 @@ type ThemeSnapshot = ReturnType<ThemeStore['getSnapshot']>
 export class UpupStore {
     private props!: UpupUploaderProps
     private upload!: UpupUploadHandle
+    private root!: RootController
     core!: UpupUploadHandle['core']
-    private orch!: UploaderOrchestrator
     private orchState!: SignalStore<OrchSnapshot>
 
     /** The orchestrator instance, exposed for the dropzone DragDropController. Set during init(). */
-    get orchestrator(): UploaderOrchestrator { return this.orch }
+    get orchestrator(): UploaderOrchestrator { return this.root.orchestrator }
 
-    private themeStore!: ThemeStore
     private themeState!: SignalStore<ThemeSnapshot>
     private started = false
     private disposed = false
     private cleanups: Array<() => void> = []
-    private inputEl: HTMLInputElement | null = null
 
     // Resolved values captured during init() — used by file-op handlers
     // (mirrors how svelte's create-root-provider closes over them).
@@ -155,239 +142,143 @@ export class UpupStore {
     }
 
     init(): void {
-        if (this.started) return
-        this.started = true
+        // Reset disposed flag at the TOP so the dispose()→init() rebuild cycle works
+        // repeatedly (even if init() was never called before this cycle).
         this.disposed = false
 
-        // ── Destructure props with defaults (mirrors create-root-provider ~39–104) ──
-        const {
-            allowedFileTypes: acceptProp = '*',
-            mini = false,
-            theme: themeProp,
-            maxFiles,
-            maxFileSize: maxFileSizeProp,
-            minFileSize: minFileSizeProp,
-            maxTotalFileSize: maxTotalFileSizeProp,
-            restrictions,
-            imageCompression = false,
-            thumbnailGenerator = false,
-            checksumVerification = false,
-            webWorker,
-            heicConversion = false,
-            stripExifData = false,
-            contentDeduplication = false,
-            crashRecovery = false,
-            sources,
-            onFileRemove: onFileRemoveProp = () => {},
-            onFileRemoved: onFileRemovedProp,
-            autoUpload = false,
-            maxConcurrentUploads,
-            imageEditor: imageEditorProp,
-            onUploadStart = () => {},
-            onFileUploadStart = () => {},
-            onFileUploadProgress = () => {},
-            onFilesUploadProgress = () => {},
-            onFileUploadComplete = () => {},
-            onFilesUploadComplete = () => {},
-            onUploadComplete = () => {},
-            onFilesSelected = () => {},
-            onDoneClicked = () => {},
-            onPrepareFiles,
-            onBeforeFileAdded,
-            onFileTypeMismatch = () => {},
-            onRestrictionFailed,
-            provider,
-            mode: modeProp,
-            uploadEndpoint,
-            serverUrl,
-            cloudDrives,
-            metadata,
-            cors,
-            maxRetries,
-            resumable,
-            processingEndpoint,
-            onFileProcessed,
-            processingTimeout,
-            // UI props needed for uiProps aggregate
-            isProcessing = false,
-            allowPreview = true,
-            folderUpload,
-            showBranding = true,
-            disableDragDrop = false,
-            className,
-            style,
-            icons = {},
-            i18n,
-            onIntegrationClick = () => {},
-            onFileClick = () => {},
-            onStatusChange,
-            onFilesDragOver = () => {},
-            onFilesDragLeave = () => {},
-            onFilesDrop = () => {},
-            enablePaste = false,
-        } = this.props ?? {}
+        if (this.started) return
+        this.started = true
 
-        // ── Resolved props (mirrors lines ~106–138) ──────────────
-        const resolvedSources = sources
-            ? (sources.map(s => normalizeSource(s as string)).filter(Boolean) as FileSource[])
-            : DEFAULT_SOURCES
-        const resolvedLimit = maxFiles ?? restrictions?.maxNumberOfFiles ?? 10
-        const resolvedMode = modeProp ?? (serverUrl && !uploadEndpoint ? 'server' : 'client')
-        const resolvedServerUrl = serverUrl
-        const resolvedEndpoint = uploadEndpoint
-        const maxFileSize = maxFileSizeProp ?? restrictions?.maxFileSize ?? DEFAULT_MAX_FILE_SIZE
-        const minFileSize = minFileSizeProp ?? restrictions?.minFileSize
-        const maxTotalFileSize = maxTotalFileSizeProp ?? restrictions?.maxTotalFileSize
-        const accept = resolveAccept(
-            restrictions?.allowedFileTypes
-                ? restrictions.allowedFileTypes.join(',')
-                : (acceptProp as string),
-        )
-        const folderUploadAllowDrop = folderUpload?.allowDrop ?? false
-        const folderPickerButtonVisible = folderUpload?.showSelectFolderButton ?? false
-        const limit = mini ? 1 : Math.max(resolvedLimit, 1)
-        const multiple = mini ? false : limit > 1
+        // ── Build factory-compatible options object ───────────────
+        // UpupUploaderProps.allowedFileTypes is string | string[] | undefined;
+        // RootControllerOptions.allowedFileTypes is string | undefined.
+        // normalizeRootOptions handles both via join cast.
+        const p = this.props ?? {}
+        const acceptProp = p.allowedFileTypes ?? '*'
+        const factoryOptions: RootControllerOptions = {
+            provider: p.provider,
+            mode: p.mode,
+            sources: p.sources as RootControllerOptions['sources'],
+            uploadEndpoint: p.uploadEndpoint,
+            serverUrl: p.serverUrl,
+            maxFiles: p.maxFiles,
+            restrictions: p.restrictions,
+            theme: p.theme,
+            folderUpload: p.folderUpload,
+            cors: p.cors,
+            cloudDrives: p.cloudDrives,
+            imageCompression: p.imageCompression ?? false,
+            thumbnailGenerator: p.thumbnailGenerator ?? false,
+            checksumVerification: p.checksumVerification ?? false,
+            webWorker: p.webWorker,
+            heicConversion: p.heicConversion ?? false,
+            stripExifData: p.stripExifData ?? false,
+            contentDeduplication: p.contentDeduplication ?? false,
+            autoUpload: p.autoUpload ?? false,
+            maxConcurrentUploads: p.maxConcurrentUploads,
+            crashRecovery: p.crashRecovery ?? false,
+            allowedFileTypes: (typeof acceptProp === 'string' ? acceptProp : (acceptProp as string[]).join(',')) as string | undefined,
+            mini: p.mini ?? false,
+            isProcessing: p.isProcessing ?? false,
+            allowPreview: p.allowPreview ?? true,
+            showBranding: p.showBranding ?? true,
+            disableDragDrop: p.disableDragDrop ?? false,
+            className: p.className,
+            maxFileSize: p.maxFileSize,
+            minFileSize: p.minFileSize,
+            maxTotalFileSize: p.maxTotalFileSize,
+            imageEditor: p.imageEditor,
+            metadata: p.metadata,
+            maxRetries: p.maxRetries,
+            resumable: p.resumable,
+            i18n: p.i18n,
+            onBeforeFileAdded: p.onBeforeFileAdded,
+            onError: p.onError,
+            onWarn: p.onWarn,
+            onUploadStart: p.onUploadStart ?? (() => {}),
+            onFileUploadStart: p.onFileUploadStart ?? (() => {}),
+            onFileUploadProgress: p.onFileUploadProgress ?? (() => {}),
+            onFilesUploadProgress: p.onFilesUploadProgress ?? (() => {}),
+            onFileUploadComplete: p.onFileUploadComplete ?? (() => {}),
+            onFilesUploadComplete: p.onFilesUploadComplete ?? (() => {}),
+            onUploadComplete: p.onUploadComplete ?? (() => {}),
+            onFilesSelected: p.onFilesSelected ?? (() => {}),
+            onDoneClicked: p.onDoneClicked ?? (() => {}),
+            onPrepareFiles: p.onPrepareFiles,
+            onFileRemove: p.onFileRemove ?? (() => {}),
+            onFileRemoved: p.onFileRemoved,
+            onStatusChange: p.onStatusChange,
+            onFileTypeMismatch: p.onFileTypeMismatch ?? (() => {}),
+            onRestrictionFailed: p.onRestrictionFailed,
+        }
 
-        const resolvedImageEditor: ResolvedImageEditorOptions = (() => {
-            if (imageEditorProp === true) {
-                return { enabled: true, autoOpen: 'never' as const, display: 'inline' as const }
-            }
-            if (typeof imageEditorProp === 'object' && imageEditorProp !== null) {
-                return {
-                    ...(imageEditorProp as object),
-                    enabled: (imageEditorProp as any).enabled ?? true,
-                    autoOpen: (imageEditorProp as any).autoOpen ?? 'never',
-                    display: (imageEditorProp as any).display ?? 'inline',
-                } as ResolvedImageEditorOptions
-            }
-            return { enabled: false, autoOpen: 'never' as const, display: 'inline' as const }
-        })()
+        // ── Normalize options (pure) ─────────────────────────────
+        const normalized = normalizeRootOptions(factoryOptions)
+        const { resolved } = normalized
 
         // Store resolved scalars for consumers
-        this.mode = resolvedMode as 'client' | 'server'
-        this.serverUrl = resolvedServerUrl
+        this.mode = resolved.mode as 'client' | 'server'
+        this.serverUrl = resolved.serverUrl
 
         // Capture restriction-handling values for handleSetSelectedFiles
         // (mirrors svelte closing over accept/onFileTypeMismatch/onRestrictionFailed).
-        this.accept = accept
-        this.onFileTypeMismatch = onFileTypeMismatch
-        this.onRestrictionFailed = onRestrictionFailed
+        this.accept = resolved.allowedFileTypes
+        this.onFileTypeMismatch = p.onFileTypeMismatch ?? (() => {})
+        this.onRestrictionFailed = p.onRestrictionFailed
 
-        // ── Cloud drives mapping (Task 6 will add plugin registration) ──
-        const coreCloudDrives = cloudDrives ? {
-            googleDrive: cloudDrives.googleDrive,
-            oneDrive: cloudDrives.oneDrive ? {
-                clientId: cloudDrives.oneDrive.clientId,
-                authority: cloudDrives.oneDrive.redirectUri,
-            } : undefined,
-            dropbox: cloudDrives.dropbox ? {
-                appKey: cloudDrives.dropbox.clientId,
-            } : undefined,
-        } : undefined
-
-        // ── Helper callbacks (route through the single this.onError/this.onWarn) ──
-        const onError = (message: string): void => this.onError(message)
-        const onWarn = (message: string): void => this.onWarn(message)
-
-        // ── Core construction via createUpupUpload ───────────────
+        // ── Core construction via createUpupUpload (FRESH per init() call) ────────
+        // Each init() creates a brand-new core + factory so cloud plugins can register
+        // cleanly (plugin.use() throws on duplicate; no unregister; fresh core avoids this).
         this.upload = createUpupUpload({
-            uploadEndpoint: resolvedEndpoint || undefined,
-            serverUrl: resolvedServerUrl,
-            provider,
-            mode: resolvedMode as 'client' | 'server',
-            allowedFileTypes: accept,
-            limit,
-            maxFileSize,
-            minFileSize,
-            maxTotalFileSize,
-            maxRetries,
-            onBeforeFileAdded,
-            imageCompression,
-            thumbnailGenerator,
-            checksumVerification,
-            webWorker,
-            heicConversion,
-            stripExifData,
-            contentDeduplication,
-            crashRecovery,
-            maxConcurrentUploads,
-            metadata,
-            cors,
-            resumable,
-            cloudDrives: coreCloudDrives,
+            ...normalized.coreOptions,
             onError: (err: unknown) =>
-                onError(typeof err === 'string' ? err : (err as Error).message),
+                this.onError(typeof err === 'string' ? err : (err as Error).message),
         })
         this.upload.start()
         this.core = this.upload.core
 
         // ── SSE processing ───────────────────────────────────────
         const sse = createSSEProcessing({
-            processingEndpoint,
-            onFileProcessed,
-            onError: (err: Error) => onError(err.message),
-            processingTimeout,
+            processingEndpoint: p.processingEndpoint,
+            onFileProcessed: p.onFileProcessed,
+            onError: (err: Error) => this.onError(err.message),
+            processingTimeout: p.processingTimeout,
         })
         this.cleanups.push(() => sse.dispose())
 
-        // ── Orchestrator callbacks (always fresh via getter proxy) ──
-        const callbackRefs: OrchestratorCallbacks = {
-            onError,
-            onWarn,
-            onUploadStart,
-            onFileUploadStart,
-            onFileUploadProgress,
-            onFilesUploadProgress,
-            onFileUploadComplete,
-            onFilesUploadComplete: (files: UploadFile[]) => {
-                onFilesUploadComplete(files)
-                // SSE connection after upload complete
-                files.forEach(file => sse.connectSSE(file))
-            },
-            onUploadComplete,
-            onFilesSelected,
-            onDoneClicked,
-            onPrepareFiles,
-            onFileRemoved: (file: UploadFile) => {
-                onFileRemoveProp(file)
-                if (onFileRemovedProp && onFileRemovedProp !== onFileRemoveProp) {
-                    onFileRemovedProp(file)
-                }
-            },
-            imageEditorOptions: resolvedImageEditor,
-            autoUpload,
-        }
+        // ── Root controller (FRESH per init() call) ──────────────
+        // Owns orchestrator, theme, plugin registration, callback proxy,
+        // status-change dedup, crash recovery, file-input registration.
+        this.root = createRootController(
+            { core: this.upload.core, options: factoryOptions, normalized },
+            { connectSSE: (file) => sse.connectSSE(file) },
+        )
 
-        const proxiedCallbacks: OrchestratorCallbacks = {
-            get onError() { return callbackRefs.onError },
-            get onWarn() { return callbackRefs.onWarn },
-            get onUploadStart() { return callbackRefs.onUploadStart },
-            get onFileUploadStart() { return callbackRefs.onFileUploadStart },
-            get onFileUploadProgress() { return callbackRefs.onFileUploadProgress },
-            get onFilesUploadProgress() { return callbackRefs.onFilesUploadProgress },
-            get onFileUploadComplete() { return callbackRefs.onFileUploadComplete },
-            get onFilesUploadComplete() { return callbackRefs.onFilesUploadComplete },
-            get onUploadComplete() { return callbackRefs.onUploadComplete },
-            get onFilesSelected() { return callbackRefs.onFilesSelected },
-            get onDoneClicked() { return callbackRefs.onDoneClicked },
-            get onPrepareFiles() { return callbackRefs.onPrepareFiles },
-            get onFileRemoved() { return callbackRefs.onFileRemoved },
-            get imageEditorOptions() { return callbackRefs.imageEditorOptions },
-            get autoUpload() { return callbackRefs.autoUpload },
-        }
+        // ── Callback proxy — updateCallbacks feeds the proxy's mutable ref ──
+        this.root.updateCallbacks({
+            onError: (message: string) => this.onError(message),
+            onWarn: (message: string) => this.onWarn(message),
+            onUploadStart: p.onUploadStart ?? (() => {}),
+            onFileUploadStart: p.onFileUploadStart ?? (() => {}),
+            onFileUploadProgress: p.onFileUploadProgress ?? (() => {}),
+            onFilesUploadProgress: p.onFilesUploadProgress ?? (() => {}),
+            onFileUploadComplete: p.onFileUploadComplete ?? (() => {}),
+            onFilesUploadComplete: p.onFilesUploadComplete ?? (() => {}),
+            onUploadComplete: p.onUploadComplete ?? (() => {}),
+            onFilesSelected: p.onFilesSelected ?? (() => {}),
+            onDoneClicked: p.onDoneClicked ?? (() => {}),
+            onPrepareFiles: p.onPrepareFiles,
+            onFileRemove: p.onFileRemove ?? (() => {}),
+            onFileRemoved: p.onFileRemoved,
+            onStatusChange: p.onStatusChange,
+            onFileTypeMismatch: p.onFileTypeMismatch ?? (() => {}),
+            onRestrictionFailed: p.onRestrictionFailed,
+            autoUpload: p.autoUpload ?? false,
+        })
 
-        // ── Orchestrator ─────────────────────────────────────────
-        this.orch = new UploaderOrchestrator(this.core, proxiedCallbacks)
-        this.orchState = toSignalStore(this.orch)
-
-        // ── Theme store ──────────────────────────────────────────
-        this.themeStore = new ThemeStore(themeProp)
-        this.themeState = toSignalStore(this.themeStore)
-
-        // ── Crash recovery ───────────────────────────────────────
-        if (crashRecovery) {
-            void this.core.restoreFromCrashRecovery().catch(() => undefined)
-        }
+        // ── Signal bridges (KEEP: toSignalStore separately for orch + theme) ──────
+        this.orchState = toSignalStore(this.root.orchestrator)
+        this.themeState = toSignalStore(this.root.theme)
 
         // ── Assign computeds AFTER stores exist ──────────────────
         this.files = computed(() => this.orchState.state().files)
@@ -412,101 +303,24 @@ export class UpupStore {
         this.slotOverrides = computed(() => this.themeState.state().slotOverrides)
         this.slots = computed(() => this.themeState.state().slots)
 
-        // ── Browser side-effects last (SSR-safe: both no-op without window) ──
-        this.orch.init()
-        this.themeStore.init()
+        // ── Factory lifecycle (orchestrator.init + theme.init + plugins + status) ──
+        this.root.init()
 
-        // ── Status-change subscription ───────────────────────────
-        let lastStatus: UploadStatus | undefined
-        const unsub = this.orch.subscribe(() => {
-            const s = this.orch.getSnapshot().uploadStatus
-            if (s && s !== lastStatus) {
-                lastStatus = s
-                onStatusChange?.(String(s).toLowerCase())
-            }
-        })
-        this.cleanups.push(unsub)
+        // ── Cloud drive configs (from factory's resolved, not re-computed inline) ──
+        this.oneDriveConfigs = resolved.oneDriveConfigs
+        this.googleDriveConfigs = resolved.googleDriveConfigs
+        this.dropboxConfigs = resolved.dropboxConfigs
+        this.boxConfigs = resolved.boxConfigs
 
-        // ── Cloud drive configs ──────────────────────────────────
-        this.oneDriveConfigs = cloudDrives?.oneDrive ? {
-            onedrive_client_id: cloudDrives.oneDrive.clientId,
-            redirectUri: cloudDrives.oneDrive.redirectUri,
-        } : undefined
-        this.googleDriveConfigs = cloudDrives?.googleDrive ? {
-            google_client_id: cloudDrives.googleDrive.clientId,
-            google_api_key: cloudDrives.googleDrive.apiKey,
-            google_app_id: cloudDrives.googleDrive.appId,
-        } : undefined
-        this.dropboxConfigs = cloudDrives?.dropbox ? {
-            dropbox_client_id: cloudDrives.dropbox.clientId,
-            dropbox_redirect_uri: cloudDrives.dropbox.redirectUri,
-        } : undefined
-        this.boxConfigs = cloudDrives?.box ? {
-            box_client_id: cloudDrives.box.clientId,
-            box_redirect_uri: cloudDrives.box.redirectUri,
-        } : undefined
-
-        // ── Cloud drive plugin registration ──────────────────────
-        const adapterPlugins: Array<{ destroy(): void }> = []
-
-        if (this.googleDriveConfigs) {
-            const plugin = new GoogleDrivePlugin()
-            plugin.configure(this.googleDriveConfigs)
-            try { this.core.use(plugin) } catch { /* already registered */ }
-            adapterPlugins.push(plugin)
-        }
-        if (this.dropboxConfigs) {
-            const plugin = new DropboxPlugin()
-            plugin.configure(this.dropboxConfigs)
-            try { this.core.use(plugin) } catch { /* already registered */ }
-            adapterPlugins.push(plugin)
-        }
-        if (this.boxConfigs) {
-            const plugin = new BoxPlugin()
-            plugin.configure(this.boxConfigs)
-            try { this.core.use(plugin) } catch { /* already registered */ }
-            adapterPlugins.push(plugin)
-        }
-        if (this.oneDriveConfigs) {
-            const plugin = new OneDrivePlugin()
-            plugin.configure(this.oneDriveConfigs)
-            try { this.core.use(plugin) } catch { /* already registered */ }
-            adapterPlugins.push(plugin)
-        }
-        this.cleanups.push(() => {
-            adapterPlugins.forEach(p => p.destroy())
-        })
-
-        // ── i18n resolution ──────────────────────────────────────
-        const localeCandidate = i18n?.locale as unknown
-        const bundle = i18n?.bundle ?? (
-            localeCandidate &&
-            typeof localeCandidate === 'object' &&
-            'code' in localeCandidate &&
-            'messages' in localeCandidate
-                ? localeCandidate as LocaleBundle
-                : undefined
-        )
-        const fallbackCandidate = i18n?.fallbackLocale as unknown
-        const fallbackBundle = (
-            fallbackCandidate &&
-            typeof fallbackCandidate === 'object' &&
-            'code' in fallbackCandidate &&
-            'messages' in fallbackCandidate
-                ? fallbackCandidate as LocaleBundle
-                : undefined
-        )
-        this.translator = createTranslator({
-            bundle: bundle ?? enUS,
-            fallback: fallbackBundle ?? enUS,
-            overrides: i18n?.overrides,
-        })
-        const resolvedTranslations = flattenTranslatorToUiTranslations(this.translator)
+        // ── i18n (from factory's resolved) ──────────────────────
+        this.translator = resolved.translator
+        const resolvedTranslations = resolved.translations
         this.translations = signal(resolvedTranslations)
-        this.lang = bundle?.code ?? (typeof i18n?.locale === 'string' ? i18n.locale : 'en-US')
-        this.dir = bundle?.dir ?? getDir(i18n?.locale as string | LocaleBundle | undefined)
+        this.lang = resolved.lang
+        this.dir = resolved.dir
 
-        // ── Icons resolution ─────────────────────────────────────
+        // ── Icons resolution (framework-specific: Angular Type<unknown>) ──────────
+        const icons = p.icons ?? {}
         const resolvedIcons = {
             ContainerAddMoreIcon: icons.ContainerAddMoreIcon ?? EmptyIconComponent,
             FileDeleteIcon: icons.FileDeleteIcon ?? EmptyIconComponent,
@@ -516,35 +330,35 @@ export class UpupStore {
             LoaderIcon: icons.LoaderIcon ?? EmptyIconComponent,
         }
 
-        // ── uiProps aggregate ────────────────────────────────────
-        const resolvedStyle = style ?? EMPTY_STYLE
+        // ── uiProps aggregate (framework-specific fields + resolved scalars) ──────
+        const resolvedStyle = p.style ?? EMPTY_STYLE
         this.uiProps = {
-            mini,
-            maxRetries,
-            resumable,
+            mini: resolved.mini,
+            maxRetries: p.maxRetries,
+            resumable: p.resumable,
             onError: (message: string) => this.onError(message),
-            onIntegrationClick,
-            onFileClick,
-            onFilesDragOver,
-            onFilesDragLeave,
-            onFilesDrop,
+            onIntegrationClick: p.onIntegrationClick ?? (() => {}),
+            onFileClick: p.onFileClick ?? (() => {}),
+            onFilesDragOver: p.onFilesDragOver ?? (() => {}),
+            onFilesDragLeave: p.onFilesDragLeave ?? (() => {}),
+            onFilesDrop: p.onFilesDrop ?? (() => {}),
             onWarn: (message: string) => this.onWarn(message),
-            enablePaste,
-            sources: resolvedSources,
-            allowedFileTypes: accept,
-            maxFileSize,
-            limit,
-            isProcessing,
-            allowPreview,
-            folderUploadAllowDrop,
-            folderPickerButtonVisible,
-            showBranding,
-            disableDragDrop,
-            className: className ?? '',
+            enablePaste: p.enablePaste ?? false,
+            sources: resolved.sources,
+            allowedFileTypes: resolved.allowedFileTypes,
+            maxFileSize: resolved.maxFileSize,
+            limit: resolved.limit,
+            isProcessing: p.isProcessing ?? false,
+            allowPreview: p.allowPreview ?? true,
+            folderUploadAllowDrop: resolved.folderUploadAllowDrop,
+            folderPickerButtonVisible: resolved.folderPickerButtonVisible,
+            showBranding: p.showBranding ?? true,
+            disableDragDrop: p.disableDragDrop ?? false,
+            className: p.className ?? '',
             style: resolvedStyle,
-            multiple,
+            multiple: resolved.multiple,
             icons: resolvedIcons,
-            imageEditor: resolvedImageEditor,
+            imageEditor: resolved.imageEditor,
         }
     }
 
@@ -553,17 +367,20 @@ export class UpupStore {
         return this.orchState.state()
     }
 
-    // ── Input ref helpers ────────────────────────────────────────
-    registerFileInput = (el: HTMLInputElement | null): void => { this.inputEl = el }
-    getFileInput = (): HTMLInputElement | null => this.inputEl
-    openFilePicker = (): void => { this.inputEl?.click() }
+    // ── Input ref helpers (delegated to factory) ─────────────────
+    registerFileInput = (el: HTMLInputElement | null): void => { this.root.registerFileInput(el) }
+    getFileInput = (): HTMLInputElement | null => this.root.getFileInput()
+    openFilePicker = (): void => { this.root.openFilePicker() }
 
-    // ── Orchestrator passthroughs ────────────────────────────────
-    setActiveAdapter(a: FileSource | undefined): void { this.orch.setActiveAdapter(a) }
-    setIsAddingMore(v: boolean): void { this.orch.setIsAddingMore(v) }
-    setViewMode(m: 'grid' | 'list'): void { this.orch.setViewMode(m) }
+    // ── Orchestrator passthroughs (delegated to root.commands) ───
+    setActiveAdapter(a: FileSource | undefined): void { this.root.commands.setActiveAdapter(a) }
+    setIsAddingMore(v: boolean): void { this.root.commands.setIsAddingMore(v) }
+    setViewMode(m: 'grid' | 'list'): void { this.root.commands.setViewMode(m) }
 
     // ── File operations ──────────────────────────────────────────
+    // handleSetSelectedFiles calls this.upload.addFiles (not core.addFiles directly)
+    // so that test spies on upload.addFiles can intercept it — matching the original
+    // store behavior. Error handling + restriction callbacks are closed over from init().
     async handleSetSelectedFiles(newFiles: File[]): Promise<void> {
         try {
             await this.upload.addFiles(newFiles)
@@ -571,8 +388,6 @@ export class UpupStore {
             const message = error instanceof Error ? error.message : String(error)
             this.onError(message)
             const first = newFiles[0]
-            // Keyword heuristic on core's error message (mirrors @upup/svelte + the
-            // other framework packages). Order matters: 'below' is checked before 'size'.
             if (first) {
                 if (message.toLowerCase().includes('type')) {
                     this.onFileTypeMismatch(first, this.accept)
@@ -589,86 +404,66 @@ export class UpupStore {
     }
 
     handleFileRemove(fileId: string): void {
-        const file = this.orchState.state().files.get(fileId)
-        if (file) revokeFileUrl(file)
-        this.upload.removeFile(fileId)
+        this.root.commands.handleFileRemove(fileId)
     }
 
     async dynamicUpload(newFiles: File[] | UploadFile[]): Promise<UploadFile[] | undefined> {
-        await this.upload.setFiles(newFiles as File[])
-        return await this.upload.upload()
+        return this.root.commands.dynamicUpload(newFiles)
     }
 
     dynamicallyReplaceFiles(newFiles: File[] | UploadFile[]): void {
-        this.orchState.state().files.forEach(file => revokeFileUrl(file))
-        void this.upload.setFiles(newFiles as File[])
+        this.root.commands.dynamicallyReplaceFiles(newFiles)
     }
 
-    // ── Upload controls ──────────────────────────────────────────
+    // ── Upload controls (delegated to root.commands) ─────────────
     async proceedUpload(): Promise<UploadFile[] | undefined> {
-        const current = [...this.orchState.state().files.values()]
-        if (current.length === 0) return undefined
-        const onPrepareFiles = this.props?.onPrepareFiles
-        const prepared = onPrepareFiles ? await onPrepareFiles(current) : current
-        if (prepared !== current) {
-            await this.upload.setFiles(prepared as File[])
-        }
-        return await this.upload.upload()
+        return this.root.commands.proceedUpload()
     }
 
     async retryUpload(fileId?: string): Promise<UploadFile[] | undefined> {
-        if (this.orchState.state().files.size === 0) return undefined
-        return await this.upload.retry(fileId)
+        return this.root.commands.retryUpload(fileId)
     }
 
     handleCancel(): void {
-        this.upload.cancel()
-        this.orchState.state().files.forEach(file => revokeFileUrl(file))
-        this.upload.removeAll()
-        this.orch.handleCancel()
+        this.root.commands.handleCancel()
     }
 
     handlePause(): void {
-        this.upload.pause()
+        this.root.commands.handlePause()
     }
 
     handleResume(): void {
-        this.upload.resume()
+        this.root.commands.handleResume()
     }
 
     handleDone(): void {
-        this.props?.onDoneClicked?.()
-        this.core?.emit('done', {})
-        this.handleCancel()
+        this.root.commands.handleDone()
     }
 
     resetState(): void {
-        this.orch.setIsAddingMore(false)
-        this.core?.emit('state-reset', {})
-        this.handleDone()
+        this.root.commands.resetState()
     }
 
-    // ── Image editor passthroughs ────────────────────────────────
-    openImageEditor(file: UploadFile): void { this.orch.openImageEditor(file) }
-    closeImageEditor(): void { this.orch.closeImageEditor() }
+    // ── Image editor passthroughs (delegated to root.commands) ───
+    openImageEditor(file: UploadFile): void { this.root.commands.openImageEditor(file) }
+    closeImageEditor(): void { this.root.commands.closeImageEditor() }
     saveImageEdit(editedImageData: string, mimeType?: string): void {
-        this.orch.saveImageEdit(editedImageData, mimeType)
+        this.root.commands.saveImageEdit(editedImageData, mimeType)
     }
     replaceFile(fileId: string, newFile: UploadFile): void {
-        this.orch.replaceFile(fileId, newFile)
+        this.root.commands.replaceFile(fileId, newFile)
     }
 
     dispose(): void {
         if (this.disposed) return
         this.disposed = true
         this.started = false
-        // cleanups: SSE dispose + status-change unsub + adapter plugin destroys
+        // cleanups: SSE dispose (+ any other per-init cleanups)
         this.cleanups.forEach(c => c())
         this.cleanups.length = 0
+        this.root?.dispose()              // orchestrator/theme/plugins/status — idempotent
         this.orchState?.dispose()
         this.themeState?.dispose()
-        this.orch?.destroy()
-        this.themeStore?.destroy()
-        this.upload?.dispose()
+        this.upload?.dispose()            // createUpupUpload owns core.destroy()
     }
 }

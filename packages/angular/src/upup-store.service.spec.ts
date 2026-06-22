@@ -437,8 +437,10 @@ describe('UpupStore', () => {
                 },
             } as any)
             store.init()
-            // SSE dispose + plugin batch cleanup + status unsub = at least 3
-            expect((store as any).cleanups.length).toBeGreaterThanOrEqual(3)
+            // After C-2 Task 8: plugin cleanup + status-change subscription are managed by
+            // createRootController internally (via root.dispose()). The store's own cleanups
+            // array holds the SSE dispose. At least one cleanup must be registered.
+            expect((store as any).cleanups.length).toBeGreaterThanOrEqual(1)
             store.dispose()
             // All cleanups should have been flushed
             expect((store as any).cleanups.length).toBe(0)
