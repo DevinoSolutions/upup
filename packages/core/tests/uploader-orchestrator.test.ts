@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { UploaderOrchestrator } from '../src/orchestrator/uploader-orchestrator'
+import { UpupCore } from '../src/core'
 import { UploadStatus } from '../src/types/upload-status'
 import { FileSource } from '../src/types/file-source'
 import type { UploadFile } from '../src/types/upload-file'
@@ -1073,6 +1074,7 @@ describe('UploaderOrchestrator', () => {
             expect(subscribedEvents).toContain('file-upload-start')
             expect(subscribedEvents).toContain('files-added')
             expect(subscribedEvents).toContain('file-removed')
+            expect(subscribedEvents).toContain('files-cleared')
             expect(subscribedEvents).toContain('upload-progress')
             expect(subscribedEvents).toContain('upload-success')
             expect(subscribedEvents).toContain('upload-all-complete')
@@ -1229,6 +1231,87 @@ describe('UploaderOrchestrator', () => {
                 handlers['file-removed'](file)
 
                 expect(onFileRemoved).toHaveBeenCalledWith(file)
+            })
+
+            it('mirrors removal into state for the direct core.removeFile path (Vue/Svelte/Angular-style)', () => {
+                const { core, handlers } = createMockCoreWithHandlers()
+                const orch = new UploaderOrchestrator(core, {})
+                orch.init()
+                const a = createUploadFile({ name: 'a.txt', id: 'a' })
+                const b = createUploadFile({ name: 'b.txt', id: 'b' })
+                handlers['files-added']([a, b])
+
+                const listener = vi.fn()
+                orch.subscribe(listener)
+                handlers['file-removed'](a)
+
+                expect(orch.getSnapshot().files.size).toBe(1)
+                expect(orch.getSnapshot().files.has('a')).toBe(false)
+                expect(orch.getSnapshot().files.get('b')).toBe(b)
+                expect(listener).toHaveBeenCalledTimes(1)
+            })
+
+            it('does not setState when the removed file is not in state, but still fires the callback', () => {
+                const { core, handlers } = createMockCoreWithHandlers()
+                const onFileRemoved = vi.fn()
+                const orch = new UploaderOrchestrator(core, { onFileRemoved })
+                orch.init()
+
+                const listener = vi.fn()
+                orch.subscribe(listener)
+                const ghost = createUploadFile({ name: 'ghost.txt', id: 'ghost' })
+                handlers['file-removed'](ghost)
+
+                expect(listener).not.toHaveBeenCalled()
+                expect(onFileRemoved).toHaveBeenCalledWith(ghost)
+            })
+
+            it('does not double-notify for the orchestrator.removeFile path (React-style)', () => {
+                const { core, handlers } = createMockCoreWithHandlers()
+                const orch = new UploaderOrchestrator(core, {})
+                orch.init()
+                const a = createUploadFile({ name: 'a.txt', id: 'a' })
+                handlers['files-added']([a])
+
+                const listener = vi.fn()
+                orch.subscribe(listener)
+                orch.removeFile('a')
+                handlers['file-removed'](a) // guard sees 'a' already gone -> no extra setState
+
+                expect(orch.getSnapshot().files.size).toBe(0)
+                expect(listener).toHaveBeenCalledTimes(1)
+            })
+        })
+
+        describe('files-cleared handler', () => {
+            it('clears all files from state', () => {
+                const { core, handlers } = createMockCoreWithHandlers()
+                const orch = new UploaderOrchestrator(core, {})
+                orch.init()
+                handlers['files-added']([
+                    createUploadFile({ name: 'a.txt', id: 'a' }),
+                    createUploadFile({ name: 'b.txt', id: 'b' }),
+                ])
+                expect(orch.getSnapshot().files.size).toBe(2)
+
+                const listener = vi.fn()
+                orch.subscribe(listener)
+                handlers['files-cleared']({})
+
+                expect(orch.getSnapshot().files.size).toBe(0)
+                expect(listener).toHaveBeenCalledTimes(1)
+            })
+
+            it('is a no-op (no notify) when state is already empty', () => {
+                const { core, handlers } = createMockCoreWithHandlers()
+                const orch = new UploaderOrchestrator(core, {})
+                orch.init()
+
+                const listener = vi.fn()
+                orch.subscribe(listener)
+                handlers['files-cleared']({})
+
+                expect(listener).not.toHaveBeenCalled()
             })
         })
 
@@ -1401,6 +1484,42 @@ describe('UploaderOrchestrator', () => {
             orch.destroy() // should not throw
 
             expect(orch.getSnapshot().uploadStatus).toBe(UploadStatus.IDLE)
+        })
+    })
+
+    // ── Integration: real core ⇄ orchestrator removal mirror ────────
+    describe('integration: core removal mirror (real UpupCore)', () => {
+        const makeRealCore = () =>
+            new UpupCore({ provider: 'aws', uploadEndpoint: '/api/upload' })
+        const realFile = (name: string) =>
+            new File(['x'], name, { type: 'text/plain' })
+
+        it('mirrors a direct core.removeFile into orchestrator state (Vue/Svelte/Angular path)', async () => {
+            const core = makeRealCore()
+            const orch = new UploaderOrchestrator(core, {})
+            orch.init()
+            await core.addFiles([realFile('a.txt'), realFile('b.txt')])
+            expect(orch.getSnapshot().files.size).toBe(2)
+
+            const [id] = [...core.files.keys()]
+            core.removeFile(id)
+
+            expect(orch.getSnapshot().files.size).toBe(1)
+            expect(orch.getSnapshot().files.has(id)).toBe(false)
+            orch.destroy()
+        })
+
+        it('mirrors core.removeAll into orchestrator state (Remove all path)', async () => {
+            const core = makeRealCore()
+            const orch = new UploaderOrchestrator(core, {})
+            orch.init()
+            await core.addFiles([realFile('a.txt'), realFile('b.txt')])
+            expect(orch.getSnapshot().files.size).toBe(2)
+
+            core.removeAll()
+
+            expect(orch.getSnapshot().files.size).toBe(0)
+            orch.destroy()
         })
     })
 })

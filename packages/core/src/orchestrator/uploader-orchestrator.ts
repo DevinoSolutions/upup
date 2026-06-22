@@ -305,7 +305,33 @@ export class UploaderOrchestrator {
         // ── file-removed ────────────────────────────────────────
         this.unsubs.push(
             this.core.on('file-removed', (file: UploadFile) => {
+                // Mirror the removal into orchestrator state. Frameworks that
+                // remove via `core.removeFile` directly (Vue/Svelte/Angular
+                // `upload.removeFile`) rely on this so their snapshot-derived
+                // list shrinks. The `has` guard makes it a no-op for the
+                // `orchestrator.removeFile` path (React), which has already
+                // removed the file from state before core emits — preserving
+                // that path's single-notify behaviour.
+                if (this.state.files.has(file.id)) {
+                    const next = new Map(this.state.files)
+                    next.delete(file.id)
+                    this.setState({ files: next })
+                }
                 this.callbacks.onFileRemoved?.(file)
+            }),
+        )
+
+        // ── files-cleared ───────────────────────────────────────
+        this.unsubs.push(
+            this.core.on('files-cleared', () => {
+                // Mirror a full clear (core.removeAll) into orchestrator state.
+                // "Remove all files" and handleCancel/handleDone route through
+                // core.removeAll; without this listener state.files never emptied
+                // and snapshot-derived lists kept stale rows. Guard avoids a
+                // redundant notify when state is already empty.
+                if (this.state.files.size > 0) {
+                    this.setState({ files: new Map() })
+                }
             }),
         )
 
