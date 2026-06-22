@@ -53,19 +53,18 @@ const SERVER_SNAPSHOT: OrchestratorState = {
     isOnline: true,
 }
 
-/** Stable SSR snapshot for theme (useSyncExternalStore third arg for ThemeStore).
- *  Computed once at module load — pure, SSR-safe (no matchMedia). */
-const THEME_SERVER_SNAPSHOT: ThemeStoreState = (() => {
-    const resolved = resolveTheme({ mode: 'light' }) as ThemeStoreState['resolved']
+/** Shape a resolved theme into the ThemeStoreState snapshot (mirrors ThemeStore.compute()).
+ *  Pure — used for the pre-mount / SSR fallback when `root` (hence root.theme) is not yet created. */
+function themeStateFromResolved(resolved: ThemeStoreState['resolved']): ThemeStoreState {
     return {
-        themeMode: 'light' as const,
-        isDark: false,
+        themeMode: resolved.mode,
+        isDark: resolved.mode === 'dark',
         tokens: resolved.tokens,
         resolved,
         slotOverrides: flattenSlotsToClassNames(resolved.slots),
         slots: resolved.slots ?? {},
     }
-})()
+}
 
 export default function useRootProvider(props: UpupUploaderProps): IRootContext {
     const {
@@ -275,15 +274,37 @@ export default function useRootProvider(props: UpupUploaderProps): IRootContext 
     // as the old useResolvedThemeMode, so light/dark/system resolve identically.
     // ThemeStoreState fields (themeMode, isDark, tokens, resolved, slotOverrides, slots)
     // map 1:1 to ContextTheme — no field renaming needed.
-    const getThemeServerSnapshot = useCallback(() => THEME_SERVER_SNAPSHOT, [])
+    //
+    // First-paint parity: on the very first render `root` is null (core is created in
+    // useUpupUpload's post-paint effect), so the store/server snapshot is used. It must
+    // resolve the EXPLICIT mode synchronously to match the OLD synchronous resolveTheme:
+    //   - mode 'dark'   → dark on first paint (no light→dark flash)
+    //   - mode 'light'  → light
+    //   - mode 'system' → 'light' pre-mount (matches old useState('light') initial; the
+    //                     matchMedia flip happens after mount via ThemeStore.init()).
+    // Memoized on props.theme for referential stability (useSyncExternalStore requires the
+    // server/getSnapshot fallback to be stable). Deterministic from props → SSR + hydration
+    // compute the same value, so no hydration mismatch and the module-level light constant
+    // is no longer needed.
+    const themeFallback = useMemo<ThemeStoreState>(() => {
+        const requested = theme?.mode
+        const mode: 'light' | 'dark' = requested === 'dark' ? 'dark' : 'light'
+        return themeStateFromResolved(resolveTheme({ ...(theme ?? {}), mode }) as ThemeStoreState['resolved'])
+    }, [theme])
+    const getThemeServerSnapshot = useCallback(() => themeFallback, [themeFallback])
     const themeState = useSyncExternalStore(
         root?.theme.subscribe ?? (() => () => {}),
-        root?.theme.getSnapshot ?? (() => THEME_SERVER_SNAPSHOT),
+        root?.theme.getSnapshot ?? (() => themeFallback),
         getThemeServerSnapshot,
     )
 
     // ── Single lifecycle effect (replaces 4 old effects) ─────────
     // init()/dispose() are idempotent + re-entrant; safe for React 18/19 StrictMode double-mount.
+    //
+    // The four old effects (orchestrator init/destroy, plugin registration, crash recovery,
+    // status-change) now live INSIDE createRootController.init()/dispose(). Notably the
+    // status-change callback is now DEDUPED there (it no longer fires an initial 'idle'),
+    // and crash recovery is triggered once from init() — both factory-owned.
     //
     // StrictMode/plugin behavior: factory dispose() calls p.destroy() on each plugin,
     // which is IDENTICAL to the old React adapter's plugin-effect cleanup:
