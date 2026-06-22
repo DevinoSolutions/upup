@@ -125,6 +125,7 @@ export function provideRootContext(value: IRootContext): void {
     setContext(RootKey, value)
     setContext(RuntimeKey, {
         core: value.core,
+        orchestrator: value.orchestrator,
         mode: value.mode,
         serverUrl: value.serverUrl,
         registerFileInput: value.registerFileInput,

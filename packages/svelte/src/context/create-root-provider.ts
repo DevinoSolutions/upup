@@ -486,6 +486,7 @@ export function createRootProvider(props: UpupUploaderProps): IRootContext {
     // ── Assemble IRootContext ────────────────────────────────────
     return {
         core,
+        orchestrator: orch,
         mode: resolvedMode,
         serverUrl: resolvedServerUrl,
         registerFileInput,
