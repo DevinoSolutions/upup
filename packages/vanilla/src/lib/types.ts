@@ -4,7 +4,11 @@ import type {
   UploaderOrchestrator, ThemeStore, Translations, Translator, MaxFileSizeObject,
   ResolvedImageEditorOptions, UpupThemeConfig, UploadSource, LocaleBundle, PartialMessages,
   DriveFile, DriveFolder, AdapterBrowserController,
+  DragDropController,
 } from '@upup/core'
+
+// Dropzone controller now lives in @upup/core (hoisted in Workstream C-1 Unit 2).
+export type { DragDropController, DragDropSnapshot, DragDropDeps } from '@upup/core'
 
 /** Flat, framework-free snapshot the render loop reads and subscribe() emits. */
 export interface UploaderSnapshot {
@@ -72,13 +76,13 @@ export interface AdapterController<S = unknown> extends UploaderController<S> {
 
 /** Lazily-instantiated controllers, keyed; the render loop disposes inactive ones on adapter switch. */
 /**
- * NOTE: The five `import('../controllers/…')` types below reference modules added in Tasks 8–12.
- * Until those land, `tsc --noEmit` emits 5 expected TS2307 errors — the plan's convergence gate
+ * NOTE: The four `import('../controllers/…')` types below reference modules added in Tasks 8–12.
+ * Until those land, `tsc --noEmit` emits 4 expected TS2307 errors — the plan's convergence gate
  * (Task 12) is where the package typecheck goes green. Do not "fix" by stubbing controllers.
  */
 export interface ControllerRegistry {
   fileInput: import('../controllers/file-input').FileInputController
-  dragDrop: import('../controllers/drag-drop').DragDropController
+  dragDrop: DragDropController
   /** active per-source controller cache (camera/audio/screen/drive); see context.ts getController(). */
   getCamera(): import('../controllers/camera').CameraController
   getAudio(): import('../controllers/audio-recorder').AudioRecorderController

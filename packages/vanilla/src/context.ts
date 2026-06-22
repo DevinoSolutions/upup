@@ -3,6 +3,7 @@ import {
   UploaderOrchestrator,
   ThemeStore,
   AdapterBrowserController,
+  DragDropController,
   FileSource,
   GoogleDrivePlugin, DropboxPlugin, BoxPlugin, OneDrivePlugin,
   GOOGLE_DRIVE_DESCRIPTOR, ONE_DRIVE_DESCRIPTOR, DROPBOX_DESCRIPTOR, BOX_DESCRIPTOR,
@@ -13,7 +14,6 @@ import {
 } from '@upup/core'
 import type { CreateUploaderOptions, RootContext, RootContextProps, ControllerRegistry } from './lib/types'
 import { FileInputController } from './controllers/file-input'
-import { DragDropController } from './controllers/drag-drop'
 import { CameraController } from './controllers/camera'
 import { AudioRecorderController } from './controllers/audio-recorder'
 import { ScreenCaptureController } from './controllers/screen-capture'
@@ -216,7 +216,13 @@ export function buildRootContext(
   }
 
   const fileInput = new FileInputController({ getFileInput, setFiles, invalidate })
-  const dragDrop = new DragDropController({ core, orchestrator, setFiles, options, props: () => ctx.props, invalidate })
+  const dragDrop = new DragDropController({
+    core,
+    orchestrator,
+    setFiles,
+    options: () => options,
+    props: () => ctx.props,
+  })
 
   const controllers: ControllerRegistry = {
     fileInput,
@@ -287,11 +293,13 @@ export function buildRootContext(
       subs.push(core.on('state-change', onChange))
       subs.push(orchestrator.subscribe(onChange))
       subs.push(theme.subscribe(onChange))
+      subs.push(dragDrop.subscribe(onChange))
       return () => subs.forEach((u) => u())
     },
     init() {
       orchestrator.init()
       theme.init()
+      dragDrop.init()
       registerPlugins()
       if (options.crashRecovery) void core.restoreFromCrashRecovery().catch(() => undefined)
     },
