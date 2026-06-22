@@ -56,7 +56,7 @@ export function createUploader(
     },
     addFiles: (files) => ctx.core.addFiles(files),
     removeFile: (id) => ctx.handleFileRemove(id),
-    removeAll: () => ctx.core.removeAll(),
+    removeAll: () => ctx.handleRemoveAll(),
     setFiles: (files) => ctx.setFiles(files),
     reorderFiles: (ids) => ctx.core.reorderFiles(ids),
     upload: () => ctx.core.upload(),

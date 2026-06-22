@@ -192,6 +192,13 @@ export function buildRootContext(
     // old uncached getSnapshot).
     dragDrop.recompute()
   }
+  function handleRemoveAll() {
+    core.removeAll()
+    // Same reason as handleFileRemove: core.removeAll emits state-change (re-renders
+    // the now-empty list) but no orchestrator notify, so nudge the dropzone controller
+    // to refresh its cached snapshot — otherwise the empty-state border stays absent.
+    dragDrop.recompute()
+  }
   async function proceedUpload() {
     const current = [...core.files.values()]
     if (current.length === 0) return undefined
@@ -286,7 +293,7 @@ export function buildRootContext(
     setActiveAdapter,
     setIsAddingMore: (v: boolean) => orchestrator.setIsAddingMore(v),
     setViewMode: (m: 'grid' | 'list') => orchestrator.setViewMode(m),
-    setFiles, handleFileRemove, proceedUpload, retryUpload, handleDone, handleCancel,
+    setFiles, handleFileRemove, handleRemoveAll, proceedUpload, retryUpload, handleDone, handleCancel,
     handlePause: () => core.pause(),
     handleResume: () => core.resume(),
     controllers,
