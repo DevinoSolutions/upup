@@ -185,6 +185,12 @@ export function buildRootContext(
     const file = core.files.get(fileId)
     if (file) revokeFileUrl(file)
     core.removeFile(fileId)
+    // core.removeFile bypasses the orchestrator (its file-removed handler does not
+    // setState), so the dropzone controller — which derives absoluteHasBorder from
+    // core.files.size — would keep a stale cached snapshot. Nudge it to refresh so
+    // the empty-state border returns when the last file is removed (parity with the
+    // old uncached getSnapshot).
+    dragDrop.recompute()
   }
   async function proceedUpload() {
     const current = [...core.files.values()]

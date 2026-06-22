@@ -129,4 +129,22 @@ describe('DragDropController', () => {
     orch._set({ isAddingMore: true })   // would recompute+notify if still subscribed
     expect(listener).not.toHaveBeenCalled()
   })
+
+  it('recompute() refreshes the cached snapshot after a core-only file change (no orchestrator notify)', () => {
+    const { deps, core } = makeDeps()
+    const c = new DragDropController(deps)
+    c.init()
+    // Empty + no active adapter → empty-state border shown.
+    expect(c.getSnapshot().absoluteHasBorder).toBe(true)
+    // A framework mutates core.files directly (e.g. vanilla core.removeFile) with no
+    // orchestrator notify — the cached snapshot stays stale until recompute() runs.
+    core.files.set('a', {})
+    expect(c.getSnapshot().absoluteHasBorder).toBe(true) // still stale (cached)
+    c.recompute()
+    expect(c.getSnapshot().absoluteHasBorder).toBe(false) // fresh: a file is present → no border
+    // Removing the last file directly: recompute() restores the empty-state border.
+    core.files.delete('a')
+    c.recompute()
+    expect(c.getSnapshot().absoluteHasBorder).toBe(true)
+  })
 })

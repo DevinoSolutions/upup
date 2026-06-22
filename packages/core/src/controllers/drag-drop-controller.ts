@@ -82,7 +82,15 @@ export class DragDropController implements ObservableController<DragDropSnapshot
     }
   }
 
-  private recompute(): void {
+  /**
+   * Recompute the cached snapshot from current inputs and notify if it changed.
+   * Runs automatically on drag events and orchestrator changes. Hosts may also call
+   * it to refresh after external state the controller cannot observe via the
+   * orchestrator — e.g. a framework that removes files through `core.removeFile`
+   * directly (which emits no orchestrator notify), leaving the file-count-derived
+   * `absoluteHasBorder` stale.
+   */
+  recompute(): void {
     const next = this.compute()
     const prev = this.snapshot
     if (
