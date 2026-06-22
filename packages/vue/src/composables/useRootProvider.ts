@@ -3,7 +3,6 @@ import {
     FileSource,
     normalizeRootOptions,
     createRootController,
-    revokeFileUrl,
     type OrchestratorState,
     type RootControllerOptions,
     type UploadFile,
@@ -230,6 +229,8 @@ export default function useRootProvider(props: UpupUploaderProps): IRootContext 
 
     // ── Input ref (Vue-specific) ────────────────────────────────
     const inputRef: Ref<HTMLInputElement | null> = ref(null)
+    // Vue drives the picker via its reactive inputRef; the factory's imperative
+    // registerFileInput/openFilePicker path is unused here (no DOM node registered).
     function openFilePicker() {
         inputRef.value?.click()
     }
