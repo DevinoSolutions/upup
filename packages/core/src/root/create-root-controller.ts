@@ -67,10 +67,7 @@ export function createRootController(
 
   // ── Plugin registration (#7) ──
   const adapterPlugins: Array<{ destroy(): void }> = []
-  let pluginsRegistered = false
   function registerPlugins() {
-    if (pluginsRegistered) return
-    pluginsRegistered = true
     const { googleDriveConfigs, dropboxConfigs, boxConfigs, oneDriveConfigs } = resolved
     if (googleDriveConfigs) {
       const p = new GoogleDrivePlugin()
@@ -235,8 +232,6 @@ export function createRootController(
     initialized = false
     statusUnsub?.(); statusUnsub = null
     lastStatus = undefined
-    // plugins: reset flag so they can be re-registered after re-init
-    pluginsRegistered = false
     adapterPlugins.splice(0).forEach((p) => p.destroy())
     tearDownFanIn()
     orchestrator.destroy()

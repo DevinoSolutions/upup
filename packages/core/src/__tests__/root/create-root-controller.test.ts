@@ -22,13 +22,19 @@ describe('createRootController', () => {
     root.dispose()
   })
 
-  it('init is idempotent: double init does not double-register plugins', () => {
+  it('registers configured plugins exactly once; double init does not re-register', () => {
     const { root, core } = build({ cloudDrives: { googleDrive: { clientId: 'g', apiKey: 'k', appId: 'a' } } })
     const useSpy = vi.spyOn(core, 'use')
     root.init()
+    expect(useSpy).toHaveBeenCalledTimes(1)   // actually registered (was only asserting <= 1)
     root.init() // StrictMode double-invoke
-    expect(useSpy.mock.calls.length).toBeLessThanOrEqual(1)
+    expect(useSpy).toHaveBeenCalledTimes(1)   // not double
     root.dispose()
+  })
+
+  it('init->dispose->init->dispose with cloud plugins is re-entrant (no throw)', () => {
+    const { root } = build({ cloudDrives: { googleDrive: { clientId: 'g', apiKey: 'k', appId: 'a' } } })
+    expect(() => { root.init(); root.dispose(); root.init(); root.dispose() }).not.toThrow()
   })
 
   it('dispose is idempotent and re-entrant (init -> dispose -> init -> dispose)', () => {
@@ -106,6 +112,19 @@ describe('createRootController', () => {
     unsub()
     core.emit('state-change', {})
     expect(listener).not.toHaveBeenCalled()
+    root.dispose()
+  })
+
+  it('re-subscribe after the fan-in goes empty still receives notifications', () => {
+    const { root, core } = build()
+    root.init()
+    const a = vi.fn()
+    const unsubA = root.subscribe(a)
+    unsubA() // last subscriber leaves -> fan-in torn down
+    const b = vi.fn()
+    root.subscribe(b) // must re-arm the fan-in
+    core.emit('state-change', {})
+    expect(b).toHaveBeenCalled()
     root.dispose()
   })
 })
