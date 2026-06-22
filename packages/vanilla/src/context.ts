@@ -5,7 +5,6 @@ import {
   FileSource,
   GOOGLE_DRIVE_DESCRIPTOR, ONE_DRIVE_DESCRIPTOR, DROPBOX_DESCRIPTOR, BOX_DESCRIPTOR,
   normalizeRootOptions, createRootController, createChildController,
-  revokeFileUrl,
   type UploadFile,
 } from '@upup/core'
 import type { CreateUploaderOptions, RootContext, RootContextProps, ControllerRegistry } from './lib/types'
