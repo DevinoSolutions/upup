@@ -1,30 +1,17 @@
 
-import { createElement, Dispatch, SetStateAction, useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
+import { Dispatch, SetStateAction, createElement, useCallback, useEffect, useMemo, useRef, useSyncExternalStore } from 'react'
 import {
     FileSource,
     UploadStatus,
-    UploaderOrchestrator,
-    createTranslator,
-    enUS,
-    flattenTranslatorToUiTranslations,
-    flattenSlotsToClassNames,
-    resolveAccept,
+    normalizeRootOptions,
+    createRootController,
     resolveTheme,
-    DropboxPlugin,
-    GoogleDrivePlugin,
-    BoxPlugin,
-    OneDrivePlugin,
-    getDir,
-    normalizeSource,
-    DEFAULT_SOURCES,
-    DEFAULT_MAX_FILE_SIZE,
-    type OrchestratorCallbacks,
+    flattenSlotsToClassNames,
+    type RootController,
+    type RootControllerOptions,
     type OrchestratorState,
-    type LocaleBundle,
-    type Translator,
+    type ThemeStoreState,
     type UploadFile,
-    type UpupThemeMode,
-    type ResolvedImageEditorOptions,
 } from '@upup/core'
 import {
     TbCameraRotate,
@@ -35,7 +22,6 @@ import {
 import Icon from '../components/Icon'
 import { UpupUploaderProps } from '../shared/types'
 import { IRootContext } from '../context/RootContext'
-import { revokeFileUrl } from '../lib/file'
 import { useUpupUpload } from '../use-upup-upload'
 import { useSSEProcessing } from './useSSEProcessing'
 
@@ -44,25 +30,6 @@ import { useSSEProcessing } from './useSSEProcessing'
  *  former react-icons default did. */
 const DefaultLoaderIconComponent = (props: { size?: number; className?: string }) =>
     createElement(Icon, { name: 'loader', ...props })
-
-function useResolvedThemeMode(mode: UpupThemeMode | undefined): 'light' | 'dark' {
-    const requestedMode = mode ?? 'light'
-    const [systemMode, setSystemMode] = useState<'light' | 'dark'>('light')
-
-    useEffect(() => {
-        if (requestedMode !== 'system') return
-        if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return
-
-        const media = window.matchMedia('(prefers-color-scheme: dark)')
-        const update = () => setSystemMode(media.matches ? 'dark' : 'light')
-        update()
-        media.addEventListener?.('change', update)
-        return () => media.removeEventListener?.('change', update)
-    }, [requestedMode])
-
-    if (requestedMode === 'system') return systemMode
-    return requestedMode
-}
 
 const EMPTY_THEME_SLOTS = {}
 const EMPTY_STYLE = {}
@@ -86,119 +53,88 @@ const SERVER_SNAPSHOT: OrchestratorState = {
     isOnline: true,
 }
 
-export default function useRootProvider({
-    allowedFileTypes: acceptProp = '*',
-    mini = false,
-    theme,
-    maxFiles,
-    isProcessing = false,
-    allowPreview = true,
-    folderUpload,
-    showBranding = true,
-    disableDragDrop = false,
-    className,
-    style,
-    maxFileSize: maxFileSizeProp,
-    minFileSize: minFileSizeProp,
-    maxTotalFileSize: maxTotalFileSizeProp,
-    restrictions,
-    imageCompression = false,
-    thumbnailGenerator = false,
-    checksumVerification = false,
-    webWorker,
-    heicConversion = false,
-    stripExifData = false,
-    contentDeduplication = false,
-    crashRecovery = false,
-    sources,
-    onError: errorHandler,
-    onWarn: warningHandler,
-    icons = {},
-    i18n,
-    onIntegrationClick = () => {},
-    onFileClick = () => {},
-    onFileRemove: onFileRemoveProp = () => {},
-    onFileRemoved,
-    onStatusChange,
-    onFilesDragOver = () => {},
-    onFilesDragLeave = () => {},
-    onFilesDrop = () => {},
-    onFileTypeMismatch = () => {},
-    onBeforeFileAdded,
-    onRestrictionFailed,
-    enablePaste = false,
-    autoUpload = false,
-    maxConcurrentUploads,
-    imageEditor: imageEditorProp,
-    onUploadStart = () => {},
-    onFileUploadStart = () => {},
-    onFileUploadProgress = () => {},
-    onFilesUploadProgress = () => {},
-    onFileUploadComplete = () => {},
-    onFilesUploadComplete = () => {},
-    onUploadComplete = () => {},
-    onFilesSelected = () => {},
-    onDoneClicked = () => {},
-    onPrepareFiles,
-    provider,
-    mode: modeProp,
-    uploadEndpoint,
-    serverUrl,
-    cloudDrives,
-    metadata,
-    cors,
-    maxRetries,
-    resumable,
-    processingEndpoint,
-    onFileProcessed,
-    processingTimeout,
-}: UpupUploaderProps): IRootContext {
-    // ── Resolved props ──────────────────────────────────────────
-    const resolvedSources = useMemo(
-        () => sources
-            ? sources.map(source => normalizeSource(source)).filter(Boolean) as FileSource[]
-            : DEFAULT_SOURCES,
-        [sources],
-    )
-    const resolvedLimit = maxFiles ?? restrictions?.maxNumberOfFiles ?? 10
-    const resolvedMode = modeProp ?? (serverUrl && !uploadEndpoint ? 'server' : 'client')
-    const resolvedServerUrl = serverUrl
-    const resolvedEndpoint = uploadEndpoint
-    const maxFileSize = maxFileSizeProp ?? restrictions?.maxFileSize ?? DEFAULT_MAX_FILE_SIZE
-    const minFileSize = minFileSizeProp ?? restrictions?.minFileSize
-    const maxTotalFileSize = maxTotalFileSizeProp ?? restrictions?.maxTotalFileSize
-    const accept = resolveAccept(restrictions?.allowedFileTypes ? restrictions.allowedFileTypes.join(',') : acceptProp)
-    const folderUploadAllowDrop = folderUpload?.allowDrop ?? false
-    const folderPickerButtonVisible = folderUpload?.showSelectFolderButton ?? false
-    const limit = useMemo(() => (mini ? 1 : Math.max(resolvedLimit, 1)), [mini, resolvedLimit])
-    const multiple = useMemo(() => (mini ? false : limit > 1), [limit, mini])
+/** Stable SSR snapshot for theme (useSyncExternalStore third arg for ThemeStore).
+ *  Computed once at module load — pure, SSR-safe (no matchMedia). */
+const THEME_SERVER_SNAPSHOT: ThemeStoreState = (() => {
+    const resolved = resolveTheme({ mode: 'light' }) as ThemeStoreState['resolved']
+    return {
+        themeMode: 'light' as const,
+        isDark: false,
+        tokens: resolved.tokens,
+        resolved,
+        slotOverrides: flattenSlotsToClassNames(resolved.slots),
+        slots: resolved.slots ?? {},
+    }
+})()
 
-    const resolvedImageEditor = useMemo<ResolvedImageEditorOptions>(() => {
-        if (imageEditorProp === true) {
-            return { enabled: true, autoOpen: 'never', display: 'inline' }
-        }
-        if (typeof imageEditorProp === 'object' && imageEditorProp !== null) {
-            return {
-                ...imageEditorProp,
-                enabled: imageEditorProp.enabled ?? true,
-                autoOpen: imageEditorProp.autoOpen ?? 'never',
-                display: imageEditorProp.display ?? 'inline',
-            }
-        }
-        return { enabled: false, autoOpen: 'never', display: 'inline' }
-    }, [imageEditorProp])
-
-    // ── Core (via useUpupUpload) ────────────────────────────────
-    const coreCloudDrives = cloudDrives ? {
-        googleDrive: cloudDrives.googleDrive,
-        oneDrive: cloudDrives.oneDrive ? {
-            clientId: cloudDrives.oneDrive.clientId,
-            authority: cloudDrives.oneDrive.redirectUri,
-        } : undefined,
-        dropbox: cloudDrives.dropbox ? {
-            appKey: cloudDrives.dropbox.clientId,
-        } : undefined,
-    } : undefined
+export default function useRootProvider(props: UpupUploaderProps): IRootContext {
+    const {
+        allowedFileTypes: acceptProp = '*',
+        mini = false,
+        theme,
+        maxFiles,
+        isProcessing = false,
+        allowPreview = true,
+        folderUpload,
+        showBranding = true,
+        disableDragDrop = false,
+        className,
+        style,
+        maxFileSize: maxFileSizeProp,
+        minFileSize: minFileSizeProp,
+        maxTotalFileSize: maxTotalFileSizeProp,
+        restrictions,
+        imageCompression = false,
+        thumbnailGenerator = false,
+        checksumVerification = false,
+        webWorker,
+        heicConversion = false,
+        stripExifData = false,
+        contentDeduplication = false,
+        crashRecovery = false,
+        sources,
+        onError: errorHandler,
+        onWarn: warningHandler,
+        icons = {},
+        i18n,
+        onIntegrationClick = () => {},
+        onFileClick = () => {},
+        onFileRemove: onFileRemoveProp = () => {},
+        onFileRemoved,
+        onStatusChange,
+        onFilesDragOver = () => {},
+        onFilesDragLeave = () => {},
+        onFilesDrop = () => {},
+        onFileTypeMismatch = () => {},
+        onBeforeFileAdded,
+        onRestrictionFailed,
+        enablePaste = false,
+        autoUpload = false,
+        maxConcurrentUploads,
+        imageEditor: imageEditorProp,
+        onUploadStart = () => {},
+        onFileUploadStart = () => {},
+        onFileUploadProgress = () => {},
+        onFilesUploadProgress = () => {},
+        onFileUploadComplete = () => {},
+        onFilesUploadComplete = () => {},
+        onUploadComplete = () => {},
+        onFilesSelected = () => {},
+        onDoneClicked = () => {},
+        onPrepareFiles,
+        provider,
+        mode: modeProp,
+        uploadEndpoint,
+        serverUrl,
+        cloudDrives,
+        metadata,
+        cors,
+        maxRetries,
+        resumable,
+        processingEndpoint,
+        onFileProcessed,
+        processingTimeout,
+    } = props
 
     const onError = useCallback((message: string) => {
         errorHandler?.(message)
@@ -207,18 +143,22 @@ export default function useRootProvider({
         warningHandler?.(message)
     }, [warningHandler])
 
-    const upload = useUpupUpload({
-        uploadEndpoint: resolvedEndpoint || undefined,
-        serverUrl: resolvedServerUrl,
+    // ── Build factory-compatible options object ──────────────────
+    // UpupUploaderProps.allowedFileTypes is string | string[] | undefined;
+    // RootControllerOptions.allowedFileTypes is string | undefined.
+    // normalizeRootOptions handles both at runtime via a cast, so we cast here.
+    const factoryOptions = useMemo<RootControllerOptions>(() => ({
         provider,
-        mode: resolvedMode,
-        allowedFileTypes: accept,
-        limit,
-        maxFileSize,
-        minFileSize,
-        maxTotalFileSize,
-        maxRetries,
-        onBeforeFileAdded,
+        mode: modeProp,
+        sources: sources as RootControllerOptions['sources'],
+        uploadEndpoint,
+        serverUrl,
+        maxFiles,
+        restrictions,
+        theme,
+        folderUpload,
+        cors,
+        cloudDrives,
         imageCompression,
         thumbnailGenerator,
         checksumVerification,
@@ -226,29 +166,28 @@ export default function useRootProvider({
         heicConversion,
         stripExifData,
         contentDeduplication,
-        crashRecovery,
+        autoUpload,
         maxConcurrentUploads,
+        crashRecovery,
+        allowedFileTypes: (typeof acceptProp === 'string' ? acceptProp : (acceptProp as string[]).join(',')) as string | undefined,
+        mini,
+        isProcessing,
+        allowPreview,
+        showBranding,
+        disableDragDrop,
+        className,
+        maxFileSize: maxFileSizeProp,
+        minFileSize: minFileSizeProp,
+        maxTotalFileSize: maxTotalFileSizeProp,
+        imageEditor: imageEditorProp,
         metadata,
-        cors,
+        maxRetries,
         resumable,
-        cloudDrives: coreCloudDrives,
-        onError: (err) => onError(typeof err === 'string' ? err : err.message),
-    })
-    const core = upload.core
-
-    // ── SSE processing ──────────────────────────────────────────
-    const { connectSSE } = useSSEProcessing({
-        processingEndpoint,
-        onFileProcessed,
-        onError: (err) => onError(err.message),
-        processingTimeout,
-    })
-
-    // ── Callback refs (always fresh, no stale closures) ─────────
-    const callbackRefs = useRef<OrchestratorCallbacks>({})
-    callbackRefs.current = {
-        onError,
-        onWarn,
+        i18n,
+        onBeforeFileAdded,
+        // Callbacks: set to current stable refs; updated live via root.updateCallbacks() each render
+        onError: errorHandler,
+        onWarn: warningHandler,
         onUploadStart,
         onFileUploadStart,
         onFileUploadProgress,
@@ -259,120 +198,200 @@ export default function useRootProvider({
         onFilesSelected,
         onDoneClicked,
         onPrepareFiles,
-        onFileRemoved: (file: UploadFile) => {
-            onFileRemoveProp(file)
-            if (onFileRemoved && onFileRemoved !== onFileRemoveProp) {
-                onFileRemoved(file)
-            }
-        },
-        imageEditorOptions: resolvedImageEditor,
-        autoUpload,
-    }
+        onFileRemove: onFileRemoveProp,
+        onFileRemoved,
+        onStatusChange,
+        onFileTypeMismatch,
+        onRestrictionFailed,
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }), [props])  // props identity memoization — same as normalizeRootOptions below
 
-    // ── Orchestrator (created once, bound to core) ──────────────
-    const orchRef = useRef<UploaderOrchestrator | null>(null)
+    // ── Normalize options (pure; memoized on props identity) ─────
+    const normalized = useMemo(() => normalizeRootOptions(factoryOptions), [factoryOptions])
+    const { resolved } = normalized
+
+    // ── Core (via useUpupUpload; owns core lifecycle) ────────────
+    const upload = useUpupUpload(normalized.coreOptions)
+    const core = upload.core
+
+    // ── SSE processing ──────────────────────────────────────────
+    const { connectSSE } = useSSEProcessing({
+        processingEndpoint,
+        onFileProcessed,
+        onError: (err) => onError(err.message),
+        processingTimeout,
+    })
+
+    // Keep connectSSERef fresh every render (factory proxy reads via closure)
     const connectSSERef = useRef(connectSSE)
     connectSSERef.current = connectSSE
 
-    if (!orchRef.current && core) {
-        // Wrap callbacks so they always call the latest ref
-        const proxiedCallbacks: OrchestratorCallbacks = {
-            get onError() { return callbackRefs.current.onError },
-            get onWarn() { return callbackRefs.current.onWarn },
-            get onUploadStart() { return callbackRefs.current.onUploadStart },
-            get onFileUploadStart() { return callbackRefs.current.onFileUploadStart },
-            get onFileUploadProgress() { return callbackRefs.current.onFileUploadProgress },
-            get onFilesUploadProgress() { return callbackRefs.current.onFilesUploadProgress },
-            get onFileUploadComplete() { return callbackRefs.current.onFileUploadComplete },
-            get onFilesUploadComplete() { return (...args: Parameters<NonNullable<OrchestratorCallbacks['onFilesUploadComplete']>>) => {
-                callbackRefs.current.onFilesUploadComplete?.(...args)
-                // SSE connection after upload complete
-                const completed = args[0]
-                if (Array.isArray(completed)) {
-                    completed.forEach(file => connectSSERef.current(file))
-                }
-            }},
-            get onUploadComplete() { return callbackRefs.current.onUploadComplete },
-            get onFilesSelected() { return callbackRefs.current.onFilesSelected },
-            get onDoneClicked() { return callbackRefs.current.onDoneClicked },
-            get onPrepareFiles() { return callbackRefs.current.onPrepareFiles },
-            get onFileRemoved() { return callbackRefs.current.onFileRemoved },
-            get imageEditorOptions() { return callbackRefs.current.imageEditorOptions },
-            get autoUpload() { return callbackRefs.current.autoUpload },
-        }
-        orchRef.current = new UploaderOrchestrator(core, proxiedCallbacks)
+    // ── Root controller (created once, guarded ref) ──────────────
+    const rootRef = useRef<RootController | null>(null)
+    if (!rootRef.current && core) {
+        rootRef.current = createRootController(
+            { core, options: factoryOptions, normalized },
+            { connectSSE: (file) => connectSSERef.current(file) },
+        )
     }
-    const orch = orchRef.current!
+    const root = rootRef.current!
 
-    // ── Subscribe to orchestrator state (React 18 pattern) ──────
+    // Refresh proxied callbacks every render (replaces old callbackRefs.current overwrite).
+    // Must call before any render-path reads from the proxy.
+    if (root) {
+        root.updateCallbacks({
+            onError,
+            onWarn,
+            onUploadStart,
+            onFileUploadStart,
+            onFileUploadProgress,
+            onFilesUploadProgress,
+            onFileUploadComplete,
+            onFilesUploadComplete,
+            onUploadComplete,
+            onFilesSelected,
+            onDoneClicked,
+            onPrepareFiles,
+            // Map React's dual onFileRemove/onFileRemoved props into factory's callback slots
+            onFileRemove: onFileRemoveProp,
+            onFileRemoved,
+            onStatusChange,
+            onFileTypeMismatch,
+            onRestrictionFailed,
+            autoUpload,
+        })
+    }
+
+    // ── Subscribe to orchestrator state (React 18 useSyncExternalStore) ──
     const getServerSnapshot = useCallback(() => SERVER_SNAPSHOT, [])
     const state = useSyncExternalStore(
-        orch?.subscribe ?? (() => () => {}),
-        orch?.getSnapshot ?? (() => SERVER_SNAPSHOT),
+        root?.orchestrator.subscribe ?? (() => () => {}),
+        root?.orchestrator.getSnapshot ?? (() => SERVER_SNAPSHOT),
         getServerSnapshot,
     )
 
-    // ── Orchestrator lifecycle ───────────────────────────────────
+    // ── Subscribe to theme state (ThemeStore → replaces useResolvedThemeMode) ──
+    // ThemeStore.init() owns the same matchMedia('prefers-color-scheme: dark') subscription
+    // as the old useResolvedThemeMode, so light/dark/system resolve identically.
+    // ThemeStoreState fields (themeMode, isDark, tokens, resolved, slotOverrides, slots)
+    // map 1:1 to ContextTheme — no field renaming needed.
+    const getThemeServerSnapshot = useCallback(() => THEME_SERVER_SNAPSHOT, [])
+    const themeState = useSyncExternalStore(
+        root?.theme.subscribe ?? (() => () => {}),
+        root?.theme.getSnapshot ?? (() => THEME_SERVER_SNAPSHOT),
+        getThemeServerSnapshot,
+    )
+
+    // ── Single lifecycle effect (replaces 4 old effects) ─────────
+    // init()/dispose() are idempotent + re-entrant; safe for React 18/19 StrictMode double-mount.
+    //
+    // StrictMode/plugin behavior: factory dispose() calls p.destroy() on each plugin,
+    // which is IDENTICAL to the old React adapter's plugin-effect cleanup:
+    //   return () => { plugins.forEach(p => p.destroy()) }
+    // So after StrictMode init→dispose→init on the same core, cloud plugins could be dead.
+    // This is NOT a regression — the original React adapter had the same behavior.
     useEffect(() => {
-        orch?.init()
-        return () => orch?.destroy()
-    }, [orch])
+        root?.init()
+        return () => root?.dispose()
+    }, [root])
 
-    // ── Crash recovery ──────────────────────────────────────────
-    const crashRecoveryRestoreRef = useRef(false)
-    useEffect(() => {
-        if (!crashRecovery || crashRecoveryRestoreRef.current) return
-        crashRecoveryRestoreRef.current = true
-        void core.restoreFromCrashRecovery().catch(() => undefined)
-    }, [core, crashRecovery])
+    // ── Input ref (React-specific) ──────────────────────────────
+    const inputRef = useRef<HTMLInputElement>(null)
+    const openFilePicker = useCallback(() => {
+        inputRef.current?.click()
+    }, [])
 
-    // ── Theme resolution (framework-specific) ───────────────────
-    const themeMode = useResolvedThemeMode(theme?.mode)
-    const resolvedTheme = useMemo(
-        () => resolveTheme({ ...(theme ?? {}), mode: themeMode }),
-        [theme, themeMode],
+    // ── Commands (delegate to factory commands) ──────────────────
+    const handleSetSelectedFiles = useCallback(async (newFiles: File[]) => {
+        return root?.commands.handleSetSelectedFiles(newFiles)
+    }, [root])
+
+    const handleFileRemove = useCallback((fileId: string) => {
+        root?.commands.handleFileRemove(fileId)
+    }, [root])
+
+    const dynamicUpload = useCallback(async (newFiles: File[] | UploadFile[]) => {
+        return root?.commands.dynamicUpload(newFiles)
+    }, [root])
+
+    const dynamicallyReplaceFiles = useCallback((newFiles: File[] | UploadFile[]) => {
+        root?.commands.dynamicallyReplaceFiles(newFiles)
+    }, [root])
+
+    const proceedUpload = useCallback(async () => {
+        return root?.commands.proceedUpload()
+    }, [root])
+
+    const retryUpload = useCallback(async (fileId?: string) => {
+        return root?.commands.retryUpload(fileId)
+    }, [root])
+
+    const handleCancel = useCallback(() => {
+        root?.commands.handleCancel()
+    }, [root])
+
+    const handlePause = useCallback(() => {
+        root?.commands.handlePause()
+    }, [root])
+
+    const handleResume = useCallback(() => {
+        root?.commands.handleResume()
+    }, [root])
+
+    const handleDone = useCallback(() => {
+        root?.commands.handleDone()
+    }, [root])
+
+    const resetState = useCallback(() => {
+        root?.commands.resetState()
+    }, [root])
+
+    const openImageEditor = useCallback((file: UploadFile) => {
+        root?.commands.openImageEditor(file)
+    }, [root])
+
+    const closeImageEditor = useCallback(() => {
+        root?.commands.closeImageEditor()
+    }, [root])
+
+    const saveImageEdit = useCallback((editedImageData: string, mimeType?: string) => {
+        root?.commands.saveImageEdit(editedImageData, mimeType)
+    }, [root])
+
+    const replaceFile = useCallback((fileId: string, newFile: UploadFile) => {
+        root?.commands.replaceFile(fileId, newFile)
+    }, [root])
+
+    // ── Dispatch<SetStateAction> setters (preserve functional-update branch) ──
+    const setActiveAdapter: Dispatch<SetStateAction<FileSource | undefined>> = useCallback(
+        (value: SetStateAction<FileSource | undefined>) => {
+            if (typeof value === 'function') {
+                root?.commands.setActiveAdapter(value(root.orchestrator.getSnapshot().activeAdapter))
+            } else {
+                root?.commands.setActiveAdapter(value)
+            }
+        }, [root],
     )
-    const themeSlots = resolvedTheme.slots
-    const resolvedSlotClasses = useMemo(
-        () => flattenSlotsToClassNames(themeSlots),
-        [themeSlots],
+    const setIsAddingMore: Dispatch<SetStateAction<boolean>> = useCallback(
+        (value: SetStateAction<boolean>) => {
+            if (typeof value === 'function') {
+                root?.commands.setIsAddingMore(value(root.orchestrator.getSnapshot().isAddingMore ?? false))
+            } else {
+                root?.commands.setIsAddingMore(value)
+            }
+        }, [root],
+    )
+    const setViewMode: Dispatch<SetStateAction<'grid' | 'list'>> = useCallback(
+        (value: SetStateAction<'grid' | 'list'>) => {
+            if (typeof value === 'function') {
+                root?.commands.setViewMode(value(root.orchestrator.getSnapshot().viewMode ?? 'grid'))
+            } else {
+                root?.commands.setViewMode(value)
+            }
+        }, [root],
     )
 
-    // ── I18n resolution (framework-specific) ────────────────────
-    const localeCandidate = i18n?.locale as unknown
-    const bundle = i18n?.bundle ?? (
-        localeCandidate &&
-        typeof localeCandidate === 'object' &&
-        'code' in localeCandidate &&
-        'messages' in localeCandidate
-            ? localeCandidate as LocaleBundle
-            : undefined
-    )
-    const fallbackCandidate = i18n?.fallbackLocale as unknown
-    const fallbackBundle = (
-        fallbackCandidate &&
-        typeof fallbackCandidate === 'object' &&
-        'code' in fallbackCandidate &&
-        'messages' in fallbackCandidate
-            ? fallbackCandidate as LocaleBundle
-            : undefined
-    )
-    const translator = useMemo<Translator>(
-        () => createTranslator({
-            bundle: bundle ?? enUS,
-            fallback: fallbackBundle ?? enUS,
-            overrides: i18n?.overrides,
-        }),
-        [bundle, fallbackBundle, i18n?.overrides],
-    )
-    const translations = useMemo(
-        () => flattenTranslatorToUiTranslations(translator),
-        [translator],
-    )
-    const lang = bundle?.code ?? (typeof i18n?.locale === 'string' ? i18n.locale : 'en-US')
-    const dir = bundle?.dir ?? getDir(i18n?.locale as string | LocaleBundle | undefined)
-
-    // ── Icons resolution (framework-specific) ───────────────────
+    // ── Icons resolution (React-specific) ───────────────────────
     const resolvedIcons = useMemo(() => ({
         ContainerAddMoreIcon: icons.ContainerAddMoreIcon || TbPlus,
         FileDeleteIcon: icons.FileDeleteIcon || TbTrash,
@@ -389,227 +408,18 @@ export default function useRootProvider({
         icons.LoaderIcon,
     ])
 
-    // ── Cloud drive configs (framework-specific) ────────────────
-    const oneDriveConfigs = useMemo(() => cloudDrives?.oneDrive ? {
-        onedrive_client_id: cloudDrives.oneDrive.clientId,
-        redirectUri: cloudDrives.oneDrive.redirectUri,
-    } : undefined, [
-        cloudDrives?.oneDrive?.clientId,
-        cloudDrives?.oneDrive?.redirectUri,
-    ])
-    const googleDriveConfigs = useMemo(() => cloudDrives?.googleDrive ? {
-        google_client_id: cloudDrives.googleDrive.clientId,
-        google_api_key: cloudDrives.googleDrive.apiKey,
-        google_app_id: cloudDrives.googleDrive.appId,
-    } : undefined, [
-        cloudDrives?.googleDrive?.apiKey,
-        cloudDrives?.googleDrive?.appId,
-        cloudDrives?.googleDrive?.clientId,
-    ])
-    const dropboxConfigs = useMemo(() => cloudDrives?.dropbox ? {
-        dropbox_client_id: cloudDrives.dropbox.clientId,
-        dropbox_redirect_uri: cloudDrives.dropbox.redirectUri,
-    } : undefined, [
-        cloudDrives?.dropbox?.clientId,
-        cloudDrives?.dropbox?.redirectUri,
-    ])
-    const boxConfigs = useMemo(() => cloudDrives?.box ? {
-        box_client_id: cloudDrives.box.clientId,
-        box_redirect_uri: cloudDrives.box.redirectUri,
-    } : undefined, [
-        cloudDrives?.box?.clientId,
-        cloudDrives?.box?.redirectUri,
-    ])
-
-    // ── Plugin registration (cloud drives) ──────────────────────
-    const adapterPluginsRef = useRef<Array<{ destroy(): void }>>([])
-    useEffect(() => {
-        if (!core) return
-        adapterPluginsRef.current.forEach(p => p.destroy())
-        adapterPluginsRef.current = []
-
-        const plugins: Array<{ destroy(): void }> = []
-
-        if (googleDriveConfigs) {
-            const plugin = new GoogleDrivePlugin()
-            plugin.configure(googleDriveConfigs)
-            try { core.use(plugin) } catch { /* already registered */ }
-            plugins.push(plugin)
-        }
-        if (dropboxConfigs) {
-            const plugin = new DropboxPlugin()
-            plugin.configure(dropboxConfigs)
-            try { core.use(plugin) } catch { /* already registered */ }
-            plugins.push(plugin)
-        }
-        if (boxConfigs) {
-            const plugin = new BoxPlugin()
-            plugin.configure(boxConfigs)
-            try { core.use(plugin) } catch { /* already registered */ }
-            plugins.push(plugin)
-        }
-        if (oneDriveConfigs) {
-            const plugin = new OneDrivePlugin()
-            plugin.configure(oneDriveConfigs)
-            try { core.use(plugin) } catch { /* already registered */ }
-            plugins.push(plugin)
-        }
-
-        adapterPluginsRef.current = plugins
-
-        return () => {
-            plugins.forEach(p => p.destroy())
-            adapterPluginsRef.current = []
-        }
-    }, [core, googleDriveConfigs, dropboxConfigs, boxConfigs, oneDriveConfigs])
-
-    // ── Status change callback ──────────────────────────────────
-    useEffect(() => {
-        onStatusChange?.(state.uploadStatus.toLowerCase())
-    }, [state.uploadStatus, onStatusChange])
-
-    // ── Input ref (React-specific) ──────────────────────────────
-    const inputRef = useRef<HTMLInputElement>(null)
-    const openFilePicker = useCallback(() => {
-        inputRef.current?.click()
-    }, [])
-
-    // ── React-compatible setters (support Dispatch<SetStateAction<T>>) ──
-    const setActiveAdapter: Dispatch<SetStateAction<FileSource | undefined>> = useCallback(
-        (value: SetStateAction<FileSource | undefined>) => {
-            if (typeof value === 'function') {
-                const current = orch?.getSnapshot().activeAdapter
-                orch?.setActiveAdapter(value(current))
-            } else {
-                orch?.setActiveAdapter(value)
-            }
-        }, [orch],
-    )
-    const setIsAddingMore: Dispatch<SetStateAction<boolean>> = useCallback(
-        (value: SetStateAction<boolean>) => {
-            if (typeof value === 'function') {
-                const current = orch?.getSnapshot().isAddingMore ?? false
-                orch?.setIsAddingMore(value(current))
-            } else {
-                orch?.setIsAddingMore(value)
-            }
-        }, [orch],
-    )
-    const setViewMode: Dispatch<SetStateAction<'grid' | 'list'>> = useCallback(
-        (value: SetStateAction<'grid' | 'list'>) => {
-            if (typeof value === 'function') {
-                const current = orch?.getSnapshot().viewMode ?? 'grid'
-                orch?.setViewMode(value(current))
-            } else {
-                orch?.setViewMode(value)
-            }
-        }, [orch],
-    )
-
-    // ── File operations (delegate to core via useUpupUpload) ────
-    const handleSetSelectedFiles = useCallback(async (newFiles: File[]) => {
-        try {
-            await upload.addFiles(newFiles)
-        } catch (error) {
-            const message = error instanceof Error ? error.message : String(error)
-            onError(message)
-            const first = newFiles[0]
-            if (first) {
-                if (message.toLowerCase().includes('type')) {
-                    onFileTypeMismatch(first, accept)
-                    onRestrictionFailed?.(first, 'TYPE_MISMATCH')
-                } else if (message.toLowerCase().includes('limit')) {
-                    onRestrictionFailed?.(first, 'LIMIT_EXCEEDED')
-                } else if (message.toLowerCase().includes('below')) {
-                    onRestrictionFailed?.(first, 'FILE_TOO_SMALL')
-                } else if (message.toLowerCase().includes('size')) {
-                    onRestrictionFailed?.(first, 'FILE_TOO_LARGE')
-                }
-            }
-        }
-    }, [accept, onError, onFileTypeMismatch, onRestrictionFailed, upload])
-
-    const handleFileRemove = useCallback((fileId: string) => {
-        orch?.removeFile(fileId)
-    }, [orch])
-
-    const dynamicUpload = useCallback(async (newFiles: File[] | UploadFile[]) => {
-        await upload.setFiles(newFiles as File[])
-        return await upload.upload()
-    }, [upload])
-
-    const dynamicallyReplaceFiles = useCallback((newFiles: File[] | UploadFile[]) => {
-        upload.files.forEach(file => revokeFileUrl(file))
-        void upload.setFiles(newFiles as File[])
-    }, [upload])
-
-    // ── Upload controls (delegate to orchestrator + core) ───────
-    const proceedUpload = useCallback(async () => {
-        if (upload.files.length === 0) return undefined
-        const prepared = onPrepareFiles ? await onPrepareFiles(upload.files) : upload.files
-        if (prepared !== upload.files) {
-            await upload.setFiles(prepared as File[])
-        }
-        return await upload.upload()
-    }, [onPrepareFiles, upload])
-
-    const retryUpload = useCallback(async (fileId?: string) => {
-        if (upload.files.length === 0) return undefined
-        return await upload.retry(fileId)
-    }, [upload])
-
-    const handleCancel = useCallback(() => {
-        upload.cancel()
-        upload.files.forEach(file => revokeFileUrl(file))
-        upload.removeAll()
-        orch?.handleCancel()
-    }, [orch, upload])
-
-    const handlePause = useCallback(() => {
-        upload.pause()
-    }, [upload])
-
-    const handleResume = useCallback(() => {
-        upload.resume()
-    }, [upload])
-
-    const handleDone = useCallback(() => {
-        onDoneClicked()
-        core?.emit('done', {})
-        handleCancel()
-    }, [core, handleCancel, onDoneClicked])
-
-    const resetState = useCallback(async () => {
-        orch?.setIsAddingMore(false)
-        core?.emit('state-reset', {})
-        handleDone()
-    }, [core, handleDone, orch])
-
-    // ── Image editor (delegate to orchestrator) ─────────────────
-    const openImageEditor = useCallback((file: UploadFile) => {
-        orch?.openImageEditor(file)
-    }, [orch])
-
-    const closeImageEditor = useCallback(() => {
-        orch?.closeImageEditor()
-    }, [orch])
-
-    const saveImageEdit = useCallback((editedImageData: string, mimeType?: string) => {
-        orch?.saveImageEdit(editedImageData, mimeType)
-    }, [orch])
-
-    const replaceFile = useCallback((fileId: string, newFile: UploadFile) => {
-        orch?.replaceFile(fileId, newFile)
-    }, [orch])
+    // ── Cloud drive configs (from resolved — unchanged shape) ────
+    const { oneDriveConfigs, googleDriveConfigs, dropboxConfigs, boxConfigs } = resolved
 
     const resolvedStyle = style ?? EMPTY_STYLE
 
     // ── Assemble IRootContext ────────────────────────────────────
+    // themeState fields match ContextTheme 1:1 (ThemeStoreState ≡ ContextTheme shape)
     return {
         core,
-        orchestrator: orch,
-        mode: resolvedMode,
-        serverUrl: resolvedServerUrl,
+        orchestrator: root?.orchestrator,
+        mode: resolved.mode,
+        serverUrl: resolved.serverUrl,
         inputRef,
         openFilePicker,
         activeAdapter: state.activeAdapter,
@@ -619,17 +429,17 @@ export default function useRootProvider({
         viewMode: state.viewMode,
         setViewMode,
         isOnline: state.isOnline,
-        translations,
-        translator,
-        lang,
-        dir,
+        translations: resolved.translations,
+        translator: resolved.translator,
+        lang: resolved.lang,
+        dir: resolved.dir,
         theme: {
-            themeMode: resolvedTheme.mode as 'light' | 'dark',
-            isDark: resolvedTheme.mode === 'dark',
-            tokens: resolvedTheme.tokens,
-            resolved: resolvedTheme as typeof resolvedTheme & { mode: 'light' | 'dark' },
-            slotOverrides: resolvedSlotClasses,
-            slots: themeSlots ?? EMPTY_THEME_SLOTS,
+            themeMode: themeState.themeMode,
+            isDark: themeState.isDark,
+            tokens: themeState.tokens,
+            resolved: themeState.resolved,
+            slotOverrides: themeState.slotOverrides,
+            slots: themeState.slots ?? EMPTY_THEME_SLOTS,
         },
         files: state.files,
         setFiles: handleSetSelectedFiles,
@@ -675,21 +485,21 @@ export default function useRootProvider({
             onFilesDrop,
             onWarn,
             enablePaste,
-            sources: resolvedSources,
-            allowedFileTypes: accept,
-            maxFileSize,
-            limit,
+            sources: resolved.sources,
+            allowedFileTypes: resolved.allowedFileTypes,
+            maxFileSize: resolved.maxFileSize,
+            limit: resolved.limit,
             isProcessing,
             allowPreview,
-            folderUploadAllowDrop,
-            folderPickerButtonVisible,
+            folderUploadAllowDrop: resolved.folderUploadAllowDrop,
+            folderPickerButtonVisible: resolved.folderPickerButtonVisible,
             showBranding,
             disableDragDrop,
             className: className ?? '',
             style: resolvedStyle,
-            multiple,
+            multiple: resolved.multiple,
             icons: resolvedIcons,
-            imageEditor: resolvedImageEditor,
+            imageEditor: resolved.imageEditor,
         },
     }
 }
