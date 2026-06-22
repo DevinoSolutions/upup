@@ -1,139 +1,74 @@
-import { ClipboardEventHandler, DragEventHandler, useCallback, useMemo, useState } from 'react'
+import { ClipboardEventHandler, DragEventHandler, useEffect, useRef, useSyncExternalStore } from 'react'
+import { DragDropController, type DragDropSnapshot } from '@upup/core'
 import {
     useUploaderFiles,
     useUploaderOptions,
     useUploaderRuntime,
-    useUploaderSource,
-    useUploaderUploadControls,
-    useUploaderView,
 } from '../context/RootContext'
-import { isUploadActive, collectDroppedFiles } from '@upup/core'
+
+const EMPTY_SNAPSHOT: DragDropSnapshot = {
+    isDragging: false,
+    absoluteIsDragging: false,
+    absoluteHasBorder: true,
+}
+const NOOP = () => {}
+const NOOP_SUBSCRIBE = () => () => {}
+const getEmptySnapshot = () => EMPTY_SNAPSHOT
 
 export default function useMainBox() {
-    const { core } = useUploaderRuntime()
-    const { files, setFiles } = useUploaderFiles()
-    const { activeAdapter } = useUploaderSource()
-    const { isAddingMore } = useUploaderView()
-    const { upload: { uploadStatus } } = useUploaderUploadControls()
-    const {
-        onFilesDragOver,
-        onFilesDragLeave,
-        onFilesDrop,
-        onWarn,
-        isProcessing,
-        enablePaste,
-        disableDragDrop,
-        folderUploadAllowDrop,
-    } = useUploaderOptions()
-    const [isDragging, setIsDragging] = useState(false)
+    const { core, orchestrator } = useUploaderRuntime()
+    const { setFiles } = useUploaderFiles()
+    const options = useUploaderOptions()
 
-    const absoluteIsDragging = useMemo(
-        () => isDragging && !activeAdapter,
-        [isDragging, activeAdapter],
+    // Keep the latest values for the controller to read fresh (React re-reads each render).
+    const latest = useRef({ setFiles, options })
+    latest.current = { setFiles, options }
+
+    // Construct lazily, only once core + orchestrator exist (both are null on the first render).
+    const controllerRef = useRef<DragDropController | null>(null)
+    if (!controllerRef.current && core && orchestrator) {
+        controllerRef.current = new DragDropController({
+            core,
+            orchestrator,
+            setFiles: (files) => latest.current.setFiles(files),
+            options: () => latest.current.options,
+            props: () => ({
+                disableDragDrop: latest.current.options.disableDragDrop,
+                isProcessing: latest.current.options.isProcessing,
+                folderUploadAllowDrop: latest.current.options.folderUploadAllowDrop,
+            }),
+        })
+    }
+    const controller = controllerRef.current
+
+    const snapshot = useSyncExternalStore(
+        controller?.subscribe ?? NOOP_SUBSCRIBE,
+        controller?.getSnapshot ?? getEmptySnapshot,
     )
 
-    const absoluteHasBorder = useMemo(
-        () => (!files.size || isAddingMore || isDragging) && !activeAdapter,
-        [activeAdapter, files.size, isAddingMore, isDragging],
-    )
+    useEffect(() => {
+        controller?.init()
+        return () => controller?.dispose()
+    }, [controller])
 
-    const disableDragAction = useMemo(
-        () => disableDragDrop || activeAdapter || isUploadActive(uploadStatus),
-        [activeAdapter, disableDragDrop, uploadStatus],
-    )
-
-    const handleDragOver: DragEventHandler<HTMLDivElement> = useCallback(
-        e => {
-            if (disableDragAction || isProcessing) return
-            e.preventDefault()
-
-            setIsDragging(true)
-            e.dataTransfer.dropEffect = 'copy'
-
-            const files = Array.from(e.dataTransfer.files)
-            onFilesDragOver(files)
-            core?.emit('drag-over', {})
-        },
-        [core, disableDragAction, onFilesDragOver, isProcessing],
-    )
-
-    const handleDragLeave: DragEventHandler<HTMLDivElement> = useCallback(
-        e => {
-            if (disableDragAction || isProcessing) return
-            e.preventDefault()
-
-            setIsDragging(false)
-
-            const files = Array.from(e.dataTransfer.files)
-            onFilesDragLeave(files)
-            core?.emit('drag-leave', {})
-        },
-        [core, disableDragAction, onFilesDragLeave, isProcessing],
-    )
-
-    const handleDrop: DragEventHandler<HTMLDivElement> = useCallback(
-        async e => {
-            if (disableDragAction || isProcessing) return
-            e.preventDefault()
-
-            const {
-                files: droppedFiles,
-                skippedDirectory,
-            } = await collectDroppedFiles(e.dataTransfer, folderUploadAllowDrop)
-
-            if (skippedDirectory) {
-                onWarn(
-                    droppedFiles.length > 0
-                        ? 'Dropped folders were ignored because folderUpload.allowDrop is disabled.'
-                        : 'Folder drop is disabled. Enable folderUpload.allowDrop to accept dropped folders.',
-                )
-                core?.emit('folder-drop-blocked', { acceptedFiles: droppedFiles.length })
-                if (droppedFiles.length === 0) {
-                    setIsDragging(false)
-                    return
-                }
-            }
-
-            onFilesDrop(droppedFiles)
-            setFiles(droppedFiles)
-            core?.emit('drop', { files: droppedFiles })
-
-            setIsDragging(false)
-        },
-        [core, disableDragAction, folderUploadAllowDrop, onFilesDrop, onWarn, setFiles, isProcessing],
-    )
-
-    const handlePaste: ClipboardEventHandler<HTMLDivElement> = useCallback(
-        e => {
-            if (!enablePaste || isProcessing) return
-            const items = Array.from(e.clipboardData?.items || [])
-            const pastedFiles: File[] = []
-            for (const item of items) {
-                if (item.kind === 'file') {
-                    const file = item.getAsFile()
-                    if (file) {
-                        // Generate a name for pasted images (screenshots etc.)
-                        const name = file.name === 'image.png' || !file.name
-                            ? `pasted-${Date.now()}.${file.type.split('/')[1] || 'png'}`
-                            : file.name
-                        const renamed = new File([file], name, { type: file.type })
-                        pastedFiles.push(renamed)
-                    }
-                }
-            }
-            if (pastedFiles.length > 0) {
-                e.preventDefault()
-                setFiles(pastedFiles)
-                core?.emit('paste', { files: pastedFiles })
-            }
-        },
-        [core, enablePaste, isProcessing, setFiles],
-    )
+    // React synthetic events extend the native DOM events, so casting to DragEvent is safe.
+    const handleDragOver: DragEventHandler<HTMLDivElement> = controller
+        ? (e) => controller.handleDragOver(e as unknown as DragEvent)
+        : NOOP
+    const handleDragLeave: DragEventHandler<HTMLDivElement> = controller
+        ? (e) => controller.handleDragLeave(e as unknown as DragEvent)
+        : NOOP
+    const handleDrop: DragEventHandler<HTMLDivElement> = controller
+        ? (e) => { void controller.handleDrop(e as unknown as DragEvent) }
+        : NOOP
+    const handlePaste: ClipboardEventHandler<HTMLDivElement> = controller
+        ? (e) => controller.handlePaste(e as unknown as ClipboardEvent)
+        : NOOP
 
     return {
-        isDragging,
-        absoluteIsDragging,
-        absoluteHasBorder,
+        isDragging: snapshot.isDragging,
+        absoluteIsDragging: snapshot.absoluteIsDragging,
+        absoluteHasBorder: snapshot.absoluteHasBorder,
         handleDragOver,
         handleDragLeave,
         handleDrop,

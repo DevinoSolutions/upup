@@ -132,12 +132,13 @@ export function RootContextProvider({
 }) {
     const runtime = useMemo<ContextRuntime>(() => ({
         core: value.core,
+        orchestrator: value.orchestrator,
         mode: value.mode,
         serverUrl: value.serverUrl,
         inputRef: value.inputRef,
         openFilePicker: value.openFilePicker,
         isOnline: value.isOnline,
-    }), [value.core, value.inputRef, value.isOnline, value.mode, value.openFilePicker, value.serverUrl])
+    }), [value.core, value.orchestrator, value.inputRef, value.isOnline, value.mode, value.openFilePicker, value.serverUrl])
 
     const source = useMemo<ContextSource>(() => ({
         activeAdapter: value.activeAdapter,
