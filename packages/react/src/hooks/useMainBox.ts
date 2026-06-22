@@ -31,6 +31,9 @@ export default function useMainBox() {
             core,
             orchestrator,
             setFiles: (files) => latest.current.setFiles(files),
+            // The file list derives from the orchestrator snapshot — derive the
+            // border's file count from the same source so it stays in lockstep.
+            filesSize: () => orchestrator.getSnapshot().files.size,
             options: () => latest.current.options,
             props: () => ({
                 disableDragDrop: latest.current.options.disableDragDrop,

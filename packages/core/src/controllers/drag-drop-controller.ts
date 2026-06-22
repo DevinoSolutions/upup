@@ -24,6 +24,19 @@ export interface DragDropDeps {
   core: UpupCore
   orchestrator: UploaderOrchestrator
   setFiles: (files: File[]) => void | Promise<void>
+  /**
+   * Current selected-file count, read fresh on each recompute. Each host MUST
+   * supply the SAME source its file list renders from, so the dropzone border
+   * (`absoluteHasBorder`) stays in lockstep with the visible files:
+   *   - React / Vue / Svelte / Angular → `orchestrator.getSnapshot().files.size`
+   *     (their lists derive from the orchestrator snapshot)
+   *   - Vanilla                        → `core.files.size` (its list reads core)
+   * Reading `core.files.size` unconditionally desyncs from the orchestrator
+   * notify timing: `orchestrator.removeFile` runs `setState()` (which notifies)
+   * and only THEN `core.removeFile`, so on that notify `core.files` still holds
+   * the file and the border would never recover after the last removal.
+   */
+  filesSize: () => number
   /** Getter so frameworks that re-read options each render (React) stay fresh. */
   options: () => DragDropOptions
   /** Getter so frameworks that re-read props each render (React) stay fresh. */
@@ -72,7 +85,7 @@ export class DragDropController implements ObservableController<DragDropSnapshot
 
   private compute(): DragDropSnapshot {
     const o = this.deps.orchestrator.getSnapshot()
-    const filesSize = this.deps.core.files.size
+    const filesSize = this.deps.filesSize()
     const active = o.activeAdapter
     const isAddingMore = o.isAddingMore
     return {

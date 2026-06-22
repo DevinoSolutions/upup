@@ -23,6 +23,9 @@ function makeDeps(over: Partial<any> = {}): { deps: DragDropDeps; orch: any; cor
     core: core as any,
     orchestrator: orch as any,
     setFiles,
+    // Vanilla-style source: the file count tracks core.files directly. The
+    // React-style (orchestrator-snapshot) source is exercised explicitly below.
+    filesSize: () => core.files.size,
     options: () => ({ enablePaste: true, onFilesDragOver: vi.fn(), onFilesDragLeave: vi.fn(), onFilesDrop: vi.fn(), onWarn: vi.fn(), ...(over.options ?? {}) }),
     props: () => ({ disableDragDrop: false, isProcessing: false, folderUploadAllowDrop: false, ...(over.props ?? {}) }),
   }
@@ -128,6 +131,23 @@ describe('DragDropController', () => {
     c.dispose()
     orch._set({ isAddingMore: true })   // would recompute+notify if still subscribed
     expect(listener).not.toHaveBeenCalled()
+  })
+
+  it('absoluteHasBorder follows the filesSize getter and recovers on orchestrator notify (React-style)', () => {
+    // React/Vue/Svelte/Angular derive the file count from the orchestrator
+    // snapshot (their list source), NOT core.files. Removal flips the snapshot
+    // count and notifies; the border must recover. Regression: reading
+    // core.files.size left the border stuck after removing the last file because
+    // orchestrator.removeFile setState()s (notify) *before* core.removeFile runs.
+    const { deps, orch } = makeDeps()
+    deps.filesSize = () => orch.getSnapshot().files.size
+    const c = new DragDropController(deps)
+    c.init()
+    expect(c.getSnapshot().absoluteHasBorder).toBe(true)          // empty → border
+    orch._set({ files: new Map([['a', {}]]) })                    // add → notify
+    expect(c.getSnapshot().absoluteHasBorder).toBe(false)         // a file present → no border
+    orch._set({ files: new Map() })                              // remove last → notify
+    expect(c.getSnapshot().absoluteHasBorder).toBe(true)          // border recovers
   })
 
   it('recompute() refreshes the cached snapshot after a core-only file change (no orchestrator notify)', () => {

@@ -226,6 +226,9 @@ export function buildRootContext(
     core,
     orchestrator,
     setFiles,
+    // Vanilla renders its file list straight from core.files (not the
+    // orchestrator snapshot), so derive the border's file count from core too.
+    filesSize: () => core.files.size,
     options: () => options,
     props: () => ctx.props,
   })

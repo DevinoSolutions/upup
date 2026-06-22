@@ -76,6 +76,9 @@ export class MainBoxComponent implements OnInit, OnDestroy {
             core: this.store.core!,
             orchestrator: this.store.orchestrator!,
             setFiles: (files) => this.store.handleSetSelectedFiles(files),
+            // The file list derives from the orchestrator snapshot — derive the
+            // border's file count from the same source so it stays in lockstep.
+            filesSize: () => this.store.orchestrator!.getSnapshot().files.size,
             options: () => this.store.uiProps,
             props: () => ({
                 disableDragDrop: this.store.uiProps.disableDragDrop,
