@@ -13,8 +13,10 @@
  *   A hanging fetch captures the AbortSignal; dispose() must set signal.aborted.
  *
  * Guard 3 — dispose removes window 'message' listener:
- *   A 401 → startAuth() arms a window 'message' listener; dispose() must call
- *   window.removeEventListener('message', <same handler reference>).
+ *   startAuth() arms a window 'message' listener; dispose() must call
+ *   window.removeEventListener with 'message'. The internal handler reference
+ *   (_authListener/_abort) are owned by the core controller and no longer
+ *   exposed here; we verify the net effect through the public surface and spies.
  *
  * Strategy:
  *   - Services constructed via TestBed with a minimal UpupStore mock.
@@ -170,11 +172,17 @@ describe('ServerModeDriveService — guard 2: dispose aborts in-flight list requ
 })
 
 // ── Guard 3: dispose removes window 'message' listener ────────────────────────
+//
+// NOTE: The internal _authListener and _abort getters were removed from the
+// service — the abort/listener guards are now owned and tested by the core
+// controller (server-mode-drive-controller.test.ts). We test the net effect
+// here: that dispose() causes window.removeEventListener to be called with the
+// 'message' event type, which confirms the listener is torn down.
 
 describe('ServerModeDriveService — guard 3: dispose removes window message listener (leak-fix)', () => {
     afterEach(() => { vi.restoreAllMocks(); vi.unstubAllGlobals(); TestBed.resetTestingModule() })
 
-    it('dispose() calls window.removeEventListener("message", <same handler>) after startAuth', async () => {
+    it('dispose() calls window.removeEventListener("message", ...) after startAuth', async () => {
         // Stub fetch to return 401 so state transitions to 'reauth'
         vi.stubGlobal('fetch', vi.fn(async () => new Response('', { status: 401 })))
         // Stub window.open so startAuth doesn't actually open a browser window
@@ -199,15 +207,12 @@ describe('ServerModeDriveService — guard 3: dispose removes window message lis
         // startAuth() opens the popup and arms the window 'message' listener
         svc.startAuth()
 
-        // Find the handler that was registered for the 'message' event
+        // Confirm that a 'message' listener was registered
         const msgAddCall = addSpy.mock.calls.find(([type]) => type === 'message')
         expect(msgAddCall).toBeTruthy()
         const handler = msgAddCall![1] as EventListenerOrEventListenerObject
 
-        // The same handler reference must be stored and accessible
-        expect(svc._authListener).toBe(handler)
-
-        // dispose() must remove it
+        // dispose() must remove the message listener
         svc.dispose()
 
         expect(removeSpy).toHaveBeenCalledWith('message', handler)
@@ -215,6 +220,12 @@ describe('ServerModeDriveService — guard 3: dispose removes window message lis
 })
 
 // ── Parity guard: startAuth de-dups the re-auth message listener ──────────────
+//
+// NOTE: We verify the de-dup behavior through spies rather than via the removed
+// _authListener getter. The core controller owns this logic and tests it directly
+// in server-mode-drive-controller.test.ts. Here we confirm the Angular service
+// delegates correctly: a second startAuth() removes the prior listener before
+// arming a new one, observable via the window spy call sequence.
 
 describe('ServerModeDriveService — startAuth() de-dups the re-auth message listener (vanilla parity)', () => {
     afterEach(() => { vi.restoreAllMocks(); vi.unstubAllGlobals(); TestBed.resetTestingModule() })
@@ -243,7 +254,6 @@ describe('ServerModeDriveService — startAuth() de-dups the re-auth message lis
         const firstMsgAdd = addSpy.mock.calls.find(([type]) => type === 'message')
         expect(firstMsgAdd).toBeTruthy()
         const firstHandler = firstMsgAdd![1] as EventListenerOrEventListenerObject
-        expect(svc._authListener).toBe(firstHandler)
 
         // Clear the removeEventListener spy history so we can prove the de-dup on call #2
         removeSpy.mockClear()
@@ -255,11 +265,10 @@ describe('ServerModeDriveService — startAuth() de-dups the re-auth message lis
         // The first handler must have been removed before the second listener was added
         expect(removeSpy).toHaveBeenCalledWith('message', firstHandler)
 
-        // _authListener now points to the SECOND handler, not the first
+        // A second 'message' addEventListener call must have been made
         const messageAddCalls = addSpy.mock.calls.filter(([type]) => type === 'message')
         expect(messageAddCalls.length).toBe(2)
         const secondHandler = messageAddCalls[1][1] as EventListenerOrEventListenerObject
         expect(secondHandler).not.toBe(firstHandler)
-        expect(svc._authListener).toBe(secondHandler)
     })
 })
