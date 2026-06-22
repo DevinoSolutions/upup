@@ -41,15 +41,6 @@ export class UpupStore {
     private disposed = false
     private cleanups: Array<() => void> = []
 
-    // Resolved values captured during init() — used by file-op handlers
-    // (mirrors how svelte's create-root-provider closes over them).
-    private accept = ''
-    private onFileTypeMismatch: (file: File, accept: string) => void = () => {}
-    private onRestrictionFailed?: (
-        file: File,
-        reason: 'TYPE_MISMATCH' | 'FILE_TOO_LARGE' | 'FILE_TOO_SMALL' | 'LIMIT_EXCEEDED',
-    ) => void
-
     /** Set during init(); undefined before init() is called. */
     mode!: 'client' | 'server'
     serverUrl?: string
@@ -220,12 +211,6 @@ export class UpupStore {
         this.mode = resolved.mode as 'client' | 'server'
         this.serverUrl = resolved.serverUrl
 
-        // Capture restriction-handling values for handleSetSelectedFiles
-        // (mirrors svelte closing over accept/onFileTypeMismatch/onRestrictionFailed).
-        this.accept = resolved.allowedFileTypes
-        this.onFileTypeMismatch = p.onFileTypeMismatch ?? (() => {})
-        this.onRestrictionFailed = p.onRestrictionFailed
-
         // ── Core construction via createUpupUpload (FRESH per init() call) ────────
         // Each init() creates a brand-new core + factory so cloud plugins can register
         // cleanly (plugin.use() throws on duplicate; no unregister; fresh core avoids this).
@@ -377,30 +362,9 @@ export class UpupStore {
     setIsAddingMore(v: boolean): void { this.root.commands.setIsAddingMore(v) }
     setViewMode(m: 'grid' | 'list'): void { this.root.commands.setViewMode(m) }
 
-    // ── File operations ──────────────────────────────────────────
-    // handleSetSelectedFiles calls this.upload.addFiles (not core.addFiles directly)
-    // so that test spies on upload.addFiles can intercept it — matching the original
-    // store behavior. Error handling + restriction callbacks are closed over from init().
+    // ── File operations (delegated to root.commands) ─────────────
     async handleSetSelectedFiles(newFiles: File[]): Promise<void> {
-        try {
-            await this.upload.addFiles(newFiles)
-        } catch (error) {
-            const message = error instanceof Error ? error.message : String(error)
-            this.onError(message)
-            const first = newFiles[0]
-            if (first) {
-                if (message.toLowerCase().includes('type')) {
-                    this.onFileTypeMismatch(first, this.accept)
-                    this.onRestrictionFailed?.(first, 'TYPE_MISMATCH')
-                } else if (message.toLowerCase().includes('limit')) {
-                    this.onRestrictionFailed?.(first, 'LIMIT_EXCEEDED')
-                } else if (message.toLowerCase().includes('below')) {
-                    this.onRestrictionFailed?.(first, 'FILE_TOO_SMALL')
-                } else if (message.toLowerCase().includes('size')) {
-                    this.onRestrictionFailed?.(first, 'FILE_TOO_LARGE')
-                }
-            }
-        }
+        await this.root.commands.handleSetSelectedFiles(newFiles)
     }
 
     handleFileRemove(fileId: string): void {

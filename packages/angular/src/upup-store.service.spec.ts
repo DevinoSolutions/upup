@@ -439,8 +439,8 @@ describe('UpupStore', () => {
             store.init()
             // After C-2 Task 8: plugin cleanup + status-change subscription are managed by
             // createRootController internally (via root.dispose()). The store's own cleanups
-            // array holds the SSE dispose. At least one cleanup must be registered.
-            expect((store as any).cleanups.length).toBeGreaterThanOrEqual(1)
+            // array holds exactly the SSE dispose — lock that invariant against a future leak.
+            expect((store as any).cleanups.length).toBe(1)
             store.dispose()
             // All cleanups should have been flushed
             expect((store as any).cleanups.length).toBe(0)
@@ -477,7 +477,7 @@ describe('UpupStore', () => {
             const s = new UpupStore()
             s.setConfig({ onRestrictionFailed, onFileTypeMismatch } as any)
             s.init()
-            vi.spyOn(s['upload'], 'addFiles').mockRejectedValue(new Error('File type not allowed'))
+            vi.spyOn(s.core, 'addFiles').mockRejectedValue(new Error('File type not allowed'))
             await s.handleSetSelectedFiles([txt()])
             expect(onFileTypeMismatch).toHaveBeenCalled()
             expect(onRestrictionFailed).toHaveBeenCalledWith(expect.any(File), 'TYPE_MISMATCH')
@@ -490,7 +490,7 @@ describe('UpupStore', () => {
             const s = new UpupStore()
             s.setConfig({ onRestrictionFailed, onFileTypeMismatch } as any)
             s.init()
-            vi.spyOn(s['upload'], 'addFiles').mockRejectedValue(new Error('Number of files exceeds limit'))
+            vi.spyOn(s.core, 'addFiles').mockRejectedValue(new Error('Number of files exceeds limit'))
             await s.handleSetSelectedFiles([txt()])
             expect(onRestrictionFailed).toHaveBeenCalledWith(expect.any(File), 'LIMIT_EXCEEDED')
             expect(onFileTypeMismatch).not.toHaveBeenCalled()
@@ -503,7 +503,7 @@ describe('UpupStore', () => {
             const s = new UpupStore()
             s.setConfig({ onRestrictionFailed, onFileTypeMismatch } as any)
             s.init()
-            vi.spyOn(s['upload'], 'addFiles').mockRejectedValue(new Error('File is below the minimum size'))
+            vi.spyOn(s.core, 'addFiles').mockRejectedValue(new Error('File is below the minimum size'))
             await s.handleSetSelectedFiles([txt()])
             expect(onRestrictionFailed).toHaveBeenCalledWith(expect.any(File), 'FILE_TOO_SMALL')
             expect(onFileTypeMismatch).not.toHaveBeenCalled()
@@ -516,7 +516,7 @@ describe('UpupStore', () => {
             const s = new UpupStore()
             s.setConfig({ onRestrictionFailed, onFileTypeMismatch } as any)
             s.init()
-            vi.spyOn(s['upload'], 'addFiles').mockRejectedValue(new Error('File exceeds the maximum size'))
+            vi.spyOn(s.core, 'addFiles').mockRejectedValue(new Error('File exceeds the maximum size'))
             await s.handleSetSelectedFiles([txt()])
             expect(onRestrictionFailed).toHaveBeenCalledWith(expect.any(File), 'FILE_TOO_LARGE')
             expect(onFileTypeMismatch).not.toHaveBeenCalled()
