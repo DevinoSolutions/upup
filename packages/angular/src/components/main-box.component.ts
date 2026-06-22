@@ -1,12 +1,13 @@
 import {
     Component,
     OnDestroy,
+    OnInit,
     computed,
     inject,
-    signal,
 } from '@angular/core'
-import { cn, collectDroppedFiles, isUploadActive } from '@upup/core'
+import { cn, DragDropController, type DragDropSnapshot } from '@upup/core'
 import { UpupStore } from '../upup-store.service'
+import { toSignalStore, type SignalStore } from '../lib/to-signal-store'
 import { AdapterViewComponent } from './adapter-view.component'
 import { AdapterSelectorComponent } from './adapter-selector.component'
 import { FileListComponent } from './file-list.component'
@@ -63,29 +64,33 @@ import { FileListComponent } from './file-list.component'
         </div>
     `,
 })
-export class MainBoxComponent implements OnDestroy {
+export class MainBoxComponent implements OnInit, OnDestroy {
     readonly store = inject(UpupStore)
 
-    // ── Dragging state ────────────────────────────────────────────────────────
-    readonly isDragging = signal(false)
+    // ── Dropzone controller (shared @upup/core) + its Angular-signal view ─────
+    private dragController!: DragDropController
+    private dragStore!: SignalStore<DragDropSnapshot>
 
-    // ── Computed class signals (mirrors useMainBox.ts formulas) ──────────────
-    readonly absoluteIsDragging = computed(
-        () => this.isDragging() && !this.store.activeAdapter?.(),
-    )
+    ngOnInit(): void {
+        this.dragController = new DragDropController({
+            core: this.store.core!,
+            orchestrator: this.store.orchestrator!,
+            setFiles: (files) => this.store.handleSetSelectedFiles(files),
+            options: () => this.store.uiProps,
+            props: () => ({
+                disableDragDrop: this.store.uiProps.disableDragDrop,
+                isProcessing: this.store.uiProps.isProcessing,
+                folderUploadAllowDrop: this.store.uiProps.folderUploadAllowDrop,
+            }),
+        })
+        this.dragStore = toSignalStore(this.dragController)
+        this.dragController.init()
+    }
 
-    readonly absoluteHasBorder = computed(
-        () =>
-            (!(this.store.files?.().size ?? 0) || this.store.isAddingMore?.() || this.isDragging()) &&
-            !this.store.activeAdapter?.(),
-    )
-
-    readonly disableDragAction = computed(
-        () =>
-            !!(this.store.uiProps?.disableDragDrop) ||
-            !!this.store.activeAdapter?.() ||
-            isUploadActive(this.store.uploadStatus?.()),
-    )
+    // ── Drag-state signals (controller-backed; mirror the prior computeds) ────
+    readonly isDragging = computed(() => this.dragStore?.state().isDragging ?? false)
+    readonly absoluteIsDragging = computed(() => this.dragStore?.state().absoluteIsDragging ?? false)
+    readonly absoluteHasBorder = computed(() => this.dragStore?.state().absoluteHasBorder ?? true)
 
     readonly boxClass = computed(() => {
         const hasBorder = this.absoluteHasBorder()
@@ -109,89 +114,12 @@ export class MainBoxComponent implements OnDestroy {
         ),
     )
 
-    // ── Drag handlers (1:1 port of useMainBox.ts) ────────────────────────────
-    handleDragOver(e: DragEvent): void {
-        if (this.disableDragAction() || this.store.uiProps.isProcessing) return
-        e.preventDefault()
-
-        this.isDragging.set(true)
-        if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy'
-
-        const droppedFiles = Array.from(e.dataTransfer?.files ?? [])
-        this.store.uiProps.onFilesDragOver(droppedFiles)
-        this.store.core?.emit('drag-over', {})
-    }
-
-    handleDragLeave(e: DragEvent): void {
-        if (this.disableDragAction() || this.store.uiProps.isProcessing) return
-        e.preventDefault()
-
-        this.isDragging.set(false)
-
-        const droppedFiles = Array.from(e.dataTransfer?.files ?? [])
-        this.store.uiProps.onFilesDragLeave(droppedFiles)
-        this.store.core?.emit('drag-leave', {})
-    }
-
-    async handleDrop(e: DragEvent): Promise<void> {
-        if (this.disableDragAction() || this.store.uiProps.isProcessing) return
-        e.preventDefault()
-
-        if (!e.dataTransfer) {
-            this.isDragging.set(false)
-            return
-        }
-
-        const { files: droppedFiles, skippedDirectory } = await collectDroppedFiles(
-            e.dataTransfer,
-            this.store.uiProps.folderUploadAllowDrop,
-        )
-
-        if (skippedDirectory) {
-            this.store.uiProps.onWarn(
-                droppedFiles.length > 0
-                    ? 'Dropped folders were ignored because folderUpload.allowDrop is disabled.'
-                    : 'Folder drop is disabled. Enable folderUpload.allowDrop to accept dropped folders.',
-            )
-            this.store.core?.emit('folder-drop-blocked', { acceptedFiles: droppedFiles.length })
-            if (droppedFiles.length === 0) {
-                this.isDragging.set(false)
-                return
-            }
-        }
-
-        this.store.uiProps.onFilesDrop(droppedFiles)
-        void this.store.handleSetSelectedFiles(droppedFiles)
-        this.store.core?.emit('drop', { files: droppedFiles })
-
-        this.isDragging.set(false)
-    }
-
-    handlePaste(e: ClipboardEvent): void {
-        if (!this.store.uiProps.enablePaste || this.store.uiProps.isProcessing) return
-
-        const items = Array.from(e.clipboardData?.items ?? [])
-        const pastedFiles: File[] = []
-        for (const item of items) {
-            if (item.kind === 'file') {
-                const file = item.getAsFile()
-                if (file) {
-                    const name =
-                        file.name === 'image.png' || !file.name
-                            ? `pasted-${Date.now()}.${file.type.split('/')[1] || 'png'}`
-                            : file.name
-                    const renamed = new File([file], name, { type: file.type })
-                    pastedFiles.push(renamed)
-                }
-            }
-        }
-
-        if (pastedFiles.length > 0) {
-            e.preventDefault()
-            void this.store.handleSetSelectedFiles(pastedFiles)
-            this.store.core?.emit('paste', { files: pastedFiles })
-        }
-    }
+    // ── Drag handlers — delegate to the shared @upup/core controller ──────────
+    handleDragOver(e: DragEvent): void { this.dragController.handleDragOver(e) }
+    handleDragLeave(e: DragEvent): void { this.dragController.handleDragLeave(e) }
+    // Returns the promise so callers/tests can await the async folder-collect → setFiles flow.
+    handleDrop(e: DragEvent): Promise<void> { return this.dragController.handleDrop(e) }
+    handlePaste(e: ClipboardEvent): void { this.dragController.handlePaste(e) }
 
     // ── Keyboard handler ──────────────────────────────────────────────────────
     onKeyDown(e: KeyboardEvent): void {
@@ -207,6 +135,7 @@ export class MainBoxComponent implements OnDestroy {
     }
 
     ngOnDestroy(): void {
-        // No subscriptions to clean up — all state is signals/computeds.
+        this.dragController?.dispose()
+        this.dragStore?.dispose()
     }
 }

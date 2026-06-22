@@ -43,6 +43,10 @@ export class UpupStore {
     core!: UpupUploadHandle['core']
     private orch!: UploaderOrchestrator
     private orchState!: SignalStore<OrchSnapshot>
+
+    /** The orchestrator instance, exposed for the dropzone DragDropController. Set during init(). */
+    get orchestrator(): UploaderOrchestrator { return this.orch }
+
     private themeStore!: ThemeStore
     private themeState!: SignalStore<ThemeSnapshot>
     private started = false
