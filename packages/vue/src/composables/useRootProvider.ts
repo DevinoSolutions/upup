@@ -493,6 +493,7 @@ export default function useRootProvider(props: UpupUploaderProps): IRootContext 
     // ── Assemble IRootContext ────────────────────────────────────
     return {
         core,
+        orchestrator: orch,
         mode: resolvedMode,
         serverUrl: resolvedServerUrl,
         inputRef,

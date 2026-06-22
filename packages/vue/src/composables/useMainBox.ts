@@ -1,132 +1,40 @@
-import { computed, ref } from 'vue'
+import { computed, shallowRef, onMounted, onUnmounted } from 'vue'
+import { DragDropController } from '@upup/core'
 import {
     useUploaderFiles,
     useUploaderOptions,
     useUploaderRuntime,
-    useUploaderSource,
-    useUploaderUploadControls,
-    useUploaderView,
 } from '../context/root-context'
-import { isUploadActive, collectDroppedFiles } from '@upup/core'
 
 export default function useMainBox() {
-    const { core } = useUploaderRuntime()
-    const { files, setFiles } = useUploaderFiles()
-    const { activeAdapter } = useUploaderSource()
-    const { isAddingMore } = useUploaderView()
-    const { upload: { uploadStatus } } = useUploaderUploadControls()
-    const {
-        onFilesDragOver,
-        onFilesDragLeave,
-        onFilesDrop,
-        onWarn,
-        isProcessing,
-        enablePaste,
-        disableDragDrop,
-        folderUploadAllowDrop,
-    } = useUploaderOptions()
+    const { core, orchestrator } = useUploaderRuntime()
+    const { setFiles } = useUploaderFiles()
+    const options = useUploaderOptions()
+    const { disableDragDrop, isProcessing, folderUploadAllowDrop } = options
 
-    const isDragging = ref(false)
+    const controller = new DragDropController({
+        core: core!,
+        orchestrator: orchestrator!,
+        setFiles,
+        options: () => options,
+        props: () => ({ disableDragDrop, isProcessing, folderUploadAllowDrop }),
+    })
 
-    const absoluteIsDragging = computed(
-        () => isDragging.value && !activeAdapter.value,
-    )
-
-    const absoluteHasBorder = computed(
-        () => (!files.value.size || isAddingMore.value || isDragging.value) && !activeAdapter.value,
-    )
-
-    const disableDragAction = computed(
-        () => disableDragDrop || activeAdapter.value || isUploadActive(uploadStatus.value),
-    )
-
-    function handleDragOver(e: DragEvent) {
-        if (disableDragAction.value || isProcessing) return
-        e.preventDefault()
-
-        isDragging.value = true
-        if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy'
-
-        const droppedFiles = Array.from(e.dataTransfer?.files || [])
-        onFilesDragOver(droppedFiles)
-        core?.emit('drag-over', {})
-    }
-
-    function handleDragLeave(e: DragEvent) {
-        if (disableDragAction.value || isProcessing) return
-        e.preventDefault()
-
-        isDragging.value = false
-
-        const droppedFiles = Array.from(e.dataTransfer?.files || [])
-        onFilesDragLeave(droppedFiles)
-        core?.emit('drag-leave', {})
-    }
-
-    async function handleDrop(e: DragEvent) {
-        if (disableDragAction.value || isProcessing) return
-        e.preventDefault()
-
-        if (!e.dataTransfer) {
-            isDragging.value = false
-            return
-        }
-
-        const {
-            files: droppedFiles,
-            skippedDirectory,
-        } = await collectDroppedFiles(e.dataTransfer, folderUploadAllowDrop)
-
-        if (skippedDirectory) {
-            onWarn(
-                droppedFiles.length > 0
-                    ? 'Dropped folders were ignored because folderUpload.allowDrop is disabled.'
-                    : 'Folder drop is disabled. Enable folderUpload.allowDrop to accept dropped folders.',
-            )
-            core?.emit('folder-drop-blocked', { acceptedFiles: droppedFiles.length })
-            if (droppedFiles.length === 0) {
-                isDragging.value = false
-                return
-            }
-        }
-
-        onFilesDrop(droppedFiles)
-        setFiles(droppedFiles)
-        core?.emit('drop', { files: droppedFiles })
-
-        isDragging.value = false
-    }
-
-    function handlePaste(e: ClipboardEvent) {
-        if (!enablePaste || isProcessing) return
-        const items = Array.from(e.clipboardData?.items || [])
-        const pastedFiles: File[] = []
-        for (const item of items) {
-            if (item.kind === 'file') {
-                const file = item.getAsFile()
-                if (file) {
-                    const name = file.name === 'image.png' || !file.name
-                        ? `pasted-${Date.now()}.${file.type.split('/')[1] || 'png'}`
-                        : file.name
-                    const renamed = new File([file], name, { type: file.type })
-                    pastedFiles.push(renamed)
-                }
-            }
-        }
-        if (pastedFiles.length > 0) {
-            e.preventDefault()
-            setFiles(pastedFiles)
-            core?.emit('paste', { files: pastedFiles })
-        }
-    }
+    const snapshot = shallowRef(controller.getSnapshot())
+    let unsub: (() => void) | null = null
+    onMounted(() => {
+        unsub = controller.subscribe(() => { snapshot.value = controller.getSnapshot() })
+        controller.init()
+    })
+    onUnmounted(() => { controller.dispose(); unsub?.() })
 
     return {
-        isDragging,
-        absoluteIsDragging,
-        absoluteHasBorder,
-        handleDragOver,
-        handleDragLeave,
-        handleDrop,
-        handlePaste,
+        isDragging: computed(() => snapshot.value.isDragging),
+        absoluteIsDragging: computed(() => snapshot.value.absoluteIsDragging),
+        absoluteHasBorder: computed(() => snapshot.value.absoluteHasBorder),
+        handleDragOver: controller.handleDragOver,
+        handleDragLeave: controller.handleDragLeave,
+        handleDrop: controller.handleDrop,
+        handlePaste: controller.handlePaste,
     }
 }

@@ -138,6 +138,7 @@ export function provideRootContext(value: IRootContext) {
     provide(RootKey, value)
     provide(RuntimeKey, {
         core: value.core,
+        orchestrator: value.orchestrator,
         mode: value.mode,
         serverUrl: value.serverUrl,
         inputRef: value.inputRef,
