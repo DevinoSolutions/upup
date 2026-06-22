@@ -159,6 +159,11 @@ export { DragDropController } from './controllers/drag-drop-controller'
 export type {
   DragDropDeps, DragDropOptions, DragDropProps, DragDropSnapshot,
 } from './controllers/drag-drop-controller'
+export { ServerModeDriveController } from './controllers/server-mode-drive-controller'
+export type {
+  ServerModeProvider, ServerDriveFile, ServerDriveListState,
+  ServerDriveTransferResult, ServerDriveSnapshot, ServerModeDriveDeps,
+} from './controllers/server-mode-drive-controller'
 export {
     GOOGLE_DRIVE_DESCRIPTOR,
     ONE_DRIVE_DESCRIPTOR,
