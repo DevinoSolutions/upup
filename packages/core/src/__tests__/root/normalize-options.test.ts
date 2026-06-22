@@ -70,6 +70,24 @@ describe('normalizeRootOptions', () => {
     expect(coreOptions.cloudDrives?.dropbox).toEqual({ appKey: 'd' })
   })
 
+  it("dropbox/box redirectUri ?? '' fallback when omitted", () => {
+    const { resolved } = normalizeRootOptions({
+      cloudDrives: {
+        dropbox: { clientId: 'd' }, // redirectUri omitted -> ''
+        box: { clientId: 'b' }, // redirectUri omitted -> ''
+      },
+    })
+    expect(resolved.dropboxConfigs).toEqual({ dropbox_client_id: 'd', dropbox_redirect_uri: '' })
+    expect(resolved.boxConfigs).toEqual({ box_client_id: 'b', box_redirect_uri: '' })
+  })
+
+  it('limit floor: non-mini maxFiles 1 -> limit 1 / multiple false; maxFiles 0 -> limit 1', () => {
+    const r1 = normalizeRootOptions({ maxFiles: 1 }).resolved
+    expect(r1.limit).toBe(1)
+    expect(r1.multiple).toBe(false)
+    expect(normalizeRootOptions({ maxFiles: 0 }).resolved.limit).toBe(1)
+  })
+
   it('i18n: bundle code drives lang/dir; locale string fallback', () => {
     expect(normalizeRootOptions({ i18n: { locale: 'fr-FR' } }).resolved.lang).toBe('fr-FR')
     expect(normalizeRootOptions({}).resolved.dir).toBe('ltr')
