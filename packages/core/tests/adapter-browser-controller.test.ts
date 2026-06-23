@@ -32,7 +32,7 @@ describe('drive-browser descriptors', () => {
     })
 })
 
-/** Minimal in-memory plugin: satisfies DriveBrowserPlugin, never hits network. */
+/** Minimal in-memory plugin: satisfies AdapterPlugin, never hits network. */
 class FakeDrivePlugin {
     name: string
     id: string

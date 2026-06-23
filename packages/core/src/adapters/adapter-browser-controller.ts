@@ -3,28 +3,7 @@ import { bindAdapterEvents } from './bind-adapter-events'
 import type { DriveFile, DriveFolder, DriveUser } from './types'
 import type { AdapterProviderDescriptor } from './drive-browser-descriptors'
 import { loadGoogleIdentityServices } from '../utils/load-gapi'
-
-/**
- * The concrete plugin surface the controller drives. The four *Plugin classes
- * structurally satisfy this; optional members are only present on some providers
- * (authenticate = GIS providers; authenticateViaPopup/loadAllFilesInFolder = popup
- * providers; getConfig = used for GIS client id).
- */
-export interface DriveBrowserPlugin {
-    restoreSession(): boolean
-    isAuthenticated(): boolean
-    getAccessToken(): string | null
-    // Real plugins resolve to `… | null` (box/dropbox/onedrive) — keep all three so a
-    // typed getPlugin() would still satisfy this; the `if (userInfo)` guard handles it.
-    getUserInfo(): Promise<DriveUser | null | undefined>
-    loadFiles(folderArg?: string): Promise<unknown>
-    downloadFiles(files: DriveFile[]): Promise<File[]>
-    signOut(): void
-    authenticate?(token: string, expiresIn?: number): Promise<void>
-    authenticateViaPopup?(): Promise<void>
-    loadAllFilesInFolder?(folderArg: string): Promise<DriveFile[]>
-    getConfig?(): unknown
-}
+import type { AdapterPlugin } from './plugin'
 
 export interface AdapterBrowserState {
     user?: DriveUser
@@ -81,7 +60,7 @@ export class AdapterBrowserController {
     private core: UpupCore
     private descriptor: AdapterProviderDescriptor
     private callbacks: AdapterBrowserCallbacks
-    private plugin: DriveBrowserPlugin | null = null
+    private plugin: AdapterPlugin | null = null
     private tokenClient: GisTokenClient | null = null
     private unsubs: (() => void)[] = []
 
@@ -129,7 +108,7 @@ export class AdapterBrowserController {
 
     init(): void {
         const plugin = this.core.getPlugin(this.descriptor.pluginId) as
-            | DriveBrowserPlugin
+            | AdapterPlugin
             | undefined
         if (!plugin) return
         this.plugin = plugin
@@ -152,7 +131,7 @@ export class AdapterBrowserController {
 
     // ── Restore session on mount ─────────────────────────────────
 
-    private restore(plugin: DriveBrowserPlugin): void {
+    private restore(plugin: AdapterPlugin): void {
         const restored = plugin.restoreSession()
         if (this.descriptor.auth === 'gis') {
             if (!restored) return
@@ -258,7 +237,7 @@ export class AdapterBrowserController {
 
     // ── Auth ─────────────────────────────────────────────────────
 
-    private async initGis(plugin: DriveBrowserPlugin): Promise<void> {
+    private async initGis(plugin: AdapterPlugin): Promise<void> {
         const cfg = (plugin.getConfig?.() ?? {}) as GoogleDriveConfigLike
         if (!cfg.google_client_id || !cfg.google_api_key) {
             this.setState({ isAuthReady: true })

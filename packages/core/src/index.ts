@@ -150,7 +150,6 @@ export { AdapterBrowserController } from './adapters/adapter-browser-controller'
 export type {
     AdapterBrowserState,
     AdapterBrowserCallbacks,
-    DriveBrowserPlugin,
 } from './adapters/adapter-browser-controller'
 export type { ObservableController } from './controllers/types'
 export { DragDropController } from './controllers/drag-drop-controller'
