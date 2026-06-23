@@ -3,7 +3,7 @@ import type { FileSource } from '../types/file-source'
 import type { UploadFile } from '../types/upload-file'
 import type { UpupCore } from '../core'
 import type { OrchestratorState, OrchestratorCallbacks } from './types'
-import { fileAppendParams, revokeFileUrl } from '../utils/file-helpers'
+import { revokeFileUrl } from '../utils/file-helpers'
 import { dataURLtoBlob, blobToUploadFile, revokeAndReplace } from '../utils/image-helpers'
 import type { UploadResult } from '../contracts-strategies'
 
@@ -78,27 +78,6 @@ export class UploaderOrchestrator {
     /** Toggle the "adding more files" state. */
     setIsAddingMore(value: boolean): void {
         this.setState({ isAddingMore: value })
-    }
-
-    /** Add raw File objects to state (converts via fileAppendParams). */
-    addFiles(files: File[]): void {
-        const next = new Map(this.state.files)
-        for (const file of files) {
-            const uploadFile = fileAppendParams(file)
-            next.set(uploadFile.id, uploadFile)
-        }
-        this.setState({ files: next })
-    }
-
-    /** Replace all files in state with new ones (revokes old blob URLs). */
-    dynamicallyReplaceFiles(files: File[]): void {
-        this.state.files.forEach(file => revokeFileUrl(file))
-        const next = new Map<string, UploadFile>()
-        for (const file of files) {
-            const uploadFile = fileAppendParams(file)
-            next.set(uploadFile.id, uploadFile)
-        }
-        this.setState({ files: next })
     }
 
     // ── Upload control methods ──────────────────────────────────────
