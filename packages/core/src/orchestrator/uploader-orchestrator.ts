@@ -265,6 +265,7 @@ export class UploaderOrchestrator {
         if (current.size !== coreFiles.size) return true
         const a = current.entries()
         const b = coreFiles.entries()
+        // positional compare: key (value[0]) then UploadFile identity (value[1])
         for (let x = a.next(), y = b.next(); !x.done && !y.done; x = a.next(), y = b.next()) {
             if (x.value[0] !== y.value[0] || x.value[1] !== y.value[1]) return true
         }
