@@ -1,4 +1,4 @@
-import { useEffect, useRef, useSyncExternalStore, type SetStateAction } from 'react'
+import { useCallback, useEffect, useRef, useSyncExternalStore, type SetStateAction } from 'react'
 import {
     AdapterBrowserController,
     ONE_DRIVE_DESCRIPTOR,
@@ -58,22 +58,35 @@ export default function useOneDrive() {
         () => SERVER_SNAPSHOT,
     )
 
+    // setPath is consumed as a useEffect dependency in DriveBrowser
+    // (DriveBrowser.tsx: `useEffect(..., [driveFiles, setPath])`), so it MUST be
+    // referentially stable across renders — otherwise the effect re-runs every
+    // render and loops. Same reason useRootProvider useCallbacks its setters.
+    // Resolves a functional updater against the live snapshot before delegating to
+    // the array-only controller.setPath.
+    const setPath = useCallback(
+        (value: SetStateAction<DriveFolder[]>) =>
+            controller?.setPath(
+                typeof value === 'function'
+                    ? value(controller.getSnapshot().path)
+                    : value,
+            ),
+        [controller],
+    )
+
     return {
         user: state.user,
         oneDriveFiles: state.folder,
         signOut: () => controller?.signOut(),
         signIn: () => controller?.signIn(),
         authenticate: () => controller?.signIn(),
+        // 'active' is a presence sentinel the component checks via `!token`; the real
+        // GIS token lives in state.token and is intentionally not surfaced here.
         token: state.isAuthenticated ? 'active' : undefined,
         isAuthenticated: state.isAuthenticated,
         isLoading: state.isLoading,
         path: state.path,
-        setPath: (value: SetStateAction<DriveFolder[]>) =>
-            controller?.setPath(
-                typeof value === 'function'
-                    ? value(controller.getSnapshot().path)
-                    : value,
-            ),
+        setPath,
         isClickLoading: state.isClickLoading,
         handleClick: (file: DriveFile) => controller?.handleClick(file),
         selectedFiles: state.selectedFiles,
