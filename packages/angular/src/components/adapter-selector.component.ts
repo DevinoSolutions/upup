@@ -1,5 +1,5 @@
 import { Component, inject } from '@angular/core'
-import { cn, FileSource, sourceNameKeys } from '@upup/core'
+import { cn, FileSource, sourceNameKeys, formatUiMessage as t, pluralUiMessage as plural } from '@upup/core'
 import { UpupStore } from '../upup-store.service'
 import {
     MyDeviceIconComponent,
@@ -12,6 +12,7 @@ import {
     AudioIconComponent,
     ScreenCastIconComponent,
 } from './icons'
+import { IconComponent } from './icon.component'
 import { NgComponentOutlet } from '@angular/common'
 
 /**
@@ -20,6 +21,11 @@ import { NgComponentOutlet } from '@angular/common'
  * Renders one tile per source in store.uiProps.sources with data-testid="upup-source-${id}".
  * Clicking a non-LOCAL tile calls store.setActiveAdapter(id).
  * LOCAL tile is intentionally no-op here (file picker is owned by the shell).
+ *
+ * Below the tiles (svelte parity), the empty-state copy block renders:
+ *   - the "drag your files / browse files" line (+ optional "select a folder")
+ *   - the constraint sub-copy (allowed types / count / max size)
+ * Plus the "adding more files" header and the mini upload variant.
  *
  * Source tile testids (FileSource id is the suffix):
  *   upup-source-local, upup-source-googleDrive, upup-source-oneDrive,
@@ -36,25 +42,94 @@ interface SourceEntry {
 @Component({
     selector: 'upup-adapter-selector',
     standalone: true,
-    imports: [NgComponentOutlet],
+    imports: [NgComponentOutlet, IconComponent],
     template: `
         <div
             data-upup-slot="adapter-selector"
             [class]="containerClass"
         >
-            <div [class]="listClass">
-                @for (source of chosenSources; track source.id) {
+            <!-- Adding-more header (Back + label) -->
+            @if (store.isAddingMore()) {
+                <div [class]="headerClass">
                     <button
                         type="button"
-                        [attr.data-testid]="'upup-source-' + source.id"
-                        [class]="tileClass"
-                        (click)="handleAdapterClick(source.id)"
+                        [class]="headerBackButtonClass"
+                        (click)="onCancelAddingMore()"
                     >
-                        <ng-container *ngComponentOutlet="source.iconType"></ng-container>
-                        <span [class]="labelClass">{{ source.label }}</span>
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="16"
+                            height="16"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
+                            <polyline points="15 18 9 12 15 6" />
+                        </svg>
+                        Back
                     </button>
-                }
-            </div>
+                    <span [class]="headerLabelClass">Adding more files</span>
+                </div>
+            }
+
+            <!-- Source tiles -->
+            @if (!store.uiProps.mini) {
+                <div [class]="listClass">
+                    @for (source of chosenSources; track source.id) {
+                        <button
+                            type="button"
+                            [attr.data-testid]="'upup-source-' + source.id"
+                            [class]="tileClass"
+                            (click)="handleAdapterClick(source.id)"
+                        >
+                            <ng-container *ngComponentOutlet="source.iconType"></ng-container>
+                            <span [class]="labelClass">{{ source.label }}</span>
+                        </button>
+                    }
+                </div>
+            }
+
+            <!-- Mini upload button OR empty-state drag/browse copy -->
+            @if (store.uiProps.mini) {
+                <button
+                    type="button"
+                    (click)="handleBrowseFilesClick()"
+                    class="upup-flex upup-cursor-pointer upup-flex-col upup-items-center upup-justify-center upup-gap-2 upup-rounded-lg upup-p-2"
+                >
+                    <upup-icon name="upload" [size]="32" [class]="miniIconClass" />
+                    <p [class]="miniTextClass">Drag or browse to upload</p>
+                </button>
+            } @else {
+                <div class="upup-flex upup-flex-col upup-items-center upup-gap-1 upup-px-3 upup-text-center md:upup-gap-2 md:upup-px-[30px]">
+                    <div class="upup-flex upup-flex-wrap upup-items-center upup-justify-center upup-gap-1">
+                        <span [class]="copyTextClass">{{ dragText }}</span>
+                        <button
+                            type="button"
+                            data-testid="upup-browse-files"
+                            [class]="browseButtonClass"
+                            (click)="handleBrowseFilesClick()"
+                        >
+                            {{ store.translations().browseFiles }}
+                        </button>
+                        @if (store.uiProps.folderPickerButtonVisible) {
+                            <span [class]="copyTextClass"> {{ store.translations().or }}</span>
+                            <button
+                                type="button"
+                                [class]="browseButtonClass"
+                                (click)="handleSelectFolderClick()"
+                            >
+                                {{ store.translations().selectAFolder }}
+                            </button>
+                        }
+                    </div>
+                    @if (constraintLine) {
+                        <p [class]="constraintClass">{{ constraintLine }}</p>
+                    }
+                </div>
+            }
         </div>
     `,
 })
@@ -91,7 +166,6 @@ export class AdapterSelectorComponent {
     }
 
     get containerClass(): string {
-        const dark = this.store.isDark()
         const isAddingMore = this.store.isAddingMore()
         return cn(
             'upup-relative upup-flex upup-h-full upup-gap-3 upup-rounded-lg',
@@ -126,6 +200,115 @@ export class AdapterSelectorComponent {
         )
     }
 
+    // ── Empty-state copy + header (svelte AdapterSelector.svelte parity) ─────────
+
+    get headerClass(): string {
+        const dark = this.store.isDark()
+        const slotClasses = this.store.slotOverrides()
+        return cn(
+            'upup-shadow-bottom upup-flex upup-w-full upup-items-center upup-rounded-t-lg upup-bg-black/[0.025] upup-px-3 upup-py-2',
+            { 'upup-bg-white/5 dark:upup-bg-white/5': dark },
+            slotClasses.containerHeader,
+        )
+    }
+
+    get headerBackButtonClass(): string {
+        const dark = this.store.isDark()
+        const slotClasses = this.store.slotOverrides()
+        return cn(
+            'upup-flex upup-items-center upup-gap-1 upup-text-sm upup-font-medium upup-text-blue-600',
+            { 'upup-text-[#30C5F7] dark:upup-text-[#30C5F7]': dark },
+            slotClasses.containerCancelButton,
+        )
+    }
+
+    get headerLabelClass(): string {
+        const dark = this.store.isDark()
+        return cn(
+            'upup-flex-1 upup-text-center upup-text-sm upup-text-[#6D6D6D]',
+            { 'upup-text-gray-300 dark:upup-text-gray-300': dark },
+        )
+    }
+
+    get dragText(): string {
+        const tr = this.store.translations()
+        return this.store.uiProps.limit > 1 ? tr.dragFilesOr : tr.dragFileOr
+    }
+
+    get copyTextClass(): string {
+        const dark = this.store.isDark()
+        return cn(
+            'upup-text-xs upup-text-[#0B0B0B] md:upup-text-sm',
+            { 'upup-text-white dark:upup-text-white': dark },
+        )
+    }
+
+    get browseButtonClass(): string {
+        const dark = this.store.isDark()
+        return cn(
+            'upup-cursor-pointer upup-text-xs upup-font-semibold upup-text-[#0E2ADD] md:upup-text-sm',
+            { 'upup-text-[#59D1F9] dark:upup-text-[#59D1F9]': dark },
+        )
+    }
+
+    get constraintClass(): string {
+        const dark = this.store.isDark()
+        return cn(
+            'upup-text-center upup-text-xs upup-text-[#6D6D6D] md:upup-text-sm',
+            { 'upup-text-gray-300 dark:upup-text-gray-300': dark },
+        )
+    }
+
+    get miniIconClass(): string {
+        const dark = this.store.isDark()
+        return cn(
+            'upup-h-16 upup-w-16 md:upup-h-20 md:upup-w-20',
+            { 'upup-text-[#0B0B0B]': !dark, 'upup-text-white dark:upup-text-white': dark },
+        )
+    }
+
+    get miniTextClass(): string {
+        const dark = this.store.isDark()
+        return cn('px-6 upup-text-center upup-text-xs', {
+            'upup-text-[#6D6D6D] dark:upup-text-gray-400': !dark,
+            'upup-text-gray-400 dark:upup-text-gray-500': dark,
+        })
+    }
+
+    /** Constraint sub-copy: humanized allowed types + count + max size (svelte parity). */
+    get constraintLine(): string {
+        const tr = this.store.translations()
+        const { allowedFileTypes, limit, maxFileSize } = this.store.uiProps
+        const parts: string[] = []
+        if (allowedFileTypes && allowedFileTypes !== '*/*' && allowedFileTypes !== '*') {
+            const humanized = allowedFileTypes
+                .split(',')
+                .map((s) => s.trim())
+                .map((m) => {
+                    if (m.startsWith('.')) return m
+                    const [type, sub] = m.split('/')
+                    if (sub === '*') return type.charAt(0).toUpperCase() + type.slice(1) + 's'
+                    return sub.toUpperCase()
+                })
+                .join(', ')
+            parts.push(humanized + ' only')
+        }
+        if (limit > 1) {
+            parts.push(t(tr.addDocumentsHere, { limit }))
+        }
+        if (maxFileSize?.size && maxFileSize?.unit) {
+            parts.push(
+                t(plural(tr, 'maxFileSizeAllowed', limit), {
+                    size: maxFileSize.size,
+                    unit: maxFileSize.unit,
+                }),
+            )
+        }
+        return parts.join(', ')
+    }
+
+    // ── Handlers ────────────────────────────────────────────────────────────────
+
     /**
      * Unified tile click handler — 1:1 port of svelte useAdapterSelector.handleAdapterClick:
      *   onIntegrationClick(sourceId)
@@ -140,6 +323,82 @@ export class AdapterSelectorComponent {
             this.store.openFilePicker()
         } else {
             this.store.setActiveAdapter(sourceId)
+        }
+    }
+
+    onCancelAddingMore(): void {
+        this.store.setIsAddingMore(false)
+    }
+
+    handleBrowseFilesClick(): void {
+        const el = this.store.getFileInput()
+        if (el) {
+            el.removeAttribute('webkitdirectory')
+            el.removeAttribute('directory')
+        }
+        this.store.openFilePicker()
+        this.store.core?.emit('browse-files', {})
+    }
+
+    async handleSelectFolderClick(): Promise<void> {
+        const fsWindow = window as Window & {
+            showDirectoryPicker?: () => Promise<FileSystemDirectoryHandle>
+        }
+        if (fsWindow.showDirectoryPicker) {
+            try {
+                const directoryHandle = await fsWindow.showDirectoryPicker()
+                const collectedFiles: File[] = []
+
+                type IterableDirHandle = {
+                    values(): AsyncIterableIterator<
+                        FileSystemHandle & { kind: string; getFile: () => Promise<File> }
+                    >
+                }
+                async function getFiles(dirHandle: IterableDirHandle, path = '') {
+                    for await (const entry of dirHandle.values()) {
+                        const newPath = path ? `${path}/${entry.name}` : entry.name
+                        if (entry.kind === 'file') {
+                            const pickedFile = await entry.getFile()
+                            const file = new File(
+                                [await pickedFile.arrayBuffer()],
+                                pickedFile.name,
+                                { type: pickedFile.type, lastModified: pickedFile.lastModified },
+                            )
+                            try {
+                                Object.defineProperty(file, 'webkitRelativePath', {
+                                    value: newPath, configurable: true, writable: true,
+                                })
+                                Object.defineProperty(file, 'relativePath', {
+                                    value: newPath, configurable: true, writable: true,
+                                })
+                            } catch {
+                                Object.assign(file, { relativePath: newPath })
+                            }
+                            collectedFiles.push(file)
+                        } else if (entry.kind === 'directory') {
+                            await getFiles(entry as unknown as IterableDirHandle, newPath)
+                        }
+                    }
+                }
+                await getFiles(directoryHandle as unknown as IterableDirHandle)
+                if (collectedFiles.length > 0) {
+                    this.store.handleSetSelectedFiles(collectedFiles)
+                    this.store.core?.emit('folder-select', { count: collectedFiles.length })
+                    const el = this.store.getFileInput()
+                    if (el) el.value = ''
+                }
+            } catch (error) {
+                const name = error instanceof DOMException ? error.name : ''
+                if (name !== 'AbortError') throw error
+            }
+        } else {
+            const el = this.store.getFileInput()
+            if (el) {
+                el.setAttribute('webkitdirectory', 'true')
+                el.setAttribute('directory', 'true')
+            }
+            this.store.openFilePicker()
+            this.store.core?.emit('folder-select', { count: 0 })
         }
     }
 }
