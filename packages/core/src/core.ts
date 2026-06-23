@@ -18,6 +18,7 @@ import { UploadManager } from './upload-manager'
 import { resolveUploadConfig } from './resolve-upload-config'
 import { CrashRecoveryManager, IndexedDBStorage, type PersistentStorage } from './crash-recovery'
 import { serializeCrashRecovery, reviveCrashRecoverySnapshot } from './crash-recovery-serializer'
+import { mergeConstructOptions, mergeUpdateOptions } from './options/normalize-core-options'
 
 export interface Restrictions {
   maxFileSize?: import('./contracts').MaxFileSizeObject
@@ -140,30 +141,7 @@ export class UpupCore {
   constructor(options: CoreOptions) {
     this.options = { ...options }
 
-    // Merge restrictions into flat options (flat takes precedence)
-    if (options.restrictions) {
-      const r = options.restrictions
-      if (r.maxFileSize && !options.maxFileSize) this.options.maxFileSize = r.maxFileSize
-      if (r.minFileSize && !options.minFileSize) this.options.minFileSize = r.minFileSize
-      if (r.maxTotalFileSize && !options.maxTotalFileSize) this.options.maxTotalFileSize = r.maxTotalFileSize
-      if (r.maxNumberOfFiles != null && !options.limit) this.options.limit = r.maxNumberOfFiles
-      if (r.minNumberOfFiles != null && !options.minFiles) this.options.minFiles = r.minNumberOfFiles
-      if (r.allowedFileTypes && !options.allowedFileTypes) this.options.allowedFileTypes = r.allowedFileTypes.join(',')
-    }
-
-    // Merge cloudDrives into flat options (flat takes precedence)
-    if (options.cloudDrives) {
-      const cd = options.cloudDrives
-      if (cd.googleDrive && !options.googleDriveConfigs) {
-        this.options.googleDriveConfigs = cd.googleDrive as unknown as Record<string, unknown>
-      }
-      if (cd.oneDrive && !options.oneDriveConfigs) {
-        this.options.oneDriveConfigs = cd.oneDrive as unknown as Record<string, unknown>
-      }
-      if (cd.dropbox && !options.dropboxConfigs) {
-        this.options.dropboxConfigs = cd.dropbox as unknown as Record<string, unknown>
-      }
-    }
+    mergeConstructOptions(this.options, options)
 
     this.fileManager = new FileManager({
       allowedFileTypes: this.options.allowedFileTypes,
@@ -321,28 +299,7 @@ export class UpupCore {
     const hadCrashRecovery = this.crashRecovery != null
     Object.assign(this.options, partial)
 
-    if (partial.restrictions) {
-      const r = partial.restrictions
-      if (r.maxFileSize && !('maxFileSize' in partial)) this.options.maxFileSize = r.maxFileSize
-      if (r.minFileSize && !('minFileSize' in partial)) this.options.minFileSize = r.minFileSize
-      if (r.maxTotalFileSize && !('maxTotalFileSize' in partial)) this.options.maxTotalFileSize = r.maxTotalFileSize
-      if (r.maxNumberOfFiles != null && !('limit' in partial)) this.options.limit = r.maxNumberOfFiles
-      if (r.minNumberOfFiles != null && !('minFiles' in partial)) this.options.minFiles = r.minNumberOfFiles
-      if (r.allowedFileTypes && !('allowedFileTypes' in partial)) this.options.allowedFileTypes = r.allowedFileTypes.join(',')
-    }
-
-    if (partial.cloudDrives) {
-      const cd = partial.cloudDrives
-      if (cd.googleDrive) {
-        this.options.googleDriveConfigs = cd.googleDrive as unknown as Record<string, unknown>
-      }
-      if (cd.oneDrive) {
-        this.options.oneDriveConfigs = cd.oneDrive as unknown as Record<string, unknown>
-      }
-      if (cd.dropbox) {
-        this.options.dropboxConfigs = cd.dropbox as unknown as Record<string, unknown>
-      }
-    }
+    mergeUpdateOptions(this.options, partial)
 
     this.fileManager.updateOptions({
       allowedFileTypes: this.options.allowedFileTypes,
