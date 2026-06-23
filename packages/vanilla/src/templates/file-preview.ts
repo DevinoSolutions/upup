@@ -9,6 +9,7 @@ import type { RootContext } from '../lib/types'
 import { shouldRender } from './should-render'
 import { progressBar } from './shared/progress-bar'
 import { filePreviewThumbnail } from './file-preview-thumbnail'
+import { icon } from './icon'
 
 function formatFileSize(bytes: number | undefined, tr: Translations): string {
   if (!bytes || bytes === 0) return tr.zeroBytes
@@ -134,7 +135,7 @@ export function filePreview(
           aria-label=${tr.removeFile}
           data-testid="upup-file-remove"
         >
-          ${nothing}
+          ${icon('trash', { class: 'upup-h-3 upup-w-3' })}
         </button>
 
         ${progressBar(ctx, {

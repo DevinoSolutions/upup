@@ -1,4 +1,4 @@
-import { ref, shallowRef, computed, onMounted, onUnmounted, defineComponent, type Ref } from 'vue'
+import { ref, shallowRef, computed, onMounted, onUnmounted, defineComponent, h, type Ref } from 'vue'
 import {
     FileSource,
     normalizeRootOptions,
@@ -11,9 +11,24 @@ import type { UpupUploaderProps } from '../shared/types'
 import type { IRootContext } from '../context/root-context'
 import { useUpupUpload } from '../use-upup-upload'
 import { useSSEProcessing } from './useSSEProcessing'
+import { Icon } from '../components/Icon'
 
-/** Empty component placeholder for icons until Vue SVG icons are added */
+/** Empty component placeholder for icons that have no real default glyph yet. */
 const EmptyIcon = defineComponent({ render: () => null })
+
+/** Default file-delete glyph — renders the shared registry 'trash' icon (parity with
+ *  React's react-icons TbTrash default). Forwards the consumer's class/attrs to the svg. */
+const DefaultFileDeleteIcon = defineComponent({
+    name: 'UpupDefaultFileDeleteIcon',
+    inheritAttrs: false,
+    // attrs is Record<string, unknown> (SetupContext); narrow the two props Icon accepts.
+    setup: (_props, { attrs }) => () =>
+        h(Icon, {
+            name: 'trash',
+            class: attrs.class as string | undefined,
+            size: attrs.size as number | undefined,
+        }),
+})
 
 const EMPTY_STYLE: Record<string, string> = {}
 
@@ -238,7 +253,7 @@ export default function useRootProvider(props: UpupUploaderProps): IRootContext 
     // ── Icons resolution (framework-specific; Vue uses EmptyIcon stubs) ──────
     const resolvedIcons = computed(() => ({
         ContainerAddMoreIcon: icons.ContainerAddMoreIcon ?? EmptyIcon,
-        FileDeleteIcon: icons.FileDeleteIcon ?? EmptyIcon,
+        FileDeleteIcon: icons.FileDeleteIcon ?? DefaultFileDeleteIcon,
         CameraCaptureIcon: icons.CameraCaptureIcon ?? EmptyIcon,
         CameraRotateIcon: icons.CameraRotateIcon ?? EmptyIcon,
         CameraDeleteIcon: icons.CameraDeleteIcon ?? EmptyIcon,

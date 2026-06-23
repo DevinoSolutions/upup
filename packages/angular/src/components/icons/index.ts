@@ -2,6 +2,7 @@ import type { Type } from '@angular/core'
 
 export { IconComponent } from '../icon.component'
 export { EmptyIconComponent } from './empty-icon.component'
+export { TrashIconComponent } from './trash-icon.component'
 export { DefaultLoaderIconComponent } from './default-loader-icon.component'
 export { UploadIconComponent } from './upload-icon.component'
 export { LoaderIconComponent } from './loader-icon.component'

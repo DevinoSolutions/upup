@@ -15,6 +15,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { UploadStatus, FileSource, UpupCore, GoogleDrivePlugin } from '@upup/core'
 import { UpupStore } from './upup-store.service'
 import { EmptyIconComponent } from './components/icons/empty-icon.component'
+import { TrashIconComponent } from './components/icons/trash-icon.component'
 
 /** Minimal valid props — all optional fields omitted. */
 const baseProps = {} as any
@@ -413,12 +414,13 @@ describe('UpupStore', () => {
             store.dispose()
         })
 
-        it('uiProps.icons defaults each slot to EmptyIconComponent when no icons prop is provided', () => {
-            // T8: EmptyIconComponent is the sentinel for "no icon provided"
+        it('uiProps.icons defaults FileDeleteIcon to TrashIconComponent and the rest to EmptyIconComponent', () => {
+            // FileDeleteIcon ships a real default glyph (registry 'trash', parity with React's
+            // TbTrash). The remaining slots still default to EmptyIconComponent (no glyph yet).
             const store = makeStore()
             const icons = store.uiProps.icons
             expect(icons.ContainerAddMoreIcon).toBe(EmptyIconComponent)
-            expect(icons.FileDeleteIcon).toBe(EmptyIconComponent)
+            expect(icons.FileDeleteIcon).toBe(TrashIconComponent)
             expect(icons.CameraCaptureIcon).toBe(EmptyIconComponent)
             expect(icons.CameraRotateIcon).toBe(EmptyIconComponent)
             expect(icons.CameraDeleteIcon).toBe(EmptyIconComponent)

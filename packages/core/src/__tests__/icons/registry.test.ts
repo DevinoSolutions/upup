@@ -6,7 +6,7 @@ const EXPECTED: IconName[] = [
   'my-device', 'box', 'dropbox', 'google-drive', 'one-drive',
   'link', 'camera', 'audio', 'screen-cast',
   // stroke
-  'upload', 'loader', 'x', 'layout-grid', 'layout-list',
+  'upload', 'loader', 'x', 'trash', 'layout-grid', 'layout-list',
   'folder', 'search', 'user', 'file',
   // filled
   'player-play', 'player-pause',

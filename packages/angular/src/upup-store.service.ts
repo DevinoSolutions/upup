@@ -18,6 +18,7 @@ import { createSSEProcessing } from './lib/use-sse-processing'
 import { toSignalStore, type SignalStore } from './lib/to-signal-store'
 import type { UpupUploaderProps } from './shared/types'
 import { EmptyIconComponent } from './components/icons/empty-icon.component'
+import { TrashIconComponent } from './components/icons/trash-icon.component'
 
 // Stable sentinel — avoids allocating a new object on every init() when style is not passed.
 const EMPTY_STYLE: Record<string, string> = {}
@@ -308,7 +309,7 @@ export class UpupStore {
         const icons = p.icons ?? {}
         const resolvedIcons = {
             ContainerAddMoreIcon: icons.ContainerAddMoreIcon ?? EmptyIconComponent,
-            FileDeleteIcon: icons.FileDeleteIcon ?? EmptyIconComponent,
+            FileDeleteIcon: icons.FileDeleteIcon ?? TrashIconComponent,
             CameraCaptureIcon: icons.CameraCaptureIcon ?? EmptyIconComponent,
             CameraRotateIcon: icons.CameraRotateIcon ?? EmptyIconComponent,
             CameraDeleteIcon: icons.CameraDeleteIcon ?? EmptyIconComponent,

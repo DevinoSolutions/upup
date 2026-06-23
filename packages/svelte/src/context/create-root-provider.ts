@@ -14,6 +14,7 @@ import { useUpupUpload } from '../use-upup-upload'
 import { useSSEProcessing } from '../composables/useSSEProcessing'
 import { toReadable } from '../lib/to-readable'
 import EmptyIcon from '../components/EmptyIcon.svelte'
+import TrashIcon from '../components/TrashIcon.svelte'
 
 const EMPTY_STYLE: Record<string, string> = {}
 
@@ -218,7 +219,7 @@ export function createRootProvider(props: UpupUploaderProps): IRootContext {
     // ── Icons resolution (framework-specific) ───────────────────
     const resolvedIcons = {
         ContainerAddMoreIcon: icons.ContainerAddMoreIcon ?? (EmptyIcon as Component),
-        FileDeleteIcon: icons.FileDeleteIcon ?? (EmptyIcon as Component),
+        FileDeleteIcon: icons.FileDeleteIcon ?? (TrashIcon as Component),
         CameraCaptureIcon: icons.CameraCaptureIcon ?? (EmptyIcon as Component),
         CameraRotateIcon: icons.CameraRotateIcon ?? (EmptyIcon as Component),
         CameraDeleteIcon: icons.CameraDeleteIcon ?? (EmptyIcon as Component),
