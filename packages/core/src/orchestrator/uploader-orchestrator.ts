@@ -58,15 +58,11 @@ export class UploaderOrchestrator {
 
     // ── File management methods ──────────────────────────────────────
 
-    /** Remove a file by id: revoke blob URL, remove from state, notify core. */
+    /** Remove a file by id: revoke its blob URL, then delegate to core. */
     removeFile(fileId: string): void {
-        const file = this.state.files.get(fileId)
+        const file = this.core.files.get(fileId)
         if (file) revokeFileUrl(file)
-        const next = new Map(this.state.files)
-        next.delete(fileId)
-        this.setState({ files: next })
         this.core.removeFile(fileId)
-        if (file) this.callbacks.onFileRemoved?.(file)
     }
 
     /** Set the active cloud/source adapter. */
@@ -249,6 +245,32 @@ export class UploaderOrchestrator {
 
     private speedSamples: { time: number; bytes: number }[] = []
 
+    /**
+     * Rebuild the projected files map from core (the single source of truth).
+     * No-op when the file set is unchanged (same size + ordered ids + same
+     * UploadFile refs) so the `files` reference stays stable across the many
+     * status-only `state-change` events core emits during upload — preserving
+     * referential stability for useSyncExternalStore / computed consumers.
+     */
+    private rebuildFilesProjection(): void {
+        const coreFiles = this.core.files
+        if (!this.filesProjectionChanged(coreFiles)) return
+        const files = new Map(coreFiles)
+        const totalBytes = [...files.values()].reduce((sum, f) => sum + f.size, 0)
+        this.setState({ files, totalBytes })
+    }
+
+    private filesProjectionChanged(coreFiles: Map<string, UploadFile>): boolean {
+        const current = this.state.files
+        if (current.size !== coreFiles.size) return true
+        const a = current.entries()
+        const b = coreFiles.entries()
+        for (let x = a.next(), y = b.next(); !x.done && !y.done; x = a.next(), y = b.next()) {
+            if (x.value[0] !== y.value[0] || x.value[1] !== y.value[1]) return true
+        }
+        return false
+    }
+
     init(): void {
         // ── upload-start ────────────────────────────────────────
         this.unsubs.push(
@@ -265,20 +287,15 @@ export class UploaderOrchestrator {
             }),
         )
 
-        // ── files-added ─────────────────────────────────────────
+        // ── files (projection of core.files — single source of truth) ──
+        this.unsubs.push(
+            this.core.on('state-change', () => this.rebuildFilesProjection()),
+        )
+
+        // ── files-added (side-effects only; the map is owned by state-change) ──
         this.unsubs.push(
             this.core.on('files-added', (added: UploadFile[]) => {
                 if (!Array.isArray(added) || added.length === 0) return
-
-                // Merge into state map
-                const next = new Map(this.state.files)
-                for (const file of added) {
-                    next.set(file.id, file)
-                }
-
-                // Track total bytes
-                const totalBytes = [...next.values()].reduce((sum, f) => sum + f.size, 0)
-                this.setState({ files: next, totalBytes })
 
                 this.callbacks.onFilesSelected?.(added)
 
@@ -302,38 +319,18 @@ export class UploaderOrchestrator {
             }),
         )
 
-        // ── file-removed ────────────────────────────────────────
+        // ── file-removed (callback only; the map is owned by state-change) ──
         this.unsubs.push(
             this.core.on('file-removed', (file: UploadFile) => {
-                // Mirror the removal into orchestrator state. Frameworks that
-                // remove via `core.removeFile` directly (Vue/Svelte/Angular
-                // `upload.removeFile`) rely on this so their snapshot-derived
-                // list shrinks. The `has` guard makes it a no-op for the
-                // `orchestrator.removeFile` path (React), which has already
-                // removed the file from state before core emits — preserving
-                // that path's single-notify behaviour.
-                if (this.state.files.has(file.id)) {
-                    const next = new Map(this.state.files)
-                    next.delete(file.id)
-                    this.setState({ files: next })
-                }
                 this.callbacks.onFileRemoved?.(file)
             }),
         )
 
-        // ── files-cleared ───────────────────────────────────────
-        this.unsubs.push(
-            this.core.on('files-cleared', () => {
-                // Mirror a full clear (core.removeAll) into orchestrator state.
-                // "Remove all files" and handleCancel/handleDone route through
-                // core.removeAll; without this listener state.files never emptied
-                // and snapshot-derived lists kept stale rows. Guard avoids a
-                // redundant notify when state is already empty.
-                if (this.state.files.size > 0) {
-                    this.setState({ files: new Map() })
-                }
-            }),
-        )
+        // Note: files-cleared is NOT subscribed here. The state-change listener
+        // above (subscribed to core.on('state-change')) rebuilds the projection
+        // from core.files on every mutation, including removeAll(). core.removeAll()
+        // emits state-change before files-cleared, so the projection is already
+        // empty by the time files-cleared would fire.
 
         // ── upload-progress ─────────────────────────────────────
         this.unsubs.push(

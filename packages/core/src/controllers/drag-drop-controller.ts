@@ -29,12 +29,13 @@ export interface DragDropDeps {
    * supply the SAME source its file list renders from, so the dropzone border
    * (`absoluteHasBorder`) stays in lockstep with the visible files:
    *   - React / Vue / Svelte / Angular → `orchestrator.getSnapshot().files.size`
-   *     (their lists derive from the orchestrator snapshot)
+   *     (their lists derive from the orchestrator snapshot, which is now a
+   *     projection of core.files refreshed on every `state-change` event)
    *   - Vanilla                        → `core.files.size` (its list reads core)
-   * Reading `core.files.size` unconditionally desyncs from the orchestrator
-   * notify timing: `orchestrator.removeFile` runs `setState()` (which notifies)
-   * and only THEN `core.removeFile`, so on that notify `core.files` still holds
-   * the file and the border would never recover after the last removal.
+   * Both sources are now in sync after every file mutation: the orchestrator
+   * files map is rebuilt from `core.files` on each `state-change`, so
+   * `orchestrator.getSnapshot().files.size` always equals `core.files.size`
+   * after any mutation completes.
    */
   filesSize: () => number
   /** Getter so frameworks that re-read options each render (React) stay fresh. */
