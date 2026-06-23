@@ -15,11 +15,7 @@ import { validateFileRestrictions } from './validate-file-restrictions'
 import { PipelineEngine } from './pipeline/engine'
 import { buildAutoPipeline } from './pipeline/build-auto-pipeline'
 import { UploadManager } from './upload-manager'
-import { TokenEndpointCredentials } from './strategies/token-endpoint'
-import { ServerCredentials } from './strategies/server-credentials'
-import { DirectUpload } from './strategies/direct-upload'
-import { MultipartUpload } from './strategies/multipart-upload'
-import { TusUpload } from './strategies/tus-upload'
+import { resolveUploadConfig } from './resolve-upload-config'
 import { CrashRecoveryManager, IndexedDBStorage, type PersistentStorage } from './crash-recovery'
 import { serializeCrashRecovery, reviveCrashRecoverySnapshot } from './crash-recovery-serializer'
 
@@ -402,68 +398,9 @@ export class UpupCore {
   }
 
   private createUploadManager(): UploadManager {
-    const tusOptions =
-      this.options.resumable?.protocol === 'tus'
-        ? this.options.resumable
-        : null
-    const configuredTargetCount = [
-      this.options.uploadEndpoint,
-      this.options.serverUrl,
-      tusOptions?.endpoint,
-    ].filter(Boolean).length
-
-    if (configuredTargetCount > 1) {
-      throw new UpupConfigError(
-        'Configure exactly one upload target: uploadEndpoint, serverUrl, or resumable.protocol="tus" with endpoint.',
-        'AMBIGUOUS_UPLOAD_TARGET',
-      )
-    }
-
-    const credentials = this.options.serverUrl
-      ? new ServerCredentials({
-          serverUrl: this.options.serverUrl,
-        })
-      : this.options.uploadEndpoint
-        ? new TokenEndpointCredentials({
-            url: this.options.uploadEndpoint,
-          })
-        : {
-            getPresignedUrl: async () => {
-              throw new UpupConfigError('Tus uploads do not use presigned upload URLs.')
-            },
-          }
-    const directUpload = new DirectUpload()
-    const tusUpload = tusOptions ? new TusUpload(tusOptions) : null
-    const multipartUpload =
-      this.options.resumable?.protocol === 'multipart'
-        ? new MultipartUpload({
-            credentials,
-            chunkSizeBytes: this.options.resumable.chunkSizeBytes,
-          })
-        : null
-    const multipartThreshold =
-      this.options.resumable?.protocol === 'multipart'
-        ? this.options.resumable.thresholdBytes ?? 5 * 1024 * 1024
-        : Number.POSITIVE_INFINITY
-
+    const config = resolveUploadConfig(this.options)
     return new UploadManager({
-      credentials,
-      uploadStrategy: directUpload,
-      resolveUploadStrategy: (file) => {
-        if (tusUpload) {
-          return { uploadStrategy: tusUpload, presign: false }
-        }
-        const shouldUseMultipart = Boolean(
-          multipartUpload && file.size >= multipartThreshold,
-        )
-        return shouldUseMultipart
-          ? { uploadStrategy: multipartUpload!, presign: false }
-          : { uploadStrategy: directUpload, presign: true }
-      },
-      maxConcurrentUploads: this.options.maxConcurrentUploads ?? 3,
-      maxRetries: this.options.maxRetries,
-      fastAbortThreshold: this.options.fastAbortThreshold,
-      isSuccessfulCall: this.options.isSuccessfulCall,
+      ...config,
       onFileStart: (file) => {
         const uploading = Object.assign(file, { status: UploadStatus.UPLOADING }) as UploadFile
         this.files.set(file.id, uploading)
