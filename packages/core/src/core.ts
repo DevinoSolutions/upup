@@ -13,6 +13,7 @@ import type { AdapterPlugin } from './adapters/plugin'
 import { FileManager, type FileManagerOptions } from './file-manager'
 import { validateFileRestrictions } from './validate-file-restrictions'
 import { PipelineEngine } from './pipeline/engine'
+import { buildAutoPipeline } from './pipeline/build-auto-pipeline'
 import { UploadManager } from './upload-manager'
 import { TokenEndpointCredentials } from './strategies/token-endpoint'
 import { ServerCredentials } from './strategies/server-credentials'
@@ -375,43 +376,6 @@ export class UpupCore {
     this.emitter.emit('files-reordered', { fileIds })
   }
 
-  private async buildAutoPipeline(): Promise<PipelineStep[]> {
-    const steps: PipelineStep[] = []
-
-    if (this.options.heicConversion) {
-      const { heicStep } = await import('./steps/heic')
-      steps.push(heicStep())
-    }
-
-    if (this.options.stripExifData) {
-      const { exifStep } = await import('./steps/exif')
-      steps.push(exifStep())
-    }
-
-    if (this.options.imageCompression) {
-      const { compressStep } = await import('./steps/compress')
-      const opts = typeof this.options.imageCompression === 'object'
-        ? this.options.imageCompression
-        : {}
-      steps.push(compressStep(opts))
-    }
-
-    if (this.options.thumbnailGenerator) {
-      const { thumbnailStep } = await import('./steps/thumbnail')
-      const opts = typeof this.options.thumbnailGenerator === 'object'
-        ? this.options.thumbnailGenerator
-        : {}
-      steps.push(thumbnailStep(opts))
-    }
-
-    if (this.options.checksumVerification) {
-      const { hashStep } = await import('./steps/hash')
-      steps.push(hashStep())
-    }
-
-    return steps
-  }
-
   private async maybeCreateWorkerProvider(stepCount: number): Promise<import('./worker/create-worker-provider').WorkerProvider | null> {
     const { isWorkerEligible } = await import('./worker/eligibility')
     if (!isWorkerEligible(this.options, typeof Worker !== 'undefined', stepCount)) return null
@@ -613,7 +577,7 @@ export class UpupCore {
     try {
       // Build auto-pipeline lazily from boolean options if no explicit pipeline
       if (!this.pipelineEngine) {
-        const autoSteps = await this.buildAutoPipeline()
+        const autoSteps = await buildAutoPipeline(this.options)
         if (autoSteps.length > 0) {
           this.pipelineEngine = new PipelineEngine(autoSteps)
         }
