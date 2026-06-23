@@ -11,7 +11,8 @@ import { EventEmitter, type EventHandler } from './events'
 import type { CoreEvents } from './types/core-events'
 import { PluginManager, type UpupPlugin, type ExtensionMethods } from './plugin'
 import type { AdapterPlugin } from './adapters/plugin'
-import { FileManager, type FileManagerOptions, fileSizeInBytes, matchesAccept } from './file-manager'
+import { FileManager, type FileManagerOptions } from './file-manager'
+import { validateFileRestrictions } from './validate-file-restrictions'
 import { PipelineEngine } from './pipeline/engine'
 import { UploadManager } from './upload-manager'
 import { TokenEndpointCredentials } from './strategies/token-endpoint'
@@ -745,46 +746,10 @@ export class UpupCore {
   }
 
   async validateFiles(files: File[]): Promise<ValidationResult[]> {
-    const results: ValidationResult[] = []
-
-    for (const file of files) {
-      const errors: Array<{ code: string; message: string }> = []
-
-      if (this.options.allowedFileTypes && !matchesAccept(file, this.options.allowedFileTypes)) {
-        errors.push({
-          code: UpupErrorCode.TYPE_MISMATCH,
-          message: `File type "${file.type}" is not accepted`,
-        })
-      }
-
-      if (this.options.maxFileSize) {
-        const maxBytes = fileSizeInBytes(this.options.maxFileSize)
-        if (file.size > maxBytes) {
-          errors.push({
-            code: UpupErrorCode.FILE_TOO_LARGE,
-            message: `File "${file.name}" exceeds maximum size`,
-          })
-        }
-      }
-
-      if (this.options.minFileSize) {
-        const minBytes = fileSizeInBytes(this.options.minFileSize)
-        if (file.size < minBytes) {
-          errors.push({
-            code: UpupErrorCode.FILE_TOO_SMALL,
-            message: `File "${file.name}" is below minimum size`,
-          })
-        }
-      }
-
-      results.push({
-        file,
-        valid: errors.length === 0,
-        errors,
-      })
-    }
-
-    return results
+    return files.map(file => {
+      const errors = validateFileRestrictions(file, this.options)
+      return { file, valid: errors.length === 0, errors }
+    })
   }
 
   async upload(): Promise<UploadFile[]> {

@@ -6,6 +6,10 @@ import {
   type UploadFile,
   type MaxFileSizeObject,
 } from './contracts'
+import { fileSizeInBytes, matchesAccept, validateFileRestrictions } from './validate-file-restrictions'
+
+// Re-exported for backwards compatibility — relocated to validate-file-restrictions.ts
+export { fileSizeInBytes, matchesAccept }
 
 export interface FileManagerOptions {
   allowedFileTypes?: string
@@ -61,28 +65,6 @@ function applyContentHash(file: UploadFile, hash: string): UploadFile {
     originalContentHash: hash,
   }
   return file
-}
-
-export function fileSizeInBytes(size: MaxFileSizeObject): number {
-  const units: Record<string, number> = { B: 1, KB: 1024, MB: 1024 ** 2, GB: 1024 ** 3 }
-  return size.size * (units[size.unit] ?? 1)
-}
-
-export function matchesAccept(file: File, accept: string): boolean {
-  const types = accept.split(',').map(t => t.trim()).filter(Boolean)
-  if (types.length === 0 || types.some(type => type === '*' || type === '*/*')) {
-    return true
-  }
-
-  return types.some(type => {
-    if (type.endsWith('/*')) {
-      return file.type.startsWith(type.replace('/*', '/'))
-    }
-    if (type.startsWith('.')) {
-      return file.name.toLowerCase().endsWith(type.toLowerCase())
-    }
-    return file.type === type
-  })
 }
 
 function nativeToUploadFile(file: File, source: FileSource = FileSource.LOCAL): UploadFile {
@@ -177,34 +159,9 @@ export class FileManager {
   }
 
   private validateFile(file: File): void {
-    if (this.options.allowedFileTypes && !matchesAccept(file, this.options.allowedFileTypes)) {
-      throw new UpupValidationError(
-        `File type "${file.type}" is not accepted`,
-        UpupErrorCode.TYPE_MISMATCH,
-        file,
-      )
-    }
-
-    if (this.options.maxFileSize) {
-      const maxBytes = fileSizeInBytes(this.options.maxFileSize)
-      if (file.size > maxBytes) {
-        throw new UpupValidationError(
-          `File "${file.name}" exceeds maximum size`,
-          UpupErrorCode.FILE_TOO_LARGE,
-          file,
-        )
-      }
-    }
-
-    if (this.options.minFileSize) {
-      const minBytes = fileSizeInBytes(this.options.minFileSize)
-      if (file.size < minBytes) {
-        throw new UpupValidationError(
-          `File "${file.name}" is below minimum size`,
-          UpupErrorCode.FILE_TOO_SMALL,
-          file,
-        )
-      }
+    const [violation] = validateFileRestrictions(file, this.options)
+    if (violation) {
+      throw new UpupValidationError(violation.message, violation.code, file)
     }
   }
 
