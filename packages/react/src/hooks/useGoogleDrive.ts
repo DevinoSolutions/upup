@@ -80,6 +80,8 @@ export function useGoogleDrive() {
         },
         token: state.token,
         authCancelled: state.authCancelled,
+        // GoogleDrive has no separate signIn: initial consent AND retry both go
+        // through retryAuth (it resets authCancelled, then requests a GIS token).
         retryAuth: () => controller?.retryAuth(),
         isAuthReady: state.isAuthReady,
         path: state.path,
