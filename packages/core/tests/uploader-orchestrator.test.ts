@@ -194,11 +194,13 @@ describe('UploaderOrchestrator', () => {
             await core.addFiles([new File(['data'], 'notify.txt')])
             const fileId = orch.getSnapshot().files.keys().next().value as string
 
+            // Subscribe AFTER the add (its notify already fired) so the only
+            // notify counted is the single removal's — pinning exactly-once.
             const listener = vi.fn()
             orch.subscribe(listener)
             orch.removeFile(fileId)
 
-            expect(listener).toHaveBeenCalled()
+            expect(listener).toHaveBeenCalledTimes(1)
             core.destroy()
         })
 
