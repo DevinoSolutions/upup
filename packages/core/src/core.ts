@@ -3,7 +3,6 @@ import { createTranslator } from './i18n/create-translator'
 import { enUS } from './i18n/locales/en-US'
 import type { LocaleBundle, UpupLocaleCode } from './i18n/types'
 import type { PipelineContext, PipelineStep } from './contracts-pipeline'
-import { FileSource } from './types/file-source'
 import type { ResumableUploadOptions } from './types/upload-protocols'
 import type { UploadFile } from './types/upload-file'
 import { UploadStatus } from './types/upload-status'
@@ -21,6 +20,7 @@ import { DirectUpload } from './strategies/direct-upload'
 import { MultipartUpload } from './strategies/multipart-upload'
 import { TusUpload } from './strategies/tus-upload'
 import { CrashRecoveryManager, IndexedDBStorage, type PersistentStorage } from './crash-recovery'
+import { serializeCrashRecovery, reviveCrashRecoverySnapshot } from './crash-recovery-serializer'
 
 export interface Restrictions {
   maxFileSize?: import('./contracts').MaxFileSizeObject
@@ -122,28 +122,6 @@ export type UploadOptions = {
   metadata?: Record<string, string>
 }
 
-type CrashRecoveryFileSnapshot = {
-  file: File
-  id: string
-  name: string
-  type: string
-  lastModified?: number
-  source: UploadFile['source']
-  status: UploadStatus
-  metadata: UploadFile['metadata']
-  url?: string
-  relativePath?: string
-  key?: string
-  etag?: string
-  fileHash?: string
-  checksumSHA256?: string
-  thumbnail?: UploadFile['thumbnail']
-}
-
-type CoreCrashRecoverySnapshot = {
-  files: [string, CrashRecoveryFileSnapshot | UploadFile][]
-  status: UploadStatus
-}
 
 export class UpupCore {
   private emitter = new EventEmitter<CoreEvents>()
@@ -253,7 +231,7 @@ export class UpupCore {
         this.crashRecovery?.clear().catch(() => {})
         return
       }
-      this.crashRecovery?.save(this.getCrashRecoverySnapshot()).catch(() => {})
+      this.crashRecovery?.save(serializeCrashRecovery(this.files, this._status)).catch(() => {})
     })
   }
 
@@ -263,134 +241,6 @@ export class UpupCore {
     this.crashRecoveryUnsubscribe = null
     this.crashRecovery = null
     manager?.clear().catch(() => {})
-  }
-
-  private getCrashRecoverySnapshot(): CoreCrashRecoverySnapshot {
-    return {
-      files: [...this.files.entries()].map(([id, file]) => [
-        id,
-        this.toCrashRecoveryFileSnapshot(id, file),
-      ]),
-      status: this._status,
-    }
-  }
-
-  private toCrashRecoveryFileSnapshot(id: string, file: UploadFile): CrashRecoveryFileSnapshot {
-    const snapshot: CrashRecoveryFileSnapshot = {
-      file,
-      id: file.id ?? id,
-      name: file.name,
-      type: file.type,
-      lastModified: file.lastModified,
-      source: file.source ?? FileSource.LOCAL,
-      status: file.status ?? UploadStatus.IDLE,
-      metadata: file.metadata ?? {},
-    }
-
-    if (file.url && !file.url.startsWith('blob:')) {
-      snapshot.url = file.url
-    }
-
-    for (const key of ['relativePath', 'key', 'etag', 'fileHash', 'checksumSHA256'] as const) {
-      if (file[key] !== undefined) {
-        Object.assign(snapshot, { [key]: file[key] })
-      }
-    }
-    if (file.thumbnail) {
-      snapshot.thumbnail = file.thumbnail
-    }
-
-    return snapshot
-  }
-
-  private reviveCrashRecoverySnapshot(snapshot: unknown): { files: [string, UploadFile][]; status: UploadStatus } | null {
-    if (!this.isRecord(snapshot) || !Array.isArray(snapshot.files)) {
-      return null
-    }
-
-    const status = this.isUploadStatus(snapshot.status) ? snapshot.status : UploadStatus.IDLE
-    const files = snapshot.files
-      .map((entry, index): [string, UploadFile] | null => {
-        if (!Array.isArray(entry) || entry.length < 2) return null
-        const id = typeof entry[0] === 'string' ? entry[0] : `recovered-${index}`
-        const file = this.reviveCrashRecoveryFile(id, entry[1], status)
-        return file ? [id, file] : null
-      })
-      .filter((entry): entry is [string, UploadFile] => entry != null)
-
-    return { files, status }
-  }
-
-  private reviveCrashRecoveryFile(id: string, value: unknown, fallbackStatus: UploadStatus): UploadFile | null {
-    const isFileLike = typeof File !== 'undefined' && value instanceof File
-    const wrappedBlob = this.isRecord(value) && typeof Blob !== 'undefined' && value.file instanceof Blob
-      ? value.file
-      : null
-    const props = this.isRecord(value) && wrappedBlob ? value : this.isRecord(value) ? value : {}
-    const nameFromProps = typeof props.name === 'string' && props.name.trim() !== ''
-      ? props.name
-      : undefined
-    const file = wrappedBlob
-      ? this.toRecoverableFile(wrappedBlob, nameFromProps ?? id, props)
-      : isFileLike
-        ? value as File
-        : null
-    if (!file) return null
-
-    const metadata = this.isRecord(props.metadata)
-      ? props.metadata as UploadFile['metadata']
-      : {}
-    const uploadStatus = this.isUploadStatus(props.status) ? props.status : fallbackStatus
-    const source = Object.values(FileSource).includes(props.source as FileSource)
-      ? props.source as FileSource
-      : FileSource.LOCAL
-    const uploadFile = Object.assign(file, {
-      id: typeof props.id === 'string' ? props.id : id,
-      source,
-      status: uploadStatus,
-      metadata,
-    }) as UploadFile
-    const url = typeof props.url === 'string' && !props.url.startsWith('blob:')
-      ? props.url
-      : this.createObjectUrl(file)
-    if (url) {
-      uploadFile.url = url
-    }
-
-    for (const key of ['relativePath', 'key', 'etag', 'fileHash', 'checksumSHA256'] as const) {
-      if (typeof props[key] === 'string') {
-        Object.assign(uploadFile, { [key]: props[key] })
-      }
-    }
-    if (this.isRecord(props.thumbnail)) {
-      uploadFile.thumbnail = props.thumbnail as UploadFile['thumbnail']
-    }
-
-    return uploadFile
-  }
-
-  private createObjectUrl(file: File): string | undefined {
-    return typeof URL !== 'undefined' && typeof URL.createObjectURL === 'function'
-      ? URL.createObjectURL(file)
-      : undefined
-  }
-
-  private toRecoverableFile(blob: Blob, name: string, props: Record<string, unknown>): File | null {
-    if (typeof File === 'undefined') return null
-    if (blob instanceof File && blob.name) {
-      return blob
-    }
-    const type = typeof props.type === 'string' ? props.type : blob.type
-    const lastModified = typeof props.lastModified === 'number' ? props.lastModified : Date.now()
-    return new File([blob], name, { type, lastModified })
-  }
-
-  private isRecord(value: unknown): value is Record<string, unknown> {
-    return typeof value === 'object' && value !== null
-  }
-
-  private isUploadStatus(value: unknown): value is UploadStatus {
-    return Object.values(UploadStatus).includes(value as UploadStatus)
   }
 
   use(plugin: UpupPlugin): this {
@@ -974,7 +824,7 @@ export class UpupCore {
   async restoreFromCrashRecovery(): Promise<boolean> {
     if (!this.crashRecovery) return false
     const snapshot = await this.crashRecovery.restore()
-    const restored = this.reviveCrashRecoverySnapshot(snapshot)
+    const restored = reviveCrashRecoverySnapshot(snapshot)
     if (restored && restored.files.length > 0) {
       const wasActive =
         restored.status === UploadStatus.PROCESSING ||
