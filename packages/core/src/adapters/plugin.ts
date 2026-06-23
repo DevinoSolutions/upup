@@ -5,9 +5,11 @@ import type { DriveFile, DriveUser } from './types'
 /**
  * The single drive-adapter contract. Extends the generic UpupPlugin registration
  * base with the adapter lifecycle (id/init/destroy) AND the runtime surface the
- * AdapterBrowserController drives. The four concrete *Plugin classes implement this;
- * optional members are only present on some providers (authenticate = GIS providers;
- * authenticateViaPopup/loadAllFilesInFolder = popup providers; getConfig = GIS client id).
+ * AdapterBrowserController drives. The four concrete *Plugin classes implement this.
+ * Members marked optional may be omitted by a future provider that doesn't need them:
+ * authenticate is implemented by all current providers but only invoked on the GIS path;
+ * authenticateViaPopup/loadAllFilesInFolder are popup-provider-only (absent on GIS);
+ * getConfig is implemented by all and read for the GIS client id.
  *
  * Folds in the formerly-inline DriveBrowserPlugin (was in adapter-browser-controller.ts)
  * so the declared lifecycle interface and the driven runtime surface are one type.
