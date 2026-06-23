@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { compressStep } from '../../src/steps/compress'
 import { exifStep } from '../../src/steps/exif'
-import { gzipStep } from '../../src/steps/gzip'
 import { heicStep } from '../../src/steps/heic'
 import type { UploadFile } from '@upup/core'
 
@@ -103,41 +102,6 @@ describe('exifStep', () => {
     it('process returns the file unchanged', async () => {
         const file = makeFile('photo.jpg', 'image/jpeg')
         const result = await exifStep().process(file, ctx)
-        expect(result).toBe(file)
-    })
-})
-
-// ─────────────────────────────────────────────
-// gzipStep
-// ─────────────────────────────────────────────
-describe('gzipStep', () => {
-    it('returns a step with name "gzip"', () => {
-        expect(gzipStep().name).toBe('gzip')
-    })
-
-    it('has a process function', () => {
-        expect(typeof gzipStep().process).toBe('function')
-    })
-
-    it('does not define shouldProcess (processes all files)', () => {
-        expect(gzipStep().shouldProcess).toBeUndefined()
-    })
-
-    it('process returns the file unchanged for text/plain', async () => {
-        const file = makeFile('notes.txt', 'text/plain')
-        const result = await gzipStep().process(file, ctx)
-        expect(result).toBe(file)
-    })
-
-    it('process returns the file unchanged for image/png', async () => {
-        const file = makeFile('img.png', 'image/png')
-        const result = await gzipStep().process(file, ctx)
-        expect(result).toBe(file)
-    })
-
-    it('process returns the file unchanged for application/pdf', async () => {
-        const file = makeFile('doc.pdf', 'application/pdf')
-        const result = await gzipStep().process(file, ctx)
         expect(result).toBe(file)
     })
 })

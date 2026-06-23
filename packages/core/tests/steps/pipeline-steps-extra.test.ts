@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { compressStep } from '../../src/steps/compress'
 import { exifStep } from '../../src/steps/exif'
-import { gzipStep } from '../../src/steps/gzip'
 import { heicStep } from '../../src/steps/heic'
 import type { UploadFile, PipelineContext } from '@upup/core'
 
@@ -85,31 +84,6 @@ describe('exifStep', () => {
         const file = makeFile('img.jpg', 'image/jpeg')
         const result = await step.process(file, ctx)
         expect(result).toBe(file)
-    })
-})
-
-// ─────────────────────────────────────────────
-// gzipStep
-// ─────────────────────────────────────────────
-describe('gzipStep', () => {
-    it('has name "gzip"', () => {
-        expect(gzipStep().name).toBe('gzip')
-    })
-
-    it('has no shouldProcess guard (processes all files)', () => {
-        expect(gzipStep().shouldProcess).toBeUndefined()
-    })
-
-    it('process returns the same file reference for text file', async () => {
-        const step = gzipStep()
-        const file = makeFile('data.txt', 'text/plain')
-        expect(await step.process(file, ctx)).toBe(file)
-    })
-
-    it('process returns the same file reference for binary file', async () => {
-        const step = gzipStep()
-        const file = makeFile('archive.zip', 'application/zip')
-        expect(await step.process(file, ctx)).toBe(file)
     })
 })
 

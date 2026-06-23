@@ -45,11 +45,6 @@
       "import": "./dist/steps/hash.js",
       "require": "./dist/steps/hash.cjs"
     },
-    "./steps/gzip": {
-      "types": "./dist/steps/gzip.d.ts",
-      "import": "./dist/steps/gzip.js",
-      "require": "./dist/steps/gzip.cjs"
-    },
     "./steps/heic": {
       "types": "./dist/steps/heic.d.ts",
       "import": "./dist/steps/heic.js",
@@ -69,11 +64,6 @@
       "types": "./dist/steps/thumbnail.d.ts",
       "import": "./dist/steps/thumbnail.js",
       "require": "./dist/steps/thumbnail.cjs"
-    },
-    "./steps/deduplicate": {
-      "types": "./dist/steps/deduplicate.d.ts",
-      "import": "./dist/steps/deduplicate.js",
-      "require": "./dist/steps/deduplicate.cjs"
     }
   },
   "main": "./dist/index.cjs",
