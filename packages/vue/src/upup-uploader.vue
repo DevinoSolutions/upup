@@ -7,7 +7,18 @@ import MainBox from './components/MainBox.vue'
 import ImageEditorStub from './components/ImageEditorStub.vue'
 import { devinoDark, devinoLight, logoDark, logoLight } from './assets/logos'
 
-const props = defineProps<UpupUploaderProps>()
+// Vue types each optional `boolean` prop as `Boolean`, so an ABSENT prop is
+// coerced to `false` — which would defeat the intended `true` defaults
+// (allowPreview, showBranding) and silently force main-thread processing
+// (webWorker, whose contract is "unset/true = auto, false = main thread").
+// React/Svelte/Angular/Vanilla all resolve these `true` when omitted; withDefaults
+// restores that cross-framework parity. Every other boolean prop defaults to
+// `false`, where Vue's coerce-to-false already matches the intended default.
+const props = withDefaults(defineProps<UpupUploaderProps>(), {
+    allowPreview: true,
+    showBranding: true,
+    webWorker: true,
+})
 const ctx = useRootProvider(props)
 provideRootContext(ctx)
 
