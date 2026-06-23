@@ -2,7 +2,6 @@ import React, { Dispatch, SetStateAction, memo, useMemo } from 'react'
 import { cn } from '@upup/core'
 import type { InternalFlatClassNames, Translations } from '@upup/core'
 import {
-    fileCanPreviewText,
     fileGetExtension,
     fileGetIsPdf,
     fileGetIsText,
@@ -49,16 +48,17 @@ export default memo(
             [fileType, fileName],
         )
 
-        // Large text files (e.g. 3MB+ JSON) must not be rendered via <object> tags
-        // as the browser will attempt to parse and lay out the entire content,
-        // blocking the main thread and freezing the page.
-        const isOversizedText = useMemo(() => {
-            const isText = fileGetIsText(fileType, fileName)
-            return isText && !fileCanPreviewText(fileType, fileName, fileSize)
-        }, [fileType, fileName, fileSize])
+        // Text files render as a static doc icon (cross-framework parity — all
+        // adapters show the doc icon, not the inline text). The full content stays
+        // available via the "click to preview" portal, and this also avoids laying
+        // out huge text files inline (which froze the main thread).
+        const isText = useMemo(
+            () => fileGetIsText(fileType, fileName),
+            [fileType, fileName],
+        )
 
-        // PDFs, 3D files, and oversized text → static icon (no inline embedding)
-        if (isPdf || is3D || isOversizedText) {
+        // PDFs, 3D files, and text → static icon (no inline embedding)
+        if (isPdf || is3D || isText) {
             return (
                 <div className="upup-flex upup-flex-col upup-items-center upup-gap-2">
                     <FileIcon

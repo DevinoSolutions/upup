@@ -1,7 +1,6 @@
 import { Component, Input, Output, EventEmitter, inject } from '@angular/core'
 import { DomSanitizer, type SafeResourceUrl } from '@angular/platform-browser'
 import {
-    fileCanPreviewText,
     fileGetExtension,
     fileGetIsPdf,
     fileGetIsText,
@@ -31,7 +30,7 @@ import { ShouldRenderComponent } from './should-render.component'
     imports: [FileIconComponent, ShouldRenderComponent],
     template: `
         @if (isStaticIcon) {
-            <!-- PDFs, 3D files, and oversized text → static icon -->
+            <!-- PDFs, 3D files, and text → static icon -->
             <div class="upup-flex upup-flex-col upup-items-center upup-gap-2">
                 <upup-file-icon [extension]="extension" [class]="slotClasses.fileIcon" />
             </div>
@@ -106,13 +105,13 @@ export class FilePreviewThumbnailComponent {
         return fileGetIsPdf(this.fileType, this.fileName)
     }
 
-    get isOversizedText(): boolean {
-        const isText = fileGetIsText(this.fileType, this.fileName)
-        return isText && !fileCanPreviewText(this.fileType, this.fileName, this.fileSize)
+    // Text files render as a static doc icon (cross-framework parity).
+    get isText(): boolean {
+        return fileGetIsText(this.fileType, this.fileName)
     }
 
     get isStaticIcon(): boolean {
-        return this.isPdf || this.is3D || this.isOversizedText
+        return this.isPdf || this.is3D || this.isText
     }
 
     get iconWhenCanPreviewClass(): string {

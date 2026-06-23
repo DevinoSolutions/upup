@@ -2,7 +2,6 @@
 import { computed } from 'vue'
 import type { InternalFlatClassNames, Translations } from '@upup/core'
 import {
-    fileCanPreviewText,
     fileGetExtension,
     fileGetIsPdf,
     fileGetIsText,
@@ -30,10 +29,8 @@ const emit = defineEmits<{
 const extension = computed(() => fileGetExtension(props.fileType, props.fileName))
 const is3D = computed(() => fileIs3D(extension.value?.toLowerCase() || ''))
 const isPdf = computed(() => fileGetIsPdf(props.fileType, props.fileName))
-const isOversizedText = computed(() => {
-    const isText = fileGetIsText(props.fileType, props.fileName)
-    return isText && !fileCanPreviewText(props.fileType, props.fileName, props.fileSize)
-})
+// Text files render as a static doc icon (cross-framework parity).
+const isText = computed(() => fileGetIsText(props.fileType, props.fileName))
 
 function onObjectLoad() {
     emit('update:canPreview', true)
@@ -43,7 +40,7 @@ function onObjectLoad() {
 <template>
     <!-- PDFs, 3D files, and oversized text -> static icon -->
     <div
-        v-if="isPdf || is3D || isOversizedText"
+        v-if="isPdf || is3D || isText"
         class="upup-flex upup-flex-col upup-items-center upup-gap-2"
     >
         <FileIcon :extension="extension" :class="slotClasses.fileIcon" />

@@ -1,7 +1,6 @@
 <script lang="ts">
   import type { InternalFlatClassNames, Translations } from '@upup/core'
   import {
-    fileCanPreviewText,
     fileGetExtension,
     fileGetIsPdf,
     fileGetIsText,
@@ -36,18 +35,16 @@
   const extension = $derived(fileGetExtension(fileType, fileName))
   const is3D = $derived(fileIs3D(extension?.toLowerCase() ?? ''))
   const isPdf = $derived(fileGetIsPdf(fileType, fileName))
-  const isOversizedText = $derived(() => {
-    const isText = fileGetIsText(fileType, fileName)
-    return isText && !fileCanPreviewText(fileType, fileName, fileSize)
-  })
+  // Text files render as a static doc icon (cross-framework parity).
+  const isText = $derived(fileGetIsText(fileType, fileName))
 
   function onObjectLoad() {
     onUpdateCanPreview?.(true)
   }
 </script>
 
-{#if isPdf || is3D || isOversizedText()}
-  <!-- PDFs, 3D files, and oversized text -> static icon -->
+{#if isPdf || is3D || isText}
+  <!-- PDFs, 3D files, and text -> static icon -->
   <div class="upup-flex upup-flex-col upup-items-center upup-gap-2">
     <FileIcon {extension} class={slotClasses.fileIcon} />
   </div>

@@ -4,7 +4,6 @@ import {
   fileGetExtension,
   fileGetIsPdf,
   fileGetIsText,
-  fileCanPreviewText,
   fileIs3D,
   cn,
 } from '@upup/core'
@@ -30,11 +29,11 @@ export function filePreviewThumbnail(
   const extension = fileGetExtension(fileType, fileName)
   const isPdf = fileGetIsPdf(fileType, fileName)
   const is3D = fileIs3D(extension?.toLowerCase() ?? '')
+  // Text files render as a static doc icon (cross-framework parity).
   const isText = fileGetIsText(fileType, fileName)
-  const isOversizedText = isText && !fileCanPreviewText(fileType, fileName, fileSize)
 
-  if (isPdf || is3D || isOversizedText) {
-    // PDFs, 3D files, oversized text — static icon only
+  if (isPdf || is3D || isText) {
+    // PDFs, 3D files, and text — static icon only
     return html`
       <div class="upup-flex upup-flex-col upup-items-center upup-gap-2">
         ${fileIcon(ctx, extension ?? '', slot.fileIcon)}
