@@ -75,10 +75,6 @@
 
   const isLoading = $derived(($isClickLoading ?? false) || !$driveFiles)
 
-  $effect(() => {
-    if ($driveFiles) setPath([$driveFiles])
-  })
-
   function noopClick() { /* disabled click */ }
 </script>
 

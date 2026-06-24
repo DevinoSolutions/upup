@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed } from 'vue'
 import {
     type DriveFile,
     type DriveFolder,
@@ -65,10 +65,6 @@ const displayedItems = computed(() =>
 )
 
 const isLoading = computed(() => props.isClickLoading || !props.driveFiles)
-
-watch(() => props.driveFiles, (df) => {
-    if (df) props.setPath([df])
-})
 
 function noopClick() { /* disabled click */ }
 </script>

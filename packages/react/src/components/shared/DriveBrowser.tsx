@@ -1,7 +1,6 @@
 import React, {
     Dispatch,
     SetStateAction,
-    useEffect,
     useMemo,
     useState,
 } from 'react'
@@ -77,10 +76,6 @@ export default function DriveBrowser({
         [searchTerm, items],
     )
     const isLoading = isClickLoading || !driveFiles
-
-    useEffect(() => {
-        if (driveFiles) setPath([driveFiles])
-    }, [driveFiles, setPath])
 
     return (
         <AdapterViewContainer isLoading={isLoading} data-upup-slot={dataUpupSlot}>
