@@ -191,14 +191,14 @@ describe('AdapterBrowserController — actions', () => {
         expect(controller.getSnapshot().selectedFiles).toHaveLength(0)
     })
 
-    it('handleClick on a folder pushes the current folder onto path + flags loading', () => {
-        const { core, controller } = setup()
+    it('handleClick on a folder flags loading + requests it; trail unchanged until files-loaded', () => {
+        const { core, controller, plugin } = setup()
         core.emit('google-drive:files-loaded', { files: [], folderId: 'root' })
+        const loadSpy = vi.spyOn(plugin, 'loadFiles')
         controller.handleClick(file('f1', 'Folder', true))
-        const snap = controller.getSnapshot()
-        expect(snap.isClickLoading).toBe(true)
-        expect(snap.path).toHaveLength(1)
-        expect(snap.path[0].name).toBe('Drive')
+        expect(controller.getSnapshot().isClickLoading).toBe(true)
+        expect(controller.getSnapshot().path.map(p => p.id)).toEqual(['root'])
+        expect(loadSpy).toHaveBeenCalledWith('f1')
     })
 
     it('handleSubmit downloads selection, pushes files, and closes the view', async () => {
@@ -230,5 +230,53 @@ describe('AdapterBrowserController — actions', () => {
         controller.signOut()
         expect(signOutSpy).toHaveBeenCalledTimes(1)
         expect(controller.getSnapshot().token).toBeUndefined()
+    })
+
+    it('files-loaded seeds the root folder as the path trail', () => {
+        const { core, controller } = setup()
+        core.emit('google-drive:files-loaded', { files: [file('f1', 'Folder', true)], folderId: 'root' })
+        const snap = controller.getSnapshot()
+        expect(snap.path.map(p => p.id)).toEqual(['root'])
+        expect(snap.path[0].name).toBe('Drive')
+    })
+
+    it('navigating into folders accumulates a unique path trail (no duplicate, no collapse)', () => {
+        const { core, controller } = setup()
+        core.emit('google-drive:files-loaded', { files: [file('f1', 'Folder', true)], folderId: 'root' })
+        controller.handleClick(file('f1', 'Folder', true))
+        core.emit('google-drive:files-loaded', { files: [file('x', 'child.txt')], folderId: 'f1' })
+        expect(controller.getSnapshot().path.map(p => p.id)).toEqual(['root', 'f1'])
+        controller.handleClick(file('f2', 'Sub', true))
+        core.emit('google-drive:files-loaded', { files: [], folderId: 'f2' })
+        expect(controller.getSnapshot().path.map(p => p.id)).toEqual(['root', 'f1', 'f2'])
+    })
+
+    it('breadcrumb truncation (setPath) navigates back up the trail', () => {
+        const { core, controller } = setup()
+        core.emit('google-drive:files-loaded', { files: [], folderId: 'root' })
+        controller.handleClick(file('f1', 'Folder', true))
+        core.emit('google-drive:files-loaded', { files: [], folderId: 'f1' })
+        const snap = controller.getSnapshot()
+        controller.setPath(snap.path.slice(0, 1))
+        expect(controller.getSnapshot().path.map(p => p.id)).toEqual(['root'])
+    })
+
+    it('re-loading a folder already in the trail truncates to it (no growth)', () => {
+        const { core, controller } = setup()
+        core.emit('google-drive:files-loaded', { files: [], folderId: 'root' })
+        controller.handleClick(file('f1', 'F1', true))
+        core.emit('google-drive:files-loaded', { files: [], folderId: 'f1' })
+        controller.handleClick(file('f2', 'F2', true))
+        core.emit('google-drive:files-loaded', { files: [], folderId: 'f2' })
+        core.emit('google-drive:files-loaded', { files: [], folderId: 'f1' })
+        expect(controller.getSnapshot().path.map(p => p.id)).toEqual(['root', 'f1'])
+    })
+
+    it('dropbox path-keyed trail accumulates by path id', () => {
+        const { core, controller } = setup(DROPBOX_DESCRIPTOR)
+        core.emit('dropbox:files-loaded', { files: [], path: '' })
+        expect(controller.getSnapshot().path.map(p => p.id)).toEqual(['root'])
+        core.emit('dropbox:files-loaded', { files: [], path: '/Photos' })
+        expect(controller.getSnapshot().path.map(p => p.id)).toEqual(['root', '/Photos'])
     })
 })

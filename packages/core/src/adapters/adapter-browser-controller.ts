@@ -197,7 +197,7 @@ export class AdapterBrowserController {
             },
             onFilesLoaded: (payload: unknown) => {
                 const folder = this.buildRootFolder(payload as FilesLoadedPayload)
-                this.setState({ folder, isClickLoading: false })
+                this.setState({ folder, path: this.nextPath(folder), isClickLoading: false })
             },
             onStateChange: (payload: unknown) => {
                 const data = payload as { state: string }
@@ -317,6 +317,21 @@ export class AdapterBrowserController {
 
     // ── Browse / select actions ──────────────────────────────────
 
+    /**
+     * Folder trail for the breadcrumb, owned here so every framework stays consistent
+     * (react/vue/svelte previously seeded it in a component effect that collapsed the
+     * trail; vanilla/angular had no seed at all). Root load resets to [root]; descending
+     * appends; re-loading a folder already in the trail truncates to it. Ids must stay
+     * unique — the breadcrumb is keyed by folder id.
+     */
+    private nextPath(folder: DriveFolder): DriveFolder[] {
+        if (folder.id === this.descriptor.rootFolderId) return [folder]
+        const cur = this.state.path
+        const idx = cur.findIndex(p => p.id === folder.id)
+        if (idx >= 0) return [...cur.slice(0, idx), folder]
+        return [...cur, folder]
+    }
+
     setPath(path: DriveFolder[]): void {
         this.setState({ path })
     }
@@ -325,10 +340,10 @@ export class AdapterBrowserController {
         const plugin = this.plugin
         if (!plugin) return
         if (file.isFolder) {
+            // Trail is derived from files-loaded (see nextPath). Navigating only flags
+            // loading + requests the folder. (Was: pushed this.state.folder here, which
+            // duplicated the seeded id → duplicate breadcrumb keys + collapsed trail.)
             this.setState({ isClickLoading: true })
-            if (this.state.folder) {
-                this.setState({ path: [...this.state.path, this.state.folder] })
-            }
             const arg = this.descriptor.folderKey === 'path' ? file.path : file.id
             void plugin.loadFiles(arg)
         } else {
