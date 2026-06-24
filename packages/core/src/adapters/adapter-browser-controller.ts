@@ -63,6 +63,8 @@ export class AdapterBrowserController {
     private plugin: AdapterPlugin | null = null
     private tokenClient: GisTokenClient | null = null
     private unsubs: (() => void)[] = []
+    /** Real name of the folder being navigated into, captured at click time. */
+    private pendingFolder?: { id: string; name: string }
 
     constructor(
         core: UpupCore,
@@ -222,6 +224,8 @@ export class AdapterBrowserController {
         const isRoot = !rawId || id === d.rootFolderId
         let name: string
         if (isRoot) name = d.rootFolderName
+        // files-loaded echoes only the id/path, so use the name captured at click time.
+        else if (this.pendingFolder?.id === id) name = this.pendingFolder.name
         else if (d.folderKey === 'path') name = id.split('/').pop() || d.rootFolderName
         else name = id
         return {
@@ -345,6 +349,9 @@ export class AdapterBrowserController {
             // duplicated the seeded id → duplicate breadcrumb keys + collapsed trail.)
             this.setState({ isClickLoading: true })
             const arg = this.descriptor.folderKey === 'path' ? file.path : file.id
+            // Stash the real name (keyed by the value that comes back as the loaded
+            // folder id) so buildRootFolder can label the breadcrumb crumb with it.
+            this.pendingFolder = { id: arg, name: file.name }
             void plugin.loadFiles(arg)
         } else {
             const prev = this.state.selectedFiles

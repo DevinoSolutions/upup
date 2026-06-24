@@ -251,6 +251,31 @@ describe('AdapterBrowserController — actions', () => {
         expect(controller.getSnapshot().path.map(p => p.id)).toEqual(['root', 'f1', 'f2'])
     })
 
+    it('navigated folder crumbs show the clicked folder name, not the raw id', () => {
+        const { core, controller } = setup()
+        core.emit('google-drive:files-loaded', { files: [file('f1', 'Reports', true)], folderId: 'root' })
+        controller.handleClick(file('f1', 'Reports', true))
+        core.emit('google-drive:files-loaded', { files: [file('f2', '2024', true)], folderId: 'f1' })
+        controller.handleClick(file('f2', '2024', true))
+        core.emit('google-drive:files-loaded', { files: [], folderId: 'f2' })
+        expect(controller.getSnapshot().path.map(p => p.name)).toEqual([
+            'Drive',
+            'Reports',
+            '2024',
+        ])
+        expect(controller.getSnapshot().folder?.name).toBe('2024')
+    })
+
+    it('dropbox navigated folder crumb keeps the clicked name (path-keyed)', () => {
+        const { core, controller } = setup(DROPBOX_DESCRIPTOR)
+        core.emit('dropbox:files-loaded', { files: [file('/Photos', 'Photos', true, '/Photos')], path: '' })
+        controller.handleClick(file('/Photos', 'Photos', true, '/Photos'))
+        core.emit('dropbox:files-loaded', { files: [], path: '/Photos' })
+        const last = controller.getSnapshot().path.at(-1)
+        expect(last?.id).toBe('/Photos')
+        expect(last?.name).toBe('Photos')
+    })
+
     it('breadcrumb truncation (setPath) navigates back up the trail', () => {
         const { core, controller } = setup()
         core.emit('google-drive:files-loaded', { files: [], folderId: 'root' })
