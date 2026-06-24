@@ -179,6 +179,7 @@ export class AdapterBrowserController {
                 }
             },
             onSignedOut: () => {
+                this.pendingFolder = undefined
                 this.setState({
                     user: undefined,
                     folder: undefined,
@@ -224,7 +225,10 @@ export class AdapterBrowserController {
         const isRoot = !rawId || id === d.rootFolderId
         let name: string
         if (isRoot) name = d.rootFolderName
-        // files-loaded echoes only the id/path, so use the name captured at click time.
+        // files-loaded echoes only the id/path, not the name, so reuse the name
+        // captured at click time. This assumes folders are entered via handleClick
+        // (the only navigated-load path today); a future reload-ancestor flow would
+        // need to thread the name through too, else it falls back to the id/path below.
         else if (this.pendingFolder?.id === id) name = this.pendingFolder.name
         else if (d.folderKey === 'path') name = id.split('/').pop() || d.rootFolderName
         else name = id

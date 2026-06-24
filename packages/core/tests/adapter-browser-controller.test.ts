@@ -276,6 +276,25 @@ describe('AdapterBrowserController — actions', () => {
         expect(last?.name).toBe('Photos')
     })
 
+    it('descend, breadcrumb-back, then descend a sibling keeps a clean unique trail', () => {
+        const { core, controller } = setup()
+        core.emit('google-drive:files-loaded', {
+            files: [file('f1', 'Reports', true), file('f2', 'Photos', true)],
+            folderId: 'root',
+        })
+        controller.handleClick(file('f1', 'Reports', true))
+        core.emit('google-drive:files-loaded', { files: [], folderId: 'f1' })
+        expect(controller.getSnapshot().path.map(p => p.id)).toEqual(['root', 'f1'])
+        // breadcrumb-back to root (header truncates via setPath(slice(0, i+1)); no reload)
+        controller.setPath(controller.getSnapshot().path.slice(0, 1))
+        expect(controller.getSnapshot().path.map(p => p.id)).toEqual(['root'])
+        // descend into a DIFFERENT sibling — must not resurrect a stale/duplicate crumb
+        controller.handleClick(file('f2', 'Photos', true))
+        core.emit('google-drive:files-loaded', { files: [], folderId: 'f2' })
+        expect(controller.getSnapshot().path.map(p => p.id)).toEqual(['root', 'f2'])
+        expect(controller.getSnapshot().path.map(p => p.name)).toEqual(['Drive', 'Photos'])
+    })
+
     it('breadcrumb truncation (setPath) navigates back up the trail', () => {
         const { core, controller } = setup()
         core.emit('google-drive:files-loaded', { files: [], folderId: 'root' })

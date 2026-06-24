@@ -58,12 +58,12 @@ export default function useOneDrive() {
         () => SERVER_SNAPSHOT,
     )
 
-    // setPath is consumed as a useEffect dependency in DriveBrowser
-    // (DriveBrowser.tsx: `useEffect(..., [driveFiles, setPath])`), so it MUST be
-    // referentially stable across renders — otherwise the effect re-runs every
-    // render and loops. Same reason useRootProvider useCallbacks its setters.
-    // Resolves a functional updater against the live snapshot before delegating to
-    // the array-only controller.setPath.
+    // setPath is passed as a prop to DriveBrowser/DriveBrowserHeader, where the
+    // breadcrumb truncates the trail by calling it with a functional updater
+    // (`prev => prev.slice(0, i+1)`). It MUST be referentially stable across renders
+    // (same reason useRootProvider useCallbacks its setters) and resolves that
+    // updater against the live snapshot before delegating to the array-only
+    // controller.setPath.
     const setPath = useCallback(
         (value: SetStateAction<DriveFolder[]>) =>
             controller?.setPath(
