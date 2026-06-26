@@ -576,6 +576,49 @@ export function buildOAuthSuccessPage(
 </body></html>`
 }
 
+async function refreshAccessToken(
+  config: UpupServerConfig,
+  provider: OAuthProvider,
+  userId: string,
+  tokens: DriveTokens,
+): Promise<DriveTokens | null> {
+  if (!tokens.refreshToken || !config.tokenStore) return null
+  const meta = getProviderMeta(config, provider)
+  if ('error' in meta) return null
+  const res = await fetch(meta.tokenUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      grant_type: 'refresh_token',
+      refresh_token: tokens.refreshToken,
+      client_id: meta.clientId,
+      client_secret: meta.clientSecret,
+    }),
+  })
+  if (!res.ok) {
+    // Refresh token is dead/revoked -> force a clean re-auth.
+    await deleteTokens(config.tokenStore, userId, provider)
+    return null
+  }
+  const payload = (await res.json()) as {
+    access_token: string
+    expires_in?: number
+    refresh_token?: string
+    scope?: string
+    token_type?: string
+  }
+  const next: DriveTokens = {
+    accessToken: payload.access_token,
+    expiresAt: payload.expires_in ? Date.now() + payload.expires_in * 1000 : undefined,
+    scope: payload.scope ?? tokens.scope,
+    tokenType: payload.token_type ?? tokens.tokenType,
+    // Some providers omit refresh_token on refresh -> keep the existing one.
+    refreshToken: payload.refresh_token ?? tokens.refreshToken,
+  }
+  await setTokens(config.tokenStore, userId, provider, next)
+  return next
+}
+
 async function handleListFiles(
   req: Request,
   config: UpupServerConfig,
@@ -591,9 +634,20 @@ async function handleListFiles(
   const userId = await resolveUserId(config, req)
   if (!userId) return json({ error: 'Unauthenticated' }, 401, responseHeaders)
 
-  const tokens = await getTokens(config.tokenStore, userId, provider)
+  let tokens = await getTokens(config.tokenStore, userId, provider)
   if (!tokens) {
     return json({ reauth: true, provider }, 401, responseHeaders)
+  }
+  if (
+    tokens.refreshToken &&
+    tokens.expiresAt &&
+    Date.now() > tokens.expiresAt - 30_000
+  ) {
+    const refreshed = await refreshAccessToken(config, provider, userId, tokens)
+    if (!refreshed) {
+      return json({ reauth: true, provider }, 401, responseHeaders)
+    }
+    tokens = refreshed
   }
 
   const url = new URL(req.url)
@@ -630,8 +684,19 @@ async function handleFileTransfer(
   const userId = await resolveUserId(config, req)
   if (!userId) return json({ error: 'Unauthenticated' }, 401, responseHeaders)
 
-  const tokens = await getTokens(config.tokenStore, userId, provider)
+  let tokens = await getTokens(config.tokenStore, userId, provider)
   if (!tokens) return json({ reauth: true, provider }, 401, responseHeaders)
+  if (
+    tokens.refreshToken &&
+    tokens.expiresAt &&
+    Date.now() > tokens.expiresAt - 30_000
+  ) {
+    const refreshed = await refreshAccessToken(config, provider, userId, tokens)
+    if (!refreshed) {
+      return json({ reauth: true, provider }, 401, responseHeaders)
+    }
+    tokens = refreshed
+  }
 
   let body: {
     fileId: string
