@@ -1273,15 +1273,12 @@ importers:
       '@sveltejs/vite-plugin-svelte':
         specifier: ^6.0.0
         version: 6.2.4(svelte@5.56.2(@typescript-eslint/types@8.56.1))(vite@7.3.5(@types/node@25.3.5)(jiti@2.6.1)(less@4.6.4)(lightningcss@1.32.0)(sass@1.100.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.1))
-      '@tailwindcss/container-queries':
-        specifier: ^0.1.1
-        version: 0.1.1(tailwindcss@3.4.19(tsx@4.21.0)(yaml@2.8.1))
       '@testing-library/svelte':
         specifier: ^5.2.0
         version: 5.3.1(svelte@5.56.2(@typescript-eslint/types@8.56.1))(vite@7.3.5(@types/node@25.3.5)(jiti@2.6.1)(less@4.6.4)(lightningcss@1.32.0)(sass@1.100.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.1))(vitest@4.1.2(@opentelemetry/api@1.9.1)(@types/node@25.3.5)(jsdom@22.1.0)(msw@2.14.6(@types/node@25.3.5)(typescript@5.6.3))(vite@7.3.5(@types/node@25.3.5)(jiti@2.6.1)(less@4.6.4)(lightningcss@1.32.0)(sass@1.100.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.1)))
-      autoprefixer:
-        specifier: ^10.4.20
-        version: 10.4.27(postcss@8.5.14)
+      '@upup/tailwind-config':
+        specifier: workspace:*
+        version: link:../tailwind-config
       jsdom:
         specifier: 22.1.0
         version: 22.1.0
@@ -1291,18 +1288,12 @@ importers:
       postcss-cli:
         specifier: ^11.0.1
         version: 11.0.1(jiti@2.6.1)(postcss@8.5.14)(tsx@4.21.0)
-      postcss-prefix-selector:
-        specifier: ^2.1.1
-        version: 2.1.1(postcss@8.5.14)
       svelte:
         specifier: ^5.0.0
         version: 5.56.2(@typescript-eslint/types@8.56.1)
       svelte-check:
         specifier: ^4.1.0
         version: 4.6.0(picomatch@4.0.4)(svelte@5.56.2(@typescript-eslint/types@8.56.1))(typescript@5.6.3)
-      tailwindcss:
-        specifier: ^3.4.17
-        version: 3.4.19(tsx@4.21.0)(yaml@2.8.1)
       typescript:
         specifier: ^5.3.2
         version: 5.6.3
