@@ -51,21 +51,18 @@
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
-    "@tailwindcss/container-queries": "^0.1.1",
     "@testing-library/react": "^16.0.1",
     "@testing-library/user-event": "^14.6.1",
     "@types/jest-axe": "^3.5.9",
     "@types/pako": "^2.0.4",
     "@types/react": ">=18.0.0",
     "@types/react-dom": ">=18.0.0",
-    "autoprefixer": "^10.4.20",
+    "@upup/tailwind-config": "workspace:*",
     "jest-axe": "^10.0.0",
     "jsdom": "22.1.0",
     "postcss": "^8.5.2",
     "postcss-cli": "^11.0.1",
-    "postcss-prefix-selector": "^2.1.1",
     "tailwind-variants": "^3.2.2",
-    "tailwindcss": "^3.4.17",
     "tsup": "^8.4.0",
     "typescript": "^5.3.2",
     "vitest": "^4.1.2"

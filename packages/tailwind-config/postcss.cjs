@@ -2,7 +2,7 @@
  * Shared PostCSS config factory for the upup UI packages (react/vue/svelte/vanilla/angular).
  * Each consumer's postcss.config.cjs is one line:
  *   module.exports = require('@upup/tailwind-config').createPostcssConfig({
- *     content: ['./src/**/*.{<framework extensions>}'],
+ *     content: ['./src/<glob>'],
  *   })
  *
  * The ONLY per-framework knob is `content` (the source-file glob set). Everything else — the
