@@ -503,7 +503,12 @@ function htmlResponse(body: string, status = 200): Response {
 
 /** Validate an OAuth returnTo against same-origin + the CORS allowlist (audit S7).
  *  Returns the resolved absolute URL string if allowed, else undefined.
- *  A wildcard '*' in allowedOrigins does NOT authorize an arbitrary cross-origin returnTo. */
+ *  A wildcard '*' in allowedOrigins does NOT authorize an arbitrary cross-origin returnTo.
+ *  Proxy caveat: a RELATIVE returnTo resolves against `new URL(req.url).origin` and is
+ *  returned ABSOLUTE. Behind an origin-rewriting reverse proxy (internal req.url origin ≠
+ *  public origin) it becomes absolute to the INTERNAL origin — this fails closed (never an
+ *  open redirect); to keep relative returnTo working there, add the public origin to
+ *  cors.allowedOrigins. */
 export function validateReturnTo(
   returnTo: string | undefined,
   req: Request,

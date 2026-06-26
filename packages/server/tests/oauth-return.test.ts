@@ -63,6 +63,27 @@ describe('validateReturnTo', () => {
     const result = validateReturnTo('https://other.example/page', req, undefined)
     expect(result).toBeUndefined()
   })
+
+  // Open-redirect bypass batch: protocol-relative + backslash tricks that the
+  // WHATWG parser normalizes to an off-origin authority. All must fail closed (S7).
+  it.each([
+    '//evil.example',
+    '/\\evil.example',
+    '\\\\evil.example',
+    'https:/\\evil.example',
+    'https://\\evil.example',
+  ])('rejects open-redirect bypass %j', (payload) => {
+    expect(validateReturnTo(payload, req, undefined)).toBeUndefined()
+  })
+
+  it('rejects userinfo confusion (real host is evil.example, not allowlisted app.example)', () => {
+    const result = validateReturnTo(
+      'https://app.example@evil.example/x',
+      req,
+      { allowedOrigins: ['https://app.example'] },
+    )
+    expect(result).toBeUndefined()
+  })
 })
 
 // ---------------------------------------------------------------------------
@@ -152,5 +173,26 @@ describe('buildOAuthSuccessPage', () => {
     expect(html).not.toContain('google<script>')
     // The sanitized form (angle brackets stripped) must appear
     expect(html).toContain('googlescript')
+  })
+
+  // XSS lock-in: a same-origin returnTo carrying a </script><script> breakout is
+  // allowed by validateReturnTo (same-origin), but URL normalization percent-encodes
+  // the < and >, so it can never break out of the inline <script> block (S7).
+  const req = new Request('https://srv.example/auth/google-drive/cb')
+
+  it('percent-encodes a </script> breakout payload in returnTo (no XSS)', () => {
+    const returnTo = validateReturnTo(
+      'https://srv.example/x</script><script>alert(1)</script>',
+      req,
+      undefined,
+    )
+    // Same-origin, so it validates (the URL parser sanitizes it)
+    expect(returnTo).toBe(
+      'https://srv.example/x%3C/script%3E%3Cscript%3Ealert(1)%3C/script%3E',
+    )
+    const html = buildOAuthSuccessPage('google-drive', { returnTo, targetOrigins: [] })
+    // Exactly ONE </script — the legitimate closing tag; no injected one
+    expect((html.match(/<\/script/g) ?? []).length).toBe(1)
+    expect(html).not.toContain('<script>alert')
   })
 })
