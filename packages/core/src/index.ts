@@ -33,7 +33,6 @@ export type {
   ImageCompressionOptions,
   ThumbnailGeneratorOptions,
 } from './types/image-editor'
-export type { UploaderClassNames } from './types/class-names'
 export type { UploadSource, UploadProvider } from './types/uploader-options'
 
 // ── Errors ───────────────────────────────────────────────────
