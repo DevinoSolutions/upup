@@ -9,5 +9,6 @@ packages:
   - packages/server
   - packages/interactive-example
   - packages/storybook-config
+  - packages/tailwind-config
   - packages/preact
   - packages/next
