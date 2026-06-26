@@ -37,7 +37,7 @@ function RestrictionsDemo() {
   return (
     <UpupUploader
       uploadEndpoint="/api/upload"
-      accept="image/*"
+      allowedFileTypes="image/*"
       maxFiles={2}
       maxFileSize={{ size: 50, unit: 'KB' }}
       minFileSize={{ size: 1, unit: 'KB' }}
