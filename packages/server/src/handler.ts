@@ -828,6 +828,16 @@ export function escapeDriveQueryValue(value: string): string {
   return value.replace(/\\/g, '\\\\').replace(/'/g, "\\'")
 }
 
+/**
+ * Escape a user value for an OData string literal (Microsoft Graph). OData
+ * escapes a single quote by doubling it. Applied before encodeURIComponent so
+ * the doubled quote survives URL-decoding on Graph's side (defense-in-depth
+ * parity with Google Drive's escapeDriveQueryValue).
+ */
+export function escapeODataSearchValue(value: string): string {
+  return value.replace(/'/g, "''")
+}
+
 async function listGoogleDriveFiles(
   accessToken: string,
   opts: { folderId?: string; search?: string },
@@ -902,7 +912,7 @@ async function listOneDriveFiles(
   opts: { folderId?: string; search?: string },
 ): Promise<DriveFile[]> {
   const path = opts.search
-    ? `/me/drive/root/search(q='${encodeURIComponent(opts.search)}')`
+    ? `/me/drive/root/search(q='${encodeURIComponent(escapeODataSearchValue(opts.search))}')`
     : opts.folderId
       ? `/me/drive/items/${encodeURIComponent(opts.folderId)}/children`
       : '/me/drive/root/children'
