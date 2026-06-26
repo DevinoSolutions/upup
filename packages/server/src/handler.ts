@@ -489,7 +489,9 @@ async function handleOAuthCallback(
   }
   await setTokens(config.tokenStore, stateData.userId, provider, tokens)
 
-  return htmlResponse(buildOAuthSuccessPage(provider, stateData.returnTo))
+  const validatedReturn = validateReturnTo(stateData.returnTo, req, config.cors)
+  const targetOrigins = concreteAllowedOrigins(config.cors)
+  return htmlResponse(buildOAuthSuccessPage(provider, { returnTo: validatedReturn, targetOrigins }))
 }
 
 function htmlResponse(body: string, status = 200): Response {
@@ -499,23 +501,66 @@ function htmlResponse(body: string, status = 200): Response {
   })
 }
 
-function buildOAuthSuccessPage(provider: string, returnTo?: string): string {
+/** Validate an OAuth returnTo against same-origin + the CORS allowlist (audit S7).
+ *  Returns the resolved absolute URL string if allowed, else undefined.
+ *  A wildcard '*' in allowedOrigins does NOT authorize an arbitrary cross-origin returnTo. */
+export function validateReturnTo(
+  returnTo: string | undefined,
+  req: Request,
+  cors: { allowedOrigins: string[] } | undefined,
+): string | undefined {
+  if (!returnTo) return undefined
+  const serverOrigin = new URL(req.url).origin
+  let resolved: URL
+  try {
+    resolved = new URL(returnTo, serverOrigin) // relative returnTo resolves to same-origin
+  } catch {
+    return undefined
+  }
+  if (resolved.origin === serverOrigin) return resolved.toString()
+  const concrete = (cors?.allowedOrigins ?? []).filter((o) => o !== '*')
+  if (concrete.includes(resolved.origin)) return resolved.toString()
+  return undefined
+}
+
+/** Concrete (non-wildcard) origins to target postMessage at (audit S7). */
+export function concreteAllowedOrigins(cors: { allowedOrigins: string[] } | undefined): string[] {
+  return (cors?.allowedOrigins ?? []).filter((o) => o !== '*')
+}
+
+export function buildOAuthSuccessPage(
+  provider: string,
+  opts: { returnTo?: string; targetOrigins: string[] },
+): string {
   const safeProvider = provider.replace(/[^a-z0-9-]/gi, '')
-  const safeReturn = returnTo
-    ? returnTo.replace(/[<>"'\\]/g, '')
-    : ''
+  const { returnTo, targetOrigins } = opts
+
+  let postMessageScript: string
+  if (targetOrigins.length > 0) {
+    postMessageScript = targetOrigins
+      .map(
+        (origin) =>
+          `window.opener.postMessage({ type: 'upup:oauth-success', provider: ${JSON.stringify(safeProvider)} }, ${JSON.stringify(origin)});`,
+      )
+      .join('\n      ')
+  } else {
+    // '*' is acceptable here because the payload is token-free ({type, provider}, no secret)
+    postMessageScript = `window.opener.postMessage({ type: 'upup:oauth-success', provider: ${JSON.stringify(safeProvider)} }, '*' /* token-free payload */);`
+  }
+
+  const elseBody = returnTo
+    ? `window.location.replace(${JSON.stringify(returnTo)});`
+    : `document.body.textContent = 'Connected to ' + ${JSON.stringify(safeProvider)} + '. You may close this window.';`
+
   return `<!doctype html>
 <html><head><title>Connected</title></head><body>
 <script>
   try {
     if (window.opener) {
-      window.opener.postMessage(
-        { type: 'upup:oauth-success', provider: ${JSON.stringify(safeProvider)} },
-        '*',
-      );
+      ${postMessageScript}
       window.close();
-    } else if (${JSON.stringify(safeReturn)}) {
-      window.location.replace(${JSON.stringify(safeReturn)});
+    } else if (${JSON.stringify(returnTo ?? '')}) {
+      ${elseBody}
     } else {
       document.body.textContent = 'Connected to ' + ${JSON.stringify(safeProvider)} + '. You may close this window.';
     }
