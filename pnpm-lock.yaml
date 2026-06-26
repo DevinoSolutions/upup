@@ -272,13 +272,13 @@ importers:
         version: 10.4.27(postcss@8.5.14)
       eslint:
         specifier: ^9
-        version: 9.39.4(jiti@2.6.1)
+        version: 9.39.4(jiti@1.21.7)
       eslint-config-next:
         specifier: 16.1.6
-        version: 16.1.6(eslint@9.39.4(jiti@2.6.1))(typescript@5.6.3)
+        version: 16.1.6(eslint@9.39.4(jiti@1.21.7))(typescript@5.6.3)
       eslint-plugin-react:
         specifier: ^7.37.4
-        version: 7.37.5(eslint@9.39.4(jiti@2.6.1))
+        version: 7.37.5(eslint@9.39.4(jiti@1.21.7))
       react-syntax-highlighter:
         specifier: ^15.6.1
         version: 15.6.6(react@19.2.4)
@@ -293,7 +293,7 @@ importers:
         version: 5.6.3
       typescript-eslint:
         specifier: ^8.46.2
-        version: 8.56.1(eslint@9.39.4(jiti@2.6.1))(typescript@5.6.3)
+        version: 8.56.1(eslint@9.39.4(jiti@1.21.7))(typescript@5.6.3)
 
   apps/mastra:
     dependencies:
@@ -422,13 +422,13 @@ importers:
         version: 10.4.27(postcss@8.5.14)
       eslint:
         specifier: ^9
-        version: 9.39.4(jiti@1.21.7)
+        version: 9.39.4(jiti@2.6.1)
       eslint-config-next:
         specifier: 16.1.6
-        version: 16.1.6(eslint@9.39.4(jiti@1.21.7))(typescript@5.6.3)
+        version: 16.1.6(eslint@9.39.4(jiti@2.6.1))(typescript@5.6.3)
       eslint-plugin-react:
         specifier: ^7.37.4
-        version: 7.37.5(eslint@9.39.4(jiti@1.21.7))
+        version: 7.37.5(eslint@9.39.4(jiti@2.6.1))
       tailwindcss:
         specifier: ^3.4.3
         version: 3.4.19(tsx@4.21.0)(yaml@2.8.1)
@@ -437,7 +437,7 @@ importers:
         version: 5.6.3
       typescript-eslint:
         specifier: ^8.46.2
-        version: 8.56.1(eslint@9.39.4(jiti@1.21.7))(typescript@5.6.3)
+        version: 8.56.1(eslint@9.39.4(jiti@2.6.1))(typescript@5.6.3)
 
   apps/storybook-angular:
     dependencies:
@@ -1331,12 +1331,9 @@ importers:
         specifier: ^3.2.0
         version: 3.3.3
     devDependencies:
-      '@tailwindcss/container-queries':
-        specifier: ^0.1.1
-        version: 0.1.1(tailwindcss@3.4.19(tsx@4.21.0)(yaml@2.8.1))
-      autoprefixer:
-        specifier: ^10.4.20
-        version: 10.4.27(postcss@8.5.14)
+      '@upup/tailwind-config':
+        specifier: workspace:*
+        version: link:../tailwind-config
       jsdom:
         specifier: 22.1.0
         version: 22.1.0
@@ -1346,12 +1343,6 @@ importers:
       postcss-cli:
         specifier: ^11.0.1
         version: 11.0.1(jiti@2.6.1)(postcss@8.5.14)(tsx@4.21.0)
-      postcss-prefix-selector:
-        specifier: ^2.1.1
-        version: 2.1.1(postcss@8.5.14)
-      tailwindcss:
-        specifier: ^3.4.17
-        version: 3.4.19(tsx@4.21.0)(yaml@2.8.1)
       tsup:
         specifier: ^8.4.0
         version: 8.5.1(jiti@2.6.1)(postcss@8.5.14)(tsx@4.21.0)(typescript@5.6.3)(yaml@2.8.1)
