@@ -60,7 +60,14 @@ export async function setTokens(
   provider: string,
   tokens: DriveTokens,
 ): Promise<void> {
-  await store.set(tokensKey(userId, provider), JSON.stringify(tokens))
+  // Refresh-aware TTL (audit S8): when a refresh token exists the blob must
+  // outlive the short-lived access token so it can be refreshed, so store it
+  // without expiry. Only a dead, non-refreshable access token self-evicts.
+  let ttlSeconds: number | undefined
+  if (!tokens.refreshToken && tokens.expiresAt) {
+    ttlSeconds = Math.max(0, Math.ceil((tokens.expiresAt - Date.now()) / 1000))
+  }
+  await store.set(tokensKey(userId, provider), JSON.stringify(tokens), ttlSeconds)
 }
 
 export async function deleteTokens(
