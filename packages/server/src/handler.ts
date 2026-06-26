@@ -37,7 +37,11 @@ function corsHeaders(req: Request, config: UpupServerConfig): ResponseHeaders {
   const allowsOrigin = origin && cors.allowedOrigins.includes(origin)
   if (!allowsWildcard && !allowsOrigin) return {}
 
-  const allowOrigin = allowsWildcard ? '*' : origin
+  // Never send a literal '*' to a browser (Origin present): reflect the concrete
+  // origin so credentialed CORS works and no route (incl. /files/*, /presign)
+  // exposes a bare wildcard. '*' is emitted only for origin-less (non-browser)
+  // requests, and then without credentials (audit S3).
+  const allowOrigin = origin ? origin : '*'
   const headers: ResponseHeaders = {
     'Access-Control-Allow-Origin': allowOrigin,
     'Access-Control-Allow-Methods': (cors.allowedMethods ?? ['GET', 'POST', 'OPTIONS']).join(', '),
