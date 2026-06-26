@@ -37,10 +37,9 @@ function corsHeaders(req: Request, config: UpupServerConfig): ResponseHeaders {
   const allowsOrigin = origin && cors.allowedOrigins.includes(origin)
   if (!allowsWildcard && !allowsOrigin) return {}
 
-  // Never send a literal '*' to a browser (Origin present): reflect the concrete
-  // origin so credentialed CORS works and no route (incl. /files/*, /presign)
-  // exposes a bare wildcard. '*' is emitted only for origin-less (non-browser)
-  // requests, and then without credentials (audit S3).
+  // Never send a literal '*' to a browser (Origin present): reflect the matched
+  // origin so no route (incl. /files/*, /presign) exposes a bare wildcard. '*'
+  // is emitted only for origin-less (non-browser) requests (audit S3).
   const allowOrigin = origin ? origin : '*'
   const headers: ResponseHeaders = {
     'Access-Control-Allow-Origin': allowOrigin,
@@ -49,12 +48,13 @@ function corsHeaders(req: Request, config: UpupServerConfig): ResponseHeaders {
     'Access-Control-Max-Age': String(cors.maxAgeSeconds ?? 600),
     'Vary': 'Origin',
   }
-  // The cross-framework server-mode drive client fetches with
-  // `credentials: 'include'`. Credentialed CORS requires an explicit origin
-  // (never '*') plus Access-Control-Allow-Credentials, so emit it whenever we
-  // echo a concrete origin. Without it the browser blocks even a readable 401,
-  // surfacing as "Failed to fetch" with no chance to re-auth.
-  if (allowOrigin !== '*') {
+  // Credentialed CORS is gated on a CONCRETE allowlist match only — NEVER a
+  // wildcard-only match. Reflecting an arbitrary origin (allowed solely via '*')
+  // together with credentials would let any site make credentialed cross-origin
+  // reads, so a '*'-configured server gets public, NON-credentialed CORS. To use
+  // the server-mode drive client (`credentials: 'include'`), operators must
+  // enumerate their app origin(s) in `allowedOrigins` (audit S3 / CORS review).
+  if (allowsOrigin) {
     headers['Access-Control-Allow-Credentials'] = 'true'
   }
   return headers
