@@ -54,7 +54,7 @@ function corsHeaders(req: Request, config: UpupServerConfig): ResponseHeaders {
   // reads, so a '*'-configured server gets public, NON-credentialed CORS. To use
   // the server-mode drive client (`credentials: 'include'`), operators must
   // enumerate their app origin(s) in `allowedOrigins` (audit S3 / CORS review).
-  if (allowsOrigin) {
+  if (allowsOrigin && allowOrigin !== '*') {
     headers['Access-Control-Allow-Credentials'] = 'true'
   }
   return headers

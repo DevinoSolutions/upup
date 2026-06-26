@@ -126,6 +126,7 @@ describe('CORS — credentialed reflection is never reachable under a wildcard-o
     'https://evil.example',
     'http://localhost:1337',
     'https://sub.attacker.test',
+    '*', // a non-browser client crafting a literal Origin: * must still never get credentials
   ])('never emits Allow-Credentials for arbitrary origin %s under allowedOrigins:["*"]', async (origin) => {
     const handler = createHandler({
       ...baseConfig,
