@@ -25,10 +25,6 @@
       "dependsOn": ["^build"],
       "outputs": ["storybook-static/**"]
     },
-    "@upup/storybook-react#build-storybook": {
-      "dependsOn": ["^build", "@upup/storybook-vue#build-storybook"],
-      "outputs": ["storybook-static/**"]
-    },
     "@upup/storybook-vanilla#build-storybook": {
       "dependsOn": ["^build"],
       "outputs": ["storybook-static/**"]
