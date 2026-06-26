@@ -703,13 +703,19 @@ async function driveFetch(
   return res
 }
 
+/** Escape a value for use inside a Google Drive API query string literal (single-quoted).
+ * Backslashes must be escaped before quotes to prevent query injection (audit S5). */
+export function escapeDriveQueryValue(value: string): string {
+  return value.replace(/\\/g, '\\\\').replace(/'/g, "\\'")
+}
+
 async function listGoogleDriveFiles(
   accessToken: string,
   opts: { folderId?: string; search?: string },
 ): Promise<DriveFile[]> {
   const parent = opts.folderId ?? 'root'
   const q = opts.search
-    ? `name contains '${opts.search.replace(/'/g, "\\'")}' and trashed = false`
+    ? `name contains '${escapeDriveQueryValue(opts.search)}' and trashed = false`
     : `'${parent}' in parents and trashed = false`
   const params = new URLSearchParams({
     q,
