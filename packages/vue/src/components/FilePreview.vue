@@ -95,6 +95,10 @@ function formatFileSize(bytes: number | undefined, tr: Translations) {
 function updateCanPreview(val: boolean) {
     emit('update:canPreview', val)
 }
+
+function onKeydown(e: KeyboardEvent) {
+    if (e.key === 'Enter' || e.key === ' ') emit('click')
+}
 </script>
 
 <template>
@@ -102,7 +106,10 @@ function updateCanPreview(val: boolean) {
         :class="cn('upup-inline-block', themeSlots?.filePreview?.root)"
         data-testid="upup-file-preview"
         data-upup-slot="file-preview"
+        role="button"
+        :tabindex="0"
         @click="emit('click')"
+        @keydown="onKeydown"
     >
         <div
             :class="cn(

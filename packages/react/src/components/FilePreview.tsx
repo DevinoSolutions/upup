@@ -44,6 +44,7 @@ export default memo(function FilePreview(props: Props) {
         canPreview,
         setCanPreview,
         onRequestPreview,
+        onClick,
         ...restProps
     } = props
 
@@ -111,7 +112,20 @@ export default memo(function FilePreview(props: Props) {
     }
 
     return (
-        <div className={cn('upup-inline-block', themeSlots?.filePreview?.root)} data-testid="upup-file-preview" data-upup-slot="file-preview" {...restProps}>
+        <div
+            className={cn('upup-inline-block', themeSlots?.filePreview?.root)}
+            data-testid="upup-file-preview"
+            data-upup-slot="file-preview"
+            role="button"
+            tabIndex={0}
+            onClick={onClick}
+            onKeyDown={e => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    onClick?.(e as unknown as React.MouseEvent<HTMLDivElement>)
+                }
+            }}
+            {...restProps}
+        >
             <div
                 className={cn(
                     'upup-relative upup-h-[145px] upup-w-[145px] upup-overflow-hidden upup-rounded-lg upup-bg-white upup-shadow-sm',
