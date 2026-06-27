@@ -135,7 +135,7 @@ function makeStoreMock(files: Map<string, UploadFile>) {
 // ── FileIconComponent ─────────────────────────────────────────────────────────
 
 describe('FileIconComponent', () => {
-    it('renders the svg icon wrapper', async () => {
+    it('renders the unified icon wrapper with the typed glyph and no extension badge', async () => {
         const storeMock = makeStoreMock(new Map())
 
         await TestBed.configureTestingModule({
@@ -147,13 +147,16 @@ describe('FileIconComponent', () => {
         fixture.componentInstance.extension = 'pdf'
         fixture.detectChanges()
         const el: HTMLElement = fixture.nativeElement
+        // Unified shape: <span.upup-inline-flex testid> … <svg> … </span>.
+        const wrapper = el.querySelector('[data-testid="upup-file-icon"]')
+        expect(wrapper?.tagName.toLowerCase()).toBe('span')
+        expect(wrapper?.classList.contains('upup-inline-flex')).toBe(true)
         expect(el.querySelector('svg')).not.toBeNull()
-        // Extension label
-        const span = el.querySelector('span')
-        expect(span?.textContent?.trim()).toBe('pdf')
+        // The extension text badge was removed in the cross-framework unification.
+        expect(el.textContent?.trim()).toBe('')
     })
 
-    it('renders no span when extension is empty', async () => {
+    it('still renders the icon (generic fallback) with no badge when extension is empty', async () => {
         const storeMock = makeStoreMock(new Map())
 
         await TestBed.configureTestingModule({
@@ -165,7 +168,11 @@ describe('FileIconComponent', () => {
         fixture.componentInstance.extension = ''
         fixture.detectChanges()
         const el: HTMLElement = fixture.nativeElement
-        expect(el.querySelector('span')).toBeNull()
+        // Wrapper span is always present; glyph falls back to the generic 'file' icon.
+        expect(el.querySelector('[data-testid="upup-file-icon"]')).not.toBeNull()
+        expect(el.querySelector('svg')).not.toBeNull()
+        // No extension text badge anymore.
+        expect(el.textContent?.trim()).toBe('')
     })
 })
 
