@@ -81,6 +81,12 @@ test.describe('cross-framework DOM + a11y parity', () => {
     // Soft assertions so a single run reports ALL four component mismatches at
     // once (the composite fileItem embeds the fileIcon + filePreview subtrees, so
     // a hard assert would mask the leaf results behind the first failure).
+    //
+    // Fix 4 (D1): the hidden file input is `upup-hidden` (display:none) + aria-hidden
+    // + tabindex=-1 — invisible plumbing. React/Vue render it inside AdapterSelector;
+    // Svelte/Angular own it in the shell. The normalizer skips `upup-hidden` subtrees,
+    // so this asserts the VISIBLE + a11y AdapterSelector contract only. The input's DOM
+    // location stays a per-framework implementation detail (no runtime-contract rewrite).
     expect.soft(captured.adapterSelector, 'AdapterSelector parity').toEqual(PARITY_FIXTURES.adapterSelector)
     expect.soft(captured.fileItem, 'FileItem parity').toEqual(PARITY_FIXTURES.fileItem)
     expect.soft(captured.filePreview, 'FilePreview parity').toEqual(PARITY_FIXTURES.filePreview)
