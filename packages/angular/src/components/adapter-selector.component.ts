@@ -85,6 +85,7 @@ interface SourceEntry {
                             [attr.data-testid]="'upup-source-' + source.id"
                             [class]="tileClass"
                             (click)="handleAdapterClick(source.id)"
+                            (keydown)="onSourceKeydown($event)"
                         >
                             <ng-container *ngComponentOutlet="source.iconType"></ng-container>
                             <span [class]="labelClass">{{ source.label }}</span>
@@ -178,7 +179,7 @@ export class AdapterSelectorComponent {
 
     get listClass(): string {
         return cn(
-            'upup-flex upup-flex-col upup-justify-center upup-gap-1',
+            'upup-flex upup-flex-col upup-justify-center upup-gap-1 upup-w-full',
             'md:upup-flex-row md:upup-flex-wrap md:upup-items-center md:upup-gap-[30px] md:upup-px-[30px]',
         )
     }
@@ -196,7 +197,7 @@ export class AdapterSelectorComponent {
     get labelClass(): string {
         const dark = this.store.isDark()
         return cn(
-            'upup-text-xs upup-text-[#0B0B0B] md:upup-text-sm',
+            'upup-text-xs upup-text-[#242634] md:upup-text-sm',
             dark ? 'upup-text-white dark:upup-text-white' : '',
         )
     }
@@ -329,6 +330,10 @@ export class AdapterSelectorComponent {
 
     onCancelAddingMore(): void {
         this.store.setIsAddingMore(false)
+    }
+
+    onSourceKeydown(e: KeyboardEvent): void {
+        if (e.key === 'Enter') e.preventDefault()
     }
 
     handleBrowseFilesClick(): void {
