@@ -24,7 +24,11 @@ const iconClass = computed(() =>
 </script>
 
 <template>
-    <div class="upup-flex upup-flex-col upup-items-center upup-gap-0.5">
+    <div
+        class="upup-flex upup-flex-col upup-items-center upup-gap-0.5"
+        data-testid="upup-file-icon"
+        data-upup-slot="file-icon"
+    >
         <Icon name="file" :class="iconClass" />
         <span
             v-if="extension"

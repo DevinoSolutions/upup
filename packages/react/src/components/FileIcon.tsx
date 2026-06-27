@@ -62,13 +62,19 @@ export default memo(
         const { isDark: dark } = useUploaderTheme()
         const IconComponent = (fileTypes[extension] || TbFile) as React.ElementType
         return (
-            <IconComponent
-                ref={ref}
-                className={cn('upup-text-5xl upup-text-blue-600', className, {
-                    'upup-text-[#59D1F9] dark:upup-text-[#59D1F9]': dark,
-                })}
-                {...restProps}
-            />
+            <span
+                className="upup-inline-flex"
+                data-testid="upup-file-icon"
+                data-upup-slot="file-icon"
+            >
+                <IconComponent
+                    ref={ref}
+                    className={cn('upup-text-5xl upup-text-blue-600', className, {
+                        'upup-text-[#59D1F9] dark:upup-text-[#59D1F9]': dark,
+                    })}
+                    {...restProps}
+                />
+            </span>
         )
     }),
 )

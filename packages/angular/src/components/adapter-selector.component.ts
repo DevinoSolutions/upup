@@ -45,6 +45,7 @@ interface SourceEntry {
     imports: [NgComponentOutlet, IconComponent],
     template: `
         <div
+            data-testid="upup-adapter-selector"
             data-upup-slot="adapter-selector"
             [class]="containerClass"
         >

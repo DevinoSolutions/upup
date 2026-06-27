@@ -20,7 +20,7 @@ import { FileIconSvgComponent } from './icons/file-icon-svg.component'
     standalone: true,
     imports: [FileIconSvgComponent],
     template: `
-        <div class="upup-flex upup-flex-col upup-items-center upup-gap-0.5">
+        <div class="upup-flex upup-flex-col upup-items-center upup-gap-0.5" data-testid="upup-file-icon" data-upup-slot="file-icon">
             <upup-file-icon-svg [class]="iconClass" />
             @if (extension) {
                 <span class="upup-text-[10px] upup-font-medium upup-uppercase upup-text-gray-500">

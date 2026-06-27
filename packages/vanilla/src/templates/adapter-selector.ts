@@ -131,6 +131,7 @@ export function adapterSelector(ctx: RootContext) {
 
   return html`
     <div
+      data-testid="upup-adapter-selector"
       data-upup-slot="adapter-selector"
       class=${cn(
         'upup-relative upup-flex upup-h-full upup-gap-3 upup-rounded-lg',
