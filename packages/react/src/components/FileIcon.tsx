@@ -1,80 +1,25 @@
-import React, { forwardRef, memo, SVGAttributes } from 'react'
-import {
-    TbFile,
-    TbFileTypeBmp,
-    TbFileTypeCss,
-    TbFileTypeCsv,
-    TbFileTypeDocx,
-    TbFileTypeHtml,
-    TbFileTypeJpg,
-    TbFileTypeJs,
-    TbFileTypeJsx,
-    TbFileTypePdf,
-    TbFileTypePhp,
-    TbFileTypePng,
-    TbFileTypePpt,
-    TbFileTypeRs,
-    TbFileTypeSql,
-    TbFileTypeSvg,
-    TbFileTypeTs,
-    TbFileTypeTsx,
-    TbFileTypeTxt,
-    TbFileTypeVue,
-    TbFileTypeXls,
-    TbFileTypeXml,
-    TbFileTypeZip,
-} from 'react-icons/tb'
+import { memo, SVGAttributes } from 'react'
+import { cn, fileTypeIconName } from '@upup/core'
 import { useUploaderTheme } from '../context/RootContext'
-import { cn } from '@upup/core'
+import Icon from './Icon'
 
-const fileTypes = {
-    bmp: TbFileTypeBmp,
-    css: TbFileTypeCss,
-    csv: TbFileTypeCsv,
-    docx: TbFileTypeDocx,
-    html: TbFileTypeHtml,
-    jpg: TbFileTypeJpg,
-    js: TbFileTypeJs,
-    jsx: TbFileTypeJsx,
-    pdf: TbFileTypePdf,
-    png: TbFileTypePng,
-    php: TbFileTypePhp,
-    ppt: TbFileTypePpt,
-    rs: TbFileTypeRs,
-    sql: TbFileTypeSql,
-    svg: TbFileTypeSvg,
-    ts: TbFileTypeTs,
-    tsx: TbFileTypeTsx,
-    txt: TbFileTypeTxt,
-    vue: TbFileTypeVue,
-    xls: TbFileTypeXls,
-    xml: TbFileTypeXml,
-    zip: TbFileTypeZip,
-} as Record<string, unknown>
-
-export default memo(
-    forwardRef<
-        SVGSVGElement,
-        {
-            extension?: string
-        } & SVGAttributes<SVGElement>
-    >(function FileIcon({ extension = '', className, ...restProps }, ref) {
-        const { isDark: dark } = useUploaderTheme()
-        const IconComponent = (fileTypes[extension] || TbFile) as React.ElementType
-        return (
-            <span
-                className="upup-inline-flex"
-                data-testid="upup-file-icon"
-                data-upup-slot="file-icon"
-            >
-                <IconComponent
-                    ref={ref}
-                    className={cn('upup-text-5xl upup-text-blue-600', className, {
-                        'upup-text-[#59D1F9] dark:upup-text-[#59D1F9]': dark,
-                    })}
-                    {...restProps}
-                />
-            </span>
-        )
-    }),
-)
+export default memo(function FileIcon({
+    extension = '',
+    className,
+}: { extension?: string } & SVGAttributes<SVGElement>) {
+    const { isDark: dark } = useUploaderTheme()
+    return (
+        <span
+            className="upup-inline-flex"
+            data-testid="upup-file-icon"
+            data-upup-slot="file-icon"
+        >
+            <Icon
+                name={fileTypeIconName(extension)}
+                className={cn('upup-text-5xl upup-text-blue-600', className as string, {
+                    'upup-text-[#59D1F9] dark:upup-text-[#59D1F9]': dark,
+                })}
+            />
+        </span>
+    )
+})

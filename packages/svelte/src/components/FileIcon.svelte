@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { cn } from '@upup/core'
+  import { cn, fileTypeIconName } from '@upup/core'
   import { useUploaderTheme } from '../context/root-context'
   import Icon from './Icon.svelte'
 
@@ -14,15 +14,6 @@
   )
 </script>
 
-<div
-  class="upup-flex upup-flex-col upup-items-center upup-gap-0.5"
-  data-testid="upup-file-icon"
-  data-upup-slot="file-icon"
->
-  <Icon name="file" class={iconClass} />
-  {#if extension}
-    <span class="upup-text-[10px] upup-font-medium upup-uppercase upup-text-gray-500">
-      {extension}
-    </span>
-  {/if}
-</div>
+<span class="upup-inline-flex" data-testid="upup-file-icon" data-upup-slot="file-icon">
+  <Icon name={fileTypeIconName(extension)} class={iconClass} />
+</span>

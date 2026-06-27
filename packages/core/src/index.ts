@@ -226,3 +226,6 @@ export { loadGoogleIdentityServices } from './utils/load-gapi'
 // ── Icons ─────────────────────────────────────────────────────
 export { ICONS } from './icons/registry'
 export type { IconName, IconDef } from './icons/registry'
+export { fileTypeIconName } from './icons/file-type-icon'
+export { FILE_TYPE_EXTENSIONS } from './icons/file-type-icons'
+export type { FileTypeIconName } from './icons/file-type-icons'

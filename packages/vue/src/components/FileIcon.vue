@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useUploaderTheme } from '../context/root-context'
-import { cn } from '@upup/core'
+import { cn, fileTypeIconName } from '@upup/core'
 import Icon from './Icon'
 
 const props = withDefaults(
@@ -14,8 +14,7 @@ const props = withDefaults(
 
 const { isDark: dark } = useUploaderTheme()
 
-// Since Vue doesn't have the react-icons TbFileType* components,
-// we use a generic file icon with the extension label
+const iconName = computed(() => fileTypeIconName(props.extension))
 const iconClass = computed(() =>
     cn('upup-text-5xl upup-text-blue-600', props.class, {
         'upup-text-[#59D1F9] dark:upup-text-[#59D1F9]': dark,
@@ -24,17 +23,7 @@ const iconClass = computed(() =>
 </script>
 
 <template>
-    <div
-        class="upup-flex upup-flex-col upup-items-center upup-gap-0.5"
-        data-testid="upup-file-icon"
-        data-upup-slot="file-icon"
-    >
-        <Icon name="file" :class="iconClass" />
-        <span
-            v-if="extension"
-            class="upup-text-[10px] upup-font-medium upup-uppercase upup-text-gray-500"
-        >
-            {{ extension }}
-        </span>
-    </div>
+    <span class="upup-inline-flex" data-testid="upup-file-icon" data-upup-slot="file-icon">
+        <Icon :name="iconName" :class="iconClass" />
+    </span>
 </template>

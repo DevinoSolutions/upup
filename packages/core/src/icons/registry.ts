@@ -1,9 +1,12 @@
+import { FILE_TYPE_ICONS, type FileTypeIconName } from './file-type-icons'
+
 export type IconName =
   | 'my-device' | 'box' | 'dropbox' | 'google-drive' | 'one-drive'
   | 'link' | 'camera' | 'audio' | 'screen-cast'
   | 'upload' | 'loader' | 'x' | 'trash' | 'layout-grid' | 'layout-list'
   | 'folder' | 'search' | 'user' | 'file'
   | 'player-play' | 'player-pause'
+  | FileTypeIconName
 
 export interface IconDef {
   /** e.g. '0 0 24 24' (stroke/filled) or '0 0 32 32' (brand). */
@@ -245,4 +248,7 @@ export const ICONS: Record<IconName, IconDef> = {
     <rect x="6" y="4" width="4" height="16" rx="1" /><rect x="14" y="4" width="4" height="16" rx="1" />
   `,
   },
+
+  // ── File-type typed glyphs (Tabler TbFileType*) ──
+  ...FILE_TYPE_ICONS,
 }

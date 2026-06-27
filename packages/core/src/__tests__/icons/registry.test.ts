@@ -10,6 +10,11 @@ const EXPECTED: IconName[] = [
   'folder', 'search', 'user', 'file',
   // filled
   'player-play', 'player-pause',
+  // file-type typed glyphs
+  'file-bmp', 'file-css', 'file-csv', 'file-docx', 'file-html',
+  'file-jpg', 'file-js', 'file-jsx', 'file-pdf', 'file-png', 'file-php',
+  'file-ppt', 'file-rs', 'file-sql', 'file-svg', 'file-ts', 'file-tsx',
+  'file-txt', 'file-vue', 'file-xls', 'file-xml', 'file-zip',
 ]
 
 describe('ICONS registry', () => {
