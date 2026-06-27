@@ -95,12 +95,17 @@ import { FilePreviewThumbnailComponent } from './file-preview-thumbnail.componen
                     <ng-container [ngComponentOutlet]="fileDeleteIcon" />
                 </button>
 
-                <!-- Upload progress bar -->
-                <upup-progress-bar
-                    class="upup-absolute upup-bottom-0 upup-left-0 upup-right-0"
-                    progressBarClassName="upup-rounded-t-none upup-rounded-b-md"
-                    [progress]="progress"
-                />
+                <!-- Upload progress bar. Gated on progress so the idle DOM has no
+                     progress node — React's <ProgressBar> returns null at progress 0,
+                     but an Angular component host always renders, so without @if the
+                     empty <upup-progress-bar> host would break DOM parity. -->
+                @if (progress) {
+                    <upup-progress-bar
+                        class="upup-absolute upup-bottom-0 upup-left-0 upup-right-0"
+                        progressBarClassName="upup-rounded-t-none upup-rounded-b-md"
+                        [progress]="progress"
+                    />
+                }
             </div>
 
             <!-- Name + size + preview button -->
