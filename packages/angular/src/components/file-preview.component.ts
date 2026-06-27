@@ -7,6 +7,7 @@ import {
     fileGetIsPdf,
     fileGetIsText,
     cn,
+    isUploadActive,
     type Translations,
 } from '@upup/core'
 import type { UploadFile } from '@upup/core'
@@ -95,11 +96,13 @@ import { FilePreviewThumbnailComponent } from './file-preview-thumbnail.componen
                     <ng-container [ngComponentOutlet]="fileDeleteIcon" />
                 </button>
 
-                <!-- Upload progress bar. Gated on progress so the idle DOM has no
-                     progress node — React's <ProgressBar> returns null at progress 0,
-                     but an Angular component host always renders, so without @if the
-                     empty <upup-progress-bar> host would break DOM parity. -->
-                @if (progress) {
+                <!-- Upload progress bar. An Angular component host always renders a DOM
+                     node, so the empty <upup-progress-bar> host would break DOM parity at
+                     idle (React's <ProgressBar> returns null there). Gate the host on the
+                     SAME condition the component uses internally (shouldShow) so it mirrors
+                     React's render exactly — including the active-upload instant where
+                     progress is still 0 but the upload is in flight. -->
+                @if (showProgressBar) {
                     <upup-progress-bar
                         class="upup-absolute upup-bottom-0 upup-left-0 upup-right-0"
                         progressBarClassName="upup-rounded-t-none upup-rounded-b-md"
@@ -169,6 +172,16 @@ export class FilePreviewComponent implements OnChanges {
         const entry = map[this.fileId]
         if (!entry || !entry.total) return 0
         return Math.floor((entry.loaded / entry.total) * 100)
+    }
+
+    /**
+     * Whether to render the <upup-progress-bar> host. Mirrors
+     * ProgressBarComponent.shouldShow (and React's <ProgressBar> render condition)
+     * so the host element appears exactly when React would show the bar — including
+     * the active-upload instant where progress is still 0.
+     */
+    get showProgressBar(): boolean {
+        return !!this.progress || isUploadActive(this.store.uploadStatus())
     }
 
     get fileDeleteIcon(): Type<unknown> {
