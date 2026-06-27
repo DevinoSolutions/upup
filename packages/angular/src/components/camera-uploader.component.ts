@@ -35,9 +35,9 @@ import { AdapterViewContainerComponent } from './adapter-view-container.componen
         <upup-adapter-view-container slotName="camera-uploader">
             <div
                 data-testid="upup-camera-uploader"
-                class="upup-flex upup-h-full upup-w-full upup-flex-col upup-justify-center upup-overflow-auto upup-px-3 upup-py-2"
+                class="upup-flex upup-h-full upup-w-full upup-flex-col upup-justify-center upup-overflow-hidden upup-px-3 upup-py-2"
             >
-                <div class="upup-flex-1 upup-pt-10">
+                <div class="upup-flex upup-min-h-0 upup-flex-1 upup-items-center upup-justify-center upup-pt-2">
                     @if (cameraSvc.capturedUrl()) {
                         <div
                             [class]="previewContainerClass"
@@ -58,12 +58,12 @@ import { AdapterViewContainerComponent } from './adapter-view-container.componen
                             autoplay
                             muted
                             playsinline
-                            class="upup-aspect-video upup-rounded-xl"
+                            class="upup-aspect-video upup-max-h-full upup-max-w-full upup-rounded-xl upup-object-contain"
                         ></video>
                     }
                 </div>
 
-                <div class="upup-flex upup-gap-4">
+                <div class="upup-flex upup-shrink-0 upup-gap-4">
                     @if (!cameraSvc.capturedUrl()) {
                         <button
                             [class]="captureButtonClass"
@@ -154,7 +154,7 @@ export class CameraUploaderComponent implements AfterViewInit, OnDestroy {
         const dark = this.store.isDark()
         const slotClasses = this.store.slotOverrides()
         return cn(
-            'upup-relative upup-aspect-video upup-bg-black/[0.025] upup-bg-contain upup-bg-center upup-bg-no-repeat upup-shadow-xl',
+            'upup-relative upup-aspect-video upup-max-h-full upup-max-w-full upup-bg-black/[0.025] upup-bg-contain upup-bg-center upup-bg-no-repeat upup-shadow-xl',
             {
                 'upup-bg-white/5 dark:upup-bg-white/5': dark,
             },

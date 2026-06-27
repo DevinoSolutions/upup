@@ -22,12 +22,12 @@ export default function CameraUploader() {
 
     return (
         <AdapterViewContainer data-upup-slot="camera-uploader">
-            <div data-testid="upup-camera-uploader" className="upup-flex upup-h-full upup-w-full upup-flex-col upup-justify-center upup-overflow-auto upup-px-3 upup-py-2">
-                <div className="upup-flex-1 upup-pt-10">
+            <div data-testid="upup-camera-uploader" className="upup-flex upup-h-full upup-w-full upup-flex-col upup-justify-center upup-overflow-hidden upup-px-3 upup-py-2">
+                <div className="upup-flex upup-min-h-0 upup-flex-1 upup-items-center upup-justify-center upup-pt-2">
                     <ShouldRender if={!!url}>
                         <div
                             className={cn(
-                                'upup-relative upup-aspect-video upup-bg-black/[0.025] upup-bg-contain upup-bg-center upup-bg-no-repeat upup-shadow-xl',
+                                'upup-relative upup-aspect-video upup-max-h-full upup-max-w-full upup-bg-black/[0.025] upup-bg-contain upup-bg-center upup-bg-no-repeat upup-shadow-xl',
                                 {
                                     'upup-bg-white/5 dark:upup-bg-white/5':
                                         dark,
@@ -55,11 +55,11 @@ export default function CameraUploader() {
                             ref={webcamRef}
                             screenshotFormat="image/jpeg"
                             videoConstraints={{ facingMode }}
-                            className="upup-aspect-video upup-rounded-xl"
+                            className="upup-aspect-video upup-max-h-full upup-max-w-full upup-rounded-xl upup-object-contain"
                         />
                     </ShouldRender>
                 </div>
-                <div className="upup-flex upup-gap-4">
+                <div className="upup-flex upup-shrink-0 upup-gap-4">
                     <ShouldRender if={!url}>
                         <button
                             className={cn(
