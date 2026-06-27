@@ -93,6 +93,7 @@
     "tus-js-client": "^4.3.1"
   },
   "devDependencies": {
+    "@types/node": "^22",
     "esbuild": "^0.25.0",
     "rollup": "^4.60.0",
     "tsup": "^8.4.0",
