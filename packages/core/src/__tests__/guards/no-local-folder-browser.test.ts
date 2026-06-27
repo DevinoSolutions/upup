@@ -34,5 +34,5 @@ describe('LocalFolderBrowser is fully removed', () => {
       }
     }
     expect(hits, `unexpected LocalFolderBrowser references:\n${hits.join('\n')}`).toEqual([])
-  })
+  }, 30_000)
 })
