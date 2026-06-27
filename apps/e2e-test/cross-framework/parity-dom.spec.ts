@@ -27,4 +27,36 @@ test.describe('parity-dom normalizer', () => {
       ],
     })
   })
+
+  test('unwraps transparent custom-element component hosts (angular)', async ({ page }) => {
+    await page.setContent(`
+      <div id="root" class="upup-wrap" data-testid="upup-x">
+        <upup-icon-my-device>
+          <upup-icon>
+            <svg class="upup-text-blue-600"><path d="M0 0"/></svg>
+          </upup-icon>
+        </upup-icon-my-device>
+        <upup-keep class="upup-styled" data-testid="keep-me">
+          <span class="upup-inner">label</span>
+        </upup-keep>
+      </div>
+    `)
+    const got: NormalizedNode = await page.$eval('#root', normalizeElement)
+    expect(got).toEqual({
+      tag: 'div',
+      testid: 'upup-x',
+      classes: ['upup-wrap'],
+      children: [
+        // both hyphenated hosts are class-less + hook-less ⇒ unwrapped, svg hoisted
+        { tag: 'svg', classes: ['upup-text-blue-600'], children: [] },
+        // a custom element carrying a upup- class AND a testid is NOT transparent ⇒ kept
+        {
+          tag: 'upup-keep',
+          testid: 'keep-me',
+          classes: ['upup-styled'],
+          children: [{ tag: 'span', classes: ['upup-inner'], children: [] }],
+        },
+      ],
+    })
+  })
 })
