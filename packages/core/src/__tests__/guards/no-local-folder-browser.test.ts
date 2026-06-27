@@ -30,7 +30,16 @@ describe('LocalFolderBrowser is fully removed', () => {
       }
       for (const file of walk(srcDir)) {
         if (file === SELF) continue
-        if (readFileSync(file, 'utf8').includes('LocalFolderBrowser')) hits.push(file)
+        // Filename check catches a reintroduced component whose body never names
+        // the symbol (e.g. an anonymous `<script setup>` LocalFolderBrowser.vue);
+        // content check catches imports/usages/references anywhere else.
+        const base = file.split(/[\\/]/).pop() ?? file
+        if (
+          base.includes('LocalFolderBrowser') ||
+          readFileSync(file, 'utf8').includes('LocalFolderBrowser')
+        ) {
+          hits.push(file)
+        }
       }
     }
     expect(hits, `unexpected LocalFolderBrowser references:\n${hits.join('\n')}`).toEqual([])
