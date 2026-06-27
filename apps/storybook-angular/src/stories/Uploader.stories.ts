@@ -138,7 +138,25 @@ export const RealUploadClient: Story = {
   },
 }
 
-// ── 11. RealUploadServerDrive ─────────────────────────────────────────────────
+// ── 11. Parity (deterministic DOM fixture — no network, no upload) ────────────
+// autoUpload: false → no presign call. No serverUrl/uploadEndpoint → nothing to
+// hit. themeMode: 'light' overrides the meta default ('dark') for a consistent
+// snapshot. Angular reads env via process.env (same as REAL_SERVER_URL pattern);
+// no server URL needed here. Locale is the component default (en).
+// Used by the parity harness.
+export const Parity: Story = {
+  parameters: { msw: { handlers: [] } },
+  args: {
+    mode: 'client',
+    autoUpload: false,
+    sources: ['local', 'googleDrive'],
+    maxFiles: 3,
+    showBranding: false,
+    themeMode: 'light',
+  },
+}
+
+// ── 13. RealUploadServerDrive ─────────────────────────────────────────────────
 // Opt-in: disable MSW + server-mode presign via @upup/server on :53060.
 export const RealUploadServerDrive: Story = {
   parameters: { msw: { handlers: [] } },
@@ -153,7 +171,7 @@ export const RealUploadServerDrive: Story = {
   },
 }
 
-// ── 12. Dark ──────────────────────────────────────────────────────────────────
+// ── 14. Dark ──────────────────────────────────────────────────────────────────
 // Sets themeMode: 'dark' → buildOptions splits it into theme.mode = 'dark'.
 // Angular equivalent of Vanilla's ElementTag (Angular has no custom-element variant).
 // T18 will visually verify the dark palette is applied correctly.

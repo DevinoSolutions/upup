@@ -113,7 +113,23 @@ export const RealUploadClient: Story = {
   },
 }
 
-// ── 11. RealUploadServerDrive ─────────────────────────────────────────────────
+// ── 11. Parity (deterministic DOM fixture — no network, no upload) ────────────
+// autoUpload: false → no presign call. No serverUrl/uploadEndpoint → nothing to
+// hit. themeMode: 'light' overrides the meta default ('dark') for a consistent
+// snapshot. Locale is the component default (en). Used by the parity harness.
+export const Parity: Story = {
+  parameters: { msw: { handlers: [] } },
+  args: {
+    mode: 'client',
+    autoUpload: false,
+    sources: ['local', 'googleDrive'],
+    maxFiles: 3,
+    showBranding: false,
+    themeMode: 'light',
+  },
+}
+
+// ── 12. RealUploadServerDrive ─────────────────────────────────────────────────
 // Server-mode Google Drive: hits the real harness server, streams via Drive API.
 // MSW is disabled so requests reach the real local server on :53060.
 export const RealUploadServerDrive: Story = {
@@ -129,7 +145,7 @@ export const RealUploadServerDrive: Story = {
   },
 }
 
-// ── 12. Dark ──────────────────────────────────────────────────────────────────
+// ── 13. Dark ──────────────────────────────────────────────────────────────────
 // Sets themeMode: 'dark' → the render helper splits it into theme.mode = 'dark'.
 // T7 will visually verify the dark palette is applied correctly.
 export const Dark: Story = {

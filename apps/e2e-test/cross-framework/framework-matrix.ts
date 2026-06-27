@@ -11,15 +11,17 @@ export interface FrameworkEntry {
   port: number
   /** Storybook story id for the real-upload smoke. */
   storyId: string
+  /** Story id for the deterministic DOM-parity fixture (autoUpload off). */
+  parityStoryId: string
 }
 
 export const FRAMEWORKS: FrameworkEntry[] = [
-  { name: 'react', port: 53050, storyId: 'react-uploader--real-upload-client' },
-  { name: 'vue', port: 53051, storyId: 'vue-uploader--real-upload-client' },
-  { name: 'svelte', port: 53052, storyId: 'svelte-uploader--real-upload-client' },
-  { name: 'vanilla', port: 53053, storyId: 'vanilla-uploader--real-upload-client' },
-  { name: 'angular', port: 53054, storyId: 'angular-uploader--real-upload-client' },
-  { name: 'preact', port: 53055, storyId: 'preact-uploader--real-upload-client' },
+  { name: 'react',   port: 53050, storyId: 'react-uploader--real-upload-client',   parityStoryId: 'react-uploader--parity' },
+  { name: 'vue',     port: 53051, storyId: 'vue-uploader--real-upload-client',     parityStoryId: 'vue-uploader--parity' },
+  { name: 'svelte',  port: 53052, storyId: 'svelte-uploader--real-upload-client',  parityStoryId: 'svelte-uploader--parity' },
+  { name: 'vanilla', port: 53053, storyId: 'vanilla-uploader--real-upload-client', parityStoryId: 'vanilla-uploader--parity' },
+  { name: 'angular', port: 53054, storyId: 'angular-uploader--real-upload-client', parityStoryId: 'angular-uploader--parity' },
+  { name: 'preact',  port: 53055, storyId: 'preact-uploader--real-upload-client',  parityStoryId: 'preact-uploader--parity' },
 ]
 
 /** All six storybook origins, comma-joined (for the harness CORS allowlist). */

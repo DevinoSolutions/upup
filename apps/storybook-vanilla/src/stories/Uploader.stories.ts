@@ -119,6 +119,22 @@ export const RealUploadClient: Story = {
   },
 }
 
+// ── Parity (deterministic DOM fixture — no network, no upload) ────────────────
+// autoUpload: false → no presign call. No serverUrl/uploadEndpoint → nothing to
+// hit. themeMode: 'light' overrides the meta default ('dark') for a consistent
+// snapshot. Locale is the component default (en). Used by the parity harness.
+export const Parity: Story = {
+  parameters: { msw: { handlers: [] } },
+  args: {
+    mode: 'client',
+    autoUpload: false,
+    sources: ['local', 'googleDrive'],
+    maxFiles: 3,
+    showBranding: false,
+    themeMode: 'light',
+  },
+}
+
 export const RealUploadServerDrive: Story = {
   parameters: { msw: { handlers: [] } },
   args: {

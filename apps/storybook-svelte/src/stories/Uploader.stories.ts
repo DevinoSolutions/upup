@@ -65,6 +65,26 @@ export const RealUploadClient: Story = {
   },
 }
 
+// ── Parity (deterministic DOM fixture — no network, no upload) ────────────────
+// autoUpload: false → no presign call. No serverUrl/uploadEndpoint → nothing to
+// hit. themeMode: 'light' overrides the meta default ('dark') for a consistent
+// snapshot. Locale is the component default (en). Used by the parity harness.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const Parity: Story = {
+  parameters: { msw: { handlers: [] } },
+  // themeMode is a virtual arg (not in UpupUploaderProps) — cast mirrors the
+  // existing render: props cast and meta args shape (uploaderDefaultArgs has it).
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  args: {
+    mode: 'client',
+    autoUpload: false,
+    sources: ['local', 'googleDrive'],
+    maxFiles: 3,
+    showBranding: false,
+    themeMode: 'light',
+  } as any,
+}
+
 export const RealUploadServerDrive: Story = {
   parameters: { msw: { handlers: [] } },
   args: {
