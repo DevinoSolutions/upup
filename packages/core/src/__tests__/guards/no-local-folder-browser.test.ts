@@ -13,7 +13,7 @@ function walk(dir: string, out: string[] = []): string[] {
     if (entry === 'node_modules' || entry === 'dist') continue
     const full = join(dir, entry)
     if (statSync(full).isDirectory()) walk(full, out)
-    else if (/\.(ts|tsx|vue|svelte|js)$/.test(entry)) out.push(full)
+    else if (/\.(ts|tsx|vue|svelte|js|jsx|mjs|cjs|mts|cts)$/.test(entry)) out.push(full)
   }
   return out
 }
