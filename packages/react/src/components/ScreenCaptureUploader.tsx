@@ -208,7 +208,7 @@ export default function ScreenCaptureUploader() {
                         <video
                             ref={previewRef}
                             muted
-                            className="upup-w-full upup-max-w-md upup-rounded-lg"
+                            className="upup-w-full upup-max-w-md upup-min-h-0 upup-flex-1 upup-rounded-lg upup-object-contain"
                         />
                         <div className="upup-flex upup-items-center upup-gap-3">
                             <span className="upup-h-3 upup-w-3 upup-animate-pulse upup-rounded-full upup-bg-red-500" />
@@ -240,7 +240,7 @@ export default function ScreenCaptureUploader() {
                             ref={videoRef}
                             controls
                             src={videoUrl}
-                            className="upup-w-full upup-max-w-md upup-rounded-lg"
+                            className="upup-w-full upup-max-w-md upup-min-h-0 upup-flex-1 upup-rounded-lg upup-object-contain"
                         />
                         <div className="upup-flex upup-gap-3">
                             <button

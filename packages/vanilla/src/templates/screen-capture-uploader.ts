@@ -32,7 +32,7 @@ export function screenCaptureUploader(ctx: RootContext) {
         : nothing}
       ${s.recordingState === 'recording'
         ? html`
-            <video ${ref(sc.previewRef)} muted class="upup-w-full upup-max-w-md upup-rounded-lg"></video>
+            <video ${ref(sc.previewRef)} muted class="upup-w-full upup-max-w-md upup-min-h-0 upup-flex-1 upup-rounded-lg upup-object-contain"></video>
             <div class="upup-flex upup-items-center upup-gap-3">
               <span class="upup-h-3 upup-w-3 upup-animate-pulse upup-rounded-full upup-bg-red-500"></span>
               <span class=${cn('upup-font-mono upup-text-lg upup-tabular-nums', { 'upup-text-[#1b1b1b]': !isDark, 'upup-text-white': isDark })}>${sc.formatTime(s.duration)}</span>
@@ -41,7 +41,7 @@ export function screenCaptureUploader(ctx: RootContext) {
         : nothing}
       ${s.recordingState === 'recorded' && s.videoUrl
         ? html`
-            <video controls src=${s.videoUrl} class="upup-w-full upup-max-w-md upup-rounded-lg"></video>
+            <video controls src=${s.videoUrl} class="upup-w-full upup-max-w-md upup-min-h-0 upup-flex-1 upup-rounded-lg upup-object-contain"></video>
             <div class="upup-flex upup-gap-3">
               <button type="button" class="upup-rounded-lg upup-bg-gray-500 upup-px-4 upup-py-2.5 upup-text-sm upup-font-medium upup-text-white upup-transition-colors hover:upup-bg-gray-600" @click=${() => sc.discardRecording()}>Discard</button>
               <button type="button" class=${cn('upup-rounded-lg upup-bg-blue-600 upup-px-4 upup-py-2.5 upup-text-sm upup-font-medium upup-text-white upup-transition-colors hover:upup-bg-blue-700', { 'upup-bg-[#59D1F9] hover:upup-bg-[#40b8e0] dark:upup-bg-[#59D1F9]': isDark })} @click=${() => sc.addRecording()}>Add Recording</button>

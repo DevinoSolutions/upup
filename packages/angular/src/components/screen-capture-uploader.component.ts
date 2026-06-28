@@ -82,7 +82,7 @@ type RecordingState = 'idle' | 'recording' | 'recorded'
                         <video
                             #previewEl
                             muted
-                            class="upup-w-full upup-max-w-md upup-rounded-lg"
+                            class="upup-w-full upup-max-w-md upup-min-h-0 upup-flex-1 upup-rounded-lg upup-object-contain"
                         ></video>
                         <div class="upup-flex upup-items-center upup-gap-3">
                             <span class="upup-h-3 upup-w-3 upup-animate-pulse upup-rounded-full upup-bg-red-500"></span>
@@ -103,7 +103,7 @@ type RecordingState = 'idle' | 'recording' | 'recorded'
                         <video
                             controls
                             [src]="videoUrl"
-                            class="upup-w-full upup-max-w-md upup-rounded-lg"
+                            class="upup-w-full upup-max-w-md upup-min-h-0 upup-flex-1 upup-rounded-lg upup-object-contain"
                         ></video>
                         <div class="upup-flex upup-gap-3">
                             <button

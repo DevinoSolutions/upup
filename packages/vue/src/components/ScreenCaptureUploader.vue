@@ -180,7 +180,7 @@ function formatTime(s: number) {
                 <video
                     ref="previewRef"
                     muted
-                    class="upup-w-full upup-max-w-md upup-rounded-lg"
+                    class="upup-w-full upup-max-w-md upup-min-h-0 upup-flex-1 upup-rounded-lg upup-object-contain"
                 />
                 <div class="upup-flex upup-items-center upup-gap-3">
                     <span class="upup-h-3 upup-w-3 upup-animate-pulse upup-rounded-full upup-bg-red-500" />
@@ -211,7 +211,7 @@ function formatTime(s: number) {
                     ref="videoRef"
                     controls
                     :src="videoUrl"
-                    class="upup-w-full upup-max-w-md upup-rounded-lg"
+                    class="upup-w-full upup-max-w-md upup-min-h-0 upup-flex-1 upup-rounded-lg upup-object-contain"
                 />
                 <div class="upup-flex upup-gap-3">
                     <button
