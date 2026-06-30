@@ -34,6 +34,14 @@ export default function ScreenCaptureUploader() {
         }
     }, [videoUrl])
 
+    const bindPreview = useCallback((el: HTMLVideoElement | null) => {
+        previewRef.current = el
+        if (el && streamRef.current) {
+            el.srcObject = streamRef.current
+            el.play().catch(() => {})
+        }
+    }, [])
+
     const startRecording = useCallback(async () => {
         try {
             const stream = await navigator.mediaDevices.getDisplayMedia({
@@ -42,11 +50,6 @@ export default function ScreenCaptureUploader() {
             })
             streamRef.current = stream
             chunks.current = []
-
-            if (previewRef.current) {
-                previewRef.current.srcObject = stream
-                previewRef.current.play()
-            }
 
             stream.getVideoTracks()[0].onended = () => {
                 if (
@@ -206,7 +209,7 @@ export default function ScreenCaptureUploader() {
                 {state === 'recording' && (
                     <>
                         <video
-                            ref={previewRef}
+                            ref={bindPreview}
                             muted
                             className="upup-w-full upup-max-w-md upup-min-h-0 upup-flex-1 upup-rounded-lg upup-object-contain"
                         />

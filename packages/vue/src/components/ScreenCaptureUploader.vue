@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onUnmounted, ref } from 'vue'
+import { onUnmounted, ref, type ComponentPublicInstance } from 'vue'
 import {
     useUploaderFiles,
     useUploaderSource,
@@ -24,13 +24,26 @@ const chunks: Blob[] = []
 const timerRef = ref<ReturnType<typeof setInterval> | null>(null)
 const streamRef = ref<MediaStream | null>(null)
 const videoRef = ref<HTMLVideoElement | null>(null)
-const previewRef = ref<HTMLVideoElement | null>(null)
+let previewRef: HTMLVideoElement | null = null
 
 onUnmounted(() => {
     if (timerRef.value) clearInterval(timerRef.value)
     if (videoUrl.value) URL.revokeObjectURL(videoUrl.value)
     streamRef.value?.getTracks().forEach(t => t.stop())
 })
+
+function bindPreview(el: Element | ComponentPublicInstance | null) {
+    const video = el instanceof HTMLVideoElement ? el : null
+    previewRef = video
+    // Vue invokes a function ref on every component update, and the recording
+    // timer re-renders this view once per second. Guard so we bind srcObject +
+    // play() once per mount, not every tick — re-assigning srcObject restarts
+    // the media element's load algorithm and visibly flickers the preview.
+    if (video && streamRef.value && video.srcObject !== streamRef.value) {
+        video.srcObject = streamRef.value
+        void video.play().catch(() => {})
+    }
+}
 
 async function startRecording() {
     try {
@@ -40,11 +53,6 @@ async function startRecording() {
         })
         streamRef.value = stream
         chunks.length = 0
-
-        if (previewRef.value) {
-            previewRef.value.srcObject = stream
-            previewRef.value.play()
-        }
 
         stream.getVideoTracks()[0].onended = () => {
             if (mediaRecorder.value && mediaRecorder.value.state !== 'inactive') {
@@ -65,7 +73,7 @@ async function startRecording() {
             const blob = new Blob(chunks, { type: recorder.mimeType || 'video/webm' })
             videoUrl.value = URL.createObjectURL(blob)
             stream.getTracks().forEach(t => t.stop())
-            if (previewRef.value) previewRef.value.srcObject = null
+            if (previewRef) previewRef.srcObject = null
         }
 
         recorder.start()
@@ -178,7 +186,7 @@ function formatTime(s: number) {
             <!-- Recording -->
             <template v-if="state === 'recording'">
                 <video
-                    ref="previewRef"
+                    :ref="bindPreview"
                     muted
                     class="upup-w-full upup-max-w-md upup-min-h-0 upup-flex-1 upup-rounded-lg upup-object-contain"
                 />

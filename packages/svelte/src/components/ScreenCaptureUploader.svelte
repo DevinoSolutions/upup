@@ -23,13 +23,26 @@
   const chunks: Blob[] = []
   let timerHandle: ReturnType<typeof setInterval> | null = null
   let streamRef: MediaStream | null = null
-  let previewEl: HTMLVideoElement | null = $state(null)
+  let previewEl: HTMLVideoElement | null = null
 
   onDestroy(() => {
     if (timerHandle) clearInterval(timerHandle)
     if (videoUrl) URL.revokeObjectURL(videoUrl)
     streamRef?.getTracks().forEach((t) => t.stop())
   })
+
+  function bindPreview(node: HTMLVideoElement) {
+    previewEl = node
+    if (streamRef) {
+      node.srcObject = streamRef
+      void node.play().catch(() => {})
+    }
+    return {
+      destroy() {
+        if (previewEl === node) previewEl = null
+      },
+    }
+  }
 
   async function startRecording() {
     try {
@@ -39,11 +52,6 @@
       })
       streamRef = stream
       chunks.length = 0
-
-      if (previewEl) {
-        previewEl.srcObject = stream
-        previewEl.play()
-      }
 
       stream.getVideoTracks()[0].onended = () => {
         if (mediaRecorder && mediaRecorder.state !== 'inactive') {
@@ -180,7 +188,7 @@
       {#if recordingState === 'recording'}
         <!-- svelte-ignore a11y_media_has_caption -->
         <video
-          bind:this={previewEl}
+          use:bindPreview
           muted
           class="upup-w-full upup-max-w-md upup-min-h-0 upup-flex-1 upup-rounded-lg upup-object-contain"
         ></video>

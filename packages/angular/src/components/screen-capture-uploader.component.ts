@@ -136,7 +136,14 @@ export class ScreenCaptureUploaderComponent implements OnDestroy {
     videoUrl: string | null = null
     error: string | null = null
 
-    @ViewChild('previewEl') previewElRef?: ElementRef<HTMLVideoElement>
+    @ViewChild('previewEl')
+    set previewEl(ref: ElementRef<HTMLVideoElement> | undefined) {
+        const el = ref?.nativeElement
+        if (el && this.streamRef) {
+            el.srcObject = this.streamRef
+            void el.play().catch(() => {})
+        }
+    }
 
     private mediaRecorder: MediaRecorder | null = null
     private chunks: Blob[] = []
@@ -157,12 +164,6 @@ export class ScreenCaptureUploaderComponent implements OnDestroy {
             })
             this.streamRef = stream
             this.chunks = []
-
-            const previewEl = this.previewElRef?.nativeElement
-            if (previewEl) {
-                previewEl.srcObject = stream
-                void previewEl.play()
-            }
 
             stream.getVideoTracks()[0].onended = () => {
                 if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
