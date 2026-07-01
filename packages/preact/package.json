@@ -53,6 +53,7 @@
     "jsdom": "22.1.0",
     "konva": "^10.3.0",
     "preact": "^10.29.2",
+    "preact-render-to-string": "^6.5.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-filerobot-image-editor": "^4.9.1",
