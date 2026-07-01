@@ -6,7 +6,7 @@ import {
     useUploaderTheme,
 } from '../context/root-context'
 import { cn } from '@upup/core'
-import AdapterViewContainer from './shared/AdapterViewContainer.vue'
+import SourceViewContainer from './shared/SourceViewContainer.vue'
 
 type RecordingState = 'idle' | 'recording' | 'recorded'
 
@@ -91,7 +91,7 @@ function formatTime(s: number) {
 
 <template>
     <!-- Error state -->
-    <AdapterViewContainer v-if="error" data-upup-slot="audio-uploader">
+    <SourceViewContainer v-if="error" data-upup-slot="audio-uploader">
         <div class="upup-flex upup-flex-col upup-items-center upup-gap-3 upup-p-6 upup-text-center">
             <p
                 :class="cn('upup-text-sm upup-text-red-500', {
@@ -101,10 +101,10 @@ function formatTime(s: number) {
                 {{ error }}
             </p>
         </div>
-    </AdapterViewContainer>
+    </SourceViewContainer>
 
     <!-- Normal state -->
-    <AdapterViewContainer v-else data-upup-slot="audio-uploader">
+    <SourceViewContainer v-else data-upup-slot="audio-uploader">
         <div class="upup-flex upup-h-full upup-w-full upup-flex-col upup-items-center upup-justify-center upup-gap-6 upup-p-6">
             <div
                 :class="cn(
@@ -208,5 +208,5 @@ function formatTime(s: number) {
                 </template>
             </div>
         </div>
-    </AdapterViewContainer>
+    </SourceViewContainer>
 </template>

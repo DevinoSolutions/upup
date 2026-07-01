@@ -6,7 +6,7 @@
     useUploaderTheme,
   } from '../context/root-context'
   import { cn } from '@upup/core'
-  import AdapterViewContainer from './shared/AdapterViewContainer.svelte'
+  import SourceViewContainer from './shared/SourceViewContainer.svelte'
 
   type RecordingState = 'idle' | 'recording' | 'recorded'
 
@@ -122,7 +122,7 @@
 
 {#if error}
   <!-- Error state -->
-  <AdapterViewContainer data-upup-slot="screen-capture-uploader">
+  <SourceViewContainer data-upup-slot="screen-capture-uploader">
     <div class="upup-flex upup-flex-col upup-items-center upup-gap-3 upup-p-6 upup-text-center">
       <p
         class={cn('upup-text-sm upup-text-red-500', {
@@ -144,10 +144,10 @@
         Try Again
       </button>
     </div>
-  </AdapterViewContainer>
+  </SourceViewContainer>
 {:else}
   <!-- Normal state -->
-  <AdapterViewContainer data-upup-slot="screen-capture-uploader">
+  <SourceViewContainer data-upup-slot="screen-capture-uploader">
     <div class="upup-flex upup-h-full upup-w-full upup-flex-col upup-items-center upup-justify-center upup-gap-4 upup-p-4">
       <!-- Idle -->
       {#if recordingState === 'idle'}
@@ -246,5 +246,5 @@
         </div>
       {/if}
     </div>
-  </AdapterViewContainer>
+  </SourceViewContainer>
 {/if}

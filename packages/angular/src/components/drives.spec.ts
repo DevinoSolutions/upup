@@ -44,7 +44,7 @@ function makeStoreMock() {
         driveItemContainerSelected: '',
         driveItemContainerInner: '',
         driveItemInnerText: '',
-        adapterView: '',
+        sourceView: '',
         driveLoading: '',
     }
     const translations = {

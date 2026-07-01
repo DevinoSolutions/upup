@@ -1,7 +1,7 @@
 import React from 'react'
 import { cn, formatUiMessage as t } from '@upup/core'
 import { useUploaderI18n, useUploaderTheme } from '../../context/RootContext'
-import AdapterViewContainer from './AdapterViewContainer'
+import SourceViewContainer from './SourceViewContainer'
 
 type Props = {
     providerName: string
@@ -18,7 +18,7 @@ export default function DriveAuthFallback({
     const { translations: tr } = useUploaderI18n()
 
     return (
-        <AdapterViewContainer data-upup-slot={dataUpupSlot}>
+        <SourceViewContainer data-upup-slot={dataUpupSlot}>
             <div className="upup-flex upup-h-full upup-w-full upup-flex-col upup-items-center upup-justify-center upup-gap-4 upup-p-6 upup-text-center">
                 <p
                     className={cn(
@@ -27,7 +27,7 @@ export default function DriveAuthFallback({
                             'upup-text-[#FAFAFA] dark:upup-text-[#FAFAFA]':
                                 dark,
                         },
-                        slotClasses.adapterView,
+                        slotClasses.sourceView,
                     )}
                 >
                     {t(tr.authenticatePrompt, { provider: providerName })}
@@ -46,6 +46,6 @@ export default function DriveAuthFallback({
                     {t(tr.signInWith, { provider: providerName })}
                 </button>
             </div>
-        </AdapterViewContainer>
+        </SourceViewContainer>
     )
 }

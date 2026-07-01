@@ -42,7 +42,7 @@ test.describe('cross-framework smoke', () => {
     await expect(page.locator('[data-testid="upup-dropzone"]')).toBeVisible()
 
     // 3. File-add registers (binding-layer critical). The hidden input is present
-    // at mount (AdapterSelector renders while files.size === 0). If a wrapper ever
+    // at mount (SourceSelector renders while files.size === 0). If a wrapper ever
     // gates it behind the local source button, reveal it first.
     const fileInput = page.locator('[data-testid="upup-file-input"]')
     if ((await fileInput.count()) === 0) {

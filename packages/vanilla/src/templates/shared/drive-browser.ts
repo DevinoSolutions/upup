@@ -3,7 +3,7 @@ import { repeat } from 'lit-html/directives/repeat.js'
 import { cn, formatUiMessage as t, pluralUiMessage as plural, searchDriveFiles } from '@upup/core'
 import type { DriveFile, DriveFolder, DriveUser } from '@upup/core'
 import type { RootContext } from '../../lib/types'
-import { adapterViewContainer } from './adapter-view-container'
+import { sourceViewContainer } from './source-view-container'
 import { driveBrowserHeader } from './drive-browser-header'
 import { driveBrowserItem } from './drive-browser-item'
 
@@ -166,5 +166,5 @@ export function driveBrowser(ctx: RootContext, props: DriveBrowserProps) {
         </div>` : nothing}
     </div>`
 
-  return adapterViewContainer(ctx, { isLoading, dataUpupSlot }, inner)
+  return sourceViewContainer(ctx, { isLoading, dataUpupSlot }, inner)
 }

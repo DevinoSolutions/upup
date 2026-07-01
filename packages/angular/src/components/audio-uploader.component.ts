@@ -1,7 +1,7 @@
 import { Component, inject, OnDestroy } from '@angular/core'
 import { cn } from '@upup/core'
 import { UpupStore } from '../upup-store.service'
-import { AdapterViewContainerComponent } from './adapter-view-container.component'
+import { SourceViewContainerComponent } from './source-view-container.component'
 
 type RecordingState = 'idle' | 'recording' | 'recorded'
 
@@ -9,7 +9,7 @@ type RecordingState = 'idle' | 'recording' | 'recorded'
  * Audio recorder leaf — port of AudioUploader.svelte.
  *
  * Slot name : "audio-uploader"
- * (Both the error-state and normal-state AdapterViewContainers use slotName="audio-uploader".)
+ * (Both the error-state and normal-state SourceViewContainers use slotName="audio-uploader".)
  *
  * Svelte parity:
  *   - All state (recordingState, duration, audioUrl, error) is plain class properties
@@ -25,7 +25,7 @@ type RecordingState = 'idle' | 'recording' | 'recorded'
 @Component({
     selector: 'upup-audio-uploader',
     standalone: true,
-    imports: [AdapterViewContainerComponent],
+    imports: [SourceViewContainerComponent],
     template: `
         @if (error) {
             <!-- Error state -->

@@ -2,7 +2,7 @@ import React, { HTMLAttributes, PropsWithChildren } from 'react'
 import { useUploaderTheme } from '../../context/RootContext'
 import { cn } from '@upup/core'
 
-export default function AdapterViewContainer({
+export default function SourceViewContainer({
     children,
     isLoading = false,
     ...rest
@@ -16,8 +16,8 @@ export default function AdapterViewContainer({
                 {
                     'upup-bg-white/10 upup-text-[#FAFAFA] dark:upup-bg-white/10 dark:upup-text-[#FAFAFA]':
                         isLoading && dark,
-                    [slotClasses.adapterView!]:
-                        !isLoading && slotClasses.adapterView,
+                    [slotClasses.sourceView!]:
+                        !isLoading && slotClasses.sourceView,
                     [slotClasses.driveLoading!]:
                         isLoading && slotClasses.driveLoading,
                 },

@@ -237,7 +237,7 @@ export function createRootProvider(props: UploaderProps): IRootContext {
         registerFileInput,
         getFileInput,
         openFilePicker,
-        // Reactive so consumers (AdapterView/MainBox/FileList) re-render when the
+        // Reactive so consumers (SourceView/MainBox/FileList) re-render when the
         // active adapter changes.
         activeAdapter: derived(orchState, $s => $s.activeAdapter),
         setActiveAdapter: (adapter: FileSource | undefined) => root.commands.setActiveAdapter(adapter),

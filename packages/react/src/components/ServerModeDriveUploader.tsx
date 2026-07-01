@@ -5,7 +5,7 @@ import {
     type ServerDriveFile,
     type ServerModeProvider,
 } from '../hooks/useServerModeDrive'
-import AdapterViewContainer from './shared/AdapterViewContainer'
+import SourceViewContainer from './shared/SourceViewContainer'
 import DriveAuthFallback from './shared/DriveAuthFallback'
 import ShouldRender from './shared/ShouldRender'
 import { cn } from '@upup/core'
@@ -74,7 +74,7 @@ export default function ServerModeDriveUploader({
     }
 
     return (
-        <AdapterViewContainer
+        <SourceViewContainer
             isLoading={isLoading}
             data-upup-slot={dataUpupSlot}
         >
@@ -183,7 +183,7 @@ export default function ServerModeDriveUploader({
                     </div>
                 </div>
             </ShouldRender>
-        </AdapterViewContainer>
+        </SourceViewContainer>
     )
 }
 

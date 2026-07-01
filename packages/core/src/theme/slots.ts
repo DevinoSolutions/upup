@@ -167,9 +167,9 @@ const SLOT_TO_FLAT: {
     dragText: 'adapterButtonText',
   },
   sourceView: {
-    root: 'adapterView',
-    header: 'adapterViewHeader',
-    cancelButton: 'adapterViewCancelButton',
+    root: 'sourceView',
+    header: 'sourceViewHeader',
+    cancelButton: 'sourceViewCancelButton',
   },
   fileList: {
     root: 'fileListContainer',

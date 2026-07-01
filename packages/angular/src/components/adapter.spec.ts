@@ -2,10 +2,10 @@
  * adapter.spec.ts — T12 component test suite
  *
  * Tests:
- *   - AdapterSelectorComponent: renders source tiles with correct testids incl.
+ *   - SourceSelectorComponent: renders source tiles with correct testids incl.
  *     upup-source-url and upup-source-googleDrive; clicking a drive tile calls
  *     store.setActiveAdapter('googleDrive').
- *   - AdapterViewComponent: set activeAdapter → url renders UrlUploader;
+ *   - SourceViewComponent: set activeAdapter → url renders UrlUploader;
  *     set 'googleDrive' → renders GoogleDrive wrapper; undefined → renders nothing.
  *   - Wrapper routing: GoogleDriveUploaderComponent with mode='client' renders
  *     ClientGoogleDriveUploader; mode='server' renders ServerModeDriveUploader.
@@ -22,8 +22,8 @@ import { describe, it, expect, afterEach, vi } from 'vitest'
 import { TestBed } from '@angular/core/testing'
 import { Component, Injectable, computed, signal } from '@angular/core'
 import { UpupStore } from '../upup-store.service'
-import { AdapterSelectorComponent } from './adapter-selector.component'
-import { AdapterViewComponent } from './adapter-view.component'
+import { SourceSelectorComponent } from './source-selector.component'
+import { SourceViewComponent } from './source-view.component'
 import { GoogleDriveUploaderComponent } from './google-drive-uploader.component'
 import { OneDriveUploaderComponent } from './onedrive-uploader.component'
 import { DropboxUploaderComponent } from './dropbox-uploader.component'
@@ -81,9 +81,9 @@ function makeFakeGoogleDriveService() {
     return FakeGDService
 }
 
-// ── AdapterSelectorComponent ──────────────────────────────────────────────────
+// ── SourceSelectorComponent ──────────────────────────────────────────────────
 
-describe('AdapterSelectorComponent', () => {
+describe('SourceSelectorComponent', () => {
     let store: UpupStore
 
     afterEach(() => {
@@ -95,11 +95,11 @@ describe('AdapterSelectorComponent', () => {
     it('renders a tile for each source with the correct data-testid', async () => {
         store = makeStore()
         await TestBed.configureTestingModule({
-            imports: [AdapterSelectorComponent],
+            imports: [SourceSelectorComponent],
             providers: [{ provide: UpupStore, useValue: store }],
         }).compileComponents()
 
-        const fixture = TestBed.createComponent(AdapterSelectorComponent)
+        const fixture = TestBed.createComponent(SourceSelectorComponent)
         fixture.detectChanges()
 
         // Check key testids
@@ -131,11 +131,11 @@ describe('AdapterSelectorComponent', () => {
     it('source id is "url" (not "link") — testid is upup-source-url', async () => {
         store = makeStore()
         await TestBed.configureTestingModule({
-            imports: [AdapterSelectorComponent],
+            imports: [SourceSelectorComponent],
             providers: [{ provide: UpupStore, useValue: store }],
         }).compileComponents()
 
-        const fixture = TestBed.createComponent(AdapterSelectorComponent)
+        const fixture = TestBed.createComponent(SourceSelectorComponent)
         fixture.detectChanges()
 
         // upup-source-url must exist
@@ -150,11 +150,11 @@ describe('AdapterSelectorComponent', () => {
         const pickerSpy = vi.spyOn(store, 'openFilePicker')
 
         await TestBed.configureTestingModule({
-            imports: [AdapterSelectorComponent],
+            imports: [SourceSelectorComponent],
             providers: [{ provide: UpupStore, useValue: store }],
         }).compileComponents()
 
-        const fixture = TestBed.createComponent(AdapterSelectorComponent)
+        const fixture = TestBed.createComponent(SourceSelectorComponent)
         fixture.detectChanges()
 
         const gdTile = fixture.nativeElement.querySelector('[data-testid="upup-source-googleDrive"]') as HTMLButtonElement
@@ -173,11 +173,11 @@ describe('AdapterSelectorComponent', () => {
         const adapterSpy = vi.spyOn(store, 'setActiveAdapter')
 
         await TestBed.configureTestingModule({
-            imports: [AdapterSelectorComponent],
+            imports: [SourceSelectorComponent],
             providers: [{ provide: UpupStore, useValue: store }],
         }).compileComponents()
 
-        const fixture = TestBed.createComponent(AdapterSelectorComponent)
+        const fixture = TestBed.createComponent(SourceSelectorComponent)
         fixture.detectChanges()
 
         const localTile = fixture.nativeElement.querySelector('[data-testid="upup-source-local"]') as HTMLButtonElement
@@ -195,11 +195,11 @@ describe('AdapterSelectorComponent', () => {
         const emitSpy = vi.spyOn(store.core, 'emit')
 
         await TestBed.configureTestingModule({
-            imports: [AdapterSelectorComponent],
+            imports: [SourceSelectorComponent],
             providers: [{ provide: UpupStore, useValue: store }],
         }).compileComponents()
 
-        const fixture = TestBed.createComponent(AdapterSelectorComponent)
+        const fixture = TestBed.createComponent(SourceSelectorComponent)
         fixture.detectChanges()
 
         const localTile = fixture.nativeElement.querySelector('[data-testid="upup-source-local"]') as HTMLButtonElement
@@ -215,11 +215,11 @@ describe('AdapterSelectorComponent', () => {
         const emitSpy = vi.spyOn(store.core, 'emit')
 
         await TestBed.configureTestingModule({
-            imports: [AdapterSelectorComponent],
+            imports: [SourceSelectorComponent],
             providers: [{ provide: UpupStore, useValue: store }],
         }).compileComponents()
 
-        const fixture = TestBed.createComponent(AdapterSelectorComponent)
+        const fixture = TestBed.createComponent(SourceSelectorComponent)
         fixture.detectChanges()
 
         const gdTile = fixture.nativeElement.querySelector('[data-testid="upup-source-googleDrive"]') as HTMLButtonElement
@@ -233,11 +233,11 @@ describe('AdapterSelectorComponent', () => {
     it('renders the adapter-selector slot container', async () => {
         store = makeStore()
         await TestBed.configureTestingModule({
-            imports: [AdapterSelectorComponent],
+            imports: [SourceSelectorComponent],
             providers: [{ provide: UpupStore, useValue: store }],
         }).compileComponents()
 
-        const fixture = TestBed.createComponent(AdapterSelectorComponent)
+        const fixture = TestBed.createComponent(SourceSelectorComponent)
         fixture.detectChanges()
 
         const slot = fixture.nativeElement.querySelector('[data-upup-slot="adapter-selector"]')
@@ -251,11 +251,11 @@ describe('AdapterSelectorComponent', () => {
         store = store2
 
         await TestBed.configureTestingModule({
-            imports: [AdapterSelectorComponent],
+            imports: [SourceSelectorComponent],
             providers: [{ provide: UpupStore, useValue: store }],
         }).compileComponents()
 
-        const fixture = TestBed.createComponent(AdapterSelectorComponent)
+        const fixture = TestBed.createComponent(SourceSelectorComponent)
         fixture.detectChanges()
 
         expect(fixture.nativeElement.querySelector('[data-testid="upup-source-googleDrive"]')).not.toBeNull()
@@ -265,9 +265,9 @@ describe('AdapterSelectorComponent', () => {
     })
 })
 
-// ── AdapterViewComponent ──────────────────────────────────────────────────────
+// ── SourceViewComponent ──────────────────────────────────────────────────────
 
-describe('AdapterViewComponent', () => {
+describe('SourceViewComponent', () => {
     let store: UpupStore
 
     afterEach(() => {
@@ -279,11 +279,11 @@ describe('AdapterViewComponent', () => {
     it('renders nothing when no adapter is active', async () => {
         store = makeStore()
         await TestBed.configureTestingModule({
-            imports: [AdapterViewComponent],
+            imports: [SourceViewComponent],
             providers: [{ provide: UpupStore, useValue: store }],
         }).compileComponents()
 
-        const fixture = TestBed.createComponent(AdapterViewComponent)
+        const fixture = TestBed.createComponent(SourceViewComponent)
         fixture.detectChanges()
 
         // No adapter-view slot rendered
@@ -296,11 +296,11 @@ describe('AdapterViewComponent', () => {
         store.setActiveAdapter('url' as any)
 
         await TestBed.configureTestingModule({
-            imports: [AdapterViewComponent],
+            imports: [SourceViewComponent],
             providers: [{ provide: UpupStore, useValue: store }],
         }).compileComponents()
 
-        const fixture = TestBed.createComponent(AdapterViewComponent)
+        const fixture = TestBed.createComponent(SourceViewComponent)
         fixture.detectChanges()
         await fixture.whenStable()
 
@@ -318,11 +318,11 @@ describe('AdapterViewComponent', () => {
         store.setActiveAdapter('googleDrive' as any)
 
         await TestBed.configureTestingModule({
-            imports: [AdapterViewComponent],
+            imports: [SourceViewComponent],
             providers: [{ provide: UpupStore, useValue: store }],
         }).compileComponents()
 
-        const fixture = TestBed.createComponent(AdapterViewComponent)
+        const fixture = TestBed.createComponent(SourceViewComponent)
         fixture.detectChanges()
         await fixture.whenStable()
 
@@ -342,11 +342,11 @@ describe('AdapterViewComponent', () => {
         store = miniStore
 
         await TestBed.configureTestingModule({
-            imports: [AdapterViewComponent],
+            imports: [SourceViewComponent],
             providers: [{ provide: UpupStore, useValue: store }],
         }).compileComponents()
 
-        const fixture = TestBed.createComponent(AdapterViewComponent)
+        const fixture = TestBed.createComponent(SourceViewComponent)
         fixture.detectChanges()
 
         // mini=true → shouldRender = false → adapter-view not shown
@@ -357,7 +357,7 @@ describe('AdapterViewComponent', () => {
     it('renders the image editor stub when editingFile is set', async () => {
         store = makeStore()
         // Simulate editingFile being set by patching the signal read in the template
-        // We test stub renders independently; AdapterView conditionally shows it.
+        // We test stub renders independently; SourceView conditionally shows it.
         await TestBed.configureTestingModule({
             imports: [ImageEditorStubComponent],
             providers: [{ provide: UpupStore, useValue: store }],

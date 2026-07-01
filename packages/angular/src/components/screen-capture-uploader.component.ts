@@ -1,7 +1,7 @@
 import { Component, inject, OnDestroy, ViewChild, ElementRef } from '@angular/core'
 import { cn } from '@upup/core'
 import { UpupStore } from '../upup-store.service'
-import { AdapterViewContainerComponent } from './adapter-view-container.component'
+import { SourceViewContainerComponent } from './source-view-container.component'
 
 type RecordingState = 'idle' | 'recording' | 'recorded'
 
@@ -25,7 +25,7 @@ type RecordingState = 'idle' | 'recording' | 'recorded'
 @Component({
     selector: 'upup-screen-capture-uploader',
     standalone: true,
-    imports: [AdapterViewContainerComponent],
+    imports: [SourceViewContainerComponent],
     template: `
         @if (error) {
             <!-- Error state -->

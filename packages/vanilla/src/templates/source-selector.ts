@@ -6,7 +6,7 @@ import { shouldRender } from './should-render'
 import { uploadSourceObject } from '../lib/constants'
 import { icon } from './icon'
 
-export function adapterSelector(ctx: RootContext) {
+export function sourceSelector(ctx: RootContext) {
   const isDark = ctx.theme.getSnapshot().isDark
   const slot = ctx.theme.getSnapshot().slotOverrides
   const tr = ctx.translations
@@ -17,7 +17,7 @@ export function adapterSelector(ctx: RootContext) {
   const maxFileSize = ctx.props.maxFileSize
   const folderPickerButtonVisible = ctx.props.folderPickerButtonVisible
 
-  // Build constraint line (mirrors svelte AdapterSelector:8-30, AdapterSelector.svelte)
+  // Build constraint line (mirrors svelte SourceSelector:8-30, SourceSelector.svelte)
   const constraintLine = (() => {
     const parts: string[] = []
     if (allowedFileTypes && allowedFileTypes !== '*/*' && allowedFileTypes !== '*') {
@@ -31,7 +31,7 @@ export function adapterSelector(ctx: RootContext) {
           return sub.toUpperCase()
         })
         .join(', ')
-      // svelte AdapterSelector.svelte:L19 hardcodes " only" — not a translation key
+      // svelte SourceSelector.svelte:L19 hardcodes " only" — not a translation key
       parts.push(humanized + ' only')
     }
     if (limit > 1) {
@@ -48,7 +48,7 @@ export function adapterSelector(ctx: RootContext) {
     return parts.join(', ')
   })()
 
-  // chosenSources: mirror svelte useAdapterSelector composable
+  // chosenSources: mirror svelte useSourceSelector composable
   const chosenSources = Object.values(uploadSourceObject)
     .filter((item) => ctx.props.sources.includes(item.id))
     .map((item) => ({ ...item, name: tr[item.nameKey] }))

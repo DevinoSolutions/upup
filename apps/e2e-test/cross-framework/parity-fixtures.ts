@@ -3,7 +3,7 @@ import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import type { NormalizedNode } from './parity-dom'
 
-export type ParityComponent = 'fileIcon' | 'filePreview' | 'fileItem' | 'adapterSelector'
+export type ParityComponent = 'fileIcon' | 'filePreview' | 'fileItem' | 'sourceSelector'
 
 // Read the canonical trees at module load via fs rather than a static JSON
 // import: Node's ESM loader requires an import attribute (`with { type: 'json' }`)

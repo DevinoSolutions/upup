@@ -9,7 +9,7 @@ import {
     useUploaderTheme,
     useUploaderView,
 } from '../context/root-context'
-import useAdapterSelector from '../composables/useAdapterSelector'
+import useSourceSelector from '../composables/useSourceSelector'
 import Icon from './Icon'
 import ShouldRender from './shared/ShouldRender.vue'
 
@@ -57,7 +57,7 @@ const constraintLine = computed(() => {
 })
 
 const { chosenSources, handleAdapterClick, handleInputFileChange } =
-    useAdapterSelector()
+    useSourceSelector()
 
 function handleBrowseFilesClick() {
     if (inputRef.value) {

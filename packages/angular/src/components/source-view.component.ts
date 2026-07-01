@@ -24,7 +24,7 @@ import { DefaultLoaderIconComponent } from './icons'
 import { NgComponentOutlet } from '@angular/common'
 
 /**
- * AdapterView — Angular port of AdapterView.svelte.
+ * SourceView — Angular port of SourceView.svelte.
  *
  * Renders the active adapter's view when store.activeAdapter() is set and
  * store.uiProps.mini is false. Mirrors svelte's shouldRender check:
@@ -132,7 +132,7 @@ import { NgComponentOutlet } from '@angular/common'
         }
     `,
 })
-export class AdapterViewComponent {
+export class SourceViewComponent {
     readonly store = inject(UpupStore)
 
     /** Mirror svelte: shouldRender = !!activeComponent && !mini && !!activeAdapter */
@@ -151,7 +151,7 @@ export class AdapterViewComponent {
             dark
                 ? 'upup-bg-white/5 upup-text-[#FAFAFA] dark:upup-bg-white/5 dark:upup-text-[#FAFAFA]'
                 : '',
-            slotClasses.adapterViewHeader ?? '',
+            slotClasses.sourceViewHeader ?? '',
         )
     }
 
@@ -161,7 +161,7 @@ export class AdapterViewComponent {
         return cn(
             'upup-rounded-md upup-p-1 upup-text-blue-600 upup-transition-all upup-duration-300',
             dark ? 'upup-text-[#30C5F7] dark:upup-text-[#30C5F7]' : '',
-            slotClasses.adapterViewCancelButton ?? '',
+            slotClasses.sourceViewCancelButton ?? '',
         )
     }
 

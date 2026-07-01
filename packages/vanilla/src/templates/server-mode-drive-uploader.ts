@@ -2,7 +2,7 @@ import { html, nothing } from 'lit-html'
 import { repeat } from 'lit-html/directives/repeat.js'
 import { cn } from '@upup/core'
 import type { RootContext } from '../lib/types'
-import { adapterViewContainer } from './shared/adapter-view-container'
+import { sourceViewContainer } from './shared/source-view-container'
 import { driveAuthFallback } from './shared/drive-auth-fallback'
 
 export type ServerModeProvider = 'google-drive' | 'onedrive' | 'dropbox' | 'box'
@@ -175,5 +175,5 @@ export function serverModeDriveUploader(ctx: RootContext, opts: { provider: Serv
       </div>
     </div>`
 
-  return adapterViewContainer(ctx, { isLoading, dataUpupSlot: resolvedSlot }, inner)
+  return sourceViewContainer(ctx, { isLoading, dataUpupSlot: resolvedSlot }, inner)
 }

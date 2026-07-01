@@ -110,7 +110,7 @@ describe('flattenSlotsToClassNames', () => {
     expect(out.driveLoading).toBe('ld')
   })
 
-  it('maps sourceView slots to adapterView flat keys', () => {
+  it('maps sourceView slots to sourceView flat keys', () => {
     const out = flattenSlotsToClassNames({
       sourceView: {
         root: 'v-root',
@@ -118,8 +118,8 @@ describe('flattenSlotsToClassNames', () => {
         cancelButton: 'v-cancel',
       },
     })
-    expect(out.adapterView).toBe('v-root')
-    expect(out.adapterViewHeader).toBe('v-head')
-    expect(out.adapterViewCancelButton).toBe('v-cancel')
+    expect(out.sourceView).toBe('v-root')
+    expect(out.sourceViewHeader).toBe('v-head')
+    expect(out.sourceViewCancelButton).toBe('v-cancel')
   })
 })

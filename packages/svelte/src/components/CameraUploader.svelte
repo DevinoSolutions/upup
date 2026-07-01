@@ -2,7 +2,7 @@
   import { onMount, onDestroy } from 'svelte'
   import { formatUiMessage as t, cn } from '@upup/core'
   import useCameraUploader from '../composables/useCameraUploader'
-  import AdapterViewContainer from './shared/AdapterViewContainer.svelte'
+  import SourceViewContainer from './shared/SourceViewContainer.svelte'
 
   const {
     setVideoEl,
@@ -48,7 +48,7 @@
   })
 </script>
 
-<AdapterViewContainer data-upup-slot="camera-uploader">
+<SourceViewContainer data-upup-slot="camera-uploader">
   <div
     data-testid="upup-camera-uploader"
     class="upup-flex upup-h-full upup-w-full upup-flex-col upup-justify-center upup-overflow-hidden upup-px-3 upup-py-2"
@@ -136,4 +136,4 @@
       {/if}
     </div>
   </div>
-</AdapterViewContainer>
+</SourceViewContainer>

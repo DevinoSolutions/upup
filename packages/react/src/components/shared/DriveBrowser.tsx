@@ -18,7 +18,7 @@ import {
     useUploaderTheme,
 } from '../../context/RootContext'
 import { searchDriveFiles } from '../../lib/file'
-import AdapterViewContainer from './AdapterViewContainer'
+import SourceViewContainer from './SourceViewContainer'
 import DriveBrowserHeader from './DriveBrowserHeader'
 import DriveBrowserItem from './DriveBrowserItem'
 import ShouldRender from './ShouldRender'
@@ -78,7 +78,7 @@ export default function DriveBrowser({
     const isLoading = isClickLoading || !driveFiles
 
     return (
-        <AdapterViewContainer isLoading={isLoading} data-upup-slot={dataUpupSlot}>
+        <SourceViewContainer isLoading={isLoading} data-upup-slot={dataUpupSlot}>
             <ShouldRender if={true} isLoading={isLoading}>
                 <div data-testid="upup-drive-browser" className="upup-grid upup-h-full upup-w-full upup-grid-rows-[auto,1fr,auto] upup-overflow-auto">
                     <DriveBrowserHeader
@@ -198,6 +198,6 @@ export default function DriveBrowser({
                     </ShouldRender>
                 </div>
             </ShouldRender>
-        </AdapterViewContainer>
+        </SourceViewContainer>
     )
 }

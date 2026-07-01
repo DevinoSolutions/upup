@@ -2,7 +2,7 @@ import React from 'react'
 import Webcam from 'react-webcam'
 import { cn, formatUiMessage as t } from '@upup/core'
 import useCameraUploader from '../hooks/useCameraUploader'
-import AdapterViewContainer from './shared/AdapterViewContainer'
+import SourceViewContainer from './shared/SourceViewContainer'
 import ShouldRender from './shared/ShouldRender'
 
 export default function CameraUploader() {
@@ -21,7 +21,7 @@ export default function CameraUploader() {
     } = useCameraUploader()
 
     return (
-        <AdapterViewContainer data-upup-slot="camera-uploader">
+        <SourceViewContainer data-upup-slot="camera-uploader">
             <div data-testid="upup-camera-uploader" className="upup-flex upup-h-full upup-w-full upup-flex-col upup-justify-center upup-overflow-hidden upup-px-3 upup-py-2">
                 <div className="upup-flex upup-min-h-0 upup-flex-1 upup-items-center upup-justify-center upup-pt-2">
                     <ShouldRender if={!!url}>
@@ -117,6 +117,6 @@ export default function CameraUploader() {
                     </ShouldRender>
                 </div>
             </div>
-        </AdapterViewContainer>
+        </SourceViewContainer>
     )
 }

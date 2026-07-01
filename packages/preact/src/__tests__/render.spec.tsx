@@ -9,9 +9,9 @@
  *   upup-container    → packages/react/src/upup-uploader.tsx:81
  *   upup-branding     → packages/react/src/upup-uploader.tsx:142
  *   upup-dropzone     → packages/react/src/components/MainBox.tsx:36
- *   upup-file-input   → packages/react/src/components/AdapterSelector.tsx:244
- *   upup-browse-files → packages/react/src/components/AdapterSelector.tsx:293
- *   upup-source-${id} → packages/react/src/components/AdapterSelector.tsx:208
+ *   upup-file-input   → packages/react/src/components/SourceSelector.tsx:244
+ *   upup-browse-files → packages/react/src/components/SourceSelector.tsx:293
+ *   upup-source-${id} → packages/react/src/components/SourceSelector.tsx:208
  *                        id values from FileSource enum (packages/core/src/types/file-source.ts):
  *                        local | googleDrive | oneDrive | dropbox | box | url | camera | ...
  */
@@ -65,7 +65,7 @@ describe('@upup/preact render parity on compat', () => {
 
   test('hidden file input is present in non-mini mode', () => {
     render(<UpupUploader />)
-    // upup-file-input: AdapterSelector.tsx:244, type="file" aria-hidden="true"
+    // upup-file-input: SourceSelector.tsx:244, type="file" aria-hidden="true"
     const input = screen.getByTestId('upup-file-input')
     expect(input).toBeTruthy()
     expect(input.getAttribute('type')).toBe('file')
@@ -79,18 +79,18 @@ describe('@upup/preact render parity on compat', () => {
     expect(input.getAttribute('type')).toBe('file')
   })
 
-  // ── Source tiles (non-mini only, via AdapterSelector) ──────────────────────
+  // ── Source tiles (non-mini only, via SourceSelector) ──────────────────────
 
   test('renders the local (device) source tile', () => {
     render(<UpupUploader />)
     // FileSource.LOCAL = 'local' → data-testid="upup-source-local"
-    // AdapterSelector.tsx:208: data-testid={`upup-source-${id}`}
+    // SourceSelector.tsx:208: data-testid={`upup-source-${id}`}
     expect(screen.getByTestId('upup-source-local')).toBeTruthy()
   })
 
   test('renders the browse-files button in non-mini mode', () => {
     render(<UpupUploader />)
-    // upup-browse-files: AdapterSelector.tsx:293
+    // upup-browse-files: SourceSelector.tsx:293
     expect(screen.getByTestId('upup-browse-files')).toBeTruthy()
   })
 

@@ -1,6 +1,6 @@
 /**
  * shell.spec.ts — TestBed tests for the four shell leaf components:
- *   ShouldRenderComponent, ProgressBarComponent, MainBoxHeaderComponent, AdapterViewContainerComponent
+ *   ShouldRenderComponent, ProgressBarComponent, MainBoxHeaderComponent, SourceViewContainerComponent
  *
  * Store strategy:
  *   - All four components inject UpupStore (ShouldRender reads icons.LoaderIcon for the
@@ -18,7 +18,7 @@ import { UpupStore } from '../upup-store.service'
 import { ShouldRenderComponent } from './should-render.component'
 import { ProgressBarComponent } from './progress-bar.component'
 import { MainBoxHeaderComponent } from './main-box-header.component'
-import { AdapterViewContainerComponent } from './adapter-view-container.component'
+import { SourceViewContainerComponent } from './source-view-container.component'
 import { DefaultLoaderIconComponent } from './icons/default-loader-icon.component'
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
@@ -340,9 +340,9 @@ describe('MainBoxHeaderComponent', () => {
     })
 })
 
-// ── AdapterViewContainer ───────────────────────────────────────────────────────
+// ── SourceViewContainer ───────────────────────────────────────────────────────
 
-describe('AdapterViewContainerComponent', () => {
+describe('SourceViewContainerComponent', () => {
     let store: UpupStore
 
     afterEach(() => store?.dispose())
@@ -350,11 +350,11 @@ describe('AdapterViewContainerComponent', () => {
     it('renders data-testid="upup-adapter-view"', async () => {
         store = makeStore()
         await TestBed.configureTestingModule({
-            imports: [AdapterViewContainerComponent],
+            imports: [SourceViewContainerComponent],
             providers: [{ provide: UpupStore, useValue: store }],
         }).compileComponents()
 
-        const fixture = TestBed.createComponent(AdapterViewContainerComponent)
+        const fixture = TestBed.createComponent(SourceViewContainerComponent)
         fixture.detectChanges()
 
         const el = fixture.nativeElement.querySelector('[data-testid="upup-adapter-view"]')
@@ -366,7 +366,7 @@ describe('AdapterViewContainerComponent', () => {
 
         @Component({
             standalone: true,
-            imports: [AdapterViewContainerComponent],
+            imports: [SourceViewContainerComponent],
             template: `
                 <upup-adapter-view-container>
                     <span data-testid="projected">inner</span>
@@ -391,11 +391,11 @@ describe('AdapterViewContainerComponent', () => {
     it('defaults data-upup-slot to "adapter-view"', async () => {
         store = makeStore()
         await TestBed.configureTestingModule({
-            imports: [AdapterViewContainerComponent],
+            imports: [SourceViewContainerComponent],
             providers: [{ provide: UpupStore, useValue: store }],
         }).compileComponents()
 
-        const fixture = TestBed.createComponent(AdapterViewContainerComponent)
+        const fixture = TestBed.createComponent(SourceViewContainerComponent)
         fixture.detectChanges()
 
         const el = fixture.nativeElement.querySelector('[data-upup-slot="adapter-view"]')
@@ -407,7 +407,7 @@ describe('AdapterViewContainerComponent', () => {
 
         @Component({
             standalone: true,
-            imports: [AdapterViewContainerComponent],
+            imports: [SourceViewContainerComponent],
             template: `<upup-adapter-view-container slotName="audio-uploader"></upup-adapter-view-container>`,
         })
         class Host {}
@@ -432,11 +432,11 @@ describe('AdapterViewContainerComponent', () => {
     it('container has base flex classes in classList', async () => {
         store = makeStore()
         await TestBed.configureTestingModule({
-            imports: [AdapterViewContainerComponent],
+            imports: [SourceViewContainerComponent],
             providers: [{ provide: UpupStore, useValue: store }],
         }).compileComponents()
 
-        const fixture = TestBed.createComponent(AdapterViewContainerComponent)
+        const fixture = TestBed.createComponent(SourceViewContainerComponent)
         fixture.detectChanges()
 
         const el = fixture.nativeElement.querySelector('[data-testid="upup-adapter-view"]') as HTMLElement

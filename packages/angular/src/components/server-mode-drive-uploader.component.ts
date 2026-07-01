@@ -8,7 +8,7 @@ import {
     PROVIDER_LABEL,
 } from '../services/server-mode-drive.service'
 import { DriveAuthFallbackComponent } from './shared/drive-auth-fallback.component'
-import { AdapterViewContainerComponent } from './adapter-view-container.component'
+import { SourceViewContainerComponent } from './source-view-container.component'
 import { ShouldRenderComponent } from './should-render.component'
 
 /**
@@ -32,7 +32,7 @@ import { ShouldRenderComponent } from './should-render.component'
     providers: [ServerModeDriveService],
     imports: [
         DriveAuthFallbackComponent,
-        AdapterViewContainerComponent,
+        SourceViewContainerComponent,
         ShouldRenderComponent,
     ],
     template: `
@@ -122,7 +122,7 @@ export class ServerModeDriveUploaderComponent implements OnInit, OnDestroy {
 
     @Input({ required: true }) provider!: ServerModeProvider
     @Input() onBack: () => void = () => {}
-    /** data-upup-slot forwarded to AdapterViewContainer and DriveAuthFallback. */
+    /** data-upup-slot forwarded to SourceViewContainer and DriveAuthFallback. */
     @Input() slotName: string = ''
 
     ngOnInit(): void {

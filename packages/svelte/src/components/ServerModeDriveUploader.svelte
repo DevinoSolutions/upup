@@ -8,7 +8,7 @@
     type ServerDriveFile,
     type ServerModeProvider,
   } from '../composables/useServerModeDrive'
-  import AdapterViewContainer from './shared/AdapterViewContainer.svelte'
+  import SourceViewContainer from './shared/SourceViewContainer.svelte'
   import DriveAuthFallback from './shared/DriveAuthFallback.svelte'
   import ShouldRender from './shared/ShouldRender.svelte'
 
@@ -87,7 +87,7 @@
     onRetry={startAuth}
   />
 {:else}
-  <AdapterViewContainer
+  <SourceViewContainer
     isLoading={$isLoading}
     data-upup-slot={resolvedSlot}
   >
@@ -185,5 +185,5 @@
         </div>
       </div>
     </ShouldRender>
-  </AdapterViewContainer>
+  </SourceViewContainer>
 {/if}

@@ -4,9 +4,9 @@
  * Covers:
  *   - dropzone testid + slot render
  *   - FileList always present
- *   - AdapterSelector shown when no active adapter + no files / adding more
- *   - AdapterSelector hidden when adapter is active
- *   - AdapterView shown when adapter is active
+ *   - SourceSelector shown when no active adapter + no files / adding more
+ *   - SourceSelector hidden when adapter is active
+ *   - SourceView shown when adapter is active
  *   - Offline banner appears when isOnline=false
  *   - handleDrop with stubbed DataTransfer calls store.handleSetSelectedFiles + emits 'drop'
  *   - disableDragDrop suppresses drag handlers (handleSetSelectedFiles NOT called, isDragging stays false)
@@ -82,7 +82,7 @@ describe('MainBoxComponent', () => {
         expect(headers[0].closest('upup-file-list')).not.toBeNull()
     })
 
-    it('shows AdapterSelector when no active adapter and no files', async () => {
+    it('shows SourceSelector when no active adapter and no files', async () => {
         store = makeStore()
         const fixture = await setup(store)
         const el: HTMLElement = fixture.nativeElement
@@ -90,7 +90,7 @@ describe('MainBoxComponent', () => {
         expect(el.querySelector('upup-adapter-selector')).not.toBeNull()
     })
 
-    it('hides AdapterSelector when an adapter is active', async () => {
+    it('hides SourceSelector when an adapter is active', async () => {
         store = makeStore()
         const fixture = await setup(store)
         // Set active adapter
@@ -100,7 +100,7 @@ describe('MainBoxComponent', () => {
         expect(el.querySelector('upup-adapter-selector')).toBeNull()
     })
 
-    it('shows AdapterView when an adapter is active', async () => {
+    it('shows SourceView when an adapter is active', async () => {
         store = makeStore()
         const fixture = await setup(store)
         store.setActiveAdapter('google-drive' as any)
@@ -109,7 +109,7 @@ describe('MainBoxComponent', () => {
         expect(el.querySelector('upup-adapter-view')).not.toBeNull()
     })
 
-    it('hides AdapterView when no adapter is active', async () => {
+    it('hides SourceView when no adapter is active', async () => {
         store = makeStore()
         const fixture = await setup(store)
         const el: HTMLElement = fixture.nativeElement

@@ -46,7 +46,7 @@ function handleCancel() {
                 {
                     'upup-bg-white/5 upup-text-[#FAFAFA] dark:upup-bg-white/5 dark:upup-text-[#FAFAFA]': dark,
                 },
-                slotClasses.adapterViewHeader,
+                slotClasses.sourceViewHeader,
             )"
         >
             <component :is="adapterIcon!" />
@@ -54,7 +54,7 @@ function handleCancel() {
                 :class="cn(
                     'upup-rounded-md upup-p-1 upup-text-blue-600 upup-transition-all upup-duration-300',
                     { 'upup-text-[#30C5F7] dark:upup-text-[#30C5F7]': dark },
-                    slotClasses.adapterViewCancelButton,
+                    slotClasses.sourceViewCancelButton,
                 )"
                 @click="handleCancel"
                 type="button"

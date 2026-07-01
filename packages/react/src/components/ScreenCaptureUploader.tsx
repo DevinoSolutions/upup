@@ -5,7 +5,7 @@ import {
     useUploaderTheme,
 } from '../context/RootContext'
 import { cn } from '@upup/core'
-import AdapterViewContainer from './shared/AdapterViewContainer'
+import SourceViewContainer from './shared/SourceViewContainer'
 
 type RecordingState = 'idle' | 'recording' | 'recorded'
 
@@ -128,7 +128,7 @@ export default function ScreenCaptureUploader() {
 
     if (error) {
         return (
-            <AdapterViewContainer data-upup-slot="screen-capture-uploader">
+            <SourceViewContainer data-upup-slot="screen-capture-uploader">
                 <div className="upup-flex upup-flex-col upup-items-center upup-gap-3 upup-p-6 upup-text-center">
                     <p
                         className={cn('upup-text-sm upup-text-red-500', {
@@ -154,12 +154,12 @@ export default function ScreenCaptureUploader() {
                         Try Again
                     </button>
                 </div>
-            </AdapterViewContainer>
+            </SourceViewContainer>
         )
     }
 
     return (
-        <AdapterViewContainer data-upup-slot="screen-capture-uploader">
+        <SourceViewContainer data-upup-slot="screen-capture-uploader">
             <div className="upup-flex upup-h-full upup-w-full upup-flex-col upup-items-center upup-justify-center upup-gap-4 upup-p-4">
                 {state === 'idle' && (
                     <div className="upup-flex upup-flex-col upup-items-center upup-gap-4">
@@ -270,6 +270,6 @@ export default function ScreenCaptureUploader() {
                     </>
                 )}
             </div>
-        </AdapterViewContainer>
+        </SourceViewContainer>
     )
 }

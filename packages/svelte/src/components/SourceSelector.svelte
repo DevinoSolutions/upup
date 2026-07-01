@@ -8,7 +8,7 @@
     useUploaderTheme,
     useUploaderView,
   } from '../context/root-context'
-  import useAdapterSelector from '../composables/useAdapterSelector'
+  import useSourceSelector from '../composables/useSourceSelector'
   import Icon from './Icon.svelte'
   import ShouldRender from './shared/ShouldRender.svelte'
 
@@ -54,7 +54,7 @@
     return parts.join(', ')
   })()
 
-  const { chosenSources, handleAdapterClick } = useAdapterSelector()
+  const { chosenSources, handleAdapterClick } = useSourceSelector()
 
   function handleBrowseFilesClick() {
     const el = getFileInput()

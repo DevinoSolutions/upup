@@ -1,7 +1,7 @@
 import { html } from 'lit-html'
 import { cn, deriveFetchedFileName } from '@upup/core'
 import type { RootContext } from '../lib/types'
-import { adapterViewContainer } from './shared/adapter-view-container'
+import { sourceViewContainer } from './shared/source-view-container'
 import { icon } from './icon'
 
 interface UrlState { url: string; loading: boolean }
@@ -71,5 +71,5 @@ export function urlUploader(ctx: RootContext) {
       >${s.loading ? icon('loader') : tr.fetch}</button>
     </form>`
 
-  return adapterViewContainer(ctx, { dataTestid: 'upup-url-uploader', dataUpupSlot: 'url-uploader' }, inner)
+  return sourceViewContainer(ctx, { dataTestid: 'upup-url-uploader', dataUpupSlot: 'url-uploader' }, inner)
 }

@@ -14,7 +14,7 @@
     'upup-flex upup-items-center upup-justify-center upup-overflow-hidden upup-bg-black/[0.075]',
     {
       'upup-bg-white/10 upup-text-[#FAFAFA] dark:upup-bg-white/10 dark:upup-text-[#FAFAFA]': isLoading && $dark,
-      [$slotClasses.adapterView!]: !isLoading && !!$slotClasses.adapterView,
+      [$slotClasses.sourceView!]: !isLoading && !!$slotClasses.sourceView,
       [$slotClasses.driveLoading!]: isLoading && !!$slotClasses.driveLoading,
     },
   )}

@@ -3,7 +3,7 @@
 // enable sources local/url/camera/microphone/screen (MSW-mocked upload — no real
 // network). 4a RECORDS axe violations (the list/listitem ARIA contract is React-only
 // until the 5-framework port, so this is report-only, attached per project). 4b
-// HARD-ASSERTS the fixed-height AdapterViewContainer (`upup-overflow-hidden`) does
+// HARD-ASSERTS the fixed-height SourceViewContainer (`upup-overflow-hidden`) does
 // not clip its media views: scrollHeight <= clientHeight (+tolerance).
 //
 // Run (dedicated config boots all six storybooks; MSW so no MinIO/e2e server):
@@ -60,9 +60,9 @@ async function runAxe(page: Page): Promise<AxeViolation[]> {
 }
 
 // Measure the fixed-height, overflow-hidden container. We key on the per-view
-// `data-upup-slot` (present on the AdapterViewContainer root for EVERY view) rather
+// `data-upup-slot` (present on the SourceViewContainer root for EVERY view) rather
 // than `data-testid="upup-adapter-view"`: some views (e.g. UrlUploader) pass their
-// own data-testid to AdapterViewContainer, which spreads {...rest} last and thus
+// own data-testid to SourceViewContainer, which spreads {...rest} last and thus
 // OVERRIDES the default upup-adapter-view testid. The slot attribute is the stable
 // handle to the same clipping box across all views.
 async function measureOverflow(container: Locator) {
@@ -98,7 +98,7 @@ test.describe('cross-framework a11y + overflow', () => {
   })
 
   // 4b — media/adapter views must not clip inside the fixed-height, overflow-hidden
-  // AdapterViewContainer. Camera/microphone auto-start via fake media devices; screen
+  // SourceViewContainer. Camera/microphone auto-start via fake media devices; screen
   // capture (getDisplayMedia) is not driveable headlessly, so its initial view state
   // is measured (live preview verified interactively in a prior session).
   const MEDIA_VIEWS = [

@@ -1,6 +1,6 @@
 import { tv } from 'tailwind-variants'
 
-export const adapterSelectorRecipe = tv({
+export const sourceSelectorRecipe = tv({
     slots: {
         root: 'upup-relative upup-flex upup-h-full upup-gap-3 upup-rounded-lg',
         header: 'upup-shadow-bottom upup-flex upup-w-full upup-items-center upup-rounded-t-lg upup-bg-black/[0.025] upup-px-3 upup-py-2',
@@ -35,4 +35,4 @@ export const adapterSelectorRecipe = tv({
     },
 })
 
-export type AdapterSelectorSlots = keyof ReturnType<typeof adapterSelectorRecipe>
+export type SourceSelectorSlots = keyof ReturnType<typeof sourceSelectorRecipe>

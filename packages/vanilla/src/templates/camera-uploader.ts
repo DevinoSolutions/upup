@@ -2,7 +2,7 @@ import { html, nothing } from 'lit-html'
 import { ref } from 'lit-html/directives/ref.js'
 import { formatUiMessage as t, cn } from '@upup/core'
 import type { RootContext } from '../lib/types'
-import { adapterViewContainer } from './shared/adapter-view-container'
+import { sourceViewContainer } from './shared/source-view-container'
 
 export function cameraUploader(ctx: RootContext) {
   const cam = ctx.controllers.getCamera()
@@ -42,5 +42,5 @@ export function cameraUploader(ctx: RootContext) {
       </div>
     </div>`
 
-  return adapterViewContainer(ctx, { dataUpupSlot: 'camera-uploader' }, inner)
+  return sourceViewContainer(ctx, { dataUpupSlot: 'camera-uploader' }, inner)
 }

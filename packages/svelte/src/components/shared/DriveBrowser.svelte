@@ -14,7 +14,7 @@
     useUploaderOptions,
     useUploaderTheme,
   } from '../../context/root-context'
-  import AdapterViewContainer from './AdapterViewContainer.svelte'
+  import SourceViewContainer from './SourceViewContainer.svelte'
   import DriveBrowserHeader from './DriveBrowserHeader.svelte'
   import DriveBrowserItem from './DriveBrowserItem.svelte'
   import ShouldRender from './ShouldRender.svelte'
@@ -78,7 +78,7 @@
   function noopClick() { /* disabled click */ }
 </script>
 
-<AdapterViewContainer isLoading={isLoading} data-upup-slot={dataUpupSlot}>
+<SourceViewContainer isLoading={isLoading} data-upup-slot={dataUpupSlot}>
   <ShouldRender if={true} isLoading={isLoading}>
     <div data-testid="upup-drive-browser" class="upup-grid upup-h-full upup-w-full upup-grid-rows-[auto,1fr,auto] upup-overflow-auto">
       <DriveBrowserHeader
@@ -179,4 +179,4 @@
       </ShouldRender>
     </div>
   </ShouldRender>
-</AdapterViewContainer>
+</SourceViewContainer>

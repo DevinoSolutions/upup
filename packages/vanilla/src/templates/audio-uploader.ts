@@ -1,7 +1,7 @@
 import { html, nothing } from 'lit-html'
 import { cn } from '@upup/core'
 import type { RootContext } from '../lib/types'
-import { adapterViewContainer } from './shared/adapter-view-container'
+import { sourceViewContainer } from './shared/source-view-container'
 
 export function audioUploader(ctx: RootContext) {
   const a = ctx.controllers.getAudio()
@@ -9,7 +9,7 @@ export function audioUploader(ctx: RootContext) {
   const isDark = ctx.theme.getSnapshot().isDark
 
   if (s.error) {
-    return adapterViewContainer(ctx, { dataUpupSlot: 'audio-uploader' }, html`
+    return sourceViewContainer(ctx, { dataUpupSlot: 'audio-uploader' }, html`
       <div class="upup-flex upup-flex-col upup-items-center upup-gap-3 upup-p-6 upup-text-center">
         <p class=${cn('upup-text-sm upup-text-red-500', { 'upup-text-red-400': isDark })}>${s.error}</p>
       </div>`)
@@ -41,5 +41,5 @@ export function audioUploader(ctx: RootContext) {
       </div>
     </div>`
 
-  return adapterViewContainer(ctx, { dataUpupSlot: 'audio-uploader' }, inner)
+  return sourceViewContainer(ctx, { dataUpupSlot: 'audio-uploader' }, inner)
 }

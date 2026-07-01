@@ -9,7 +9,7 @@ import {
 } from '../context/root-context'
 import { uploadSourceObject } from '../lib/constants'
 
-export default function useAdapterSelector() {
+export default function useSourceSelector() {
     const { core, openFilePicker } = useUploaderRuntime()
     const { setActiveAdapter } = useUploaderSource()
     const { setFiles } = useUploaderFiles()

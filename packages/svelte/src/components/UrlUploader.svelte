@@ -9,7 +9,7 @@
   } from '../context/root-context'
   import useFetchFileByUrl from '../composables/useFetchFileByUrl'
   import { cn } from '@upup/core'
-  import AdapterViewContainer from './shared/AdapterViewContainer.svelte'
+  import SourceViewContainer from './shared/SourceViewContainer.svelte'
 
   const { core } = useUploaderRuntime()
   const { setFiles } = useUploaderFiles()
@@ -34,7 +34,7 @@
   }
 </script>
 
-<AdapterViewContainer data-testid="upup-url-uploader" data-upup-slot="url-uploader">
+<SourceViewContainer data-testid="upup-url-uploader" data-upup-slot="url-uploader">
   <form onsubmit={handleFormSubmit} class="upup-px-3 upup-py-2">
     <input
       type="url"
@@ -68,4 +68,4 @@
       {/if}
     </button>
   </form>
-</AdapterViewContainer>
+</SourceViewContainer>

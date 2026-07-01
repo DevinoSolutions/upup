@@ -14,7 +14,7 @@ import {
 } from '../../context/root-context'
 import { searchDriveFiles } from '@upup/core'
 import { cn } from '@upup/core'
-import AdapterViewContainer from './AdapterViewContainer.vue'
+import SourceViewContainer from './SourceViewContainer.vue'
 import DriveBrowserHeader from './DriveBrowserHeader.vue'
 import DriveBrowserItem from './DriveBrowserItem.vue'
 import ShouldRender from './ShouldRender.vue'
@@ -70,7 +70,7 @@ function noopClick() { /* disabled click */ }
 </script>
 
 <template>
-    <AdapterViewContainer :is-loading="isLoading" :data-upup-slot="props.dataUpupSlot">
+    <SourceViewContainer :is-loading="isLoading" :data-upup-slot="props.dataUpupSlot">
         <ShouldRender :if="true" :is-loading="isLoading">
             <div data-testid="upup-drive-browser" class="upup-grid upup-h-full upup-w-full upup-grid-rows-[auto,1fr,auto] upup-overflow-auto">
                 <DriveBrowserHeader
@@ -175,5 +175,5 @@ function noopClick() { /* disabled click */ }
                 </ShouldRender>
             </div>
         </ShouldRender>
-    </AdapterViewContainer>
+    </SourceViewContainer>
 </template>

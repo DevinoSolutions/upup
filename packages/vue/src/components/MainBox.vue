@@ -9,8 +9,8 @@ import {
 } from '../context/root-context'
 import useMainBox from '../composables/useMainBox'
 import { cn } from '@upup/core'
-import AdapterSelector from './AdapterSelector.vue'
-import AdapterView from './AdapterView.vue'
+import SourceSelector from './SourceSelector.vue'
+import SourceView from './SourceView.vue'
 import FileList from './FileList.vue'
 import ShouldRender from './shared/ShouldRender.vue'
 
@@ -77,10 +77,10 @@ function onKeyDown(e: KeyboardEvent) {
             </div>
         </ShouldRender>
         <ShouldRender :if="!!activeAdapter">
-            <AdapterView />
+            <SourceView />
         </ShouldRender>
         <ShouldRender :if="!activeAdapter && (isAddingMore || !files.size)">
-            <AdapterSelector />
+            <SourceSelector />
         </ShouldRender>
         <FileList />
     </div>

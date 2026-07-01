@@ -3,13 +3,13 @@ import { NgComponentOutlet } from '@angular/common'
 import { cn, formatUiMessage as t } from '@upup/core'
 import { UpupStore } from '../upup-store.service'
 import { CameraUploaderService } from '../services/camera-uploader.service'
-import { AdapterViewContainerComponent } from './adapter-view-container.component'
+import { SourceViewContainerComponent } from './source-view-container.component'
 
 /**
  * Camera uploader leaf — port of CameraUploader.svelte.
  *
  * Slot name : "camera-uploader"
- * (AdapterViewContainer inner div carries data-upup-slot="camera-uploader";
+ * (SourceViewContainer inner div carries data-upup-slot="camera-uploader";
  * the outer div inside the AVC carries data-testid="upup-camera-uploader".)
  *
  * Svelte parity:
@@ -29,7 +29,7 @@ import { AdapterViewContainerComponent } from './adapter-view-container.componen
 @Component({
     selector: 'upup-camera-uploader',
     standalone: true,
-    imports: [NgComponentOutlet, AdapterViewContainerComponent],
+    imports: [NgComponentOutlet, SourceViewContainerComponent],
     providers: [CameraUploaderService],
     template: `
         <upup-adapter-view-container slotName="camera-uploader">

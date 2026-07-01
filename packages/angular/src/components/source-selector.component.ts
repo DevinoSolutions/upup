@@ -16,7 +16,7 @@ import { IconComponent } from './icon.component'
 import { NgComponentOutlet } from '@angular/common'
 
 /**
- * AdapterSelector — Angular port of AdapterSelector.svelte + useAdapterSelector composable.
+ * SourceSelector — Angular port of SourceSelector.svelte + useSourceSelector composable.
  *
  * Renders one tile per source in store.uiProps.sources with data-testid="upup-source-${id}".
  * Clicking a non-LOCAL tile calls store.setActiveAdapter(id).
@@ -135,7 +135,7 @@ interface SourceEntry {
         </div>
     `,
 })
-export class AdapterSelectorComponent {
+export class SourceSelectorComponent {
     readonly store = inject(UpupStore)
 
     private static readonly ICON_MAP: Record<string, new (...args: unknown[]) => unknown> = {
@@ -156,7 +156,7 @@ export class AdapterSelectorComponent {
         return sources
             .map((id) => {
                 const nameKey = sourceNameKeys[id]
-                const iconType = AdapterSelectorComponent.ICON_MAP[id]
+                const iconType = SourceSelectorComponent.ICON_MAP[id]
                 if (!iconType) return null
                 return {
                     id,
@@ -202,7 +202,7 @@ export class AdapterSelectorComponent {
         )
     }
 
-    // ── Empty-state copy + header (svelte AdapterSelector.svelte parity) ─────────
+    // ── Empty-state copy + header (svelte SourceSelector.svelte parity) ─────────
 
     get headerClass(): string {
         const dark = this.store.isDark()
@@ -312,7 +312,7 @@ export class AdapterSelectorComponent {
     // ── Handlers ────────────────────────────────────────────────────────────────
 
     /**
-     * Unified tile click handler — 1:1 port of svelte useAdapterSelector.handleAdapterClick:
+     * Unified tile click handler — 1:1 port of svelte useSourceSelector.handleAdapterClick:
      *   onIntegrationClick(sourceId)
      *   core?.emit('source-click', { sourceId })
      *   if (sourceId === LOCAL) openFilePicker() else setActiveAdapter(sourceId)

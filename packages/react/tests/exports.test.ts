@@ -17,8 +17,8 @@ describe('@upup/react public exports', () => {
 
   it('does not export v1/internal component surface from the main entry', () => {
     expect((ReactPackage as any).UpupCore).toBeUndefined()
-    expect((ReactPackage as any).AdapterSelector).toBeUndefined()
-    expect((ReactPackage as any).AdapterView).toBeUndefined()
+    expect((ReactPackage as any).SourceSelector).toBeUndefined()
+    expect((ReactPackage as any).SourceView).toBeUndefined()
     expect((ReactPackage as any).CameraUploader).toBeUndefined()
     expect((ReactPackage as any).FileList).toBeUndefined()
     expect((ReactPackage as any).FilePreview).toBeUndefined()

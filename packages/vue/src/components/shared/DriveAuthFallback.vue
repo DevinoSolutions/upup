@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { formatUiMessage as t, cn } from '@upup/core'
 import { useUploaderI18n, useUploaderTheme } from '../../context/root-context'
-import AdapterViewContainer from './AdapterViewContainer.vue'
+import SourceViewContainer from './SourceViewContainer.vue'
 
 const props = withDefaults(defineProps<{
     providerName: string
@@ -16,7 +16,7 @@ const { translations: tr } = useUploaderI18n()
 </script>
 
 <template>
-    <AdapterViewContainer :data-upup-slot="props.dataUpupSlot">
+    <SourceViewContainer :data-upup-slot="props.dataUpupSlot">
         <div class="upup-flex upup-h-full upup-w-full upup-flex-col upup-items-center upup-justify-center upup-gap-4 upup-p-6 upup-text-center">
             <p
                 :class="cn(
@@ -24,7 +24,7 @@ const { translations: tr } = useUploaderI18n()
                     {
                         'upup-text-[#FAFAFA] dark:upup-text-[#FAFAFA]': dark,
                     },
-                    slotClasses.adapterView,
+                    slotClasses.sourceView,
                 )"
             >
                 {{ t(tr.authenticatePrompt, { provider: props.providerName }) }}
@@ -42,5 +42,5 @@ const { translations: tr } = useUploaderI18n()
                 {{ t(tr.signInWith, { provider: props.providerName }) }}
             </button>
         </div>
-    </AdapterViewContainer>
+    </SourceViewContainer>
 </template>

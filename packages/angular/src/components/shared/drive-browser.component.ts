@@ -9,7 +9,7 @@ import {
     cn,
 } from '@upup/core'
 import { UpupStore } from '../../upup-store.service'
-import { AdapterViewContainerComponent } from '../adapter-view-container.component'
+import { SourceViewContainerComponent } from '../source-view-container.component'
 import { ShouldRenderComponent } from '../should-render.component'
 import { DriveBrowserHeaderComponent } from './drive-browser-header.component'
 import { DriveBrowserItemComponent } from './drive-browser-item.component'
@@ -27,7 +27,7 @@ import { DriveBrowserItemComponent } from './drive-browser-item.component'
     selector: 'upup-drive-browser',
     standalone: true,
     imports: [
-        AdapterViewContainerComponent,
+        SourceViewContainerComponent,
         ShouldRenderComponent,
         DriveBrowserHeaderComponent,
         DriveBrowserItemComponent,

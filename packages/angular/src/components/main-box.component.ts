@@ -8,8 +8,8 @@ import {
 import { cn, DragDropController, type DragDropSnapshot } from '@upup/core'
 import { UpupStore } from '../upup-store.service'
 import { toSignalStore, type SignalStore } from '../lib/to-signal-store'
-import { AdapterViewComponent } from './adapter-view.component'
-import { AdapterSelectorComponent } from './adapter-selector.component'
+import { SourceViewComponent } from './source-view.component'
+import { SourceSelectorComponent } from './source-selector.component'
 import { FileListComponent } from './file-list.component'
 
 /**
@@ -17,8 +17,8 @@ import { FileListComponent } from './file-list.component'
  *
  * Renders the main dropzone area with:
  *   - Offline banner
- *   - AdapterView (when an adapter is active)
- *   - AdapterSelector (when no adapter + no files / adding more)
+ *   - SourceView (when an adapter is active)
+ *   - SourceSelector (when no adapter + no files / adding more)
  *   - FileList (always)
  *
  * Drag/drop/paste/keydown logic 1:1 from useMainBox.ts.
@@ -27,8 +27,8 @@ import { FileListComponent } from './file-list.component'
     selector: 'upup-main-box',
     standalone: true,
     imports: [
-        AdapterViewComponent,
-        AdapterSelectorComponent,
+        SourceViewComponent,
+        SourceSelectorComponent,
         FileListComponent,
     ],
     template: `

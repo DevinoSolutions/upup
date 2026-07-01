@@ -6,7 +6,7 @@ import {
     useUploaderTheme,
 } from '../context/root-context'
 import { cn } from '@upup/core'
-import AdapterViewContainer from './shared/AdapterViewContainer.vue'
+import SourceViewContainer from './shared/SourceViewContainer.vue'
 
 type RecordingState = 'idle' | 'recording' | 'recorded'
 
@@ -123,7 +123,7 @@ function formatTime(s: number) {
 
 <template>
     <!-- Error state -->
-    <AdapterViewContainer v-if="error" data-upup-slot="screen-capture-uploader">
+    <SourceViewContainer v-if="error" data-upup-slot="screen-capture-uploader">
         <div class="upup-flex upup-flex-col upup-items-center upup-gap-3 upup-p-6 upup-text-center">
             <p
                 :class="cn('upup-text-sm upup-text-red-500', {
@@ -145,10 +145,10 @@ function formatTime(s: number) {
                 Try Again
             </button>
         </div>
-    </AdapterViewContainer>
+    </SourceViewContainer>
 
     <!-- Normal state -->
-    <AdapterViewContainer v-else data-upup-slot="screen-capture-uploader">
+    <SourceViewContainer v-else data-upup-slot="screen-capture-uploader">
         <div class="upup-flex upup-h-full upup-w-full upup-flex-col upup-items-center upup-justify-center upup-gap-4 upup-p-4">
             <!-- Idle -->
             <div v-if="state === 'idle'" class="upup-flex upup-flex-col upup-items-center upup-gap-4">
@@ -244,5 +244,5 @@ function formatTime(s: number) {
                 </div>
             </template>
         </div>
-    </AdapterViewContainer>
+    </SourceViewContainer>
 </template>

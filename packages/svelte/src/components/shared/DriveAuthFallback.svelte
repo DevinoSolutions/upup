@@ -1,7 +1,7 @@
 <script lang="ts">
   import { formatUiMessage as t, cn } from '@upup/core'
   import { useUploaderI18n, useUploaderTheme } from '../../context/root-context'
-  import AdapterViewContainer from './AdapterViewContainer.svelte'
+  import SourceViewContainer from './SourceViewContainer.svelte'
 
   const {
     providerName,
@@ -17,7 +17,7 @@
   const { translations: tr } = useUploaderI18n()
 </script>
 
-<AdapterViewContainer data-upup-slot={dataUpupSlot}>
+<SourceViewContainer data-upup-slot={dataUpupSlot}>
   <div class="upup-flex upup-h-full upup-w-full upup-flex-col upup-items-center upup-justify-center upup-gap-4 upup-p-6 upup-text-center">
     <p
       class={cn(
@@ -25,7 +25,7 @@
         {
           'upup-text-[#FAFAFA] dark:upup-text-[#FAFAFA]': $dark,
         },
-        $slotClasses.adapterView,
+        $slotClasses.sourceView,
       )}
     >
       {t(tr.authenticatePrompt, { provider: providerName })}
@@ -43,4 +43,4 @@
       {t(tr.signInWith, { provider: providerName })}
     </button>
   </div>
-</AdapterViewContainer>
+</SourceViewContainer>

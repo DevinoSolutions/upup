@@ -9,7 +9,7 @@ import {
 } from '../context/RootContext'
 import useFetchFileByUrl from '../hooks/useFetchFileByUrl'
 import { cn } from '@upup/core'
-import AdapterViewContainer from './shared/AdapterViewContainer'
+import SourceViewContainer from './shared/SourceViewContainer'
 
 export default function UrlUploader() {
     const { core } = useUploaderRuntime()
@@ -36,7 +36,7 @@ export default function UrlUploader() {
     }
 
     return (
-        <AdapterViewContainer data-testid="upup-url-uploader" data-upup-slot="url-uploader">
+        <SourceViewContainer data-testid="upup-url-uploader" data-upup-slot="url-uploader">
             <form onSubmit={handleFormSubmit} className="upup-px-3 upup-py-2">
                 <input
                     type="url"
@@ -69,6 +69,6 @@ export default function UrlUploader() {
                     {loading ? <LoaderIcon /> : tr.fetch}
                 </button>
             </form>
-        </AdapterViewContainer>
+        </SourceViewContainer>
     )
 }

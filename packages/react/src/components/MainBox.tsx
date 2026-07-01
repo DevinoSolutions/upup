@@ -10,8 +10,8 @@ import {
 } from '../context/RootContext'
 import useMainBox from '../hooks/useMainBox'
 import { cn } from '@upup/core'
-import AdapterSelector from './AdapterSelector'
-import AdapterView from './AdapterView'
+import SourceSelector from './SourceSelector'
+import SourceView from './SourceView'
 import FileList from './FileList'
 import ShouldRender from './shared/ShouldRender'
 export default function MainBox() {
@@ -78,12 +78,12 @@ export default function MainBox() {
                 </div>
             </ShouldRender>
             <ShouldRender if={!!activeAdapter}>
-                <AdapterView />
+                <SourceView />
             </ShouldRender>
             <ShouldRender
                 if={!activeAdapter && (isAddingMore || !files.size)}
             >
-                <AdapterSelector />
+                <SourceSelector />
             </ShouldRender>
             <FileList />
         </div>

@@ -1,7 +1,7 @@
 import { Component, Input, inject } from '@angular/core'
 import { formatUiMessage as t, cn } from '@upup/core'
 import { UpupStore } from '../../upup-store.service'
-import { AdapterViewContainerComponent } from '../adapter-view-container.component'
+import { SourceViewContainerComponent } from '../source-view-container.component'
 
 /**
  * Angular port of DriveAuthFallback.svelte.
@@ -14,7 +14,7 @@ import { AdapterViewContainerComponent } from '../adapter-view-container.compone
 @Component({
     selector: 'upup-drive-auth-fallback',
     standalone: true,
-    imports: [AdapterViewContainerComponent],
+    imports: [SourceViewContainerComponent],
     template: `
         <upup-adapter-view-container [slotName]="slotName">
             <div class="upup-flex upup-h-full upup-w-full upup-flex-col upup-items-center upup-justify-center upup-gap-4 upup-p-6 upup-text-center">
@@ -35,7 +35,7 @@ export class DriveAuthFallbackComponent {
 
     @Input({ required: true }) providerName!: string
     @Input({ required: true }) onRetry!: () => void
-    /** Maps to svelte's dataUpupSlot prop — forwarded to AdapterViewContainer slotName. */
+    /** Maps to svelte's dataUpupSlot prop — forwarded to SourceViewContainer slotName. */
     @Input() slotName: string = 'drive-auth-fallback'
 
     /** Resolved i18n string: "Sign in to access {{provider}}" → "Sign in to access Google Drive" */
@@ -56,7 +56,7 @@ export class DriveAuthFallbackComponent {
         return cn(
             'upup-text-sm upup-text-[#333]',
             dark ? 'upup-text-[#FAFAFA] dark:upup-text-[#FAFAFA]' : '',
-            slotClasses.adapterView,
+            slotClasses.sourceView,
         )
     }
 

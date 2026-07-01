@@ -10,7 +10,7 @@ import {
 } from '../context/root-context'
 import useFetchFileByUrl from '../composables/useFetchFileByUrl'
 import { cn } from '@upup/core'
-import AdapterViewContainer from './shared/AdapterViewContainer.vue'
+import SourceViewContainer from './shared/SourceViewContainer.vue'
 
 const { core } = useUploaderRuntime()
 const { setFiles } = useUploaderFiles()
@@ -36,7 +36,7 @@ async function handleFormSubmit(e: Event) {
 </script>
 
 <template>
-    <AdapterViewContainer data-testid="upup-url-uploader" data-upup-slot="url-uploader">
+    <SourceViewContainer data-testid="upup-url-uploader" data-upup-slot="url-uploader">
         <form @submit.prevent="handleFormSubmit" class="upup-px-3 upup-py-2">
             <input
                 type="url"
@@ -67,5 +67,5 @@ async function handleFormSubmit(e: Event) {
                 <template v-else>{{ tr.fetch }}</template>
             </button>
         </form>
-    </AdapterViewContainer>
+    </SourceViewContainer>
 </template>

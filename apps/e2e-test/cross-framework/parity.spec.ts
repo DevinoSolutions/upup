@@ -43,8 +43,8 @@ test.describe('cross-framework DOM + a11y parity', () => {
     await page.reload()
     await expect(page.locator('[data-testid="upup-root"]')).toBeVisible({ timeout: 30_000 })
 
-    // AdapterSelector is present at mount (files.size === 0).
-    const adapterSelector = await normalize(page, '[data-testid="upup-adapter-selector"]')
+    // SourceSelector is present at mount (files.size === 0).
+    const sourceSelector = await normalize(page, '[data-testid="upup-adapter-selector"]')
 
     // Add an image (→ FilePreview) and a PDF (→ FileItem + FileIcon).
     const fileInput = page.locator('[data-testid="upup-file-input"]')
@@ -65,7 +65,7 @@ test.describe('cross-framework DOM + a11y parity', () => {
     const fileIcon = await normalize(page, '[data-testid="upup-file-icon"]')
 
     const captured: Record<ParityComponent, NormalizedNode> = {
-      adapterSelector,
+      sourceSelector,
       fileItem,
       filePreview,
       fileIcon,
@@ -83,11 +83,11 @@ test.describe('cross-framework DOM + a11y parity', () => {
     // a hard assert would mask the leaf results behind the first failure).
     //
     // Fix 4 (D1): the hidden file input is `upup-hidden` (display:none) + aria-hidden
-    // + tabindex=-1 — invisible plumbing. React/Vue render it inside AdapterSelector;
+    // + tabindex=-1 — invisible plumbing. React/Vue render it inside SourceSelector;
     // Svelte/Angular own it in the shell. The normalizer skips `upup-hidden` subtrees,
-    // so this asserts the VISIBLE + a11y AdapterSelector contract only. The input's DOM
+    // so this asserts the VISIBLE + a11y SourceSelector contract only. The input's DOM
     // location stays a per-framework implementation detail (no runtime-contract rewrite).
-    expect.soft(captured.adapterSelector, 'AdapterSelector parity').toEqual(PARITY_FIXTURES.adapterSelector)
+    expect.soft(captured.sourceSelector, 'SourceSelector parity').toEqual(PARITY_FIXTURES.sourceSelector)
     expect.soft(captured.fileItem, 'FileItem parity').toEqual(PARITY_FIXTURES.fileItem)
     expect.soft(captured.filePreview, 'FilePreview parity').toEqual(PARITY_FIXTURES.filePreview)
     expect.soft(captured.fileIcon, 'FileIcon parity').toEqual(PARITY_FIXTURES.fileIcon)

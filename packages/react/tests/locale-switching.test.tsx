@@ -9,7 +9,7 @@ describe('Locale switching', () => {
         const { container } = render(
             <UpupUploader provider="aws" serverUrl="https://example.com" />,
         )
-        // AdapterSelector renders tr.browseFiles — en_US value is 'browse files'
+        // SourceSelector renders tr.browseFiles — en_US value is 'browse files'
         const text = container.textContent ?? ''
         expect(text.toLowerCase()).toContain('browse')
     })

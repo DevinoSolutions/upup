@@ -6,7 +6,7 @@ import {
     type ServerDriveFile,
     type ServerModeProvider,
 } from '../composables/useServerModeDrive'
-import AdapterViewContainer from './shared/AdapterViewContainer.vue'
+import SourceViewContainer from './shared/SourceViewContainer.vue'
 import DriveAuthFallback from './shared/DriveAuthFallback.vue'
 import ShouldRender from './shared/ShouldRender.vue'
 import { cn } from '@upup/core'
@@ -79,7 +79,7 @@ function formatBytes(bytes: number): string {
         :provider-name="PROVIDER_LABEL[props.provider]"
         :on-retry="startAuth"
     />
-    <AdapterViewContainer
+    <SourceViewContainer
         v-else
         :is-loading="isLoading"
         :data-upup-slot="resolvedSlot"
@@ -171,5 +171,5 @@ function formatBytes(bytes: number): string {
                 </div>
             </div>
         </ShouldRender>
-    </AdapterViewContainer>
+    </SourceViewContainer>
 </template>

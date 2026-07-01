@@ -165,7 +165,7 @@ describe('LayoutListIconComponent', () => {
 })
 
 // ── SOURCE_ICONS map — adapter-selector tile icon path ───────────────────────
-// AdapterSelectorComponent uses SOURCE_ICONS (and its own ICON_MAP) to resolve
+// SourceSelectorComponent uses SOURCE_ICONS (and its own ICON_MAP) to resolve
 // icon component classes from FileSource string keys via NgComponentOutlet.
 // This test proves the map entries are real instantiable Angular components
 // that render <svg> — catching any class-reference breakage that selector

@@ -2,7 +2,7 @@
 import { onMounted, watch } from 'vue'
 import { formatUiMessage as t, cn } from '@upup/core'
 import useCameraUploader from '../composables/useCameraUploader'
-import AdapterViewContainer from './shared/AdapterViewContainer.vue'
+import SourceViewContainer from './shared/SourceViewContainer.vue'
 import ShouldRender from './shared/ShouldRender.vue'
 
 const {
@@ -31,7 +31,7 @@ watch(facingMode, () => {
 </script>
 
 <template>
-    <AdapterViewContainer data-upup-slot="camera-uploader">
+    <SourceViewContainer data-upup-slot="camera-uploader">
         <div
             data-testid="upup-camera-uploader"
             class="upup-flex upup-h-full upup-w-full upup-flex-col upup-justify-center upup-overflow-hidden upup-px-3 upup-py-2"
@@ -122,5 +122,5 @@ watch(facingMode, () => {
                 </ShouldRender>
             </div>
         </div>
-    </AdapterViewContainer>
+    </SourceViewContainer>
 </template>

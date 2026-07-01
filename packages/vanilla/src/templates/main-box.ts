@@ -2,8 +2,8 @@ import { html } from 'lit-html'
 import { cn } from '../lib/cn'
 import type { RootContext } from '../lib/types'
 import { shouldRender } from './should-render'
-import { adapterView } from './adapter-view'
-import { adapterSelector } from './adapter-selector'
+import { sourceView } from './source-view'
+import { sourceSelector } from './source-selector'
 import { fileList } from './file-list'
 
 export function mainBox(ctx: RootContext) {
@@ -50,8 +50,8 @@ export function mainBox(ctx: RootContext) {
           No internet connection — uploads will resume when you reconnect.
         </div>
       `)}
-      ${shouldRender(!!activeAdapter, () => adapterView(ctx))}
-      ${shouldRender(!activeAdapter && (isAddingMore || !filesSize), () => adapterSelector(ctx))}
+      ${shouldRender(!!activeAdapter, () => sourceView(ctx))}
+      ${shouldRender(!activeAdapter && (isAddingMore || !filesSize), () => sourceSelector(ctx))}
       ${fileList(ctx)}
     </div>
   `

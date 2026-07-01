@@ -3,13 +3,13 @@ import { NgComponentOutlet } from '@angular/common'
 import { cn } from '@upup/core'
 import { UpupStore } from '../upup-store.service'
 import { FetchFileByUrlService } from '../services/fetch-file-by-url.service'
-import { AdapterViewContainerComponent } from './adapter-view-container.component'
+import { SourceViewContainerComponent } from './source-view-container.component'
 
 /**
  * URL uploader leaf — port of UrlUploader.svelte.
  *
  * Slot name : "url-uploader"
- * Testid    : "upup-url-uploader" (on the AdapterViewContainer inner div)
+ * Testid    : "upup-url-uploader" (on the SourceViewContainer inner div)
  *
  * Svelte parity:
  *   - FetchFileByUrlService (Injectable) ↔ useFetchFileByUrl composable
@@ -23,7 +23,7 @@ import { AdapterViewContainerComponent } from './adapter-view-container.componen
 @Component({
     selector: 'upup-url-uploader',
     standalone: true,
-    imports: [NgComponentOutlet, AdapterViewContainerComponent],
+    imports: [NgComponentOutlet, SourceViewContainerComponent],
     providers: [FetchFileByUrlService],
     template: `
         <upup-adapter-view-container slotName="url-uploader">

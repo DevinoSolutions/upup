@@ -9,10 +9,10 @@ import {
     useUploaderTheme,
     useUploaderView,
 } from '../context/RootContext'
-import useAdapterSelector from '../hooks/useAdapterSelector'
+import useSourceSelector from '../hooks/useSourceSelector'
 import ShouldRender from './shared/ShouldRender'
 
-export default function AdapterSelector() {
+export default function SourceSelector() {
     const { core, inputRef, openFilePicker } = useUploaderRuntime()
     const { translations: tr } = useUploaderI18n()
     const { isAddingMore, setIsAddingMore } = useUploaderView()
@@ -53,7 +53,7 @@ export default function AdapterSelector() {
         )
     const constraintLine = constraintParts.join(', ')
     const { chosenSources, handleAdapterClick, handleInputFileChange } =
-        useAdapterSelector()
+        useSourceSelector()
 
     const handleBrowseFilesClick = useCallback(() => {
         if (inputRef.current) {

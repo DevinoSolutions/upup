@@ -5,7 +5,7 @@ import {
     useUploaderTheme,
 } from '../context/RootContext'
 import { cn } from '@upup/core'
-import AdapterViewContainer from './shared/AdapterViewContainer'
+import SourceViewContainer from './shared/SourceViewContainer'
 
 type RecordingState = 'idle' | 'recording' | 'recorded'
 
@@ -107,7 +107,7 @@ export default function AudioUploader() {
 
     if (error) {
         return (
-            <AdapterViewContainer data-upup-slot="audio-uploader">
+            <SourceViewContainer data-upup-slot="audio-uploader">
                 <div className="upup-flex upup-flex-col upup-items-center upup-gap-3 upup-p-6 upup-text-center">
                     <p
                         className={cn('upup-text-sm upup-text-red-500', {
@@ -117,12 +117,12 @@ export default function AudioUploader() {
                         {error}
                     </p>
                 </div>
-            </AdapterViewContainer>
+            </SourceViewContainer>
         )
     }
 
     return (
-        <AdapterViewContainer data-upup-slot="audio-uploader">
+        <SourceViewContainer data-upup-slot="audio-uploader">
             <div className="upup-flex upup-h-full upup-w-full upup-flex-col upup-items-center upup-justify-center upup-gap-6 upup-p-6">
                 <div
                     className={cn(
@@ -236,6 +236,6 @@ export default function AudioUploader() {
                     )}
                 </div>
             </div>
-        </AdapterViewContainer>
+        </SourceViewContainer>
     )
 }

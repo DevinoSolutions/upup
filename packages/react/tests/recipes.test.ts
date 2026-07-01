@@ -3,9 +3,9 @@ import {
     progressBarRecipe,
     fileListRecipe,
     filePreviewRecipe,
-    adapterSelectorRecipe,
+    sourceSelectorRecipe,
     mainBoxRecipe,
-    adapterViewRecipe,
+    sourceViewRecipe,
     urlUploaderRecipe,
     driveBrowserRecipe,
     cameraUploaderRecipe,
@@ -63,9 +63,9 @@ describe('filePreviewRecipe', () => {
     })
 })
 
-describe('adapterSelectorRecipe', () => {
+describe('sourceSelectorRecipe', () => {
     it('generates base slot classes', () => {
-        const slots = adapterSelectorRecipe()
+        const slots = sourceSelectorRecipe()
         expect(slots.root()).toContain('upup-h-full')
         expect(slots.adapterButton()).toContain('upup-border-gray-200')
         expect(slots.adapterButtonText()).toContain('upup-text-[#242634]')
@@ -73,7 +73,7 @@ describe('adapterSelectorRecipe', () => {
     })
 
     it('applies dark variant', () => {
-        const slots = adapterSelectorRecipe({ dark: true })
+        const slots = sourceSelectorRecipe({ dark: true })
         expect(slots.adapterButtonText()).toContain('upup-text-gray-300')
         expect(slots.browseButton()).toContain('upup-text-[#59D1F9]')
     })
@@ -113,16 +113,16 @@ describe('mainBoxRecipe', () => {
     })
 })
 
-describe('adapterViewRecipe', () => {
+describe('sourceViewRecipe', () => {
     it('generates base slot classes', () => {
-        const slots = adapterViewRecipe()
+        const slots = sourceViewRecipe()
         expect(slots.root()).toContain('upup-grid-rows-[auto,1fr]')
         expect(slots.header()).toContain('upup-text-[#1b5dab]')
         expect(slots.cancelButton()).toContain('upup-text-blue-600')
     })
 
     it('applies dark variant', () => {
-        const slots = adapterViewRecipe({ dark: true })
+        const slots = sourceViewRecipe({ dark: true })
         expect(slots.header()).toContain('upup-text-[#FAFAFA]')
         expect(slots.cancelButton()).toContain('upup-text-[#30C5F7]')
     })

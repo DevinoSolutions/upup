@@ -2,7 +2,7 @@ import { html, nothing } from 'lit-html'
 import { ref } from 'lit-html/directives/ref.js'
 import { cn } from '@upup/core'
 import type { RootContext } from '../lib/types'
-import { adapterViewContainer } from './shared/adapter-view-container'
+import { sourceViewContainer } from './shared/source-view-container'
 
 export function screenCaptureUploader(ctx: RootContext) {
   const sc = ctx.controllers.getScreen()
@@ -10,7 +10,7 @@ export function screenCaptureUploader(ctx: RootContext) {
   const isDark = ctx.theme.getSnapshot().isDark
 
   if (s.error) {
-    return adapterViewContainer(ctx, { dataUpupSlot: 'screen-capture-uploader' }, html`
+    return sourceViewContainer(ctx, { dataUpupSlot: 'screen-capture-uploader' }, html`
       <div class="upup-flex upup-flex-col upup-items-center upup-gap-3 upup-p-6 upup-text-center">
         <p class=${cn('upup-text-sm upup-text-red-500', { 'upup-text-red-400': isDark })}>${s.error}</p>
         <button type="button" class=${cn('upup-rounded-lg upup-bg-blue-600 upup-px-4 upup-py-2 upup-text-sm upup-font-medium upup-text-white', { 'upup-bg-[#59D1F9] dark:upup-bg-[#59D1F9]': isDark })} @click=${() => sc.retryRecording()}>Try Again</button>
@@ -49,5 +49,5 @@ export function screenCaptureUploader(ctx: RootContext) {
         : nothing}
     </div>`
 
-  return adapterViewContainer(ctx, { dataUpupSlot: 'screen-capture-uploader' }, inner)
+  return sourceViewContainer(ctx, { dataUpupSlot: 'screen-capture-uploader' }, inner)
 }

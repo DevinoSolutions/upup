@@ -3,7 +3,7 @@ import { cn } from '../lib/cn'
 import type { RootContext } from '../lib/types'
 import { uploadSourceObject } from '../lib/constants'
 
-export function adapterView(ctx: RootContext) {
+export function sourceView(ctx: RootContext) {
   const active = ctx.orchestrator.getSnapshot().activeAdapter
   const entry = active ? uploadSourceObject[active] : undefined
   const View = entry?.View
@@ -24,7 +24,7 @@ export function adapterView(ctx: RootContext) {
         class=${cn(
           'upup-shadow-bottom upup-flex upup-items-center upup-justify-between upup-bg-black/[0.025] upup-px-3 upup-py-2 upup-text-sm upup-font-medium upup-text-[#1b5dab]',
           { 'upup-bg-white/5 upup-text-[#FAFAFA] dark:upup-bg-white/5 dark:upup-text-[#FAFAFA]': isDark },
-          slot.adapterViewHeader,
+          slot.sourceViewHeader,
         )}
       >
         ${Icon ? Icon() : nothing}
@@ -32,7 +32,7 @@ export function adapterView(ctx: RootContext) {
           class=${cn(
             'upup-rounded-md upup-p-1 upup-text-blue-600 upup-transition-all upup-duration-300',
             { 'upup-text-[#30C5F7] dark:upup-text-[#30C5F7]': isDark },
-            slot.adapterViewCancelButton,
+            slot.sourceViewCancelButton,
           )}
           @click=${handleCancel}
           type="button"

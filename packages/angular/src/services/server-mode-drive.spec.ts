@@ -57,7 +57,7 @@ function makeStoreMock() {
             driveAddFilesButton: '',
             driveCancelFilesButton: '',
             driveItemContainer: '',
-            adapterView: '',
+            sourceView: '',
             driveLoading: '',
         }),
         translations: signal({

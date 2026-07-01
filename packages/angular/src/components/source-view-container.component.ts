@@ -2,7 +2,7 @@ import { Component, Input, inject } from '@angular/core'
 import { UpupStore } from '../upup-store.service'
 
 /**
- * Content-projection wrapper — port of AdapterViewContainer.svelte.
+ * Content-projection wrapper — port of SourceViewContainer.svelte.
  *
  * Svelte original:
  *   <div data-testid="upup-adapter-view" class={cn('upup-flex upup-items-center …', { … })} ...rest>
@@ -29,7 +29,7 @@ import { UpupStore } from '../upup-store.service'
         </div>
     `,
 })
-export class AdapterViewContainerComponent {
+export class SourceViewContainerComponent {
     private store = inject(UpupStore)
 
     @Input() isLoading: boolean = false
@@ -48,8 +48,8 @@ export class AdapterViewContainerComponent {
         ]
         if (this.isLoading && dark) {
             parts.push('upup-bg-white/10 upup-text-[#FAFAFA] dark:upup-bg-white/10 dark:upup-text-[#FAFAFA]')
-        } else if (!this.isLoading && slotClasses.adapterView) {
-            parts.push(slotClasses.adapterView)
+        } else if (!this.isLoading && slotClasses.sourceView) {
+            parts.push(slotClasses.sourceView)
         }
         if (this.isLoading && slotClasses.driveLoading) {
             parts.push(slotClasses.driveLoading)
