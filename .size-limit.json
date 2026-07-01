@@ -1,0 +1,37 @@
+[
+  {
+    "name": "@upup/core",
+    "path": "packages/core/dist/index.js",
+    "limit": "540 KB"
+  },
+  {
+    "name": "@upup/react",
+    "path": "packages/react/dist/index.js",
+    "limit": "990 KB"
+  },
+  {
+    "name": "@upup/vue",
+    "path": "packages/vue/dist/index.js",
+    "limit": "710 KB"
+  },
+  {
+    "name": "@upup/vanilla",
+    "path": "packages/vanilla/dist/index.js",
+    "limit": "690 KB"
+  },
+  {
+    "name": "@upup/angular",
+    "path": "packages/angular/dist/fesm2022/upup-angular.mjs",
+    "limit": "850 KB"
+  },
+  {
+    "name": "@upup/preact",
+    "path": "packages/preact/dist/index.js",
+    "limit": "1120 KB"
+  },
+  {
+    "name": "@upup/next",
+    "path": "packages/next/dist/index.js",
+    "limit": "990 KB"
+  }
+]
