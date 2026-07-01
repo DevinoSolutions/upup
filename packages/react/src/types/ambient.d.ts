@@ -17,7 +17,7 @@ declare module 'google' {
         [key: string]: unknown
     }
 
-    export type Root = {
+    export type GoogleRoot = {
         id: string
         name: string
         mimeType?: string
@@ -33,7 +33,7 @@ declare module 'google' {
         [key: string]: unknown
     }
 
-    export type User = {
+    export type GoogleUser = {
         name: string
         picture?: string
         mail?: string
