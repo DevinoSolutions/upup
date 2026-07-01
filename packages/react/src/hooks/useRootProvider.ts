@@ -13,12 +13,6 @@ import {
     type ThemeStoreState,
     type UploadFile,
 } from '@upup/core'
-import {
-    TbCameraRotate,
-    TbCapture,
-    TbPlus,
-    TbTrash,
-} from 'react-icons/tb'
 import Icon from '../components/Icon'
 import { UploaderProps } from '../shared/types'
 import { IRootContext } from '../context/RootContext'
@@ -30,6 +24,22 @@ import { useSSEProcessing } from './useSSEProcessing'
  *  former react-icons default did. */
 const DefaultLoaderIconComponent = (props: { size?: number; className?: string }) =>
     createElement(Icon, { name: 'loader', ...props })
+
+/** Default 'add more' icon — renders the registry 'plus' glyph (was react-icons TbPlus). */
+const DefaultPlusIconComponent = (props: { size?: number; className?: string }) =>
+    createElement(Icon, { name: 'plus', ...props })
+
+/** Default camera-capture icon — renders the registry 'capture' glyph (was react-icons TbCapture). */
+const DefaultCaptureIconComponent = (props: { size?: number; className?: string }) =>
+    createElement(Icon, { name: 'capture', ...props })
+
+/** Default camera-rotate icon — renders the registry 'camera-rotate' glyph (was react-icons TbCameraRotate). */
+const DefaultCameraRotateIconComponent = (props: { size?: number; className?: string }) =>
+    createElement(Icon, { name: 'camera-rotate', ...props })
+
+/** Default delete icon (file + camera slots) — renders the registry 'trash' glyph (was react-icons TbTrash). */
+const DefaultTrashIconComponent = (props: { size?: number; className?: string }) =>
+    createElement(Icon, { name: 'trash', ...props })
 
 const EMPTY_THEME_SLOTS = {}
 const EMPTY_STYLE = {}
@@ -414,11 +424,11 @@ export default function useRootProvider(props: UploaderProps): IRootContext {
 
     // ── Icons resolution (React-specific) ───────────────────────
     const resolvedIcons = useMemo(() => ({
-        ContainerAddMoreIcon: icons.ContainerAddMoreIcon || TbPlus,
-        FileDeleteIcon: icons.FileDeleteIcon || TbTrash,
-        CameraCaptureIcon: icons.CameraCaptureIcon || TbCapture,
-        CameraRotateIcon: icons.CameraRotateIcon || TbCameraRotate,
-        CameraDeleteIcon: icons.CameraDeleteIcon || TbTrash,
+        ContainerAddMoreIcon: icons.ContainerAddMoreIcon || DefaultPlusIconComponent,
+        FileDeleteIcon: icons.FileDeleteIcon || DefaultTrashIconComponent,
+        CameraCaptureIcon: icons.CameraCaptureIcon || DefaultCaptureIconComponent,
+        CameraRotateIcon: icons.CameraRotateIcon || DefaultCameraRotateIconComponent,
+        CameraDeleteIcon: icons.CameraDeleteIcon || DefaultTrashIconComponent,
         LoaderIcon: icons.LoaderIcon || DefaultLoaderIconComponent,
     }), [
         icons.CameraCaptureIcon,

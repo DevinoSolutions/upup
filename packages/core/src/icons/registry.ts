@@ -3,7 +3,7 @@ import { FILE_TYPE_ICONS, type FileTypeIconName } from './file-type-icons'
 export type IconName =
   | 'my-device' | 'box' | 'dropbox' | 'google-drive' | 'one-drive'
   | 'link' | 'camera' | 'audio' | 'screen-cast'
-  | 'upload' | 'loader' | 'x' | 'trash' | 'layout-grid' | 'layout-list'
+  | 'upload' | 'loader' | 'x' | 'trash' | 'camera-rotate' | 'capture' | 'plus' | 'layout-grid' | 'layout-list'
   | 'folder' | 'search' | 'user' | 'file'
   | 'player-play' | 'player-pause'
   | FileTypeIconName
@@ -174,6 +174,44 @@ export const ICONS: Record<IconName, IconDef> = {
     <path d="M14 11l0 6" />
     <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" />
     <path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3" />
+  `,
+  },
+
+  // Tabler 'camera-rotate' (matches react-icons/tb TbCameraRotate exactly) — default for icons.CameraRotateIcon.
+  'camera-rotate': {
+    viewBox: '0 0 24 24',
+    defaultSize: 24,
+    attrs: { ...STROKE_ATTRS },
+    inner: `
+    <path d="M5 7h1a2 2 0 0 0 2 -2a1 1 0 0 1 1 -1h6a1 1 0 0 1 1 1a2 2 0 0 0 2 2h1a2 2 0 0 1 2 2v9a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-9a2 2 0 0 1 2 -2" />
+    <path d="M11.245 15.904a3 3 0 0 0 3.755 -2.904m-2.25 -2.905a3 3 0 0 0 -3.75 2.905" />
+    <path d="M14 13h2v2" />
+    <path d="M10 13h-2v-2" />
+  `,
+  },
+
+  // Tabler 'capture' (matches react-icons/tb TbCapture exactly) — default for icons.CameraCaptureIcon.
+  'capture': {
+    viewBox: '0 0 24 24',
+    defaultSize: 24,
+    attrs: { ...STROKE_ATTRS },
+    inner: `
+    <path d="M4 8v-2a2 2 0 0 1 2 -2h2" />
+    <path d="M4 16v2a2 2 0 0 0 2 2h2" />
+    <path d="M16 4h2a2 2 0 0 1 2 2v2" />
+    <path d="M16 20h2a2 2 0 0 0 2 -2v-2" />
+    <path d="M12 12m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0" />
+  `,
+  },
+
+  // Tabler 'plus' (matches react-icons/tb TbPlus exactly) — default for icons.ContainerAddMoreIcon.
+  'plus': {
+    viewBox: '0 0 24 24',
+    defaultSize: 24,
+    attrs: { ...STROKE_ATTRS },
+    inner: `
+    <path d="M12 5l0 14" />
+    <path d="M5 12l14 0" />
   `,
   },
 
