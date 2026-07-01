@@ -11,7 +11,7 @@ import type {
     UpupThemeConfig,
 } from '@upup/core'
 
-export type UpupUploaderPropsIcons = {
+export type UploaderIcons = {
     ContainerAddMoreIcon?: FC<{ className?: string }>
 
     FileDeleteIcon?: FC<{ className?: string }>
@@ -23,7 +23,7 @@ export type UpupUploaderPropsIcons = {
     LoaderIcon?: FC<{ className?: string }>
 }
 
-export type UpupUploaderProps = {
+export type UploaderProps = {
     /**
      * Storage provider. Optional for local-only selection and generic
      * uploadEndpoint/serverUrl flows. When provided, accepts core provider
@@ -124,7 +124,7 @@ export type UpupUploaderProps = {
     metadata?: Record<string, unknown>
     maxRetries?: number
     resumable?: ResumableUploadOptions
-    icons?: UpupUploaderPropsIcons
+    icons?: UploaderIcons
 
     // i18n / Localisation
     /** i18n configuration. Uses ICU locale bundles from `@upup/core`. */

@@ -20,7 +20,7 @@ import {
     TbTrash,
 } from 'react-icons/tb'
 import Icon from '../components/Icon'
-import { UpupUploaderProps } from '../shared/types'
+import { UploaderProps } from '../shared/types'
 import { IRootContext } from '../context/RootContext'
 import { useUpupUpload } from '../use-upup-upload'
 import { useSSEProcessing } from './useSSEProcessing'
@@ -66,7 +66,7 @@ function themeStateFromResolved(resolved: ThemeStoreState['resolved']): ThemeSto
     }
 }
 
-export default function useRootProvider(props: UpupUploaderProps): IRootContext {
+export default function useRootProvider(props: UploaderProps): IRootContext {
     const {
         allowedFileTypes: acceptProp = '*',
         mini = false,
@@ -143,7 +143,7 @@ export default function useRootProvider(props: UpupUploaderProps): IRootContext 
     }, [warningHandler])
 
     // ── Build factory-compatible options object ──────────────────
-    // UpupUploaderProps.allowedFileTypes is string | string[] | undefined;
+    // UploaderProps.allowedFileTypes is string | string[] | undefined;
     // RootControllerOptions.allowedFileTypes is string | undefined.
     // normalizeRootOptions handles both at runtime via a cast, so we cast here.
     const factoryOptions = useMemo<RootControllerOptions>(() => ({

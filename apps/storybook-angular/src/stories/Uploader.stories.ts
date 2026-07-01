@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from '@storybook/angular'
 import { applicationConfig, moduleMetadata } from '@storybook/angular'
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async'
 import { UpupUploaderComponent } from '@upup/angular'
-import type { UpupUploaderProps } from '@upup/angular'
+import type { UploaderProps } from '@upup/angular'
 import { uploaderArgTypes, uploaderDefaultArgs } from '@upup/storybook-config'
 
 // ── REAL_SERVER_URL (webpack-safe) ─────────────────────────────────────────────
@@ -16,15 +16,15 @@ const _proc: any = typeof (globalThis as any).process !== 'undefined' ? (globalT
 const REAL_SERVER_URL: string = (_proc?.env?.STORYBOOK_UPUP_E2E_SERVER_URL as string | undefined) ?? 'http://localhost:53060'
 
 // ── buildOptions: split virtual args out into the `theme` sub-object ──────────
-function buildOptions(args: Record<string, unknown>): UpupUploaderProps {
+function buildOptions(args: Record<string, unknown>): UploaderProps {
   const { themeMode, primaryColor, ...rest } = args
   const theme: Record<string, unknown> = {
     ...(themeMode ? { mode: themeMode } : {}),
     ...(primaryColor ? { tokens: { color: { primary: primaryColor } } } : {}),
   }
   return {
-    ...(rest as UpupUploaderProps),
-    ...(Object.keys(theme).length ? { theme: theme as UpupUploaderProps['theme'] } : {}),
+    ...(rest as UploaderProps),
+    ...(Object.keys(theme).length ? { theme: theme as UploaderProps['theme'] } : {}),
   }
 }
 

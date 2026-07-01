@@ -72,7 +72,7 @@ export const RealUploadClient: Story = {
 // snapshot. Locale is the component default (en). Used by the parity harness.
 export const Parity: Story = {
     parameters: { msw: { handlers: [] } },
-    // themeMode is a virtual arg (not in UpupUploaderProps) handled by buildProps;
+    // themeMode is a virtual arg (not in UploaderProps) handled by buildProps;
     // cast mirrors the meta-level uploaderDefaultArgs (Record<string,unknown>).
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     args: {

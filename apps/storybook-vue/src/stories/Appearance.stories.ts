@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/vue3-vite'
-import { UpupUploader, type UpupUploaderProps } from '@upup/vue'
+import { UpupUploader, type UploaderProps } from '@upup/vue'
 import { uploaderArgTypes, uploaderDefaultArgs } from '@upup/storybook-config'
 
 function buildProps(args: Record<string, unknown>) {
@@ -26,9 +26,9 @@ const meta: Meta<typeof UpupUploader> = {
 export default meta
 // Appearance stories surface the two virtual controls (themeMode/primaryColor)
 // directly in story args; widen the Story args type to admit them while keeping
-// full type-safety on real UpupUploaderProps.
+// full type-safety on real UploaderProps.
 type Story = StoryObj<
-  UpupUploaderProps & { themeMode?: 'light' | 'dark' | 'system'; primaryColor?: string }
+  UploaderProps & { themeMode?: 'light' | 'dark' | 'system'; primaryColor?: string }
 >
 
 export const Mini: Story = { args: { mini: true } }

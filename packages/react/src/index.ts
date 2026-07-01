@@ -3,7 +3,7 @@
 // ── Core component + ref ─────────────────────────────────
 export {
     default as UpupUploader,
-    type UpupUploaderRef,
+    type UploaderRef,
 } from './upup-uploader'
 
 // ── Headless hook (v2) ───────────────────────────────────
@@ -25,8 +25,8 @@ export type {
     ResumableUploadOptions,
 } from '@upup/core'
 export type {
-    UpupUploaderProps,
-    UpupUploaderPropsIcons,
+    UploaderProps,
+    UploaderIcons,
 } from './shared/types'
 
 // ── v2 core contract re-exports ───────────────────────

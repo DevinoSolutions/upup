@@ -1,5 +1,5 @@
 import type React from 'react'
-import type { UpupUploaderProps } from '@upup/react'
+import type { UploaderProps } from '@upup/react'
 
 export type CategoryId =
     | 'upload'
@@ -13,7 +13,7 @@ export type CategoryId =
     | 'events'
     | 'advanced'
 
-/** Dotted path into UpupUploaderProps, e.g. "provider" or "cloudDrives.googleDrive.clientId". */
+/** Dotted path into UploaderProps, e.g. "provider" or "cloudDrives.googleDrive.clientId". */
 export type PropId = string
 
 export type PrimitiveKind =
@@ -76,7 +76,7 @@ export type CategoryDefinition = {
     tier?: 'simple' | 'advanced'
 }
 
-export type UpupConfig = Partial<UpupUploaderProps>
+export type UpupConfig = Partial<UploaderProps>
 
 export type InteractiveExampleProps = {
     defaultExpanded?: CategoryId[]

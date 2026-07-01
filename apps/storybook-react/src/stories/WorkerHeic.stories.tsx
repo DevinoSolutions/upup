@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import { UpupUploader, type UpupUploaderProps } from '@upup/react'
+import { UpupUploader, type UploaderProps } from '@upup/react'
 import {
   uploaderArgTypes,
   uploaderDefaultArgs,
@@ -14,10 +14,10 @@ function render(args: Record<string, unknown>) {
     ...(primaryColor ? { tokens: { color: { primary: primaryColor } } } : {}),
   }
   const props = { ...rest, ...(Object.keys(theme).length ? { theme } : {}) }
-  return <UpupUploader {...(props as UpupUploaderProps)} />
+  return <UpupUploader {...(props as UploaderProps)} />
 }
 
-const meta: Meta<UpupUploaderProps> = {
+const meta: Meta<UploaderProps> = {
   title: 'React/WorkerHeic',
   component: UpupUploader,
   argTypes: uploaderArgTypes,
@@ -26,7 +26,7 @@ const meta: Meta<UpupUploaderProps> = {
   parameters: { layout: 'padded' },
 }
 export default meta
-type Story = StoryObj<UpupUploaderProps>
+type Story = StoryObj<UploaderProps>
 
 export const HeicConversion: Story = {
   args: workerHeicArgs.heicConversion,

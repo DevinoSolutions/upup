@@ -26,7 +26,7 @@ export { AudioIconComponent } from './audio-icon.component'
 export { ScreenCastIconComponent } from './screencast-icon.component'
 
 // Source → icon component mapping (mirrors svelte's Icons.ts role).
-// Keys are FileSource string values used in UpupUploaderProps['sources'].
+// Keys are FileSource string values used in UploaderProps['sources'].
 import { MyDeviceIconComponent } from './my-device-icon.component'
 import { BoxIconComponent } from './box-icon.component'
 import { DropBoxIconComponent } from './dropbox-icon.component'

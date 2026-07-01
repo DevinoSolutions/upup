@@ -16,7 +16,7 @@ import {
 import { createUpupUpload, type UpupUploadHandle } from './lib/use-upup-upload'
 import { createSSEProcessing } from './lib/use-sse-processing'
 import { toSignalStore, type SignalStore } from './lib/to-signal-store'
-import type { UpupUploaderProps } from './shared/types'
+import type { UploaderProps } from './shared/types'
 import { EmptyIconComponent } from './components/icons/empty-icon.component'
 import { TrashIconComponent } from './components/icons/trash-icon.component'
 
@@ -28,7 +28,7 @@ type ThemeSnapshot = ReturnType<ThemeStore['getSnapshot']>
 
 @Injectable() // component-scoped: add to the component's providers:[UpupStore]
 export class UpupStore {
-    private props!: UpupUploaderProps
+    private props!: UploaderProps
     private upload!: UpupUploadHandle
     private root!: RootController
     core!: UpupUploadHandle['core']
@@ -62,7 +62,7 @@ export class UpupStore {
     uiProps!: {
         mini: boolean
         maxRetries?: number
-        resumable?: UpupUploaderProps['resumable']
+        resumable?: UploaderProps['resumable']
         onError: (message: string) => void
         onIntegrationClick: (integrationType: string) => void
         onFileClick: (file: UploadFile) => void
@@ -73,7 +73,7 @@ export class UpupStore {
         enablePaste: boolean
         sources: FileSource[]
         allowedFileTypes: string
-        maxFileSize?: UpupUploaderProps['maxFileSize']
+        maxFileSize?: UploaderProps['maxFileSize']
         limit: number
         isProcessing: boolean
         allowPreview: boolean
@@ -121,7 +121,7 @@ export class UpupStore {
     slots!: Signal<ThemeSnapshot['slots']>
 
     /** Call before init() to provide props. */
-    setConfig(props: UpupUploaderProps): void {
+    setConfig(props: UploaderProps): void {
         this.props = props
     }
 
@@ -142,7 +142,7 @@ export class UpupStore {
         this.started = true
 
         // ── Build factory-compatible options object ───────────────
-        // UpupUploaderProps.allowedFileTypes is string | string[] | undefined;
+        // UploaderProps.allowedFileTypes is string | string[] | undefined;
         // RootControllerOptions.allowedFileTypes is string | undefined.
         // normalizeRootOptions handles both via join cast.
         const p = this.props ?? {}

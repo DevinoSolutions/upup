@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import { UpupUploader, type UpupUploaderProps } from '@upup/react'
+import { UpupUploader, type UploaderProps } from '@upup/react'
 import { uploaderArgTypes, uploaderDefaultArgs } from '@upup/storybook-config'
 
-const meta: Meta<UpupUploaderProps> = {
+const meta: Meta<UploaderProps> = {
   title: 'React/Limits',
   component: UpupUploader,
   argTypes: uploaderArgTypes,
@@ -10,7 +10,7 @@ const meta: Meta<UpupUploaderProps> = {
   parameters: { layout: 'padded' },
 }
 export default meta
-type Story = StoryObj<UpupUploaderProps>
+type Story = StoryObj<UploaderProps>
 
 export const SingleFile: Story = { args: { maxFiles: 1 } }
 export const ImagesOnly: Story = { args: { allowedFileTypes: 'images' } }

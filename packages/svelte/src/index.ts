@@ -10,7 +10,7 @@ export type {
   IRootContext, ContextRuntime, ContextSource, ContextI18n, ContextFiles,
   ContextUploadControls, ContextView, ContextEditor, ContextTheme, ContextProps, ContextUpload,
 } from './context/root-context'
-export type { UpupUploaderProps, UpupUploaderPropsIcons } from './shared/types'
+export type { UploaderProps, UploaderIcons } from './shared/types'
 export { toReadable } from './lib/to-readable'
 export { FileSource, StorageProvider, UploadStatus } from '@upup/core'
 export type {

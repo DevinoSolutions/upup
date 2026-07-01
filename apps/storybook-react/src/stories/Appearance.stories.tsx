@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import { UpupUploader, type UpupUploaderProps } from '@upup/react'
+import { UpupUploader, type UploaderProps } from '@upup/react'
 import { uploaderArgTypes, uploaderDefaultArgs } from '@upup/storybook-config'
 
 function render(args: Record<string, unknown>) {
@@ -9,10 +9,10 @@ function render(args: Record<string, unknown>) {
     ...(primaryColor ? { tokens: { color: { primary: primaryColor } } } : {}),
   }
   const props = { ...rest, ...(Object.keys(theme).length ? { theme } : {}) }
-  return <UpupUploader {...(props as UpupUploaderProps)} />
+  return <UpupUploader {...(props as UploaderProps)} />
 }
 
-const meta: Meta<UpupUploaderProps> = {
+const meta: Meta<UploaderProps> = {
   title: 'React/Appearance',
   component: UpupUploader,
   argTypes: uploaderArgTypes,
@@ -23,9 +23,9 @@ const meta: Meta<UpupUploaderProps> = {
 export default meta
 // Appearance stories surface the two virtual controls (themeMode/primaryColor)
 // directly in story args; widen the Story args type to admit them while keeping
-// full type-safety on real UpupUploaderProps.
+// full type-safety on real UploaderProps.
 type Story = StoryObj<
-  UpupUploaderProps & { themeMode?: 'light' | 'dark' | 'system'; primaryColor?: string }
+  UploaderProps & { themeMode?: 'light' | 'dark' | 'system'; primaryColor?: string }
 >
 
 export const Mini: Story = { args: { mini: true } }

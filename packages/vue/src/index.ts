@@ -33,8 +33,8 @@ export type {
 } from './context/root-context'
 
 export type {
-  UpupUploaderProps,
-  UpupUploaderPropsIcons,
+  UploaderProps,
+  UploaderIcons,
 } from './shared/types'
 
 // Re-export core types consumers need

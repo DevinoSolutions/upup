@@ -72,7 +72,7 @@ export const RealUploadClient: Story = {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const Parity: Story = {
   parameters: { msw: { handlers: [] } },
-  // themeMode is a virtual arg (not in UpupUploaderProps) — cast mirrors the
+  // themeMode is a virtual arg (not in UploaderProps) — cast mirrors the
   // existing render: props cast and meta args shape (uploaderDefaultArgs has it).
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   args: {

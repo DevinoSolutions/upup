@@ -20,7 +20,7 @@ export interface UploaderSnapshot {
   viewMode: 'grid' | 'list'
 }
 
-/** Cloud-drive config shape accepted by createUploader (mirrors svelte UpupUploaderProps.cloudDrives). */
+/** Cloud-drive config shape accepted by createUploader (mirrors svelte UploaderProps.cloudDrives). */
 export interface VanillaCloudDrives {
   googleDrive?: { clientId: string; apiKey: string; appId: string }
   oneDrive?: { clientId: string; redirectUri?: string }
@@ -32,10 +32,10 @@ export interface VanillaCloudDrives {
 export interface CreateUploaderOptions extends Omit<CoreOptions, 'cloudDrives'> {
   /** Initial theme; true => dark. Maps to ThemeStore('dark'|'light'). */
   dark?: boolean
-  /** svelte UpupUploaderProps.theme passthrough when present (takes precedence over `dark`). */
+  /** svelte UploaderProps.theme passthrough when present (takes precedence over `dark`). */
   theme?: UpupThemeConfig
   sources?: UploadSource[]
-  /** Mirrors svelte UpupUploaderProps.maxFiles — max number of files. Resolution: maxFiles ?? restrictions?.maxNumberOfFiles ?? 10. */
+  /** Mirrors svelte UploaderProps.maxFiles — max number of files. Resolution: maxFiles ?? restrictions?.maxNumberOfFiles ?? 10. */
   maxFiles?: number
   className?: string
   showBranding?: boolean

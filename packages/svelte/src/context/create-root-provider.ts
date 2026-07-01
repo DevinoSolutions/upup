@@ -8,7 +8,7 @@ import {
     type UploadFile,
 } from '@upup/core'
 import type { Component } from 'svelte'
-import type { UpupUploaderProps } from '../shared/types'
+import type { UploaderProps } from '../shared/types'
 import type { IRootContext } from './root-context'
 import { useUpupUpload } from '../use-upup-upload'
 import { useSSEProcessing } from '../composables/useSSEProcessing'
@@ -18,7 +18,7 @@ import TrashIcon from '../components/TrashIcon.svelte'
 
 const EMPTY_STYLE: Record<string, string> = {}
 
-export function createRootProvider(props: UpupUploaderProps): IRootContext {
+export function createRootProvider(props: UploaderProps): IRootContext {
     // ── Destructure props with defaults ──────────────────────────
     const {
         allowedFileTypes: acceptProp = '*',
@@ -94,7 +94,7 @@ export function createRootProvider(props: UpupUploaderProps): IRootContext {
     }
 
     // ── Build factory-compatible options object ──────────────────
-    // UpupUploaderProps.allowedFileTypes is string | string[] | undefined;
+    // UploaderProps.allowedFileTypes is string | string[] | undefined;
     // RootControllerOptions.allowedFileTypes is string | undefined.
     // normalizeRootOptions handles both via join cast.
     const factoryOptions: RootControllerOptions = {

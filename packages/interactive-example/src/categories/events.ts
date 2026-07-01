@@ -1,7 +1,7 @@
 import type { CategoryDefinition, ToggleEntry } from '../types'
 import { Activity } from 'lucide-react'
 
-// Event prop names on UpupUploaderProps grouped by lifecycle. Each toggle
+// Event prop names on UploaderProps grouped by lifecycle. Each toggle
 // wires both the EventLog panel and a console logger as the callback
 // (see preview/UploaderPreview.tsx).
 const GROUPS: Array<{ label: string; ids: readonly string[] }> = [

@@ -9,7 +9,7 @@ import React, {
 import { devinoDark, devinoLight, logoDark, logoLight } from './assets/logos'
 import { cn } from '@upup/core'
 import type { UploadFile } from '@upup/core'
-import { UpupUploaderProps } from './shared/types'
+import { UploaderProps } from './shared/types'
 import Icon from './components/Icon'
 import DefaultLoaderIcon from './components/DefaultLoaderIcon'
 import MainBox from './components/MainBox'
@@ -22,7 +22,7 @@ import { UpupThemeProvider } from './theme'
 const ImageEditorInline = lazy(() => import('./components/ImageEditorInline'))
 const ImageEditorModal = lazy(() => import('./components/ImageEditorModal'))
 
-export type UpupUploaderRef = {
+export type UploaderRef = {
     useUpload(): {
         error?: string
         files: UploadFile[]
@@ -38,7 +38,7 @@ export type UpupUploaderRef = {
     }
 }
 
-export default forwardRef<UpupUploaderRef, UpupUploaderProps>(
+export default forwardRef<UploaderRef, UploaderProps>(
     function UpupUploader(props, ref) {
         const providerValues = useRootProvider({
             ...props,

@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import { UpupUploader, type UpupUploaderProps } from '@upup/react'
+import { UpupUploader, type UploaderProps } from '@upup/react'
 import { frFR, arSA, jaJP } from '@upup/core'
 import { uploaderArgTypes, uploaderDefaultArgs } from '@upup/storybook-config'
 
-const meta: Meta<UpupUploaderProps> = {
+const meta: Meta<UploaderProps> = {
   title: 'React/i18n',
   component: UpupUploader,
   argTypes: uploaderArgTypes,
@@ -11,7 +11,7 @@ const meta: Meta<UpupUploaderProps> = {
   parameters: { layout: 'padded' },
 }
 export default meta
-type Story = StoryObj<UpupUploaderProps>
+type Story = StoryObj<UploaderProps>
 
 export const French: Story = { args: { i18n: { locale: frFR } } }
 export const ArabicRTL: Story = { args: { i18n: { locale: arSA } } }

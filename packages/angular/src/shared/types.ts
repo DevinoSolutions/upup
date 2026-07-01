@@ -11,7 +11,7 @@ import type {
     UpupThemeConfig,
 } from '@upup/core'
 
-export type UpupUploaderPropsIcons = {
+export type UploaderIcons = {
     ContainerAddMoreIcon?: Type<unknown>
     FileDeleteIcon?: Type<unknown>
     CameraDeleteIcon?: Type<unknown>
@@ -20,7 +20,7 @@ export type UpupUploaderPropsIcons = {
     LoaderIcon?: Type<unknown>
 }
 
-export type UpupUploaderProps = {
+export type UploaderProps = {
     provider?: UploadProvider
     mode?: 'client' | 'server'
     sources?: UploadSource[]
@@ -78,7 +78,7 @@ export type UpupUploaderProps = {
     metadata?: Record<string, unknown>
     maxRetries?: number
     resumable?: ResumableUploadOptions
-    icons?: UpupUploaderPropsIcons
+    icons?: UploaderIcons
 
     i18n?: {
         bundle?: LocaleBundle

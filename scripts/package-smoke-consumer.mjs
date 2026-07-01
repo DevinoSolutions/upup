@@ -328,7 +328,7 @@ import { createRoot } from 'react-dom/client'
 import {
   FileSource,
   UpupUploader,
-  type UpupUploaderProps,
+  type UploaderProps,
 } from '@upup/react'
 import '@upup/react/styles'
 import {
@@ -346,7 +346,7 @@ const translator = createTranslator({ bundle: enUS, fallback: arSA })
 const theme = resolveTheme({ mode: 'light' })
 const vars = tokensToVars(theme.tokens)
 
-const props: UpupUploaderProps = {
+const props: UploaderProps = {
   sources: [FileSource.LOCAL, FileSource.URL],
   uploadEndpoint: '/api/upup-mock/presign',
   i18n: { locale: enUS, fallbackLocale: arSA },

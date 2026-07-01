@@ -1,13 +1,13 @@
 <script lang="ts">
 import { cn } from '@upup/core'
-import type { UpupUploaderProps } from './shared/types'
+import type { UploaderProps } from './shared/types'
 import { createRootProvider } from './context/create-root-provider'
 import { provideRootContext } from './context/root-context'
 import ImageEditorStub from './components/ImageEditorStub.svelte'
 import MainBox from './components/MainBox.svelte'
 import { devinoDark, devinoLight, logoDark, logoLight } from './assets/logos'
 
-let props: UpupUploaderProps = $props()
+let props: UploaderProps = $props()
 // Props are init-time configuration (mirrors Vue's `useRootProvider(props)` and
 // React's one-shot context build); capturing the initial value here is intentional.
 // svelte-ignore state_referenced_locally

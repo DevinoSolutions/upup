@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from '@storybook/angular'
 import { applicationConfig, moduleMetadata } from '@storybook/angular'
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async'
 import { UpupUploaderComponent } from '@upup/angular'
-import type { UpupUploaderProps } from '@upup/angular'
+import type { UploaderProps } from '@upup/angular'
 import {
   uploaderArgTypes,
   uploaderDefaultArgs,
@@ -11,15 +11,15 @@ import {
   workerHeicPlays,
 } from '@upup/storybook-config'
 
-function buildOptions(args: Record<string, unknown>): UpupUploaderProps {
+function buildOptions(args: Record<string, unknown>): UploaderProps {
   const { themeMode, primaryColor, ...rest } = args
   const theme: Record<string, unknown> = {
     ...(themeMode ? { mode: themeMode } : {}),
     ...(primaryColor ? { tokens: { color: { primary: primaryColor } } } : {}),
   }
   return {
-    ...(rest as UpupUploaderProps),
-    ...(Object.keys(theme).length ? { theme: theme as UpupUploaderProps['theme'] } : {}),
+    ...(rest as UploaderProps),
+    ...(Object.keys(theme).length ? { theme: theme as UploaderProps['theme'] } : {}),
   }
 }
 

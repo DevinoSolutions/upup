@@ -7,7 +7,7 @@ import {
     type RootControllerOptions,
     type UploadFile,
 } from '@upup/core'
-import type { UpupUploaderProps } from '../shared/types'
+import type { UploaderProps } from '../shared/types'
 import type { IRootContext } from '../context/root-context'
 import { useUpupUpload } from '../use-upup-upload'
 import { useSSEProcessing } from './useSSEProcessing'
@@ -32,7 +32,7 @@ const DefaultFileDeleteIcon = defineComponent({
 
 const EMPTY_STYLE: Record<string, string> = {}
 
-export default function useRootProvider(props: UpupUploaderProps): IRootContext {
+export default function useRootProvider(props: UploaderProps): IRootContext {
     // ── Destructure props with defaults ──────────────────────────
     const {
         allowedFileTypes: acceptProp = '*',
@@ -110,7 +110,7 @@ export default function useRootProvider(props: UpupUploaderProps): IRootContext 
     }
 
     // ── Build factory-compatible options object ──────────────────
-    // UpupUploaderProps.allowedFileTypes is string | string[] | undefined;
+    // UploaderProps.allowedFileTypes is string | string[] | undefined;
     // RootControllerOptions.allowedFileTypes is string | undefined.
     // normalizeRootOptions handles both at runtime via the join cast.
     const factoryOptions: RootControllerOptions = {

@@ -1,6 +1,6 @@
 // src/argTypes.ts
 // Hand-authored controls mirroring the playground's knobs. Prop names match
-// UpupUploaderProps exactly (packages/react|vue/src/shared/types.ts).
+// UploaderProps exactly (packages/react|vue/src/shared/types.ts).
 // MAINTENANCE: when the uploader gains a user-facing prop, add it here.
 
 import { cloudDrivesFromEnv } from './cloudDrives'

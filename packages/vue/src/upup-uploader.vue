@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { cn } from '@upup/core'
-import type { UpupUploaderProps } from './shared/types'
+import type { UploaderProps } from './shared/types'
 import useRootProvider from './composables/useRootProvider'
 import { provideRootContext } from './context/root-context'
 import MainBox from './components/MainBox.vue'
@@ -14,7 +14,7 @@ import { devinoDark, devinoLight, logoDark, logoLight } from './assets/logos'
 // React/Svelte/Angular/Vanilla all resolve these `true` when omitted; withDefaults
 // restores that cross-framework parity. Every other boolean prop defaults to
 // `false`, where Vue's coerce-to-false already matches the intended default.
-const props = withDefaults(defineProps<UpupUploaderProps>(), {
+const props = withDefaults(defineProps<UploaderProps>(), {
     allowPreview: true,
     showBranding: true,
     webWorker: true,

@@ -14,7 +14,7 @@ import {
 import { isPlatformBrowser } from '@angular/common'
 import { cn } from '@upup/core'
 import { UpupStore } from './upup-store.service'
-import type { UpupUploaderProps } from './shared/types'
+import type { UploaderProps } from './shared/types'
 import type { UploadFile } from '@upup/core'
 import { MainBoxComponent } from './components/main-box.component'
 import { ImageEditorStubComponent } from './components/image-editor-stub.component'
@@ -130,7 +130,7 @@ export class UpupUploaderComponent implements OnInit, AfterViewInit {
   readonly devinoDark = devinoDark
   readonly devinoLight = devinoLight
 
-  @Input() set config(value: UpupUploaderProps) {
+  @Input() set config(value: UploaderProps) {
     this.store.setConfig(value)
     if (this.started) {
       // re-init on config change (mirrors vanilla's config setter); re-wire to the NEW core

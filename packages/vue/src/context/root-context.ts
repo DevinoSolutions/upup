@@ -17,8 +17,8 @@ import type {
 } from '@upup/core'
 import { UploadStatus } from '@upup/core'
 import type {
-    UpupUploaderProps,
-    UpupUploaderPropsIcons,
+    UploaderProps,
+    UploaderIcons,
 } from '../shared/types'
 
 export { UploadStatus }
@@ -78,7 +78,7 @@ export type ContextTheme = Omit<BaseContextTheme, 'themeMode' | 'isDark'> & {
 
 export type ContextProps = Required<
     Pick<
-        UpupUploaderProps,
+        UploaderProps,
         | 'sources'
         | 'isProcessing'
         | 'allowPreview'
@@ -97,13 +97,13 @@ export type ContextProps = Required<
         | 'disableDragDrop'
     >
 > &
-    Pick<UpupUploaderProps, 'maxFileSize' | 'maxRetries' | 'resumable'> & {
+    Pick<UploaderProps, 'maxFileSize' | 'maxRetries' | 'resumable'> & {
         allowedFileTypes: string
         limit: number
         folderUploadAllowDrop: boolean
         folderPickerButtonVisible: boolean
         multiple: boolean
-        icons: Required<UpupUploaderPropsIcons>
+        icons: Required<UploaderIcons>
         imageEditor: ResolvedImageEditorOptions
     }
 

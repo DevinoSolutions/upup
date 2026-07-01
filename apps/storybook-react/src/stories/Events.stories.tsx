@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import { UpupUploader, type UpupUploaderProps } from '@upup/react'
+import { UpupUploader, type UploaderProps } from '@upup/react'
 import { uploaderArgTypes, uploaderDefaultArgs } from '@upup/storybook-config'
 
-const meta: Meta<UpupUploaderProps> = {
+const meta: Meta<UploaderProps> = {
   title: 'React/Events',
   component: UpupUploader,
   argTypes: uploaderArgTypes,
@@ -13,6 +13,6 @@ const meta: Meta<UpupUploaderProps> = {
   },
 }
 export default meta
-type Story = StoryObj<UpupUploaderProps>
+type Story = StoryObj<UploaderProps>
 
 export const AllCallbacks: Story = {}
