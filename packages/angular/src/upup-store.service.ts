@@ -125,7 +125,7 @@ export class UpupStore {
         this.props = props
     }
 
-    // Single error/warn routing (mirrors svelte create-root-provider lines 152-158).
+    // Single error/warn routing (mirrors svelte create-uploader-controller lines 152-158).
     private onError(message: string): void {
         this.props?.onError?.(message)
     }

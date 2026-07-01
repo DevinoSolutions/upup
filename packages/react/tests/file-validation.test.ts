@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 
-// Test the file validation logic as resolved in useRootProvider's handleSetSelectedFiles
+// Test the file validation logic as resolved in useUploaderController's handleSetSelectedFiles
 // These tests mirror the validation flow without requiring React rendering
 
 describe('onBeforeFileAdded filter', () => {

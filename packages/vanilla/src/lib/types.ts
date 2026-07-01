@@ -110,7 +110,7 @@ export interface UploaderContextProps {
   resumable: CoreOptions['resumable']
 }
 
-/** The flat root context every template fn receives. Replicates svelte createRootProvider data without core extraction. */
+/** The flat root context every template fn receives. Replicates svelte createUploaderController data without core extraction. */
 export interface UploaderContext {
   core: UpupCore
   orchestrator: UploaderOrchestrator

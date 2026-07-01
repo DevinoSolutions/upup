@@ -1,17 +1,17 @@
 <script lang="ts">
 import { cn } from '@upup/core'
 import type { UploaderProps } from './shared/types'
-import { createRootProvider } from './context/create-root-provider'
+import { createUploaderController } from './context/create-uploader-controller'
 import { provideUploaderContext } from './context/uploader-context'
 import ImageEditorStub from './components/ImageEditorStub.svelte'
 import UploaderPanel from './components/UploaderPanel.svelte'
 import { devinoDark, devinoLight, logoDark, logoLight } from './assets/logos'
 
 let props: UploaderProps = $props()
-// Props are init-time configuration (mirrors Vue's `useRootProvider(props)` and
+// Props are init-time configuration (mirrors Vue's `useUploaderController(props)` and
 // React's one-shot context build); capturing the initial value here is intentional.
 // svelte-ignore state_referenced_locally
-const ctx = createRootProvider(props)
+const ctx = createUploaderController(props)
 provideUploaderContext(ctx)
 
 const { isDark, slotOverrides } = ctx.theme

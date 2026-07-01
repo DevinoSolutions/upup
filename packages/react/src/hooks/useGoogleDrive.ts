@@ -59,7 +59,7 @@ export function useGoogleDrive() {
     // setPath is passed as a prop to DriveBrowser/DriveBrowserHeader, where the
     // breadcrumb truncates the trail by calling it with a functional updater
     // (`prev => prev.slice(0, i+1)`). It MUST be referentially stable across renders
-    // (same reason useRootProvider useCallbacks its setters) and resolves that
+    // (same reason useUploaderController useCallbacks its setters) and resolves that
     // updater against the live snapshot before delegating to the array-only
     // controller.setPath.
     const setPath = useCallback(

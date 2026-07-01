@@ -76,7 +76,7 @@ function themeStateFromResolved(resolved: ThemeStoreState['resolved']): ThemeSto
     }
 }
 
-export default function useRootProvider(props: UploaderProps): IUploaderContext {
+export default function useUploaderController(props: UploaderProps): IUploaderContext {
     const {
         allowedFileTypes: acceptProp = '*',
         mini = false,

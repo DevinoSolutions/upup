@@ -1,43 +1,28 @@
-import { ref, shallowRef, computed, onMounted, onUnmounted, defineComponent, h, type Ref } from 'vue'
+import { onMount, onDestroy } from 'svelte'
+import { derived } from 'svelte/store'
 import {
     FileSource,
     normalizeRootOptions,
     createRootController,
-    type OrchestratorState,
     type RootControllerOptions,
     type UploadFile,
 } from '@upup/core'
+import type { Component } from 'svelte'
 import type { UploaderProps } from '../shared/types'
-import type { IUploaderContext } from '../context/uploader-context'
+import type { IUploaderContext } from './uploader-context'
 import { useUpupUpload } from '../use-upup-upload'
-import { useSSEProcessing } from './useSSEProcessing'
-import { Icon } from '../components/Icon'
-
-/** Empty component placeholder for icons that have no real default glyph yet. */
-const EmptyIcon = defineComponent({ render: () => null })
-
-/** Default file-delete glyph — renders the shared registry 'trash' icon (parity with
- *  React's react-icons TbTrash default). Forwards the consumer's class/attrs to the svg. */
-const DefaultFileDeleteIcon = defineComponent({
-    name: 'UpupDefaultFileDeleteIcon',
-    inheritAttrs: false,
-    // attrs is Record<string, unknown> (SetupContext); narrow the two props Icon accepts.
-    setup: (_props, { attrs }) => () =>
-        h(Icon, {
-            name: 'trash',
-            class: attrs.class as string | undefined,
-            size: attrs.size as number | undefined,
-        }),
-})
+import { useSSEProcessing } from '../composables/useSSEProcessing'
+import { toReadable } from '../lib/to-readable'
+import EmptyIcon from '../components/EmptyIcon.svelte'
+import TrashIcon from '../components/TrashIcon.svelte'
 
 const EMPTY_STYLE: Record<string, string> = {}
 
-export default function useRootProvider(props: UploaderProps): IUploaderContext {
+export function createUploaderController(props: UploaderProps): IUploaderContext {
     // ── Destructure props with defaults ──────────────────────────
     const {
         allowedFileTypes: acceptProp = '*',
         mini = false,
-        maxFiles,
         isProcessing = false,
         allowPreview = true,
         folderUpload,
@@ -46,8 +31,7 @@ export default function useRootProvider(props: UploaderProps): IUploaderContext 
         className,
         style,
         maxFileSize: maxFileSizeProp,
-        minFileSize: minFileSizeProp,
-        maxTotalFileSize: maxTotalFileSizeProp,
+        maxFiles,
         restrictions,
         imageCompression = false,
         thumbnailGenerator = false,
@@ -112,7 +96,7 @@ export default function useRootProvider(props: UploaderProps): IUploaderContext 
     // ── Build factory-compatible options object ──────────────────
     // UploaderProps.allowedFileTypes is string | string[] | undefined;
     // RootControllerOptions.allowedFileTypes is string | undefined.
-    // normalizeRootOptions handles both at runtime via the join cast.
+    // normalizeRootOptions handles both via join cast.
     const factoryOptions: RootControllerOptions = {
         provider,
         mode: modeProp,
@@ -143,8 +127,8 @@ export default function useRootProvider(props: UploaderProps): IUploaderContext 
         disableDragDrop,
         className,
         maxFileSize: maxFileSizeProp,
-        minFileSize: minFileSizeProp,
-        maxTotalFileSize: maxTotalFileSizeProp,
+        minFileSize: props.minFileSize,
+        maxTotalFileSize: props.maxTotalFileSize,
         imageEditor: imageEditorProp,
         metadata,
         maxRetries,
@@ -176,7 +160,6 @@ export default function useRootProvider(props: UploaderProps): IUploaderContext 
 
     // ── Core (via useUpupUpload; owns core lifecycle) ────────────
     const upload = useUpupUpload(normalized.coreOptions)
-    const core = upload.core
 
     // ── SSE processing ──────────────────────────────────────────
     const { connectSSE } = useSSEProcessing({
@@ -188,7 +171,7 @@ export default function useRootProvider(props: UploaderProps): IUploaderContext 
 
     // ── Root controller (created once, owns orchestrator/theme/plugins/commands) ──
     const root = createRootController(
-        { core, options: factoryOptions, normalized },
+        { core: upload.core, options: factoryOptions, normalized },
         { connectSSE: (file) => connectSSE(file) },
     )
     root.updateCallbacks({
@@ -212,90 +195,76 @@ export default function useRootProvider(props: UploaderProps): IUploaderContext 
         autoUpload,
     })
 
-    // ── Subscribe to orchestrator state (Vue pattern: shallowRef + subscribe) ─
-    const state = shallowRef<OrchestratorState>(root.orchestrator.getSnapshot())
-    const unsub = root.orchestrator.subscribe(() => {
-        state.value = root.orchestrator.getSnapshot()
-    })
+    // ── Subscribe to orchestrator state (toReadable handles sub/unsub) ──
+    const orchState = toReadable(root.orchestrator)
 
-    // ── Subscribe to theme state (Vue pattern: shallowRef + subscribe) ────────
-    const themeState = shallowRef(root.theme.getSnapshot())
-    let unsubTheme: (() => void) | null = null
-
-    onMounted(() => {
-        unsubTheme = root.theme.subscribe(() => {
-            themeState.value = root.theme.getSnapshot()
-        })
-    })
-    onUnmounted(() => {
-        unsubTheme?.()
-    })
+    // ── Subscribe to theme state (toReadable handles sub/unsub) ──
+    const themeState = toReadable(root.theme)
 
     // ── Lifecycle via factory (idempotent init/dispose) ──────────
     // root.init() owns: orchestrator.init, theme.init, plugin registration,
     //   status-change dedup, crash recovery.
     // root.dispose() owns: orchestrator.destroy, theme.destroy, plugin cleanup.
-    // core lifecycle remains owned by useUpupUpload's onUnmounted.
-    onMounted(() => root.init())
-    onUnmounted(() => {
-        root.dispose()
-        unsub()
-    })
+    // core lifecycle remains owned by useUpupUpload's onDestroy.
+    onMount(() => root.init())
+    onDestroy(() => root.dispose())
 
-    // ── Input ref (Vue-specific) ────────────────────────────────
-    const inputRef: Ref<HTMLInputElement | null> = ref(null)
-    // Vue drives the picker via its reactive inputRef; the factory's imperative
-    // registerFileInput/openFilePicker path is unused here (no DOM node registered).
-    function openFilePicker() {
-        inputRef.value?.click()
+    // ── Input ref: delegate to factory (Svelte bind:this registration) ──────
+    // UpupUploader.svelte: $effect(() => ctx.registerFileInput(inputEl))
+    // must keep these field names; bodies delegate to root.*.
+    const registerFileInput = (el: HTMLInputElement | null) => root.registerFileInput(el)
+    const getFileInput = (): HTMLInputElement | null => root.getFileInput()
+    const openFilePicker = () => root.openFilePicker()
+
+    // ── Icons resolution (framework-specific) ───────────────────
+    const resolvedIcons = {
+        ContainerAddMoreIcon: icons.ContainerAddMoreIcon ?? (EmptyIcon as Component),
+        FileDeleteIcon: icons.FileDeleteIcon ?? (TrashIcon as Component),
+        CameraCaptureIcon: icons.CameraCaptureIcon ?? (EmptyIcon as Component),
+        CameraRotateIcon: icons.CameraRotateIcon ?? (EmptyIcon as Component),
+        CameraDeleteIcon: icons.CameraDeleteIcon ?? (EmptyIcon as Component),
+        LoaderIcon: icons.LoaderIcon ?? (EmptyIcon as Component),
     }
-
-    // ── Icons resolution (framework-specific; Vue uses EmptyIcon stubs) ──────
-    const resolvedIcons = computed(() => ({
-        ContainerAddMoreIcon: icons.ContainerAddMoreIcon ?? EmptyIcon,
-        FileDeleteIcon: icons.FileDeleteIcon ?? DefaultFileDeleteIcon,
-        CameraCaptureIcon: icons.CameraCaptureIcon ?? EmptyIcon,
-        CameraRotateIcon: icons.CameraRotateIcon ?? EmptyIcon,
-        CameraDeleteIcon: icons.CameraDeleteIcon ?? EmptyIcon,
-        LoaderIcon: icons.LoaderIcon ?? EmptyIcon,
-    }))
 
     const resolvedStyle = style ?? EMPTY_STYLE
 
     // ── Assemble IUploaderContext ────────────────────────────────────
     return {
-        core,
+        core: upload.core,
         orchestrator: root.orchestrator,
         mode: resolved.mode,
         serverUrl: resolved.serverUrl,
-        inputRef,
+        registerFileInput,
+        getFileInput,
         openFilePicker,
-        // Reactive so consumers re-render when the active adapter changes.
-        activeAdapter: computed(() => state.value.activeAdapter),
+        // Reactive so consumers (SourceView/UploaderPanel/FileList) re-render when the
+        // active adapter changes.
+        activeAdapter: derived(orchState, $s => $s.activeAdapter),
         setActiveAdapter: (adapter: FileSource | undefined) => root.commands.setActiveAdapter(adapter),
-        isAddingMore: computed(() => state.value.isAddingMore),
+        isAddingMore: derived(orchState, $s => $s.isAddingMore),
         setIsAddingMore: (v: boolean) => root.commands.setIsAddingMore(v),
-        viewMode: computed(() => state.value.viewMode),
+        viewMode: derived(orchState, $s => $s.viewMode),
         setViewMode: (m: 'grid' | 'list') => root.commands.setViewMode(m),
-        isOnline: computed(() => state.value.isOnline),
+        isOnline: derived(orchState, $s => $s.isOnline),
         translations: resolved.translations,
         translator: resolved.translator,
         lang: resolved.lang,
         dir: resolved.dir,
         theme: {
-            // themeMode/isDark stay reactive so `themeMode:'system'` resolves live;
-            // tokens/resolved/slotOverrides remain provide-time snapshots (unchanged
-            // contract). The resolution lives in core's ThemeStore.
-            themeMode: computed(() => themeState.value.themeMode),
-            isDark: computed(() => themeState.value.isDark),
-            tokens: themeState.value.tokens,
-            resolved: themeState.value.resolved,
-            slotOverrides: themeState.value.slotOverrides,
-            slots: themeState.value.slots,
+            // All theme fields stay reactive (mirroring React): ThemeStore
+            // recomputes tokens/resolved/slotOverrides/slots at init() and on OS
+            // dark/light change, so `themeMode:'system'` resolves live instead of
+            // freezing the construction-time (light) values.
+            themeMode: derived(themeState, $s => $s.themeMode),
+            isDark: derived(themeState, $s => $s.isDark),
+            tokens: derived(themeState, $s => $s.tokens),
+            resolved: derived(themeState, $s => $s.resolved),
+            slotOverrides: derived(themeState, $s => $s.slotOverrides),
+            slots: derived(themeState, $s => $s.slots),
         },
-        files: computed(() => state.value.files),
-        setFiles: async (newFiles: File[]) => root.commands.handleSetSelectedFiles(newFiles),
-        uploadFiles: async (newFiles: File[] | UploadFile[]) => root.commands.uploadFiles(newFiles),
+        files: derived(orchState, $s => $s.files),
+        setFiles: (newFiles: File[]) => root.commands.handleSetSelectedFiles(newFiles),
+        uploadFiles: (newFiles: File[] | UploadFile[]) => root.commands.uploadFiles(newFiles),
         resetState: () => root.commands.resetState(),
         replaceFiles: (newFiles: File[] | UploadFile[]) => root.commands.replaceFiles(newFiles),
         handleDone: () => root.commands.handleDone(),
@@ -303,7 +272,7 @@ export default function useRootProvider(props: UploaderProps): IUploaderContext 
         handlePause: () => root.commands.handlePause(),
         handleResume: () => root.commands.handleResume(),
         handleFileRemove: (fileId: string) => root.commands.handleFileRemove(fileId),
-        editingFile: computed(() => state.value.editingFile),
+        editingFile: derived(orchState, $s => $s.editingFile),
         openImageEditor: (file: UploadFile) => root.commands.openImageEditor(file),
         closeImageEditor: () => root.commands.closeImageEditor(),
         saveImageEdit: (editedImageData: string, mimeType?: string) => root.commands.saveImageEdit(editedImageData, mimeType),
@@ -313,16 +282,16 @@ export default function useRootProvider(props: UploaderProps): IUploaderContext 
         dropboxConfigs: resolved.dropboxConfigs,
         boxConfigs: resolved.boxConfigs,
         upload: {
-            totalProgress: computed(() => state.value.totalProgress),
-            filesProgressMap: computed(() => state.value.filesProgressMap),
+            totalProgress: derived(orchState, $s => $s.totalProgress),
+            filesProgressMap: derived(orchState, $s => $s.filesProgressMap),
             startUpload: () => root.commands.startUpload(),
             retryUpload: (fileId?: string) => root.commands.retryUpload(fileId),
-            uploadStatus: computed(() => state.value.uploadStatus),
-            uploadError: computed(() => state.value.uploadError),
-            uploadSpeed: computed(() => state.value.uploadSpeed),
-            uploadEta: computed(() => state.value.uploadEta),
-            uploadedBytes: computed(() => state.value.uploadedBytes),
-            totalBytes: computed(() => state.value.totalBytes),
+            uploadStatus: derived(orchState, $s => $s.uploadStatus),
+            uploadError: derived(orchState, $s => $s.uploadError),
+            uploadSpeed: derived(orchState, $s => $s.uploadSpeed),
+            uploadEta: derived(orchState, $s => $s.uploadEta),
+            uploadedBytes: derived(orchState, $s => $s.uploadedBytes),
+            totalBytes: derived(orchState, $s => $s.totalBytes),
         },
         props: {
             mini,
@@ -349,7 +318,7 @@ export default function useRootProvider(props: UploaderProps): IUploaderContext 
             className: className ?? '',
             style: resolvedStyle,
             multiple: resolved.multiple,
-            icons: resolvedIcons.value,
+            icons: resolvedIcons,
             imageEditor: resolved.imageEditor,
         },
     }

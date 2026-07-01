@@ -15,7 +15,7 @@ import DefaultLoaderIcon from './components/DefaultLoaderIcon'
 import UploaderPanel from './components/UploaderPanel'
 import ShouldRender from './components/shared/ShouldRender'
 import { UploaderContextProvider } from './context/UploaderContext'
-import useRootProvider from './hooks/useRootProvider'
+import useUploaderController from './hooks/useUploaderController'
 import useUpload from './hooks/useUpload'
 import { UpupThemeProvider } from './theme'
 
@@ -40,7 +40,7 @@ export type UploaderRef = {
 
 export default forwardRef<UploaderRef, UploaderProps>(
     function UpupUploader(props, ref) {
-        const providerValues = useRootProvider({
+        const providerValues = useUploaderController({
             ...props,
             icons: {
                 ...props.icons,

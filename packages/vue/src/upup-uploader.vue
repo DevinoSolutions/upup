@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { cn } from '@upup/core'
 import type { UploaderProps } from './shared/types'
-import useRootProvider from './composables/useRootProvider'
+import useUploaderController from './composables/useUploaderController'
 import { provideUploaderContext } from './context/uploader-context'
 import UploaderPanel from './components/UploaderPanel.vue'
 import ImageEditorStub from './components/ImageEditorStub.vue'
@@ -19,7 +19,7 @@ const props = withDefaults(defineProps<UploaderProps>(), {
     showBranding: true,
     webWorker: true,
 })
-const ctx = useRootProvider(props)
+const ctx = useUploaderController(props)
 provideUploaderContext(ctx)
 
 function onInputChange(e: Event) {

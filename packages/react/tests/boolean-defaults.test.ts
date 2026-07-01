@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 
-// Test the default values for boolean props as resolved in useRootProvider
-// These mirror the destructuring defaults at the top of useRootProvider
+// Test the default values for boolean props as resolved in useUploaderController
+// These mirror the destructuring defaults at the top of useUploaderController
 
 describe('boolean prop defaults', () => {
   // Simulates the destructuring: enablePaste = false

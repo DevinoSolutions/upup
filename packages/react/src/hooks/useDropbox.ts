@@ -34,7 +34,7 @@ export function useDropbox() {
     const { setFiles } = useUploaderFiles()
 
     // One controller per mounted adapter view, created once (guarded ref) — same
-    // idiom as useRootProvider's rootRef. setFiles/setActiveAdapter are referentially
+    // idiom as useUploaderController's rootRef. setFiles/setActiveAdapter are referentially
     // stable (useCallback over root), so capturing them once is safe.
     const controllerRef = useRef<AdapterBrowserController | null>(null)
     if (!controllerRef.current && core) {
@@ -59,7 +59,7 @@ export function useDropbox() {
     // setPath is passed as a prop to DriveBrowser/DriveBrowserHeader, where the
     // breadcrumb truncates the trail by calling it with a functional updater
     // (`prev => prev.slice(0, i+1)`). It MUST be referentially stable across renders
-    // (same reason useRootProvider useCallbacks its setters) and resolves that
+    // (same reason useUploaderController useCallbacks its setters) and resolves that
     // updater against the live snapshot before delegating to the array-only
     // controller.setPath.
     const setPath = useCallback(
