@@ -6,7 +6,6 @@
     useUploaderTheme,
   } from '../../context/uploader-context'
   import Icon from '../Icon.svelte'
-  import ShouldRender from './ShouldRender.svelte'
 
   const {
     path,
@@ -42,7 +41,7 @@
         $slotClasses.driveHeader,
       )}
     >
-      <ShouldRender if={!!path}>
+      {#if !!path}
         <div class="upup-flex upup-items-center upup-gap-1">
           {#each path as p, i (p.id)}
             <!-- svelte-ignore a11y_click_events_have_key_events -->
@@ -67,19 +66,19 @@
             </p>
           {/each}
         </div>
-      </ShouldRender>
+      {/if}
       <div class="upup-flex upup-items-center upup-gap-2">
         <div class="upup-relative upup-flex upup-h-8 upup-w-8 upup-items-center upup-justify-center upup-overflow-hidden upup-rounded-full">
-          <ShouldRender if={!!user.picture}>
+          {#if !!user.picture}
             <img
               alt={user.name}
               src={user.picture}
               class="upup-bg-center upup-object-cover"
             />
-          </ShouldRender>
-          <ShouldRender if={!user.picture}>
+          {/if}
+          {#if !user.picture}
             <Icon name="user" class="upup-text-xl" />
-          </ShouldRender>
+          {/if}
         </div>
 
         <button
@@ -97,7 +96,7 @@
       </div>
     </div>
 
-    <ShouldRender if={showSearch}>
+    {#if showSearch}
       <div
         class={cn(
           'upup-relative upup-h-fit upup-bg-black/[0.025] upup-px-3 upup-py-2',
@@ -124,6 +123,6 @@
         />
         <Icon name="search" class="upup-absolute upup-left-5 upup-top-1/2 upup--translate-y-1/2 upup-text-[#939393]" />
       </div>
-    </ShouldRender>
+    {/if}
   </div>
 {/if}

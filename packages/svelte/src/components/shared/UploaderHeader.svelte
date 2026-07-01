@@ -10,7 +10,6 @@
     useUploaderView,
   } from '../../context/uploader-context'
   import Icon from '../Icon.svelte'
-  import ShouldRender from './ShouldRender.svelte'
 
   let { handleCancel }: { handleCancel: () => void } = $props()
 
@@ -65,15 +64,15 @@
         { 'upup-text-gray-300 dark:upup-text-gray-300': $dark },
       )}
     >
-      <ShouldRender if={$isAddingMore}>
+      {#if $isAddingMore}
         {tr.addingMoreFiles}
-      </ShouldRender>
-      <ShouldRender if={!$isAddingMore}>
+      {/if}
+      {#if !$isAddingMore}
         {t(plural(tr, 'filesSelected', $files.size), { count: $files.size })}
-      </ShouldRender>
+      {/if}
     </span>
     <div class="upup-col-start-3 upup-col-end-5 upup-flex upup-items-center upup-justify-end upup-gap-2 md:upup-col-start-4">
-      <ShouldRender if={$files.size > 1}>
+      {#if $files.size > 1}
         <button
           class={cn(
             'upup-flex upup-h-7 upup-w-7 upup-items-center upup-justify-center upup-rounded upup-text-gray-500 upup-transition-colors hover:upup-bg-black/10',
@@ -88,8 +87,8 @@
             <Icon name="layout-grid" size={16} />
           {/if}
         </button>
-      </ShouldRender>
-      <ShouldRender if={!$isAddingMore && limit > 1 && !$isLimitReached}>
+      {/if}
+      {#if !$isAddingMore && limit > 1 && !$isLimitReached}
         <button
           class={cn(
             'upup-flex upup-items-center upup-gap-1 upup-rounded-md upup-border upup-border-dashed upup-border-blue-400/50 upup-px-2 upup-py-1 upup-text-sm upup-text-blue-600',
@@ -101,7 +100,7 @@
         >
           <ContainerAddMoreIcon /> {tr.addMore}
         </button>
-      </ShouldRender>
+      {/if}
     </div>
   </div>
 {/if}

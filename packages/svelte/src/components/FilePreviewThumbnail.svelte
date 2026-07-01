@@ -8,7 +8,6 @@
     cn,
   } from '@upup/core'
   import FileIcon from './FileIcon.svelte'
-  import ShouldRender from './shared/ShouldRender.svelte'
 
   let {
     canPreview,
@@ -49,7 +48,7 @@
     <FileIcon {extension} class={slotClasses.fileIcon} />
   </div>
 {:else}
-  <ShouldRender if={!canPreview}>
+  {#if !canPreview}
     <object
       data={fileUrl}
       width="0%"
@@ -62,9 +61,9 @@
       <p>{labels.loading}</p>
     </object>
     <FileIcon {extension} />
-  </ShouldRender>
+  {/if}
 
-  <ShouldRender if={canPreview}>
+  {#if canPreview}
     <FileIcon
       {extension}
       class={cn(
@@ -89,5 +88,5 @@
         <p>{labels.loading}</p>
       </object>
     </div>
-  </ShouldRender>
+  {/if}
 {/if}

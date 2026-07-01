@@ -2,7 +2,7 @@
   import { writable, derived } from 'svelte/store'
   import { untrack } from 'svelte'
   import { cn } from '@upup/core'
-  import { useUploaderTheme } from '../context/uploader-context'
+  import { useUploaderOptions, useUploaderTheme } from '../context/uploader-context'
   import {
     useServerModeDrive,
     type ServerDriveFile,
@@ -10,7 +10,6 @@
   } from '../composables/useServerModeDrive'
   import SourceViewContainer from './shared/SourceViewContainer.svelte'
   import DriveAuthFallback from './shared/DriveAuthFallback.svelte'
-  import ShouldRender from './shared/ShouldRender.svelte'
 
   let {
     provider,
@@ -36,6 +35,8 @@
     untrack(() => useServerModeDrive(provider))
 
   const { isDark: dark } = useUploaderTheme()
+  const { icons } = useUploaderOptions()
+  const Loader = icons.LoaderIcon
 
   const selected = writable<Set<string>>(new Set())
   const transferring = writable(false)
@@ -91,7 +92,9 @@
     isLoading={$isLoading}
     data-upup-slot={resolvedSlot}
   >
-    <ShouldRender if={true} isLoading={$isLoading}>
+    {#if $isLoading}
+      <Loader />
+    {:else}
       <div
         data-testid="upup-server-drive-browser"
         class="upup-grid upup-h-full upup-w-full upup-grid-rows-[auto,1fr,auto] upup-overflow-auto"
@@ -184,6 +187,6 @@
           </button>
         </div>
       </div>
-    </ShouldRender>
+    {/if}
   </SourceViewContainer>
 {/if}

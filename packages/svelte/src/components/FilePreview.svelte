@@ -18,7 +18,6 @@
   } from '../context/uploader-context'
   import FilePreviewThumbnail from './FilePreviewThumbnail.svelte'
   import ProgressBar from './shared/ProgressBar.svelte'
-  import ShouldRender from './shared/ShouldRender.svelte'
 
   let {
     fileName,
@@ -116,7 +115,7 @@
     )}
     style={isImage ? `background-image: url(${fileUrl})` : undefined}
   >
-    <ShouldRender if={!isImage}>
+    {#if !isImage}
       <div class="upup-flex upup-h-full upup-items-center upup-justify-center upup-p-6">
         <FilePreviewThumbnail
           {canPreview}
@@ -130,7 +129,7 @@
           onUpdateCanPreview={onUpdateCanPreview}
         />
       </div>
-    </ShouldRender>
+    {/if}
 
     {#if isImage && imageEditor.enabled}
       <button

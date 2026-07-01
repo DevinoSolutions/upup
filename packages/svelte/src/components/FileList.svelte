@@ -22,7 +22,6 @@
   import FileItem from './FileItem.svelte'
   import UploaderHeader from './shared/UploaderHeader.svelte'
   import ProgressBar from './shared/ProgressBar.svelte'
-  import ShouldRender from './shared/ShouldRender.svelte'
 
   const VIRTUAL_SCROLL_THRESHOLD = 20
   const ESTIMATED_ITEM_HEIGHT = 76
@@ -198,9 +197,7 @@
       $slotClasses.fileListFooter,
     )}
   >
-    <ShouldRender
-      if={$uploadStatus !== UploadStatus.SUCCESSFUL && $uploadStatus !== UploadStatus.FAILED}
-    >
+    {#if $uploadStatus !== UploadStatus.SUCCESSFUL && $uploadStatus !== UploadStatus.FAILED}
       <button
         data-testid="upup-upload-btn"
         class={cn(
@@ -213,9 +210,9 @@
       >
         {t(plural(tr, 'uploadFiles', $files.size), { count: $files.size })}
       </button>
-    </ShouldRender>
+    {/if}
 
-    <ShouldRender if={$uploadStatus === UploadStatus.FAILED}>
+    {#if $uploadStatus === UploadStatus.FAILED}
       <button
         data-testid="upup-retry-btn"
         class={cn(
@@ -227,9 +224,9 @@
       >
         {resumable?.protocol === 'multipart' ? tr.resumeUpload : tr.retryUpload}
       </button>
-    </ShouldRender>
+    {/if}
 
-    <ShouldRender if={$uploadStatus === UploadStatus.SUCCESSFUL}>
+    {#if $uploadStatus === UploadStatus.SUCCESSFUL}
       <button
         class={cn(
           'upup-disabled:animate-pulse upup-ml-auto upup-rounded-lg upup-bg-blue-600 upup-px-3 upup-py-2 upup-text-sm upup-font-medium upup-text-white',
@@ -240,16 +237,11 @@
       >
         {tr.done}
       </button>
-    </ShouldRender>
+    {/if}
 
     <div class="upup-flex upup-flex-1 upup-flex-col upup-gap-1">
       <div class="upup-flex upup-items-center upup-gap-2">
-        <ShouldRender
-          if={
-            resumable?.protocol === 'multipart' &&
-            (isUploadActive($uploadStatus) || $uploadStatus === UploadStatus.PAUSED)
-          }
-        >
+        {#if resumable?.protocol === 'multipart' && (isUploadActive($uploadStatus) || $uploadStatus === UploadStatus.PAUSED)}
           <button
             data-testid="upup-upload-pause-toggle"
             class={cn(
@@ -278,7 +270,7 @@
           >
             <Icon name="x" size={14} />
           </button>
-        </ShouldRender>
+        {/if}
         <ProgressBar
           class="upup-flex-1"
           progressBarClassName="upup-rounded"
@@ -287,9 +279,7 @@
         />
       </div>
 
-      <ShouldRender
-        if={(isUploadActive($uploadStatus) || $uploadStatus === UploadStatus.PAUSED) && $totalBytes > 0}
-      >
+      {#if (isUploadActive($uploadStatus) || $uploadStatus === UploadStatus.PAUSED) && $totalBytes > 0}
         <div
           class={cn(
             'upup-flex upup-items-center upup-justify-between upup-text-[11px] upup-text-gray-500',
@@ -302,14 +292,14 @@
               &middot; {formatBytes($uploadSpeed)}/s
             {/if}
           </span>
-          <ShouldRender if={isUploadActive($uploadStatus) && $uploadEta > 0}>
+          {#if isUploadActive($uploadStatus) && $uploadEta > 0}
             <span>{formatEta($uploadEta)}</span>
-          </ShouldRender>
-          <ShouldRender if={$uploadStatus === UploadStatus.PAUSED}>
+          {/if}
+          {#if $uploadStatus === UploadStatus.PAUSED}
             <span>{tr.paused}</span>
-          </ShouldRender>
+          {/if}
         </div>
-      </ShouldRender>
+      {/if}
     </div>
   </div>
 </div>

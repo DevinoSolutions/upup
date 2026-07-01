@@ -2,7 +2,6 @@
   import { useUploaderFiles, useUploaderI18n, useUploaderRuntime, useUploaderSource, useUploaderTheme, useUploaderView } from '../context/uploader-context'
   import useUploaderPanel from '../composables/useUploaderPanel'
   import { cn } from '@upup/core'
-  import ShouldRender from './shared/ShouldRender.svelte'
   import SourceView from './SourceView.svelte'
   import SourceSelector from './SourceSelector.svelte'
   import FileList from './FileList.svelte'
@@ -48,12 +47,12 @@
     'upup-bg-[#045671] upup-backdrop-blur-sm dark:upup-bg-[#045671]': $absoluteIsDragging && $dark,
   })}
 >
-  <ShouldRender if={!$isOnline}>
+  {#if !$isOnline}
     <div class={cn('upup-absolute upup-inset-x-0 upup-top-0 upup-z-20 upup-px-3 upup-py-1.5 upup-text-center upup-text-xs upup-font-medium upup-text-white upup-bg-yellow-500', { 'upup-bg-yellow-600': $dark })}>
       No internet connection — uploads will resume when you reconnect.
     </div>
-  </ShouldRender>
-  <ShouldRender if={!!$activeAdapter}><SourceView /></ShouldRender>
-  <ShouldRender if={!$activeAdapter && ($isAddingMore || !$files.size)}><SourceSelector /></ShouldRender>
+  {/if}
+  {#if !!$activeAdapter}<SourceView />{/if}
+  {#if !$activeAdapter && ($isAddingMore || !$files.size)}<SourceSelector />{/if}
   <FileList />
 </div>

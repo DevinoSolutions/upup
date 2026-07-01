@@ -9,7 +9,6 @@
     PREVIEW_TEXT_TRUNCATE_LENGTH,
   } from '@upup/core'
   import { useUploaderI18n, useUploaderTheme } from '../context/uploader-context'
-  import ShouldRender from './shared/ShouldRender.svelte'
 
   let {
     fileUrl,
@@ -141,15 +140,15 @@
             x
           </button>
 
-          <ShouldRender if={isImage}>
+          {#if isImage}
             <img
               src={fileUrl}
               alt={fileName}
               class="upup-h-full upup-w-full upup-rounded upup-object-contain"
             />
-          </ShouldRender>
+          {/if}
 
-          <ShouldRender if={isPdf}>
+          {#if isPdf}
             <embed
               src={fileUrl}
               type="application/pdf"
@@ -158,10 +157,10 @@
               class="upup-rounded"
               title={fileName}
             />
-          </ShouldRender>
+          {/if}
 
-          <ShouldRender if={!isImage && !isPdf}>
-            <ShouldRender if={isText}>
+          {#if !isImage && !isPdf}
+            {#if isText}
               <div class="upup-h-full upup-w-full upup-overflow-auto upup-p-4 upup-font-mono upup-text-xs">
                 {#if textLoading}<p>{tr.loading}</p>{/if}
                 {#if textError}<p>{t(tr.previewError, { message: textError })}</p>{/if}
@@ -174,8 +173,8 @@
                   {/if}
                 {/if}
               </div>
-            </ShouldRender>
-            <ShouldRender if={!isText}>
+            {/if}
+            {#if !isText}
               <object
                 data={fileUrl}
                 width="100%"
@@ -186,8 +185,8 @@
               >
                 <p>{tr.loading}</p>
               </object>
-            </ShouldRender>
-          </ShouldRender>
+            {/if}
+          {/if}
         </div>
       </div>
     </div>

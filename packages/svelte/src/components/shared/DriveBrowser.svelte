@@ -17,7 +17,6 @@
   import SourceViewContainer from './SourceViewContainer.svelte'
   import DriveBrowserHeader from './DriveBrowserHeader.svelte'
   import DriveBrowserItem from './DriveBrowserItem.svelte'
-  import ShouldRender from './ShouldRender.svelte'
 
   const {
     isClickLoading,
@@ -49,7 +48,8 @@
     dataUpupSlot?: string
   } = $props()
 
-  const { allowedFileTypes } = useUploaderOptions()
+  const { allowedFileTypes, icons } = useUploaderOptions()
+  const Loader = icons.LoaderIcon
   const { isDark: dark, slotOverrides: slotClasses } = useUploaderTheme()
   const { translations: tr } = useUploaderI18n()
   let searchTerm = $state('')
@@ -79,7 +79,9 @@
 </script>
 
 <SourceViewContainer isLoading={isLoading} data-upup-slot={dataUpupSlot}>
-  <ShouldRender if={true} isLoading={isLoading}>
+  {#if isLoading}
+    <Loader />
+  {:else}
     <div data-testid="upup-drive-browser" class="upup-grid upup-h-full upup-w-full upup-grid-rows-[auto,1fr,auto] upup-overflow-auto">
       <DriveBrowserHeader
         showSearch={!!items?.length}
@@ -90,7 +92,7 @@
         user={$user}
         {handleSignOut}
       />
-      <ShouldRender if={!!$path}>
+      {#if !!$path}
         <div
           class={cn(
             'upup-h-full upup-overflow-y-scroll upup-bg-black/[0.075] upup-pt-2',
@@ -100,7 +102,7 @@
             $slotClasses.driveBody,
           )}
         >
-          <ShouldRender if={!!displayedItems.length}>
+          {#if !!displayedItems.length}
             <ul class="upup-p-2">
               {#each displayedItems as file (file.id)}
                 <DriveBrowserItem
@@ -110,18 +112,18 @@
                 />
               {/each}
             </ul>
-          </ShouldRender>
-          <ShouldRender if={!displayedItems.length}>
+          {/if}
+          {#if !displayedItems.length}
             <div class="upup-flex upup-h-full upup-flex-col upup-items-center upup-justify-center">
               <p class="upup-text-xs upup-opacity-70">
                 {tr.noAcceptedFilesFound}
               </p>
             </div>
-          </ShouldRender>
+          {/if}
         </div>
-      </ShouldRender>
+      {/if}
 
-      <ShouldRender if={!!$selectedFiles.length || !!onSelectCurrentFolder}>
+      {#if !!$selectedFiles.length || !!onSelectCurrentFolder}
         <div
           class={cn(
             'upup-flex upup-origin-bottom upup-items-center upup-justify-start upup-gap-4 upup-bg-black/[0.025] upup-px-3 upup-py-2',
@@ -131,7 +133,7 @@
             $slotClasses.driveFooter,
           )}
         >
-          <ShouldRender if={!!onSelectCurrentFolder}>
+          {#if !!onSelectCurrentFolder}
             <button
               class={cn(
                 'upup-rounded-md upup-bg-transparent upup-px-3 upup-py-2 upup-text-sm upup-font-medium upup-text-blue-600 upup-transition-all upup-duration-300',
@@ -144,7 +146,7 @@
             >
               {tr.selectThisFolder}
             </button>
-          </ShouldRender>
+          {/if}
           <button
             class={cn(
               'upup-rounded-md upup-bg-blue-600 upup-px-3 upup-py-2 upup-text-sm upup-font-medium upup-text-white upup-transition-all upup-duration-300',
@@ -176,7 +178,7 @@
             {tr.cancel}
           </button>
         </div>
-      </ShouldRender>
+      {/if}
     </div>
-  </ShouldRender>
+  {/if}
 </SourceViewContainer>

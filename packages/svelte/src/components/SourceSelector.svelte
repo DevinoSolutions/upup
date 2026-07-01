@@ -10,7 +10,6 @@
   } from '../context/uploader-context'
   import useSourceSelector from '../composables/useSourceSelector'
   import Icon from './Icon.svelte'
-  import ShouldRender from './shared/ShouldRender.svelte'
 
   const { core, getFileInput, openFilePicker } = useUploaderRuntime()
   const { translations: tr } = useUploaderI18n()
@@ -138,7 +137,7 @@
     },
   )}
 >
-  <ShouldRender if={$isAddingMore}>
+  {#if $isAddingMore}
     <div
       class={cn(
         'upup-shadow-bottom upup-flex upup-w-full upup-items-center upup-rounded-t-lg upup-bg-black/[0.025] upup-px-3 upup-py-2',
@@ -178,9 +177,9 @@
         Adding more files
       </span>
     </div>
-  </ShouldRender>
+  {/if}
 
-  <ShouldRender if={!mini}>
+  {#if !mini}
     <div
       class={cn(
         'upup-flex upup-w-full upup-flex-col upup-justify-center upup-gap-1 md:upup-flex-row md:upup-flex-wrap md:upup-items-center md:upup-gap-[30px] md:upup-px-[30px]',
@@ -212,7 +211,7 @@
         </button>
       {/each}
     </div>
-  </ShouldRender>
+  {/if}
 
   {#if mini}
     <button

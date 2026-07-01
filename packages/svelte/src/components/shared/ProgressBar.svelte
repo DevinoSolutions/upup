@@ -5,7 +5,6 @@
     useUploaderUploadControls,
   } from '../../context/uploader-context'
   import { isUploadActive, cn } from '@upup/core'
-  import ShouldRender from './ShouldRender.svelte'
 
   let {
     progress,
@@ -24,7 +23,7 @@
   const { upload: { uploadStatus } } = useUploaderUploadControls()
 </script>
 
-<ShouldRender if={!!progress || isUploadActive($uploadStatus)}>
+{#if !!progress || isUploadActive($uploadStatus)}
   <div
     data-testid="upup-progress-bar"
     data-upup-slot="progress-bar"
@@ -57,7 +56,7 @@
         )}
       ></div>
     </div>
-    <ShouldRender if={!!showValue}>
+    {#if !!showValue}
       <p
         class={cn(
           'upup-text-xs upup-font-semibold',
@@ -68,6 +67,6 @@
       >
         {progress}%
       </p>
-    </ShouldRender>
+    {/if}
   </div>
-</ShouldRender>
+{/if}
