@@ -1,7 +1,6 @@
-import { html } from 'lit-html'
+import { html, nothing } from 'lit-html'
 import { cn } from '../lib/cn'
 import type { UploaderContext } from '../lib/types'
-import { shouldRender } from './should-render'
 import { sourceView } from './source-view'
 import { sourceSelector } from './source-selector'
 import { fileList } from './file-list'
@@ -45,13 +44,13 @@ export function uploaderPanel(ctx: UploaderContext) {
         'upup-bg-[#045671] upup-backdrop-blur-sm dark:upup-bg-[#045671]': dd.absoluteIsDragging && isDark,
       })}
     >
-      ${shouldRender(!isOnline, () => html`
+      ${!isOnline ? html`
         <div class=${cn('upup-absolute upup-inset-x-0 upup-top-0 upup-z-20 upup-px-3 upup-py-1.5 upup-text-center upup-text-xs upup-font-medium upup-text-white upup-bg-yellow-500', { 'upup-bg-yellow-600': isDark })}>
           No internet connection — uploads will resume when you reconnect.
         </div>
-      `)}
-      ${shouldRender(!!activeAdapter, () => sourceView(ctx))}
-      ${shouldRender(!activeAdapter && (isAddingMore || !filesSize), () => sourceSelector(ctx))}
+      ` : nothing}
+      ${!!activeAdapter ? sourceView(ctx) : nothing}
+      ${!activeAdapter && (isAddingMore || !filesSize) ? sourceSelector(ctx) : nothing}
       ${fileList(ctx)}
     </div>
   `

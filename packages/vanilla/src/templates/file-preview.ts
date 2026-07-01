@@ -6,7 +6,6 @@ import {
   cn,
 } from '@upup/core'
 import type { UploaderContext } from '../lib/types'
-import { shouldRender } from './should-render'
 import { progressBar } from './shared/progress-bar'
 import { filePreviewThumbnail } from './file-preview-thumbnail'
 import { icon } from './icon'
@@ -84,11 +83,11 @@ export function filePreview(
         )}
         style=${isImage ? `background-image: url(${fileUrl})` : ''}
       >
-        ${shouldRender(!isImage, () => html`
+        ${!isImage ? html`
           <div class="upup-flex upup-h-full upup-items-center upup-justify-center upup-p-6">
             ${filePreviewThumbnail(ctx, { canPreview: state.canPreview, fileType, fileName, fileUrl, fileSize, allowPreview }, onCanPreview)}
           </div>
-        `)}
+        ` : nothing}
 
         ${isImage && imageEditor.enabled
           ? html`

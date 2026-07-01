@@ -8,7 +8,6 @@ import {
   cn,
 } from '@upup/core'
 import type { UploaderContext } from '../lib/types'
-import { shouldRender } from './should-render'
 import { fileIcon } from './file-icon'
 
 export function filePreviewThumbnail(
@@ -41,7 +40,7 @@ export function filePreviewThumbnail(
   }
 
   return html`
-    ${shouldRender(!canPreview, () => html`
+    ${!canPreview ? html`
       <object
         data=${fileUrl}
         width="0%"
@@ -54,8 +53,8 @@ export function filePreviewThumbnail(
         <p>${ctx.translations.loading}</p>
       </object>
       ${fileIcon(ctx, extension ?? '')}
-    `)}
-    ${shouldRender(canPreview, () => html`
+    ` : nothing}
+    ${canPreview ? html`
       ${fileIcon(ctx, extension ?? '', cn({ 'md:upup-hidden': allowPreview }, slot.fileIcon))}
       <div
         class=${cn(
@@ -74,5 +73,5 @@ export function filePreviewThumbnail(
           <p>${ctx.translations.loading}</p>
         </object>
       </div>
-    `)}`
+    ` : nothing}`
 }

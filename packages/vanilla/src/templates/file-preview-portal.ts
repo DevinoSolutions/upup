@@ -10,7 +10,6 @@ import {
   cn,
 } from '@upup/core'
 import type { UploaderContext } from '../lib/types'
-import { shouldRender } from './should-render'
 
 // Text-preview fetch state, stored on the per-file FileItemState cell so it survives
 // re-renders (a fresh args object literal each render would otherwise miss the cache).
@@ -120,15 +119,15 @@ export function filePreviewPortal(
               x
             </button>
 
-            ${shouldRender(isImage, () => html`
+            ${isImage ? html`
               <img
                 src=${fileUrl}
                 alt=${fileName}
                 class="upup-h-full upup-w-full upup-rounded upup-object-contain"
               />
-            `)}
+            ` : nothing}
 
-            ${shouldRender(isPdf, () => html`
+            ${isPdf ? html`
               <embed
                 src=${fileUrl}
                 type="application/pdf"
@@ -137,10 +136,10 @@ export function filePreviewPortal(
                 class="upup-rounded"
                 title=${fileName}
               />
-            `)}
+            ` : nothing}
 
-            ${shouldRender(!isImage && !isPdf, () => html`
-              ${shouldRender(isText, () => html`
+            ${!isImage && !isPdf ? html`
+              ${isText ? html`
                 <div class="upup-h-full upup-w-full upup-overflow-auto upup-p-4 upup-font-mono upup-text-xs">
                   ${textState.loading ? html`<p>${tr.loading}</p>` : nothing}
                   ${textState.error ? html`<p>${t(tr.previewError, { message: textState.error })}</p>` : nothing}
@@ -153,8 +152,8 @@ export function filePreviewPortal(
                     ` : nothing}
                   ` : nothing}
                 </div>
-              `)}
-              ${shouldRender(!isText, () => html`
+              ` : nothing}
+              ${!isText ? html`
                 <object
                   data=${fileUrl}
                   width="100%"
@@ -165,8 +164,8 @@ export function filePreviewPortal(
                 >
                   <p>${tr.loading}</p>
                 </object>
-              `)}
-            `)}
+              ` : nothing}
+            ` : nothing}
           </div>
         </div>
       </div>

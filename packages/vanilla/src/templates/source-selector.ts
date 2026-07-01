@@ -2,7 +2,6 @@ import { html, nothing } from 'lit-html'
 import { repeat } from 'lit-html/directives/repeat.js'
 import { formatUiMessage as t, pluralUiMessage as plural, cn, FileSource } from '@upup/core'
 import type { UploaderContext } from '../lib/types'
-import { shouldRender } from './should-render'
 import { uploadSourceObject } from '../lib/constants'
 import { icon } from './icon'
 
@@ -141,7 +140,7 @@ export function sourceSelector(ctx: UploaderContext) {
         },
       )}
     >
-      ${shouldRender(isAddingMore, () => html`
+      ${isAddingMore ? html`
         <div
           class=${cn(
             'upup-shadow-bottom upup-flex upup-w-full upup-items-center upup-rounded-t-lg upup-bg-black/[0.025] upup-px-3 upup-py-2',
@@ -181,9 +180,9 @@ export function sourceSelector(ctx: UploaderContext) {
             Adding more files
           </span>
         </div>
-      `)}
+      ` : nothing}
 
-      ${shouldRender(!mini, () => html`
+      ${!mini ? html`
         <div
           class=${cn(
             'upup-flex upup-w-full upup-flex-col upup-justify-center upup-gap-1 md:upup-flex-row md:upup-flex-wrap md:upup-items-center md:upup-gap-[30px] md:upup-px-[30px]',
@@ -215,7 +214,7 @@ export function sourceSelector(ctx: UploaderContext) {
             </button>
           `)}
         </div>
-      `)}
+      ` : nothing}
 
       ${mini
         ? html`
