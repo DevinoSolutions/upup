@@ -1,6 +1,7 @@
-import React, { createContext, useCallback, useMemo, useState, type ReactNode } from 'react'
+import React, { createContext, useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
 import type { UpupConfig } from '../types'
 import { buildDefaultConfig } from '../categories'
+import { decodeConfig } from './serialize'
 
 type ConfigContextValue = {
     config: UpupConfig
@@ -64,6 +65,22 @@ export function ConfigProvider({
     const [config, setConfigState] = useState<UpupConfig>(
         () => ({ ...defaults, ...(initialConfig ?? {}) }),
     )
+
+    // Read-on-mount `?c=` permalink support (design spec §5). Runs from an
+    // effect — not the useState initializer — so a server-rendered first
+    // pass never diverges from the client's first render (SSR-safe, no
+    // hydration mismatch). `initialConfig` still wins over anything decoded
+    // from the URL. Only touches state when a `c` token is actually present;
+    // otherwise the seeded defaults/initialConfig state is left alone. Reads
+    // once on mount only — subsequent URL changes are not picked up.
+    useEffect(() => {
+        if (typeof window === 'undefined') return
+        const token = new URLSearchParams(window.location.search).get('c')
+        if (!token) return
+        const urlConfig = decodeConfig(token)
+        setConfigState({ ...defaults, ...urlConfig, ...(initialConfig ?? {}) })
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
 
     const setConfig = useCallback(
         (next: UpupConfig | ((prev: UpupConfig) => UpupConfig)) => {
