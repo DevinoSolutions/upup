@@ -1,37 +1,61 @@
 [
   {
     "name": "@upup/core",
-    "path": "packages/core/dist/index.js",
-    "limit": "540 KB"
+    "path": "packages/core/dist/**/*.js",
+    "gzip": false,
+    "brotli": false,
+    "limit": "410 KB"
   },
   {
     "name": "@upup/react",
-    "path": "packages/react/dist/index.js",
-    "limit": "990 KB"
+    "path": "packages/react/dist/**/*.js",
+    "gzip": false,
+    "brotli": false,
+    "limit": "430 KB"
   },
   {
     "name": "@upup/vue",
-    "path": "packages/vue/dist/index.js",
-    "limit": "710 KB"
+    "path": "packages/vue/dist/**/*.js",
+    "gzip": false,
+    "brotli": false,
+    "limit": "460 KB"
+  },
+  {
+    "name": "@upup/svelte",
+    "path": "packages/svelte/dist/**/*.{js,svelte}",
+    "gzip": false,
+    "brotli": false,
+    "limit": "370 KB"
   },
   {
     "name": "@upup/vanilla",
-    "path": "packages/vanilla/dist/index.js",
-    "limit": "690 KB"
+    "path": "packages/vanilla/dist/**/*.js",
+    "gzip": false,
+    "brotli": false,
+    "limit": "320 KB"
   },
   {
     "name": "@upup/angular",
-    "path": "packages/angular/dist/fesm2022/upup-angular.mjs",
-    "limit": "850 KB"
+    "path": "packages/angular/dist/**/*.mjs",
+    "gzip": false,
+    "brotli": false,
+    "limit": "590 KB"
   },
   {
     "name": "@upup/preact",
-    "path": "packages/preact/dist/index.js",
-    "limit": "1120 KB"
+    "path": [
+      "packages/preact/dist/**/*.js",
+      "!packages/preact/dist/filerobot-island.js"
+    ],
+    "gzip": false,
+    "brotli": false,
+    "limit": "670 KB"
   },
   {
     "name": "@upup/next",
-    "path": "packages/next/dist/index.js",
-    "limit": "990 KB"
+    "path": "packages/next/dist/**/*.js",
+    "gzip": false,
+    "brotli": false,
+    "limit": "8 KB"
   }
 ]
