@@ -5,7 +5,6 @@ import {
     useUploaderUploadControls,
 } from '../../context/uploader-context'
 import { isUploadActive, cn } from '@upup/core'
-import ShouldRender from './ShouldRender.vue'
 
 const props = withDefaults(
     defineProps<{
@@ -23,7 +22,7 @@ const { upload: { uploadStatus } } = useUploaderUploadControls()
 </script>
 
 <template>
-    <ShouldRender :if="!!props.progress || isUploadActive(uploadStatus)">
+    <template v-if="!!props.progress || isUploadActive(uploadStatus)">
         <div
             data-testid="upup-progress-bar"
             data-upup-slot="progress-bar"
@@ -56,7 +55,7 @@ const { upload: { uploadStatus } } = useUploaderUploadControls()
                     )"
                 />
             </div>
-            <ShouldRender :if="!!props.showValue">
+            <template v-if="!!props.showValue">
                 <p
                     :class="cn(
                         'upup-text-xs upup-font-semibold',
@@ -67,7 +66,7 @@ const { upload: { uploadStatus } } = useUploaderUploadControls()
                 >
                     {{ props.progress }}%
                 </p>
-            </ShouldRender>
+            </template>
         </div>
-    </ShouldRender>
+    </template>
 </template>

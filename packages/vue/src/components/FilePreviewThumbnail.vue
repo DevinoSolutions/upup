@@ -9,7 +9,6 @@ import {
 } from '@upup/core'
 import { cn } from '@upup/core'
 import FileIcon from './FileIcon.vue'
-import ShouldRender from './shared/ShouldRender.vue'
 
 const props = defineProps<{
     canPreview: boolean
@@ -46,7 +45,7 @@ function onObjectLoad() {
         <FileIcon :extension="extension" :class="slotClasses.fileIcon" />
     </div>
     <template v-else>
-        <ShouldRender :if="!canPreview">
+        <template v-if="!canPreview">
             <object
                 :data="fileUrl"
                 width="0%"
@@ -58,9 +57,9 @@ function onObjectLoad() {
                 <p>{{ labels.loading }}</p>
             </object>
             <FileIcon :extension="extension" />
-        </ShouldRender>
+        </template>
 
-        <ShouldRender :if="canPreview">
+        <template v-if="canPreview">
             <FileIcon
                 :extension="extension"
                 :class="cn(
@@ -84,6 +83,6 @@ function onObjectLoad() {
                     <p>{{ labels.loading }}</p>
                 </object>
             </div>
-        </ShouldRender>
+        </template>
     </template>
 </template>

@@ -7,7 +7,6 @@ import {
 } from '../../context/uploader-context'
 import { cn } from '@upup/core'
 import Icon from '../Icon'
-import ShouldRender from './ShouldRender.vue'
 
 const props = defineProps<{
     path: DriveFolder[]
@@ -35,7 +34,7 @@ const { isDark: dark, slotOverrides: slotClasses } = useUploaderTheme()
                 slotClasses.driveHeader,
             )"
         >
-            <ShouldRender :if="!!props.path">
+            <template v-if="!!props.path">
                 <div class="upup-flex upup-items-center upup-gap-1">
                     <p
                         v-for="(p, i) in props.path"
@@ -60,19 +59,19 @@ const { isDark: dark, slotOverrides: slotClasses } = useUploaderTheme()
                         </template>
                     </p>
                 </div>
-            </ShouldRender>
+            </template>
             <div class="upup-flex upup-items-center upup-gap-2">
                 <div class="upup-relative upup-flex upup-h-8 upup-w-8 upup-items-center upup-justify-center upup-overflow-hidden upup-rounded-full">
-                    <ShouldRender :if="!!props.user.picture">
+                    <template v-if="!!props.user.picture">
                         <img
                             :alt="props.user.name"
                             :src="props.user.picture"
                             class="upup-bg-center upup-object-cover"
                         />
-                    </ShouldRender>
-                    <ShouldRender :if="!props.user.picture">
+                    </template>
+                    <template v-if="!props.user.picture">
                         <Icon name="user" class="upup-text-xl" />
-                    </ShouldRender>
+                    </template>
                 </div>
 
                 <button
@@ -90,7 +89,7 @@ const { isDark: dark, slotOverrides: slotClasses } = useUploaderTheme()
             </div>
         </div>
 
-        <ShouldRender :if="props.showSearch">
+        <template v-if="props.showSearch">
             <div
                 :class="cn(
                     'upup-relative upup-h-fit upup-bg-black/[0.025] upup-px-3 upup-py-2',
@@ -117,6 +116,6 @@ const { isDark: dark, slotOverrides: slotClasses } = useUploaderTheme()
                 />
                 <Icon name="search" class="upup-absolute upup-left-5 upup-top-1/2 upup--translate-y-1/2 upup-text-[#939393]" />
             </div>
-        </ShouldRender>
+        </template>
     </div>
 </template>

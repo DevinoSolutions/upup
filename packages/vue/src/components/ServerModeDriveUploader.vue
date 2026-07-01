@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { useUploaderTheme } from '../context/uploader-context'
+import { useUploaderOptions, useUploaderTheme } from '../context/uploader-context'
 import {
     useServerModeDrive,
     type ServerDriveFile,
@@ -8,7 +8,6 @@ import {
 } from '../composables/useServerModeDrive'
 import SourceViewContainer from './shared/SourceViewContainer.vue'
 import DriveAuthFallback from './shared/DriveAuthFallback.vue'
-import ShouldRender from './shared/ShouldRender.vue'
 import { cn } from '@upup/core'
 
 const props = withDefaults(defineProps<{
@@ -28,6 +27,7 @@ const PROVIDER_LABEL: Record<ServerModeProvider, string> = {
 
 const resolvedSlot = computed(() => props.dataUpupSlot ?? `drive-browser-${props.provider}`)
 
+const { icons } = useUploaderOptions()
 const { isDark: dark } = useUploaderTheme()
 const { state, search, setSearch, refresh, transfer, startAuth } =
     useServerModeDrive(props.provider)
@@ -84,7 +84,8 @@ function formatBytes(bytes: number): string {
         :is-loading="isLoading"
         :data-upup-slot="resolvedSlot"
     >
-        <ShouldRender :if="true" :is-loading="isLoading">
+        <component :is="icons.LoaderIcon" v-if="isLoading" />
+        <template v-else>
             <div
                 data-testid="upup-server-drive-browser"
                 class="upup-grid upup-h-full upup-w-full upup-grid-rows-[auto,1fr,auto] upup-overflow-auto"
@@ -170,6 +171,6 @@ function formatBytes(bytes: number): string {
                     </button>
                 </div>
             </div>
-        </ShouldRender>
+        </template>
     </SourceViewContainer>
 </template>

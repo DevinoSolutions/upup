@@ -9,7 +9,6 @@ import {
     PREVIEW_MAX_TEXT_SIZE,
     PREVIEW_TEXT_TRUNCATE_LENGTH,
 } from '@upup/core'
-import ShouldRender from './shared/ShouldRender.vue'
 
 const props = defineProps<{
     fileUrl: string
@@ -132,14 +131,14 @@ function onContentClick(e: MouseEvent) {
                         >
                             x
                         </button>
-                        <ShouldRender :if="isImage">
+                        <template v-if="isImage">
                             <img
                                 :src="fileUrl"
                                 :alt="fileName"
                                 class="upup-h-full upup-w-full upup-rounded upup-object-contain"
                             />
-                        </ShouldRender>
-                        <ShouldRender :if="isPdf">
+                        </template>
+                        <template v-if="isPdf">
                             <embed
                                 :src="fileUrl"
                                 type="application/pdf"
@@ -148,9 +147,9 @@ function onContentClick(e: MouseEvent) {
                                 class="upup-rounded"
                                 :title="fileName"
                             />
-                        </ShouldRender>
-                        <ShouldRender :if="!isImage && !isPdf">
-                            <ShouldRender :if="isText">
+                        </template>
+                        <template v-if="!isImage && !isPdf">
+                            <template v-if="isText">
                                 <div class="upup-h-full upup-w-full upup-overflow-auto upup-p-4 upup-font-mono upup-text-xs">
                                     <p v-if="textLoading">{{ tr.loading }}</p>
                                     <p v-if="textError">
@@ -166,8 +165,8 @@ function onContentClick(e: MouseEvent) {
                                         </div>
                                     </template>
                                 </div>
-                            </ShouldRender>
-                            <ShouldRender :if="!isText">
+                            </template>
+                            <template v-if="!isText">
                                 <object
                                     :data="fileUrl"
                                     width="100%"
@@ -177,8 +176,8 @@ function onContentClick(e: MouseEvent) {
                                 >
                                     <p>{{ tr.loading }}</p>
                                 </object>
-                            </ShouldRender>
-                        </ShouldRender>
+                            </template>
+                        </template>
                     </div>
                 </div>
             </div>

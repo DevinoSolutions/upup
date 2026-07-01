@@ -17,7 +17,6 @@ import { cn } from '@upup/core'
 import SourceViewContainer from './SourceViewContainer.vue'
 import DriveBrowserHeader from './DriveBrowserHeader.vue'
 import DriveBrowserItem from './DriveBrowserItem.vue'
-import ShouldRender from './ShouldRender.vue'
 
 const props = withDefaults(defineProps<{
     isClickLoading?: boolean
@@ -38,7 +37,7 @@ const props = withDefaults(defineProps<{
     dataUpupSlot: 'drive-browser',
 })
 
-const { allowedFileTypes } = useUploaderOptions()
+const { allowedFileTypes, icons } = useUploaderOptions()
 const { isDark: dark, slotOverrides: slotClasses } = useUploaderTheme()
 const { translations: tr } = useUploaderI18n()
 const searchTerm = ref('')
@@ -71,7 +70,8 @@ function noopClick() { /* disabled click */ }
 
 <template>
     <SourceViewContainer :is-loading="isLoading" :data-upup-slot="props.dataUpupSlot">
-        <ShouldRender :if="true" :is-loading="isLoading">
+        <component :is="icons.LoaderIcon" v-if="isLoading" />
+        <template v-else>
             <div data-testid="upup-drive-browser" class="upup-grid upup-h-full upup-w-full upup-grid-rows-[auto,1fr,auto] upup-overflow-auto">
                 <DriveBrowserHeader
                     :show-search="!!items?.length"
@@ -82,7 +82,7 @@ function noopClick() { /* disabled click */ }
                     :user="props.user"
                     :handle-sign-out="props.handleSignOut"
                 />
-                <ShouldRender :if="!!props.path">
+                <template v-if="!!props.path">
                     <div
                         :class="cn(
                             'upup-h-full upup-overflow-y-scroll upup-bg-black/[0.075] upup-pt-2',
@@ -92,7 +92,7 @@ function noopClick() { /* disabled click */ }
                             slotClasses.driveBody,
                         )"
                     >
-                        <ShouldRender :if="!!displayedItems.length">
+                        <template v-if="!!displayedItems.length">
                             <ul class="upup-p-2">
                                 <DriveBrowserItem
                                     v-for="file in displayedItems"
@@ -102,18 +102,18 @@ function noopClick() { /* disabled click */ }
                                     :selected-files="props.selectedFiles"
                                 />
                             </ul>
-                        </ShouldRender>
-                        <ShouldRender :if="!displayedItems.length">
+                        </template>
+                        <template v-if="!displayedItems.length">
                             <div class="upup-flex upup-h-full upup-flex-col upup-items-center upup-justify-center">
                                 <p class="upup-text-xs upup-opacity-70">
                                     {{ tr.noAcceptedFilesFound }}
                                 </p>
                             </div>
-                        </ShouldRender>
+                        </template>
                     </div>
-                </ShouldRender>
+                </template>
 
-                <ShouldRender :if="!!props.selectedFiles.length || !!props.onSelectCurrentFolder">
+                <template v-if="!!props.selectedFiles.length || !!props.onSelectCurrentFolder">
                     <div
                         :class="cn(
                             'upup-flex upup-origin-bottom upup-items-center upup-justify-start upup-gap-4 upup-bg-black/[0.025] upup-px-3 upup-py-2',
@@ -123,7 +123,7 @@ function noopClick() { /* disabled click */ }
                             slotClasses.driveFooter,
                         )"
                     >
-                        <ShouldRender :if="!!props.onSelectCurrentFolder">
+                        <template v-if="!!props.onSelectCurrentFolder">
                             <button
                                 :class="cn(
                                     'upup-rounded-md upup-bg-transparent upup-px-3 upup-py-2 upup-text-sm upup-font-medium upup-text-blue-600 upup-transition-all upup-duration-300',
@@ -136,7 +136,7 @@ function noopClick() { /* disabled click */ }
                             >
                                 {{ tr.selectThisFolder }}
                             </button>
-                        </ShouldRender>
+                        </template>
                         <button
                             :class="cn(
                                 'upup-rounded-md upup-bg-blue-600 upup-px-3 upup-py-2 upup-text-sm upup-font-medium upup-text-white upup-transition-all upup-duration-300',
@@ -172,8 +172,8 @@ function noopClick() { /* disabled click */ }
                             {{ tr.cancel }}
                         </button>
                     </div>
-                </ShouldRender>
+                </template>
             </div>
-        </ShouldRender>
+        </template>
     </SourceViewContainer>
 </template>

@@ -3,7 +3,6 @@ import { onMounted, watch } from 'vue'
 import { formatUiMessage as t, cn } from '@upup/core'
 import useCameraUploader from '../composables/useCameraUploader'
 import SourceViewContainer from './shared/SourceViewContainer.vue'
-import ShouldRender from './shared/ShouldRender.vue'
 
 const {
     videoRef,
@@ -37,7 +36,7 @@ watch(facingMode, () => {
             class="upup-flex upup-h-full upup-w-full upup-flex-col upup-justify-center upup-overflow-hidden upup-px-3 upup-py-2"
         >
             <div class="upup-flex upup-min-h-0 upup-flex-1 upup-items-center upup-justify-center upup-pt-2">
-                <ShouldRender :if="!!capturedUrl">
+                <template v-if="!!capturedUrl">
                     <div
                         :class="cn(
                             'upup-relative upup-aspect-video upup-max-h-full upup-max-w-full upup-bg-black/[0.025] upup-bg-contain upup-bg-center upup-bg-no-repeat upup-shadow-xl',
@@ -59,9 +58,9 @@ watch(facingMode, () => {
                             <component :is="CameraDeleteIcon" />
                         </button>
                     </div>
-                </ShouldRender>
+                </template>
 
-                <ShouldRender :if="!capturedUrl">
+                <template v-if="!capturedUrl">
                     <video
                         ref="videoRef"
                         autoplay
@@ -69,11 +68,11 @@ watch(facingMode, () => {
                         playsinline
                         class="upup-aspect-video upup-max-h-full upup-max-w-full upup-rounded-xl upup-object-contain"
                     />
-                </ShouldRender>
+                </template>
             </div>
 
             <div class="upup-flex upup-shrink-0 upup-gap-4">
-                <ShouldRender :if="!capturedUrl">
+                <template v-if="!capturedUrl">
                     <button
                         :class="cn(
                             'upup-mt-2 upup-flex upup-w-1/3 upup-flex-col upup-items-center upup-justify-center upup-rounded-md upup-bg-blue-600 upup-p-2 upup-text-white upup-transition-all upup-duration-300',
@@ -103,9 +102,9 @@ watch(facingMode, () => {
                             }) }}
                         </span>
                     </button>
-                </ShouldRender>
+                </template>
 
-                <ShouldRender :if="!!capturedUrl">
+                <template v-if="!!capturedUrl">
                     <button
                         :class="cn(
                             'upup-mt-2 upup-w-full upup-rounded-md upup-bg-blue-600 upup-p-2 upup-text-white upup-transition-all upup-duration-300',
@@ -119,7 +118,7 @@ watch(facingMode, () => {
                     >
                         {{ tr.addImage }}
                     </button>
-                </ShouldRender>
+                </template>
             </div>
         </div>
     </SourceViewContainer>

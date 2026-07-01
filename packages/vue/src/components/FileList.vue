@@ -15,7 +15,6 @@ import Icon from './Icon'
 import FileItem from './FileItem.vue'
 import UploaderHeader from './shared/UploaderHeader.vue'
 import ProgressBar from './shared/ProgressBar.vue'
-import ShouldRender from './shared/ShouldRender.vue'
 
 const VIRTUAL_SCROLL_THRESHOLD = 20
 const ESTIMATED_ITEM_HEIGHT = 76
@@ -173,8 +172,8 @@ function onRetryClick() {
                 slotClasses.fileListFooter,
             )"
         >
-            <ShouldRender
-                :if="uploadStatus !== UploadStatus.SUCCESSFUL && uploadStatus !== UploadStatus.FAILED"
+            <template
+                v-if="uploadStatus !== UploadStatus.SUCCESSFUL && uploadStatus !== UploadStatus.FAILED"
             >
                 <button
                     data-testid="upup-upload-btn"
@@ -188,8 +187,8 @@ function onRetryClick() {
                 >
                     {{ t(plural(tr, 'uploadFiles', files.size), { count: files.size }) }}
                 </button>
-            </ShouldRender>
-            <ShouldRender :if="uploadStatus === UploadStatus.FAILED">
+            </template>
+            <template v-if="uploadStatus === UploadStatus.FAILED">
                 <button
                     data-testid="upup-retry-btn"
                     :class="cn(
@@ -201,8 +200,8 @@ function onRetryClick() {
                 >
                     {{ resumable?.protocol === 'multipart' ? tr.resumeUpload : tr.retryUpload }}
                 </button>
-            </ShouldRender>
-            <ShouldRender :if="uploadStatus === UploadStatus.SUCCESSFUL">
+            </template>
+            <template v-if="uploadStatus === UploadStatus.SUCCESSFUL">
                 <button
                     :class="cn(
                         'upup-disabled:animate-pulse upup-ml-auto upup-rounded-lg upup-bg-blue-600 upup-px-3 upup-py-2 upup-text-sm upup-font-medium upup-text-white',
@@ -213,11 +212,11 @@ function onRetryClick() {
                 >
                     {{ tr.done }}
                 </button>
-            </ShouldRender>
+            </template>
             <div class="upup-flex upup-flex-1 upup-flex-col upup-gap-1">
                 <div class="upup-flex upup-items-center upup-gap-2">
-                    <ShouldRender
-                        :if="
+                    <template
+                        v-if="
                             resumable?.protocol === 'multipart' &&
                             (isUploadActive(uploadStatus) || uploadStatus === UploadStatus.PAUSED)
                         "
@@ -247,7 +246,7 @@ function onRetryClick() {
                         >
                             <Icon name="x" :size="14" />
                         </button>
-                    </ShouldRender>
+                    </template>
                     <ProgressBar
                         class="upup-flex-1"
                         progress-bar-class-name="upup-rounded"
@@ -255,8 +254,8 @@ function onRetryClick() {
                         :show-value="true"
                     />
                 </div>
-                <ShouldRender
-                    :if="(isUploadActive(uploadStatus) || uploadStatus === UploadStatus.PAUSED) && totalBytes > 0"
+                <template
+                    v-if="(isUploadActive(uploadStatus) || uploadStatus === UploadStatus.PAUSED) && totalBytes > 0"
                 >
                     <div
                         :class="cn(
@@ -270,14 +269,14 @@ function onRetryClick() {
                                 &middot; {{ formatBytes(uploadSpeed) }}/s
                             </template>
                         </span>
-                        <ShouldRender :if="isUploadActive(uploadStatus) && uploadEta > 0">
+                        <template v-if="isUploadActive(uploadStatus) && uploadEta > 0">
                             <span>{{ formatEta(uploadEta) }}</span>
-                        </ShouldRender>
-                        <ShouldRender :if="uploadStatus === UploadStatus.PAUSED">
+                        </template>
+                        <template v-if="uploadStatus === UploadStatus.PAUSED">
                             <span>{{ tr.paused }}</span>
-                        </ShouldRender>
+                        </template>
                     </div>
-                </ShouldRender>
+                </template>
             </div>
         </div>
     </div>

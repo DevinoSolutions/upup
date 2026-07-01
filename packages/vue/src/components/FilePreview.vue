@@ -13,7 +13,6 @@ import { fileCanPreviewText, fileGetIsImage, fileGetIsPdf, fileGetIsText } from 
 import { cn } from '@upup/core'
 import FilePreviewThumbnail from './FilePreviewThumbnail.vue'
 import ProgressBar from './shared/ProgressBar.vue'
-import ShouldRender from './shared/ShouldRender.vue'
 
 const props = defineProps<{
     fileName: string
@@ -123,7 +122,7 @@ function onKeydown(e: KeyboardEvent) {
             )"
             :style="isImage ? { backgroundImage: `url(${fileUrl})` } : undefined"
         >
-            <ShouldRender :if="!isImage">
+            <template v-if="!isImage">
                 <div class="upup-flex upup-h-full upup-items-center upup-justify-center upup-p-6">
                     <FilePreviewThumbnail
                         :can-preview="canPreview"
@@ -137,7 +136,7 @@ function onKeydown(e: KeyboardEvent) {
                         @update:can-preview="updateCanPreview"
                     />
                 </div>
-            </ShouldRender>
+            </template>
 
             <button
                 v-if="isImage && imageEditor.enabled"

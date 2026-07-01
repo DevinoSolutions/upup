@@ -12,7 +12,6 @@ import { cn } from '@upup/core'
 import SourceSelector from './SourceSelector.vue'
 import SourceView from './SourceView.vue'
 import FileList from './FileList.vue'
-import ShouldRender from './shared/ShouldRender.vue'
 
 const { files } = useUploaderFiles()
 const { activeAdapter } = useUploaderSource()
@@ -66,7 +65,7 @@ function onKeyDown(e: KeyboardEvent) {
         @drop="handleDrop"
         @paste="handlePaste"
     >
-        <ShouldRender :if="!isOnline">
+        <template v-if="!isOnline">
             <div
                 :class="cn(
                     'upup-absolute upup-inset-x-0 upup-top-0 upup-z-20 upup-px-3 upup-py-1.5 upup-text-center upup-text-xs upup-font-medium upup-text-white upup-bg-yellow-500',
@@ -75,13 +74,13 @@ function onKeyDown(e: KeyboardEvent) {
             >
                 No internet connection — uploads will resume when you reconnect.
             </div>
-        </ShouldRender>
-        <ShouldRender :if="!!activeAdapter">
+        </template>
+        <template v-if="!!activeAdapter">
             <SourceView />
-        </ShouldRender>
-        <ShouldRender :if="!activeAdapter && (isAddingMore || !files.size)">
+        </template>
+        <template v-if="!activeAdapter && (isAddingMore || !files.size)">
             <SourceSelector />
-        </ShouldRender>
+        </template>
         <FileList />
     </div>
 </template>

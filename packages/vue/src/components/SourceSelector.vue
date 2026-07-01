@@ -11,7 +11,6 @@ import {
 } from '../context/uploader-context'
 import useSourceSelector from '../composables/useSourceSelector'
 import Icon from './Icon'
-import ShouldRender from './shared/ShouldRender.vue'
 
 const { core, inputRef, openFilePicker } = useUploaderRuntime()
 const { translations: tr } = useUploaderI18n()
@@ -139,7 +138,7 @@ function onSourceKeydown(e: KeyboardEvent) {
             },
         )"
     >
-        <ShouldRender :if="isAddingMore">
+        <template v-if="isAddingMore">
             <div
                 :class="cn(
                     'upup-shadow-bottom upup-flex upup-w-full upup-items-center upup-rounded-t-lg upup-bg-black/[0.025] upup-px-3 upup-py-2',
@@ -179,9 +178,9 @@ function onSourceKeydown(e: KeyboardEvent) {
                     Adding more files
                 </span>
             </div>
-        </ShouldRender>
+        </template>
 
-        <ShouldRender :if="!mini">
+        <template v-if="!mini">
             <div
                 :class="cn(
                     'upup-flex upup-w-full upup-flex-col upup-justify-center upup-gap-1 md:upup-flex-row md:upup-flex-wrap md:upup-items-center md:upup-gap-[30px] md:upup-px-[30px]',
@@ -213,7 +212,7 @@ function onSourceKeydown(e: KeyboardEvent) {
                     </span>
                 </button>
             </div>
-        </ShouldRender>
+        </template>
 
         <input
             type="file"
