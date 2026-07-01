@@ -135,15 +135,15 @@ export function createRootController(
     handleRemoveAll() {
       core.removeAll()
     },
-    async dynamicUpload(newFiles: File[] | UploadFile[]) {
+    async uploadFiles(newFiles: File[] | UploadFile[]) {
       await core.setFiles(newFiles as File[])
       return core.upload()
     },
-    dynamicallyReplaceFiles(newFiles: File[] | UploadFile[]) {
+    replaceFiles(newFiles: File[] | UploadFile[]) {
       filesArray().forEach((f) => revokeFileUrl(f))
       void core.setFiles(newFiles as File[])
     },
-    async proceedUpload() {
+    async startUpload() {
       const current = filesArray()
       if (current.length === 0) return undefined
       const prepared = callbackRefs.onPrepareFiles ? await callbackRefs.onPrepareFiles(current) : current

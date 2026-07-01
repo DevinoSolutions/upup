@@ -42,7 +42,7 @@ const { files } = useUploaderFiles()
 const { translations: tr } = useUploaderI18n()
 const {
     upload: {
-        proceedUpload,
+        startUpload,
         retryUpload,
         uploadStatus,
         totalProgress,
@@ -87,7 +87,7 @@ const virtualItems = computed(() => virtualizer.value.getVirtualItems())
 const totalSize = computed(() => virtualizer.value.getTotalSize())
 
 function onUploadClick() {
-    void proceedUpload().catch(() => undefined)
+    void startUpload().catch(() => undefined)
 }
 
 function onRetryClick() {

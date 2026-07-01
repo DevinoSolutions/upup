@@ -341,16 +341,16 @@ export default function useRootProvider(props: UploaderProps): IRootContext {
         root?.commands.handleFileRemove(fileId)
     }, [root])
 
-    const dynamicUpload = useCallback(async (newFiles: File[] | UploadFile[]) => {
-        return root?.commands.dynamicUpload(newFiles)
+    const uploadFiles = useCallback(async (newFiles: File[] | UploadFile[]) => {
+        return root?.commands.uploadFiles(newFiles)
     }, [root])
 
-    const dynamicallyReplaceFiles = useCallback((newFiles: File[] | UploadFile[]) => {
-        root?.commands.dynamicallyReplaceFiles(newFiles)
+    const replaceFiles = useCallback((newFiles: File[] | UploadFile[]) => {
+        root?.commands.replaceFiles(newFiles)
     }, [root])
 
-    const proceedUpload = useCallback(async () => {
-        return root?.commands.proceedUpload()
+    const startUpload = useCallback(async () => {
+        return root?.commands.startUpload()
     }, [root])
 
     const retryUpload = useCallback(async (fileId?: string) => {
@@ -474,9 +474,9 @@ export default function useRootProvider(props: UploaderProps): IRootContext {
         },
         files: state.files,
         setFiles: handleSetSelectedFiles,
-        dynamicUpload,
+        uploadFiles,
         resetState,
-        dynamicallyReplaceFiles,
+        replaceFiles,
         handleDone,
         handleCancel,
         handlePause,
@@ -494,7 +494,7 @@ export default function useRootProvider(props: UploaderProps): IRootContext {
         upload: {
             totalProgress: state.totalProgress,
             filesProgressMap: state.filesProgressMap,
-            proceedUpload,
+            startUpload,
             retryUpload,
             uploadStatus: state.uploadStatus,
             setUploadStatus: () => {},

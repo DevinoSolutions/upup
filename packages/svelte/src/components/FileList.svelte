@@ -49,7 +49,7 @@
   const { translations: tr } = useUploaderI18n()
   const {
     upload: {
-      proceedUpload,
+      startUpload,
       retryUpload,
       uploadStatus,
       totalProgress,
@@ -122,7 +122,7 @@
   })
 
   function onUploadClick() {
-    void proceedUpload().catch(() => undefined)
+    void startUpload().catch(() => undefined)
   }
 
   function onRetryClick() {

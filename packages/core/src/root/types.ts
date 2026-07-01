@@ -102,9 +102,9 @@ export interface RootCommands {
   handleSetSelectedFiles(newFiles: File[]): Promise<void>
   handleFileRemove(fileId: string): void
   handleRemoveAll(): void
-  dynamicUpload(newFiles: File[] | UploadFile[]): Promise<UploadFile[] | undefined>
-  dynamicallyReplaceFiles(newFiles: File[] | UploadFile[]): void
-  proceedUpload(): Promise<UploadFile[] | undefined>
+  uploadFiles(newFiles: File[] | UploadFile[]): Promise<UploadFile[] | undefined>
+  replaceFiles(newFiles: File[] | UploadFile[]): void
+  startUpload(): Promise<UploadFile[] | undefined>
   retryUpload(fileId?: string): Promise<UploadFile[] | undefined>
   handleCancel(): void
   handlePause(): void

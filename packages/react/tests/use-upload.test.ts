@@ -4,7 +4,7 @@ import { UploadStatus } from '@upup/core'
 
 function makeUploadCtx(overrides: Record<string, unknown> = {}) {
     return {
-        proceedUpload: vi.fn(),
+        startUpload: vi.fn(),
         retryUpload: vi.fn(),
         uploadStatus: UploadStatus.IDLE,
         uploadError: '',
@@ -29,14 +29,14 @@ function makeFiles(...names: string[]) {
 }
 
 describe('useUpload', () => {
-    it('maps proceedUpload to upload', () => {
+    it('maps startUpload to upload', () => {
         const fn = vi.fn()
         const result = useUpload({
-            upload: makeUploadCtx({ proceedUpload: fn }),
+            upload: makeUploadCtx({ startUpload: fn }),
             files: new Map(),
             setFiles: vi.fn(),
-            dynamicallyReplaceFiles: vi.fn(),
-            dynamicUpload: vi.fn(),
+            replaceFiles: vi.fn(),
+            uploadFiles: vi.fn(),
             resetState: vi.fn(),
         } as any)
         expect(result.upload).toBe(fn)
@@ -47,8 +47,8 @@ describe('useUpload', () => {
             upload: makeUploadCtx({ uploadStatus: UploadStatus.UPLOADING }),
             files: new Map(),
             setFiles: vi.fn(),
-            dynamicallyReplaceFiles: vi.fn(),
-            dynamicUpload: vi.fn(),
+            replaceFiles: vi.fn(),
+            uploadFiles: vi.fn(),
             resetState: vi.fn(),
         } as any)
         expect(result.loading).toBe(true)
@@ -59,8 +59,8 @@ describe('useUpload', () => {
             upload: makeUploadCtx({ uploadStatus: UploadStatus.IDLE }),
             files: new Map(),
             setFiles: vi.fn(),
-            dynamicallyReplaceFiles: vi.fn(),
-            dynamicUpload: vi.fn(),
+            replaceFiles: vi.fn(),
+            uploadFiles: vi.fn(),
             resetState: vi.fn(),
         } as any)
         expect(result.loading).toBe(false)
@@ -71,8 +71,8 @@ describe('useUpload', () => {
             upload: makeUploadCtx({ uploadStatus: UploadStatus.SUCCESSFUL }),
             files: new Map(),
             setFiles: vi.fn(),
-            dynamicallyReplaceFiles: vi.fn(),
-            dynamicUpload: vi.fn(),
+            replaceFiles: vi.fn(),
+            uploadFiles: vi.fn(),
             resetState: vi.fn(),
         } as any)
         expect(result.loading).toBe(false)
@@ -83,8 +83,8 @@ describe('useUpload', () => {
             upload: makeUploadCtx({ uploadStatus: UploadStatus.FAILED }),
             files: new Map(),
             setFiles: vi.fn(),
-            dynamicallyReplaceFiles: vi.fn(),
-            dynamicUpload: vi.fn(),
+            replaceFiles: vi.fn(),
+            uploadFiles: vi.fn(),
             resetState: vi.fn(),
         } as any)
         expect(result.loading).toBe(false)
@@ -95,8 +95,8 @@ describe('useUpload', () => {
             upload: makeUploadCtx({ uploadError: 'Network timeout' }),
             files: new Map(),
             setFiles: vi.fn(),
-            dynamicallyReplaceFiles: vi.fn(),
-            dynamicUpload: vi.fn(),
+            replaceFiles: vi.fn(),
+            uploadFiles: vi.fn(),
             resetState: vi.fn(),
         } as any)
         expect(result.error).toBe('Network timeout')
@@ -107,8 +107,8 @@ describe('useUpload', () => {
             upload: makeUploadCtx({ totalProgress: 75 }),
             files: new Map(),
             setFiles: vi.fn(),
-            dynamicallyReplaceFiles: vi.fn(),
-            dynamicUpload: vi.fn(),
+            replaceFiles: vi.fn(),
+            uploadFiles: vi.fn(),
             resetState: vi.fn(),
         } as any)
         expect(result.progress).toBe(75)
@@ -119,8 +119,8 @@ describe('useUpload', () => {
             upload: makeUploadCtx(),
             files: makeFiles('a.txt', 'b.txt', 'c.txt'),
             setFiles: vi.fn(),
-            dynamicallyReplaceFiles: vi.fn(),
-            dynamicUpload: vi.fn(),
+            replaceFiles: vi.fn(),
+            uploadFiles: vi.fn(),
             resetState: vi.fn(),
         } as any)
         expect(Array.isArray(result.files)).toBe(true)
@@ -132,29 +132,29 @@ describe('useUpload', () => {
             upload: makeUploadCtx(),
             files: new Map(),
             setFiles: vi.fn(),
-            dynamicallyReplaceFiles: vi.fn(),
-            dynamicUpload: vi.fn(),
+            replaceFiles: vi.fn(),
+            uploadFiles: vi.fn(),
             resetState: vi.fn(),
         } as any)
         expect(result.files).toHaveLength(0)
     })
 
-    it('passes through setFiles, dynamicallyReplaceFiles, dynamicUpload, resetState', () => {
+    it('passes through setFiles, replaceFiles, uploadFiles, resetState', () => {
         const setFiles = vi.fn()
-        const dynamicallyReplaceFiles = vi.fn()
-        const dynamicUpload = vi.fn()
+        const replaceFiles = vi.fn()
+        const uploadFiles = vi.fn()
         const resetState = vi.fn()
         const result = useUpload({
             upload: makeUploadCtx(),
             files: new Map(),
             setFiles,
-            dynamicallyReplaceFiles,
-            dynamicUpload,
+            replaceFiles,
+            uploadFiles,
             resetState,
         } as any)
         expect(result.setFiles).toBe(setFiles)
-        expect(result.dynamicallyReplaceFiles).toBe(dynamicallyReplaceFiles)
-        expect(result.dynamicUpload).toBe(dynamicUpload)
+        expect(result.replaceFiles).toBe(replaceFiles)
+        expect(result.uploadFiles).toBe(uploadFiles)
         expect(result.resetState).toBe(resetState)
     })
 
@@ -163,8 +163,8 @@ describe('useUpload', () => {
             upload: undefined as any,
             files: new Map(),
             setFiles: vi.fn(),
-            dynamicallyReplaceFiles: vi.fn(),
-            dynamicUpload: vi.fn(),
+            replaceFiles: vi.fn(),
+            uploadFiles: vi.fn(),
             resetState: vi.fn(),
         } as any)
         expect(result.upload).toBeUndefined()

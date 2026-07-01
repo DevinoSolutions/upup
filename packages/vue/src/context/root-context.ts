@@ -162,9 +162,9 @@ export function provideRootContext(value: IRootContext) {
     provide(FilesKey, {
         files: value.files,
         setFiles: value.setFiles,
-        dynamicallyReplaceFiles: value.dynamicallyReplaceFiles,
+        replaceFiles: value.replaceFiles,
         resetState: value.resetState,
-        dynamicUpload: value.dynamicUpload,
+        uploadFiles: value.uploadFiles,
         handleFileRemove: value.handleFileRemove,
     })
     provide(UploadControlsKey, {

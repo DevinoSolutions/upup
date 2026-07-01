@@ -39,7 +39,7 @@ export type BaseContextUpload = {
     uploadError?: string
     totalProgress: number
     filesProgressMap: FilesProgressMap
-    proceedUpload: () => Promise<UploadFile[] | undefined>
+    startUpload: () => Promise<UploadFile[] | undefined>
     retryUpload: (fileId?: string) => Promise<UploadFile[] | undefined>
     uploadSpeed: number
     uploadEta: number
@@ -84,9 +84,9 @@ export type BaseContextI18n = {
 export type BaseContextFiles = {
     files: Map<string, UploadFile>
     setFiles: (newFiles: File[]) => void
-    dynamicallyReplaceFiles: (files: File[] | UploadFile[]) => void
+    replaceFiles: (files: File[] | UploadFile[]) => void
     resetState: () => void
-    dynamicUpload: (files: File[] | UploadFile[]) => Promise<UploadFile[] | undefined>
+    uploadFiles: (files: File[] | UploadFile[]) => Promise<UploadFile[] | undefined>
     handleFileRemove: (fileId: string) => void
 }
 

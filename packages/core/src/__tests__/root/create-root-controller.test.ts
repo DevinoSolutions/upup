@@ -18,7 +18,7 @@ describe('createRootController', () => {
     expect(root.orchestrator).toBeTruthy()
     expect(root.theme).toBeTruthy()
     expect(root.resolved.limit).toBe(10)
-    expect(typeof root.commands.proceedUpload).toBe('function')
+    expect(typeof root.commands.startUpload).toBe('function')
     root.dispose()
   })
 
@@ -43,22 +43,22 @@ describe('createRootController', () => {
     expect(() => root.dispose()).not.toThrow()
   })
 
-  it('proceedUpload no-ops on empty file list', async () => {
+  it('startUpload no-ops on empty file list', async () => {
     const { root, core } = build()
     const upSpy = vi.spyOn(core, 'upload').mockResolvedValue([])
     root.init()
-    await root.commands.proceedUpload()
+    await root.commands.startUpload()
     expect(upSpy).not.toHaveBeenCalled()
     root.dispose()
   })
 
-  it('proceedUpload calls onPrepareFiles and core.upload when files present', async () => {
+  it('startUpload calls onPrepareFiles and core.upload when files present', async () => {
     const onPrepareFiles = vi.fn(async (f) => f)
     const { root, core } = build({ onPrepareFiles })
     core.files.set('a', { id: 'a', file: new File(['x'], 'a.txt') } as never)
     const upSpy = vi.spyOn(core, 'upload').mockResolvedValue([])
     root.init()
-    await root.commands.proceedUpload()
+    await root.commands.startUpload()
     expect(onPrepareFiles).toHaveBeenCalledTimes(1)
     expect(upSpy).toHaveBeenCalledTimes(1)
     root.dispose()

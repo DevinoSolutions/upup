@@ -48,7 +48,7 @@ vi.mock('../src/context/RootContext', () => ({
     }),
     useUploaderUploadControls: () => ({
         upload: {
-            proceedUpload: vi.fn(),
+            startUpload: vi.fn(),
             retryUpload: vi.fn(),
             uploadStatus: 'PENDING',
             totalProgress: 0,

@@ -179,7 +179,7 @@ export function buildRootContext(
     setFiles,
     handleFileRemove,
     handleRemoveAll,
-    proceedUpload: () => root.commands.proceedUpload(),
+    startUpload: () => root.commands.startUpload(),
     retryUpload: (fileId?: string) => root.commands.retryUpload(fileId),
     handleDone: () => root.commands.handleDone(),
     handleCancel: () => root.commands.handleCancel(),

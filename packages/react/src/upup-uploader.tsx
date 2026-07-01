@@ -30,11 +30,11 @@ export type UploaderRef = {
         progress: number
         upload(): Promise<UploadFile[] | undefined>
         resetState(): void
-        dynamicUpload(
+        uploadFiles(
             files: File[] | UploadFile[],
         ): Promise<UploadFile[] | undefined>
         setFiles(newFiles: File[]): void
-        dynamicallyReplaceFiles(files: File[] | UploadFile[]): void
+        replaceFiles(files: File[] | UploadFile[]): void
     }
 }
 
@@ -51,9 +51,9 @@ export default forwardRef<UploaderRef, UploaderProps>(
             upload: providerValues.upload,
             files: providerValues.files,
             setFiles: providerValues.setFiles,
-            dynamicUpload: providerValues.dynamicUpload,
+            uploadFiles: providerValues.uploadFiles,
             resetState: providerValues.resetState,
-            dynamicallyReplaceFiles: providerValues.dynamicallyReplaceFiles,
+            replaceFiles: providerValues.replaceFiles,
         })
 
         useImperativeHandle(ref, () => ({

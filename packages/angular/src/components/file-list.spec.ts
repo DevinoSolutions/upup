@@ -124,7 +124,7 @@ function makeStoreMock(files: Map<string, UploadFile>) {
         handleDone: vi.fn(),
         handleFileRemove: vi.fn(),
         openImageEditor: vi.fn(),
-        proceedUpload: vi.fn().mockResolvedValue(undefined),
+        startUpload: vi.fn().mockResolvedValue(undefined),
         retryUpload: vi.fn().mockResolvedValue(undefined),
         setViewMode: vi.fn(),
         setIsAddingMore: vi.fn(),

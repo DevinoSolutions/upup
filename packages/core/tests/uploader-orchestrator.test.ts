@@ -310,7 +310,7 @@ describe('UploaderOrchestrator', () => {
 
     // ── Upload control methods ────────────────────────────────────────
 
-    describe('proceedUpload', () => {
+    describe('startUpload', () => {
         it('calls core.upload() and returns result', async () => {
             const core = createMockCore()
             const mockFiles = [createUploadFile({ name: 'a.txt' })]
@@ -318,7 +318,7 @@ describe('UploaderOrchestrator', () => {
             const orch = new UploaderOrchestrator(core, {})
             ;(orch as any).setState({ files: new Map([['f1', createUploadFile({ name: 'a.txt', id: 'f1' })]]) })
 
-            const result = await orch.proceedUpload()
+            const result = await orch.startUpload()
 
             expect(core.upload).toHaveBeenCalled()
             expect(result).toEqual(mockFiles)
@@ -328,7 +328,7 @@ describe('UploaderOrchestrator', () => {
             const core = createMockCore()
             const orch = new UploaderOrchestrator(core, {})
 
-            const result = await orch.proceedUpload()
+            const result = await orch.startUpload()
 
             expect(result).toBeUndefined()
             expect(core.upload).not.toHaveBeenCalled()
@@ -339,7 +339,7 @@ describe('UploaderOrchestrator', () => {
             core.upload.mockResolvedValue([])
             const orch = new UploaderOrchestrator(core, {})
             ;(orch as any).setState({ files: new Map([['f1', createUploadFile({ name: 'a.txt', id: 'f1' })]]) })
-            await orch.proceedUpload()
+            await orch.startUpload()
 
             expect(orch.getSnapshot().uploadError).toBe('')
         })
@@ -353,7 +353,7 @@ describe('UploaderOrchestrator', () => {
             const orch = new UploaderOrchestrator(core, { onPrepareFiles })
             ;(orch as any).setState({ files: new Map([['f1', createUploadFile({ name: 'a.txt', id: 'f1' })]]) })
 
-            await orch.proceedUpload()
+            await orch.startUpload()
 
             expect(onPrepareFiles).toHaveBeenCalledTimes(1)
             expect(core.removeAll).toHaveBeenCalled()
@@ -368,7 +368,7 @@ describe('UploaderOrchestrator', () => {
             })
             ;(orch as any).setState({ files: new Map([['f1', createUploadFile({ name: 'a.txt', id: 'f1' })]]) })
 
-            await orch.proceedUpload()
+            await orch.startUpload()
 
             expect(core.removeAll).not.toHaveBeenCalled()
             expect(core.addFiles).not.toHaveBeenCalled()

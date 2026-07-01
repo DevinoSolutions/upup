@@ -137,7 +137,7 @@ export interface RootContext {
   setFiles(files: File[]): Promise<void>
   handleFileRemove(fileId: string): void
   handleRemoveAll(): void
-  proceedUpload(): Promise<UploadFile[] | undefined>
+  startUpload(): Promise<UploadFile[] | undefined>
   retryUpload(fileId?: string): Promise<UploadFile[] | undefined>
   handleDone(): void
   handleCancel(): void

@@ -83,7 +83,7 @@ export class UploaderOrchestrator {
     // ── Upload control methods ──────────────────────────────────────
 
     /** Trigger upload for all current files. Calls onPrepareFiles if provided. */
-    async proceedUpload(): Promise<UploadFile[] | undefined> {
+    async startUpload(): Promise<UploadFile[] | undefined> {
         const currentFiles = [...this.state.files.values()]
         if (currentFiles.length === 0) return undefined
         this.setState({ uploadError: '' })

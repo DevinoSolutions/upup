@@ -43,7 +43,7 @@ export default memo(function FileList() {
     const { translations: tr } = useUploaderI18n()
     const {
         upload: {
-            proceedUpload,
+            startUpload,
             retryUpload,
             uploadStatus,
             totalProgress,
@@ -188,7 +188,7 @@ export default memo(function FileList() {
                             slotClasses.uploadButton,
                         )}
                         onClick={() => {
-                            void proceedUpload().catch(() => undefined)
+                            void startUpload().catch(() => undefined)
                         }}
                         disabled={
                             isUploadActive(uploadStatus) ||

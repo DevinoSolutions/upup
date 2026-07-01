@@ -5,23 +5,23 @@ export default function useUpload({
     upload,
     files,
     setFiles,
-    dynamicallyReplaceFiles,
-    dynamicUpload,
+    replaceFiles,
+    uploadFiles,
     resetState,
 }: Pick<
     IRootContext,
     | 'upload'
     | 'files'
     | 'setFiles'
-    | 'dynamicallyReplaceFiles'
+    | 'replaceFiles'
     | 'resetState'
-    | 'dynamicUpload'
+    | 'uploadFiles'
 >) {
-    const { proceedUpload, uploadStatus, uploadError, totalProgress } =
+    const { startUpload, uploadStatus, uploadError, totalProgress } =
         upload || {}
 
     return {
-        upload: proceedUpload,
+        upload: startUpload,
         loading: isUploadActive(uploadStatus!),
         error: uploadError,
         progress: totalProgress,
@@ -29,8 +29,8 @@ export default function useUpload({
             return file
         }),
         setFiles,
-        dynamicallyReplaceFiles,
-        dynamicUpload,
+        replaceFiles,
+        uploadFiles,
         resetState,
     }
 }

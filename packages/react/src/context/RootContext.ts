@@ -166,13 +166,13 @@ export function RootContextProvider({
     const files = useMemo<ContextFiles>(() => ({
         files: value.files,
         setFiles: value.setFiles,
-        dynamicallyReplaceFiles: value.dynamicallyReplaceFiles,
+        replaceFiles: value.replaceFiles,
         resetState: value.resetState,
-        dynamicUpload: value.dynamicUpload,
+        uploadFiles: value.uploadFiles,
         handleFileRemove: value.handleFileRemove,
     }), [
-        value.dynamicUpload,
-        value.dynamicallyReplaceFiles,
+        value.uploadFiles,
+        value.replaceFiles,
         value.files,
         value.handleFileRemove,
         value.resetState,

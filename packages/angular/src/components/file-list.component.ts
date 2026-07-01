@@ -400,7 +400,7 @@ export class FileListComponent implements AfterViewInit, OnDestroy {
     // ── Upload action handlers ─────────────────────────────────────────────────
 
     onUploadClick(): void {
-        void this.store.proceedUpload().catch(() => undefined)
+        void this.store.startUpload().catch(() => undefined)
     }
 
     onRetryClick(): void {

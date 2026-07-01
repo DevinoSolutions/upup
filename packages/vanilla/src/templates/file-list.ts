@@ -134,7 +134,7 @@ export function fileList(ctx: RootContext) {
 
   // Pause/resume/cancel gated on multipart resumable (mirrors svelte FileList.svelte).
 
-  const onUploadClick = () => { void ctx.proceedUpload().catch(() => undefined) }
+  const onUploadClick = () => { void ctx.startUpload().catch(() => undefined) }
   const onRetryClick = () => { void ctx.retryUpload().catch(() => undefined) }
 
   const footer = html`

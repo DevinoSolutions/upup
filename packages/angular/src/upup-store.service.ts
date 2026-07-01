@@ -372,17 +372,17 @@ export class UpupStore {
         this.root.commands.handleFileRemove(fileId)
     }
 
-    async dynamicUpload(newFiles: File[] | UploadFile[]): Promise<UploadFile[] | undefined> {
-        return this.root.commands.dynamicUpload(newFiles)
+    async uploadFiles(newFiles: File[] | UploadFile[]): Promise<UploadFile[] | undefined> {
+        return this.root.commands.uploadFiles(newFiles)
     }
 
-    dynamicallyReplaceFiles(newFiles: File[] | UploadFile[]): void {
-        this.root.commands.dynamicallyReplaceFiles(newFiles)
+    replaceFiles(newFiles: File[] | UploadFile[]): void {
+        this.root.commands.replaceFiles(newFiles)
     }
 
     // ── Upload controls (delegated to root.commands) ─────────────
-    async proceedUpload(): Promise<UploadFile[] | undefined> {
-        return this.root.commands.proceedUpload()
+    async startUpload(): Promise<UploadFile[] | undefined> {
+        return this.root.commands.startUpload()
     }
 
     async retryUpload(fileId?: string): Promise<UploadFile[] | undefined> {
