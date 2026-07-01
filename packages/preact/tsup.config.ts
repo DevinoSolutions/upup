@@ -15,6 +15,15 @@ export default defineConfig([
     sourcemap: true,
     clean: false, // cleaned once up-front by scripts/clean-dist.mjs
     target: 'es2019',
+    // Browser platform activates the "browser" export condition, so preact/compat
+    // resolves to its ESM build (compat.module.js) even when reached through a
+    // CJS require() context (e.g. react-webcam's UMD `require("react")` aliased to
+    // preact/compat). Without this, a require()-kind reference falls through to the
+    // CJS compat.js, whose `require("preact")` compiles to esbuild's __require shim
+    // and throws "Dynamic require of preact is not supported" at runtime — which
+    // killed the lazy CameraUploader chunk (@upup/preact camera view). preact stays
+    // external, so no duplicate preact instance is bundled.
+    platform: 'browser',
     noExternal: ['@upup/react', 'react', 'react-dom', 'react-filerobot-image-editor'],
     external: [
       'preact',
