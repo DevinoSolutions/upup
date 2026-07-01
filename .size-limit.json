@@ -52,6 +52,13 @@
     "limit": "670 KB"
   },
   {
+    "name": "@upup/preact (image editor island)",
+    "path": "packages/preact/dist/filerobot-island.js",
+    "gzip": false,
+    "brotli": false,
+    "limit": "4 MB"
+  },
+  {
     "name": "@upup/next",
     "path": "packages/next/dist/**/*.js",
     "gzip": false,
