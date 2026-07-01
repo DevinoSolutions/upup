@@ -91,6 +91,14 @@ export default memo(function FileList() {
                 themeSlots?.fileList?.root,
             )}
         >
+            {/* Visually-hidden live region: announces the current selection count
+                to screen readers via the existing header.filesSelected i18n key. */}
+            <div role="status" aria-live="polite" className="upup-sr-only">
+                {t(plural(tr, 'filesSelected', files.size), {
+                    count: files.size,
+                })}
+            </div>
+
             <MainBoxHeader handleCancel={handleCancel} />
 
             <div
@@ -104,6 +112,7 @@ export default memo(function FileList() {
                 {shouldVirtualize ? (
                     // Virtualized list: only renders visible FileItems
                     <div
+                        role="list"
                         data-upup-slot="file-list-virtual"
                         style={{ height: virtualizer.getTotalSize(), position: 'relative' }}
                         className={cn(
@@ -132,6 +141,7 @@ export default memo(function FileList() {
                 ) : (
                     // Standard rendering for small lists and grid mode
                     <div
+                        role="list"
                         className={cn(
                             `${isProcessing && 'upup-pointer-events-none upup-opacity-75'} upup-flex upup-flex-col upup-gap-3 upup-font-[Arial,Helvetica,sans-serif]`,
                             {
