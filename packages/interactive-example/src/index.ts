@@ -1,3 +1,5 @@
+'use client'
+
 export { InteractiveExample, default } from './InteractiveExample'
 export { ConfigProvider, ConfigContext } from './state/ConfigContext'
 export { useConfig } from './state/useConfig'

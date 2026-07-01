@@ -1,4 +1,5 @@
-import HomepageDemo from "@/components/HomepageDemo";
+import { InteractiveExample } from "@upup/interactive-example";
+import "@upup/interactive-example/styles";
 import HomepageFeatures from "@/components/HomepageFeatures";
 import FeedbackSection from "@/components/FeedbackSection";
 import Toast from "@/components/Toast";
@@ -18,7 +19,7 @@ export default function Home() {
     return (
         <div className="container mx-auto">
             <HeroSection />
-            <HomepageDemo />
+            <InteractiveExample />
             <HomepageFeatures />
             <StackBlitzDemoSection />
             <FeedbackSection />
