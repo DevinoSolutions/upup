@@ -28,7 +28,6 @@ import {
 import { UpupStore } from '../upup-store.service'
 import { UploaderHeaderComponent } from './uploader-header.component'
 import { ProgressBarComponent } from './progress-bar.component'
-import { ShouldRenderComponent } from './should-render.component'
 import { FileItemComponent } from './file-item.component'
 import { PlayerPlayFilledIconComponent } from './icons/player-play-filled-icon.component'
 import { PlayerPauseFilledIconComponent } from './icons/player-pause-filled-icon.component'
@@ -61,7 +60,6 @@ const ESTIMATED_ITEM_HEIGHT = 76
     imports: [
         UploaderHeaderComponent,
         ProgressBarComponent,
-        ShouldRenderComponent,
         FileItemComponent,
         PlayerPlayFilledIconComponent,
         PlayerPauseFilledIconComponent,
@@ -117,9 +115,7 @@ const ESTIMATED_ITEM_HEIGHT = 76
             <!-- Footer: upload / retry / done + pause/cancel controls + ETA -->
             <div [class]="footerClass">
                 <!-- Upload button -->
-                <upup-should-render
-                    [when]="store.uploadStatus() !== UploadStatus.SUCCESSFUL && store.uploadStatus() !== UploadStatus.FAILED"
-                >
+                @if (store.uploadStatus() !== UploadStatus.SUCCESSFUL && store.uploadStatus() !== UploadStatus.FAILED) {
                     <button
                         data-testid="upup-upload-btn"
                         [class]="uploadButtonClass"
@@ -128,10 +124,10 @@ const ESTIMATED_ITEM_HEIGHT = 76
                     >
                         {{ uploadButtonText }}
                     </button>
-                </upup-should-render>
+                }
 
                 <!-- Retry button -->
-                <upup-should-render [when]="store.uploadStatus() === UploadStatus.FAILED">
+                @if (store.uploadStatus() === UploadStatus.FAILED) {
                     <button
                         data-testid="upup-retry-btn"
                         [class]="retryButtonClass"
@@ -139,24 +135,22 @@ const ESTIMATED_ITEM_HEIGHT = 76
                     >
                         {{ retryButtonText }}
                     </button>
-                </upup-should-render>
+                }
 
                 <!-- Done button -->
-                <upup-should-render [when]="store.uploadStatus() === UploadStatus.SUCCESSFUL">
+                @if (store.uploadStatus() === UploadStatus.SUCCESSFUL) {
                     <button
                         [class]="doneButtonClass"
                         (click)="store.handleDone()"
                     >
                         {{ store.translations().done }}
                     </button>
-                </upup-should-render>
+                }
 
                 <!-- Pause / cancel / ETA area -->
                 <div class="upup-flex upup-flex-1 upup-flex-col upup-gap-1">
                     <div class="upup-flex upup-items-center upup-gap-2">
-                        <upup-should-render
-                            [when]="store.uiProps.resumable?.protocol === 'multipart' && (isUploadActive(store.uploadStatus()) || store.uploadStatus() === UploadStatus.PAUSED)"
-                        >
+                        @if (store.uiProps.resumable?.protocol === 'multipart' && (isUploadActive(store.uploadStatus()) || store.uploadStatus() === UploadStatus.PAUSED)) {
                             <button
                                 data-testid="upup-upload-pause-toggle"
                                 [class]="pauseToggleClass"
@@ -178,22 +172,22 @@ const ESTIMATED_ITEM_HEIGHT = 76
                             >
                                 <upup-x-icon [size]="14" />
                             </button>
-                        </upup-should-render>
+                        }
 
-                        <upup-should-render [when]="showProgressText">
+                        @if (showProgressText) {
                             <span [class]="progressTextClass">
                                 {{ progressText }}
                             </span>
-                        </upup-should-render>
+                        }
                     </div>
 
-                    <upup-should-render [when]="isUploadActive(store.uploadStatus()) && store.uploadEta() > 0">
+                    @if (isUploadActive(store.uploadStatus()) && store.uploadEta() > 0) {
                         <span class="upup-text-[11px] upup-text-gray-500">{{ etaText }}</span>
-                    </upup-should-render>
+                    }
 
-                    <upup-should-render [when]="store.uploadStatus() === UploadStatus.PAUSED">
+                    @if (store.uploadStatus() === UploadStatus.PAUSED) {
                         <span>{{ store.translations().paused }}</span>
-                    </upup-should-render>
+                    }
                 </div>
             </div>
         </div>

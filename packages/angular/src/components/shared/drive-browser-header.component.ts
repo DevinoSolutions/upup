@@ -1,7 +1,6 @@
 import { Component, Input, inject } from '@angular/core'
 import { type DriveFolder, type DriveUser, cn } from '@upup/core'
 import { UpupStore } from '../../upup-store.service'
-import { ShouldRenderComponent } from '../should-render.component'
 import { SearchIconComponent } from '../icons/search-icon.component'
 import { UserIconComponent } from '../icons/user-icon.component'
 
@@ -15,12 +14,12 @@ import { UserIconComponent } from '../icons/user-icon.component'
 @Component({
     selector: 'upup-drive-browser-header',
     standalone: true,
-    imports: [ShouldRenderComponent, SearchIconComponent, UserIconComponent],
+    imports: [SearchIconComponent, UserIconComponent],
     template: `
         @if (user) {
             <div data-upup-slot="drive-browser-header">
                 <div [class]="headerClass">
-                    <upup-should-render [when]="!!path?.length">
+                    @if (!!path?.length) {
                         <div class="upup-flex upup-items-center upup-gap-1">
                             @for (p of path; track p.id; let i = $index) {
                                 <p
@@ -36,20 +35,20 @@ import { UserIconComponent } from '../icons/user-icon.component'
                                 </p>
                             }
                         </div>
-                    </upup-should-render>
+                    }
 
                     <div class="upup-flex upup-items-center upup-gap-2">
                         <div class="upup-relative upup-flex upup-h-8 upup-w-8 upup-items-center upup-justify-center upup-overflow-hidden upup-rounded-full">
-                            <upup-should-render [when]="!!user?.picture">
+                            @if (!!user?.picture) {
                                 <img
                                     [alt]="user?.name"
                                     [src]="user?.picture"
                                     class="upup-bg-center upup-object-cover"
                                 />
-                            </upup-should-render>
-                            <upup-should-render [when]="!user?.picture">
+                            }
+                            @if (!user?.picture) {
                                 <upup-user-icon class="upup-text-xl" />
-                            </upup-should-render>
+                            }
                         </div>
                         <button
                             type="button"
@@ -61,7 +60,7 @@ import { UserIconComponent } from '../icons/user-icon.component'
                     </div>
                 </div>
 
-                <upup-should-render [when]="showSearch">
+                @if (showSearch) {
                     <div [class]="searchContainerClass">
                         <input
                             type="search"
@@ -74,7 +73,7 @@ import { UserIconComponent } from '../icons/user-icon.component'
                         />
                         <upup-search-icon class="upup-absolute upup-left-5 upup-top-1/2 upup--translate-y-1/2 upup-text-[#939393]" />
                     </div>
-                </upup-should-render>
+                }
             </div>
         }
     `,

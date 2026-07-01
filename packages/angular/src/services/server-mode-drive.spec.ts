@@ -41,8 +41,8 @@ import { EmptyIconComponent } from '../components/icons/empty-icon.component'
  * {{provider}} exactly as vanilla's makeCtx does.
  *
  * Icons must be decorated @Component classes (not plain `class {}`) because
- * ShouldRenderComponent uses NgComponentOutlet — EmptyIconComponent is the
- * canonical no-op stub used throughout the package.
+ * the loading branch renders icons.LoaderIcon via NgComponentOutlet —
+ * EmptyIconComponent is the canonical no-op stub used throughout the package.
  */
 function makeStoreMock() {
     return {

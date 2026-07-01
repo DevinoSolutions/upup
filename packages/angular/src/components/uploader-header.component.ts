@@ -2,7 +2,6 @@ import { Component, Input, inject, Type } from '@angular/core'
 import { NgComponentOutlet } from '@angular/common'
 import { formatUiMessage as t, pluralUiMessage as plural, isUploadActive } from '@upup/core'
 import { UpupStore } from '../upup-store.service'
-import { ShouldRenderComponent } from './should-render.component'
 import { LayoutGridIconComponent } from './icons/layout-grid-icon.component'
 import { LayoutListIconComponent } from './icons/layout-list-icon.component'
 
@@ -30,7 +29,6 @@ import { LayoutListIconComponent } from './icons/layout-list-icon.component'
     selector: 'upup-main-box-header',
     standalone: true,
     imports: [
-        ShouldRenderComponent,
         LayoutGridIconComponent,
         LayoutListIconComponent,
         NgComponentOutlet,
@@ -53,18 +51,18 @@ import { LayoutListIconComponent } from './icons/layout-list-icon.component'
 
                 <!-- File count / adding-more label (centre) -->
                 <span [class]="labelClass">
-                    <upup-should-render [when]="store.isAddingMore()">
+                    @if (store.isAddingMore()) {
                         {{ store.translations().addingMoreFiles }}
-                    </upup-should-render>
-                    <upup-should-render [when]="!store.isAddingMore()">
+                    }
+                    @if (!store.isAddingMore()) {
                         {{ fileCountText }}
-                    </upup-should-render>
+                    }
                 </span>
 
                 <!-- Right controls: view-mode toggle + add-more -->
                 <div class="upup-col-start-3 upup-col-end-5 upup-flex upup-items-center upup-justify-end upup-gap-2 md:upup-col-start-4">
                     <!-- View-mode toggle (only when >1 file) -->
-                    <upup-should-render [when]="store.files().size > 1">
+                    @if (store.files().size > 1) {
                         <button
                             [class]="viewModeButtonClass"
                             (click)="toggleViewMode()"
@@ -78,10 +76,10 @@ import { LayoutListIconComponent } from './icons/layout-list-icon.component'
                                 <upup-icon-layout-grid [size]="16" />
                             }
                         </button>
-                    </upup-should-render>
+                    }
 
                     <!-- Add-more button -->
-                    <upup-should-render [when]="!store.isAddingMore() && store.uiProps.limit > 1 && !isLimitReached">
+                    @if (!store.isAddingMore() && store.uiProps.limit > 1 && !isLimitReached) {
                         <button
                             [class]="addMoreButtonClass"
                             (click)="store.setIsAddingMore(true)"
@@ -90,7 +88,7 @@ import { LayoutListIconComponent } from './icons/layout-list-icon.component'
                             <ng-container [ngComponentOutlet]="containerAddMoreIcon" />
                             {{ store.translations().addMore }}
                         </button>
-                    </upup-should-render>
+                    }
                 </div>
             </div>
         }

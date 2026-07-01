@@ -1,25 +1,22 @@
 /**
- * shell.spec.ts — TestBed tests for the four shell leaf components:
- *   ShouldRenderComponent, ProgressBarComponent, UploaderHeaderComponent, SourceViewContainerComponent
+ * shell.spec.ts — TestBed tests for the three shell leaf components:
+ *   ProgressBarComponent, UploaderHeaderComponent, SourceViewContainerComponent
  *
  * Store strategy:
- *   - All four components inject UpupStore (ShouldRender reads icons.LoaderIcon for the
- *     loader branch — faithful svelte parity). We instantiate a real UpupStore
+ *   - All three components inject UpupStore. We instantiate a real UpupStore
  *     (new UpupStore(); setConfig({}); init()) and provide it via
  *     { provide: UpupStore, useValue: store }. The store is disposed in afterEach.
  *
  * Content-projection tests use inline host components (a @Component wrapper that projects
- * a marker element via <upup-should-render [when]="cond">…</upup-should-render>).
+ * a marker element via <upup-adapter-view-container>…</upup-adapter-view-container>).
  */
 import { describe, it, expect, afterEach } from 'vitest'
 import { TestBed } from '@angular/core/testing'
 import { Component } from '@angular/core'
 import { UpupStore } from '../upup-store.service'
-import { ShouldRenderComponent } from './should-render.component'
 import { ProgressBarComponent } from './progress-bar.component'
 import { UploaderHeaderComponent } from './uploader-header.component'
 import { SourceViewContainerComponent } from './source-view-container.component'
-import { DefaultLoaderIconComponent } from './icons/default-loader-icon.component'
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -30,123 +27,6 @@ function makeStore(): UpupStore {
     store.init()
     return store
 }
-
-// ── ShouldRender ───────────────────────────────────────────────────────────────
-
-describe('ShouldRenderComponent', () => {
-    let store: UpupStore
-
-    afterEach(() => store?.dispose())
-
-    it('projects content when when=true (and not loading)', async () => {
-        store = makeStore()
-        @Component({
-            standalone: true,
-            imports: [ShouldRenderComponent],
-            template: `<upup-should-render [when]="true"><span data-testid="child">hello</span></upup-should-render>`,
-        })
-        class Host {}
-
-        await TestBed.configureTestingModule({
-            imports: [Host],
-            providers: [{ provide: UpupStore, useValue: store }],
-        }).compileComponents()
-        const fixture = TestBed.createComponent(Host)
-        fixture.detectChanges()
-        const child = fixture.nativeElement.querySelector('[data-testid="child"]')
-        expect(child).not.toBeNull()
-        expect(child.textContent).toBe('hello')
-    })
-
-    it('renders nothing when when=false', async () => {
-        store = makeStore()
-        @Component({
-            standalone: true,
-            imports: [ShouldRenderComponent],
-            template: `<upup-should-render [when]="false"><span data-testid="child">hello</span></upup-should-render>`,
-        })
-        class Host {}
-
-        await TestBed.configureTestingModule({
-            imports: [Host],
-            providers: [{ provide: UpupStore, useValue: store }],
-        }).compileComponents()
-        const fixture = TestBed.createComponent(Host)
-        fixture.detectChanges()
-        const child = fixture.nativeElement.querySelector('[data-testid="child"]')
-        expect(child).toBeNull()
-    })
-
-    it('renders the configured loader (not content) when isLoading=true', async () => {
-        // Svelte parity: ShouldRender renders `icons.LoaderIcon` on isLoading.
-        // Configure a real loader so we can assert it is rendered; the default
-        // LoaderIcon is EmptyIcon (renders nothing).
-        store = new UpupStore()
-        store.setConfig({ icons: { LoaderIcon: DefaultLoaderIconComponent } } as any)
-        store.init()
-
-        @Component({
-            standalone: true,
-            imports: [ShouldRenderComponent],
-            template: `<upup-should-render [when]="true" [isLoading]="true"><span data-testid="child">hello</span></upup-should-render>`,
-        })
-        class Host {}
-
-        await TestBed.configureTestingModule({
-            imports: [Host],
-            providers: [{ provide: UpupStore, useValue: store }],
-        }).compileComponents()
-        const fixture = TestBed.createComponent(Host)
-        fixture.detectChanges()
-
-        // Loader branch: the DefaultLoaderIcon renders an <svg>; content is suppressed.
-        const child = fixture.nativeElement.querySelector('[data-testid="child"]')
-        expect(child).toBeNull()
-        const svg = fixture.nativeElement.querySelector('svg')
-        expect(svg).not.toBeNull()
-    })
-
-    it('with default loader (EmptyIcon), isLoading=true renders neither content nor svg', async () => {
-        // Faithful parity: when icons.LoaderIcon defaults to EmptyIcon, the loader
-        // branch renders nothing — but content is still suppressed (isLoading wins).
-        store = makeStore()
-        @Component({
-            standalone: true,
-            imports: [ShouldRenderComponent],
-            template: `<upup-should-render [when]="true" [isLoading]="true"><span data-testid="child">hello</span></upup-should-render>`,
-        })
-        class Host {}
-
-        await TestBed.configureTestingModule({
-            imports: [Host],
-            providers: [{ provide: UpupStore, useValue: store }],
-        }).compileComponents()
-        const fixture = TestBed.createComponent(Host)
-        fixture.detectChanges()
-        expect(fixture.nativeElement.querySelector('[data-testid="child"]')).toBeNull()
-        expect(fixture.nativeElement.querySelector('svg')).toBeNull()
-    })
-
-    it('defaults to not rendering (when defaults to false)', async () => {
-        store = makeStore()
-        @Component({
-            standalone: true,
-            imports: [ShouldRenderComponent],
-            template: `<upup-should-render><span data-testid="default-child">hi</span></upup-should-render>`,
-        })
-        class Host {}
-
-        await TestBed.configureTestingModule({
-            imports: [Host],
-            providers: [{ provide: UpupStore, useValue: store }],
-        }).compileComponents()
-        const fixture = TestBed.createComponent(Host)
-        fixture.detectChanges()
-        // when defaults to false — content is not projected
-        const child = fixture.nativeElement.querySelector('[data-testid="default-child"]')
-        expect(child).toBeNull()
-    })
-})
 
 // ── ProgressBar ────────────────────────────────────────────────────────────────
 

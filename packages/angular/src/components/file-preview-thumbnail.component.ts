@@ -10,7 +10,6 @@ import {
 import type { InternalFlatClassNames, Translations } from '@upup/core'
 import { UpupStore } from '../upup-store.service'
 import { FileIconComponent } from './file-icon.component'
-import { ShouldRenderComponent } from './should-render.component'
 
 /**
  * FilePreviewThumbnail — port of FilePreviewThumbnail.svelte.
@@ -21,13 +20,13 @@ import { ShouldRenderComponent } from './should-render.component'
  * Svelte original:
  *   {#if isPdf || is3D || isOversizedText()} → static icon
  *   {:else}
- *     ShouldRender !canPreview → hidden <object> + icon
- *     ShouldRender canPreview  → icon (hidden on md if allowPreview) + visible <object>
+ *     {#if !canPreview} → hidden <object> + icon
+ *     {#if canPreview}  → icon (hidden on md if allowPreview) + visible <object>
  */
 @Component({
     selector: 'upup-file-preview-thumbnail',
     standalone: true,
-    imports: [FileIconComponent, ShouldRenderComponent],
+    imports: [FileIconComponent],
     template: `
         @if (isStaticIcon) {
             <!-- PDFs, 3D files, and text → static icon -->
@@ -36,7 +35,7 @@ import { ShouldRenderComponent } from './should-render.component'
             </div>
         } @else {
             <!-- Hidden object probe: fires (load) to signal canPreview=true -->
-            <upup-should-render [when]="!canPreview">
+            @if (!canPreview) {
                 <object
                     [data]="safeFileUrl"
                     width="0%"
@@ -49,9 +48,9 @@ import { ShouldRenderComponent } from './should-render.component'
                     <p>{{ labels.loading }}</p>
                 </object>
                 <upup-file-icon [extension]="extension" />
-            </upup-should-render>
+            }
 
-            <upup-should-render [when]="canPreview">
+            @if (canPreview) {
                 <upup-file-icon
                     [extension]="extension"
                     [class]="iconWhenCanPreviewClass"
@@ -69,7 +68,7 @@ import { ShouldRenderComponent } from './should-render.component'
                         <p>{{ labels.loading }}</p>
                     </object>
                 </div>
-            </upup-should-render>
+            }
         }
     `,
 })

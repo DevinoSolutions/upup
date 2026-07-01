@@ -6,12 +6,12 @@ import { UpupStore } from '../upup-store.service'
  * Progress bar — port of ProgressBar.svelte.
  *
  * Svelte original:
- *   <ShouldRender if={!!progress || isUploadActive($uploadStatus)}>
+ *   {#if !!progress || isUploadActive($uploadStatus)}
  *     <div data-testid="upup-progress-bar" role="progressbar" aria-valuenow={progress} …>
  *       <div class="…track…"><div style="width: {progress}%" class="…fill…"></div></div>
- *       <ShouldRender if={!!showValue}><p>{progress}%</p></ShouldRender>
+ *       {#if !!showValue}<p>{progress}%</p>{/if}
  *     </div>
- *   </ShouldRender>
+ *   {/if}
  *
  * Reads: store.uploadStatus(), store.isDark(), store.slotOverrides(), store.slots(),
  *        store.translations() (for aria-label).

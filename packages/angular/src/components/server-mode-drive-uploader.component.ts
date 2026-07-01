@@ -1,4 +1,5 @@
-import { Component, Input, inject, OnInit, OnDestroy } from '@angular/core'
+import { Component, Input, inject, OnInit, OnDestroy, Type } from '@angular/core'
+import { NgComponentOutlet } from '@angular/common'
 import { cn } from '@upup/core'
 import { UpupStore } from '../upup-store.service'
 import {
@@ -9,7 +10,6 @@ import {
 } from '../services/server-mode-drive.service'
 import { DriveAuthFallbackComponent } from './shared/drive-auth-fallback.component'
 import { SourceViewContainerComponent } from './source-view-container.component'
-import { ShouldRenderComponent } from './should-render.component'
 
 /**
  * Angular port of ServerModeDriveUploader.svelte.
@@ -33,7 +33,7 @@ import { ShouldRenderComponent } from './should-render.component'
     imports: [
         DriveAuthFallbackComponent,
         SourceViewContainerComponent,
-        ShouldRenderComponent,
+        NgComponentOutlet,
     ],
     template: `
         @if (svc.listState().status === 'reauth') {
@@ -47,7 +47,9 @@ import { ShouldRenderComponent } from './should-render.component'
                 [isLoading]="isLoading"
                 [slotName]="slotName"
             >
-                <upup-should-render [when]="true" [isLoading]="isLoading">
+                @if (isLoading) {
+                    <ng-container [ngComponentOutlet]="loader" />
+                } @else {
                     <div
                         data-testid="upup-server-drive-browser"
                         class="upup-grid upup-h-full upup-w-full upup-grid-rows-[auto,1fr,auto] upup-overflow-auto"
@@ -111,7 +113,7 @@ import { ShouldRenderComponent } from './should-render.component'
                             </button>
                         </div>
                     </div>
-                </upup-should-render>
+                }
             </upup-adapter-view-container>
         }
     `,
@@ -149,6 +151,10 @@ export class ServerModeDriveUploaderComponent implements OnInit, OnDestroy {
     get isLoading(): boolean {
         const s = this.svc.listState().status
         return s === 'loading' || s === 'idle'
+    }
+
+    get loader(): Type<unknown> {
+        return this.store.uiProps.icons.LoaderIcon as Type<unknown>
     }
 
     get displayFiles(): ServerDriveFile[] {

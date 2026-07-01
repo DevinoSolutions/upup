@@ -12,7 +12,6 @@ import {
 } from '@upup/core'
 import type { UploadFile } from '@upup/core'
 import { UpupStore } from '../upup-store.service'
-import { ShouldRenderComponent } from './should-render.component'
 import { ProgressBarComponent } from './progress-bar.component'
 import { FilePreviewThumbnailComponent } from './file-preview-thumbnail.component'
 
@@ -28,7 +27,7 @@ import { FilePreviewThumbnailComponent } from './file-preview-thumbnail.componen
 @Component({
     selector: 'upup-file-preview',
     standalone: true,
-    imports: [ShouldRenderComponent, ProgressBarComponent, FilePreviewThumbnailComponent, NgComponentOutlet],
+    imports: [ProgressBarComponent, FilePreviewThumbnailComponent, NgComponentOutlet],
     template: `
         <div
             class="upup-inline-block"
@@ -44,10 +43,10 @@ import { FilePreviewThumbnailComponent } from './file-preview-thumbnail.componen
                 <!-- Thumbnail (image bg or object preview).
                      Non-images render the thumbnail centered inside the card;
                      images show via the background-image on the wrapper above.
-                     Mirrors FilePreview in react/vue/svelte/vanilla (ShouldRender
-                     !isImage + the h-full/items-center/justify-center/p-6 wrapper)
+                     Mirrors FilePreview in react/vue/svelte/vanilla (the !isImage
+                     conditional + the h-full/items-center/justify-center/p-6 wrapper)
                      so the static doc icon is vertically centered, not top-aligned. -->
-                <upup-should-render [when]="!isImage">
+                @if (!isImage) {
                     <div class="upup-flex upup-h-full upup-items-center upup-justify-center upup-p-6">
                         <upup-file-preview-thumbnail
                             [canPreview]="canPreview"
@@ -61,7 +60,7 @@ import { FilePreviewThumbnailComponent } from './file-preview-thumbnail.componen
                             (updateCanPreview)="onUpdateCanPreview($event)"
                         />
                     </div>
-                </upup-should-render>
+                }
 
                 <!-- Edit-image button (only for images with editor enabled) -->
                 @if (isImage && store.uiProps.imageEditor.enabled) {

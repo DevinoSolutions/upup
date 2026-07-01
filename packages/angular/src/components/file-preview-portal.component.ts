@@ -9,7 +9,6 @@ import {
     type Translations,
 } from '@upup/core'
 import { UpupStore } from '../upup-store.service'
-import { ShouldRenderComponent } from './should-render.component'
 
 const TEXT_PREVIEW_MAX_BYTES = 1024 * 1024 // 1 MB cap — mirrors svelte portal
 
@@ -26,7 +25,7 @@ const TEXT_PREVIEW_MAX_BYTES = 1024 * 1024 // 1 MB cap — mirrors svelte portal
 @Component({
     selector: 'upup-file-preview-portal',
     standalone: true,
-    imports: [ShouldRenderComponent],
+    imports: [],
     template: `
         <!-- Fixed full-viewport overlay (portal equivalent) -->
         <div class="upup-scope" data-upup-slot="file-preview-portal">
@@ -56,16 +55,16 @@ const TEXT_PREVIEW_MAX_BYTES = 1024 * 1024 // 1 MB cap — mirrors svelte portal
                         </button>
 
                         <!-- Image preview -->
-                        <upup-should-render [when]="isImage">
+                        @if (isImage) {
                             <img
                                 [src]="safeImgUrl"
                                 [alt]="fileName"
                                 class="upup-h-full upup-w-full upup-rounded upup-object-contain"
                             />
-                        </upup-should-render>
+                        }
 
                         <!-- PDF preview -->
-                        <upup-should-render [when]="isPdf">
+                        @if (isPdf) {
                             <embed
                                 [src]="safeResourceUrl"
                                 type="application/pdf"
@@ -74,11 +73,11 @@ const TEXT_PREVIEW_MAX_BYTES = 1024 * 1024 // 1 MB cap — mirrors svelte portal
                                 class="upup-rounded"
                                 [title]="fileName"
                             />
-                        </upup-should-render>
+                        }
 
                         <!-- Text / other preview -->
-                        <upup-should-render [when]="!isImage && !isPdf">
-                            <upup-should-render [when]="isText">
+                        @if (!isImage && !isPdf) {
+                            @if (isText) {
                                 <div class="upup-h-full upup-w-full upup-overflow-auto upup-p-4 upup-font-mono upup-text-xs">
                                     @if (textLoading) {
                                         <p>{{ translations.loading }}</p>
@@ -95,10 +94,10 @@ const TEXT_PREVIEW_MAX_BYTES = 1024 * 1024 // 1 MB cap — mirrors svelte portal
                                         }
                                     }
                                 </div>
-                            </upup-should-render>
+                            }
 
                             <!-- Native <object> fallback for svg/video/audio/etc. -->
-                            <upup-should-render [when]="!isText">
+                            @if (!isText) {
                                 <object
                                     [data]="safeResourceUrl"
                                     width="100%"
@@ -109,8 +108,8 @@ const TEXT_PREVIEW_MAX_BYTES = 1024 * 1024 // 1 MB cap — mirrors svelte portal
                                 >
                                     <p>{{ translations.loading }}</p>
                                 </object>
-                            </upup-should-render>
-                        </upup-should-render>
+                            }
+                        }
                     </div>
                 </div>
             </div>

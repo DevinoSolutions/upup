@@ -1,4 +1,5 @@
-import { Component, Input, inject, signal, computed, effect } from '@angular/core'
+import { Component, Input, inject, signal, computed, effect, Type } from '@angular/core'
+import { NgComponentOutlet } from '@angular/common'
 import {
     type DriveFile,
     type DriveFolder,
@@ -10,7 +11,6 @@ import {
 } from '@upup/core'
 import { UpupStore } from '../../upup-store.service'
 import { SourceViewContainerComponent } from '../source-view-container.component'
-import { ShouldRenderComponent } from '../should-render.component'
 import { DriveBrowserHeaderComponent } from './drive-browser-header.component'
 import { DriveBrowserItemComponent } from './drive-browser-item.component'
 
@@ -28,13 +28,15 @@ import { DriveBrowserItemComponent } from './drive-browser-item.component'
     standalone: true,
     imports: [
         SourceViewContainerComponent,
-        ShouldRenderComponent,
+        NgComponentOutlet,
         DriveBrowserHeaderComponent,
         DriveBrowserItemComponent,
     ],
     template: `
         <upup-adapter-view-container [isLoading]="isLoading()" [slotName]="slotName">
-            <upup-should-render [when]="true" [isLoading]="isLoading()">
+            @if (isLoading()) {
+                <ng-container [ngComponentOutlet]="loader" />
+            } @else {
                 <div
                     data-testid="upup-drive-browser"
                     class="upup-grid upup-h-full upup-w-full upup-grid-rows-[auto,1fr,auto] upup-overflow-auto"
@@ -51,9 +53,9 @@ import { DriveBrowserItemComponent } from './drive-browser-item.component'
                     />
 
                     <!-- Body: file/folder list or empty message -->
-                    <upup-should-render [when]="!!path()?.length">
+                    @if (!!path()?.length) {
                         <div [class]="bodyClass">
-                            <upup-should-render [when]="!!displayedItems().length">
+                            @if (!!displayedItems().length) {
                                 <ul class="upup-p-2">
                                     @for (file of displayedItems(); track file.id) {
                                         <upup-drive-browser-item
@@ -63,17 +65,17 @@ import { DriveBrowserItemComponent } from './drive-browser-item.component'
                                         />
                                     }
                                 </ul>
-                            </upup-should-render>
-                            <upup-should-render [when]="!displayedItems().length">
+                            }
+                            @if (!displayedItems().length) {
                                 <div class="upup-flex upup-h-full upup-flex-col upup-items-center upup-justify-center">
                                     <p class="upup-text-xs upup-opacity-70">{{ tr.noAcceptedFilesFound }}</p>
                                 </div>
-                            </upup-should-render>
+                            }
                         </div>
-                    </upup-should-render>
+                    }
 
                     <!-- Footer: select folder, add files, cancel -->
-                    <upup-should-render [when]="!!selectedFiles().length || !!onSelectCurrentFolder">
+                    @if (!!selectedFiles().length || !!onSelectCurrentFolder) {
                         <div [class]="footerClass">
                             @if (onSelectCurrentFolder) {
                                 <button
@@ -102,9 +104,9 @@ import { DriveBrowserItemComponent } from './drive-browser-item.component'
                                 {{ tr.cancel }}
                             </button>
                         </div>
-                    </upup-should-render>
+                    }
                 </div>
-            </upup-should-render>
+            }
         </upup-adapter-view-container>
     `,
 })
@@ -133,6 +135,10 @@ export class DriveBrowserComponent {
 
     // ── Derived ───────────────────────────────────────────────────
     readonly isLoading = computed(() => (this.isClickLoading?.() ?? false) || !this.driveFiles?.())
+
+    get loader(): Type<unknown> {
+        return this.store.uiProps.icons.LoaderIcon as Type<unknown>
+    }
 
     readonly items = computed(() => {
         const currentFolder = this.path()?.at(-1)
