@@ -1,9 +1,9 @@
 import { html, nothing } from 'lit-html'
 import { cn } from '../lib/cn'
-import type { RootContext } from '../lib/types'
+import type { UploaderContext } from '../lib/types'
 import { uploadSourceObject } from '../lib/constants'
 
-export function sourceView(ctx: RootContext) {
+export function sourceView(ctx: UploaderContext) {
   const active = ctx.orchestrator.getSnapshot().activeAdapter
   const entry = active ? uploadSourceObject[active] : undefined
   const View = entry?.View

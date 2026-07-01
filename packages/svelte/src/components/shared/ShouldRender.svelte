@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { Snippet } from 'svelte'
-  import { useUploaderOptions } from '../../context/root-context'
+  import { useUploaderOptions } from '../../context/uploader-context'
   let { if: condition, isLoading = false, children }:
     { if: boolean; isLoading?: boolean; children?: Snippet } = $props()
   const { icons } = useUploaderOptions()

@@ -1,9 +1,9 @@
 import { html, nothing } from 'lit-html'
 import { isUploadActive, cn } from '@upup/core'
-import type { RootContext } from '../../lib/types'
+import type { UploaderContext } from '../../lib/types'
 
 export function progressBar(
-  ctx: RootContext,
+  ctx: UploaderContext,
   opts: { progress: number; showValue?: boolean; progressBarClassName?: string; class?: string },
 ) {
   const { progress, showValue = false, progressBarClassName = '', class: className = '' } = opts

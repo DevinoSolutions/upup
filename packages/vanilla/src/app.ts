@@ -1,13 +1,13 @@
 import { html, nothing, render } from 'lit-html'
 import { ref } from 'lit-html/directives/ref.js'
 import { cn } from './lib/cn'
-import type { RootContext } from './lib/types'
+import type { UploaderContext } from './lib/types'
 import { uploaderPanel } from './templates/uploader-panel'
 import { imageEditorStub } from './templates/image-editor-stub'
 import { devinoDark, devinoLight, logoDark, logoLight } from './assets/logos'
 
 /** Root App template. Pure function of ctx + current store snapshots. */
-export function App(ctx: RootContext) {
+export function App(ctx: UploaderContext) {
   const isDark = ctx.theme.getSnapshot().isDark
   const slotOverrides = ctx.theme.getSnapshot().slotOverrides
   const status = ctx.orchestrator.getSnapshot().uploadStatus
@@ -87,7 +87,7 @@ export function App(ctx: RootContext) {
 }
 
 /** Mounts the render loop into rootEl and toggles the dark class on the scope element. */
-export function createRenderLoop(ctx: RootContext, rootEl: HTMLElement) {
+export function createRenderLoop(ctx: UploaderContext, rootEl: HTMLElement) {
   let scheduled = false
   let stopped = false
 

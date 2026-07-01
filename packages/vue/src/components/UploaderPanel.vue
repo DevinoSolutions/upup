@@ -6,7 +6,7 @@ import {
     useUploaderSource,
     useUploaderTheme,
     useUploaderView,
-} from '../context/root-context'
+} from '../context/uploader-context'
 import useUploaderPanel from '../composables/useUploaderPanel'
 import { cn } from '@upup/core'
 import SourceSelector from './SourceSelector.vue'

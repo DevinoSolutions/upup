@@ -9,7 +9,7 @@ import {
   PREVIEW_TEXT_TRUNCATE_LENGTH,
   cn,
 } from '@upup/core'
-import type { RootContext } from '../lib/types'
+import type { UploaderContext } from '../lib/types'
 import { shouldRender } from './should-render'
 
 // Text-preview fetch state, stored on the per-file FileItemState cell so it survives
@@ -22,7 +22,7 @@ export interface TextState {
   fetched: boolean
 }
 
-async function loadText(state: TextState, fileUrl: string, isOversized: boolean, ctx: RootContext): Promise<void> {
+async function loadText(state: TextState, fileUrl: string, isOversized: boolean, ctx: UploaderContext): Promise<void> {
   if (state.fetched || state.loading) return
   state.loading = true
   ctx.invalidate()
@@ -58,7 +58,7 @@ async function loadText(state: TextState, fileUrl: string, isOversized: boolean,
 }
 
 export function filePreviewPortal(
-  ctx: RootContext,
+  ctx: UploaderContext,
   args: {
     fileType: string
     fileUrl: string

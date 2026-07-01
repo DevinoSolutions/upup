@@ -8,7 +8,7 @@ import {
     useUploaderRuntime,
     useUploaderTheme,
     useUploaderView,
-} from '../context/RootContext'
+} from '../context/UploaderContext'
 import useSourceSelector from '../hooks/useSourceSelector'
 import ShouldRender from './shared/ShouldRender'
 

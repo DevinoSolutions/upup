@@ -6,7 +6,7 @@ import {
     useUploaderOptions,
     useUploaderRuntime,
     useUploaderSource,
-} from '../context/root-context'
+} from '../context/uploader-context'
 import { uploadSourceObject } from '../lib/constants'
 
 export default function useSourceSelector() {

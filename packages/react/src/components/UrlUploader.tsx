@@ -6,7 +6,7 @@ import {
     useUploaderRuntime,
     useUploaderSource,
     useUploaderTheme,
-} from '../context/RootContext'
+} from '../context/UploaderContext'
 import useFetchFileByUrl from '../hooks/useFetchFileByUrl'
 import { cn } from '@upup/core'
 import SourceViewContainer from './shared/SourceViewContainer'

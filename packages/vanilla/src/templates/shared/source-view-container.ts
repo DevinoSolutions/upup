@@ -1,10 +1,10 @@
 import { html } from 'lit-html'
 import type { TemplateResult } from 'lit-html'
 import { cn } from '../../lib/cn'
-import type { RootContext } from '../../lib/types'
+import type { UploaderContext } from '../../lib/types'
 
 export function sourceViewContainer(
-  ctx: RootContext,
+  ctx: UploaderContext,
   opts: { isLoading?: boolean; dataUpupSlot?: string; dataTestid?: string },
   children: TemplateResult,
 ) {

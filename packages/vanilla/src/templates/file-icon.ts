@@ -1,10 +1,10 @@
 import { html } from 'lit-html'
 import { cn } from '../lib/cn'
 import { fileTypeIconName } from '@upup/core'
-import type { RootContext } from '../lib/types'
+import type { UploaderContext } from '../lib/types'
 import { icon } from './icon'
 
-export function fileIcon(ctx: RootContext, extension = '', className = '') {
+export function fileIcon(ctx: UploaderContext, extension = '', className = '') {
   const isDark = ctx.theme.getSnapshot().isDark
   const iconClass = cn('upup-text-5xl upup-text-blue-600', className, { 'upup-text-[#59D1F9] dark:upup-text-[#59D1F9]': isDark })
   return html`

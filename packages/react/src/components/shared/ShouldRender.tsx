@@ -1,5 +1,5 @@
 import React, { PropsWithChildren } from 'react'
-import { useUploaderOptions } from '../../context/RootContext'
+import { useUploaderOptions } from '../../context/UploaderContext'
 
 export default function ShouldRender({
     children,

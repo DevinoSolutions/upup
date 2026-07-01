@@ -14,7 +14,7 @@ import Icon from './components/Icon'
 import DefaultLoaderIcon from './components/DefaultLoaderIcon'
 import UploaderPanel from './components/UploaderPanel'
 import ShouldRender from './components/shared/ShouldRender'
-import { RootContextProvider } from './context/RootContext'
+import { UploaderContextProvider } from './context/UploaderContext'
 import useRootProvider from './hooks/useRootProvider'
 import useUpload from './hooks/useUpload'
 import { UpupThemeProvider } from './theme'
@@ -62,7 +62,7 @@ export default forwardRef<UploaderRef, UploaderProps>(
 
         return (
             <UpupThemeProvider theme={props.theme}>
-            <RootContextProvider value={providerValues}>
+            <UploaderContextProvider value={providerValues}>
                 <div className={`upup-scope upup-h-full upup-w-full ${providerValues.props.className ?? ''}`} style={providerValues.props.style} data-testid="upup-root" data-upup-slot="root" data-state={providerValues.upload.uploadStatus?.toLowerCase() ?? 'idle'} lang={providerValues.lang} dir={providerValues.dir}>
                     <div
                         className={cn('upup-w-full', {
@@ -236,7 +236,7 @@ export default forwardRef<UploaderRef, UploaderProps>(
                             />
                         </Suspense>
                     )}
-            </RootContextProvider>
+            </UploaderContextProvider>
             </UpupThemeProvider>
         )
     },

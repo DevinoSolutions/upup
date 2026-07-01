@@ -10,7 +10,7 @@ import {
     useUploaderFiles,
     useUploaderRuntime,
     useUploaderSource,
-} from '../context/RootContext'
+} from '../context/UploaderContext'
 
 /** Stable fallback snapshot for the first render (core is created post-paint, so the
  *  controller is briefly null) and for useSyncExternalStore's server snapshot.

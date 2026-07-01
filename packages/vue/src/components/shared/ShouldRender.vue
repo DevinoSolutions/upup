@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useUploaderOptions } from '../../context/root-context'
+import { useUploaderOptions } from '../../context/uploader-context'
 
 defineProps<{
     if: boolean

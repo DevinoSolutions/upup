@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { sanitizeFileName, extensionFromMime, fileNameFromContentDisposition, deriveFetchedFileName } from '@upup/core'
-import { useUploaderOptions, useUploaderRuntime } from '../context/RootContext'
+import { useUploaderOptions, useUploaderRuntime } from '../context/UploaderContext'
 
 export { deriveFetchedFileName }
 

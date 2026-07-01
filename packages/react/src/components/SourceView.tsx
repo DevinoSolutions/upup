@@ -5,7 +5,7 @@ import {
     useUploaderRuntime,
     useUploaderSource,
     useUploaderTheme,
-} from '../context/RootContext'
+} from '../context/UploaderContext'
 import { uploadSourceObject } from '../lib/constants'
 import { cn } from '@upup/core'
 import DefaultLoaderIcon from './DefaultLoaderIcon'

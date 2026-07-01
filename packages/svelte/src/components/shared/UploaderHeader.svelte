@@ -8,7 +8,7 @@
     useUploaderTheme,
     useUploaderUploadControls,
     useUploaderView,
-  } from '../../context/root-context'
+  } from '../../context/uploader-context'
   import Icon from '../Icon.svelte'
   import ShouldRender from './ShouldRender.svelte'
 

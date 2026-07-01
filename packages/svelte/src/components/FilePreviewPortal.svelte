@@ -8,7 +8,7 @@
     PREVIEW_MAX_TEXT_SIZE,
     PREVIEW_TEXT_TRUNCATE_LENGTH,
   } from '@upup/core'
-  import { useUploaderI18n, useUploaderTheme } from '../context/root-context'
+  import { useUploaderI18n, useUploaderTheme } from '../context/uploader-context'
   import ShouldRender from './shared/ShouldRender.svelte'
 
   let {

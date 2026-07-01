@@ -1,9 +1,9 @@
 import { html, nothing } from 'lit-html'
 import { formatUiMessage as t, pluralUiMessage as plural, isUploadActive, cn } from '@upup/core'
-import type { RootContext } from '../../lib/types'
+import type { UploaderContext } from '../../lib/types'
 import { icon } from '../icon'
 
-export function uploaderHeader(ctx: RootContext, handleCancel: () => void) {
+export function uploaderHeader(ctx: UploaderContext, handleCancel: () => void) {
   const mini = ctx.props.mini
   if (mini) return nothing
 

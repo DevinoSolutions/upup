@@ -15,7 +15,7 @@
     useUploaderOptions,
     useUploaderTheme,
     useUploaderUploadControls,
-  } from '../context/root-context'
+  } from '../context/uploader-context'
   import FilePreviewThumbnail from './FilePreviewThumbnail.svelte'
   import ProgressBar from './shared/ProgressBar.svelte'
   import ShouldRender from './shared/ShouldRender.svelte'

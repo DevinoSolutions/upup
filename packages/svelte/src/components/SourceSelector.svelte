@@ -7,7 +7,7 @@
     useUploaderRuntime,
     useUploaderTheme,
     useUploaderView,
-  } from '../context/root-context'
+  } from '../context/uploader-context'
   import useSourceSelector from '../composables/useSourceSelector'
   import Icon from './Icon.svelte'
   import ShouldRender from './shared/ShouldRender.svelte'

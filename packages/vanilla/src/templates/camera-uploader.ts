@@ -1,10 +1,10 @@
 import { html, nothing } from 'lit-html'
 import { ref } from 'lit-html/directives/ref.js'
 import { formatUiMessage as t, cn } from '@upup/core'
-import type { RootContext } from '../lib/types'
+import type { UploaderContext } from '../lib/types'
 import { sourceViewContainer } from './shared/source-view-container'
 
-export function cameraUploader(ctx: RootContext) {
+export function cameraUploader(ctx: UploaderContext) {
   const cam = ctx.controllers.getCamera()
   const s = cam.getSnapshot()
   const isDark = ctx.theme.getSnapshot().isDark

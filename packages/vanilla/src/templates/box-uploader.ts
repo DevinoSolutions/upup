@@ -1,9 +1,9 @@
 import { FileSource } from '@upup/core'
-import type { RootContext } from '../lib/types'
+import type { UploaderContext } from '../lib/types'
 import { clientDriveUploader } from './client-drive-uploader'
 import { serverModeDriveUploader } from './server-mode-drive-uploader'
 
-export function boxUploader(ctx: RootContext) {
+export function boxUploader(ctx: UploaderContext) {
   return ctx.mode === 'server'
     ? serverModeDriveUploader(ctx, { provider: 'box', onBack: () => ctx.setActiveAdapter(undefined) })
     : clientDriveUploader(ctx, FileSource.BOX)

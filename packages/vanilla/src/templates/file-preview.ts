@@ -5,7 +5,7 @@ import {
   fileGetIsImage,
   cn,
 } from '@upup/core'
-import type { RootContext } from '../lib/types'
+import type { UploaderContext } from '../lib/types'
 import { shouldRender } from './should-render'
 import { progressBar } from './shared/progress-bar'
 import { filePreviewThumbnail } from './file-preview-thumbnail'
@@ -20,7 +20,7 @@ function formatFileSize(bytes: number | undefined, tr: Translations): string {
 }
 
 export function filePreview(
-  ctx: RootContext,
+  ctx: UploaderContext,
   file: UploadFile,
   state: { canPreview: boolean },
   opts: { onRequestPreview: () => void },

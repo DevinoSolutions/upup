@@ -1,11 +1,11 @@
 import { html } from 'lit-html'
 import { cn } from '@upup/core'
 import type { DriveFile, DriveFolder } from '@upup/core'
-import type { RootContext } from '../../lib/types'
+import type { UploaderContext } from '../../lib/types'
 import { driveBrowserIcon } from './drive-browser-icon'
 
 export function driveBrowserItem(
-  ctx: RootContext,
+  ctx: UploaderContext,
   args: {
     item: DriveFile | DriveFolder
     isSelected: boolean

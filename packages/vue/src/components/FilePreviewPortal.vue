@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { formatUiMessage as t, cn } from '@upup/core'
-import { useUploaderI18n, useUploaderTheme } from '../context/root-context'
+import { useUploaderI18n, useUploaderTheme } from '../context/uploader-context'
 import {
     fileGetIsImage,
     fileGetIsPdf,

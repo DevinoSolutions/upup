@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { useUploaderTheme } from '../../context/root-context'
+  import { useUploaderTheme } from '../../context/uploader-context'
   import { cn } from '@upup/core'
   import type { Snippet } from 'svelte'
 

@@ -25,7 +25,7 @@ describe('@upup/react public exports', () => {
     expect((ReactPackage as any).UploaderPanel).toBeUndefined()
     expect((ReactPackage as any).UrlUploader).toBeUndefined()
     expect((ReactPackage as any).createPropGetters).toBeUndefined()
-    expect((ReactPackage as any).useRootContext).toBeUndefined()
+    expect((ReactPackage as any).useUploaderContext).toBeUndefined()
   })
 
   it('keeps utilities that are intentionally public', () => {

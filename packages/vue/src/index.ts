@@ -6,7 +6,7 @@ export type {
 } from './use-upup-upload'
 
 export {
-  useRootContext,
+  useUploaderContext,
   useUploaderRuntime,
   useUploaderSource,
   useUploaderI18n,
@@ -16,10 +16,10 @@ export {
   useUploaderEditor,
   useUploaderOptions,
   useUploaderTheme,
-} from './context/root-context'
+} from './context/uploader-context'
 
 export type {
-  IRootContext,
+  IUploaderContext,
   ContextRuntime,
   ContextSource,
   ContextI18n,
@@ -30,7 +30,7 @@ export type {
   ContextTheme,
   ContextProps,
   ContextUpload,
-} from './context/root-context'
+} from './context/uploader-context'
 
 export type {
   UploaderProps,

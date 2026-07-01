@@ -107,7 +107,7 @@ export type ContextProps = Required<
         imageEditor: ResolvedImageEditorOptions
     }
 
-export interface IRootContext extends
+export interface IUploaderContext extends
     ContextRuntime,
     ContextSource,
     ContextI18n,
@@ -130,11 +130,11 @@ const ViewKey: InjectionKey<ContextView> = Symbol('upup-view')
 const EditorKey: InjectionKey<ContextEditor> = Symbol('upup-editor')
 const OptionsKey: InjectionKey<ContextProps> = Symbol('upup-options')
 const ThemeKey: InjectionKey<ContextTheme> = Symbol('upup-theme')
-const RootKey: InjectionKey<IRootContext> = Symbol('upup-root')
+const RootKey: InjectionKey<IUploaderContext> = Symbol('upup-root')
 
 // ─── Provider function ─────────────────────────────────────
 
-export function provideRootContext(value: IRootContext) {
+export function provideUploaderContext(value: IUploaderContext) {
     provide(RootKey, value)
     provide(RuntimeKey, {
         core: value.core,
@@ -199,7 +199,7 @@ function readInjection<T>(key: InjectionKey<T>, name: string): T {
     return value
 }
 
-export function useRootContext() { return readInjection(RootKey, 'useRootContext') }
+export function useUploaderContext() { return readInjection(RootKey, 'useUploaderContext') }
 export function useUploaderRuntime() { return readInjection(RuntimeKey, 'useUploaderRuntime') }
 export function useUploaderSource() { return readInjection(SourceKey, 'useUploaderSource') }
 export function useUploaderI18n() { return readInjection(I18nKey, 'useUploaderI18n') }

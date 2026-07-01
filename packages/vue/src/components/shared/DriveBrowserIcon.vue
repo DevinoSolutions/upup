@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { type DriveFile, cn, b64EncodeUnicode } from '@upup/core'
-import { useUploaderTheme } from '../../context/root-context'
+import { useUploaderTheme } from '../../context/uploader-context'
 import Icon from '../Icon'
 
 const props = defineProps<{ file: DriveFile }>()

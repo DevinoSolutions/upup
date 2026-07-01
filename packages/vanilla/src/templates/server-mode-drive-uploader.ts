@@ -1,7 +1,7 @@
 import { html, nothing } from 'lit-html'
 import { repeat } from 'lit-html/directives/repeat.js'
 import { cn } from '@upup/core'
-import type { RootContext } from '../lib/types'
+import type { UploaderContext } from '../lib/types'
 import { sourceViewContainer } from './shared/source-view-container'
 import { driveAuthFallback } from './shared/drive-auth-fallback'
 
@@ -26,10 +26,10 @@ interface ServerDriveState {
   authListener: ((ev: MessageEvent) => void) | null
 }
 
-// Per-ctx, per-provider state. WeakMap keyed by RootContext => GC-safe + no cross-instance
+// Per-ctx, per-provider state. WeakMap keyed by UploaderContext => GC-safe + no cross-instance
 // collision (replaces the fragile string-key/__id scheme).
-const cells = new WeakMap<RootContext, Map<ServerModeProvider, ServerDriveState>>()
-function cell(ctx: RootContext, provider: ServerModeProvider): ServerDriveState {
+const cells = new WeakMap<UploaderContext, Map<ServerModeProvider, ServerDriveState>>()
+function cell(ctx: UploaderContext, provider: ServerModeProvider): ServerDriveState {
   let m = cells.get(ctx)
   if (!m) { m = new Map(); cells.set(ctx, m) }
   let c = m.get(provider)
@@ -40,7 +40,7 @@ function cell(ctx: RootContext, provider: ServerModeProvider): ServerDriveState 
   return c
 }
 
-async function list(ctx: RootContext, provider: ServerModeProvider, opts?: { folderId?: string; search?: string }) {
+async function list(ctx: UploaderContext, provider: ServerModeProvider, opts?: { folderId?: string; search?: string }) {
   const c = cell(ctx, provider)
   const serverUrl = ctx.serverUrl
   if (!serverUrl) { c.state = { status: 'error', message: 'Server Mode requires `serverUrl` prop' }; ctx.invalidate(); return }
@@ -64,7 +64,7 @@ async function list(ctx: RootContext, provider: ServerModeProvider, opts?: { fol
   } finally { if (c.abort === ac) c.abort = null }
 }
 
-async function transfer(ctx: RootContext, provider: ServerModeProvider, file: ServerDriveFile): Promise<{ status: 'ok' | 'reauth' | 'error'; message?: string }> {
+async function transfer(ctx: UploaderContext, provider: ServerModeProvider, file: ServerDriveFile): Promise<{ status: 'ok' | 'reauth' | 'error'; message?: string }> {
   const serverUrl = ctx.serverUrl
   if (!serverUrl) return { status: 'error', message: 'Server Mode requires `serverUrl` prop' }
   try {
@@ -79,7 +79,7 @@ async function transfer(ctx: RootContext, provider: ServerModeProvider, file: Se
   } catch (err) { return { status: 'error', message: (err as Error).message } }
 }
 
-function startAuth(ctx: RootContext, provider: ServerModeProvider) {
+function startAuth(ctx: UploaderContext, provider: ServerModeProvider) {
   const serverUrl = ctx.serverUrl
   if (!serverUrl) return
   const c = cell(ctx, provider)
@@ -106,7 +106,7 @@ function formatBytes(bytes: number): string {
 }
 
 /** Disposer: abort in-flight + remove auth listeners + drop the ctx's cells. Called from create-uploader.destroy. */
-export function disposeServerDrives(ctx: RootContext) {
+export function disposeServerDrives(ctx: UploaderContext) {
   const m = cells.get(ctx)
   if (!m) return
   for (const c of m.values()) {
@@ -116,7 +116,7 @@ export function disposeServerDrives(ctx: RootContext) {
   cells.delete(ctx)
 }
 
-export function serverModeDriveUploader(ctx: RootContext, opts: { provider: ServerModeProvider; onBack?: () => void; dataUpupSlot?: string }) {
+export function serverModeDriveUploader(ctx: UploaderContext, opts: { provider: ServerModeProvider; onBack?: () => void; dataUpupSlot?: string }) {
   const { provider, onBack } = opts
   const c = cell(ctx, provider)
   if (!c.inited) { c.inited = true; void list(ctx, provider) }

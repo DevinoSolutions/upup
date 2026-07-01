@@ -13,7 +13,7 @@
     useUploaderI18n,
     useUploaderOptions,
     useUploaderTheme,
-  } from '../../context/root-context'
+  } from '../../context/uploader-context'
   import SourceViewContainer from './SourceViewContainer.svelte'
   import DriveBrowserHeader from './DriveBrowserHeader.svelte'
   import DriveBrowserItem from './DriveBrowserItem.svelte'

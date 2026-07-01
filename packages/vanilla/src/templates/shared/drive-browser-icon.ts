@@ -1,7 +1,7 @@
 import { html, nothing } from 'lit-html'
 import { cn, b64EncodeUnicode } from '@upup/core'
 import type { DriveFile } from '@upup/core'
-import type { RootContext } from '../../lib/types'
+import type { UploaderContext } from '../../lib/types'
 import { icon } from '../icon'
 
 function handleImgError(e: Event) {
@@ -11,7 +11,7 @@ function handleImgError(e: Event) {
   img.onerror = null
 }
 
-export function driveBrowserIcon(ctx: RootContext, args: { isFolder: boolean; file: DriveFile }) {
+export function driveBrowserIcon(ctx: UploaderContext, args: { isFolder: boolean; file: DriveFile }) {
   const { isFolder, file } = args
   const isDark = ctx.theme.getSnapshot().isDark
 

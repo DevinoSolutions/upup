@@ -91,7 +91,7 @@ export interface ControllerRegistry {
 }
 
 /** Resolved props (plain values, mirroring svelte ContextProps). */
-export interface RootContextProps {
+export interface UploaderContextProps {
   mini: boolean
   sources: FileSource[]
   allowedFileTypes: string
@@ -111,7 +111,7 @@ export interface RootContextProps {
 }
 
 /** The flat root context every template fn receives. Replicates svelte createRootProvider data without core extraction. */
-export interface RootContext {
+export interface UploaderContext {
   core: UpupCore
   orchestrator: UploaderOrchestrator
   theme: ThemeStore
@@ -121,7 +121,7 @@ export interface RootContext {
   translator: Translator
   lang: string
   dir: 'ltr' | 'rtl'
-  props: RootContextProps
+  props: UploaderContextProps
   cloudDrives: {
     googleDriveConfigs?: Record<string, string>
     oneDriveConfigs?: Record<string, string>

@@ -8,7 +8,7 @@ import {
     useUploaderOptions,
     useUploaderTheme,
     useUploaderUploadControls,
-} from '../context/root-context'
+} from '../context/uploader-context'
 import { fileCanPreviewText, fileGetIsImage, fileGetIsPdf, fileGetIsText } from '@upup/core'
 import { cn } from '@upup/core'
 import FilePreviewThumbnail from './FilePreviewThumbnail.vue'

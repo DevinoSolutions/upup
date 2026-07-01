@@ -1,7 +1,7 @@
 import { computed, shallowRef, onMounted, onUnmounted } from 'vue'
 import { ServerModeDriveController } from '@upup/core'
 import type { ServerModeProvider, ServerDriveFile } from '@upup/core'
-import { useUploaderRuntime } from '../context/root-context'
+import { useUploaderRuntime } from '../context/uploader-context'
 
 export type { ServerModeProvider, ServerDriveFile }
 

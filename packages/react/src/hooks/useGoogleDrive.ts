@@ -10,7 +10,7 @@ import {
     useUploaderFiles,
     useUploaderRuntime,
     useUploaderSource,
-} from '../context/RootContext'
+} from '../context/UploaderContext'
 
 /** Stable fallback snapshot — mirrors AdapterBrowserController constructor defaults. */
 const SERVER_SNAPSHOT: AdapterBrowserState = {

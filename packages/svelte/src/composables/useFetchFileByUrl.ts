@@ -1,6 +1,6 @@
 import { writable, get } from 'svelte/store'
 import { deriveFetchedFileName } from '@upup/core'
-import { useUploaderOptions, useUploaderRuntime } from '../context/root-context'
+import { useUploaderOptions, useUploaderRuntime } from '../context/uploader-context'
 
 export { deriveFetchedFileName }
 

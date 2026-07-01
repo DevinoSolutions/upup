@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll, vi } from 'vitest'
 import { defineComponent, h } from 'vue'
 import { mount } from '@vue/test-utils'
 import UpupUploader from '../src/upup-uploader.vue'
-import { useUploaderOptions } from '../src/context/root-context'
+import { useUploaderOptions } from '../src/context/uploader-context'
 
 // jsdom has no matchMedia; ThemeStore.init() (run from the uploader's onMounted)
 // subscribes to prefers-color-scheme, so without a stub mount() throws.

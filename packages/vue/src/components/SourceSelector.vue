@@ -8,7 +8,7 @@ import {
     useUploaderRuntime,
     useUploaderTheme,
     useUploaderView,
-} from '../context/root-context'
+} from '../context/uploader-context'
 import useSourceSelector from '../composables/useSourceSelector'
 import Icon from './Icon'
 import ShouldRender from './shared/ShouldRender.vue'

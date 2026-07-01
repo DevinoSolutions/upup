@@ -9,7 +9,7 @@ import React, {
 } from 'react'
 import { cn } from '@upup/core'
 import type { UploadFile } from '@upup/core'
-import { useUploaderOptions, useUploaderTheme } from '../context/RootContext'
+import { useUploaderOptions, useUploaderTheme } from '../context/UploaderContext'
 import {
     getFilerobotTheme,
     getImageEditorCssOverrides,

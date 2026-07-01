@@ -9,7 +9,7 @@ import {
 } from '@upup/core'
 import type { Component } from 'svelte'
 import type { UploaderProps } from '../shared/types'
-import type { IRootContext } from './root-context'
+import type { IUploaderContext } from './uploader-context'
 import { useUpupUpload } from '../use-upup-upload'
 import { useSSEProcessing } from '../composables/useSSEProcessing'
 import { toReadable } from '../lib/to-readable'
@@ -18,7 +18,7 @@ import TrashIcon from '../components/TrashIcon.svelte'
 
 const EMPTY_STYLE: Record<string, string> = {}
 
-export function createRootProvider(props: UploaderProps): IRootContext {
+export function createRootProvider(props: UploaderProps): IUploaderContext {
     // ── Destructure props with defaults ──────────────────────────
     const {
         allowedFileTypes: acceptProp = '*',
@@ -228,7 +228,7 @@ export function createRootProvider(props: UploaderProps): IRootContext {
 
     const resolvedStyle = style ?? EMPTY_STYLE
 
-    // ── Assemble IRootContext ────────────────────────────────────
+    // ── Assemble IUploaderContext ────────────────────────────────────
     return {
         core: upload.core,
         orchestrator: root.orchestrator,

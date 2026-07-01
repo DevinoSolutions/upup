@@ -1,7 +1,7 @@
 import { FileSource } from '@upup/core'
 import type { Translations } from '@upup/core'
 import type { TemplateResult } from 'lit-html'
-import type { RootContext } from './types'
+import type { UploaderContext } from './types'
 import {
   MyDeviceIcon, GoogleDriveIcon, OneDriveIcon, DropBoxIcon, BoxIcon,
   LinkIcon, CameraIcon, AudioIcon, ScreenCastIcon,
@@ -21,7 +21,7 @@ type SourceEntry = {
   id: FileSource
   nameKey: keyof Translations
   Icon: (props?: { size?: number; class?: string }) => TemplateResult
-  View?: (ctx: RootContext) => TemplateResult
+  View?: (ctx: UploaderContext) => TemplateResult
 }
 
 export const uploadSourceObject: Record<string, SourceEntry> = {

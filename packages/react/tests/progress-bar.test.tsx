@@ -4,7 +4,7 @@ import React from 'react'
 
 // ProgressBar reads focused uploader contexts; mock the slices needed to
 // render it standalone.
-vi.mock('../src/context/RootContext', () => ({
+vi.mock('../src/context/UploaderContext', () => ({
   useUploaderTheme: () => ({
     isDark: false,
     slotOverrides: {},

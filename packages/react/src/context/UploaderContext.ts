@@ -92,7 +92,7 @@ export type ContextEditor = BaseContextEditor
 
 export type ContextTheme = BaseContextTheme
 
-export interface IRootContext extends
+export interface IUploaderContext extends
     ContextRuntime,
     ContextSource,
     ContextI18n,
@@ -104,7 +104,7 @@ export interface IRootContext extends
     theme: ContextTheme
 }
 
-const RootContext = createContext<IRootContext | null>(null)
+const UploaderContext = createContext<IUploaderContext | null>(null)
 const RuntimeContext = createContext<ContextRuntime | null>(null)
 const SourceContext = createContext<ContextSource | null>(null)
 const I18nContext = createContext<ContextI18n | null>(null)
@@ -123,11 +123,11 @@ function readContext<T>(context: Context<T | null>, name: string): T {
     return value
 }
 
-export function RootContextProvider({
+export function UploaderContextProvider({
     value,
     children,
 }: {
-    value: IRootContext
+    value: IUploaderContext
     children: ReactNode
 }) {
     const runtime = useMemo<ContextRuntime>(() => ({
@@ -258,7 +258,7 @@ export function RootContextProvider({
     ])
 
     return createElement(
-        RootContext.Provider,
+        UploaderContext.Provider,
         { value },
         createElement(
             RuntimeContext.Provider,
@@ -301,8 +301,8 @@ export function RootContextProvider({
 }
 
 /** Compatibility aggregate hook. New internals should use the focused hooks. */
-export function useRootContext() {
-    return readContext(RootContext, 'useRootContext')
+export function useUploaderContext() {
+    return readContext(UploaderContext, 'useUploaderContext')
 }
 
 export function useUploaderRuntime() {
@@ -341,4 +341,4 @@ export function useUploaderTheme() {
     return readContext(ThemeContext, 'useUploaderTheme')
 }
 
-export default RootContext
+export default UploaderContext

@@ -5,7 +5,7 @@ import {
     useUploaderFiles,
     useUploaderOptions,
     useUploaderRuntime,
-} from '../context/root-context'
+} from '../context/uploader-context'
 import { toReadable } from '../lib/to-readable'
 
 export default function useUploaderPanel() {

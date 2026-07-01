@@ -10,7 +10,7 @@ import {
     useUploaderTheme,
     useUploaderUploadControls,
     useUploaderView,
-} from '../context/root-context'
+} from '../context/uploader-context'
 import Icon from './Icon'
 import FileItem from './FileItem.vue'
 import UploaderHeader from './shared/UploaderHeader.vue'

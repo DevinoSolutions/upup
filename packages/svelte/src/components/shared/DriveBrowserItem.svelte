@@ -1,6 +1,6 @@
 <script lang="ts">
   import { type DriveFile, cn } from '@upup/core'
-  import { useUploaderTheme } from '../../context/root-context'
+  import { useUploaderTheme } from '../../context/uploader-context'
   import DriveBrowserIcon from './DriveBrowserIcon.svelte'
 
   const { file, handleClick, selectedFiles }: {

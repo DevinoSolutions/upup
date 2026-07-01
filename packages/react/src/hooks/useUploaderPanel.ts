@@ -4,7 +4,7 @@ import {
     useUploaderFiles,
     useUploaderOptions,
     useUploaderRuntime,
-} from '../context/RootContext'
+} from '../context/UploaderContext'
 
 const EMPTY_SNAPSHOT: DragDropSnapshot = {
     isDragging: false,

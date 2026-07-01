@@ -3,7 +3,7 @@ import {
     useUploaderFiles,
     useUploaderSource,
     useUploaderTheme,
-} from '../context/RootContext'
+} from '../context/UploaderContext'
 import { cn } from '@upup/core'
 import SourceViewContainer from './shared/SourceViewContainer'
 

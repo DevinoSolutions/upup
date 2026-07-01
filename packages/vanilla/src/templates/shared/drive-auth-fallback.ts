@@ -1,10 +1,10 @@
 import { html } from 'lit-html'
 import { formatUiMessage as t, cn } from '@upup/core'
-import type { RootContext } from '../../lib/types'
+import type { UploaderContext } from '../../lib/types'
 import { sourceViewContainer } from './source-view-container'
 
 export function driveAuthFallback(
-  ctx: RootContext,
+  ctx: UploaderContext,
   opts: { providerName: string; onRetry: () => void; dataUpupSlot?: string },
 ) {
   const isDark = ctx.theme.getSnapshot().isDark

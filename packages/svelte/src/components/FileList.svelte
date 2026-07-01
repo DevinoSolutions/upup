@@ -17,7 +17,7 @@
     useUploaderTheme,
     useUploaderUploadControls,
     useUploaderView,
-  } from '../context/root-context'
+  } from '../context/uploader-context'
   import Icon from './Icon.svelte'
   import FileItem from './FileItem.svelte'
   import UploaderHeader from './shared/UploaderHeader.svelte'

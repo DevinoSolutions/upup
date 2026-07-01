@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { useUploaderTheme } from '../context/root-context'
+import { useUploaderTheme } from '../context/uploader-context'
 import { cn, fileTypeIconName } from '@upup/core'
 import Icon from './Icon'
 

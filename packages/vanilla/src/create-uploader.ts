@@ -1,5 +1,5 @@
 import { render, nothing } from 'lit-html'
-import { buildRootContext } from './context'
+import { buildUploaderContext } from './context'
 import { createRenderLoop } from './app'
 import { resolveTarget } from './lib/dom'
 import { disposeFileList } from './templates/file-list'
@@ -14,7 +14,7 @@ export function createUploader(
 
   // forward-ref invalidate cell (loop is created after context)
   let loopInvalidate: () => void = () => {}
-  const built = buildRootContext(options, () => loopInvalidate())
+  const built = buildUploaderContext(options, () => loopInvalidate())
   const { ctx } = built
   const loop = createRenderLoop(ctx, el)
   loopInvalidate = loop.invalidate

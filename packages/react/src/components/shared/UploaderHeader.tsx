@@ -8,7 +8,7 @@ import {
     useUploaderTheme,
     useUploaderUploadControls,
     useUploaderView,
-} from '../../context/RootContext'
+} from '../../context/UploaderContext'
 import ShouldRender from './ShouldRender'
 
 type Props = {

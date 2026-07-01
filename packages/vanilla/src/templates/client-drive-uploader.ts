@@ -1,6 +1,6 @@
 import { FileSource } from '@upup/core'
 import type { DriveFile, DriveFolder } from '@upup/core'
-import type { RootContext } from '../lib/types'
+import type { UploaderContext } from '../lib/types'
 import { driveAuthFallback } from './shared/drive-auth-fallback'
 import { driveBrowser } from './shared/drive-browser'
 
@@ -11,7 +11,7 @@ const META: Record<string, { providerName: string; slot: string }> = {
   [FileSource.BOX]: { providerName: 'Box', slot: 'box-uploader' },
 }
 
-export function clientDriveUploader(ctx: RootContext, source: FileSource) {
+export function clientDriveUploader(ctx: UploaderContext, source: FileSource) {
   const controller = ctx.controllers.getDrive(source)
   const st = controller.getSnapshot()
   const meta = META[source]

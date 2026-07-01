@@ -17,7 +17,7 @@ function makeFilesMap(count: number): Map<string, any> {
     return map
 }
 
-vi.mock('../src/context/RootContext', () => ({
+vi.mock('../src/context/UploaderContext', () => ({
     UploadStatus: {
         PENDING: 'PENDING',
         ONGOING: 'ONGOING',

@@ -8,7 +8,7 @@ import {
     type UploadFile,
 } from '@upup/core'
 import type { UploaderProps } from '../shared/types'
-import type { IRootContext } from '../context/root-context'
+import type { IUploaderContext } from '../context/uploader-context'
 import { useUpupUpload } from '../use-upup-upload'
 import { useSSEProcessing } from './useSSEProcessing'
 import { Icon } from '../components/Icon'
@@ -32,7 +32,7 @@ const DefaultFileDeleteIcon = defineComponent({
 
 const EMPTY_STYLE: Record<string, string> = {}
 
-export default function useRootProvider(props: UploaderProps): IRootContext {
+export default function useRootProvider(props: UploaderProps): IUploaderContext {
     // ── Destructure props with defaults ──────────────────────────
     const {
         allowedFileTypes: acceptProp = '*',
@@ -262,7 +262,7 @@ export default function useRootProvider(props: UploaderProps): IRootContext {
 
     const resolvedStyle = style ?? EMPTY_STYLE
 
-    // ── Assemble IRootContext ────────────────────────────────────
+    // ── Assemble IUploaderContext ────────────────────────────────────
     return {
         core,
         orchestrator: root.orchestrator,

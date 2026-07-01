@@ -4,7 +4,7 @@
     useUploaderFiles,
     useUploaderSource,
     useUploaderTheme,
-  } from '../context/root-context'
+  } from '../context/uploader-context'
   import { cn } from '@upup/core'
   import SourceViewContainer from './shared/SourceViewContainer.svelte'
 

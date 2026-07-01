@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { useUploaderFiles, useUploaderI18n, useUploaderRuntime, useUploaderSource, useUploaderTheme, useUploaderView } from '../context/root-context'
+  import { useUploaderFiles, useUploaderI18n, useUploaderRuntime, useUploaderSource, useUploaderTheme, useUploaderView } from '../context/uploader-context'
   import useUploaderPanel from '../composables/useUploaderPanel'
   import { cn } from '@upup/core'
   import ShouldRender from './shared/ShouldRender.svelte'

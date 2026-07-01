@@ -1,12 +1,12 @@
 import { html, nothing } from 'lit-html'
 import { repeat } from 'lit-html/directives/repeat.js'
 import { formatUiMessage as t, pluralUiMessage as plural, cn, FileSource } from '@upup/core'
-import type { RootContext } from '../lib/types'
+import type { UploaderContext } from '../lib/types'
 import { shouldRender } from './should-render'
 import { uploadSourceObject } from '../lib/constants'
 import { icon } from './icon'
 
-export function sourceSelector(ctx: RootContext) {
+export function sourceSelector(ctx: UploaderContext) {
   const isDark = ctx.theme.getSnapshot().isDark
   const slot = ctx.theme.getSnapshot().slotOverrides
   const tr = ctx.translations

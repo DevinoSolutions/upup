@@ -16,7 +16,7 @@ import {
     useUploaderI18n,
     useUploaderOptions,
     useUploaderTheme,
-} from '../../context/RootContext'
+} from '../../context/UploaderContext'
 import { searchDriveFiles } from '../../lib/file'
 import SourceViewContainer from './SourceViewContainer'
 import DriveBrowserHeader from './DriveBrowserHeader'

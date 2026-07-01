@@ -2,11 +2,11 @@ import { html, nothing } from 'lit-html'
 import { repeat } from 'lit-html/directives/repeat.js'
 import { cn } from '@upup/core'
 import type { DriveFolder } from '@upup/core'
-import type { RootContext } from '../../lib/types'
+import type { UploaderContext } from '../../lib/types'
 import { icon } from '../icon'
 
 export function driveBrowserHeader(
-  ctx: RootContext,
+  ctx: UploaderContext,
   args: {
     user: { name?: string; email?: string; picture?: string } | undefined
     path: DriveFolder[]

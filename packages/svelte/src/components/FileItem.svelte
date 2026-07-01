@@ -6,7 +6,7 @@
     useUploaderOptions,
     useUploaderRuntime,
     useUploaderTheme,
-  } from '../context/root-context'
+  } from '../context/uploader-context'
   import FilePreview from './FilePreview.svelte'
   import FilePreviewPortal from './FilePreviewPortal.svelte'
 

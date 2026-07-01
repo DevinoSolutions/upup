@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useUploaderEditor, useUploaderTheme } from '../context/root-context'
+import { useUploaderEditor, useUploaderTheme } from '../context/uploader-context'
 import { cn } from '@upup/core'
 
 const { editingFile, closeImageEditor } = useUploaderEditor()

@@ -6,7 +6,7 @@ import {
     useUploaderOptions,
     useUploaderRuntime,
     useUploaderTheme,
-} from '../context/RootContext'
+} from '../context/UploaderContext'
 import FilePreview from './FilePreview'
 import FilePreviewPortal from './FilePreviewPortal'
 

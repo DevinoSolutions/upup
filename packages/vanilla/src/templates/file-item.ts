@@ -2,7 +2,7 @@ import { html, nothing } from 'lit-html'
 import type { UploadFile } from '@upup/core'
 import { fileGetIsImage, fileGetIsPdf, fileGetIsText, fileCanPreviewText } from '@upup/core'
 import { cn } from '../lib/cn'
-import type { RootContext } from '../lib/types'
+import type { UploaderContext } from '../lib/types'
 import { filePreview } from './file-preview'
 import { filePreviewPortal, type TextState } from './file-preview-portal'
 
@@ -19,7 +19,7 @@ function stateFor(file: UploadFile): FileItemState {
   return s
 }
 
-export function fileItem(ctx: RootContext, file: UploadFile) {
+export function fileItem(ctx: UploaderContext, file: UploadFile) {
   const state = stateFor(file)
   const slot = ctx.theme.getSnapshot().slotOverrides
   const filesSize = ctx.core.files.size

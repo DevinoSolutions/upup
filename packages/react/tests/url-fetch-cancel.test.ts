@@ -1,11 +1,11 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
 
-// Test doubles captured by the RootContext mock below.
+// Test doubles captured by the UploaderContext mock below.
 const emit = vi.fn()
 const onError = vi.fn()
 
-vi.mock('../src/context/RootContext', () => ({
+vi.mock('../src/context/UploaderContext', () => ({
     useUploaderRuntime: () => ({ core: { emit } }),
     useUploaderOptions: () => ({ onError }),
 }))

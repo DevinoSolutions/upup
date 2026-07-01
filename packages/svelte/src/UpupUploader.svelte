@@ -2,7 +2,7 @@
 import { cn } from '@upup/core'
 import type { UploaderProps } from './shared/types'
 import { createRootProvider } from './context/create-root-provider'
-import { provideRootContext } from './context/root-context'
+import { provideUploaderContext } from './context/uploader-context'
 import ImageEditorStub from './components/ImageEditorStub.svelte'
 import UploaderPanel from './components/UploaderPanel.svelte'
 import { devinoDark, devinoLight, logoDark, logoLight } from './assets/logos'
@@ -12,7 +12,7 @@ let props: UploaderProps = $props()
 // React's one-shot context build); capturing the initial value here is intentional.
 // svelte-ignore state_referenced_locally
 const ctx = createRootProvider(props)
-provideRootContext(ctx)
+provideUploaderContext(ctx)
 
 const { isDark, slotOverrides } = ctx.theme
 const uploadStatus = ctx.upload.uploadStatus

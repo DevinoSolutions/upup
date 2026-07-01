@@ -11,7 +11,7 @@ import {
     useUploaderI18n,
     useUploaderOptions,
     useUploaderTheme,
-} from '../../context/root-context'
+} from '../../context/uploader-context'
 import { searchDriveFiles } from '@upup/core'
 import { cn } from '@upup/core'
 import SourceViewContainer from './SourceViewContainer.vue'

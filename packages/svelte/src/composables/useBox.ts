@@ -10,7 +10,7 @@ import {
     useUploaderFiles,
     useUploaderRuntime,
     useUploaderSource,
-} from '../context/root-context'
+} from '../context/uploader-context'
 import { toReadable } from '../lib/to-readable'
 
 export function useBox() {

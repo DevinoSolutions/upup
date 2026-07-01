@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { useUploaderTheme } from '../context/root-context'
+import { useUploaderTheme } from '../context/uploader-context'
 import {
     useServerModeDrive,
     type ServerDriveFile,

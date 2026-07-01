@@ -1,6 +1,6 @@
 import { memo, SVGAttributes } from 'react'
 import { cn, fileTypeIconName } from '@upup/core'
-import { useUploaderTheme } from '../context/RootContext'
+import { useUploaderTheme } from '../context/UploaderContext'
 import Icon from './Icon'
 
 export default memo(function FileIcon({

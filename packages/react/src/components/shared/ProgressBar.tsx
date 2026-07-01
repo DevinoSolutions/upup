@@ -3,7 +3,7 @@ import {
     useUploaderI18n,
     useUploaderTheme,
     useUploaderUploadControls,
-} from '../../context/RootContext'
+} from '../../context/UploaderContext'
 import { cn, isUploadActive } from '@upup/core'
 import ShouldRender from './ShouldRender'
 

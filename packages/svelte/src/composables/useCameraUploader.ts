@@ -7,7 +7,7 @@ import {
     useUploaderRuntime,
     useUploaderSource,
     useUploaderTheme,
-} from '../context/root-context'
+} from '../context/uploader-context'
 
 export enum FacingMode {
     Environment = 'environment',

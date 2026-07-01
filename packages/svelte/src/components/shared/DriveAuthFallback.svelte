@@ -1,6 +1,6 @@
 <script lang="ts">
   import { formatUiMessage as t, cn } from '@upup/core'
-  import { useUploaderI18n, useUploaderTheme } from '../../context/root-context'
+  import { useUploaderI18n, useUploaderTheme } from '../../context/uploader-context'
   import SourceViewContainer from './SourceViewContainer.svelte'
 
   const {

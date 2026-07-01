@@ -5,7 +5,7 @@ import {
     useUploaderI18n,
     useUploaderSource,
     useUploaderTheme,
-} from '../../context/RootContext'
+} from '../../context/UploaderContext'
 import ShouldRender from './ShouldRender'
 
 type Props = {

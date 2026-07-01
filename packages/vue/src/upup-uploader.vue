@@ -2,7 +2,7 @@
 import { cn } from '@upup/core'
 import type { UploaderProps } from './shared/types'
 import useRootProvider from './composables/useRootProvider'
-import { provideRootContext } from './context/root-context'
+import { provideUploaderContext } from './context/uploader-context'
 import UploaderPanel from './components/UploaderPanel.vue'
 import ImageEditorStub from './components/ImageEditorStub.vue'
 import { devinoDark, devinoLight, logoDark, logoLight } from './assets/logos'
@@ -20,7 +20,7 @@ const props = withDefaults(defineProps<UploaderProps>(), {
     webWorker: true,
 })
 const ctx = useRootProvider(props)
-provideRootContext(ctx)
+provideUploaderContext(ctx)
 
 function onInputChange(e: Event) {
     const target = e.target as HTMLInputElement

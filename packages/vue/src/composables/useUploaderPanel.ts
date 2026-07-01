@@ -4,7 +4,7 @@ import {
     useUploaderFiles,
     useUploaderOptions,
     useUploaderRuntime,
-} from '../context/root-context'
+} from '../context/uploader-context'
 
 export default function useUploaderPanel() {
     const { core, orchestrator } = useUploaderRuntime()

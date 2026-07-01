@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useUploaderRuntime, useUploaderSource } from '../context/root-context'
+import { useUploaderRuntime, useUploaderSource } from '../context/uploader-context'
 import ClientOneDriveUploader from './ClientOneDriveUploader.vue'
 import ServerModeDriveUploader from './ServerModeDriveUploader.vue'
 

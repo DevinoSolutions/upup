@@ -7,7 +7,7 @@ import {
     useUploaderSource,
     useUploaderTheme,
     useUploaderView,
-} from '../context/RootContext'
+} from '../context/UploaderContext'
 import useUploaderPanel from '../hooks/useUploaderPanel'
 import { cn } from '@upup/core'
 import SourceSelector from './SourceSelector'

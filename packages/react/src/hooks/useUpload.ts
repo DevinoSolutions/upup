@@ -1,4 +1,4 @@
-import { IRootContext } from '../context/RootContext'
+import { IUploaderContext } from '../context/UploaderContext'
 import { isUploadActive } from '@upup/core'
 
 export default function useUpload({
@@ -9,7 +9,7 @@ export default function useUpload({
     uploadFiles,
     resetState,
 }: Pick<
-    IRootContext,
+    IUploaderContext,
     | 'upload'
     | 'files'
     | 'setFiles'

@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { useUploaderTheme } from '../context/RootContext'
+import { useUploaderTheme } from '../context/UploaderContext'
 import {
     useServerModeDrive,
     type ServerDriveFile,

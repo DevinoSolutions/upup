@@ -1,12 +1,12 @@
 import { html } from 'lit-html'
 import { cn } from '../lib/cn'
-import type { RootContext } from '../lib/types'
+import type { UploaderContext } from '../lib/types'
 import { shouldRender } from './should-render'
 import { sourceView } from './source-view'
 import { sourceSelector } from './source-selector'
 import { fileList } from './file-list'
 
-export function uploaderPanel(ctx: RootContext) {
+export function uploaderPanel(ctx: UploaderContext) {
   const o = ctx.orchestrator.getSnapshot()
   const isDark = ctx.theme.getSnapshot().isDark
   const tr = ctx.translations

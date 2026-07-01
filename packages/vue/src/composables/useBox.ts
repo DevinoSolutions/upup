@@ -9,7 +9,7 @@ import {
     useUploaderFiles,
     useUploaderRuntime,
     useUploaderSource,
-} from '../context/root-context'
+} from '../context/uploader-context'
 
 export function useBox() {
     const { core } = useUploaderRuntime()

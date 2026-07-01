@@ -1,18 +1,18 @@
 import { html } from 'lit-html'
 import { cn, deriveFetchedFileName } from '@upup/core'
-import type { RootContext } from '../lib/types'
+import type { UploaderContext } from '../lib/types'
 import { sourceViewContainer } from './shared/source-view-container'
 import { icon } from './icon'
 
 interface UrlState { url: string; loading: boolean }
-const stateMap = new WeakMap<RootContext, UrlState>()
-function urlState(ctx: RootContext): UrlState {
+const stateMap = new WeakMap<UploaderContext, UrlState>()
+function urlState(ctx: UploaderContext): UrlState {
   let s = stateMap.get(ctx)
   if (!s) { s = { url: '', loading: false }; stateMap.set(ctx, s) }
   return s
 }
 
-async function fetchImage(ctx: RootContext, url: string): Promise<File | undefined> {
+async function fetchImage(ctx: UploaderContext, url: string): Promise<File | undefined> {
   const s = urlState(ctx)
   if (s.loading) return undefined
   try {
@@ -34,7 +34,7 @@ async function fetchImage(ctx: RootContext, url: string): Promise<File | undefin
   }
 }
 
-export function urlUploader(ctx: RootContext) {
+export function urlUploader(ctx: UploaderContext) {
   const s = urlState(ctx)
   const isDark = ctx.theme.getSnapshot().isDark
   const slot = ctx.theme.getSnapshot().slotOverrides

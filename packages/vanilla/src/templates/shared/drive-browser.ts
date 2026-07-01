@@ -2,7 +2,7 @@ import { html, nothing } from 'lit-html'
 import { repeat } from 'lit-html/directives/repeat.js'
 import { cn, formatUiMessage as t, pluralUiMessage as plural, searchDriveFiles } from '@upup/core'
 import type { DriveFile, DriveFolder, DriveUser } from '@upup/core'
-import type { RootContext } from '../../lib/types'
+import type { UploaderContext } from '../../lib/types'
 import { sourceViewContainer } from './source-view-container'
 import { driveBrowserHeader } from './drive-browser-header'
 import { driveBrowserItem } from './drive-browser-item'
@@ -25,8 +25,8 @@ export interface DriveBrowserProps {
 
 // Per-context search state (reset when props key changes)
 interface DriveSearchState { searchTerm: string; slotKey: string }
-const searchStateMap = new WeakMap<RootContext, DriveSearchState>()
-function getDriveSearchState(ctx: RootContext, slot: string): DriveSearchState {
+const searchStateMap = new WeakMap<UploaderContext, DriveSearchState>()
+function getDriveSearchState(ctx: UploaderContext, slot: string): DriveSearchState {
   let s = searchStateMap.get(ctx)
   if (!s || s.slotKey !== slot) {
     s = { searchTerm: '', slotKey: slot }
@@ -46,7 +46,7 @@ function filterItems(item: DriveFile, accept: string): boolean {
   })
 }
 
-export function driveBrowser(ctx: RootContext, props: DriveBrowserProps) {
+export function driveBrowser(ctx: UploaderContext, props: DriveBrowserProps) {
   const {
     driveFiles, user, handleSignOut, dataUpupSlot, path, setPath,
     isClickLoading, handleClick, selectedFiles, showLoader,

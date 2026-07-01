@@ -6,7 +6,7 @@ import {
     useUploaderOptions,
     useUploaderRuntime,
     useUploaderTheme,
-} from '../context/root-context'
+} from '../context/uploader-context'
 import { cn } from '@upup/core'
 import FilePreview from './FilePreview.vue'
 import FilePreviewPortal from './FilePreviewPortal.vue'

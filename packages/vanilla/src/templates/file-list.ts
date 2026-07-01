@@ -10,7 +10,7 @@ import {
   cn,
 } from '@upup/core'
 import type { UploadFile } from '@upup/core'
-import type { RootContext } from '../lib/types'
+import type { UploaderContext } from '../lib/types'
 import { fileItem } from './file-item'
 import { uploaderHeader } from './shared/uploader-header'
 import { progressBar } from './shared/progress-bar'
@@ -25,11 +25,11 @@ interface VirtualizerEntry {
    *  the ResizeObserver and removes all scroll/scrollend event listeners. */
   unmount: () => void
 }
-const virtualizers = new WeakMap<RootContext, VirtualizerEntry>()
+const virtualizers = new WeakMap<UploaderContext, VirtualizerEntry>()
 
-const scrollEls = new WeakMap<RootContext, HTMLDivElement | null>()
-const scrollRefCbs = new WeakMap<RootContext, (el: Element | undefined) => void>()
-function getScrollRefCb(ctx: RootContext): (el: Element | undefined) => void {
+const scrollEls = new WeakMap<UploaderContext, HTMLDivElement | null>()
+const scrollRefCbs = new WeakMap<UploaderContext, (el: Element | undefined) => void>()
+function getScrollRefCb(ctx: UploaderContext): (el: Element | undefined) => void {
   let cb = scrollRefCbs.get(ctx)
   if (!cb) {
     cb = (el: Element | undefined) => {
@@ -47,7 +47,7 @@ function getScrollRefCb(ctx: RootContext): (el: Element | undefined) => void {
   return cb
 }
 
-function getVirtualizer(ctx: RootContext, count: number, scrollEl: HTMLDivElement): Virtualizer<HTMLDivElement, HTMLDivElement> {
+function getVirtualizer(ctx: UploaderContext, count: number, scrollEl: HTMLDivElement): Virtualizer<HTMLDivElement, HTMLDivElement> {
   const entry = virtualizers.get(ctx)
   if (!entry) {
     const v = new Virtualizer<HTMLDivElement, HTMLDivElement>({
@@ -69,7 +69,7 @@ function getVirtualizer(ctx: RootContext, count: number, scrollEl: HTMLDivElemen
   }
 }
 
-export function disposeFileList(ctx: RootContext) {
+export function disposeFileList(ctx: UploaderContext) {
   const entry = virtualizers.get(ctx)
   if (entry) {
     // Call the cleanup fn returned by _didMount() — this is the public API for teardown.
@@ -98,7 +98,7 @@ function formatEta(seconds: number): string {
   return `${s}s left`
 }
 
-export function fileList(ctx: RootContext) {
+export function fileList(ctx: UploaderContext) {
   const o = ctx.orchestrator.getSnapshot()
   const files = [...ctx.core.files.values()]
   // Sort by relativePath || name (mirrors FileList.svelte sort)

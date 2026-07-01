@@ -1,5 +1,5 @@
 import React from 'react'
-import { useUploaderRuntime, useUploaderSource } from '../context/RootContext'
+import { useUploaderRuntime, useUploaderSource } from '../context/UploaderContext'
 import { useDropbox } from '../hooks/useDropbox'
 import DriveAuthFallback from './shared/DriveAuthFallback'
 import DriveBrowser from './shared/DriveBrowser'

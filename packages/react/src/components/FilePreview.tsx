@@ -17,7 +17,7 @@ import {
     useUploaderOptions,
     useUploaderTheme,
     useUploaderUploadControls,
-} from '../context/RootContext'
+} from '../context/UploaderContext'
 import { fileCanPreviewText, fileGetIsImage, fileGetIsPdf, fileGetIsText } from '../lib/file'
 import FilePreviewThumbnail from './FilePreviewThumbnail'
 import ProgressBar from './shared/ProgressBar'

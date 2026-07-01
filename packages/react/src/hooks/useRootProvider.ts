@@ -15,7 +15,7 @@ import {
 } from '@upup/core'
 import Icon from '../components/Icon'
 import { UploaderProps } from '../shared/types'
-import { IRootContext } from '../context/RootContext'
+import { IUploaderContext } from '../context/UploaderContext'
 import { useUpupUpload } from '../use-upup-upload'
 import { useSSEProcessing } from './useSSEProcessing'
 
@@ -76,7 +76,7 @@ function themeStateFromResolved(resolved: ThemeStoreState['resolved']): ThemeSto
     }
 }
 
-export default function useRootProvider(props: UploaderProps): IRootContext {
+export default function useRootProvider(props: UploaderProps): IUploaderContext {
     const {
         allowedFileTypes: acceptProp = '*',
         mini = false,
@@ -444,7 +444,7 @@ export default function useRootProvider(props: UploaderProps): IRootContext {
 
     const resolvedStyle = style ?? EMPTY_STYLE
 
-    // ── Assemble IRootContext ────────────────────────────────────
+    // ── Assemble IUploaderContext ────────────────────────────────────
     // themeState fields match ContextTheme 1:1 (ThemeStoreState ≡ ContextTheme shape)
     return {
         core,

@@ -1,5 +1,5 @@
 export { createUploader } from './create-uploader'
-export type { UpupInstance, CreateUploaderOptions, UploaderSnapshot, RootContext } from './lib/types'
+export type { UpupInstance, CreateUploaderOptions, UploaderSnapshot, UploaderContext } from './lib/types'
 // re-export the same core types svelte re-exports
 export { FileSource, StorageProvider, UploadStatus } from '@upup/core'
 export type {

@@ -1,6 +1,6 @@
 <script lang="ts">
   import { cn, fileTypeIconName } from '@upup/core'
-  import { useUploaderTheme } from '../context/root-context'
+  import { useUploaderTheme } from '../context/uploader-context'
   import Icon from './Icon.svelte'
 
   let { extension = '', class: className = '' }: { extension?: string; class?: string } = $props()

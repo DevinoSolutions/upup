@@ -7,14 +7,14 @@ import {
   normalizeRootOptions, createRootController, createChildController,
   type UploadFile,
 } from '@upup/core'
-import type { CreateUploaderOptions, RootContext, RootContextProps, ControllerRegistry } from './lib/types'
+import type { CreateUploaderOptions, UploaderContext, UploaderContextProps, ControllerRegistry } from './lib/types'
 import { FileInputController } from './controllers/file-input'
 import { CameraController } from './controllers/camera'
 import { AudioRecorderController } from './controllers/audio-recorder'
 import { ScreenCaptureController } from './controllers/screen-capture'
 
 export interface BuildResult {
-  ctx: RootContext
+  ctx: UploaderContext
   /** Subscribe the render loop to all stores + the core state-change event. Returns an unsub-all. */
   subscribeAll(onChange: () => void): () => void
   /** Run orchestrator.init()/theme.init() + register plugins (called once after first render). */
@@ -23,7 +23,7 @@ export interface BuildResult {
   dispose(): void
 }
 
-export function buildRootContext(
+export function buildUploaderContext(
   options: CreateUploaderOptions,
   invalidate: () => void,
 ): BuildResult {
@@ -133,7 +133,7 @@ export function buildRootContext(
 
   // ── 10. Props assembly (from root.resolved + vanilla-only fields) ──
   const { resolved } = root
-  const props: RootContextProps = {
+  const props: UploaderContextProps = {
     mini: resolved.mini,
     sources: resolved.sources,
     allowedFileTypes: resolved.allowedFileTypes,
@@ -152,8 +152,8 @@ export function buildRootContext(
     resumable: resolved.resumable,
   }
 
-  // ── 11. RootContext assembly ──
-  const ctx: RootContext = {
+  // ── 11. UploaderContext assembly ──
+  const ctx: UploaderContext = {
     core,
     orchestrator: root.orchestrator,
     theme: root.theme,

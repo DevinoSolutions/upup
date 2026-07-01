@@ -9,7 +9,7 @@ import React, {
 } from 'react'
 import { createPortal } from 'react-dom'
 import { cn, formatUiMessage as t } from '@upup/core'
-import { useUploaderI18n, useUploaderTheme } from '../context/RootContext'
+import { useUploaderI18n, useUploaderTheme } from '../context/UploaderContext'
 import {
     fileGetIsImage,
     fileGetIsPdf,

@@ -11,7 +11,7 @@ import {
     useUploaderTheme,
     useUploaderUploadControls,
     useUploaderView,
-} from '../context/RootContext'
+} from '../context/UploaderContext'
 import FileItem from './FileItem'
 import UploaderHeader from './shared/UploaderHeader'
 import ProgressBar from './shared/ProgressBar'

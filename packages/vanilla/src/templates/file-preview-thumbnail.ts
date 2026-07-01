@@ -7,12 +7,12 @@ import {
   fileIs3D,
   cn,
 } from '@upup/core'
-import type { RootContext } from '../lib/types'
+import type { UploaderContext } from '../lib/types'
 import { shouldRender } from './should-render'
 import { fileIcon } from './file-icon'
 
 export function filePreviewThumbnail(
-  ctx: RootContext,
+  ctx: UploaderContext,
   args: {
     canPreview: boolean
     fileType: string

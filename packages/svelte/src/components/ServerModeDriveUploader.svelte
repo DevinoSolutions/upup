@@ -2,7 +2,7 @@
   import { writable, derived } from 'svelte/store'
   import { untrack } from 'svelte'
   import { cn } from '@upup/core'
-  import { useUploaderTheme } from '../context/root-context'
+  import { useUploaderTheme } from '../context/uploader-context'
   import {
     useServerModeDrive,
     type ServerDriveFile,

@@ -3,7 +3,7 @@ import {
     useUploaderI18n,
     useUploaderTheme,
     useUploaderUploadControls,
-} from '../../context/root-context'
+} from '../../context/uploader-context'
 import { isUploadActive, cn } from '@upup/core'
 import ShouldRender from './ShouldRender.vue'
 

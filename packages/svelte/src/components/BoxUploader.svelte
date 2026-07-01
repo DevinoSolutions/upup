@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { useUploaderRuntime, useUploaderSource } from '../context/root-context'
+  import { useUploaderRuntime, useUploaderSource } from '../context/uploader-context'
   import ClientBoxUploader from './ClientBoxUploader.svelte'
   import ServerModeDriveUploader from './ServerModeDriveUploader.svelte'
 

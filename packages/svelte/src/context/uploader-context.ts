@@ -101,7 +101,7 @@ export type ContextProps = Required<
         imageEditor: ResolvedImageEditorOptions
     }
 
-export interface IRootContext
+export interface IUploaderContext
     extends ContextRuntime, ContextSource, ContextI18n, ContextFiles,
         ContextUploadControls, ContextView, ContextEditor {
     props: ContextProps
@@ -121,7 +121,7 @@ const ThemeKey = Symbol('upup-theme')
 const RootKey = Symbol('upup-root')
 
 // ─── Provider ───────────────────────────────────────────────
-export function provideRootContext(value: IRootContext): void {
+export function provideUploaderContext(value: IUploaderContext): void {
     setContext(RootKey, value)
     setContext(RuntimeKey, {
         core: value.core,
@@ -186,7 +186,7 @@ function read<T>(key: symbol, name: string): T {
     return value
 }
 
-export const useRootContext = () => read<IRootContext>(RootKey, 'useRootContext')
+export const useUploaderContext = () => read<IUploaderContext>(RootKey, 'useUploaderContext')
 export const useUploaderRuntime = () => read<ContextRuntime>(RuntimeKey, 'useUploaderRuntime')
 export const useUploaderSource = () => read<ContextSource>(SourceKey, 'useUploaderSource')
 export const useUploaderI18n = () => read<ContextI18n>(I18nKey, 'useUploaderI18n')
