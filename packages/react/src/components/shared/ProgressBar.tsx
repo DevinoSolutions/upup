@@ -5,7 +5,6 @@ import {
     useUploaderUploadControls,
 } from '../../context/UploaderContext'
 import { cn, isUploadActive } from '@upup/core'
-import ShouldRender from './ShouldRender'
 
 type Props = {
     progress: number
@@ -21,7 +20,7 @@ export default forwardRef<HTMLDivElement, Props>(function ProgressBar(
     const { translations: tr } = useUploaderI18n()
     const { upload: { uploadStatus } } = useUploaderUploadControls()
     return (
-        <ShouldRender if={!!progress || isUploadActive(uploadStatus)}>
+        (!!progress || isUploadActive(uploadStatus)) && (
             <div data-testid="upup-progress-bar"
                 data-upup-slot="progress-bar"
                 ref={ref}
@@ -57,7 +56,7 @@ export default forwardRef<HTMLDivElement, Props>(function ProgressBar(
                         )}
                     />
                 </div>
-                <ShouldRender if={!!showValue}>
+                {!!showValue && (
                     <p
                         className={cn(
                             'upup-text-xs upup-font-semibold',
@@ -70,8 +69,8 @@ export default forwardRef<HTMLDivElement, Props>(function ProgressBar(
                     >
                         {progress}%
                     </p>
-                </ShouldRender>
+                )}
             </div>
-        </ShouldRender>
+        )
     )
 })

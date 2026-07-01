@@ -21,7 +21,6 @@ import {
 import { fileCanPreviewText, fileGetIsImage, fileGetIsPdf, fileGetIsText } from '../lib/file'
 import FilePreviewThumbnail from './FilePreviewThumbnail'
 import ProgressBar from './shared/ProgressBar'
-import ShouldRender from './shared/ShouldRender'
 
 type Props = {
     fileName: string
@@ -142,7 +141,7 @@ export default memo(function FilePreview(props: Props) {
                     isImage ? { backgroundImage: `url(${fileUrl})` } : undefined
                 }
             >
-                <ShouldRender if={!isImage}>
+                {!isImage && (
                     <div className="upup-flex upup-h-full upup-items-center upup-justify-center upup-p-6">
                         <FilePreviewThumbnail
                             canPreview={canPreview}
@@ -156,7 +155,7 @@ export default memo(function FilePreview(props: Props) {
                             labels={tr}
                         />
                     </div>
-                </ShouldRender>
+                )}
 
                 {isImage && imageEditor.enabled && (
                     <button

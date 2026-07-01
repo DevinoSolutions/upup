@@ -15,7 +15,6 @@ import {
 import FileItem from './FileItem'
 import UploaderHeader from './shared/UploaderHeader'
 import ProgressBar from './shared/ProgressBar'
-import ShouldRender from './shared/ShouldRender'
 
 const VIRTUAL_SCROLL_THRESHOLD = 20
 const ESTIMATED_ITEM_HEIGHT = 76 // px — approximate FileItem row height
@@ -171,12 +170,8 @@ export default memo(function FileList() {
                 )}
             >
                 {/* FIX: Hide upload button when status is SUCCESSFUL or FAILED */}
-                <ShouldRender
-                    if={
-                        uploadStatus !== UploadStatus.SUCCESSFUL &&
-                        uploadStatus !== UploadStatus.FAILED
-                    }
-                >
+                {uploadStatus !== UploadStatus.SUCCESSFUL &&
+                    uploadStatus !== UploadStatus.FAILED && (
                     <button
                         data-testid="upup-upload-btn"
                         className={cn(
@@ -200,8 +195,8 @@ export default memo(function FileList() {
                             count: files.size,
                         })}
                     </button>
-                </ShouldRender>
-                <ShouldRender if={uploadStatus === UploadStatus.FAILED}>
+                )}
+                {uploadStatus === UploadStatus.FAILED && (
                     <button
                         data-testid="upup-retry-btn"
                         className={cn(
@@ -219,8 +214,8 @@ export default memo(function FileList() {
                             ? tr.resumeUpload
                             : tr.retryUpload}
                     </button>
-                </ShouldRender>
-                <ShouldRender if={uploadStatus === UploadStatus.SUCCESSFUL}>
+                )}
+                {uploadStatus === UploadStatus.SUCCESSFUL && (
                     <button
                         className={cn(
                             'upup-disabled:animate-pulse upup-ml-auto upup-rounded-lg upup-bg-blue-600 upup-px-3 upup-py-2 upup-text-sm upup-font-medium upup-text-white',
@@ -234,16 +229,13 @@ export default memo(function FileList() {
                     >
                         {tr.done}
                     </button>
-                </ShouldRender>
+                )}
                 <div className="upup-flex upup-flex-1 upup-flex-col upup-gap-1">
                     <div className="upup-flex upup-items-center upup-gap-2">
-                        <ShouldRender
-                            if={
-                                resumable?.protocol === 'multipart' &&
-                                (isUploadActive(uploadStatus) ||
-                                    uploadStatus === UploadStatus.PAUSED)
-                            }
-                        >
+                        {resumable?.protocol === 'multipart' &&
+                            (isUploadActive(uploadStatus) ||
+                                uploadStatus === UploadStatus.PAUSED) && (
+                            <>
                             <button
                                 data-testid="upup-upload-pause-toggle"
                                 className={cn(
@@ -290,7 +282,8 @@ export default memo(function FileList() {
                             >
                                 <Icon name="x" size={14} />
                             </button>
-                        </ShouldRender>
+                            </>
+                        )}
                         <ProgressBar
                             className="upup-flex-1"
                             progressBarClassName="upup-rounded"
@@ -298,13 +291,9 @@ export default memo(function FileList() {
                             showValue
                         />
                     </div>
-                    <ShouldRender
-                        if={
-                            (isUploadActive(uploadStatus) ||
-                                uploadStatus === UploadStatus.PAUSED) &&
-                            totalBytes > 0
-                        }
-                    >
+                    {(isUploadActive(uploadStatus) ||
+                        uploadStatus === UploadStatus.PAUSED) &&
+                        totalBytes > 0 && (
                         <div
                             className={cn(
                                 'upup-flex upup-items-center upup-justify-between upup-text-[11px] upup-text-gray-500',
@@ -319,21 +308,15 @@ export default memo(function FileList() {
                                 {uploadSpeed > 0 &&
                                     ` · ${formatBytes(uploadSpeed)}/s`}
                             </span>
-                            <ShouldRender
-                                if={
-                                    isUploadActive(uploadStatus) &&
-                                    uploadEta > 0
-                                }
-                            >
+                            {isUploadActive(uploadStatus) &&
+                                uploadEta > 0 && (
                                 <span>{formatEta(uploadEta)}</span>
-                            </ShouldRender>
-                            <ShouldRender
-                                if={uploadStatus === UploadStatus.PAUSED}
-                            >
+                            )}
+                            {uploadStatus === UploadStatus.PAUSED && (
                                 <span>{tr.paused}</span>
-                            </ShouldRender>
+                            )}
                         </div>
-                    </ShouldRender>
+                    )}
                 </div>
             </div>
         </div>

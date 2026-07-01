@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { useUploaderTheme } from '../context/UploaderContext'
+import { useUploaderOptions, useUploaderTheme } from '../context/UploaderContext'
 import {
     useServerModeDrive,
     type ServerDriveFile,
@@ -7,7 +7,6 @@ import {
 } from '../hooks/useServerModeDrive'
 import SourceViewContainer from './shared/SourceViewContainer'
 import DriveAuthFallback from './shared/DriveAuthFallback'
-import ShouldRender from './shared/ShouldRender'
 import { cn } from '@upup/core'
 
 type Props = {
@@ -29,6 +28,9 @@ export default function ServerModeDriveUploader({
     'data-upup-slot': dataUpupSlot = `drive-browser-${provider}`,
 }: Readonly<Props>) {
     const { isDark: dark } = useUploaderTheme()
+    const {
+        icons: { LoaderIcon },
+    } = useUploaderOptions()
     const { state, search, setSearch, refresh, transfer, startAuth } =
         useServerModeDrive(provider)
     const [selected, setSelected] = useState<Set<string>>(new Set())
@@ -78,7 +80,9 @@ export default function ServerModeDriveUploader({
             isLoading={isLoading}
             data-upup-slot={dataUpupSlot}
         >
-            <ShouldRender if={true} isLoading={isLoading}>
+            {isLoading ? (
+                <LoaderIcon />
+            ) : (
                 <div
                     data-testid="upup-server-drive-browser"
                     className="upup-grid upup-h-full upup-w-full upup-grid-rows-[auto,1fr,auto] upup-overflow-auto"
@@ -182,7 +186,7 @@ export default function ServerModeDriveUploader({
                         </button>
                     </div>
                 </div>
-            </ShouldRender>
+            )}
         </SourceViewContainer>
     )
 }

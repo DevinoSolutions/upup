@@ -13,7 +13,6 @@ import { cn } from '@upup/core'
 import SourceSelector from './SourceSelector'
 import SourceView from './SourceView'
 import FileList from './FileList'
-import ShouldRender from './shared/ShouldRender'
 export default function UploaderPanel() {
     const { files } = useUploaderFiles()
     const { activeAdapter } = useUploaderSource()
@@ -67,7 +66,7 @@ export default function UploaderPanel() {
             onDrop={handleDrop}
             onPaste={handlePaste}
         >
-            <ShouldRender if={!isOnline}>
+            {!isOnline && (
                 <div
                     className={cn(
                         'upup-absolute upup-inset-x-0 upup-top-0 upup-z-20 upup-px-3 upup-py-1.5 upup-text-center upup-text-xs upup-font-medium upup-text-white upup-bg-yellow-500',
@@ -76,15 +75,13 @@ export default function UploaderPanel() {
                 >
                     No internet connection — uploads will resume when you reconnect.
                 </div>
-            </ShouldRender>
-            <ShouldRender if={!!activeAdapter}>
+            )}
+            {!!activeAdapter && (
                 <SourceView />
-            </ShouldRender>
-            <ShouldRender
-                if={!activeAdapter && (isAddingMore || !files.size)}
-            >
+            )}
+            {!activeAdapter && (isAddingMore || !files.size) && (
                 <SourceSelector />
-            </ShouldRender>
+            )}
             <FileList />
         </div>
     )

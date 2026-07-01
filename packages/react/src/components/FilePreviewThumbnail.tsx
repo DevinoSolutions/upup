@@ -8,7 +8,6 @@ import {
     fileIs3D,
 } from '../lib/file'
 import FileIcon from './FileIcon'
-import ShouldRender from './shared/ShouldRender'
 
 type Props = {
     canPreview: boolean
@@ -71,49 +70,53 @@ export default memo(
 
         return (
             <>
-                <ShouldRender if={!canPreview}>
-                    <object
-                        data={fileUrl}
-                        width="0%"
-                        height="0%"
-                        name={fileName}
-                        type={fileType}
-                        onLoad={() => setCanPreview(true)}
-                    >
-                        <p>{tr.loading}</p>
-                    </object>
-                    <FileIcon extension={extension} />
-                </ShouldRender>
-
-                <ShouldRender if={canPreview}>
-                    <FileIcon
-                        extension={extension}
-                        className={cn(
-                            {
-                                'md:upup-hidden': allowPreview,
-                            },
-                            slotClasses.fileIcon,
-                        )}
-                    />
-                    <div
-                        className={cn(
-                            `upup-relative upup-hidden upup-h-full upup-w-full ${
-                                allowPreview && 'md:upup-block'
-                            }`,
-                        )}
-                    >
+                {!canPreview && (
+                    <>
                         <object
                             data={fileUrl}
-                            width="100%"
-                            height="100%"
+                            width="0%"
+                            height="0%"
                             name={fileName}
                             type={fileType}
-                            className="upup-absolute upup-h-full upup-w-full"
+                            onLoad={() => setCanPreview(true)}
                         >
                             <p>{tr.loading}</p>
                         </object>
-                    </div>
-                </ShouldRender>
+                        <FileIcon extension={extension} />
+                    </>
+                )}
+
+                {canPreview && (
+                    <>
+                        <FileIcon
+                            extension={extension}
+                            className={cn(
+                                {
+                                    'md:upup-hidden': allowPreview,
+                                },
+                                slotClasses.fileIcon,
+                            )}
+                        />
+                        <div
+                            className={cn(
+                                `upup-relative upup-hidden upup-h-full upup-w-full ${
+                                    allowPreview && 'md:upup-block'
+                                }`,
+                            )}
+                        >
+                            <object
+                                data={fileUrl}
+                                width="100%"
+                                height="100%"
+                                name={fileName}
+                                type={fileType}
+                                className="upup-absolute upup-h-full upup-w-full"
+                            >
+                                <p>{tr.loading}</p>
+                            </object>
+                        </div>
+                    </>
+                )}
             </>
         )
     },

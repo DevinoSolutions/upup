@@ -9,7 +9,6 @@ import {
     useUploaderUploadControls,
     useUploaderView,
 } from '../../context/UploaderContext'
-import ShouldRender from './ShouldRender'
 
 type Props = {
     handleCancel(): void
@@ -69,17 +68,14 @@ export default function UploaderHeader({ handleCancel }: Readonly<Props>) {
                     },
                 )}
             >
-                <ShouldRender if={isAddingMore}>
-                    {tr.addingMoreFiles}
-                </ShouldRender>
-                <ShouldRender if={!isAddingMore}>
-                    {t(plural(tr, 'filesSelected', files.size), {
+                {isAddingMore && tr.addingMoreFiles}
+                {!isAddingMore &&
+                    t(plural(tr, 'filesSelected', files.size), {
                         count: files.size,
                     })}
-                </ShouldRender>
             </span>
             <div className="upup-col-start-3 upup-col-end-5 upup-flex upup-items-center upup-justify-end upup-gap-2 md:upup-col-start-4">
-                <ShouldRender if={files.size > 1}>
+                {files.size > 1 && (
                     <button
                         className={cn(
                             'upup-flex upup-h-7 upup-w-7 upup-items-center upup-justify-center upup-rounded upup-text-gray-500 upup-transition-colors hover:upup-bg-black/10',
@@ -90,8 +86,8 @@ export default function UploaderHeader({ handleCancel }: Readonly<Props>) {
                     >
                         {viewMode === 'grid' ? <Icon name="layout-list" size={16} /> : <Icon name="layout-grid" size={16} />}
                     </button>
-                </ShouldRender>
-                <ShouldRender if={!isAddingMore && limit > 1 && !isLimitReached}>
+                )}
+                {!isAddingMore && limit > 1 && !isLimitReached && (
                     <button
                         className={cn(
                             'upup-flex upup-items-center upup-gap-1 upup-rounded-md upup-border upup-border-dashed upup-border-blue-400/50 upup-px-2 upup-py-1 upup-text-sm upup-text-blue-600',
@@ -106,7 +102,7 @@ export default function UploaderHeader({ handleCancel }: Readonly<Props>) {
                     >
                         <ContainerAddMoreIcon /> {tr.addMore}
                     </button>
-                </ShouldRender>
+                )}
             </div>
         </div>
     )

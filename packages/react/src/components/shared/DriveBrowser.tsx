@@ -21,7 +21,6 @@ import { searchDriveFiles } from '../../lib/file'
 import SourceViewContainer from './SourceViewContainer'
 import DriveBrowserHeader from './DriveBrowserHeader'
 import DriveBrowserItem from './DriveBrowserItem'
-import ShouldRender from './ShouldRender'
 
 type Props = {
     isClickLoading?: boolean
@@ -64,7 +63,10 @@ export default function DriveBrowser({
     'data-upup-slot': dataUpupSlot = 'drive-browser',
     ...rest
 }: Readonly<Props>) {
-    const { allowedFileTypes } = useUploaderOptions()
+    const {
+        allowedFileTypes,
+        icons: { LoaderIcon },
+    } = useUploaderOptions()
     const { isDark: dark, slotOverrides: slotClasses } = useUploaderTheme()
     const { translations: tr } = useUploaderI18n()
     const [searchTerm, setSearchTerm] = useState('')
@@ -79,7 +81,9 @@ export default function DriveBrowser({
 
     return (
         <SourceViewContainer isLoading={isLoading} data-upup-slot={dataUpupSlot}>
-            <ShouldRender if={true} isLoading={isLoading}>
+            {isLoading ? (
+                <LoaderIcon />
+            ) : (
                 <div data-testid="upup-drive-browser" className="upup-grid upup-h-full upup-w-full upup-grid-rows-[auto,1fr,auto] upup-overflow-auto">
                     <DriveBrowserHeader
                         showSearch={!!items?.length}
@@ -89,7 +93,7 @@ export default function DriveBrowser({
                         onSearch={setSearchTerm}
                         {...rest}
                     />
-                    <ShouldRender if={!!path}>
+                    {!!path && (
                         <div
                             className={cn(
                                 'upup-h-full upup-overflow-y-scroll upup-bg-black/[0.075] upup-pt-2',
@@ -100,7 +104,7 @@ export default function DriveBrowser({
                                 slotClasses.driveBody,
                             )}
                         >
-                            <ShouldRender if={!!displayedItems.length}>
+                            {!!displayedItems.length && (
                                 <ul className="upup-p-2">
                                     {displayedItems.map(file => {
                                         return (
@@ -117,20 +121,18 @@ export default function DriveBrowser({
                                         )
                                     })}
                                 </ul>
-                            </ShouldRender>
-                            <ShouldRender if={!displayedItems.length}>
+                            )}
+                            {!displayedItems.length && (
                                 <div className="upup-flex upup-h-full upup-flex-col upup-items-center upup-justify-center">
                                     <p className="upup-text-xs upup-opacity-70">
                                         {tr.noAcceptedFilesFound}
                                     </p>
                                 </div>
-                            </ShouldRender>
+                            )}
                         </div>
-                    </ShouldRender>
+                    )}
 
-                    <ShouldRender
-                        if={!!selectedFiles.length || !!onSelectCurrentFolder}
-                    >
+                    {(!!selectedFiles.length || !!onSelectCurrentFolder) && (
                         <div
                             className={cn(
                                 'upup-flex upup-origin-bottom upup-items-center upup-justify-start upup-gap-4 upup-bg-black/[0.025] upup-px-3 upup-py-2',
@@ -141,7 +143,7 @@ export default function DriveBrowser({
                                 slotClasses.driveFooter,
                             )}
                         >
-                            <ShouldRender if={!!onSelectCurrentFolder}>
+                            {!!onSelectCurrentFolder && (
                                 <button
                                     className={cn(
                                         'upup-rounded-md upup-bg-transparent upup-px-3 upup-py-2 upup-text-sm upup-font-medium upup-text-blue-600 upup-transition-all upup-duration-300',
@@ -157,7 +159,7 @@ export default function DriveBrowser({
                                 >
                                     {tr.selectThisFolder}
                                 </button>
-                            </ShouldRender>
+                            )}
                             <button
                                 className={cn(
                                     'upup-rounded-md upup-bg-blue-600 upup-px-3 upup-py-2 upup-text-sm upup-font-medium upup-text-white upup-transition-all upup-duration-300',
@@ -195,9 +197,9 @@ export default function DriveBrowser({
                                 {tr.cancel}
                             </button>
                         </div>
-                    </ShouldRender>
+                    )}
                 </div>
-            </ShouldRender>
+            )}
         </SourceViewContainer>
     )
 }

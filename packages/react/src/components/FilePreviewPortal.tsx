@@ -17,7 +17,6 @@ import {
     PREVIEW_MAX_TEXT_SIZE,
     PREVIEW_TEXT_TRUNCATE_LENGTH,
 } from '../lib/file'
-import ShouldRender from './shared/ShouldRender'
 
 export default memo(
     forwardRef<
@@ -168,14 +167,14 @@ export default memo(
                             >
                                 x
                             </button>
-                            <ShouldRender if={isImage}>
+                            {isImage && (
                                 <img
                                     src={fileUrl}
                                     alt={fileName}
                                     className="upup-h-full upup-w-full upup-rounded upup-object-contain"
                                 />
-                            </ShouldRender>
-                            <ShouldRender if={isPdf}>
+                            )}
+                            {isPdf && (
                                 <embed
                                     src={fileUrl}
                                     type="application/pdf"
@@ -184,46 +183,48 @@ export default memo(
                                     className="upup-rounded"
                                     title={fileName}
                                 />
-                            </ShouldRender>
-                            <ShouldRender if={!isImage && !isPdf}>
-                                <ShouldRender if={isText}>
-                                    <div className="upup-h-full upup-w-full upup-overflow-auto upup-p-4 upup-font-mono upup-text-xs">
-                                        {textLoading && <p>{tr.loading}</p>}
-                                        {textError && (
-                                            <p>
-                                                {t(tr.previewError, {
-                                                    message: textError,
-                                                })}
-                                            </p>
-                                        )}
-                                        {!textLoading && !textError && (
-                                            <>
-                                                <pre className="upup-whitespace-pre-wrap">
-                                                    {textContent}
-                                                </pre>
-                                                {isTruncated && (
-                                                    <div className="upup-mt-4 upup-rounded upup-border upup-border-yellow-500/30 upup-bg-yellow-500/10 upup-px-3 upup-py-2 upup-text-xs upup-text-yellow-400">
-                                                        Content truncated - file
-                                                        is too large to preview
-                                                        in full.
-                                                    </div>
-                                                )}
-                                            </>
-                                        )}
-                                    </div>
-                                </ShouldRender>
-                                <ShouldRender if={!isText}>
-                                    <object
-                                        data={fileUrl}
-                                        width="100%"
-                                        height="100%"
-                                        name={fileName}
-                                        type={fileType}
-                                    >
-                                        <p>{tr.loading}</p>
-                                    </object>
-                                </ShouldRender>
-                            </ShouldRender>
+                            )}
+                            {!isImage && !isPdf && (
+                                <>
+                                    {isText && (
+                                        <div className="upup-h-full upup-w-full upup-overflow-auto upup-p-4 upup-font-mono upup-text-xs">
+                                            {textLoading && <p>{tr.loading}</p>}
+                                            {textError && (
+                                                <p>
+                                                    {t(tr.previewError, {
+                                                        message: textError,
+                                                    })}
+                                                </p>
+                                            )}
+                                            {!textLoading && !textError && (
+                                                <>
+                                                    <pre className="upup-whitespace-pre-wrap">
+                                                        {textContent}
+                                                    </pre>
+                                                    {isTruncated && (
+                                                        <div className="upup-mt-4 upup-rounded upup-border upup-border-yellow-500/30 upup-bg-yellow-500/10 upup-px-3 upup-py-2 upup-text-xs upup-text-yellow-400">
+                                                            Content truncated - file
+                                                            is too large to preview
+                                                            in full.
+                                                        </div>
+                                                    )}
+                                                </>
+                                            )}
+                                        </div>
+                                    )}
+                                    {!isText && (
+                                        <object
+                                            data={fileUrl}
+                                            width="100%"
+                                            height="100%"
+                                            name={fileName}
+                                            type={fileType}
+                                        >
+                                            <p>{tr.loading}</p>
+                                        </object>
+                                    )}
+                                </>
+                            )}
                         </div>
                     </div>
                 </div>

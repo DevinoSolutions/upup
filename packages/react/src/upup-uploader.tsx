@@ -13,7 +13,6 @@ import { UploaderProps } from './shared/types'
 import Icon from './components/Icon'
 import DefaultLoaderIcon from './components/DefaultLoaderIcon'
 import UploaderPanel from './components/UploaderPanel'
-import ShouldRender from './components/shared/ShouldRender'
 import { UploaderContextProvider } from './context/UploaderContext'
 import useUploaderController from './hooks/useUploaderController'
 import useUpload from './hooks/useUpload'
@@ -101,9 +100,7 @@ export default forwardRef<UploaderRef, UploaderProps>(
                                 },
                             )}
                         >
-                            <ShouldRender
-                                if={providerValues.props.isProcessing}
-                            >
+                            {providerValues.props.isProcessing && (
                                 <Icon
                                     name="loader"
                                     className={cn(
@@ -114,7 +111,7 @@ export default forwardRef<UploaderRef, UploaderProps>(
                                         },
                                     )}
                                 />
-                            </ShouldRender>
+                            )}
                             <UploaderPanel />
 
                             {/* Inline image editor — overlays the uploader content */}
@@ -138,7 +135,7 @@ export default forwardRef<UploaderRef, UploaderProps>(
                                     </Suspense>
                                 )}
 
-                            <ShouldRender if={!providerValues.props.mini && providerValues.props.showBranding !== false}>
+                            {!providerValues.props.mini && providerValues.props.showBranding !== false && (
                                 <div
                                     data-testid="upup-branding"
                                     className={cn(
@@ -151,26 +148,22 @@ export default forwardRef<UploaderRef, UploaderProps>(
                                         rel="noopener noreferrer"
                                         className="upup-flex upup-items-center upup-gap-[5px]"
                                     >
-                                        <ShouldRender
-                                            if={providerValues.theme.themeMode === 'dark'}
-                                        >
+                                        {providerValues.theme.themeMode === 'dark' && (
                                             <img
                                                 src={logoDark}
                                                 width={61}
                                                 height={13}
                                                 alt="logo-dark"
                                             />
-                                        </ShouldRender>
-                                        <ShouldRender
-                                            if={providerValues.theme.themeMode !== 'dark'}
-                                        >
+                                        )}
+                                        {providerValues.theme.themeMode !== 'dark' && (
                                             <img
                                                 src={logoLight}
                                                 width={61}
                                                 height={13}
                                                 alt="logo-light"
                                             />
-                                        </ShouldRender>
+                                        )}
                                     </a>
                                     <a
                                         href={'https://devino.ca/'}
@@ -194,29 +187,25 @@ export default forwardRef<UploaderRef, UploaderProps>(
                                                     .builtBy
                                             }{' '}
                                         </span>
-                                        <ShouldRender
-                                            if={providerValues.theme.themeMode === 'dark'}
-                                        >
+                                        {providerValues.theme.themeMode === 'dark' && (
                                             <img
                                                 src={devinoDark}
                                                 width={61}
                                                 height={13}
                                                 alt="logo-dark"
                                             />
-                                        </ShouldRender>
-                                        <ShouldRender
-                                            if={providerValues.theme.themeMode !== 'dark'}
-                                        >
+                                        )}
+                                        {providerValues.theme.themeMode !== 'dark' && (
                                             <img
                                                 src={devinoLight}
                                                 width={61}
                                                 height={13}
                                                 alt="logo-light"
                                             />
-                                        </ShouldRender>
+                                        )}
                                     </a>
                                 </div>
-                            </ShouldRender>
+                            )}
                         </section>
                     </div>
                 </div>

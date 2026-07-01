@@ -10,7 +10,6 @@ import {
     useUploaderView,
 } from '../context/UploaderContext'
 import useSourceSelector from '../hooks/useSourceSelector'
-import ShouldRender from './shared/ShouldRender'
 
 export default function SourceSelector() {
     const { core, inputRef, openFilePicker } = useUploaderRuntime()
@@ -146,7 +145,7 @@ export default function SourceSelector() {
                 },
             )}
         >
-            <ShouldRender if={isAddingMore}>
+            {isAddingMore && (
                 <div
                     className={cn(
                         'upup-shadow-bottom upup-flex upup-w-full upup-items-center upup-rounded-t-lg upup-bg-black/[0.025] upup-px-3 upup-py-2',
@@ -194,8 +193,8 @@ export default function SourceSelector() {
                         Adding more files
                     </span>
                 </div>
-            </ShouldRender>
-            <ShouldRender if={!mini}>
+            )}
+            {!mini && (
                 <div
                     className={cn(
                         'upup-flex upup-w-full upup-flex-col upup-justify-center upup-gap-1 md:upup-flex-row md:upup-flex-wrap md:upup-items-center md:upup-gap-[30px] md:upup-px-[30px]',
@@ -236,7 +235,7 @@ export default function SourceSelector() {
                         </button>
                     ))}
                 </div>
-            </ShouldRender>
+            )}
             <input
                 type="file"
                 name="upup-files"

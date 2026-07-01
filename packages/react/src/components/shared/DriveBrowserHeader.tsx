@@ -6,7 +6,6 @@ import {
     useUploaderSource,
     useUploaderTheme,
 } from '../../context/UploaderContext'
-import ShouldRender from './ShouldRender'
 
 type Props = {
     path: DriveFolder[]
@@ -45,7 +44,7 @@ export default function DriveBrowserHeader({
                     slotClasses.driveHeader,
                 )}
             >
-                <ShouldRender if={!!path}>
+                {!!path && (
                     <div className="upup-flex upup-items-center upup-gap-1">
                         {path.map((p, i) => (
                             <p
@@ -71,26 +70,28 @@ export default function DriveBrowserHeader({
                                 <span className="upup-group-hover:upup-underline upup-truncate">
                                     {p.name}
                                 </span>
-                                <ShouldRender if={i !== path.length - 1}>
-                                    {' '}
-                                    &gt;{' '}
-                                </ShouldRender>
+                                {i !== path.length - 1 && (
+                                    <>
+                                        {' '}
+                                        &gt;{' '}
+                                    </>
+                                )}
                             </p>
                         ))}
                     </div>
-                </ShouldRender>
+                )}
                 <div className="upup-flex upup-items-center upup-gap-2">
                     <div className="upup-relative upup-flex upup-h-8 upup-w-8 upup-items-center upup-justify-center upup-overflow-hidden upup-rounded-full">
-                        <ShouldRender if={!!user.picture}>
+                        {!!user.picture && (
                             <img
                                 alt={user.name}
                                 src={user.picture}
                                 className="upup-bg-center upup-object-cover"
                             />
-                        </ShouldRender>
-                        <ShouldRender if={!user.picture}>
+                        )}
+                        {!user.picture && (
                             <Icon name="user" className="upup-text-xl" />
-                        </ShouldRender>
+                        )}
                     </div>
 
                     <button
@@ -112,7 +113,7 @@ export default function DriveBrowserHeader({
                 </div>
             </div>
 
-            <ShouldRender if={showSearch}>
+            {showSearch && (
                 <div
                     className={cn(
                         'upup-relative upup-h-fit upup-bg-black/[0.025] upup-px-3 upup-py-2',
@@ -141,7 +142,7 @@ export default function DriveBrowserHeader({
                     />
                     <Icon name="search" className="upup-absolute upup-left-5 upup-top-1/2 upup--translate-y-1/2 upup-text-[#939393]" />
                 </div>
-            </ShouldRender>
+            )}
         </div>
     )
 }
