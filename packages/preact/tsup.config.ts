@@ -15,7 +15,7 @@ export default defineConfig([
     sourcemap: true,
     clean: false, // cleaned once up-front by scripts/clean-dist.mjs
     target: 'es2019',
-    noExternal: ['@upup/react'],
+    noExternal: ['@upup/react', 'react', 'react-dom', 'react-filerobot-image-editor'],
     external: [
       'preact',
       'preact/compat',
