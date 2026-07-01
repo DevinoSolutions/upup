@@ -1,5 +1,5 @@
 {
-  "adapterSelector": {
+  "sourceSelector": {
     "tag": "div",
     "classes": [
       "upup-flex",
