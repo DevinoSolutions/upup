@@ -1,14 +1,12 @@
-import { onMount, onDestroy } from 'svelte'
-import { derived } from 'svelte/store'
+import { computed, shallowRef, onMounted, onUnmounted } from 'vue'
 import { DragDropController } from '@upup/core'
 import {
     useUploaderFiles,
     useUploaderOptions,
     useUploaderRuntime,
 } from '../context/root-context'
-import { toReadable } from '../lib/to-readable'
 
-export default function useMainBox() {
+export default function useUploaderPanel() {
     const { core, orchestrator } = useUploaderRuntime()
     const { setFiles } = useUploaderFiles()
     const options = useUploaderOptions()
@@ -25,14 +23,18 @@ export default function useMainBox() {
         props: () => ({ disableDragDrop, isProcessing, folderUploadAllowDrop }),
     })
 
-    const state = toReadable(controller)
-    onMount(() => controller.init())
-    onDestroy(() => controller.dispose())
+    const snapshot = shallowRef(controller.getSnapshot())
+    let unsub: (() => void) | null = null
+    onMounted(() => {
+        unsub = controller.subscribe(() => { snapshot.value = controller.getSnapshot() })
+        controller.init()
+    })
+    onUnmounted(() => { controller.dispose(); unsub?.() })
 
     return {
-        isDragging: derived(state, ($s) => $s.isDragging),
-        absoluteIsDragging: derived(state, ($s) => $s.absoluteIsDragging),
-        absoluteHasBorder: derived(state, ($s) => $s.absoluteHasBorder),
+        isDragging: computed(() => snapshot.value.isDragging),
+        absoluteIsDragging: computed(() => snapshot.value.absoluteIsDragging),
+        absoluteHasBorder: computed(() => snapshot.value.absoluteHasBorder),
         handleDragOver: controller.handleDragOver,
         handleDragLeave: controller.handleDragLeave,
         handleDrop: controller.handleDrop,

@@ -26,7 +26,7 @@ import {
     type Translations,
 } from '@upup/core'
 import { UpupStore } from '../upup-store.service'
-import { MainBoxHeaderComponent } from './main-box-header.component'
+import { UploaderHeaderComponent } from './uploader-header.component'
 import { ProgressBarComponent } from './progress-bar.component'
 import { ShouldRenderComponent } from './should-render.component'
 import { FileItemComponent } from './file-item.component'
@@ -59,7 +59,7 @@ const ESTIMATED_ITEM_HEIGHT = 76
     standalone: true,
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
-        MainBoxHeaderComponent,
+        UploaderHeaderComponent,
         ProgressBarComponent,
         ShouldRenderComponent,
         FileItemComponent,
@@ -394,7 +394,7 @@ export class FileListComponent implements AfterViewInit, OnDestroy {
         return this.store.uiProps.resumable?.protocol === 'multipart' ? tr.resumeUpload : tr.retryUpload
     }
 
-    // Bound fn for MainBoxHeader (avoids arrow-fn re-creation in template)
+    // Bound fn for UploaderHeader (avoids arrow-fn re-creation in template)
     readonly handleCancelFn = () => this.store.handleCancel()
 
     // ── Upload action handlers ─────────────────────────────────────────────────

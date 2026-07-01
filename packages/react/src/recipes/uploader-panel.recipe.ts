@@ -1,6 +1,6 @@
 import { tv } from 'tailwind-variants'
 
-export const mainBoxRecipe = tv({
+export const uploaderPanelRecipe = tv({
     slots: {
         root: 'upup-relative upup-flex-1 upup-overflow-hidden upup-rounded-lg',
         offlineBanner:
@@ -53,4 +53,4 @@ export const mainBoxRecipe = tv({
     },
 })
 
-export type MainBoxSlots = keyof ReturnType<typeof mainBoxRecipe>
+export type UploaderPanelSlots = keyof ReturnType<typeof uploaderPanelRecipe>

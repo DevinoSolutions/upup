@@ -4,7 +4,7 @@ import type { UploaderProps } from './shared/types'
 import { createRootProvider } from './context/create-root-provider'
 import { provideRootContext } from './context/root-context'
 import ImageEditorStub from './components/ImageEditorStub.svelte'
-import MainBox from './components/MainBox.svelte'
+import UploaderPanel from './components/UploaderPanel.svelte'
 import { devinoDark, devinoLight, logoDark, logoLight } from './assets/logos'
 
 let props: UploaderProps = $props()
@@ -63,7 +63,7 @@ function onInputChange(e: Event) {
                 },
             )}
         >
-            <MainBox />
+            <UploaderPanel />
 
             {#if ctx.props.imageEditor.enabled}
                 <ImageEditorStub />

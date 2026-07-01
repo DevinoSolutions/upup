@@ -1,6 +1,6 @@
 /**
  * create-uploader tests — NOTE: this file is DEFERRED-RED until Task 14.
- * `createUploader` transitively imports ./templates/main-box + ./templates/image-editor-stub
+ * `createUploader` transitively imports ./templates/uploader-panel + ./templates/image-editor-stub
  * which do not exist until Tasks 6–7. All tests fail at import time — expected.
  */
 import { describe, it, expect, vi } from 'vitest'

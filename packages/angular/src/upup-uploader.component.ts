@@ -16,7 +16,7 @@ import { cn } from '@upup/core'
 import { UpupStore } from './upup-store.service'
 import type { UploaderProps } from './shared/types'
 import type { UploadFile } from '@upup/core'
-import { MainBoxComponent } from './components/main-box.component'
+import { UploaderPanelComponent } from './components/uploader-panel.component'
 import { ImageEditorStubComponent } from './components/image-editor-stub.component'
 import { devinoDark, devinoLight, logoDark, logoLight } from './assets/logos'
 
@@ -34,7 +34,7 @@ const FORWARDED: ReadonlyArray<
   selector: 'upup-uploader',
   standalone: true,
   providers: [UpupStore],
-  imports: [MainBoxComponent, ImageEditorStubComponent],
+  imports: [UploaderPanelComponent, ImageEditorStubComponent],
   template: `
     <div
       class="upup-scope upup-h-full upup-w-full"

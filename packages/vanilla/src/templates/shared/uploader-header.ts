@@ -3,7 +3,7 @@ import { formatUiMessage as t, pluralUiMessage as plural, isUploadActive, cn } f
 import type { RootContext } from '../../lib/types'
 import { icon } from '../icon'
 
-export function mainBoxHeader(ctx: RootContext, handleCancel: () => void) {
+export function uploaderHeader(ctx: RootContext, handleCancel: () => void) {
   const mini = ctx.props.mini
   if (mini) return nothing
 

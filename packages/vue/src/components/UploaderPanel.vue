@@ -7,7 +7,7 @@ import {
     useUploaderTheme,
     useUploaderView,
 } from '../context/root-context'
-import useMainBox from '../composables/useMainBox'
+import useUploaderPanel from '../composables/useUploaderPanel'
 import { cn } from '@upup/core'
 import SourceSelector from './SourceSelector.vue'
 import SourceView from './SourceView.vue'
@@ -28,7 +28,7 @@ const {
     handleDragLeave,
     handleDrop,
     handlePaste,
-} = useMainBox()
+} = useUploaderPanel()
 
 function onKeyDown(e: KeyboardEvent) {
     if (e.key === 'Enter' || e.key === ' ') {

@@ -13,7 +13,7 @@ import { SourceSelectorComponent } from './source-selector.component'
 import { FileListComponent } from './file-list.component'
 
 /**
- * MainBoxComponent — Angular port of MainBox.svelte + useMainBox.ts composable.
+ * UploaderPanelComponent — Angular port of UploaderPanel.svelte + useUploaderPanel.ts composable.
  *
  * Renders the main dropzone area with:
  *   - Offline banner
@@ -21,7 +21,7 @@ import { FileListComponent } from './file-list.component'
  *   - SourceSelector (when no adapter + no files / adding more)
  *   - FileList (always)
  *
- * Drag/drop/paste/keydown logic 1:1 from useMainBox.ts.
+ * Drag/drop/paste/keydown logic 1:1 from useUploaderPanel.ts.
  */
 @Component({
     selector: 'upup-main-box',
@@ -64,7 +64,7 @@ import { FileListComponent } from './file-list.component'
         </div>
     `,
 })
-export class MainBoxComponent implements OnInit, OnDestroy {
+export class UploaderPanelComponent implements OnInit, OnDestroy {
     readonly store = inject(UpupStore)
 
     // ── Dropzone controller (shared @upup/core) + its Angular-signal view ─────

@@ -20,7 +20,7 @@
   } from '../context/root-context'
   import Icon from './Icon.svelte'
   import FileItem from './FileItem.svelte'
-  import MainBoxHeader from './shared/MainBoxHeader.svelte'
+  import UploaderHeader from './shared/UploaderHeader.svelte'
   import ProgressBar from './shared/ProgressBar.svelte'
   import ShouldRender from './shared/ShouldRender.svelte'
 
@@ -139,7 +139,7 @@
     $themeSlots?.fileList?.root,
   )}
 >
-  <MainBoxHeader {handleCancel} />
+  <UploaderHeader {handleCancel} />
 
   <div
     bind:this={scrollEl}

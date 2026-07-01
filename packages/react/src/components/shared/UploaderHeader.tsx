@@ -15,7 +15,7 @@ type Props = {
     handleCancel(): void
 }
 
-export default function MainBoxHeader({ handleCancel }: Readonly<Props>) {
+export default function UploaderHeader({ handleCancel }: Readonly<Props>) {
     const { files } = useUploaderFiles()
     const { setIsAddingMore, isAddingMore, viewMode, setViewMode } = useUploaderView()
     const { translations: tr } = useUploaderI18n()

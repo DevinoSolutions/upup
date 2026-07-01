@@ -12,7 +12,7 @@ import {
 import type { UploadFile } from '@upup/core'
 import type { RootContext } from '../lib/types'
 import { fileItem } from './file-item'
-import { mainBoxHeader } from './shared/main-box-header'
+import { uploaderHeader } from './shared/uploader-header'
 import { progressBar } from './shared/progress-bar'
 import { icon } from './icon'
 
@@ -253,7 +253,7 @@ export function fileList(ctx: RootContext) {
       data-testid="upup-file-list"
       data-upup-slot="file-list"
     >
-      ${mainBoxHeader(ctx, () => ctx.handleCancel())}
+      ${uploaderHeader(ctx, () => ctx.handleCancel())}
       <div
         ${ref(getScrollRefCb(ctx))}
         class=${cn(

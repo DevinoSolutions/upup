@@ -7,7 +7,7 @@ import { LayoutGridIconComponent } from './icons/layout-grid-icon.component'
 import { LayoutListIconComponent } from './icons/layout-list-icon.component'
 
 /**
- * Header bar for the main upload box — port of MainBoxHeader.svelte.
+ * Header bar for the main upload box — port of UploaderHeader.svelte.
  *
  * Svelte original:
  *   {#if !mini} <div data-testid="upup-header" …> … </div> {/if}
@@ -24,7 +24,7 @@ import { LayoutListIconComponent } from './icons/layout-list-icon.component'
  *   - store.translations()   → tr
  *
  * Input:
- *   - handleCancel (() => void) — passed from the parent (MainBox) on cancel button click.
+ *   - handleCancel (() => void) — passed from the parent (UploaderPanel) on cancel button click.
  */
 @Component({
     selector: 'upup-main-box-header',
@@ -96,10 +96,10 @@ import { LayoutListIconComponent } from './icons/layout-list-icon.component'
         }
     `,
 })
-export class MainBoxHeaderComponent {
+export class UploaderHeaderComponent {
     readonly store = inject(UpupStore)
 
-    /** Passed by the parent (MainBox) — called when the cancel/remove-all button is clicked. */
+    /** Passed by the parent (UploaderPanel) — called when the cancel/remove-all button is clicked. */
     @Input() handleCancel: () => void = () => {}
 
     // ── Derived getters ────────────────────────────────────────────────────────

@@ -15,7 +15,7 @@ const NOOP = () => {}
 const NOOP_SUBSCRIBE = () => () => {}
 const getEmptySnapshot = () => EMPTY_SNAPSHOT
 
-export default function useMainBox() {
+export default function useUploaderPanel() {
     const { core, orchestrator } = useUploaderRuntime()
     const { setFiles } = useUploaderFiles()
     const options = useUploaderOptions()

@@ -6,7 +6,7 @@ import { sourceView } from './source-view'
 import { sourceSelector } from './source-selector'
 import { fileList } from './file-list'
 
-export function mainBox(ctx: RootContext) {
+export function uploaderPanel(ctx: RootContext) {
   const o = ctx.orchestrator.getSnapshot()
   const isDark = ctx.theme.getSnapshot().isDark
   const tr = ctx.translations

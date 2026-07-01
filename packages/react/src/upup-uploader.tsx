@@ -12,7 +12,7 @@ import type { UploadFile } from '@upup/core'
 import { UploaderProps } from './shared/types'
 import Icon from './components/Icon'
 import DefaultLoaderIcon from './components/DefaultLoaderIcon'
-import MainBox from './components/MainBox'
+import UploaderPanel from './components/UploaderPanel'
 import ShouldRender from './components/shared/ShouldRender'
 import { RootContextProvider } from './context/RootContext'
 import useRootProvider from './hooks/useRootProvider'
@@ -115,7 +115,7 @@ export default forwardRef<UploaderRef, UploaderProps>(
                                     )}
                                 />
                             </ShouldRender>
-                            <MainBox />
+                            <UploaderPanel />
 
                             {/* Inline image editor — overlays the uploader content */}
                             {providerValues.editingFile &&

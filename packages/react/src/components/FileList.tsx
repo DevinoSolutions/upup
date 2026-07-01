@@ -13,7 +13,7 @@ import {
     useUploaderView,
 } from '../context/RootContext'
 import FileItem from './FileItem'
-import MainBoxHeader from './shared/MainBoxHeader'
+import UploaderHeader from './shared/UploaderHeader'
 import ProgressBar from './shared/ProgressBar'
 import ShouldRender from './shared/ShouldRender'
 
@@ -99,7 +99,7 @@ export default memo(function FileList() {
                 })}
             </div>
 
-            <MainBoxHeader handleCancel={handleCancel} />
+            <UploaderHeader handleCancel={handleCancel} />
 
             <div
                 ref={scrollRef}

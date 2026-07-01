@@ -8,13 +8,13 @@ import {
     useUploaderTheme,
     useUploaderView,
 } from '../context/RootContext'
-import useMainBox from '../hooks/useMainBox'
+import useUploaderPanel from '../hooks/useUploaderPanel'
 import { cn } from '@upup/core'
 import SourceSelector from './SourceSelector'
 import SourceView from './SourceView'
 import FileList from './FileList'
 import ShouldRender from './shared/ShouldRender'
-export default function MainBox() {
+export default function UploaderPanel() {
     const { files } = useUploaderFiles()
     const { activeAdapter } = useUploaderSource()
     const { isAddingMore } = useUploaderView()
@@ -29,7 +29,7 @@ export default function MainBox() {
         handleDragLeave,
         handleDrop,
         handlePaste,
-    } = useMainBox()
+    } = useUploaderPanel()
 
     return (
         <div

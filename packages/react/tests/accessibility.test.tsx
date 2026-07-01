@@ -5,32 +5,32 @@ import { UpupUploader } from '../src'
 
 expect.extend(toHaveNoViolations)
 
-describe('MainBox accessibility', () => {
-  it('MainBox has aria-dropeffect="none" in default state', () => {
+describe('UploaderPanel accessibility', () => {
+  it('UploaderPanel has aria-dropeffect="none" in default state', () => {
     const { container } = render(
       <UpupUploader provider="s3" serverUrl="https://example.com" />
     )
-    const mainBox = container.querySelector('[data-upup-slot="main-box"]')
-    expect(mainBox?.getAttribute('aria-dropeffect')).toBe('none')
+    const uploaderPanel = container.querySelector('[data-upup-slot="main-box"]')
+    expect(uploaderPanel?.getAttribute('aria-dropeffect')).toBe('none')
   })
 
-  it('MainBox has role="button" and is keyboard focusable (tabIndex >= 0)', () => {
+  it('UploaderPanel has role="button" and is keyboard focusable (tabIndex >= 0)', () => {
     const { container } = render(
       <UpupUploader provider="s3" serverUrl="https://example.com" />
     )
-    const mainBox = container.querySelector('[data-upup-slot="main-box"]') as HTMLElement
-    expect(mainBox?.getAttribute('role')).toBe('button')
-    expect(Number(mainBox?.getAttribute('tabindex'))).toBeGreaterThanOrEqual(0)
+    const uploaderPanel = container.querySelector('[data-upup-slot="main-box"]') as HTMLElement
+    expect(uploaderPanel?.getAttribute('role')).toBe('button')
+    expect(Number(uploaderPanel?.getAttribute('tabindex'))).toBeGreaterThanOrEqual(0)
   })
 
-  it('MainBox has an accessible label', () => {
+  it('UploaderPanel has an accessible label', () => {
     const { container } = render(
       <UpupUploader provider="s3" serverUrl="https://example.com" />
     )
-    const mainBox = container.querySelector('[data-upup-slot="main-box"]') as HTMLElement
+    const uploaderPanel = container.querySelector('[data-upup-slot="main-box"]') as HTMLElement
     const hasLabel =
-      mainBox?.hasAttribute('aria-label') ||
-      mainBox?.hasAttribute('aria-labelledby')
+      uploaderPanel?.hasAttribute('aria-label') ||
+      uploaderPanel?.hasAttribute('aria-labelledby')
     expect(hasLabel).toBe(true)
   })
 

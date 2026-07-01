@@ -22,7 +22,7 @@ describe('@upup/react public exports', () => {
     expect((ReactPackage as any).CameraUploader).toBeUndefined()
     expect((ReactPackage as any).FileList).toBeUndefined()
     expect((ReactPackage as any).FilePreview).toBeUndefined()
-    expect((ReactPackage as any).MainBox).toBeUndefined()
+    expect((ReactPackage as any).UploaderPanel).toBeUndefined()
     expect((ReactPackage as any).UrlUploader).toBeUndefined()
     expect((ReactPackage as any).createPropGetters).toBeUndefined()
     expect((ReactPackage as any).useRootContext).toBeUndefined()

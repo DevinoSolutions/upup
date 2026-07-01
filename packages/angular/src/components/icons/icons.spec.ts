@@ -107,7 +107,7 @@ describe('XIconComponent', () => {
 })
 
 // ── LayoutGridIconComponent — view-mode toggle path ──────────────────────────
-// Validates that <upup-icon-layout-grid> (selector used in main-box-header.component.ts)
+// Validates that <upup-icon-layout-grid> (selector used in uploader-header.component.ts)
 // actually renders an <svg>, catching any selector/template mismatch the build might miss.
 
 describe('LayoutGridIconComponent', () => {

@@ -2,7 +2,7 @@ import { html, nothing, render } from 'lit-html'
 import { ref } from 'lit-html/directives/ref.js'
 import { cn } from './lib/cn'
 import type { RootContext } from './lib/types'
-import { mainBox } from './templates/main-box'
+import { uploaderPanel } from './templates/uploader-panel'
 import { imageEditorStub } from './templates/image-editor-stub'
 import { devinoDark, devinoLight, logoDark, logoLight } from './assets/logos'
 
@@ -45,7 +45,7 @@ export function App(ctx: RootContext) {
             },
           )}
         >
-          ${mainBox(ctx)}
+          ${uploaderPanel(ctx)}
           ${ctx.props.imageEditor.enabled ? imageEditorStub() : nothing}
           ${!ctx.props.mini && ctx.props.showBranding
             ? html`

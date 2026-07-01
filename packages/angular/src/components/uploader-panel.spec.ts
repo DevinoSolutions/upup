@@ -1,5 +1,5 @@
 /**
- * main-box.spec.ts — TestBed tests for MainBoxComponent.
+ * uploader-panel.spec.ts — TestBed tests for UploaderPanelComponent.
  *
  * Covers:
  *   - dropzone testid + slot render
@@ -18,7 +18,7 @@ import { describe, it, expect, afterEach, vi } from 'vitest'
 import { TestBed } from '@angular/core/testing'
 import { signal } from '@angular/core'
 import { UpupStore } from '../upup-store.service'
-import { MainBoxComponent } from './main-box.component'
+import { UploaderPanelComponent } from './uploader-panel.component'
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -32,18 +32,18 @@ function makeStore(): UpupStore {
 
 async function setup(store: UpupStore) {
     await TestBed.configureTestingModule({
-        imports: [MainBoxComponent],
+        imports: [UploaderPanelComponent],
         providers: [{ provide: UpupStore, useValue: store }],
     }).compileComponents()
 
-    const fixture = TestBed.createComponent(MainBoxComponent)
+    const fixture = TestBed.createComponent(UploaderPanelComponent)
     fixture.detectChanges()
     return fixture
 }
 
 // ── Tests ──────────────────────────────────────────────────────────────────
 
-describe('MainBoxComponent', () => {
+describe('UploaderPanelComponent', () => {
     let store: UpupStore
 
     afterEach(() => {
@@ -73,9 +73,9 @@ describe('MainBoxComponent', () => {
         store = makeStore()
         const fixture = await setup(store)
         const el: HTMLElement = fixture.nativeElement
-        // React/Svelte render MainBoxHeader ONLY inside FileList (which is
+        // React/Svelte render UploaderHeader ONLY inside FileList (which is
         // hidden via `upup-hidden` when there are no files). A stray header at
-        // the MainBox root would always be visible and show a phantom
+        // the UploaderPanel root would always be visible and show a phantom
         // "files selected" band in the empty state.
         const headers = el.querySelectorAll('upup-main-box-header')
         expect(headers.length).toBe(1)

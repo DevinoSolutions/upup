@@ -21,7 +21,7 @@ beforeAll(() => {
 
 // Probe rendered inside the uploader's default slot: reads the resolved option
 // context and writes the values onto data-attributes for DOM assertions. Lives in
-// the slot so the heavy MainBox (virtual-list) subtree is not rendered.
+// the slot so the heavy UploaderPanel (virtual-list) subtree is not rendered.
 const OptionsProbe = defineComponent({
     name: 'OptionsProbe',
     setup() {

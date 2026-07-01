@@ -8,7 +8,7 @@
  *   upup-root         → packages/react/src/upup-uploader.tsx:66
  *   upup-container    → packages/react/src/upup-uploader.tsx:81
  *   upup-branding     → packages/react/src/upup-uploader.tsx:142
- *   upup-dropzone     → packages/react/src/components/MainBox.tsx:36
+ *   upup-dropzone     → packages/react/src/components/UploaderPanel.tsx:36
  *   upup-file-input   → packages/react/src/components/SourceSelector.tsx:244
  *   upup-browse-files → packages/react/src/components/SourceSelector.tsx:293
  *   upup-source-${id} → packages/react/src/components/SourceSelector.tsx:208
@@ -35,7 +35,7 @@ describe('@upup/preact render parity on compat', () => {
 
   test('mounts dropzone inside the container', () => {
     render(<UpupUploader />)
-    // upup-dropzone: MainBox.tsx:36, role="button" with drag/drop handlers
+    // upup-dropzone: UploaderPanel.tsx:36, role="button" with drag/drop handlers
     const dropzone = screen.getByTestId('upup-dropzone')
     expect(dropzone).toBeTruthy()
     // The dropzone also carries the correct role

@@ -13,7 +13,7 @@ import {
 } from '../context/root-context'
 import Icon from './Icon'
 import FileItem from './FileItem.vue'
-import MainBoxHeader from './shared/MainBoxHeader.vue'
+import UploaderHeader from './shared/UploaderHeader.vue'
 import ProgressBar from './shared/ProgressBar.vue'
 import ShouldRender from './shared/ShouldRender.vue'
 
@@ -105,7 +105,7 @@ function onRetryClick() {
             themeSlots?.fileList?.root,
         )"
     >
-        <MainBoxHeader :handle-cancel="handleCancel" />
+        <UploaderHeader :handle-cancel="handleCancel" />
 
         <div
             ref="scrollRef"

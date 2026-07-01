@@ -1,6 +1,6 @@
 <script lang="ts">
   import { useUploaderFiles, useUploaderI18n, useUploaderRuntime, useUploaderSource, useUploaderTheme, useUploaderView } from '../context/root-context'
-  import useMainBox from '../composables/useMainBox'
+  import useUploaderPanel from '../composables/useUploaderPanel'
   import { cn } from '@upup/core'
   import ShouldRender from './shared/ShouldRender.svelte'
   import SourceView from './SourceView.svelte'
@@ -13,7 +13,7 @@
   const { isOnline, getFileInput, openFilePicker } = useUploaderRuntime()
   const { translations: tr } = useUploaderI18n()
   const { isDark: dark } = useUploaderTheme()
-  const { isDragging, absoluteIsDragging, absoluteHasBorder, handleDragOver, handleDragLeave, handleDrop, handlePaste } = useMainBox()
+  const { isDragging, absoluteIsDragging, absoluteHasBorder, handleDragOver, handleDragLeave, handleDrop, handlePaste } = useUploaderPanel()
 
   function onKeyDown(e: KeyboardEvent) {
     if (e.key === 'Enter' || e.key === ' ') {

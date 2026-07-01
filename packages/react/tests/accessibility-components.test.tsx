@@ -30,7 +30,7 @@ function renderUploader(extra: Partial<React.ComponentProps<typeof UpupUploader>
  * Returns the axe results object — callers assert `toHaveNoViolations()`.
  *
  * Why scoped: an unscoped scan of the whole <UpupUploader> tree would attribute
- * a violation in FileList to MainBox. Scoping to the slot subtree gives each
+ * a violation in FileList to UploaderPanel. Scoping to the slot subtree gives each
  * describe block a clean, per-component signal.
  */
 async function scanSlot(
@@ -92,7 +92,7 @@ function stubFileInput(input: HTMLInputElement, files: File[]) {
     fireEvent.change(input)
 }
 
-describe('axe — MainBox (DropZone)', () => {
+describe('axe — UploaderPanel (DropZone)', () => {
     it('has no violations in default state', async () => {
         const { container } = renderUploader()
         const results = await scanSlot(container, 'main-box', {
@@ -253,7 +253,7 @@ describe('axe — FilePreview', () => {
                 // FilePreview card is role="button" (keyboard-activatable) yet
                 // contains nested controls (remove/edit buttons) — the same
                 // intentional clickable-region pattern already accepted for
-                // MainBox / FileList / MainBoxHeader. Keyboard activation is the
+                // UploaderPanel / FileList / UploaderHeader. Keyboard activation is the
                 // accessibility win; the nested-interactive rule is disabled to
                 // match those precedents and the svelte/angular reference.
                 'nested-interactive': { enabled: false },
@@ -283,7 +283,7 @@ describe('axe — SourceView (SourceView)', () => {
     })
 })
 
-describe('axe — MainBoxHeader (header slot)', () => {
+describe('axe — UploaderHeader (header slot)', () => {
     it('has no violations with files loaded', async () => {
         const { container } = renderUploader()
         const input = container.querySelector(

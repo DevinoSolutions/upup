@@ -3,7 +3,7 @@ import { cn } from '@upup/core'
 import type { UploaderProps } from './shared/types'
 import useRootProvider from './composables/useRootProvider'
 import { provideRootContext } from './context/root-context'
-import MainBox from './components/MainBox.vue'
+import UploaderPanel from './components/UploaderPanel.vue'
 import ImageEditorStub from './components/ImageEditorStub.vue'
 import { devinoDark, devinoLight, logoDark, logoLight } from './assets/logos'
 
@@ -68,7 +68,7 @@ function onInputChange(e: Event) {
                 )"
             >
                 <slot>
-                    <MainBox />
+                    <UploaderPanel />
                 </slot>
 
                 <ImageEditorStub v-if="ctx.props.imageEditor.enabled" />

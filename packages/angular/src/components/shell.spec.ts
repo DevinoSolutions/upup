@@ -1,6 +1,6 @@
 /**
  * shell.spec.ts — TestBed tests for the four shell leaf components:
- *   ShouldRenderComponent, ProgressBarComponent, MainBoxHeaderComponent, SourceViewContainerComponent
+ *   ShouldRenderComponent, ProgressBarComponent, UploaderHeaderComponent, SourceViewContainerComponent
  *
  * Store strategy:
  *   - All four components inject UpupStore (ShouldRender reads icons.LoaderIcon for the
@@ -17,7 +17,7 @@ import { Component } from '@angular/core'
 import { UpupStore } from '../upup-store.service'
 import { ShouldRenderComponent } from './should-render.component'
 import { ProgressBarComponent } from './progress-bar.component'
-import { MainBoxHeaderComponent } from './main-box-header.component'
+import { UploaderHeaderComponent } from './uploader-header.component'
 import { SourceViewContainerComponent } from './source-view-container.component'
 import { DefaultLoaderIconComponent } from './icons/default-loader-icon.component'
 
@@ -268,9 +268,9 @@ describe('ProgressBarComponent', () => {
     })
 })
 
-// ── MainBoxHeader ──────────────────────────────────────────────────────────────
+// ── UploaderHeader ──────────────────────────────────────────────────────────────
 
-describe('MainBoxHeaderComponent', () => {
+describe('UploaderHeaderComponent', () => {
     let store: UpupStore
 
     afterEach(() => store?.dispose())
@@ -278,11 +278,11 @@ describe('MainBoxHeaderComponent', () => {
     it('renders the header element (data-testid="upup-header") when mini=false', async () => {
         store = makeStore()
         await TestBed.configureTestingModule({
-            imports: [MainBoxHeaderComponent],
+            imports: [UploaderHeaderComponent],
             providers: [{ provide: UpupStore, useValue: store }],
         }).compileComponents()
 
-        const fixture = TestBed.createComponent(MainBoxHeaderComponent)
+        const fixture = TestBed.createComponent(UploaderHeaderComponent)
         fixture.detectChanges()
 
         const header = fixture.nativeElement.querySelector('[data-testid="upup-header"]')
@@ -296,11 +296,11 @@ describe('MainBoxHeaderComponent', () => {
         store = s
 
         await TestBed.configureTestingModule({
-            imports: [MainBoxHeaderComponent],
+            imports: [UploaderHeaderComponent],
             providers: [{ provide: UpupStore, useValue: store }],
         }).compileComponents()
 
-        const fixture = TestBed.createComponent(MainBoxHeaderComponent)
+        const fixture = TestBed.createComponent(UploaderHeaderComponent)
         fixture.detectChanges()
 
         const header = fixture.nativeElement.querySelector('[data-testid="upup-header"]')
@@ -310,11 +310,11 @@ describe('MainBoxHeaderComponent', () => {
     it('calls handleCancel when the cancel button is clicked', async () => {
         store = makeStore()
         await TestBed.configureTestingModule({
-            imports: [MainBoxHeaderComponent],
+            imports: [UploaderHeaderComponent],
             providers: [{ provide: UpupStore, useValue: store }],
         }).compileComponents()
 
-        const fixture = TestBed.createComponent(MainBoxHeaderComponent)
+        const fixture = TestBed.createComponent(UploaderHeaderComponent)
         let called = false
         fixture.componentInstance.handleCancel = () => { called = true }
         fixture.detectChanges()
@@ -328,11 +328,11 @@ describe('MainBoxHeaderComponent', () => {
     it('has data-upup-slot="header" attribute', async () => {
         store = makeStore()
         await TestBed.configureTestingModule({
-            imports: [MainBoxHeaderComponent],
+            imports: [UploaderHeaderComponent],
             providers: [{ provide: UpupStore, useValue: store }],
         }).compileComponents()
 
-        const fixture = TestBed.createComponent(MainBoxHeaderComponent)
+        const fixture = TestBed.createComponent(UploaderHeaderComponent)
         fixture.detectChanges()
 
         const header = fixture.nativeElement.querySelector('[data-upup-slot="header"]')

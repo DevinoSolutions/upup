@@ -77,7 +77,7 @@ vi.mock('../src/context/RootContext', () => ({
 vi.mock('../src/components/FileItem', () => ({
     default: ({ file }: any) => <div data-testid="file-item">{file.name}</div>,
 }))
-vi.mock('../src/components/shared/MainBoxHeader', () => ({
+vi.mock('../src/components/shared/UploaderHeader', () => ({
     default: () => <div data-testid="main-box-header" />,
 }))
 vi.mock('../src/components/shared/MyAnimatePresence', () => ({

@@ -4,7 +4,7 @@ import {
     fileListRecipe,
     filePreviewRecipe,
     sourceSelectorRecipe,
-    mainBoxRecipe,
+    uploaderPanelRecipe,
     sourceViewRecipe,
     urlUploaderRecipe,
     driveBrowserRecipe,
@@ -79,36 +79,36 @@ describe('sourceSelectorRecipe', () => {
     })
 })
 
-describe('mainBoxRecipe', () => {
+describe('uploaderPanelRecipe', () => {
     it('generates base slot classes', () => {
-        const slots = mainBoxRecipe()
+        const slots = uploaderPanelRecipe()
         expect(slots.root()).toContain('upup-rounded-lg')
         expect(slots.offlineBanner()).toContain('upup-bg-yellow-500')
     })
 
     it('adds border when hasBorder=true', () => {
-        const slots = mainBoxRecipe({ hasBorder: true })
+        const slots = uploaderPanelRecipe({ hasBorder: true })
         expect(slots.root()).toContain('upup-border')
         expect(slots.root()).toContain('upup-border-[#1849D6]')
     })
 
     it('adds dark border color via compoundVariant', () => {
-        const slots = mainBoxRecipe({ hasBorder: true, dark: true })
+        const slots = uploaderPanelRecipe({ hasBorder: true, dark: true })
         expect(slots.root()).toContain('upup-border-[#30C5F7]')
     })
 
     it('adds dashed border when not dragging', () => {
-        const slots = mainBoxRecipe({ isDragging: false })
+        const slots = uploaderPanelRecipe({ isDragging: false })
         expect(slots.root()).toContain('upup-border-dashed')
     })
 
     it('adds drag-over bg in light mode', () => {
-        const slots = mainBoxRecipe({ isDraggingOver: true })
+        const slots = uploaderPanelRecipe({ isDraggingOver: true })
         expect(slots.root()).toContain('upup-bg-[#E7ECFC]')
     })
 
     it('adds drag-over bg in dark mode via compoundVariant', () => {
-        const slots = mainBoxRecipe({ isDraggingOver: true, dark: true })
+        const slots = uploaderPanelRecipe({ isDraggingOver: true, dark: true })
         expect(slots.root()).toContain('upup-bg-[#045671]')
     })
 })

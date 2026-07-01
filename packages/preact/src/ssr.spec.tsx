@@ -12,7 +12,7 @@
  *   upup-root                              → packages/react/src/upup-uploader.tsx:66
  *   upup-container                         → packages/react/src/upup-uploader.tsx:81
  *   data-upup-slot="adapter-selector"      → packages/react/src/components/SourceSelector.tsx:139
- *   "No internet connection" (offline banner) → packages/react/src/components/MainBox.tsx:77
+ *   "No internet connection" (offline banner) → packages/react/src/components/UploaderPanel.tsx:77
  *   data-theme                             → packages/react/src/theme/UpupThemeProvider.tsx:39
  */
 
