@@ -9,6 +9,7 @@ vi.mock('../src/providers/aws', () => ({
   completeMultipartUpload: vi.fn(),
   abortMultipartUpload: vi.fn(),
   listMultipartParts: vi.fn(),
+  getMultipartUploadedSize: vi.fn().mockResolvedValue(0),
 }))
 
 const storage = { type: 'aws', bucket: 'b', region: 'us-east-1' } as const

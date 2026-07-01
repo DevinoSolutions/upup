@@ -120,7 +120,9 @@ export async function verifyUploadToken(
   if (
     typeof payload.k !== 'string' ||
     typeof payload.u !== 'string' ||
-    typeof payload.exp !== 'number'
+    typeof payload.exp !== 'number' ||
+    typeof payload.smin !== 'number' ||
+    typeof payload.smax !== 'number'
   ) {
     throw new UploadTokenError('malformed', 'Upload token payload is missing required fields')
   }

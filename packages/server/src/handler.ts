@@ -5,6 +5,7 @@ import {
   generatePresignedPartUrl,
   completeMultipartUpload,
   abortMultipartUpload,
+  getMultipartUploadedSize,
 } from './providers/aws'
 import {
   assertUploadTokenSecret,
@@ -275,6 +276,18 @@ async function handleMultipartComplete(req: Request, config: UpupServerConfig, r
       if (e instanceof UploadTokenError) return json({ error: 'Invalid upload token' }, 403, responseHeaders)
       throw e
     }
+
+    // S1 (multipart): smin/smax are SIGNED at init but must be ENFORCED here —
+    // otherwise a client can init with a tiny declared size (tiny smax) and
+    // upload arbitrarily large real parts, since sign-part/PUT never sees the
+    // client-declared size. Sum the bytes S3 actually received (ListParts) and
+    // reject + abort if outside the signed envelope.
+    const uploadedSize = await getMultipartUploadedSize(config.storage, payload.k, payload.u)
+    if (uploadedSize < payload.smin || uploadedSize > payload.smax) {
+      await abortMultipartUpload(config.storage, payload.k, payload.u)
+      return json({ error: 'Upload size outside signed envelope' }, 403, responseHeaders)
+    }
+
     const result = await completeMultipartUpload(config.storage, payload.k, payload.u, body.parts)
     return json(result, 200, responseHeaders)
   } catch (error) {

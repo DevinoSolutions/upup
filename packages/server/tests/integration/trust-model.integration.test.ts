@@ -7,6 +7,8 @@ import {
   S3Client,
   ListObjectsV2Command,
   DeleteObjectsCommand,
+  HeadObjectCommand,
+  ListPartsCommand,
 } from '@aws-sdk/client-s3'
 import { buildS3ClientConfig } from '../../src/providers/s3-client'
 import { createHandler } from '../../src/handler'
@@ -73,6 +75,56 @@ describe.skipIf(!RUN)('trust model — exploit harness', () => {
       body: oversized,
     })
     expect(put.ok).toBe(false) // pre-fix: MinIO accepts (200) -> RED
+  }, 30_000)
+
+  // S1 (multipart): the size envelope (smin/smax) is signed into the token at
+  // init but was never ENFORCED at complete — a client could init with a tiny
+  // declared size (=> tiny smax) then upload real oversized parts and still
+  // complete. MinIO requires >=5 MiB for a non-final part, so declare a size
+  // well under that and upload one real 5 MiB part.
+  it('S1 (multipart): rejects complete when uploaded bytes exceed the signed smax', async () => {
+    const handler = createHandler(config)
+    const declaredSize = 1024 // tiny declared size -> smax = 1024 bytes
+    const init = await (await post(handler, '/multipart/init', {
+      name: 's1-multipart-oversized.bin',
+      size: declaredSize,
+      type: 'application/octet-stream',
+    })).json()
+    createdKeys.push(init.key)
+    expect(typeof init.token).toBe('string')
+
+    // Upload ONE real part far larger than the declared/signed size.
+    const oversizedPart = new Uint8Array(5 * 1024 * 1024).fill(3) // 5 MiB >> 1 KiB declared
+    const signed = await (await post(handler, '/multipart/sign-part', {
+      token: init.token,
+      partNumber: 1,
+    })).json()
+    const put = await fetch(signed.uploadUrl, { method: 'PUT', body: oversizedPart })
+    expect(put.status).toBe(200)
+    const eTag = put.headers.get('etag') as string
+
+    const done = await post(handler, '/multipart/complete', {
+      token: init.token,
+      parts: [{ partNumber: 1, eTag }],
+    })
+    expect(done.status).toBe(403) // pre-fix: MinIO completes it (200) -> RED
+
+    // The object must NOT be finalized.
+    await expect(
+      s3.send(new HeadObjectCommand({ Bucket: storage.bucket, Key: init.key })),
+    ).rejects.toThrow()
+
+    // ...and the multipart upload itself must be ABORTED (not just left
+    // dangling) — ListParts on a dead uploadId is rejected by S3/MinIO.
+    await expect(
+      s3.send(
+        new ListPartsCommand({
+          Bucket: storage.bucket,
+          Key: init.key,
+          UploadId: init.uploadId,
+        }),
+      ),
+    ).rejects.toThrow()
   }, 30_000)
 
   // S2: a tampered token must be refused; a valid token must succeed.

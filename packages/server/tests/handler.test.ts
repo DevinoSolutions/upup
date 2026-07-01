@@ -13,6 +13,7 @@ vi.mock('../src/providers/aws', () => ({
   completeMultipartUpload: vi.fn(),
   abortMultipartUpload: vi.fn(),
   listMultipartParts: vi.fn(),
+  getMultipartUploadedSize: vi.fn().mockResolvedValue(0),
 }))
 
 const config = {

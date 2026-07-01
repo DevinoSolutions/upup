@@ -205,3 +205,44 @@ export async function listMultipartParts(
 
   return { parts }
 }
+
+/**
+ * Server-internal only (not part of the shared `@upup/core` multipart contract):
+ * sums the ACTUAL bytes S3 has received for an in-progress multipart upload, by
+ * reading `Size` off each part from `ListParts`. Used to enforce the signed size
+ * envelope (`smin`/`smax`) at complete-time — the client can assert whatever
+ * `size` it likes at init, but the bytes actually stored are authoritative
+ * (closes the multipart variant of S1: init small, upload large parts, complete).
+ * Paginates on `IsTruncated`, mirroring `listMultipartParts`.
+ */
+export async function getMultipartUploadedSize(
+  storage: UpupServerConfig['storage'],
+  key: string,
+  uploadId: string,
+): Promise<number> {
+  const client = createS3Client(storage)
+  let total = 0
+  let partNumberMarker: string | undefined
+
+  while (true) {
+    const command = new ListPartsCommand({
+      Bucket: storage.bucket,
+      Key: key,
+      UploadId: uploadId,
+      PartNumberMarker: partNumberMarker,
+    })
+
+    const response = await client.send(command)
+
+    if (response.Parts) {
+      for (const part of response.Parts) {
+        total += part.Size ?? 0
+      }
+    }
+
+    if (!response.IsTruncated) break
+    partNumberMarker = String(response.Parts?.[response.Parts.length - 1]?.PartNumber)
+  }
+
+  return total
+}

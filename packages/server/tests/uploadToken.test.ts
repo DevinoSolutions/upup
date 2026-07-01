@@ -56,6 +56,17 @@ describe('uploadToken', () => {
     })
   })
 
+  // Phase 5b: smin/smax must be validated as numbers, same as k/u/exp — a
+  // payload with a stringified (or missing) envelope must be treated as
+  // malformed, never silently trusted downstream by the multipart-size guard.
+  it('rejects a payload with non-numeric smin/smax', async () => {
+    const badPayload = { ...payload(), smin: '0', smax: '2048' } as unknown as UploadTokenPayload
+    const tok = await signUploadToken(SECRET, badPayload)
+    await expect(verifyUploadToken(SECRET, tok, now)).rejects.toMatchObject({
+      code: 'malformed',
+    })
+  })
+
   it('assertUploadTokenSecret throws on missing/short secret', () => {
     expect(() => assertUploadTokenSecret(undefined)).toThrow()
     expect(() => assertUploadTokenSecret('short')).toThrow()
