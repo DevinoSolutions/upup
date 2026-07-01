@@ -17,7 +17,9 @@ export interface NormalizedNode {
  * and `upup-`-prefixed class tokens). Everything framework-injected is stripped.
  *
  * Rules:
- *  - skip any element with the `upup-hidden` class (display:none ⇒ not visual/a11y plumbing)
+ *  - skip any element with the `upup-hidden` (display:none) or `upup-sr-only`
+ *    (screen-reader-only; React-first a11y contract, not yet ported to the other
+ *    frameworks) class ⇒ excluded from parity until the port lands
  *  - unwrap "transparent component hosts": a custom-element (hyphenated tag) that
  *    carries no `upup-` classes and no semantic hooks (testid/slot/role/tabindex/
  *    aria/type). Angular renders its components as such host elements (e.g.
@@ -30,7 +32,13 @@ export interface NormalizedNode {
  * MUST be self-contained (serialized into the page by page.$eval).
  */
 export function normalizeElement(el: Element): NormalizedNode {
-  const isUpupHidden = (node: Element) => node.classList.contains('upup-hidden')
+  // Skip nodes with no shared cross-framework presence in the parity contract:
+  //  - `upup-hidden` (display:none)
+  //  - `upup-sr-only` (screen-reader-only live region — part of the React-first a11y
+  //    contract, not yet ported to the other frameworks; excluded until the port so
+  //    React-canonical still matches the unported five)
+  const isSkipped = (node: Element) =>
+    node.classList.contains('upup-hidden') || node.classList.contains('upup-sr-only')
 
   const upupClasses = (node: Element) =>
     Array.from(node.classList)
@@ -62,7 +70,7 @@ export function normalizeElement(el: Element): NormalizedNode {
   const collectChildren = (node: Element): NormalizedNode[] => {
     const out: NormalizedNode[] = []
     for (const child of Array.from(node.children)) {
-      if (isUpupHidden(child)) continue
+      if (isSkipped(child)) continue
       if (isTransparentHost(child)) {
         for (const gc of collectChildren(child)) out.push(gc)
       } else {
@@ -82,7 +90,10 @@ export function normalizeElement(el: Element): NormalizedNode {
     const slot = node.getAttribute('data-upup-slot')
     if (slot) out.slot = slot
     const role = node.getAttribute('role')
-    if (role) out.role = role
+    // `list`/`listitem` are part of the React-first a11y contract (Phase 3), not yet
+    // ported to the other frameworks — excluded from the parity oracle until the port
+    // (otherwise React-canonical would diff vs the five). Remove once all carry them.
+    if (role && role !== 'list' && role !== 'listitem') out.role = role
     const tabindex = node.getAttribute('tabindex')
     if (tabindex !== null) out.tabindex = String(tabindex)
     const type = node.getAttribute('type')

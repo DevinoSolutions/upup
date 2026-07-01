@@ -59,4 +59,41 @@ test.describe('parity-dom normalizer', () => {
       ],
     })
   })
+
+  test('excludes React-first a11y additions not yet ported (list/listitem roles + sr-only region)', async ({ page }) => {
+    await page.setContent(`
+      <div id="root" class="upup-wrap" data-testid="upup-file-list">
+        <div role="status" aria-live="polite" class="upup-sr-only">2 files selected</div>
+        <div role="list" class="upup-inner" data-upup-slot="file-list-virtual">
+          <div role="listitem" class="upup-item" data-testid="upup-file-item">
+            <span class="upup-name">a.png</span>
+          </div>
+        </div>
+      </div>
+    `)
+    const got: NormalizedNode = await page.$eval('#root', normalizeElement)
+    expect(got).toEqual({
+      tag: 'div',
+      testid: 'upup-file-list',
+      classes: ['upup-wrap'],
+      children: [
+        // upup-sr-only status region skipped entirely (React-first a11y, not yet ported)
+        {
+          tag: 'div',
+          slot: 'file-list-virtual',
+          classes: ['upup-inner'],
+          // role="list" dropped from the parity contract until the port lands
+          children: [
+            {
+              tag: 'div',
+              testid: 'upup-file-item',
+              classes: ['upup-item'],
+              // role="listitem" likewise dropped
+              children: [{ tag: 'span', classes: ['upup-name'], children: [] }],
+            },
+          ],
+        },
+      ],
+    })
+  })
 })
