@@ -72,7 +72,9 @@ jobs:
         shell: bash
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TO_PUBLISH: ${{ steps.package_meta.outputs.to_publish }}
         run: |
-          for ref in ${{ steps.package_meta.outputs.to_publish }}; do
+          for ref in $TO_PUBLISH; do
+            case "$ref" in *[!A-Za-z0-9@._/-]*) echo "skip invalid ref: $ref"; continue;; esac
             gh release create "$ref" --title "$ref" --generate-notes || true
           done
