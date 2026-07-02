@@ -12,7 +12,7 @@ export const deDE: LocaleBundle = {
             or: 'oder',
         },
 
-        adapters: {
+        sources: {
             myDevice: 'Mein Ger\u00E4t',
             googleDrive: 'Google Drive',
             oneDrive: 'OneDrive',

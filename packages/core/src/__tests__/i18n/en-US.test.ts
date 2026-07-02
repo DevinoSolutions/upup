@@ -12,7 +12,7 @@ describe('en-US locale bundle', () => {
     it('has all required namespaces', () => {
         const namespaces: (keyof UpupMessages)[] = [
             'common',
-            'adapters',
+            'sources',
             'dropzone',
             'header',
             'fileList',

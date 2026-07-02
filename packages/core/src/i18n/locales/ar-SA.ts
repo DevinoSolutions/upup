@@ -12,7 +12,7 @@ export const arSA: LocaleBundle = {
             or: '\u0623\u0648',
         },
 
-        adapters: {
+        sources: {
             myDevice: '\u062C\u0647\u0627\u0632\u064A',
             googleDrive: 'Google Drive',
             oneDrive: 'OneDrive',

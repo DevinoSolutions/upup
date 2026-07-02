@@ -12,7 +12,7 @@ export const jaJP: LocaleBundle = {
             or: '\u307E\u305F\u306F',
         },
 
-        adapters: {
+        sources: {
             myDevice: '\u30DE\u30A4\u30C7\u30D0\u30A4\u30B9',
             googleDrive: 'Google Drive',
             oneDrive: 'OneDrive',

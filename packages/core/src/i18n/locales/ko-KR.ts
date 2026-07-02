@@ -11,7 +11,7 @@ export const koKR: LocaleBundle = {
             loading: '로딩 중...',
             or: '또는',
         },
-        adapters: {
+        sources: {
             myDevice: '내 기기',
             googleDrive: 'Google Drive',
             oneDrive: 'OneDrive',

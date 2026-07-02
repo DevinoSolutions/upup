@@ -12,7 +12,7 @@ export const enUS: LocaleBundle = {
             or: 'or',
         },
 
-        adapters: {
+        sources: {
             myDevice: 'My Device',
             googleDrive: 'Google Drive',
             oneDrive: 'OneDrive',

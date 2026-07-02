@@ -36,7 +36,7 @@ export interface CommonMessages {
     or: string
 }
 
-export interface AdapterMessages {
+export interface SourceMessages {
     myDevice: string
     googleDrive: string
     oneDrive: string
@@ -254,7 +254,7 @@ export interface ErrorMessages {
  */
 export interface UpupMessages {
     common: CommonMessages
-    adapters: AdapterMessages
+    sources: SourceMessages
     dropzone: DropzoneMessages
     header: HeaderMessages
     fileList: FileListMessages

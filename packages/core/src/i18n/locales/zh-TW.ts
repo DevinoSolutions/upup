@@ -11,7 +11,7 @@ export const zhTW: LocaleBundle = {
             loading: '載入中...',
             or: '或',
         },
-        adapters: {
+        sources: {
             myDevice: '我的裝置',
             googleDrive: 'Google Drive',
             oneDrive: 'OneDrive',

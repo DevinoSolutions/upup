@@ -23,7 +23,7 @@ const ALL_LOCALES = [
 
 const REQUIRED_NAMESPACES: (keyof UpupMessages)[] = [
     'common',
-    'adapters',
+    'sources',
     'dropzone',
     'header',
     'fileList',

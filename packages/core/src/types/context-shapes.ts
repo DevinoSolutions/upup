@@ -1,5 +1,5 @@
 /**
- * Base context shape types shared between React and Vue adapters.
+ * Base context shape types shared across the framework bindings.
  *
  * Each framework package defines its own concrete context types that extend
  * these bases with framework-specific fields (e.g. React refs, Vue refs,

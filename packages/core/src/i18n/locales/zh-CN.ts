@@ -11,7 +11,7 @@ export const zhCN: LocaleBundle = {
             loading: '加载中...',
             or: '或',
         },
-        adapters: {
+        sources: {
             myDevice: '本地文件',
             googleDrive: 'Google Drive',
             oneDrive: 'OneDrive',

@@ -8,14 +8,14 @@ describe('en-US locale — content validity', () => {
         expect(typeof enUS.messages.common.loading).toBe('string')
     })
 
-    it('adapters namespace has all adapter names', () => {
-        const adapters = enUS.messages.adapters
-        expect(adapters.myDevice).toBeDefined()
-        expect(adapters.googleDrive).toBeDefined()
-        expect(adapters.oneDrive).toBeDefined()
-        expect(adapters.dropbox).toBeDefined()
-        expect(adapters.link).toBeDefined()
-        expect(adapters.camera).toBeDefined()
+    it('sources namespace has all adapter names', () => {
+        const sources = enUS.messages.sources
+        expect(sources.myDevice).toBeDefined()
+        expect(sources.googleDrive).toBeDefined()
+        expect(sources.oneDrive).toBeDefined()
+        expect(sources.dropbox).toBeDefined()
+        expect(sources.link).toBeDefined()
+        expect(sources.camera).toBeDefined()
     })
 
     it('errors namespace has error message templates', () => {

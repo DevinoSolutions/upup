@@ -12,7 +12,7 @@ export const esES: LocaleBundle = {
             or: 'o',
         },
 
-        adapters: {
+        sources: {
             myDevice: 'Mi dispositivo',
             googleDrive: 'Google Drive',
             oneDrive: 'OneDrive',

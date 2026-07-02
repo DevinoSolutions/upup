@@ -18,7 +18,7 @@ export interface RootCloudDrivesConfig {
   box?: { clientId: string; redirectUri?: string }
 }
 
-/** i18n option block (identical across adapters). */
+/** i18n option block (identical across frameworks). */
 export interface RootI18nOptions {
   bundle?: LocaleBundle
   locale?: LocaleBundle | string
