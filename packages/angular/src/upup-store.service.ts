@@ -152,7 +152,6 @@ export class UpupStore {
             uploadEndpoint: p.uploadEndpoint,
             serverUrl: p.serverUrl,
             maxFiles: p.maxFiles,
-            restrictions: p.restrictions,
             theme: p.theme,
             folderUpload: p.folderUpload,
             cors: p.cors,

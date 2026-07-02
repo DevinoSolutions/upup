@@ -6,15 +6,6 @@ import type { LocaleBundle, UpupLocaleCode } from '../i18n/types'
 import type { PersistentStorage } from '../crash-recovery'
 import type { CloudDrivesConfig } from '../drives/configs'
 
-export interface Restrictions {
-  maxFileSize?: import('../contracts').MaxFileSizeObject
-  minFileSize?: import('../contracts').MaxFileSizeObject
-  maxTotalFileSize?: import('../contracts').MaxFileSizeObject
-  maxNumberOfFiles?: number
-  minNumberOfFiles?: number
-  allowedFileTypes?: string[]
-}
-
 export type { CloudDrivesConfig, GoogleDriveConfig, OneDriveConfig, DropboxConfig, BoxConfig } from '../drives/configs'
 
 export interface UpupCorsConfig {
@@ -64,7 +55,6 @@ export interface CoreOptions extends FileManagerOptions {
    *   responsible for resolving codes to bundles via `i18n.loadLocale`.
    */
   locale?: LocaleBundle | UpupLocaleCode
-  restrictions?: Restrictions
   cloudDrives?: CloudDrivesConfig
 }
 

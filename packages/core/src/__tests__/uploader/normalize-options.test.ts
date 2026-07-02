@@ -24,10 +24,10 @@ describe('normalizeUploaderOptions', () => {
     expect(resolved.multiple).toBe(false)
   })
 
-  it('limit precedence: maxFiles ?? restrictions.maxNumberOfFiles ?? 10', () => {
+  it('limit resolution: maxFiles ?? 10', () => {
     expect(normalizeUploaderOptions({ maxFiles: 7 }).resolved.limit).toBe(7)
-    expect(normalizeUploaderOptions({ restrictions: { maxNumberOfFiles: 3 } }).resolved.limit).toBe(3)
-    expect(normalizeUploaderOptions({ maxFiles: 7, restrictions: { maxNumberOfFiles: 3 } }).resolved.limit).toBe(7)
+    expect(normalizeUploaderOptions({ maxFiles: 7 }).coreOptions.limit).toBe(7)
+    expect(normalizeUploaderOptions({}).resolved.limit).toBe(10)
   })
 
   it('mode auto-resolves to server when serverUrl set without uploadEndpoint', () => {
@@ -82,8 +82,18 @@ describe('normalizeUploaderOptions', () => {
     expect(normalizeUploaderOptions({}).resolved.dir).toBe('ltr')
   })
 
-  it('accept resolves from restrictions.allowedFileTypes when present', () => {
-    const r = normalizeUploaderOptions({ restrictions: { allowedFileTypes: ['image/png', 'image/jpeg'] } }).resolved
-    expect(r.allowedFileTypes).toContain('image/png')
+  it('accept resolves from the flat allowedFileTypes prop (string or array)', () => {
+    expect(normalizeUploaderOptions({ allowedFileTypes: 'image/png' }).resolved.allowedFileTypes).toContain('image/png')
+    const r = normalizeUploaderOptions({ allowedFileTypes: ['image/png', 'image/jpeg'] as never }).resolved
+    expect(r.allowedFileTypes).toContain('image/jpeg')
+  })
+
+  it('flat minFileSize/maxTotalFileSize pass through to coreOptions verbatim', () => {
+    const { coreOptions } = normalizeUploaderOptions({
+      minFileSize: { size: 1, unit: 'KB' },
+      maxTotalFileSize: { size: 100, unit: 'MB' },
+    })
+    expect(coreOptions.minFileSize).toEqual({ size: 1, unit: 'KB' })
+    expect(coreOptions.maxTotalFileSize).toEqual({ size: 100, unit: 'MB' })
   })
 })

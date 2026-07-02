@@ -25,51 +25,22 @@ describe('UpupCore constructor — no implicit hosted apiKey URL', () => {
 })
 
 // ─────────────────────────────────────────────
-// restrictions merging
+// flat option storage
 // ─────────────────────────────────────────────
-describe('UpupCore constructor — restrictions merging', () => {
-    it('maps restrictions.maxFileSize to options.maxFileSize', () => {
-        const core = new UpupCore({ restrictions: { maxFileSize: { size: 5, unit: 'MB' } } })
-        expect(core.options.maxFileSize).toEqual({ size: 5, unit: 'MB' })
-        core.destroy()
-    })
-
-    it('maps restrictions.minFileSize to options.minFileSize', () => {
-        const core = new UpupCore({ restrictions: { minFileSize: { size: 1, unit: 'KB' } } })
-        expect(core.options.minFileSize).toEqual({ size: 1, unit: 'KB' })
-        core.destroy()
-    })
-
-    it('maps restrictions.maxTotalFileSize to options.maxTotalFileSize', () => {
-        const core = new UpupCore({ restrictions: { maxTotalFileSize: { size: 100, unit: 'MB' } } })
-        expect(core.options.maxTotalFileSize).toEqual({ size: 100, unit: 'MB' })
-        core.destroy()
-    })
-
-    it('maps restrictions.maxNumberOfFiles to options.limit', () => {
-        const core = new UpupCore({ restrictions: { maxNumberOfFiles: 10 } })
-        expect(core.options.limit).toBe(10)
-        core.destroy()
-    })
-
-    it('maps restrictions.minNumberOfFiles to options.minFiles', () => {
-        const core = new UpupCore({ restrictions: { minNumberOfFiles: 2 } })
-        expect(core.options.minFiles).toBe(2)
-        core.destroy()
-    })
-
-    it('maps restrictions.allowedFileTypes to options.allowedFileTypes', () => {
-        const core = new UpupCore({ restrictions: { allowedFileTypes: ['image/*', '.pdf'] } })
-        expect(core.options.allowedFileTypes).toBe('image/*,.pdf')
-        core.destroy()
-    })
-
-    it('flat options take precedence over restrictions', () => {
+describe('UpupCore constructor — flat option storage', () => {
+    it('stores the flat file-limit options as given', () => {
         const core = new UpupCore({
-            restrictions: { maxNumberOfFiles: 20 },
             limit: 5,
+            maxFileSize: { size: 5, unit: 'MB' },
+            minFileSize: { size: 1, unit: 'KB' },
+            maxTotalFileSize: { size: 100, unit: 'MB' },
+            allowedFileTypes: 'image/*,.pdf',
         })
         expect(core.options.limit).toBe(5)
+        expect(core.options.maxFileSize).toEqual({ size: 5, unit: 'MB' })
+        expect(core.options.minFileSize).toEqual({ size: 1, unit: 'KB' })
+        expect(core.options.maxTotalFileSize).toEqual({ size: 100, unit: 'MB' })
+        expect(core.options.allowedFileTypes).toBe('image/*,.pdf')
         core.destroy()
     })
 })

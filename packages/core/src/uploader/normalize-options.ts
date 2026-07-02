@@ -15,14 +15,10 @@ export function normalizeUploaderOptions(options: UploaderControllerOptions): No
   const resolvedSources = options.sources
     ? (options.sources.map((s) => normalizeSource(s)).filter(Boolean) as FileSource[])
     : DEFAULT_SOURCES
-  const resolvedLimit = options.maxFiles ?? options.restrictions?.maxNumberOfFiles ?? 10
+  const resolvedLimit = options.maxFiles ?? 10
   const resolvedMode = options.mode ?? (options.serverUrl && !options.uploadEndpoint ? 'server' : 'client')
-  const maxFileSize = options.maxFileSize ?? options.restrictions?.maxFileSize ?? DEFAULT_MAX_FILE_SIZE
-  const accept = resolveAccept(
-    options.restrictions?.allowedFileTypes
-      ? options.restrictions.allowedFileTypes.join(',')
-      : (typeof acceptProp === 'string' ? acceptProp : acceptProp.join(',')),
-  )
+  const maxFileSize = options.maxFileSize ?? DEFAULT_MAX_FILE_SIZE
+  const accept = resolveAccept(typeof acceptProp === 'string' ? acceptProp : acceptProp.join(','))
   const limit = mini ? 1 : Math.max(resolvedLimit, 1)
   const multiple = mini ? false : limit > 1
   const folderUploadAllowDrop = options.folderUpload?.allowDrop ?? false
@@ -72,8 +68,8 @@ export function normalizeUploaderOptions(options: UploaderControllerOptions): No
     allowedFileTypes: accept,
     limit,
     maxFileSize,
-    minFileSize: options.minFileSize ?? options.restrictions?.minFileSize,
-    maxTotalFileSize: options.maxTotalFileSize ?? options.restrictions?.maxTotalFileSize,
+    minFileSize: options.minFileSize,
+    maxTotalFileSize: options.maxTotalFileSize,
     maxRetries: options.maxRetries,
     onBeforeFileAdded: options.onBeforeFileAdded,
     imageCompression: options.imageCompression,

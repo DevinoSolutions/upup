@@ -18,11 +18,9 @@ import { UploadManager } from './upload-manager'
 import { resolveUploadConfig } from './resolve-upload-config'
 import { CrashRecoveryManager, IndexedDBStorage } from './crash-recovery'
 import { serializeCrashRecovery, reviveCrashRecoverySnapshot } from './crash-recovery-serializer'
-import { mergeConstructOptions, mergeUpdateOptions } from './options/normalize-core-options'
 
 import type { CoreOptions, ValidationResult, UploadOptions } from './options/types'
 export type {
-  Restrictions,
   GoogleDriveConfig,
   OneDriveConfig,
   DropboxConfig,
@@ -56,12 +54,9 @@ export class UpupCore {
   constructor(options: CoreOptions) {
     this.options = { ...options }
 
-    mergeConstructOptions(this.options, options)
-
     this.fileManager = new FileManager({
       allowedFileTypes: this.options.allowedFileTypes,
       limit: this.options.limit,
-      minFiles: this.options.minFiles,
       maxFileSize: this.options.maxFileSize,
       minFileSize: this.options.minFileSize,
       maxTotalFileSize: this.options.maxTotalFileSize,
@@ -214,12 +209,9 @@ export class UpupCore {
     const hadCrashRecovery = this.crashRecovery != null
     Object.assign(this.options, partial)
 
-    mergeUpdateOptions(this.options, partial)
-
     this.fileManager.updateOptions({
       allowedFileTypes: this.options.allowedFileTypes,
       limit: this.options.limit,
-      minFiles: this.options.minFiles,
       maxFileSize: this.options.maxFileSize,
       minFileSize: this.options.minFileSize,
       maxTotalFileSize: this.options.maxTotalFileSize,

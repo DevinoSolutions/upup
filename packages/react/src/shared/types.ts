@@ -46,16 +46,8 @@ export type UploaderProps = {
     uploadEndpoint?: string
     /** Server URL for @upup/server handler. */
     serverUrl?: string
-    /** v2: Alias for limit */
+    /** Maximum number of files that can be added. Default 10. */
     maxFiles?: number
-    /** v2: Unified file restrictions object */
-    restrictions?: {
-        maxFileSize?: MaxFileSizeObject
-        minFileSize?: MaxFileSizeObject
-        maxTotalFileSize?: MaxFileSizeObject
-        maxNumberOfFiles?: number
-        allowedFileTypes?: string[]
-    }
     /** v2: Theme configuration. mode replaces `dark`, tokens/slots replace flat styling overrides. */
     theme?: UpupThemeConfig
 

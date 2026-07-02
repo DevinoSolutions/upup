@@ -5,12 +5,12 @@ import { useUpupUpload } from '../src/use-upup-upload'
 const makeFile = (name: string, size = 10, type = 'text/plain') =>
     new File(['x'.repeat(size)], name, { type })
 
-describe('useUpupUpload — restrictions nested config', () => {
-    it('enforces restrictions.maxNumberOfFiles', async () => {
+describe('useUpupUpload — flat file restrictions', () => {
+    it('enforces the file-count limit', async () => {
         const { result } = renderHook(() =>
             useUpupUpload({
                 provider: 'S3' as const,
-                restrictions: { maxNumberOfFiles: 2 },
+                limit: 2,
             }),
         )
         await act(async () => {
@@ -24,11 +24,11 @@ describe('useUpupUpload — restrictions nested config', () => {
         expect(result.current.files.length).toBe(2) // still 2
     })
 
-    it('enforces restrictions.maxFileSize', async () => {
+    it('enforces maxFileSize', async () => {
         const { result } = renderHook(() =>
             useUpupUpload({
                 provider: 'S3' as const,
-                restrictions: { maxFileSize: { size: 5, unit: 'B' } },
+                maxFileSize: { size: 5, unit: 'B' },
             }),
         )
         await act(async () => {
@@ -37,11 +37,11 @@ describe('useUpupUpload — restrictions nested config', () => {
         expect(result.current.files.length).toBe(0)
     })
 
-    it('enforces restrictions.allowedFileTypes', async () => {
+    it('enforces allowedFileTypes', async () => {
         const { result } = renderHook(() =>
             useUpupUpload({
                 provider: 'S3' as const,
-                restrictions: { allowedFileTypes: ['image/*'] },
+                allowedFileTypes: 'image/*',
             }),
         )
         await act(async () => {
@@ -115,24 +115,5 @@ describe('useUpupUpload — combined options', () => {
         })
         expect(result.current.files.length).toBe(1)
         expect(cb).toHaveBeenCalledTimes(1)
-    })
-
-    it('flat options override restrictions', async () => {
-        const { result } = renderHook(() =>
-            useUpupUpload({
-                provider: 'S3' as const,
-                restrictions: { maxNumberOfFiles: 10 },
-                limit: 1, // flat takes precedence
-            }),
-        )
-        await act(async () => {
-            await result.current.addFiles([makeFile('first.txt')])
-        })
-        expect(result.current.files.length).toBe(1)
-
-        await act(async () => {
-            try { await result.current.addFiles([makeFile('second.txt')]) } catch {}
-        })
-        expect(result.current.files.length).toBe(1) // limit=1 enforced
     })
 })

@@ -14,7 +14,6 @@ export { fileSizeInBytes, matchesAccept }
 export interface FileManagerOptions {
   allowedFileTypes?: string
   limit?: number
-  minFiles?: number
   maxFileSize?: MaxFileSizeObject
   minFileSize?: MaxFileSizeObject
   maxTotalFileSize?: MaxFileSizeObject

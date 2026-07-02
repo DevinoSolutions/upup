@@ -30,3 +30,14 @@ describe('CoreOptions.cloudDrives', () => {
     core.destroy()
   })
 })
+
+describe('UpupCore.updateOptions — cloudDrives', () => {
+  it('replaces cloudDrives wholesale (plain assign)', () => {
+    const core = new UpupCore({
+      cloudDrives: { googleDrive: { clientId: 'old', apiKey: 'k', appId: 'a' } },
+    })
+    core.updateOptions({ cloudDrives: { googleDrive: { clientId: 'new', apiKey: 'k', appId: 'a' } } })
+    expect(core.options.cloudDrives?.googleDrive?.clientId).toBe('new')
+    core.destroy()
+  })
+})

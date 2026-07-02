@@ -27,13 +27,6 @@ export type UploaderProps = {
     uploadEndpoint?: string
     serverUrl?: string
     maxFiles?: number
-    restrictions?: {
-        maxFileSize?: MaxFileSizeObject
-        minFileSize?: MaxFileSizeObject
-        maxTotalFileSize?: MaxFileSizeObject
-        maxNumberOfFiles?: number
-        allowedFileTypes?: string[]
-    }
     theme?: UpupThemeConfig
     folderUpload?: {
         allowDrop?: boolean
