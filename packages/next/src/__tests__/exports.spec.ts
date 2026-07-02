@@ -17,7 +17,7 @@ describe('client export surface (@upup/next)', () => {
 
 describe('server export surface (@upup/next/server)', () => {
   it('exposes the handlers + helpers + token-store utils', () => {
-    expect(typeof server.createUpupHandler).toBe('function')
+    expect(typeof server.createUpupNextHandler).toBe('function')
     expect(typeof server.createUpupPagesHandler).toBe('function')
     expect(typeof server.defineUpupConfig).toBe('function')
     expect(typeof server.normalizeRequestOrigin).toBe('function')

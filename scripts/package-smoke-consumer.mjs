@@ -366,8 +366,8 @@ createRoot(document.getElementById('root')!).render(<App />)
 `)
 
 writeFileSync(join(consumerDir, 'src', 'server-smoke.ts'), `import { StorageProvider } from '@upup/core'
-import { createHandler, InMemoryTokenStore, type UpupServerConfig } from '@upup/server'
-import { createUpupHandler } from '@upup/server/next'
+import { createUpupHandler, InMemoryTokenStore, type UpupServerConfig } from '@upup/server'
+import { createUpupNextHandler } from '@upup/server/next'
 
 const tokenStore = new InMemoryTokenStore()
 
@@ -383,8 +383,8 @@ const serverConfig: UpupServerConfig = {
 }
 
 export const serverSmoke = {
-  routeHandler: createHandler(serverConfig),
-  nextHandler: createUpupHandler(serverConfig),
+  routeHandler: createUpupHandler(serverConfig),
+  nextHandler: createUpupNextHandler(serverConfig),
 }
 `)
 

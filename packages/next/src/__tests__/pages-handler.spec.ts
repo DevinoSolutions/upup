@@ -6,7 +6,7 @@ const received: { req?: Request } = {}
 let respond: (req: Request) => Promise<Response>
 
 vi.mock('@upup/server', () => ({
-  createHandler: () => async (req: Request) => {
+  createUpupHandler: () => async (req: Request) => {
     received.req = req
     return respond(req)
   },

@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest'
 import { createUpupMiddleware } from '../src/express'
 import { createUpupPlugin } from '../src/fastify'
 import { createUpupRoutes } from '../src/hono'
-import { createUpupHandler } from '../src/next'
+import { createUpupNextHandler } from '../src/next'
 
 vi.mock('../src/providers/aws', () => ({
   generatePresignedUrl: vi.fn().mockResolvedValue({
@@ -26,7 +26,7 @@ const config = {
 
 describe('Next.js adapter', () => {
   it('exposes all four HTTP verbs backed by the same handler', () => {
-    const { GET, POST, PUT, DELETE } = createUpupHandler(config)
+    const { GET, POST, PUT, DELETE } = createUpupNextHandler(config)
     expect(typeof GET).toBe('function')
     expect(typeof POST).toBe('function')
     expect(typeof PUT).toBe('function')
@@ -35,7 +35,7 @@ describe('Next.js adapter', () => {
   })
 
   it('routes suffix-matched paths when mounted under a prefix', async () => {
-    const { POST } = createUpupHandler(config)
+    const { POST } = createUpupNextHandler(config)
     const req = new Request('http://localhost/api/upup/presign', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

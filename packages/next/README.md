@@ -20,12 +20,12 @@ export default function Page() {
 ## Server — App Router (`app/api/upup/[...path]/route.ts`)
 
 ```ts
-import { createUpupHandler, defineUpupConfig } from '@upup/next/server'
+import { createUpupNextHandler, defineUpupConfig } from '@upup/next/server'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60
 
-export const { GET, POST, PUT, DELETE } = createUpupHandler(
+export const { GET, POST, PUT, DELETE } = createUpupNextHandler(
   defineUpupConfig({
     storage: { type: 'aws', bucket: process.env.S3_BUCKET!, region: process.env.S3_REGION! /* creds... */ },
   }),
@@ -55,7 +55,7 @@ export default createUpupPagesHandler(defineUpupConfig({ /* storage, providers *
 - **Memory.** `@upup/server` buffers files below `multipartThreshold` (default 100 MB)
   in RAM during transfer. On 128–256 MB functions, lower `multipartThreshold` so
   transfers stream in chunks instead.
-- **Proxy/CDN origin.** Behind a proxy, pass `createUpupHandler(config, { baseUrl })`
+- **Proxy/CDN origin.** Behind a proxy, pass `createUpupNextHandler(config, { baseUrl })`
   (or `{ trustProxy: true }` to read `x-forwarded-*`) so the OAuth callback URL is
   correct. No-op on Vercel App Router (`req.url` is already public).
 - **OAuth redirect URIs.** Register your deployed callback URL

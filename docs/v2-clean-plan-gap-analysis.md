@@ -90,7 +90,7 @@ This means **shared/core/server are likely fully plan-compliant**. The **React l
 | ServerOAuth strategy | ✅ | ✅ | |
 | ServerTransfer strategy | ✅ | ✅ | |
 | apiKey managed mode wiring | ✅ | ✅ (commit: apiKey prop + sync) | |
-| Server OAuth routes (GET /auth/:provider) | ✅ | ✅ (apps use createUpupHandler) | |
+| Server OAuth routes (GET /auth/:provider) | ✅ | ✅ (apps use createUpupNextHandler) | |
 | Server file transfer routes | ✅ | ✅ | |
 | serverUrl prop | ✅ | ✅ (commit: serverUrl prop added) | |
 

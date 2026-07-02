@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { createHandler } from '../src/handler'
+import { createUpupHandler } from '../src/handler'
 import { InMemoryTokenStore, setTokens, DEFAULT_USER_ID } from '../src/tokenStore'
 
 vi.mock('../src/providers/aws', () => ({
@@ -39,7 +39,7 @@ const config = {
 // ─────────────────────────────────────────────
 describe('handler — allowedTypes', () => {
     it('rejects disallowed file type', async () => {
-        const handler = createHandler({ ...config, allowedTypes: ['image/*'] })
+        const handler = createUpupHandler({ ...config, allowedTypes: ['image/*'] })
         const req = new Request('http://localhost/presign', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -50,7 +50,7 @@ describe('handler — allowedTypes', () => {
     })
 
     it('accepts allowed file type (exact match)', async () => {
-        const handler = createHandler({ ...config, allowedTypes: ['image/jpeg'] })
+        const handler = createUpupHandler({ ...config, allowedTypes: ['image/jpeg'] })
         const req = new Request('http://localhost/presign', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -61,7 +61,7 @@ describe('handler — allowedTypes', () => {
     })
 
     it('accepts any type when allowedTypes not configured', async () => {
-        const handler = createHandler(config)
+        const handler = createUpupHandler(config)
         const req = new Request('http://localhost/presign', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -77,7 +77,7 @@ describe('handler — allowedTypes', () => {
 // ─────────────────────────────────────────────
 describe('handler — hooks.onBeforeUpload', () => {
     it('rejects upload when hook returns false', async () => {
-        const handler = createHandler({
+        const handler = createUpupHandler({
             ...config,
             hooks: { onBeforeUpload: async () => false },
         })
@@ -91,7 +91,7 @@ describe('handler — hooks.onBeforeUpload', () => {
     })
 
     it('allows upload when hook returns true', async () => {
-        const handler = createHandler({
+        const handler = createUpupHandler({
             ...config,
             hooks: { onBeforeUpload: async () => true },
         })
@@ -106,7 +106,7 @@ describe('handler — hooks.onBeforeUpload', () => {
 
     it('hook receives file metadata', async () => {
         const hook = vi.fn().mockResolvedValue(true)
-        const handler = createHandler({ ...config, hooks: { onBeforeUpload: hook } })
+        const handler = createUpupHandler({ ...config, hooks: { onBeforeUpload: hook } })
         const req = new Request('http://localhost/presign', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -125,7 +125,7 @@ describe('handler — hooks.onBeforeUpload', () => {
 // ─────────────────────────────────────────────
 describe('handler — multipart', () => {
     it('applies allowedTypes wildcard validation to multipart init', async () => {
-        const handler = createHandler({ ...config, allowedTypes: ['image/*'] })
+        const handler = createUpupHandler({ ...config, allowedTypes: ['image/*'] })
         const req = new Request('http://localhost/multipart/init', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -136,7 +136,7 @@ describe('handler — multipart', () => {
     })
 
     it('initiates multipart upload and returns a token', async () => {
-        const handler = createHandler(config)
+        const handler = createUpupHandler(config)
         const req = new Request('http://localhost/multipart/init', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -151,7 +151,7 @@ describe('handler — multipart', () => {
     })
 
     it('signs a part using the issued token', async () => {
-        const handler = createHandler(config)
+        const handler = createUpupHandler(config)
         const init = await (await handler(new Request('http://localhost/multipart/init', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -169,7 +169,7 @@ describe('handler — multipart', () => {
     })
 
     it('rejects sign-part with a forged token (403)', async () => {
-        const handler = createHandler(config)
+        const handler = createUpupHandler(config)
         const res = await handler(new Request('http://localhost/multipart/sign-part', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -179,7 +179,7 @@ describe('handler — multipart', () => {
     })
 
     it('completes multipart upload using the issued token', async () => {
-        const handler = createHandler(config)
+        const handler = createUpupHandler(config)
         const init = await (await handler(new Request('http://localhost/multipart/init', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -199,7 +199,7 @@ describe('handler — multipart', () => {
 
 describe('handler — CORS', () => {
     it('responds to OPTIONS with configured CORS headers', async () => {
-        const handler = createHandler({
+        const handler = createUpupHandler({
             ...config,
             cors: {
                 allowedOrigins: ['http://localhost:3000'],
@@ -218,7 +218,7 @@ describe('handler — CORS', () => {
     })
 
     it('does not reflect disallowed origins', async () => {
-        const handler = createHandler({
+        const handler = createUpupHandler({
             ...config,
             cors: { allowedOrigins: ['https://app.example.com'] },
         })
@@ -246,7 +246,7 @@ describe('handler — CORS', () => {
     })
 
     it('sets CORS header on GET /files/:provider 401 reauth response', async () => {
-        const handler = createHandler(serverCors())
+        const handler = createUpupHandler(serverCors())
         const res = await handler(
             new Request('http://localhost/files/google-drive', {
                 method: 'GET',
@@ -272,7 +272,7 @@ describe('handler — CORS', () => {
                 headers: { 'Content-Type': 'application/json' },
             }),
         )
-        const handler = createHandler(serverCors(store))
+        const handler = createUpupHandler(serverCors(store))
         const res = await handler(
             new Request('http://localhost/files/google-drive', {
                 method: 'GET',
@@ -288,7 +288,7 @@ describe('handler — CORS', () => {
     })
 
     it('sets CORS header on POST /files/:provider/transfer 401 reauth response', async () => {
-        const handler = createHandler(serverCors())
+        const handler = createUpupHandler(serverCors())
         const res = await handler(
             new Request('http://localhost/files/google-drive/transfer', {
                 method: 'POST',
@@ -327,7 +327,7 @@ describe('handler — OAuth redirect_uri consistency', () => {
 
     it('uses the same redirect_uri for the auth request and the token exchange', async () => {
         const store = new InMemoryTokenStore()
-        const handler = createHandler(oauthConfig(store))
+        const handler = createUpupHandler(oauthConfig(store))
 
         // 1. Authorization request → capture redirect_uri + state from Location.
         const authRes = await handler(
@@ -385,14 +385,14 @@ describe('handler — OAuth redirect_uri consistency', () => {
 // ─────────────────────────────────────────────
 describe('handler — presign edge cases', () => {
     it('rejects GET on presign endpoint', async () => {
-        const handler = createHandler(config)
+        const handler = createUpupHandler(config)
         const req = new Request('http://localhost/presign', { method: 'GET' })
         const res = await handler(req)
         expect([404, 405]).toContain(res.status)
     })
 
     it('presign with empty body still processes (no field validation)', async () => {
-        const handler = createHandler(config)
+        const handler = createUpupHandler(config)
         const req = new Request('http://localhost/presign', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -404,7 +404,7 @@ describe('handler — presign edge cases', () => {
     })
 
     it('auth success allows presign', async () => {
-        const handler = createHandler({ ...config, auth: async () => true })
+        const handler = createUpupHandler({ ...config, auth: async () => true })
         const req = new Request('http://localhost/presign', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },

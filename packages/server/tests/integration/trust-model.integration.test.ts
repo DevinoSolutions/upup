@@ -1,4 +1,4 @@
-// Trust-model exploit harness. Drives the REAL createHandler against a local
+// Trust-model exploit harness. Drives the REAL createUpupHandler against a local
 // MinIO to prove the server stops trusting the client. Gated on UPUP_E2E_MINIO=1
 // (same gate as minio.integration.test.ts). Bring infra up first:
 //   pnpm e2e:minio:up   then   pnpm e2e:minio:test
@@ -11,7 +11,7 @@ import {
   ListPartsCommand,
 } from '@aws-sdk/client-s3'
 import { buildS3ClientConfig } from '../../src/providers/s3-client'
-import { createHandler } from '../../src/handler'
+import { createUpupHandler } from '../../src/handler'
 import type { UpupServerConfig } from '../../src/config'
 
 const RUN = process.env.UPUP_E2E_MINIO === '1'
@@ -57,7 +57,7 @@ describe.skipIf(!RUN)('trust model — exploit harness', () => {
 
   // S1: presign approves a small size; an oversized PUT body must be rejected.
   it('S1: rejects a PUT whose body exceeds the presigned content-length', async () => {
-    const handler = createHandler(config)
+    const handler = createUpupHandler(config)
     const declared = 1024
     const res = await post(handler, '/presign', {
       name: 's1-oversized.bin',
@@ -83,7 +83,7 @@ describe.skipIf(!RUN)('trust model — exploit harness', () => {
   // complete. MinIO requires >=5 MiB for a non-final part, so declare a size
   // well under that and upload one real 5 MiB part.
   it('S1 (multipart): rejects complete when uploaded bytes exceed the signed smax', async () => {
-    const handler = createHandler(config)
+    const handler = createUpupHandler(config)
     const declaredSize = 1024 // tiny declared size -> smax = 1024 bytes
     const init = await (await post(handler, '/multipart/init', {
       name: 's1-multipart-oversized.bin',
@@ -129,7 +129,7 @@ describe.skipIf(!RUN)('trust model — exploit harness', () => {
 
   // S2: a tampered token must be refused; a valid token must succeed.
   it('S2: refuses multipart complete with a forged token (403)', async () => {
-    const handler = createHandler(config)
+    const handler = createUpupHandler(config)
     const res = await post(handler, '/multipart/complete', {
       token: 'forged.token',
       parts: [],
@@ -138,7 +138,7 @@ describe.skipIf(!RUN)('trust model — exploit harness', () => {
   }, 30_000)
 
   it('multipart round-trip via the handler stores correct bytes', async () => {
-    const handler = createHandler(config)
+    const handler = createUpupHandler(config)
     const part1 = new Uint8Array(5 * 1024 * 1024).fill(7) // 5 MiB
     const part2 = new Uint8Array(4096).fill(9)
 
@@ -168,7 +168,7 @@ describe.skipIf(!RUN)('trust model — exploit harness', () => {
   }, 60_000)
 
   it('ignores a client-sent key — the token is authoritative', async () => {
-    const handler = createHandler(config)
+    const handler = createUpupHandler(config)
     const init = await (await post(handler, '/multipart/init', {
       name: 'authoritative.bin',
       size: 8 * 1024 * 1024,

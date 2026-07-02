@@ -1,6 +1,6 @@
-import { createUpupHandler } from "@upup/server/next";
+import { createUpupNextHandler } from "@upup/server/next";
 
-export const { GET, POST, PUT, DELETE } = createUpupHandler({
+export const { GET, POST, PUT, DELETE } = createUpupNextHandler({
   storage: {
     type: "backblaze",
     bucket: process.env.S3_BUCKET!,

@@ -1,4 +1,4 @@
-import { createUpupHandler } from '@upup/next/server'
+import { createUpupNextHandler } from '@upup/next/server'
 import { upupConfig } from '@/lib/upup-config'
 
 // Recommended for the server-mode drive-transfer path (it streams through the
@@ -6,4 +6,4 @@ import { upupConfig } from '@/lib/upup-config'
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60
 
-export const { GET, POST, PUT, DELETE } = createUpupHandler(upupConfig)
+export const { GET, POST, PUT, DELETE } = createUpupNextHandler(upupConfig)

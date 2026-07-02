@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { normalizeRequestOrigin, resolveOrigin } from '../normalize-origin'
+import { normalizeRequestOrigin, resolveOrigin } from '../src/normalize-origin'
 
 describe('resolveOrigin', () => {
   it('returns the origin of an explicit baseUrl', () => {

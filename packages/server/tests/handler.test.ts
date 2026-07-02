@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { createHandler } from '../src/handler'
+import { createUpupHandler } from '../src/handler'
 
 vi.mock('../src/providers/aws', () => ({
   generatePresignedUrl: vi.fn().mockResolvedValue({
@@ -25,16 +25,16 @@ const config = {
   uploadTokenSecret: 'handler-test-secret-0123456789',
 }
 
-describe('createHandler', () => {
+describe('createUpupHandler', () => {
   it('returns 404 for unknown routes', async () => {
-    const handler = createHandler(config)
+    const handler = createUpupHandler(config)
     const req = new Request('http://localhost/unknown', { method: 'GET' })
     const res = await handler(req)
     expect(res.status).toBe(404)
   })
 
   it('handles presign POST', async () => {
-    const handler = createHandler(config)
+    const handler = createUpupHandler(config)
     const req = new Request('http://localhost/presign', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -48,7 +48,7 @@ describe('createHandler', () => {
   })
 
   it('rejects oversized files', async () => {
-    const handler = createHandler({ ...config, maxFileSize: 500 })
+    const handler = createUpupHandler({ ...config, maxFileSize: 500 })
     const req = new Request('http://localhost/presign', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -59,7 +59,7 @@ describe('createHandler', () => {
   })
 
   it('checks auth when configured', async () => {
-    const handler = createHandler({
+    const handler = createUpupHandler({
       ...config,
       auth: async () => false,
     })
@@ -88,7 +88,7 @@ const configWithProviders = {
 // and the validation surfaces here since they don't depend on tokenStore.
 describe('OAuth routes — error surfaces', () => {
   it('returns 400 for unknown provider', async () => {
-    const handler = createHandler(configWithProviders)
+    const handler = createUpupHandler(configWithProviders)
     const req = new Request('http://localhost/auth/unknown-provider', { method: 'GET' })
     const res = await handler(req)
     expect(res.status).toBe(400)
@@ -97,7 +97,7 @@ describe('OAuth routes — error surfaces', () => {
 
 describe('File routes — error surfaces', () => {
   it('returns 400 for unknown provider on list', async () => {
-    const handler = createHandler(configWithProviders)
+    const handler = createUpupHandler(configWithProviders)
     const req = new Request('http://localhost/files/badprovider', { method: 'GET' })
     const res = await handler(req)
     expect(res.status).toBe(400)

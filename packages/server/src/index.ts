@@ -1,4 +1,4 @@
-export { createHandler } from './handler'
+export { createUpupHandler } from './handler'
 export type { RouteHandler } from './handler'
 export type {
   UpupServerConfig,

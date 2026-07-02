@@ -1,4 +1,4 @@
-import { createHandler } from './handler'
+import { createUpupHandler } from './handler'
 import type { UpupServerConfig } from './config'
 
 interface ExpressReq {
@@ -17,7 +17,7 @@ interface ExpressRes {
 }
 
 export function createUpupMiddleware(config: UpupServerConfig) {
-  const handler = createHandler(config)
+  const handler = createUpupHandler(config)
 
   return async (req: ExpressReq, res: ExpressRes, _next: () => void) => {
     const url = `${req.protocol}://${req.get('host')}${req.originalUrl}`

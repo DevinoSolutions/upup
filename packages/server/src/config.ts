@@ -44,7 +44,7 @@ export type UpupServerConfig = {
   /**
    * HMAC secret for stateless upload tokens (multipart key/uploadId binding).
    * REQUIRED. Stable, high-entropy, >=16 chars, shared across all instances.
-   * `createHandler` throws if missing or too short.
+   * `createUpupHandler` throws if missing or too short.
    */
   uploadTokenSecret?: string
 
@@ -57,7 +57,7 @@ export type UpupServerConfig = {
   /**
    * Permit drive providers / tokenStore WITHOUT a getUserId resolver, collapsing
    * every caller into one shared anonymous namespace. Demos only — never in
-   * multi-tenant production. Default false -> createHandler throws.
+   * multi-tenant production. Default false -> createUpupHandler throws.
    */
   allowAnonymous?: boolean
 

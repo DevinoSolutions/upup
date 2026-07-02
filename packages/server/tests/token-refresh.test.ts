@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
-import { createHandler } from '../src/handler'
+import { createUpupHandler } from '../src/handler'
 import {
   InMemoryTokenStore,
   getTokens,
@@ -66,7 +66,7 @@ describe('token refresh — proactive refresh on expiry (handleListFiles)', () =
       )
     })
 
-    const handler = createHandler(baseConfig(store))
+    const handler = createUpupHandler(baseConfig(store))
     const res = await handler(
       new Request('http://localhost/files/google-drive', { method: 'GET' }),
     )
@@ -106,7 +106,7 @@ describe('token refresh — proactive refresh on expiry (handleListFiles)', () =
       new Response('Unauthorized', { status: 401 }),
     )
 
-    const handler = createHandler(baseConfig(store))
+    const handler = createUpupHandler(baseConfig(store))
     const res = await handler(
       new Request('http://localhost/files/google-drive', { method: 'GET' }),
     )
@@ -131,7 +131,7 @@ describe('token refresh — proactive refresh on expiry (handleListFiles)', () =
       ),
     )
 
-    const handler = createHandler(baseConfig(store))
+    const handler = createUpupHandler(baseConfig(store))
     const res = await handler(
       new Request('http://localhost/files/google-drive', { method: 'GET' }),
     )
@@ -174,7 +174,7 @@ describe('token refresh — proactive refresh on expiry (handleListFiles)', () =
       )
     })
 
-    const handler = createHandler(baseConfig(store))
+    const handler = createUpupHandler(baseConfig(store))
     await handler(
       new Request('http://localhost/files/google-drive', { method: 'GET' }),
     )
@@ -218,7 +218,7 @@ describe('token refresh — proactive refresh on expiry (handleFileTransfer)', (
       )
     })
 
-    const handler = createHandler(baseConfig(store))
+    const handler = createUpupHandler(baseConfig(store))
     await handler(
       new Request('http://localhost/files/google-drive/transfer', {
         method: 'POST',
@@ -253,7 +253,7 @@ describe('token refresh — proactive refresh on expiry (handleFileTransfer)', (
       new Response('Unauthorized', { status: 401 }),
     )
 
-    const handler = createHandler(baseConfig(store))
+    const handler = createUpupHandler(baseConfig(store))
     const res = await handler(
       new Request('http://localhost/files/google-drive/transfer', {
         method: 'POST',

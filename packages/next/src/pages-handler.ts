@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
-import { createHandler } from '@upup/server'
+import { createUpupHandler } from '@upup/server'
 import type { UpupServerConfig } from '@upup/server'
-import type { UpupNextOptions } from './normalize-origin'
+import type { UpupNextOptions } from '@upup/server/next'
 
 function firstHeaderValue(
   value: string | string[] | undefined,
@@ -73,7 +73,7 @@ export function createUpupPagesHandler(
   config: UpupServerConfig,
   opts?: UpupNextOptions,
 ): (req: NextApiRequest, res: NextApiResponse) => Promise<void> {
-  const handler = createHandler(config)
+  const handler = createUpupHandler(config)
   return async (req, res) => {
     try {
       const base = resolveBase(req, opts)

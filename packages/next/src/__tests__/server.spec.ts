@@ -1,28 +1,16 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect } from 'vitest'
+import * as serverEntry from '../server'
+import * as upstream from '@upup/server/next'
 
-const received: { req?: Request } = {}
-vi.mock('@upup/server', () => ({
-  createHandler: () => async (req: Request) => {
-    received.req = req
-    return new Response('{}', { status: 200 })
-  },
-  InMemoryTokenStore: class {},
-}))
-
-import { createUpupHandler } from '../server'
-
-describe('createUpupHandler', () => {
-  it('returns GET/POST/PUT/DELETE handlers', () => {
-    const h = createUpupHandler({} as any)
-    expect(typeof h.GET).toBe('function')
-    expect(typeof h.POST).toBe('function')
-    expect(typeof h.PUT).toBe('function')
-    expect(typeof h.DELETE).toBe('function')
+// The App Router handler + origin utils live in @upup/server/next; this entry
+// must re-export the SAME functions (behavior is tested in @upup/server).
+describe('@upup/next/server re-exports', () => {
+  it('createUpupNextHandler is the @upup/server/next function', () => {
+    expect(serverEntry.createUpupNextHandler).toBe(upstream.createUpupNextHandler)
   })
 
-  it('normalizes the request origin before delegating (baseUrl)', async () => {
-    const h = createUpupHandler({} as any, { baseUrl: 'https://app.example.com' })
-    await h.POST(new Request('https://internal.local/api/upup/presign'))
-    expect(new URL(received.req!.url).origin).toBe('https://app.example.com')
+  it('origin utils are the @upup/server/next functions', () => {
+    expect(serverEntry.normalizeRequestOrigin).toBe(upstream.normalizeRequestOrigin)
+    expect(serverEntry.resolveOrigin).toBe(upstream.resolveOrigin)
   })
 })

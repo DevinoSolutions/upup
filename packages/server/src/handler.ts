@@ -103,7 +103,7 @@ async function validateUploadMetadata(
   return null
 }
 
-export function createHandler(config: UpupServerConfig): RouteHandler {
+export function createUpupHandler(config: UpupServerConfig): RouteHandler {
   // Secure-by-default: a stable token secret is mandatory (the multipart routes
   // are always live and issue/verify tokens), and drive/tokenStore use requires
   // a real identity resolver unless anonymous is explicitly opted into.

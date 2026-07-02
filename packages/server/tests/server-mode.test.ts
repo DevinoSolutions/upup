@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { createHandler } from '../src/handler'
+import { createUpupHandler } from '../src/handler'
 import {
   InMemoryTokenStore,
   getTokens,
@@ -172,7 +172,7 @@ describe('GET /auth/:provider redirect', () => {
   it('redirects to Google with state param and saves state', async () => {
     const store = new InMemoryTokenStore()
     const storeSpy = vi.spyOn(store, 'set')
-    const handler = createHandler(baseConfig(store))
+    const handler = createUpupHandler(baseConfig(store))
     const res = await handler(
       new Request('http://localhost/auth/google-drive', { method: 'GET' }),
     )
@@ -190,7 +190,7 @@ describe('GET /auth/:provider redirect', () => {
   })
 
   it('redirects to Microsoft with tenant path', async () => {
-    const handler = createHandler(baseConfig())
+    const handler = createUpupHandler(baseConfig())
     const res = await handler(
       new Request('http://localhost/auth/onedrive', { method: 'GET' }),
     )
@@ -201,7 +201,7 @@ describe('GET /auth/:provider redirect', () => {
   })
 
   it('redirects to Dropbox auth URL', async () => {
-    const handler = createHandler(baseConfig())
+    const handler = createUpupHandler(baseConfig())
     const res = await handler(
       new Request('http://localhost/auth/dropbox', { method: 'GET' }),
     )
@@ -213,7 +213,7 @@ describe('GET /auth/:provider redirect', () => {
   })
 
   it('redirects to Box auth URL', async () => {
-    const handler = createHandler(baseConfig())
+    const handler = createUpupHandler(baseConfig())
     const res = await handler(
       new Request('http://localhost/auth/box', { method: 'GET' }),
     )
@@ -224,7 +224,7 @@ describe('GET /auth/:provider redirect', () => {
   })
 
   it('rejects unknown provider', async () => {
-    const handler = createHandler(baseConfig())
+    const handler = createUpupHandler(baseConfig())
     const res = await handler(
       new Request('http://localhost/auth/mega', { method: 'GET' }),
     )
@@ -232,7 +232,7 @@ describe('GET /auth/:provider redirect', () => {
   })
 
   it('500s when tokenStore missing', async () => {
-    const handler = createHandler({
+    const handler = createUpupHandler({
       ...baseConfig(),
       tokenStore: undefined,
     })
@@ -243,7 +243,7 @@ describe('GET /auth/:provider redirect', () => {
   })
 
   it('401s when getUserId returns null', async () => {
-    const handler = createHandler({
+    const handler = createUpupHandler({
       ...baseConfig(),
       getUserId: async () => null,
     })
@@ -285,7 +285,7 @@ describe('GET /auth/:provider/cb', () => {
       userId: 'u',
       provider: 'google-drive',
     })
-    const handler = createHandler(baseConfig(store))
+    const handler = createUpupHandler(baseConfig(store))
     const res = await handler(
       new Request(
         'http://localhost/auth/google-drive/cb?code=xyz&state=valid-state',
@@ -304,7 +304,7 @@ describe('GET /auth/:provider/cb', () => {
   })
 
   it('rejects invalid state', async () => {
-    const handler = createHandler(baseConfig())
+    const handler = createUpupHandler(baseConfig())
     const res = await handler(
       new Request(
         'http://localhost/auth/google-drive/cb?code=xyz&state=never-saved',
@@ -317,7 +317,7 @@ describe('GET /auth/:provider/cb', () => {
   it('rejects missing code', async () => {
     const store = new InMemoryTokenStore()
     await saveOAuthState(store, 's', { userId: 'u', provider: 'google-drive' })
-    const handler = createHandler(baseConfig(store))
+    const handler = createUpupHandler(baseConfig(store))
     const res = await handler(
       new Request('http://localhost/auth/google-drive/cb?state=s', {
         method: 'GET',
@@ -327,7 +327,7 @@ describe('GET /auth/:provider/cb', () => {
   })
 
   it('propagates provider errors', async () => {
-    const handler = createHandler(baseConfig())
+    const handler = createUpupHandler(baseConfig())
     const res = await handler(
       new Request(
         'http://localhost/auth/google-drive/cb?error=access_denied',
@@ -345,7 +345,7 @@ describe('GET /auth/:provider/cb', () => {
     )
     const store = new InMemoryTokenStore()
     await saveOAuthState(store, 's', { userId: 'u', provider: 'dropbox' })
-    const handler = createHandler(baseConfig(store))
+    const handler = createUpupHandler(baseConfig(store))
     const res = await handler(
       new Request('http://localhost/auth/dropbox/cb?code=x&state=s', {
         method: 'GET',
@@ -366,7 +366,7 @@ describe('GET /files/:provider', () => {
   })
 
   it('401s with reauth flag when no token persisted', async () => {
-    const handler = createHandler(baseConfig())
+    const handler = createUpupHandler(baseConfig())
     const res = await handler(
       new Request('http://localhost/files/google-drive', { method: 'GET' }),
     )
@@ -401,7 +401,7 @@ describe('GET /files/:provider', () => {
         { status: 200, headers: { 'Content-Type': 'application/json' } },
       ),
     )
-    const handler = createHandler(baseConfig(store))
+    const handler = createUpupHandler(baseConfig(store))
     const res = await handler(
       new Request('http://localhost/files/google-drive', { method: 'GET' }),
     )
@@ -423,7 +423,7 @@ describe('GET /files/:provider', () => {
     fetchSpy = vi
       .spyOn(globalThis, 'fetch')
       .mockResolvedValue(new Response('', { status: 401 }))
-    const handler = createHandler(baseConfig(store))
+    const handler = createUpupHandler(baseConfig(store))
     const res = await handler(
       new Request('http://localhost/files/dropbox', { method: 'GET' }),
     )
@@ -438,7 +438,7 @@ describe('GET /files/:provider', () => {
 // ─────────────────────────────────────────────────────────────
 describe('POST /files/:provider/transfer', () => {
   it('401s with reauth when no token persisted', async () => {
-    const handler = createHandler(baseConfig())
+    const handler = createUpupHandler(baseConfig())
     const res = await handler(
       new Request('http://localhost/files/google-drive/transfer', {
         method: 'POST',
@@ -453,7 +453,7 @@ describe('POST /files/:provider/transfer', () => {
   it('rejects missing fileId', async () => {
     const store = new InMemoryTokenStore()
     await setTokens(store, DEFAULT_USER_ID, 'google-drive', { accessToken: 'AT' })
-    const handler = createHandler(baseConfig(store))
+    const handler = createUpupHandler(baseConfig(store))
     const res = await handler(
       new Request('http://localhost/files/google-drive/transfer', {
         method: 'POST',
@@ -467,7 +467,7 @@ describe('POST /files/:provider/transfer', () => {
   it('enforces maxFileSize', async () => {
     const store = new InMemoryTokenStore()
     await setTokens(store, DEFAULT_USER_ID, 'google-drive', { accessToken: 'AT' })
-    const handler = createHandler({
+    const handler = createUpupHandler({
       ...baseConfig(store),
       maxFileSize: 500,
     })
@@ -484,7 +484,7 @@ describe('POST /files/:provider/transfer', () => {
   it('enforces allowedTypes', async () => {
     const store = new InMemoryTokenStore()
     await setTokens(store, DEFAULT_USER_ID, 'google-drive', { accessToken: 'AT' })
-    const handler = createHandler({
+    const handler = createUpupHandler({
       ...baseConfig(store),
       allowedTypes: ['image/png'],
     })

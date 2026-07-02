@@ -62,9 +62,9 @@ npm i @upup/react @upup/server
 ```
 
 ```ts
-import { createHandler, InMemoryTokenStore } from '@upup/server'
+import { createUpupHandler, InMemoryTokenStore } from '@upup/server'
 
-const handler = createHandler({
+const handler = createUpupHandler({
   storage: {
     type: 'aws',
     bucket: process.env.S3_BUCKET!,

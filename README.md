@@ -79,9 +79,9 @@ Server Mode routes browser traffic through your server. Your credentials never r
 
 ```ts
 // app/api/upup/[...route]/route.ts  (Next.js App Router)
-import { createHandler, InMemoryTokenStore } from "@upup/server";
+import { createUpupHandler, InMemoryTokenStore } from "@upup/server";
 
-const handler = createHandler({
+const handler = createUpupHandler({
   storage: {
     type: "aws",
     bucket: process.env.S3_BUCKET!,

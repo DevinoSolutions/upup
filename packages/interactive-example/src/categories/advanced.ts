@@ -36,7 +36,7 @@ export const advancedCategory: CategoryDefinition = {
         {
             id: 'serverUrl',
             label: 'Server URL',
-            description: 'Base path where @upup/server\'s createHandler() is mounted.',
+            description: 'Base path where @upup/server\'s createUpupHandler() is mounted.',
             primitive: 'string',
             defaultValue: '',
             options: { placeholder: '/api/upup' },

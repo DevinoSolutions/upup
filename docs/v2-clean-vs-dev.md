@@ -222,7 +222,7 @@ Full Playwright test suite under `apps/e2e-test/`:
 
 ### `apps/playground`
 - Migrated from old `upup-react-file-uploader` to `@upup/react`
-- Uses v2 API routes with `createUpupHandler` from `@upup/server`
+- Uses v2 API routes with `createUpupNextHandler` from `@upup/server`
 
 ### `apps/landing`
 - Migrated imports, install commands, locale imports to `@upup/react`

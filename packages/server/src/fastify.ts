@@ -1,4 +1,4 @@
-import { createHandler } from './handler'
+import { createUpupHandler } from './handler'
 import type { UpupServerConfig } from './config'
 
 interface FastifyInstance {
@@ -21,7 +21,7 @@ interface FastifyReply {
 }
 
 export function createUpupPlugin(config: UpupServerConfig) {
-  const handler = createHandler(config)
+  const handler = createUpupHandler(config)
 
   return async (fastify: FastifyInstance) => {
     fastify.all('/upup/*', async (request: FastifyRequest, reply: FastifyReply) => {

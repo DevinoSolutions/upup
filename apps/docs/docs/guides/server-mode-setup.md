@@ -5,7 +5,7 @@ sidebar_position: 2
 # Server Mode — Setup
 
 End-to-end setup for `mode="server"`. Assumes a Next.js app; the same
-`createHandler()` plugs into Express, Fastify, or Hono via the
+`createUpupHandler()` plugs into Express, Fastify, or Hono via the
 per-framework adapters.
 
 Rough time budget: **15–30 minutes** including provider OAuth
@@ -26,9 +26,9 @@ dependency on it — your client bundle stays free of S3 SDKs.
 
 ```ts
 // app/api/upup/[...route]/route.ts
-import { createHandler, InMemoryTokenStore } from '@upup/server'
+import { createUpupHandler, InMemoryTokenStore } from '@upup/server'
 
-const handler = createHandler({
+const handler = createUpupHandler({
   storage: {
     type: 'aws',
     bucket: process.env.S3_BUCKET!,
@@ -125,7 +125,7 @@ DynamoDB, Postgres — anything shaped like this works.
 ## 6. Tuning
 
 ```ts
-createHandler({
+createUpupHandler({
   // ...
   maxFileSize: 500 * 1024 * 1024,      // 500 MB
   allowedTypes: ['image/*', 'video/*'],
