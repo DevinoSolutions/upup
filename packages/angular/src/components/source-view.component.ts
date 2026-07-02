@@ -13,12 +13,12 @@ import { ImageEditorStubComponent } from './image-editor-stub.component'
 import {
     GoogleDriveIconComponent,
     OneDriveIconComponent,
-    DropBoxIconComponent,
+    DropboxIconComponent,
     BoxIconComponent,
     LinkIconComponent,
     CameraIconComponent,
     AudioIconComponent,
-    ScreenCastIconComponent,
+    ScreenCaptureIconComponent,
 } from './icons'
 import { DefaultLoaderIconComponent } from './icons'
 import { NgComponentOutlet } from '@angular/common'
@@ -60,12 +60,12 @@ import { NgComponentOutlet } from '@angular/common'
         ImageEditorStubComponent,
         GoogleDriveIconComponent,
         OneDriveIconComponent,
-        DropBoxIconComponent,
+        DropboxIconComponent,
         BoxIconComponent,
         LinkIconComponent,
         CameraIconComponent,
         AudioIconComponent,
-        ScreenCastIconComponent,
+        ScreenCaptureIconComponent,
         DefaultLoaderIconComponent,
     ],
     template: `
@@ -84,7 +84,7 @@ import { NgComponentOutlet } from '@angular/common'
                         @case ('url') { <upup-link-icon /> }
                         @case ('camera') { <upup-camera-icon /> }
                         @case ('microphone') { <upup-audio-icon /> }
-                        @case ('screen') { <upup-screencast-icon /> }
+                        @case ('screen') { <upup-screen-capture-icon /> }
                     }
                     <button
                         [class]="cancelBtnClass"

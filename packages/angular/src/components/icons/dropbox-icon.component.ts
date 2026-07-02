@@ -7,4 +7,4 @@ import { IconComponent } from '../icon.component'
     imports: [IconComponent],
     template: `<upup-icon name="dropbox" />`,
 })
-export class DropBoxIconComponent {}
+export class DropboxIconComponent {}

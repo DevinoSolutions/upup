@@ -5,12 +5,12 @@ import {
     AudioIcon,
     BoxIcon,
     CameraIcon,
-    DropBoxIcon,
+    DropboxIcon,
     GoogleDriveIcon,
     LinkIcon,
     MyDeviceIcon,
     OneDriveIcon,
-    ScreenCastIcon,
+    ScreenCaptureIcon,
 } from '../components/Icons'
 import UrlUploader from '../components/UrlUploader'
 
@@ -50,7 +50,7 @@ export const uploadSourceObject = {
     [FileSource.DROPBOX]: {
         id: FileSource.DROPBOX,
         nameKey: 'dropbox' as keyof Translations,
-        Icon: DropBoxIcon,
+        Icon: DropboxIcon,
         Component: DropboxUploader,
     },
     [FileSource.BOX]: {
@@ -80,7 +80,7 @@ export const uploadSourceObject = {
     [FileSource.SCREEN]: {
         id: FileSource.SCREEN,
         nameKey: 'screenCapture' as keyof Translations,
-        Icon: ScreenCastIcon,
+        Icon: ScreenCaptureIcon,
         Component: ScreenCaptureUploader,
     },
 }

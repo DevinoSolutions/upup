@@ -2,4 +2,4 @@
   import Icon from '../Icon.svelte'
   let { class: className = undefined }: { class?: string } = $props()
 </script>
-<Icon name="screen-cast" class={className} />
+<Icon name="screen-capture" class={className} />

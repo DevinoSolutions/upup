@@ -5,12 +5,12 @@ import {
     AudioIcon,
     BoxIcon,
     CameraIcon,
-    DropBoxIcon,
+    DropboxIcon,
     GoogleDriveIcon,
     LinkIcon,
     MyDeviceIcon,
     OneDriveIcon,
-    ScreenCastIcon,
+    ScreenCaptureIcon,
 } from '../components/Icons'
 
 export { sourceNameKeys } from '@upup/core'
@@ -51,7 +51,7 @@ export const uploadSourceObject: Record<string, {
     [FileSource.DROPBOX]: {
         id: FileSource.DROPBOX,
         nameKey: 'dropbox' as keyof Translations,
-        Icon: DropBoxIcon,
+        Icon: DropboxIcon,
         Component: DropboxUploader,
     },
     [FileSource.BOX]: {
@@ -81,7 +81,7 @@ export const uploadSourceObject: Record<string, {
     [FileSource.SCREEN]: {
         id: FileSource.SCREEN,
         nameKey: 'screenCapture' as keyof Translations,
-        Icon: ScreenCastIcon,
+        Icon: ScreenCaptureIcon,
         Component: ScreenCaptureUploader,
     },
 }

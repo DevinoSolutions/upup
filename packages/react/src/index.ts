@@ -39,13 +39,13 @@ export type {
 export {
     MyDeviceIcon,
     BoxIcon,
-    DropBoxIcon,
+    DropboxIcon,
     GoogleDriveIcon,
     OneDriveIcon,
     LinkIcon,
     CameraIcon,
     AudioIcon,
-    ScreenCastIcon,
+    ScreenCaptureIcon,
 } from './components/Icons'
 
 // ── Accept presets ──────────────────────────────────────

@@ -8,7 +8,7 @@ export const MyDeviceIcon = ({ className }: SourceIconProps) => (
 export const BoxIcon = ({ className }: SourceIconProps) => (
     <Icon name="box" className={className} />
 )
-export const DropBoxIcon = ({ className }: SourceIconProps) => (
+export const DropboxIcon = ({ className }: SourceIconProps) => (
     <Icon name="dropbox" className={className} />
 )
 export const GoogleDriveIcon = ({ className }: SourceIconProps) => (
@@ -26,6 +26,6 @@ export const CameraIcon = ({ className }: SourceIconProps) => (
 export const AudioIcon = ({ className }: SourceIconProps) => (
     <Icon name="audio" className={className} />
 )
-export const ScreenCastIcon = ({ className }: SourceIconProps) => (
-    <Icon name="screen-cast" className={className} />
+export const ScreenCaptureIcon = ({ className }: SourceIconProps) => (
+    <Icon name="screen-capture" className={className} />
 )

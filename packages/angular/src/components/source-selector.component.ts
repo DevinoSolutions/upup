@@ -5,12 +5,12 @@ import {
     MyDeviceIconComponent,
     GoogleDriveIconComponent,
     OneDriveIconComponent,
-    DropBoxIconComponent,
+    DropboxIconComponent,
     BoxIconComponent,
     LinkIconComponent,
     CameraIconComponent,
     AudioIconComponent,
-    ScreenCastIconComponent,
+    ScreenCaptureIconComponent,
 } from './icons'
 import { IconComponent } from './icon.component'
 import { NgComponentOutlet } from '@angular/common'
@@ -142,12 +142,12 @@ export class SourceSelectorComponent {
         [FileSource.LOCAL]: MyDeviceIconComponent as new (...args: unknown[]) => unknown,
         [FileSource.GOOGLE_DRIVE]: GoogleDriveIconComponent as new (...args: unknown[]) => unknown,
         [FileSource.ONE_DRIVE]: OneDriveIconComponent as new (...args: unknown[]) => unknown,
-        [FileSource.DROPBOX]: DropBoxIconComponent as new (...args: unknown[]) => unknown,
+        [FileSource.DROPBOX]: DropboxIconComponent as new (...args: unknown[]) => unknown,
         [FileSource.BOX]: BoxIconComponent as new (...args: unknown[]) => unknown,
         [FileSource.URL]: LinkIconComponent as new (...args: unknown[]) => unknown,
         [FileSource.CAMERA]: CameraIconComponent as new (...args: unknown[]) => unknown,
         [FileSource.MICROPHONE]: AudioIconComponent as new (...args: unknown[]) => unknown,
-        [FileSource.SCREEN]: ScreenCastIconComponent as new (...args: unknown[]) => unknown,
+        [FileSource.SCREEN]: ScreenCaptureIconComponent as new (...args: unknown[]) => unknown,
     }
 
     get chosenSources(): SourceEntry[] {

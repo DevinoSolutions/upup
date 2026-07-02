@@ -4,7 +4,7 @@ import { ICONS, type IconName } from '../../icons/registry'
 const EXPECTED: IconName[] = [
   // brand
   'my-device', 'box', 'dropbox', 'google-drive', 'one-drive',
-  'link', 'camera', 'audio', 'screen-cast',
+  'link', 'camera', 'audio', 'screen-capture',
   // stroke
   'upload', 'loader', 'x', 'trash', 'camera-rotate', 'capture', 'plus', 'layout-grid', 'layout-list',
   'folder', 'search', 'user', 'file',

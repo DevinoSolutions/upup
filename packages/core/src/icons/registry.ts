@@ -2,7 +2,7 @@ import { FILE_TYPE_ICONS, type FileTypeIconName } from './file-type-icons'
 
 export type IconName =
   | 'my-device' | 'box' | 'dropbox' | 'google-drive' | 'one-drive'
-  | 'link' | 'camera' | 'audio' | 'screen-cast'
+  | 'link' | 'camera' | 'audio' | 'screen-capture'
   | 'upload' | 'loader' | 'x' | 'trash' | 'camera-rotate' | 'capture' | 'plus' | 'layout-grid' | 'layout-list'
   | 'folder' | 'search' | 'user' | 'file'
   | 'player-play' | 'player-pause'
@@ -117,7 +117,7 @@ export const ICONS: Record<IconName, IconDef> = {
 `,
   },
 
-  'screen-cast': {
+  'screen-capture': {
     viewBox: '0 0 32 32',
     defaultSize: 32,
     className: 'upup-text-[#2c3e50]',

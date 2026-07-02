@@ -3,12 +3,12 @@ import {
     MyDeviceIcon,
     GoogleDriveIcon,
     OneDriveIcon,
-    DropBoxIcon,
+    DropboxIcon,
     BoxIcon,
     LinkIcon,
     CameraIcon,
     AudioIcon,
-    ScreenCastIcon,
+    ScreenCaptureIcon,
 } from '@upup/react'
 
 export type SourceMeta = {
@@ -30,17 +30,17 @@ export const SOURCE_META: Record<string, SourceMeta> = {
     local: { label: 'My device', Icon: MyDeviceIcon },
     googleDrive: { label: 'Google Drive', Icon: GoogleDriveIcon },
     oneDrive: { label: 'OneDrive', Icon: OneDriveIcon },
-    dropbox: { label: 'Dropbox', Icon: DropBoxIcon },
+    dropbox: { label: 'Dropbox', Icon: DropboxIcon },
     box: { label: 'Box', Icon: BoxIcon },
     url: { label: 'Link / URL', Icon: LinkIcon },
     camera: { label: 'Camera', Icon: CameraIcon },
     microphone: { label: 'Microphone', Icon: AudioIcon },
-    screen: { label: 'Screen capture', Icon: ScreenCastIcon },
+    screen: { label: 'Screen capture', Icon: ScreenCaptureIcon },
 }
 
 export const CLOUD_DRIVE_META: Record<string, SourceMeta> = {
     googleDrive: { label: 'Google Drive', Icon: GoogleDriveIcon },
     oneDrive: { label: 'OneDrive', Icon: OneDriveIcon },
-    dropbox: { label: 'Dropbox', Icon: DropBoxIcon },
+    dropbox: { label: 'Dropbox', Icon: DropboxIcon },
     box: { label: 'Box', Icon: BoxIcon },
 }
