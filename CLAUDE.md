@@ -160,10 +160,11 @@ recurring visual traps it will never flag — check these live:
 - `Drive*` — cloud-drive browsing: `DriveBrowser`, `DriveFile`.
 - Upload commands: `startUpload`, `uploadFiles`, `replaceFiles`.
 - The `Adapter*`/`Root*` → `Drive*`/`Uploader*`/`Source*` vocabulary sweep is
-  COMPLETE in code, i18n keys, and theme slots (N1, 2026-07-01). What legacy
-  remains, deliberately: DOM contract strings (`upup-adapter-selector`,
-  `data-upup-slot="adapter-selector"`, `.uploader-adapter-*` CSS — frozen until
-  the N4 unfreeze), the snake_case cloud-config maps (N2 scope), `RuntimeAdapter`
+  COMPLETE in code, i18n keys, and theme slots (N1, 2026-07-01); the cloud-drive
+  config is ONE camelCase `cloudDrives` shape end-to-end (N2, 2026-07-02 — the
+  snake_case maps are gone). What legacy remains, deliberately: DOM contract
+  strings (`upup-adapter-selector`, `data-upup-slot="adapter-selector"`,
+  `.uploader-adapter-*` CSS — frozen until the N4 unfreeze), `RuntimeAdapter`
   (kept: environment abstraction), and drive-domain `RootArg`/`RootFolder`/
   `getRootProps` (kept: filesystem-root / dropzone conventions). Do not
   introduce new `Adapter*`/`Root*` names, and do not partially rename — a
@@ -223,6 +224,8 @@ if needed; never silently "improve" them:
 
 - The `rtk` token-filter hook rewrites shell commands. Playwright must run
   unfiltered: prefix with `rtk proxy` (e.g. `rtk proxy pnpm run e2e`),
-  otherwise the filter mangles the reporter output.
+  otherwise the filter mangles the reporter output. Same for prettier: the
+  filter has reported "all files formatted" on a red `--check` — use
+  `rtk proxy` for any prettier run whose result you act on.
 - Long-running user processes (e.g. a Python scraper) may be present — never
   kill unfamiliar PIDs.
