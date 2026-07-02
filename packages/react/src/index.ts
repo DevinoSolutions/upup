@@ -1,10 +1,7 @@
 'use client'
 
 // ── Core component + ref ─────────────────────────────────
-export {
-    default as UpupUploader,
-    type UploaderRef,
-} from './upup-uploader'
+export { default as UpupUploader, type UploaderRef } from './upup-uploader'
 
 // ── Headless hook (v2) ───────────────────────────────────
 export { useUpupUpload, type UseUpupUploadReturn } from './use-upup-upload'
@@ -26,13 +23,17 @@ export type {
     CloudDrivesConfig,
     ResumableUploadOptions,
 } from '@upup/core'
-export type {
-    UploaderProps,
-    UploaderIcons,
-} from './shared/types'
+export type { UploaderProps, UploaderIcons } from './shared/types'
 
 // ── v2 core contract re-exports ───────────────────────
-export type { UploadFile, UploadFileWithProgress, UploadStatus, UpupThemeSlots, DeepPartialSlots, UpupSlotPath } from '@upup/core'
+export type {
+    UploadFile,
+    UploadFileWithProgress,
+    UploadStatus,
+    UpupThemeSlots,
+    DeepPartialSlots,
+    UpupSlotPath,
+} from '@upup/core'
 
 // ── Brand icons (authentic colours, matches uploader adapter buttons) ──
 export {
@@ -53,4 +54,3 @@ export type { AcceptPreset, AcceptPresetDefinition } from '@upup/core'
 
 // ── Theme ────────────────────────────────────────────────
 export { UpupThemeProvider } from './theme'
-

@@ -11,8 +11,7 @@ export const sourceViewRecipe = tv({
         dark: {
             true: {
                 header: 'upup-bg-white/5 upup-text-[#FAFAFA] dark:upup-bg-white/5 dark:upup-text-[#FAFAFA]',
-                cancelButton:
-                    'upup-text-[#30C5F7] dark:upup-text-[#30C5F7]',
+                cancelButton: 'upup-text-[#30C5F7] dark:upup-text-[#30C5F7]',
             },
         },
     },

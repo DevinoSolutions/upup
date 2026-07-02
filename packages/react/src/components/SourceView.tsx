@@ -48,7 +48,9 @@ export default function SourceView() {
                         slotClasses.sourceViewCancelButton,
                     )}
                     onClick={() => {
-                        core?.emit('source-view-cancel', { sourceId: activeSource })
+                        core?.emit('source-view-cancel', {
+                            sourceId: activeSource,
+                        })
                         setActiveSource(undefined)
                     }}
                     type="button"

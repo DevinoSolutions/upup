@@ -30,7 +30,7 @@ export default function ScreenCaptureUploader() {
         return () => {
             if (timerRef.current) clearInterval(timerRef.current)
             if (videoUrl) URL.revokeObjectURL(videoUrl)
-            streamRef.current?.getTracks().forEach((t) => t.stop())
+            streamRef.current?.getTracks().forEach(t => t.stop())
         }
     }, [videoUrl])
 
@@ -65,7 +65,7 @@ export default function ScreenCaptureUploader() {
             const recorder = new MediaRecorder(stream)
             mediaRecorder.current = recorder
 
-            recorder.ondataavailable = (e) => {
+            recorder.ondataavailable = e => {
                 if (e.data.size > 0) chunks.current.push(e.data)
             }
 
@@ -74,17 +74,14 @@ export default function ScreenCaptureUploader() {
                     type: recorder.mimeType || 'video/webm',
                 })
                 setVideoUrl(URL.createObjectURL(blob))
-                stream.getTracks().forEach((t) => t.stop())
+                stream.getTracks().forEach(t => t.stop())
                 if (previewRef.current) previewRef.current.srcObject = null
             }
 
             recorder.start()
             setState('recording')
             setDuration(0)
-            timerRef.current = setInterval(
-                () => setDuration((d) => d + 1),
-                1000,
-            )
+            timerRef.current = setInterval(() => setDuration(d => d + 1), 1000)
         } catch {
             setError(
                 'Screen sharing was cancelled or denied. Please try again.',
@@ -108,8 +105,8 @@ export default function ScreenCaptureUploader() {
     const addRecording = useCallback(() => {
         if (!videoUrl) return
         fetch(videoUrl)
-            .then((r) => r.blob())
-            .then((blob) => {
+            .then(r => r.blob())
+            .then(blob => {
                 const file = new File(
                     [blob],
                     `screen-recording-${Date.now()}.webm`,

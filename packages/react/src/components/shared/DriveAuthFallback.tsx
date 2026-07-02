@@ -1,6 +1,9 @@
 import React from 'react'
 import { cn, formatUiMessage as t } from '@upup/core'
-import { useUploaderI18n, useUploaderTheme } from '../../context/UploaderContext'
+import {
+    useUploaderI18n,
+    useUploaderTheme,
+} from '../../context/UploaderContext'
 import SourceViewContainer from './SourceViewContainer'
 
 type Props = {

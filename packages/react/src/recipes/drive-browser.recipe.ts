@@ -18,7 +18,8 @@ export const driveBrowserRecipe = tv({
                 body: 'upup-bg-white/10 upup-text-[#fafafa] dark:upup-bg-white/10 dark:upup-text-[#fafafa]',
                 footer: 'upup-bg-white/5 upup-text-[#fafafa] dark:upup-bg-white/5 dark:upup-text-[#fafafa]',
                 addButton: 'upup-bg-[#30C5F7] dark:upup-bg-[#30C5F7]',
-                selectFolderButton: 'upup-text-[#30C5F7] dark:upup-text-[#30C5F7]',
+                selectFolderButton:
+                    'upup-text-[#30C5F7] dark:upup-text-[#30C5F7]',
                 cancelButton: 'upup-text-[#30C5F7] dark:upup-text-[#30C5F7]',
             },
         },

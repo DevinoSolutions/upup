@@ -1,4 +1,10 @@
-import { useCallback, useEffect, useRef, useSyncExternalStore, type SetStateAction } from 'react'
+import {
+    useCallback,
+    useEffect,
+    useRef,
+    useSyncExternalStore,
+    type SetStateAction,
+} from 'react'
 import {
     DriveBrowserController,
     GOOGLE_DRIVE_DESCRIPTOR,
@@ -38,10 +44,14 @@ export function useGoogleDrive() {
     // no longer reads the drive config from context or uses useLoadGAPI.
     const controllerRef = useRef<DriveBrowserController | null>(null)
     if (!controllerRef.current && core) {
-        controllerRef.current = new DriveBrowserController(core, GOOGLE_DRIVE_DESCRIPTOR, {
-            onFilesSelected: files => setFiles(files),
-            onClose: () => setActiveSource(undefined),
-        })
+        controllerRef.current = new DriveBrowserController(
+            core,
+            GOOGLE_DRIVE_DESCRIPTOR,
+            {
+                onFilesSelected: files => setFiles(files),
+                onClose: () => setActiveSource(undefined),
+            },
+        )
     }
     const controller = controllerRef.current
 
@@ -91,8 +101,11 @@ export function useGoogleDrive() {
         showLoader: state.showLoader,
         handleSubmit: () => controller?.handleSubmit() ?? Promise.resolve(),
         downloadProgress: state.downloadProgress,
-        handleCancelDownload: () => { controller?.handleCancelDownload() },
-        onSelectCurrentFolder: () => controller?.onSelectCurrentFolder() ?? Promise.resolve(),
+        handleCancelDownload: () => {
+            controller?.handleCancelDownload()
+        },
+        onSelectCurrentFolder: () =>
+            controller?.onSelectCurrentFolder() ?? Promise.resolve(),
         isClickLoading: state.isClickLoading,
     }
 }

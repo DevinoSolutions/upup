@@ -11,7 +11,9 @@ export function useServerModeDrive(provider: ServerModeProvider) {
     const latest = useRef({ serverUrl })
     latest.current = { serverUrl }
 
-    const controllerRef = useRef<ServerModeDriveController | undefined>(undefined)
+    const controllerRef = useRef<ServerModeDriveController | undefined>(
+        undefined,
+    )
     if (!controllerRef.current) {
         controllerRef.current = new ServerModeDriveController({
             provider,
@@ -20,7 +22,10 @@ export function useServerModeDrive(provider: ServerModeProvider) {
     }
     const controller = controllerRef.current
 
-    const snap = useSyncExternalStore(controller.subscribe, controller.getSnapshot)
+    const snap = useSyncExternalStore(
+        controller.subscribe,
+        controller.getSnapshot,
+    )
 
     useEffect(() => {
         controller.init()
@@ -30,9 +35,15 @@ export function useServerModeDrive(provider: ServerModeProvider) {
     return {
         state: snap.state,
         folderId: snap.folderId,
-        setFolderId: (id: string | undefined) => { controller.setFolderId(id); void controller.refresh() },
+        setFolderId: (id: string | undefined) => {
+            controller.setFolderId(id)
+            void controller.refresh()
+        },
         search: snap.search,
-        setSearch: (s: string) => { controller.setSearch(s); void controller.refresh() },
+        setSearch: (s: string) => {
+            controller.setSearch(s)
+            void controller.refresh()
+        },
         refresh: controller.refresh,
         transfer: controller.transfer,
         startAuth: controller.startAuth,

@@ -18,7 +18,12 @@ import {
     useUploaderTheme,
     useUploaderUploadControls,
 } from '../context/UploaderContext'
-import { fileCanPreviewText, fileGetIsImage, fileGetIsPdf, fileGetIsText } from '../lib/file'
+import {
+    fileCanPreviewText,
+    fileGetIsImage,
+    fileGetIsPdf,
+    fileGetIsText,
+} from '../lib/file'
 import FilePreviewThumbnail from './FilePreviewThumbnail'
 import ProgressBar from './shared/ProgressBar'
 
@@ -50,7 +55,9 @@ export default memo(function FilePreview(props: Props) {
     const { handleFileRemove, files } = useUploaderFiles()
     const { translations: tr } = useUploaderI18n()
     const { openImageEditor } = useUploaderEditor()
-    const { upload: { filesProgressMap } } = useUploaderUploadControls()
+    const {
+        upload: { filesProgressMap },
+    } = useUploaderUploadControls()
     const {
         icons: { FileDeleteIcon },
         allowPreview,
@@ -63,7 +70,10 @@ export default memo(function FilePreview(props: Props) {
     } = useUploaderTheme()
 
     const isImage = useMemo(() => fileGetIsImage(fileType), [fileType])
-    const isPdf = useMemo(() => fileGetIsPdf(fileType, fileName), [fileType, fileName])
+    const isPdf = useMemo(
+        () => fileGetIsPdf(fileType, fileName),
+        [fileType, fileName],
+    )
     const isText = useMemo(
         () => fileGetIsText(fileType, fileName),
         [fileType, fileName],
@@ -235,7 +245,10 @@ export default memo(function FilePreview(props: Props) {
                         type="button"
                         className={cn(
                             'upup-mt-1 upup-text-[11px] upup-font-normal upup-leading-tight upup-text-[#2563eb] upup-transition-all hover:upup-text-blue-700 hover:upup-underline',
-                            { 'upup-text-[#4A9EFF] hover:upup-text-blue-300': isDarkTheme },
+                            {
+                                'upup-text-[#4A9EFF] hover:upup-text-blue-300':
+                                    isDarkTheme,
+                            },
                             themeSlots?.filePreview?.previewButton,
                         )}
                         onClick={onRequestPreview}

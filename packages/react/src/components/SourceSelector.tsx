@@ -27,14 +27,19 @@ export default function SourceSelector() {
     } = useUploaderOptions()
 
     const constraintParts: string[] = []
-    if (allowedFileTypes && allowedFileTypes !== '*/*' && allowedFileTypes !== '*') {
+    if (
+        allowedFileTypes &&
+        allowedFileTypes !== '*/*' &&
+        allowedFileTypes !== '*'
+    ) {
         const humanized = allowedFileTypes
             .split(',')
-            .map((s) => s.trim())
-            .map((m) => {
+            .map(s => s.trim())
+            .map(m => {
                 if (m.startsWith('.')) return m
                 const [type, sub] = m.split('/')
-                if (sub === '*') return type.charAt(0).toUpperCase() + type.slice(1) + 's'
+                if (sub === '*')
+                    return type.charAt(0).toUpperCase() + type.slice(1) + 's'
                 return sub.toUpperCase()
             })
             .join(', ')
@@ -64,14 +69,26 @@ export default function SourceSelector() {
     }, [core, inputRef, openFilePicker])
 
     const handleSelectFolderClick = useCallback(async () => {
-        const fsWindow = window as Window & { showDirectoryPicker?: () => Promise<FileSystemDirectoryHandle> }
+        const fsWindow = window as Window & {
+            showDirectoryPicker?: () => Promise<FileSystemDirectoryHandle>
+        }
         if (fsWindow.showDirectoryPicker) {
             try {
                 const directoryHandle = await fsWindow.showDirectoryPicker()
                 const files: File[] = []
 
-                type IterableDirHandle = { values(): AsyncIterableIterator<FileSystemHandle & { kind: string; getFile: () => Promise<File> }> }
-                async function getFiles(dirHandle: IterableDirHandle, path = '') {
+                type IterableDirHandle = {
+                    values(): AsyncIterableIterator<
+                        FileSystemHandle & {
+                            kind: string
+                            getFile: () => Promise<File>
+                        }
+                    >
+                }
+                async function getFiles(
+                    dirHandle: IterableDirHandle,
+                    path = '',
+                ) {
                     for await (const entry of dirHandle.values()) {
                         const newPath = path
                             ? `${path}/${entry.name}`
@@ -87,11 +104,15 @@ export default function SourceSelector() {
                                 },
                             )
                             try {
-                                Object.defineProperty(file, 'webkitRelativePath', {
-                                    value: newPath,
-                                    configurable: true,
-                                    writable: true,
-                                })
+                                Object.defineProperty(
+                                    file,
+                                    'webkitRelativePath',
+                                    {
+                                        value: newPath,
+                                        configurable: true,
+                                        writable: true,
+                                    },
+                                )
                                 Object.defineProperty(file, 'relativePath', {
                                     value: newPath,
                                     configurable: true,
@@ -102,7 +123,10 @@ export default function SourceSelector() {
                             }
                             files.push(file)
                         } else if (entry.kind === 'directory') {
-                            await getFiles(entry as unknown as IterableDirHandle, newPath)
+                            await getFiles(
+                                entry as unknown as IterableDirHandle,
+                                newPath,
+                            )
                         }
                     }
                 }
@@ -219,7 +243,11 @@ export default function SourceSelector() {
                             }}
                             onClick={() => handleAdapterClick(id)}
                         >
-                            <Icon className={slotClasses.sourceButtonIcon || undefined} />
+                            <Icon
+                                className={
+                                    slotClasses.sourceButtonIcon || undefined
+                                }
+                            />
                             <span
                                 className={cn(
                                     'upup-text-xs upup-text-[#242634]',

@@ -1,6 +1,11 @@
 import React, { useMemo } from 'react'
 import Icon from '../Icon'
-import { cn, formatUiMessage as t, isUploadActive, pluralUiMessage as plural } from '@upup/core'
+import {
+    cn,
+    formatUiMessage as t,
+    isUploadActive,
+    pluralUiMessage as plural,
+} from '@upup/core'
 import {
     useUploaderFiles,
     useUploaderI18n,
@@ -16,7 +21,8 @@ type Props = {
 
 export default function UploaderHeader({ handleCancel }: Readonly<Props>) {
     const { files } = useUploaderFiles()
-    const { setIsAddingMore, isAddingMore, viewMode, setViewMode } = useUploaderView()
+    const { setIsAddingMore, isAddingMore, viewMode, setViewMode } =
+        useUploaderView()
     const { translations: tr } = useUploaderI18n()
     const {
         mini,
@@ -25,7 +31,9 @@ export default function UploaderHeader({ handleCancel }: Readonly<Props>) {
         icons: { ContainerAddMoreIcon },
     } = useUploaderOptions()
     const { isDark: dark, slotOverrides: slotClasses } = useUploaderTheme()
-    const { upload: { uploadStatus } } = useUploaderUploadControls()
+    const {
+        upload: { uploadStatus },
+    } = useUploaderUploadControls()
     const isUploading = isUploadActive(uploadStatus)
     const isLimitReached = limit === files.size
     const cancelText = useMemo(
@@ -79,12 +87,25 @@ export default function UploaderHeader({ handleCancel }: Readonly<Props>) {
                     <button
                         className={cn(
                             'upup-flex upup-h-7 upup-w-7 upup-items-center upup-justify-center upup-rounded upup-text-gray-500 upup-transition-colors hover:upup-bg-black/10',
-                            { 'upup-text-gray-300 hover:upup-bg-white/10': dark },
+                            {
+                                'upup-text-gray-300 hover:upup-bg-white/10':
+                                    dark,
+                            },
                         )}
-                        onClick={() => setViewMode(v => v === 'grid' ? 'list' : 'grid')}
-                        title={viewMode === 'grid' ? tr.switchToListView : tr.switchToGridView}
+                        onClick={() =>
+                            setViewMode(v => (v === 'grid' ? 'list' : 'grid'))
+                        }
+                        title={
+                            viewMode === 'grid'
+                                ? tr.switchToListView
+                                : tr.switchToGridView
+                        }
                     >
-                        {viewMode === 'grid' ? <Icon name="layout-list" size={16} /> : <Icon name="layout-grid" size={16} />}
+                        {viewMode === 'grid' ? (
+                            <Icon name="layout-list" size={16} />
+                        ) : (
+                            <Icon name="layout-grid" size={16} />
+                        )}
                     </button>
                 )}
                 {!isAddingMore && limit > 1 && !isLimitReached && (

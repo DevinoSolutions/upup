@@ -1,4 +1,3 @@
-
 import React from 'react'
 import {
     useUploaderFiles,
@@ -38,7 +37,7 @@ export default function UploaderPanel() {
             tabIndex={0}
             aria-label={tr.dropzoneLabel}
             aria-dropeffect={isDragging ? 'copy' : 'none'}
-            onKeyDown={(e) => {
+            onKeyDown={e => {
                 if (e.key === 'Enter' || e.key === ' ') {
                     e.preventDefault()
                     if (inputRef.current) {
@@ -73,12 +72,11 @@ export default function UploaderPanel() {
                         { 'upup-bg-yellow-600': dark },
                     )}
                 >
-                    No internet connection — uploads will resume when you reconnect.
+                    No internet connection — uploads will resume when you
+                    reconnect.
                 </div>
             )}
-            {!!activeSource && (
-                <SourceView />
-            )}
+            {!!activeSource && <SourceView />}
             {!activeSource && (isAddingMore || !files.size) && (
                 <SourceSelector />
             )}

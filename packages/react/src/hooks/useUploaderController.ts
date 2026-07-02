@@ -1,5 +1,13 @@
-
-import { Dispatch, SetStateAction, createElement, useCallback, useEffect, useMemo, useRef, useSyncExternalStore } from 'react'
+import {
+    Dispatch,
+    SetStateAction,
+    createElement,
+    useCallback,
+    useEffect,
+    useMemo,
+    useRef,
+    useSyncExternalStore,
+} from 'react'
 import {
     FileSource,
     UploadStatus,
@@ -22,24 +30,34 @@ import { useSSEProcessing } from './useSSEProcessing'
 /** Default loader icon — renders the registry 'loader' glyph via the shared Icon renderer
  *  (which applies the stroke attrs, so the glyph is visible). Forwards size/class like the
  *  former react-icons default did. */
-const DefaultLoaderIconComponent = (props: { size?: number; className?: string }) =>
-    createElement(Icon, { name: 'loader', ...props })
+const DefaultLoaderIconComponent = (props: {
+    size?: number
+    className?: string
+}) => createElement(Icon, { name: 'loader', ...props })
 
 /** Default 'add more' icon — renders the registry 'plus' glyph (was react-icons TbPlus). */
-const DefaultPlusIconComponent = (props: { size?: number; className?: string }) =>
-    createElement(Icon, { name: 'plus', ...props })
+const DefaultPlusIconComponent = (props: {
+    size?: number
+    className?: string
+}) => createElement(Icon, { name: 'plus', ...props })
 
 /** Default camera-capture icon — renders the registry 'capture' glyph (was react-icons TbCapture). */
-const DefaultCaptureIconComponent = (props: { size?: number; className?: string }) =>
-    createElement(Icon, { name: 'capture', ...props })
+const DefaultCaptureIconComponent = (props: {
+    size?: number
+    className?: string
+}) => createElement(Icon, { name: 'capture', ...props })
 
 /** Default camera-rotate icon — renders the registry 'camera-rotate' glyph (was react-icons TbCameraRotate). */
-const DefaultCameraRotateIconComponent = (props: { size?: number; className?: string }) =>
-    createElement(Icon, { name: 'camera-rotate', ...props })
+const DefaultCameraRotateIconComponent = (props: {
+    size?: number
+    className?: string
+}) => createElement(Icon, { name: 'camera-rotate', ...props })
 
 /** Default delete icon (file + camera slots) — renders the registry 'trash' glyph (was react-icons TbTrash). */
-const DefaultTrashIconComponent = (props: { size?: number; className?: string }) =>
-    createElement(Icon, { name: 'trash', ...props })
+const DefaultTrashIconComponent = (props: {
+    size?: number
+    className?: string
+}) => createElement(Icon, { name: 'trash', ...props })
 
 const EMPTY_THEME_SLOTS = {}
 const EMPTY_STYLE = {}
@@ -65,7 +83,9 @@ const SERVER_SNAPSHOT: OrchestratorState = {
 
 /** Shape a resolved theme into the ThemeStoreState snapshot (mirrors ThemeStore.compute()).
  *  Pure — used for the pre-mount / SSR fallback when `root` (hence root.theme) is not yet created. */
-function themeStateFromResolved(resolved: ThemeStoreState['resolved']): ThemeStoreState {
+function themeStateFromResolved(
+    resolved: ThemeStoreState['resolved'],
+): ThemeStoreState {
     return {
         themeMode: resolved.mode,
         isDark: resolved.mode === 'dark',
@@ -76,7 +96,9 @@ function themeStateFromResolved(resolved: ThemeStoreState['resolved']): ThemeSto
     }
 }
 
-export default function useUploaderController(props: UploaderProps): IUploaderContext {
+export default function useUploaderController(
+    props: UploaderProps,
+): IUploaderContext {
     const {
         allowedFileTypes: acceptProp = '*',
         mini = false,
@@ -145,78 +167,92 @@ export default function useUploaderController(props: UploaderProps): IUploaderCo
         processingTimeout,
     } = props
 
-    const onError = useCallback((message: string) => {
-        errorHandler?.(message)
-    }, [errorHandler])
-    const onWarn = useCallback((message: string) => {
-        warningHandler?.(message)
-    }, [warningHandler])
+    const onError = useCallback(
+        (message: string) => {
+            errorHandler?.(message)
+        },
+        [errorHandler],
+    )
+    const onWarn = useCallback(
+        (message: string) => {
+            warningHandler?.(message)
+        },
+        [warningHandler],
+    )
 
     // ── Build factory-compatible options object ──────────────────
     // UploaderProps.allowedFileTypes is string | string[] | undefined;
     // UploaderControllerOptions.allowedFileTypes is string | undefined.
     // normalizeUploaderOptions handles both at runtime via a cast, so we cast here.
-    const factoryOptions = useMemo<UploaderControllerOptions>(() => ({
-        provider,
-        mode: modeProp,
-        sources: sources as UploaderControllerOptions['sources'],
-        uploadEndpoint,
-        serverUrl,
-        maxFiles,
-        restrictions,
-        theme,
-        folderUpload,
-        cors,
-        cloudDrives,
-        imageCompression,
-        thumbnailGenerator,
-        checksumVerification,
-        webWorker,
-        heicConversion,
-        stripExifData,
-        contentDeduplication,
-        autoUpload,
-        maxConcurrentUploads,
-        crashRecovery,
-        allowedFileTypes: (typeof acceptProp === 'string' ? acceptProp : (acceptProp as string[]).join(',')) as string | undefined,
-        mini,
-        isProcessing,
-        allowPreview,
-        showBranding,
-        disableDragDrop,
-        className,
-        maxFileSize: maxFileSizeProp,
-        minFileSize: minFileSizeProp,
-        maxTotalFileSize: maxTotalFileSizeProp,
-        imageEditor: imageEditorProp,
-        metadata,
-        maxRetries,
-        resumable,
-        i18n,
-        onBeforeFileAdded,
-        // Callbacks: set to current stable refs; updated live via root.updateCallbacks() each render
-        onError: errorHandler,
-        onWarn: warningHandler,
-        onUploadStart,
-        onFileUploadStart,
-        onFileUploadProgress,
-        onFilesUploadProgress,
-        onFileUploadComplete,
-        onFilesUploadComplete,
-        onUploadComplete,
-        onFilesSelected,
-        onDoneClicked,
-        onPrepareFiles,
-        onFileRemove: onFileRemoveProp,
-        onFileRemoved,
-        onStatusChange,
-        onFileTypeMismatch,
-        onRestrictionFailed,
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }), [props])  // props identity memoization — same as normalizeUploaderOptions below
+    const factoryOptions = useMemo<UploaderControllerOptions>(
+        () => ({
+            provider,
+            mode: modeProp,
+            sources: sources as UploaderControllerOptions['sources'],
+            uploadEndpoint,
+            serverUrl,
+            maxFiles,
+            restrictions,
+            theme,
+            folderUpload,
+            cors,
+            cloudDrives,
+            imageCompression,
+            thumbnailGenerator,
+            checksumVerification,
+            webWorker,
+            heicConversion,
+            stripExifData,
+            contentDeduplication,
+            autoUpload,
+            maxConcurrentUploads,
+            crashRecovery,
+            allowedFileTypes: (typeof acceptProp === 'string'
+                ? acceptProp
+                : (acceptProp as string[]).join(',')) as string | undefined,
+            mini,
+            isProcessing,
+            allowPreview,
+            showBranding,
+            disableDragDrop,
+            className,
+            maxFileSize: maxFileSizeProp,
+            minFileSize: minFileSizeProp,
+            maxTotalFileSize: maxTotalFileSizeProp,
+            imageEditor: imageEditorProp,
+            metadata,
+            maxRetries,
+            resumable,
+            i18n,
+            onBeforeFileAdded,
+            // Callbacks: set to current stable refs; updated live via root.updateCallbacks() each render
+            onError: errorHandler,
+            onWarn: warningHandler,
+            onUploadStart,
+            onFileUploadStart,
+            onFileUploadProgress,
+            onFilesUploadProgress,
+            onFileUploadComplete,
+            onFilesUploadComplete,
+            onUploadComplete,
+            onFilesSelected,
+            onDoneClicked,
+            onPrepareFiles,
+            onFileRemove: onFileRemoveProp,
+            onFileRemoved,
+            onStatusChange,
+            onFileTypeMismatch,
+            onRestrictionFailed,
+            // eslint-disable-next-line react-hooks/exhaustive-deps
+        }),
+        [props],
+    ) // props identity memoization — same as normalizeUploaderOptions below
 
     // ── Normalize options (pure; memoized on props identity) ─────
-    const normalized = useMemo(() => normalizeUploaderOptions(factoryOptions), [factoryOptions])
+    const normalized = useMemo(
+        () => normalizeUploaderOptions(factoryOptions),
+        [factoryOptions],
+    )
     const { resolved } = normalized
 
     // ── Core (via useUpupUpload; owns core lifecycle) ────────────
@@ -227,7 +263,7 @@ export default function useUploaderController(props: UploaderProps): IUploaderCo
     const { connectSSE } = useSSEProcessing({
         processingEndpoint,
         onFileProcessed,
-        onError: (err) => onError(err.message),
+        onError: err => onError(err.message),
         processingTimeout,
     })
 
@@ -240,7 +276,7 @@ export default function useUploaderController(props: UploaderProps): IUploaderCo
     if (!rootRef.current && core) {
         rootRef.current = createUploaderController(
             { core, options: factoryOptions, normalized },
-            { connectSSE: (file) => connectSSERef.current(file) },
+            { connectSSE: file => connectSSERef.current(file) },
         )
     }
     const root = rootRef.current!
@@ -299,9 +335,17 @@ export default function useUploaderController(props: UploaderProps): IUploaderCo
     const themeFallback = useMemo<ThemeStoreState>(() => {
         const requested = theme?.mode
         const mode: 'light' | 'dark' = requested === 'dark' ? 'dark' : 'light'
-        return themeStateFromResolved(resolveTheme({ ...(theme ?? {}), mode }) as ThemeStoreState['resolved'])
+        return themeStateFromResolved(
+            resolveTheme({
+                ...(theme ?? {}),
+                mode,
+            }) as ThemeStoreState['resolved'],
+        )
     }, [theme])
-    const getThemeServerSnapshot = useCallback(() => themeFallback, [themeFallback])
+    const getThemeServerSnapshot = useCallback(
+        () => themeFallback,
+        [themeFallback],
+    )
     const themeState = useSyncExternalStore(
         root?.theme.subscribe ?? (() => () => {}),
         root?.theme.getSnapshot ?? (() => themeFallback),
@@ -333,29 +377,44 @@ export default function useUploaderController(props: UploaderProps): IUploaderCo
     }, [])
 
     // ── Commands (delegate to factory commands) ──────────────────
-    const handleSetSelectedFiles = useCallback(async (newFiles: File[]) => {
-        return root?.commands.handleSetSelectedFiles(newFiles)
-    }, [root])
+    const handleSetSelectedFiles = useCallback(
+        async (newFiles: File[]) => {
+            return root?.commands.handleSetSelectedFiles(newFiles)
+        },
+        [root],
+    )
 
-    const handleFileRemove = useCallback((fileId: string) => {
-        root?.commands.handleFileRemove(fileId)
-    }, [root])
+    const handleFileRemove = useCallback(
+        (fileId: string) => {
+            root?.commands.handleFileRemove(fileId)
+        },
+        [root],
+    )
 
-    const uploadFiles = useCallback(async (newFiles: File[] | UploadFile[]) => {
-        return root?.commands.uploadFiles(newFiles)
-    }, [root])
+    const uploadFiles = useCallback(
+        async (newFiles: File[] | UploadFile[]) => {
+            return root?.commands.uploadFiles(newFiles)
+        },
+        [root],
+    )
 
-    const replaceFiles = useCallback((newFiles: File[] | UploadFile[]) => {
-        root?.commands.replaceFiles(newFiles)
-    }, [root])
+    const replaceFiles = useCallback(
+        (newFiles: File[] | UploadFile[]) => {
+            root?.commands.replaceFiles(newFiles)
+        },
+        [root],
+    )
 
     const startUpload = useCallback(async () => {
         return root?.commands.startUpload()
     }, [root])
 
-    const retryUpload = useCallback(async (fileId?: string) => {
-        return root?.commands.retryUpload(fileId)
-    }, [root])
+    const retryUpload = useCallback(
+        async (fileId?: string) => {
+            return root?.commands.retryUpload(fileId)
+        },
+        [root],
+    )
 
     const handleCancel = useCallback(() => {
         root?.commands.handleCancel()
@@ -377,67 +436,95 @@ export default function useUploaderController(props: UploaderProps): IUploaderCo
         root?.commands.resetState()
     }, [root])
 
-    const openImageEditor = useCallback((file: UploadFile) => {
-        root?.commands.openImageEditor(file)
-    }, [root])
+    const openImageEditor = useCallback(
+        (file: UploadFile) => {
+            root?.commands.openImageEditor(file)
+        },
+        [root],
+    )
 
     const closeImageEditor = useCallback(() => {
         root?.commands.closeImageEditor()
     }, [root])
 
-    const saveImageEdit = useCallback((editedImageData: string, mimeType?: string) => {
-        root?.commands.saveImageEdit(editedImageData, mimeType)
-    }, [root])
+    const saveImageEdit = useCallback(
+        (editedImageData: string, mimeType?: string) => {
+            root?.commands.saveImageEdit(editedImageData, mimeType)
+        },
+        [root],
+    )
 
-    const replaceFile = useCallback((fileId: string, newFile: UploadFile) => {
-        root?.commands.replaceFile(fileId, newFile)
-    }, [root])
+    const replaceFile = useCallback(
+        (fileId: string, newFile: UploadFile) => {
+            root?.commands.replaceFile(fileId, newFile)
+        },
+        [root],
+    )
 
     // ── Dispatch<SetStateAction> setters (preserve functional-update branch) ──
-    const setActiveSource: Dispatch<SetStateAction<FileSource | undefined>> = useCallback(
-        (value: SetStateAction<FileSource | undefined>) => {
-            if (typeof value === 'function') {
-                root?.commands.setActiveSource(value(root.orchestrator.getSnapshot().activeSource))
-            } else {
-                root?.commands.setActiveSource(value)
-            }
-        }, [root],
-    )
+    const setActiveSource: Dispatch<SetStateAction<FileSource | undefined>> =
+        useCallback(
+            (value: SetStateAction<FileSource | undefined>) => {
+                if (typeof value === 'function') {
+                    root?.commands.setActiveSource(
+                        value(root.orchestrator.getSnapshot().activeSource),
+                    )
+                } else {
+                    root?.commands.setActiveSource(value)
+                }
+            },
+            [root],
+        )
     const setIsAddingMore: Dispatch<SetStateAction<boolean>> = useCallback(
         (value: SetStateAction<boolean>) => {
             if (typeof value === 'function') {
-                root?.commands.setIsAddingMore(value(root.orchestrator.getSnapshot().isAddingMore ?? false))
+                root?.commands.setIsAddingMore(
+                    value(
+                        root.orchestrator.getSnapshot().isAddingMore ?? false,
+                    ),
+                )
             } else {
                 root?.commands.setIsAddingMore(value)
             }
-        }, [root],
+        },
+        [root],
     )
     const setViewMode: Dispatch<SetStateAction<'grid' | 'list'>> = useCallback(
         (value: SetStateAction<'grid' | 'list'>) => {
             if (typeof value === 'function') {
-                root?.commands.setViewMode(value(root.orchestrator.getSnapshot().viewMode ?? 'grid'))
+                root?.commands.setViewMode(
+                    value(root.orchestrator.getSnapshot().viewMode ?? 'grid'),
+                )
             } else {
                 root?.commands.setViewMode(value)
             }
-        }, [root],
+        },
+        [root],
     )
 
     // ── Icons resolution (React-specific) ───────────────────────
-    const resolvedIcons = useMemo(() => ({
-        ContainerAddMoreIcon: icons.ContainerAddMoreIcon || DefaultPlusIconComponent,
-        FileDeleteIcon: icons.FileDeleteIcon || DefaultTrashIconComponent,
-        CameraCaptureIcon: icons.CameraCaptureIcon || DefaultCaptureIconComponent,
-        CameraRotateIcon: icons.CameraRotateIcon || DefaultCameraRotateIconComponent,
-        CameraDeleteIcon: icons.CameraDeleteIcon || DefaultTrashIconComponent,
-        LoaderIcon: icons.LoaderIcon || DefaultLoaderIconComponent,
-    }), [
-        icons.CameraCaptureIcon,
-        icons.CameraDeleteIcon,
-        icons.CameraRotateIcon,
-        icons.ContainerAddMoreIcon,
-        icons.FileDeleteIcon,
-        icons.LoaderIcon,
-    ])
+    const resolvedIcons = useMemo(
+        () => ({
+            ContainerAddMoreIcon:
+                icons.ContainerAddMoreIcon || DefaultPlusIconComponent,
+            FileDeleteIcon: icons.FileDeleteIcon || DefaultTrashIconComponent,
+            CameraCaptureIcon:
+                icons.CameraCaptureIcon || DefaultCaptureIconComponent,
+            CameraRotateIcon:
+                icons.CameraRotateIcon || DefaultCameraRotateIconComponent,
+            CameraDeleteIcon:
+                icons.CameraDeleteIcon || DefaultTrashIconComponent,
+            LoaderIcon: icons.LoaderIcon || DefaultLoaderIconComponent,
+        }),
+        [
+            icons.CameraCaptureIcon,
+            icons.CameraDeleteIcon,
+            icons.CameraRotateIcon,
+            icons.ContainerAddMoreIcon,
+            icons.FileDeleteIcon,
+            icons.LoaderIcon,
+        ],
+    )
 
     const resolvedStyle = style ?? EMPTY_STYLE
 

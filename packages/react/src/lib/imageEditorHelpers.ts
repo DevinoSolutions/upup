@@ -103,7 +103,8 @@ export function getImageEditorCssOverrides(isDarkTheme: boolean): string {
     `
 
     return isDarkTheme
-        ? common + `
+        ? common +
+              `
         /* Input background & border overrides (hardcoded in @scaleflex/ui) */
         [data-upup-theme='dark'] .SfxInput-Base {
             background-color: #2d2d2d !important;
@@ -168,7 +169,8 @@ export function getImageEditorCssOverrides(isDarkTheme: boolean): string {
             opacity: 1 !important;
         }
         `
-        : common + `
+        : common +
+              `
         [data-upup-theme='light'] .FIE_topbar-save-button,
         [data-upup-theme='light'] .FIE_watermark-add-button {
             background-color: #2563eb !important;

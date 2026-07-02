@@ -20,9 +20,13 @@ const AudioUploader = lazy(() => import('../components/AudioUploader'))
 const BoxUploader = lazy(() => import('../components/BoxUploader'))
 const CameraUploader = lazy(() => import('../components/CameraUploader'))
 const DropboxUploader = lazy(() => import('../components/DropboxUploader'))
-const GoogleDriveUploader = lazy(() => import('../components/GoogleDriveUploader'))
+const GoogleDriveUploader = lazy(
+    () => import('../components/GoogleDriveUploader'),
+)
 const OneDriveUploader = lazy(() => import('../components/OneDriveUploader'))
-const ScreenCaptureUploader = lazy(() => import('../components/ScreenCaptureUploader'))
+const ScreenCaptureUploader = lazy(
+    () => import('../components/ScreenCaptureUploader'),
+)
 
 export const uploadSourceObject = {
     [FileSource.LOCAL]: {

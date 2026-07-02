@@ -1,9 +1,4 @@
-import React, {
-    Dispatch,
-    SetStateAction,
-    useMemo,
-    useState,
-} from 'react'
+import React, { Dispatch, SetStateAction, useMemo, useState } from 'react'
 import {
     type DriveFile,
     type DriveFolder,
@@ -44,7 +39,8 @@ function filterItems(item: DriveFile, accept: string) {
     return accept.split(',').some(pattern => {
         const p = pattern.trim()
         if (p.startsWith('.')) return item.name.endsWith(p)
-        if (p.endsWith('/*')) return item.mimeType.startsWith(p.replace('/*', '/'))
+        if (p.endsWith('/*'))
+            return item.mimeType.startsWith(p.replace('/*', '/'))
         return item.mimeType === p
     })
 }
@@ -70,8 +66,8 @@ export default function DriveBrowser({
     const { isDark: dark, slotOverrides: slotClasses } = useUploaderTheme()
     const { translations: tr } = useUploaderI18n()
     const [searchTerm, setSearchTerm] = useState('')
-    const items = path[path.length - 1]?.children?.filter(
-        item => filterItems(item, allowedFileTypes),
+    const items = path[path.length - 1]?.children?.filter(item =>
+        filterItems(item, allowedFileTypes),
     )
     const displayedItems = useMemo(
         () => searchDriveFiles(items, searchTerm) || [],
@@ -80,11 +76,17 @@ export default function DriveBrowser({
     const isLoading = isClickLoading || !driveFiles
 
     return (
-        <SourceViewContainer isLoading={isLoading} data-upup-slot={dataUpupSlot}>
+        <SourceViewContainer
+            isLoading={isLoading}
+            data-upup-slot={dataUpupSlot}
+        >
             {isLoading ? (
                 <LoaderIcon />
             ) : (
-                <div data-testid="upup-drive-browser" className="upup-grid upup-h-full upup-w-full upup-grid-rows-[auto,1fr,auto] upup-overflow-auto">
+                <div
+                    data-testid="upup-drive-browser"
+                    className="upup-grid upup-h-full upup-w-full upup-grid-rows-[auto,1fr,auto] upup-overflow-auto"
+                >
                     <DriveBrowserHeader
                         showSearch={!!items?.length}
                         path={path}
@@ -152,9 +154,7 @@ export default function DriveBrowser({
                                                 dark,
                                         },
                                     )}
-                                    onClick={() =>
-                                        onSelectCurrentFolder?.()
-                                    }
+                                    onClick={() => onSelectCurrentFolder?.()}
                                     disabled={showLoader}
                                 >
                                     {tr.selectThisFolder}

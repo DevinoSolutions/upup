@@ -62,20 +62,13 @@ export default function DriveBrowserHeader({
                                         i === path.length - 1 ? 'none' : 'auto',
                                 }}
                                 onClick={() =>
-                                    setPath(prev =>
-                                        prev.slice(0, i + 1),
-                                    )
+                                    setPath(prev => prev.slice(0, i + 1))
                                 }
                             >
                                 <span className="upup-group-hover:upup-underline upup-truncate">
                                     {p.name}
                                 </span>
-                                {i !== path.length - 1 && (
-                                    <>
-                                        {' '}
-                                        &gt;{' '}
-                                    </>
-                                )}
+                                {i !== path.length - 1 && <> &gt; </>}
                             </p>
                         ))}
                     </div>
@@ -140,7 +133,10 @@ export default function DriveBrowserHeader({
                         value={searchTerm}
                         onChange={e => onSearch(e.currentTarget.value)}
                     />
-                    <Icon name="search" className="upup-absolute upup-left-5 upup-top-1/2 upup--translate-y-1/2 upup-text-[#939393]" />
+                    <Icon
+                        name="search"
+                        className="upup-absolute upup-left-5 upup-top-1/2 upup--translate-y-1/2 upup-text-[#939393]"
+                    />
                 </div>
             )}
         </div>

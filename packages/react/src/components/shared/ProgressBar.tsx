@@ -16,12 +16,19 @@ export default forwardRef<HTMLDivElement, Props>(function ProgressBar(
     { progress, className, progressBarClassName, showValue = false, ...rest },
     ref,
 ) {
-    const { isDark: dark, slotOverrides: slotClasses, slots: themeSlots } = useUploaderTheme()
+    const {
+        isDark: dark,
+        slotOverrides: slotClasses,
+        slots: themeSlots,
+    } = useUploaderTheme()
     const { translations: tr } = useUploaderI18n()
-    const { upload: { uploadStatus } } = useUploaderUploadControls()
+    const {
+        upload: { uploadStatus },
+    } = useUploaderUploadControls()
     return (
         (!!progress || isUploadActive(uploadStatus)) && (
-            <div data-testid="upup-progress-bar"
+            <div
+                data-testid="upup-progress-bar"
                 data-upup-slot="progress-bar"
                 ref={ref}
                 role="progressbar"

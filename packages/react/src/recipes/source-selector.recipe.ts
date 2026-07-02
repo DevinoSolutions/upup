@@ -23,10 +23,8 @@ export const sourceSelectorRecipe = tv({
                 backButton: 'upup-text-[#30C5F7] dark:upup-text-[#30C5F7]',
                 sourceButton:
                     'upup-border-[#6D6D6D] dark:upup-border-[#6D6D6D]',
-                sourceButtonText:
-                    'upup-text-gray-300 dark:upup-text-gray-300',
-                browseButton:
-                    'upup-text-[#59D1F9] dark:upup-text-[#59D1F9]',
+                sourceButtonText: 'upup-text-gray-300 dark:upup-text-gray-300',
+                browseButton: 'upup-text-[#59D1F9] dark:upup-text-[#59D1F9]',
                 hint: 'upup-text-gray-300 dark:upup-text-gray-300',
             },
         },

@@ -4,10 +4,17 @@ import { fileAppendParams, revokeFileUrl } from '@upup/core'
 
 export { fileAppendParams, revokeFileUrl }
 export {
-    bytesToSize, sizeToBytes, checkFileSize,
-    PREVIEW_MAX_TEXT_SIZE, PREVIEW_TEXT_TRUNCATE_LENGTH,
-    fileGetIsImage, fileGetIsPdf, fileGetIsText,
-    fileCanPreviewText, fileGetExtension, fileIs3D,
+    bytesToSize,
+    sizeToBytes,
+    checkFileSize,
+    PREVIEW_MAX_TEXT_SIZE,
+    PREVIEW_TEXT_TRUNCATE_LENGTH,
+    fileGetIsImage,
+    fileGetIsPdf,
+    fileGetIsText,
+    fileCanPreviewText,
+    fileGetExtension,
+    fileIs3D,
     searchDriveFiles,
 } from '@upup/core'
 

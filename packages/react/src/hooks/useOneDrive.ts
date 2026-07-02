@@ -1,4 +1,10 @@
-import { useCallback, useEffect, useRef, useSyncExternalStore, type SetStateAction } from 'react'
+import {
+    useCallback,
+    useEffect,
+    useRef,
+    useSyncExternalStore,
+    type SetStateAction,
+} from 'react'
 import {
     DriveBrowserController,
     ONE_DRIVE_DESCRIPTOR,
@@ -40,10 +46,14 @@ export default function useOneDrive() {
     // stable (useCallback over root), so capturing them once is safe.
     const controllerRef = useRef<DriveBrowserController | null>(null)
     if (!controllerRef.current && core) {
-        controllerRef.current = new DriveBrowserController(core, ONE_DRIVE_DESCRIPTOR, {
-            onFilesSelected: files => setFiles(files),
-            onClose: () => setActiveSource(undefined),
-        })
+        controllerRef.current = new DriveBrowserController(
+            core,
+            ONE_DRIVE_DESCRIPTOR,
+            {
+                onFilesSelected: files => setFiles(files),
+                onClose: () => setActiveSource(undefined),
+            },
+        )
     }
     const controller = controllerRef.current
 
@@ -93,7 +103,10 @@ export default function useOneDrive() {
         showLoader: state.showLoader,
         handleSubmit: () => controller?.handleSubmit() ?? Promise.resolve(),
         downloadProgress: state.downloadProgress,
-        handleCancelDownload: () => { controller?.handleCancelDownload() },
-        onSelectCurrentFolder: () => controller?.onSelectCurrentFolder() ?? Promise.resolve(),
+        handleCancelDownload: () => {
+            controller?.handleCancelDownload()
+        },
+        onSelectCurrentFolder: () =>
+            controller?.onSelectCurrentFolder() ?? Promise.resolve(),
     }
 }

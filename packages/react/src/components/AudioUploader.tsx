@@ -28,7 +28,7 @@ export default function AudioUploader() {
         return () => {
             if (timerRef.current) clearInterval(timerRef.current)
             if (audioUrl) URL.revokeObjectURL(audioUrl)
-            streamRef.current?.getTracks().forEach((t) => t.stop())
+            streamRef.current?.getTracks().forEach(t => t.stop())
         }
     }, [audioUrl])
 
@@ -42,7 +42,7 @@ export default function AudioUploader() {
             const recorder = new MediaRecorder(stream)
             mediaRecorder.current = recorder
 
-            recorder.ondataavailable = (e) => {
+            recorder.ondataavailable = e => {
                 if (e.data.size > 0) chunks.current.push(e.data)
             }
 
@@ -51,16 +51,13 @@ export default function AudioUploader() {
                     type: recorder.mimeType || 'audio/webm',
                 })
                 setAudioUrl(URL.createObjectURL(blob))
-                stream.getTracks().forEach((t) => t.stop())
+                stream.getTracks().forEach(t => t.stop())
             }
 
             recorder.start()
             setState('recording')
             setDuration(0)
-            timerRef.current = setInterval(
-                () => setDuration((d) => d + 1),
-                1000,
-            )
+            timerRef.current = setInterval(() => setDuration(d => d + 1), 1000)
         } catch {
             setError(
                 'Microphone access denied. Please allow microphone access and try again.',
@@ -87,8 +84,8 @@ export default function AudioUploader() {
             ? 'webm'
             : 'ogg'
         fetch(audioUrl)
-            .then((r) => r.blob())
-            .then((blob) => {
+            .then(r => r.blob())
+            .then(blob => {
                 const file = new File(
                     [blob],
                     `recording-${Date.now()}.${ext}`,

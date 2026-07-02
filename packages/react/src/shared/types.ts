@@ -182,11 +182,20 @@ export type UploaderProps = {
     onFilesDrop?: (files: File[]) => void
     onFileTypeMismatch?: (file: File, acceptedTypes: string) => void
     /** v2: Called when a file is rejected for any reason (type, size, limit). */
-    onRestrictionFailed?: (file: File, reason: 'TYPE_MISMATCH' | 'FILE_TOO_LARGE' | 'FILE_TOO_SMALL' | 'LIMIT_EXCEEDED') => void
+    onRestrictionFailed?: (
+        file: File,
+        reason:
+            | 'TYPE_MISMATCH'
+            | 'FILE_TOO_LARGE'
+            | 'FILE_TOO_SMALL'
+            | 'LIMIT_EXCEEDED',
+    ) => void
     /** v2: Enable clipboard paste uploads (Ctrl+V / Cmd+V). Default false. */
     enablePaste?: boolean
     /** v2: Async filter called before each file is added. Return false to reject, a File to replace, or true/undefined to accept. */
-    onBeforeFileAdded?: (file: File) => boolean | File | undefined | Promise<boolean | File | undefined>
+    onBeforeFileAdded?: (
+        file: File,
+    ) => boolean | File | undefined | Promise<boolean | File | undefined>
     onError?: (errorMessage: string) => void
     onWarn?: (warningMessage: string) => void
     /** v2: After each file upload, open an SSE connection to this endpoint.
@@ -198,5 +207,3 @@ export type UploaderProps = {
     /** v2: Max milliseconds to wait for the server SSE event before closing. Default 60000. */
     processingTimeout?: number
 }
-
-

@@ -30,11 +30,17 @@ export default memo(function FileItem({ file }: Props) {
     )
     const openPreviewPortal = useCallback(() => {
         setShowPreviewPortal(true)
-        core?.emit('file-preview-open', { fileId: file.id, fileName: file.name })
+        core?.emit('file-preview-open', {
+            fileId: file.id,
+            fileName: file.name,
+        })
     }, [core, file.id, file.name])
     const closePreviewPortal = useCallback(() => {
         setShowPreviewPortal(false)
-        core?.emit('file-preview-close', { fileId: file.id, fileName: file.name })
+        core?.emit('file-preview-close', {
+            fileId: file.id,
+            fileName: file.name,
+        })
     }, [core, file.id, file.name])
 
     return (

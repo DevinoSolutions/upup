@@ -10,7 +10,10 @@ import React, {
 import { createPortal } from 'react-dom'
 import { cn } from '@upup/core'
 import type { UploadFile } from '@upup/core'
-import { useUploaderOptions, useUploaderTheme } from '../context/UploaderContext'
+import {
+    useUploaderOptions,
+    useUploaderTheme,
+} from '../context/UploaderContext'
 import {
     getFilerobotTheme,
     getImageEditorCssOverrides,

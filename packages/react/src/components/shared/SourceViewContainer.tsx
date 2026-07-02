@@ -6,11 +6,14 @@ export default function SourceViewContainer({
     children,
     isLoading = false,
     ...rest
-}: PropsWithChildren<{ isLoading?: boolean } & HTMLAttributes<HTMLDivElement>>) {
+}: PropsWithChildren<
+    { isLoading?: boolean } & HTMLAttributes<HTMLDivElement>
+>) {
     const { isDark: dark, slotOverrides: slotClasses } = useUploaderTheme()
 
     return (
-        <div data-testid="upup-adapter-view"
+        <div
+            data-testid="upup-adapter-view"
             className={cn(
                 'upup-flex upup-items-center upup-justify-center upup-overflow-hidden upup-bg-black/[0.075]',
                 {

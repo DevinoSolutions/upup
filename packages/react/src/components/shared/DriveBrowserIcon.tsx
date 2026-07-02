@@ -9,11 +9,7 @@ const handleImgError: ReactEventHandler<HTMLImageElement> = e => {
     e.currentTarget.onerror = null
 }
 
-export default function DriveBrowserIcon({
-    file,
-}: {
-    file: DriveFile
-}) {
+export default function DriveBrowserIcon({ file }: { file: DriveFile }) {
     const { isDark: dark } = useUploaderTheme()
     const isFolder = file.isFolder
     const src = file.thumbnail

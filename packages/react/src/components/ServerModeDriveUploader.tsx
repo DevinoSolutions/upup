@@ -1,5 +1,8 @@
 import React, { useState } from 'react'
-import { useUploaderOptions, useUploaderTheme } from '../context/UploaderContext'
+import {
+    useUploaderOptions,
+    useUploaderTheme,
+} from '../context/UploaderContext'
 import {
     useServerModeDrive,
     type ServerDriveFile,
@@ -17,9 +20,9 @@ type Props = {
 
 const PROVIDER_LABEL: Record<ServerModeProvider, string> = {
     'google-drive': 'Google Drive',
-    'onedrive': 'OneDrive',
-    'dropbox': 'Dropbox',
-    'box': 'Box',
+    onedrive: 'OneDrive',
+    dropbox: 'Dropbox',
+    box: 'Box',
 }
 
 export default function ServerModeDriveUploader({
@@ -46,8 +49,7 @@ export default function ServerModeDriveUploader({
     }
 
     const isLoading = state.status === 'loading' || state.status === 'idle'
-    const files: ServerDriveFile[] =
-        state.status === 'ready' ? state.files : []
+    const files: ServerDriveFile[] = state.status === 'ready' ? state.files : []
 
     const toggle = (id: string) => {
         setSelected(prev => {
@@ -109,7 +111,9 @@ export default function ServerModeDriveUploader({
                             }}
                             onKeyDown={e => {
                                 if (e.key === 'Enter') {
-                                    void refresh({ search: e.currentTarget.value })
+                                    void refresh({
+                                        search: e.currentTarget.value,
+                                    })
                                 }
                             }}
                             placeholder="Search…"

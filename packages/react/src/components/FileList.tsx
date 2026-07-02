@@ -1,7 +1,12 @@
 import { useVirtualizer } from '@tanstack/react-virtual'
 import React, { memo, useRef } from 'react'
 import Icon from './Icon'
-import { cn, formatUiMessage as t, isUploadActive, pluralUiMessage as plural } from '@upup/core'
+import {
+    cn,
+    formatUiMessage as t,
+    isUploadActive,
+    pluralUiMessage as plural,
+} from '@upup/core'
 import { UploadStatus } from '@upup/core'
 import {
     useUploaderFiles,
@@ -57,7 +62,11 @@ export default memo(function FileList() {
         handleResume,
     } = useUploaderUploadControls()
     const { isProcessing, resumable } = useUploaderOptions()
-    const { isDark: dark, slotOverrides: slotClasses, slots: themeSlots } = useUploaderTheme()
+    const {
+        isDark: dark,
+        slotOverrides: slotClasses,
+        slots: themeSlots,
+    } = useUploaderTheme()
 
     const scrollRef = useRef<HTMLDivElement>(null)
 
@@ -68,7 +77,8 @@ export default memo(function FileList() {
     })
 
     // Virtual scrolling only for list mode with many files
-    const shouldVirtualize = sortedFiles.length >= VIRTUAL_SCROLL_THRESHOLD && viewMode !== 'grid'
+    const shouldVirtualize =
+        sortedFiles.length >= VIRTUAL_SCROLL_THRESHOLD && viewMode !== 'grid'
 
     const virtualizer = useVirtualizer({
         count: sortedFiles.length,
@@ -113,9 +123,13 @@ export default memo(function FileList() {
                     <div
                         role="list"
                         data-upup-slot="file-list-virtual"
-                        style={{ height: virtualizer.getTotalSize(), position: 'relative' }}
+                        style={{
+                            height: virtualizer.getTotalSize(),
+                            position: 'relative',
+                        }}
                         className={cn(
-                            isProcessing && 'upup-pointer-events-none upup-opacity-75',
+                            isProcessing &&
+                                'upup-pointer-events-none upup-opacity-75',
                             'upup-font-[Arial,Helvetica,sans-serif]',
                         )}
                     >
@@ -133,7 +147,9 @@ export default memo(function FileList() {
                                     paddingBottom: 12,
                                 }}
                             >
-                                <FileItem file={sortedFiles[virtualItem.index]} />
+                                <FileItem
+                                    file={sortedFiles[virtualItem.index]}
+                                />
                             </div>
                         ))}
                     </div>
@@ -144,13 +160,17 @@ export default memo(function FileList() {
                         className={cn(
                             `${isProcessing && 'upup-pointer-events-none upup-opacity-75'} upup-flex upup-flex-col upup-gap-3 upup-font-[Arial,Helvetica,sans-serif]`,
                             {
-                                'md:upup-grid md:upup-gap-y-6': files.size > 1 && viewMode === 'grid',
-                                'md:upup-grid-cols-2': files.size > 1 && viewMode === 'grid',
+                                'md:upup-grid md:upup-gap-y-6':
+                                    files.size > 1 && viewMode === 'grid',
+                                'md:upup-grid-cols-2':
+                                    files.size > 1 && viewMode === 'grid',
                                 'upup-flex-1': files.size === 1,
                                 [slotClasses.fileListContainerInnerMultiple!]:
-                                    slotClasses.fileListContainerInnerMultiple && files.size > 1,
+                                    slotClasses.fileListContainerInnerMultiple &&
+                                    files.size > 1,
                                 [slotClasses.fileListContainerInnerSingle!]:
-                                    slotClasses.fileListContainerInnerSingle && files.size === 1,
+                                    slotClasses.fileListContainerInnerSingle &&
+                                    files.size === 1,
                             },
                         )}
                     >
@@ -172,30 +192,30 @@ export default memo(function FileList() {
                 {/* FIX: Hide upload button when status is SUCCESSFUL or FAILED */}
                 {uploadStatus !== UploadStatus.SUCCESSFUL &&
                     uploadStatus !== UploadStatus.FAILED && (
-                    <button
-                        data-testid="upup-upload-btn"
-                        className={cn(
-                            'upup-disabled:animate-pulse upup-ml-auto upup-rounded-full upup-bg-blue-600 upup-px-4 upup-py-2 upup-text-sm upup-font-medium upup-text-white',
-                            {
-                                'upup-bg-[#30C5F7] dark:upup-bg-[#30C5F7]':
-                                    dark,
-                            },
-                            slotClasses.uploadButton,
-                        )}
-                        onClick={() => {
-                            void startUpload().catch(() => undefined)
-                        }}
-                        disabled={
-                            isUploadActive(uploadStatus) ||
-                            uploadStatus === UploadStatus.PAUSED ||
-                            isProcessing
-                        }
-                    >
-                        {t(plural(tr, 'uploadFiles', files.size), {
-                            count: files.size,
-                        })}
-                    </button>
-                )}
+                        <button
+                            data-testid="upup-upload-btn"
+                            className={cn(
+                                'upup-disabled:animate-pulse upup-ml-auto upup-rounded-full upup-bg-blue-600 upup-px-4 upup-py-2 upup-text-sm upup-font-medium upup-text-white',
+                                {
+                                    'upup-bg-[#30C5F7] dark:upup-bg-[#30C5F7]':
+                                        dark,
+                                },
+                                slotClasses.uploadButton,
+                            )}
+                            onClick={() => {
+                                void startUpload().catch(() => undefined)
+                            }}
+                            disabled={
+                                isUploadActive(uploadStatus) ||
+                                uploadStatus === UploadStatus.PAUSED ||
+                                isProcessing
+                            }
+                        >
+                            {t(plural(tr, 'uploadFiles', files.size), {
+                                count: files.size,
+                            })}
+                        </button>
+                    )}
                 {uploadStatus === UploadStatus.FAILED && (
                     <button
                         data-testid="upup-retry-btn"
@@ -235,55 +255,62 @@ export default memo(function FileList() {
                         {resumable?.protocol === 'multipart' &&
                             (isUploadActive(uploadStatus) ||
                                 uploadStatus === UploadStatus.PAUSED) && (
-                            <>
-                            <button
-                                data-testid="upup-upload-pause-toggle"
-                                className={cn(
-                                    'upup-flex upup-h-7 upup-w-7 upup-items-center upup-justify-center upup-rounded-full upup-bg-gray-200 upup-text-gray-700 upup-transition-colors hover:upup-bg-gray-300',
-                                    {
-                                        'upup-bg-white/10 upup-text-white hover:upup-bg-white/20':
-                                            dark,
-                                    },
-                                )}
-                                onClick={
-                                    uploadStatus === UploadStatus.PAUSED
-                                        ? handleResume
-                                        : handlePause
-                                }
-                                aria-label={
-                                    uploadStatus === UploadStatus.PAUSED
-                                        ? tr.resumeUpload
-                                        : tr.pauseUpload
-                                }
-                                title={
-                                    uploadStatus === UploadStatus.PAUSED
-                                        ? tr.resumeUpload
-                                        : tr.pauseUpload
-                                }
-                            >
-                                {uploadStatus === UploadStatus.PAUSED ? (
-                                    <Icon name="player-play" size={14} />
-                                ) : (
-                                    <Icon name="player-pause" size={14} />
-                                )}
-                            </button>
-                            <button
-                                data-testid="upup-upload-cancel-btn"
-                                className={cn(
-                                    'upup-flex upup-h-7 upup-w-7 upup-items-center upup-justify-center upup-rounded-full upup-bg-red-100 upup-text-red-700 upup-transition-colors hover:upup-bg-red-200',
-                                    {
-                                        'upup-bg-red-500/20 upup-text-red-100 hover:upup-bg-red-500/30':
-                                            dark,
-                                    },
-                                )}
-                                onClick={handleCancel}
-                                aria-label={tr.cancel}
-                                title={tr.cancel}
-                            >
-                                <Icon name="x" size={14} />
-                            </button>
-                            </>
-                        )}
+                                <>
+                                    <button
+                                        data-testid="upup-upload-pause-toggle"
+                                        className={cn(
+                                            'upup-flex upup-h-7 upup-w-7 upup-items-center upup-justify-center upup-rounded-full upup-bg-gray-200 upup-text-gray-700 upup-transition-colors hover:upup-bg-gray-300',
+                                            {
+                                                'upup-bg-white/10 upup-text-white hover:upup-bg-white/20':
+                                                    dark,
+                                            },
+                                        )}
+                                        onClick={
+                                            uploadStatus === UploadStatus.PAUSED
+                                                ? handleResume
+                                                : handlePause
+                                        }
+                                        aria-label={
+                                            uploadStatus === UploadStatus.PAUSED
+                                                ? tr.resumeUpload
+                                                : tr.pauseUpload
+                                        }
+                                        title={
+                                            uploadStatus === UploadStatus.PAUSED
+                                                ? tr.resumeUpload
+                                                : tr.pauseUpload
+                                        }
+                                    >
+                                        {uploadStatus ===
+                                        UploadStatus.PAUSED ? (
+                                            <Icon
+                                                name="player-play"
+                                                size={14}
+                                            />
+                                        ) : (
+                                            <Icon
+                                                name="player-pause"
+                                                size={14}
+                                            />
+                                        )}
+                                    </button>
+                                    <button
+                                        data-testid="upup-upload-cancel-btn"
+                                        className={cn(
+                                            'upup-flex upup-h-7 upup-w-7 upup-items-center upup-justify-center upup-rounded-full upup-bg-red-100 upup-text-red-700 upup-transition-colors hover:upup-bg-red-200',
+                                            {
+                                                'upup-bg-red-500/20 upup-text-red-100 hover:upup-bg-red-500/30':
+                                                    dark,
+                                            },
+                                        )}
+                                        onClick={handleCancel}
+                                        aria-label={tr.cancel}
+                                        title={tr.cancel}
+                                    >
+                                        <Icon name="x" size={14} />
+                                    </button>
+                                </>
+                            )}
                         <ProgressBar
                             className="upup-flex-1"
                             progressBarClassName="upup-rounded"
@@ -294,29 +321,29 @@ export default memo(function FileList() {
                     {(isUploadActive(uploadStatus) ||
                         uploadStatus === UploadStatus.PAUSED) &&
                         totalBytes > 0 && (
-                        <div
-                            className={cn(
-                                'upup-flex upup-items-center upup-justify-between upup-text-[11px] upup-text-gray-500',
-                                {
-                                    'upup-text-gray-400': dark,
-                                },
-                            )}
-                        >
-                            <span>
-                                {formatBytes(uploadedBytes)} of{' '}
-                                {formatBytes(totalBytes)}
-                                {uploadSpeed > 0 &&
-                                    ` · ${formatBytes(uploadSpeed)}/s`}
-                            </span>
-                            {isUploadActive(uploadStatus) &&
-                                uploadEta > 0 && (
-                                <span>{formatEta(uploadEta)}</span>
-                            )}
-                            {uploadStatus === UploadStatus.PAUSED && (
-                                <span>{tr.paused}</span>
-                            )}
-                        </div>
-                    )}
+                            <div
+                                className={cn(
+                                    'upup-flex upup-items-center upup-justify-between upup-text-[11px] upup-text-gray-500',
+                                    {
+                                        'upup-text-gray-400': dark,
+                                    },
+                                )}
+                            >
+                                <span>
+                                    {formatBytes(uploadedBytes)} of{' '}
+                                    {formatBytes(totalBytes)}
+                                    {uploadSpeed > 0 &&
+                                        ` · ${formatBytes(uploadSpeed)}/s`}
+                                </span>
+                                {isUploadActive(uploadStatus) &&
+                                    uploadEta > 0 && (
+                                        <span>{formatEta(uploadEta)}</span>
+                                    )}
+                                {uploadStatus === UploadStatus.PAUSED && (
+                                    <span>{tr.paused}</span>
+                                )}
+                            </div>
+                        )}
                 </div>
             </div>
         </div>

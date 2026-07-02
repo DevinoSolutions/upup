@@ -1,6 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { sanitizeFileName, extensionFromMime, fileNameFromContentDisposition, deriveFetchedFileName } from '@upup/core'
-import { useUploaderOptions, useUploaderRuntime } from '../context/UploaderContext'
+import {
+    sanitizeFileName,
+    extensionFromMime,
+    fileNameFromContentDisposition,
+    deriveFetchedFileName,
+} from '@upup/core'
+import {
+    useUploaderOptions,
+    useUploaderRuntime,
+} from '../context/UploaderContext'
 
 export { deriveFetchedFileName }
 
@@ -32,7 +40,9 @@ export default function useFetchFileByUrl() {
 
             try {
                 setLoading(true)
-                const response = await fetch(url, { signal: abortController.signal })
+                const response = await fetch(url, {
+                    signal: abortController.signal,
+                })
                 if (!response.ok) {
                     throw new Error(`Failed to fetch URL: ${response.status}`)
                 }

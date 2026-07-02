@@ -15,13 +15,18 @@ export default function CameraUploader() {
         webcamRef,
         facingMode,
         translations: tr,
-        props: { icons: { CameraCaptureIcon, CameraDeleteIcon, CameraRotateIcon } },
+        props: {
+            icons: { CameraCaptureIcon, CameraDeleteIcon, CameraRotateIcon },
+        },
         theme: { isDark: dark, slotOverrides: slotClasses },
     } = useCameraUploader()
 
     return (
         <SourceViewContainer data-upup-slot="camera-uploader">
-            <div data-testid="upup-camera-uploader" className="upup-flex upup-h-full upup-w-full upup-flex-col upup-justify-center upup-overflow-hidden upup-px-3 upup-py-2">
+            <div
+                data-testid="upup-camera-uploader"
+                className="upup-flex upup-h-full upup-w-full upup-flex-col upup-justify-center upup-overflow-hidden upup-px-3 upup-py-2"
+            >
                 <div className="upup-flex upup-min-h-0 upup-flex-1 upup-items-center upup-justify-center upup-pt-2">
                     {!!url && (
                         <div

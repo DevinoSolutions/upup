@@ -16,7 +16,9 @@ export default function UrlUploader() {
     const { setFiles } = useUploaderFiles()
     const { setActiveSource } = useUploaderSource()
     const { translations: tr } = useUploaderI18n()
-    const { icons: { LoaderIcon } } = useUploaderOptions()
+    const {
+        icons: { LoaderIcon },
+    } = useUploaderOptions()
     const { isDark: dark, slotOverrides: slotClasses } = useUploaderTheme()
     const [url, setUrl] = useState('')
     const { loading, fetchImage } = useFetchFileByUrl()
@@ -36,7 +38,10 @@ export default function UrlUploader() {
     }
 
     return (
-        <SourceViewContainer data-testid="upup-url-uploader" data-upup-slot="url-uploader">
+        <SourceViewContainer
+            data-testid="upup-url-uploader"
+            data-upup-slot="url-uploader"
+        >
             <form onSubmit={handleFormSubmit} className="upup-px-3 upup-py-2">
                 <input
                     type="url"

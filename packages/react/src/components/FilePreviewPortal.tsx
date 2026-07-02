@@ -44,7 +44,10 @@ export default memo(
         const { isDark: dark, slotOverrides: slotClasses } = useUploaderTheme()
         const { translations: tr } = useUploaderI18n()
         const isImage = useMemo(() => fileGetIsImage(fileType), [fileType])
-        const isPdf = useMemo(() => fileGetIsPdf(fileType, fileName), [fileType, fileName])
+        const isPdf = useMemo(
+            () => fileGetIsPdf(fileType, fileName),
+            [fileType, fileName],
+        )
         const isText = useMemo(
             () => fileGetIsText(fileType, fileName),
             [fileType, fileName],
@@ -203,9 +206,9 @@ export default memo(
                                                     </pre>
                                                     {isTruncated && (
                                                         <div className="upup-mt-4 upup-rounded upup-border upup-border-yellow-500/30 upup-bg-yellow-500/10 upup-px-3 upup-py-2 upup-text-xs upup-text-yellow-400">
-                                                            Content truncated - file
-                                                            is too large to preview
-                                                            in full.
+                                                            Content truncated -
+                                                            file is too large to
+                                                            preview in full.
                                                         </div>
                                                     )}
                                                 </>
