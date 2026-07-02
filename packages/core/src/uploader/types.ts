@@ -28,8 +28,6 @@ export interface UploaderCallbacks extends OrchestratorCallbacks {
   onStatusChange?: (status: string) => void
   onFileTypeMismatch?: (file: File, acceptedTypes: string) => void
   onRestrictionFailed?: (file: File, reason: 'TYPE_MISMATCH' | 'FILE_TOO_LARGE' | 'FILE_TOO_SMALL' | 'LIMIT_EXCEEDED') => void
-  // removal (both v1 `onFileRemove` and v2 `onFileRemoved`; deduped if same ref)
-  onFileRemove?: (file: UploadFile) => void
   onDoneClicked?: () => void
   autoUpload?: boolean
 }

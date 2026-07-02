@@ -168,14 +168,13 @@ export type UploaderProps = {
         }: { loaded: number; total: number; percentage: number },
     ) => void
     onFilesUploadProgress?: (completedFiles: number, totalFiles: number) => void
-    onFileRemove?: (file: UploadFile) => void
     /** v2: Called once when the batch upload starts */
     onUploadStart?: () => void
     /** v2: Called when all uploads complete or fail */
     onUploadComplete?: (files: UploadFile[]) => void
     /** v2: Called whenever upload status changes (idle → uploading → complete/failed) */
     onStatusChange?: (status: string) => void
-    /** v2: Alias for onFileRemove with v2 naming */
+    /** v2: Called when a file is removed. */
     onFileRemoved?: (file: UploadFile) => void
     onFilesDragOver?: (files: File[]) => void
     onFilesDragLeave?: (files: File[]) => void

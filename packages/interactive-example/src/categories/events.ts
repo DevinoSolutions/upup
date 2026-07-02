@@ -38,7 +38,7 @@ const GROUPS: Array<{ label: string; ids: readonly string[] }> = [
     },
     {
         label: 'File management',
-        ids: ['onFileRemove', 'onFileRemoved'],
+        ids: ['onFileRemoved'],
     },
     {
         label: 'Drag & drop',

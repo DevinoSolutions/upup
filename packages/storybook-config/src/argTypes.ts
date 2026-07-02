@@ -68,7 +68,7 @@ export const uploaderArgTypes: Record<string, unknown> = {
   onFileUploadComplete: { action: 'onFileUploadComplete', ...cat('Events') },
   onUploadComplete: { action: 'onUploadComplete', ...cat('Events') },
   onStatusChange: { action: 'onStatusChange', ...cat('Events') },
-  onFileRemove: { action: 'onFileRemove', ...cat('Events') },
+  onFileRemoved: { action: 'onFileRemoved', ...cat('Events') },
   onError: { action: 'onError', ...cat('Events') },
   onWarn: { action: 'onWarn', ...cat('Events') },
 }

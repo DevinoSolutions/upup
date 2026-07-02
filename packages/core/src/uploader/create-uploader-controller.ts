@@ -46,15 +46,7 @@ export function createUploaderController(
     get onFilesSelected() { return callbackRefs.onFilesSelected },
     get onDoneClicked() { return callbackRefs.onDoneClicked },
     get onPrepareFiles() { return callbackRefs.onPrepareFiles },
-    get onFileRemoved() {
-      return (file: UploadFile) => {
-        callbackRefs.onFileRemove?.(file)
-        // Dedup: if onFileRemoved is the same ref as onFileRemove, skip double-call
-        if (callbackRefs.onFileRemoved && callbackRefs.onFileRemoved !== callbackRefs.onFileRemove) {
-          callbackRefs.onFileRemoved(file)
-        }
-      }
-    },
+    get onFileRemoved() { return callbackRefs.onFileRemoved },
     get imageEditorOptions() { return resolved.imageEditor },
     get autoUpload() { return callbackRefs.autoUpload ?? false },
   }

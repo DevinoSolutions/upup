@@ -784,7 +784,6 @@ test('wires every playground category into copy-pasteable generated code', async
         'onFilesUploadComplete',
         'onUploadComplete',
         'onStatusChange',
-        'onFileRemove',
         'onFileRemoved',
         'onFilesDragOver',
         'onFilesDragLeave',
@@ -1005,14 +1004,13 @@ test('runtime feature controls affect folder button, accept filter, editor butto
     await attachScreenshot(page, testInfo, 'runtime-editor-button-visible')
 })
 
-test('event toggles log selection, removal aliases, prepare-files, and upload lifecycle', async ({ page }, testInfo) => {
+test('event toggles log selection, removal, prepare-files, and upload lifecycle', async ({ page }, testInfo) => {
     await openPlayground(page, `?mockRun=${uniqueRun('events')}`)
 
     await openCategory(page, 'Events')
     for (const label of [
         'onFilesSelected',
         'onPrepareFiles',
-        'onFileRemove',
         'onFileRemoved',
         'onUploadStart',
         'onFileUploadStart',
@@ -1035,7 +1033,6 @@ test('event toggles log selection, removal aliases, prepare-files, and upload li
     const logList = page.locator('.upup-ie-eventlog-list')
     for (const eventName of [
         'onFilesSelected',
-        'onFileRemove',
         'onFileRemoved',
         'onPrepareFiles',
         'onUploadStart',

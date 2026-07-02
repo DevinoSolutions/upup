@@ -100,7 +100,6 @@ export type UploaderProps = {
         progress: { loaded: number; total: number; percentage: number },
     ) => void
     onFilesUploadProgress?: (completedFiles: number, totalFiles: number) => void
-    onFileRemove?: (file: UploadFile) => void
     onUploadStart?: () => void
     onUploadComplete?: (files: UploadFile[]) => void
     onStatusChange?: (status: string) => void
