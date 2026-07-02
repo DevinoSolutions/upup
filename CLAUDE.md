@@ -57,6 +57,19 @@ svelte/vanilla/angular/preact` (per-framework style-parity references),
    `dist/`, not `src/`. After editing `packages/core/src`, run
    `pnpm --filter @upup/core build` (same idea for any `packages/*` edit)
    unless the `pnpm run dev:package` watchers are running.
+6. **Keep core's mandatory path lean.** Heavy capabilities are opt-in:
+   `libheif-js` (HEIC) and `tus-js-client` (resumable) are
+   `optionalDependencies` loaded via dynamic `import()` behind subpath exports
+   (`@upup/core/steps/heic`, `@upup/core/strategies/tus-upload`), and the
+   pipeline worker is a separate module, not inlined. Never add a static
+   top-level import of a heavy dependency to core's main entry.
+   `.size-limit.json` holds the per-package budgets; `pnpm run size` enforces.
+7. **Never weaken the server trust model.** Server-mode requests are
+   HMAC-verified (signed length, key/uploadId binding, mandatory secrets) and
+   forged or unsigned requests must keep returning 403.
+   `packages/server/tests/handler-extended.test.ts` and
+   `tests/integration/trust-model.integration.test.ts` assert this — a handler
+   change that only passes by loosening a check is the wrong change.
 
 ## Gates — run before calling work done
 
@@ -73,6 +86,11 @@ pnpm run size           # size-limit bundle budgets
 Known-red baseline: two `@upup/angular` unit specs fail under jsdom
 (pre-existing environment issue, not a regression signal — angular is covered
 for real by the e2e gate). Everything else is expected green.
+
+Flake protocol: if a test fails only in the full run, re-run it isolated
+before suspecting your change. Known load-sensitive case:
+`@upup/server tests/token-refresh.test.ts` ("refresh success") can exceed its
+5 s timeout when the whole suite runs but passes alone.
 
 Dev loops: `pnpm run dev` (playground + landing + docs + package watchers),
 `pnpm run dev:playground` for the quick loop, `pnpm run dev:storybook` for the
@@ -116,6 +134,20 @@ hooks) are shared across all frameworks and asserted by tests. Renaming one is
 a cross-framework breaking change: grep every package plus the fixtures before
 touching them.
 
+### What the harness cannot catch
+
+The harness compares normalized DOM structure, not rendered geometry. Two
+recurring visual traps it will never flag — check these live:
+
+- The uploader panel is a fixed-height container by design; unbounded media
+  clips. Every media element (camera, screen capture, previews) needs
+  `min-h-0 flex-1 object-contain` — see `CameraUploader` /
+  `ScreenCaptureUploader` in each framework for the reference pattern.
+- Live previews: bind `srcObject` only after the conditional `<video>` has
+  actually mounted (each framework has a mount hook for this; Vue additionally
+  guards against function-ref flicker). Binding early yields a silent black
+  preview that no DOM assertion notices.
+
 ## Naming vocabulary
 
 - `Upup*` — public entry points / brand: `UpupUploader`, `UpupThemeProvider`.
@@ -130,6 +162,29 @@ touching them.
   vocabulary change must sweep all packages, locales, and parity fixtures in
   one pass.
 
+How sweeps are done: a small Node codemod — exact-substring replacement,
+longest-name-first ordering, an explicit KEEP-list for intentional exceptions —
+followed by the full gate. Never per-file hand edits, never word-boundary
+regexes (they miss `data-testid` strings and compound identifiers). This
+method carried the §16 rename across the whole monorepo without a regression.
+
+## Deliberate decisions — do not "fix"
+
+Choices that look like gaps but are rulings. Re-litigate with the maintainer
+if needed; never silently "improve" them:
+
+- **The image editor is react/preact-only.** `@upup/preact` ships the real
+  Filerobot editor as a lazily-loaded real-React island (`filerobot-island.js`,
+  budgeted separately in `.size-limit.json`); vue/svelte/angular/vanilla
+  intentionally stub it. Do not port it to the other frameworks.
+- **ffmpeg.wasm was evaluated and rejected** as a pipeline replacement. At most
+  it may someday ship as an opt-in video/audio plugin; never wire it into the
+  default pipeline.
+- **The uploader panel is fixed-height.** Media views adapt to it (see the
+  parity-harness traps above); don't make the panel grow to fit content.
+- **Per-framework duplication is intentional** (principle 4). The parallel
+  hooks/components across frameworks are not a refactor target.
+
 ## Git & commits
 
 - Default branch `master`; current integration branch `v2-clean` (the v2 work
@@ -141,7 +196,9 @@ touching them.
 - `docs/superpowers/` is an intentionally untracked local workspace for specs,
   plans, and audit records. This file is the committed source of process truth;
   promote anything durable from there into here.
-- Never bypass hooks (`--no-verify`); fix the underlying failure instead.
+- The pre-commit hook runs the package unit suites (core, react, server);
+  never bypass it (`--no-verify`) — fix the underlying failure instead, and
+  see the flake protocol above before assuming your change broke something.
 
 ## CI (`.github/workflows`)
 
