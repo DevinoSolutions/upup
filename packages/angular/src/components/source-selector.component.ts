@@ -87,7 +87,9 @@ interface SourceEntry {
                             (click)="handleAdapterClick(source.id)"
                             (keydown)="onSourceKeydown($event)"
                         >
-                            <ng-container *ngComponentOutlet="source.iconType"></ng-container>
+                            <ng-container
+                                *ngComponentOutlet="source.iconType; inputs: sourceIconInputs"
+                            ></ng-container>
                             <span [class]="labelClass">{{ source.label }}</span>
                         </button>
                     }
@@ -178,28 +180,41 @@ export class SourceSelectorComponent {
     }
 
     get listClass(): string {
+        const slotClasses = this.store.slotOverrides()
         return cn(
             'upup-flex upup-flex-col upup-justify-center upup-gap-1 upup-w-full',
             'md:upup-flex-row md:upup-flex-wrap md:upup-items-center md:upup-gap-[30px] md:upup-px-[30px]',
+            slotClasses.sourceButtonList,
         )
     }
 
     get tileClass(): string {
         const dark = this.store.isDark()
+        const slotClasses = this.store.slotOverrides()
         return cn(
             'upup-group upup-flex upup-items-center upup-gap-[6px]',
             'upup-border-b upup-border-gray-200 upup-px-2 upup-py-1',
             'md:upup-flex-col md:upup-justify-center md:upup-rounded-lg md:upup-border-none md:upup-p-0',
             dark ? 'upup-border-[#6D6D6D] dark:upup-border-[#6D6D6D]' : '',
+            slotClasses.sourceButton,
         )
     }
 
     get labelClass(): string {
         const dark = this.store.isDark()
+        const slotClasses = this.store.slotOverrides()
         return cn(
             'upup-text-xs upup-text-[#242634] md:upup-text-sm',
             dark ? 'upup-text-white dark:upup-text-white' : '',
+            slotClasses.sourceButtonText,
         )
+    }
+
+    /** Inputs for the tile icon outlet — mirrors react's `slotClasses.sourceButtonIcon || undefined`. */
+    get sourceIconInputs(): Record<string, unknown> {
+        return {
+            class: this.store.slotOverrides().sourceButtonIcon || undefined,
+        }
     }
 
     // ── Empty-state copy + header (svelte SourceSelector.svelte parity) ─────────
