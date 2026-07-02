@@ -190,7 +190,7 @@ export default function useUploaderController(
             uploadEndpoint,
             serverUrl,
             maxFiles,
-                theme,
+            theme,
             folderUpload,
             cors,
             cloudDrives,
