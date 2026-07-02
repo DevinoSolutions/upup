@@ -5,11 +5,11 @@
  * Promises verified:
  *   1. Snapshot → signals: computed fields are wired and return correct types after init().
  *   2. Multi-instance isolation: two stores have independent cores and independent state.
- *   3. Idempotent teardown: double-dispose is safe; dispose+re-init does not throw.
+ *   3. Idempotent teardown: double-destroy is safe; destroy+re-init does not throw.
  *   4. i18n wired: translations signal is populated, lang/dir default correctly.
  *   5. Drive plugin registration: cloudDrives populated + core.use called.
- *   6. Status-change: onStatusChange called on status transition; unsub on dispose.
- *   7. Cleanups: cleanups array populated with drives/sse/status; safe after dispose.
+ *   6. Status-change: onStatusChange called on status transition; unsub on destroy.
+ *   7. Cleanups: cleanups array populated with drives/sse/status; safe after destroy.
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { UploadStatus, FileSource, UpupCore, GoogleDrivePlugin } from '@upup/core'
@@ -108,7 +108,7 @@ describe('UpupStore', () => {
             expect(store.mode).toBe('client')
         })
 
-        afterEach(() => store.dispose())
+        afterEach(() => store.destroy())
     })
 
     // ── Promise 2: Multi-instance isolation ─────────────────────
@@ -118,8 +118,8 @@ describe('UpupStore', () => {
             const a = makeStore()
             const b = makeStore()
             expect(a.core).not.toBe(b.core)
-            a.dispose()
-            b.dispose()
+            a.destroy()
+            b.destroy()
         })
 
         it('two stores have independent uploadStatus signals', () => {
@@ -130,45 +130,45 @@ describe('UpupStore', () => {
             expect(b.uploadStatus()).toBe(UploadStatus.IDLE)
             // Signal objects themselves are different references
             expect(a.uploadStatus).not.toBe(b.uploadStatus)
-            a.dispose()
-            b.dispose()
+            a.destroy()
+            b.destroy()
         })
 
         it('two stores have independent file maps', () => {
             const a = makeStore()
             const b = makeStore()
             expect(a.files()).not.toBe(b.files())
-            a.dispose()
-            b.dispose()
+            a.destroy()
+            b.destroy()
         })
 
         it('two stores have independent orchState (snapshot)', () => {
             const a = makeStore()
             const b = makeStore()
             expect(a.snapshot()).not.toBe(b.snapshot())
-            a.dispose()
-            b.dispose()
+            a.destroy()
+            b.destroy()
         })
     })
 
     // ── Promise 3: Idempotent teardown ───────────────────────────
 
     describe('idempotent teardown', () => {
-        it('dispose() twice does not throw', () => {
+        it('destroy() twice does not throw', () => {
             const store = makeStore()
             expect(() => {
-                store.dispose()
-                store.dispose()
+                store.destroy()
+                store.destroy()
             }).not.toThrow()
         })
 
-        it('dispose() then dispose() is safe from any initial state', () => {
+        it('destroy() then destroy() is safe from any initial state', () => {
             const store = new UpupStore()
             store.setConfig(baseProps)
-            // dispose before init — should still not throw
+            // destroy before init — should still not throw
             expect(() => {
-                store.dispose()
-                store.dispose()
+                store.destroy()
+                store.destroy()
             }).not.toThrow()
         })
 
@@ -179,7 +179,7 @@ describe('UpupStore', () => {
             const coreRef = store.core
             store.init() // second call must be a no-op
             expect(store.core).toBe(coreRef) // same core, no re-init
-            store.dispose()
+            store.destroy()
         })
     })
 
@@ -189,7 +189,7 @@ describe('UpupStore', () => {
         let store: UpupStore
 
         beforeEach(() => { store = makeStore() })
-        afterEach(() => store.dispose())
+        afterEach(() => store.destroy())
 
         it('registerFileInput / getFileInput round-trip', () => {
             const el = document.createElement('input')
@@ -244,7 +244,7 @@ describe('UpupStore', () => {
         let store: UpupStore
 
         beforeEach(() => { store = makeStore() })
-        afterEach(() => store.dispose())
+        afterEach(() => store.destroy())
 
         it('translations is a Signal (function)', () => {
             expect(typeof store.translations).toBe('function')
@@ -293,13 +293,13 @@ describe('UpupStore', () => {
             expect(store.cloudDrives!.googleDrive!.apiKey).toBe('gapikey')
             expect(store.cloudDrives!.googleDrive!.appId).toBe('gappid')
             useSpy.mockRestore()
-            store.dispose()
+            store.destroy()
         })
 
         it('with no cloudDrives → store.cloudDrives is undefined', () => {
             const store = makeStore({} as any)
             expect(store.cloudDrives).toBeUndefined()
-            store.dispose()
+            store.destroy()
         })
 
         it('with dropbox config → cloudDrives.dropbox populated', () => {
@@ -313,7 +313,7 @@ describe('UpupStore', () => {
             expect(store.cloudDrives?.dropbox).toBeDefined()
             expect(store.cloudDrives!.dropbox!.clientId).toBe('dbcid')
             expect(store.cloudDrives!.dropbox!.redirectUri).toBe('https://example.com/cb')
-            store.dispose()
+            store.destroy()
         })
 
         it('core.use registers a GoogleDrivePlugin when googleDrive config present', () => {
@@ -323,7 +323,7 @@ describe('UpupStore', () => {
             store.init()
             expect(useSpy).toHaveBeenCalledWith(expect.any(GoogleDrivePlugin))
             useSpy.mockRestore()
-            store.dispose()
+            store.destroy()
         })
 
         it('core.use registers no drive plugin when no cloudDrives configured', () => {
@@ -333,7 +333,7 @@ describe('UpupStore', () => {
             store.init()
             expect(useSpy).not.toHaveBeenCalledWith(expect.any(GoogleDrivePlugin))
             useSpy.mockRestore()
-            store.dispose()
+            store.destroy()
         })
     })
 
@@ -347,15 +347,15 @@ describe('UpupStore', () => {
             store.init()
             // At minimum the status-change unsub was pushed
             expect((store as any).cleanups.length).toBeGreaterThan(0)
-            store.dispose()
+            store.destroy()
         })
 
-        it('dispose() runs cleanups without throwing', () => {
+        it('destroy() runs cleanups without throwing', () => {
             const onStatusChange = vi.fn()
             const store = new UpupStore()
             store.setConfig({ onStatusChange } as any)
             store.init()
-            expect(() => store.dispose()).not.toThrow()
+            expect(() => store.destroy()).not.toThrow()
             // cleanups array should be cleared
             expect((store as any).cleanups.length).toBe(0)
         })
@@ -382,7 +382,7 @@ describe('UpupStore', () => {
             // A second non-status notification must add NO further call (dedup guard holds).
             store.setIsAddingMore(false)
             expect(onStatusChange.mock.calls.length).toBe(countAfterFlush)
-            store.dispose()
+            store.destroy()
         })
     })
 
@@ -396,7 +396,7 @@ describe('UpupStore', () => {
             expect(Array.isArray(store.uiProps.sources)).toBe(true)
             expect(typeof store.uiProps.allowedFileTypes).toBe('string')
             expect(typeof store.uiProps.limit).toBe('number')
-            store.dispose()
+            store.destroy()
         })
 
         it('uiProps.icons has all six icon slots', () => {
@@ -408,7 +408,7 @@ describe('UpupStore', () => {
             expect('CameraRotateIcon' in icons).toBe(true)
             expect('CameraDeleteIcon' in icons).toBe(true)
             expect('LoaderIcon' in icons).toBe(true)
-            store.dispose()
+            store.destroy()
         })
 
         it('uiProps.icons defaults FileDeleteIcon to TrashIconComponent and the rest to EmptyIconComponent', () => {
@@ -422,7 +422,7 @@ describe('UpupStore', () => {
             expect(icons.CameraRotateIcon).toBe(EmptyIconComponent)
             expect(icons.CameraDeleteIcon).toBe(EmptyIconComponent)
             expect(icons.LoaderIcon).toBe(EmptyIconComponent)
-            store.dispose()
+            store.destroy()
         })
 
         it('cleanups grow when drives + onStatusChange + processingEndpoint are set', () => {
@@ -437,15 +437,15 @@ describe('UpupStore', () => {
             } as any)
             store.init()
             // After C-2 Task 8: plugin cleanup + status-change subscription are managed by
-            // createUploaderController internally (via root.dispose()). The store's own cleanups
-            // array holds exactly the SSE dispose — lock that invariant against a future leak.
+            // createUploaderController internally (via root.destroy()). The store's own cleanups
+            // array holds exactly the SSE destroy — lock that invariant against a future leak.
             expect((store as any).cleanups.length).toBe(1)
-            store.dispose()
+            store.destroy()
             // All cleanups should have been flushed
             expect((store as any).cleanups.length).toBe(0)
         })
 
-        it('dispose() is idempotent even with all cleanups active', () => {
+        it('destroy() is idempotent even with all cleanups active', () => {
             const store = new UpupStore()
             store.setConfig({
                 onStatusChange: vi.fn(),
@@ -455,8 +455,8 @@ describe('UpupStore', () => {
             } as any)
             store.init()
             expect(() => {
-                store.dispose()
-                store.dispose()
+                store.destroy()
+                store.destroy()
             }).not.toThrow()
         })
     })
@@ -480,7 +480,7 @@ describe('UpupStore', () => {
             await s.handleSetSelectedFiles([txt()])
             expect(onFileTypeMismatch).toHaveBeenCalled()
             expect(onRestrictionFailed).toHaveBeenCalledWith(expect.any(File), 'TYPE_MISMATCH')
-            s.dispose()
+            s.destroy()
         })
 
         it('limit error → LIMIT_EXCEEDED (no onFileTypeMismatch)', async () => {
@@ -493,7 +493,7 @@ describe('UpupStore', () => {
             await s.handleSetSelectedFiles([txt()])
             expect(onRestrictionFailed).toHaveBeenCalledWith(expect.any(File), 'LIMIT_EXCEEDED')
             expect(onFileTypeMismatch).not.toHaveBeenCalled()
-            s.dispose()
+            s.destroy()
         })
 
         it("below error → FILE_TOO_SMALL (branch order: 'below' before 'size')", async () => {
@@ -506,7 +506,7 @@ describe('UpupStore', () => {
             await s.handleSetSelectedFiles([txt()])
             expect(onRestrictionFailed).toHaveBeenCalledWith(expect.any(File), 'FILE_TOO_SMALL')
             expect(onFileTypeMismatch).not.toHaveBeenCalled()
-            s.dispose()
+            s.destroy()
         })
 
         it('size error → FILE_TOO_LARGE (no onFileTypeMismatch)', async () => {
@@ -519,7 +519,7 @@ describe('UpupStore', () => {
             await s.handleSetSelectedFiles([txt()])
             expect(onRestrictionFailed).toHaveBeenCalledWith(expect.any(File), 'FILE_TOO_LARGE')
             expect(onFileTypeMismatch).not.toHaveBeenCalled()
-            s.dispose()
+            s.destroy()
         })
     })
 })

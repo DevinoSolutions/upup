@@ -10,20 +10,20 @@ export type SSEProcessingOptions = {
 
 /**
  * Framework-free SSE processing helper (ported from @upup/svelte useSSEProcessing).
- * Returns { connectSSE(file), dispose() }.
+ * Returns { connectSSE(file), destroy() }.
  * - connectSSE opens an EventSource at processingEndpoint?key=file.key.
- * - dispose tears down all open EventSources and timers.
+ * - destroy tears down all open EventSources and timers.
  *
- * No Svelte lifecycle hooks — callers push dispose() into their own cleanup array.
+ * No Svelte lifecycle hooks — callers push destroy() into their own cleanup array.
  */
 export function createSSEProcessing({
     processingEndpoint,
     onFileProcessed,
     onError,
     processingTimeout = 60_000,
-}: SSEProcessingOptions): { connectSSE(file: UploadFile): void; dispose(): void } {
+}: SSEProcessingOptions): { connectSSE(file: UploadFile): void; destroy(): void } {
     const processor = new SSEProcessor()
-    let disposed = false
+    let destroyed = false
 
     function connectSSE(file: UploadFile): void {
         const key = file.key
@@ -38,11 +38,11 @@ export function createSSEProcessing({
         )
     }
 
-    function dispose(): void {
-        if (disposed) return
-        disposed = true
+    function destroy(): void {
+        if (destroyed) return
+        destroyed = true
         processor.destroy()
     }
 
-    return { connectSSE, dispose }
+    return { connectSSE, destroy }
 }

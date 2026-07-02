@@ -59,7 +59,7 @@ export default function useUploaderPanel() {
 
     useEffect(() => {
         controller?.init()
-        return () => controller?.dispose()
+        return () => controller?.destroy()
     }, [controller])
 
     // React synthetic events extend the native DOM events, so casting to DragEvent is safe.

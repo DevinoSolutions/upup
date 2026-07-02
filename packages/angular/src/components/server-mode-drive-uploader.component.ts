@@ -23,8 +23,8 @@ import { SourceViewContainerComponent } from './source-view-container.component'
  *
  * Regression guards (from vanilla's server-drive.test.ts, ported to Angular):
  *   1. 401 → state.status === 'reauth' → auth fallback rendered, browser testid absent
- *   2. ngOnDestroy calls dispose() → abort controller aborted
- *   3. ngOnDestroy calls dispose() → window 'message' listener removed
+ *   2. ngOnDestroy calls destroy() → abort controller aborted
+ *   3. ngOnDestroy calls destroy() → window 'message' listener removed
  */
 @Component({
     selector: 'upup-server-mode-drive-uploader',
@@ -135,7 +135,7 @@ export class ServerModeDriveUploaderComponent implements OnInit, OnDestroy {
     }
 
     ngOnDestroy(): void {
-        this.svc.dispose()
+        this.svc.destroy()
     }
 
     // ── Bound handlers ────────────────────────────────────────────

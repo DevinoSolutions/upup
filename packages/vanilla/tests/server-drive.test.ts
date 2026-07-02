@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { render } from 'lit-html'
-import { serverModeDriveUploader, disposeServerDrives } from '../src/templates/server-mode-drive-uploader'
+import { serverModeDriveUploader, destroyServerDrives } from '../src/templates/server-mode-drive-uploader'
 
 // Fresh ctx per test so the module-level per-ctx WeakMap state never bleeds across cases.
 function makeCtx(invalidate: () => void) {
@@ -40,7 +40,7 @@ describe('serverModeDriveUploader', () => {
     vi.unstubAllGlobals()
   })
 
-  it('disposeServerDrives aborts the in-flight list request', async () => {
+  it('destroyServerDrives aborts the in-flight list request', async () => {
     const invalidate = vi.fn()
     const ctx = makeCtx(invalidate)
     let captured: AbortSignal | undefined
@@ -49,12 +49,12 @@ describe('serverModeDriveUploader', () => {
     await flush()
     expect(captured).toBeTruthy()
     expect(captured!.aborted).toBe(false)
-    disposeServerDrives(ctx)
+    destroyServerDrives(ctx)
     expect(captured!.aborted).toBe(true)
     vi.unstubAllGlobals()
   })
 
-  it('disposeServerDrives removes the window message listener armed by re-auth (leak-fix regression guard)', async () => {
+  it('destroyServerDrives removes the window message listener armed by re-auth (leak-fix regression guard)', async () => {
     const invalidate = vi.fn()
     const ctx = makeCtx(invalidate)
     vi.stubGlobal('fetch', vi.fn(async () => new Response('', { status: 401 })))
@@ -69,7 +69,7 @@ describe('serverModeDriveUploader', () => {
     const msgAdd = addSpy.mock.calls.find(([type]) => type === 'message')
     expect(msgAdd).toBeTruthy()
     const handler = msgAdd![1]
-    disposeServerDrives(ctx)
+    destroyServerDrives(ctx)
     expect(removeSpy).toHaveBeenCalledWith('message', handler)
     vi.unstubAllGlobals()
   })

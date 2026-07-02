@@ -5,7 +5,7 @@
  * Store strategy:
  *   - All three components inject UpupStore. We instantiate a real UpupStore
  *     (new UpupStore(); setConfig({}); init()) and provide it via
- *     { provide: UpupStore, useValue: store }. The store is disposed in afterEach.
+ *     { provide: UpupStore, useValue: store }. The store is destroyed in afterEach.
  *
  * Content-projection tests use inline host components (a @Component wrapper that projects
  * a marker element via <upup-adapter-view-container>…</upup-adapter-view-container>).
@@ -33,7 +33,7 @@ function makeStore(): UpupStore {
 describe('ProgressBarComponent', () => {
     let store: UpupStore
 
-    afterEach(() => store?.dispose())
+    afterEach(() => store?.destroy())
 
     it('renders the progress bar element when progress > 0', async () => {
         store = makeStore()
@@ -153,7 +153,7 @@ describe('ProgressBarComponent', () => {
 describe('UploaderHeaderComponent', () => {
     let store: UpupStore
 
-    afterEach(() => store?.dispose())
+    afterEach(() => store?.destroy())
 
     it('renders the header element (data-testid="upup-header") when mini=false', async () => {
         store = makeStore()
@@ -225,7 +225,7 @@ describe('UploaderHeaderComponent', () => {
 describe('SourceViewContainerComponent', () => {
     let store: UpupStore
 
-    afterEach(() => store?.dispose())
+    afterEach(() => store?.destroy())
 
     it('renders data-testid="upup-adapter-view"', async () => {
         store = makeStore()

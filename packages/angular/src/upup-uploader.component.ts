@@ -134,11 +134,11 @@ export class UpupUploaderComponent implements OnInit, AfterViewInit {
     this.store.setConfig(value)
     if (this.started) {
       // re-init on config change (mirrors vanilla's config setter); re-wire to the NEW core
-      this.store.dispose()
+      this.store.destroy()
       this.store.init()
       this.storeReady = true
       this.wireOutputs()
-      // Re-register file input after re-init (dispose clears the cached inputEl)
+      // Re-register file input after re-init (destroy clears the cached inputEl)
       if (this.fileInputRef?.nativeElement) {
         this.store.registerFileInput(this.fileInputRef.nativeElement)
       }
@@ -160,7 +160,7 @@ export class UpupUploaderComponent implements OnInit, AfterViewInit {
     this.destroyRef.onDestroy(() => {
       this.forwardUnsubs.forEach(u => u())
       this.forwardUnsubs = []
-      this.store.dispose()
+      this.store.destroy()
     })
   }
 

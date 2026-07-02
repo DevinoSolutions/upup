@@ -21,7 +21,7 @@ export class CameraController implements AdapterController<CameraSnapshot> {
   private facingMode: FacingMode = FacingMode.Environment
   private stream: MediaStream | null = null
   private videoEl: HTMLVideoElement | null = null
-  private disposed = false
+  private destroyed = false
 
   constructor(private deps: CameraDeps) {}
 
@@ -46,7 +46,7 @@ export class CameraController implements AdapterController<CameraSnapshot> {
     try {
       if (this.stream) this.stream.getTracks().forEach((t) => t.stop())
       const mediaStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: this.facingMode } })
-      if (this.disposed) { mediaStream.getTracks().forEach((t) => t.stop()); return }
+      if (this.destroyed) { mediaStream.getTracks().forEach((t) => t.stop()); return }
       this.stream = mediaStream
       if (this.videoEl) { this.videoEl.srcObject = mediaStream; void this.videoEl.play() }
       this.deps.invalidate()
@@ -99,5 +99,5 @@ export class CameraController implements AdapterController<CameraSnapshot> {
     }
   }
 
-  dispose() { this.disposed = true; this.stopCamera() }
+  destroy() { this.destroyed = true; this.stopCamera() }
 }

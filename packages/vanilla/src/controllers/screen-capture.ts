@@ -26,7 +26,7 @@ export class ScreenCaptureController implements AdapterController<ScreenSnapshot
   private timerHandle: ReturnType<typeof setInterval> | null = null
   private streamRef: MediaStream | null = null
   private previewEl: HTMLVideoElement | null = null
-  private disposed = false
+  private destroyed = false
 
   constructor(private deps: ScreenDeps) {}
 
@@ -38,7 +38,7 @@ export class ScreenCaptureController implements AdapterController<ScreenSnapshot
   }
 
   activate() {}
-  deactivate() { this.dispose() }
+  deactivate() { this.destroy() }
 
   setPreviewEl(el: HTMLVideoElement | null) {
     this.previewEl = el
@@ -48,7 +48,7 @@ export class ScreenCaptureController implements AdapterController<ScreenSnapshot
   async startRecording() {
     try {
       const stream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true })
-      if (this.disposed) { stream.getTracks().forEach((t) => t.stop()); return }
+      if (this.destroyed) { stream.getTracks().forEach((t) => t.stop()); return }
       this.streamRef = stream
       this.chunks = []
       if (this.previewEl) { this.previewEl.srcObject = stream; void this.previewEl.play() }
@@ -113,8 +113,8 @@ export class ScreenCaptureController implements AdapterController<ScreenSnapshot
     return { recordingState: this.recordingState, duration: this.duration, videoUrl: this.videoUrl, error: this.error }
   }
 
-  dispose() {
-    this.disposed = true
+  destroy() {
+    this.destroyed = true
     if (this.timerHandle) clearInterval(this.timerHandle)
     if (this.streamRef) this.streamRef.getVideoTracks().forEach((t) => { t.onended = null })
     if (this.mediaRecorder) {

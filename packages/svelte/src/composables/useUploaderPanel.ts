@@ -27,7 +27,7 @@ export default function useUploaderPanel() {
 
     const state = toReadable(controller)
     onMount(() => controller.init())
-    onDestroy(() => controller.dispose())
+    onDestroy(() => controller.destroy())
 
     return {
         isDragging: derived(state, ($s) => $s.isDragging),

@@ -29,7 +29,7 @@ export function useServerModeDrive(provider: ServerModeProvider) {
 
     useEffect(() => {
         controller.init()
-        return () => controller.dispose()
+        return () => controller.destroy()
     }, [controller])
 
     return {

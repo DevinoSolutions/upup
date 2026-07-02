@@ -7,7 +7,7 @@ beforeEach(() => { document.body.innerHTML = '' })
 describe('buildUploaderContext', () => {
   it('builds a context with core, orchestrator, theme and resolved props', () => {
     const onError = vi.fn()
-    const { ctx, dispose } = buildUploaderContext(
+    const { ctx, destroy } = buildUploaderContext(
       { sources: ['local'], maxFiles: 3, allowedFileTypes: 'image/*', onError },
       () => {},
     )
@@ -18,31 +18,31 @@ describe('buildUploaderContext', () => {
     expect(ctx.props.sources).toContain(FileSource.LOCAL)
     expect(ctx.mode).toBe('client')
     expect(typeof ctx.setActiveSource).toBe('function')
-    dispose()
+    destroy()
   })
 
   it('resolves server mode when serverUrl is set without uploadEndpoint', () => {
-    const { ctx, dispose } = buildUploaderContext({ serverUrl: 'http://localhost:53060' }, () => {})
+    const { ctx, destroy } = buildUploaderContext({ serverUrl: 'http://localhost:53060' }, () => {})
     expect(ctx.mode).toBe('server')
     expect(ctx.serverUrl).toBe('http://localhost:53060')
-    dispose()
+    destroy()
   })
 
   it('wires convenience onFileAdded to the core files-added event', () => {
     const onFileAdded = vi.fn()
-    const { ctx, dispose } = buildUploaderContext({ onFileAdded }, () => {})
+    const { ctx, destroy } = buildUploaderContext({ onFileAdded }, () => {})
     ctx.core.emit('files-added', [])
     expect(onFileAdded).toHaveBeenCalled()
-    dispose()
+    destroy()
   })
 
   it('routes ctx.setFiles through core.addFiles so files-added fires (autoUpload parity with svelte/react)', async () => {
-    const { ctx, dispose } = buildUploaderContext({ sources: ['local'] }, () => {})
+    const { ctx, destroy } = buildUploaderContext({ sources: ['local'] }, () => {})
     const filesAdded = vi.fn()
     ctx.core.on('files-added', filesAdded)
     await ctx.setFiles([new File(['x'], 'a.txt', { type: 'text/plain' })])
     expect(filesAdded).toHaveBeenCalledTimes(1)
     expect(ctx.core.files.size).toBe(1)
-    dispose()
+    destroy()
   })
 })

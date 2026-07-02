@@ -87,7 +87,7 @@ describe('SourceSelectorComponent', () => {
     let store: UpupStore
 
     afterEach(() => {
-        store?.dispose()
+        store?.destroy()
         vi.restoreAllMocks()
         TestBed.resetTestingModule()
     })
@@ -271,7 +271,7 @@ describe('SourceViewComponent', () => {
     let store: UpupStore
 
     afterEach(() => {
-        store?.dispose()
+        store?.destroy()
         vi.restoreAllMocks()
         TestBed.resetTestingModule()
     })
@@ -376,7 +376,7 @@ describe('GoogleDriveUploaderComponent — wrapper routing', () => {
     let store: UpupStore
 
     afterEach(() => {
-        store?.dispose()
+        store?.destroy()
         vi.restoreAllMocks()
         TestBed.resetTestingModule()
     })
@@ -442,7 +442,7 @@ describe('OneDriveUploaderComponent — wrapper routing', () => {
     let store: UpupStore
 
     afterEach(() => {
-        store?.dispose()
+        store?.destroy()
         vi.restoreAllMocks()
         TestBed.resetTestingModule()
     })
@@ -484,7 +484,7 @@ describe('DropboxUploaderComponent — wrapper routing', () => {
     let store: UpupStore
 
     afterEach(() => {
-        store?.dispose()
+        store?.destroy()
         vi.restoreAllMocks()
         TestBed.resetTestingModule()
     })
@@ -526,7 +526,7 @@ describe('BoxUploaderComponent — wrapper routing', () => {
     let store: UpupStore
 
     afterEach(() => {
-        store?.dispose()
+        store?.destroy()
         vi.restoreAllMocks()
         TestBed.resetTestingModule()
     })

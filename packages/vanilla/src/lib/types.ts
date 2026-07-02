@@ -65,7 +65,7 @@ export interface CreateUploaderOptions extends Omit<CoreOptions, 'cloudDrives'> 
 /** Base controller contract. invalidate() is injected at construction by the render loop. */
 export interface UploaderController<S = unknown> {
   getSnapshot(): S
-  dispose(): void
+  destroy(): void
 }
 
 /** Controllers that own an adapter view also implement activate/deactivate. */
@@ -74,7 +74,7 @@ export interface AdapterController<S = unknown> extends UploaderController<S> {
   deactivate(): void
 }
 
-/** Lazily-instantiated controllers, keyed; the render loop disposes inactive ones on adapter switch. */
+/** Lazily-instantiated controllers, keyed; the render loop destroys inactive ones on adapter switch. */
 export interface ControllerRegistry {
   fileInput: import('../controllers/file-input').FileInputController
   dragDrop: DragDropController
@@ -84,10 +84,10 @@ export interface ControllerRegistry {
   getScreen(): import('../controllers/screen-capture').ScreenCaptureController
   /** drive browser controllers are core DriveBrowserController instances, cached by FileSource. */
   getDrive(source: FileSource): DriveBrowserController
-  /** dispose every cached per-source controller (called on adapter switch + destroy). */
-  disposeActive(): void
-  /** dispose everything including fileInput + dragDrop (called on destroy). */
-  disposeAll(): void
+  /** destroy every cached per-source controller (called on adapter switch + destroy). */
+  destroyActive(): void
+  /** destroy everything including fileInput + dragDrop (called on destroy). */
+  destroyAll(): void
 }
 
 /** Resolved props (plain values, mirroring svelte ContextProps). */

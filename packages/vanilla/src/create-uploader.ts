@@ -2,8 +2,8 @@ import { render, nothing } from 'lit-html'
 import { buildUploaderContext } from './context'
 import { createRenderLoop } from './app'
 import { resolveTarget } from './lib/dom'
-import { disposeFileList } from './templates/file-list'
-import { disposeServerDrives } from './templates/server-mode-drive-uploader'
+import { destroyFileList } from './templates/file-list'
+import { destroyServerDrives } from './templates/server-mode-drive-uploader'
 import type { CreateUploaderOptions, UpupInstance, UploaderSnapshot } from './lib/types'
 
 export function createUploader(
@@ -75,9 +75,9 @@ export function createUploader(
       loop.stop()
       unsubAll()
       subscribers.clear()
-      built.dispose()
-      disposeFileList(ctx)
-      disposeServerDrives(ctx)
+      built.destroy()
+      destroyFileList(ctx)
+      destroyServerDrives(ctx)
       render(nothing, el)
     },
   }

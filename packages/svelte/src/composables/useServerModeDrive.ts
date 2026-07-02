@@ -13,7 +13,7 @@ export function useServerModeDrive(provider: ServerModeProvider) {
 
     const state = toReadable(controller)
     onMount(() => controller.init())
-    onDestroy(() => controller.dispose())
+    onDestroy(() => controller.destroy())
 
     return {
         state: derived(state, ($s) => $s.state),

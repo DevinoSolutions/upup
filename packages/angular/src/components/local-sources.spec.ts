@@ -77,7 +77,7 @@ describe('UrlUploaderComponent', () => {
     let store: UpupStore
 
     afterEach(() => {
-        store?.dispose()
+        store?.destroy()
         vi.restoreAllMocks()
         TestBed.resetTestingModule()
     })
@@ -165,7 +165,7 @@ describe('CameraUploaderComponent', () => {
     })
 
     afterEach(() => {
-        store?.dispose()
+        store?.destroy()
         restoreMediaDevices()
         vi.restoreAllMocks()
         TestBed.resetTestingModule()
@@ -318,7 +318,7 @@ describe('AudioUploaderComponent', () => {
     let store: UpupStore
 
     afterEach(() => {
-        store?.dispose()
+        store?.destroy()
         restoreMediaDevices()
         vi.restoreAllMocks()
         TestBed.resetTestingModule()
@@ -457,7 +457,7 @@ describe('ScreenCaptureUploaderComponent', () => {
     let store: UpupStore
 
     afterEach(() => {
-        store?.dispose()
+        store?.destroy()
         restoreMediaDevices()
         vi.restoreAllMocks()
         TestBed.resetTestingModule()

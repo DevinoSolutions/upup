@@ -31,5 +31,5 @@ export class FileInputController implements UploaderController<FileInputSnapshot
 
   getSnapshot(): FileInputSnapshot { return {} }
 
-  dispose() { /* the input element is owned/cleared by the render loop on destroy */ }
+  destroy() { /* the input element is owned/cleared by the render loop on destroy */ }
 }

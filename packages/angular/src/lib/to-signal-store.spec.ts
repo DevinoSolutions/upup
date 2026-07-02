@@ -22,16 +22,16 @@ describe('toSignalStore', () => {
     s._set({ n: 2 })
     expect(state().n).toBe(2)
   })
-  it('dispose unsubscribes', () => {
+  it('destroy unsubscribes', () => {
     const s = fakeStore({ n: 1 })
-    const { state, dispose } = toSignalStore(s)
-    dispose()
+    const { state, destroy } = toSignalStore(s)
+    destroy()
     s._set({ n: 99 })
     expect(state().n).toBe(1)
   })
-  it('dispose is idempotent', () => {
+  it('destroy is idempotent', () => {
     const s = fakeStore({ n: 1 })
-    const { dispose } = toSignalStore(s)
-    expect(() => { dispose(); dispose() }).not.toThrow()
+    const { destroy } = toSignalStore(s)
+    expect(() => { destroy(); destroy() }).not.toThrow()
   })
 })

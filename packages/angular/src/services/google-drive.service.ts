@@ -51,7 +51,7 @@ export class GoogleDriveService {
     // ── Lifecycle (caller's responsibility) ──────────────────────
     init(): void { this.controller.init() }
     destroy(): void {
-        this.signalStore.dispose()
+        this.signalStore.destroy()
         this.controller.destroy()
     }
 

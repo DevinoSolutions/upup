@@ -5,5 +5,5 @@ export interface ObservableController<TSnapshot = unknown> {
   /** Current immutable snapshot — referentially stable until a change occurs. */
   getSnapshot(): TSnapshot
   /** Tear down internal subscriptions/listeners. Idempotent. */
-  dispose(): void
+  destroy(): void
 }

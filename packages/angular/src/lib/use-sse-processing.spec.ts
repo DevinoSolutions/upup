@@ -53,7 +53,7 @@ function makeFile(key: string): UploadFile {
 
 describe('createSSEProcessing', () => {
     it('connectSSE opens an EventSource at the right URL', () => {
-        const { connectSSE, dispose } = createSSEProcessing({
+        const { connectSSE, destroy } = createSSEProcessing({
             processingEndpoint: 'https://api.example.com/process',
             onFileProcessed: vi.fn(),
         })
@@ -62,40 +62,40 @@ describe('createSSEProcessing', () => {
         expect(lastInstance).not.toBeNull()
         expect(lastInstance!.url).toContain('https://api.example.com/process')
         expect(lastInstance!.url).toContain('key=abc123')
-        dispose()
+        destroy()
     })
 
     it('does nothing when processingEndpoint is absent', () => {
-        const { connectSSE, dispose } = createSSEProcessing({
+        const { connectSSE, destroy } = createSSEProcessing({
             onFileProcessed: vi.fn(),
         })
         connectSSE(makeFile('abc'))
         expect(lastInstance).toBeNull()
-        dispose()
+        destroy()
     })
 
     it('does nothing when onFileProcessed is absent', () => {
-        const { connectSSE, dispose } = createSSEProcessing({
+        const { connectSSE, destroy } = createSSEProcessing({
             processingEndpoint: 'https://api.example.com/process',
         })
         connectSSE(makeFile('abc'))
         expect(lastInstance).toBeNull()
-        dispose()
+        destroy()
     })
 
     it('does nothing when file.key is falsy', () => {
-        const { connectSSE, dispose } = createSSEProcessing({
+        const { connectSSE, destroy } = createSSEProcessing({
             processingEndpoint: 'https://api.example.com/process',
             onFileProcessed: vi.fn(),
         })
         connectSSE(makeFile(''))
         expect(lastInstance).toBeNull()
-        dispose()
+        destroy()
     })
 
     it('calls onFileProcessed with parsed JSON on message', () => {
         const onFileProcessed = vi.fn()
-        const { connectSSE, dispose } = createSSEProcessing({
+        const { connectSSE, destroy } = createSSEProcessing({
             processingEndpoint: 'https://api.example.com/process',
             onFileProcessed,
         })
@@ -110,12 +110,12 @@ describe('createSSEProcessing', () => {
         expect(onFileProcessed).toHaveBeenCalledWith(file, { status: 'done', fileId: 'k1' })
         // EventSource should be closed after message
         expect(lastInstance!.close).toHaveBeenCalled()
-        dispose()
+        destroy()
     })
 
     it('calls onError and closes EventSource on stream error', () => {
         const onError = vi.fn()
-        const { connectSSE, dispose } = createSSEProcessing({
+        const { connectSSE, destroy } = createSSEProcessing({
             processingEndpoint: 'https://api.example.com/process',
             onFileProcessed: vi.fn(),
             onError,
@@ -128,11 +128,11 @@ describe('createSSEProcessing', () => {
         expect(onError).toHaveBeenCalledOnce()
         expect(onError.mock.calls[0][0]).toBeInstanceOf(Error)
         expect(lastInstance!.close).toHaveBeenCalled()
-        dispose()
+        destroy()
     })
 
-    it('dispose() closes all open EventSources', () => {
-        const { connectSSE, dispose } = createSSEProcessing({
+    it('destroy() closes all open EventSources', () => {
+        const { connectSSE, destroy } = createSSEProcessing({
             processingEndpoint: 'https://api.example.com/process',
             onFileProcessed: vi.fn(),
         })
@@ -143,7 +143,7 @@ describe('createSSEProcessing', () => {
         connectSSE(makeFile('x2'))
         const es2 = lastInstance!
 
-        dispose()
+        destroy()
         expect(es1.close).toHaveBeenCalled()
         expect(es2.close).toHaveBeenCalled()
     })
@@ -151,7 +151,7 @@ describe('createSSEProcessing', () => {
     it('calls onError and closes on timeout', () => {
         vi.useFakeTimers()
         const onError = vi.fn()
-        const { connectSSE, dispose } = createSSEProcessing({
+        const { connectSSE, destroy } = createSSEProcessing({
             processingEndpoint: 'https://api.example.com/process',
             onFileProcessed: vi.fn(),
             onError,
@@ -165,15 +165,15 @@ describe('createSSEProcessing', () => {
         expect(onError).toHaveBeenCalledOnce()
         expect(onError.mock.calls[0][0]).toBeInstanceOf(Error)
         expect(lastInstance!.close).toHaveBeenCalled()
-        dispose()
+        destroy()
     })
 
-    it('dispose() is idempotent — second call does not throw', () => {
-        const { connectSSE, dispose } = createSSEProcessing({
+    it('destroy() is idempotent — second call does not throw', () => {
+        const { connectSSE, destroy } = createSSEProcessing({
             processingEndpoint: 'https://api.example.com/process',
             onFileProcessed: vi.fn(),
         })
         connectSSE(makeFile('y1'))
-        expect(() => { dispose(); dispose() }).not.toThrow()
+        expect(() => { destroy(); destroy() }).not.toThrow()
     })
 })

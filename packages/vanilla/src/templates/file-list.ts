@@ -58,7 +58,7 @@ function getVirtualizer(ctx: UploaderContext, count: number, scrollEl: HTMLDivEl
     // observeElementRect/observeElementOffset) on first call; must be called before first render.
     v._willUpdate()
     // _didMount() returns the public cleanup fn (calls internal cleanup(): disconnect observer +
-    // cancel rAF + remove scroll listeners). Store it so disposeFileList can call it on destroy().
+    // cancel rAF + remove scroll listeners). Store it so destroyFileList can call it on destroy().
     const unmount = v._didMount()
     virtualizers.set(ctx, { v, unmount })
     return v
@@ -69,7 +69,7 @@ function getVirtualizer(ctx: UploaderContext, count: number, scrollEl: HTMLDivEl
   }
 }
 
-export function disposeFileList(ctx: UploaderContext) {
+export function destroyFileList(ctx: UploaderContext) {
   const entry = virtualizers.get(ctx)
   if (entry) {
     // Call the cleanup fn returned by _didMount() — this is the public API for teardown.

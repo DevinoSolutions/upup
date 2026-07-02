@@ -11,12 +11,12 @@ function mockMedia() {
 beforeEach(() => { vi.restoreAllMocks() })
 
 describe('CameraController', () => {
-  it('starts and stops the camera, stopping all tracks on dispose', async () => {
+  it('starts and stops the camera, stopping all tracks on destroy', async () => {
     const { track } = mockMedia()
     const c = new CameraController({ core: { emit: vi.fn() } as any, setFiles: vi.fn(async () => {}), setActiveSource: vi.fn(), invalidate: vi.fn() })
     c.activate()
     await c.startCamera()
-    c.dispose()
+    c.destroy()
     expect(track.stop).toHaveBeenCalled()
   })
   it('toggles facing mode', () => {
@@ -26,8 +26,8 @@ describe('CameraController', () => {
     c.handleCameraSwitch()
     expect(c.getSnapshot().facingMode).not.toBe(before)
   })
-  it('disposed-guard: a stream resolving after dispose() is stopped, no post-dispose invalidate', async () => {
-    // getUserMedia stays pending until we resolve it, so we can interleave dispose() mid-flight.
+  it('destroyed-guard: a stream resolving after destroy() is stopped, no post-destroy invalidate', async () => {
+    // getUserMedia stays pending until we resolve it, so we can interleave destroy() mid-flight.
     const track = { stop: vi.fn() }
     const lateStream = { getTracks: () => [track] } as unknown as MediaStream
     let resolveGum!: (s: MediaStream) => void
@@ -35,7 +35,7 @@ describe('CameraController', () => {
     const invalidate = vi.fn()
     const c = new CameraController({ core: { emit: vi.fn() } as any, setFiles: vi.fn(async () => {}), setActiveSource: vi.fn(), invalidate })
     const pending = c.startCamera()            // awaits getUserMedia (still pending)
-    c.dispose()                                // tear down BEFORE the stream resolves
+    c.destroy()                                // tear down BEFORE the stream resolves
     const invalidatesAtDispose = invalidate.mock.calls.length
     resolveGum(lateStream)                      // now the late stream arrives
     await pending

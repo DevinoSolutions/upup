@@ -122,13 +122,13 @@ describe('DragDropController', () => {
     expect(c.getSnapshot().absoluteIsDragging).toBe(false)
   })
 
-  it('dispose unsubscribes from the orchestrator and clears listeners', () => {
+  it('destroy unsubscribes from the orchestrator and clears listeners', () => {
     const { deps, orch } = makeDeps()
     const c = new DragDropController(deps)
     c.init()
     const listener = vi.fn()
     c.subscribe(listener)
-    c.dispose()
+    c.destroy()
     orch._set({ isAddingMore: true })   // would recompute+notify if still subscribed
     expect(listener).not.toHaveBeenCalled()
   })

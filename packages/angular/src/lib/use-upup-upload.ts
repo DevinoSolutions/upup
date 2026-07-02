@@ -28,10 +28,10 @@ export interface UpupUploadHandle {
   ext: Record<string, ExtensionMethods>
   core: UpupCore
   start(): void
-  dispose(): void
+  destroy(): void
 }
 
-/** Single-use: after dispose() the underlying UpupCore is destroyed; do not call start() again on the same instance. */
+/** Single-use: after destroy() the underlying UpupCore is destroyed; do not call start() again on the same instance. */
 export function createUpupUpload(options: UseUpupUploadOptions): UpupUploadHandle {
   const core = new UpupCore(options)
   const files = signal<UploadFile[]>([...core.files.values()])
@@ -40,7 +40,7 @@ export function createUpupUpload(options: UseUpupUploadOptions): UpupUploadHandl
   const error = signal<Error | null>(null)
   const unsubs: Array<() => void> = []
   let started = false
-  let disposed = false
+  let destroyed = false
 
   return {
     files,
@@ -97,9 +97,9 @@ export function createUpupUpload(options: UseUpupUploadOptions): UpupUploadHandl
       }
     },
 
-    dispose() {
-      if (disposed) return
-      disposed = true
+    destroy() {
+      if (destroyed) return
+      destroyed = true
       unsubs.forEach(u => u())
       unsubs.length = 0
       core.destroy()

@@ -20,7 +20,7 @@ export interface BuildResult {
   /** Run orchestrator.init()/theme.init() + register plugins (called once after first render). */
   init(): void
   /** Tear down: unsubs, controllers, orchestrator/theme/core destroy. Idempotent. */
-  dispose(): void
+  destroy(): void
 }
 
 export function buildUploaderContext(
@@ -101,18 +101,18 @@ export function buildUploaderContext(
       }
       return c
     },
-    disposeActive() {
-      camera?.dispose(); camera = null
-      audio?.dispose(); audio = null
-      screen?.dispose(); screen = null
+    destroyActive() {
+      camera?.destroy(); camera = null
+      audio?.destroy(); audio = null
+      screen?.destroy(); screen = null
       driveControllers.forEach((c) => c.destroy()); driveControllers.clear()
     },
-    disposeAll() { this.disposeActive(); fileInputHandle.dispose(); dragDropHandle.dispose() },
+    destroyAll() { this.destroyActive(); fileInputHandle.destroy(); dragDropHandle.destroy() },
   }
 
-  // ── 8. setActiveSource (vanilla-specific: disposes active adapters before delegating to factory command) ──
+  // ── 8. setActiveSource (vanilla-specific: destroys active adapters before delegating to factory command) ──
   function setActiveSource(a: FileSource | undefined) {
-    controllers.disposeActive()
+    controllers.destroyActive()
     root.commands.setActiveSource(a)
   }
 
@@ -185,7 +185,7 @@ export function buildUploaderContext(
     onError: (message: string) => options.onError?.(message),
   }
 
-  let disposed = false
+  let destroyed = false
   return {
     ctx,
     subscribeAll(onChange: () => void) {
@@ -197,11 +197,11 @@ export function buildUploaderContext(
       fileInputHandle.init()
       dragDropHandle.init()
     },
-    dispose() {
-      if (disposed) return
-      disposed = true
-      controllers.disposeAll()
-      root.dispose()
+    destroy() {
+      if (destroyed) return
+      destroyed = true
+      controllers.destroyAll()
+      root.destroy()
       unsubs.forEach((u) => u())
       core.destroy()          // vanilla owns core — destroyed exactly once here
     },

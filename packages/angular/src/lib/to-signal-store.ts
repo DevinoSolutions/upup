@@ -6,10 +6,10 @@ export interface HeadlessStore<S> {
   getSnapshot(): S
 }
 
-/** The Angular-signal view returned by toSignalStore. Call dispose() in ngOnDestroy / DestroyRef. */
+/** The Angular-signal view returned by toSignalStore. Call destroy() in ngOnDestroy / DestroyRef. */
 export interface SignalStore<S> {
   state: Signal<S>
-  dispose: () => void
+  destroy: () => void
 }
 
 /**
@@ -18,7 +18,7 @@ export interface SignalStore<S> {
  * mirroring @upup/svelte's toReadable and keeping SSR side-effect-free.
  * The orchestrator returns a fresh snapshot object on every change, so Object.is
  * (the signal default) always sees a new reference, ensuring no real update is
- * silently dropped. dispose() is idempotent — safe to call more than once.
+ * silently dropped. destroy() is idempotent — safe to call more than once.
  */
 export function toSignalStore<S>(store: HeadlessStore<S>): SignalStore<S> {
   const state = signal<S>(store.getSnapshot())
@@ -26,7 +26,7 @@ export function toSignalStore<S>(store: HeadlessStore<S>): SignalStore<S> {
   const unsub = store.subscribe(() => state.set(store.getSnapshot()))
   return {
     state,
-    dispose: () => {
+    destroy: () => {
       if (!active) return
       active = false
       unsub()

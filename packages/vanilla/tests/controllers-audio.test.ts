@@ -26,9 +26,9 @@ describe('AudioRecorderController', () => {
     expect(c.getSnapshot().recordingState).toBe('recording')
     c.stopRecording()
     expect(c.getSnapshot().recordingState).toBe('recorded')
-    c.dispose()
+    c.destroy()
   })
-  it('disposed-guard: a mic stream resolving after dispose() is stopped, no timer/invalidate', async () => {
+  it('destroyed-guard: a mic stream resolving after destroy() is stopped, no timer/invalidate', async () => {
     const track = { stop: vi.fn() }
     const lateStream = { getTracks: () => [track] } as unknown as MediaStream
     let resolveGum!: (s: MediaStream) => void
@@ -36,7 +36,7 @@ describe('AudioRecorderController', () => {
     const invalidate = vi.fn()
     const c = new AudioRecorderController({ setFiles: vi.fn(async () => {}), setActiveSource: vi.fn(), invalidate })
     const pending = c.startRecording()
-    c.dispose()
+    c.destroy()
     const at = invalidate.mock.calls.length
     resolveGum(lateStream)
     await pending

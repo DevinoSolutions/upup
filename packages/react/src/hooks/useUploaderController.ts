@@ -349,21 +349,21 @@ export default function useUploaderController(
     )
 
     // ── Single lifecycle effect (replaces 4 old effects) ─────────
-    // init()/dispose() are idempotent + re-entrant; safe for React 18/19 StrictMode double-mount.
+    // init()/destroy() are idempotent + re-entrant; safe for React 18/19 StrictMode double-mount.
     //
     // The four old effects (orchestrator init/destroy, plugin registration, crash recovery,
-    // status-change) now live INSIDE createUploaderController.init()/dispose(). Notably the
+    // status-change) now live INSIDE createUploaderController.init()/destroy(). Notably the
     // status-change callback is now DEDUPED there (it no longer fires an initial 'idle'),
     // and crash recovery is triggered once from init() — both factory-owned.
     //
-    // StrictMode/plugin behavior: factory dispose() calls p.destroy() on each plugin,
+    // StrictMode/plugin behavior: factory destroy() calls p.destroy() on each plugin,
     // which is IDENTICAL to the old React adapter's plugin-effect cleanup:
     //   return () => { plugins.forEach(p => p.destroy()) }
-    // So after StrictMode init→dispose→init on the same core, cloud plugins could be dead.
+    // So after StrictMode init→destroy→init on the same core, cloud plugins could be dead.
     // This is NOT a regression — the original React adapter had the same behavior.
     useEffect(() => {
         root?.init()
-        return () => root?.dispose()
+        return () => root?.destroy()
     }, [root])
 
     // ── Input ref (React-specific) ──────────────────────────────

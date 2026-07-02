@@ -198,13 +198,13 @@ export function createUploaderContext(props: UploaderProps): IUploaderContext {
     // ── Subscribe to theme state (toReadable handles sub/unsub) ──
     const themeState = toReadable(root.theme)
 
-    // ── Lifecycle via factory (idempotent init/dispose) ──────────
+    // ── Lifecycle via factory (idempotent init/destroy) ──────────
     // root.init() owns: orchestrator.init, theme.init, plugin registration,
     //   status-change dedup, crash recovery.
-    // root.dispose() owns: orchestrator.destroy, theme.destroy, plugin cleanup.
+    // root.destroy() owns: orchestrator.destroy, theme.destroy, plugin cleanup.
     // core lifecycle remains owned by useUpupUpload's onDestroy.
     onMount(() => root.init())
-    onDestroy(() => root.dispose())
+    onDestroy(() => root.destroy())
 
     // ── Input ref: delegate to factory (Svelte bind:this registration) ──────
     // UpupUploader.svelte: $effect(() => ctx.registerFileInput(inputEl))

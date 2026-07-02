@@ -47,7 +47,7 @@ describe('UploaderPanelComponent', () => {
     let store: UpupStore
 
     afterEach(() => {
-        store?.dispose()
+        store?.destroy()
         TestBed.resetTestingModule()
     })
 

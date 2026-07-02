@@ -56,7 +56,7 @@ describe('FetchFileByUrlService', () => {
     })
 
     afterEach(() => {
-        store.dispose()
+        store.destroy()
         vi.restoreAllMocks()
         TestBed.resetTestingModule()
     })

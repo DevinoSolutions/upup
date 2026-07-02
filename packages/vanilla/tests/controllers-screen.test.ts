@@ -31,9 +31,9 @@ describe('ScreenCaptureController', () => {
     expect(c.getSnapshot().recordingState).toBe('recording')
     c.stopRecording()
     expect(c.getSnapshot().recordingState).toBe('recorded')
-    c.dispose()
+    c.destroy()
   })
-  it('disposed-guard: a display stream resolving after dispose() is stopped, no timer/invalidate', async () => {
+  it('destroyed-guard: a display stream resolving after destroy() is stopped, no timer/invalidate', async () => {
     const track = { stop: vi.fn(), onended: null as null | (() => void) }
     const lateStream = { getTracks: () => [track], getVideoTracks: () => [track] } as unknown as MediaStream
     let resolveGdm!: (s: MediaStream) => void
@@ -41,7 +41,7 @@ describe('ScreenCaptureController', () => {
     const invalidate = vi.fn()
     const c = new ScreenCaptureController({ setFiles: vi.fn(async () => {}), setActiveSource: vi.fn(), invalidate })
     const pending = c.startRecording()
-    c.dispose()
+    c.destroy()
     const at = invalidate.mock.calls.length
     resolveGdm(lateStream)
     await pending

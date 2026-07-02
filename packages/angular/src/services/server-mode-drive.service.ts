@@ -83,9 +83,9 @@ export class ServerModeDriveService {
         }
     }
 
-    dispose(): void {
-        this.controller?.dispose()
-        this.bridge?.dispose()
+    destroy(): void {
+        this.controller?.destroy()
+        this.bridge?.destroy()
     }
 
     get providerLabel(): string {

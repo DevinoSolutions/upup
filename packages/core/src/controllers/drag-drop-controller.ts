@@ -196,7 +196,7 @@ export class DragDropController implements ObservableController<DragDropSnapshot
     }
   }
 
-  dispose(): void {
+  destroy(): void {
     this.unsubOrchestrator?.()
     this.unsubOrchestrator = null
     this.listeners.clear()

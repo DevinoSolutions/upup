@@ -22,7 +22,7 @@ describe('UpupUploaderComponent', () => {
         f.componentInstance.config = {} as any
         f.detectChanges()
         const core1 = f.componentInstance.store.core
-        f.componentInstance.config = { showBranding: false } as any // setter runs, started=true → dispose+init
+        f.componentInstance.config = { showBranding: false } as any // setter runs, started=true → destroy+init
         const core2 = f.componentInstance.store.core
         expect(core1).not.toBe(core2)
     })
@@ -59,13 +59,13 @@ describe('UpupUploaderComponent', () => {
         expect(f.componentInstance['started']).toBe(false) // ngOnInit guard returned early
     })
 
-    it('disposes the store on destroy', () => {
+    it('destroys the store on destroy', () => {
         const f = TestBed.createComponent(UpupUploaderComponent)
         f.componentInstance.config = {} as any
         f.detectChanges()
-        const disposeSpy = vi.spyOn(f.componentInstance.store, 'dispose')
+        const destroySpy = vi.spyOn(f.componentInstance.store, 'destroy')
         f.destroy()
-        expect(disposeSpy).toHaveBeenCalled()
+        expect(destroySpy).toHaveBeenCalled()
     })
 
     // ── Root-shell / branding / container / file-input ──────────────────────

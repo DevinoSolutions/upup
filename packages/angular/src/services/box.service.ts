@@ -46,7 +46,7 @@ export class BoxService {
     // ── Lifecycle ─────────────────────────────────────────────────
     init(): void { this.controller.init() }
     destroy(): void {
-        this.signalStore.dispose()
+        this.signalStore.destroy()
         this.controller.destroy()
     }
 

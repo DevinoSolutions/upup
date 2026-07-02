@@ -135,5 +135,5 @@ export interface UploaderController {
   /** Idempotent: orchestrator.init + theme.init + plugin registration + crash recovery + status-change. */
   init(): void
   /** Idempotent + re-entrant: reverse of init; safe for Angular config rebuild. */
-  dispose(): void
+  destroy(): void
 }

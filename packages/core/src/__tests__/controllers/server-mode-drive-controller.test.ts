@@ -99,14 +99,14 @@ describe('ServerModeDriveController', () => {
     expect(fetchSpy).toHaveBeenCalled()
   })
 
-  it('dispose aborts an in-flight list and removes the message listener', async () => {
+  it('destroy aborts an in-flight list and removes the message listener', async () => {
     const removeSpy = vi.fn()
     vi.stubGlobal('window', { open: vi.fn().mockReturnValue({}), addEventListener: vi.fn(), removeEventListener: removeSpy })
     vi.stubGlobal('fetch', vi.fn().mockReturnValue(new Promise(() => {})))  // never resolves
     const c = ctrl()
     c.startAuth()
     void c.list()
-    c.dispose()
+    c.destroy()
     expect(removeSpy).toHaveBeenCalled()
   })
 })

@@ -40,7 +40,7 @@ export class UpupStore {
 
     private themeState!: SignalStore<ThemeSnapshot>
     private started = false
-    private disposed = false
+    private destroyed = false
     private cleanups: Array<() => void> = []
 
     /** Set during init(); undefined before init() is called. */
@@ -132,9 +132,9 @@ export class UpupStore {
     }
 
     init(): void {
-        // Reset disposed flag at the TOP so the dispose()→init() rebuild cycle works
+        // Reset destroyed flag at the TOP so the destroy()→init() rebuild cycle works
         // repeatedly (even if init() was never called before this cycle).
-        this.disposed = false
+        this.destroyed = false
 
         if (this.started) return
         this.started = true
@@ -227,7 +227,7 @@ export class UpupStore {
             onError: (err: Error) => this.onError(err.message),
             processingTimeout: p.processingTimeout,
         })
-        this.cleanups.push(() => sse.dispose())
+        this.cleanups.push(() => sse.destroy())
 
         // ── Root controller (FRESH per init() call) ──────────────
         // Owns orchestrator, theme, plugin registration, callback proxy,
@@ -412,16 +412,16 @@ export class UpupStore {
         this.root.commands.replaceFile(fileId, newFile)
     }
 
-    dispose(): void {
-        if (this.disposed) return
-        this.disposed = true
+    destroy(): void {
+        if (this.destroyed) return
+        this.destroyed = true
         this.started = false
-        // cleanups: SSE dispose (+ any other per-init cleanups)
+        // cleanups: SSE destroy (+ any other per-init cleanups)
         this.cleanups.forEach(c => c())
         this.cleanups.length = 0
-        this.root?.dispose()              // orchestrator/theme/plugins/status — idempotent
-        this.orchState?.dispose()
-        this.themeState?.dispose()
-        this.upload?.dispose()            // createUpupUpload owns core.destroy()
+        this.root?.destroy()              // orchestrator/theme/plugins/status — idempotent
+        this.orchState?.destroy()
+        this.themeState?.destroy()
+        this.upload?.destroy()            // createUpupUpload owns core.destroy()
     }
 }

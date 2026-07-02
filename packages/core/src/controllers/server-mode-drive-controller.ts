@@ -161,7 +161,7 @@ export class ServerModeDriveController implements ObservableController<ServerDri
   /** Force the error view (used by batch consumers on a transfer failure). */
   setError(message: string): void { this.setState({ state: { status: 'error', message } }) }
 
-  dispose(): void {
+  destroy(): void {
     this.abort?.abort()
     this.abort = null
     if (this.authListener) {

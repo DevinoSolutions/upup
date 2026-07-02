@@ -29,7 +29,7 @@ export default function useUploaderPanel() {
         unsub = controller.subscribe(() => { snapshot.value = controller.getSnapshot() })
         controller.init()
     })
-    onUnmounted(() => { controller.dispose(); unsub?.() })
+    onUnmounted(() => { controller.destroy(); unsub?.() })
 
     return {
         isDragging: computed(() => snapshot.value.isDragging),

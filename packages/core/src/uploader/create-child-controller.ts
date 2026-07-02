@@ -4,20 +4,19 @@
 
 export interface ChildControllerLike {
   init?(): void
-  dispose?(): void
   destroy?(): void
   subscribe?(listener: () => void): () => void
 }
 
 export interface CreateChildControllerOptions {
-  /** If provided and the controller supports subscribe(), wired on init() and unwired on dispose(). */
+  /** If provided and the controller supports subscribe(), wired on init() and unwired on destroy(). */
   onChange?: () => void
 }
 
 export interface ChildControllerHandle<C extends ChildControllerLike> {
   controller: C
   init(): void
-  dispose(): void
+  destroy(): void
 }
 
 export function createChildController<C extends ChildControllerLike>(
@@ -37,12 +36,11 @@ export function createChildController<C extends ChildControllerLike>(
       controller.init?.()
       if (options.onChange && controller.subscribe) unsub = controller.subscribe(options.onChange)
     },
-    dispose() {
+    destroy() {
       if (stopped) return
       stopped = true
       unsub?.(); unsub = null
-      if (controller.dispose) controller.dispose()
-      else if (controller.destroy) controller.destroy()
+      controller.destroy?.()
     },
   }
 }

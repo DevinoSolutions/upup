@@ -25,7 +25,7 @@ describe('createUpupUpload', () => {
 
     expect(onAdded).toHaveBeenCalledWith(fakeFiles)
 
-    u.dispose()
+    u.destroy()
   })
 
   it('exposes signal accessors with initial values', () => {
@@ -39,13 +39,13 @@ describe('createUpupUpload', () => {
     // initial values
     expect(Array.isArray(u.files())).toBe(true)
     expect(u.error()).toBeNull()
-    u.dispose()
+    u.destroy()
   })
 
-  it('dispose is idempotent and tears down without throwing', () => {
+  it('destroy is idempotent and tears down without throwing', () => {
     const u = createUpupUpload(baseOptions)
     u.start()
-    expect(() => { u.dispose(); u.dispose() }).not.toThrow()
+    expect(() => { u.destroy(); u.destroy() }).not.toThrow()
   })
 
   it('start() is idempotent — calling twice does not double-register listeners', () => {
@@ -59,16 +59,16 @@ describe('createUpupUpload', () => {
 
     // Must have been called exactly once, not twice
     expect(onAdded).toHaveBeenCalledTimes(1)
-    u.dispose()
+    u.destroy()
   })
 
-  it('after dispose(), core events do NOT reach callbacks', () => {
+  it('after destroy(), core events do NOT reach callbacks', () => {
     const onAdded = vi.fn()
     const u = createUpupUpload({ ...baseOptions, onFileAdded: onAdded })
     u.start()
     u.core.emit('files-added', [{ id: 'pre', name: 'pre.txt' }] as any)
-    expect(onAdded).toHaveBeenCalledTimes(1)        // wired before dispose
-    u.dispose()
+    expect(onAdded).toHaveBeenCalledTimes(1)        // wired before destroy
+    u.destroy()
     u.core.emit('files-added', [{ id: 'post', name: 'post.txt' }] as any)
     expect(onAdded).toHaveBeenCalledTimes(1)        // still 1 — listener removed
   })
@@ -79,7 +79,7 @@ describe('createUpupUpload', () => {
     u.core.emit('state-change', undefined as any)
     expect(u.status()).toBe(u.core.status)
     expect(u.files().length).toBe([...u.core.files.values()].length)
-    u.dispose()
+    u.destroy()
   })
 
   it('forwards upload-all-complete to onUploadComplete', () => {
@@ -89,6 +89,6 @@ describe('createUpupUpload', () => {
     const done = [{ id: 'a', name: 'a.txt' }] as any
     u.core.emit('upload-all-complete', done)
     expect(onComplete).toHaveBeenCalledWith(done)
-    u.dispose()
+    u.destroy()
   })
 })

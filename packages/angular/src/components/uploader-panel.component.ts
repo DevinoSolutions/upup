@@ -138,7 +138,7 @@ export class UploaderPanelComponent implements OnInit, OnDestroy {
     }
 
     ngOnDestroy(): void {
-        this.dragController?.dispose()
-        this.dragStore?.dispose()
+        this.dragController?.destroy()
+        this.dragStore?.destroy()
     }
 }

@@ -19,7 +19,7 @@ describe('createUploaderController', () => {
     expect(root.theme).toBeTruthy()
     expect(root.resolved.limit).toBe(10)
     expect(typeof root.commands.startUpload).toBe('function')
-    root.dispose()
+    root.destroy()
   })
 
   it('registers configured plugins exactly once; double init does not re-register', () => {
@@ -29,7 +29,7 @@ describe('createUploaderController', () => {
     expect(useSpy).toHaveBeenCalledTimes(1)   // actually registered (was only asserting <= 1)
     root.init() // StrictMode double-invoke
     expect(useSpy).toHaveBeenCalledTimes(1)   // not double
-    root.dispose()
+    root.destroy()
   })
 
   it('config-surface: all four drives register with the camelCase config verbatim', () => {
@@ -53,18 +53,18 @@ describe('createUploaderController', () => {
     expect(byId.get('one-drive')?.getConfig()).toEqual(cloudDrives.oneDrive)
     expect(byId.get('dropbox')?.getConfig()).toEqual(cloudDrives.dropbox)
     expect(byId.get('box')?.getConfig()).toEqual(cloudDrives.box)
-    root.dispose()
+    root.destroy()
   })
 
-  it('init->dispose->init->dispose with cloud plugins is re-entrant (no throw)', () => {
+  it('init->destroy->init->destroy with cloud plugins is re-entrant (no throw)', () => {
     const { root } = build({ cloudDrives: { googleDrive: { clientId: 'g', apiKey: 'k', appId: 'a' } } })
-    expect(() => { root.init(); root.dispose(); root.init(); root.dispose() }).not.toThrow()
+    expect(() => { root.init(); root.destroy(); root.init(); root.destroy() }).not.toThrow()
   })
 
-  it('dispose is idempotent and re-entrant (init -> dispose -> init -> dispose)', () => {
+  it('destroy is idempotent and re-entrant (init -> destroy -> init -> destroy)', () => {
     const { root } = build()
-    root.init(); root.dispose(); root.init(); root.dispose()
-    expect(() => root.dispose()).not.toThrow()
+    root.init(); root.destroy(); root.init(); root.destroy()
+    expect(() => root.destroy()).not.toThrow()
   })
 
   it('startUpload no-ops on empty file list', async () => {
@@ -73,7 +73,7 @@ describe('createUploaderController', () => {
     root.init()
     await root.commands.startUpload()
     expect(upSpy).not.toHaveBeenCalled()
-    root.dispose()
+    root.destroy()
   })
 
   it('startUpload calls onPrepareFiles and core.upload when files present', async () => {
@@ -85,7 +85,7 @@ describe('createUploaderController', () => {
     await root.commands.startUpload()
     expect(onPrepareFiles).toHaveBeenCalledTimes(1)
     expect(upSpy).toHaveBeenCalledTimes(1)
-    root.dispose()
+    root.destroy()
   })
 
   it('image-editor commands delegate to the orchestrator', () => {
@@ -96,7 +96,7 @@ describe('createUploaderController', () => {
     root.commands.openImageEditor(f); root.commands.closeImageEditor()
     expect(open).toHaveBeenCalledWith(f)
     expect(close).toHaveBeenCalled()
-    root.dispose()
+    root.destroy()
   })
 
   it('status-change fires onStatusChange once per real change (deduped)', () => {
@@ -108,7 +108,7 @@ describe('createUploaderController', () => {
     core.emit('state-change', {})
     const calls = onStatusChange.mock.calls.length
     expect(calls).toBeLessThanOrEqual(1) // same status deduped
-    root.dispose()
+    root.destroy()
   })
 
   it('onFilesUploadComplete wrapper invokes connectSSE per completed file', () => {
@@ -122,7 +122,7 @@ describe('createUploaderController', () => {
       .callbacks.onFilesUploadComplete?.(files)
     expect(onFilesUploadComplete).toHaveBeenCalledWith(files)
     expect(connectSSE).toHaveBeenCalledTimes(2)
-    root.dispose()
+    root.destroy()
   })
 
   it('subscribe fans in core state-change + orchestrator + theme; unsub stops it', () => {
@@ -136,7 +136,7 @@ describe('createUploaderController', () => {
     unsub()
     core.emit('state-change', {})
     expect(listener).not.toHaveBeenCalled()
-    root.dispose()
+    root.destroy()
   })
 
   it('re-subscribe after the fan-in goes empty still receives notifications', () => {
@@ -149,6 +149,6 @@ describe('createUploaderController', () => {
     root.subscribe(b) // must re-arm the fan-in
     core.emit('state-change', {})
     expect(b).toHaveBeenCalled()
-    root.dispose()
+    root.destroy()
   })
 })

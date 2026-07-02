@@ -25,17 +25,17 @@ export class AudioRecorderController implements AdapterController<AudioSnapshot>
   private chunks: Blob[] = []
   private timerHandle: ReturnType<typeof setInterval> | null = null
   private streamRef: MediaStream | null = null
-  private disposed = false
+  private destroyed = false
 
   constructor(private deps: AudioDeps) {}
 
   activate() { /* no auto-start; user clicks Start Recording */ }
-  deactivate() { this.dispose() }
+  deactivate() { this.destroy() }
 
   async startRecording() {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-      if (this.disposed) { stream.getTracks().forEach((t) => t.stop()); return }
+      if (this.destroyed) { stream.getTracks().forEach((t) => t.stop()); return }
       this.streamRef = stream
       this.chunks = []
       const recorder = new MediaRecorder(stream)
@@ -91,8 +91,8 @@ export class AudioRecorderController implements AdapterController<AudioSnapshot>
     return { recordingState: this.recordingState, duration: this.duration, audioUrl: this.audioUrl, error: this.error }
   }
 
-  dispose() {
-    this.disposed = true
+  destroy() {
+    this.destroyed = true
     if (this.timerHandle) clearInterval(this.timerHandle)
     if (this.mediaRecorder) {
       this.mediaRecorder.ondataavailable = null

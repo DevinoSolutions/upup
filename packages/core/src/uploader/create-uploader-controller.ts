@@ -197,12 +197,12 @@ export function createUploaderController(
 
   // ── Lifecycle (idempotent) ──
   let initialized = false
-  let disposed = false
+  let destroyed = false
 
   function init() {
     if (initialized) return
     initialized = true
-    disposed = false
+    destroyed = false
     orchestrator.init()
     theme.init()
     registerPlugins()
@@ -218,9 +218,9 @@ export function createUploaderController(
     if (options.crashRecovery) void core.restoreFromCrashRecovery().catch(() => undefined)
   }
 
-  function dispose() {
-    if (disposed) return
-    disposed = true
+  function destroy() {
+    if (destroyed) return
+    destroyed = true
     initialized = false
     statusUnsub?.(); statusUnsub = null
     lastStatus = undefined
@@ -258,6 +258,6 @@ export function createUploaderController(
     updateCallbacks,
     subscribe,
     init,
-    dispose,
+    destroy,
   }
 }

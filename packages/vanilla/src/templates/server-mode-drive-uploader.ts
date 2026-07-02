@@ -105,8 +105,8 @@ function formatBytes(bytes: number): string {
   return `${(bytes / (1024 * 1024 * 1024)).toFixed(1)} GB`
 }
 
-/** Disposer: abort in-flight + remove auth listeners + drop the ctx's cells. Called from create-uploader.destroy. */
-export function disposeServerDrives(ctx: UploaderContext) {
+/** Teardown: abort in-flight + remove auth listeners + drop the ctx's cells. Called from create-uploader.destroy. */
+export function destroyServerDrives(ctx: UploaderContext) {
   const m = cells.get(ctx)
   if (!m) return
   for (const c of m.values()) {

@@ -9,11 +9,11 @@
  *   component renders the DriveAuthFallback text (resolved {{provider}} →
  *   "Sign in with Google Drive"), and the browser testid is absent.
  *
- * Guard 2 — dispose aborts in-flight list:
- *   A hanging fetch captures the AbortSignal; dispose() must set signal.aborted.
+ * Guard 2 — destroy aborts in-flight list:
+ *   A hanging fetch captures the AbortSignal; destroy() must set signal.aborted.
  *
- * Guard 3 — dispose removes window 'message' listener:
- *   startAuth() arms a window 'message' listener; dispose() must call
+ * Guard 3 — destroy removes window 'message' listener:
+ *   startAuth() arms a window 'message' listener; destroy() must call
  *   window.removeEventListener with 'message'. The internal handler reference
  *   (_authListener/_abort) are owned by the core controller and no longer
  *   exposed here; we verify the net effect through the public surface and spies.
@@ -138,12 +138,12 @@ describe('ServerModeDriveUploaderComponent — guard 1: 401 → auth fallback re
     })
 })
 
-// ── Guard 2: dispose aborts in-flight list ────────────────────────────────────
+// ── Guard 2: destroy aborts in-flight list ────────────────────────────────────
 
-describe('ServerModeDriveService — guard 2: dispose aborts in-flight list request', () => {
+describe('ServerModeDriveService — guard 2: destroy aborts in-flight list request', () => {
     afterEach(() => { vi.restoreAllMocks(); vi.unstubAllGlobals(); TestBed.resetTestingModule() })
 
-    it('dispose() sets signal.aborted on the captured AbortSignal', async () => {
+    it('destroy() sets signal.aborted on the captured AbortSignal', async () => {
         let captured: AbortSignal | undefined
         vi.stubGlobal('fetch', vi.fn((_url: string, init: RequestInit) => {
             captured = init.signal as AbortSignal
@@ -165,24 +165,24 @@ describe('ServerModeDriveService — guard 2: dispose aborts in-flight list requ
         expect(captured).toBeTruthy()
         expect(captured!.aborted).toBe(false)
 
-        svc.dispose()
+        svc.destroy()
 
         expect(captured!.aborted).toBe(true)
     })
 })
 
-// ── Guard 3: dispose removes window 'message' listener ────────────────────────
+// ── Guard 3: destroy removes window 'message' listener ────────────────────────
 //
 // NOTE: The internal _authListener and _abort getters were removed from the
 // service — the abort/listener guards are now owned and tested by the core
 // controller (server-mode-drive-controller.test.ts). We test the net effect
-// here: that dispose() causes window.removeEventListener to be called with the
+// here: that destroy() causes window.removeEventListener to be called with the
 // 'message' event type, which confirms the listener is torn down.
 
-describe('ServerModeDriveService — guard 3: dispose removes window message listener (leak-fix)', () => {
+describe('ServerModeDriveService — guard 3: destroy removes window message listener (leak-fix)', () => {
     afterEach(() => { vi.restoreAllMocks(); vi.unstubAllGlobals(); TestBed.resetTestingModule() })
 
-    it('dispose() calls window.removeEventListener("message", ...) after startAuth', async () => {
+    it('destroy() calls window.removeEventListener("message", ...) after startAuth', async () => {
         // Stub fetch to return 401 so state transitions to 'reauth'
         vi.stubGlobal('fetch', vi.fn(async () => new Response('', { status: 401 })))
         // Stub window.open so startAuth doesn't actually open a browser window
@@ -212,8 +212,8 @@ describe('ServerModeDriveService — guard 3: dispose removes window message lis
         expect(msgAddCall).toBeTruthy()
         const handler = msgAddCall![1] as EventListenerOrEventListenerObject
 
-        // dispose() must remove the message listener
-        svc.dispose()
+        // destroy() must remove the message listener
+        svc.destroy()
 
         expect(removeSpy).toHaveBeenCalledWith('message', handler)
     })

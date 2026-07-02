@@ -228,14 +228,14 @@ export default function useUploaderController(props: UploaderProps): IUploaderCo
         unsubTheme?.()
     })
 
-    // ── Lifecycle via factory (idempotent init/dispose) ──────────
+    // ── Lifecycle via factory (idempotent init/destroy) ──────────
     // root.init() owns: orchestrator.init, theme.init, plugin registration,
     //   status-change dedup, crash recovery.
-    // root.dispose() owns: orchestrator.destroy, theme.destroy, plugin cleanup.
+    // root.destroy() owns: orchestrator.destroy, theme.destroy, plugin cleanup.
     // core lifecycle remains owned by useUpupUpload's onUnmounted.
     onMounted(() => root.init())
     onUnmounted(() => {
-        root.dispose()
+        root.destroy()
         unsub()
     })
 

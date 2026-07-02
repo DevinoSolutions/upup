@@ -15,7 +15,7 @@ export function useServerModeDrive(provider: ServerModeProvider) {
         unsub = controller.subscribe(() => { snap.value = controller.getSnapshot() })
         controller.init()
     })
-    onUnmounted(() => { controller.dispose(); unsub?.() })
+    onUnmounted(() => { controller.destroy(); unsub?.() })
 
     return {
         state: computed(() => snap.value.state),
