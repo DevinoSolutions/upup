@@ -19,12 +19,12 @@
   const activeComponent = $derived(
     $activeSource ? uploadSourceObject[$activeSource]?.Component : undefined,
   )
-  const AdapterIcon = $derived(
+  const SourceIcon = $derived(
     $activeSource ? uploadSourceObject[$activeSource]?.Icon : undefined,
   )
 
   const shouldRender = $derived(
-    !!activeComponent && !mini && !!$activeSource && !!AdapterIcon,
+    !!activeComponent && !mini && !!$activeSource && !!SourceIcon,
   )
 
   function handleCancel() {
@@ -47,8 +47,8 @@
         $slotClasses.sourceViewHeader,
       )}
     >
-      {#if AdapterIcon}
-        <AdapterIcon />
+      {#if SourceIcon}
+        <SourceIcon />
       {/if}
       <button
         class={cn(

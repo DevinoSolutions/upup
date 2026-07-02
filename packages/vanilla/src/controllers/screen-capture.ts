@@ -1,5 +1,5 @@
 import type { FileSource } from '@upup/core'
-import type { AdapterController } from '../lib/types'
+import type { SourceController } from '../lib/types'
 
 export type RecordingState = 'idle' | 'recording' | 'recorded'
 
@@ -16,7 +16,7 @@ export interface ScreenSnapshot {
   error: string | null
 }
 
-export class ScreenCaptureController implements AdapterController<ScreenSnapshot> {
+export class ScreenCaptureController implements SourceController<ScreenSnapshot> {
   private recordingState: RecordingState = 'idle'
   private duration = 0
   private videoUrl: string | null = null

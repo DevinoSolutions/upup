@@ -56,7 +56,7 @@ export default function SourceSelector() {
             }),
         )
     const constraintLine = constraintParts.join(', ')
-    const { chosenSources, handleAdapterClick, handleInputFileChange } =
+    const { chosenSources, handleSourceClick, handleInputFileChange } =
         useSourceSelector()
 
     const handleBrowseFilesClick = useCallback(() => {
@@ -241,7 +241,7 @@ export default function SourceSelector() {
                             onKeyDown={e => {
                                 if (e.key === 'Enter') e.preventDefault()
                             }}
-                            onClick={() => handleAdapterClick(id)}
+                            onClick={() => handleSourceClick(id)}
                         >
                             <Icon
                                 className={

@@ -65,9 +65,9 @@ export class UploaderOrchestrator {
         this.core.removeFile(fileId)
     }
 
-    /** Set the active cloud/source adapter. */
-    setActiveSource(adapter: FileSource | undefined): void {
-        this.setState({ activeSource: adapter })
+    /** Set the active upload source. */
+    setActiveSource(source: FileSource | undefined): void {
+        this.setState({ activeSource: source })
     }
 
     /** Toggle between grid and list view. */

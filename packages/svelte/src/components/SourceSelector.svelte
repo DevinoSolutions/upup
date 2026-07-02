@@ -53,7 +53,7 @@
     return parts.join(', ')
   })()
 
-  const { chosenSources, handleAdapterClick } = useSourceSelector()
+  const { chosenSources, handleSourceClick } = useSourceSelector()
 
   function handleBrowseFilesClick() {
     const el = getFileInput()
@@ -196,7 +196,7 @@
             $slotClasses.sourceButton,
           )}
           onkeydown={onSourceKeydown}
-          onclick={() => handleAdapterClick(id)}
+          onclick={() => handleSourceClick(id)}
         >
           <Icon class={$slotClasses.sourceButtonIcon || undefined} />
           <span

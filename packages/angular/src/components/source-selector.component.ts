@@ -84,7 +84,7 @@ interface SourceEntry {
                             type="button"
                             [attr.data-testid]="'upup-source-' + source.id"
                             [class]="tileClass"
-                            (click)="handleAdapterClick(source.id)"
+                            (click)="handleSourceClick(source.id)"
                             (keydown)="onSourceKeydown($event)"
                         >
                             <ng-container
@@ -327,13 +327,13 @@ export class SourceSelectorComponent {
     // ── Handlers ────────────────────────────────────────────────────────────────
 
     /**
-     * Unified tile click handler — 1:1 port of svelte useSourceSelector.handleAdapterClick:
+     * Unified tile click handler — 1:1 port of svelte useSourceSelector.handleSourceClick:
      *   onIntegrationClick(sourceId)
      *   core?.emit('source-click', { sourceId })
      *   if (sourceId === LOCAL) openFilePicker() else setActiveSource(sourceId)
      * Fires for EVERY source (including LOCAL) — no dead button.
      */
-    handleAdapterClick(sourceId: FileSource): void {
+    handleSourceClick(sourceId: FileSource): void {
         this.store.uiProps.onIntegrationClick(sourceId)
         this.store.core?.emit('source-click', { sourceId })
         if (sourceId === FileSource.LOCAL) {

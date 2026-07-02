@@ -1,5 +1,5 @@
 import type { UpupCore, FileSource } from '@upup/core'
-import type { AdapterController } from '../lib/types'
+import type { SourceController } from '../lib/types'
 
 export enum FacingMode { Environment = 'environment', User = 'user' }
 
@@ -16,7 +16,7 @@ export interface CameraSnapshot {
   newCameraSide: 'front' | 'back'
 }
 
-export class CameraController implements AdapterController<CameraSnapshot> {
+export class CameraController implements SourceController<CameraSnapshot> {
   private capturedUrl = ''
   private facingMode: FacingMode = FacingMode.Environment
   private stream: MediaStream | null = null

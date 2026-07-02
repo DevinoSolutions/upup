@@ -55,7 +55,7 @@ const constraintLine = computed(() => {
     return parts.join(', ')
 })
 
-const { chosenSources, handleAdapterClick, handleInputFileChange } =
+const { chosenSources, handleSourceClick, handleInputFileChange } =
     useSourceSelector()
 
 function handleBrowseFilesClick() {
@@ -198,7 +198,7 @@ function onSourceKeydown(e: KeyboardEvent) {
                         slotClasses.sourceButton,
                     )"
                     @keydown="onSourceKeydown"
-                    @click="handleAdapterClick(id)"
+                    @click="handleSourceClick(id)"
                 >
                     <component :is="Icon" :class="slotClasses.sourceButtonIcon" />
                     <span

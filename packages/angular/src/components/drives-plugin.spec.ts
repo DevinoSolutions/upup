@@ -1,5 +1,5 @@
 /**
- * adapter.spec.ts — T12 component test suite
+ * drives-plugin.spec.ts — T12 component test suite
  *
  * Tests:
  *   - SourceSelectorComponent: renders source tiles with correct testids incl.
@@ -146,7 +146,7 @@ describe('SourceSelectorComponent', () => {
 
     it('clicking the googleDrive tile calls store.setActiveSource("googleDrive") and NOT openFilePicker', async () => {
         store = makeStore()
-        const adapterSpy = vi.spyOn(store, 'setActiveSource')
+        const sourceSpy = vi.spyOn(store, 'setActiveSource')
         const pickerSpy = vi.spyOn(store, 'openFilePicker')
 
         await TestBed.configureTestingModule({
@@ -162,7 +162,7 @@ describe('SourceSelectorComponent', () => {
         gdTile.click()
         fixture.detectChanges()
 
-        expect(adapterSpy).toHaveBeenCalledWith('googleDrive')
+        expect(sourceSpy).toHaveBeenCalledWith('googleDrive')
         // non-LOCAL source must NOT open the device file picker (svelte branch parity)
         expect(pickerSpy).not.toHaveBeenCalled()
     })
@@ -170,7 +170,7 @@ describe('SourceSelectorComponent', () => {
     it('clicking the LOCAL tile calls store.openFilePicker() and NOT setActiveSource', async () => {
         store = makeStore()
         const pickerSpy = vi.spyOn(store, 'openFilePicker')
-        const adapterSpy = vi.spyOn(store, 'setActiveSource')
+        const sourceSpy = vi.spyOn(store, 'setActiveSource')
 
         await TestBed.configureTestingModule({
             imports: [SourceSelectorComponent],
@@ -185,9 +185,9 @@ describe('SourceSelectorComponent', () => {
         localTile.click()
         fixture.detectChanges()
 
-        // LOCAL branch opens the device picker, never sets an active adapter (svelte parity)
+        // LOCAL branch opens the device picker, never sets an active source (svelte parity)
         expect(pickerSpy).toHaveBeenCalled()
-        expect(adapterSpy).not.toHaveBeenCalled()
+        expect(sourceSpy).not.toHaveBeenCalled()
     })
 
     it('emits core "source-click" with { sourceId } for a LOCAL click', async () => {
@@ -276,7 +276,7 @@ describe('SourceViewComponent', () => {
         TestBed.resetTestingModule()
     })
 
-    it('renders nothing when no adapter is active', async () => {
+    it('renders nothing when no source is active', async () => {
         store = makeStore()
         await TestBed.configureTestingModule({
             imports: [SourceViewComponent],
@@ -334,7 +334,7 @@ describe('SourceViewComponent', () => {
         expect(gdEl).not.toBeNull()
     })
 
-    it('renders nothing when mini=true even if adapter is active', async () => {
+    it('renders nothing when mini=true even if source is active', async () => {
         const miniStore = new UpupStore()
         miniStore.setConfig({ mini: true, sources: ['url'] } as any)
         miniStore.init()

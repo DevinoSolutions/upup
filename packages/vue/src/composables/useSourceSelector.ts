@@ -25,7 +25,7 @@ export default function useSourceSelector() {
             })),
     )
 
-    function handleAdapterClick(sourceId: FileSource) {
+    function handleSourceClick(sourceId: FileSource) {
         onIntegrationClick(sourceId)
         core?.emit('source-click', { sourceId })
         if (sourceId === FileSource.LOCAL) openFilePicker()
@@ -40,7 +40,7 @@ export default function useSourceSelector() {
 
     return {
         chosenSources,
-        handleAdapterClick,
+        handleSourceClick,
         handleInputFileChange,
     }
 }

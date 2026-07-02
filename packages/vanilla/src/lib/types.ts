@@ -68,13 +68,13 @@ export interface UploaderController<S = unknown> {
   destroy(): void
 }
 
-/** Controllers that own an adapter view also implement activate/deactivate. */
-export interface AdapterController<S = unknown> extends UploaderController<S> {
+/** Controllers that own a source view also implement activate/deactivate. */
+export interface SourceController<S = unknown> extends UploaderController<S> {
   activate(): void
   deactivate(): void
 }
 
-/** Lazily-instantiated controllers, keyed; the render loop destroys inactive ones on adapter switch. */
+/** Lazily-instantiated controllers, keyed; the render loop destroys inactive ones on source switch. */
 export interface ControllerRegistry {
   fileInput: import('../controllers/file-input').FileInputController
   dragDrop: DragDropController
@@ -84,7 +84,7 @@ export interface ControllerRegistry {
   getScreen(): import('../controllers/screen-capture').ScreenCaptureController
   /** drive browser controllers are core DriveBrowserController instances, cached by FileSource. */
   getDrive(source: FileSource): DriveBrowserController
-  /** destroy every cached per-source controller (called on adapter switch + destroy). */
+  /** destroy every cached per-source controller (called on source switch + destroy). */
   destroyActive(): void
   /** destroy everything including fileInput + dragDrop (called on destroy). */
   destroyAll(): void

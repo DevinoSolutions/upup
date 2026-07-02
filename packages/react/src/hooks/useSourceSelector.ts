@@ -27,7 +27,7 @@ export default function useSourceSelector() {
         [sources, translations],
     )
 
-    const handleAdapterClick = useCallback(
+    const handleSourceClick = useCallback(
         (sourceId: FileSource) => {
             onIntegrationClick(sourceId)
             core?.emit('source-click', { sourceId })
@@ -48,7 +48,7 @@ export default function useSourceSelector() {
 
     return {
         chosenSources,
-        handleAdapterClick,
+        handleSourceClick,
         handleInputFileChange,
     }
 }

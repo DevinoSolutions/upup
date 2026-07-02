@@ -26,11 +26,11 @@ import { NgComponentOutlet } from '@angular/common'
 /**
  * SourceView — Angular port of SourceView.svelte.
  *
- * Renders the active adapter's view when store.activeSource() is set and
+ * Renders the active source's view when store.activeSource() is set and
  * store.uiProps.mini is false. Mirrors svelte's shouldRender check:
- *   shouldRender = !!activeComponent && !mini && !!activeSource && !!AdapterIcon
+ *   shouldRender = !!activeComponent && !mini && !!activeSource && !!SourceIcon
  *
- * Active-adapter switch map:
+ * Active-source switch map:
  *   url        → UrlUploaderComponent
  *   camera     → CameraUploaderComponent
  *   microphone → AudioUploaderComponent
@@ -95,7 +95,7 @@ import { NgComponentOutlet } from '@angular/common'
                     </button>
                 </div>
 
-                <!-- Content row: the active adapter component -->
+                <!-- Content row: the active source component -->
                 <div class="upup-overflow-hidden">
                     @switch (store.activeSource()) {
                         @case ('url') {

@@ -20,12 +20,12 @@ const { isDark: dark, slotOverrides: slotClasses } = useUploaderTheme()
 const uploadComponent = computed(
     () => activeSource.value && uploadSourceObject[activeSource.value]?.Component,
 )
-const adapterIcon = computed(
+const sourceIcon = computed(
     () => activeSource.value && uploadSourceObject[activeSource.value]?.Icon,
 )
 
 const shouldRender = computed(
-    () => !!uploadComponent.value && !mini && !!activeSource.value && !!adapterIcon.value,
+    () => !!uploadComponent.value && !mini && !!activeSource.value && !!sourceIcon.value,
 )
 
 function handleCancel() {
@@ -49,7 +49,7 @@ function handleCancel() {
                 slotClasses.sourceViewHeader,
             )"
         >
-            <component :is="adapterIcon!" />
+            <component :is="sourceIcon!" />
             <button
                 :class="cn(
                     'upup-rounded-md upup-p-1 upup-text-blue-600 upup-transition-all upup-duration-300',

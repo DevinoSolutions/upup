@@ -233,9 +233,9 @@ export function createUploaderContext(props: UploaderProps): IUploaderContext {
         getFileInput,
         openFilePicker,
         // Reactive so consumers (SourceView/UploaderPanel/FileList) re-render when the
-        // active adapter changes.
+        // active source changes.
         activeSource: derived(orchState, $s => $s.activeSource),
-        setActiveSource: (adapter: FileSource | undefined) => root.commands.setActiveSource(adapter),
+        setActiveSource: (source: FileSource | undefined) => root.commands.setActiveSource(source),
         isAddingMore: derived(orchState, $s => $s.isAddingMore),
         setIsAddingMore: (v: boolean) => root.commands.setIsAddingMore(v),
         viewMode: derived(orchState, $s => $s.viewMode),

@@ -1,5 +1,5 @@
 import type { FileSource } from '@upup/core'
-import type { AdapterController } from '../lib/types'
+import type { SourceController } from '../lib/types'
 
 export type RecordingState = 'idle' | 'recording' | 'recorded'
 
@@ -16,7 +16,7 @@ export interface AudioSnapshot {
   error: string | null
 }
 
-export class AudioRecorderController implements AdapterController<AudioSnapshot> {
+export class AudioRecorderController implements SourceController<AudioSnapshot> {
   private recordingState: RecordingState = 'idle'
   private duration = 0
   private audioUrl: string | null = null

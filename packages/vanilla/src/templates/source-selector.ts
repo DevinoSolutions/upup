@@ -52,7 +52,7 @@ export function sourceSelector(ctx: UploaderContext) {
     .filter((item) => ctx.props.sources.includes(item.id))
     .map((item) => ({ ...item, name: tr[item.nameKey] }))
 
-  function handleAdapterClick(sourceId: FileSource) {
+  function handleSourceClick(sourceId: FileSource) {
     ctx.props.onIntegrationClick(sourceId)
     ctx.core.emit('source-click', { sourceId })
     if (sourceId === FileSource.LOCAL) ctx.openFilePicker()
@@ -199,7 +199,7 @@ export function sourceSelector(ctx: UploaderContext) {
                 slot.sourceButton,
               )}
               @keydown=${onSourceKeydown}
-              @click=${() => handleAdapterClick(id)}
+              @click=${() => handleSourceClick(id)}
             >
               ${Icon({ class: slot.sourceButtonIcon })}
               <span

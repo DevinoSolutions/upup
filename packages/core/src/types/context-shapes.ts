@@ -58,7 +58,7 @@ export type BaseContextRuntime = {
 
 export type BaseContextSource = {
     activeSource?: FileSource
-    setActiveSource: (adapter: FileSource | undefined) => void
+    setActiveSource: (source: FileSource | undefined) => void
     cloudDrives?: CloudDrivesConfig
 }
 

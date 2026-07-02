@@ -135,9 +135,9 @@ export class UpupCore {
     // here so events like 'google-drive:files-loaded' actually reach core.on()
     // subscribers. Without this, drive plugins fetch successfully but every event is
     // silently dropped — e.g. the drive browser stays stuck on its spinner.
-    const adapter = plugin as Partial<DrivePlugin>
-    if (typeof adapter.init === 'function') {
-      adapter.init(this.emitter as unknown as EventEmitter)
+    const drivePlugin = plugin as Partial<DrivePlugin>
+    if (typeof drivePlugin.init === 'function') {
+      drivePlugin.init(this.emitter as unknown as EventEmitter)
     }
     this.emitter.emit('plugin-registered', { name: plugin.name })
     return this
