@@ -4,7 +4,7 @@ import type {
   UploaderOrchestrator, ThemeStore, Translations, Translator, MaxFileSizeObject,
   ResolvedImageEditorOptions, UpupThemeConfig, UploadSource, LocaleBundle, PartialMessages,
   DriveFile, DriveFolder, DriveBrowserController,
-  DragDropController,
+  DragDropController, CloudDrivesConfig,
 } from '@upup/core'
 
 // Dropzone controller now lives in @upup/core (hoisted in Workstream C-1 Unit 2).
@@ -122,12 +122,7 @@ export interface UploaderContext {
   lang: string
   dir: 'ltr' | 'rtl'
   props: UploaderContextProps
-  cloudDrives: {
-    googleDriveConfigs?: Record<string, string>
-    oneDriveConfigs?: Record<string, string>
-    dropboxConfigs?: Record<string, string>
-    boxConfigs?: Record<string, string>
-  }
+  cloudDrives?: CloudDrivesConfig
   registerFileInput(el: HTMLInputElement | null): void
   getFileInput(): HTMLInputElement | null
   openFilePicker(): void

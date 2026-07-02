@@ -35,7 +35,7 @@ export function useGoogleDrive() {
 
     // GIS config (client id / api key) + GIS script loading are sourced inside the
     // controller (plugin.getConfig() + core loadGoogleIdentityServices), so the hook
-    // no longer reads googleDriveConfigs from context or uses useLoadGAPI.
+    // no longer reads the drive config from context or uses useLoadGAPI.
     const controllerRef = useRef<DriveBrowserController | null>(null)
     if (!controllerRef.current && core) {
         controllerRef.current = new DriveBrowserController(core, GOOGLE_DRIVE_DESCRIPTOR, {

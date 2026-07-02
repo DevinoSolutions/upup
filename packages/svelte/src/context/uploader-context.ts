@@ -136,10 +136,7 @@ export function provideUploaderContext(value: IUploaderContext): void {
     setContext(SourceKey, {
         activeSource: value.activeSource,
         setActiveSource: value.setActiveSource,
-        oneDriveConfigs: value.oneDriveConfigs,
-        googleDriveConfigs: value.googleDriveConfigs,
-        dropboxConfigs: value.dropboxConfigs,
-        boxConfigs: value.boxConfigs,
+        cloudDrives: value.cloudDrives,
     })
     setContext(I18nKey, {
         translations: value.translations,

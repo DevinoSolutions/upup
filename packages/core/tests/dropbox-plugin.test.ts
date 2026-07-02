@@ -98,7 +98,7 @@ describe('DropboxPlugin', () => {
         emitter = new EventEmitter()
         events = captureEvents(emitter)
 
-        plugin.configure({ dropbox_client_id: 'test-client-id' })
+        plugin.configure({ clientId: 'test-client-id' })
         plugin.init(emitter)
     })
 
@@ -121,19 +121,19 @@ describe('DropboxPlugin', () => {
         it('configure() stores config and returns this', () => {
             const fresh = new DropboxPlugin()
             const result = fresh.configure({
-                dropbox_client_id: 'abc',
-                dropbox_redirect_uri: 'https://example.com/cb',
+                clientId: 'abc',
+                redirectUri: 'https://example.com/cb',
             })
             expect(result).toBe(fresh)
             expect(fresh.getConfig()).toEqual({
-                dropbox_client_id: 'abc',
-                dropbox_redirect_uri: 'https://example.com/cb',
+                clientId: 'abc',
+                redirectUri: 'https://example.com/cb',
             })
         })
 
         it('getConfig() returns the current config', () => {
             expect(plugin.getConfig()).toEqual({
-                dropbox_client_id: 'test-client-id',
+                clientId: 'test-client-id',
             })
         })
 
@@ -214,8 +214,8 @@ describe('DropboxPlugin', () => {
 
         it('uses configured redirect_uri when provided', async () => {
             plugin.configure({
-                dropbox_client_id: 'test-client-id',
-                dropbox_redirect_uri: 'https://custom.com/callback',
+                clientId: 'test-client-id',
+                redirectUri: 'https://custom.com/callback',
             })
 
             const url = await plugin.getAuthUrl()
@@ -233,8 +233,8 @@ describe('DropboxPlugin', () => {
             )
         })
 
-        it('throws if dropbox_client_id is not configured', async () => {
-            plugin.configure({})
+        it('throws if clientId is not configured', async () => {
+            plugin.configure({ clientId: '' })
             await expect(plugin.getAuthUrl()).rejects.toThrow(
                 'Dropbox client_id is not configured',
             )
@@ -338,7 +338,7 @@ describe('DropboxPlugin', () => {
         })
 
         it('throws if client_id not configured', async () => {
-            plugin.configure({})
+            plugin.configure({ clientId: '' })
             await expect(plugin.authenticate('code')).rejects.toThrow(
                 'Dropbox client_id is not configured',
             )
@@ -468,7 +468,7 @@ describe('DropboxPlugin', () => {
         })
 
         it('returns null if no client_id', async () => {
-            plugin.configure({})
+            plugin.configure({ clientId: '' })
             const result = await plugin.refreshAccessToken()
             expect(result).toBeNull()
         })
@@ -777,7 +777,7 @@ describe('DropboxPlugin', () => {
 
         it('throws when not authenticated', async () => {
             const fresh = new DropboxPlugin()
-            fresh.configure({ dropbox_client_id: 'id' })
+            fresh.configure({ clientId: 'id' })
             fresh.init(emitter)
 
             await expect(fresh.loadFiles('')).rejects.toThrow(

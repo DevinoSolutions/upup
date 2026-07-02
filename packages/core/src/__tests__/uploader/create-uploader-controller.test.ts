@@ -32,6 +32,30 @@ describe('createUploaderController', () => {
     root.dispose()
   })
 
+  it('config-surface: all four drives register with the camelCase config verbatim', () => {
+    const cloudDrives = {
+      googleDrive: { clientId: 'g', apiKey: 'k', appId: 'a' },
+      oneDrive: { clientId: 'o', redirectUri: 'https://app.example/od' },
+      dropbox: { clientId: 'd' },
+      box: { clientId: 'b', redirectUri: 'https://app.example/box' },
+    }
+    const { root, core } = build({ cloudDrives })
+    const useSpy = vi.spyOn(core, 'use')
+    root.init()
+    expect(useSpy).toHaveBeenCalledTimes(4)
+    const byId = new Map(
+      useSpy.mock.calls.map(([p]) => {
+        const plugin = p as unknown as { id: string; getConfig(): unknown }
+        return [plugin.id, plugin] as const
+      }),
+    )
+    expect(byId.get('google-drive')?.getConfig()).toEqual(cloudDrives.googleDrive)
+    expect(byId.get('one-drive')?.getConfig()).toEqual(cloudDrives.oneDrive)
+    expect(byId.get('dropbox')?.getConfig()).toEqual(cloudDrives.dropbox)
+    expect(byId.get('box')?.getConfig()).toEqual(cloudDrives.box)
+    root.dispose()
+  })
+
   it('init->dispose->init->dispose with cloud plugins is re-entrant (no throw)', () => {
     const { root } = build({ cloudDrives: { googleDrive: { clientId: 'g', apiKey: 'k', appId: 'a' } } })
     expect(() => { root.init(); root.dispose(); root.init(); root.dispose() }).not.toThrow()

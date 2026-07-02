@@ -38,24 +38,6 @@ export function normalizeUploaderOptions(options: UploaderControllerOptions): No
     return { enabled: false, autoOpen: 'never', display: 'inline' }
   })()
 
-  // -- core cloud-drive mapping (orchestrator shape) --
-  const cd = options.cloudDrives
-  const coreCloudDrives = cd
-    ? {
-        googleDrive: cd.googleDrive,
-        oneDrive: cd.oneDrive ? { clientId: cd.oneDrive.clientId, authority: cd.oneDrive.redirectUri } : undefined,
-        dropbox: cd.dropbox ? { appKey: cd.dropbox.clientId } : undefined,
-      }
-    : undefined
-
-  // -- framework-facing cloud-config maps (canonical: redirectUri ?? '') --
-  const googleDriveConfigs = cd?.googleDrive
-    ? { google_client_id: cd.googleDrive.clientId, google_api_key: cd.googleDrive.apiKey, google_app_id: cd.googleDrive.appId }
-    : undefined
-  const oneDriveConfigs = cd?.oneDrive ? { onedrive_client_id: cd.oneDrive.clientId, redirectUri: cd.oneDrive.redirectUri ?? '' } : undefined
-  const dropboxConfigs = cd?.dropbox ? { dropbox_client_id: cd.dropbox.clientId, dropbox_redirect_uri: cd.dropbox.redirectUri ?? '' } : undefined
-  const boxConfigs = cd?.box ? { box_client_id: cd.box.clientId, box_redirect_uri: cd.box.redirectUri ?? '' } : undefined
-
   // -- i18n --
   const i18n = options.i18n
   const localeCandidate = i18n?.locale as unknown
@@ -79,7 +61,7 @@ export function normalizeUploaderOptions(options: UploaderControllerOptions): No
     mode: resolvedMode, serverUrl: options.serverUrl,
     folderUploadAllowDrop, folderPickerButtonVisible, imageEditor, resumable: options.resumable,
     translator, translations, lang, dir,
-    googleDriveConfigs, oneDriveConfigs, dropboxConfigs, boxConfigs,
+    cloudDrives: options.cloudDrives,
   }
 
   const coreOptions: CoreOptions = {
@@ -106,7 +88,7 @@ export function normalizeUploaderOptions(options: UploaderControllerOptions): No
     metadata: options.metadata,
     cors: options.cors,
     resumable: options.resumable,
-    cloudDrives: coreCloudDrives,
+    cloudDrives: options.cloudDrives,
   } as CoreOptions
 
   return { coreOptions, resolved }

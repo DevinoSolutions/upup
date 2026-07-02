@@ -164,12 +164,7 @@ export function buildUploaderContext(
     lang: resolved.lang,
     dir: resolved.dir,
     props,
-    cloudDrives: {
-      googleDriveConfigs: resolved.googleDriveConfigs,
-      oneDriveConfigs: resolved.oneDriveConfigs,
-      dropboxConfigs: resolved.dropboxConfigs,
-      boxConfigs: resolved.boxConfigs,
-    },
+    cloudDrives: resolved.cloudDrives,
     registerFileInput: root.registerFileInput,
     getFileInput: root.getFileInput,
     openFilePicker: root.openFilePicker,

@@ -75,39 +75,18 @@ describe('UpupCore constructor — restrictions merging', () => {
 })
 
 // ─────────────────────────────────────────────
-// cloudDrives merging
+// cloudDrives storage
 // ─────────────────────────────────────────────
-describe('UpupCore constructor — cloudDrives merging', () => {
-    it('maps cloudDrives.googleDrive to options.googleDriveConfigs', () => {
-        const core = new UpupCore({
-            cloudDrives: { googleDrive: { clientId: 'gd-id', apiKey: 'gd-key', appId: 'gd-app' } },
-        })
-        expect(core.options.googleDriveConfigs).toEqual({ clientId: 'gd-id', apiKey: 'gd-key', appId: 'gd-app' })
-        core.destroy()
-    })
-
-    it('maps cloudDrives.oneDrive to options.oneDriveConfigs', () => {
-        const core = new UpupCore({
-            cloudDrives: { oneDrive: { clientId: 'od-id' } },
-        })
-        expect(core.options.oneDriveConfigs).toEqual({ clientId: 'od-id' })
-        core.destroy()
-    })
-
-    it('maps cloudDrives.dropbox to options.dropboxConfigs', () => {
-        const core = new UpupCore({
-            cloudDrives: { dropbox: { appKey: 'db-key' } },
-        })
-        expect(core.options.dropboxConfigs).toEqual({ appKey: 'db-key' })
-        core.destroy()
-    })
-
-    it('flat configs take precedence over cloudDrives', () => {
-        const core = new UpupCore({
-            cloudDrives: { dropbox: { appKey: 'nested-key' } },
-            dropboxConfigs: { appKey: 'flat-key' } as any,
-        })
-        expect((core.options.dropboxConfigs as any).appKey).toBe('flat-key')
+describe('UpupCore constructor — cloudDrives', () => {
+    it('stores the camelCase cloudDrives config as-is (all four drives)', () => {
+        const cloudDrives = {
+            googleDrive: { clientId: 'gd-id', apiKey: 'gd-key', appId: 'gd-app' },
+            oneDrive: { clientId: 'od-id', redirectUri: 'https://app.example/od' },
+            dropbox: { clientId: 'db-id' },
+            box: { clientId: 'bx-id', redirectUri: 'https://app.example/box' },
+        }
+        const core = new UpupCore({ cloudDrives })
+        expect(core.options.cloudDrives).toEqual(cloudDrives)
         core.destroy()
     })
 })

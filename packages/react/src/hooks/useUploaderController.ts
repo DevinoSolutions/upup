@@ -439,9 +439,6 @@ export default function useUploaderController(props: UploaderProps): IUploaderCo
         icons.LoaderIcon,
     ])
 
-    // ── Cloud drive configs (from resolved — unchanged shape) ────
-    const { oneDriveConfigs, googleDriveConfigs, dropboxConfigs, boxConfigs } = resolved
-
     const resolvedStyle = style ?? EMPTY_STYLE
 
     // ── Assemble IUploaderContext ────────────────────────────────────
@@ -487,10 +484,7 @@ export default function useUploaderController(props: UploaderProps): IUploaderCo
         closeImageEditor,
         saveImageEdit,
         replaceFile,
-        oneDriveConfigs,
-        googleDriveConfigs,
-        dropboxConfigs,
-        boxConfigs,
+        cloudDrives: resolved.cloudDrives,
         upload: {
             totalProgress: state.totalProgress,
             filesProgressMap: state.filesProgressMap,

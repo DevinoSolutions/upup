@@ -98,7 +98,7 @@ describe('OneDrivePlugin', () => {
         emitter = new EventEmitter()
         events = captureEvents(emitter)
 
-        plugin.configure({ onedrive_client_id: 'test-client-id' })
+        plugin.configure({ clientId: 'test-client-id' })
         plugin.init(emitter)
     })
 
@@ -121,19 +121,19 @@ describe('OneDrivePlugin', () => {
         it('configure() stores config and returns this', () => {
             const fresh = new OneDrivePlugin()
             const result = fresh.configure({
-                onedrive_client_id: 'abc',
+                clientId: 'abc',
                 redirectUri: 'https://example.com/cb',
             })
             expect(result).toBe(fresh)
             expect(fresh.getConfig()).toEqual({
-                onedrive_client_id: 'abc',
+                clientId: 'abc',
                 redirectUri: 'https://example.com/cb',
             })
         })
 
         it('getConfig() returns the current config', () => {
             expect(plugin.getConfig()).toEqual({
-                onedrive_client_id: 'test-client-id',
+                clientId: 'test-client-id',
             })
         })
 
@@ -204,7 +204,7 @@ describe('OneDrivePlugin', () => {
 
         it('uses configured redirectUri when provided', async () => {
             plugin.configure({
-                onedrive_client_id: 'test-client-id',
+                clientId: 'test-client-id',
                 redirectUri: 'https://custom.com/callback',
             })
 
@@ -223,8 +223,8 @@ describe('OneDrivePlugin', () => {
             )
         })
 
-        it('throws if onedrive_client_id is not configured', async () => {
-            plugin.configure({ onedrive_client_id: '' })
+        it('throws if clientId is not configured', async () => {
+            plugin.configure({ clientId: '' })
             await expect(plugin.getAuthUrl()).rejects.toThrow(
                 'OneDrive client_id is not configured',
             )
@@ -327,7 +327,7 @@ describe('OneDrivePlugin', () => {
         })
 
         it('throws if client_id not configured', async () => {
-            plugin.configure({ onedrive_client_id: '' })
+            plugin.configure({ clientId: '' })
             await expect(plugin.authenticate('code')).rejects.toThrow(
                 'OneDrive client_id is not configured',
             )
@@ -490,7 +490,7 @@ describe('OneDrivePlugin', () => {
         })
 
         it('returns null if no client_id', async () => {
-            plugin.configure({ onedrive_client_id: '' })
+            plugin.configure({ clientId: '' })
             const result = await plugin.refreshAccessToken()
             expect(result).toBeNull()
         })
@@ -795,7 +795,7 @@ describe('OneDrivePlugin', () => {
 
         it('throws when not authenticated', async () => {
             const fresh = new OneDrivePlugin()
-            fresh.configure({ onedrive_client_id: 'id' })
+            fresh.configure({ clientId: 'id' })
             fresh.init(emitter)
 
             await expect(fresh.loadFiles()).rejects.toThrow(

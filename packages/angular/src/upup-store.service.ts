@@ -8,6 +8,7 @@ import {
     createUploaderController,
     type UploaderControllerOptions,
     type UploaderController,
+    type CloudDrivesConfig,
     type UploadFile,
     type UiTranslations,
     type Translator,
@@ -52,11 +53,8 @@ export class UpupStore {
     lang!: string
     dir!: string
 
-    // ── Cloud drive configs (set during init()) ──────────────────
-    oneDriveConfigs?: { onedrive_client_id: string; redirectUri?: string }
-    googleDriveConfigs?: { google_client_id: string; google_api_key: string; google_app_id: string }
-    dropboxConfigs?: { dropbox_client_id: string; dropbox_redirect_uri?: string }
-    boxConfigs?: { box_client_id: string; box_redirect_uri?: string }
+    // ── Cloud drive config (set during init()) ───────────────────
+    cloudDrives?: CloudDrivesConfig
 
     // ── Resolved UI options aggregate (set during init()) ────────
     uiProps!: {
@@ -292,11 +290,8 @@ export class UpupStore {
         // ── Factory lifecycle (orchestrator.init + theme.init + plugins + status) ──
         this.root.init()
 
-        // ── Cloud drive configs (from factory's resolved, not re-computed inline) ──
-        this.oneDriveConfigs = resolved.oneDriveConfigs
-        this.googleDriveConfigs = resolved.googleDriveConfigs
-        this.dropboxConfigs = resolved.dropboxConfigs
-        this.boxConfigs = resolved.boxConfigs
+        // ── Cloud drive config (from factory's resolved, not re-computed inline) ──
+        this.cloudDrives = resolved.cloudDrives
 
         // ── i18n (from factory's resolved) ──────────────────────
         this.translator = resolved.translator

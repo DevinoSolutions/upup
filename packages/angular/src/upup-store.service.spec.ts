@@ -7,7 +7,7 @@
  *   2. Multi-instance isolation: two stores have independent cores and independent state.
  *   3. Idempotent teardown: double-dispose is safe; dispose+re-init does not throw.
  *   4. i18n wired: translations signal is populated, lang/dir default correctly.
- *   5. Drive plugin registration: googleDriveConfigs populated + core.use called.
+ *   5. Drive plugin registration: cloudDrives populated + core.use called.
  *   6. Status-change: onStatusChange called on status transition; unsub on dispose.
  *   7. Cleanups: cleanups array populated with drives/sse/status; safe after dispose.
  */
@@ -277,7 +277,7 @@ describe('UpupStore', () => {
     // ── Promise 5: Drive plugin registration ─────────────────────
 
     describe('cloud drive plugin registration', () => {
-        it('with googleDrive config → googleDriveConfigs is populated + core.use called', () => {
+        it('with googleDrive config → store.cloudDrives populated + core.use called', () => {
             const store = new UpupStore()
             store.setConfig({
                 cloudDrives: {
@@ -287,25 +287,22 @@ describe('UpupStore', () => {
             store.init()
 
             const useSpy = vi.spyOn(store.core, 'use')
-            // Re-init won't call again (idempotent guard) — check the configs instead
-            expect(store.googleDriveConfigs).toBeDefined()
-            expect(store.googleDriveConfigs!.google_client_id).toBe('gcid')
-            expect(store.googleDriveConfigs!.google_api_key).toBe('gapikey')
-            expect(store.googleDriveConfigs!.google_app_id).toBe('gappid')
+            // Re-init won't call again (idempotent guard) — check the config instead
+            expect(store.cloudDrives?.googleDrive).toBeDefined()
+            expect(store.cloudDrives!.googleDrive!.clientId).toBe('gcid')
+            expect(store.cloudDrives!.googleDrive!.apiKey).toBe('gapikey')
+            expect(store.cloudDrives!.googleDrive!.appId).toBe('gappid')
             useSpy.mockRestore()
             store.dispose()
         })
 
-        it('with no cloudDrives → all drive configs are undefined', () => {
+        it('with no cloudDrives → store.cloudDrives is undefined', () => {
             const store = makeStore({} as any)
-            expect(store.googleDriveConfigs).toBeUndefined()
-            expect(store.oneDriveConfigs).toBeUndefined()
-            expect(store.dropboxConfigs).toBeUndefined()
-            expect(store.boxConfigs).toBeUndefined()
+            expect(store.cloudDrives).toBeUndefined()
             store.dispose()
         })
 
-        it('with dropbox config → dropboxConfigs populated', () => {
+        it('with dropbox config → cloudDrives.dropbox populated', () => {
             const store = new UpupStore()
             store.setConfig({
                 cloudDrives: {
@@ -313,9 +310,9 @@ describe('UpupStore', () => {
                 },
             } as any)
             store.init()
-            expect(store.dropboxConfigs).toBeDefined()
-            expect(store.dropboxConfigs!.dropbox_client_id).toBe('dbcid')
-            expect(store.dropboxConfigs!.dropbox_redirect_uri).toBe('https://example.com/cb')
+            expect(store.cloudDrives?.dropbox).toBeDefined()
+            expect(store.cloudDrives!.dropbox!.clientId).toBe('dbcid')
+            expect(store.cloudDrives!.dropbox!.redirectUri).toBe('https://example.com/cb')
             store.dispose()
         })
 

@@ -9,30 +9,30 @@ import { OneDrivePlugin } from '../src/drives/one-drive-plugin'
 describe('adapter plugin stubs', () => {
     it('DropboxPlugin initializes with config', () => {
         const plugin = new DropboxPlugin()
-        plugin.configure({ dropbox_client_id: 'test-id' })
+        plugin.configure({ clientId: 'test-id' })
         expect(plugin.id).toBe('dropbox')
-        expect(plugin.getConfig().dropbox_client_id).toBe('test-id')
+        expect(plugin.getConfig().clientId).toBe('test-id')
     })
 
     it('GoogleDrivePlugin initializes with config', () => {
         const plugin = new GoogleDrivePlugin()
-        plugin.configure({ google_api_key: 'k', google_app_id: 'a', google_client_id: 'c' })
+        plugin.configure({ apiKey: 'k', appId: 'a', clientId: 'c' })
         expect(plugin.id).toBe('google-drive')
-        expect(plugin.getConfig().google_client_id).toBe('c')
+        expect(plugin.getConfig().clientId).toBe('c')
     })
 
     it('BoxPlugin initializes with config', () => {
         const plugin = new BoxPlugin()
-        plugin.configure({ box_client_id: 'test' })
+        plugin.configure({ clientId: 'test' })
         expect(plugin.id).toBe('box')
-        expect(plugin.getConfig().box_client_id).toBe('test')
+        expect(plugin.getConfig().clientId).toBe('test')
     })
 
     it('OneDrivePlugin initializes with config', () => {
         const plugin = new OneDrivePlugin()
-        plugin.configure({ onedrive_client_id: 'test' })
+        plugin.configure({ clientId: 'test' })
         expect(plugin.id).toBe('one-drive')
-        expect(plugin.getConfig().onedrive_client_id).toBe('test')
+        expect(plugin.getConfig().clientId).toBe('test')
     })
 
     it('plugins accept emitter via init and release via destroy', () => {
@@ -52,7 +52,7 @@ describe('adapter plugin stubs', () => {
     it('core.use() wires an adapter plugin emitter so its events reach core.on()', () => {
         const core = new UpupCore({})
         const plugin = new GoogleDrivePlugin()
-        plugin.configure({ google_api_key: 'k', google_app_id: 'a', google_client_id: 'c' })
+        plugin.configure({ apiKey: 'k', appId: 'a', clientId: 'c' })
         core.use(plugin)
 
         let signedOut = false

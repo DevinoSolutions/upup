@@ -25,12 +25,7 @@ import type {
 import type { InternalFlatClassNames, DeepPartialSlots } from '../theme/slots'
 import type { UpupCore } from '../core'
 import type { UploaderOrchestrator } from '../orchestrator/uploader-orchestrator'
-import type {
-    BoxConfigs,
-    DropboxConfigs,
-    GoogleDriveConfigs,
-    OneDriveConfigs,
-} from '../drives/configs'
+import type { CloudDrivesConfig } from '../drives/configs'
 
 // ─── Upload ───────────────────────────────────────────────────
 
@@ -64,10 +59,7 @@ export type BaseContextRuntime = {
 export type BaseContextSource = {
     activeSource?: FileSource
     setActiveSource: (adapter: FileSource | undefined) => void
-    oneDriveConfigs?: OneDriveConfigs
-    googleDriveConfigs?: GoogleDriveConfigs
-    dropboxConfigs?: DropboxConfigs
-    boxConfigs?: BoxConfigs
+    cloudDrives?: CloudDrivesConfig
 }
 
 // ─── I18n ─────────────────────────────────────────────────────

@@ -44,7 +44,7 @@ interface FilesLoadedPayload {
     folderId?: string
     path?: string
 }
-type GoogleDriveConfigLike = { google_client_id?: string; google_api_key?: string }
+type GoogleDriveConfigLike = { clientId?: string; apiKey?: string }
 
 const GIS_SCOPE =
     'https://www.googleapis.com/auth/drive.readonly https://www.googleapis.com/auth/userinfo.profile'
@@ -247,7 +247,7 @@ export class DriveBrowserController {
 
     private async initGis(plugin: DrivePlugin): Promise<void> {
         const cfg = (plugin.getConfig?.() ?? {}) as GoogleDriveConfigLike
-        if (!cfg.google_client_id || !cfg.google_api_key) {
+        if (!cfg.clientId || !cfg.apiKey) {
             this.setState({ isAuthReady: true })
             return
         }
@@ -268,7 +268,7 @@ export class DriveBrowserController {
             return
         }
         this.tokenClient = google.accounts.oauth2.initTokenClient({
-            client_id: cfg.google_client_id,
+            client_id: cfg.clientId,
             scope: GIS_SCOPE,
             ux_mode: 'popup',
             callback: (tokenResponse: GisTokenResponse) => {

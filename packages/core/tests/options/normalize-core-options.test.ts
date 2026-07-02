@@ -35,22 +35,17 @@ describe('mergeConstructOptions (value-guard, flat wins)', () => {
     expect(target.allowedFileTypes).toBe('image/png,image/jpeg')
   })
 
-  it('cloudDrives: flat config wins; fills only when flat is absent', () => {
+  it('leaves cloudDrives untouched (stored as-is, no flat mirroring)', () => {
     const options: CoreOptions = {
-      googleDriveConfigs: { clientId: 'flat' } as unknown as Record<string, unknown>,
-      cloudDrives: {
-        googleDrive: { clientId: 'nested', apiKey: 'k', appId: 'a' },
-        dropbox: { appKey: 'dbx' },
-      },
+      cloudDrives: { googleDrive: { clientId: 'g', apiKey: 'k', appId: 'a' } },
     }
     const target = { ...options }
     mergeConstructOptions(target, options)
-    expect(target.googleDriveConfigs).toEqual({ clientId: 'flat' })
-    expect(target.dropboxConfigs).toEqual({ appKey: 'dbx' })
+    expect(target.cloudDrives).toBe(options.cloudDrives)
   })
 })
 
-describe('mergeUpdateOptions (key-guard, partial overwrites cloud)', () => {
+describe('mergeUpdateOptions (key-guard)', () => {
   it('fills flat key when key is ABSENT from the partial', () => {
     const partial: Partial<CoreOptions> = { restrictions: { maxFileSize: { size: 9, unit: 'MB' } } }
     const target: CoreOptions = {}
@@ -70,15 +65,6 @@ describe('mergeUpdateOptions (key-guard, partial overwrites cloud)', () => {
     expect(target.maxFileSize).toEqual({ size: 2, unit: 'MB' })
   })
 
-  it('cloudDrives overwrite is UNCONDITIONAL (partial wins, unlike construct)', () => {
-    const partial: Partial<CoreOptions> = {
-      cloudDrives: { googleDrive: { clientId: 'new', apiKey: 'k', appId: 'a' } },
-    }
-    const target: CoreOptions = { googleDriveConfigs: { clientId: 'old' } as unknown as Record<string, unknown> }
-    Object.assign(target, partial)
-    mergeUpdateOptions(target, partial)
-    expect(target.googleDriveConfigs).toEqual({ clientId: 'new', apiKey: 'k', appId: 'a' })
-  })
 })
 
 describe('characterization via UpupCore (behavior preserved through public API)', () => {
@@ -89,10 +75,12 @@ describe('characterization via UpupCore (behavior preserved through public API)'
     core.destroy()
   })
 
-  it('updateOptions overwrites cloudDrives unconditionally', () => {
-    const core = new UpupCore({ googleDriveConfigs: { clientId: 'old' } as unknown as Record<string, unknown> })
+  it('updateOptions replaces cloudDrives wholesale (plain assign)', () => {
+    const core = new UpupCore({
+      cloudDrives: { googleDrive: { clientId: 'old', apiKey: 'k', appId: 'a' } },
+    })
     core.updateOptions({ cloudDrives: { googleDrive: { clientId: 'new', apiKey: 'k', appId: 'a' } } })
-    expect(core.options.googleDriveConfigs).toEqual({ clientId: 'new', apiKey: 'k', appId: 'a' })
+    expect(core.options.cloudDrives?.googleDrive?.clientId).toBe('new')
     core.destroy()
   })
 })

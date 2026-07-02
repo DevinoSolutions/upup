@@ -4,6 +4,7 @@ import type { ResumableUploadOptions } from '../types/upload-protocols'
 import type { UpupPlugin } from '../plugin'
 import type { LocaleBundle, UpupLocaleCode } from '../i18n/types'
 import type { PersistentStorage } from '../crash-recovery'
+import type { CloudDrivesConfig } from '../drives/configs'
 
 export interface Restrictions {
   maxFileSize?: import('../contracts').MaxFileSizeObject
@@ -14,26 +15,7 @@ export interface Restrictions {
   allowedFileTypes?: string[]
 }
 
-export interface GoogleDriveConfig {
-  clientId: string
-  apiKey: string
-  appId: string
-}
-
-export interface OneDriveConfig {
-  clientId: string
-  authority?: string
-}
-
-export interface DropboxConfig {
-  appKey: string
-}
-
-export interface CloudDrivesConfig {
-  googleDrive?: GoogleDriveConfig
-  oneDrive?: OneDriveConfig
-  dropbox?: DropboxConfig
-}
+export type { CloudDrivesConfig, GoogleDriveConfig, OneDriveConfig, DropboxConfig, BoxConfig } from '../drives/configs'
 
 export interface UpupCorsConfig {
   dangerouslyAutoConfigure?: boolean
@@ -73,10 +55,6 @@ export interface CoreOptions extends FileManagerOptions {
   isSuccessfulCall?: (response: { status: number; headers: Record<string, string>; body: unknown }) => boolean | Promise<boolean>
   crashRecovery?: boolean | CrashRecoveryOptions
   onError?: (error: string | Error) => void
-  googleDriveConfigs?: Record<string, unknown>
-  oneDriveConfigs?: Record<string, unknown>
-  dropboxConfigs?: Record<string, unknown>
-  boxConfigs?: Record<string, unknown>
   metadata?: Record<string, unknown>
   cors?: UpupCorsConfig
   /**

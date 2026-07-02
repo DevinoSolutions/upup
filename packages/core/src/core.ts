@@ -26,6 +26,7 @@ export type {
   GoogleDriveConfig,
   OneDriveConfig,
   DropboxConfig,
+  BoxConfig,
   CloudDrivesConfig,
   UpupCorsConfig,
   CrashRecoveryOptions,

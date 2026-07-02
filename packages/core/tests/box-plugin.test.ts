@@ -98,7 +98,7 @@ describe('BoxPlugin', () => {
         emitter = new EventEmitter()
         events = captureEvents(emitter)
 
-        plugin.configure({ box_client_id: 'test-client-id' })
+        plugin.configure({ clientId: 'test-client-id' })
         plugin.init(emitter)
     })
 
@@ -121,19 +121,19 @@ describe('BoxPlugin', () => {
         it('configure() stores config and returns this', () => {
             const fresh = new BoxPlugin()
             const result = fresh.configure({
-                box_client_id: 'abc',
-                box_redirect_uri: 'https://example.com/cb',
+                clientId: 'abc',
+                redirectUri: 'https://example.com/cb',
             })
             expect(result).toBe(fresh)
             expect(fresh.getConfig()).toEqual({
-                box_client_id: 'abc',
-                box_redirect_uri: 'https://example.com/cb',
+                clientId: 'abc',
+                redirectUri: 'https://example.com/cb',
             })
         })
 
         it('getConfig() returns the current config', () => {
             expect(plugin.getConfig()).toEqual({
-                box_client_id: 'test-client-id',
+                clientId: 'test-client-id',
             })
         })
 
@@ -198,8 +198,8 @@ describe('BoxPlugin', () => {
 
         it('uses configured redirect_uri when provided', async () => {
             plugin.configure({
-                box_client_id: 'test-client-id',
-                box_redirect_uri: 'https://custom.com/callback',
+                clientId: 'test-client-id',
+                redirectUri: 'https://custom.com/callback',
             })
 
             const url = await plugin.getAuthUrl()
@@ -217,8 +217,8 @@ describe('BoxPlugin', () => {
             )
         })
 
-        it('throws if box_client_id is not configured', async () => {
-            plugin.configure({})
+        it('throws if clientId is not configured', async () => {
+            plugin.configure({ clientId: '' })
             await expect(plugin.getAuthUrl()).rejects.toThrow(
                 'Box client_id is not configured',
             )
@@ -319,7 +319,7 @@ describe('BoxPlugin', () => {
         })
 
         it('throws if client_id not configured', async () => {
-            plugin.configure({})
+            plugin.configure({ clientId: '' })
             await expect(plugin.authenticate('code')).rejects.toThrow(
                 'Box client_id is not configured',
             )
@@ -445,7 +445,7 @@ describe('BoxPlugin', () => {
         })
 
         it('returns null if no client_id', async () => {
-            plugin.configure({})
+            plugin.configure({ clientId: '' })
             const result = await plugin.refreshAccessToken()
             expect(result).toBeNull()
         })
@@ -729,7 +729,7 @@ describe('BoxPlugin', () => {
 
         it('throws when not authenticated', async () => {
             const fresh = new BoxPlugin()
-            fresh.configure({ box_client_id: 'id' })
+            fresh.configure({ clientId: 'id' })
             fresh.init(emitter)
 
             await expect(fresh.loadFiles('0')).rejects.toThrow(

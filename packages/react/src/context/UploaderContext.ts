@@ -143,16 +143,10 @@ export function UploaderContextProvider({
     const source = useMemo<ContextSource>(() => ({
         activeSource: value.activeSource,
         setActiveSource: value.setActiveSource,
-        oneDriveConfigs: value.oneDriveConfigs,
-        googleDriveConfigs: value.googleDriveConfigs,
-        dropboxConfigs: value.dropboxConfigs,
-        boxConfigs: value.boxConfigs,
+        cloudDrives: value.cloudDrives,
     }), [
         value.activeSource,
-        value.boxConfigs,
-        value.dropboxConfigs,
-        value.googleDriveConfigs,
-        value.oneDriveConfigs,
+        value.cloudDrives,
         value.setActiveSource,
     ])
 

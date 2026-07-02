@@ -87,9 +87,9 @@ describe('GoogleDrivePlugin', () => {
         events = captureEvents(emitter)
 
         plugin.configure({
-            google_api_key: 'test-api-key',
-            google_app_id: 'test-app-id',
-            google_client_id: 'test-client-id',
+            apiKey: 'test-api-key',
+            appId: 'test-app-id',
+            clientId: 'test-client-id',
         })
         plugin.init(emitter)
     })
@@ -113,23 +113,23 @@ describe('GoogleDrivePlugin', () => {
         it('configure() stores config and returns this', () => {
             const fresh = new GoogleDrivePlugin()
             const result = fresh.configure({
-                google_api_key: 'key',
-                google_app_id: 'app',
-                google_client_id: 'client',
+                apiKey: 'key',
+                appId: 'app',
+                clientId: 'client',
             })
             expect(result).toBe(fresh)
             expect(fresh.getConfig()).toEqual({
-                google_api_key: 'key',
-                google_app_id: 'app',
-                google_client_id: 'client',
+                apiKey: 'key',
+                appId: 'app',
+                clientId: 'client',
             })
         })
 
         it('getConfig() returns the current config', () => {
             expect(plugin.getConfig()).toEqual({
-                google_api_key: 'test-api-key',
-                google_app_id: 'test-app-id',
-                google_client_id: 'test-client-id',
+                apiKey: 'test-api-key',
+                appId: 'test-app-id',
+                clientId: 'test-client-id',
             })
         })
 
@@ -615,9 +615,9 @@ describe('GoogleDrivePlugin', () => {
         it('throws when not authenticated', async () => {
             const fresh = new GoogleDrivePlugin()
             fresh.configure({
-                google_api_key: 'key',
-                google_app_id: 'app',
-                google_client_id: 'client',
+                apiKey: 'key',
+                appId: 'app',
+                clientId: 'client',
             })
             fresh.init(emitter)
 

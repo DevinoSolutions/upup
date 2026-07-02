@@ -52,33 +52,22 @@ describe('normalizeUploaderOptions', () => {
     expect(r.sources).toContain(FileSource.LOCAL)
   })
 
-  it('cloud-config maps built from options.cloudDrives with redirectUri ?? ""', () => {
-    const { resolved, coreOptions } = normalizeUploaderOptions({
-      cloudDrives: {
-        googleDrive: { clientId: 'g', apiKey: 'k', appId: 'a' },
-        oneDrive: { clientId: 'o' }, // redirectUri omitted -> ''
-        dropbox: { clientId: 'd', redirectUri: 'r' },
-        box: { clientId: 'b', redirectUri: 'rb' },
-      },
-    })
-    expect(resolved.googleDriveConfigs).toEqual({ google_client_id: 'g', google_api_key: 'k', google_app_id: 'a' })
-    expect(resolved.oneDriveConfigs).toEqual({ onedrive_client_id: 'o', redirectUri: '' })
-    expect(resolved.dropboxConfigs).toEqual({ dropbox_client_id: 'd', dropbox_redirect_uri: 'r' })
-    expect(resolved.boxConfigs).toEqual({ box_client_id: 'b', box_redirect_uri: 'rb' })
-    // core gets the orchestrator-shaped cloud config (oneDrive.authority = redirectUri)
-    expect(coreOptions.cloudDrives?.oneDrive).toEqual({ clientId: 'o', authority: undefined })
-    expect(coreOptions.cloudDrives?.dropbox).toEqual({ appKey: 'd' })
+  it('cloudDrives passes through verbatim to resolved AND coreOptions (one shape end-to-end)', () => {
+    const cloudDrives = {
+      googleDrive: { clientId: 'g', apiKey: 'k', appId: 'a' },
+      oneDrive: { clientId: 'o' },
+      dropbox: { clientId: 'd', redirectUri: 'r' },
+      box: { clientId: 'b', redirectUri: 'rb' },
+    }
+    const { resolved, coreOptions } = normalizeUploaderOptions({ cloudDrives })
+    expect(resolved.cloudDrives).toBe(cloudDrives)
+    expect(coreOptions.cloudDrives).toBe(cloudDrives)
   })
 
-  it("dropbox/box redirectUri ?? '' fallback when omitted", () => {
-    const { resolved } = normalizeUploaderOptions({
-      cloudDrives: {
-        dropbox: { clientId: 'd' }, // redirectUri omitted -> ''
-        box: { clientId: 'b' }, // redirectUri omitted -> ''
-      },
-    })
-    expect(resolved.dropboxConfigs).toEqual({ dropbox_client_id: 'd', dropbox_redirect_uri: '' })
-    expect(resolved.boxConfigs).toEqual({ box_client_id: 'b', box_redirect_uri: '' })
+  it('cloudDrives absent -> resolved/coreOptions cloudDrives undefined', () => {
+    const { resolved, coreOptions } = normalizeUploaderOptions({})
+    expect(resolved.cloudDrives).toBeUndefined()
+    expect(coreOptions.cloudDrives).toBeUndefined()
   })
 
   it('limit floor: non-mini maxFiles 1 -> limit 1 / multiple false; maxFiles 0 -> limit 1', () => {

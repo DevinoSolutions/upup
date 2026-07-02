@@ -1,6 +1,6 @@
 import type { EventEmitter } from '../events'
 import type { DrivePlugin } from './plugin'
-import type { DropboxConfigs } from './configs'
+import type { DropboxConfig } from './configs'
 import type { DriveFile, DriveState } from './types'
 
 // ── Session storage keys ──
@@ -129,7 +129,7 @@ export class DropboxPlugin implements DrivePlugin {
     readonly name = 'dropbox'
 
     private emitter: EventEmitter | null = null
-    private config: DropboxConfigs = {}
+    private config: DropboxConfig = { clientId: '' }
     private accessToken: string | null = null
     private refreshTokenValue: string | null = null
     private tokenExpiry = 0
@@ -142,12 +142,12 @@ export class DropboxPlugin implements DrivePlugin {
 
     // ── Plugin lifecycle ──
 
-    configure(config: DropboxConfigs): this {
+    configure(config: DropboxConfig): this {
         this.config = config
         return this
     }
 
-    getConfig(): Readonly<DropboxConfigs> {
+    getConfig(): Readonly<DropboxConfig> {
         return this.config
     }
 
@@ -178,7 +178,7 @@ export class DropboxPlugin implements DrivePlugin {
     // ── Auth: build the OAuth URL with PKCE ──
 
     async getAuthUrl(): Promise<string> {
-        const clientId = this.config.dropbox_client_id
+        const clientId = this.config.clientId
         if (!clientId) {
             throw new Error('Dropbox client_id is not configured')
         }
@@ -203,7 +203,7 @@ export class DropboxPlugin implements DrivePlugin {
     // ── Auth: exchange authorization code for tokens ──
 
     async authenticate(code: string): Promise<void> {
-        const clientId = this.config.dropbox_client_id
+        const clientId = this.config.clientId
         if (!clientId) {
             throw new Error('Dropbox client_id is not configured')
         }
@@ -368,7 +368,7 @@ export class DropboxPlugin implements DrivePlugin {
     // ── Auth: refresh access token ──
 
     async refreshAccessToken(): Promise<string | null> {
-        const clientId = this.config.dropbox_client_id
+        const clientId = this.config.clientId
         if (!clientId || !this.refreshTokenValue) return null
 
         try {
@@ -784,8 +784,8 @@ export class DropboxPlugin implements DrivePlugin {
     // ── Private: redirect URI ──
 
     private getRedirectUri(): string {
-        if (this.config.dropbox_redirect_uri) {
-            return this.config.dropbox_redirect_uri
+        if (this.config.redirectUri) {
+            return this.config.redirectUri
         }
         if (typeof window !== 'undefined') {
             return `${window.location.origin}/dp_redirect`

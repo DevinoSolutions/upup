@@ -66,32 +66,32 @@ export function createUploaderController(
   const theme = new ThemeStore(themeConfig)
 
   // ── Plugin registration (#7) ──
-  const adapterPlugins: Array<{ destroy(): void }> = []
+  const drivePlugins: Array<{ destroy(): void }> = []
   function registerPlugins() {
-    const { googleDriveConfigs, dropboxConfigs, boxConfigs, oneDriveConfigs } = resolved
-    if (googleDriveConfigs) {
+    const cd = resolved.cloudDrives
+    if (cd?.googleDrive) {
       const p = new GoogleDrivePlugin()
-      p.configure(googleDriveConfigs)
+      p.configure(cd.googleDrive)
       try { core.use(p) } catch { /* already registered */ }
-      adapterPlugins.push(p)
+      drivePlugins.push(p)
     }
-    if (dropboxConfigs) {
+    if (cd?.dropbox) {
       const p = new DropboxPlugin()
-      p.configure(dropboxConfigs)
+      p.configure(cd.dropbox)
       try { core.use(p) } catch { /* already */ }
-      adapterPlugins.push(p)
+      drivePlugins.push(p)
     }
-    if (boxConfigs) {
+    if (cd?.box) {
       const p = new BoxPlugin()
-      p.configure(boxConfigs)
+      p.configure(cd.box)
       try { core.use(p) } catch { /* already */ }
-      adapterPlugins.push(p)
+      drivePlugins.push(p)
     }
-    if (oneDriveConfigs) {
+    if (cd?.oneDrive) {
       const p = new OneDrivePlugin()
-      p.configure(oneDriveConfigs)
+      p.configure(cd.oneDrive)
       try { core.use(p) } catch { /* already */ }
-      adapterPlugins.push(p)
+      drivePlugins.push(p)
     }
   }
 
@@ -232,7 +232,7 @@ export function createUploaderController(
     initialized = false
     statusUnsub?.(); statusUnsub = null
     lastStatus = undefined
-    adapterPlugins.splice(0).forEach((p) => p.destroy())
+    drivePlugins.splice(0).forEach((p) => p.destroy())
     tearDownFanIn()
     orchestrator.destroy()
     theme.destroy()

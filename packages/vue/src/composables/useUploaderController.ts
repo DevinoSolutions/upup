@@ -308,10 +308,7 @@ export default function useUploaderController(props: UploaderProps): IUploaderCo
         closeImageEditor: () => root.commands.closeImageEditor(),
         saveImageEdit: (editedImageData: string, mimeType?: string) => root.commands.saveImageEdit(editedImageData, mimeType),
         replaceFile: (fileId: string, newFile: UploadFile) => root.commands.replaceFile(fileId, newFile),
-        oneDriveConfigs: resolved.oneDriveConfigs,
-        googleDriveConfigs: resolved.googleDriveConfigs,
-        dropboxConfigs: resolved.dropboxConfigs,
-        boxConfigs: resolved.boxConfigs,
+        cloudDrives: resolved.cloudDrives,
         upload: {
             totalProgress: computed(() => state.value.totalProgress),
             filesProgressMap: computed(() => state.value.filesProgressMap),

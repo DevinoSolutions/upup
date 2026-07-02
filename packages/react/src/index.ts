@@ -19,9 +19,11 @@ export type {
     ResolvedImageEditorOptions,
     UploadSource,
     UploadProvider,
-    GoogleDriveConfigs,
-    OneDriveConfigs,
-    DropboxConfigs,
+    GoogleDriveConfig,
+    OneDriveConfig,
+    DropboxConfig,
+    BoxConfig,
+    CloudDrivesConfig,
     ResumableUploadOptions,
 } from '@upup/core'
 export type {

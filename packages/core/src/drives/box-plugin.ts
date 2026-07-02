@@ -1,6 +1,6 @@
 import type { EventEmitter } from '../events'
 import type { DrivePlugin } from './plugin'
-import type { BoxConfigs } from './configs'
+import type { BoxConfig } from './configs'
 import type { DriveFile, DriveState } from './types'
 
 // ── Session storage keys ──
@@ -122,7 +122,7 @@ export class BoxPlugin implements DrivePlugin {
     readonly name = 'box'
 
     private emitter: EventEmitter | null = null
-    private config: BoxConfigs = {}
+    private config: BoxConfig = { clientId: '' }
     private accessToken: string | null = null
     private refreshTokenValue: string | null = null
     private state: DriveState = 'idle'
@@ -134,12 +134,12 @@ export class BoxPlugin implements DrivePlugin {
 
     // ── Plugin lifecycle ──
 
-    configure(config: BoxConfigs): this {
+    configure(config: BoxConfig): this {
         this.config = config
         return this
     }
 
-    getConfig(): Readonly<BoxConfigs> {
+    getConfig(): Readonly<BoxConfig> {
         return this.config
     }
 
@@ -170,7 +170,7 @@ export class BoxPlugin implements DrivePlugin {
     // ── Auth: build the OAuth URL with PKCE ──
 
     async getAuthUrl(): Promise<string> {
-        const clientId = this.config.box_client_id
+        const clientId = this.config.clientId
         if (!clientId) {
             throw new Error('Box client_id is not configured')
         }
@@ -193,7 +193,7 @@ export class BoxPlugin implements DrivePlugin {
     // ── Auth: exchange authorization code for tokens ──
 
     async authenticate(code: string): Promise<void> {
-        const clientId = this.config.box_client_id
+        const clientId = this.config.clientId
         if (!clientId) {
             throw new Error('Box client_id is not configured')
         }
@@ -357,7 +357,7 @@ export class BoxPlugin implements DrivePlugin {
     // ── Auth: refresh access token ──
 
     async refreshAccessToken(): Promise<string | null> {
-        const clientId = this.config.box_client_id
+        const clientId = this.config.clientId
         if (!clientId || !this.refreshTokenValue) return null
 
         try {
@@ -647,8 +647,8 @@ export class BoxPlugin implements DrivePlugin {
     // ── Private: redirect URI ──
 
     private getRedirectUri(): string {
-        if (this.config.box_redirect_uri) {
-            return this.config.box_redirect_uri
+        if (this.config.redirectUri) {
+            return this.config.redirectUri
         }
         if (typeof window !== 'undefined') {
             return `${window.location.origin}/box_redirect`

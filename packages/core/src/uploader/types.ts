@@ -9,14 +9,7 @@ import type { UploadFile } from '../types/upload-file'
 import type { Translator, LocaleBundle, PartialMessages } from '../i18n/types'
 import type { UiTranslations } from '../i18n/ui-translations'
 import type { ResumableUploadOptions } from '../types/upload-protocols'
-
-/** Framework-facing cloud-drive config (adds redirectUri vs core CloudDrivesConfig). */
-export interface UploaderCloudDrivesConfig {
-  googleDrive?: { clientId: string; apiKey: string; appId: string }
-  oneDrive?: { clientId: string; redirectUri?: string }
-  dropbox?: { clientId: string; redirectUri?: string }
-  box?: { clientId: string; redirectUri?: string }
-}
+import type { CloudDrivesConfig } from '../drives/configs'
 
 /** i18n option block (identical across frameworks). */
 export interface UploaderI18nOptions {
@@ -42,7 +35,7 @@ export interface UploaderCallbacks extends OrchestratorCallbacks {
 }
 
 /** Options accepted by the factory (framework-agnostic superset; each framework's props satisfy this structurally). */
-export interface UploaderControllerOptions extends Omit<CoreOptions, 'cloudDrives' | 'onError'>, UploaderCallbacks {
+export interface UploaderControllerOptions extends Omit<CoreOptions, 'onError'>, UploaderCallbacks {
   dark?: boolean
   theme?: UpupThemeConfig
   sources?: Array<FileSource | string>
@@ -57,22 +50,14 @@ export interface UploaderControllerOptions extends Omit<CoreOptions, 'cloudDrive
   enablePaste?: boolean
   resumable?: ResumableUploadOptions
   i18n?: UploaderI18nOptions
-  cloudDrives?: UploaderCloudDrivesConfig
   onIntegrationClick?: (sourceId: string) => void
   onPrepareFiles?: (files: UploadFile[]) => Promise<UploadFile[]>
   maxFiles?: number
 }
 
-/** Framework-facing cloud-config maps (consumed by plugins + drive browser). */
-export interface UploaderCloudConfigMaps {
-  googleDriveConfigs?: { google_client_id: string; google_api_key: string; google_app_id: string }
-  oneDriveConfigs?: { onedrive_client_id: string; redirectUri: string }
-  dropboxConfigs?: { dropbox_client_id: string; dropbox_redirect_uri: string }
-  boxConfigs?: { box_client_id: string; box_redirect_uri: string }
-}
-
-/** All resolved scalars + i18n + cloud-config maps (static, computed once). */
-export interface UploaderResolved extends UploaderCloudConfigMaps {
+/** All resolved scalars + i18n + cloud-drive config (static, computed once). */
+export interface UploaderResolved {
+  cloudDrives?: CloudDrivesConfig
   mini: boolean
   sources: FileSource[]
   allowedFileTypes: string

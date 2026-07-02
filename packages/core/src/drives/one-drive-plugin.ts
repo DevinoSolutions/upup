@@ -1,6 +1,6 @@
 import type { EventEmitter } from '../events'
 import type { DrivePlugin } from './plugin'
-import type { OneDriveConfigs } from './configs'
+import type { OneDriveConfig } from './configs'
 import type { DriveFile, DriveState } from './types'
 
 // ── Session storage keys ──
@@ -141,7 +141,7 @@ export class OneDrivePlugin implements DrivePlugin {
     readonly name = 'one-drive'
 
     private emitter: EventEmitter | null = null
-    private config: OneDriveConfigs = { onedrive_client_id: '' }
+    private config: OneDriveConfig = { clientId: '' }
     private accessToken: string | null = null
     private refreshTokenValue: string | null = null
     private tokenExpiry = 0
@@ -154,12 +154,12 @@ export class OneDrivePlugin implements DrivePlugin {
 
     // ── Plugin lifecycle ──
 
-    configure(config: OneDriveConfigs): this {
+    configure(config: OneDriveConfig): this {
         this.config = config
         return this
     }
 
-    getConfig(): Readonly<OneDriveConfigs> {
+    getConfig(): Readonly<OneDriveConfig> {
         return this.config
     }
 
@@ -190,7 +190,7 @@ export class OneDrivePlugin implements DrivePlugin {
     // ── Auth: build the OAuth URL with PKCE ──
 
     async getAuthUrl(): Promise<string> {
-        const clientId = this.config.onedrive_client_id
+        const clientId = this.config.clientId
         if (!clientId) {
             throw new Error('OneDrive client_id is not configured')
         }
@@ -215,7 +215,7 @@ export class OneDrivePlugin implements DrivePlugin {
     // ── Auth: exchange authorization code for tokens ──
 
     async authenticate(code: string): Promise<void> {
-        const clientId = this.config.onedrive_client_id
+        const clientId = this.config.clientId
         if (!clientId) {
             throw new Error('OneDrive client_id is not configured')
         }
@@ -381,7 +381,7 @@ export class OneDrivePlugin implements DrivePlugin {
     // ── Auth: refresh access token ──
 
     async refreshAccessToken(): Promise<string | null> {
-        const clientId = this.config.onedrive_client_id
+        const clientId = this.config.clientId
         if (!clientId || !this.refreshTokenValue) return null
 
         try {

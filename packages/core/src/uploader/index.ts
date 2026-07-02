@@ -2,8 +2,8 @@ export { normalizeUploaderOptions } from './normalize-options'
 export { createUploaderController } from './create-uploader-controller'
 export { createChildController } from './create-child-controller'
 export type {
-  UploaderControllerOptions, UploaderCloudDrivesConfig, UploaderI18nOptions, UploaderCallbacks,
-  UploaderCloudConfigMaps, UploaderResolved, NormalizedUploaderOptions, UploaderCommands,
+  UploaderControllerOptions, UploaderI18nOptions, UploaderCallbacks,
+  UploaderResolved, NormalizedUploaderOptions, UploaderCommands,
   UploaderHostHooks, CreateUploaderControllerParams, UploaderController,
 } from './types'
 export type {

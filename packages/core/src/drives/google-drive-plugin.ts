@@ -1,6 +1,6 @@
 import type { EventEmitter } from '../events'
 import type { DrivePlugin } from './plugin'
-import type { GoogleDriveConfigs } from './configs'
+import type { GoogleDriveConfig } from './configs'
 import type { DriveFile, DriveState } from './types'
 
 // ── Session storage keys ──
@@ -115,10 +115,10 @@ export class GoogleDrivePlugin implements DrivePlugin {
     readonly name = 'google-drive'
 
     private emitter: EventEmitter | null = null
-    private config: GoogleDriveConfigs = {
-        google_api_key: '',
-        google_app_id: '',
-        google_client_id: '',
+    private config: GoogleDriveConfig = {
+        apiKey: '',
+        appId: '',
+        clientId: '',
     }
     private accessToken: string | null = null
     private tokenExpiry = 0
@@ -126,12 +126,12 @@ export class GoogleDrivePlugin implements DrivePlugin {
 
     // ── Plugin lifecycle ──
 
-    configure(config: GoogleDriveConfigs): this {
+    configure(config: GoogleDriveConfig): this {
         this.config = config
         return this
     }
 
-    getConfig(): Readonly<GoogleDriveConfigs> {
+    getConfig(): Readonly<GoogleDriveConfig> {
         return this.config
     }
 
@@ -272,7 +272,7 @@ export class GoogleDrivePlugin implements DrivePlugin {
             const params = new URLSearchParams({
                 q,
                 fields: 'files(fileExtension,id,mimeType,name,parents,size,thumbnailLink)',
-                key: this.config.google_api_key,
+                key: this.config.apiKey,
                 pageSize: '1000',
             })
 
@@ -345,7 +345,7 @@ export class GoogleDrivePlugin implements DrivePlugin {
         driveFile: DriveFile,
     ): Promise<File | null> {
         const params = new URLSearchParams({
-            key: this.config.google_api_key,
+            key: this.config.apiKey,
             alt: 'media',
         })
 
