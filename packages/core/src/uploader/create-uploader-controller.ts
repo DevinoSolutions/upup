@@ -9,15 +9,15 @@ import { revokeFileUrl } from '../utils/file-helpers'
 import type { UploadFile } from '../types/upload-file'
 import type {
   CreateUploaderControllerParams,
-  RootCallbacks,
-  RootCommands,
+  UploaderCallbacks,
+  UploaderCommands,
   UploaderController,
-  RootHostHooks,
+  UploaderHostHooks,
 } from './types'
 
 export function createUploaderController(
   { core, options, normalized }: CreateUploaderControllerParams,
-  hostHooks: RootHostHooks = {},
+  hostHooks: UploaderHostHooks = {},
 ): UploaderController {
   const { resolved } = normalized
   const { connectSSE } = hostHooks
@@ -25,7 +25,7 @@ export function createUploaderController(
   const onError = (message: string) => options.onError?.(message)
 
   // ── Callback proxy (#3): mutable ref + getter proxy; SSE wrapper folds in connectSSE ──
-  let callbackRefs: RootCallbacks = { ...options }
+  let callbackRefs: UploaderCallbacks = { ...options }
 
   const proxiedCallbacks: OrchestratorCallbacks = {
     get onError() { return callbackRefs.onError },
@@ -104,7 +104,7 @@ export function createUploaderController(
   // ── Commands (#8/#9/#10): core-centric, vanilla-proven ──
   const filesArray = () => [...core.files.values()]
 
-  const commands: RootCommands = {
+  const commands: UploaderCommands = {
     async handleSetSelectedFiles(newFiles: File[]) {
       try {
         await core.addFiles(newFiles)
@@ -250,7 +250,7 @@ export function createUploaderController(
     }
   }
 
-  function updateCallbacks(next: RootCallbacks) {
+  function updateCallbacks(next: UploaderCallbacks) {
     callbackRefs = { ...callbackRefs, ...next }
   }
 

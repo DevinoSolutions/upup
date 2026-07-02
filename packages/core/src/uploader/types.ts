@@ -11,7 +11,7 @@ import type { UiTranslations } from '../i18n/ui-translations'
 import type { ResumableUploadOptions } from '../types/upload-protocols'
 
 /** Framework-facing cloud-drive config (adds redirectUri vs core CloudDrivesConfig). */
-export interface RootCloudDrivesConfig {
+export interface UploaderCloudDrivesConfig {
   googleDrive?: { clientId: string; apiKey: string; appId: string }
   oneDrive?: { clientId: string; redirectUri?: string }
   dropbox?: { clientId: string; redirectUri?: string }
@@ -19,7 +19,7 @@ export interface RootCloudDrivesConfig {
 }
 
 /** i18n option block (identical across frameworks). */
-export interface RootI18nOptions {
+export interface UploaderI18nOptions {
   bundle?: LocaleBundle
   locale?: LocaleBundle | string
   fallbackLocale?: LocaleBundle | string
@@ -27,7 +27,7 @@ export interface RootI18nOptions {
 }
 
 /** Every callback the orchestrator/commands/proxy may invoke (framework-agnostic superset). */
-export interface RootCallbacks extends OrchestratorCallbacks {
+export interface UploaderCallbacks extends OrchestratorCallbacks {
   // convenience (core-event bridges; wired by the host's upload hook, not the factory)
   onFileAdded?: (files: UploadFile[]) => void
   onUploadProgress?: (p: { fileId: string; loaded: number; total: number }) => void
@@ -42,7 +42,7 @@ export interface RootCallbacks extends OrchestratorCallbacks {
 }
 
 /** Options accepted by the factory (framework-agnostic superset; each framework's props satisfy this structurally). */
-export interface UploaderControllerOptions extends Omit<CoreOptions, 'cloudDrives' | 'onError'>, RootCallbacks {
+export interface UploaderControllerOptions extends Omit<CoreOptions, 'cloudDrives' | 'onError'>, UploaderCallbacks {
   dark?: boolean
   theme?: UpupThemeConfig
   sources?: Array<FileSource | string>
@@ -56,15 +56,15 @@ export interface UploaderControllerOptions extends Omit<CoreOptions, 'cloudDrive
   imageEditor?: boolean | ImageEditorOptions
   enablePaste?: boolean
   resumable?: ResumableUploadOptions
-  i18n?: RootI18nOptions
-  cloudDrives?: RootCloudDrivesConfig
+  i18n?: UploaderI18nOptions
+  cloudDrives?: UploaderCloudDrivesConfig
   onIntegrationClick?: (sourceId: string) => void
   onPrepareFiles?: (files: UploadFile[]) => Promise<UploadFile[]>
   maxFiles?: number
 }
 
-/** Framework-facing cloud-config maps (consumed by plugins + adapter browser). */
-export interface RootCloudConfigMaps {
+/** Framework-facing cloud-config maps (consumed by plugins + drive browser). */
+export interface UploaderCloudConfigMaps {
   googleDriveConfigs?: { google_client_id: string; google_api_key: string; google_app_id: string }
   oneDriveConfigs?: { onedrive_client_id: string; redirectUri: string }
   dropboxConfigs?: { dropbox_client_id: string; dropbox_redirect_uri: string }
@@ -72,7 +72,7 @@ export interface RootCloudConfigMaps {
 }
 
 /** All resolved scalars + i18n + cloud-config maps (static, computed once). */
-export interface RootResolved extends RootCloudConfigMaps {
+export interface UploaderResolved extends UploaderCloudConfigMaps {
   mini: boolean
   sources: FileSource[]
   allowedFileTypes: string
@@ -92,13 +92,13 @@ export interface RootResolved extends RootCloudConfigMaps {
 }
 
 /** Output of the pure normalizer: the CoreOptions object to build core with, plus all resolved values. */
-export interface NormalizedRootOptions {
+export interface NormalizedUploaderOptions {
   coreOptions: CoreOptions
-  resolved: RootResolved
+  resolved: UploaderResolved
 }
 
 /** Imperative command surface (delegates to core + orchestrator). */
-export interface RootCommands {
+export interface UploaderCommands {
   handleSetSelectedFiles(newFiles: File[]): Promise<void>
   handleFileRemove(fileId: string): void
   handleRemoveAll(): void
@@ -121,10 +121,10 @@ export interface RootCommands {
 }
 
 /** Optional host injection points. */
-export interface RootHostHooks {
+export interface UploaderHostHooks {
   /** Per-framework SSE wiring; called for each completed file in onFilesUploadComplete. Vanilla omits. */
   connectSSE?: (file: UploadFile) => void
-  /** Manual render-loop nudge (vanilla). Adapters with reactive bridges omit. */
+  /** Manual render-loop nudge (vanilla). Frameworks with reactive bridges omit. */
   invalidate?: () => void
 }
 
@@ -132,7 +132,7 @@ export interface RootHostHooks {
 export interface CreateUploaderControllerParams {
   core: UpupCore
   options: UploaderControllerOptions
-  normalized: NormalizedRootOptions
+  normalized: NormalizedUploaderOptions
 }
 
 /** Stable handle returned by the factory. */
@@ -140,13 +140,13 @@ export interface UploaderController {
   core: UpupCore
   orchestrator: UploaderOrchestrator
   theme: ThemeStore
-  resolved: RootResolved
-  commands: RootCommands
+  resolved: UploaderResolved
+  commands: UploaderCommands
   registerFileInput(el: HTMLInputElement | null): void
   getFileInput(): HTMLInputElement | null
   openFilePicker(): void
   /** Refresh the proxied callbacks (React calls every render; others once). */
-  updateCallbacks(callbacks: RootCallbacks): void
+  updateCallbacks(callbacks: UploaderCallbacks): void
   /** Optional fan-in of core `state-change` + orchestrator + theme notifications. */
   subscribe(listener: () => void): () => void
   /** Idempotent: orchestrator.init + theme.init + plugin registration + crash recovery + status-change. */

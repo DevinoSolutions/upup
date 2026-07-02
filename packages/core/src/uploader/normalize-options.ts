@@ -7,9 +7,9 @@ import type { FileSource } from '../types/file-source'
 import type { LocaleBundle, Translator } from '../i18n/types'
 import type { ResolvedImageEditorOptions } from '../types/image-editor'
 import type { CoreOptions } from '../core'
-import type { NormalizedRootOptions, UploaderControllerOptions, RootResolved } from './types'
+import type { NormalizedUploaderOptions, UploaderControllerOptions, UploaderResolved } from './types'
 
-export function normalizeUploaderOptions(options: UploaderControllerOptions): NormalizedRootOptions {
+export function normalizeUploaderOptions(options: UploaderControllerOptions): NormalizedUploaderOptions {
   const acceptProp = (options.allowedFileTypes as string | string[] | undefined) ?? '*'
   const mini = options.mini ?? false
   const resolvedSources = options.sources
@@ -74,7 +74,7 @@ export function normalizeUploaderOptions(options: UploaderControllerOptions): No
   const lang = bundle?.code ?? (typeof i18n?.locale === 'string' ? i18n.locale : 'en-US')
   const dir = (bundle?.dir ?? getDir(i18n?.locale as string | LocaleBundle | undefined)) as 'ltr' | 'rtl'
 
-  const resolved: RootResolved = {
+  const resolved: UploaderResolved = {
     mini, sources: resolvedSources, allowedFileTypes: accept, limit, maxFileSize, multiple,
     mode: resolvedMode, serverUrl: options.serverUrl,
     folderUploadAllowDrop, folderPickerButtonVisible, imageEditor, resumable: options.resumable,
