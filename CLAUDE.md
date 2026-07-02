@@ -159,8 +159,13 @@ recurring visual traps it will never flag — check these live:
 - `Source*` — upload-source selection UI: `SourceSelector`, `SourceView`.
 - `Drive*` — cloud-drive browsing: `DriveBrowser`, `DriveFile`.
 - Upload commands: `startUpload`, `uploadFiles`, `replaceFiles`.
-- Legacy `Adapter*` / `Root*` names remain in core internals and in i18n/theme
-  keys (`adapters.*`, `adapterButton`, …). A rename backlog exists. Do not
+- The `Adapter*`/`Root*` → `Drive*`/`Uploader*`/`Source*` vocabulary sweep is
+  COMPLETE in code, i18n keys, and theme slots (N1, 2026-07-01). What legacy
+  remains, deliberately: DOM contract strings (`upup-adapter-selector`,
+  `data-upup-slot="adapter-selector"`, `.uploader-adapter-*` CSS — frozen until
+  the N4 unfreeze), the snake_case cloud-config maps (N2 scope), `RuntimeAdapter`
+  (kept: environment abstraction), and drive-domain `RootArg`/`RootFolder`/
+  `getRootProps` (kept: filesystem-root / dropzone conventions). Do not
   introduce new `Adapter*`/`Root*` names, and do not partially rename — a
   vocabulary change must sweep all packages, locales, and parity fixtures in
   one pass.
