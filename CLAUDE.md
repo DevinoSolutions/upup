@@ -56,7 +56,10 @@ svelte/vanilla/angular/preact` (per-framework style-parity references),
 5. **Rebuild before dependents see your edit.** Packages consume each other's
    `dist/`, not `src/`. After editing `packages/core/src`, run
    `pnpm --filter @upup/core build` (same idea for any `packages/*` edit)
-   unless the `pnpm run dev:package` watchers are running.
+   unless the `pnpm run dev:package` watchers are running. Trap: `@upup/preact`
+   tests exercise its BUILT bundle (which inlines react), so after react/core
+   edits rebuild react + preact before trusting preact test results — a stale
+   dist fails with errors whose sourcemaps point at up-to-date `src/` files.
 6. **Keep core's mandatory path lean.** Heavy capabilities are opt-in:
    `libheif-js` (HEIC) and `tus-js-client` (resumable) are
    `optionalDependencies` loaded via dynamic `import()` behind subpath exports

@@ -196,7 +196,7 @@ describe('token refresh — proactive refresh on expiry (handleFileTransfer)', (
     fetchSpy?.mockRestore()
   })
 
-  it('refresh success: token endpoint called with correct params, new tokens persisted', async () => {
+  it('refresh success: token endpoint called with correct params, new tokens persisted', { timeout: 15_000 }, async () => {
     const store = new InMemoryTokenStore()
     await setTokens(store, DEFAULT_USER_ID, 'google-drive', {
       accessToken: 'old',

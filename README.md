@@ -105,7 +105,7 @@ export const POST = handler;
 <UpupUploader mode="server" serverUrl="/api/upup" provider="aws" />
 ```
 
-Adapters for Express, Fastify, Hono, and Next.js are published as subpath exports (`@upup/server/express`, `/fastify`, `/hono`, `/next`).
+Server handlers for Express, Fastify, Hono, and Next.js are published as subpath exports (`@upup/server/express`, `/fastify`, `/hono`, `/next`).
 
 > **Full docs → [useupup.com/documentation](https://useupup.com/documentation/docs/getting-started)** · **Mode comparison → [`apps/docs/docs/guides/modes.md`](apps/docs/docs/guides/modes.md)** · **Server Mode setup → [`apps/docs/docs/guides/server-mode-setup.md`](apps/docs/docs/guides/server-mode-setup.md)**
 
@@ -128,12 +128,25 @@ This repo is a monorepo managed with [pnpm workspaces](https://pnpm.io/workspace
 
 ```
 upup/
-├── packages/core/               # @upup/core (published contracts + workflow engine)
-├── packages/react/              # @upup/react (published React/browser host)
-├── packages/server/             # @upup/server (published server host)
-├── packages/interactive-example/# In-browser playground
+├── packages/core/               # @upup/core — headless engine (state, pipeline, drive plugins, i18n, theme)
+├── packages/react/              # @upup/react — canonical UI
+├── packages/vue/                # @upup/vue — native Vue port (DOM-identical to react)
+├── packages/svelte/             # @upup/svelte — native Svelte port
+├── packages/angular/            # @upup/angular — native Angular port
+├── packages/vanilla/            # @upup/vanilla — framework-free port
+├── packages/preact/             # @upup/preact — preact/compat re-export of react
+├── packages/next/               # @upup/next — client re-export + /server route handlers
+├── packages/server/             # @upup/server — server-mode endpoints (S3 presign/proxy, drive tokens)
+├── packages/interactive-example/# In-browser playground engine (private)
+├── packages/storybook-config/   # Shared storybook config (private)
+├── packages/tailwind-config/    # Shared Tailwind/postcss factory (private)
+├── apps/playground/             # Main dev app
 ├── apps/landing/                # Next.js marketing site at useupup.com
 ├── apps/docs/                   # Docusaurus documentation site
+├── apps/e2e-test/               # Playwright: deep React suite + cross-framework parity
+├── apps/storybook-*/            # Six per-framework storybooks (style-parity references)
+├── apps/next-example/           # @upup/next example app
+├── apps/mastra/                 # Agents/tools for the interactive playground
 ├── local-dev/                   # Port config & local dev helpers
 └── turbo.json                   # Build pipeline configuration
 ```
@@ -158,10 +171,10 @@ pnpm dev          # runs landing + docs + playground + package watchers via Turb
 
 ### Publishing
 
-```bash
-# From the repo root — publishes all public packages in dependency order
-pnpm -r --filter @upup/core --filter @upup/server --filter @upup/react publish --access public
-```
+Releases go through [changesets](https://github.com/changesets/changesets): pushes to
+`master` open a release PR and publish all nine public packages via CI
+(`.github/workflows/publish.yml`). Locally, `pnpm run release` publishes in
+dependency order and `pnpm run test-release` dry-runs it.
 
 ---
 

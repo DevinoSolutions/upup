@@ -78,7 +78,7 @@ vi.mock('../src/components/FileItem', () => ({
     default: ({ file }: any) => <div data-testid="file-item">{file.name}</div>,
 }))
 vi.mock('../src/components/shared/UploaderHeader', () => ({
-    default: () => <div data-testid="main-box-header" />,
+    default: () => <div data-testid="uploader-header" />,
 }))
 vi.mock('../src/components/shared/MyAnimatePresence', () => ({
     default: ({ children }: any) => <>{children}</>,
@@ -86,10 +86,6 @@ vi.mock('../src/components/shared/MyAnimatePresence', () => ({
 vi.mock('../src/components/shared/ProgressBar', () => ({
     default: () => null,
 }))
-vi.mock('../src/components/shared/ShouldRender', () => ({
-    default: ({ if: cond, children }: any) => (cond ? <>{children}</> : null),
-}))
-
 import FileList from '../src/components/FileList'
 
 describe('FileList — virtual scrolling', () => {

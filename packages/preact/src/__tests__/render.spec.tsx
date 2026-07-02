@@ -52,7 +52,7 @@ describe('@upup/preact render parity on compat', () => {
 
   test('honors mini prop — branding absent in mini mode', () => {
     render(<UpupUploader mini />)
-    // Branding is inside ShouldRender if={!mini && showBranding !== false}
+    // Branding renders only when !mini && showBranding !== false
     expect(screen.queryByTestId('upup-branding')).toBeNull()
   })
 
@@ -73,7 +73,7 @@ describe('@upup/preact render parity on compat', () => {
 
   test('hidden file input is present in mini mode too', () => {
     render(<UpupUploader mini />)
-    // File input renders regardless of mini — it is outside the ShouldRender guard
+    // File input renders regardless of mini — it is not gated by the mini branch
     const input = screen.getByTestId('upup-file-input')
     expect(input).toBeTruthy()
     expect(input.getAttribute('type')).toBe('file')
