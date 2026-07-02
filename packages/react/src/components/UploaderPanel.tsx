@@ -15,7 +15,7 @@ import SourceView from './SourceView'
 import FileList from './FileList'
 export default function UploaderPanel() {
     const { files } = useUploaderFiles()
-    const { activeAdapter } = useUploaderSource()
+    const { activeSource } = useUploaderSource()
     const { isAddingMore } = useUploaderView()
     const { isOnline, inputRef, openFilePicker } = useUploaderRuntime()
     const { translations: tr } = useUploaderI18n()
@@ -76,10 +76,10 @@ export default function UploaderPanel() {
                     No internet connection — uploads will resume when you reconnect.
                 </div>
             )}
-            {!!activeAdapter && (
+            {!!activeSource && (
                 <SourceView />
             )}
-            {!activeAdapter && (isAddingMore || !files.size) && (
+            {!activeSource && (isAddingMore || !files.size) && (
                 <SourceSelector />
             )}
             <FileList />

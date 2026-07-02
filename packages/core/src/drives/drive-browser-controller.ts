@@ -27,7 +27,7 @@ export interface DriveBrowserState {
 export interface DriveBrowserCallbacks {
     /** Push downloaded files into the uploader (host maps to context setFiles). */
     onFilesSelected: (files: File[]) => void
-    /** Close the adapter browser view (host maps to setActiveAdapter(undefined)). */
+    /** Close the adapter browser view (host maps to setActiveSource(undefined)). */
     onClose: () => void
 }
 

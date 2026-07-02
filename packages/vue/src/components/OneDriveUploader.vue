@@ -4,14 +4,14 @@ import ClientOneDriveUploader from './ClientOneDriveUploader.vue'
 import ServerModeDriveUploader from './ServerModeDriveUploader.vue'
 
 const { mode } = useUploaderRuntime()
-const { setActiveAdapter } = useUploaderSource()
+const { setActiveSource } = useUploaderSource()
 </script>
 
 <template>
     <ServerModeDriveUploader
         v-if="mode === 'server'"
         provider="onedrive"
-        :on-back="() => setActiveAdapter(undefined)"
+        :on-back="() => setActiveSource(undefined)"
     />
     <ClientOneDriveUploader v-else />
 </template>

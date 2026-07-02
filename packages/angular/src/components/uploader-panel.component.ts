@@ -52,11 +52,11 @@ import { FileListComponent } from './file-list.component'
                 </div>
             }
 
-            @if (!!store.activeAdapter?.()) {
+            @if (!!store.activeSource?.()) {
                 <upup-adapter-view />
             }
 
-            @if (!store.activeAdapter?.() && (store.isAddingMore?.() || !store.files?.().size)) {
+            @if (!store.activeSource?.() && (store.isAddingMore?.() || !store.files?.().size)) {
                 <upup-adapter-selector />
             }
 

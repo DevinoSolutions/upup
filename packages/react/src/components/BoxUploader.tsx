@@ -7,12 +7,12 @@ import ServerModeDriveUploader from './ServerModeDriveUploader'
 
 export default function BoxUploader() {
     const { mode } = useUploaderRuntime()
-    const { setActiveAdapter } = useUploaderSource()
+    const { setActiveSource } = useUploaderSource()
     if (mode === 'server') {
         return (
             <ServerModeDriveUploader
                 provider="box"
-                onBack={() => setActiveAdapter(undefined)}
+                onBack={() => setActiveSource(undefined)}
             />
         )
     }

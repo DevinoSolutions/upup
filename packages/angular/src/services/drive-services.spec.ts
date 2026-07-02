@@ -5,7 +5,7 @@
  *   - Creates an DriveBrowserController and bridges its state to Angular signals
  *   - Forwards every action method to the controller (no business logic leaked)
  *   - onFilesSelected callback wires to store.handleSetSelectedFiles
- *   - onClose callback wires to store.setActiveAdapter(undefined)
+ *   - onClose callback wires to store.setActiveSource(undefined)
  *
  * Strategy: construct services directly (NOT via TestBed), inject a mock UpupStore
  * via Angular's inject() context, and assert on the service's forwarding methods.
@@ -31,7 +31,7 @@ function makeStoreMock() {
     return {
         core: {} as any,
         handleSetSelectedFiles: vi.fn().mockResolvedValue(undefined),
-        setActiveAdapter: vi.fn(),
+        setActiveSource: vi.fn(),
     } as unknown as UpupStore
 }
 
@@ -288,7 +288,7 @@ describe('Drive service callback wiring', () => {
         expect(store.handleSetSelectedFiles).toHaveBeenCalledWith(fakeFiles)
     })
 
-    it('GoogleDriveService: onClose fires store.setActiveAdapter(undefined)', () => {
+    it('GoogleDriveService: onClose fires store.setActiveSource(undefined)', () => {
         const store = makeStoreMock()
         TestBed.configureTestingModule({
             providers: [
@@ -300,7 +300,7 @@ describe('Drive service callback wiring', () => {
         const ctrl = (svc as any)['controller'] as DriveBrowserController
         const callbacks = (ctrl as any)['callbacks']
         callbacks.onClose()
-        expect(store.setActiveAdapter).toHaveBeenCalledWith(undefined)
+        expect(store.setActiveSource).toHaveBeenCalledWith(undefined)
     })
 
     it('DropboxService: onFilesSelected fires store.handleSetSelectedFiles', () => {
@@ -319,7 +319,7 @@ describe('Drive service callback wiring', () => {
         expect(store.handleSetSelectedFiles).toHaveBeenCalledWith(fakeFiles)
     })
 
-    it('BoxService: onClose fires store.setActiveAdapter(undefined)', () => {
+    it('BoxService: onClose fires store.setActiveSource(undefined)', () => {
         const store = makeStoreMock()
         TestBed.configureTestingModule({
             providers: [
@@ -331,6 +331,6 @@ describe('Drive service callback wiring', () => {
         const ctrl = (svc as any)['controller'] as DriveBrowserController
         const callbacks = (ctrl as any)['callbacks']
         callbacks.onClose()
-        expect(store.setActiveAdapter).toHaveBeenCalledWith(undefined)
+        expect(store.setActiveSource).toHaveBeenCalledWith(undefined)
     })
 })

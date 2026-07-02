@@ -20,7 +20,7 @@ beforeEach(() => {
 
 describe('AudioRecorderController', () => {
   it('transitions idle -> recording -> recorded', async () => {
-    const c = new AudioRecorderController({ setFiles: vi.fn(async () => {}), setActiveAdapter: vi.fn(), invalidate: vi.fn() })
+    const c = new AudioRecorderController({ setFiles: vi.fn(async () => {}), setActiveSource: vi.fn(), invalidate: vi.fn() })
     expect(c.getSnapshot().recordingState).toBe('idle')
     await c.startRecording()
     expect(c.getSnapshot().recordingState).toBe('recording')
@@ -34,7 +34,7 @@ describe('AudioRecorderController', () => {
     let resolveGum!: (s: MediaStream) => void
     ;(navigator as any).mediaDevices = { getUserMedia: vi.fn(() => new Promise<MediaStream>((r) => { resolveGum = r })) }
     const invalidate = vi.fn()
-    const c = new AudioRecorderController({ setFiles: vi.fn(async () => {}), setActiveAdapter: vi.fn(), invalidate })
+    const c = new AudioRecorderController({ setFiles: vi.fn(async () => {}), setActiveSource: vi.fn(), invalidate })
     const pending = c.startRecording()
     c.dispose()
     const at = invalidate.mock.calls.length

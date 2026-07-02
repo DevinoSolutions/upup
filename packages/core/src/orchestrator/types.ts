@@ -21,7 +21,7 @@ export interface OrchestratorState {
     uploadEta: number
     uploadedBytes: number
     totalBytes: number
-    activeAdapter?: FileSource
+    activeSource?: FileSource
     editingFile: UploadFile | null
     editorQueue: UploadFile[]
     isAddingMore: boolean

@@ -37,7 +37,7 @@ function formatEta(seconds: number): string {
 
 export default memo(function FileList() {
     const { isAddingMore, viewMode } = useUploaderView()
-    const { activeAdapter } = useUploaderSource()
+    const { activeSource } = useUploaderSource()
     const { files } = useUploaderFiles()
     const { translations: tr } = useUploaderI18n()
     const {
@@ -85,7 +85,7 @@ export default memo(function FileList() {
             className={cn(
                 'upup-relative upup-flex upup-h-full upup-flex-col upup-rounded-lg upup-shadow',
                 {
-                    'upup-hidden': isAddingMore || activeAdapter || !files.size,
+                    'upup-hidden': isAddingMore || activeSource || !files.size,
                 },
                 themeSlots?.fileList?.root,
             )}

@@ -84,16 +84,16 @@ export function buildUploaderContext(
   const controllers: ControllerRegistry = {
     fileInput: fileInputHandle.controller,
     dragDrop: dragDropHandle.controller,
-    getCamera() { if (!camera) camera = new CameraController({ core, setFiles, setActiveAdapter, invalidate }); camera.activate(); return camera },
-    getAudio() { if (!audio) audio = new AudioRecorderController({ setFiles, setActiveAdapter, invalidate }); audio.activate(); return audio },
-    getScreen() { if (!screen) screen = new ScreenCaptureController({ setFiles, setActiveAdapter, invalidate }); screen.activate(); return screen },
+    getCamera() { if (!camera) camera = new CameraController({ core, setFiles, setActiveSource, invalidate }); camera.activate(); return camera },
+    getAudio() { if (!audio) audio = new AudioRecorderController({ setFiles, setActiveSource, invalidate }); audio.activate(); return audio },
+    getScreen() { if (!screen) screen = new ScreenCaptureController({ setFiles, setActiveSource, invalidate }); screen.activate(); return screen },
     getDrive(source: FileSource) {
       let c = driveControllers.get(source)
       if (!c) {
         const descriptor = DRIVE_DESCRIPTORS[source] as ConstructorParameters<typeof DriveBrowserController>[1]
         c = new DriveBrowserController(core, descriptor, {
           onFilesSelected: (files) => { void setFiles(files) },
-          onClose: () => setActiveAdapter(undefined),
+          onClose: () => setActiveSource(undefined),
         })
         c.init()
         c.subscribe(() => invalidate())
@@ -110,10 +110,10 @@ export function buildUploaderContext(
     disposeAll() { this.disposeActive(); fileInputHandle.dispose(); dragDropHandle.dispose() },
   }
 
-  // ── 8. setActiveAdapter (vanilla-specific: disposes active adapters before delegating to factory command) ──
-  function setActiveAdapter(a: FileSource | undefined) {
+  // ── 8. setActiveSource (vanilla-specific: disposes active adapters before delegating to factory command) ──
+  function setActiveSource(a: FileSource | undefined) {
     controllers.disposeActive()
-    root.commands.setActiveAdapter(a)
+    root.commands.setActiveSource(a)
   }
 
   // ── 9. Vanilla-specific file-removal wrappers (KEEP: nudge dragDrop.recompute() after core-only mutations) ──
@@ -173,7 +173,7 @@ export function buildUploaderContext(
     registerFileInput: root.registerFileInput,
     getFileInput: root.getFileInput,
     openFilePicker: root.openFilePicker,
-    setActiveAdapter,
+    setActiveSource,
     setIsAddingMore: root.commands.setIsAddingMore,
     setViewMode: root.commands.setViewMode,
     setFiles,

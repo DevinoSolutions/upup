@@ -71,8 +71,8 @@ export type ContextRuntime = BaseContextRuntime & {
     inputRef: RefObject<HTMLInputElement | null>
 }
 
-export type ContextSource = Omit<BaseContextSource, 'setActiveAdapter'> & {
-    setActiveAdapter: Dispatch<SetStateAction<FileSource | undefined>>
+export type ContextSource = Omit<BaseContextSource, 'setActiveSource'> & {
+    setActiveSource: Dispatch<SetStateAction<FileSource | undefined>>
 }
 
 export type ContextI18n = BaseContextI18n
@@ -141,19 +141,19 @@ export function UploaderContextProvider({
     }), [value.core, value.orchestrator, value.inputRef, value.isOnline, value.mode, value.openFilePicker, value.serverUrl])
 
     const source = useMemo<ContextSource>(() => ({
-        activeAdapter: value.activeAdapter,
-        setActiveAdapter: value.setActiveAdapter,
+        activeSource: value.activeSource,
+        setActiveSource: value.setActiveSource,
         oneDriveConfigs: value.oneDriveConfigs,
         googleDriveConfigs: value.googleDriveConfigs,
         dropboxConfigs: value.dropboxConfigs,
         boxConfigs: value.boxConfigs,
     }), [
-        value.activeAdapter,
+        value.activeSource,
         value.boxConfigs,
         value.dropboxConfigs,
         value.googleDriveConfigs,
         value.oneDriveConfigs,
-        value.setActiveAdapter,
+        value.setActiveSource,
     ])
 
     const i18n = useMemo<ContextI18n>(() => ({

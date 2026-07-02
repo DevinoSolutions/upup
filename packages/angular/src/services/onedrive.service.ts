@@ -24,7 +24,7 @@ export class OneDriveService {
         ONE_DRIVE_DESCRIPTOR,
         {
             onFilesSelected: (files) => { void this.store.handleSetSelectedFiles(files as File[]) },
-            onClose: () => { this.store.setActiveAdapter(undefined) },
+            onClose: () => { this.store.setActiveSource(undefined) },
         },
     )
 

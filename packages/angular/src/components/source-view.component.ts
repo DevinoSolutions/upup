@@ -26,9 +26,9 @@ import { NgComponentOutlet } from '@angular/common'
 /**
  * SourceView — Angular port of SourceView.svelte.
  *
- * Renders the active adapter's view when store.activeAdapter() is set and
+ * Renders the active adapter's view when store.activeSource() is set and
  * store.uiProps.mini is false. Mirrors svelte's shouldRender check:
- *   shouldRender = !!activeComponent && !mini && !!activeAdapter && !!AdapterIcon
+ *   shouldRender = !!activeComponent && !mini && !!activeSource && !!AdapterIcon
  *
  * Active-adapter switch map:
  *   url        → UrlUploaderComponent
@@ -76,7 +76,7 @@ import { NgComponentOutlet } from '@angular/common'
             >
                 <!-- Header row with icon + cancel -->
                 <div [class]="headerClass">
-                    @switch (store.activeAdapter()) {
+                    @switch (store.activeSource()) {
                         @case ('googleDrive') { <upup-google-drive-icon /> }
                         @case ('oneDrive') { <upup-onedrive-icon /> }
                         @case ('dropbox') { <upup-dropbox-icon /> }
@@ -97,7 +97,7 @@ import { NgComponentOutlet } from '@angular/common'
 
                 <!-- Content row: the active adapter component -->
                 <div class="upup-overflow-hidden">
-                    @switch (store.activeAdapter()) {
+                    @switch (store.activeSource()) {
                         @case ('url') {
                             <upup-url-uploader />
                         }
@@ -135,9 +135,9 @@ import { NgComponentOutlet } from '@angular/common'
 export class SourceViewComponent {
     readonly store = inject(UpupStore)
 
-    /** Mirror svelte: shouldRender = !!activeComponent && !mini && !!activeAdapter */
+    /** Mirror svelte: shouldRender = !!activeComponent && !mini && !!activeSource */
     get shouldRender(): boolean {
-        const active = this.store.activeAdapter()
+        const active = this.store.activeSource()
         const mini = this.store.uiProps.mini
         return !!active && !mini
     }
@@ -166,6 +166,6 @@ export class SourceViewComponent {
     }
 
     handleCancel(): void {
-        this.store.setActiveAdapter(undefined)
+        this.store.setActiveSource(undefined)
     }
 }

@@ -25,7 +25,7 @@
     user?: DriveUser
   } = $props()
 
-  const { setActiveAdapter } = useUploaderSource()
+  const { setActiveSource } = useUploaderSource()
   const { translations: tr } = useUploaderI18n()
   const { isDark: dark, slotOverrides: slotClasses } = useUploaderTheme()
 </script>
@@ -89,7 +89,7 @@
             },
             $slotClasses.driveLogoutButton,
           )}
-          onclick={() => { handleSignOut(); setActiveAdapter(undefined) }}
+          onclick={() => { handleSignOut(); setActiveSource(undefined) }}
         >
           {tr.logOut}
         </button>

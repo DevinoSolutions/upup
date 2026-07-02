@@ -13,7 +13,7 @@
 
   const { core } = useUploaderRuntime()
   const { setFiles } = useUploaderFiles()
-  const { setActiveAdapter } = useUploaderSource()
+  const { setActiveSource } = useUploaderSource()
   const { translations: tr } = useUploaderI18n()
   const { icons: { LoaderIcon } } = useUploaderOptions()
   const { isDark: dark, slotOverrides: slotClasses } = useUploaderTheme()
@@ -29,7 +29,7 @@
       Object.assign(file, { url })
       setFiles([file])
       url = ''
-      setActiveAdapter(undefined)
+      setActiveSource(undefined)
     }
   }
 </script>

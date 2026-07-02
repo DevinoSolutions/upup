@@ -5,6 +5,6 @@ import { serverModeDriveUploader } from './server-mode-drive-uploader'
 
 export function oneDriveUploader(ctx: UploaderContext) {
   return ctx.mode === 'server'
-    ? serverModeDriveUploader(ctx, { provider: 'onedrive', onBack: () => ctx.setActiveAdapter(undefined) })
+    ? serverModeDriveUploader(ctx, { provider: 'onedrive', onBack: () => ctx.setActiveSource(undefined) })
     : clientDriveUploader(ctx, FileSource.ONE_DRIVE)
 }

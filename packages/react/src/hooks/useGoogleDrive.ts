@@ -30,7 +30,7 @@ const SERVER_SNAPSHOT: DriveBrowserState = {
 
 export function useGoogleDrive() {
     const { core } = useUploaderRuntime()
-    const { setActiveAdapter } = useUploaderSource()
+    const { setActiveSource } = useUploaderSource()
     const { setFiles } = useUploaderFiles()
 
     // GIS config (client id / api key) + GIS script loading are sourced inside the
@@ -40,7 +40,7 @@ export function useGoogleDrive() {
     if (!controllerRef.current && core) {
         controllerRef.current = new DriveBrowserController(core, GOOGLE_DRIVE_DESCRIPTOR, {
             onFilesSelected: files => setFiles(files),
-            onClose: () => setActiveAdapter(undefined),
+            onClose: () => setActiveSource(undefined),
         })
     }
     const controller = controllerRef.current

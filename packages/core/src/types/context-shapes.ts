@@ -62,8 +62,8 @@ export type BaseContextRuntime = {
 // ─── Source ───────────────────────────────────────────────────
 
 export type BaseContextSource = {
-    activeAdapter?: FileSource
-    setActiveAdapter: (adapter: FileSource | undefined) => void
+    activeSource?: FileSource
+    setActiveSource: (adapter: FileSource | undefined) => void
     oneDriveConfigs?: OneDriveConfigs
     googleDriveConfigs?: GoogleDriveConfigs
     dropboxConfigs?: DropboxConfigs

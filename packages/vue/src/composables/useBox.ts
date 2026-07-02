@@ -13,14 +13,14 @@ import {
 
 export function useBox() {
     const { core } = useUploaderRuntime()
-    const { setActiveAdapter } = useUploaderSource()
+    const { setActiveSource } = useUploaderSource()
     const { setFiles } = useUploaderFiles()
 
     const controller = new DriveBrowserController(core!, BOX_DESCRIPTOR, {
         onFilesSelected: (files) => {
             setFiles(files)
         },
-        onClose: () => setActiveAdapter(undefined),
+        onClose: () => setActiveSource(undefined),
     })
 
     const state = shallowRef(controller.getSnapshot())

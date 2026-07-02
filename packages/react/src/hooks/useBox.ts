@@ -30,17 +30,17 @@ const SERVER_SNAPSHOT: DriveBrowserState = {
 
 export function useBox() {
     const { core } = useUploaderRuntime()
-    const { setActiveAdapter } = useUploaderSource()
+    const { setActiveSource } = useUploaderSource()
     const { setFiles } = useUploaderFiles()
 
     // One controller per mounted adapter view, created once (guarded ref) — same
-    // idiom as useUploaderController's rootRef. setFiles/setActiveAdapter are referentially
+    // idiom as useUploaderController's rootRef. setFiles/setActiveSource are referentially
     // stable (useCallback over root), so capturing them once is safe.
     const controllerRef = useRef<DriveBrowserController | null>(null)
     if (!controllerRef.current && core) {
         controllerRef.current = new DriveBrowserController(core, BOX_DESCRIPTOR, {
             onFilesSelected: files => setFiles(files),
-            onClose: () => setActiveAdapter(undefined),
+            onClose: () => setActiveSource(undefined),
         })
     }
     const controller = controllerRef.current

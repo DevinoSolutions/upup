@@ -26,7 +26,7 @@ export default function DriveBrowserHeader({
     onSearch,
     searchTerm,
 }: Readonly<Props>) {
-    const { setActiveAdapter } = useUploaderSource()
+    const { setActiveSource } = useUploaderSource()
     const { translations: tr } = useUploaderI18n()
     const { isDark: dark, slotOverrides: slotClasses } = useUploaderTheme()
 
@@ -105,7 +105,7 @@ export default function DriveBrowserHeader({
                         )}
                         onClick={() => {
                             handleSignOut()
-                            setActiveAdapter(undefined)
+                            setActiveSource(undefined)
                         }}
                     >
                         {tr.logOut}

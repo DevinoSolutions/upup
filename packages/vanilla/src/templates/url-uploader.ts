@@ -48,7 +48,7 @@ export function urlUploader(ctx: UploaderContext) {
       Object.assign(file, { url: s.url })
       await ctx.setFiles([file])
       s.url = ''
-      ctx.setActiveAdapter(undefined)
+      ctx.setActiveSource(undefined)
     }
   }
   const onInput = (e: Event) => { s.url = (e.target as HTMLInputElement).value; ctx.invalidate() }

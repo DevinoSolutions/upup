@@ -16,7 +16,7 @@ export interface UploaderSnapshot {
   status: UploadStatus
   progress: { totalFiles: number; completedFiles: number; percentage: number }
   error: Error | null
-  activeAdapter: FileSource | undefined
+  activeSource: FileSource | undefined
   viewMode: 'grid' | 'list'
 }
 
@@ -131,7 +131,7 @@ export interface UploaderContext {
   registerFileInput(el: HTMLInputElement | null): void
   getFileInput(): HTMLInputElement | null
   openFilePicker(): void
-  setActiveAdapter(a: FileSource | undefined): void
+  setActiveSource(a: FileSource | undefined): void
   setIsAddingMore(v: boolean): void
   setViewMode(m: 'grid' | 'list'): void
   setFiles(files: File[]): Promise<void>

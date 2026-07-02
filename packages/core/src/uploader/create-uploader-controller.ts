@@ -176,7 +176,7 @@ export function createUploaderController(
     closeImageEditor() { orchestrator.closeImageEditor() },
     saveImageEdit(editedImageData: string, mimeType?: string) { orchestrator.saveImageEdit(editedImageData, mimeType) },
     replaceFile(fileId: string, newFile: UploadFile) { orchestrator.replaceFile(fileId, newFile) },
-    setActiveAdapter(a) { orchestrator.setActiveAdapter(a) },
+    setActiveSource(a) { orchestrator.setActiveSource(a) },
     setIsAddingMore(v: boolean) { orchestrator.setIsAddingMore(v) },
     setViewMode(m: 'grid' | 'list') { orchestrator.setViewMode(m) },
   }

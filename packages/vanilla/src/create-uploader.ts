@@ -28,7 +28,7 @@ export function createUploader(
       status: ctx.core.status,
       progress: ctx.core.progress,
       error: ctx.core.error,
-      activeAdapter: o.activeAdapter,
+      activeSource: o.activeSource,
       viewMode: o.viewMode,
     }
   }

@@ -11,7 +11,7 @@ import SourceViewContainer from './shared/SourceViewContainer.vue'
 type RecordingState = 'idle' | 'recording' | 'recorded'
 
 const { setFiles } = useUploaderFiles()
-const { setActiveAdapter } = useUploaderSource()
+const { setActiveSource } = useUploaderSource()
 const { isDark: dark } = useUploaderTheme()
 
 const state = ref<RecordingState>('idle')
@@ -105,7 +105,7 @@ function addRecording() {
         .then(blob => {
             const file = new File([blob], `screen-recording-${Date.now()}.webm`, { type: blob.type })
             setFiles([file])
-            setActiveAdapter(undefined)
+            setActiveSource(undefined)
         })
 }
 

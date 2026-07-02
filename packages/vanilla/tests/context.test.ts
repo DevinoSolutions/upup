@@ -17,7 +17,7 @@ describe('buildUploaderContext', () => {
     expect(ctx.props.limit).toBe(3)
     expect(ctx.props.sources).toContain(FileSource.LOCAL)
     expect(ctx.mode).toBe('client')
-    expect(typeof ctx.setActiveAdapter).toBe('function')
+    expect(typeof ctx.setActiveSource).toBe('function')
     dispose()
   })
 

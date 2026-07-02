@@ -27,7 +27,7 @@ export class UploaderOrchestrator {
             uploadEta: 0,
             uploadedBytes: 0,
             totalBytes: 0,
-            activeAdapter: undefined,
+            activeSource: undefined,
             editingFile: null,
             editorQueue: [],
             isAddingMore: false,
@@ -66,8 +66,8 @@ export class UploaderOrchestrator {
     }
 
     /** Set the active cloud/source adapter. */
-    setActiveAdapter(adapter: FileSource | undefined): void {
-        this.setState({ activeAdapter: adapter })
+    setActiveSource(adapter: FileSource | undefined): void {
+        this.setState({ activeSource: adapter })
     }
 
     /** Toggle between grid and list view. */

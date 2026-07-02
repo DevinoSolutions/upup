@@ -49,7 +49,7 @@ describe('UpupStore', () => {
 
         it('all orch-state computeds are defined and callable', () => {
             const signals = [
-                'files', 'activeAdapter', 'isAddingMore', 'viewMode',
+                'files', 'activeSource', 'isAddingMore', 'viewMode',
                 'isOnline', 'editingFile', 'totalProgress', 'filesProgressMap',
                 'uploadStatus', 'uploadError', 'uploadSpeed', 'uploadEta',
                 'uploadedBytes', 'totalBytes',
@@ -199,9 +199,9 @@ describe('UpupStore', () => {
             expect(store.getFileInput()).toBeNull()
         })
 
-        it('setActiveAdapter updates the activeAdapter signal', () => {
-            store.setActiveAdapter(FileSource.GOOGLE_DRIVE)
-            expect(store.activeAdapter()).toBe(FileSource.GOOGLE_DRIVE)
+        it('setActiveSource updates the activeSource signal', () => {
+            store.setActiveSource(FileSource.GOOGLE_DRIVE)
+            expect(store.activeSource()).toBe(FileSource.GOOGLE_DRIVE)
         })
 
         it('setIsAddingMore updates isAddingMore signal', () => {

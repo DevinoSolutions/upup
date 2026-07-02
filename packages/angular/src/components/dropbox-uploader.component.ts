@@ -36,6 +36,6 @@ export class DropboxUploaderComponent {
     readonly store = inject(UpupStore)
 
     readonly handleBack = (): void => {
-        this.store.setActiveAdapter(undefined)
+        this.store.setActiveSource(undefined)
     }
 }

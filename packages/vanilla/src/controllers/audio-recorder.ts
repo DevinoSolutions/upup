@@ -5,7 +5,7 @@ export type RecordingState = 'idle' | 'recording' | 'recorded'
 
 export interface AudioDeps {
   setFiles: (files: File[]) => Promise<void>
-  setActiveAdapter: (a: FileSource | undefined) => void
+  setActiveSource: (a: FileSource | undefined) => void
   invalidate: () => void
 }
 
@@ -81,7 +81,7 @@ export class AudioRecorderController implements AdapterController<AudioSnapshot>
       .then(async (blob) => {
         const file = new File([blob], `recording-${Date.now()}.${ext}`, { type: blob.type })
         await this.deps.setFiles([file])
-        this.deps.setActiveAdapter(undefined)
+        this.deps.setActiveSource(undefined)
       })
   }
 

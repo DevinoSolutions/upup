@@ -43,7 +43,7 @@
   }
 
   const { isAddingMore, viewMode } = useUploaderView()
-  const { activeAdapter } = useUploaderSource()
+  const { activeSource } = useUploaderSource()
   const { files } = useUploaderFiles()
   const { translations: tr } = useUploaderI18n()
   const {
@@ -134,7 +134,7 @@
   data-upup-slot="file-list"
   class={cn(
     'upup-relative upup-flex upup-h-full upup-flex-col upup-rounded-lg upup-shadow',
-    { 'upup-hidden': $isAddingMore || $activeAdapter || !$files.size },
+    { 'upup-hidden': $isAddingMore || $activeSource || !$files.size },
     $themeSlots?.fileList?.root,
   )}
 >

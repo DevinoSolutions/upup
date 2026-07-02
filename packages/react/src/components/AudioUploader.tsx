@@ -11,7 +11,7 @@ type RecordingState = 'idle' | 'recording' | 'recorded'
 
 export default function AudioUploader() {
     const { setFiles } = useUploaderFiles()
-    const { setActiveAdapter } = useUploaderSource()
+    const { setActiveSource } = useUploaderSource()
     const { isDark: dark } = useUploaderTheme()
 
     const [state, setState] = useState<RecordingState>('idle')
@@ -95,9 +95,9 @@ export default function AudioUploader() {
                     { type: blob.type },
                 )
                 setFiles([file])
-                setActiveAdapter(undefined)
+                setActiveSource(undefined)
             })
-    }, [audioUrl, setFiles, setActiveAdapter])
+    }, [audioUrl, setFiles, setActiveSource])
 
     const formatTime = (s: number) => {
         const m = Math.floor(s / 60)

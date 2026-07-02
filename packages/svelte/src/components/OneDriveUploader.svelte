@@ -4,13 +4,13 @@
   import ServerModeDriveUploader from './ServerModeDriveUploader.svelte'
 
   const { mode } = useUploaderRuntime()
-  const { setActiveAdapter } = useUploaderSource()
+  const { setActiveSource } = useUploaderSource()
 </script>
 
 {#if mode === 'server'}
   <ServerModeDriveUploader
     provider="onedrive"
-    onBack={() => setActiveAdapter(undefined)}
+    onBack={() => setActiveSource(undefined)}
   />
 {:else}
   <ClientOneDriveUploader />

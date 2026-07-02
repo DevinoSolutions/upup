@@ -42,10 +42,10 @@ export type ContextRuntime = Omit<BaseContextRuntime, 'isOnline'> & {
     isOnline: ComputedRef<boolean>
 }
 
-// Vue exposes activeAdapter as a reactive ComputedRef (React uses a plain value
+// Vue exposes activeSource as a reactive ComputedRef (React uses a plain value
 // + re-render). Consumers read it via `.value` in script; templates auto-unwrap.
-export type ContextSource = Omit<BaseContextSource, 'activeAdapter'> & {
-    activeAdapter: ComputedRef<FileSource | undefined>
+export type ContextSource = Omit<BaseContextSource, 'activeSource'> & {
+    activeSource: ComputedRef<FileSource | undefined>
 }
 
 export type ContextI18n = BaseContextI18n
@@ -146,8 +146,8 @@ export function provideUploaderContext(value: IUploaderContext) {
         isOnline: value.isOnline,
     })
     provide(SourceKey, {
-        activeAdapter: value.activeAdapter,
-        setActiveAdapter: value.setActiveAdapter,
+        activeSource: value.activeSource,
+        setActiveSource: value.setActiveSource,
         oneDriveConfigs: value.oneDriveConfigs,
         googleDriveConfigs: value.googleDriveConfigs,
         dropboxConfigs: value.dropboxConfigs,

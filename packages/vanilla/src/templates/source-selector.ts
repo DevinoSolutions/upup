@@ -56,7 +56,7 @@ export function sourceSelector(ctx: UploaderContext) {
     ctx.props.onIntegrationClick(sourceId)
     ctx.core.emit('source-click', { sourceId })
     if (sourceId === FileSource.LOCAL) ctx.openFilePicker()
-    else ctx.setActiveAdapter(sourceId)
+    else ctx.setActiveSource(sourceId)
   }
 
   function handleBrowseFilesClick() {

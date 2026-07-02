@@ -6,7 +6,7 @@ export enum FacingMode { Environment = 'environment', User = 'user' }
 export interface CameraDeps {
   core: UpupCore
   setFiles: (files: File[]) => Promise<void>
-  setActiveAdapter: (a: FileSource | undefined) => void
+  setActiveSource: (a: FileSource | undefined) => void
   invalidate: () => void
 }
 
@@ -81,7 +81,7 @@ export class CameraController implements AdapterController<CameraSnapshot> {
     const file = new File([blob], `capture-${Date.now()}.jpg`, { type: 'image/jpeg' })
     await this.deps.setFiles([file])
     this.capturedUrl = ''
-    this.deps.setActiveAdapter(undefined)
+    this.deps.setActiveSource(undefined)
     this.deps.core.emit('camera-confirm', { file })
   }
 

@@ -271,8 +271,8 @@ export default function useUploaderController(props: UploaderProps): IUploaderCo
         inputRef,
         openFilePicker,
         // Reactive so consumers re-render when the active adapter changes.
-        activeAdapter: computed(() => state.value.activeAdapter),
-        setActiveAdapter: (adapter: FileSource | undefined) => root.commands.setActiveAdapter(adapter),
+        activeSource: computed(() => state.value.activeSource),
+        setActiveSource: (adapter: FileSource | undefined) => root.commands.setActiveSource(adapter),
         isAddingMore: computed(() => state.value.isAddingMore),
         setIsAddingMore: (v: boolean) => root.commands.setIsAddingMore(v),
         viewMode: computed(() => state.value.viewMode),

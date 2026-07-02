@@ -221,22 +221,22 @@ describe('UploaderOrchestrator', () => {
         })
     })
 
-    describe('setActiveAdapter', () => {
-        it('updates activeAdapter in state', () => {
+    describe('setActiveSource', () => {
+        it('updates activeSource in state', () => {
             const core = createMockCore()
             const orch = new UploaderOrchestrator(core, {})
-            expect(orch.getSnapshot().activeAdapter).toBeUndefined()
+            expect(orch.getSnapshot().activeSource).toBeUndefined()
 
-            orch.setActiveAdapter(FileSource.GOOGLE_DRIVE)
-            expect(orch.getSnapshot().activeAdapter).toBe(FileSource.GOOGLE_DRIVE)
+            orch.setActiveSource(FileSource.GOOGLE_DRIVE)
+            expect(orch.getSnapshot().activeSource).toBe(FileSource.GOOGLE_DRIVE)
         })
 
-        it('can clear activeAdapter with undefined', () => {
+        it('can clear activeSource with undefined', () => {
             const core = createMockCore()
             const orch = new UploaderOrchestrator(core, {})
-            orch.setActiveAdapter(FileSource.DROPBOX)
-            orch.setActiveAdapter(undefined)
-            expect(orch.getSnapshot().activeAdapter).toBeUndefined()
+            orch.setActiveSource(FileSource.DROPBOX)
+            orch.setActiveSource(undefined)
+            expect(orch.getSnapshot().activeSource).toBeUndefined()
         })
 
         it('notifies listeners', () => {
@@ -245,7 +245,7 @@ describe('UploaderOrchestrator', () => {
             const listener = vi.fn()
             orch.subscribe(listener)
 
-            orch.setActiveAdapter(FileSource.LOCAL)
+            orch.setActiveSource(FileSource.LOCAL)
             expect(listener).toHaveBeenCalledTimes(1)
         })
     })

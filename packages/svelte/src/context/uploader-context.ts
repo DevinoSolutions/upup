@@ -44,8 +44,8 @@ export type ContextRuntime = Omit<BaseContextRuntime, 'isOnline'> & {
     isOnline: Readable<boolean>
 }
 
-export type ContextSource = Omit<BaseContextSource, 'activeAdapter'> & {
-    activeAdapter: Readable<FileSource | undefined>
+export type ContextSource = Omit<BaseContextSource, 'activeSource'> & {
+    activeSource: Readable<FileSource | undefined>
 }
 
 export type ContextI18n = BaseContextI18n
@@ -134,8 +134,8 @@ export function provideUploaderContext(value: IUploaderContext): void {
         isOnline: value.isOnline,
     })
     setContext(SourceKey, {
-        activeAdapter: value.activeAdapter,
-        setActiveAdapter: value.setActiveAdapter,
+        activeSource: value.activeSource,
+        setActiveSource: value.setActiveSource,
         oneDriveConfigs: value.oneDriveConfigs,
         googleDriveConfigs: value.googleDriveConfigs,
         dropboxConfigs: value.dropboxConfigs,

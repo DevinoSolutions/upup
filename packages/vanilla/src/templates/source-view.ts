@@ -4,7 +4,7 @@ import type { UploaderContext } from '../lib/types'
 import { uploadSourceObject } from '../lib/constants'
 
 export function sourceView(ctx: UploaderContext) {
-  const active = ctx.orchestrator.getSnapshot().activeAdapter
+  const active = ctx.orchestrator.getSnapshot().activeSource
   const entry = active ? uploadSourceObject[active] : undefined
   const View = entry?.View
   const Icon = entry?.Icon
@@ -16,7 +16,7 @@ export function sourceView(ctx: UploaderContext) {
 
   const handleCancel = () => {
     ctx.core.emit('source-view-cancel', { sourceId: active })
-    ctx.setActiveAdapter(undefined)
+    ctx.setActiveSource(undefined)
   }
   return html`
     <div class="upup-grid upup-h-full upup-w-full upup-grid-rows-[auto,1fr]" data-upup-slot="adapter-view">

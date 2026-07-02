@@ -14,7 +14,7 @@ function makeOrchestrator(initial: any) {
 
 function makeDeps(over: Partial<any> = {}): { deps: DragDropDeps; orch: any; core: any; setFiles: any } {
   const orch = makeOrchestrator({
-    activeAdapter: undefined, uploadStatus: UploadStatus.IDLE,
+    activeSource: undefined, uploadStatus: UploadStatus.IDLE,
     isAddingMore: false, files: new Map(),
   })
   const core = { files: new Map<string, unknown>(), emit: vi.fn() }
@@ -72,10 +72,10 @@ describe('DragDropController', () => {
   it('is a no-op when an adapter is active or an upload is in progress', () => {
     const { deps, orch, core } = makeDeps()
     const c = new DragDropController(deps)
-    orch._set({ activeAdapter: 'GOOGLE_DRIVE' })
+    orch._set({ activeSource: 'GOOGLE_DRIVE' })
     c.handleDragOver(dragEvent())
     expect(core.emit).not.toHaveBeenCalled()
-    orch._set({ activeAdapter: undefined, uploadStatus: UploadStatus.UPLOADING })
+    orch._set({ activeSource: undefined, uploadStatus: UploadStatus.UPLOADING })
     c.handleDragOver(dragEvent())
     expect(core.emit).not.toHaveBeenCalled()
   })
@@ -118,7 +118,7 @@ describe('DragDropController', () => {
     c.init()
     c.handleDragOver(dragEvent())
     expect(c.getSnapshot().absoluteIsDragging).toBe(true)
-    orch._set({ activeAdapter: 'GOOGLE_DRIVE' })
+    orch._set({ activeSource: 'GOOGLE_DRIVE' })
     expect(c.getSnapshot().absoluteIsDragging).toBe(false)
   })
 

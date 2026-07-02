@@ -81,13 +81,13 @@ export class DragDropController implements ObservableController<DragDropSnapshot
   private get disabled(): boolean {
     const p = this.deps.props()
     const o = this.deps.orchestrator.getSnapshot()
-    return p.disableDragDrop || !!o.activeAdapter || isUploadActive(o.uploadStatus)
+    return p.disableDragDrop || !!o.activeSource || isUploadActive(o.uploadStatus)
   }
 
   private compute(): DragDropSnapshot {
     const o = this.deps.orchestrator.getSnapshot()
     const filesSize = this.deps.filesSize()
-    const active = o.activeAdapter
+    const active = o.activeSource
     const isAddingMore = o.isAddingMore
     return {
       isDragging: this.isDragging,

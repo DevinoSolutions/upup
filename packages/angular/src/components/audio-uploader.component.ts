@@ -176,7 +176,7 @@ export class AudioUploaderComponent implements OnDestroy {
             .then(blob => {
                 const file = new File([blob], `recording-${Date.now()}.${ext}`, { type: blob.type })
                 void this.store.handleSetSelectedFiles([file])
-                this.store.setActiveAdapter(undefined)
+                this.store.setActiveSource(undefined)
             })
     }
 

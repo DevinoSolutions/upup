@@ -88,7 +88,7 @@ function makeStoreMock(files: Map<string, UploadFile>) {
     return {
         files: () => files,
         isAddingMore: () => false,
-        activeAdapter: () => undefined,
+        activeSource: () => undefined,
         isDark: () => false,
         viewMode: () => 'list' as const,
         uploadStatus: () => UploadStatus.IDLE,

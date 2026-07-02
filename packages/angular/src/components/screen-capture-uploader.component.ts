@@ -215,7 +215,7 @@ export class ScreenCaptureUploaderComponent implements OnDestroy {
             .then(blob => {
                 const file = new File([blob], `screen-recording-${Date.now()}.webm`, { type: blob.type })
                 void this.store.handleSetSelectedFiles([file])
-                this.store.setActiveAdapter(undefined)
+                this.store.setActiveSource(undefined)
             })
     }
 

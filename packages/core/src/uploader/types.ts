@@ -115,7 +115,7 @@ export interface UploaderCommands {
   closeImageEditor(): void
   saveImageEdit(editedImageData: string, mimeType?: string): void
   replaceFile(fileId: string, newFile: UploadFile): void
-  setActiveAdapter(adapter: FileSource | undefined): void
+  setActiveSource(adapter: FileSource | undefined): void
   setIsAddingMore(value: boolean): void
   setViewMode(mode: 'grid' | 'list'): void
 }

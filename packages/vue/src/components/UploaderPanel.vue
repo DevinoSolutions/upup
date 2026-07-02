@@ -14,7 +14,7 @@ import SourceView from './SourceView.vue'
 import FileList from './FileList.vue'
 
 const { files } = useUploaderFiles()
-const { activeAdapter } = useUploaderSource()
+const { activeSource } = useUploaderSource()
 const { isAddingMore } = useUploaderView()
 const { isOnline, inputRef, openFilePicker } = useUploaderRuntime()
 const { translations: tr } = useUploaderI18n()
@@ -75,10 +75,10 @@ function onKeyDown(e: KeyboardEvent) {
                 No internet connection — uploads will resume when you reconnect.
             </div>
         </template>
-        <template v-if="!!activeAdapter">
+        <template v-if="!!activeSource">
             <SourceView />
         </template>
-        <template v-if="!activeAdapter && (isAddingMore || !files.size)">
+        <template v-if="!activeSource && (isAddingMore || !files.size)">
             <SourceSelector />
         </template>
         <FileList />

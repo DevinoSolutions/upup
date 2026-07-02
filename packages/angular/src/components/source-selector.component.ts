@@ -19,7 +19,7 @@ import { NgComponentOutlet } from '@angular/common'
  * SourceSelector — Angular port of SourceSelector.svelte + useSourceSelector composable.
  *
  * Renders one tile per source in store.uiProps.sources with data-testid="upup-source-${id}".
- * Clicking a non-LOCAL tile calls store.setActiveAdapter(id).
+ * Clicking a non-LOCAL tile calls store.setActiveSource(id).
  * LOCAL tile is intentionally no-op here (file picker is owned by the shell).
  *
  * Below the tiles (svelte parity), the empty-state copy block renders:
@@ -315,7 +315,7 @@ export class SourceSelectorComponent {
      * Unified tile click handler — 1:1 port of svelte useSourceSelector.handleAdapterClick:
      *   onIntegrationClick(sourceId)
      *   core?.emit('source-click', { sourceId })
-     *   if (sourceId === LOCAL) openFilePicker() else setActiveAdapter(sourceId)
+     *   if (sourceId === LOCAL) openFilePicker() else setActiveSource(sourceId)
      * Fires for EVERY source (including LOCAL) — no dead button.
      */
     handleAdapterClick(sourceId: FileSource): void {
@@ -324,7 +324,7 @@ export class SourceSelectorComponent {
         if (sourceId === FileSource.LOCAL) {
             this.store.openFilePicker()
         } else {
-            this.store.setActiveAdapter(sourceId)
+            this.store.setActiveSource(sourceId)
         }
     }
 

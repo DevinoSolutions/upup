@@ -12,15 +12,15 @@ import DefaultLoaderIcon from './DefaultLoaderIcon'
 
 export default function SourceView() {
     const { core } = useUploaderRuntime()
-    const { activeAdapter, setActiveAdapter } = useUploaderSource()
+    const { activeSource, setActiveSource } = useUploaderSource()
     const { translations: tr } = useUploaderI18n()
     const { mini } = useUploaderOptions()
     const { isDark: dark, slotOverrides: slotClasses } = useUploaderTheme()
     const UploadComponent =
-        activeAdapter && uploadSourceObject[activeAdapter].Component
-    const Icon = activeAdapter && uploadSourceObject[activeAdapter].Icon
+        activeSource && uploadSourceObject[activeSource].Component
+    const Icon = activeSource && uploadSourceObject[activeSource].Icon
 
-    if (!UploadComponent || mini || !activeAdapter || !Icon) return null
+    if (!UploadComponent || mini || !activeSource || !Icon) return null
 
     return (
         <div
@@ -48,8 +48,8 @@ export default function SourceView() {
                         slotClasses.sourceViewCancelButton,
                     )}
                     onClick={() => {
-                        core?.emit('source-view-cancel', { sourceId: activeAdapter })
-                        setActiveAdapter(undefined)
+                        core?.emit('source-view-cancel', { sourceId: activeSource })
+                        setActiveSource(undefined)
                     }}
                     type="button"
                 >

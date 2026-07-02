@@ -24,7 +24,7 @@ export class BoxService {
         BOX_DESCRIPTOR,
         {
             onFilesSelected: (files) => { void this.store.handleSetSelectedFiles(files as File[]) },
-            onClose: () => { this.store.setActiveAdapter(undefined) },
+            onClose: () => { this.store.setActiveSource(undefined) },
         },
     )
 

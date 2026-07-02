@@ -11,7 +11,7 @@ export function uploaderPanel(ctx: UploaderContext) {
   const tr = ctx.translations
   const dd = ctx.controllers.dragDrop.getSnapshot()
   const filesSize = o.files.size
-  const activeAdapter = o.activeAdapter
+  const activeSource = o.activeSource
   const isAddingMore = o.isAddingMore
   const isOnline = o.isOnline
 
@@ -49,8 +49,8 @@ export function uploaderPanel(ctx: UploaderContext) {
           No internet connection — uploads will resume when you reconnect.
         </div>
       ` : nothing}
-      ${!!activeAdapter ? sourceView(ctx) : nothing}
-      ${!activeAdapter && (isAddingMore || !filesSize) ? sourceSelector(ctx) : nothing}
+      ${!!activeSource ? sourceView(ctx) : nothing}
+      ${!activeSource && (isAddingMore || !filesSize) ? sourceSelector(ctx) : nothing}
       ${fileList(ctx)}
     </div>
   `

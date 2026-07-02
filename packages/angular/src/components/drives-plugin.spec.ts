@@ -4,8 +4,8 @@
  * Tests:
  *   - SourceSelectorComponent: renders source tiles with correct testids incl.
  *     upup-source-url and upup-source-googleDrive; clicking a drive tile calls
- *     store.setActiveAdapter('googleDrive').
- *   - SourceViewComponent: set activeAdapter → url renders UrlUploader;
+ *     store.setActiveSource('googleDrive').
+ *   - SourceViewComponent: set activeSource → url renders UrlUploader;
  *     set 'googleDrive' → renders GoogleDrive wrapper; undefined → renders nothing.
  *   - Wrapper routing: GoogleDriveUploaderComponent with mode='client' renders
  *     ClientGoogleDriveUploader; mode='server' renders ServerModeDriveUploader.
@@ -144,9 +144,9 @@ describe('SourceSelectorComponent', () => {
         expect(fixture.nativeElement.querySelector('[data-testid="upup-source-link"]')).toBeNull()
     })
 
-    it('clicking the googleDrive tile calls store.setActiveAdapter("googleDrive") and NOT openFilePicker', async () => {
+    it('clicking the googleDrive tile calls store.setActiveSource("googleDrive") and NOT openFilePicker', async () => {
         store = makeStore()
-        const adapterSpy = vi.spyOn(store, 'setActiveAdapter')
+        const adapterSpy = vi.spyOn(store, 'setActiveSource')
         const pickerSpy = vi.spyOn(store, 'openFilePicker')
 
         await TestBed.configureTestingModule({
@@ -167,10 +167,10 @@ describe('SourceSelectorComponent', () => {
         expect(pickerSpy).not.toHaveBeenCalled()
     })
 
-    it('clicking the LOCAL tile calls store.openFilePicker() and NOT setActiveAdapter', async () => {
+    it('clicking the LOCAL tile calls store.openFilePicker() and NOT setActiveSource', async () => {
         store = makeStore()
         const pickerSpy = vi.spyOn(store, 'openFilePicker')
-        const adapterSpy = vi.spyOn(store, 'setActiveAdapter')
+        const adapterSpy = vi.spyOn(store, 'setActiveSource')
 
         await TestBed.configureTestingModule({
             imports: [SourceSelectorComponent],
@@ -291,9 +291,9 @@ describe('SourceViewComponent', () => {
         expect(slot).toBeNull()
     })
 
-    it('renders the url-uploader when activeAdapter is "url"', async () => {
+    it('renders the url-uploader when activeSource is "url"', async () => {
         store = makeStore()
-        store.setActiveAdapter('url' as any)
+        store.setActiveSource('url' as any)
 
         await TestBed.configureTestingModule({
             imports: [SourceViewComponent],
@@ -313,9 +313,9 @@ describe('SourceViewComponent', () => {
         expect(urlEl).not.toBeNull()
     })
 
-    it('renders the google-drive wrapper when activeAdapter is "googleDrive"', async () => {
+    it('renders the google-drive wrapper when activeSource is "googleDrive"', async () => {
         store = makeStore()
-        store.setActiveAdapter('googleDrive' as any)
+        store.setActiveSource('googleDrive' as any)
 
         await TestBed.configureTestingModule({
             imports: [SourceViewComponent],
@@ -338,7 +338,7 @@ describe('SourceViewComponent', () => {
         const miniStore = new UpupStore()
         miniStore.setConfig({ mini: true, sources: ['url'] } as any)
         miniStore.init()
-        miniStore.setActiveAdapter('url' as any)
+        miniStore.setActiveSource('url' as any)
         store = miniStore
 
         await TestBed.configureTestingModule({

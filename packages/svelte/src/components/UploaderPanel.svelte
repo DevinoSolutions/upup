@@ -7,7 +7,7 @@
   import FileList from './FileList.svelte'
 
   const { files } = useUploaderFiles()
-  const { activeAdapter } = useUploaderSource()
+  const { activeSource } = useUploaderSource()
   const { isAddingMore } = useUploaderView()
   const { isOnline, getFileInput, openFilePicker } = useUploaderRuntime()
   const { translations: tr } = useUploaderI18n()
@@ -52,7 +52,7 @@
       No internet connection — uploads will resume when you reconnect.
     </div>
   {/if}
-  {#if !!$activeAdapter}<SourceView />{/if}
-  {#if !$activeAdapter && ($isAddingMore || !$files.size)}<SourceSelector />{/if}
+  {#if !!$activeSource}<SourceView />{/if}
+  {#if !$activeSource && ($isAddingMore || !$files.size)}<SourceSelector />{/if}
   <FileList />
 </div>

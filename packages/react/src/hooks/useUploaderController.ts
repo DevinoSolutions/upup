@@ -55,7 +55,7 @@ const SERVER_SNAPSHOT: OrchestratorState = {
     uploadEta: 0,
     uploadedBytes: 0,
     totalBytes: 0,
-    activeAdapter: undefined,
+    activeSource: undefined,
     editingFile: null,
     editorQueue: [],
     isAddingMore: false,
@@ -394,12 +394,12 @@ export default function useUploaderController(props: UploaderProps): IUploaderCo
     }, [root])
 
     // ── Dispatch<SetStateAction> setters (preserve functional-update branch) ──
-    const setActiveAdapter: Dispatch<SetStateAction<FileSource | undefined>> = useCallback(
+    const setActiveSource: Dispatch<SetStateAction<FileSource | undefined>> = useCallback(
         (value: SetStateAction<FileSource | undefined>) => {
             if (typeof value === 'function') {
-                root?.commands.setActiveAdapter(value(root.orchestrator.getSnapshot().activeAdapter))
+                root?.commands.setActiveSource(value(root.orchestrator.getSnapshot().activeSource))
             } else {
-                root?.commands.setActiveAdapter(value)
+                root?.commands.setActiveSource(value)
             }
         }, [root],
     )
@@ -453,8 +453,8 @@ export default function useUploaderController(props: UploaderProps): IUploaderCo
         serverUrl: resolved.serverUrl,
         inputRef,
         openFilePicker,
-        activeAdapter: state.activeAdapter,
-        setActiveAdapter,
+        activeSource: state.activeSource,
+        setActiveSource,
         isAddingMore: state.isAddingMore,
         setIsAddingMore,
         viewMode: state.viewMode,

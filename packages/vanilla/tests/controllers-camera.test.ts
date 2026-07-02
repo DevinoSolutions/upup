@@ -13,7 +13,7 @@ beforeEach(() => { vi.restoreAllMocks() })
 describe('CameraController', () => {
   it('starts and stops the camera, stopping all tracks on dispose', async () => {
     const { track } = mockMedia()
-    const c = new CameraController({ core: { emit: vi.fn() } as any, setFiles: vi.fn(async () => {}), setActiveAdapter: vi.fn(), invalidate: vi.fn() })
+    const c = new CameraController({ core: { emit: vi.fn() } as any, setFiles: vi.fn(async () => {}), setActiveSource: vi.fn(), invalidate: vi.fn() })
     c.activate()
     await c.startCamera()
     c.dispose()
@@ -21,7 +21,7 @@ describe('CameraController', () => {
   })
   it('toggles facing mode', () => {
     mockMedia()
-    const c = new CameraController({ core: { emit: vi.fn() } as any, setFiles: vi.fn(async () => {}), setActiveAdapter: vi.fn(), invalidate: vi.fn() })
+    const c = new CameraController({ core: { emit: vi.fn() } as any, setFiles: vi.fn(async () => {}), setActiveSource: vi.fn(), invalidate: vi.fn() })
     const before = c.getSnapshot().facingMode
     c.handleCameraSwitch()
     expect(c.getSnapshot().facingMode).not.toBe(before)
@@ -33,7 +33,7 @@ describe('CameraController', () => {
     let resolveGum!: (s: MediaStream) => void
     ;(navigator as any).mediaDevices = { getUserMedia: vi.fn(() => new Promise<MediaStream>((r) => { resolveGum = r })) }
     const invalidate = vi.fn()
-    const c = new CameraController({ core: { emit: vi.fn() } as any, setFiles: vi.fn(async () => {}), setActiveAdapter: vi.fn(), invalidate })
+    const c = new CameraController({ core: { emit: vi.fn() } as any, setFiles: vi.fn(async () => {}), setActiveSource: vi.fn(), invalidate })
     const pending = c.startCamera()            // awaits getUserMedia (still pending)
     c.dispose()                                // tear down BEFORE the stream resolves
     const invalidatesAtDispose = invalidate.mock.calls.length

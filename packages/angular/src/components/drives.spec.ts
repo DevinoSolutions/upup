@@ -66,7 +66,7 @@ function makeStoreMock() {
         translations: signal(translations),
         uiProps: { allowedFileTypes: '*' } as any,
         handleSetSelectedFiles: vi.fn().mockResolvedValue(undefined),
-        setActiveAdapter: vi.fn(),
+        setActiveSource: vi.fn(),
     } as unknown as UpupStore
 }
 

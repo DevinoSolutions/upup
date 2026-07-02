@@ -14,7 +14,7 @@ import SourceViewContainer from './shared/SourceViewContainer'
 export default function UrlUploader() {
     const { core } = useUploaderRuntime()
     const { setFiles } = useUploaderFiles()
-    const { setActiveAdapter } = useUploaderSource()
+    const { setActiveSource } = useUploaderSource()
     const { translations: tr } = useUploaderI18n()
     const { icons: { LoaderIcon } } = useUploaderOptions()
     const { isDark: dark, slotOverrides: slotClasses } = useUploaderTheme()
@@ -31,7 +31,7 @@ export default function UrlUploader() {
             })
             setFiles([file])
             setUrl('')
-            setActiveAdapter(undefined)
+            setActiveSource(undefined)
         }
     }
 

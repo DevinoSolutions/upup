@@ -97,7 +97,7 @@ export class UpupStore {
 
     // ── orchState computeds ──────────────────────────────────────
     files!: Signal<OrchSnapshot['files']>
-    activeAdapter!: Signal<FileSource | undefined>
+    activeSource!: Signal<FileSource | undefined>
     isAddingMore!: Signal<boolean>
     viewMode!: Signal<'grid' | 'list'>
     isOnline!: Signal<boolean>
@@ -268,7 +268,7 @@ export class UpupStore {
 
         // ── Assign computeds AFTER stores exist ──────────────────
         this.files = computed(() => this.orchState.state().files)
-        this.activeAdapter = computed(() => this.orchState.state().activeAdapter)
+        this.activeSource = computed(() => this.orchState.state().activeSource)
         this.isAddingMore = computed(() => this.orchState.state().isAddingMore)
         this.viewMode = computed(() => this.orchState.state().viewMode)
         this.isOnline = computed(() => this.orchState.state().isOnline)
@@ -359,7 +359,7 @@ export class UpupStore {
     openFilePicker = (): void => { this.root.openFilePicker() }
 
     // ── Orchestrator passthroughs (delegated to root.commands) ───
-    setActiveAdapter(a: FileSource | undefined): void { this.root.commands.setActiveAdapter(a) }
+    setActiveSource(a: FileSource | undefined): void { this.root.commands.setActiveSource(a) }
     setIsAddingMore(v: boolean): void { this.root.commands.setIsAddingMore(v) }
     setViewMode(m: 'grid' | 'list'): void { this.root.commands.setViewMode(m) }
 

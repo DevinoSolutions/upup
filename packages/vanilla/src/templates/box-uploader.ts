@@ -5,6 +5,6 @@ import { serverModeDriveUploader } from './server-mode-drive-uploader'
 
 export function boxUploader(ctx: UploaderContext) {
   return ctx.mode === 'server'
-    ? serverModeDriveUploader(ctx, { provider: 'box', onBack: () => ctx.setActiveAdapter(undefined) })
+    ? serverModeDriveUploader(ctx, { provider: 'box', onBack: () => ctx.setActiveSource(undefined) })
     : clientDriveUploader(ctx, FileSource.BOX)
 }

@@ -15,14 +15,14 @@ import { toReadable } from '../lib/to-readable'
 
 export function useOneDrive() {
     const { core } = useUploaderRuntime()
-    const { setActiveAdapter } = useUploaderSource()
+    const { setActiveSource } = useUploaderSource()
     const { setFiles } = useUploaderFiles()
 
     const controller = new DriveBrowserController(core!, ONE_DRIVE_DESCRIPTOR, {
         onFilesSelected: (files) => {
             setFiles(files)
         },
-        onClose: () => setActiveAdapter(undefined),
+        onClose: () => setActiveSource(undefined),
     })
 
     const state = toReadable(controller)

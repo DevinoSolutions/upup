@@ -11,7 +11,7 @@
   type RecordingState = 'idle' | 'recording' | 'recorded'
 
   const { setFiles } = useUploaderFiles()
-  const { setActiveAdapter } = useUploaderSource()
+  const { setActiveSource } = useUploaderSource()
   const { isDark: dark } = useUploaderTheme()
 
   let recordingState: RecordingState = $state('idle')
@@ -78,7 +78,7 @@
       .then((blob) => {
         const file = new File([blob], `recording-${Date.now()}.${ext}`, { type: blob.type })
         setFiles([file])
-        setActiveAdapter(undefined)
+        setActiveSource(undefined)
       })
   }
 

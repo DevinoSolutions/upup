@@ -97,7 +97,7 @@ export class CameraUploaderService {
         const file = new File([blob], `capture-${Date.now()}.jpg`, { type: 'image/jpeg' })
         await this.store.handleSetSelectedFiles([file])
         this.capturedUrl.set('')
-        this.store.setActiveAdapter(undefined)
+        this.store.setActiveSource(undefined)
         this.store.core?.emit('camera-confirm', { file })
     }
 

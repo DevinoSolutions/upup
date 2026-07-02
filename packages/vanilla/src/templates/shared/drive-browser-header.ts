@@ -70,7 +70,7 @@ export function driveBrowserHeader(
               },
               slot.driveLogoutButton,
             )}
-            @click=${() => { void handleSignOut(); ctx.setActiveAdapter(undefined) }}
+            @click=${() => { void handleSignOut(); ctx.setActiveSource(undefined) }}
           >
             ${tr.logOut}
           </button>

@@ -11,25 +11,25 @@
   import DefaultLoaderIcon from './DefaultLoaderIcon.svelte'
 
   const { core } = useUploaderRuntime()
-  const { activeAdapter, setActiveAdapter } = useUploaderSource()
+  const { activeSource, setActiveSource } = useUploaderSource()
   const { translations: tr } = useUploaderI18n()
   const { mini } = useUploaderOptions()
   const { isDark: dark, slotOverrides: slotClasses } = useUploaderTheme()
 
   const activeComponent = $derived(
-    $activeAdapter ? uploadSourceObject[$activeAdapter]?.Component : undefined,
+    $activeSource ? uploadSourceObject[$activeSource]?.Component : undefined,
   )
   const AdapterIcon = $derived(
-    $activeAdapter ? uploadSourceObject[$activeAdapter]?.Icon : undefined,
+    $activeSource ? uploadSourceObject[$activeSource]?.Icon : undefined,
   )
 
   const shouldRender = $derived(
-    !!activeComponent && !mini && !!$activeAdapter && !!AdapterIcon,
+    !!activeComponent && !mini && !!$activeSource && !!AdapterIcon,
   )
 
   function handleCancel() {
-    core?.emit('source-view-cancel', { sourceId: $activeAdapter })
-    setActiveAdapter(undefined)
+    core?.emit('source-view-cancel', { sourceId: $activeSource })
+    setActiveSource(undefined)
   }
 </script>
 

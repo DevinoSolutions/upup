@@ -109,12 +109,12 @@ export function fileList(ctx: UploaderContext) {
   })
   const viewMode = o.viewMode
   const tr = ctx.translations
-  const activeAdapter = o.activeAdapter
+  const activeSource = o.activeSource
   const isAddingMore = o.isAddingMore
 
-  // Mirror svelte: hidden when isAddingMore OR activeAdapter OR !files.size
+  // Mirror svelte: hidden when isAddingMore OR activeSource OR !files.size
   // In vanilla we use early-return nothing (same semantic as upup-hidden)
-  if (activeAdapter || (!sortedFiles.length && !isAddingMore)) return nothing
+  if (activeSource || (!sortedFiles.length && !isAddingMore)) return nothing
 
   const shouldVirtualize = sortedFiles.length >= VIRTUAL_SCROLL_THRESHOLD && viewMode !== 'grid'
   const uploadStatus = o.uploadStatus

@@ -16,7 +16,7 @@ import { SourceViewContainerComponent } from './source-view-container.component'
  *   - store.translations() ↔ tr
  *   - store.isDark() ↔ $dark
  *   - store.slotOverrides() ↔ $slotClasses
- *   - On submit: emit('url-submit'), fetchImage → handleSetSelectedFiles, setActiveAdapter(undefined)
+ *   - On submit: emit('url-submit'), fetchImage → handleSetSelectedFiles, setActiveSource(undefined)
  *
  * Note: No @angular/forms dep — two-way bind via (input) + [value] instead of ngModel.
  */
@@ -93,7 +93,7 @@ export class UrlUploaderComponent {
             Object.assign(file, { url: this.url })
             await this.store.handleSetSelectedFiles([file])
             this.url = ''
-            this.store.setActiveAdapter(undefined)
+            this.store.setActiveSource(undefined)
         }
     }
 }

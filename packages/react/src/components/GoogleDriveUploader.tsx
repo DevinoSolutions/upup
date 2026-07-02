@@ -7,12 +7,12 @@ import ServerModeDriveUploader from './ServerModeDriveUploader'
 
 export default function GoogleDriveUploader() {
     const { mode } = useUploaderRuntime()
-    const { setActiveAdapter } = useUploaderSource()
+    const { setActiveSource } = useUploaderSource()
     if (mode === 'server') {
         return (
             <ServerModeDriveUploader
                 provider="google-drive"
-                onBack={() => setActiveAdapter(undefined)}
+                onBack={() => setActiveSource(undefined)}
             />
         )
     }

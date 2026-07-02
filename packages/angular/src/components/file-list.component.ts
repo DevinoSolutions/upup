@@ -245,12 +245,12 @@ export class FileListComponent implements AfterViewInit, OnDestroy {
 
     get fileListClass(): string {
         const isAddingMore = this.store.isAddingMore()
-        const activeAdapter = this.store.activeAdapter()
+        const activeSource = this.store.activeSource()
         const files = this.store.files()
         const themeSlots = this.store.slots()
         return cn(
             'upup-relative upup-flex upup-h-full upup-flex-col upup-rounded-lg upup-shadow',
-            { 'upup-hidden': isAddingMore || !!activeAdapter || !files.size },
+            { 'upup-hidden': isAddingMore || !!activeSource || !files.size },
             (themeSlots as any)?.fileList?.root ?? '',
         )
     }

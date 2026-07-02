@@ -11,7 +11,7 @@ type RecordingState = 'idle' | 'recording' | 'recorded'
 
 export default function ScreenCaptureUploader() {
     const { setFiles } = useUploaderFiles()
-    const { setActiveAdapter } = useUploaderSource()
+    const { setActiveSource } = useUploaderSource()
     const { isDark: dark } = useUploaderTheme()
 
     const [state, setState] = useState<RecordingState>('idle')
@@ -116,9 +116,9 @@ export default function ScreenCaptureUploader() {
                     { type: blob.type },
                 )
                 setFiles([file])
-                setActiveAdapter(undefined)
+                setActiveSource(undefined)
             })
-    }, [videoUrl, setFiles, setActiveAdapter])
+    }, [videoUrl, setFiles, setActiveSource])
 
     const formatTime = (s: number) => {
         const m = Math.floor(s / 60)

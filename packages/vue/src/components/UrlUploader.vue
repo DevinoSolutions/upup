@@ -14,7 +14,7 @@ import SourceViewContainer from './shared/SourceViewContainer.vue'
 
 const { core } = useUploaderRuntime()
 const { setFiles } = useUploaderFiles()
-const { setActiveAdapter } = useUploaderSource()
+const { setActiveSource } = useUploaderSource()
 const { translations: tr } = useUploaderI18n()
 const { icons: { LoaderIcon } } = useUploaderOptions()
 const { isDark: dark, slotOverrides: slotClasses } = useUploaderTheme()
@@ -30,7 +30,7 @@ async function handleFormSubmit(e: Event) {
         Object.assign(file, { url: url.value })
         setFiles([file])
         url.value = ''
-        setActiveAdapter(undefined)
+        setActiveSource(undefined)
     }
 }
 </script>

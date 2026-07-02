@@ -30,7 +30,7 @@ vi.mock('../src/context/UploaderContext', () => ({
         viewMode: _viewMode,
     }),
     useUploaderSource: () => ({
-        activeAdapter: null,
+        activeSource: null,
     }),
     useUploaderFiles: () => ({
         files: makeFilesMap(_fileCount),

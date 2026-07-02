@@ -5,6 +5,6 @@ import { serverModeDriveUploader } from './server-mode-drive-uploader'
 
 export function googleDriveUploader(ctx: UploaderContext) {
   return ctx.mode === 'server'
-    ? serverModeDriveUploader(ctx, { provider: 'google-drive', onBack: () => ctx.setActiveAdapter(undefined) })
+    ? serverModeDriveUploader(ctx, { provider: 'google-drive', onBack: () => ctx.setActiveSource(undefined) })
     : clientDriveUploader(ctx, FileSource.GOOGLE_DRIVE)
 }

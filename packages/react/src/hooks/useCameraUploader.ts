@@ -18,7 +18,7 @@ export enum FacingMode {
 export default function useCameraUploader() {
     const { core } = useUploaderRuntime()
     const { setFiles } = useUploaderFiles()
-    const { setActiveAdapter } = useUploaderSource()
+    const { setActiveSource } = useUploaderSource()
     const { translations } = useUploaderI18n()
     const props = useUploaderOptions()
     const theme = useUploaderTheme()
@@ -45,7 +45,7 @@ export default function useCameraUploader() {
         if (file) {
             setFiles([file])
             setUrl('')
-            setActiveAdapter(undefined)
+            setActiveSource(undefined)
             core?.emit('camera-confirm', { file })
         }
     }

@@ -5,7 +5,7 @@ export type RecordingState = 'idle' | 'recording' | 'recorded'
 
 export interface ScreenDeps {
   setFiles: (files: File[]) => Promise<void>
-  setActiveAdapter: (a: FileSource | undefined) => void
+  setActiveSource: (a: FileSource | undefined) => void
   invalidate: () => void
 }
 
@@ -101,7 +101,7 @@ export class ScreenCaptureController implements AdapterController<ScreenSnapshot
       .then(async (blob) => {
         const file = new File([blob], `screen-recording-${Date.now()}.webm`, { type: blob.type })
         await this.deps.setFiles([file])
-        this.deps.setActiveAdapter(undefined)
+        this.deps.setActiveSource(undefined)
       })
   }
 

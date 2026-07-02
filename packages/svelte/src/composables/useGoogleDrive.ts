@@ -15,7 +15,7 @@ import { toReadable } from '../lib/to-readable'
 
 export function useGoogleDrive() {
     const { core } = useUploaderRuntime()
-    const { setActiveAdapter } = useUploaderSource()
+    const { setActiveSource } = useUploaderSource()
     const { setFiles } = useUploaderFiles()
 
     // core is always non-null inside <UpupUploader /> — the injection throws otherwise.
@@ -23,7 +23,7 @@ export function useGoogleDrive() {
         onFilesSelected: (files) => {
             setFiles(files)
         },
-        onClose: () => setActiveAdapter(undefined),
+        onClose: () => setActiveSource(undefined),
     })
 
     const state = toReadable(controller)

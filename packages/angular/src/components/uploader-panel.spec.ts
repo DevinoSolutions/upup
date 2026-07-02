@@ -94,7 +94,7 @@ describe('UploaderPanelComponent', () => {
         store = makeStore()
         const fixture = await setup(store)
         // Set active adapter
-        store.setActiveAdapter('google-drive' as any)
+        store.setActiveSource('google-drive' as any)
         fixture.detectChanges()
         const el: HTMLElement = fixture.nativeElement
         expect(el.querySelector('upup-adapter-selector')).toBeNull()
@@ -103,7 +103,7 @@ describe('UploaderPanelComponent', () => {
     it('shows SourceView when an adapter is active', async () => {
         store = makeStore()
         const fixture = await setup(store)
-        store.setActiveAdapter('google-drive' as any)
+        store.setActiveSource('google-drive' as any)
         fixture.detectChanges()
         const el: HTMLElement = fixture.nativeElement
         expect(el.querySelector('upup-adapter-view')).not.toBeNull()
@@ -190,7 +190,7 @@ describe('UploaderPanelComponent', () => {
         const fixture = await setup(store)
         const comp = fixture.componentInstance
 
-        store.setActiveAdapter('google-drive' as any)
+        store.setActiveSource('google-drive' as any)
         fixture.detectChanges()
 
         const handleSetSpy = vi.spyOn(store, 'handleSetSelectedFiles')

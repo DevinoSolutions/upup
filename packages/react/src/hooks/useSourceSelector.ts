@@ -11,7 +11,7 @@ import { uploadSourceObject } from '../lib/constants'
 
 export default function useSourceSelector() {
     const { core, openFilePicker } = useUploaderRuntime()
-    const { setActiveAdapter } = useUploaderSource()
+    const { setActiveSource } = useUploaderSource()
     const { setFiles } = useUploaderFiles()
     const { translations } = useUploaderI18n()
     const { sources, onIntegrationClick } = useUploaderOptions()
@@ -32,9 +32,9 @@ export default function useSourceSelector() {
             onIntegrationClick(sourceId)
             core?.emit('source-click', { sourceId })
             if (sourceId === FileSource.LOCAL) openFilePicker()
-            else setActiveAdapter(sourceId)
+            else setActiveSource(sourceId)
         },
-        [core, openFilePicker, onIntegrationClick, setActiveAdapter],
+        [core, openFilePicker, onIntegrationClick, setActiveSource],
     )
 
     const handleInputFileChange: ChangeEventHandler<HTMLInputElement> =
