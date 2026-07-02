@@ -18,7 +18,7 @@ import TrashIcon from '../components/TrashIcon.svelte'
 
 const EMPTY_STYLE: Record<string, string> = {}
 
-export function createUploaderController(props: UploaderProps): IUploaderContext {
+export function createUploaderContext(props: UploaderProps): IUploaderContext {
     // ── Destructure props with defaults ──────────────────────────
     const {
         allowedFileTypes: acceptProp = '*',

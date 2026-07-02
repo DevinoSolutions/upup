@@ -1,7 +1,7 @@
 <script lang="ts">
 import { cn } from '@upup/core'
 import type { UploaderProps } from './shared/types'
-import { createUploaderController } from './context/create-uploader-controller'
+import { createUploaderContext } from './context/create-uploader-context'
 import { provideUploaderContext } from './context/uploader-context'
 import ImageEditorStub from './components/ImageEditorStub.svelte'
 import UploaderPanel from './components/UploaderPanel.svelte'
@@ -11,7 +11,7 @@ let props: UploaderProps = $props()
 // Props are init-time configuration (mirrors Vue's `useUploaderController(props)` and
 // React's one-shot context build); capturing the initial value here is intentional.
 // svelte-ignore state_referenced_locally
-const ctx = createUploaderController(props)
+const ctx = createUploaderContext(props)
 provideUploaderContext(ctx)
 
 const { isDark, slotOverrides } = ctx.theme
