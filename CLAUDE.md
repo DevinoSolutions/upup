@@ -159,6 +159,16 @@ recurring visual traps it will never flag — check these live:
 - `Source*` — upload-source selection UI: `SourceSelector`, `SourceView`.
 - `Drive*` — cloud-drive browsing: `DriveBrowser`, `DriveFile`.
 - Upload commands: `startUpload`, `uploadFiles`, `replaceFiles`.
+- Lifecycle verb: `destroy()` everywhere (`dispose`/`teardown` are dead);
+  removal callback: `onFileRemoved` (past tense — the `onFileRemove` alias is
+  dead); file limits are the flat `maxFiles` + size/type props (the
+  `restrictions` object is dead). All retired in N3 (2026-07-02) — do not
+  reintroduce.
+- One name per function, one function per name: no aliased re-exports, and a
+  name means the same thing in every package (`createUpupHandler` = the
+  @upup/server core factory; `createUpupNextHandler` = its Next wrapper).
+- `UploadError` and its subclasses keep their `Upload*` names — error
+  taxonomy, not UI vocabulary; only `Adapter*`/`Root*` were retired.
 - The `Adapter*`/`Root*` → `Drive*`/`Uploader*`/`Source*` vocabulary sweep is
   COMPLETE in code, i18n keys, and theme slots (N1, 2026-07-01); the cloud-drive
   config is ONE camelCase `cloudDrives` shape end-to-end (N2, 2026-07-02 — the
