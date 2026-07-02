@@ -2,9 +2,9 @@ import { onMount, onDestroy } from 'svelte'
 import { derived } from 'svelte/store'
 import {
     FileSource,
-    normalizeRootOptions,
-    createRootController,
-    type RootControllerOptions,
+    normalizeUploaderOptions,
+    createUploaderController,
+    type UploaderControllerOptions,
     type UploadFile,
 } from '@upup/core'
 import type { Component } from 'svelte'
@@ -95,12 +95,12 @@ export function createUploaderContext(props: UploaderProps): IUploaderContext {
 
     // ── Build factory-compatible options object ──────────────────
     // UploaderProps.allowedFileTypes is string | string[] | undefined;
-    // RootControllerOptions.allowedFileTypes is string | undefined.
-    // normalizeRootOptions handles both via join cast.
-    const factoryOptions: RootControllerOptions = {
+    // UploaderControllerOptions.allowedFileTypes is string | undefined.
+    // normalizeUploaderOptions handles both via join cast.
+    const factoryOptions: UploaderControllerOptions = {
         provider,
         mode: modeProp,
-        sources: sources as RootControllerOptions['sources'],
+        sources: sources as UploaderControllerOptions['sources'],
         uploadEndpoint,
         serverUrl,
         maxFiles,
@@ -155,7 +155,7 @@ export function createUploaderContext(props: UploaderProps): IUploaderContext {
     }
 
     // ── Normalize options (pure) ─────────────────────────────────
-    const normalized = normalizeRootOptions(factoryOptions)
+    const normalized = normalizeUploaderOptions(factoryOptions)
     const { resolved } = normalized
 
     // ── Core (via useUpupUpload; owns core lifecycle) ────────────
@@ -170,7 +170,7 @@ export function createUploaderContext(props: UploaderProps): IUploaderContext {
     })
 
     // ── Root controller (created once, owns orchestrator/theme/plugins/commands) ──
-    const root = createRootController(
+    const root = createUploaderController(
         { core: upload.core, options: factoryOptions, normalized },
         { connectSSE: (file) => connectSSE(file) },
     )

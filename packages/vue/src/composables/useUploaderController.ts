@@ -1,10 +1,10 @@
 import { ref, shallowRef, computed, onMounted, onUnmounted, defineComponent, h, type Ref } from 'vue'
 import {
     FileSource,
-    normalizeRootOptions,
-    createRootController,
+    normalizeUploaderOptions,
+    createUploaderController,
     type OrchestratorState,
-    type RootControllerOptions,
+    type UploaderControllerOptions,
     type UploadFile,
 } from '@upup/core'
 import type { UploaderProps } from '../shared/types'
@@ -111,12 +111,12 @@ export default function useUploaderController(props: UploaderProps): IUploaderCo
 
     // ── Build factory-compatible options object ──────────────────
     // UploaderProps.allowedFileTypes is string | string[] | undefined;
-    // RootControllerOptions.allowedFileTypes is string | undefined.
-    // normalizeRootOptions handles both at runtime via the join cast.
-    const factoryOptions: RootControllerOptions = {
+    // UploaderControllerOptions.allowedFileTypes is string | undefined.
+    // normalizeUploaderOptions handles both at runtime via the join cast.
+    const factoryOptions: UploaderControllerOptions = {
         provider,
         mode: modeProp,
-        sources: sources as RootControllerOptions['sources'],
+        sources: sources as UploaderControllerOptions['sources'],
         uploadEndpoint,
         serverUrl,
         maxFiles,
@@ -171,7 +171,7 @@ export default function useUploaderController(props: UploaderProps): IUploaderCo
     }
 
     // ── Normalize options (pure) ─────────────────────────────────
-    const normalized = normalizeRootOptions(factoryOptions)
+    const normalized = normalizeUploaderOptions(factoryOptions)
     const { resolved } = normalized
 
     // ── Core (via useUpupUpload; owns core lifecycle) ────────────
@@ -187,7 +187,7 @@ export default function useUploaderController(props: UploaderProps): IUploaderCo
     })
 
     // ── Root controller (created once, owns orchestrator/theme/plugins/commands) ──
-    const root = createRootController(
+    const root = createUploaderController(
         { core, options: factoryOptions, normalized },
         { connectSSE: (file) => connectSSE(file) },
     )

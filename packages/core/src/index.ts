@@ -197,7 +197,7 @@ export type { OrchestratorState, OrchestratorCallbacks, UploadProgressInfo } fro
 export { getDir, normalizeSource, DEFAULT_SOURCES, DEFAULT_MAX_FILE_SIZE } from './orchestrator/helpers'
 
 // ── Root composition factory (C-2) ───────────────────────
-export * from './root'
+export * from './uploader'
 
 // ── Shared utilities ─────────────────────────────────────
 export { ACCEPT_PRESETS, resolveAccept } from './utils/accept-presets'

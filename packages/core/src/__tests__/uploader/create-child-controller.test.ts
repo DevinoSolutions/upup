@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { createChildController } from '../../root/create-child-controller'
+import { createChildController } from '../../uploader/create-child-controller'
 
 describe('createChildController', () => {
   it('constructs via the factory and exposes the instance', () => {

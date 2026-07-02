@@ -8,17 +8,17 @@ import { OneDrivePlugin } from '../adapters/one-drive-plugin'
 import { revokeFileUrl } from '../utils/file-helpers'
 import type { UploadFile } from '../types/upload-file'
 import type {
-  CreateRootControllerParams,
+  CreateUploaderControllerParams,
   RootCallbacks,
   RootCommands,
-  RootController,
+  UploaderController,
   RootHostHooks,
 } from './types'
 
-export function createRootController(
-  { core, options, normalized }: CreateRootControllerParams,
+export function createUploaderController(
+  { core, options, normalized }: CreateUploaderControllerParams,
   hostHooks: RootHostHooks = {},
-): RootController {
+): UploaderController {
   const { resolved } = normalized
   const { connectSSE } = hostHooks
 

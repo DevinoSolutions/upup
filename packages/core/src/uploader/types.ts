@@ -42,7 +42,7 @@ export interface RootCallbacks extends OrchestratorCallbacks {
 }
 
 /** Options accepted by the factory (framework-agnostic superset; each framework's props satisfy this structurally). */
-export interface RootControllerOptions extends Omit<CoreOptions, 'cloudDrives' | 'onError'>, RootCallbacks {
+export interface UploaderControllerOptions extends Omit<CoreOptions, 'cloudDrives' | 'onError'>, RootCallbacks {
   dark?: boolean
   theme?: UpupThemeConfig
   sources?: Array<FileSource | string>
@@ -129,14 +129,14 @@ export interface RootHostHooks {
 }
 
 /** Parameters for the factory: the host-created core, the raw options, and the precomputed normalization. */
-export interface CreateRootControllerParams {
+export interface CreateUploaderControllerParams {
   core: UpupCore
-  options: RootControllerOptions
+  options: UploaderControllerOptions
   normalized: NormalizedRootOptions
 }
 
 /** Stable handle returned by the factory. */
-export interface RootController {
+export interface UploaderController {
   core: UpupCore
   orchestrator: UploaderOrchestrator
   theme: ThemeStore

@@ -1,17 +1,17 @@
 import { describe, it, expect, vi } from 'vitest'
-import { createRootController } from '../../root/create-root-controller'
-import { normalizeRootOptions } from '../../root/normalize-options'
+import { createUploaderController } from '../../uploader/create-uploader-controller'
+import { normalizeUploaderOptions } from '../../uploader/normalize-options'
 import { UpupCore } from '../../core'
-import type { RootControllerOptions } from '../../root/types'
+import type { UploaderControllerOptions } from '../../uploader/types'
 
-function build(options: RootControllerOptions = {}, hostHooks = {}) {
-  const normalized = normalizeRootOptions(options)
+function build(options: UploaderControllerOptions = {}, hostHooks = {}) {
+  const normalized = normalizeUploaderOptions(options)
   const core = new UpupCore(normalized.coreOptions)
-  const root = createRootController({ core, options, normalized }, hostHooks)
+  const root = createUploaderController({ core, options, normalized }, hostHooks)
   return { root, core, normalized }
 }
 
-describe('createRootController', () => {
+describe('createUploaderController', () => {
   it('exposes core, orchestrator, theme, resolved, commands', () => {
     const { root, core } = build()
     expect(root.core).toBe(core)

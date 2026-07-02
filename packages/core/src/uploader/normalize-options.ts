@@ -7,9 +7,9 @@ import type { FileSource } from '../types/file-source'
 import type { LocaleBundle, Translator } from '../i18n/types'
 import type { ResolvedImageEditorOptions } from '../types/image-editor'
 import type { CoreOptions } from '../core'
-import type { NormalizedRootOptions, RootControllerOptions, RootResolved } from './types'
+import type { NormalizedRootOptions, UploaderControllerOptions, RootResolved } from './types'
 
-export function normalizeRootOptions(options: RootControllerOptions): NormalizedRootOptions {
+export function normalizeUploaderOptions(options: UploaderControllerOptions): NormalizedRootOptions {
   const acceptProp = (options.allowedFileTypes as string | string[] | undefined) ?? '*'
   const mini = options.mini ?? false
   const resolvedSources = options.sources

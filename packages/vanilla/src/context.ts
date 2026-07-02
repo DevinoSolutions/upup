@@ -4,7 +4,7 @@ import {
   DragDropController,
   FileSource,
   GOOGLE_DRIVE_DESCRIPTOR, ONE_DRIVE_DESCRIPTOR, DROPBOX_DESCRIPTOR, BOX_DESCRIPTOR,
-  normalizeRootOptions, createRootController, createChildController,
+  normalizeUploaderOptions, createUploaderController, createChildController,
   type UploadFile,
 } from '@upup/core'
 import type { CreateUploaderOptions, UploaderContext, UploaderContextProps, ControllerRegistry } from './lib/types'
@@ -28,7 +28,7 @@ export function buildUploaderContext(
   invalidate: () => void,
 ): BuildResult {
   // ── 1. Normalize + resolve ──
-  const normalized = normalizeRootOptions(options)
+  const normalized = normalizeUploaderOptions(options)
 
   // ── 2. Core (vanilla owns lifecycle) ──
   const core = new UpupCore(normalized.coreOptions)
@@ -42,7 +42,7 @@ export function buildUploaderContext(
   if (options.onUploadComplete) unsubs.push(core.on('upload-all-complete', (...a: unknown[]) => options.onUploadComplete!(...(a as [UploadFile[]]))))
 
   // ── 4. Root controller (owns orchestrator, theme, plugins, commands, crash recovery) ──
-  const root = createRootController({ core, options, normalized }, { invalidate })
+  const root = createUploaderController({ core, options, normalized }, { invalidate })
 
   // ── 5. setFiles wrapper (routes through factory command for onFilesSelected + auto-upload) ──
   async function setFiles(newFiles: File[]) {

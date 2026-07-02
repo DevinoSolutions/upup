@@ -1,10 +1,10 @@
-export { normalizeRootOptions } from './normalize-options'
-export { createRootController } from './create-root-controller'
+export { normalizeUploaderOptions } from './normalize-options'
+export { createUploaderController } from './create-uploader-controller'
 export { createChildController } from './create-child-controller'
 export type {
-  RootControllerOptions, RootCloudDrivesConfig, RootI18nOptions, RootCallbacks,
+  UploaderControllerOptions, RootCloudDrivesConfig, RootI18nOptions, RootCallbacks,
   RootCloudConfigMaps, RootResolved, NormalizedRootOptions, RootCommands,
-  RootHostHooks, CreateRootControllerParams, RootController,
+  RootHostHooks, CreateUploaderControllerParams, UploaderController,
 } from './types'
 export type {
   ChildControllerLike, CreateChildControllerOptions, ChildControllerHandle,

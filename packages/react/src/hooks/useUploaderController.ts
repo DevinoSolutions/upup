@@ -3,12 +3,12 @@ import { Dispatch, SetStateAction, createElement, useCallback, useEffect, useMem
 import {
     FileSource,
     UploadStatus,
-    normalizeRootOptions,
-    createRootController,
+    normalizeUploaderOptions,
+    createUploaderController,
     resolveTheme,
     flattenSlotsToClassNames,
-    type RootController,
-    type RootControllerOptions,
+    type UploaderController,
+    type UploaderControllerOptions,
     type OrchestratorState,
     type ThemeStoreState,
     type UploadFile,
@@ -154,12 +154,12 @@ export default function useUploaderController(props: UploaderProps): IUploaderCo
 
     // ── Build factory-compatible options object ──────────────────
     // UploaderProps.allowedFileTypes is string | string[] | undefined;
-    // RootControllerOptions.allowedFileTypes is string | undefined.
-    // normalizeRootOptions handles both at runtime via a cast, so we cast here.
-    const factoryOptions = useMemo<RootControllerOptions>(() => ({
+    // UploaderControllerOptions.allowedFileTypes is string | undefined.
+    // normalizeUploaderOptions handles both at runtime via a cast, so we cast here.
+    const factoryOptions = useMemo<UploaderControllerOptions>(() => ({
         provider,
         mode: modeProp,
-        sources: sources as RootControllerOptions['sources'],
+        sources: sources as UploaderControllerOptions['sources'],
         uploadEndpoint,
         serverUrl,
         maxFiles,
@@ -213,10 +213,10 @@ export default function useUploaderController(props: UploaderProps): IUploaderCo
         onFileTypeMismatch,
         onRestrictionFailed,
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }), [props])  // props identity memoization — same as normalizeRootOptions below
+    }), [props])  // props identity memoization — same as normalizeUploaderOptions below
 
     // ── Normalize options (pure; memoized on props identity) ─────
-    const normalized = useMemo(() => normalizeRootOptions(factoryOptions), [factoryOptions])
+    const normalized = useMemo(() => normalizeUploaderOptions(factoryOptions), [factoryOptions])
     const { resolved } = normalized
 
     // ── Core (via useUpupUpload; owns core lifecycle) ────────────
@@ -236,9 +236,9 @@ export default function useUploaderController(props: UploaderProps): IUploaderCo
     connectSSERef.current = connectSSE
 
     // ── Root controller (created once, guarded ref) ──────────────
-    const rootRef = useRef<RootController | null>(null)
+    const rootRef = useRef<UploaderController | null>(null)
     if (!rootRef.current && core) {
-        rootRef.current = createRootController(
+        rootRef.current = createUploaderController(
             { core, options: factoryOptions, normalized },
             { connectSSE: (file) => connectSSERef.current(file) },
         )
@@ -312,7 +312,7 @@ export default function useUploaderController(props: UploaderProps): IUploaderCo
     // init()/dispose() are idempotent + re-entrant; safe for React 18/19 StrictMode double-mount.
     //
     // The four old effects (orchestrator init/destroy, plugin registration, crash recovery,
-    // status-change) now live INSIDE createRootController.init()/dispose(). Notably the
+    // status-change) now live INSIDE createUploaderController.init()/dispose(). Notably the
     // status-change callback is now DEDUPED there (it no longer fires an initial 'idle'),
     // and crash recovery is triggered once from init() — both factory-owned.
     //

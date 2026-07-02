@@ -4,10 +4,10 @@ import {
     UploadStatus,
     UploaderOrchestrator,
     ThemeStore,
-    normalizeRootOptions,
-    createRootController,
-    type RootControllerOptions,
-    type RootController,
+    normalizeUploaderOptions,
+    createUploaderController,
+    type UploaderControllerOptions,
+    type UploaderController,
     type UploadFile,
     type UiTranslations,
     type Translator,
@@ -30,7 +30,7 @@ type ThemeSnapshot = ReturnType<ThemeStore['getSnapshot']>
 export class UpupStore {
     private props!: UploaderProps
     private upload!: UpupUploadHandle
-    private root!: RootController
+    private root!: UploaderController
     core!: UpupUploadHandle['core']
     private orchState!: SignalStore<OrchSnapshot>
 
@@ -143,14 +143,14 @@ export class UpupStore {
 
         // ── Build factory-compatible options object ───────────────
         // UploaderProps.allowedFileTypes is string | string[] | undefined;
-        // RootControllerOptions.allowedFileTypes is string | undefined.
-        // normalizeRootOptions handles both via join cast.
+        // UploaderControllerOptions.allowedFileTypes is string | undefined.
+        // normalizeUploaderOptions handles both via join cast.
         const p = this.props ?? {}
         const acceptProp = p.allowedFileTypes ?? '*'
-        const factoryOptions: RootControllerOptions = {
+        const factoryOptions: UploaderControllerOptions = {
             provider: p.provider,
             mode: p.mode,
-            sources: p.sources as RootControllerOptions['sources'],
+            sources: p.sources as UploaderControllerOptions['sources'],
             uploadEndpoint: p.uploadEndpoint,
             serverUrl: p.serverUrl,
             maxFiles: p.maxFiles,
@@ -205,7 +205,7 @@ export class UpupStore {
         }
 
         // ── Normalize options (pure) ─────────────────────────────
-        const normalized = normalizeRootOptions(factoryOptions)
+        const normalized = normalizeUploaderOptions(factoryOptions)
         const { resolved } = normalized
 
         // Store resolved scalars for consumers
@@ -235,7 +235,7 @@ export class UpupStore {
         // ── Root controller (FRESH per init() call) ──────────────
         // Owns orchestrator, theme, plugin registration, callback proxy,
         // status-change dedup, crash recovery, file-input registration.
-        this.root = createRootController(
+        this.root = createUploaderController(
             { core: this.upload.core, options: factoryOptions, normalized },
             { connectSSE: (file) => sse.connectSSE(file) },
         )

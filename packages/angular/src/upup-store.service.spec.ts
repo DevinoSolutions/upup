@@ -440,7 +440,7 @@ describe('UpupStore', () => {
             } as any)
             store.init()
             // After C-2 Task 8: plugin cleanup + status-change subscription are managed by
-            // createRootController internally (via root.dispose()). The store's own cleanups
+            // createUploaderController internally (via root.dispose()). The store's own cleanups
             // array holds exactly the SSE dispose — lock that invariant against a future leak.
             expect((store as any).cleanups.length).toBe(1)
             store.dispose()
