@@ -198,7 +198,7 @@ export default function SourceSelector() {
                 <div
                     className={cn(
                         'upup-flex upup-w-full upup-flex-col upup-justify-center upup-gap-1 md:upup-flex-row md:upup-flex-wrap md:upup-items-center md:upup-gap-[30px] md:upup-px-[30px]',
-                        slotClasses.adapterButtonList,
+                        slotClasses.sourceButtonList,
                     )}
                 >
                     {chosenSources.map(({ Icon, id, name }) => (
@@ -212,14 +212,14 @@ export default function SourceSelector() {
                                     'upup-border-[#6D6D6D] dark:upup-border-[#6D6D6D]':
                                         dark,
                                 },
-                                slotClasses.adapterButton,
+                                slotClasses.sourceButton,
                             )}
                             onKeyDown={e => {
                                 if (e.key === 'Enter') e.preventDefault()
                             }}
                             onClick={() => handleAdapterClick(id)}
                         >
-                            <Icon />
+                            <Icon className={slotClasses.sourceButtonIcon || undefined} />
                             <span
                                 className={cn(
                                     'upup-text-xs upup-text-[#242634]',
@@ -227,7 +227,7 @@ export default function SourceSelector() {
                                         'upup-text-gray-300 dark:upup-text-gray-300':
                                             dark,
                                     },
-                                    slotClasses.adapterButtonText,
+                                    slotClasses.sourceButtonText,
                                 )}
                             >
                                 {name}

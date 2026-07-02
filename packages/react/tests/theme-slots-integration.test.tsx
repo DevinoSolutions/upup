@@ -7,19 +7,35 @@ import { UpupUploader } from '../src'
 // Tier B removed the old flat styling prop in favour of this path.
 
 describe('theme.slots DOM integration', () => {
-  it('applies an sourceSelector.adapterButton slot override to rendered markup', () => {
+  it('applies a sourceSelector.sourceButton slot override to rendered markup', () => {
     const { container } = render(
       <UpupUploader
         provider="s3"
         serverUrl="https://example.com"
         theme={{
           slots: {
-            sourceSelector: { adapterButton: 'probe-adapter-btn' },
+            sourceSelector: { sourceButton: 'probe-adapter-btn' },
           },
         }}
       />,
     )
     expect(container.innerHTML).toContain('probe-adapter-btn')
+  })
+
+  it('applies a sourceSelector.sourceButtonIcon slot override to the source icons', () => {
+    const { container } = render(
+      <UpupUploader
+        provider="s3"
+        serverUrl="https://example.com"
+        theme={{
+          slots: {
+            sourceSelector: { sourceButtonIcon: 'probe-source-icon' },
+          },
+        }}
+      />,
+    )
+    const probed = container.querySelectorAll('svg.probe-source-icon')
+    expect(probed.length).toBeGreaterThan(0)
   })
 
   it('applies an uploader.container slot override', () => {

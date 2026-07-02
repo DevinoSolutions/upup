@@ -683,7 +683,7 @@ test('wires every playground category into copy-pasteable generated code', async
     await fillNestedTextField(page, 'Appearance', 'Slot overrides (className strings)', 'fileList.uploadButton', 'bg-emerald-600 text-white')
     await fillNestedTextField(page, 'Appearance', 'Slot overrides (className strings)', 'filePreview.deleteButton', 'bg-red-500 text-white')
     await fillNestedTextField(page, 'Appearance', 'Slot overrides (className strings)', 'progressBar.fill', 'bg-pink-500')
-    await fillNestedTextField(page, 'Appearance', 'Slot overrides (className strings)', 'sourceSelector.adapterButton', 'rounded-md border')
+    await fillNestedTextField(page, 'Appearance', 'Slot overrides (className strings)', 'sourceSelector.sourceButton', 'rounded-md border')
     await fillNestedTextField(page, 'Appearance', 'Slot overrides (className strings)', 'sourceView.header', 'border-b px-4')
     await fillNestedTextField(page, 'Appearance', 'Slot overrides (className strings)', 'urlUploader.fetchButton', 'bg-slate-900 text-white')
     await fillTextField(page, 'Appearance', 'Root className', 'max-w-xl')

@@ -15,10 +15,10 @@ export interface UpupThemeSlots {
   }
   sourceSelector: {
     root?: string
-    adapterList?: string
-    adapterButton?: string
-    adapterButtonIcon?: string
-    adapterButtonText?: string
+    sourceList?: string
+    sourceButton?: string
+    sourceButtonIcon?: string
+    sourceButtonText?: string
     browseText?: string
     dragText?: string
   }
@@ -159,12 +159,12 @@ const SLOT_TO_FLAT: {
   },
   sourceSelector: {
     root: 'containerFull',
-    adapterList: 'adapterButtonList',
-    adapterButton: 'adapterButton',
-    adapterButtonIcon: 'adapterButtonIcon',
-    adapterButtonText: 'adapterButtonText',
-    browseText: 'adapterButtonText',
-    dragText: 'adapterButtonText',
+    sourceList: 'sourceButtonList',
+    sourceButton: 'sourceButton',
+    sourceButtonIcon: 'sourceButtonIcon',
+    sourceButtonText: 'sourceButtonText',
+    browseText: 'sourceButtonText',
+    dragText: 'sourceButtonText',
   },
   sourceView: {
     root: 'sourceView',

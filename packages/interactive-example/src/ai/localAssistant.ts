@@ -16,7 +16,7 @@ function size(size: number, unit: 'B' | 'KB' | 'MB' | 'GB') {
 const roundedSlots = {
     uploader: { container: 'rounded-2xl' },
     dropZone: { root: 'rounded-2xl' },
-    sourceSelector: { adapterButton: 'rounded-xl' },
+    sourceSelector: { sourceButton: 'rounded-xl' },
     filePreview: { root: 'rounded-xl' },
     fileList: { uploadButton: 'rounded-xl' },
 }

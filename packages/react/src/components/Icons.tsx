@@ -1,11 +1,13 @@
 import Icon from './Icon'
 
-export const MyDeviceIcon = () => <Icon name="my-device" />
-export const BoxIcon = () => <Icon name="box" />
-export const DropBoxIcon = () => <Icon name="dropbox" />
-export const GoogleDriveIcon = () => <Icon name="google-drive" />
-export const OneDriveIcon = () => <Icon name="one-drive" />
-export const LinkIcon = () => <Icon name="link" />
-export const CameraIcon = () => <Icon name="camera" />
-export const AudioIcon = () => <Icon name="audio" />
-export const ScreenCastIcon = () => <Icon name="screen-cast" />
+type SourceIconProps = { className?: string }
+
+export const MyDeviceIcon = ({ className }: SourceIconProps) => <Icon name="my-device" className={className} />
+export const BoxIcon = ({ className }: SourceIconProps) => <Icon name="box" className={className} />
+export const DropBoxIcon = ({ className }: SourceIconProps) => <Icon name="dropbox" className={className} />
+export const GoogleDriveIcon = ({ className }: SourceIconProps) => <Icon name="google-drive" className={className} />
+export const OneDriveIcon = ({ className }: SourceIconProps) => <Icon name="one-drive" className={className} />
+export const LinkIcon = ({ className }: SourceIconProps) => <Icon name="link" className={className} />
+export const CameraIcon = ({ className }: SourceIconProps) => <Icon name="camera" className={className} />
+export const AudioIcon = ({ className }: SourceIconProps) => <Icon name="audio" className={className} />
+export const ScreenCastIcon = ({ className }: SourceIconProps) => <Icon name="screen-cast" className={className} />

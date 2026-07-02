@@ -183,7 +183,7 @@
     <div
       class={cn(
         'upup-flex upup-w-full upup-flex-col upup-justify-center upup-gap-1 md:upup-flex-row md:upup-flex-wrap md:upup-items-center md:upup-gap-[30px] md:upup-px-[30px]',
-        $slotClasses.adapterButtonList,
+        $slotClasses.sourceButtonList,
       )}
     >
       {#each chosenSources as { Icon, id, name } (id)}
@@ -193,17 +193,17 @@
           class={cn(
             'upup-group upup-flex upup-items-center upup-gap-[6px] upup-border-b upup-border-gray-200 upup-px-2 upup-py-1 md:upup-flex-col md:upup-justify-center md:upup-rounded-lg md:upup-border-none md:upup-p-0',
             { 'upup-border-[#6D6D6D] dark:upup-border-[#6D6D6D]': $dark },
-            $slotClasses.adapterButton,
+            $slotClasses.sourceButton,
           )}
           onkeydown={onSourceKeydown}
           onclick={() => handleAdapterClick(id)}
         >
-          <Icon />
+          <Icon class={$slotClasses.sourceButtonIcon || undefined} />
           <span
             class={cn(
               'upup-text-xs upup-text-[#242634]',
               { 'upup-text-gray-300 dark:upup-text-gray-300': $dark },
-              $slotClasses.adapterButtonText,
+              $slotClasses.sourceButtonText,
             )}
           >
             {name}

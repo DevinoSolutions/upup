@@ -50,7 +50,7 @@ Same semantics, new name.
 This one has a shape change. The old `classNames` was a flat map with
 keys like `fileListContainer`, `adapterButton`, `progressBarInner`.
 The new `theme.slots` is nested by component: `fileList.root`,
-`sourceSelector.adapterButton`, `progressBar.fill`.
+`sourceSelector.sourceButton`, `progressBar.fill`.
 
 ```diff
   <UpupUploader
@@ -67,7 +67,7 @@ The new `theme.slots` is nested by component: `fileList.root`,
 +         uploadButton: 'my-upload-btn',
 +       },
 +       sourceSelector: {
-+         adapterButton: 'my-adapter-btn',
++         sourceButton: 'my-adapter-btn',
 +       },
 +       progressBar: {
 +         fill: 'my-progress-fill',
@@ -105,10 +105,10 @@ Partial overrides are fine — every key is optional. See the
 | `filePreviewButton`                | `filePreview.previewButton`                      |
 | `fileDeleteButton`                 | `filePreview.deleteButton`                       |
 | `filePreviewPortal`                | `filePreviewPortal.root`                         |
-| `adapterButton`                    | `sourceSelector.adapterButton`                   |
-| `adapterButtonIcon`                | `sourceSelector.adapterButtonIcon`               |
-| `adapterButtonText`                | `sourceSelector.adapterButtonText`               |
-| `adapterButtonList`                | `sourceSelector.adapterList`                     |
+| `adapterButton`                    | `sourceSelector.sourceButton`                    |
+| `adapterButtonIcon`                | `sourceSelector.sourceButtonIcon`                |
+| `adapterButtonText`                | `sourceSelector.sourceButtonText`                |
+| `adapterButtonList`                | `sourceSelector.sourceList`                      |
 | `adapterView`                      | `sourceView.root`                                |
 | `adapterViewHeader`                | `sourceView.header`                              |
 | `adapterViewCancelButton`          | `sourceView.cancelButton`                        |
@@ -192,7 +192,7 @@ The top-level keys are:
 - `progressBar` — the aggregate progress bar
 - `notifier` — toasts emitted from the uploader
 - `urlUploader`, `cameraUploader`, `audioUploader`,
-  `screenCaptureUploader` — per-adapter panels
+  `screenCaptureUploader` — per-source panels
 - `driveBrowser` — Google Drive / OneDrive / Dropbox / Box file pickers
 - `driveAuthFallback` — the "sign in with `{provider}`" fallback screen
 - `filePreviewPortal` — the full-size preview dialog

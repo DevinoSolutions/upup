@@ -1,4 +1,5 @@
 <script lang="ts">
   import Icon from '../Icon.svelte'
+  let { class: className = undefined }: { class?: string } = $props()
 </script>
-<Icon name="google-drive" />
+<Icon name="google-drive" class={className} />

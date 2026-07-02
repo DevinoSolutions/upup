@@ -106,8 +106,8 @@ export const appearanceCategory: CategoryDefinition = {
                         },
                     },
                     {
-                        id: 'sourceSelector.adapterButton',
-                        label: 'sourceSelector.adapterButton',
+                        id: 'sourceSelector.sourceButton',
+                        label: 'sourceSelector.sourceButton',
                         description: 'The row of source tiles (Device, Google Drive, Camera, …).',
                         primitive: 'combo',
                         defaultValue: '',

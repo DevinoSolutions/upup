@@ -67,14 +67,14 @@ describe('sourceSelectorRecipe', () => {
     it('generates base slot classes', () => {
         const slots = sourceSelectorRecipe()
         expect(slots.root()).toContain('upup-h-full')
-        expect(slots.adapterButton()).toContain('upup-border-gray-200')
-        expect(slots.adapterButtonText()).toContain('upup-text-[#242634]')
+        expect(slots.sourceButton()).toContain('upup-border-gray-200')
+        expect(slots.sourceButtonText()).toContain('upup-text-[#242634]')
         expect(slots.browseButton()).toContain('upup-text-[#0E2ADD]')
     })
 
     it('applies dark variant', () => {
         const slots = sourceSelectorRecipe({ dark: true })
-        expect(slots.adapterButtonText()).toContain('upup-text-gray-300')
+        expect(slots.sourceButtonText()).toContain('upup-text-gray-300')
         expect(slots.browseButton()).toContain('upup-text-[#59D1F9]')
     })
 })

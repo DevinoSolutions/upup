@@ -71,9 +71,9 @@ export default function Uploader({
             addMoreButton: `uploader-add-${currentTheme}`,
         },
         sourceSelector: {
-            adapterButton: `uploader-adapter-${currentTheme}`,
-            adapterButtonIcon: `uploader-file-list-${currentTheme}`,
-            adapterButtonText: `uploader-preview-${currentTheme}`,
+            sourceButton: `uploader-adapter-${currentTheme}`,
+            sourceButtonIcon: `uploader-file-list-${currentTheme}`,
+            sourceButtonText: `uploader-preview-${currentTheme}`,
         },
         sourceView: {
             root: `uploader-adapter-view-${currentTheme}`,
