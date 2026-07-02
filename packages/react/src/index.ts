@@ -7,6 +7,34 @@ export { default as UpupUploader, type UploaderRef } from './upup-uploader'
 export { useUpupUpload, type UseUpupUploadReturn } from './use-upup-upload'
 export { useIsClient } from './use-is-client'
 
+// ── Headless context hooks (parity with @upup/vue and @upup/svelte) ──
+export {
+    useUploaderContext,
+    useUploaderRuntime,
+    useUploaderSource,
+    useUploaderI18n,
+    useUploaderFiles,
+    useUploaderUploadControls,
+    useUploaderView,
+    useUploaderEditor,
+    useUploaderOptions,
+    useUploaderTheme,
+} from './context/UploaderContext'
+
+export type {
+    IUploaderContext,
+    ContextRuntime,
+    ContextSource,
+    ContextI18n,
+    ContextFiles,
+    ContextUploadControls,
+    ContextView,
+    ContextEditor,
+    ContextTheme,
+    ContextProps,
+    ContextUpload,
+} from './context/UploaderContext'
+
 // ── Canonical shared enums/types ─────────────────────────
 export { FileSource, StorageProvider } from '@upup/core'
 

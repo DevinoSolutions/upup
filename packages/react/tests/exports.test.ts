@@ -25,7 +25,25 @@ describe('@upup/react public exports', () => {
     expect((ReactPackage as any).UploaderPanel).toBeUndefined()
     expect((ReactPackage as any).UrlUploader).toBeUndefined()
     expect((ReactPackage as any).createPropGetters).toBeUndefined()
-    expect((ReactPackage as any).useUploaderContext).toBeUndefined()
+  })
+
+  it('exports the headless context hooks (parity with @upup/vue and @upup/svelte)', () => {
+    for (const hook of [
+      'useUploaderContext',
+      'useUploaderRuntime',
+      'useUploaderSource',
+      'useUploaderI18n',
+      'useUploaderFiles',
+      'useUploaderUploadControls',
+      'useUploaderView',
+      'useUploaderEditor',
+      'useUploaderOptions',
+      'useUploaderTheme',
+    ] as const) {
+      expect(typeof (ReactPackage as Record<string, unknown>)[hook], hook).toBe(
+        'function',
+      )
+    }
   })
 
   it('keeps utilities that are intentionally public', () => {
