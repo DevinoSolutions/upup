@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { EventEmitter } from '../src/events'
-import { DropboxPlugin } from '../src/adapters/dropbox-plugin'
-import type { DriveFile } from '../src/adapters/types'
+import { DropboxPlugin } from '../src/drives/dropbox-plugin'
+import type { DriveFile } from '../src/drives/types'
 
 // ── Helpers ──
 

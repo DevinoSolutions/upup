@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useRef, useSyncExternalStore, type SetStateAction } from 'react'
 import {
-    AdapterBrowserController,
+    DriveBrowserController,
     ONE_DRIVE_DESCRIPTOR,
-    type AdapterBrowserState,
+    type DriveBrowserState,
     type DriveFile,
     type DriveFolder,
 } from '@upup/core'
@@ -14,8 +14,8 @@ import {
 
 /** Stable fallback snapshot for the first render (core is created post-paint, so the
  *  controller is briefly null) and for useSyncExternalStore's server snapshot.
- *  Mirrors the AdapterBrowserController constructor defaults. */
-const SERVER_SNAPSHOT: AdapterBrowserState = {
+ *  Mirrors the DriveBrowserController constructor defaults. */
+const SERVER_SNAPSHOT: DriveBrowserState = {
     user: undefined,
     folder: undefined,
     path: [],
@@ -38,9 +38,9 @@ export default function useOneDrive() {
     // One controller per mounted adapter view, created once (guarded ref) — same
     // idiom as useUploaderController's rootRef. setFiles/setActiveAdapter are referentially
     // stable (useCallback over root), so capturing them once is safe.
-    const controllerRef = useRef<AdapterBrowserController | null>(null)
+    const controllerRef = useRef<DriveBrowserController | null>(null)
     if (!controllerRef.current && core) {
-        controllerRef.current = new AdapterBrowserController(core, ONE_DRIVE_DESCRIPTOR, {
+        controllerRef.current = new DriveBrowserController(core, ONE_DRIVE_DESCRIPTOR, {
             onFilesSelected: files => setFiles(files),
             onClose: () => setActiveAdapter(undefined),
         })

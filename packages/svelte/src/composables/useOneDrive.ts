@@ -1,7 +1,7 @@
 import { onMount, onDestroy } from 'svelte'
 import { derived } from 'svelte/store'
 import {
-    AdapterBrowserController,
+    DriveBrowserController,
     ONE_DRIVE_DESCRIPTOR,
     type DriveFile,
     type DriveFolder,
@@ -18,7 +18,7 @@ export function useOneDrive() {
     const { setActiveAdapter } = useUploaderSource()
     const { setFiles } = useUploaderFiles()
 
-    const controller = new AdapterBrowserController(core!, ONE_DRIVE_DESCRIPTOR, {
+    const controller = new DriveBrowserController(core!, ONE_DRIVE_DESCRIPTOR, {
         onFilesSelected: (files) => {
             setFiles(files)
         },

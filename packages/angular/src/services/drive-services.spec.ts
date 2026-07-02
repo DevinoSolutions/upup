@@ -2,21 +2,21 @@
  * drive-services.spec.ts — T13 drive-service delegation suite
  *
  * Verifies that each drive service (Google, OneDrive, Dropbox, Box):
- *   - Creates an AdapterBrowserController and bridges its state to Angular signals
+ *   - Creates an DriveBrowserController and bridges its state to Angular signals
  *   - Forwards every action method to the controller (no business logic leaked)
  *   - onFilesSelected callback wires to store.handleSetSelectedFiles
  *   - onClose callback wires to store.setActiveAdapter(undefined)
  *
  * Strategy: construct services directly (NOT via TestBed), inject a mock UpupStore
  * via Angular's inject() context, and assert on the service's forwarding methods.
- * The AdapterBrowserController is constructed with a fake core (no plugins registered)
+ * The DriveBrowserController is constructed with a fake core (no plugins registered)
  * so no network/OAuth fires; we spy on its instance methods after construction.
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { TestBed } from '@angular/core/testing'
 import { signal } from '@angular/core'
-import { AdapterBrowserController } from '@upup/core'
+import { DriveBrowserController } from '@upup/core'
 import { UpupStore } from '../upup-store.service'
 import { GoogleDriveService } from './google-drive.service'
 import { OneDriveService } from './onedrive.service'
@@ -43,7 +43,7 @@ function makeStoreMock() {
 function setupService<T extends GoogleDriveService | OneDriveService | DropboxService | BoxService>(
     ServiceCls: new (...args: any[]) => T,
     store: UpupStore,
-): { svc: T; ctrl: AdapterBrowserController } {
+): { svc: T; ctrl: DriveBrowserController } {
     TestBed.configureTestingModule({
         providers: [
             { provide: UpupStore, useValue: store },
@@ -52,7 +52,7 @@ function setupService<T extends GoogleDriveService | OneDriveService | DropboxSe
     })
     const svc = TestBed.inject(ServiceCls as any) as T
     // Access the private controller via bracket notation for test purposes
-    const ctrl = (svc as any)['controller'] as AdapterBrowserController
+    const ctrl = (svc as any)['controller'] as DriveBrowserController
     return { svc, ctrl }
 }
 
@@ -82,7 +82,7 @@ describe('LoadGapiService', () => {
 describe('GoogleDriveService delegation', () => {
     let store: UpupStore
     let svc: GoogleDriveService
-    let ctrl: AdapterBrowserController
+    let ctrl: DriveBrowserController
 
     beforeEach(() => {
         store = makeStoreMock()
@@ -164,7 +164,7 @@ describe('GoogleDriveService delegation', () => {
 describe('OneDriveService delegation', () => {
     let store: UpupStore
     let svc: OneDriveService
-    let ctrl: AdapterBrowserController
+    let ctrl: DriveBrowserController
 
     beforeEach(() => {
         store = makeStoreMock()
@@ -202,7 +202,7 @@ describe('OneDriveService delegation', () => {
 describe('DropboxService delegation', () => {
     let store: UpupStore
     let svc: DropboxService
-    let ctrl: AdapterBrowserController
+    let ctrl: DriveBrowserController
 
     beforeEach(() => {
         store = makeStoreMock()
@@ -237,7 +237,7 @@ describe('DropboxService delegation', () => {
 describe('BoxService delegation', () => {
     let store: UpupStore
     let svc: BoxService
-    let ctrl: AdapterBrowserController
+    let ctrl: DriveBrowserController
 
     beforeEach(() => {
         store = makeStoreMock()
@@ -280,7 +280,7 @@ describe('Drive service callback wiring', () => {
             ],
         })
         const svc = TestBed.inject(GoogleDriveService)
-        const ctrl = (svc as any)['controller'] as AdapterBrowserController
+        const ctrl = (svc as any)['controller'] as DriveBrowserController
         const callbacks = (ctrl as any)['callbacks']
         // Invoke the callback directly — it should call the store
         const fakeFiles = [{ id: 'x', name: 'x.txt' }]
@@ -297,7 +297,7 @@ describe('Drive service callback wiring', () => {
             ],
         })
         const svc = TestBed.inject(GoogleDriveService)
-        const ctrl = (svc as any)['controller'] as AdapterBrowserController
+        const ctrl = (svc as any)['controller'] as DriveBrowserController
         const callbacks = (ctrl as any)['callbacks']
         callbacks.onClose()
         expect(store.setActiveAdapter).toHaveBeenCalledWith(undefined)
@@ -312,7 +312,7 @@ describe('Drive service callback wiring', () => {
             ],
         })
         const svc = TestBed.inject(DropboxService)
-        const ctrl = (svc as any)['controller'] as AdapterBrowserController
+        const ctrl = (svc as any)['controller'] as DriveBrowserController
         const callbacks = (ctrl as any)['callbacks']
         const fakeFiles = [{ id: 'y', name: 'y.pdf' }]
         callbacks.onFilesSelected(fakeFiles)
@@ -328,7 +328,7 @@ describe('Drive service callback wiring', () => {
             ],
         })
         const svc = TestBed.inject(BoxService)
-        const ctrl = (svc as any)['controller'] as AdapterBrowserController
+        const ctrl = (svc as any)['controller'] as DriveBrowserController
         const callbacks = (ctrl as any)['callbacks']
         callbacks.onClose()
         expect(store.setActiveAdapter).toHaveBeenCalledWith(undefined)

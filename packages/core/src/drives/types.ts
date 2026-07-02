@@ -19,9 +19,9 @@ export type DriveUser = {
     picture?: string
 }
 
-export type AdapterState = 'idle' | 'authenticating' | 'authenticated' | 'browsing' | 'session-expired'
+export type DriveState = 'idle' | 'authenticating' | 'authenticated' | 'browsing' | 'session-expired'
 
-export type AdapterEventMap = {
+export type DriveEventMap = {
     'authenticated': { token: string }
     'signed-out': Record<string, never>
     'session-expired': Record<string, never>
@@ -29,5 +29,5 @@ export type AdapterEventMap = {
     'file-downloaded': { file: File; driveFile: DriveFile }
     'download-progress': { driveFileId: string; loaded: number; total: number }
     'error': { error: Error; action: string }
-    'state-change': { state: AdapterState }
+    'state-change': { state: DriveState }
 }

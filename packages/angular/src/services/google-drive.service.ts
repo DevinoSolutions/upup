@@ -1,8 +1,8 @@
 import { Injectable, inject, computed, type Signal } from '@angular/core'
 import {
-    AdapterBrowserController,
+    DriveBrowserController,
     GOOGLE_DRIVE_DESCRIPTOR,
-    type AdapterBrowserState,
+    type DriveBrowserState,
     type DriveFile,
     type DriveFolder,
 } from '@upup/core'
@@ -12,7 +12,7 @@ import { toSignalStore } from '../lib/to-signal-store'
 /**
  * Angular port of useGoogleDrive.ts (svelte composable).
  *
- * Creates and manages one AdapterBrowserController for Google Drive (GIS auth).
+ * Creates and manages one DriveBrowserController for Google Drive (GIS auth).
  * ALL business logic lives in the controller — this service only:
  *   1. Constructs the controller with the store's core + callbacks
  *   2. Bridges the controller's subscribe/getSnapshot to Angular signals via toSignalStore
@@ -24,7 +24,7 @@ import { toSignalStore } from '../lib/to-signal-store'
 export class GoogleDriveService {
     private store = inject(UpupStore)
 
-    private controller = new AdapterBrowserController(
+    private controller = new DriveBrowserController(
         this.store.core,
         GOOGLE_DRIVE_DESCRIPTOR,
         {
@@ -33,8 +33,8 @@ export class GoogleDriveService {
         },
     )
 
-    private signalStore = toSignalStore<AdapterBrowserState>(this.controller)
-    private state: Signal<AdapterBrowserState> = this.signalStore.state
+    private signalStore = toSignalStore<DriveBrowserState>(this.controller)
+    private state: Signal<DriveBrowserState> = this.signalStore.state
 
     // ── Selector signals (pure computed from snapshot) ──────────
     readonly user = computed(() => this.state().user)

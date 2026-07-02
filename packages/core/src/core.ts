@@ -9,7 +9,7 @@ import { UploadStatus } from './types/upload-status'
 import { EventEmitter, type EventHandler } from './events'
 import type { CoreEvents } from './types/core-events'
 import { PluginManager, type UpupPlugin, type ExtensionMethods } from './plugin'
-import type { AdapterPlugin } from './adapters/plugin'
+import type { DrivePlugin } from './drives/plugin'
 import { FileManager, type FileManagerOptions } from './file-manager'
 import { validateFileRestrictions } from './validate-file-restrictions'
 import { PipelineEngine } from './pipeline/engine'
@@ -139,7 +139,7 @@ export class UpupCore {
     // here so events like 'google-drive:files-loaded' actually reach core.on()
     // subscribers. Without this, adapters fetch successfully but every event is
     // silently dropped — e.g. the drive browser stays stuck on its spinner.
-    const adapter = plugin as Partial<AdapterPlugin>
+    const adapter = plugin as Partial<DrivePlugin>
     if (typeof adapter.init === 'function') {
       adapter.init(this.emitter as unknown as EventEmitter)
     }

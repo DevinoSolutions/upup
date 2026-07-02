@@ -14,7 +14,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { TestBed } from '@angular/core/testing'
 import { Component, Injectable, signal, computed } from '@angular/core'
-import { type AdapterBrowserState, type DriveFile, type DriveFolder } from '@upup/core'
+import { type DriveBrowserState, type DriveFile, type DriveFolder } from '@upup/core'
 import { UpupStore } from '../upup-store.service'
 import { DriveAuthFallbackComponent } from './shared/drive-auth-fallback.component'
 import { DriveBrowserComponent } from './shared/drive-browser.component'
@@ -77,7 +77,7 @@ function makeStoreMock() {
  * The client uploader components inject their service via providers: [ServiceCls],
  * which we override with a mock that exposes the same computed signals.
  */
-function makeFakeGoogleDriveService(state: ReturnType<typeof signal<Partial<AdapterBrowserState>>>) {
+function makeFakeGoogleDriveService(state: ReturnType<typeof signal<Partial<DriveBrowserState>>>) {
     @Injectable()
     class FakeGoogleDriveService {
         readonly token = computed(() => state().token)
@@ -102,7 +102,7 @@ function makeFakeGoogleDriveService(state: ReturnType<typeof signal<Partial<Adap
     return FakeGoogleDriveService
 }
 
-function makeFakeDropboxService(state: ReturnType<typeof signal<Partial<AdapterBrowserState>>>) {
+function makeFakeDropboxService(state: ReturnType<typeof signal<Partial<DriveBrowserState>>>) {
     const filesSignal = computed(() => state().folder)
     @Injectable()
     class FakeDropboxService {
@@ -131,7 +131,7 @@ function makeFakeDropboxService(state: ReturnType<typeof signal<Partial<AdapterB
     return FakeDropboxService
 }
 
-function makeFakeBoxService(state: ReturnType<typeof signal<Partial<AdapterBrowserState>>>) {
+function makeFakeBoxService(state: ReturnType<typeof signal<Partial<DriveBrowserState>>>) {
     const filesSignal = computed(() => state().folder)
     @Injectable()
     class FakeBoxService {
@@ -160,7 +160,7 @@ function makeFakeBoxService(state: ReturnType<typeof signal<Partial<AdapterBrows
     return FakeBoxService
 }
 
-function makeFakeOneDriveService(state: ReturnType<typeof signal<Partial<AdapterBrowserState>>>) {
+function makeFakeOneDriveService(state: ReturnType<typeof signal<Partial<DriveBrowserState>>>) {
     const filesSignal = computed(() => state().folder)
     @Injectable()
     class FakeOneDriveService {
@@ -405,9 +405,9 @@ describe('DriveBrowserComponent', () => {
 describe('ClientGoogleDriveUploaderComponent', () => {
     afterEach(() => TestBed.resetTestingModule())
 
-    function mountWithState(statePartial: Partial<AdapterBrowserState>) {
+    function mountWithState(statePartial: Partial<DriveBrowserState>) {
         const store = makeStoreMock()
-        const stateSig = signal<Partial<AdapterBrowserState>>(statePartial)
+        const stateSig = signal<Partial<DriveBrowserState>>(statePartial)
         const FakeService = makeFakeGoogleDriveService(stateSig)
 
         TestBed.configureTestingModule({
@@ -456,9 +456,9 @@ describe('ClientGoogleDriveUploaderComponent', () => {
 describe('ClientDropboxUploaderComponent', () => {
     afterEach(() => TestBed.resetTestingModule())
 
-    function mountWithState(statePartial: Partial<AdapterBrowserState>) {
+    function mountWithState(statePartial: Partial<DriveBrowserState>) {
         const store = makeStoreMock()
-        const stateSig = signal<Partial<AdapterBrowserState>>(statePartial)
+        const stateSig = signal<Partial<DriveBrowserState>>(statePartial)
         const FakeService = makeFakeDropboxService(stateSig)
 
         TestBed.configureTestingModule({
@@ -495,9 +495,9 @@ describe('ClientDropboxUploaderComponent', () => {
 describe('ClientBoxUploaderComponent', () => {
     afterEach(() => TestBed.resetTestingModule())
 
-    function mountWithState(statePartial: Partial<AdapterBrowserState>) {
+    function mountWithState(statePartial: Partial<DriveBrowserState>) {
         const store = makeStoreMock()
-        const stateSig = signal<Partial<AdapterBrowserState>>(statePartial)
+        const stateSig = signal<Partial<DriveBrowserState>>(statePartial)
         const FakeService = makeFakeBoxService(stateSig)
 
         TestBed.configureTestingModule({
@@ -524,9 +524,9 @@ describe('ClientBoxUploaderComponent', () => {
 describe('ClientOneDriveUploaderComponent', () => {
     afterEach(() => TestBed.resetTestingModule())
 
-    function mountWithState(statePartial: Partial<AdapterBrowserState>) {
+    function mountWithState(statePartial: Partial<DriveBrowserState>) {
         const store = makeStoreMock()
-        const stateSig = signal<Partial<AdapterBrowserState>>(statePartial)
+        const stateSig = signal<Partial<DriveBrowserState>>(statePartial)
         const FakeService = makeFakeOneDriveService(stateSig)
 
         TestBed.configureTestingModule({

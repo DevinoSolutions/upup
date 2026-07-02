@@ -1,7 +1,7 @@
 import { onMount, onDestroy } from 'svelte'
 import { derived } from 'svelte/store'
 import {
-    AdapterBrowserController,
+    DriveBrowserController,
     DROPBOX_DESCRIPTOR,
     type DriveFile,
     type DriveFolder,
@@ -18,7 +18,7 @@ export function useDropbox() {
     const { setActiveAdapter } = useUploaderSource()
     const { setFiles } = useUploaderFiles()
 
-    const controller = new AdapterBrowserController(core!, DROPBOX_DESCRIPTOR, {
+    const controller = new DriveBrowserController(core!, DROPBOX_DESCRIPTOR, {
         onFilesSelected: (files) => {
             setFiles(files)
         },

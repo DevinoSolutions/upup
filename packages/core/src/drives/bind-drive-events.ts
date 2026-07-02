@@ -1,6 +1,6 @@
 import type { UpupCore } from '../core'
 
-export interface AdapterEventCallbacks {
+export interface DriveEventCallbacks {
     onAuthenticated: (payload: unknown) => void
     onSignedOut: () => void
     onSessionExpired: () => void
@@ -9,10 +9,10 @@ export interface AdapterEventCallbacks {
     onError: (payload?: unknown) => void
 }
 
-export function bindAdapterEvents(
+export function bindDriveEvents(
     core: UpupCore,
     provider: string,
-    callbacks: AdapterEventCallbacks,
+    callbacks: DriveEventCallbacks,
 ): () => void {
     const unsubs = [
         core.on(`${provider}:authenticated`, callbacks.onAuthenticated),

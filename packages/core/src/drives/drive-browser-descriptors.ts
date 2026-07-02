@@ -1,18 +1,18 @@
 /**
- * Per-provider configuration for the framework-agnostic AdapterBrowserController.
+ * Per-provider configuration for the framework-agnostic DriveBrowserController.
  * The four cloud-drive providers share ~90% of their browse logic; everything
  * that genuinely differs is captured declaratively here.
  */
 
-export type AdapterAuthKind = 'gis' | 'popup'
-export type AdapterFolderKey = 'id' | 'path'
-export type AdapterSelectFolderStrategy = 'cached-children' | 'load-all'
+export type DriveAuthKind = 'gis' | 'popup'
+export type DriveFolderKey = 'id' | 'path'
+export type DriveSelectFolderStrategy = 'cached-children' | 'load-all'
 
-export interface AdapterProviderDescriptor {
+export interface DriveProviderDescriptor {
     /** Key passed to core.getPlugin(...). Matches the plugin's `id`/`name`. */
     pluginId: string
     /**
-     * Prefix used to build event names for bindAdapterEvents(core, eventPrefix, …).
+     * Prefix used to build event names for bindDriveEvents(core, eventPrefix, …).
      * NOTE: one-drive emits with the 'onedrive' prefix despite its id being 'one-drive'.
      */
     eventPrefix: string
@@ -21,20 +21,20 @@ export interface AdapterProviderDescriptor {
     /** Id used to detect/label the root folder in files-loaded payloads. */
     rootFolderId: string
     /** Whether a folder is addressed by `id` (most) or `path` (Dropbox). */
-    folderKey: AdapterFolderKey
+    folderKey: DriveFolderKey
     /** Argument passed to plugin.loadFiles() to list the root folder. */
     loadFilesRootArg: string | undefined
     /** Which field in the files-loaded payload carries the folder identity. */
     folderIdField: 'folderId' | 'path'
     /** Auth strategy: GIS popup (Google) or plugin-driven popup (the rest). */
-    auth: AdapterAuthKind
+    auth: DriveAuthKind
     /** How onSelectCurrentFolder gathers files. */
-    selectFolder: AdapterSelectFolderStrategy
+    selectFolder: DriveSelectFolderStrategy
     /** Root argument for plugin.loadAllFilesInFolder() (popup providers only). */
     loadAllRootArg?: string
 }
 
-export const GOOGLE_DRIVE_DESCRIPTOR: AdapterProviderDescriptor = {
+export const GOOGLE_DRIVE_DESCRIPTOR: DriveProviderDescriptor = {
     pluginId: 'google-drive',
     eventPrefix: 'google-drive',
     rootFolderName: 'Drive',
@@ -46,7 +46,7 @@ export const GOOGLE_DRIVE_DESCRIPTOR: AdapterProviderDescriptor = {
     selectFolder: 'cached-children',
 }
 
-export const ONE_DRIVE_DESCRIPTOR: AdapterProviderDescriptor = {
+export const ONE_DRIVE_DESCRIPTOR: DriveProviderDescriptor = {
     pluginId: 'one-drive',
     eventPrefix: 'onedrive',
     rootFolderName: 'OneDrive',
@@ -59,7 +59,7 @@ export const ONE_DRIVE_DESCRIPTOR: AdapterProviderDescriptor = {
     loadAllRootArg: 'root',
 }
 
-export const DROPBOX_DESCRIPTOR: AdapterProviderDescriptor = {
+export const DROPBOX_DESCRIPTOR: DriveProviderDescriptor = {
     pluginId: 'dropbox',
     eventPrefix: 'dropbox',
     rootFolderName: 'Dropbox',
@@ -72,7 +72,7 @@ export const DROPBOX_DESCRIPTOR: AdapterProviderDescriptor = {
     loadAllRootArg: '',
 }
 
-export const BOX_DESCRIPTOR: AdapterProviderDescriptor = {
+export const BOX_DESCRIPTOR: DriveProviderDescriptor = {
     pluginId: 'box',
     eventPrefix: 'box',
     rootFolderName: 'Box',

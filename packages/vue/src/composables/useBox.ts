@@ -1,6 +1,6 @@
 import { shallowRef, computed, onMounted, onUnmounted } from 'vue'
 import {
-    AdapterBrowserController,
+    DriveBrowserController,
     BOX_DESCRIPTOR,
     type DriveFile,
     type DriveFolder,
@@ -16,7 +16,7 @@ export function useBox() {
     const { setActiveAdapter } = useUploaderSource()
     const { setFiles } = useUploaderFiles()
 
-    const controller = new AdapterBrowserController(core!, BOX_DESCRIPTOR, {
+    const controller = new DriveBrowserController(core!, BOX_DESCRIPTOR, {
         onFilesSelected: (files) => {
             setFiles(files)
         },

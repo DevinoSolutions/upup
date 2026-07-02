@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { bindAdapterEvents } from '../src/adapters/bind-adapter-events'
+import { bindDriveEvents } from '../src/drives/bind-drive-events'
 
 function createMockCore() {
     const listeners = new Map<string, Function>()
@@ -14,7 +14,7 @@ function createMockCore() {
     }
 }
 
-describe('bindAdapterEvents', () => {
+describe('bindDriveEvents', () => {
     it('subscribes to all 6 standard adapter events', () => {
         const core = createMockCore()
         const callbacks = {
@@ -25,7 +25,7 @@ describe('bindAdapterEvents', () => {
             onStateChange: vi.fn(),
             onError: vi.fn(),
         }
-        bindAdapterEvents(core as any, 'box', callbacks)
+        bindDriveEvents(core as any, 'box', callbacks)
         expect(core.on).toHaveBeenCalledTimes(6)
         expect(core.on).toHaveBeenCalledWith('box:authenticated', expect.any(Function))
         expect(core.on).toHaveBeenCalledWith('box:error', expect.any(Function))
@@ -41,7 +41,7 @@ describe('bindAdapterEvents', () => {
             onStateChange: vi.fn(),
             onError: vi.fn(),
         }
-        bindAdapterEvents(core as any, 'box', callbacks)
+        bindDriveEvents(core as any, 'box', callbacks)
         core._emit('box:authenticated', { user: { name: 'Test' } })
         expect(callbacks.onAuthenticated).toHaveBeenCalledWith({ user: { name: 'Test' } })
     })
@@ -56,7 +56,7 @@ describe('bindAdapterEvents', () => {
             onStateChange: vi.fn(),
             onError: vi.fn(),
         }
-        const cleanup = bindAdapterEvents(core as any, 'box', callbacks)
+        const cleanup = bindDriveEvents(core as any, 'box', callbacks)
         cleanup()
         core._emit('box:authenticated', { user: { name: 'Test' } })
         expect(callbacks.onAuthenticated).not.toHaveBeenCalled()
@@ -72,7 +72,7 @@ describe('bindAdapterEvents', () => {
             onStateChange: vi.fn(),
             onError: vi.fn(),
         }
-        bindAdapterEvents(core as any, 'google-drive', callbacks)
+        bindDriveEvents(core as any, 'google-drive', callbacks)
         expect(core.on).toHaveBeenCalledWith('google-drive:authenticated', expect.any(Function))
     })
 })

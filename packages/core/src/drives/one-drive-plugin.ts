@@ -1,28 +1,28 @@
 import type { EventEmitter } from '../events'
-import type { AdapterPlugin } from './plugin'
-import type { DropboxConfigs } from './configs'
-import type { DriveFile, AdapterState } from './types'
+import type { DrivePlugin } from './plugin'
+import type { OneDriveConfigs } from './configs'
+import type { DriveFile, DriveState } from './types'
 
 // ── Session storage keys ──
-const SK_ACCESS = 'upup_dropbox_access_token'
-const SK_REFRESH = 'upup_dropbox_refresh_token'
-const SK_EXPIRY = 'upup_dropbox_token_expiry'
+const SK_ACCESS = 'upup_onedrive_access_token'
+const SK_REFRESH = 'upup_onedrive_refresh_token'
+const SK_EXPIRY = 'upup_onedrive_token_expiry'
 
-// ── Dropbox API endpoints ──
-const AUTH_URL = 'https://www.dropbox.com/oauth2/authorize'
-const TOKEN_URL = 'https://api.dropbox.com/oauth2/token'
-const LIST_FOLDER_URL = 'https://api.dropbox.com/2/files/list_folder'
-const LIST_FOLDER_CONTINUE_URL =
-    'https://api.dropbox.com/2/files/list_folder/continue'
-const DOWNLOAD_URL = 'https://content.dropboxapi.com/2/files/download'
-const SEARCH_URL = 'https://api.dropbox.com/2/files/search_v2'
-const USER_INFO_URL = 'https://api.dropbox.com/2/users/get_current_account'
-const TEMP_LINK_URL = 'https://api.dropbox.com/2/files/get_temporary_link'
+// ── Microsoft OAuth2 / Graph API endpoints ──
+const AUTH_URL =
+    'https://login.microsoftonline.com/common/oauth2/v2.0/authorize'
+const TOKEN_URL =
+    'https://login.microsoftonline.com/common/oauth2/v2.0/token'
+const GRAPH_BASE = 'https://graph.microsoft.com/v1.0'
 
-const OAUTH_SCOPES =
-    'files.metadata.read files.content.read files.content.write account_info.read'
+const OAUTH_SCOPES = 'user.read files.readwrite.all offline_access'
 
-const POPUP_NAME = 'UpupDropboxAuth'
+const POPUP_NAME = 'UpupOneDriveAuth'
+
+// ── Graph API query params for file listing ──
+const FILE_SELECT =
+    'id,name,folder,file,size,@microsoft.graph.downloadUrl'
+const FILE_EXPAND = 'thumbnails'
 
 // ── PKCE helpers ──
 
@@ -71,20 +71,32 @@ function storageDel(key: string): void {
     }
 }
 
-// ── Dropbox entry → DriveFile mapper ──
+// ── Microsoft Graph item → DriveFile mapper ──
 
-function mapEntry(entry: Record<string, unknown>): DriveFile {
-    const tag = entry['.tag'] as string
-    const isFolder = tag === 'folder'
+function mapGraphItem(item: Record<string, unknown>): DriveFile {
+    const isFolder = !!item.folder
+    const file = item.file as Record<string, unknown> | undefined
+    const mimeType = isFolder
+        ? 'folder'
+        : (file?.mimeType as string) ?? guessMimeType(item.name as string)
+
+    const thumbnails = item.thumbnails as Array<Record<string, unknown>> | undefined
+    let thumbnail: string | undefined
+    if (thumbnails && thumbnails.length > 0) {
+        const thumbSet = thumbnails[0]
+        const medium = thumbSet?.medium as Record<string, unknown> | undefined
+        thumbnail = (medium?.url as string) ?? undefined
+    }
+
     return {
-        id: (entry.id as string) ?? '',
-        name: (entry.name as string) ?? '',
-        path: (entry.path_display as string) ?? '',
-        size: isFolder ? 0 : ((entry.size as number) ?? 0),
-        mimeType: isFolder ? 'folder' : guessMimeType(entry.name as string),
+        id: (item.id as string) ?? '',
+        name: (item.name as string) ?? '',
+        path: (item.id as string) ?? '', // OneDrive uses id-based navigation
+        size: isFolder ? 0 : ((item.size as number) ?? 0),
+        mimeType,
         isFolder,
-        thumbnail: undefined,
-        modifiedAt: (entry.server_modified as string) ?? undefined,
+        thumbnail,
+        modifiedAt: (item.lastModifiedDateTime as string) ?? undefined,
     }
 }
 
@@ -122,18 +134,18 @@ function guessMimeType(name: string): string {
     return map[ext] ?? 'application/octet-stream'
 }
 
-// ── DropboxPlugin ──
+// ── OneDrivePlugin ──
 
-export class DropboxPlugin implements AdapterPlugin {
-    readonly id = 'dropbox'
-    readonly name = 'dropbox'
+export class OneDrivePlugin implements DrivePlugin {
+    readonly id = 'one-drive'
+    readonly name = 'one-drive'
 
     private emitter: EventEmitter | null = null
-    private config: DropboxConfigs = {}
+    private config: OneDriveConfigs = { onedrive_client_id: '' }
     private accessToken: string | null = null
     private refreshTokenValue: string | null = null
     private tokenExpiry = 0
-    private state: AdapterState = 'idle'
+    private state: DriveState = 'idle'
     private codeVerifier: string | null = null
 
     // Popup polling references
@@ -142,12 +154,12 @@ export class DropboxPlugin implements AdapterPlugin {
 
     // ── Plugin lifecycle ──
 
-    configure(config: DropboxConfigs): this {
+    configure(config: OneDriveConfigs): this {
         this.config = config
         return this
     }
 
-    getConfig(): Readonly<DropboxConfigs> {
+    getConfig(): Readonly<OneDriveConfigs> {
         return this.config
     }
 
@@ -166,21 +178,21 @@ export class DropboxPlugin implements AdapterPlugin {
 
     // ── State management ──
 
-    getState(): AdapterState {
+    getState(): DriveState {
         return this.state
     }
 
-    private setState(newState: AdapterState): void {
+    private setState(newState: DriveState): void {
         this.state = newState
-        this.emitter?.emit('dropbox:state-change', { state: newState })
+        this.emitter?.emit('onedrive:state-change', { state: newState })
     }
 
     // ── Auth: build the OAuth URL with PKCE ──
 
     async getAuthUrl(): Promise<string> {
-        const clientId = this.config.dropbox_client_id
+        const clientId = this.config.onedrive_client_id
         if (!clientId) {
-            throw new Error('Dropbox client_id is not configured')
+            throw new Error('OneDrive client_id is not configured')
         }
 
         const redirectUri = this.getRedirectUri()
@@ -191,10 +203,10 @@ export class DropboxPlugin implements AdapterPlugin {
             client_id: clientId,
             response_type: 'code',
             redirect_uri: redirectUri,
-            token_access_type: 'offline',
             scope: OAUTH_SCOPES,
             code_challenge: challenge,
             code_challenge_method: 'S256',
+            response_mode: 'query',
         })
 
         return `${AUTH_URL}?${params.toString()}`
@@ -203,9 +215,9 @@ export class DropboxPlugin implements AdapterPlugin {
     // ── Auth: exchange authorization code for tokens ──
 
     async authenticate(code: string): Promise<void> {
-        const clientId = this.config.dropbox_client_id
+        const clientId = this.config.onedrive_client_id
         if (!clientId) {
-            throw new Error('Dropbox client_id is not configured')
+            throw new Error('OneDrive client_id is not configured')
         }
         if (!this.codeVerifier) {
             throw new Error('No PKCE code verifier — call getAuthUrl() first')
@@ -220,6 +232,7 @@ export class DropboxPlugin implements AdapterPlugin {
                 code_verifier: this.codeVerifier,
                 grant_type: 'authorization_code',
                 redirect_uri: this.getRedirectUri(),
+                scope: OAUTH_SCOPES,
             })
 
             const res = await fetch(TOKEN_URL, {
@@ -243,16 +256,16 @@ export class DropboxPlugin implements AdapterPlugin {
             // Fetch user profile
             let user: { name: string; email: string } | undefined
             try {
-                user = await this.fetchUserProfile()
+                user = await this.getUserInfo()
             } catch {
                 // Profile fetch is non-critical
             }
 
             this.setState('authenticated')
-            this.emitter?.emit('dropbox:authenticated', { user })
+            this.emitter?.emit('onedrive:authenticated', { user })
         } catch (err) {
             this.setState('idle')
-            this.emitter?.emit('dropbox:error', {
+            this.emitter?.emit('onedrive:error', {
                 error: err instanceof Error ? err : new Error(String(err)),
                 action: 'authenticate',
             })
@@ -284,7 +297,7 @@ export class DropboxPlugin implements AdapterPlugin {
         )
 
         if (!this.popupWindow) {
-            this.emitter?.emit('dropbox:error', {
+            this.emitter?.emit('onedrive:error', {
                 error: new Error('Popup was blocked by the browser'),
                 action: 'authenticateViaPopup',
             })
@@ -309,7 +322,7 @@ export class DropboxPlugin implements AdapterPlugin {
                     try {
                         href = this.popupWindow.location.href
                     } catch {
-                        // Cross-origin while still on Dropbox domain — expected
+                        // Cross-origin while still on Microsoft domain — expected
                         return
                     }
 
@@ -329,7 +342,7 @@ export class DropboxPlugin implements AdapterPlugin {
                             'No authorization code found in redirect URL',
                         )
                         this.setState('idle')
-                        this.emitter?.emit('dropbox:error', {
+                        this.emitter?.emit('onedrive:error', {
                             error: err,
                             action: 'authenticateViaPopup',
                         })
@@ -354,7 +367,7 @@ export class DropboxPlugin implements AdapterPlugin {
 
                     this.cleanupPopup()
                     this.setState('idle')
-                    this.emitter?.emit('dropbox:error', {
+                    this.emitter?.emit('onedrive:error', {
                         error:
                             err instanceof Error ? err : new Error(String(err)),
                         action: 'authenticateViaPopup',
@@ -368,7 +381,7 @@ export class DropboxPlugin implements AdapterPlugin {
     // ── Auth: refresh access token ──
 
     async refreshAccessToken(): Promise<string | null> {
-        const clientId = this.config.dropbox_client_id
+        const clientId = this.config.onedrive_client_id
         if (!clientId || !this.refreshTokenValue) return null
 
         try {
@@ -379,6 +392,7 @@ export class DropboxPlugin implements AdapterPlugin {
                     grant_type: 'refresh_token',
                     refresh_token: this.refreshTokenValue,
                     client_id: clientId,
+                    scope: OAUTH_SCOPES,
                 }),
             })
 
@@ -390,14 +404,14 @@ export class DropboxPlugin implements AdapterPlugin {
             const data = await res.json()
             this.setTokens(
                 data.access_token,
-                this.refreshTokenValue, // Refresh token stays the same
+                data.refresh_token ?? this.refreshTokenValue,
                 data.expires_in ? Date.now() + data.expires_in * 1000 : 0,
             )
 
             return data.access_token
         } catch (err) {
-            this.emitter?.emit('dropbox:session-expired', {})
-            this.emitter?.emit('dropbox:error', {
+            this.emitter?.emit('onedrive:session-expired', {})
+            this.emitter?.emit('onedrive:error', {
                 error: err instanceof Error ? err : new Error(String(err)),
                 action: 'refreshAccessToken',
             })
@@ -413,7 +427,7 @@ export class DropboxPlugin implements AdapterPlugin {
         this.clearTokens()
         this.cleanupPopup()
         this.setState('idle')
-        this.emitter?.emit('dropbox:signed-out', {})
+        this.emitter?.emit('onedrive:signed-out', {})
     }
 
     // ── Auth: restore session from sessionStorage ──
@@ -442,137 +456,42 @@ export class DropboxPlugin implements AdapterPlugin {
         return this.accessToken
     }
 
-    async getUserInfo(): Promise<{ name: string; email: string } | null> {
-        if (!this.isAuthenticated()) return null
-        try {
-            return await this.fetchUserProfile()
-        } catch {
-            return null
-        }
-    }
-
-    // ── File operations: list folder ──
+    // ── File operations: list files ──
 
     async loadFiles(
-        path = '',
+        folderId?: string,
     ): Promise<{
         files: DriveFile[]
-        hasMore: boolean
-        cursor?: string
+        folderId: string
     }> {
         this.setState('browsing')
 
         try {
-            const res = await this.apiRequest(LIST_FOLDER_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    path,
-                    recursive: false,
-                    include_media_info: true,
-                    include_deleted: false,
-                    include_has_explicit_shared_members: false,
-                }),
+            const path = folderId
+                ? `/me/drive/items/${folderId}/children`
+                : '/me/drive/root/children'
+
+            const params = new URLSearchParams({
+                $select: FILE_SELECT,
+                $expand: FILE_EXPAND,
             })
 
-            const data = await res.json()
-            const files: DriveFile[] = (data.entries ?? []).map(mapEntry)
+            const data = await this.graphRequest(`${path}?${params.toString()}`)
+            const items: Record<string, unknown>[] = (Array.isArray(data.value) ? data.value : []) as Record<string, unknown>[]
+            const files: DriveFile[] = items.map(mapGraphItem)
 
             this.setState('authenticated')
-            this.emitter?.emit('dropbox:files-loaded', {
+            this.emitter?.emit('onedrive:files-loaded', {
                 files,
-                path,
-                hasMore: !!data.has_more,
-                cursor: data.cursor,
+                folderId: folderId ?? 'root',
             })
 
-            return { files, hasMore: !!data.has_more, cursor: data.cursor }
+            return { files, folderId: folderId ?? 'root' }
         } catch (err) {
             this.setState('authenticated')
-            this.emitter?.emit('dropbox:error', {
+            this.emitter?.emit('onedrive:error', {
                 error: err instanceof Error ? err : new Error(String(err)),
                 action: 'loadFiles',
-            })
-            throw err
-        }
-    }
-
-    // ── File operations: continue listing (pagination) ──
-
-    async loadMoreFiles(cursor: string): Promise<{
-        files: DriveFile[]
-        hasMore: boolean
-        cursor?: string
-    }> {
-        try {
-            const res = await this.apiRequest(LIST_FOLDER_CONTINUE_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ cursor }),
-            })
-
-            const data = await res.json()
-            const files: DriveFile[] = (data.entries ?? []).map(mapEntry)
-
-            this.emitter?.emit('dropbox:files-loaded', {
-                files,
-                path: '',
-                hasMore: !!data.has_more,
-                cursor: data.cursor,
-            })
-
-            return { files, hasMore: !!data.has_more, cursor: data.cursor }
-        } catch (err) {
-            this.emitter?.emit('dropbox:error', {
-                error: err instanceof Error ? err : new Error(String(err)),
-                action: 'loadMoreFiles',
-            })
-            throw err
-        }
-    }
-
-    // ── File operations: load all files in folder recursively ──
-
-    async loadAllFilesInFolder(folderPath: string): Promise<DriveFile[]> {
-        const allFiles: DriveFile[] = []
-
-        try {
-            const initialRes = await this.apiRequest(LIST_FOLDER_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    path: folderPath,
-                    recursive: true,
-                    include_media_info: true,
-                }),
-            })
-
-            let data = await initialRes.json()
-            const entries: Record<string, unknown>[] = data.entries ?? []
-
-            while (data.has_more) {
-                const contRes = await this.apiRequest(
-                    LIST_FOLDER_CONTINUE_URL,
-                    {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ cursor: data.cursor }),
-                    },
-                )
-                data = await contRes.json()
-                entries.push(...(data.entries ?? []))
-            }
-
-            for (const entry of entries) {
-                const file = mapEntry(entry)
-                if (!file.isFolder) allFiles.push(file)
-            }
-
-            return allFiles
-        } catch (err) {
-            this.emitter?.emit('dropbox:error', {
-                error: err instanceof Error ? err : new Error(String(err)),
-                action: 'loadAllFilesInFolder',
             })
             throw err
         }
@@ -590,13 +509,13 @@ export class DropboxPlugin implements AdapterPlugin {
                 const file = await this.downloadSingleFile(driveFile)
                 if (file) {
                     results.push(file)
-                    this.emitter?.emit('dropbox:file-downloaded', {
+                    this.emitter?.emit('onedrive:file-downloaded', {
                         file,
                         driveFile,
                     })
                 }
             } catch (err) {
-                this.emitter?.emit('dropbox:error', {
+                this.emitter?.emit('onedrive:error', {
                     error: err instanceof Error ? err : new Error(String(err)),
                     action: 'downloadFiles',
                 })
@@ -607,109 +526,100 @@ export class DropboxPlugin implements AdapterPlugin {
         return results
     }
 
-    // ── File operations: search ──
+    // ── File operations: load all files in folder recursively ──
 
-    async searchFiles(
-        query: string,
-        path?: string,
-    ): Promise<DriveFile[]> {
+    async loadAllFilesInFolder(folderId: string): Promise<DriveFile[]> {
+        const allFiles: DriveFile[] = []
+
         try {
-            const body: Record<string, unknown> = {
-                query,
-                options: {
-                    max_results: 100,
-                    file_status: { '.tag': 'active' },
-                },
-            }
-            if (path) {
-                body.options = {
-                    ...(body.options as object),
-                    path,
+            const { files } = await this.loadFiles(folderId)
+            for (const file of files) {
+                if (file.isFolder) {
+                    const nested = await this.loadAllFilesInFolder(file.id)
+                    allFiles.push(...nested)
+                } else {
+                    allFiles.push(file)
                 }
             }
-
-            const res = await this.apiRequest(SEARCH_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(body),
-            })
-
-            const data = await res.json()
-            const matches = data.matches ?? []
-            return matches.map(
-                (m: { metadata: { metadata: Record<string, unknown> } }) =>
-                    mapEntry(m.metadata.metadata),
-            )
+            return allFiles
         } catch (err) {
-            this.emitter?.emit('dropbox:error', {
+            this.emitter?.emit('onedrive:error', {
                 error: err instanceof Error ? err : new Error(String(err)),
-                action: 'searchFiles',
+                action: 'loadAllFilesInFolder',
             })
             throw err
         }
     }
 
-    // ── Private: authenticated API request with auto-refresh ──
+    // ── User profile ──
 
-    private async apiRequest(
-        url: string,
-        options: RequestInit,
+    async getUserInfo(): Promise<{ name: string; email: string }> {
+        const data = await this.graphRequest('/me')
+        return {
+            name: String(data.displayName ?? ''),
+            email: String(data.mail ?? data.userPrincipalName ?? ''),
+        }
+    }
+
+    // ── Private: Microsoft Graph API request with auto-refresh ──
+
+    private async graphRequest(
+        path: string,
+        options: RequestInit = {},
         isRetry = false,
-    ): Promise<Response> {
+    ): Promise<Record<string, unknown>> {
         await this.ensureValidToken()
 
+        const url = path.startsWith('http') ? path : `${GRAPH_BASE}${path}`
         const headers = new Headers(options.headers ?? {})
         headers.set('Authorization', `Bearer ${this.accessToken}`)
 
         const res = await fetch(url, { ...options, headers })
 
-        if (res.ok) return res
+        if (res.ok) {
+            return res.json()
+        }
 
         const errorText = await res.text()
 
         // Handle 401 — attempt token refresh
         if (res.status === 401 && !isRetry) {
-            const isExpired =
-                errorText.includes('expired_access_token') ||
-                res.status === 401
-
-            if (isExpired && this.refreshTokenValue) {
+            if (this.refreshTokenValue) {
                 const newToken = await this.refreshAccessToken()
                 if (newToken) {
-                    return this.apiRequest(url, options, true)
+                    return this.graphRequest(path, options, true)
                 }
             }
 
             // No refresh token or refresh failed
-            this.emitter?.emit('dropbox:session-expired', {})
+            this.emitter?.emit('onedrive:session-expired', {})
             this.clearTokens()
             this.setState('session-expired')
         }
 
         throw new Error(
-            `Dropbox API error (${res.status}): ${errorText}`,
+            `OneDrive API error (${res.status}): ${errorText}`,
         )
     }
 
-    // ── Private: download a single file via temporary link ──
+    // ── Private: download a single file ──
 
     private async downloadSingleFile(driveFile: DriveFile): Promise<File | null> {
-        // Get temporary download link
-        const linkRes = await this.apiRequest(TEMP_LINK_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ path: driveFile.path }),
-        })
+        // First try to get the download URL from item metadata
+        const itemData = await this.graphRequest(
+            `/me/drive/items/${driveFile.id}?select=@microsoft.graph.downloadUrl`,
+        )
 
-        const linkData = await linkRes.json()
-        const downloadLink: string = linkData.link
+        const downloadUrl =
+            (itemData['@microsoft.graph.downloadUrl'] as string) ??
+            (itemData['@content.downloadUrl'] as string)
 
-        if (!downloadLink) {
-            throw new Error(`No download link returned for ${driveFile.name}`)
+        if (!downloadUrl) {
+            throw new Error(`No download URL available for ${driveFile.name}`)
         }
 
-        // Download the file content via the temporary link
-        const downloadRes = await fetch(downloadLink, { method: 'GET' })
+        // Download the file content via the download URL (no auth needed)
+        const downloadRes = await fetch(downloadUrl, { method: 'GET' })
         if (!downloadRes.ok) {
             throw new Error(
                 `Download failed (${downloadRes.status}) for ${driveFile.name}`,
@@ -720,25 +630,6 @@ export class DropboxPlugin implements AdapterPlugin {
         return new File([blob], driveFile.name, {
             type: blob.type || driveFile.mimeType || 'application/octet-stream',
         })
-    }
-
-    // ── Private: fetch user profile ──
-
-    private async fetchUserProfile(): Promise<{
-        name: string
-        email: string
-    }> {
-        const res = await this.apiRequest(USER_INFO_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: null,
-        })
-
-        const data = await res.json()
-        return {
-            name: data.name?.display_name ?? '',
-            email: data.email ?? '',
-        }
     }
 
     // ── Private: token management ──
@@ -784,11 +675,11 @@ export class DropboxPlugin implements AdapterPlugin {
     // ── Private: redirect URI ──
 
     private getRedirectUri(): string {
-        if (this.config.dropbox_redirect_uri) {
-            return this.config.dropbox_redirect_uri
+        if (this.config.redirectUri) {
+            return this.config.redirectUri
         }
         if (typeof window !== 'undefined') {
-            return `${window.location.origin}/dp_redirect`
+            return `${window.location.origin}/od_redirect`
         }
         return ''
     }

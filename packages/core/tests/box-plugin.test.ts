@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { EventEmitter } from '../src/events'
-import { BoxPlugin } from '../src/adapters/box-plugin'
-import type { DriveFile } from '../src/adapters/types'
+import { BoxPlugin } from '../src/drives/box-plugin'
+import type { DriveFile } from '../src/drives/types'
 
 // ── Helpers ──
 

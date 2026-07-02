@@ -1,28 +1,21 @@
 import type { EventEmitter } from '../events'
-import type { AdapterPlugin } from './plugin'
-import type { OneDriveConfigs } from './configs'
-import type { DriveFile, AdapterState } from './types'
+import type { DrivePlugin } from './plugin'
+import type { BoxConfigs } from './configs'
+import type { DriveFile, DriveState } from './types'
 
 // ── Session storage keys ──
-const SK_ACCESS = 'upup_onedrive_access_token'
-const SK_REFRESH = 'upup_onedrive_refresh_token'
-const SK_EXPIRY = 'upup_onedrive_token_expiry'
+const SK_ACCESS = 'upup_box_access_token'
+const SK_REFRESH = 'upup_box_refresh_token'
 
-// ── Microsoft OAuth2 / Graph API endpoints ──
-const AUTH_URL =
-    'https://login.microsoftonline.com/common/oauth2/v2.0/authorize'
-const TOKEN_URL =
-    'https://login.microsoftonline.com/common/oauth2/v2.0/token'
-const GRAPH_BASE = 'https://graph.microsoft.com/v1.0'
+// ── Box API endpoints ──
+const AUTH_URL = 'https://account.box.com/api/oauth2/authorize'
+const TOKEN_URL = 'https://api.box.com/oauth2/token'
+const USER_URL = 'https://api.box.com/2.0/users/me'
+const FOLDERS_URL = 'https://api.box.com/2.0/folders'
+const FILES_URL = 'https://api.box.com/2.0/files'
+const SEARCH_URL = 'https://api.box.com/2.0/search'
 
-const OAUTH_SCOPES = 'user.read files.readwrite.all offline_access'
-
-const POPUP_NAME = 'UpupOneDriveAuth'
-
-// ── Graph API query params for file listing ──
-const FILE_SELECT =
-    'id,name,folder,file,size,@microsoft.graph.downloadUrl'
-const FILE_EXPAND = 'thumbnails'
+const POPUP_NAME = 'UpupBoxAuth'
 
 // ── PKCE helpers ──
 
@@ -71,32 +64,20 @@ function storageDel(key: string): void {
     }
 }
 
-// ── Microsoft Graph item → DriveFile mapper ──
+// ── Box entry → DriveFile mapper ──
 
-function mapGraphItem(item: Record<string, unknown>): DriveFile {
-    const isFolder = !!item.folder
-    const file = item.file as Record<string, unknown> | undefined
-    const mimeType = isFolder
-        ? 'folder'
-        : (file?.mimeType as string) ?? guessMimeType(item.name as string)
-
-    const thumbnails = item.thumbnails as Array<Record<string, unknown>> | undefined
-    let thumbnail: string | undefined
-    if (thumbnails && thumbnails.length > 0) {
-        const thumbSet = thumbnails[0]
-        const medium = thumbSet?.medium as Record<string, unknown> | undefined
-        thumbnail = (medium?.url as string) ?? undefined
-    }
-
+function mapEntry(entry: Record<string, unknown>): DriveFile {
+    const type = entry.type as string
+    const isFolder = type === 'folder'
     return {
-        id: (item.id as string) ?? '',
-        name: (item.name as string) ?? '',
-        path: (item.id as string) ?? '', // OneDrive uses id-based navigation
-        size: isFolder ? 0 : ((item.size as number) ?? 0),
-        mimeType,
+        id: (entry.id as string) ?? '',
+        name: (entry.name as string) ?? '',
+        path: (entry.id as string) ?? '', // Box uses IDs for navigation, not paths
+        size: isFolder ? 0 : ((entry.size as number) ?? 0),
+        mimeType: isFolder ? 'folder' : guessMimeType(entry.name as string),
         isFolder,
-        thumbnail,
-        modifiedAt: (item.lastModifiedDateTime as string) ?? undefined,
+        thumbnail: undefined,
+        modifiedAt: (entry.modified_at as string) ?? undefined,
     }
 }
 
@@ -134,18 +115,17 @@ function guessMimeType(name: string): string {
     return map[ext] ?? 'application/octet-stream'
 }
 
-// ── OneDrivePlugin ──
+// ── BoxPlugin ──
 
-export class OneDrivePlugin implements AdapterPlugin {
-    readonly id = 'one-drive'
-    readonly name = 'one-drive'
+export class BoxPlugin implements DrivePlugin {
+    readonly id = 'box'
+    readonly name = 'box'
 
     private emitter: EventEmitter | null = null
-    private config: OneDriveConfigs = { onedrive_client_id: '' }
+    private config: BoxConfigs = {}
     private accessToken: string | null = null
     private refreshTokenValue: string | null = null
-    private tokenExpiry = 0
-    private state: AdapterState = 'idle'
+    private state: DriveState = 'idle'
     private codeVerifier: string | null = null
 
     // Popup polling references
@@ -154,12 +134,12 @@ export class OneDrivePlugin implements AdapterPlugin {
 
     // ── Plugin lifecycle ──
 
-    configure(config: OneDriveConfigs): this {
+    configure(config: BoxConfigs): this {
         this.config = config
         return this
     }
 
-    getConfig(): Readonly<OneDriveConfigs> {
+    getConfig(): Readonly<BoxConfigs> {
         return this.config
     }
 
@@ -178,21 +158,21 @@ export class OneDrivePlugin implements AdapterPlugin {
 
     // ── State management ──
 
-    getState(): AdapterState {
+    getState(): DriveState {
         return this.state
     }
 
-    private setState(newState: AdapterState): void {
+    private setState(newState: DriveState): void {
         this.state = newState
-        this.emitter?.emit('onedrive:state-change', { state: newState })
+        this.emitter?.emit('box:state-change', { state: newState })
     }
 
     // ── Auth: build the OAuth URL with PKCE ──
 
     async getAuthUrl(): Promise<string> {
-        const clientId = this.config.onedrive_client_id
+        const clientId = this.config.box_client_id
         if (!clientId) {
-            throw new Error('OneDrive client_id is not configured')
+            throw new Error('Box client_id is not configured')
         }
 
         const redirectUri = this.getRedirectUri()
@@ -203,10 +183,8 @@ export class OneDrivePlugin implements AdapterPlugin {
             client_id: clientId,
             response_type: 'code',
             redirect_uri: redirectUri,
-            scope: OAUTH_SCOPES,
             code_challenge: challenge,
             code_challenge_method: 'S256',
-            response_mode: 'query',
         })
 
         return `${AUTH_URL}?${params.toString()}`
@@ -215,9 +193,9 @@ export class OneDrivePlugin implements AdapterPlugin {
     // ── Auth: exchange authorization code for tokens ──
 
     async authenticate(code: string): Promise<void> {
-        const clientId = this.config.onedrive_client_id
+        const clientId = this.config.box_client_id
         if (!clientId) {
-            throw new Error('OneDrive client_id is not configured')
+            throw new Error('Box client_id is not configured')
         }
         if (!this.codeVerifier) {
             throw new Error('No PKCE code verifier — call getAuthUrl() first')
@@ -232,7 +210,6 @@ export class OneDrivePlugin implements AdapterPlugin {
                 code_verifier: this.codeVerifier,
                 grant_type: 'authorization_code',
                 redirect_uri: this.getRedirectUri(),
-                scope: OAUTH_SCOPES,
             })
 
             const res = await fetch(TOKEN_URL, {
@@ -250,22 +227,21 @@ export class OneDrivePlugin implements AdapterPlugin {
             this.setTokens(
                 data.access_token,
                 data.refresh_token ?? null,
-                data.expires_in ? Date.now() + data.expires_in * 1000 : 0,
             )
 
             // Fetch user profile
             let user: { name: string; email: string } | undefined
             try {
-                user = await this.getUserInfo()
+                user = await this.fetchUserProfile()
             } catch {
                 // Profile fetch is non-critical
             }
 
             this.setState('authenticated')
-            this.emitter?.emit('onedrive:authenticated', { user })
+            this.emitter?.emit('box:authenticated', { user })
         } catch (err) {
             this.setState('idle')
-            this.emitter?.emit('onedrive:error', {
+            this.emitter?.emit('box:error', {
                 error: err instanceof Error ? err : new Error(String(err)),
                 action: 'authenticate',
             })
@@ -297,7 +273,7 @@ export class OneDrivePlugin implements AdapterPlugin {
         )
 
         if (!this.popupWindow) {
-            this.emitter?.emit('onedrive:error', {
+            this.emitter?.emit('box:error', {
                 error: new Error('Popup was blocked by the browser'),
                 action: 'authenticateViaPopup',
             })
@@ -322,7 +298,7 @@ export class OneDrivePlugin implements AdapterPlugin {
                     try {
                         href = this.popupWindow.location.href
                     } catch {
-                        // Cross-origin while still on Microsoft domain — expected
+                        // Cross-origin while still on Box domain — expected
                         return
                     }
 
@@ -342,7 +318,7 @@ export class OneDrivePlugin implements AdapterPlugin {
                             'No authorization code found in redirect URL',
                         )
                         this.setState('idle')
-                        this.emitter?.emit('onedrive:error', {
+                        this.emitter?.emit('box:error', {
                             error: err,
                             action: 'authenticateViaPopup',
                         })
@@ -367,7 +343,7 @@ export class OneDrivePlugin implements AdapterPlugin {
 
                     this.cleanupPopup()
                     this.setState('idle')
-                    this.emitter?.emit('onedrive:error', {
+                    this.emitter?.emit('box:error', {
                         error:
                             err instanceof Error ? err : new Error(String(err)),
                         action: 'authenticateViaPopup',
@@ -381,7 +357,7 @@ export class OneDrivePlugin implements AdapterPlugin {
     // ── Auth: refresh access token ──
 
     async refreshAccessToken(): Promise<string | null> {
-        const clientId = this.config.onedrive_client_id
+        const clientId = this.config.box_client_id
         if (!clientId || !this.refreshTokenValue) return null
 
         try {
@@ -392,7 +368,6 @@ export class OneDrivePlugin implements AdapterPlugin {
                     grant_type: 'refresh_token',
                     refresh_token: this.refreshTokenValue,
                     client_id: clientId,
-                    scope: OAUTH_SCOPES,
                 }),
             })
 
@@ -405,13 +380,12 @@ export class OneDrivePlugin implements AdapterPlugin {
             this.setTokens(
                 data.access_token,
                 data.refresh_token ?? this.refreshTokenValue,
-                data.expires_in ? Date.now() + data.expires_in * 1000 : 0,
             )
 
             return data.access_token
         } catch (err) {
-            this.emitter?.emit('onedrive:session-expired', {})
-            this.emitter?.emit('onedrive:error', {
+            this.emitter?.emit('box:session-expired', {})
+            this.emitter?.emit('box:error', {
                 error: err instanceof Error ? err : new Error(String(err)),
                 action: 'refreshAccessToken',
             })
@@ -427,7 +401,7 @@ export class OneDrivePlugin implements AdapterPlugin {
         this.clearTokens()
         this.cleanupPopup()
         this.setState('idle')
-        this.emitter?.emit('onedrive:signed-out', {})
+        this.emitter?.emit('box:signed-out', {})
     }
 
     // ── Auth: restore session from sessionStorage ──
@@ -435,13 +409,11 @@ export class OneDrivePlugin implements AdapterPlugin {
     restoreSession(): boolean {
         const token = storageGet(SK_ACCESS)
         const refresh = storageGet(SK_REFRESH)
-        const expiry = storageGet(SK_EXPIRY)
 
         if (!token) return false
 
         this.accessToken = token
         this.refreshTokenValue = refresh
-        this.tokenExpiry = expiry ? parseInt(expiry, 10) : 0
         this.setState('authenticated')
         return true
     }
@@ -456,10 +428,19 @@ export class OneDrivePlugin implements AdapterPlugin {
         return this.accessToken
     }
 
-    // ── File operations: list files ──
+    async getUserInfo(): Promise<{ name: string; email: string } | null> {
+        if (!this.isAuthenticated()) return null
+        try {
+            return await this.fetchUserProfile()
+        } catch {
+            return null
+        }
+    }
+
+    // ── File operations: list folder ──
 
     async loadFiles(
-        folderId?: string,
+        folderId = '0',
     ): Promise<{
         files: DriveFile[]
         folderId: string
@@ -467,29 +448,26 @@ export class OneDrivePlugin implements AdapterPlugin {
         this.setState('browsing')
 
         try {
-            const path = folderId
-                ? `/me/drive/items/${folderId}/children`
-                : '/me/drive/root/children'
-
             const params = new URLSearchParams({
-                $select: FILE_SELECT,
-                $expand: FILE_EXPAND,
+                fields: 'id,name,type,size,modified_at',
+                limit: '1000',
             })
 
-            const data = await this.graphRequest(`${path}?${params.toString()}`)
-            const items: Record<string, unknown>[] = (Array.isArray(data.value) ? data.value : []) as Record<string, unknown>[]
-            const files: DriveFile[] = items.map(mapGraphItem)
+            const res = await this.apiRequest(
+                `${FOLDERS_URL}/${folderId}/items?${params.toString()}`,
+                { method: 'GET' },
+            )
+
+            const data = await res.json()
+            const files: DriveFile[] = (data.entries ?? []).map(mapEntry)
 
             this.setState('authenticated')
-            this.emitter?.emit('onedrive:files-loaded', {
-                files,
-                folderId: folderId ?? 'root',
-            })
+            this.emitter?.emit('box:files-loaded', { files, folderId })
 
-            return { files, folderId: folderId ?? 'root' }
+            return { files, folderId }
         } catch (err) {
             this.setState('authenticated')
-            this.emitter?.emit('onedrive:error', {
+            this.emitter?.emit('box:error', {
                 error: err instanceof Error ? err : new Error(String(err)),
                 action: 'loadFiles',
             })
@@ -509,13 +487,13 @@ export class OneDrivePlugin implements AdapterPlugin {
                 const file = await this.downloadSingleFile(driveFile)
                 if (file) {
                     results.push(file)
-                    this.emitter?.emit('onedrive:file-downloaded', {
+                    this.emitter?.emit('box:file-downloaded', {
                         file,
                         driveFile,
                     })
                 }
             } catch (err) {
-                this.emitter?.emit('onedrive:error', {
+                this.emitter?.emit('box:error', {
                     error: err instanceof Error ? err : new Error(String(err)),
                     action: 'downloadFiles',
                 })
@@ -543,7 +521,7 @@ export class OneDrivePlugin implements AdapterPlugin {
             }
             return allFiles
         } catch (err) {
-            this.emitter?.emit('onedrive:error', {
+            this.emitter?.emit('box:error', {
                 error: err instanceof Error ? err : new Error(String(err)),
                 action: 'loadAllFilesInFolder',
             })
@@ -551,34 +529,50 @@ export class OneDrivePlugin implements AdapterPlugin {
         }
     }
 
-    // ── User profile ──
+    // ── File operations: search ──
 
-    async getUserInfo(): Promise<{ name: string; email: string }> {
-        const data = await this.graphRequest('/me')
-        return {
-            name: String(data.displayName ?? ''),
-            email: String(data.mail ?? data.userPrincipalName ?? ''),
+    async searchFiles(query: string): Promise<DriveFile[]> {
+        try {
+            const params = new URLSearchParams({
+                query,
+                fields: 'id,name,type,size,modified_at',
+                limit: '100',
+            })
+
+            const res = await this.apiRequest(
+                `${SEARCH_URL}?${params.toString()}`,
+                { method: 'GET' },
+            )
+
+            const data = await res.json()
+            const entries = data.entries ?? []
+            return entries.map(mapEntry)
+        } catch (err) {
+            this.emitter?.emit('box:error', {
+                error: err instanceof Error ? err : new Error(String(err)),
+                action: 'searchFiles',
+            })
+            throw err
         }
     }
 
-    // ── Private: Microsoft Graph API request with auto-refresh ──
+    // ── Private: authenticated API request with auto-refresh ──
 
-    private async graphRequest(
-        path: string,
-        options: RequestInit = {},
+    private async apiRequest(
+        url: string,
+        options: RequestInit,
         isRetry = false,
-    ): Promise<Record<string, unknown>> {
-        await this.ensureValidToken()
+    ): Promise<Response> {
+        if (!this.accessToken) {
+            throw new Error('Not authenticated — no access token')
+        }
 
-        const url = path.startsWith('http') ? path : `${GRAPH_BASE}${path}`
         const headers = new Headers(options.headers ?? {})
         headers.set('Authorization', `Bearer ${this.accessToken}`)
 
         const res = await fetch(url, { ...options, headers })
 
-        if (res.ok) {
-            return res.json()
-        }
+        if (res.ok) return res
 
         const errorText = await res.text()
 
@@ -587,49 +581,47 @@ export class OneDrivePlugin implements AdapterPlugin {
             if (this.refreshTokenValue) {
                 const newToken = await this.refreshAccessToken()
                 if (newToken) {
-                    return this.graphRequest(path, options, true)
+                    return this.apiRequest(url, options, true)
                 }
             }
 
             // No refresh token or refresh failed
-            this.emitter?.emit('onedrive:session-expired', {})
+            this.emitter?.emit('box:session-expired', {})
             this.clearTokens()
             this.setState('session-expired')
         }
 
         throw new Error(
-            `OneDrive API error (${res.status}): ${errorText}`,
+            `Box API error (${res.status}): ${errorText}`,
         )
     }
 
     // ── Private: download a single file ──
 
     private async downloadSingleFile(driveFile: DriveFile): Promise<File | null> {
-        // First try to get the download URL from item metadata
-        const itemData = await this.graphRequest(
-            `/me/drive/items/${driveFile.id}?select=@microsoft.graph.downloadUrl`,
+        const res = await this.apiRequest(
+            `${FILES_URL}/${driveFile.id}/content`,
+            { method: 'GET' },
         )
 
-        const downloadUrl =
-            (itemData['@microsoft.graph.downloadUrl'] as string) ??
-            (itemData['@content.downloadUrl'] as string)
-
-        if (!downloadUrl) {
-            throw new Error(`No download URL available for ${driveFile.name}`)
-        }
-
-        // Download the file content via the download URL (no auth needed)
-        const downloadRes = await fetch(downloadUrl, { method: 'GET' })
-        if (!downloadRes.ok) {
-            throw new Error(
-                `Download failed (${downloadRes.status}) for ${driveFile.name}`,
-            )
-        }
-
-        const blob = await downloadRes.blob()
+        const blob = await res.blob()
         return new File([blob], driveFile.name, {
             type: blob.type || driveFile.mimeType || 'application/octet-stream',
         })
+    }
+
+    // ── Private: fetch user profile ──
+
+    private async fetchUserProfile(): Promise<{
+        name: string
+        email: string
+    }> {
+        const res = await this.apiRequest(USER_URL, { method: 'GET' })
+        const data = await res.json()
+        return {
+            name: data.name ?? '',
+            email: data.login ?? '',
+        }
     }
 
     // ── Private: token management ──
@@ -637,49 +629,29 @@ export class OneDrivePlugin implements AdapterPlugin {
     private setTokens(
         access: string,
         refresh: string | null,
-        expiry: number,
     ): void {
         this.accessToken = access
         this.refreshTokenValue = refresh
-        this.tokenExpiry = expiry
 
         storageSet(SK_ACCESS, access)
         if (refresh) storageSet(SK_REFRESH, refresh)
-        if (expiry) storageSet(SK_EXPIRY, String(expiry))
     }
 
     private clearTokens(): void {
         this.accessToken = null
         this.refreshTokenValue = null
-        this.tokenExpiry = 0
         storageDel(SK_ACCESS)
         storageDel(SK_REFRESH)
-        storageDel(SK_EXPIRY)
-    }
-
-    private async ensureValidToken(): Promise<void> {
-        if (!this.accessToken) {
-            throw new Error('Not authenticated — no access token')
-        }
-
-        // If token expires within 60s, proactively refresh
-        if (
-            this.tokenExpiry > 0 &&
-            Date.now() > this.tokenExpiry - 60_000 &&
-            this.refreshTokenValue
-        ) {
-            await this.refreshAccessToken()
-        }
     }
 
     // ── Private: redirect URI ──
 
     private getRedirectUri(): string {
-        if (this.config.redirectUri) {
-            return this.config.redirectUri
+        if (this.config.box_redirect_uri) {
+            return this.config.box_redirect_uri
         }
         if (typeof window !== 'undefined') {
-            return `${window.location.origin}/od_redirect`
+            return `${window.location.origin}/box_redirect`
         }
         return ''
     }

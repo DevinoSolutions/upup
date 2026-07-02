@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useRef, useSyncExternalStore, type SetStateAction } from 'react'
 import {
-    AdapterBrowserController,
+    DriveBrowserController,
     GOOGLE_DRIVE_DESCRIPTOR,
-    type AdapterBrowserState,
+    type DriveBrowserState,
     type DriveFile,
     type DriveFolder,
 } from '@upup/core'
@@ -12,8 +12,8 @@ import {
     useUploaderSource,
 } from '../context/UploaderContext'
 
-/** Stable fallback snapshot — mirrors AdapterBrowserController constructor defaults. */
-const SERVER_SNAPSHOT: AdapterBrowserState = {
+/** Stable fallback snapshot — mirrors DriveBrowserController constructor defaults. */
+const SERVER_SNAPSHOT: DriveBrowserState = {
     user: undefined,
     folder: undefined,
     path: [],
@@ -36,9 +36,9 @@ export function useGoogleDrive() {
     // GIS config (client id / api key) + GIS script loading are sourced inside the
     // controller (plugin.getConfig() + core loadGoogleIdentityServices), so the hook
     // no longer reads googleDriveConfigs from context or uses useLoadGAPI.
-    const controllerRef = useRef<AdapterBrowserController | null>(null)
+    const controllerRef = useRef<DriveBrowserController | null>(null)
     if (!controllerRef.current && core) {
-        controllerRef.current = new AdapterBrowserController(core, GOOGLE_DRIVE_DESCRIPTOR, {
+        controllerRef.current = new DriveBrowserController(core, GOOGLE_DRIVE_DESCRIPTOR, {
             onFilesSelected: files => setFiles(files),
             onClose: () => setActiveAdapter(undefined),
         })

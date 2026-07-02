@@ -1,21 +1,28 @@
 import type { EventEmitter } from '../events'
-import type { AdapterPlugin } from './plugin'
-import type { BoxConfigs } from './configs'
-import type { DriveFile, AdapterState } from './types'
+import type { DrivePlugin } from './plugin'
+import type { DropboxConfigs } from './configs'
+import type { DriveFile, DriveState } from './types'
 
 // ── Session storage keys ──
-const SK_ACCESS = 'upup_box_access_token'
-const SK_REFRESH = 'upup_box_refresh_token'
+const SK_ACCESS = 'upup_dropbox_access_token'
+const SK_REFRESH = 'upup_dropbox_refresh_token'
+const SK_EXPIRY = 'upup_dropbox_token_expiry'
 
-// ── Box API endpoints ──
-const AUTH_URL = 'https://account.box.com/api/oauth2/authorize'
-const TOKEN_URL = 'https://api.box.com/oauth2/token'
-const USER_URL = 'https://api.box.com/2.0/users/me'
-const FOLDERS_URL = 'https://api.box.com/2.0/folders'
-const FILES_URL = 'https://api.box.com/2.0/files'
-const SEARCH_URL = 'https://api.box.com/2.0/search'
+// ── Dropbox API endpoints ──
+const AUTH_URL = 'https://www.dropbox.com/oauth2/authorize'
+const TOKEN_URL = 'https://api.dropbox.com/oauth2/token'
+const LIST_FOLDER_URL = 'https://api.dropbox.com/2/files/list_folder'
+const LIST_FOLDER_CONTINUE_URL =
+    'https://api.dropbox.com/2/files/list_folder/continue'
+const DOWNLOAD_URL = 'https://content.dropboxapi.com/2/files/download'
+const SEARCH_URL = 'https://api.dropbox.com/2/files/search_v2'
+const USER_INFO_URL = 'https://api.dropbox.com/2/users/get_current_account'
+const TEMP_LINK_URL = 'https://api.dropbox.com/2/files/get_temporary_link'
 
-const POPUP_NAME = 'UpupBoxAuth'
+const OAUTH_SCOPES =
+    'files.metadata.read files.content.read files.content.write account_info.read'
+
+const POPUP_NAME = 'UpupDropboxAuth'
 
 // ── PKCE helpers ──
 
@@ -64,20 +71,20 @@ function storageDel(key: string): void {
     }
 }
 
-// ── Box entry → DriveFile mapper ──
+// ── Dropbox entry → DriveFile mapper ──
 
 function mapEntry(entry: Record<string, unknown>): DriveFile {
-    const type = entry.type as string
-    const isFolder = type === 'folder'
+    const tag = entry['.tag'] as string
+    const isFolder = tag === 'folder'
     return {
         id: (entry.id as string) ?? '',
         name: (entry.name as string) ?? '',
-        path: (entry.id as string) ?? '', // Box uses IDs for navigation, not paths
+        path: (entry.path_display as string) ?? '',
         size: isFolder ? 0 : ((entry.size as number) ?? 0),
         mimeType: isFolder ? 'folder' : guessMimeType(entry.name as string),
         isFolder,
         thumbnail: undefined,
-        modifiedAt: (entry.modified_at as string) ?? undefined,
+        modifiedAt: (entry.server_modified as string) ?? undefined,
     }
 }
 
@@ -115,17 +122,18 @@ function guessMimeType(name: string): string {
     return map[ext] ?? 'application/octet-stream'
 }
 
-// ── BoxPlugin ──
+// ── DropboxPlugin ──
 
-export class BoxPlugin implements AdapterPlugin {
-    readonly id = 'box'
-    readonly name = 'box'
+export class DropboxPlugin implements DrivePlugin {
+    readonly id = 'dropbox'
+    readonly name = 'dropbox'
 
     private emitter: EventEmitter | null = null
-    private config: BoxConfigs = {}
+    private config: DropboxConfigs = {}
     private accessToken: string | null = null
     private refreshTokenValue: string | null = null
-    private state: AdapterState = 'idle'
+    private tokenExpiry = 0
+    private state: DriveState = 'idle'
     private codeVerifier: string | null = null
 
     // Popup polling references
@@ -134,12 +142,12 @@ export class BoxPlugin implements AdapterPlugin {
 
     // ── Plugin lifecycle ──
 
-    configure(config: BoxConfigs): this {
+    configure(config: DropboxConfigs): this {
         this.config = config
         return this
     }
 
-    getConfig(): Readonly<BoxConfigs> {
+    getConfig(): Readonly<DropboxConfigs> {
         return this.config
     }
 
@@ -158,21 +166,21 @@ export class BoxPlugin implements AdapterPlugin {
 
     // ── State management ──
 
-    getState(): AdapterState {
+    getState(): DriveState {
         return this.state
     }
 
-    private setState(newState: AdapterState): void {
+    private setState(newState: DriveState): void {
         this.state = newState
-        this.emitter?.emit('box:state-change', { state: newState })
+        this.emitter?.emit('dropbox:state-change', { state: newState })
     }
 
     // ── Auth: build the OAuth URL with PKCE ──
 
     async getAuthUrl(): Promise<string> {
-        const clientId = this.config.box_client_id
+        const clientId = this.config.dropbox_client_id
         if (!clientId) {
-            throw new Error('Box client_id is not configured')
+            throw new Error('Dropbox client_id is not configured')
         }
 
         const redirectUri = this.getRedirectUri()
@@ -183,6 +191,8 @@ export class BoxPlugin implements AdapterPlugin {
             client_id: clientId,
             response_type: 'code',
             redirect_uri: redirectUri,
+            token_access_type: 'offline',
+            scope: OAUTH_SCOPES,
             code_challenge: challenge,
             code_challenge_method: 'S256',
         })
@@ -193,9 +203,9 @@ export class BoxPlugin implements AdapterPlugin {
     // ── Auth: exchange authorization code for tokens ──
 
     async authenticate(code: string): Promise<void> {
-        const clientId = this.config.box_client_id
+        const clientId = this.config.dropbox_client_id
         if (!clientId) {
-            throw new Error('Box client_id is not configured')
+            throw new Error('Dropbox client_id is not configured')
         }
         if (!this.codeVerifier) {
             throw new Error('No PKCE code verifier — call getAuthUrl() first')
@@ -227,6 +237,7 @@ export class BoxPlugin implements AdapterPlugin {
             this.setTokens(
                 data.access_token,
                 data.refresh_token ?? null,
+                data.expires_in ? Date.now() + data.expires_in * 1000 : 0,
             )
 
             // Fetch user profile
@@ -238,10 +249,10 @@ export class BoxPlugin implements AdapterPlugin {
             }
 
             this.setState('authenticated')
-            this.emitter?.emit('box:authenticated', { user })
+            this.emitter?.emit('dropbox:authenticated', { user })
         } catch (err) {
             this.setState('idle')
-            this.emitter?.emit('box:error', {
+            this.emitter?.emit('dropbox:error', {
                 error: err instanceof Error ? err : new Error(String(err)),
                 action: 'authenticate',
             })
@@ -273,7 +284,7 @@ export class BoxPlugin implements AdapterPlugin {
         )
 
         if (!this.popupWindow) {
-            this.emitter?.emit('box:error', {
+            this.emitter?.emit('dropbox:error', {
                 error: new Error('Popup was blocked by the browser'),
                 action: 'authenticateViaPopup',
             })
@@ -298,7 +309,7 @@ export class BoxPlugin implements AdapterPlugin {
                     try {
                         href = this.popupWindow.location.href
                     } catch {
-                        // Cross-origin while still on Box domain — expected
+                        // Cross-origin while still on Dropbox domain — expected
                         return
                     }
 
@@ -318,7 +329,7 @@ export class BoxPlugin implements AdapterPlugin {
                             'No authorization code found in redirect URL',
                         )
                         this.setState('idle')
-                        this.emitter?.emit('box:error', {
+                        this.emitter?.emit('dropbox:error', {
                             error: err,
                             action: 'authenticateViaPopup',
                         })
@@ -343,7 +354,7 @@ export class BoxPlugin implements AdapterPlugin {
 
                     this.cleanupPopup()
                     this.setState('idle')
-                    this.emitter?.emit('box:error', {
+                    this.emitter?.emit('dropbox:error', {
                         error:
                             err instanceof Error ? err : new Error(String(err)),
                         action: 'authenticateViaPopup',
@@ -357,7 +368,7 @@ export class BoxPlugin implements AdapterPlugin {
     // ── Auth: refresh access token ──
 
     async refreshAccessToken(): Promise<string | null> {
-        const clientId = this.config.box_client_id
+        const clientId = this.config.dropbox_client_id
         if (!clientId || !this.refreshTokenValue) return null
 
         try {
@@ -379,13 +390,14 @@ export class BoxPlugin implements AdapterPlugin {
             const data = await res.json()
             this.setTokens(
                 data.access_token,
-                data.refresh_token ?? this.refreshTokenValue,
+                this.refreshTokenValue, // Refresh token stays the same
+                data.expires_in ? Date.now() + data.expires_in * 1000 : 0,
             )
 
             return data.access_token
         } catch (err) {
-            this.emitter?.emit('box:session-expired', {})
-            this.emitter?.emit('box:error', {
+            this.emitter?.emit('dropbox:session-expired', {})
+            this.emitter?.emit('dropbox:error', {
                 error: err instanceof Error ? err : new Error(String(err)),
                 action: 'refreshAccessToken',
             })
@@ -401,7 +413,7 @@ export class BoxPlugin implements AdapterPlugin {
         this.clearTokens()
         this.cleanupPopup()
         this.setState('idle')
-        this.emitter?.emit('box:signed-out', {})
+        this.emitter?.emit('dropbox:signed-out', {})
     }
 
     // ── Auth: restore session from sessionStorage ──
@@ -409,11 +421,13 @@ export class BoxPlugin implements AdapterPlugin {
     restoreSession(): boolean {
         const token = storageGet(SK_ACCESS)
         const refresh = storageGet(SK_REFRESH)
+        const expiry = storageGet(SK_EXPIRY)
 
         if (!token) return false
 
         this.accessToken = token
         this.refreshTokenValue = refresh
+        this.tokenExpiry = expiry ? parseInt(expiry, 10) : 0
         this.setState('authenticated')
         return true
     }
@@ -440,36 +454,125 @@ export class BoxPlugin implements AdapterPlugin {
     // ── File operations: list folder ──
 
     async loadFiles(
-        folderId = '0',
+        path = '',
     ): Promise<{
         files: DriveFile[]
-        folderId: string
+        hasMore: boolean
+        cursor?: string
     }> {
         this.setState('browsing')
 
         try {
-            const params = new URLSearchParams({
-                fields: 'id,name,type,size,modified_at',
-                limit: '1000',
+            const res = await this.apiRequest(LIST_FOLDER_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    path,
+                    recursive: false,
+                    include_media_info: true,
+                    include_deleted: false,
+                    include_has_explicit_shared_members: false,
+                }),
             })
-
-            const res = await this.apiRequest(
-                `${FOLDERS_URL}/${folderId}/items?${params.toString()}`,
-                { method: 'GET' },
-            )
 
             const data = await res.json()
             const files: DriveFile[] = (data.entries ?? []).map(mapEntry)
 
             this.setState('authenticated')
-            this.emitter?.emit('box:files-loaded', { files, folderId })
+            this.emitter?.emit('dropbox:files-loaded', {
+                files,
+                path,
+                hasMore: !!data.has_more,
+                cursor: data.cursor,
+            })
 
-            return { files, folderId }
+            return { files, hasMore: !!data.has_more, cursor: data.cursor }
         } catch (err) {
             this.setState('authenticated')
-            this.emitter?.emit('box:error', {
+            this.emitter?.emit('dropbox:error', {
                 error: err instanceof Error ? err : new Error(String(err)),
                 action: 'loadFiles',
+            })
+            throw err
+        }
+    }
+
+    // ── File operations: continue listing (pagination) ──
+
+    async loadMoreFiles(cursor: string): Promise<{
+        files: DriveFile[]
+        hasMore: boolean
+        cursor?: string
+    }> {
+        try {
+            const res = await this.apiRequest(LIST_FOLDER_CONTINUE_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ cursor }),
+            })
+
+            const data = await res.json()
+            const files: DriveFile[] = (data.entries ?? []).map(mapEntry)
+
+            this.emitter?.emit('dropbox:files-loaded', {
+                files,
+                path: '',
+                hasMore: !!data.has_more,
+                cursor: data.cursor,
+            })
+
+            return { files, hasMore: !!data.has_more, cursor: data.cursor }
+        } catch (err) {
+            this.emitter?.emit('dropbox:error', {
+                error: err instanceof Error ? err : new Error(String(err)),
+                action: 'loadMoreFiles',
+            })
+            throw err
+        }
+    }
+
+    // ── File operations: load all files in folder recursively ──
+
+    async loadAllFilesInFolder(folderPath: string): Promise<DriveFile[]> {
+        const allFiles: DriveFile[] = []
+
+        try {
+            const initialRes = await this.apiRequest(LIST_FOLDER_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    path: folderPath,
+                    recursive: true,
+                    include_media_info: true,
+                }),
+            })
+
+            let data = await initialRes.json()
+            const entries: Record<string, unknown>[] = data.entries ?? []
+
+            while (data.has_more) {
+                const contRes = await this.apiRequest(
+                    LIST_FOLDER_CONTINUE_URL,
+                    {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ cursor: data.cursor }),
+                    },
+                )
+                data = await contRes.json()
+                entries.push(...(data.entries ?? []))
+            }
+
+            for (const entry of entries) {
+                const file = mapEntry(entry)
+                if (!file.isFolder) allFiles.push(file)
+            }
+
+            return allFiles
+        } catch (err) {
+            this.emitter?.emit('dropbox:error', {
+                error: err instanceof Error ? err : new Error(String(err)),
+                action: 'loadAllFilesInFolder',
             })
             throw err
         }
@@ -487,13 +590,13 @@ export class BoxPlugin implements AdapterPlugin {
                 const file = await this.downloadSingleFile(driveFile)
                 if (file) {
                     results.push(file)
-                    this.emitter?.emit('box:file-downloaded', {
+                    this.emitter?.emit('dropbox:file-downloaded', {
                         file,
                         driveFile,
                     })
                 }
             } catch (err) {
-                this.emitter?.emit('box:error', {
+                this.emitter?.emit('dropbox:error', {
                     error: err instanceof Error ? err : new Error(String(err)),
                     action: 'downloadFiles',
                 })
@@ -504,51 +607,41 @@ export class BoxPlugin implements AdapterPlugin {
         return results
     }
 
-    // ── File operations: load all files in folder recursively ──
-
-    async loadAllFilesInFolder(folderId: string): Promise<DriveFile[]> {
-        const allFiles: DriveFile[] = []
-
-        try {
-            const { files } = await this.loadFiles(folderId)
-            for (const file of files) {
-                if (file.isFolder) {
-                    const nested = await this.loadAllFilesInFolder(file.id)
-                    allFiles.push(...nested)
-                } else {
-                    allFiles.push(file)
-                }
-            }
-            return allFiles
-        } catch (err) {
-            this.emitter?.emit('box:error', {
-                error: err instanceof Error ? err : new Error(String(err)),
-                action: 'loadAllFilesInFolder',
-            })
-            throw err
-        }
-    }
-
     // ── File operations: search ──
 
-    async searchFiles(query: string): Promise<DriveFile[]> {
+    async searchFiles(
+        query: string,
+        path?: string,
+    ): Promise<DriveFile[]> {
         try {
-            const params = new URLSearchParams({
+            const body: Record<string, unknown> = {
                 query,
-                fields: 'id,name,type,size,modified_at',
-                limit: '100',
+                options: {
+                    max_results: 100,
+                    file_status: { '.tag': 'active' },
+                },
+            }
+            if (path) {
+                body.options = {
+                    ...(body.options as object),
+                    path,
+                }
+            }
+
+            const res = await this.apiRequest(SEARCH_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body),
             })
 
-            const res = await this.apiRequest(
-                `${SEARCH_URL}?${params.toString()}`,
-                { method: 'GET' },
-            )
-
             const data = await res.json()
-            const entries = data.entries ?? []
-            return entries.map(mapEntry)
+            const matches = data.matches ?? []
+            return matches.map(
+                (m: { metadata: { metadata: Record<string, unknown> } }) =>
+                    mapEntry(m.metadata.metadata),
+            )
         } catch (err) {
-            this.emitter?.emit('box:error', {
+            this.emitter?.emit('dropbox:error', {
                 error: err instanceof Error ? err : new Error(String(err)),
                 action: 'searchFiles',
             })
@@ -563,9 +656,7 @@ export class BoxPlugin implements AdapterPlugin {
         options: RequestInit,
         isRetry = false,
     ): Promise<Response> {
-        if (!this.accessToken) {
-            throw new Error('Not authenticated — no access token')
-        }
+        await this.ensureValidToken()
 
         const headers = new Headers(options.headers ?? {})
         headers.set('Authorization', `Bearer ${this.accessToken}`)
@@ -578,7 +669,11 @@ export class BoxPlugin implements AdapterPlugin {
 
         // Handle 401 — attempt token refresh
         if (res.status === 401 && !isRetry) {
-            if (this.refreshTokenValue) {
+            const isExpired =
+                errorText.includes('expired_access_token') ||
+                res.status === 401
+
+            if (isExpired && this.refreshTokenValue) {
                 const newToken = await this.refreshAccessToken()
                 if (newToken) {
                     return this.apiRequest(url, options, true)
@@ -586,25 +681,42 @@ export class BoxPlugin implements AdapterPlugin {
             }
 
             // No refresh token or refresh failed
-            this.emitter?.emit('box:session-expired', {})
+            this.emitter?.emit('dropbox:session-expired', {})
             this.clearTokens()
             this.setState('session-expired')
         }
 
         throw new Error(
-            `Box API error (${res.status}): ${errorText}`,
+            `Dropbox API error (${res.status}): ${errorText}`,
         )
     }
 
-    // ── Private: download a single file ──
+    // ── Private: download a single file via temporary link ──
 
     private async downloadSingleFile(driveFile: DriveFile): Promise<File | null> {
-        const res = await this.apiRequest(
-            `${FILES_URL}/${driveFile.id}/content`,
-            { method: 'GET' },
-        )
+        // Get temporary download link
+        const linkRes = await this.apiRequest(TEMP_LINK_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ path: driveFile.path }),
+        })
 
-        const blob = await res.blob()
+        const linkData = await linkRes.json()
+        const downloadLink: string = linkData.link
+
+        if (!downloadLink) {
+            throw new Error(`No download link returned for ${driveFile.name}`)
+        }
+
+        // Download the file content via the temporary link
+        const downloadRes = await fetch(downloadLink, { method: 'GET' })
+        if (!downloadRes.ok) {
+            throw new Error(
+                `Download failed (${downloadRes.status}) for ${driveFile.name}`,
+            )
+        }
+
+        const blob = await downloadRes.blob()
         return new File([blob], driveFile.name, {
             type: blob.type || driveFile.mimeType || 'application/octet-stream',
         })
@@ -616,11 +728,16 @@ export class BoxPlugin implements AdapterPlugin {
         name: string
         email: string
     }> {
-        const res = await this.apiRequest(USER_URL, { method: 'GET' })
+        const res = await this.apiRequest(USER_INFO_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: null,
+        })
+
         const data = await res.json()
         return {
-            name: data.name ?? '',
-            email: data.login ?? '',
+            name: data.name?.display_name ?? '',
+            email: data.email ?? '',
         }
     }
 
@@ -629,29 +746,49 @@ export class BoxPlugin implements AdapterPlugin {
     private setTokens(
         access: string,
         refresh: string | null,
+        expiry: number,
     ): void {
         this.accessToken = access
         this.refreshTokenValue = refresh
+        this.tokenExpiry = expiry
 
         storageSet(SK_ACCESS, access)
         if (refresh) storageSet(SK_REFRESH, refresh)
+        if (expiry) storageSet(SK_EXPIRY, String(expiry))
     }
 
     private clearTokens(): void {
         this.accessToken = null
         this.refreshTokenValue = null
+        this.tokenExpiry = 0
         storageDel(SK_ACCESS)
         storageDel(SK_REFRESH)
+        storageDel(SK_EXPIRY)
+    }
+
+    private async ensureValidToken(): Promise<void> {
+        if (!this.accessToken) {
+            throw new Error('Not authenticated — no access token')
+        }
+
+        // If token expires within 60s, proactively refresh
+        if (
+            this.tokenExpiry > 0 &&
+            Date.now() > this.tokenExpiry - 60_000 &&
+            this.refreshTokenValue
+        ) {
+            await this.refreshAccessToken()
+        }
     }
 
     // ── Private: redirect URI ──
 
     private getRedirectUri(): string {
-        if (this.config.box_redirect_uri) {
-            return this.config.box_redirect_uri
+        if (this.config.dropbox_redirect_uri) {
+            return this.config.dropbox_redirect_uri
         }
         if (typeof window !== 'undefined') {
-            return `${window.location.origin}/box_redirect`
+            return `${window.location.origin}/dp_redirect`
         }
         return ''
     }

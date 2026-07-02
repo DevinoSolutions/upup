@@ -1,10 +1,10 @@
 import { describe, it, expect } from 'vitest'
 import { EventEmitter } from '../src'
 import { UpupCore } from '../src/core'
-import { DropboxPlugin } from '../src/adapters/dropbox-plugin'
-import { GoogleDrivePlugin } from '../src/adapters/google-drive-plugin'
-import { BoxPlugin } from '../src/adapters/box-plugin'
-import { OneDrivePlugin } from '../src/adapters/one-drive-plugin'
+import { DropboxPlugin } from '../src/drives/dropbox-plugin'
+import { GoogleDrivePlugin } from '../src/drives/google-drive-plugin'
+import { BoxPlugin } from '../src/drives/box-plugin'
+import { OneDrivePlugin } from '../src/drives/one-drive-plugin'
 
 describe('adapter plugin stubs', () => {
     it('DropboxPlugin initializes with config', () => {

@@ -30,7 +30,7 @@ import type {
     DropboxConfigs,
     GoogleDriveConfigs,
     OneDriveConfigs,
-} from '../adapters/configs'
+} from '../drives/configs'
 
 // ─── Upload ───────────────────────────────────────────────────
 

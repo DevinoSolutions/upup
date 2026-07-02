@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { EventEmitter } from '../src/events'
-import { GoogleDrivePlugin } from '../src/adapters/google-drive-plugin'
-import type { DriveFile } from '../src/adapters/types'
+import { GoogleDrivePlugin } from '../src/drives/google-drive-plugin'
+import type { DriveFile } from '../src/drives/types'
 
 // ── Helpers ──
 

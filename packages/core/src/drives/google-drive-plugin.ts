@@ -1,7 +1,7 @@
 import type { EventEmitter } from '../events'
-import type { AdapterPlugin } from './plugin'
+import type { DrivePlugin } from './plugin'
 import type { GoogleDriveConfigs } from './configs'
-import type { DriveFile, AdapterState } from './types'
+import type { DriveFile, DriveState } from './types'
 
 // ── Session storage keys ──
 const SK_ACCESS = 'upup_gdrive_access_token'
@@ -110,7 +110,7 @@ function mapGoogleEntry(entry: Record<string, unknown>): DriveFile {
 
 // ── GoogleDrivePlugin ──
 
-export class GoogleDrivePlugin implements AdapterPlugin {
+export class GoogleDrivePlugin implements DrivePlugin {
     readonly id = 'google-drive'
     readonly name = 'google-drive'
 
@@ -122,7 +122,7 @@ export class GoogleDrivePlugin implements AdapterPlugin {
     }
     private accessToken: string | null = null
     private tokenExpiry = 0
-    private state: AdapterState = 'idle'
+    private state: DriveState = 'idle'
 
     // ── Plugin lifecycle ──
 
@@ -149,11 +149,11 @@ export class GoogleDrivePlugin implements AdapterPlugin {
 
     // ── State management ──
 
-    getState(): AdapterState {
+    getState(): DriveState {
         return this.state
     }
 
-    private setState(newState: AdapterState): void {
+    private setState(newState: DriveState): void {
         this.state = newState
         this.emitter?.emit('google-drive:state-change', { state: newState })
     }

@@ -1,11 +1,11 @@
 import { describe, it, expect, vi } from 'vitest'
-import type { AdapterPlugin } from '../src/adapters/plugin'
+import type { DrivePlugin } from '../src/drives/plugin'
 import { EventEmitter } from '../src'
 
-describe('AdapterPlugin interface', () => {
+describe('DrivePlugin interface', () => {
   it('can be implemented and called', () => {
     const emitter = new EventEmitter()
-    const mockPlugin: AdapterPlugin = {
+    const mockPlugin: DrivePlugin = {
       id: 'test-adapter',
       name: 'test-adapter',
       setup: vi.fn(),

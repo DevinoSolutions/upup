@@ -3,7 +3,7 @@ import type {
   UpupCore, UploadFile, UploadStatus, FileSource, CoreOptions, ExtensionMethods,
   UploaderOrchestrator, ThemeStore, Translations, Translator, MaxFileSizeObject,
   ResolvedImageEditorOptions, UpupThemeConfig, UploadSource, LocaleBundle, PartialMessages,
-  DriveFile, DriveFolder, AdapterBrowserController,
+  DriveFile, DriveFolder, DriveBrowserController,
   DragDropController,
 } from '@upup/core'
 
@@ -82,8 +82,8 @@ export interface ControllerRegistry {
   getCamera(): import('../controllers/camera').CameraController
   getAudio(): import('../controllers/audio-recorder').AudioRecorderController
   getScreen(): import('../controllers/screen-capture').ScreenCaptureController
-  /** drive browser controllers are core AdapterBrowserController instances, cached by FileSource. */
-  getDrive(source: FileSource): AdapterBrowserController
+  /** drive browser controllers are core DriveBrowserController instances, cached by FileSource. */
+  getDrive(source: FileSource): DriveBrowserController
   /** dispose every cached per-source controller (called on adapter switch + destroy). */
   disposeActive(): void
   /** dispose everything including fileInput + dragDrop (called on destroy). */

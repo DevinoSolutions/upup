@@ -15,7 +15,7 @@ export function clientDriveUploader(ctx: UploaderContext, source: FileSource) {
   const controller = ctx.controllers.getDrive(source)
   const st = controller.getSnapshot()
   const meta = META[source]
-  // Unified auth gate over the real AdapterBrowserState fields:
+  // Unified auth gate over the real DriveBrowserState fields:
   //  - GIS (Google): readiness/cancel signalled by isAuthReady / authCancelled / token.
   //  - popup (OneDrive/Dropbox/Box): initGis never runs, so isAuthReady/authCancelled/token
   //    stay default; readiness is !isAuthenticated && !isLoading (svelte's popup $token is a

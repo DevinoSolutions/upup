@@ -137,19 +137,19 @@ export { UploadManager } from './upload-manager'
 export type { UploadManagerOptions } from './upload-manager'
 export { CrashRecoveryManager, IndexedDBStorage } from './crash-recovery'
 export type { PersistentStorage } from './crash-recovery'
-export type { AdapterPlugin } from './adapters/plugin'
-export { bindAdapterEvents, type AdapterEventCallbacks } from './adapters/bind-adapter-events'
-export type { DriveFile, DriveFolder, DriveUser, AdapterState, AdapterEventMap } from './adapters/types'
-export type { GoogleDriveConfigs, OneDriveConfigs, DropboxConfigs, BoxConfigs } from './adapters/configs'
-export { DropboxPlugin } from './adapters/dropbox-plugin'
-export { GoogleDrivePlugin } from './adapters/google-drive-plugin'
-export { BoxPlugin } from './adapters/box-plugin'
-export { OneDrivePlugin } from './adapters/one-drive-plugin'
-export { AdapterBrowserController } from './adapters/adapter-browser-controller'
+export type { DrivePlugin } from './drives/plugin'
+export { bindDriveEvents, type DriveEventCallbacks } from './drives/bind-drive-events'
+export type { DriveFile, DriveFolder, DriveUser, DriveState, DriveEventMap } from './drives/types'
+export type { GoogleDriveConfigs, OneDriveConfigs, DropboxConfigs, BoxConfigs } from './drives/configs'
+export { DropboxPlugin } from './drives/dropbox-plugin'
+export { GoogleDrivePlugin } from './drives/google-drive-plugin'
+export { BoxPlugin } from './drives/box-plugin'
+export { OneDrivePlugin } from './drives/one-drive-plugin'
+export { DriveBrowserController } from './drives/drive-browser-controller'
 export type {
-    AdapterBrowserState,
-    AdapterBrowserCallbacks,
-} from './adapters/adapter-browser-controller'
+    DriveBrowserState,
+    DriveBrowserCallbacks,
+} from './drives/drive-browser-controller'
 export type { ObservableController } from './controllers/types'
 export { DragDropController } from './controllers/drag-drop-controller'
 export type {
@@ -165,13 +165,13 @@ export {
     ONE_DRIVE_DESCRIPTOR,
     DROPBOX_DESCRIPTOR,
     BOX_DESCRIPTOR,
-} from './adapters/drive-browser-descriptors'
+} from './drives/drive-browser-descriptors'
 export type {
-    AdapterProviderDescriptor,
-    AdapterAuthKind,
-    AdapterFolderKey,
-    AdapterSelectFolderStrategy,
-} from './adapters/drive-browser-descriptors'
+    DriveProviderDescriptor,
+    DriveAuthKind,
+    DriveFolderKey,
+    DriveSelectFolderStrategy,
+} from './drives/drive-browser-descriptors'
 export type { DroppedFilesResult } from './folder-drop'
 export { collectDroppedFiles } from './folder-drop'
 export {

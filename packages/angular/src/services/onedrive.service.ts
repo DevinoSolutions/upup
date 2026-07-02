@@ -1,8 +1,8 @@
 import { Injectable, inject, computed, type Signal } from '@angular/core'
 import {
-    AdapterBrowserController,
+    DriveBrowserController,
     ONE_DRIVE_DESCRIPTOR,
-    type AdapterBrowserState,
+    type DriveBrowserState,
     type DriveFile,
     type DriveFolder,
 } from '@upup/core'
@@ -12,14 +12,14 @@ import { toSignalStore } from '../lib/to-signal-store'
 /**
  * Angular port of useOneDrive.ts (svelte composable).
  *
- * Pure delegation to AdapterBrowserController with ONE_DRIVE_DESCRIPTOR (popup auth).
+ * Pure delegation to DriveBrowserController with ONE_DRIVE_DESCRIPTOR (popup auth).
  * No business logic lives here — everything flows through the controller.
  */
 @Injectable()
 export class OneDriveService {
     private store = inject(UpupStore)
 
-    private controller = new AdapterBrowserController(
+    private controller = new DriveBrowserController(
         this.store.core,
         ONE_DRIVE_DESCRIPTOR,
         {
@@ -28,8 +28,8 @@ export class OneDriveService {
         },
     )
 
-    private signalStore = toSignalStore<AdapterBrowserState>(this.controller)
-    private state: Signal<AdapterBrowserState> = this.signalStore.state
+    private signalStore = toSignalStore<DriveBrowserState>(this.controller)
+    private state: Signal<DriveBrowserState> = this.signalStore.state
 
     // ── Selector signals ──────────────────────────────────────────
     readonly user = computed(() => this.state().user)

@@ -1,7 +1,7 @@
 import { onMount, onDestroy } from 'svelte'
 import { derived } from 'svelte/store'
 import {
-    AdapterBrowserController,
+    DriveBrowserController,
     GOOGLE_DRIVE_DESCRIPTOR,
     type DriveFile,
     type DriveFolder,
@@ -19,7 +19,7 @@ export function useGoogleDrive() {
     const { setFiles } = useUploaderFiles()
 
     // core is always non-null inside <UpupUploader /> — the injection throws otherwise.
-    const controller = new AdapterBrowserController(core!, GOOGLE_DRIVE_DESCRIPTOR, {
+    const controller = new DriveBrowserController(core!, GOOGLE_DRIVE_DESCRIPTOR, {
         onFilesSelected: (files) => {
             setFiles(files)
         },

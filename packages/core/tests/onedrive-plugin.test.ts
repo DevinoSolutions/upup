@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { EventEmitter } from '../src/events'
-import { OneDrivePlugin } from '../src/adapters/one-drive-plugin'
-import type { DriveFile } from '../src/adapters/types'
+import { OneDrivePlugin } from '../src/drives/one-drive-plugin'
+import type { DriveFile } from '../src/drives/types'
 
 // ── Helpers ──
 

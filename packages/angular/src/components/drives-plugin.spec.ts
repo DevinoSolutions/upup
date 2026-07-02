@@ -31,7 +31,7 @@ import { BoxUploaderComponent } from './box-uploader.component'
 import { ImageEditorStubComponent } from './image-editor-stub.component'
 import { ClientGoogleDriveUploaderComponent } from './client-google-drive-uploader.component'
 import { ServerModeDriveUploaderComponent } from './server-mode-drive-uploader.component'
-import { type AdapterBrowserState, type DriveFile, type DriveFolder } from '@upup/core'
+import { type DriveBrowserState, type DriveFile, type DriveFolder } from '@upup/core'
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 

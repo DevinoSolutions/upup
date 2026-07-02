@@ -1,13 +1,13 @@
 import { describe, it, expect, vi } from 'vitest'
 import { UpupCore } from '../src/core'
-import { AdapterBrowserController } from '../src/adapters/adapter-browser-controller'
-import type { DriveFile } from '../src/adapters/types'
+import { DriveBrowserController } from '../src/drives/drive-browser-controller'
+import type { DriveFile } from '../src/drives/types'
 import {
     GOOGLE_DRIVE_DESCRIPTOR,
     ONE_DRIVE_DESCRIPTOR,
     DROPBOX_DESCRIPTOR,
     BOX_DESCRIPTOR,
-} from '../src/adapters/drive-browser-descriptors'
+} from '../src/drives/drive-browser-descriptors'
 
 describe('drive-browser descriptors', () => {
     it('one-drive uses the onedrive event prefix despite its one-drive plugin id', () => {
@@ -32,7 +32,7 @@ describe('drive-browser descriptors', () => {
     })
 })
 
-/** Minimal in-memory plugin: satisfies AdapterPlugin, never hits network. */
+/** Minimal in-memory plugin: satisfies DrivePlugin, never hits network. */
 class FakeDrivePlugin {
     name: string
     id: string
@@ -89,7 +89,7 @@ function setup(descriptor = GOOGLE_DRIVE_DESCRIPTOR, pluginId = descriptor.plugi
     core.use(plugin)
     const onFilesSelected = vi.fn()
     const onClose = vi.fn()
-    const controller = new AdapterBrowserController(core, descriptor, {
+    const controller = new DriveBrowserController(core, descriptor, {
         onFilesSelected,
         onClose,
     })
@@ -97,7 +97,7 @@ function setup(descriptor = GOOGLE_DRIVE_DESCRIPTOR, pluginId = descriptor.plugi
     return { core, plugin, controller, onFilesSelected, onClose }
 }
 
-describe('AdapterBrowserController — events', () => {
+describe('DriveBrowserController — events', () => {
     it('files-loaded builds the Drive root folder (google, id-based)', () => {
         const { core, controller } = setup()
         core.emit('google-drive:files-loaded', {
@@ -167,7 +167,7 @@ describe('AdapterBrowserController — events', () => {
     })
 })
 
-describe('AdapterBrowserController — actions', () => {
+describe('DriveBrowserController — actions', () => {
     it('subscribe notifies on state change and unsubscribe stops it', () => {
         const { core, controller } = setup()
         let count = 0

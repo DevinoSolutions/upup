@@ -1,6 +1,6 @@
 import {
   UpupCore,
-  AdapterBrowserController,
+  DriveBrowserController,
   DragDropController,
   FileSource,
   GOOGLE_DRIVE_DESCRIPTOR, ONE_DRIVE_DESCRIPTOR, DROPBOX_DESCRIPTOR, BOX_DESCRIPTOR,
@@ -73,7 +73,7 @@ export function buildUploaderContext(
   let camera: CameraController | null = null
   let audio: AudioRecorderController | null = null
   let screen: ScreenCaptureController | null = null
-  const driveControllers = new Map<FileSource, AdapterBrowserController>()
+  const driveControllers = new Map<FileSource, DriveBrowserController>()
   const DRIVE_DESCRIPTORS: Partial<Record<FileSource, unknown>> = {
     [FileSource.GOOGLE_DRIVE]: GOOGLE_DRIVE_DESCRIPTOR,
     [FileSource.ONE_DRIVE]: ONE_DRIVE_DESCRIPTOR,
@@ -90,8 +90,8 @@ export function buildUploaderContext(
     getDrive(source: FileSource) {
       let c = driveControllers.get(source)
       if (!c) {
-        const descriptor = DRIVE_DESCRIPTORS[source] as ConstructorParameters<typeof AdapterBrowserController>[1]
-        c = new AdapterBrowserController(core, descriptor, {
+        const descriptor = DRIVE_DESCRIPTORS[source] as ConstructorParameters<typeof DriveBrowserController>[1]
+        c = new DriveBrowserController(core, descriptor, {
           onFilesSelected: (files) => { void setFiles(files) },
           onClose: () => setActiveAdapter(undefined),
         })
