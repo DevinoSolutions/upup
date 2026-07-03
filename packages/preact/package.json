@@ -5,6 +5,8 @@
   "repository": "https://github.com/DevinoSolutions/upup",
   "license": "MIT",
   "type": "module",
+  "sideEffects": ["*.css"],
+  "engines": { "node": ">=20" },
   "exports": {
     ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js", "require": "./dist/index.cjs" },
     "./styles": "./dist/tailwind-prefixed.css"

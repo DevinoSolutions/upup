@@ -4,6 +4,7 @@
   "license": "MIT",
   "type": "module",
   "sideEffects": false,
+  "engines": { "node": ">=20" },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
