@@ -47,3 +47,26 @@ jobs:
 
       - name: Run e2e gate (deep React + cross-framework smoke)
         run: pnpm run e2e
+
+  Smoke-Packages:
+    name: Package smoke (real tarball consumer)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version-file: '.nvmrc'
+      - name: Setup PNPM environment
+        run: |
+          npm install -g pnpm@latest
+          pnpm config set store-dir ~/.pnpm-store
+      - uses: actions/cache@v3
+        with:
+          path: ~/.pnpm-store
+          key: ${{ runner.os }}-pnpm-v3-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-v3-
+      - name: Install dependencies
+        run: pnpm install
+      - name: Package smoke (packs all 9, isolated consumer, vite build, dist-shape asserts)
+        run: pnpm run smoke:packages    # self-builds via build:package; no browser, no MinIO
