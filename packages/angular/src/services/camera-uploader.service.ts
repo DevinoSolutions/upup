@@ -49,8 +49,8 @@ export class CameraUploaderService {
             this.stream = mediaStream
             if (this.videoEl) {
                 this.videoEl.srcObject = mediaStream
-                // play() throws in jsdom — swallow the not-implemented error in tests
-                void this.videoEl.play().catch(() => {})
+                // play() returns undefined in jsdom — optional-chain so .catch() is skipped
+                void this.videoEl.play()?.catch(() => {})
             }
         } catch {
             // camera unavailable — leave stream null (svelte parity)

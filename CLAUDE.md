@@ -86,9 +86,12 @@ pnpm run prettier-check # CI blocks on this (checks @upup/react src)
 pnpm run size           # size-limit bundle budgets
 ```
 
-Known-red baseline: two `@upup/angular` unit specs fail under jsdom
-(pre-existing environment issue, not a regression signal — angular is covered
-for real by the e2e gate). Everything else is expected green.
+Baseline: every unit suite is green (16 packages, all 16 turbo `test` tasks
+pass). There is no accepted red baseline — a failing spec is a real signal,
+never noise. `pnpm run test` runs with `--continue` (one package's failure
+can't silently cancel the others' scheduling) and the `test` task depends on
+`^build`, so downstream suites always run against freshly-built sibling
+`dist/`, not stale output.
 
 Flake protocol: if a test fails only in the full run, re-run it isolated
 before suspecting your change. Known load-sensitive case:

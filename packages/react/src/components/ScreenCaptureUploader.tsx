@@ -38,7 +38,7 @@ export default function ScreenCaptureUploader() {
         previewRef.current = el
         if (el && streamRef.current) {
             el.srcObject = streamRef.current
-            el.play().catch(() => {})
+            el.play()?.catch(() => {})
         }
     }, [])
 

@@ -35,7 +35,7 @@
     previewEl = node
     if (streamRef) {
       node.srcObject = streamRef
-      void node.play().catch(() => {})
+      void node.play()?.catch(() => {})
     }
     return {
       destroy() {

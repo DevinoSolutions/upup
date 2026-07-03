@@ -141,7 +141,7 @@ export class ScreenCaptureUploaderComponent implements OnDestroy {
         const el = ref?.nativeElement
         if (el && this.streamRef) {
             el.srcObject = this.streamRef
-            void el.play().catch(() => {})
+            void el.play()?.catch(() => {})
         }
     }
 

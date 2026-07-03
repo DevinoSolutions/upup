@@ -41,7 +41,7 @@ function bindPreview(el: Element | ComponentPublicInstance | null) {
     // the media element's load algorithm and visibly flickers the preview.
     if (video && streamRef.value && video.srcObject !== streamRef.value) {
         video.srcObject = streamRef.value
-        void video.play().catch(() => {})
+        void video.play()?.catch(() => {})
     }
 }
 
