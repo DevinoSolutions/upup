@@ -37,7 +37,13 @@
       "dependsOn": ["^lint"]
     },
     "test": {
-      "dependsOn": ["^test"]
+      "dependsOn": ["^test", "^build"]
+    },
+    "@upup/vanilla#test": {
+      "dependsOn": ["^test", "^build", "build"]
+    },
+    "@upup/preact#test": {
+      "dependsOn": ["^test", "^build", "build"]
     },
     "typecheck": {
       "dependsOn": ["^typecheck"]
