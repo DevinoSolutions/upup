@@ -1,5 +1,13 @@
 ---
-"upup-react-file-uploader": minor
+"@upup/core": major
+"@upup/server": major
+"@upup/react": major
+"@upup/vue": major
+"@upup/svelte": major
+"@upup/angular": major
+"@upup/vanilla": major
+"@upup/preact": major
+"@upup/next": major
 ---
 
 ## Removed four legacy v1 props
