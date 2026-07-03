@@ -224,12 +224,14 @@ if needed; never silently "improve" them:
 
 ## CI (`.github/workflows`)
 
-- `main.yml` — PRs to master/dev: prettier → unit coverage → typecheck →
-  build → size-limit. **Caveat:** its Test job runs only `test:coverage`,
-  which is `@upup/react`'s vitest alone — not `turbo run test`. Local
-  `pnpm run test` is stricter than CI.
+- `main.yml` — PRs to master/dev: prettier → all-package unit suites
+  (`pnpm run test`) + uniform v8 coverage floors on core/server/react
+  (`pnpm run test:coverage`) → typecheck → build → size-limit.
 - `e2e.yml` — PRs to master/dev: full `pnpm run e2e` gate (OAuth-free; MinIO
-  env provisioned from the example file).
+  env provisioned from the example file), plus `smoke:packages` as a
+  sibling `Smoke-Packages` job (real npm-tarball consumer). The
+  `apps/playground` deep functional suite (`playground-deep.spec.ts`) is
+  local-only — its first gated run surfaced real failures, tracked as F-704.
 - `publish.yml` — push to master: changesets release PR, then npm publish of
   all nine packages; on dev: `test-release` dry-run.
 
