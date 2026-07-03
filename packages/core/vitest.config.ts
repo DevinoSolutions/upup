@@ -18,5 +18,12 @@ export default defineConfig({
       'tests/**/*.test.ts',
       'src/**/__tests__/**/*.test.ts',
     ],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json-summary', 'html'],
+      reportsDirectory: '../../coverage/core',
+      // measured 2026-07-03: statements 76.79% branches 66.15% functions 75.23% lines 78.71%
+      thresholds: { statements: 73, branches: 63, functions: 72, lines: 75 },
+    },
   },
 })

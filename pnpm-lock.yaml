@@ -932,6 +932,9 @@ importers:
       '@types/node':
         specifier: ^22
         version: 22.19.21
+      '@vitest/coverage-v8':
+        specifier: ^4.1.2
+        version: 4.1.9(vitest@4.1.2(@opentelemetry/api@1.9.1)(@types/node@22.19.21)(jsdom@22.1.0)(msw@2.14.6(@types/node@22.19.21)(typescript@5.6.3))(vite@8.0.13(@types/node@22.19.21)(esbuild@0.25.12)(jiti@2.6.1)(less@4.6.4)(sass@1.100.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.1)))
       esbuild:
         specifier: ^0.25.0
         version: 0.25.12
@@ -1183,6 +1186,9 @@ importers:
       '@upup/tailwind-config':
         specifier: workspace:*
         version: link:../tailwind-config
+      '@vitest/coverage-v8':
+        specifier: ^4.1.2
+        version: 4.1.9(vitest@4.1.2(@opentelemetry/api@1.9.1)(@types/node@25.3.5)(jsdom@22.1.0)(msw@2.14.6(@types/node@25.3.5)(typescript@5.6.3))(vite@8.0.13(@types/node@25.3.5)(esbuild@0.28.0)(jiti@2.6.1)(less@4.6.4)(sass@1.100.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.1)))
       jest-axe:
         specifier: ^10.0.0
         version: 10.0.0
@@ -1223,6 +1229,9 @@ importers:
       '@types/node':
         specifier: ^20.10.0
         version: 20.19.37
+      '@vitest/coverage-v8':
+        specifier: ^4.1.2
+        version: 4.1.9(vitest@4.1.2(@opentelemetry/api@1.9.1)(@types/node@20.19.37)(jsdom@22.1.0)(msw@2.14.6(@types/node@20.19.37)(typescript@5.6.3))(vite@8.0.13(@types/node@20.19.37)(esbuild@0.28.0)(jiti@2.6.1)(less@4.6.4)(sass@1.100.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.1)))
       tsup:
         specifier: ^8.4.0
         version: 8.5.1(jiti@2.6.1)(postcss@8.5.14)(tsx@4.21.0)(typescript@5.6.3)(yaml@2.8.1)
@@ -2601,6 +2610,10 @@ packages:
   '@babel/types@7.29.0':
     resolution: {integrity: sha512-LwdZHpScM4Qz8Xw2iKSzS+cfglZzJGvofQICy7W7v4caru4EaAmyUuO6BGrbyQ2mYV11W0U8j5mBhd14dd3B0A==}
     engines: {node: '>=6.9.0'}
+
+  '@bcoe/v8-coverage@1.0.2':
+    resolution: {integrity: sha512-6zABk/ECA/QYSCQ1NGiVwwbQerUCZ+TQbp64Q3AgmfNvurHH0j8TtXa1qbShXA6qqkpAj4V5W8pP6mLe1mcMqA==}
+    engines: {node: '>=18'}
 
   '@braintree/sanitize-url@7.1.1':
     resolution: {integrity: sha512-i1L7noDNxtFyL5DmZafWy1wRVhGehQmzZaz1HiN5e7iylJMSZR7ekOV7NsIqa5qBldlLrsKv4HbgFUVlQrz8Mw==}
@@ -6775,6 +6788,15 @@ packages:
       vite: ^5.0.0 || ^6.0.0
       vue: ^3.2.25
 
+  '@vitest/coverage-v8@4.1.9':
+    resolution: {integrity: sha512-G9/lgqibheLVBDRuya45EbsEXTYcWoSG+TLg7i2axuzx0Eq62eXn+aWXyaVdV5vKvFSWd6ywcX8hA7la9Pvu8g==}
+    peerDependencies:
+      '@vitest/browser': 4.1.9
+      vitest: 4.1.9
+    peerDependenciesMeta:
+      '@vitest/browser':
+        optional: true
+
   '@vitest/expect@3.2.4':
     resolution: {integrity: sha512-Io0yyORnB6sikFlt8QW5K7slY4OjqNX9jmJQ02QDda8lyM6B5oNgVWoSoKPac8/kgnCUzuHQKrSLtu/uOqqrig==}
 
@@ -6809,6 +6831,9 @@ packages:
   '@vitest/pretty-format@4.1.2':
     resolution: {integrity: sha512-dwQga8aejqeuB+TvXCMzSQemvV9hNEtDDpgUKDzOmNQayl2OG241PSWeJwKRH3CiC+sESrmoFd49rfnq7T4RnA==}
 
+  '@vitest/pretty-format@4.1.9':
+    resolution: {integrity: sha512-s0iufns3iIFitdgm+YR7g1whCAaGtXz459VS9/PqyKDEEFgYIhsHOQmXgIgDuYCt7DeQmiZT0Qe2OA2p4ZPu5A==}
+
   '@vitest/runner@4.1.2':
     resolution: {integrity: sha512-Gr+FQan34CdiYAwpGJmQG8PgkyFVmARK8/xSijia3eTFgVfpcpztWLuP6FttGNfPLJhaZVP/euvujeNYar36OQ==}
 
@@ -6826,6 +6851,9 @@ packages:
 
   '@vitest/utils@4.1.2':
     resolution: {integrity: sha512-xw2/TiX82lQHA06cgbqRKFb5lCAy3axQ4H4SoUFhUsg+wztiet+co86IAMDtF6Vm1hc7J6j09oh/rgDn+JdKIQ==}
+
+  '@vitest/utils@4.1.9':
+    resolution: {integrity: sha512-A51o8ymO5PpqlWNnBP9ZHPXDIpuMtTLlGSjN7la4US+LJzoUMyhwjA5QXlm39JexgwHKW4Xjs8Z2d3dLCXOeuA==}
 
   '@volar/language-core@2.4.15':
     resolution: {integrity: sha512-3VHw+QZU0ZG9IuQmzT68IyN4hZNd9GchGPhbD9+pa8CVv7rnoOZwo7T8weIbrRmihqy3ATpdfXFnqRrfPVK6CA==}
@@ -7213,6 +7241,9 @@ packages:
   ast-types@0.16.1:
     resolution: {integrity: sha512-6t10qk83GOG8p0vKmaCr8eiilZwO171AvbROMtvvNiwrTly62t+7XkA8RdIIVbpMhCASAsxgAzdRSwh6nw/5Dg==}
     engines: {node: '>=4'}
+
+  ast-v8-to-istanbul@1.0.4:
+    resolution: {integrity: sha512-0bC0/4bTSrnwdhU3IsZDwEdojvuPrSg59OYZfKsLRtJZ0u8VBx9DebfqqG8bRdCC0I7vjgxmPi41P0lpkhJHtA==}
 
   astring@1.9.0:
     resolution: {integrity: sha512-LElXdjswlqjWrPpJFg1Fx4wpkOCxj1TDHlSV4PlaRxHGWko024xICaa97ZkMfs6DRKlCguiAI+rbXv5GWwXIkg==}
@@ -10232,6 +10263,14 @@ packages:
     resolution: {integrity: sha512-Vtgk7L/R2JHyyGW07spoFlB8/lpjiOLTjMdms6AFMraYt3BaJauod/NGrfnVG/y4Ix1JEuMRPDPEj2ua+zz1/Q==}
     engines: {node: '>=10'}
 
+  istanbul-lib-report@3.0.1:
+    resolution: {integrity: sha512-GCfE1mtsHGOELCU8e/Z7YWzpmybrx/+dSTfLrvY8qRmaY6zXTKWn6WQIjaAFw069icm6GVMNkgu0NzI4iPZUNw==}
+    engines: {node: '>=10'}
+
+  istanbul-reports@3.2.0:
+    resolution: {integrity: sha512-HGYWWS/ehqTV3xN10i23tkPkpH46MLCIMFNCaaKNavAXTF1RkqxawEPtnjnGZ6XKSInBKkiOA5BKS+aZiY3AvA==}
+    engines: {node: '>=8'}
+
   iterator.prototype@1.1.5:
     resolution: {integrity: sha512-H0dkQoCa3b2VEeKQBOxFph+JAbcrQdE7KC0UkqwpLmv2EC4P41QXP+rqo9wYodACiG5/WM5s9oDApTU8utwj9g==}
     engines: {node: '>= 0.4'}
@@ -10317,6 +10356,9 @@ packages:
 
   js-stringify@1.0.2:
     resolution: {integrity: sha512-rtS5ATOo2Q5k1G+DADISilDA6lv79zIiwFd6CcjuIxGKLFm5C+RLImRscVap9k55i+MOZwgliw+NejvkLuGD5g==}
+
+  js-tokens@10.0.0:
+    resolution: {integrity: sha512-lM/UBzQmfJRo9ABXbPWemivdCW8V2G8FHaHdypQaIy523snUjog0W71ayWXTjiR+ixeMyVHN2XcpnTd/liPg/Q==}
 
   js-tokens@4.0.0:
     resolution: {integrity: sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==}
@@ -10831,6 +10873,9 @@ packages:
   magic-string@0.30.21:
     resolution: {integrity: sha512-vd2F4YUyEXKGcLHoq+TEyCjxueSeHnFxyyjNp80yg0XV4vUhnDer/lvvlqM/arB5bXQN5K2/3oinyCRyx8T2CQ==}
 
+  magicast@0.5.3:
+    resolution: {integrity: sha512-pVKE4UdSQ7DvHzivsCIFx2BJn1mHG6KsyrFcaxFx6tONdneEuThrDx0Cj3AMg58KyN4pzYT+LHOotxDQDjNvkw==}
+
   make-dir@2.1.0:
     resolution: {integrity: sha512-LS9X+dc8KLxXCb8dni79fLIIUA5VyZoyjSMCwTluaXA0o27cCK0bhXkpgw+sTXVpPy/lSO57ilRixqk0vDmtRA==}
     engines: {node: '>=6'}
@@ -10838,6 +10883,10 @@ packages:
   make-dir@3.1.0:
     resolution: {integrity: sha512-g3FeP20LNwhALb/6Cz6Dd4F2ngze0jz7tbzrD2wAV+o9FeNHe4rL+yK2md0J/fiSf1sa1ADhXqi5+oVwOM/eGw==}
     engines: {node: '>=8'}
+
+  make-dir@4.0.0:
+    resolution: {integrity: sha512-hXdUTZYIVOt1Ex//jAQi+wTZZpUpwBj/0QsOzqegb3rGMMeJiSEu5xLHnYfBrRV4RH2+OCSOO95Is/7x1WJ4bw==}
+    engines: {node: '>=10'}
 
   make-fetch-happen@14.0.3:
     resolution: {integrity: sha512-QMjGbFTP0blj97EeidG5hk/QhKQ3T4ICckQGLgz38QF7Vgbk6e6FTARN8KhKxyBbWn8R0HU+bnw8aSoFPD4qtQ==}
@@ -17774,6 +17823,8 @@ snapshots:
       '@babel/helper-string-parser': 7.27.1
       '@babel/helper-validator-identifier': 7.28.5
 
+  '@bcoe/v8-coverage@1.0.2': {}
+
   '@braintree/sanitize-url@7.1.1': {}
 
   '@changesets/apply-release-plan@7.1.0':
@@ -23227,6 +23278,48 @@ snapshots:
       vite: 8.0.13(@types/node@25.3.5)(esbuild@0.28.0)(jiti@2.6.1)(less@4.6.4)(sass@1.100.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.1)
       vue: 3.5.34(typescript@5.6.3)
 
+  '@vitest/coverage-v8@4.1.9(vitest@4.1.2(@opentelemetry/api@1.9.1)(@types/node@20.19.37)(jsdom@22.1.0)(msw@2.14.6(@types/node@20.19.37)(typescript@5.6.3))(vite@8.0.13(@types/node@20.19.37)(esbuild@0.28.0)(jiti@2.6.1)(less@4.6.4)(sass@1.100.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.1)))':
+    dependencies:
+      '@bcoe/v8-coverage': 1.0.2
+      '@vitest/utils': 4.1.9
+      ast-v8-to-istanbul: 1.0.4
+      istanbul-lib-coverage: 3.2.2
+      istanbul-lib-report: 3.0.1
+      istanbul-reports: 3.2.0
+      magicast: 0.5.3
+      obug: 2.1.1
+      std-env: 4.0.0
+      tinyrainbow: 3.1.0
+      vitest: 4.1.2(@opentelemetry/api@1.9.1)(@types/node@20.19.37)(jsdom@22.1.0)(msw@2.14.6(@types/node@20.19.37)(typescript@5.6.3))(vite@8.0.13(@types/node@20.19.37)(esbuild@0.28.0)(jiti@2.6.1)(less@4.6.4)(sass@1.100.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.1))
+
+  '@vitest/coverage-v8@4.1.9(vitest@4.1.2(@opentelemetry/api@1.9.1)(@types/node@22.19.21)(jsdom@22.1.0)(msw@2.14.6(@types/node@22.19.21)(typescript@5.6.3))(vite@8.0.13(@types/node@22.19.21)(esbuild@0.25.12)(jiti@2.6.1)(less@4.6.4)(sass@1.100.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.1)))':
+    dependencies:
+      '@bcoe/v8-coverage': 1.0.2
+      '@vitest/utils': 4.1.9
+      ast-v8-to-istanbul: 1.0.4
+      istanbul-lib-coverage: 3.2.2
+      istanbul-lib-report: 3.0.1
+      istanbul-reports: 3.2.0
+      magicast: 0.5.3
+      obug: 2.1.1
+      std-env: 4.0.0
+      tinyrainbow: 3.1.0
+      vitest: 4.1.2(@opentelemetry/api@1.9.1)(@types/node@22.19.21)(jsdom@22.1.0)(msw@2.14.6(@types/node@22.19.21)(typescript@5.6.3))(vite@8.0.13(@types/node@22.19.21)(esbuild@0.25.12)(jiti@2.6.1)(less@4.6.4)(sass@1.100.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.1))
+
+  '@vitest/coverage-v8@4.1.9(vitest@4.1.2(@opentelemetry/api@1.9.1)(@types/node@25.3.5)(jsdom@22.1.0)(msw@2.14.6(@types/node@25.3.5)(typescript@5.6.3))(vite@8.0.13(@types/node@25.3.5)(esbuild@0.28.0)(jiti@2.6.1)(less@4.6.4)(sass@1.100.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.1)))':
+    dependencies:
+      '@bcoe/v8-coverage': 1.0.2
+      '@vitest/utils': 4.1.9
+      ast-v8-to-istanbul: 1.0.4
+      istanbul-lib-coverage: 3.2.2
+      istanbul-lib-report: 3.0.1
+      istanbul-reports: 3.2.0
+      magicast: 0.5.3
+      obug: 2.1.1
+      std-env: 4.0.0
+      tinyrainbow: 3.1.0
+      vitest: 4.1.2(@opentelemetry/api@1.9.1)(@types/node@25.3.5)(jsdom@22.1.0)(msw@2.14.6(@types/node@25.3.5)(typescript@5.6.3))(vite@8.0.13(@types/node@25.3.5)(esbuild@0.28.0)(jiti@2.6.1)(less@4.6.4)(sass@1.100.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.1))
+
   '@vitest/expect@3.2.4':
     dependencies:
       '@types/chai': 5.2.3
@@ -23324,6 +23417,10 @@ snapshots:
     dependencies:
       tinyrainbow: 3.1.0
 
+  '@vitest/pretty-format@4.1.9':
+    dependencies:
+      tinyrainbow: 3.1.0
+
   '@vitest/runner@4.1.2':
     dependencies:
       '@vitest/utils': 4.1.2
@@ -23351,6 +23448,12 @@ snapshots:
   '@vitest/utils@4.1.2':
     dependencies:
       '@vitest/pretty-format': 4.1.2
+      convert-source-map: 2.0.0
+      tinyrainbow: 3.1.0
+
+  '@vitest/utils@4.1.9':
+    dependencies:
+      '@vitest/pretty-format': 4.1.9
       convert-source-map: 2.0.0
       tinyrainbow: 3.1.0
 
@@ -23839,6 +23942,12 @@ snapshots:
   ast-types@0.16.1:
     dependencies:
       tslib: 2.8.1
+
+  ast-v8-to-istanbul@1.0.4:
+    dependencies:
+      '@jridgewell/trace-mapping': 0.3.31
+      estree-walker: 3.0.3
+      js-tokens: 10.0.0
 
   astring@1.9.0: {}
 
@@ -27625,6 +27734,17 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
+  istanbul-lib-report@3.0.1:
+    dependencies:
+      istanbul-lib-coverage: 3.2.2
+      make-dir: 4.0.0
+      supports-color: 7.2.0
+
+  istanbul-reports@3.2.0:
+    dependencies:
+      html-escaper: 2.0.2
+      istanbul-lib-report: 3.0.1
+
   iterator.prototype@1.1.5:
     dependencies:
       define-data-property: 1.1.4
@@ -27747,6 +27867,8 @@ snapshots:
   js-cookie@3.0.7: {}
 
   js-stringify@1.0.2: {}
+
+  js-tokens@10.0.0: {}
 
   js-tokens@4.0.0: {}
 
@@ -28256,6 +28378,12 @@ snapshots:
     dependencies:
       '@jridgewell/sourcemap-codec': 1.5.5
 
+  magicast@0.5.3:
+    dependencies:
+      '@babel/parser': 7.29.3
+      '@babel/types': 7.29.0
+      source-map-js: 1.2.1
+
   make-dir@2.1.0:
     dependencies:
       pify: 4.0.1
@@ -28265,6 +28393,10 @@ snapshots:
   make-dir@3.1.0:
     dependencies:
       semver: 6.3.1
+
+  make-dir@4.0.0:
+    dependencies:
+      semver: 7.7.4
 
   make-fetch-happen@14.0.3:
     dependencies:

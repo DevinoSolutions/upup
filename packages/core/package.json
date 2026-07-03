@@ -94,6 +94,7 @@
   },
   "devDependencies": {
     "@types/node": "^22",
+    "@vitest/coverage-v8": "^4.1.2",
     "esbuild": "^0.25.0",
     "rollup": "^4.60.0",
     "tsup": "^8.4.0",
