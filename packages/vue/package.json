@@ -24,9 +24,7 @@
     "dev": "tsup --watch --onSuccess \"pnpm run build:css\"",
     "test": "vitest run",
     "test:watch": "vitest",
-    "typecheck": "vue-tsc --noEmit",
-    "release": "pnpm run build && pnpm publish --access public --no-git-checks",
-    "test-release": "pnpm run build && pnpm publish --dry-run --access public --no-git-checks"
+    "typecheck": "vue-tsc --noEmit"
   },
   "files": [
     "dist"

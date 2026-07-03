@@ -26,9 +26,7 @@
     "dev": "svelte-package --input src --output dist --watch",
     "test": "vitest run",
     "test:watch": "vitest",
-    "typecheck": "svelte-check --tsconfig ./tsconfig.json",
-    "release": "pnpm run build && pnpm publish --access public --no-git-checks",
-    "test-release": "pnpm run build && pnpm publish --dry-run --access public --no-git-checks"
+    "typecheck": "svelte-check --tsconfig ./tsconfig.json"
   },
   "dependencies": {
     "@tanstack/svelte-virtual": "^3.13.0",

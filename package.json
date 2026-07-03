@@ -33,8 +33,8 @@
     "smoke:packages": "node scripts/package-smoke-consumer.mjs",
     "typecheck": "turbo run typecheck",
     "size": "size-limit",
-    "release": "pnpm --filter @upup/core run release && pnpm --filter @upup/server run release && pnpm --filter @upup/react run release && pnpm --filter @upup/vue run release && pnpm --filter @upup/svelte run release && pnpm --filter @upup/vanilla run release && pnpm --filter @upup/angular run release && pnpm --filter @upup/preact run release && pnpm --filter @upup/next run release",
-    "test-release": "pnpm --filter @upup/core run test-release && pnpm --filter @upup/server run test-release && pnpm --filter @upup/react run test-release && pnpm --filter @upup/vue run test-release && pnpm --filter @upup/svelte run test-release && pnpm --filter @upup/vanilla run test-release && pnpm --filter @upup/angular run test-release && pnpm --filter @upup/preact run test-release && pnpm --filter @upup/next run test-release"
+    "release": "pnpm run build:package && changeset publish",
+    "test-release": "pnpm run build:package && pnpm -r publish --dry-run --no-git-checks"
   },
   "devDependencies": {
     "@changesets/cli": "^2.30.0",

@@ -173,8 +173,9 @@ pnpm dev          # runs landing + docs + playground + package watchers via Turb
 
 Releases go through [changesets](https://github.com/changesets/changesets): pushes to
 `master` open a release PR and publish all nine public packages via CI
-(`.github/workflows/publish.yml`). Locally, `pnpm run release` publishes in
-dependency order and `pnpm run test-release` dry-runs it.
+(`.github/workflows/publish.yml`). Locally, `pnpm run release` runs `changeset publish`
+after building all packages (skips any version already on npm, publishes the rest);
+`pnpm run test-release` dry-runs the same packing via `pnpm -r publish --dry-run`.
 
 ---
 

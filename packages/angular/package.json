@@ -21,9 +21,7 @@
     "dev": "ng-packagr -p ng-package.json --watch",
     "test": "vitest run",
     "test:watch": "vitest",
-    "typecheck": "tsc -p tsconfig.lib.json --noEmit",
-    "release": "pnpm run build && pnpm publish --access public --no-git-checks",
-    "test-release": "pnpm run build && pnpm publish --dry-run --access public --no-git-checks"
+    "typecheck": "tsc -p tsconfig.lib.json --noEmit"
   },
   "dependencies": { "@tanstack/virtual-core": "^3.13.0", "@upup/core": "workspace:*", "tslib": "^2.6.0" },
   "peerDependencies": {
