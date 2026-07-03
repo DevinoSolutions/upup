@@ -341,7 +341,7 @@ import {
 import { arSA } from '@upup/core/i18n'
 import { resolveTheme, tokensToVars } from '@upup/core/theme'
 
-const core = new UpupCore({ restrictions: { maxNumberOfFiles: 2 } })
+const core = new UpupCore({ limit: 2 })
 const translator = createTranslator({ bundle: enUS, fallback: arSA })
 const theme = resolveTheme({ mode: 'light' })
 const vars = tokensToVars(theme.tokens)
