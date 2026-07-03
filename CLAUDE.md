@@ -232,8 +232,10 @@ if needed; never silently "improve" them:
   sibling `Smoke-Packages` job (real npm-tarball consumer). The
   `apps/playground` deep functional suite (`playground-deep.spec.ts`) is
   local-only — its first gated run surfaced real failures, tracked as F-704.
-- `publish.yml` — push to master: changesets release PR, then npm publish of
-  all nine packages; on dev: `test-release` dry-run.
+- `publish.yml` — push to master: changesets release PR, then (when packages
+  need publishing) a pre-publish gate — typecheck, unit suites, build, size,
+  `smoke:packages` — before `pnpm run release` (`changeset publish`, which
+  skips versions already on npm); on dev: `test-release` dry-run.
 
 ## Machine-local notes (primary dev box only)
 

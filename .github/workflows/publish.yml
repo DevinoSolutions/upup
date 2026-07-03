@@ -25,7 +25,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 22.x
+          node-version-file: '.nvmrc'
           cache: pnpm
 
       - name: Upgrade npm for trusted publishing
@@ -58,6 +58,26 @@ jobs:
           TO_PUBLISH=$(echo $TO_PUBLISH | xargs)
           echo "to_publish=$TO_PUBLISH" >> "$GITHUB_OUTPUT"
           [ -n "$TO_PUBLISH" ] && echo "any_needs_publish=true" >> "$GITHUB_OUTPUT" || echo "any_needs_publish=false" >> "$GITHUB_OUTPUT"
+
+      - name: Typecheck (all packages)
+        if: github.ref == 'refs/heads/master' && steps.changesets.outputs.hasChangesets == 'false' && steps.package_meta.outputs.any_needs_publish == 'true'
+        run: pnpm run typecheck
+
+      - name: Unit suites (all packages)
+        if: github.ref == 'refs/heads/master' && steps.changesets.outputs.hasChangesets == 'false' && steps.package_meta.outputs.any_needs_publish == 'true'
+        run: pnpm run test
+
+      - name: Build (turbo)
+        if: github.ref == 'refs/heads/master' && steps.changesets.outputs.hasChangesets == 'false' && steps.package_meta.outputs.any_needs_publish == 'true'
+        run: pnpm run build
+
+      - name: Bundle-size budgets
+        if: github.ref == 'refs/heads/master' && steps.changesets.outputs.hasChangesets == 'false' && steps.package_meta.outputs.any_needs_publish == 'true'
+        run: pnpm run size
+
+      - name: Package smoke (real tarball consumer)
+        if: github.ref == 'refs/heads/master' && steps.changesets.outputs.hasChangesets == 'false' && steps.package_meta.outputs.any_needs_publish == 'true'
+        run: pnpm run smoke:packages
 
       - name: Publish to npm
         if: github.ref == 'refs/heads/master' && steps.changesets.outputs.hasChangesets == 'false' && steps.package_meta.outputs.any_needs_publish == 'true'
