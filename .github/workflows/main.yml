@@ -72,45 +72,11 @@ jobs:
         if: steps.cache-primes.outputs.cache-hit != 'true'
         run: pnpm install
 
-      - name: Run Tests with Coverage
-        run: pnpm run test:coverage
+      - name: Run all package unit suites        # F-163 / F-502 — every package, not just react
+        run: pnpm run test                         # after P1 === `turbo run test --continue`
 
-      - name: Check Coverage Thresholds
-        run: |
-          COVERAGE_OUTPUT=$(cat coverage/coverage-summary.json)
-          
-          STATEMENTS_PCT=$(echo $COVERAGE_OUTPUT | jq -r '.total.statements.pct')
-          BRANCHES_PCT=$(echo $COVERAGE_OUTPUT | jq -r '.total.branches.pct')
-          FUNCTIONS_PCT=$(echo $COVERAGE_OUTPUT | jq -r '.total.functions.pct')
-          LINES_PCT=$(echo $COVERAGE_OUTPUT | jq -r '.total.lines.pct')
-          
-          THRESHOLD=1
-          
-          if (( $(echo "$STATEMENTS_PCT < $THRESHOLD" | bc -l) )); then
-            echo "❌ Statement coverage ($STATEMENTS_PCT%) is below threshold ($THRESHOLD%)"
-            exit 1
-          fi
-          
-          if (( $(echo "$BRANCHES_PCT < $THRESHOLD" | bc -l) )); then
-            echo "❌ Branch coverage ($BRANCHES_PCT%) is below threshold ($THRESHOLD%)"
-            exit 1
-          fi
-          
-          if (( $(echo "$FUNCTIONS_PCT < $THRESHOLD" | bc -l) )); then
-            echo "❌ Function coverage ($FUNCTIONS_PCT%) is below threshold ($THRESHOLD%)"
-            exit 1
-          fi
-          
-          if (( $(echo "$LINES_PCT < $THRESHOLD" | bc -l) )); then
-            echo "❌ Line coverage ($LINES_PCT%) is below threshold ($THRESHOLD%)"
-            exit 1
-          fi
-          
-          echo "✅ All coverage thresholds met!"
-          echo "Statements: $STATEMENTS_PCT%"
-          echo "Branches: $BRANCHES_PCT%"
-          echo "Functions: $FUNCTIONS_PCT%"
-          echo "Lines: $LINES_PCT%"
+      - name: Coverage floor (core/server/react)  # F-162 / F-503 — floors live in each vitest.config.ts
+        run: pnpm run test:coverage
 
       - name: Archive code coverage results
         uses: actions/upload-artifact@v4
@@ -223,6 +189,14 @@ jobs:
 
       - name: Size limit
         run: pnpm run size
+
+  # --- P13 SEAM (do not implement here): prod-scoped dependency-audit gate for packages/* ---
+  # Dependency-Audit:
+  #   name: Dependency audit (packages/*, production scope)
+  #   runs-on: ubuntu-latest
+  #   needs: [Prettier-check]
+  #   steps: [ … added by plan P13 … ]
+  # When P13 lands, also add "Dependency-Audit" to Status-Check.needs below.
 
   Status-Check:
     name: Status Check
