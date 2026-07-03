@@ -162,12 +162,12 @@ pnpm dev          # runs landing + docs + playground + package watchers via Turb
 
 ### Commands
 
-| Command                                      | Description                           |
-| -------------------------------------------- | ------------------------------------- |
-| `pnpm dev`                                   | Run everything in watch mode          |
-| `pnpm build`                                 | Build all packages + apps             |
-| `pnpm test`                                  | Run vitest across the workspace       |
-| `pnpm typecheck`                             | `tsc --noEmit` in every package       |
+| Command          | Description                                                         |
+| ---------------- | ------------------------------------------------------------------- |
+| `pnpm dev`       | Run everything in watch mode                                        |
+| `pnpm build`     | Build all packages + apps                                           |
+| `pnpm test`      | Run every package's vitest suite (continues past a failing package) |
+| `pnpm typecheck` | `tsc --noEmit` in every package                                     |
 
 ### Publishing
 

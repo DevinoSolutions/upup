@@ -23,7 +23,7 @@
     "prettier-write": "pnpm --filter @upup/react exec prettier --write \"src/**/*.{ts,tsx}\"",
     "docs:build": "pnpm --filter docs run build",
     "start": "pnpm run docs:build && pnpm --filter @upup/landing run start",
-    "test": "turbo run test",
+    "test": "turbo run test --continue",
     "test:coverage": "pnpm --filter @upup/react exec vitest run --coverage --coverage.reportsDirectory=../../coverage",
     "e2e": "turbo run build && pnpm --filter e2e-test test:e2e && dotenv -e local-dev/.env.minio -- pnpm --filter e2e-test test:e2e:cf",
     "e2e:minio:up": "dotenv -e local-dev/.env.minio -- docker compose up -d",
