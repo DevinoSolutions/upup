@@ -64,11 +64,8 @@ export type {
     UploadCredentials,
     UploadResult,
     ProgressInfo,
-    OAuthTokens,
-    RemoteFile,
     CloudProvider,
     CredentialStrategy,
-    OAuthStrategy,
     UploadStrategy,
     RuntimeAdapter,
 } from './contracts-strategies'

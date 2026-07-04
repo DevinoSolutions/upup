@@ -29,22 +29,6 @@ export type ProgressInfo = {
     percentage: number
 }
 
-export type OAuthTokens = {
-    accessToken: string
-    refreshToken?: string
-    expiresAt?: number
-}
-
-export type RemoteFile = {
-    id: string
-    name: string
-    mimeType: string
-    size: number
-    isFolder: boolean
-    thumbnailUrl?: string
-    modifiedAt?: string
-}
-
 export type CloudProvider = 'googleDrive' | 'oneDrive' | 'dropbox' | 'box'
 
 export interface CredentialStrategy {
@@ -60,24 +44,6 @@ export interface CredentialStrategy {
     }): Promise<MultipartCompleteResponse>
     abortMultipartUpload?(params: { token: string }): Promise<void>
     listParts?(params: { token: string }): Promise<MultipartListPartsResponse>
-}
-
-export interface OAuthStrategy {
-    getAuthUrl(provider: CloudProvider): Promise<string>
-    handleCallback(
-        provider: CloudProvider,
-        params: Record<string, string>,
-    ): Promise<OAuthTokens>
-    listFiles(
-        provider: CloudProvider,
-        path: string,
-        token: string,
-    ): Promise<RemoteFile[]>
-    getFileMetadata(
-        provider: CloudProvider,
-        fileId: string,
-        token: string,
-    ): Promise<RemoteFile>
 }
 
 export interface UploadStrategy {
