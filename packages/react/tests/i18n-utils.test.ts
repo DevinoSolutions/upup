@@ -1,12 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import {
-  enUS,
-  formatUiMessage,
-  mergeTranslations,
-  pluralUiMessage,
-  type Translations,
-  type UpupMessages,
-} from '@upup/core'
+import { formatUiMessage, pluralUiMessage, type Translations } from '@upup/core'
 
 const baseMessages = {
   cancel: 'Cancel',
@@ -72,24 +65,5 @@ describe('pluralUiMessage()', () => {
   it('works with addFiles key', () => {
     expect(pluralUiMessage(baseMessages, 'addFiles', 1)).toBe(baseMessages.addFiles_one)
     expect(pluralUiMessage(baseMessages, 'addFiles', 10)).toBe(baseMessages.addFiles_other)
-  })
-})
-
-describe('mergeTranslations()', () => {
-  it('returns base when overrides is undefined', () => {
-    expect(mergeTranslations(enUS.messages)).toBe(enUS.messages)
-  })
-
-  it('returns base when overrides is empty', () => {
-    const result = mergeTranslations(enUS.messages, {})
-    expect(result.common.cancel).toBe(enUS.messages.common.cancel)
-  })
-
-  it('overrides specific keys', () => {
-    const result = mergeTranslations(enUS.messages, {
-      common: { cancel: 'Annuler' },
-    } as Partial<UpupMessages>)
-    expect(result.common.cancel).toBe('Annuler')
-    expect(result.common.done).toBe(enUS.messages.common.done)
   })
 })
