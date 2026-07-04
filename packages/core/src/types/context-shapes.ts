@@ -32,6 +32,8 @@ import type { CloudDrivesConfig } from '../drives/configs'
 export type BaseContextUpload = {
     uploadStatus: UploadStatus
     uploadError?: string
+    /** Machine code from a typed UpupError, when the failure carried one. */
+    uploadErrorCode?: string
     totalProgress: number
     filesProgressMap: FilesProgressMap
     startUpload: () => Promise<UploadFile[] | undefined>

@@ -15,6 +15,8 @@ export interface OrchestratorState {
     files: Map<string, UploadFile>
     uploadStatus: UploadStatus
     uploadError: string
+    /** Machine code from a typed UpupError (e.g. 'SignatureDoesNotMatch', 'bad_signature'), when the failure carried one. */
+    uploadErrorCode?: string
     totalProgress: number
     filesProgressMap: FilesProgressMap
     uploadSpeed: number

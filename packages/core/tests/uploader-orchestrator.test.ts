@@ -4,6 +4,7 @@ import { UpupCore } from '../src/core'
 import { UploadStatus } from '../src/types/upload-status'
 import { FileSource } from '../src/types/file-source'
 import type { UploadFile } from '../src/types/upload-file'
+import { UpupStorageError } from '../src/errors'
 
 function createMockCore() {
     return {
@@ -344,6 +345,19 @@ describe('UploaderOrchestrator', () => {
             expect(orch.getSnapshot().uploadError).toBe('')
         })
 
+        it('clears uploadErrorCode before uploading (P4/C9)', async () => {
+            const core = createMockCore()
+            core.upload.mockResolvedValue([])
+            const orch = new UploaderOrchestrator(core, {})
+            ;(orch as any).setState({
+                files: new Map([['f1', createUploadFile({ name: 'a.txt', id: 'f1' })]]),
+                uploadErrorCode: 'SignatureDoesNotMatch',
+            })
+            await orch.startUpload()
+
+            expect(orch.getSnapshot().uploadErrorCode).toBeUndefined()
+        })
+
         it('calls onPrepareFiles callback if provided', async () => {
             const core = createMockCore()
             core.upload.mockResolvedValue([])
@@ -419,6 +433,20 @@ describe('UploaderOrchestrator', () => {
             await orch.retryUpload()
 
             expect(orch.getSnapshot().uploadError).toBe('')
+        })
+
+        it('clears uploadErrorCode before retrying (P4/C9)', async () => {
+            const core = createMockCore()
+            core.retry.mockResolvedValue([])
+            const orch = new UploaderOrchestrator(core, {})
+            ;(orch as any).setState({
+                files: new Map([['f1', createUploadFile({ name: 'a.txt', id: 'f1' })]]),
+                uploadErrorCode: 'bad_signature',
+            })
+
+            await orch.retryUpload()
+
+            expect(orch.getSnapshot().uploadErrorCode).toBeUndefined()
         })
     })
 
@@ -1278,6 +1306,29 @@ describe('UploaderOrchestrator', () => {
                 handlers['upload-error']({ error: new Error('Timeout') })
 
                 expect(onError).toHaveBeenCalledWith('Timeout')
+            })
+
+            it('sets uploadErrorCode from a typed UpupStorageError (P4/C9)', () => {
+                const { core, handlers } = createMockCoreWithHandlers()
+                const orch = new UploaderOrchestrator(core, {})
+                orch.init()
+
+                const err = new UpupStorageError('Signature mismatch', 'S3', 'upload')
+                err.code = 'SignatureDoesNotMatch'
+                handlers['upload-error']({ error: err })
+
+                expect(orch.getSnapshot().uploadError).toBe('Signature mismatch')
+                expect(orch.getSnapshot().uploadErrorCode).toBe('SignatureDoesNotMatch')
+            })
+
+            it('leaves uploadErrorCode undefined for a plain Error (no code)', () => {
+                const { core, handlers } = createMockCoreWithHandlers()
+                const orch = new UploaderOrchestrator(core, {})
+                orch.init()
+
+                handlers['upload-error']({ error: new Error('plain failure') })
+
+                expect(orch.getSnapshot().uploadErrorCode).toBeUndefined()
             })
         })
     })

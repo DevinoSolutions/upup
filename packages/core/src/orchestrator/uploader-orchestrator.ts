@@ -6,6 +6,7 @@ import type { OrchestratorState, OrchestratorCallbacks } from './types'
 import { revokeFileUrl } from '../utils/file-helpers'
 import { dataURLtoBlob, blobToUploadFile, revokeAndReplace } from '../utils/image-helpers'
 import type { UploadResult } from '../contracts-strategies'
+import { UpupError } from '../errors'
 
 export class UploaderOrchestrator {
     private state: OrchestratorState
@@ -21,6 +22,7 @@ export class UploaderOrchestrator {
             files: new Map(),
             uploadStatus: UploadStatus.IDLE,
             uploadError: '',
+            uploadErrorCode: undefined,
             totalProgress: 0,
             filesProgressMap: {},
             uploadSpeed: 0,
@@ -86,7 +88,7 @@ export class UploaderOrchestrator {
     async startUpload(): Promise<UploadFile[] | undefined> {
         const currentFiles = [...this.state.files.values()]
         if (currentFiles.length === 0) return undefined
-        this.setState({ uploadError: '' })
+        this.setState({ uploadError: '', uploadErrorCode: undefined })
 
         const prepared = this.callbacks.onPrepareFiles
             ? await this.callbacks.onPrepareFiles(currentFiles)
@@ -104,7 +106,7 @@ export class UploaderOrchestrator {
     /** Retry upload for a specific file or all failed files. */
     async retryUpload(fileId?: string): Promise<UploadFile[] | undefined> {
         if (this.state.files.size === 0) return undefined
-        this.setState({ uploadError: '' })
+        this.setState({ uploadError: '', uploadErrorCode: undefined })
         return await this.core.retry(fileId)
     }
 
@@ -395,7 +397,8 @@ export class UploaderOrchestrator {
         this.unsubs.push(
             this.core.on('upload-error', (payload: { error: Error; file?: UploadFile }) => {
                 const message = payload.error.message
-                this.setState({ uploadStatus: UploadStatus.FAILED, uploadError: message })
+                const code = payload.error instanceof UpupError ? payload.error.code : undefined
+                this.setState({ uploadStatus: UploadStatus.FAILED, uploadError: message, uploadErrorCode: code })
                 this.callbacks.onError?.(message)
             }),
         )
