@@ -71,6 +71,12 @@ export type UpupServerConfig = {
    */
   allowAnonymousUploads?: boolean
 
+  /**
+   * onFileUploaded/onUploadComplete fire on server-side-completion paths only
+   * (multipart-complete, drive transfer) -- direct presigned-PUT uploads never
+   * reach the server on completion, so no hook fires for them. See the
+   * README's "Lifecycle hooks" section for the full per-path breakdown.
+   */
   hooks?: {
     onBeforeUpload?: (file: FileMetadata, req: Request) => Promise<boolean>
     onFileUploaded?: (file: UploadedFile, req: Request) => Promise<void>

@@ -22,6 +22,7 @@ vi.mock('../src/providers/aws', () => ({
     completeMultipartUpload: vi.fn().mockResolvedValue({
         key: 'uuid-big.zip',
         publicUrl: 'https://bucket.s3.amazonaws.com/uuid-big.zip',
+        downloadUrl: 'https://bucket.s3.amazonaws.com/uuid-big.zip?signed',
         etag: '"final"',
     }),
     abortMultipartUpload: vi.fn().mockResolvedValue(undefined),
@@ -196,6 +197,69 @@ describe('handler — multipart', () => {
         const body = await res.json()
         expect(res.status).toBe(200)
         expect(body.key).toBeDefined()
+    })
+})
+
+// ─────────────────────────────────────────────
+// hooks.onFileUploaded / onUploadComplete fire on multipart-complete (F-109)
+// ─────────────────────────────────────────────
+describe('handler — hooks fire on multipart-complete (F-109)', () => {
+    it('fires onFileUploaded and onUploadComplete exactly once on /multipart/complete', async () => {
+        const onFileUploaded = vi.fn().mockResolvedValue(undefined)
+        const onUploadComplete = vi.fn().mockResolvedValue(undefined)
+        const handler = createUpupHandler({
+            ...config,
+            hooks: { onFileUploaded, onUploadComplete },
+        })
+
+        const init = await (await handler(new Request('http://localhost/multipart/init', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: 'big.zip', size: 50 * 1024 * 1024, type: 'application/zip' }),
+        }))).json()
+
+        await handler(new Request('http://localhost/multipart/sign-part', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token: init.token, partNumber: 1 }),
+        }))
+
+        const res = await handler(new Request('http://localhost/multipart/complete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token: init.token, parts: [{ partNumber: 1, eTag: '"etag1"' }] }),
+        }))
+        expect(res.status).toBe(200)
+
+        expect(onFileUploaded).toHaveBeenCalledTimes(1)
+        expect(onFileUploaded).toHaveBeenCalledWith(
+            expect.objectContaining({ key: init.key }),
+            expect.anything(),
+        )
+        expect(onUploadComplete).toHaveBeenCalledTimes(1)
+        expect(onUploadComplete).toHaveBeenCalledWith(
+            [expect.objectContaining({ key: init.key })],
+            expect.anything(),
+        )
+    })
+
+    it('does not fire either hook on a /presign request', async () => {
+        const onFileUploaded = vi.fn().mockResolvedValue(undefined)
+        const onUploadComplete = vi.fn().mockResolvedValue(undefined)
+        const handler = createUpupHandler({
+            ...config,
+            hooks: { onFileUploaded, onUploadComplete },
+        })
+
+        const res = await handler(new Request('http://localhost/presign', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: 'photo.jpg', size: 100, type: 'image/jpeg' }),
+        }))
+        expect(res.status).toBe(200)
+
+        expect(onFileUploaded).not.toHaveBeenCalled()
+        expect(onUploadComplete).not.toHaveBeenCalled()
     })
 })
 

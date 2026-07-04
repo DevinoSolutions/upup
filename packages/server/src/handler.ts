@@ -1,5 +1,5 @@
 import { UpupErrorCode } from '@upup/core'
-import type { UpupServerConfig, FileMetadata, DriveTokens } from './config'
+import type { UpupServerConfig, FileMetadata, DriveTokens, UploadedFile } from './config'
 import {
   generatePresignedUrl,
   initiateMultipartUpload,
@@ -462,6 +462,17 @@ async function handleMultipartComplete(req: Request, config: UpupServerConfig, r
     }
 
     const result = await completeMultipartUpload(config.storage, payload.k, payload.u, body.parts)
+
+    const uploaded: UploadedFile = {
+      key: result.key,
+      name: result.key.split('/').pop() ?? result.key,
+      size: uploadedSize, // already computed above for the envelope check
+      type: '', // not retained server-side on the multipart path
+      url: result.downloadUrl ?? '',
+    }
+    if (config.hooks?.onFileUploaded) await config.hooks.onFileUploaded(uploaded, req)
+    if (config.hooks?.onUploadComplete) await config.hooks.onUploadComplete([uploaded], req)
+
     return json(result, 200, responseHeaders)
   } catch (error) {
     return fail(config, responseHeaders, 'multipart/complete', req.method, 500, UpupErrorCode.STORAGE_ERROR, 'Multipart complete failed', error)

@@ -157,6 +157,44 @@ is on by default, not something you have to wire up before your first
 incident. Override it to ship events to Datadog/Sentry/your own sink, or
 supply a no-op to silence it.
 
+## Lifecycle hooks
+
+```ts
+createUpupHandler({
+  // ...
+  hooks: {
+    onBeforeUpload: async (file, req) => true, // reject by returning false
+    onFileUploaded: async (file, req) => { /* one file completed */ },
+    onUploadComplete: async (files, req) => { /* a request's file(s) completed */ },
+  },
+})
+```
+
+**Which hook fires on which upload path — read this before wiring alerting or
+webhooks on top of these:**
+
+- **`onFileUploaded`** fires once per file on both server-side-completion
+  paths: `POST /multipart/complete` (server has just finished the S3
+  multipart upload) and the drive **transfer** path,
+  `POST /files/:provider/transfer` (server has just finished streaming a
+  cloud-drive file into S3). Both are genuinely server-side completions — the
+  server can see the finished object.
+- **`onUploadComplete`** fires only on `POST /multipart/complete`, and always
+  with a **single-element array** — the server completes one file per
+  request and has no cross-file batching concept. If you need a true "all the
+  user's files are done" signal, use the client-side `onUploadComplete` prop
+  in `@upup/core`/the UI packages instead, which does see the whole batch.
+- **Client-direct presigned-PUT uploads bypass the server entirely** (`POST
+  /presign` only hands the client a URL; the browser then PUTs straight to
+  S3), so **no server-side hook fires for that path at all** — the server
+  never observes completion. If you need server-visibility into presigned
+  uploads, use the client-side `onUploadComplete` prop, or point
+  `processingEndpoint` at an SSE route so the client tells your server when
+  it's done.
+- On the multipart-complete path, the hook's `file.type` is always `''` —
+  the declared MIME type is not retained server-side once the multipart
+  upload completes.
+
 ## `/health`
 
 ```sh
