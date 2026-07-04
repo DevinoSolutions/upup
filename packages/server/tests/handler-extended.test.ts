@@ -633,3 +633,89 @@ describe('handler — anonymous upload gate (F-110)', () => {
         expect(res.status).toBe(200)
     })
 })
+
+// ─────────────────────────────────────────────
+// F-106: enforce token uid on continuation routes where identity exists
+// ─────────────────────────────────────────────
+describe('handler — multipart uid binding (F-106)', () => {
+    const identityConfig = {
+        storage: { type: 'aws', bucket: 'test-bucket', region: 'us-east-1' },
+        uploadTokenSecret: 'handler-ext-f106-secret-0123456789',
+        getUserId: async (req: Request) => req.headers.get('x-uid'),
+    }
+
+    const initAs = async (uid: string) => {
+        const handler = createUpupHandler(identityConfig)
+        const res = await handler(new Request('http://localhost/multipart/init', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-uid': uid },
+            body: JSON.stringify({ name: 'big.zip', size: 50 * 1024 * 1024, type: 'application/zip' }),
+        }))
+        const body = await res.json()
+        return body.token as string
+    }
+
+    it('rejects sign-part when the resolved uid differs from the token owner', async () => {
+        const token = await initAs('alice')
+        const handler = createUpupHandler(identityConfig)
+        const res = await handler(new Request('http://localhost/multipart/sign-part', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-uid': 'bob' },
+            body: JSON.stringify({ token, partNumber: 1 }),
+        }))
+        const body = await res.json()
+        expect(res.status).toBe(403)
+        expect(body.code).toBe('AUTH_DENIED')
+    })
+
+    it('allows sign-part when the resolved uid matches the token owner', async () => {
+        const token = await initAs('alice')
+        const handler = createUpupHandler(identityConfig)
+        const res = await handler(new Request('http://localhost/multipart/sign-part', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-uid': 'alice' },
+            body: JSON.stringify({ token, partNumber: 1 }),
+        }))
+        expect(res.status).toBe(200)
+    })
+
+    it('rejects complete when the resolved uid differs from the token owner', async () => {
+        const token = await initAs('alice')
+        const handler = createUpupHandler(identityConfig)
+        const res = await handler(new Request('http://localhost/multipart/complete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-uid': 'bob' },
+            body: JSON.stringify({ token, parts: [{ partNumber: 1, eTag: '"etag1"' }] }),
+        }))
+        const body = await res.json()
+        expect(res.status).toBe(403)
+        expect(body.code).toBe('AUTH_DENIED')
+    })
+
+    it('preserves the token-possession model when no getUserId resolver exists', async () => {
+        const anonConfig = {
+            storage: { type: 'aws', bucket: 'test-bucket', region: 'us-east-1' },
+            uploadTokenSecret: 'handler-ext-f106-anon-secret-0123456789',
+            allowAnonymousUploads: true,
+        }
+        const handler = createUpupHandler(anonConfig)
+        const init = await (await handler(new Request('http://localhost/multipart/init', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: 'big.zip', size: 50 * 1024 * 1024, type: 'application/zip' }),
+        }))).json()
+
+        const first = await handler(new Request('http://localhost/multipart/sign-part', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token: init.token, partNumber: 1 }),
+        }))
+        const second = await handler(new Request('http://localhost/multipart/sign-part', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token: init.token, partNumber: 2 }),
+        }))
+        expect(first.status).toBe(200)
+        expect(second.status).toBe(200)
+    })
+})

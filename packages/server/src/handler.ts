@@ -157,6 +157,39 @@ async function verifyTokenOrRespond(
   }
 }
 
+/** Re-check the caller's resolved identity against a verified token's bound
+ *  uid on the multipart continuation routes (sign-part/complete/abort). The
+ *  token itself only proves possession, not who currently holds it — so a
+ *  leaked token could otherwise be replayed by a different authenticated user
+ *  (F-106). Skipped entirely when no `getUserId` resolver exists: `payload.uid`
+ *  is then always null (init never had an identity to bind), so token
+ *  possession remains the intentional model, documented in the README (F-107). */
+async function enforceTokenOwner(
+  config: UpupServerConfig,
+  req: Request,
+  payload: UploadTokenPayload,
+  h: ResponseHeaders,
+  route: string,
+  method: string,
+): Promise<Response | null> {
+  if (!config.getUserId) return null
+  const currentUserId = await resolveUserId(config, req)
+  const currentOwner = currentUserId === DEFAULT_USER_ID ? null : currentUserId
+  if (currentOwner !== payload.uid) {
+    return fail(
+      config,
+      h,
+      route,
+      method,
+      403,
+      UpupErrorCode.AUTH_DENIED,
+      'Upload token does not belong to the current user',
+      new Error('upload-token uid mismatch'),
+    )
+  }
+  return null
+}
+
 /** Parse a JSON request body, returning a 400 Response (not an unhandled throw)
  *  on malformed JSON. Collapses the two divergent body-parse sites. */
 async function parseJsonBody<T>(
@@ -400,6 +433,8 @@ async function handleMultipartSignPart(req: Request, config: UpupServerConfig, r
     const body = (await req.json()) as { token: string; partNumber: number }
     const payload = await verifyTokenOrRespond(config, body.token, responseHeaders, 'multipart/sign-part', req.method)
     if (payload instanceof Response) return payload
+    const owned = await enforceTokenOwner(config, req, payload, responseHeaders, 'multipart/sign-part', req.method)
+    if (owned) return owned
     const result = await generatePresignedPartUrl(config.storage, payload.k, payload.u, body.partNumber)
     return json(result, 200, responseHeaders)
   } catch (error) {
@@ -412,6 +447,8 @@ async function handleMultipartComplete(req: Request, config: UpupServerConfig, r
     const body = (await req.json()) as { token: string; parts: Array<{ partNumber: number; eTag: string }> }
     const payload = await verifyTokenOrRespond(config, body.token, responseHeaders, 'multipart/complete', req.method)
     if (payload instanceof Response) return payload
+    const owned = await enforceTokenOwner(config, req, payload, responseHeaders, 'multipart/complete', req.method)
+    if (owned) return owned
 
     // S1 (multipart): smin/smax are SIGNED at init but must be ENFORCED here —
     // otherwise a client can init with a tiny declared size (tiny smax) and
@@ -436,6 +473,8 @@ async function handleMultipartAbort(req: Request, config: UpupServerConfig, resp
     const body = (await req.json()) as { token: string }
     const payload = await verifyTokenOrRespond(config, body.token, responseHeaders, 'multipart/abort', req.method)
     if (payload instanceof Response) return payload
+    const owned = await enforceTokenOwner(config, req, payload, responseHeaders, 'multipart/abort', req.method)
+    if (owned) return owned
     const result = await abortMultipartUpload(config.storage, payload.k, payload.u)
     return json(result, 200, responseHeaders)
   } catch (error) {
