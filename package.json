@@ -3,6 +3,7 @@
   "private": true,
   "packageManager": "pnpm@10.11.0",
   "scripts": {
+    "prepare": "husky",
     "build": "turbo run build",
     "build:landing": "turbo run build --filter=@upup/landing",
     "build:docs": "turbo run build --filter=docs",
@@ -44,6 +45,7 @@
     "concurrently": "^9.2.1",
     "dotenv-cli": "^7.4.2",
     "express": "^4.21.0",
+    "husky": "^9.1.7",
     "size-limit": "^11.0.0",
     "turbo": "2.5.8"
   },
