@@ -27,6 +27,7 @@ vi.mock('../src/providers/aws', () => ({
     abortMultipartUpload: vi.fn().mockResolvedValue(undefined),
     listMultipartParts: vi.fn().mockResolvedValue({ parts: [] }),
     getMultipartUploadedSize: vi.fn().mockResolvedValue(0),
+    checkStorageReachable: vi.fn().mockResolvedValue({ ok: true }),
 }))
 
 const config = {
@@ -437,6 +438,29 @@ describe('handler — presign edge cases', () => {
         })
         const res = await handler(req)
         expect(res.status).toBe(200)
+    })
+})
+
+// ─────────────────────────────────────────────
+// /health route wiring (P4/C4)
+// ─────────────────────────────────────────────
+describe('handler — GET /health', () => {
+    it('is reachable WITHOUT auth even when config.auth is set', async () => {
+        const authFn = vi.fn().mockResolvedValue(false)
+        const handler = createUpupHandler({ ...config, auth: authFn })
+        const res = await handler(new Request('http://localhost/health', { method: 'GET' }))
+        const body = await res.json()
+        expect(res.status).toBe(200)
+        expect(body.status).toBeDefined()
+        expect(authFn).not.toHaveBeenCalled()
+    })
+
+    it('reports config ok and storage ok for a complete, reachable config', async () => {
+        const handler = createUpupHandler(config)
+        const res = await handler(new Request('http://localhost/health', { method: 'GET' }))
+        const body = await res.json()
+        expect(body.checks.config).toBe('ok')
+        expect(body.checks.storage).toBe('ok')
     })
 })
 

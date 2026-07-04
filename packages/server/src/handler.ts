@@ -28,6 +28,7 @@ import {
 } from './tokenStore'
 import { defaultKeyStrategy } from './key'
 import { reportServerError, toSafeError } from './observability'
+import { handleHealth } from './health'
 
 export type RouteHandler = (req: Request) => Promise<Response>
 type ResponseHeaders = Record<string, string>
@@ -220,6 +221,12 @@ export function createUpupHandler(config: UpupServerConfig): RouteHandler {
     try {
       if (req.method === 'OPTIONS') {
         return new Response(null, { status: 204, headers: responseHeaders })
+      }
+
+      // Health check sits BEFORE the auth gate so uptime/deploy probes work
+      // unauthenticated (F-426/F-428).
+      if (req.method === 'GET' && path.endsWith('/health')) {
+        return handleHealth(config, responseHeaders)
       }
 
       // Auth check

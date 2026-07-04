@@ -6,6 +6,7 @@ import {
   CompleteMultipartUploadCommand,
   AbortMultipartUploadCommand,
   ListPartsCommand,
+  HeadBucketCommand,
 } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 import type {
@@ -245,4 +246,21 @@ export async function getMultipartUploadedSize(
   }
 
   return total
+}
+
+/**
+ * Cheap reachability probe for /health: a HeadBucketCommand touches S3/MinIO
+ * without listing or transferring any object data. Used by handleHealth,
+ * TTL-cached there so a probing client can't hammer the real provider.
+ */
+export async function checkStorageReachable(
+  storage: UpupServerConfig['storage'],
+): Promise<{ ok: true } | { ok: false; error: unknown }> {
+  try {
+    const client = createS3Client(storage)
+    await client.send(new HeadBucketCommand({ Bucket: storage.bucket }))
+    return { ok: true }
+  } catch (error) {
+    return { ok: false, error }
+  }
 }
