@@ -153,11 +153,17 @@ upup/
 
 ### Getting Started (Development)
 
+The package layout documented above lives on the **`v2-clean`** branch — the
+active v2 line, which is intentionally unmerged. `master` is the previous
+single-package (`packages/upup`) release, so a bare clone lands on the wrong tree.
+
 ```bash
 git clone https://github.com/DevinoSolutions/upup.git
 cd upup
+git checkout v2-clean   # active v2 branch (master is the pre-v2 monolith)
+nvm use                 # Node 20.18.2, pinned in .nvmrc
 pnpm install
-pnpm dev          # runs landing + docs + playground + package watchers via Turborepo
+pnpm dev                # runs landing + docs + playground + package watchers via Turborepo
 ```
 
 ### Commands
