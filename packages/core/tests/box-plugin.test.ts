@@ -622,6 +622,76 @@ describe('BoxPlugin', () => {
     })
 
     // ────────────────────────────────────────────
+    // Proactive token refresh + expiry persistence (F-126)
+    // ────────────────────────────────────────────
+
+    describe('proactive refresh + expiry (F-126)', () => {
+        it('persists upup_box_token_expiry when the token response carries expires_in', async () => {
+            const fetchMock = vi.fn().mockResolvedValue({
+                ok: true,
+                status: 200,
+                json: vi.fn().mockResolvedValue({
+                    access_token: 'at-1',
+                    refresh_token: 'rt-1',
+                    expires_in: 3600,
+                }),
+                text: vi.fn().mockResolvedValue(''),
+            })
+            vi.stubGlobal('fetch', fetchMock)
+
+            await plugin.getAuthUrl()
+            await plugin.authenticate('code')
+
+            const stored = Number(sessionStore.get('upup_box_token_expiry'))
+            expect(stored).toBeGreaterThan(Date.now())
+        })
+
+        it('proactively refreshes a near-expiry restored session BEFORE any 401', async () => {
+            // Restore a session whose token expires within the 60s proactive window.
+            sessionStore.set('upup_box_access_token', 'stale')
+            sessionStore.set('upup_box_refresh_token', 'rt')
+            sessionStore.set(
+                'upup_box_token_expiry',
+                String(Date.now() + 10_000),
+            )
+            plugin.restoreSession()
+
+            const fetchMock = vi.fn((url: string) => {
+                if (url === 'https://api.box.com/oauth2/token') {
+                    return Promise.resolve({
+                        ok: true,
+                        status: 200,
+                        json: vi.fn().mockResolvedValue({
+                            access_token: 'fresh',
+                            expires_in: 3600,
+                        }),
+                        text: vi.fn().mockResolvedValue(''),
+                    })
+                }
+                return Promise.resolve({
+                    ok: true,
+                    status: 200,
+                    json: vi
+                        .fn()
+                        .mockResolvedValue({ entries: [], total_count: 0 }),
+                    text: vi.fn().mockResolvedValue(''),
+                })
+            })
+            vi.stubGlobal('fetch', fetchMock)
+
+            await plugin.loadFiles()
+
+            // The refresh (token endpoint) fired first — proactively, with NO prior 401.
+            expect(fetchMock.mock.calls[0][0]).toBe(
+                'https://api.box.com/oauth2/token',
+            )
+            expect(fetchMock.mock.calls[1][0]).toContain(
+                'https://api.box.com/2.0/folders',
+            )
+        })
+    })
+
+    // ────────────────────────────────────────────
     // File listing (loadFiles)
     // ────────────────────────────────────────────
 

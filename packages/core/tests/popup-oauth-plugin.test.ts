@@ -12,6 +12,7 @@ import type { DriveFile, DriveUser } from '../src/drives/types'
 
 const FAKE_SPEC: PopupOAuthSpec = {
     id: 'fake',
+    displayName: 'Fake',
     eventPrefix: 'fake',
     popupName: 'UpupFakeAuth',
     authUrl: 'https://auth.example.com/authorize',

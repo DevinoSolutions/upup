@@ -22,6 +22,8 @@ export interface DriveOAuthConfig {
 export interface PopupOAuthSpec {
     /** Stable plugin id, e.g. 'box' / 'one-drive' / 'dropbox'. */
     id: string
+    /** Human-facing provider name used in diagnostic error messages, e.g. 'Box' / 'OneDrive' / 'Dropbox'. */
+    displayName: string
     /** Event namespace: emits `${eventPrefix}:state-change`, `:authenticated`, `:session-expired`, `:error`, `:signed-out`, `:files-loaded`. */
     eventPrefix: string
     /** window.open target name, e.g. 'UpupBoxAuth'. */
@@ -115,7 +117,9 @@ export abstract class PopupOAuthPlugin implements DrivePlugin {
     async getAuthUrl(): Promise<string> {
         const clientId = this.config.clientId
         if (!clientId) {
-            throw new Error(`${this.spec.id} client_id is not configured`)
+            throw new Error(
+                `${this.spec.displayName} client_id is not configured`,
+            )
         }
 
         const redirectUri = this.getRedirectUri()
@@ -142,7 +146,9 @@ export abstract class PopupOAuthPlugin implements DrivePlugin {
     async authenticate(code: string): Promise<void> {
         const clientId = this.config.clientId
         if (!clientId) {
-            throw new Error(`${this.spec.id} client_id is not configured`)
+            throw new Error(
+                `${this.spec.displayName} client_id is not configured`,
+            )
         }
         if (!this.codeVerifier) {
             throw new Error('No PKCE code verifier — call getAuthUrl() first')
@@ -445,7 +451,7 @@ export abstract class PopupOAuthPlugin implements DrivePlugin {
         }
 
         throw new Error(
-            `${this.spec.id} API error (${res.status}): ${errorText}`,
+            `${this.spec.displayName} API error (${res.status}): ${errorText}`,
         )
     }
 
