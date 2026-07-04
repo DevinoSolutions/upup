@@ -159,3 +159,42 @@ describe('UpupCore — upload control sequencing', () => {
         expect(events).toEqual(['pause', 'resume'])
     })
 })
+
+// ─────────────────────────────────────────────
+// re-entrancy: one upload run at a time (F-149)
+// ─────────────────────────────────────────────
+describe('UpupCore — upload run re-entrancy (F-149)', () => {
+    const hangingFetchCore = async () => {
+        // presign never resolves → the run stays in flight for the duration of the test
+        vi.stubGlobal('fetch', vi.fn(() => new Promise<Response>(() => {})))
+        const core = new UpupCore({ provider: 'aws', uploadEndpoint: '/api/presign', maxRetries: 0 })
+        await core.addFiles([new File(['x'], 'a.txt', { type: 'text/plain' })])
+        return core
+    }
+
+    it('a second upload() while a run is in flight joins the same run (no second run started)', async () => {
+        const core = await hangingFetchCore()
+        // runUpload() emits upload-start at its head; a second run would emit it again.
+        const startSpy = vi.fn()
+        core.on('upload-start', startSpy)
+        const p1 = core.upload()
+        const p2 = core.upload()
+        // Both callers observe one run; the second call did not kick off a second runUpload.
+        expect(startSpy).toHaveBeenCalledTimes(1)
+        core.destroy()
+        vi.unstubAllGlobals()
+        await Promise.allSettled([p1, p2])
+    })
+
+    it('resume() while a run is in flight is a no-op (does not start a second run)', async () => {
+        const core = await hangingFetchCore()
+        const p1 = core.upload()
+        const resumeSpy = vi.fn()
+        core.on('upload-resume', resumeSpy)
+        core.resume() // must not kick off a competing run
+        expect(resumeSpy).not.toHaveBeenCalled()
+        core.destroy()
+        vi.unstubAllGlobals()
+        await Promise.allSettled([p1])
+    })
+})

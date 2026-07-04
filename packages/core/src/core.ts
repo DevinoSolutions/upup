@@ -49,6 +49,7 @@ export class UpupCore {
   private pauseRequested = false
   private cancelRequested = false
   private destroyed = false
+  private activeRun: Promise<UploadFile[]> | null = null
   private workerProvider: import('./worker/create-worker-provider').WorkerProvider | null = null
   options: CoreOptions
 
@@ -365,6 +366,17 @@ export class UpupCore {
   }
 
   async upload(): Promise<UploadFile[]> {
+    if (this.destroyed) throw new Error('UpupCore: upload() after destroy()')
+    if (this.activeRun) return this.activeRun
+    this.activeRun = this.runUpload()
+    try {
+      return await this.activeRun
+    } finally {
+      this.activeRun = null
+    }
+  }
+
+  private async runUpload(): Promise<UploadFile[]> {
     this.pauseRequested = false
     this.cancelRequested = false
     this.destroyed = false
@@ -472,6 +484,7 @@ export class UpupCore {
    * complete successfully (those without a `key` set).
    */
   resume(): void {
+    if (this.activeRun) return
     this.pauseRequested = false
     this._status = UploadStatus.UPLOADING
     this.emitter.emit('upload-resume', {})
@@ -479,7 +492,9 @@ export class UpupCore {
 
     const incomplete = [...this.files.values()].filter(f => f.key == null)
     if (incomplete.length > 0 && this.hasUploadTarget()) {
-      this.uploadFiles(incomplete)
+      const run = this.uploadFiles(incomplete)
+      this.activeRun = run
+      run
         .then(() => {
           const allComplete = [...this.files.values()].every(file => file.key != null)
           this._status = allComplete ? UploadStatus.SUCCESSFUL : UploadStatus.IDLE
@@ -491,6 +506,9 @@ export class UpupCore {
           this._error = err instanceof Error ? err : new Error(String(err))
           this.emitter.emit('upload-error', { error: this._error })
           this.emitter.emit('state-change', { status: this._status, error: this._error })
+        })
+        .finally(() => {
+          this.activeRun = null
         })
     }
   }
@@ -509,6 +527,16 @@ export class UpupCore {
   }
 
   async retry(fileId?: string): Promise<UploadFile[]> {
+    if (this.activeRun) return this.activeRun
+    this.activeRun = this.runRetry(fileId)
+    try {
+      return await this.activeRun
+    } finally {
+      this.activeRun = null
+    }
+  }
+
+  private async runRetry(fileId?: string): Promise<UploadFile[]> {
     this.emitter.emit('retry', { fileId })
 
     const target = fileId

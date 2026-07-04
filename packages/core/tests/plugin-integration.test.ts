@@ -74,7 +74,7 @@ describe('Plugin integration — upload control observer', () => {
         core.destroy()
     })
 
-    it('plugin observes retry events', () => {
+    it('plugin observes retry events', async () => {
         const retries: (string | undefined)[] = []
         const core = new UpupCore({})
         core.use({
@@ -84,8 +84,11 @@ describe('Plugin integration — upload control observer', () => {
             },
         })
 
-        core.retry()
-        core.retry('file-1')
+        // Await between calls: F-149 collapses CONCURRENT retries onto one in-flight run,
+        // so a second synchronous retry() would join the first and not emit. Each awaited
+        // call is its own run and emits its own retry event.
+        await core.retry()
+        await core.retry('file-1')
 
         expect(retries).toEqual([undefined, 'file-1'])
         core.destroy()
