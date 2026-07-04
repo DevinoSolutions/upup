@@ -1,0 +1,4 @@
+{
+  "_comment": "Advisory ids (numeric, as pnpm audit reports them) that are consciously accepted despite being high/critical severity in a publishable package's production tree. Each entry must have a reason recorded in a commit message or the deferred roadmap — this file is a documented-exception list, not silent suppression. Empty by design: after F-181, the publishable-surface high+ count is 0.",
+  "accept": []
+}
