@@ -10,7 +10,7 @@ import { UpupErrorCode } from '@upup/core'
 import type { UpupServerConfig } from './config'
 import { getTokens, deleteTokens, resolveUserId } from './tokenStore'
 import { isValidProvider, refreshAccessToken } from './oauth'
-import { listDriveFiles, fetchDriveFile } from './drive-clients'
+import { getDriveClient } from './drive-clients'
 import { type Responder } from './respond'
 
 export async function handleListFiles(
@@ -54,10 +54,10 @@ export async function handleListFiles(
     const search = url.searchParams.get('search') ?? undefined
 
     try {
-        const files = await listDriveFiles(provider, tokens.accessToken, {
-            folderId,
-            search,
-        })
+        const files = await getDriveClient(provider).listFiles(
+            tokens.accessToken,
+            { folderId, search },
+        )
         return res.json({ provider, files }, 200)
     } catch (err) {
         if ((err as { status?: number }).status === 401) {
@@ -138,11 +138,9 @@ export async function handleFileTransfer(
     }
 
     try {
-        const { stream, size, fileName, mimeType } = await fetchDriveFile(
+        const { stream, size, fileName, mimeType } = await getDriveClient(
             provider,
-            tokens.accessToken,
-            body,
-        )
+        ).fetchFile(tokens.accessToken, body)
         const { transferDriveFileToS3 } = await import('./transfer')
         const result = await transferDriveFileToS3({
             stream,

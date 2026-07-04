@@ -19,48 +19,42 @@ export type DriveFile = {
     modifiedAt?: string
 }
 
-export async function listDriveFiles(
-    provider: OAuthProvider,
-    accessToken: string,
-    opts: { folderId?: string; search?: string },
-): Promise<DriveFile[]> {
-    switch (provider) {
-        case 'google-drive':
-            return listGoogleDriveFiles(accessToken, opts)
-        case 'onedrive':
-            return listOneDriveFiles(accessToken, opts)
-        case 'dropbox':
-            return listDropboxFiles(accessToken, opts)
-        case 'box':
-            return listBoxFiles(accessToken, opts)
-    }
+/** One provider's drive surface: list a folder/search, and fetch a file's bytes.
+ *  Replaces the two parallel per-provider dispatch switches (F-407) — adding a
+ *  provider is now one client-fn pair + one DRIVE_CLIENTS row. */
+export type DriveClient = {
+    listFiles(
+        accessToken: string,
+        opts: { folderId?: string; search?: string },
+    ): Promise<DriveFile[]>
+    fetchFile(
+        accessToken: string,
+        body: {
+            fileId: string
+            fileName?: string
+            size?: number
+            mimeType?: string
+        },
+    ): Promise<{
+        stream: ReadableStream<Uint8Array>
+        size: number
+        fileName: string
+        mimeType: string
+    }>
 }
 
-export async function fetchDriveFile(
-    provider: OAuthProvider,
-    accessToken: string,
-    body: {
-        fileId: string
-        fileName?: string
-        size?: number
-        mimeType?: string
+const DRIVE_CLIENTS: Record<OAuthProvider, DriveClient> = {
+    'google-drive': {
+        listFiles: listGoogleDriveFiles,
+        fetchFile: fetchGoogleDriveFile,
     },
-): Promise<{
-    stream: ReadableStream<Uint8Array>
-    size: number
-    fileName: string
-    mimeType: string
-}> {
-    switch (provider) {
-        case 'google-drive':
-            return fetchGoogleDriveFile(accessToken, body)
-        case 'onedrive':
-            return fetchOneDriveFile(accessToken, body)
-        case 'dropbox':
-            return fetchDropboxFile(accessToken, body)
-        case 'box':
-            return fetchBoxFile(accessToken, body)
-    }
+    onedrive: { listFiles: listOneDriveFiles, fetchFile: fetchOneDriveFile },
+    dropbox: { listFiles: listDropboxFiles, fetchFile: fetchDropboxFile },
+    box: { listFiles: listBoxFiles, fetchFile: fetchBoxFile },
+}
+
+export function getDriveClient(provider: OAuthProvider): DriveClient {
+    return DRIVE_CLIENTS[provider]
 }
 
 async function driveFetch(
