@@ -574,6 +574,7 @@ export default function useUploaderController(
             uploadStatus: state.uploadStatus,
             setUploadStatus: () => {},
             uploadError: state.uploadError,
+            uploadErrorCode: state.uploadErrorCode,
             uploadSpeed: state.uploadSpeed,
             uploadEta: state.uploadEta,
             uploadedBytes: state.uploadedBytes,
