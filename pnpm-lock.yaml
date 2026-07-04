@@ -281,13 +281,13 @@ importers:
         version: 10.4.27(postcss@8.5.14)
       eslint:
         specifier: ^9
-        version: 9.39.4(jiti@2.6.1)
+        version: 9.39.4(jiti@1.21.7)
       eslint-config-next:
         specifier: 16.1.6
-        version: 16.1.6(eslint@9.39.4(jiti@2.6.1))(typescript@5.6.3)
+        version: 16.1.6(eslint@9.39.4(jiti@1.21.7))(typescript@5.6.3)
       eslint-plugin-react:
         specifier: ^7.37.4
-        version: 7.37.5(eslint@9.39.4(jiti@2.6.1))
+        version: 7.37.5(eslint@9.39.4(jiti@1.21.7))
       react-syntax-highlighter:
         specifier: ^15.6.1
         version: 15.6.6(react@19.2.4)
@@ -302,7 +302,7 @@ importers:
         version: 5.6.3
       typescript-eslint:
         specifier: ^8.46.2
-        version: 8.56.1(eslint@9.39.4(jiti@2.6.1))(typescript@5.6.3)
+        version: 8.56.1(eslint@9.39.4(jiti@1.21.7))(typescript@5.6.3)
 
   apps/mastra:
     dependencies:
@@ -431,13 +431,13 @@ importers:
         version: 10.4.27(postcss@8.5.14)
       eslint:
         specifier: ^9
-        version: 9.39.4(jiti@1.21.7)
+        version: 9.39.4(jiti@2.6.1)
       eslint-config-next:
         specifier: 16.1.6
-        version: 16.1.6(eslint@9.39.4(jiti@1.21.7))(typescript@5.6.3)
+        version: 16.1.6(eslint@9.39.4(jiti@2.6.1))(typescript@5.6.3)
       eslint-plugin-react:
         specifier: ^7.37.4
-        version: 7.37.5(eslint@9.39.4(jiti@1.21.7))
+        version: 7.37.5(eslint@9.39.4(jiti@2.6.1))
       tailwindcss:
         specifier: ^3.4.3
         version: 3.4.19(tsx@4.21.0)(yaml@2.8.1)
@@ -446,7 +446,7 @@ importers:
         version: 5.6.3
       typescript-eslint:
         specifier: ^8.46.2
-        version: 8.56.1(eslint@9.39.4(jiti@1.21.7))(typescript@5.6.3)
+        version: 8.56.1(eslint@9.39.4(jiti@2.6.1))(typescript@5.6.3)
 
   apps/storybook-angular:
     dependencies:
@@ -886,9 +886,15 @@ importers:
       '@angular/platform-browser-dynamic':
         specifier: ^19.0.0
         version: 19.2.25(@angular/common@19.2.25(@angular/core@19.2.25(rxjs@7.8.2)(zone.js@0.14.10))(rxjs@7.8.2))(@angular/compiler@19.2.25)(@angular/core@19.2.25(rxjs@7.8.2)(zone.js@0.14.10))(@angular/platform-browser@19.2.25(@angular/animations@19.2.25(@angular/common@19.2.25(@angular/core@19.2.25(rxjs@7.8.2)(zone.js@0.14.10))(rxjs@7.8.2))(@angular/core@19.2.25(rxjs@7.8.2)(zone.js@0.14.10)))(@angular/common@19.2.25(@angular/core@19.2.25(rxjs@7.8.2)(zone.js@0.14.10))(rxjs@7.8.2))(@angular/core@19.2.25(rxjs@7.8.2)(zone.js@0.14.10)))
+      '@upup/eslint-config':
+        specifier: workspace:*
+        version: link:../eslint-config
       '@upup/tailwind-config':
         specifier: workspace:*
         version: link:../tailwind-config
+      eslint:
+        specifier: ^9
+        version: 9.39.4(jiti@2.6.1)
       jsdom:
         specifier: 22.1.0
         version: 22.1.0
@@ -932,12 +938,18 @@ importers:
       '@types/node':
         specifier: ^22
         version: 22.19.21
+      '@upup/eslint-config':
+        specifier: workspace:*
+        version: link:../eslint-config
       '@vitest/coverage-v8':
         specifier: ^4.1.2
         version: 4.1.9(vitest@4.1.2(@opentelemetry/api@1.9.1)(@types/node@22.19.21)(jsdom@22.1.0)(msw@2.14.6(@types/node@22.19.21)(typescript@5.6.3))(vite@8.0.13(@types/node@22.19.21)(esbuild@0.25.12)(jiti@2.6.1)(less@4.6.4)(sass@1.100.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.1)))
       esbuild:
         specifier: ^0.25.0
         version: 0.25.12
+      eslint:
+        specifier: ^9
+        version: 9.39.4(jiti@2.6.1)
       rollup:
         specifier: ^3.29.4
         version: 3.29.5
@@ -966,6 +978,9 @@ importers:
       eslint:
         specifier: ^9
         version: 9.39.4(jiti@2.6.1)
+      eslint-plugin-react-hooks:
+        specifier: ^7.1.1
+        version: 7.1.1(eslint@9.39.4(jiti@2.6.1))
       globals:
         specifier: ^15.14.0
         version: 15.15.0
@@ -1046,6 +1061,12 @@ importers:
       '@types/react-dom':
         specifier: ^19
         version: 19.2.3(@types/react@19.2.14)
+      '@upup/eslint-config':
+        specifier: workspace:*
+        version: link:../eslint-config
+      eslint:
+        specifier: ^9
+        version: 9.39.4(jiti@2.6.1)
       jsdom:
         specifier: 22.1.0
         version: 22.1.0
@@ -1089,6 +1110,12 @@ importers:
       '@types/react-dom':
         specifier: ^19
         version: 19.2.3(@types/react@19.2.14)
+      '@upup/eslint-config':
+        specifier: workspace:*
+        version: link:../eslint-config
+      eslint:
+        specifier: ^9
+        version: 9.39.4(jiti@2.6.1)
       jsdom:
         specifier: 22.1.0
         version: 22.1.0
@@ -1195,12 +1222,18 @@ importers:
       '@types/react-dom':
         specifier: ^19
         version: 19.2.3(@types/react@19.2.14)
+      '@upup/eslint-config':
+        specifier: workspace:*
+        version: link:../eslint-config
       '@upup/tailwind-config':
         specifier: workspace:*
         version: link:../tailwind-config
       '@vitest/coverage-v8':
         specifier: ^4.1.2
         version: 4.1.9(vitest@4.1.2(@opentelemetry/api@1.9.1)(@types/node@25.3.5)(jsdom@22.1.0)(msw@2.14.6(@types/node@25.3.5)(typescript@5.6.3))(vite@8.0.13(@types/node@25.3.5)(esbuild@0.28.0)(jiti@2.6.1)(less@4.6.4)(sass@1.100.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.1)))
+      eslint:
+        specifier: ^9
+        version: 9.39.4(jiti@2.6.1)
       jest-axe:
         specifier: ^10.0.0
         version: 10.0.0
@@ -1238,9 +1271,15 @@ importers:
       '@types/node':
         specifier: ^20.10.0
         version: 20.19.37
+      '@upup/eslint-config':
+        specifier: workspace:*
+        version: link:../eslint-config
       '@vitest/coverage-v8':
         specifier: ^4.1.2
         version: 4.1.9(vitest@4.1.2(@opentelemetry/api@1.9.1)(@types/node@20.19.37)(jsdom@22.1.0)(msw@2.14.6(@types/node@20.19.37)(typescript@5.6.3))(vite@8.0.13(@types/node@20.19.37)(esbuild@0.28.0)(jiti@2.6.1)(less@4.6.4)(sass@1.100.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.1)))
+      eslint:
+        specifier: ^9
+        version: 9.39.4(jiti@2.6.1)
       tsup:
         specifier: ^8.4.0
         version: 8.5.1(jiti@2.6.1)(postcss@8.5.14)(tsx@4.21.0)(typescript@5.6.3)(yaml@2.8.1)
@@ -1297,9 +1336,15 @@ importers:
       '@testing-library/svelte':
         specifier: ^5.2.0
         version: 5.3.1(svelte@5.56.2(@typescript-eslint/types@8.56.1))(vite@7.3.5(@types/node@25.3.5)(jiti@2.6.1)(less@4.6.4)(lightningcss@1.32.0)(sass@1.100.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.1))(vitest@4.1.2(@opentelemetry/api@1.9.1)(@types/node@25.3.5)(jsdom@22.1.0)(msw@2.14.6(@types/node@25.3.5)(typescript@5.6.3))(vite@7.3.5(@types/node@25.3.5)(jiti@2.6.1)(less@4.6.4)(lightningcss@1.32.0)(sass@1.100.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.1)))
+      '@upup/eslint-config':
+        specifier: workspace:*
+        version: link:../eslint-config
       '@upup/tailwind-config':
         specifier: workspace:*
         version: link:../tailwind-config
+      eslint:
+        specifier: ^9
+        version: 9.39.4(jiti@2.6.1)
       jsdom:
         specifier: 22.1.0
         version: 22.1.0
@@ -1352,9 +1397,15 @@ importers:
         specifier: ^3.2.0
         version: 3.3.3
     devDependencies:
+      '@upup/eslint-config':
+        specifier: workspace:*
+        version: link:../eslint-config
       '@upup/tailwind-config':
         specifier: workspace:*
         version: link:../tailwind-config
+      eslint:
+        specifier: ^9
+        version: 9.39.4(jiti@2.6.1)
       jsdom:
         specifier: 22.1.0
         version: 22.1.0
@@ -1392,6 +1443,9 @@ importers:
         specifier: ^3.6.0
         version: 3.6.0
     devDependencies:
+      '@upup/eslint-config':
+        specifier: workspace:*
+        version: link:../eslint-config
       '@upup/tailwind-config':
         specifier: workspace:*
         version: link:../tailwind-config
@@ -1401,6 +1455,9 @@ importers:
       '@vue/test-utils':
         specifier: ^2.4.6
         version: 2.4.10(@vue/compiler-dom@3.5.34)(@vue/server-renderer@3.5.34(vue@3.5.34(typescript@5.6.3)))(vue@3.5.34(typescript@5.6.3))
+      eslint:
+        specifier: ^9
+        version: 9.39.4(jiti@2.6.1)
       jsdom:
         specifier: 22.1.0
         version: 22.1.0
@@ -8881,6 +8938,12 @@ packages:
     engines: {node: '>=18'}
     peerDependencies:
       eslint: ^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0-0 || ^9.0.0
+
+  eslint-plugin-react-hooks@7.1.1:
+    resolution: {integrity: sha512-f2I7Gw6JbvCexzIInuSbZpfdQ44D7iqdWX01FKLvrPgqxoE7oMj8clOfto8U6vYiz4yd5oKu39rRSVOe1zRu0g==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      eslint: ^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0-0 || ^9.0.0 || ^10.0.0
 
   eslint-plugin-react@7.37.5:
     resolution: {integrity: sha512-Qteup0SqU15kdocexFNAJMvCJEfa2xUKNV4CC1xsVMrIIqEy3SQ/rqyxCWNzfrd3/ldy6HMlD2e0JDVpDg2qIA==}
@@ -26119,6 +26182,17 @@ snapshots:
     dependencies:
       '@babel/core': 7.29.0
       '@babel/parser': 7.29.0
+      eslint: 9.39.4(jiti@2.6.1)
+      hermes-parser: 0.25.1
+      zod: 3.25.76
+      zod-validation-error: 4.0.2(zod@3.25.76)
+    transitivePeerDependencies:
+      - supports-color
+
+  eslint-plugin-react-hooks@7.1.1(eslint@9.39.4(jiti@2.6.1)):
+    dependencies:
+      '@babel/core': 7.29.0
+      '@babel/parser': 7.29.3
       eslint: 9.39.4(jiti@2.6.1)
       hermes-parser: 0.25.1
       zod: 3.25.76

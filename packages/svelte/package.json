@@ -24,6 +24,7 @@
     "build": "svelte-package --input src --output dist && pnpm run build:css",
     "build:css": "postcss src/tailwind.css -o ./dist/tailwind-prefixed.css",
     "dev": "svelte-package --input src --output dist --watch",
+    "lint": "eslint .",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "svelte-check --tsconfig ./tsconfig.json"
@@ -42,7 +43,9 @@
     "@sveltejs/package": "^2.3.0",
     "@sveltejs/vite-plugin-svelte": "^6.0.0",
     "@testing-library/svelte": "^5.2.0",
+    "@upup/eslint-config": "workspace:*",
     "@upup/tailwind-config": "workspace:*",
+    "eslint": "^9",
     "jsdom": "22.1.0",
     "postcss": "^8.5.2",
     "postcss-cli": "^11.0.1",

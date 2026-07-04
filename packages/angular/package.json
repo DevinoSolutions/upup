@@ -19,6 +19,7 @@
     "build": "ng-packagr -p ng-package.json && pnpm run build:css",
     "build:css": "postcss src/tailwind.css -o ./dist/tailwind-prefixed.css",
     "dev": "ng-packagr -p ng-package.json --watch",
+    "lint": "eslint .",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc -p tsconfig.lib.json --noEmit"
@@ -39,7 +40,9 @@
     "@angular/core": "^19.0.0",
     "@angular/platform-browser": "^19.0.0",
     "@angular/platform-browser-dynamic": "^19.0.0",
+    "@upup/eslint-config": "workspace:*",
     "@upup/tailwind-config": "workspace:*",
+    "eslint": "^9",
     "jsdom": "22.1.0",
     "ng-packagr": "^19.0.0",
     "postcss": "^8.5.2",

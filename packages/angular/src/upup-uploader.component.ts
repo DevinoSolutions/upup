@@ -198,9 +198,9 @@ export class UpupUploaderComponent implements OnInit, AfterViewInit {
         dark ? 'upup-bg-[#232323]' : 'upup-bg-white'
       } upup-flex upup-h-full upup-w-full upup-select-none upup-flex-col upup-gap-3 upup-overflow-hidden upup-rounded-2xl upup-px-5 upup-py-4`,
       {
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+         
         [slotOverrides['containerFull']!]: !!(slotOverrides['containerFull'] && !mini),
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+         
         [slotOverrides['containerMini']!]: !!(slotOverrides['containerMini'] && mini),
       },
     )

@@ -30,7 +30,7 @@ export function toSafeError(e: unknown): NonNullable<UpupServerErrorEvent['error
 }
 
 const defaultLogger: UpupServerLogger = (event) => {
-  // eslint-disable-next-line no-console -- the one intentional server log sink
+   
   console.error('[upup:server]', JSON.stringify(event))
 }
 

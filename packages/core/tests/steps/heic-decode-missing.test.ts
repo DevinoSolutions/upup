@@ -30,7 +30,7 @@ describe('heicToJpegBlob — optional dep missing', () => {
       if (origDescriptor) {
         Object.defineProperty(globalThis, 'document', origDescriptor)
       } else {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+         
         delete (globalThis as any).document
       }
       vi.doUnmock('libheif-js/libheif-wasm/libheif-bundle.mjs')

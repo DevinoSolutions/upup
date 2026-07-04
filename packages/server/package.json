@@ -40,6 +40,7 @@
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
+    "lint": "eslint .",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit"
@@ -54,7 +55,9 @@
   },
   "devDependencies": {
     "@types/node": "^20.10.0",
+    "@upup/eslint-config": "workspace:*",
     "@vitest/coverage-v8": "^4.1.2",
+    "eslint": "^9",
     "tsup": "^8.4.0",
     "typescript": "^5.3.2",
     "vitest": "^4.1.2"

@@ -49,7 +49,7 @@ export function uploaderPanel(ctx: UploaderContext) {
           No internet connection — uploads will resume when you reconnect.
         </div>
       ` : nothing}
-      ${!!activeSource ? sourceView(ctx) : nothing}
+      ${activeSource ? sourceView(ctx) : nothing}
       ${!activeSource && (isAddingMore || !filesSize) ? sourceSelector(ctx) : nothing}
       ${fileList(ctx)}
     </div>

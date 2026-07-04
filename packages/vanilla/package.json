@@ -28,6 +28,7 @@
     "build": "tsup && pnpm run build:css",
     "build:css": "postcss src/tailwind.css -o ./dist/tailwind-prefixed.css",
     "dev": "tsup --watch",
+    "lint": "eslint .",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit"
@@ -38,7 +39,9 @@
     "lit-html": "^3.2.0"
   },
   "devDependencies": {
+    "@upup/eslint-config": "workspace:*",
     "@upup/tailwind-config": "workspace:*",
+    "eslint": "^9",
     "jsdom": "22.1.0",
     "postcss": "^8.5.2",
     "postcss-cli": "^11.0.1",
