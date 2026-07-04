@@ -104,7 +104,7 @@ pnpm run typecheck      # turbo, all packages
 pnpm run test           # turbo, all unit suites
 pnpm run build          # turbo, all packages
 pnpm run e2e            # the REAL gate — see next section
-pnpm run prettier-check # CI blocks on this (checks @upup/react src)
+pnpm run prettier-check # CI blocks on this (repo-wide: all 9 publishable packages' src, one root config)
 pnpm run size           # size-limit bundle budgets
 pnpm run audit:prod     # high+ advisories in the publishable prod trees
 pnpm run lint           # eslint flat-config: 9 @upup/* packages + 3 apps — CI's Lint job scopes to the publishable packages only (`turbo run lint --filter='./packages/*'`); the 3 apps' lint is local-only until two pre-existing app-config defects (F-708, F-709) land
@@ -116,6 +116,12 @@ never noise. `pnpm run test` runs with `--continue` (one package's failure
 can't silently cancel the others' scheduling) and the `test` task depends on
 `^build`, so downstream suites always run against freshly-built sibling
 `dist/`, not stale output.
+
+`prettier-check`/`prettier-write` are repo-wide (P22, 2026-07-04): one root
+`.prettierrc.json` + `.prettierignore` govern all 9 publishable packages'
+`src` (`packages/react/.prettierrc.json` is gone — promoted to root,
+byte-identical settings). Run either through `rtk proxy`: the rtk filter has
+reported "all files formatted" on a red `--check` (see Machine-local notes).
 
 Flake protocol: if a test fails only in the full run, re-run it isolated
 before suspecting your change. Known load-sensitive case:
@@ -278,8 +284,8 @@ if needed; never silently "improve" them:
 ## CI (`.github/workflows`)
 
 - `main.yml` — PRs to master/dev: prettier → all-package unit suites
-  (`pnpm run test`) + uniform v8 coverage floors on core/server/react
-  (`pnpm run test:coverage`) → typecheck → build → size-limit → a prod-scoped
+  (`pnpm run test`) + uniform v8 coverage floors on all nine publishable
+  packages (`pnpm run test:coverage`) → typecheck → build → size-limit → a prod-scoped
   dependency-audit gate (`pnpm run audit:prod`, `scripts/audit-prod.mjs`) that
   fails on high+ advisories reachable from the 9 publishable packages'
   production trees only (dev-only apps/private-package noise is excluded by
