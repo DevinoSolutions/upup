@@ -514,13 +514,9 @@ export class DropboxPlugin implements DrivePlugin {
             const data = await res.json()
             const files: DriveFile[] = (data.entries ?? []).map(mapEntry)
 
-            this.emitter?.emit('dropbox:files-loaded', {
-                files,
-                path: '',
-                hasMore: !!data.has_more,
-                cursor: data.cursor,
-            })
-
+            // No files-loaded emit here: the controller's loadMore() appends this
+            // return value directly (F-125) — re-emitting would make the controller
+            // process it a second time as if it were a fresh folder load.
             return { files, hasMore: !!data.has_more, cursor: data.cursor }
         } catch (err) {
             this.emitter?.emit('dropbox:error', {

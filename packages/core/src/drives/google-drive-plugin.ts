@@ -262,7 +262,12 @@ export class GoogleDrivePlugin implements DrivePlugin {
 
     async loadFiles(
         folderId?: string,
-    ): Promise<{ files: DriveFile[]; folderId: string }> {
+    ): Promise<{
+        files: DriveFile[]
+        folderId: string
+        hasMore: boolean
+        cursor?: string
+    }> {
         this.setState('browsing')
 
         try {
@@ -271,7 +276,7 @@ export class GoogleDrivePlugin implements DrivePlugin {
 
             const params = new URLSearchParams({
                 q,
-                fields: 'files(fileExtension,id,mimeType,name,parents,size,thumbnailLink)',
+                fields: 'nextPageToken,files(fileExtension,id,mimeType,name,parents,size,thumbnailLink)',
                 key: this.config.apiKey,
                 pageSize: '1000',
             })
@@ -283,19 +288,69 @@ export class GoogleDrivePlugin implements DrivePlugin {
 
             const data = await res.json()
             const files: DriveFile[] = (data.files ?? []).map(mapGoogleEntry)
+            const hasMore = !!data.nextPageToken
+            const cursor = hasMore
+                ? JSON.stringify({ folderId: parentId, pageToken: data.nextPageToken })
+                : undefined
 
             this.setState('authenticated')
             this.emitter?.emit('google-drive:files-loaded', {
                 files,
                 folderId: parentId,
+                hasMore,
+                cursor,
             })
 
-            return { files, folderId: parentId }
+            return { files, folderId: parentId, hasMore, cursor }
         } catch (err) {
             this.setState('authenticated')
             this.emitter?.emit('google-drive:error', {
                 error: err instanceof Error ? err : new Error(String(err)),
                 action: 'loadFiles',
+            })
+            throw err
+        }
+    }
+
+    // ── File operations: continue listing (pagination) ──
+
+    async loadMoreFiles(cursor: string): Promise<{
+        files: DriveFile[]
+        hasMore: boolean
+        cursor?: string
+    }> {
+        try {
+            const { folderId, pageToken } = JSON.parse(cursor) as {
+                folderId: string
+                pageToken: string
+            }
+            const q = `'${folderId}' in parents and trashed = false`
+
+            const params = new URLSearchParams({
+                q,
+                fields: 'nextPageToken,files(fileExtension,id,mimeType,name,parents,size,thumbnailLink)',
+                key: this.config.apiKey,
+                pageSize: '1000',
+                pageToken,
+            })
+
+            const res = await this.apiRequest(
+                `${FILES_URL}?${params.toString()}`,
+                { method: 'GET' },
+            )
+
+            const data = await res.json()
+            const files: DriveFile[] = (data.files ?? []).map(mapGoogleEntry)
+            const hasMore = !!data.nextPageToken
+            const nextCursor = hasMore
+                ? JSON.stringify({ folderId, pageToken: data.nextPageToken })
+                : undefined
+
+            return { files, hasMore, cursor: nextCursor }
+        } catch (err) {
+            this.emitter?.emit('google-drive:error', {
+                error: err instanceof Error ? err : new Error(String(err)),
+                action: 'loadMoreFiles',
             })
             throw err
         }

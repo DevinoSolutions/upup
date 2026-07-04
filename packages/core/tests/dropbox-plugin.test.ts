@@ -822,7 +822,7 @@ describe('DropboxPlugin', () => {
             expect(result.cursor).toBe('next-cursor')
         })
 
-        it('emits files-loaded event', async () => {
+        it('does not emit files-loaded — the controller appends from the return value', async () => {
             vi.stubGlobal(
                 'fetch',
                 mockFetchResponse({
@@ -836,7 +836,7 @@ describe('DropboxPlugin', () => {
             const loaded = events.filter(
                 e => e.event === 'dropbox:files-loaded',
             )
-            expect(loaded).toHaveLength(1)
+            expect(loaded).toHaveLength(0)
         })
 
         it('emits error on failure', async () => {

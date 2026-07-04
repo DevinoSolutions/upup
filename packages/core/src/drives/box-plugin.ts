@@ -441,9 +441,12 @@ export class BoxPlugin implements DrivePlugin {
 
     async loadFiles(
         folderId = '0',
+        offset = '0',
     ): Promise<{
         files: DriveFile[]
         folderId: string
+        hasMore: boolean
+        cursor?: string
     }> {
         this.setState('browsing')
 
@@ -451,6 +454,7 @@ export class BoxPlugin implements DrivePlugin {
             const params = new URLSearchParams({
                 fields: 'id,name,type,size,modified_at',
                 limit: '1000',
+                offset,
             })
 
             const res = await this.apiRequest(
@@ -461,15 +465,61 @@ export class BoxPlugin implements DrivePlugin {
             const data = await res.json()
             const files: DriveFile[] = (data.entries ?? []).map(mapEntry)
 
-            this.setState('authenticated')
-            this.emitter?.emit('box:files-loaded', { files, folderId })
+            // Box's /folders/{id}/items returns total_count by default (independent
+            // of the fields param). When it's absent, loaded < loaded is always
+            // false — a safe length-based fallback rather than assuming more pages.
+            const off = Number(data.offset ?? offset ?? 0)
+            const loaded = off + files.length
+            const hasMore = loaded < Number(data.total_count ?? loaded)
+            const cursor = hasMore ? `${folderId}:${loaded}` : undefined
 
-            return { files, folderId }
+            this.setState('authenticated')
+            this.emitter?.emit('box:files-loaded', { files, folderId, hasMore, cursor })
+
+            return { files, folderId, hasMore, cursor }
         } catch (err) {
             this.setState('authenticated')
             this.emitter?.emit('box:error', {
                 error: err instanceof Error ? err : new Error(String(err)),
                 action: 'loadFiles',
+            })
+            throw err
+        }
+    }
+
+    // ── File operations: continue listing (pagination) ──
+
+    async loadMoreFiles(cursor: string): Promise<{
+        files: DriveFile[]
+        hasMore: boolean
+        cursor?: string
+    }> {
+        const [folderId, offsetStr] = cursor.split(':')
+        try {
+            const params = new URLSearchParams({
+                fields: 'id,name,type,size,modified_at',
+                limit: '1000',
+                offset: offsetStr ?? '0',
+            })
+
+            const res = await this.apiRequest(
+                `${FOLDERS_URL}/${folderId}/items?${params.toString()}`,
+                { method: 'GET' },
+            )
+
+            const data = await res.json()
+            const files: DriveFile[] = (data.entries ?? []).map(mapEntry)
+
+            const off = Number(data.offset ?? offsetStr ?? 0)
+            const loaded = off + files.length
+            const hasMore = loaded < Number(data.total_count ?? loaded)
+            const nextCursor = hasMore ? `${folderId}:${loaded}` : undefined
+
+            return { files, hasMore, cursor: nextCursor }
+        } catch (err) {
+            this.emitter?.emit('box:error', {
+                error: err instanceof Error ? err : new Error(String(err)),
+                action: 'loadMoreFiles',
             })
             throw err
         }

@@ -830,6 +830,75 @@ describe('OneDrivePlugin', () => {
                 'https://thumb.example.com/medium.jpg',
             )
         })
+
+        it('computes hasMore/cursor from @odata.nextLink (F-125)', async () => {
+            const nextLink =
+                'https://graph.microsoft.com/v1.0/me/drive/root/children?$skiptoken=abc'
+            vi.stubGlobal(
+                'fetch',
+                mockFetchResponse({
+                    value: [{ id: '1', name: 'a.txt', file: { mimeType: 'text/plain' }, size: 1 }],
+                    '@odata.nextLink': nextLink,
+                }),
+            )
+
+            const result = await plugin.loadFiles()
+
+            expect(result.hasMore).toBe(true)
+            expect(result.cursor).toBe(nextLink)
+        })
+
+        it('hasMore is false when @odata.nextLink is absent (last page)', async () => {
+            vi.stubGlobal('fetch', mockFetchResponse({ value: [] }))
+
+            const result = await plugin.loadFiles()
+
+            expect(result.hasMore).toBe(false)
+            expect(result.cursor).toBeUndefined()
+        })
+    })
+
+    describe('loadMoreFiles()', () => {
+        beforeEach(() => {
+            sessionStore.set('upup_onedrive_access_token', 'valid-token')
+            plugin.restoreSession()
+            events.length = 0
+        })
+
+        it('follows the absolute @odata.nextLink cursor unmodified', async () => {
+            const nextLink =
+                'https://graph.microsoft.com/v1.0/me/drive/root/children?$skiptoken=abc'
+            const fetchMock = mockFetchResponse({
+                value: [{ id: '2', name: 'b.txt', file: { mimeType: 'text/plain' }, size: 2 }],
+            })
+            vi.stubGlobal('fetch', fetchMock)
+
+            const result = await plugin.loadMoreFiles(nextLink)
+
+            expect(result.files).toHaveLength(1)
+            expect(result.files[0].name).toBe('b.txt')
+            expect(result.hasMore).toBe(false)
+            // graphRequest already tolerates an absolute URL (path.startsWith('http'))
+            // — loadMoreFiles needs no new fetch plumbing, just calling it through.
+            expect(fetchMock.mock.calls[0][0]).toBe(nextLink)
+        })
+
+        it('emits error on failure', async () => {
+            vi.stubGlobal(
+                'fetch',
+                mockFetchResponse('server error', 500, false),
+            )
+
+            await expect(
+                plugin.loadMoreFiles('https://graph.microsoft.com/v1.0/me/drive/root/children?x'),
+            ).rejects.toThrow()
+
+            const errors = events.filter(e => e.event === 'onedrive:error')
+            expect(errors).toHaveLength(1)
+            expect(
+                (errors[0].payload as { action: string }).action,
+            ).toBe('loadMoreFiles')
+        })
     })
 
     // ────────────────────────────────────────────

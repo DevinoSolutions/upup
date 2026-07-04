@@ -747,6 +747,92 @@ describe('BoxPlugin', () => {
             const calledUrl = fetchMock.mock.calls[0][0] as string
             expect(calledUrl).toContain('/folders/0/items')
         })
+
+        it('computes hasMore/cursor from total_count (F-125)', async () => {
+            vi.stubGlobal(
+                'fetch',
+                mockFetchResponse({
+                    entries: [{ type: 'file', id: '1', name: 'a.txt', size: 1 }],
+                    total_count: 5,
+                    offset: 0,
+                }),
+            )
+
+            const result = await plugin.loadFiles('0')
+
+            expect(result.hasMore).toBe(true)
+            expect(result.cursor).toBe('0:1')
+        })
+
+        it('hasMore is false once the offset catches up to total_count', async () => {
+            vi.stubGlobal(
+                'fetch',
+                mockFetchResponse({
+                    entries: [{ type: 'file', id: '1', name: 'a.txt', size: 1 }],
+                    total_count: 1,
+                    offset: 0,
+                }),
+            )
+
+            const result = await plugin.loadFiles('0')
+
+            expect(result.hasMore).toBe(false)
+            expect(result.cursor).toBeUndefined()
+        })
+
+        it('falls back to a length-based hasMore when total_count is absent', async () => {
+            // Existing fixtures across this file mock { entries } with no total_count —
+            // must not regress into a false "always more" state.
+            vi.stubGlobal(
+                'fetch',
+                mockFetchResponse({ entries: [] }),
+            )
+
+            const result = await plugin.loadFiles('0')
+
+            expect(result.hasMore).toBe(false)
+        })
+    })
+
+    describe('loadMoreFiles()', () => {
+        beforeEach(() => {
+            sessionStore.set('upup_box_access_token', 'valid-token')
+            plugin.restoreSession()
+            events.length = 0
+        })
+
+        it('continues listing from the encoded folderId:offset cursor', async () => {
+            vi.stubGlobal(
+                'fetch',
+                mockFetchResponse({
+                    entries: [{ type: 'file', id: '2', name: 'b.txt', size: 2 }],
+                    total_count: 2,
+                    offset: 1,
+                }),
+            )
+
+            const result = await plugin.loadMoreFiles('0:1')
+
+            expect(result.files).toHaveLength(1)
+            expect(result.files[0].name).toBe('b.txt')
+            expect(result.hasMore).toBe(false)
+            expect(result.cursor).toBeUndefined()
+        })
+
+        it('emits error on failure', async () => {
+            vi.stubGlobal(
+                'fetch',
+                mockFetchResponse('server error', 500, false),
+            )
+
+            await expect(plugin.loadMoreFiles('0:1')).rejects.toThrow()
+
+            const errors = events.filter(e => e.event === 'box:error')
+            expect(errors).toHaveLength(1)
+            expect(
+                (errors[0].payload as { action: string }).action,
+            ).toBe('loadMoreFiles')
+        })
     })
 
     // ────────────────────────────────────────────

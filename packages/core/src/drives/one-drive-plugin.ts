@@ -465,6 +465,8 @@ export class OneDrivePlugin implements DrivePlugin {
     ): Promise<{
         files: DriveFile[]
         folderId: string
+        hasMore: boolean
+        cursor?: string
     }> {
         this.setState('browsing')
 
@@ -476,24 +478,55 @@ export class OneDrivePlugin implements DrivePlugin {
             const params = new URLSearchParams({
                 $select: FILE_SELECT,
                 $expand: FILE_EXPAND,
+                $top: '200',
             })
 
             const data = await this.graphRequest(`${path}?${params.toString()}`)
             const items: Record<string, unknown>[] = (Array.isArray(data.value) ? data.value : []) as Record<string, unknown>[]
             const files: DriveFile[] = items.map(mapGraphItem)
+            const nextLink = data['@odata.nextLink'] as string | undefined
+            const hasMore = !!nextLink
 
             this.setState('authenticated')
             this.emitter?.emit('onedrive:files-loaded', {
                 files,
                 folderId: folderId ?? 'root',
+                hasMore,
+                cursor: nextLink,
             })
 
-            return { files, folderId: folderId ?? 'root' }
+            return { files, folderId: folderId ?? 'root', hasMore, cursor: nextLink }
         } catch (err) {
             this.setState('authenticated')
             this.emitter?.emit('onedrive:error', {
                 error: err instanceof Error ? err : new Error(String(err)),
                 action: 'loadFiles',
+            })
+            throw err
+        }
+    }
+
+    // ── File operations: continue listing (pagination) ──
+
+    async loadMoreFiles(cursor: string): Promise<{
+        files: DriveFile[]
+        hasMore: boolean
+        cursor?: string
+    }> {
+        try {
+            // cursor IS the absolute @odata.nextLink URL; graphRequest already
+            // tolerates an absolute URL (path.startsWith('http')), so no new fetch
+            // plumbing is needed here.
+            const data = await this.graphRequest(cursor)
+            const items: Record<string, unknown>[] = (Array.isArray(data.value) ? data.value : []) as Record<string, unknown>[]
+            const files: DriveFile[] = items.map(mapGraphItem)
+            const nextLink = data['@odata.nextLink'] as string | undefined
+
+            return { files, hasMore: !!nextLink, cursor: nextLink }
+        } catch (err) {
+            this.emitter?.emit('onedrive:error', {
+                error: err instanceof Error ? err : new Error(String(err)),
+                action: 'loadMoreFiles',
             })
             throw err
         }

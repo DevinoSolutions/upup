@@ -649,6 +649,77 @@ describe('GoogleDrivePlugin', () => {
             expect(result.files[0].name).toBe('')
             expect(result.files[0].size).toBe(0)
         })
+
+        it('computes hasMore/cursor from nextPageToken (F-125)', async () => {
+            vi.stubGlobal(
+                'fetch',
+                mockFetchResponse({
+                    files: [{ id: '1', name: 'a.txt', mimeType: 'text/plain' }],
+                    nextPageToken: 'page-2-token',
+                }),
+            )
+
+            const result = await plugin.loadFiles('my-folder')
+
+            expect(result.hasMore).toBe(true)
+            expect(result.cursor).toBe(
+                JSON.stringify({ folderId: 'my-folder', pageToken: 'page-2-token' }),
+            )
+        })
+
+        it('hasMore is false when nextPageToken is absent (last page)', async () => {
+            vi.stubGlobal(
+                'fetch',
+                mockFetchResponse({ files: [] }),
+            )
+
+            const result = await plugin.loadFiles()
+
+            expect(result.hasMore).toBe(false)
+            expect(result.cursor).toBeUndefined()
+        })
+    })
+
+    describe('loadMoreFiles()', () => {
+        beforeEach(() => {
+            plugin.setAccessToken('valid-token', 3600)
+            events.length = 0
+        })
+
+        it('continues listing from the encoded {folderId, pageToken} cursor', async () => {
+            const fetchMock = mockFetchResponse({
+                files: [{ id: '2', name: 'b.txt', mimeType: 'text/plain' }],
+            })
+            vi.stubGlobal('fetch', fetchMock)
+
+            const cursor = JSON.stringify({ folderId: 'my-folder', pageToken: 'page-2-token' })
+            const result = await plugin.loadMoreFiles(cursor)
+
+            expect(result.files).toHaveLength(1)
+            expect(result.files[0].name).toBe('b.txt')
+            expect(result.hasMore).toBe(false)
+
+            const url = fetchMock.mock.calls[0][0] as string
+            const parsed = new URL(url)
+            expect(parsed.searchParams.get('pageToken')).toBe('page-2-token')
+            expect(parsed.searchParams.get('q')).toContain("'my-folder' in parents")
+        })
+
+        it('emits error on failure', async () => {
+            vi.stubGlobal(
+                'fetch',
+                mockFetchResponse('server error', 500, false),
+            )
+
+            const cursor = JSON.stringify({ folderId: 'root', pageToken: 'x' })
+            await expect(plugin.loadMoreFiles(cursor)).rejects.toThrow()
+
+            const errors = events.filter(e => e.event === 'google-drive:error')
+            expect(errors).toHaveLength(1)
+            expect(
+                (errors[0].payload as { action: string }).action,
+            ).toBe('loadMoreFiles')
+        })
     })
 
     // ────────────────────────────────────────────
