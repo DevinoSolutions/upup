@@ -35,6 +35,8 @@ export type RestrictionFailedReason =
 export class UpupError extends Error {
   code: string
   retryable: boolean
+  /** Optional HTTP status the error originated from (set by uploadErrorFromResponse). */
+  status?: number
   constructor(message: string, code: string, retryable = false) {
     super(message)
     this.name = 'UpupError'
@@ -53,7 +55,6 @@ export class UpupAuthError extends UpupError {
 }
 
 export class UpupNetworkError extends UpupError {
-  status?: number
   constructor(message: string, status?: number) {
     super(message, UpupErrorCode.NETWORK_ERROR, true)
     this.name = 'UpupNetworkError'
@@ -85,7 +86,13 @@ export class UpupQuotaError extends UpupError {
 
 export class UpupStorageError extends UpupError {
   provider: string
-  operation: 'presign' | 'upload' | 'multipart-init' | 'multipart-complete'
+  operation:
+    | 'presign'
+    | 'upload'
+    | 'multipart-init'
+    | 'multipart-complete'
+    | 'multipart-sign-part'
+    | 'multipart-abort'
   constructor(message: string, provider: string, operation: UpupStorageError['operation']) {
     super(message, UpupErrorCode.STORAGE_ERROR, false)
     this.name = 'UpupStorageError'
@@ -126,4 +133,80 @@ export class UploadError extends Error {
     this.name = 'UploadError'
     this.status = status ?? this.DEFAULT_ERROR_STATUS_CODE
   }
+}
+
+// ── Client error factory (P4/C6) ────────────────────────────────
+//
+// Every upload strategy used to build its error from status+statusText only,
+// discarding the response body entirely — including S3's own error XML and
+// @upup/server's `{error, code}` JSON. uploadErrorFromResponse() is the one
+// place that reads the body and constructs a typed, code-carrying error.
+
+const MAX_ERROR_BODY_SNIPPET = 200
+
+/**
+ * Best-effort parse of an HTTP error response body into a {code, message}
+ * pair. Tries, in order: JSON `{code, error|message}`, S3-style XML
+ * `<Error><Code>/<Message></Error>`, then falls back to a truncated text
+ * snippet with no code.
+ */
+export function parseErrorBody(body: string | undefined): { code?: string; message: string } {
+  if (!body) return { code: undefined, message: '' }
+
+  try {
+    const parsed = JSON.parse(body) as { code?: string; error?: string; message?: string }
+    if (parsed && typeof parsed === 'object') {
+      const message = parsed.error ?? parsed.message
+      if (typeof message === 'string' || typeof parsed.code === 'string') {
+        return { code: parsed.code, message: message ?? '' }
+      }
+    }
+  } catch {
+    // not JSON — fall through to XML/text
+  }
+
+  const xmlCode = /<Code>([^<]*)<\/Code>/.exec(body)?.[1]
+  const xmlMessage = /<Message>([^<]*)<\/Message>/.exec(body)?.[1]
+  if (xmlCode || xmlMessage) {
+    return { code: xmlCode, message: xmlMessage ?? '' }
+  }
+
+  return { code: undefined, message: body.slice(0, MAX_ERROR_BODY_SNIPPET) }
+}
+
+export interface UploadErrorFromResponseArgs {
+  status: number
+  statusText: string
+  body?: string
+  kind: 'storage' | 'auth' | 'network'
+  /** Required when kind === 'storage'; ignored otherwise. */
+  operation?: UpupStorageError['operation']
+  /** Provider label for storage/auth errors (e.g. 'S3', 'google-drive'). Defaults to 'server'. */
+  provider?: string
+}
+
+/**
+ * Construct a typed, code-carrying error from a failed fetch/XHR response —
+ * the client-side half of the server's `{error, code}` convention (and S3's
+ * own `<Error><Code>` XML). Picks the error class by `kind`; the resulting
+ * `.code` is the server/S3-supplied machine code when present, else falls
+ * back to the HTTP status text.
+ */
+export function uploadErrorFromResponse(args: UploadErrorFromResponseArgs): UpupError {
+  const { status, statusText, body, kind, operation, provider } = args
+  const parsed = parseErrorBody(body)
+  const message = parsed.message || `${status} ${statusText}`.trim()
+
+  let err: UpupError
+  if (kind === 'auth') {
+    err = new UpupAuthError(message, provider ?? 'server')
+  } else if (kind === 'storage') {
+    err = new UpupStorageError(message, provider ?? 'server', operation ?? 'upload')
+  } else {
+    err = new UpupNetworkError(message, status)
+  }
+
+  if (parsed.code) err.code = parsed.code
+  err.status = status
+  return err
 }

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { DirectUpload } from '../../src/strategies/direct-upload'
-import { UpupNetworkError } from '@upup/core'
+import { UpupNetworkError, UpupStorageError, UpupError } from '@upup/core'
 
 // ─────────────────────────────────────────────
 // Fake XHR factory
@@ -163,7 +163,7 @@ describe('DirectUpload — HTTP error', () => {
         vi.unstubAllGlobals()
     })
 
-    it('rejects with UpupNetworkError on 4xx status', async () => {
+    it('rejects with a typed UpupStorageError on 4xx status (P4/C6: was UpupNetworkError, now carries provider/operation/code)', async () => {
         const fakeXhr = makeFakeXhr(403, 'Forbidden')
         vi.stubGlobal('XMLHttpRequest', function () { return fakeXhr })
 
@@ -174,10 +174,11 @@ describe('DirectUpload — HTTP error', () => {
             signal: controller.signal,
         })
         fakeXhr._triggerLoad()
-        await expect(promise).rejects.toBeInstanceOf(UpupNetworkError)
+        await expect(promise).rejects.toBeInstanceOf(UpupError)
+        await expect(promise).rejects.toBeInstanceOf(UpupStorageError)
     })
 
-    it('rejects with UpupNetworkError on 5xx status', async () => {
+    it('rejects with a typed UpupStorageError on 5xx status (P4/C6: was UpupNetworkError, now carries provider/operation/code)', async () => {
         const fakeXhr = makeFakeXhr(500, 'Internal Server Error')
         vi.stubGlobal('XMLHttpRequest', function () { return fakeXhr })
 
@@ -188,7 +189,8 @@ describe('DirectUpload — HTTP error', () => {
             signal: controller.signal,
         })
         fakeXhr._triggerLoad()
-        await expect(promise).rejects.toBeInstanceOf(UpupNetworkError)
+        await expect(promise).rejects.toBeInstanceOf(UpupError)
+        await expect(promise).rejects.toBeInstanceOf(UpupStorageError)
     })
 
     it('includes the status code in the thrown error', async () => {
@@ -204,6 +206,22 @@ describe('DirectUpload — HTTP error', () => {
         fakeXhr._triggerLoad()
         const err = await promise.catch(e => e)
         expect(err.status).toBe(422)
+    })
+
+    it('reads the response body and surfaces the server code (P4/C6)', async () => {
+        const fakeXhr = makeFakeXhr(403, 'Forbidden')
+        fakeXhr.responseText = JSON.stringify({ error: 'Signature mismatch', code: 'SignatureDoesNotMatch' })
+        vi.stubGlobal('XMLHttpRequest', function () { return fakeXhr })
+
+        const controller = makeAbortController()
+        const uploader = new DirectUpload()
+        const promise = uploader.upload(FILE, CREDENTIALS, {
+            onProgress: vi.fn(),
+            signal: controller.signal,
+        })
+        fakeXhr._triggerLoad()
+        const err = await promise.catch(e => e)
+        expect(err.code).toBe('SignatureDoesNotMatch')
     })
 })
 

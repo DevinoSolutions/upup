@@ -1,4 +1,4 @@
-import { UpupNetworkError, type CloudProvider } from '../contracts'
+import { uploadErrorFromResponse, type CloudProvider } from '../contracts'
 
 export interface ServerTransferOptions {
   serverUrl: string
@@ -61,10 +61,13 @@ export class ServerTransfer {
     })
 
     if (!response.ok) {
-      throw new UpupNetworkError(
-        `File transfer failed: ${response.status} ${response.statusText}`,
-        response.status,
-      )
+      const body = await response.text().catch(() => '')
+      throw uploadErrorFromResponse({
+        status: response.status,
+        statusText: response.statusText,
+        body,
+        kind: 'network',
+      })
     }
 
     return response.json()

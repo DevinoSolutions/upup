@@ -1,5 +1,6 @@
 import {
   UpupNetworkError,
+  uploadErrorFromResponse,
   type UploadStrategy,
   type UploadCredentials,
   type UploadResult,
@@ -32,10 +33,13 @@ export class DirectUpload implements UploadStrategy {
           })
         } else {
           reject(
-            new UpupNetworkError(
-              `Upload failed: ${xhr.status} ${xhr.statusText}`,
-              xhr.status,
-            ),
+            uploadErrorFromResponse({
+              status: xhr.status,
+              statusText: xhr.statusText,
+              body: xhr.responseText,
+              kind: 'storage',
+              operation: 'upload',
+            }),
           )
         }
       })

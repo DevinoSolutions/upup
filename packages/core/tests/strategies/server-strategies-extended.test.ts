@@ -67,11 +67,11 @@ describe('ServerOAuth — getFileMetadata', () => {
             ok: false,
             status: 404,
             statusText: 'Not Found',
+            text: () => Promise.resolve(''),
         })
         const oauth = new ServerOAuth({ serverUrl: 'https://api.example.com' })
-        await expect(
-            oauth.getFileMetadata('dropbox', 'bad', 'tok'),
-        ).rejects.toThrow('Get file metadata failed')
+        const err = await oauth.getFileMetadata('dropbox', 'bad', 'tok').catch(e => e)
+        expect(err.status).toBe(404)
     })
 })
 
@@ -94,11 +94,11 @@ describe('ServerOAuth — listFiles edge cases', () => {
             ok: false,
             status: 403,
             statusText: 'Forbidden',
+            text: () => Promise.resolve(''),
         })
         const oauth = new ServerOAuth({ serverUrl: 'https://api.example.com' })
-        await expect(
-            oauth.listFiles('dropbox', '/', 'tok'),
-        ).rejects.toThrow('List files failed')
+        const err = await oauth.listFiles('dropbox', '/', 'tok').catch(e => e)
+        expect(err.status).toBe(403)
     })
 })
 

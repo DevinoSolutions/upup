@@ -1,5 +1,5 @@
 import {
-  UpupNetworkError,
+  uploadErrorFromResponse,
   type CredentialStrategy,
   type FileMetadata,
   type PresignedUrlResponse,
@@ -7,10 +7,21 @@ import {
   type MultipartSignPartResponse,
   type MultipartCompleteResponse,
 } from '../contracts'
+import type { UpupStorageError } from '../errors'
 
 export interface ServerCredentialsOptions {
   serverUrl: string
   headers?: Record<string, string>
+}
+
+/** Map a server-mode route path to the UpupStorageError operation it represents. */
+function operationForPath(path: string): UpupStorageError['operation'] {
+  if (path.startsWith('/presign')) return 'presign'
+  if (path.startsWith('/multipart/init')) return 'multipart-init'
+  if (path.startsWith('/multipart/sign-part')) return 'multipart-sign-part'
+  if (path.startsWith('/multipart/complete')) return 'multipart-complete'
+  if (path.startsWith('/multipart/abort')) return 'multipart-abort'
+  return 'upload'
 }
 
 export class ServerCredentials implements CredentialStrategy {
@@ -33,10 +44,14 @@ export class ServerCredentials implements CredentialStrategy {
     })
 
     if (!response.ok) {
-      throw new UpupNetworkError(
-        `Presign request failed: ${response.status} ${response.statusText}`,
-        response.status,
-      )
+      const responseBody = await response.text().catch(() => '')
+      throw uploadErrorFromResponse({
+        status: response.status,
+        statusText: response.statusText,
+        body: responseBody,
+        kind: 'storage',
+        operation: operationForPath(path),
+      })
     }
 
     return response.json()

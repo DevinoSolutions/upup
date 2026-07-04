@@ -79,11 +79,24 @@ describe('ServerTransfer', () => {
       ok: false,
       status: 500,
       statusText: 'Internal Server Error',
+      text: () => Promise.resolve(''),
     })
 
     const transfer = new ServerTransfer({ serverUrl: 'https://api.example.com' })
-    await expect(
-      transfer.transfer('googleDrive', 'bad-file'),
-    ).rejects.toThrow('File transfer failed')
+    const err = await transfer.transfer('googleDrive', 'bad-file').catch(e => e)
+    expect(err.status).toBe(500)
+  })
+
+  it('surfaces the server machine code on failure (P4/C6)', async () => {
+    mockFetch.mockResolvedValue({
+      ok: false,
+      status: 500,
+      statusText: 'Internal Server Error',
+      text: () => Promise.resolve(JSON.stringify({ error: 'Drive request failed', code: 'STORAGE_ERROR' })),
+    })
+
+    const transfer = new ServerTransfer({ serverUrl: 'https://api.example.com' })
+    const err = await transfer.transfer('googleDrive', 'bad-file').catch(e => e)
+    expect(err.code).toBe('STORAGE_ERROR')
   })
 })

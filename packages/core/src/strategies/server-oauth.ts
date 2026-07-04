@@ -1,5 +1,5 @@
 import {
-  UpupNetworkError,
+  uploadErrorFromResponse,
   type OAuthStrategy,
   type CloudProvider,
   type OAuthTokens,
@@ -59,10 +59,14 @@ export class ServerOAuth implements OAuthStrategy {
     })
 
     if (!response.ok) {
-      throw new UpupNetworkError(
-        `OAuth callback failed: ${response.status} ${response.statusText}`,
-        response.status,
-      )
+      const body = await response.text().catch(() => '')
+      throw uploadErrorFromResponse({
+        status: response.status,
+        statusText: response.statusText,
+        body,
+        kind: 'auth',
+        provider,
+      })
     }
 
     return response.json()
@@ -80,10 +84,14 @@ export class ServerOAuth implements OAuthStrategy {
     })
 
     if (!response.ok) {
-      throw new UpupNetworkError(
-        `List files failed: ${response.status} ${response.statusText}`,
-        response.status,
-      )
+      const body = await response.text().catch(() => '')
+      throw uploadErrorFromResponse({
+        status: response.status,
+        statusText: response.statusText,
+        body,
+        kind: 'auth',
+        provider,
+      })
     }
 
     const data = await response.json()
@@ -102,10 +110,14 @@ export class ServerOAuth implements OAuthStrategy {
     })
 
     if (!response.ok) {
-      throw new UpupNetworkError(
-        `Get file metadata failed: ${response.status} ${response.statusText}`,
-        response.status,
-      )
+      const body = await response.text().catch(() => '')
+      throw uploadErrorFromResponse({
+        status: response.status,
+        statusText: response.statusText,
+        body,
+        kind: 'auth',
+        provider,
+      })
     }
 
     return response.json()

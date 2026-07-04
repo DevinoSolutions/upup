@@ -89,16 +89,30 @@ describe('ServerCredentials', () => {
       )
     })
 
-    it('throws UpupNetworkError on non-ok response', async () => {
+    it('throws a typed error on non-ok response', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: false,
         status: 401,
         statusText: 'Unauthorized',
+        text: () => Promise.resolve(''),
       })
 
-      await expect(
-        strategy.getPresignedUrl({ name: 'f', size: 1, type: 't' }),
-      ).rejects.toThrow('Presign request failed: 401 Unauthorized')
+      const err = await strategy.getPresignedUrl({ name: 'f', size: 1, type: 't' }).catch(e => e)
+      expect(err.status).toBe(401)
+      expect(err.message).toContain('401')
+    })
+
+    it('reads the response body and surfaces the server machine code (P4/C6)', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 403,
+        statusText: 'Forbidden',
+        text: () => Promise.resolve(JSON.stringify({ error: 'Invalid upload token', code: 'bad_signature' })),
+      })
+
+      const err = await strategy.getPresignedUrl({ name: 'f', size: 1, type: 't' }).catch(e => e)
+      expect(err.code).toBe('bad_signature')
+      expect(err.status).toBe(403)
     })
   })
 

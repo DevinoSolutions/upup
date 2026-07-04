@@ -46,12 +46,25 @@ describe('ServerOAuth', () => {
       ok: false,
       status: 401,
       statusText: 'Unauthorized',
+      text: () => Promise.resolve(''),
     })
 
     const oauth = new ServerOAuth({ serverUrl: 'https://api.example.com' })
-    await expect(
-      oauth.handleCallback('googleDrive', { code: 'bad' }),
-    ).rejects.toThrow('OAuth callback failed')
+    const err = await oauth.handleCallback('googleDrive', { code: 'bad' }).catch(e => e)
+    expect(err.status).toBe(401)
+  })
+
+  it('surfaces the server machine code on a failed callback (P4/C6)', async () => {
+    mockFetch.mockResolvedValue({
+      ok: false,
+      status: 401,
+      statusText: 'Unauthorized',
+      text: () => Promise.resolve(JSON.stringify({ error: 'Unauthorized', code: 'UNAUTHENTICATED' })),
+    })
+
+    const oauth = new ServerOAuth({ serverUrl: 'https://api.example.com' })
+    const err = await oauth.handleCallback('googleDrive', { code: 'bad' }).catch(e => e)
+    expect(err.code).toBe('UNAUTHENTICATED')
   })
 
   it('lists files from server', async () => {

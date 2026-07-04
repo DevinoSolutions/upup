@@ -123,6 +123,37 @@ describe('MultipartUpload', () => {
     expect(mockCredentials.abortMultipartUpload).toHaveBeenCalledWith({ token: 'tok-abc' })
   })
 
+  it('surfaces the S3 error code when a part PUT fails (P4/C6)', async () => {
+    const file = new File([new ArrayBuffer(1024)], 'small.zip', { type: 'application/zip' })
+
+    vi.mocked(mockCredentials.initMultipartUpload!).mockResolvedValue({
+      key: 'uploads/small.zip',
+      uploadId: 'upload-999',
+      partSize: 5 * 1024 * 1024,
+      expiresIn: 3600,
+      token: 'tok-xyz',
+    })
+    vi.mocked(mockCredentials.signPart!).mockResolvedValue({
+      uploadUrl: 'https://s3/part1?signed',
+      expiresIn: 3600,
+    })
+    vi.mocked(mockCredentials.abortMultipartUpload!).mockResolvedValue(undefined)
+    mockFetch.mockResolvedValue({
+      ok: false,
+      status: 403,
+      statusText: 'Forbidden',
+      text: () => Promise.resolve('<Error><Code>SignatureDoesNotMatch</Code><Message>bad sig</Message></Error>'),
+      headers: new Headers(),
+    })
+
+    const err = await strategy
+      .upload(file, {} as any, { onProgress: vi.fn(), signal: new AbortController().signal })
+      .catch((e) => e)
+
+    expect(err.code).toBe('SignatureDoesNotMatch')
+    expect(mockCredentials.abortMultipartUpload).toHaveBeenCalledWith({ token: 'tok-xyz' })
+  })
+
   it('throws if credentials lack multipart methods', () => {
     const bareCredentials: CredentialStrategy = {
       getPresignedUrl: vi.fn(),

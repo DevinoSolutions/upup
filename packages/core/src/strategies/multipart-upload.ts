@@ -1,5 +1,6 @@
 import {
   UpupNetworkError,
+  uploadErrorFromResponse,
   type UploadStrategy,
   type UploadCredentials,
   type UploadResult,
@@ -97,10 +98,14 @@ export class MultipartUpload implements UploadStrategy {
         })
 
         if (!response.ok) {
-          throw new UpupNetworkError(
-            `Part ${partNumber} upload failed: ${response.status}`,
-            response.status,
-          )
+          const body = await response.text().catch(() => '')
+          throw uploadErrorFromResponse({
+            status: response.status,
+            statusText: response.statusText,
+            body,
+            kind: 'storage',
+            operation: 'multipart-sign-part',
+          })
         }
 
         const eTag = response.headers.get('ETag') ?? `"part-${partNumber}"`
