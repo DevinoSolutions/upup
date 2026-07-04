@@ -1,5 +1,6 @@
 import type { CategoryDefinition } from '../types'
 import { Languages } from 'lucide-react'
+import { LOCALE_CODES } from '@upup/core'
 
 export const languageCategory: CategoryDefinition = {
     id: 'language',
@@ -14,7 +15,7 @@ export const languageCategory: CategoryDefinition = {
             primitive: 'enum',
             defaultValue: 'en-US',
             options: {
-                options: ['en-US', 'ar-SA', 'de-DE', 'es-ES', 'fr-FR', 'ja-JP', 'ko-KR', 'zh-CN', 'zh-TW'],
+                options: [...LOCALE_CODES],
             },
         },
         {
@@ -24,7 +25,7 @@ export const languageCategory: CategoryDefinition = {
             primitive: 'enum',
             defaultValue: 'en-US',
             options: {
-                options: ['en-US', 'ar-SA', 'de-DE', 'es-ES', 'fr-FR', 'ja-JP', 'ko-KR', 'zh-CN', 'zh-TW'],
+                options: [...LOCALE_CODES],
             },
         },
         {

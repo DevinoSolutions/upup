@@ -2,40 +2,10 @@
 
 import Uploader from "@/components/Uploader";
 import { useSearchParams } from "next/navigation";
-import {
-  enUS,
-  jaJP,
-  zhCN,
-  zhTW,
-  frFR,
-  arSA,
-  deDE,
-  esES,
-  koKR,
-  type LocaleBundle,
-} from "@upup/core";
-
-const LOCALE_MAP: Record<string, LocaleBundle> = {
-  "en-US": enUS,
-  "ja-JP": jaJP,
-  "zh-CN": zhCN,
-  "zh-TW": zhTW,
-  "fr-FR": frFR,
-  "ar-SA": arSA,
-  "de-DE": deDE,
-  "es-ES": esES,
-  "ko-KR": koKR,
-  enUS,
-  jaJP,
-  zhCN,
-  zhTW,
-  frFR,
-  arSA,
-  deDE,
-  esES,
-  koKR,
-};
+import { enUS, LOCALE_REGISTRY, type RegisteredLocaleCode } from "@upup/core";
 import { Suspense, useEffect } from "react";
+
+const LOCALE_MAP = LOCALE_REGISTRY;
 
 function MobileDemoContent() {
   const searchParams = useSearchParams();
@@ -84,7 +54,7 @@ function MobileDemoContent() {
   const autoRetryEnabled = searchParams.get("autoRetryEnabled") === "true";
   const autoRetryCount = parseInt(searchParams.get("autoRetryCount") || "3");
   const language = searchParams.get("language") || "en-US";
-  const locale = LOCALE_MAP[language] ?? enUS;
+  const locale = LOCALE_MAP[language as RegisteredLocaleCode] ?? enUS;
 
   // Apply dark mode immediately
   useEffect(() => {

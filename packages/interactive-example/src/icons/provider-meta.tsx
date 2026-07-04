@@ -1,5 +1,6 @@
 import React from "react"
 import { Cloud, Layers, Repeat2, Sun, Moon, Monitor, Landmark, Shield, HardDrive } from "lucide-react"
+import { LOCALE_CODES } from "@upup/core"
 import type { SourceMeta } from "./source-meta"
 
 // Brand SVG paths sourced from Simple Icons (CC0). Inlined rather than
@@ -94,19 +95,27 @@ const ADVANCED_MODE_META: Record<string, SourceMeta> = {
     server: { label: "Server (browser → @upup/server)" },
 }
 
+// Humanised locale labels, keyed by BCP-47 code. This is an override map,
+// not the option list itself — the option KEYS derive from @upup/core's
+// LOCALE_CODES below, so a newly-registered locale shows up automatically
+// (falling back to its raw code if no humanised label has been added yet).
+const LOCALE_LABELS: Record<string, string> = {
+    "en-US": "English (US)",
+    "ar-SA": "العربية (Arabic)",
+    "de-DE": "Deutsch (German)",
+    "es-ES": "Español (Spanish)",
+    "fr-FR": "Français (French)",
+    "ja-JP": "日本語 (Japanese)",
+    "ko-KR": "한국어 (Korean)",
+    "zh-CN": "简体中文 (Chinese, Simplified)",
+    "zh-TW": "繁體中文 (Chinese, Traditional)",
+}
+
 // Locale option labels. Renders in a <select> (>6 options auto-picks
 // select layout) with the humanised name shown in lieu of the BCP-47 code.
-const LOCALE_META: Record<string, SourceMeta> = {
-    "en-US": { label: "English (US)" },
-    "ar-SA": { label: "العربية (Arabic)" },
-    "de-DE": { label: "Deutsch (German)" },
-    "es-ES": { label: "Español (Spanish)" },
-    "fr-FR": { label: "Français (French)" },
-    "ja-JP": { label: "日本語 (Japanese)" },
-    "ko-KR": { label: "한국어 (Korean)" },
-    "zh-CN": { label: "简体中文 (Chinese, Simplified)" },
-    "zh-TW": { label: "繁體中文 (Chinese, Traditional)" },
-}
+const LOCALE_META: Record<string, SourceMeta> = Object.fromEntries(
+    LOCALE_CODES.map(code => [code, { label: LOCALE_LABELS[code] ?? code }]),
+)
 
 /**
  * Lookup table keyed by full propId path. CategorySection / NestedConfig
