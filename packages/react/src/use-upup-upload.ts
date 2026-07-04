@@ -1,7 +1,19 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { UpupCore, type CoreOptions } from '@upup/core'
+import {
+    useCallback,
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
+    useSyncExternalStore,
+} from 'react'
+import {
+    DragDropController,
+    UploaderOrchestrator,
+    UpupCore,
+    type CoreOptions,
+} from '@upup/core'
 import { UploadStatus, type UploadFile, type UpupError } from '@upup/core'
 import type { ExtensionMethods } from '@upup/core'
 import { createPropGetters } from './prop-getters'
@@ -43,14 +55,43 @@ export interface UseUpupUploadOptions extends CoreOptions {
         total: number
     }) => void
     onUploadComplete?: (files: UploadFile[]) => void
+
+    // ── F-606: drag/drop/paste gating, mirroring <UpupUploader>'s own props ──
+    // (packages/core/src/types/uploader-props.ts's UploaderBaseProps) so the
+    // headless path can honor the SAME rules the visual panel does. These are
+    // UI-package concerns, deliberately NOT added to core's engine-level
+    // CoreOptions (packages/core/src/options/types.ts) — @upup/core stays
+    // framework-agnostic with zero opinions on drag/drop UI gating.
+    /** Enable clipboard paste uploads (Ctrl+V / Cmd+V). Default false. */
+    enablePaste?: boolean
+    /** Disable drag-and-drop (keep browse/click functional). Default false. */
+    disableDragDrop?: boolean
+    /** When true, drag/drop/paste are no-ops (e.g. while another action is mid-flight). */
+    isProcessing?: boolean
+    /** Folder upload configuration (drag-and-drop folder traversal). */
+    folderUpload?: { allowDrop?: boolean }
+    onWarn?: (warningMessage: string) => void
 }
+
+const EMPTY_DRAG_SNAPSHOT = {
+    isDragging: false,
+    absoluteIsDragging: false,
+    absoluteHasBorder: true,
+}
+const NOOP_SUBSCRIBE = () => () => {}
+const getEmptyDragSnapshot = () => EMPTY_DRAG_SNAPSHOT
 
 export function useUpupUpload(
     options: UseUpupUploadOptions,
 ): UseUpupUploadReturn {
     const coreRef = useRef<UpupCore | null>(null)
+    const dragDropRef = useRef<DragDropController | null>(null)
     const [, forceUpdate] = useState(0)
-    const [isDragging, setIsDragging] = useState(false)
+
+    // Keep the latest options for the controller's getters to read fresh
+    // (React re-reads each render — same freshness contract as useUploaderPanel.ts).
+    const optionsRef = useRef(options)
+    optionsRef.current = options
 
     // Callback refs — always hold latest callbacks, avoiding stale closures
     const onFileAddedRef = useRef(options.onFileAdded)
@@ -69,12 +110,44 @@ export function useUpupUpload(
     useEffect(() => {
         const core = new UpupCore(options)
         coreRef.current = core
+
+        // Minimal headless orchestrator (F-606): DragDropController's only hard
+        // dependency, built the same way createUploaderController builds the
+        // panel's — the ctor is plain-state-only (no plugin/theme registration,
+        // that lives in createUploaderController/.init(), neither called here),
+        // so this stays a lean headless wrapper, not a second panel.
+        const orchestrator = new UploaderOrchestrator(core, {})
+        const dragDrop = new DragDropController({
+            core,
+            orchestrator,
+            // Append (core.addFiles), NOT replace (core.setFiles) — preserves
+            // the headless hook's existing drop/paste semantics; only the
+            // GATING (enablePaste/isProcessing/folder-drop/filename/events)
+            // was the bug, not the append-vs-replace choice.
+            setFiles: files => core.addFiles(files),
+            filesSize: () => orchestrator.getSnapshot().files.size,
+            options: () => ({
+                enablePaste: optionsRef.current.enablePaste,
+                onWarn: optionsRef.current.onWarn,
+            }),
+            props: () => ({
+                disableDragDrop: optionsRef.current.disableDragDrop ?? false,
+                isProcessing: optionsRef.current.isProcessing ?? false,
+                folderUploadAllowDrop:
+                    optionsRef.current.folderUpload?.allowDrop ?? false,
+            }),
+        })
+        dragDrop.init()
+        dragDropRef.current = dragDrop
+
+        coreRef.current = core
         forceUpdate(n => n + 1)
 
         // Subscribe to state changes to trigger re-renders
         const unsub = core.on('state-change', () => {
             forceUpdate(n => n + 1)
         })
+        const unsubDragDrop = dragDrop.subscribe(() => forceUpdate(n => n + 1))
 
         // Wire convenience callbacks through refs for freshness
         const unsubCallbacks: Array<() => void> = [
@@ -98,7 +171,10 @@ export function useUpupUpload(
 
         return () => {
             unsub()
+            unsubDragDrop()
             for (const u of unsubCallbacks) u()
+            dragDrop.destroy()
+            dragDropRef.current = null
             core.destroy()
             coreRef.current = null
         }
@@ -108,8 +184,13 @@ export function useUpupUpload(
         coreRef.current?.updateOptions(options)
     }, [options])
 
+    const dragSnapshot = useSyncExternalStore(
+        dragDropRef.current?.subscribe ?? NOOP_SUBSCRIBE,
+        dragDropRef.current?.getSnapshot ?? getEmptyDragSnapshot,
+        getEmptyDragSnapshot,
+    )
+
     const fallbackCore = coreRef.current
-    const disableDragAction = fallbackCore?.status === UploadStatus.UPLOADING
 
     const propGetters = createPropGetters({
         addFiles: files =>
@@ -117,9 +198,8 @@ export function useUpupUpload(
         status: fallbackCore?.status ?? UploadStatus.IDLE,
         allowedFileTypes: options.allowedFileTypes as string | undefined,
         multiple: options.limit !== 1,
-        isDragging,
-        setIsDragging,
-        disableDragAction,
+        isDragging: dragSnapshot.isDragging,
+        dragDrop: dragDropRef.current ?? undefined,
     })
 
     const fallback = useMemo<UseUpupUploadReturn>(

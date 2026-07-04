@@ -1,11 +1,10 @@
 import type React from 'react'
 import type {
-    DragEventHandler,
-    ClipboardEventHandler,
     ChangeEventHandler,
     HTMLAttributes,
     InputHTMLAttributes,
 } from 'react'
+import type { DragDropController } from '@upup/core'
 
 export interface PropGetterDeps {
     addFiles: (files: File[]) => Promise<void> | void
@@ -13,8 +12,16 @@ export interface PropGetterDeps {
     allowedFileTypes: string | undefined
     multiple: boolean
     isDragging: boolean
-    setIsDragging: (v: boolean) => void
-    disableDragAction: boolean
+    /**
+     * Drag/drop/paste gate (F-606). The SAME DragDropController every visual
+     * panel's useUploaderPanel already runs — routing the headless path through
+     * it (rather than a second, drifted inline implementation) is the one home
+     * for enablePaste/isProcessing/folder-drop/filename-normalization/'paste'+
+     * 'drop' core-event semantics. Optional only for back-compat with any
+     * direct createPropGetters caller predating the controller wiring; the
+     * shipped useUpupUpload hook always supplies one.
+     */
+    dragDrop?: DragDropController
 }
 
 function composeEventHandlers<E>(
@@ -34,43 +41,21 @@ export function createPropGetters(deps: PropGetterDeps) {
         allowedFileTypes,
         multiple,
         isDragging,
-        setIsDragging,
-        disableDragAction,
+        dragDrop,
     } = deps
 
     function getDropzoneProps(overrides: HTMLAttributes<HTMLElement> = {}) {
-        const onDragOver: DragEventHandler = e => {
-            if (disableDragAction) return
-            e.preventDefault()
-            setIsDragging(true)
-            e.dataTransfer.dropEffect = 'copy'
-        }
-
-        const onDragLeave: DragEventHandler = e => {
-            if (disableDragAction) return
-            e.preventDefault()
-            setIsDragging(false)
-        }
-
-        const onDrop: DragEventHandler = async e => {
-            if (disableDragAction) return
-            e.preventDefault()
-            const files = Array.from(e.dataTransfer.files)
-            await addFiles(files)
-            setIsDragging(false)
-        }
-
-        const onPaste: ClipboardEventHandler = e => {
-            if (disableDragAction) return
-            const items = Array.from(e.clipboardData?.items || [])
-            const pastedFiles = items
-                .filter(item => item.kind === 'file')
-                .map(item => item.getAsFile())
-                .filter((f): f is File => f !== null)
-            if (!pastedFiles.length) return
-            e.preventDefault()
-            addFiles(pastedFiles)
-        }
+        // React synthetic events extend the native DOM events, so casting is
+        // safe — byte-identical to useUploaderPanel.ts's handoff to the same
+        // controller class.
+        const onDragOver = (e: React.DragEvent<HTMLElement>) =>
+            dragDrop?.handleDragOver(e as unknown as DragEvent)
+        const onDragLeave = (e: React.DragEvent<HTMLElement>) =>
+            dragDrop?.handleDragLeave(e as unknown as DragEvent)
+        const onDrop = (e: React.DragEvent<HTMLElement>) =>
+            dragDrop?.handleDrop(e as unknown as DragEvent)
+        const onPaste = (e: React.ClipboardEvent<HTMLElement>) =>
+            dragDrop?.handlePaste(e as unknown as ClipboardEvent)
 
         return {
             onDragOver: composeEventHandlers<React.DragEvent<HTMLElement>>(

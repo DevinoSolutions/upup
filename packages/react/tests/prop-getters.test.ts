@@ -1,6 +1,22 @@
 import { describe, it, expect, vi } from 'vitest'
 import { createPropGetters } from '../src/prop-getters'
 
+// F-606: getDropzoneProps' onDragOver/onDragLeave/onDrop/onPaste now delegate to a
+// DragDropController (the same gate every visual panel's useUploaderPanel routes
+// through), rather than a second, drifted inline implementation. A fake exposing
+// just the four handle* methods is enough to unit-test the DELEGATION + composition
+// (ARIA/overrides) at this layer; drag-drop-controller.test.ts pins the gating rules
+// themselves, and prop-getters-gating.test.ts pins them through the real hook.
+function makeFakeDragDrop(overrides: Partial<Record<'handleDragOver' | 'handleDragLeave' | 'handleDrop' | 'handlePaste', ReturnType<typeof vi.fn>>> = {}) {
+  return {
+    handleDragOver: vi.fn(),
+    handleDragLeave: vi.fn(),
+    handleDrop: vi.fn(),
+    handlePaste: vi.fn(),
+    ...overrides,
+  } as any
+}
+
 function makeDeps(overrides: Partial<Parameters<typeof createPropGetters>[0]> = {}) {
   return {
     addFiles: vi.fn(),
@@ -8,8 +24,7 @@ function makeDeps(overrides: Partial<Parameters<typeof createPropGetters>[0]> = 
     allowedFileTypes: undefined as string | undefined,
     multiple: true,
     isDragging: false,
-    setIsDragging: vi.fn(),
-    disableDragAction: false,
+    dragDrop: makeFakeDragDrop(),
     ...overrides,
   }
 }
@@ -46,17 +61,21 @@ describe('getDropzoneProps', () => {
     expect(customDragOver).toHaveBeenCalled()
   })
 
-  it('does not process drag when disabled', () => {
-    const deps = makeDeps({ disableDragAction: true })
-    const { getDropzoneProps } = createPropGetters(deps)
-    const props = getDropzoneProps()
-
+  it('delegates onDragOver to the DragDropController (gating lives there — F-606)', () => {
+    const dragDrop = makeFakeDragDrop()
+    const { getDropzoneProps } = createPropGetters(makeDeps({ dragDrop }))
     const mockEvent = { preventDefault: vi.fn(), dataTransfer: { dropEffect: '' } } as any
-    props.onDragOver(mockEvent)
 
-    // preventDefault should NOT be called because action is disabled
-    expect(mockEvent.preventDefault).not.toHaveBeenCalled()
-    expect(deps.setIsDragging).not.toHaveBeenCalled()
+    getDropzoneProps().onDragOver(mockEvent)
+
+    expect(dragDrop.handleDragOver).toHaveBeenCalledWith(mockEvent)
+  })
+
+  it('is a no-op when no dragDrop controller is supplied (back-compat)', () => {
+    const { getDropzoneProps } = createPropGetters(makeDeps({ dragDrop: undefined }))
+    const mockEvent = { preventDefault: vi.fn(), dataTransfer: { dropEffect: '' } } as any
+
+    expect(() => getDropzoneProps().onDragOver(mockEvent)).not.toThrow()
   })
 })
 

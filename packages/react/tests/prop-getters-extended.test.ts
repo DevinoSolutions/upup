@@ -1,6 +1,25 @@
 import { describe, it, expect, vi } from 'vitest'
 import { createPropGetters } from '../src/prop-getters'
 
+// F-606: getDropzoneProps' onDragOver/onDragLeave/onDrop/onPaste now DELEGATE to a
+// DragDropController — the same gate every visual panel already runs — instead of
+// re-implementing drag/drop/paste inline (the old inline copy ignored enablePaste,
+// never honored the isProcessing PROP gate, skipped filename normalization, and
+// bypassed folder handling; see prop-getters-gating.test.ts for those gating pins
+// through the real hook, and drag-drop-controller.test.ts for the controller's own
+// rules). This file now pins the DELEGATION + event-composition contract at the
+// prop-getters layer: each getDropzoneProps handler must call the matching
+// dragDrop.handle* method with the (cast) native event, and still compose overrides.
+function makeFakeDragDrop(overrides: Partial<Record<'handleDragOver' | 'handleDragLeave' | 'handleDrop' | 'handlePaste', ReturnType<typeof vi.fn>>> = {}) {
+    return {
+        handleDragOver: vi.fn(),
+        handleDragLeave: vi.fn(),
+        handleDrop: vi.fn(),
+        handlePaste: vi.fn(),
+        ...overrides,
+    } as any
+}
+
 function makeDeps(overrides: Partial<Parameters<typeof createPropGetters>[0]> = {}) {
     return {
         addFiles: vi.fn(),
@@ -8,8 +27,7 @@ function makeDeps(overrides: Partial<Parameters<typeof createPropGetters>[0]> = 
         allowedFileTypes: undefined as string | undefined,
         multiple: true,
         isDragging: false,
-        setIsDragging: vi.fn(),
-        disableDragAction: false,
+        dragDrop: makeFakeDragDrop(),
         ...overrides,
     }
 }
@@ -35,26 +53,22 @@ function makeClipboardEvent(items: { kind: string; getAsFile?: () => File | null
 // onDragOver
 // ─────────────────────────────────────────────
 describe('getDropzoneProps — onDragOver', () => {
-    it('calls setIsDragging(true) when enabled', () => {
-        const deps = makeDeps()
-        const { getDropzoneProps } = createPropGetters(deps)
-        getDropzoneProps().onDragOver(makeDragEvent())
-        expect(deps.setIsDragging).toHaveBeenCalledWith(true)
-    })
-
-    it('calls preventDefault when enabled', () => {
-        const deps = makeDeps()
-        const { getDropzoneProps } = createPropGetters(deps)
+    it('delegates to dragDrop.handleDragOver with the event', () => {
+        const dragDrop = makeFakeDragDrop()
+        const { getDropzoneProps } = createPropGetters(makeDeps({ dragDrop }))
         const e = makeDragEvent()
         getDropzoneProps().onDragOver(e)
-        expect(e.preventDefault).toHaveBeenCalled()
+        expect(dragDrop.handleDragOver).toHaveBeenCalledWith(e)
     })
 
-    it('does not call setIsDragging when disabled', () => {
-        const deps = makeDeps({ disableDragAction: true })
-        const { getDropzoneProps } = createPropGetters(deps)
-        getDropzoneProps().onDragOver(makeDragEvent())
-        expect(deps.setIsDragging).not.toHaveBeenCalled()
+    it('composes a caller override alongside the delegation', () => {
+        const dragDrop = makeFakeDragDrop()
+        const override = vi.fn()
+        const { getDropzoneProps } = createPropGetters(makeDeps({ dragDrop }))
+        const e = makeDragEvent()
+        getDropzoneProps({ onDragOver: override }).onDragOver(e)
+        expect(dragDrop.handleDragOver).toHaveBeenCalledWith(e)
+        expect(override).toHaveBeenCalledWith(e)
     })
 })
 
@@ -62,26 +76,12 @@ describe('getDropzoneProps — onDragOver', () => {
 // onDragLeave
 // ─────────────────────────────────────────────
 describe('getDropzoneProps — onDragLeave', () => {
-    it('calls setIsDragging(false) when enabled', () => {
-        const deps = makeDeps()
-        const { getDropzoneProps } = createPropGetters(deps)
-        getDropzoneProps().onDragLeave(makeDragEvent())
-        expect(deps.setIsDragging).toHaveBeenCalledWith(false)
-    })
-
-    it('calls preventDefault when enabled', () => {
-        const deps = makeDeps()
-        const { getDropzoneProps } = createPropGetters(deps)
+    it('delegates to dragDrop.handleDragLeave with the event', () => {
+        const dragDrop = makeFakeDragDrop()
+        const { getDropzoneProps } = createPropGetters(makeDeps({ dragDrop }))
         const e = makeDragEvent()
         getDropzoneProps().onDragLeave(e)
-        expect(e.preventDefault).toHaveBeenCalled()
-    })
-
-    it('does not call setIsDragging when disabled', () => {
-        const deps = makeDeps({ disableDragAction: true })
-        const { getDropzoneProps } = createPropGetters(deps)
-        getDropzoneProps().onDragLeave(makeDragEvent())
-        expect(deps.setIsDragging).not.toHaveBeenCalled()
+        expect(dragDrop.handleDragLeave).toHaveBeenCalledWith(e)
     })
 })
 
@@ -89,36 +89,13 @@ describe('getDropzoneProps — onDragLeave', () => {
 // onDrop
 // ─────────────────────────────────────────────
 describe('getDropzoneProps — onDrop', () => {
-    it('calls addFiles with dropped files', async () => {
-        const deps = makeDeps()
-        const { getDropzoneProps } = createPropGetters(deps)
+    it('delegates to dragDrop.handleDrop with the event', () => {
+        const dragDrop = makeFakeDragDrop()
+        const { getDropzoneProps } = createPropGetters(makeDeps({ dragDrop }))
         const file = new File(['x'], 'test.txt', { type: 'text/plain' })
         const e = makeDragEvent([file])
-        await getDropzoneProps().onDrop(e)
-        expect(deps.addFiles).toHaveBeenCalledWith([file])
-    })
-
-    it('calls preventDefault on drop', async () => {
-        const deps = makeDeps()
-        const { getDropzoneProps } = createPropGetters(deps)
-        const e = makeDragEvent()
-        await getDropzoneProps().onDrop(e)
-        expect(e.preventDefault).toHaveBeenCalled()
-    })
-
-    it('calls setIsDragging(false) after drop', async () => {
-        const deps = makeDeps()
-        const { getDropzoneProps } = createPropGetters(deps)
-        await getDropzoneProps().onDrop(makeDragEvent())
-        expect(deps.setIsDragging).toHaveBeenCalledWith(false)
-    })
-
-    it('does not call addFiles when disabled', async () => {
-        const deps = makeDeps({ disableDragAction: true })
-        const { getDropzoneProps } = createPropGetters(deps)
-        const file = new File(['x'], 'test.txt')
-        await getDropzoneProps().onDrop(makeDragEvent([file]))
-        expect(deps.addFiles).not.toHaveBeenCalled()
+        getDropzoneProps().onDrop(e)
+        expect(dragDrop.handleDrop).toHaveBeenCalledWith(e)
     })
 })
 
@@ -126,46 +103,12 @@ describe('getDropzoneProps — onDrop', () => {
 // onPaste
 // ─────────────────────────────────────────────
 describe('getDropzoneProps — onPaste', () => {
-    it('calls addFiles with pasted file items', () => {
-        const deps = makeDeps()
-        const { getDropzoneProps } = createPropGetters(deps)
+    it('delegates to dragDrop.handlePaste with the event', () => {
+        const dragDrop = makeFakeDragDrop()
+        const { getDropzoneProps } = createPropGetters(makeDeps({ dragDrop }))
         const file = new File(['x'], 'paste.png', { type: 'image/png' })
         const e = makeClipboardEvent([{ kind: 'file', getAsFile: () => file }])
         getDropzoneProps().onPaste(e)
-        expect(deps.addFiles).toHaveBeenCalledWith([file])
-    })
-
-    it('calls preventDefault when files are pasted', () => {
-        const deps = makeDeps()
-        const { getDropzoneProps } = createPropGetters(deps)
-        const file = new File(['x'], 'paste.png')
-        const e = makeClipboardEvent([{ kind: 'file', getAsFile: () => file }])
-        getDropzoneProps().onPaste(e)
-        expect(e.preventDefault).toHaveBeenCalled()
-    })
-
-    it('ignores non-file clipboard items', () => {
-        const deps = makeDeps()
-        const { getDropzoneProps } = createPropGetters(deps)
-        const e = makeClipboardEvent([{ kind: 'string' }])
-        getDropzoneProps().onPaste(e)
-        expect(deps.addFiles).not.toHaveBeenCalled()
-    })
-
-    it('does not call addFiles when disabled', () => {
-        const deps = makeDeps({ disableDragAction: true })
-        const { getDropzoneProps } = createPropGetters(deps)
-        const file = new File(['x'], 'paste.png')
-        const e = makeClipboardEvent([{ kind: 'file', getAsFile: () => file }])
-        getDropzoneProps().onPaste(e)
-        expect(deps.addFiles).not.toHaveBeenCalled()
-    })
-
-    it('filters out null getAsFile results', () => {
-        const deps = makeDeps()
-        const { getDropzoneProps } = createPropGetters(deps)
-        const e = makeClipboardEvent([{ kind: 'file', getAsFile: () => null }])
-        getDropzoneProps().onPaste(e)
-        expect(deps.addFiles).not.toHaveBeenCalled()
+        expect(dragDrop.handlePaste).toHaveBeenCalledWith(e)
     })
 })

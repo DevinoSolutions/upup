@@ -1,6 +1,9 @@
 import { describe, it, expect, vi } from 'vitest'
 import { createPropGetters } from '../src/prop-getters'
 
+// getRootProps/getInputProps carry no drag/drop/paste logic (F-606 only touched
+// getDropzoneProps' delegation to DragDropController) — dragDrop stays undefined
+// here since these tests never call getDropzoneProps.
 function makeDeps(overrides: Partial<Parameters<typeof createPropGetters>[0]> = {}) {
     return {
         addFiles: vi.fn(),
@@ -8,8 +11,6 @@ function makeDeps(overrides: Partial<Parameters<typeof createPropGetters>[0]> = 
         allowedFileTypes: undefined as string | undefined,
         multiple: true,
         isDragging: false,
-        setIsDragging: vi.fn(),
-        disableDragAction: false,
         ...overrides,
     }
 }
