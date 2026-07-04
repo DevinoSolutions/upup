@@ -13,7 +13,7 @@ export type {
 export type { UploadFileMetadata, UploadFile, UploadFileWithProgress } from './types/upload-file'
 export type { FileUploadResult } from './types/upload-result'
 export { FileSource } from './types/file-source'
-export { StorageProvider } from './types/storage-provider'
+export { StorageProvider, NON_S3_STORAGE_PROVIDERS } from './types/storage-provider'
 export { UploadStatus } from './types/upload-status'
 export type {
   PresignedUrlResponse,

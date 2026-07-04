@@ -12,6 +12,14 @@ export interface KeyStrategyContext {
 
 export type UpupServerConfig = {
   storage: {
+    /**
+     * An S3 / S3-compatible provider label. @upup/server only speaks the S3
+     * API (buildS3ClientConfig always builds an @aws-sdk/client-s3 client) —
+     * set `endpoint` for any non-AWS backend (MinIO/R2/DO Spaces/etc). A
+     * provider with no S3-compatible surface (currently `StorageProvider.Azure`
+     * — see @upup/core's NON_S3_STORAGE_PROVIDERS) is rejected by
+     * createUpupHandler at construct time.
+     */
     type: StorageProvider | string
     bucket: string
     region: string

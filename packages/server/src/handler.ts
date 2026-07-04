@@ -1,4 +1,4 @@
-import { UpupErrorCode } from '@upup/core'
+import { UpupErrorCode, NON_S3_STORAGE_PROVIDERS } from '@upup/core'
 import type { UpupServerConfig, FileMetadata, DriveTokens, UploadedFile } from './config'
 import {
   generatePresignedUrl,
@@ -261,6 +261,24 @@ export function createUpupHandler(config: UpupServerConfig): RouteHandler {
   // are always live and issue/verify tokens), and drive/tokenStore use requires
   // a real identity resolver unless anonymous is explicitly opted into.
   assertUploadTokenSecret(config.uploadTokenSecret)
+
+  // Fail-fast (F-657): storage.type accepted all 21 StorageProvider values, but
+  // the S3 upload path (buildS3ClientConfig) is honored by none of them — it
+  // always builds an @aws-sdk/client-s3 client via endpoint/forcePathStyle/
+  // credentials/region. A provider with no S3-compatible surface (currently
+  // just Azure) could never function, with zero compile- or startup-time
+  // signal until now.
+  const storageType = config.storage?.type
+  if (
+    typeof storageType === 'string' &&
+    (NON_S3_STORAGE_PROVIDERS as ReadonlySet<string>).has(storageType)
+  ) {
+    throw new Error(
+      `[@upup/server] storage.type "${storageType}" has no S3-compatible API and cannot be served. ` +
+        'upup uploads via the S3 API — use an S3-compatible provider ' +
+        '(aws, minio, r2, wasabi, …) and set storage.endpoint for non-AWS backends.',
+    )
+  }
   if (
     (config.providers || config.tokenStore) &&
     !config.getUserId &&

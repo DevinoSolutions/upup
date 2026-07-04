@@ -21,3 +21,15 @@ export enum StorageProvider {
   IDrive = 'idrive',
   Ceph = 'ceph',
 }
+
+/**
+ * Providers with no S3-compatible API surface (F-657). @upup/server's storage
+ * path (buildS3ClientConfig) always builds an @aws-sdk/client-s3 client — it
+ * cannot serve a provider in this set no matter what storage.type is set to.
+ * Kept next to the enum so any future non-S3 addition is an explicit,
+ * greppable decision; createUpupHandler's construct-time guard is the sole
+ * consumer.
+ */
+export const NON_S3_STORAGE_PROVIDERS: ReadonlySet<StorageProvider> = new Set([
+  StorageProvider.Azure,
+])

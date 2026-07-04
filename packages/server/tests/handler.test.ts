@@ -104,3 +104,47 @@ describe('File routes — error surfaces', () => {
     expect(res.status).toBe(400)
   })
 })
+
+// F-657 — storage.type accepted all 21 StorageProvider enum values but the S3
+// path (buildS3ClientConfig) is honored by NONE of them; it always builds an
+// @aws-sdk/client-s3 client via endpoint/forcePathStyle/credentials/region.
+// Azure has no S3-compatible surface and could never function, with zero
+// compile- or startup-time signal. createUpupHandler now fails fast for the
+// one enum value known to have no S3 surface, reusing its existing
+// uploadTokenSecret throw path (one construct-time validation mechanism, not
+// two).
+describe('createUpupHandler — rejects storage.type with no S3-compatible surface (F-657)', () => {
+  it('throws for storage.type: "azure" (no S3-compatible API)', () => {
+    expect(() =>
+      createUpupHandler({
+        ...config,
+        storage: { ...config.storage, type: 'azure' },
+      }),
+    ).toThrow(/storage\.type/i)
+  })
+
+  it('does NOT throw for the "type" reason when storage.type is "minio"', () => {
+    expect(() =>
+      createUpupHandler({ ...config, storage: { ...config.storage, type: 'minio' } }),
+    ).not.toThrow()
+  })
+
+  it('does NOT throw for the "type" reason when storage.type is "aws"', () => {
+    expect(() =>
+      createUpupHandler({ ...config, storage: { ...config.storage, type: 'aws' } }),
+    ).not.toThrow()
+  })
+
+  it('does NOT throw for the "type" reason when storage.type is omitted', () => {
+    const { type: _omit, ...storageWithoutType } = config.storage as Record<string, unknown>
+    expect(() =>
+      createUpupHandler({ ...config, storage: storageWithoutType as typeof config.storage }),
+    ).not.toThrow()
+  })
+
+  it('does NOT throw for the "type" reason when storage.type is a custom S3-compatible provider string', () => {
+    expect(() =>
+      createUpupHandler({ ...config, storage: { ...config.storage, type: 'my-custom-provider' } }),
+    ).not.toThrow()
+  })
+})
