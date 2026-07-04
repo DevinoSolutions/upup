@@ -79,7 +79,7 @@ describe('createUploaderController', () => {
   it('startUpload calls onPrepareFiles and core.upload when files present', async () => {
     const onPrepareFiles = vi.fn(async (f) => f)
     const { root, core } = build({ onPrepareFiles })
-    core.files.set('a', { id: 'a', file: new File(['x'], 'a.txt') } as never)
+    await core.addFiles([new File(['x'], 'a.txt')])
     const upSpy = vi.spyOn(core, 'upload').mockResolvedValue([])
     root.init()
     await root.commands.startUpload()

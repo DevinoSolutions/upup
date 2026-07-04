@@ -81,7 +81,7 @@ export class UpupCore {
 
   }
 
-  get files(): Map<string, UploadFile> {
+  get files(): ReadonlyMap<string, UploadFile> {
     return this.fileManager.getFiles()
   }
 

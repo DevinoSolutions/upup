@@ -101,8 +101,7 @@ describe('UpupCore — progress getter', () => {
         ])
         // Simulate one file completed by setting its key
         const [id] = [...core.files.keys()]
-        const file = core.files.get(id)!
-        core.files.set(id, Object.assign(file, { key: 'uploaded/a.txt' }))
+        ;(core as any).fileManager.updateFile(id, { key: 'uploaded/a.txt' })
 
         expect(core.progress.totalFiles).toBe(2)
         expect(core.progress.completedFiles).toBe(1)
@@ -113,8 +112,7 @@ describe('UpupCore — progress getter', () => {
         const core = makeCore()
         await core.addFiles([new File(['x'], 'x.txt', { type: 'text/plain' })])
         const [id] = [...core.files.keys()]
-        const file = core.files.get(id)!
-        core.files.set(id, Object.assign(file, { key: 'uploaded/x.txt' }))
+        ;(core as any).fileManager.updateFile(id, { key: 'uploaded/x.txt' })
 
         expect(core.progress.percentage).toBe(100)
     })

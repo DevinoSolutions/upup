@@ -2,6 +2,7 @@ import { describe, it, expect, vi, afterEach } from 'vitest'
 import { UpupCore } from '../src/core'
 import { UploaderOrchestrator } from '../src/orchestrator/uploader-orchestrator'
 import { UploadStatus } from '../src/types/upload-status'
+import type { UploadFile } from '../src/types/upload-file'
 
 /**
  * P6 — the core state/event contract (§0). Cross-cutting pins that encode the
@@ -174,6 +175,66 @@ describe('P6 contract — pipeline-flag invalidation (F-151)', () => {
     const filesAfter = orch.getSnapshot().files
     expect(filesAfter).not.toBe(filesBefore) // the projection rebuilt on the status change
     orch.destroy()
+    core.destroy()
+  })
+})
+
+// ─────────────────────────────────────────────────────────────
+// P20 / F-143 — the files getter is a read-only view (defensive copy)
+// ─────────────────────────────────────────────────────────────
+describe('P20 contract — core.files is a defensive copy (F-143)', () => {
+  it('a caller mutating the returned map does not corrupt core state', async () => {
+    const core = new UpupCore({})
+    await core.addFiles([realFile('a.txt')])
+
+    const view = core.files as Map<string, UploadFile>
+    view.set('x', {} as UploadFile)
+
+    expect(core.files.has('x')).toBe(false)
+    core.destroy()
+  })
+
+  it('real adds still reflect through the getter', async () => {
+    const core = new UpupCore({})
+    await core.addFiles([realFile('a.txt')])
+
+    expect(core.files.size).toBe(1)
+    core.destroy()
+  })
+
+  it('core.files is a fresh copy on every read (not memoized)', async () => {
+    const core = new UpupCore({})
+    await core.addFiles([realFile('a.txt')])
+
+    expect(core.files).not.toBe(core.files)
+    core.destroy()
+  })
+
+  it('a real upload() run leaves core.files holding the pipeline-processed objects (applyProcessed wired)', async () => {
+    const core = new UpupCore({ provider: 'aws', uploadEndpoint: '/api/presign', imageCompression: true })
+    await core.addFiles([realFile('a.txt')])
+
+    await core.upload().catch(() => {})
+
+    expect(core.files.size).toBe(1)
+    core.destroy()
+  })
+
+  it('a restore(snapshot) round-trip yields exactly the snapshot entries and emits snapshot-restored (FileManager.restore wired)', async () => {
+    const core = new UpupCore({})
+    await core.addFiles([realFile('a.txt'), realFile('b.txt')])
+    const snapshot = core.getSnapshot()
+
+    const restoredSpy = vi.fn()
+    core.on('snapshot-restored', restoredSpy)
+
+    core.restore(snapshot)
+
+    expect(core.files.size).toBe(snapshot.files.length)
+    for (const [id] of snapshot.files) {
+      expect(core.files.has(id)).toBe(true)
+    }
+    expect(restoredSpy).toHaveBeenCalledWith({ count: snapshot.files.length, status: snapshot.status })
     core.destroy()
   })
 })

@@ -202,4 +202,24 @@ describe('FileManager', () => {
       revokeObjectURL.mockRestore()
     })
   })
+
+  describe('getFiles read-only view (P20 / F-143)', () => {
+    it('returns a distinct object on every call', async () => {
+      const fm = new FileManager({})
+      await fm.addFiles([makeNativeFile('a.jpg')])
+
+      expect(fm.getFiles()).not.toBe(fm.getFiles())
+    })
+
+    it('mutating the returned map does not affect FileManager state', async () => {
+      const fm = new FileManager({})
+      await fm.addFiles([makeNativeFile('a.jpg')])
+
+      const snap = fm.getFiles() as Map<string, UploadFile>
+      snap.set('bogus', {} as UploadFile)
+
+      expect(fm.getFiles().has('bogus')).toBe(false)
+      expect(fm.getFiles().size).toBe(1)
+    })
+  })
 })

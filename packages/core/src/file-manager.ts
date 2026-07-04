@@ -153,8 +153,8 @@ export class FileManager {
     }
   }
 
-  getFiles(): Map<string, UploadFile> {
-    return this.files
+  getFiles(): ReadonlyMap<string, UploadFile> {
+    return new Map(this.files)
   }
 
   /**

@@ -164,8 +164,7 @@ describe('UpupCore — smoke tests', () => {
 
         // Simulate one file completed
         const [id] = [...core.files.keys()]
-        const file = core.files.get(id)!
-        core.files.set(id, Object.assign(file, { key: 'uploaded/a.txt' }))
+        ;(core as any).fileManager.updateFile(id, { key: 'uploaded/a.txt' })
         expect(core.progress.completedFiles).toBe(1)
         expect(core.progress.percentage).toBe(50)
         core.destroy()

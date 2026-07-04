@@ -248,7 +248,7 @@ export class UploaderOrchestrator {
         if (Object.keys(partial).length > 0) this.setState(partial)
     }
 
-    private filesProjectionChanged(coreFiles: Map<string, UploadFile>): boolean {
+    private filesProjectionChanged(coreFiles: ReadonlyMap<string, UploadFile>): boolean {
         const current = this.state.files
         if (current.size !== coreFiles.size) return true
         const a = current.entries()

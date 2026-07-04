@@ -54,7 +54,7 @@ function toCrashRecoveryFileSnapshot(id: string, file: UploadFile): CrashRecover
 }
 
 export function serializeCrashRecovery(
-  files: Map<string, UploadFile>,
+  files: ReadonlyMap<string, UploadFile>,
   status: UploadStatus,
 ): CoreCrashRecoverySnapshot {
   return {
