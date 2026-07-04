@@ -10,14 +10,39 @@ We love your input! We want to make contributing to Upup as easy and transparent
 
 ## Development Process
 
-1. Fork the repo and create your branch from `master`
-2. Install dependencies using `pnpm install` or whatever package manager you use
-3. Make your changes
-4. Run `pnpm run prettier-check` to ensure code style
-5. Run `pnpm run lint` to ensure code quality
-6. Run `pnpm run test` to ensure everything works as expected
-7. Run `pnpm run build` to ensure everything builds properly
-8. Create a pull request!
+1. Fork the repo and create your branch from **`v2-clean`** — the active v2
+   development line. (`master` is the pre-v2 single-package release; the package
+   layout this project documents lives on `v2-clean`, which is intentionally
+   unmerged.)
+2. Use the pinned Node version — this repo ships a `.nvmrc` (Node 20.18.2), so
+   run `nvm use` — then install with `pnpm install`. This is a pnpm workspace
+   (corepack pins `pnpm@10.11.0`); other package managers will not resolve the
+   `workspace:*` links.
+3. Make your changes.
+4. **See your change render.** A green test suite does not prove a UI change
+   looks right — some UI strings have no test or story. Packages consume each
+   other's built `dist/`, not `src/`, so an edit to `packages/<pkg>/src` is
+   invisible until it is rebuilt:
+   - Fastest: run `pnpm dev`, then open the playground at
+     `http://localhost:53004` — the package watchers rebuild `packages/*/src`
+     on save and the playground hot-reloads.
+   - Storybook: build the package once (`pnpm --filter @upup/react build`) or
+     keep `pnpm run dev:package` running, then
+     `pnpm --filter @upup/storybook-react storybook` (`http://localhost:53050`).
+5. Run the checks CI enforces before opening your PR. CLAUDE.md's **Gates**
+   section is the authoritative list, and its **E2E** section documents the
+   MinIO setup that `pnpm run e2e` needs:
+   - `pnpm run prettier-check` — formatting (note: today this only checks
+     `@upup/react`'s `src/`)
+   - `pnpm run typecheck`
+   - `pnpm run test`
+   - `pnpm run build`
+   - `pnpm run size`
+   - `pnpm run e2e` — the real gate: real MinIO + real uploads
+   `pnpm run lint` is also worth running locally (it is not yet a required CI
+   check). CI additionally runs a package-smoke suite (a real tarball consumer
+   build).
+6. Create a pull request!
 
 ## Pull Request Process
 
