@@ -1,12 +1,12 @@
 import { html, nothing } from 'lit-html'
 import { repeat } from 'lit-html/directives/repeat.js'
 import { cn } from '@upup/core'
+import type { ServerModeProvider, ServerDriveFile } from '@upup/core'
+export type { ServerModeProvider, ServerDriveFile }
 import type { UploaderContext } from '../lib/types'
 import { sourceViewContainer } from './shared/source-view-container'
 import { driveAuthFallback } from './shared/drive-auth-fallback'
 
-export type ServerModeProvider = 'google-drive' | 'onedrive' | 'dropbox' | 'box'
-export type ServerDriveFile = { id: string; name: string; size?: number; mimeType?: string; thumbnailUrl?: string; isFolder: boolean; modifiedAt?: string }
 type ListState =
   | { status: 'idle' } | { status: 'loading' } | { status: 'ready'; files: ServerDriveFile[] }
   | { status: 'reauth' } | { status: 'error'; message: string }
