@@ -51,6 +51,8 @@
       startUpload,
       retryUpload,
       uploadStatus,
+      uploadError,
+      uploadErrorCode,
       totalProgress,
       uploadSpeed,
       uploadEta,
@@ -210,6 +212,17 @@
       >
         {t(plural(tr, 'uploadFiles', $files.size), { count: $files.size })}
       </button>
+    {/if}
+
+    {#if $uploadStatus === UploadStatus.FAILED && $uploadError}
+      <p
+        data-testid="upup-upload-error"
+        data-upup-slot="upload-error"
+        title={$uploadErrorCode}
+        class="upup-mr-auto upup-text-sm upup-text-red-600 dark:upup-text-red-400"
+      >
+        {$uploadErrorCode ? t(tr.uploadFailedWithCode, { code: $uploadErrorCode }) : t(tr.uploadFailed, { message: $uploadError })}
+      </p>
     {/if}
 
     {#if $uploadStatus === UploadStatus.FAILED}

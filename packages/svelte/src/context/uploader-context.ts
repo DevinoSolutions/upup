@@ -24,10 +24,11 @@ export { UploadStatus }
 // ─── Context type shapes (Readable<T> wherever Vue used ComputedRef<T>) ───
 export type ContextUpload = Omit<
     BaseContextUpload,
-    'uploadStatus' | 'uploadError' | 'totalProgress' | 'filesProgressMap' | 'uploadSpeed' | 'uploadEta' | 'uploadedBytes' | 'totalBytes'
+    'uploadStatus' | 'uploadError' | 'uploadErrorCode' | 'totalProgress' | 'filesProgressMap' | 'uploadSpeed' | 'uploadEta' | 'uploadedBytes' | 'totalBytes'
 > & {
     uploadStatus: Readable<UploadStatus>
     uploadError: Readable<string | undefined>
+    uploadErrorCode: Readable<string | undefined>
     totalProgress: Readable<number>
     filesProgressMap: Readable<FilesProgressMap>
     uploadSpeed: Readable<number>

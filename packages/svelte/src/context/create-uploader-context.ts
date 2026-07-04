@@ -280,6 +280,7 @@ export function createUploaderContext(props: UploaderProps): IUploaderContext {
             retryUpload: (fileId?: string) => root.commands.retryUpload(fileId),
             uploadStatus: derived(orchState, $s => $s.uploadStatus),
             uploadError: derived(orchState, $s => $s.uploadError),
+            uploadErrorCode: derived(orchState, $s => $s.uploadErrorCode),
             uploadSpeed: derived(orchState, $s => $s.uploadSpeed),
             uploadEta: derived(orchState, $s => $s.uploadEta),
             uploadedBytes: derived(orchState, $s => $s.uploadedBytes),

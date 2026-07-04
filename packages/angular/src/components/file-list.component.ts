@@ -126,6 +126,18 @@ const ESTIMATED_ITEM_HEIGHT = 76
                     </button>
                 }
 
+                <!-- Upload-error message -->
+                @if (store.uploadStatus() === UploadStatus.FAILED && store.uploadError()) {
+                    <p
+                        data-testid="upup-upload-error"
+                        data-upup-slot="upload-error"
+                        [attr.title]="store.uploadErrorCode()"
+                        class="upup-mr-auto upup-text-sm upup-text-red-600 dark:upup-text-red-400"
+                    >
+                        {{ uploadErrorText }}
+                    </p>
+                }
+
                 <!-- Retry button -->
                 @if (store.uploadStatus() === UploadStatus.FAILED) {
                     <button
@@ -386,6 +398,13 @@ export class FileListComponent implements AfterViewInit, OnDestroy {
     get retryButtonText(): string {
         const tr = this.translations
         return this.store.uiProps.resumable?.protocol === 'multipart' ? tr.resumeUpload : tr.retryUpload
+    }
+
+    get uploadErrorText(): string {
+        const tr = this.translations
+        const code = this.store.uploadErrorCode()
+        const message = this.store.uploadError() ?? ''
+        return code ? t(tr.uploadFailedWithCode, { code }) : t(tr.uploadFailed, { message })
     }
 
     // Bound fn for UploaderHeader (avoids arrow-fn re-creation in template)

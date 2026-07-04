@@ -26,9 +26,10 @@ export { UploadStatus }
 // ─── Context type shapes ───────────────────────────────────
 
 // Reactive so upload progress / status changes reach consumers post-mount.
-export type ContextUpload = Omit<BaseContextUpload, 'uploadStatus' | 'uploadError' | 'totalProgress' | 'filesProgressMap' | 'uploadSpeed' | 'uploadEta' | 'uploadedBytes' | 'totalBytes'> & {
+export type ContextUpload = Omit<BaseContextUpload, 'uploadStatus' | 'uploadError' | 'uploadErrorCode' | 'totalProgress' | 'filesProgressMap' | 'uploadSpeed' | 'uploadEta' | 'uploadedBytes' | 'totalBytes'> & {
     uploadStatus: ComputedRef<UploadStatus>
     uploadError: ComputedRef<string | undefined>
+    uploadErrorCode: ComputedRef<string | undefined>
     totalProgress: ComputedRef<number>
     filesProgressMap: ComputedRef<FilesProgressMap>
     uploadSpeed: ComputedRef<number>

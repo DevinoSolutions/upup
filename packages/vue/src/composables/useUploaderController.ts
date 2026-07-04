@@ -311,6 +311,7 @@ export default function useUploaderController(props: UploaderProps): IUploaderCo
             retryUpload: (fileId?: string) => root.commands.retryUpload(fileId),
             uploadStatus: computed(() => state.value.uploadStatus),
             uploadError: computed(() => state.value.uploadError),
+            uploadErrorCode: computed(() => state.value.uploadErrorCode),
             uploadSpeed: computed(() => state.value.uploadSpeed),
             uploadEta: computed(() => state.value.uploadEta),
             uploadedBytes: computed(() => state.value.uploadedBytes),

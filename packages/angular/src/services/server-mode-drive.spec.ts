@@ -80,8 +80,10 @@ function makeStoreMock() {
     } as unknown as UpupStore
 }
 
-/** Drain two microtask ticks — mirrors vanilla's flush(). */
-const flush = async () => { await Promise.resolve(); await Promise.resolve() }
+/** Drain microtask ticks. Bumped from 2 to 3 (P4/C8): list()/transfer() now
+ *  await an extra res.clone().json() hop to distinguish drive-reauth from
+ *  app-auth on a 401, one tick deeper than the pre-C8 status-only check. */
+const flush = async () => { await Promise.resolve(); await Promise.resolve(); await Promise.resolve() }
 
 // ── Guard 1: 401 → sign-in fallback ──────────────────────────────────────────
 
@@ -89,7 +91,10 @@ describe('ServerModeDriveService — guard 1: 401 → reauth state', () => {
     afterEach(() => { vi.restoreAllMocks(); vi.unstubAllGlobals(); TestBed.resetTestingModule() })
 
     it('routes a 401 from list to reauth state (not loading/ready)', async () => {
-        vi.stubGlobal('fetch', vi.fn(async () => new Response('', { status: 401 })))
+        vi.stubGlobal('fetch', vi.fn(async () => new Response(
+            JSON.stringify({ reauth: true, provider: 'google-drive' }),
+            { status: 401, headers: { 'Content-Type': 'application/json' } },
+        )))
 
         TestBed.configureTestingModule({
             providers: [
@@ -109,7 +114,10 @@ describe('ServerModeDriveUploaderComponent — guard 1: 401 → auth fallback re
     afterEach(() => { vi.restoreAllMocks(); vi.unstubAllGlobals(); TestBed.resetTestingModule() })
 
     it('renders "Sign in with Google Drive" and NOT upup-server-drive-browser after 401', async () => {
-        vi.stubGlobal('fetch', vi.fn(async () => new Response('', { status: 401 })))
+        vi.stubGlobal('fetch', vi.fn(async () => new Response(
+            JSON.stringify({ reauth: true, provider: 'google-drive' }),
+            { status: 401, headers: { 'Content-Type': 'application/json' } },
+        )))
 
         const store = makeStoreMock()
         await TestBed.configureTestingModule({
@@ -184,7 +192,10 @@ describe('ServerModeDriveService — guard 3: destroy removes window message lis
 
     it('destroy() calls window.removeEventListener("message", ...) after startAuth', async () => {
         // Stub fetch to return 401 so state transitions to 'reauth'
-        vi.stubGlobal('fetch', vi.fn(async () => new Response('', { status: 401 })))
+        vi.stubGlobal('fetch', vi.fn(async () => new Response(
+            JSON.stringify({ reauth: true, provider: 'google-drive' }),
+            { status: 401, headers: { 'Content-Type': 'application/json' } },
+        )))
         // Stub window.open so startAuth doesn't actually open a browser window
         vi.spyOn(window, 'open').mockReturnValue({ closed: false } as Window)
 
@@ -232,7 +243,10 @@ describe('ServerModeDriveService — startAuth() de-dups the re-auth message lis
 
     it('removes the prior message listener before arming a new one on a second startAuth()', async () => {
         // 401 so state → 'reauth'; window.open mocked so no real popup opens
-        vi.stubGlobal('fetch', vi.fn(async () => new Response('', { status: 401 })))
+        vi.stubGlobal('fetch', vi.fn(async () => new Response(
+            JSON.stringify({ reauth: true, provider: 'google-drive' }),
+            { status: 401, headers: { 'Content-Type': 'application/json' } },
+        )))
         vi.spyOn(window, 'open').mockReturnValue({ closed: false } as Window)
 
         const addSpy = vi.spyOn(window, 'addEventListener')

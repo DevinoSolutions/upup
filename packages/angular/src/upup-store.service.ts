@@ -104,6 +104,7 @@ export class UpupStore {
     filesProgressMap!: Signal<OrchSnapshot['filesProgressMap']>
     uploadStatus!: Signal<UploadStatus>
     uploadError!: Signal<string | undefined>
+    uploadErrorCode!: Signal<string | undefined>
     uploadSpeed!: Signal<number>
     uploadEta!: Signal<number>
     uploadedBytes!: Signal<number>
@@ -272,6 +273,7 @@ export class UpupStore {
         this.filesProgressMap = computed(() => this.orchState.state().filesProgressMap)
         this.uploadStatus = computed(() => this.orchState.state().uploadStatus)
         this.uploadError = computed(() => this.orchState.state().uploadError as string | undefined)
+        this.uploadErrorCode = computed(() => this.orchState.state().uploadErrorCode)
         this.uploadSpeed = computed(() => this.orchState.state().uploadSpeed)
         this.uploadEta = computed(() => this.orchState.state().uploadEta)
         this.uploadedBytes = computed(() => this.orchState.state().uploadedBytes)

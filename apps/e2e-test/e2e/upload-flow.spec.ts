@@ -91,4 +91,24 @@ test.describe('Upload flow — error', () => {
         await expect(page.locator('[data-testid="upup-root"]')).toHaveAttribute('data-state', 'failed', { timeout: 10000 })
         await expect(page.getByText(/retry/i)).toBeVisible()
     })
+
+    // P4/C11 — default upload-error slot. Not covered by the cross-framework
+    // parity harness: ParityComponent ('sourceSelector'|'fileItem'|'filePreview'
+    // |'fileIcon') never drives an upload into the FAILED footer, so there is
+    // no fixture category for it and no parity regen captures this element.
+    // This deep-suite test is the real behavioral proof instead (principle #2 —
+    // no smoke-test theater; a real mocked-server failure, not a rendered-only
+    // check).
+    test('renders the default upload-error message on a real 500 failure', async ({ page }) => {
+        await page.route(/\/api\/upload/, (route) => {
+            route.fulfill({ status: 500, body: 'Internal Server Error' })
+        })
+        await page.setInputFiles('[data-testid="upup-file-input"]', TXT_FILE)
+        await page.locator('[data-testid="upup-upload-btn"]').click()
+        await expect(page.locator('[data-testid="upup-root"]')).toHaveAttribute('data-state', 'failed', { timeout: 10000 })
+        const errorSlot = page.locator('[data-testid="upup-upload-error"]')
+        await expect(errorSlot).toBeVisible()
+        await expect(errorSlot).toHaveAttribute('data-upup-slot', 'upload-error')
+        await expect(errorSlot).not.toBeEmpty()
+    })
 })

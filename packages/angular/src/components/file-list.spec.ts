@@ -78,6 +78,8 @@ function makeStoreMock(files: Map<string, UploadFile>) {
         clickToPreview: 'Click to preview',
         loading: 'Loading…',
         previewError: 'Error:',
+        uploadFailedWithCode: 'Upload failed with error code: {{code}}',
+        uploadFailed: 'Upload failed: {{message}}',
         zeroBytes: '0 B',
         bytes: 'B',
         kb: 'KB',
@@ -92,6 +94,8 @@ function makeStoreMock(files: Map<string, UploadFile>) {
         isDark: () => false,
         viewMode: () => 'list' as const,
         uploadStatus: () => UploadStatus.IDLE,
+        uploadError: () => undefined as string | undefined,
+        uploadErrorCode: () => undefined as string | undefined,
         totalProgress: () => 0,
         uploadSpeed: () => 0,
         uploadEta: () => 0,
@@ -470,6 +474,68 @@ describe('FileListComponent', () => {
 
         const el: HTMLElement = fixture.nativeElement
         expect(el.querySelector('[data-testid="upup-retry-btn"]')).not.toBeNull()
+    })
+
+    it('renders the upup-upload-error slot when FAILED with a message (P4/C11)', async () => {
+        const file = makeFile('f1', 'photo.jpg')
+        const storeMock = makeStoreMock(new Map([['f1', file]]))
+        storeMock.uploadStatus = () => UploadStatus.FAILED
+        storeMock.uploadError = () => 'Network timeout'
+        storeMock.uploadErrorCode = () => undefined
+
+        await TestBed.configureTestingModule({
+            imports: [FileListComponent],
+            providers: [{ provide: UpupStore, useValue: storeMock }],
+        }).compileComponents()
+
+        const fixture = TestBed.createComponent(FileListComponent)
+        fixture.detectChanges()
+
+        const el: HTMLElement = fixture.nativeElement
+        const errorEl = el.querySelector('[data-testid="upup-upload-error"]')
+        expect(errorEl).not.toBeNull()
+        expect(errorEl?.getAttribute('data-upup-slot')).toBe('upload-error')
+        expect(errorEl?.textContent).toContain('Network timeout')
+    })
+
+    it('renders the code-aware message + title attribute when uploadErrorCode is set (P4/C11)', async () => {
+        const file = makeFile('f1', 'photo.jpg')
+        const storeMock = makeStoreMock(new Map([['f1', file]]))
+        storeMock.uploadStatus = () => UploadStatus.FAILED
+        storeMock.uploadError = () => 'Signature mismatch'
+        storeMock.uploadErrorCode = () => 'SignatureDoesNotMatch'
+
+        await TestBed.configureTestingModule({
+            imports: [FileListComponent],
+            providers: [{ provide: UpupStore, useValue: storeMock }],
+        }).compileComponents()
+
+        const fixture = TestBed.createComponent(FileListComponent)
+        fixture.detectChanges()
+
+        const el: HTMLElement = fixture.nativeElement
+        const errorEl = el.querySelector('[data-testid="upup-upload-error"]')
+        expect(errorEl).not.toBeNull()
+        expect(errorEl?.getAttribute('title')).toBe('SignatureDoesNotMatch')
+        expect(errorEl?.textContent).toContain('SignatureDoesNotMatch')
+    })
+
+    it('does NOT render the upup-upload-error slot when FAILED but uploadError is empty', async () => {
+        const file = makeFile('f1', 'photo.jpg')
+        const storeMock = makeStoreMock(new Map([['f1', file]]))
+        storeMock.uploadStatus = () => UploadStatus.FAILED
+        storeMock.uploadError = () => undefined
+
+        await TestBed.configureTestingModule({
+            imports: [FileListComponent],
+            providers: [{ provide: UpupStore, useValue: storeMock }],
+        }).compileComponents()
+
+        const fixture = TestBed.createComponent(FileListComponent)
+        fixture.detectChanges()
+
+        const el: HTMLElement = fixture.nativeElement
+        expect(el.querySelector('[data-testid="upup-upload-error"]')).toBeNull()
     })
 
     it('initializes virtualizer without throwing (jsdom smoke test)', async () => {

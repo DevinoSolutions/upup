@@ -126,6 +126,8 @@ export function fileList(ctx: UploaderContext) {
   const slot = ctx.theme.getSnapshot().slotOverrides
   const themeSlots = ctx.theme.getSnapshot().slots
 
+  const uploadError = o.uploadError
+  const uploadErrorCode = o.uploadErrorCode
   const totalProgress = o.totalProgress
   const uploadSpeed = o.uploadSpeed
   const uploadEta = o.uploadEta
@@ -159,6 +161,18 @@ export function fileList(ctx: UploaderContext) {
           >
             ${t(plural(tr, 'uploadFiles', sortedFiles.length), { count: sortedFiles.length })}
           </button>`
+        : nothing}
+
+      ${uploadStatus === UploadStatus.FAILED && uploadError
+        ? html`
+          <p
+            data-testid="upup-upload-error"
+            data-upup-slot="upload-error"
+            title=${uploadErrorCode ?? ''}
+            class="upup-mr-auto upup-text-sm upup-text-red-600 dark:upup-text-red-400"
+          >
+            ${uploadErrorCode ? t(tr.uploadFailedWithCode, { code: uploadErrorCode }) : t(tr.uploadFailed, { message: uploadError })}
+          </p>`
         : nothing}
 
       ${uploadStatus === UploadStatus.FAILED
