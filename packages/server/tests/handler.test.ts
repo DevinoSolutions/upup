@@ -23,6 +23,7 @@ const config = {
     region: 'us-east-1',
   },
   uploadTokenSecret: 'handler-test-secret-0123456789',
+  allowAnonymousUploads: true,
 }
 
 describe('createUpupHandler', () => {

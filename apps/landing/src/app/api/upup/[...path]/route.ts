@@ -13,6 +13,7 @@ export const { GET, POST, PUT, DELETE } = createUpupNextHandler({
     process.env.UPUP_UPLOAD_TOKEN_SECRET ?? "landing-dev-secret-not-for-prod",
   // Demo app: single shared anonymous namespace. Real apps set getUserId instead.
   allowAnonymous: true,
+  allowAnonymousUploads: true,
   providers: {
     googleDrive: {
       clientId: process.env.GOOGLE_CLIENT_ID || "",

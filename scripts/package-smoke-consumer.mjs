@@ -379,6 +379,7 @@ const serverConfig: UpupServerConfig = {
   },
   uploadTokenSecret: 'package-smoke-dev-secret-0123456789',
   allowAnonymous: true,
+  allowAnonymousUploads: true,
   tokenStore,
 }
 

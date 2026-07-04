@@ -22,6 +22,7 @@ vi.mock('../src/providers/aws', () => ({
 const config = {
   storage: { type: 'aws' as const, bucket: 'b', region: 'us-east-1' },
   uploadTokenSecret: 'adapters-test-secret-0123456789',
+  allowAnonymousUploads: true,
 }
 
 describe('Next.js adapter', () => {

@@ -62,6 +62,15 @@ export type UpupServerConfig = {
    */
   allowAnonymous?: boolean
 
+  /**
+   * Permit `/presign` + `/multipart/init` with no `auth` and no `getUserId`
+   * resolver — uploads run under the shared anonymous namespace. Demos /
+   * upstream-auth deployments (tus/companion-style, where auth is handled
+   * before the request reaches this handler) only. Default false -> those
+   * routes return 403 AUTH_REQUIRED.
+   */
+  allowAnonymousUploads?: boolean
+
   hooks?: {
     onBeforeUpload?: (file: FileMetadata, req: Request) => Promise<boolean>
     onFileUploaded?: (file: UploadedFile, req: Request) => Promise<void>

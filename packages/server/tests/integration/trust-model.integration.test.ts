@@ -30,7 +30,12 @@ const SECRET = 'trust-model-integration-secret-0123456789'
 // Cast: uploadTokenSecret/allowAnonymous are added to UpupServerConfig in a
 // later task; the cast keeps this file compile-clean against the current type
 // and valid afterward. (esbuild/vitest ignore types; this is for tsc.)
-const config = { storage, uploadTokenSecret: SECRET, allowAnonymous: true } as UpupServerConfig
+const config = {
+  storage,
+  uploadTokenSecret: SECRET,
+  allowAnonymous: true,
+  allowAnonymousUploads: true,
+} as UpupServerConfig
 const s3 = new S3Client(buildS3ClientConfig(storage))
 const createdKeys: string[] = []
 

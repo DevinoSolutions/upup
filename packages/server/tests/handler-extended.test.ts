@@ -33,6 +33,7 @@ vi.mock('../src/providers/aws', () => ({
 const config = {
     storage: { type: 'aws', bucket: 'test-bucket', region: 'us-east-1' },
     uploadTokenSecret: 'handler-ext-secret-0123456789',
+    allowAnonymousUploads: true,
 }
 
 // ─────────────────────────────────────────────
@@ -566,5 +567,69 @@ describe('handler — error channel: upload-token codes', () => {
         const body = await res.json()
         expect(res.status).toBe(403)
         expect(body.code).toBe('expired')
+    })
+})
+
+// ─────────────────────────────────────────────
+// F-110: secure-by-default upload authorization
+// ─────────────────────────────────────────────
+describe('handler — anonymous upload gate (F-110)', () => {
+    const anonConfig = {
+        storage: { type: 'aws', bucket: 'test-bucket', region: 'us-east-1' },
+        uploadTokenSecret: 'handler-ext-f110-secret-0123456789',
+    }
+
+    it('rejects anonymous /presign with 403 AUTH_REQUIRED when no auth/getUserId/allowAnonymousUploads', async () => {
+        const handler = createUpupHandler(anonConfig)
+        const res = await handler(new Request('http://localhost/presign', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: 'photo.jpg', size: 100, type: 'image/jpeg' }),
+        }))
+        const body = await res.json()
+        expect(res.status).toBe(403)
+        expect(body.code).toBe('AUTH_REQUIRED')
+    })
+
+    it('rejects anonymous /multipart/init with 403 AUTH_REQUIRED when no auth/getUserId/allowAnonymousUploads', async () => {
+        const handler = createUpupHandler(anonConfig)
+        const res = await handler(new Request('http://localhost/multipart/init', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: 'big.zip', size: 10_000_000, type: 'application/zip' }),
+        }))
+        const body = await res.json()
+        expect(res.status).toBe(403)
+        expect(body.code).toBe('AUTH_REQUIRED')
+    })
+
+    it('allows /presign with allowAnonymousUploads:true', async () => {
+        const handler = createUpupHandler({ ...anonConfig, allowAnonymousUploads: true })
+        const res = await handler(new Request('http://localhost/presign', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: 'photo.jpg', size: 100, type: 'image/jpeg' }),
+        }))
+        expect(res.status).toBe(200)
+    })
+
+    it('allows /presign with config.auth set (seam intact)', async () => {
+        const handler = createUpupHandler({ ...anonConfig, auth: async () => true })
+        const res = await handler(new Request('http://localhost/presign', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: 'photo.jpg', size: 100, type: 'image/jpeg' }),
+        }))
+        expect(res.status).toBe(200)
+    })
+
+    it('allows /presign with config.getUserId set', async () => {
+        const handler = createUpupHandler({ ...anonConfig, getUserId: async () => 'u1' })
+        const res = await handler(new Request('http://localhost/presign', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: 'photo.jpg', size: 100, type: 'image/jpeg' }),
+        }))
+        expect(res.status).toBe(200)
     })
 })

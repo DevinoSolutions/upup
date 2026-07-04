@@ -97,6 +97,35 @@ function fail(
   return json({ error: message, code }, status, h)
 }
 
+/** Secure-by-default gate for the capability-granting upload routes (/presign,
+ *  /multipart/init): reject an unauthenticated, unidentified caller unless the
+ *  integrator explicitly opts into the shared anonymous namespace. With
+ *  `config.auth` set, an unauthorized caller is already 401'd by the global
+ *  gate; with `config.getUserId` set, an unauthenticated caller is already
+ *  401'd inside the route (resolveUserId returns null) — this check only bites
+ *  when NEITHER is configured, which previously fell through to the non-null
+ *  DEFAULT_USER_ID and let the upload proceed (F-110). */
+function requireUploadAuthorization(
+  config: UpupServerConfig,
+  h: ResponseHeaders,
+  route: string,
+  method: string,
+): Response | null {
+  if (!config.auth && !config.getUserId && !config.allowAnonymousUploads) {
+    return fail(
+      config,
+      h,
+      route,
+      method,
+      403,
+      UpupErrorCode.AUTH_REQUIRED,
+      'Anonymous uploads are disabled. Set allowAnonymousUploads:true, or configure auth/getUserId.',
+      new Error('anonymous upload rejected'),
+    )
+  }
+  return null
+}
+
 /** Verify an upload token, or return the 403 Response to send as-is. Collapses
  *  the three duplicated inner try/catch blocks in sign-part/complete/abort into
  *  one call site, and surfaces the token's own malformed/bad_signature/expired
@@ -291,6 +320,9 @@ export function createUpupHandler(config: UpupServerConfig): RouteHandler {
 }
 
 async function handlePresign(req: Request, config: UpupServerConfig, responseHeaders: ResponseHeaders): Promise<Response> {
+  const gate = requireUploadAuthorization(config, responseHeaders, 'presign', req.method)
+  if (gate) return gate
+
   const parsed = await parseJsonBody<FileMetadata>(req, responseHeaders)
   if (!parsed.ok) return parsed.response
   const body = parsed.value
@@ -318,6 +350,9 @@ async function handlePresign(req: Request, config: UpupServerConfig, responseHea
 }
 
 async function handleMultipartInit(req: Request, config: UpupServerConfig, responseHeaders: ResponseHeaders): Promise<Response> {
+  const gate = requireUploadAuthorization(config, responseHeaders, 'multipart/init', req.method)
+  if (gate) return gate
+
   const parsed = await parseJsonBody<{ name: string; type: string; size: number; chunkSizeBytes?: number }>(req, responseHeaders)
   if (!parsed.ok) return parsed.response
   const body = parsed.value

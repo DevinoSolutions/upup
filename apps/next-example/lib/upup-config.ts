@@ -17,4 +17,5 @@ export const upupConfig: UpupServerConfig = defineUpupConfig({
     process.env.UPUP_UPLOAD_TOKEN_SECRET ?? 'next-example-dev-secret-not-for-prod',
   // Demo app: single shared namespace. Real apps set getUserId instead.
   allowAnonymous: true,
+  allowAnonymousUploads: true,
 })

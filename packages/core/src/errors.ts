@@ -21,6 +21,7 @@ export enum UpupErrorCode {
   QUOTA_EXCEEDED = 'QUOTA_EXCEEDED',
   NO_UPLOAD_TARGET = 'NO_UPLOAD_TARGET',
   BAD_REQUEST = 'BAD_REQUEST',
+  AUTH_REQUIRED = 'AUTH_REQUIRED',
 }
 
 export type RestrictionFailedReason =
