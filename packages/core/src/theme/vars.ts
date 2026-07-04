@@ -37,7 +37,11 @@ export function tokensToVars(
  * Generate a UpupThemeTokens-shaped object where each leaf is a
  * `var(--upup-<group>-<key>)` reference string.
  *
- * Used by slot recipes to reference tokens without knowing their values.
+ * NOTE (2026-07): currently unconsumed. No component or theme slot reads
+ * these var-ref strings today — components apply tokens via inline cn()
+ * class strings (see UploaderPanel.tsx). Retained as part of the public
+ * theme surface for future slot-level styling; do not assume the spacing
+ * group is wired until a component actually references it.
  */
 export function tokensToVarRefs(): UpupThemeTokens {
   // Build proxy-like structure with known keys
