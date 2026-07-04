@@ -1,18 +1,28 @@
 import type { LocaleBundle, UpupLocaleCode, UpupMessages, MessageNamespace } from './types'
+import type { RegisteredLocaleCode } from './locales/registry'
+import { LOCALE_REGISTRY } from './locales/registry'
+import { normalizeBcp47 } from './locale-meta'
 
 const DEFAULT_LOCALE = 'en-US'
 
 /**
- * Return the candidate if it is already a LocaleBundle object; else undefined.
- * (String codes need the locale registry — out of scope here, see P12.)
+ * Resolve a locale candidate to its LocaleBundle:
+ *  - already a LocaleBundle object → returned as-is.
+ *  - a registered BCP 47 string code (e.g. "fr-FR", or "fr_FR" via
+ *    normalizeBcp47) → resolved from the registry.
+ *  - anything else (undefined, an unregistered code) → undefined.
  */
 export function resolveLocaleBundle(
   candidate: LocaleBundle | UpupLocaleCode | undefined,
 ): LocaleBundle | undefined {
-  return candidate && typeof candidate === 'object'
-    && 'code' in candidate && 'messages' in candidate
-    ? (candidate as LocaleBundle)
-    : undefined
+  if (candidate && typeof candidate === 'object' && 'code' in candidate && 'messages' in candidate) {
+    return candidate as LocaleBundle
+  }
+  if (typeof candidate === 'string') {
+    const code = normalizeBcp47(candidate)
+    return LOCALE_REGISTRY[code as RegisteredLocaleCode] ?? undefined
+  }
+  return undefined
 }
 
 /**

@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
-import { buildFallbackChain, resolveMessage } from '../../i18n/resolve-locale'
+import { buildFallbackChain, resolveMessage, resolveLocaleBundle } from '../../i18n/resolve-locale'
 import { enUS } from '../../i18n/locales/en-US'
+import { frFR } from '../../i18n/locales/fr-FR'
 import type { LocaleBundle } from '../../i18n/types'
 
 // ─────────────────────────────────────────────
@@ -90,5 +91,30 @@ describe('resolveMessage — extended', () => {
     it('empty chain returns undefined', () => {
         const result = resolveMessage(bundles, [], 'common', 'cancel')
         expect(result).toBeUndefined()
+    })
+})
+
+// ─────────────────────────────────────────────
+// resolveLocaleBundle — registry-backed string-code resolution (P12/F-401)
+// ─────────────────────────────────────────────
+describe('resolveLocaleBundle', () => {
+    it('returns a LocaleBundle object candidate as-is', () => {
+        expect(resolveLocaleBundle(enUS)).toBe(enUS)
+    })
+
+    it('resolves a registered BCP 47 string code from the registry', () => {
+        expect(resolveLocaleBundle('fr-FR')).toBe(frFR)
+    })
+
+    it('normalizes a legacy underscore code before resolving', () => {
+        expect(resolveLocaleBundle('fr_FR')).toBe(frFR)
+    })
+
+    it('returns undefined for an unregistered string code', () => {
+        expect(resolveLocaleBundle('zz-ZZ')).toBeUndefined()
+    })
+
+    it('returns undefined for undefined input', () => {
+        expect(resolveLocaleBundle(undefined)).toBeUndefined()
     })
 })

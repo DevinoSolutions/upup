@@ -1,11 +1,12 @@
 import { describe, it, expect, vi } from 'vitest'
 import { resolveLocaleBundle } from '../src/i18n/resolve-locale'
 import type { LocaleBundle } from '../src/i18n/types'
+import { frFR } from '../src/i18n/locales/fr-FR'
 import { normalizeUploaderOptions } from '../src/uploader/normalize-options'
 import * as createTranslatorModule from '../src/i18n/create-translator'
 import { UpupCore } from '../src/core'
 
-const frFR: LocaleBundle = {
+const customFrFR: LocaleBundle = {
   code: 'fr-FR',
   language: 'Français',
   dir: 'ltr',
@@ -14,11 +15,15 @@ const frFR: LocaleBundle = {
 
 describe('resolveLocaleBundle', () => {
   it('returns the candidate when it is already a LocaleBundle object', () => {
-    expect(resolveLocaleBundle(frFR)).toBe(frFR)
+    expect(resolveLocaleBundle(customFrFR)).toBe(customFrFR)
   })
 
-  it('returns undefined for a string locale code', () => {
-    expect(resolveLocaleBundle('fr-FR')).toBeUndefined()
+  it('resolves a registered string locale code from the registry (P12 extends P7)', () => {
+    expect(resolveLocaleBundle('fr-FR')).toBe(frFR)
+  })
+
+  it('returns undefined for an unregistered string locale code', () => {
+    expect(resolveLocaleBundle('zz-ZZ')).toBeUndefined()
   })
 
   it('returns undefined for undefined', () => {
