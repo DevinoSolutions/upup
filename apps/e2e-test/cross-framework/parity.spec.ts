@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url'
 import { byName, storyUrl, PARITY_VARIANTS, type ParityVariant } from './framework-matrix'
 import { normalizeElement, type NormalizedNode } from './parity-dom'
 import { PARITY_FIXTURES, KNOWN_DIVERGENCES, type ParityComponent } from './parity-fixtures'
+import { A11Y_GAPS, gapSkipClasses, gapSkipRoles } from './parity-a11y-gaps'
 
 const HERE = dirname(fileURLToPath(import.meta.url))
 const FIXTURE_PATH = join(HERE, 'parity-fixtures.json')
@@ -30,7 +31,7 @@ async function clearCrashRecovery(page: Page) {
 
 async function normalize(page: Page, selector: string): Promise<NormalizedNode> {
   await page.locator(selector).first().waitFor({ state: 'attached', timeout: 15_000 })
-  return page.$eval(selector, normalizeElement)
+  return page.$eval(selector, normalizeElement, { classes: gapSkipClasses(), roles: gapSkipRoles() })
 }
 
 /**
@@ -109,6 +110,22 @@ test.describe('cross-framework DOM + a11y parity', () => {
         writeFileSync(FIXTURE_PATH, JSON.stringify({ ...existing, [variant]: captured }, null, 2) + '\n')
         test.info().annotations.push({ type: 'parity', description: `fixtures written (variant: ${variant})` })
         return
+      }
+
+      // Forcing-function for each tracked a11y gap (parity-a11y-gaps.ts): the
+      // populated DOM is queried directly (not via the normalizer, which strips
+      // these tokens by design) so a token's presence maps 1:1 onto the gap's
+      // `ported` list. Fails when a non-ported framework gains the token
+      // (divergence closable -> update the manifest) or a ported framework loses
+      // it (regression) -- silent permanent drift becomes a tracked decision.
+      for (const gap of A11Y_GAPS) {
+        const locator =
+          gap.kind === 'class' ? page.locator(`.${gap.token}`) : page.locator(`[role="${gap.token}"]`)
+        const present = (await locator.count()) > 0
+        expect(
+          present,
+          `${fw.name}: ${gap.token} presence should match parity-a11y-gaps.ts ported=[${gap.ported.join(', ')}] -- update the manifest if this framework ported the gap`,
+        ).toBe(gap.ported.includes(fw.name))
       }
 
       // Soft assertions so a single run reports ALL five component mismatches at

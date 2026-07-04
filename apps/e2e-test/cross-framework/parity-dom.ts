@@ -26,9 +26,9 @@ export interface NormalizedNode {
  * and `upup-`-prefixed class tokens). Everything framework-injected is stripped.
  *
  * Rules:
- *  - skip any element with the `upup-hidden` (display:none) or `upup-sr-only`
- *    (screen-reader-only; React-first a11y contract, not yet ported to the other
- *    frameworks) class ⇒ excluded from parity until the port lands
+ *  - skip any element with the `upup-hidden` (display:none) class, or a class
+ *    named in `gaps.classes` (tracked React-first a11y gaps not yet ported —
+ *    see parity-a11y-gaps.ts) ⇒ excluded from parity until the port lands
  *  - unwrap "transparent component hosts": a custom-element (hyphenated tag) that
  *    carries no `upup-` classes and no semantic hooks (testid/slot/role/tabindex/
  *    aria/type). Angular renders its components as such host elements (e.g.
@@ -37,17 +37,24 @@ export interface NormalizedNode {
  *    component-instantiation artifacts. Their children are hoisted in place.
  *  - `<svg>` is a leaf: keep its `upup-` classes, do NOT recurse into glyph internals
  *  - skip non-element nodes (text/comment) — structure only
+ *  - a `role` named in `gaps.roles` is dropped from the captured node (tracked gap)
  *
- * MUST be self-contained (serialized into the page by page.$eval).
+ * MUST be self-contained (serialized into the page by page.$eval) — `gaps` is a
+ * plain-data argument (never a closure/import) so the function keeps serializing.
+ * Defaults ({classes: [], roles: []}) preserve today's behavior if `gaps` is omitted.
  */
-export function normalizeElement(el: Element): NormalizedNode {
+export function normalizeElement(
+  el: Element,
+  gaps: { classes: string[]; roles: string[] } = { classes: [], roles: [] },
+): NormalizedNode {
   // Skip nodes with no shared cross-framework presence in the parity contract:
-  //  - `upup-hidden` (display:none)
-  //  - `upup-sr-only` (screen-reader-only live region — part of the React-first a11y
-  //    contract, not yet ported to the other frameworks; excluded until the port so
-  //    React-canonical still matches the unported five)
+  //  - `upup-hidden` (display:none) — always
+  //  - any class in `gaps.classes` (tracked React-first a11y gap, e.g. the
+  //    screen-reader-only live region — not yet ported to the other frameworks;
+  //    excluded until the port so React-canonical still matches the unported five)
   const isSkipped = (node: Element) =>
-    node.classList.contains('upup-hidden') || node.classList.contains('upup-sr-only')
+    node.classList.contains('upup-hidden') ||
+    gaps.classes.some((c) => node.classList.contains(c))
 
   const upupClasses = (node: Element) =>
     Array.from(node.classList)
@@ -99,10 +106,11 @@ export function normalizeElement(el: Element): NormalizedNode {
     const slot = node.getAttribute('data-upup-slot')
     if (slot) out.slot = slot
     const role = node.getAttribute('role')
-    // `list`/`listitem` are part of the React-first a11y contract (Phase 3), not yet
-    // ported to the other frameworks — excluded from the parity oracle until the port
-    // (otherwise React-canonical would diff vs the five). Remove once all carry them.
-    if (role && role !== 'list' && role !== 'listitem') out.role = role
+    // A role named in `gaps.roles` (e.g. list/listitem — React-first a11y contract,
+    // Phase 3, not yet ported) is excluded from the parity oracle until the port
+    // (otherwise React-canonical would diff vs the five). Remove from the manifest
+    // once all frameworks carry it.
+    if (role && !gaps.roles.includes(role)) out.role = role
     const tabindex = node.getAttribute('tabindex')
     if (tabindex !== null) out.tabindex = String(tabindex)
     const type = node.getAttribute('type')

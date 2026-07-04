@@ -1,5 +1,8 @@
 import { test, expect } from '@playwright/test'
 import { normalizeElement, type NormalizedNode } from './parity-dom'
+import { gapSkipClasses, gapSkipRoles } from './parity-a11y-gaps'
+
+const NO_GAPS = { classes: [], roles: [] }
 
 test.describe('parity-dom normalizer', () => {
   test('strips framework noise, keeps the shared contract', async ({ page }) => {
@@ -10,7 +13,7 @@ test.describe('parity-dom normalizer', () => {
         <span class="upup-badge">x</span>
       </div>
     `)
-    const got: NormalizedNode = await page.$eval('#root', normalizeElement)
+    const got: NormalizedNode = await page.$eval('#root', normalizeElement, NO_GAPS)
     expect(got).toEqual({
       tag: 'div',
       testid: 'upup-thing',
@@ -41,7 +44,7 @@ test.describe('parity-dom normalizer', () => {
         </upup-keep>
       </div>
     `)
-    const got: NormalizedNode = await page.$eval('#root', normalizeElement)
+    const got: NormalizedNode = await page.$eval('#root', normalizeElement, NO_GAPS)
     expect(got).toEqual({
       tag: 'div',
       testid: 'upup-x',
@@ -71,7 +74,10 @@ test.describe('parity-dom normalizer', () => {
         </div>
       </div>
     `)
-    const got: NormalizedNode = await page.$eval('#root', normalizeElement)
+    const got: NormalizedNode = await page.$eval('#root', normalizeElement, {
+      classes: gapSkipClasses(),
+      roles: gapSkipRoles(),
+    })
     expect(got).toEqual({
       tag: 'div',
       testid: 'upup-file-list',
