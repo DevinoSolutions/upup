@@ -1,7 +1,7 @@
 // packages/server/tests/drive-query-escape.test.ts
 // Audit S5 — Google Drive query-value injection via unescaped backslash
 import { describe, it, expect } from "vitest";
-import { escapeDriveQueryValue } from "../src/handler";
+import { escapeDriveQueryValue } from "../src/drive-clients";
 
 describe("escapeDriveQueryValue", () => {
   it("passes through plain text unchanged", () => {

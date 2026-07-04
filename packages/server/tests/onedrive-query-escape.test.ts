@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { escapeODataSearchValue } from "../src/handler";
+import { escapeODataSearchValue } from "../src/drive-clients";
 
 describe("escapeODataSearchValue (OData literal escaping)", () => {
   it("doubles a single quote", () => {
