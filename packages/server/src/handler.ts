@@ -935,7 +935,6 @@ async function handleFileTransfer(
       fileName,
       mimeType,
       storage: config.storage,
-      multipartThreshold: config.multipartThreshold,
     })
     if (config.hooks?.onFileUploaded) {
       await config.hooks.onFileUploaded(result, req)

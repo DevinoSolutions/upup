@@ -148,14 +148,13 @@ describe.skipIf(!RUN)('MinIO real-storage upload validation', () => {
   }, 30_000)
 
   it('Path C (single PUT): drive->S3 transfer stores matching bytes', async () => {
-    const bytes = makeBytes(2048, 4)
+    const bytes = makeBytes(2048, 4) // well under the fixed 5 MB single-PUT cap
     const result = await transferDriveFileToS3({
       stream: new Response(bytes).body as ReadableStream<Uint8Array>,
       size: bytes.byteLength,
       fileName: 'path-c-single.bin',
       mimeType: 'application/octet-stream',
       storage,
-      multipartThreshold: 100 * 1024 * 1024, // large -> single PUT branch
     })
     uploadedKeys.push(result.key)
     expect(result.size).toBe(bytes.byteLength)
@@ -166,14 +165,13 @@ describe.skipIf(!RUN)('MinIO real-storage upload validation', () => {
   }, 30_000)
 
   it('Path C (streaming multipart): drive->S3 transfer stores matching bytes', async () => {
-    const bytes = makeBytes(6 * 1024 * 1024, 5) // 6 MiB
+    const bytes = makeBytes(6 * 1024 * 1024, 5) // 6 MiB — over the fixed 5 MB single-PUT cap
     const result = await transferDriveFileToS3({
       stream: new Response(bytes).body as ReadableStream<Uint8Array>,
       size: bytes.byteLength,
       fileName: 'path-c-multipart.bin',
       mimeType: 'application/octet-stream',
       storage,
-      multipartThreshold: 5 * 1024 * 1024, // small -> streaming multipart branch
     })
     uploadedKeys.push(result.key)
     expect(result.size).toBe(bytes.byteLength)

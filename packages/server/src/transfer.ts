@@ -4,30 +4,18 @@ import {
   UploadPartCommand,
   CompleteMultipartUploadCommand,
   AbortMultipartUploadCommand,
-  GetObjectCommand,
 } from '@aws-sdk/client-s3'
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
-import {
-  DEFAULT_MULTIPART_THRESHOLD,
-  type UpupServerConfig,
-  type UploadedFile,
-} from './config'
+import type { UpupServerConfig, UploadedFile } from './config'
 import { createS3Client } from './providers/s3-client'
+import { MIN_PART_SIZE, generateSignedPublicUrl } from './providers/aws'
 
-const MIN_PART_SIZE = 5 * 1024 * 1024
-const PUBLIC_URL_EXPIRES_IN = 3600 * 24 * 3
-
-async function signedPublicUrl(
-  storage: UpupServerConfig['storage'],
-  key: string,
-): Promise<string> {
-  const client = createS3Client(storage)
-  return getSignedUrl(
-    client,
-    new GetObjectCommand({ Bucket: storage.bucket, Key: key }),
-    { expiresIn: PUBLIC_URL_EXPIRES_IN },
-  )
-}
+// Hard cap on buffered memory per transfer: files at or under this size are
+// singlePut (whole body buffered once); everything else streams through
+// bounded MIN_PART_SIZE multipart parts, regardless of file size (F-501).
+// This bound is intentionally NOT configurable — memory safety must not be a
+// raisable knob (the removed `multipartThreshold` let an integrator reintroduce
+// unbounded buffering by raising it).
+const SINGLE_PUT_MAX_BYTES = MIN_PART_SIZE
 
 export async function transferDriveFileToS3(opts: {
   stream: ReadableStream<Uint8Array>
@@ -35,12 +23,10 @@ export async function transferDriveFileToS3(opts: {
   fileName: string
   mimeType: string
   storage: UpupServerConfig['storage']
-  multipartThreshold?: number
 }): Promise<UploadedFile> {
-  const threshold = opts.multipartThreshold ?? DEFAULT_MULTIPART_THRESHOLD
   const key = `${crypto.randomUUID()}-${opts.fileName}`
 
-  if (opts.size > 0 && opts.size < threshold) {
+  if (opts.size > 0 && opts.size <= SINGLE_PUT_MAX_BYTES) {
     return singlePut({ ...opts, key })
   }
   return streamingMultipart({ ...opts, key })
@@ -64,7 +50,7 @@ async function singlePut(opts: {
       Body: buffer,
     }),
   )
-  const url = await signedPublicUrl(opts.storage, opts.key)
+  const url = await generateSignedPublicUrl(opts.storage, opts.key)
   return {
     key: opts.key,
     name: opts.fileName,
@@ -143,7 +129,7 @@ async function streamingMultipart(opts: {
     throw err
   }
 
-  const url = await signedPublicUrl(opts.storage, opts.key)
+  const url = await generateSignedPublicUrl(opts.storage, opts.key)
   return {
     key: opts.key,
     name: opts.fileName,

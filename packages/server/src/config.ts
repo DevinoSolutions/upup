@@ -83,13 +83,6 @@ export type UpupServerConfig = {
   cors?: UpupCorsConfig
 
   /**
-   * Outbound server→S3 multipart threshold (bytes). Files at or above this
-   * size use S3 multipart on the /files/:provider/transfer path; smaller
-   * files stream through as a single PUT. Default: 100 MB.
-   */
-  multipartThreshold?: number
-
-  /**
    * Called on every error path (500s, invalid upload tokens, OAuth/token-exchange
    * failures, health-check storage failures). Never receives secrets, tokens,
    * request bodies, or Authorization headers — only a route/method/status/code/
@@ -149,5 +142,3 @@ export interface UploadedFile {
   type: string
   url: string
 }
-
-export const DEFAULT_MULTIPART_THRESHOLD = 100 * 1024 * 1024

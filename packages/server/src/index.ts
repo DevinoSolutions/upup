@@ -9,7 +9,6 @@ export type {
   UploadedFile,
   KeyStrategyContext,
 } from './config'
-export { DEFAULT_MULTIPART_THRESHOLD } from './config'
 export {
   InMemoryTokenStore,
   getTokens,

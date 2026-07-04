@@ -23,7 +23,10 @@ import { createS3Client } from './s3-client'
 
 const DEFAULT_EXPIRES_IN = 3600
 const DEFAULT_PUBLIC_URL_EXPIRES_IN = 3600 * 24 * 3 // 3 days
-const MIN_PART_SIZE = 5 * 1024 * 1024 // 5 MiB
+// Exported: this is the one canonical home for the 5 MiB S3 part-size floor —
+// also the fixed memory-safety cap `transfer.ts` uses for its singlePut/
+// multipart routing decision (F-501, F-653).
+export const MIN_PART_SIZE = 5 * 1024 * 1024 // 5 MiB
 const MAX_PARTS = 10_000
 
 function computePartSize(fileSize: number, chunkSizeBytes?: number): number {
@@ -34,7 +37,10 @@ function computePartSize(fileSize: number, chunkSizeBytes?: number): number {
   return partSize
 }
 
-async function generateSignedPublicUrl(
+// Exported: transfer.ts's drive-transfer path uses this same signed-URL
+// producer as the direct-presign path below, so the 3-day TTL + signing body
+// are single-sourced instead of duplicated (F-653).
+export async function generateSignedPublicUrl(
   storage: UpupServerConfig['storage'],
   key: string,
   expiresIn = DEFAULT_PUBLIC_URL_EXPIRES_IN,
