@@ -158,7 +158,7 @@ touching them.
 
 ### What the harness cannot catch
 
-The harness compares normalized DOM structure, not rendered geometry. Two
+The harness compares normalized DOM structure, not rendered geometry. Three
 recurring visual traps it will never flag — check these live:
 
 - The uploader panel is a fixed-height container by design; unbounded media
@@ -169,6 +169,12 @@ recurring visual traps it will never flag — check these live:
   actually mounted (each framework has a mount hook for this; Vue additionally
   guards against function-ref flicker). Binding early yields a silent black
   preview that no DOM assertion notices.
+- **Density/variant changes:** the geometry sweep runs each `PARITY_VARIANTS`
+  density only; a new density/compact mode requires (a) a
+  `<fw>-uploader--<variant>` parity + playground story per framework, (b) a
+  variant fixture block, (c) a manual live overflow **and spacing/touch-target**
+  check per framework (the harness catches outright clip, never cramped
+  spacing).
 
 ## Naming vocabulary
 

@@ -13,7 +13,7 @@ import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
 import { readFileSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
-import { byName, storyUrl } from './framework-matrix'
+import { byName, storyUrl, PARITY_VARIANTS } from './framework-matrix'
 
 // ── axe-core source (injected via CDP evaluate, which bypasses page CSP) ──────
 const require = createRequire(import.meta.url)
@@ -101,6 +101,12 @@ test.describe('cross-framework a11y + overflow', () => {
   // SourceViewContainer. Camera/microphone auto-start via fake media devices; screen
   // capture (getDisplayMedia) is not driveable headlessly, so its initial view state
   // is measured (live preview verified interactively in a prior session).
+  //
+  // Covers geometry at each PARITY_VARIANTS density. `default` navigates today's
+  // exact playground story (zero behavior change); a future density adds a
+  // `<fw>-uploader--playground-<variant>` story per framework plus a live
+  // per-framework overflow + spacing/touch-target check (this sweep only ever
+  // catches outright clip, never cramped spacing).
   const MEDIA_VIEWS = [
     { src: 'camera', slot: 'camera-uploader' },
     { src: 'microphone', slot: 'audio-uploader' },
@@ -108,38 +114,44 @@ test.describe('cross-framework a11y + overflow', () => {
     { src: 'url', slot: 'url-uploader' },
   ] as const
 
-  for (const view of MEDIA_VIEWS) {
-    test(`4b: ${view.src} adapter view does not clip (no overflow)`, async ({ page }, testInfo) => {
-      const fw = byName(testInfo.project.name)
-      await page.goto(PLAYGROUND(fw.name))
-      await expect(page.locator('[data-testid="upup-root"]')).toBeVisible({ timeout: 30_000 })
+  for (const variant of PARITY_VARIANTS) {
+    for (const view of MEDIA_VIEWS) {
+      test(`4b: ${view.src} adapter view does not clip (no overflow) [variant: ${variant}]`, async ({ page }, testInfo) => {
+        const fw = byName(testInfo.project.name)
+        const url =
+          variant === 'default'
+            ? PLAYGROUND(fw.name)
+            : storyUrl(`${fw.name}-uploader--playground-${variant}`)
+        await page.goto(url)
+        await expect(page.locator('[data-testid="upup-root"]')).toBeVisible({ timeout: 30_000 })
 
-      const sourceBtn = page.locator(`[data-testid="upup-source-${view.src}"]`)
-      await expect(sourceBtn, `source button upup-source-${view.src} present`).toHaveCount(1)
-      await sourceBtn.first().click()
+        const sourceBtn = page.locator(`[data-testid="upup-source-${view.src}"]`)
+        await expect(sourceBtn, `source button upup-source-${view.src} present`).toHaveCount(1)
+        await sourceBtn.first().click()
 
-      // The fixed-height clipping box for this view (slot attr = stable across views).
-      const container = page.locator(`[data-upup-slot="${view.slot}"]`).first()
-      await expect(container, `${view.src} adapter container (slot=${view.slot}) rendered`).toBeVisible({ timeout: 15_000 })
-      // Let media autoplay / layout settle so the measurement reflects steady state.
-      await page.waitForTimeout(500)
+        // The fixed-height clipping box for this view (slot attr = stable across views).
+        const container = page.locator(`[data-upup-slot="${view.slot}"]`).first()
+        await expect(container, `${view.src} adapter container (slot=${view.slot}) rendered`).toBeVisible({ timeout: 15_000 })
+        // Let media autoplay / layout settle so the measurement reflects steady state.
+        await page.waitForTimeout(500)
 
-      const m = await measureOverflow(container)
-      // eslint-disable-next-line no-console
-      console.log(`[overflow][${fw.name}] ${view.src}: sh=${m.scrollHeight} ch=${m.clientHeight} sw=${m.scrollWidth} cw=${m.clientWidth}`)
-      await testInfo.attach(`overflow-${fw.name}-${view.src}.json`, {
-        body: JSON.stringify(m, null, 2),
-        contentType: 'application/json',
+        const m = await measureOverflow(container)
+        // eslint-disable-next-line no-console
+        console.log(`[overflow][${fw.name}][${variant}] ${view.src}: sh=${m.scrollHeight} ch=${m.clientHeight} sw=${m.scrollWidth} cw=${m.clientWidth}`)
+        await testInfo.attach(`overflow-${fw.name}-${variant}-${view.src}.json`, {
+          body: JSON.stringify(m, null, 2),
+          contentType: 'application/json',
+        })
+
+        expect(
+          m.scrollHeight,
+          `${fw.name}/${view.src} [${variant}]: vertical clip — content ${m.scrollHeight}px exceeds container ${m.clientHeight}px`,
+        ).toBeLessThanOrEqual(m.clientHeight + OVERFLOW_TOL)
+        expect(
+          m.scrollWidth,
+          `${fw.name}/${view.src} [${variant}]: horizontal clip — content ${m.scrollWidth}px exceeds container ${m.clientWidth}px`,
+        ).toBeLessThanOrEqual(m.clientWidth + OVERFLOW_TOL)
       })
-
-      expect(
-        m.scrollHeight,
-        `${fw.name}/${view.src}: vertical clip — content ${m.scrollHeight}px exceeds container ${m.clientHeight}px`,
-      ).toBeLessThanOrEqual(m.clientHeight + OVERFLOW_TOL)
-      expect(
-        m.scrollWidth,
-        `${fw.name}/${view.src}: horizontal clip — content ${m.scrollWidth}px exceeds container ${m.clientWidth}px`,
-      ).toBeLessThanOrEqual(m.clientWidth + OVERFLOW_TOL)
-    })
+    }
   }
 })
