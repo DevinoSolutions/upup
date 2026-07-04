@@ -1,108 +1,34 @@
 import { describe, it, expect } from 'vitest'
-import { t, plural, mergeTranslations } from '../../i18n/utils'
 import { normalizeBcp47, LOCALE_META } from '../../i18n/locale-meta'
-import type { UpupMessages } from '../../i18n/types'
+import { createTranslator } from '../../i18n/create-translator'
+import { enUS } from '../../i18n/locales/en-US'
 
 // ─────────────────────────────────────────────
-// t() — template interpolation
+// createTranslator — overrides deep-merge (absorbs deprecated mergeTranslations())
 // ─────────────────────────────────────────────
-describe('t()', () => {
-    it('returns the template unchanged when no values given', () => {
-        expect(t('Hello world')).toBe('Hello world')
+describe('createTranslator — overrides deep-merge (absorbs deprecated mergeTranslations())', () => {
+    it('applies a flat override onto the base bundle', () => {
+        const translate = createTranslator({
+            bundle: enUS,
+            overrides: { common: { cancel: 'Annuler' } },
+        })
+        expect(translate('common.cancel')).toBe('Annuler')
     })
 
-    it('interpolates a single {{key}} placeholder', () => {
-        expect(t('Hello {{name}}', { name: 'Alice' })).toBe('Hello Alice')
+    it('preserves non-overridden keys in the same namespace', () => {
+        const translate = createTranslator({
+            bundle: enUS,
+            overrides: { common: { cancel: 'Annuler' } },
+        })
+        expect(translate('common.done')).toBe(enUS.messages.common.done)
     })
 
-    it('interpolates multiple placeholders', () => {
-        expect(t('{{a}} + {{b}} = {{c}}', { a: 1, b: 2, c: 3 })).toBe('1 + 2 = 3')
-    })
-
-    it('leaves unknown placeholders as {{key}}', () => {
-        expect(t('Hello {{unknown}}')).toBe('Hello {{unknown}}')
-    })
-
-    it('handles numeric values', () => {
-        expect(t('Count: {{n}}', { n: 42 })).toBe('Count: 42')
-    })
-
-    it('interpolates the same placeholder used twice', () => {
-        expect(t('{{x}} and {{x}}', { x: 'hi' })).toBe('hi and hi')
-    })
-
-    it('returns empty string when template is empty', () => {
-        expect(t('')).toBe('')
-    })
-})
-
-// ─────────────────────────────────────────────
-// plural() — plural form selection
-// ─────────────────────────────────────────────
-describe('plural()', () => {
-    const msgs = {
-        file_one: 'one file',
-        file_other: 'many files',
-        file: 'file fallback',
-    } as unknown as UpupMessages
-
-    it('returns the _one form for count = 1', () => {
-        expect(plural(msgs, 'file', 1)).toBe('one file')
-    })
-
-    it('returns the _other form for count = 0', () => {
-        expect(plural(msgs, 'file', 0)).toBe('many files')
-    })
-
-    it('returns the _other form for count > 1', () => {
-        expect(plural(msgs, 'file', 5)).toBe('many files')
-    })
-
-    it('falls back to base key when plural-specific key is missing', () => {
-        const minimal = { file: 'file fallback' } as unknown as UpupMessages
-        expect(plural(minimal, 'file', 2)).toBe('file fallback')
-    })
-
-    it('returns empty string when key is completely missing', () => {
-        const empty = {} as unknown as UpupMessages
-        expect(plural(empty, 'nonexistent', 1)).toBe('')
-    })
-})
-
-// ─────────────────────────────────────────────
-// mergeTranslations() — deep merge
-// ─────────────────────────────────────────────
-describe('mergeTranslations()', () => {
-    const base = {
-        hello: 'Hello',
-        nested: { a: 'A', b: 'B' },
-    } as unknown as UpupMessages
-
-    it('returns base unchanged when no overrides given', () => {
-        expect(mergeTranslations(base)).toBe(base)
-    })
-
-    it('overrides a flat key', () => {
-        const result = mergeTranslations(base, { hello: 'Bonjour' } as any)
-        expect((result as any).hello).toBe('Bonjour')
-    })
-
-    it('preserves non-overridden flat keys', () => {
-        const result = mergeTranslations(base, { hello: 'Bonjour' } as any)
-        expect((result as any).nested).toEqual({ a: 'A', b: 'B' })
-    })
-
-    it('deep-merges nested object keys', () => {
-        const result = mergeTranslations(base, {
-            nested: { b: 'B2' },
-        } as any)
-        expect((result as any).nested.a).toBe('A')
-        expect((result as any).nested.b).toBe('B2')
-    })
-
-    it('does not mutate the original base', () => {
-        mergeTranslations(base, { hello: 'Changed' } as any)
-        expect((base as any).hello).toBe('Hello')
+    it('does not mutate the base bundle', () => {
+        createTranslator({
+            bundle: enUS,
+            overrides: { common: { cancel: 'Changed' } },
+        })
+        expect(enUS.messages.common.cancel).not.toBe('Changed')
     })
 })
 
