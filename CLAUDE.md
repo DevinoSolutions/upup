@@ -33,7 +33,12 @@ Publishable (`packages/`):
 
 Private (`packages/`): `interactive-example`, `storybook-config`,
 `tailwind-config` (shared Tailwind/postcss factory — theme edits happen in one
-file, not per-package).
+file, not per-package), `eslint-config` (shared flat-config factory mirroring
+`tailwind-config`; phase 1 lints TS/JS only — `.vue`/`.svelte` SFC and Angular
+HTML templates are deferred to phase 2; `@upup/react`/`@upup/preact`
+additionally compose its `reactHooksConfig` named export — kept out of the
+shared default because vue/svelte composables are also named `use*` and would
+false-positive against `react-hooks/rules-of-hooks`).
 
 Apps (`apps/`): `playground` (main dev app), `landing`, `docs`, `e2e-test`
 (Playwright: deep React suite + cross-framework parity), `storybook-react/vue/
@@ -94,6 +99,7 @@ pnpm run e2e            # the REAL gate — see next section
 pnpm run prettier-check # CI blocks on this (checks @upup/react src)
 pnpm run size           # size-limit bundle budgets
 pnpm run audit:prod     # high+ advisories in the publishable prod trees
+pnpm run lint           # eslint flat-config: 9 @upup/* packages + 3 apps
 ```
 
 Baseline: every unit suite is green (16 packages, all 16 turbo `test` tasks
@@ -228,9 +234,12 @@ if needed; never silently "improve" them:
 - `docs/superpowers/` is an intentionally untracked local workspace for specs,
   plans, and audit records. This file is the committed source of process truth;
   promote anything durable from there into here.
-- The pre-commit hook runs the package unit suites (core, react, server);
-  never bypass it (`--no-verify`) — fix the underlying failure instead, and
-  see the flake protocol above before assuming your change broke something.
+- The pre-commit hook runs the package unit suites (core, react, server) and is
+  **auto-wired via `prepare: husky` on `pnpm install`** — no manual
+  `git config core.hooksPath` step; the two dead nested `.husky` dirs
+  (`apps/landing`, `apps/playground`) were removed. Never bypass the hook
+  (`--no-verify`) — fix the underlying failure instead, and see the flake
+  protocol above before assuming your change broke something.
 
 ## CI (`.github/workflows`)
 
