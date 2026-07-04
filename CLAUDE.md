@@ -19,7 +19,7 @@ Publishable (`packages/`):
 
 - `@upup/core` — headless engine: file state + orchestrator, upload pipeline
   (compression, HEIC, web-worker offload), cloud-drive plugins, UI controllers,
-  i18n, theme/recipes. **Zero framework dependencies — keep it that way.**
+  i18n, theme. **Zero framework dependencies — keep it that way.**
 - `@upup/react` — the canonical UI. Every other framework matches its DOM.
 - `@upup/vue`, `@upup/svelte`, `@upup/angular`, `@upup/vanilla` — native ports
   of the React UI (same DOM contract, same Tailwind classes).
