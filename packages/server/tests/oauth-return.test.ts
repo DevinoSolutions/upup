@@ -4,7 +4,7 @@ import {
   validateReturnTo,
   concreteAllowedOrigins,
   buildOAuthSuccessPage,
-} from "../src/handler";
+} from "../src/oauth";
 
 // ---------------------------------------------------------------------------
 // validateReturnTo
