@@ -313,10 +313,6 @@ export class GoogleDrivePlugin implements DrivePlugin {
                 const file = await this.downloadFile(driveFile)
                 if (file) {
                     results.push(file)
-                    this.emitter?.emit('google-drive:file-downloaded', {
-                        file,
-                        driveFile,
-                    })
                 }
             } catch (err) {
                 this.emitter?.emit('google-drive:error', {

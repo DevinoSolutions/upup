@@ -52,7 +52,6 @@ export function useOneDrive() {
         selectedFiles: computed(() => state.value.selectedFiles),
         showLoader: computed(() => state.value.showLoader),
         handleSubmit: () => controller.handleSubmit(),
-        downloadProgress: computed(() => state.value.downloadProgress),
         handleCancelDownload: () => controller.handleCancelDownload(),
         onSelectCurrentFolder: () => controller.onSelectCurrentFolder(),
         isClickLoading: computed(() => state.value.isClickLoading),

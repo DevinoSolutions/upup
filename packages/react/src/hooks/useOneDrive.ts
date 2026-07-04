@@ -28,7 +28,6 @@ const SERVER_SNAPSHOT: DriveBrowserState = {
     selectedFiles: [],
     isClickLoading: false,
     showLoader: false,
-    downloadProgress: 0,
     isAuthReady: false,
     isAuthenticated: false,
     isLoading: true,
@@ -102,7 +101,6 @@ export default function useOneDrive() {
         selectedFiles: state.selectedFiles,
         showLoader: state.showLoader,
         handleSubmit: () => controller?.handleSubmit() ?? Promise.resolve(),
-        downloadProgress: state.downloadProgress,
         handleCancelDownload: () => {
             controller?.handleCancelDownload()
         },

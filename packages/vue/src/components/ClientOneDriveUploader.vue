@@ -18,7 +18,6 @@ const {
     selectedFiles,
     showLoader,
     handleSubmit,
-    downloadProgress,
     handleCancelDownload,
     onSelectCurrentFolder,
 } = useOneDrive()

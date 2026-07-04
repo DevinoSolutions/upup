@@ -590,10 +590,6 @@ export class DropboxPlugin implements DrivePlugin {
                 const file = await this.downloadSingleFile(driveFile)
                 if (file) {
                     results.push(file)
-                    this.emitter?.emit('dropbox:file-downloaded', {
-                        file,
-                        driveFile,
-                    })
                 }
             } catch (err) {
                 this.emitter?.emit('dropbox:error', {

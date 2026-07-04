@@ -843,7 +843,7 @@ describe('OneDrivePlugin', () => {
             events.length = 0
         })
 
-        it('downloads files and emits file-downloaded for each', async () => {
+        it('downloads files and returns them as File objects', async () => {
             const driveFiles = [
                 makeDriveFile({ id: 'id1', name: 'a.txt' }),
                 makeDriveFile({ id: 'id2', name: 'b.txt' }),
@@ -897,11 +897,6 @@ describe('OneDrivePlugin', () => {
             expect(results).toHaveLength(2)
             expect(results[0].name).toBe('a.txt')
             expect(results[1].name).toBe('b.txt')
-
-            const downloaded = events.filter(
-                e => e.event === 'onedrive:file-downloaded',
-            )
-            expect(downloaded).toHaveLength(2)
         })
 
         it('skips folders', async () => {

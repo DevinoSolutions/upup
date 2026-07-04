@@ -45,7 +45,6 @@ export function useOneDrive() {
         selectedFiles: derived(state, ($s) => $s.selectedFiles),
         showLoader: derived(state, ($s) => $s.showLoader),
         handleSubmit: () => controller.handleSubmit(),
-        downloadProgress: derived(state, ($s) => $s.downloadProgress),
         handleCancelDownload: () => controller.handleCancelDownload(),
         onSelectCurrentFolder: () => controller.onSelectCurrentFolder(),
         isClickLoading: derived(state, ($s) => $s.isClickLoading),

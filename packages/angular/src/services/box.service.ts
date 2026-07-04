@@ -40,7 +40,6 @@ export class BoxService {
     readonly path = computed(() => this.state().path)
     readonly selectedFiles = computed(() => this.state().selectedFiles)
     readonly showLoader = computed(() => this.state().showLoader)
-    readonly downloadProgress = computed(() => this.state().downloadProgress)
     readonly isClickLoading = computed(() => this.state().isClickLoading)
 
     // ── Lifecycle ─────────────────────────────────────────────────

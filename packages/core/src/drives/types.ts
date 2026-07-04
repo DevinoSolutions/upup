@@ -26,8 +26,6 @@ export type DriveEventMap = {
     'signed-out': Record<string, never>
     'session-expired': Record<string, never>
     'files-loaded': { files: DriveFile[]; path: string }
-    'file-downloaded': { file: File; driveFile: DriveFile }
-    'download-progress': { driveFileId: string; loaded: number; total: number }
     'error': { error: Error; action: string }
     'state-change': { state: DriveState }
 }

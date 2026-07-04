@@ -13,7 +13,6 @@ export interface DriveBrowserState {
     selectedFiles: DriveFile[]
     isClickLoading: boolean
     showLoader: boolean
-    downloadProgress: number
     /** GIS: token client ready. Popup: set true after mount restore. */
     isAuthReady: boolean
     isAuthenticated: boolean
@@ -81,7 +80,6 @@ export class DriveBrowserController {
             selectedFiles: [],
             isClickLoading: false,
             showLoader: false,
-            downloadProgress: 0,
             isAuthReady: false,
             isAuthenticated: false,
             isLoading: true,
@@ -369,18 +367,18 @@ export class DriveBrowserController {
     async handleSubmit(): Promise<void> {
         const plugin = this.plugin
         if (!plugin || this.state.selectedFiles.length === 0) return
-        this.setState({ showLoader: true, downloadProgress: 0 })
+        this.setState({ showLoader: true })
         try {
             await this.downloadAndClose(this.state.selectedFiles)
         } catch {
             // error surfaced via plugin event
         } finally {
-            this.setState({ showLoader: false, downloadProgress: 0 })
+            this.setState({ showLoader: false })
         }
     }
 
     handleCancelDownload(): void {
-        this.setState({ selectedFiles: [], downloadProgress: 0 })
+        this.setState({ selectedFiles: [] })
     }
 
     async onSelectCurrentFolder(): Promise<void> {
@@ -390,20 +388,20 @@ export class DriveBrowserController {
         if (this.descriptor.selectFolder === 'cached-children') {
             const current = this.state.path[this.state.path.length - 1]
             if (!current) return
-            this.setState({ showLoader: true, downloadProgress: 0 })
+            this.setState({ showLoader: true })
             try {
                 await this.downloadAndClose(current.children)
             } catch {
                 // error surfaced via plugin event
             } finally {
-                this.setState({ showLoader: false, downloadProgress: 0 })
+                this.setState({ showLoader: false })
             }
             return
         }
 
         // load-all (popup providers)
         if (!plugin.loadAllFilesInFolder || !this.state.folder) return
-        this.setState({ showLoader: true, downloadProgress: 0 })
+        this.setState({ showLoader: true })
         try {
             const folderArg =
                 this.state.folder[this.descriptor.folderKey] ||
@@ -414,7 +412,7 @@ export class DriveBrowserController {
         } catch {
             // error surfaced via plugin event
         } finally {
-            this.setState({ showLoader: false, downloadProgress: 0 })
+            this.setState({ showLoader: false })
         }
     }
 

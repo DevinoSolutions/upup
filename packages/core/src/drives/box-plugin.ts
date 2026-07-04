@@ -487,10 +487,6 @@ export class BoxPlugin implements DrivePlugin {
                 const file = await this.downloadSingleFile(driveFile)
                 if (file) {
                     results.push(file)
-                    this.emitter?.emit('box:file-downloaded', {
-                        file,
-                        driveFile,
-                    })
                 }
             } catch (err) {
                 this.emitter?.emit('box:error', {
