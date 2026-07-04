@@ -1,0 +1,32 @@
+version: 2
+updates:
+  # Published surface + workspace deps. `npm` ecosystem reads pnpm-lock.yaml (v9).
+  - package-ecosystem: 'npm'
+    directories:
+      - '/'
+      - '/packages/*'
+    schedule:
+      interval: 'weekly'
+      day: 'monday'
+    open-pull-requests-limit: 5
+    groups:
+      production-dependencies:      # prioritise the shipped prod deps, one PR
+        applies-to: version-updates
+        dependency-type: 'production'
+        update-types: ['minor', 'patch']
+      development-dependencies:
+        applies-to: version-updates
+        dependency-type: 'development'
+        update-types: ['minor', 'patch']
+    ignore:
+      # Majors are DEFERRED (F-189: Angular 19->22, Storybook 9->10, Tailwind
+      # 3->4, TS 5->6, Vite/Rollup/ESLint/jsdom). See audit/deferred-roadmap.md.
+      - dependency-name: '*'
+        update-types: ['version-update:semver-major']
+  - package-ecosystem: 'github-actions'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+    groups:
+      github-actions:
+        patterns: ['*']
