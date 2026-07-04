@@ -1,6 +1,6 @@
 import type { UpupPlugin } from '../plugin'
 import type { EventEmitter } from '../events'
-import type { DriveFile, DriveUser } from './types'
+import type { DriveFile, DriveListPage, DriveUser } from './types'
 
 /**
  * The single drive-adapter contract. Extends the generic UpupPlugin registration
@@ -32,4 +32,9 @@ export interface DrivePlugin extends UpupPlugin {
   authenticateViaPopup?(): Promise<void>
   loadAllFilesInFolder?(folderArg: string): Promise<DriveFile[]>
   getConfig?(): unknown
+  // optional (matches the existing authenticateViaPopup/loadAllFilesInFolder style);
+  // the controller guards with `plugin.loadMoreFiles?`. All four current providers
+  // implement it (F-125) — cursor is the opaque continuation token from the most
+  // recent files-loaded/loadMoreFiles payload.
+  loadMoreFiles?(cursor: string): Promise<DriveListPage>
 }

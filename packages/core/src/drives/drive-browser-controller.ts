@@ -48,6 +48,8 @@ interface FilesLoadedPayload {
     files: DriveFile[]
     folderId?: string
     path?: string
+    hasMore?: boolean
+    cursor?: string
 }
 type GoogleDriveConfigLike = { clientId?: string; apiKey?: string }
 
@@ -70,6 +72,8 @@ export class DriveBrowserController {
     private unsubs: (() => void)[] = []
     /** Real name of the folder being navigated into, captured at click time. */
     private pendingFolder?: { id: string; name: string }
+    /** Opaque continuation token from the most recent files-loaded/loadMoreFiles payload (F-125). */
+    private cursor?: string
 
     constructor(
         core: UpupCore,
@@ -203,12 +207,15 @@ export class DriveBrowserController {
                 this.resetSession()
             },
             onFilesLoaded: (payload: unknown) => {
-                const folder = this.buildRootFolder(payload as FilesLoadedPayload)
+                const p = payload as FilesLoadedPayload
+                const folder = this.buildRootFolder(p)
+                this.cursor = p.cursor
                 this.setState({
                     folder,
                     path: this.nextPath(folder),
                     isClickLoading: false,
                     error: undefined,
+                    hasMore: !!p.hasMore,
                 })
             },
             onStateChange: (payload: unknown) => {
@@ -241,6 +248,7 @@ export class DriveBrowserController {
      */
     private resetSession(): void {
         this.pendingFolder = undefined
+        this.cursor = undefined
         this.setState({
             user: undefined,
             folder: undefined,
@@ -386,7 +394,11 @@ export class DriveBrowserController {
     }
 
     setPath(path: DriveFolder[]): void {
-        this.setState({ path })
+        // A breadcrumb-back jump lands on a cached folder view (see nextPath); its
+        // continuation token belonged to whatever page was being listed when we left
+        // it, so pagination resets rather than carrying a stale cursor forward.
+        this.cursor = undefined
+        this.setState({ path, hasMore: false })
     }
 
     handleClick(file: DriveFile): void {
@@ -460,6 +472,39 @@ export class DriveBrowserController {
             // error surfaced via plugin event
         } finally {
             this.setState({ showLoader: false })
+        }
+    }
+
+    /**
+     * Append-driven pagination (F-125), mirroring onSelectCurrentFolder's
+     * await-then-use-the-return-value style rather than reacting to another
+     * files-loaded event — the same convention, not a second one. A no-op
+     * unless the plugin supports it, the current view has more to fetch, and
+     * a continuation token exists.
+     */
+    async loadMore(): Promise<void> {
+        const plugin = this.plugin
+        if (!plugin?.loadMoreFiles || !this.state.hasMore || !this.cursor || this.state.isLoadingMore) {
+            return
+        }
+        this.setState({ isLoadingMore: true, error: undefined })
+        try {
+            const page = await plugin.loadMoreFiles(this.cursor)
+            const folder = this.state.folder
+            if (!folder) {
+                this.setState({ isLoadingMore: false })
+                return
+            }
+            const merged = { ...folder, children: [...folder.children, ...page.files] }
+            const path = this.state.path.slice()
+            if (path.length && path[path.length - 1].id === folder.id) {
+                path[path.length - 1] = merged
+            }
+            this.cursor = page.cursor
+            this.setState({ folder: merged, path, hasMore: page.hasMore, isLoadingMore: false })
+        } catch {
+            // error already surfaced via the plugin's error emit → onError
+            this.setState({ isLoadingMore: false })
         }
     }
 

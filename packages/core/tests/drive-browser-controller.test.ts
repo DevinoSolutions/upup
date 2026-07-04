@@ -41,6 +41,12 @@ class FakeDrivePlugin {
     restoreOk = false
     /** When true, getUserInfo() rejects instead of resolving — pins the F-123 restore-throw guard. */
     getUserInfoThrows = false
+    /** Configurable next page for loadMoreFiles() (F-125 pins). */
+    nextPage: { files: DriveFile[]; hasMore: boolean; cursor?: string } = {
+        files: [],
+        hasMore: false,
+        cursor: undefined,
+    }
     constructor(id: string) {
         this.id = id
         this.name = id
@@ -69,6 +75,9 @@ class FakeDrivePlugin {
     }
     async loadAllFilesInFolder(): Promise<DriveFile[]> {
         return []
+    }
+    async loadMoreFiles(_cursor: string): Promise<{ files: DriveFile[]; hasMore: boolean; cursor?: string }> {
+        return this.nextPage
     }
     async authenticate(): Promise<void> {
         this.authed = true
@@ -192,6 +201,17 @@ describe('DriveBrowserController — events', () => {
         expect(controller.getSnapshot().selectedFiles).toHaveLength(1)
         core.emit('google-drive:session-expired', {})
         expect(controller.getSnapshot().selectedFiles).toHaveLength(0)
+    })
+
+    it('files-loaded stores hasMore/cursor (F-125)', () => {
+        const { core, controller } = setup()
+        core.emit('google-drive:files-loaded', {
+            files: [],
+            folderId: 'root',
+            hasMore: true,
+            cursor: 'c1',
+        })
+        expect(controller.getSnapshot().hasMore).toBe(true)
     })
 })
 
@@ -350,6 +370,42 @@ describe('DriveBrowserController — actions', () => {
         expect(controller.getSnapshot().path.map(p => p.id)).toEqual(['root'])
         core.emit('dropbox:files-loaded', { files: [], path: '/Photos' })
         expect(controller.getSnapshot().path.map(p => p.id)).toEqual(['root', '/Photos'])
+    })
+
+    it('loadMore appends and advances the cursor (F-125)', async () => {
+        const { core, controller, plugin } = setup()
+        core.emit('google-drive:files-loaded', {
+            files: [file('a', 'a.txt')],
+            folderId: 'root',
+            hasMore: true,
+            cursor: 'c1',
+        })
+        expect(controller.getSnapshot().hasMore).toBe(true)
+
+        plugin.nextPage = { files: [file('x', 'x.txt')], hasMore: false, cursor: undefined }
+        await controller.loadMore()
+
+        const snap = controller.getSnapshot()
+        expect(snap.folder?.children).toHaveLength(2)
+        expect(snap.folder?.children.map(f => f.id)).toEqual(['a', 'x'])
+        expect(snap.hasMore).toBe(false)
+        expect(snap.isLoadingMore).toBe(false)
+
+        // A second call is a no-op — hasMore is now false.
+        const loadMoreSpy = vi.spyOn(plugin, 'loadMoreFiles')
+        await controller.loadMore()
+        expect(loadMoreSpy).not.toHaveBeenCalled()
+        expect(controller.getSnapshot().folder?.children).toHaveLength(2)
+    })
+
+    it('loadMore is a no-op with no cursor even if hasMore were true', async () => {
+        const { core, controller, plugin } = setup()
+        // files-loaded without hasMore/cursor — hasMore defaults false, so
+        // loadMore has nothing to do regardless of plugin support.
+        core.emit('google-drive:files-loaded', { files: [], folderId: 'root' })
+        const loadMoreSpy = vi.spyOn(plugin, 'loadMoreFiles')
+        await controller.loadMore()
+        expect(loadMoreSpy).not.toHaveBeenCalled()
     })
 })
 
