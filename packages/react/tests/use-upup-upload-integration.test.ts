@@ -21,13 +21,13 @@ describe('useUpupUpload — capstone integration', () => {
                 limit: 5,
                 plugins: [{
                     name: 'lifecycle-tracker',
-                    setup: (core) => {
-                        core.on('files-added', () => log.push('files-added'))
-                        core.on('file-removed', () => log.push('file-removed'))
-                        core.on('files-cleared', () => log.push('files-cleared'))
-                        core.on('files-reordered', () => log.push('files-reordered'))
-                        core.on('files-set', () => log.push('files-set'))
-                        core.on('destroyed', () => log.push('destroyed'))
+                    init: (emitter) => {
+                        emitter.on('files-added', () => log.push('files-added'))
+                        emitter.on('file-removed', () => log.push('file-removed'))
+                        emitter.on('files-cleared', () => log.push('files-cleared'))
+                        emitter.on('files-reordered', () => log.push('files-reordered'))
+                        emitter.on('files-set', () => log.push('files-set'))
+                        emitter.on('destroyed', () => log.push('destroyed'))
                     },
                 }],
             }),
@@ -68,22 +68,29 @@ describe('useUpupUpload — capstone integration', () => {
     })
 
     it('analytics extension tracks metrics through hook', async () => {
+        // The plugin observes events via init(emitter); extensions are registered
+        // through the public core.registerExtension() (F-607: init no longer hands
+        // the plugin the core, so lifecycle-time extension registration is gone —
+        // core.registerExtension is the supported path).
+        const metrics = { adds: 0, removes: 0 }
         const { result } = renderHook(() =>
             useUpupUpload({
                 provider: 'S3' as const,
                 plugins: [{
                     name: 'analytics',
-                    setup: (core) => {
-                        const metrics = { adds: 0, removes: 0 }
-                        core.on('files-added', () => metrics.adds++)
-                        core.on('file-removed', () => metrics.removes++)
-                        ;(core as any).pluginManager.registerExtension('analytics', {
-                            getMetrics: () => ({ ...metrics }),
-                        })
+                    init: (emitter) => {
+                        emitter.on('files-added', () => metrics.adds++)
+                        emitter.on('file-removed', () => metrics.removes++)
                     },
                 }],
             }),
         )
+
+        act(() => {
+            result.current.core.registerExtension('analytics', {
+                getMetrics: () => ({ ...metrics }),
+            })
+        })
 
         await act(async () => {
             await result.current.addFiles([makeFile('x.txt')])
@@ -93,9 +100,9 @@ describe('useUpupUpload — capstone integration', () => {
         const id = result.current.files[0].id
         act(() => { result.current.removeFile(id) })
 
-        const metrics = result.current.ext.analytics.getMetrics()
-        expect(metrics.adds).toBe(2)
-        expect(metrics.removes).toBe(1)
+        const m = result.current.ext.analytics.getMetrics()
+        expect(m.adds).toBe(2)
+        expect(m.removes).toBe(1)
     })
 
     it('restriction + event + plugin all work together', async () => {
@@ -109,8 +116,8 @@ describe('useUpupUpload — capstone integration', () => {
                 limit: 2,
                 plugins: [{
                     name: 'rejection-logger',
-                    setup: (core) => {
-                        core.on('file-rejected', () => rejections.push('rejected'))
+                    init: (emitter) => {
+                        emitter.on('file-rejected', () => rejections.push('rejected'))
                     },
                 }],
             }),
@@ -158,13 +165,13 @@ describe('useUpupUpload — capstone integration', () => {
         const { result: r1 } = renderHook(() =>
             useUpupUpload({
                 provider: 'S3' as const,
-                plugins: [{ name: 'p1', setup: (c) => c.on('files-added', () => log1.push('h1')) }],
+                plugins: [{ name: 'p1', init: (e) => e.on('files-added', () => log1.push('h1')) }],
             }),
         )
         const { result: r2 } = renderHook(() =>
             useUpupUpload({
                 provider: 'S3' as const,
-                plugins: [{ name: 'p2', setup: (c) => c.on('files-added', () => log2.push('h2')) }],
+                plugins: [{ name: 'p2', init: (e) => e.on('files-added', () => log2.push('h2')) }],
             }),
         )
 

@@ -14,10 +14,10 @@ describe('Plugin integration — file lifecycle observer', () => {
         const core = new UpupCore({})
         core.use({
             name: 'file-logger',
-            setup: (c) => {
-                c.on('files-added', () => log.push('added'))
-                c.on('file-removed', () => log.push('removed'))
-                c.on('files-cleared', () => log.push('cleared'))
+            init: (emitter) => {
+                emitter.on('files-added', () => log.push('added'))
+                emitter.on('file-removed', () => log.push('removed'))
+                emitter.on('files-cleared', () => log.push('cleared'))
             },
         })
 
@@ -35,8 +35,10 @@ describe('Plugin integration — file lifecycle observer', () => {
         const core = new UpupCore({})
         core.use({
             name: 'counter',
-            setup: (c) => {
-                c.on('state-change', () => { lastCount = c.files.size })
+            init: (emitter) => {
+                emitter.on('state-change', () => {
+                    lastCount = core.files.size
+                })
             },
         })
 
@@ -59,10 +61,10 @@ describe('Plugin integration — upload control observer', () => {
         const core = new UpupCore({})
         core.use({
             name: 'upload-logger',
-            setup: (c) => {
-                c.on('upload-pause', () => log.push('paused'))
-                c.on('upload-resume', () => log.push('resumed'))
-                c.on('upload-cancel', () => log.push('cancelled'))
+            init: (emitter) => {
+                emitter.on('upload-pause', () => log.push('paused'))
+                emitter.on('upload-resume', () => log.push('resumed'))
+                emitter.on('upload-cancel', () => log.push('cancelled'))
             },
         })
 
@@ -79,8 +81,8 @@ describe('Plugin integration — upload control observer', () => {
         const core = new UpupCore({})
         core.use({
             name: 'retry-logger',
-            setup: (c) => {
-                c.on('retry', (data: any) => retries.push(data.fileId))
+            init: (emitter) => {
+                emitter.on('retry', (data: any) => retries.push(data.fileId))
             },
         })
 
@@ -103,12 +105,12 @@ describe('Plugin integration — extension with event reaction', () => {
         const core = new UpupCore({})
         core.use({
             name: 'analytics',
-            setup: (c) => {
+            init: (emitter) => {
                 const metrics = { filesAdded: 0, filesRemoved: 0, reorders: 0 }
-                c.on('files-added', () => metrics.filesAdded++)
-                c.on('file-removed', () => metrics.filesRemoved++)
-                c.on('files-reordered', () => metrics.reorders++)
-                ;(c as any).pluginManager.registerExtension('analytics', {
+                emitter.on('files-added', () => metrics.filesAdded++)
+                emitter.on('file-removed', () => metrics.filesRemoved++)
+                emitter.on('files-reordered', () => metrics.reorders++)
+                ;(core as any).pluginManager.registerExtension('analytics', {
                     getMetrics: () => ({ ...metrics }),
                 })
             },
@@ -133,7 +135,9 @@ describe('Plugin integration — extension with event reaction', () => {
         const core = new UpupCore({})
         core.use({
             name: 'listener',
-            setup: (c) => { c.on('files-added', handler) },
+            init: (emitter) => {
+                emitter.on('files-added', handler)
+            },
         })
 
         await core.addFiles([makeFile('a.txt')])
@@ -152,8 +156,16 @@ describe('Plugin integration — extension with event reaction', () => {
         const log2: string[] = []
         const core = new UpupCore({})
         core
-            .use({ name: 'p1', setup: (c) => c.on('files-added', () => log1.push('p1')) })
-            .use({ name: 'p2', setup: (c) => c.on('files-added', () => log2.push('p2')) })
+            .use({
+                name: 'p1',
+                init: (emitter) =>
+                    emitter.on('files-added', () => log1.push('p1')),
+            })
+            .use({
+                name: 'p2',
+                init: (emitter) =>
+                    emitter.on('files-added', () => log2.push('p2')),
+            })
 
         await core.addFiles([makeFile('x.txt')])
 

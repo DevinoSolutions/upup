@@ -47,22 +47,24 @@ describe('UpupCore', () => {
 
   it('registers plugins via use() and returns self for chaining', () => {
     const core = new UpupCore({ provider: 'aws', uploadEndpoint: '/api/upload' })
-    const setup = vi.fn()
-    const plugin: UpupPlugin = { name: 'test-plugin', setup }
+    const init = vi.fn()
+    const plugin: UpupPlugin = { name: 'test-plugin', init }
     const result = core.use(plugin)
-    expect(setup).toHaveBeenCalledWith(core)
+    // init(emitter) is the one lifecycle hook (F-607) — invoked with core's bus.
+    expect(init).toHaveBeenCalledOnce()
+    expect(typeof init.mock.calls[0][0].on).toBe('function')
     expect(result).toBe(core)
   })
 
   it('registers plugins via options.plugins', () => {
-    const setup = vi.fn()
-    const plugin: UpupPlugin = { name: 'opt-plugin', setup }
+    const init = vi.fn()
+    const plugin: UpupPlugin = { name: 'opt-plugin', init }
     const core = new UpupCore({
       provider: 'aws',
       uploadEndpoint: '/api/upload',
       plugins: [plugin],
     })
-    expect(setup).toHaveBeenCalledWith(core)
+    expect(init).toHaveBeenCalledOnce()
   })
 
   it('provides type-safe extension access via ext', () => {

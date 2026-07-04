@@ -8,7 +8,6 @@ describe('DrivePlugin interface', () => {
     const mockPlugin: DrivePlugin = {
       id: 'test-adapter',
       name: 'test-adapter',
-      setup: vi.fn(),
       init: vi.fn(),
       destroy: vi.fn(),
     }

@@ -4,14 +4,14 @@ import { useUpupUpload } from '../src/use-upup-upload'
 
 describe('useUpupUpload — plugin integration', () => {
     it('accepts plugins via options', () => {
-        const setup = vi.fn()
+        const init = vi.fn()
         const { result } = renderHook(() =>
             useUpupUpload({
                 provider: 'S3' as const,
-                plugins: [{ name: 'test-plugin', setup }],
+                plugins: [{ name: 'test-plugin', init }],
             }),
         )
-        expect(setup).toHaveBeenCalledOnce()
+        expect(init).toHaveBeenCalledOnce()
         expect(result.current.core).toBeDefined()
     })
 
@@ -22,7 +22,7 @@ describe('useUpupUpload — plugin integration', () => {
                 provider: 'S3' as const,
                 plugins: [{
                     name: 'observer',
-                    setup: (core) => { core.on('files-added', fileHandler) },
+                    init: (emitter) => { emitter.on('files-added', fileHandler) },
                 }],
             }),
         )
@@ -32,22 +32,5 @@ describe('useUpupUpload — plugin integration', () => {
         })
 
         expect(fileHandler).toHaveBeenCalled()
-    })
-
-    it('ext getter reflects registered extensions', () => {
-        const { result } = renderHook(() =>
-            useUpupUpload({
-                provider: 'S3' as const,
-                plugins: [{
-                    name: 'with-ext',
-                    setup: (core) => {
-                        (core as any).pluginManager.registerExtension('myExt', { value: 42 })
-                    },
-                }],
-            }),
-        )
-
-        expect(result.current.ext).toBeDefined()
-        expect(result.current.ext.myExt).toEqual({ value: 42 })
     })
 })

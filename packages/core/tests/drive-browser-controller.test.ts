@@ -51,7 +51,6 @@ class FakeDrivePlugin {
         this.id = id
         this.name = id
     }
-    setup(): void {}
     init(): void {}
     destroy(): void {}
     restoreSession(): boolean {

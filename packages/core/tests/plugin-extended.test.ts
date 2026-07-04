@@ -8,7 +8,7 @@ import type { UpupPlugin } from '../src/plugin'
 describe('UpupCore.use() — chaining and integration', () => {
     it('returns core for method chaining', () => {
         const core = new UpupCore({})
-        const plugin: UpupPlugin = { name: 'chain-test', setup: () => {} }
+        const plugin: UpupPlugin = { name: 'chain-test', init: () => {} }
         const result = core.use(plugin)
         expect(result).toBe(core)
         core.destroy()
@@ -18,27 +18,21 @@ describe('UpupCore.use() — chaining and integration', () => {
         const order: string[] = []
         const core = new UpupCore({})
         core
-            .use({ name: 'first', setup: () => order.push('first') })
-            .use({ name: 'second', setup: () => order.push('second') })
-            .use({ name: 'third', setup: () => order.push('third') })
+            .use({ name: 'first', init: () => order.push('first') })
+            .use({ name: 'second', init: () => order.push('second') })
+            .use({ name: 'third', init: () => order.push('third') })
         expect(order).toEqual(['first', 'second', 'third'])
         core.destroy()
     })
 
-    it('plugin setup receives the core instance', () => {
-        const core = new UpupCore({})
-        let receivedCore: unknown
-        core.use({ name: 'receiver', setup: (c) => { receivedCore = c } })
-        expect(receivedCore).toBe(core)
-        core.destroy()
-    })
-
-    it('plugin can subscribe to core events during setup', async () => {
+    it('plugin can subscribe to core events during init', async () => {
         const core = new UpupCore({})
         const handler = vi.fn()
         core.use({
             name: 'event-listener',
-            setup: (c) => { c.on('files-added', handler) },
+            init: (emitter) => {
+                emitter.on('files-added', handler)
+            },
         })
         await core.addFiles([new File(['x'], 'a.txt', { type: 'text/plain' })])
         expect(handler).toHaveBeenCalled()
@@ -47,8 +41,8 @@ describe('UpupCore.use() — chaining and integration', () => {
 
     it('rejects duplicate plugin names', () => {
         const core = new UpupCore({})
-        core.use({ name: 'unique', setup: () => {} })
-        expect(() => core.use({ name: 'unique', setup: () => {} })).toThrow()
+        core.use({ name: 'unique', init: () => {} })
+        expect(() => core.use({ name: 'unique', init: () => {} })).toThrow()
         core.destroy()
     })
 })
@@ -67,8 +61,8 @@ describe('UpupCore.getExtension() — extension access', () => {
         const core = new UpupCore({})
         core.use({
             name: 'math-ext',
-            setup: (c) => {
-                (c as any).pluginManager.registerExtension('math', {
+            init: () => {
+                ;(core as any).pluginManager.registerExtension('math', {
                     add: (a: number, b: number) => a + b,
                 })
             },
@@ -83,10 +77,10 @@ describe('UpupCore.getExtension() — extension access', () => {
         const core = new UpupCore({})
         core.use({
             name: 'counter-ext',
-            setup: (c) => {
+            init: (emitter) => {
                 let count = 0
-                c.on('files-added', () => count++)
-                ;(c as any).pluginManager.registerExtension('counter', {
+                emitter.on('files-added', () => count++)
+                ;(core as any).pluginManager.registerExtension('counter', {
                     getCount: () => count,
                 })
             },
@@ -104,8 +98,10 @@ describe('UpupCore.getExtension() — extension access', () => {
         const core = new UpupCore({})
         core.use({
             name: 'temp-ext',
-            setup: (c) => {
-                (c as any).pluginManager.registerExtension('temp', { val: 42 })
+            init: () => {
+                ;(core as any).pluginManager.registerExtension('temp', {
+                    val: 42,
+                })
             },
         })
         expect(core.getExtension('temp')).toBeDefined()
@@ -119,21 +115,63 @@ describe('UpupCore.getExtension() — extension access', () => {
 // ─────────────────────────────────────────────
 describe('UpupCore — options.plugins', () => {
     it('registers plugins passed in constructor options', () => {
-        const setup = vi.fn()
+        const init = vi.fn()
         const core = new UpupCore({
-            plugins: [{ name: 'opt-plug', setup }],
+            plugins: [{ name: 'opt-plug', init }],
         })
-        expect(setup).toHaveBeenCalledOnce()
+        expect(init).toHaveBeenCalledOnce()
         core.destroy()
     })
 
     it('constructor plugins and use() plugins coexist', () => {
-        const setups: string[] = []
+        const inits: string[] = []
         const core = new UpupCore({
-            plugins: [{ name: 'from-opts', setup: () => setups.push('opts') }],
+            plugins: [{ name: 'from-opts', init: () => inits.push('opts') }],
         })
-        core.use({ name: 'from-use', setup: () => setups.push('use') })
-        expect(setups).toEqual(['opts', 'use'])
+        core.use({ name: 'from-use', init: () => inits.push('use') })
+        expect(inits).toEqual(['opts', 'use'])
+        core.destroy()
+    })
+})
+
+// ─────────────────────────────────────────────
+// F-607 — init(emitter) is the one lifecycle hook (setup is retired)
+// ─────────────────────────────────────────────
+describe('UpupCore.use() — init(emitter) lifecycle hook (F-607)', () => {
+    it('accepts a plugin implementing only { name, init } and hands it the emitter', () => {
+        const core = new UpupCore({})
+        let received: unknown
+        const plugin: UpupPlugin = {
+            name: 'init-only',
+            init: (emitter) => {
+                received = emitter
+            },
+        }
+        core.use(plugin)
+        // init receives the event bus (has on/emit), NOT the core instance
+        expect(received).toBeDefined()
+        expect(typeof (received as { on?: unknown }).on).toBe('function')
+        expect(typeof (received as { emit?: unknown }).emit).toBe('function')
+        core.destroy()
+    })
+
+    it('a plugin with no lifecycle hook at all still registers', () => {
+        const core = new UpupCore({})
+        expect(() => core.use({ name: 'bare' })).not.toThrow()
+        core.destroy()
+    })
+
+    it('the init emitter is core’s bus — a subscribed handler fires on file events', async () => {
+        const core = new UpupCore({})
+        const handler = vi.fn()
+        core.use({
+            name: 'init-subscriber',
+            init: (emitter) => {
+                emitter.on('files-added', handler)
+            },
+        })
+        await core.addFiles([new File(['x'], 'a.txt', { type: 'text/plain' })])
+        expect(handler).toHaveBeenCalled()
         core.destroy()
     })
 })

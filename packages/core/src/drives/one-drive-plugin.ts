@@ -85,10 +85,6 @@ export class OneDrivePlugin implements DrivePlugin {
         return this.config
     }
 
-    setup(_core: unknown): void {
-        // Called by PluginManager.register
-    }
-
     init(emitter: EventEmitter): void {
         this.emitter = emitter
     }

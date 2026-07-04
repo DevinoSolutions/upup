@@ -68,15 +68,15 @@ describe('useUpupUpload — cleanup on unmount', () => {
         const { result, unmount } = renderHook(() =>
             useUpupUpload({
                 ...opts,
-                plugins: [{
-                    name: 'cleanup-ext',
-                    setup: (c) => {
-                        (c as any).pluginManager.registerExtension('tmp', { v: 1 })
-                    },
-                }],
+                plugins: [{ name: 'cleanup-ext' }],
             }),
         )
         const core = result.current.core
+        // Register through the public core API (F-607: init no longer hands the
+        // plugin the core; core.registerExtension is the supported path).
+        act(() => {
+            core.registerExtension('tmp', { v: 1 })
+        })
         expect(core.getExtension('tmp')).toBeDefined()
         unmount()
         expect(core.getExtension('tmp')).toBeUndefined()

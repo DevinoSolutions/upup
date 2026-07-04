@@ -1,8 +1,15 @@
+import type { EventEmitter } from './events'
+
 export interface UpupPlugin {
     /** Unique name — used for deduplication and debugging */
     name: string
-    /** Called once when the plugin is registered */
-    setup(core: unknown): void
+    /**
+     * Called once when the plugin is registered, with core's event bus. The one
+     * plugin lifecycle hook (F-607) — a plugin subscribes to core events and
+     * emits its own through this emitter. Optional: a plugin that only needs
+     * registration (dedup + storage) may omit it.
+     */
+    init?(emitter: EventEmitter): void
 }
 
 export type ExtensionMethods = Record<string, (...args: any[]) => any>
@@ -12,11 +19,13 @@ export class PluginManager {
     private extensions = new Map<string, ExtensionMethods>()
 
     register(plugin: UpupPlugin, core: unknown): void {
+        void core
         if (this.plugins.has(plugin.name)) {
             throw new Error(`Plugin "${plugin.name}" is already registered`)
         }
         this.plugins.set(plugin.name, plugin)
-        plugin.setup(core)
+        // The plugin's lifecycle hook is init(emitter), invoked by UpupCore.use()
+        // after registration (F-607). register() only dedups + stores.
     }
 
     registerExtension(name: string, methods: ExtensionMethods): void {

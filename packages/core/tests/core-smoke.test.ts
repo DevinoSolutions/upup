@@ -146,8 +146,10 @@ describe('UpupCore — smoke tests', () => {
         const core = new UpupCore({})
         core.use({
             name: 'smoke-plugin',
-            setup: (c) => {
-                (c as any).pluginManager.registerExtension('smoke', { ok: true })
+            init: () => {
+                ;(core as any).pluginManager.registerExtension('smoke', {
+                    ok: true,
+                })
             },
         })
         expect(core.getExtension('smoke')).toEqual({ ok: true })
@@ -174,9 +176,12 @@ describe('UpupCore — smoke tests', () => {
     it('destroy clears everything', async () => {
         const core = new UpupCore({})
         await core.addFiles([makeFile('x.txt')])
-        core.use({ name: 'tmp', setup: (c) => {
-            (c as any).pluginManager.registerExtension('tmp', { v: 1 })
-        }})
+        core.use({
+            name: 'tmp',
+            init: () => {
+                ;(core as any).pluginManager.registerExtension('tmp', { v: 1 })
+            },
+        })
         core.pause()
 
         core.destroy()

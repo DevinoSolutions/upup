@@ -3,23 +3,22 @@ import { PluginManager } from '../src/plugin'
 import type { UpupPlugin } from '../src/plugin'
 
 describe('PluginManager', () => {
-  it('registers a plugin and calls setup with core', () => {
+  it('registers and retrieves a plugin', () => {
     const manager = new PluginManager()
-    const setup = vi.fn()
-    const plugin: UpupPlugin = { name: 'test', setup }
-    const mockCore = { fake: true }
+    const plugin: UpupPlugin = { name: 'test' }
 
-    manager.register(plugin, mockCore)
+    // register() only dedups + stores; the lifecycle hook init(emitter) is
+    // invoked later by UpupCore.use() (F-607), not by register().
+    manager.register(plugin, {})
 
-    expect(setup).toHaveBeenCalledOnce()
-    expect(setup).toHaveBeenCalledWith(mockCore)
+    expect(manager.getPlugin('test')).toBe(plugin)
   })
 
   it('rejects duplicate plugin names', () => {
     const manager = new PluginManager()
-    manager.register({ name: 'dupe', setup: () => {} }, {})
+    manager.register({ name: 'dupe' }, {})
 
-    expect(() => manager.register({ name: 'dupe', setup: () => {} }, {}))
+    expect(() => manager.register({ name: 'dupe' }, {}))
       .toThrow('Plugin "dupe" is already registered')
   })
 
@@ -48,18 +47,12 @@ describe('PluginManager', () => {
       .toThrow('Extension "ext" is already registered')
   })
 
-  it('plugin can register extensions during setup', () => {
+  it('registers extensions independently of plugins', () => {
     const manager = new PluginManager()
-    const plugin: UpupPlugin = {
-      name: 'with-ext',
-      setup: () => {
-        manager.registerExtension('myExt', {
-          getValue: () => 42,
-        })
-      },
-    }
-
-    manager.register(plugin, {})
+    manager.register({ name: 'with-ext' }, {})
+    manager.registerExtension('myExt', {
+      getValue: () => 42,
+    })
 
     expect(manager.getExtension('myExt')!.getValue()).toBe(42)
   })
@@ -76,7 +69,7 @@ describe('PluginManager', () => {
 
   it('cleans up everything on destroy()', () => {
     const manager = new PluginManager()
-    manager.register({ name: 'test', setup: () => {} }, {})
+    manager.register({ name: 'test' }, {})
     manager.registerExtension('ext', { fn: () => {} })
 
     manager.destroy()

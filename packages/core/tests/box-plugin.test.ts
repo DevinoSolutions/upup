@@ -154,9 +154,6 @@ describe('BoxPlugin', () => {
             expect(postDestroyEvents).toHaveLength(0)
         })
 
-        it('setup() is a no-op', () => {
-            expect(() => plugin.setup({})).not.toThrow()
-        })
     })
 
     // ────────────────────────────────────────────

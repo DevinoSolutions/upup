@@ -162,11 +162,6 @@ describe('DropboxPlugin', () => {
             // after destroy, emitter is null so no events
             expect(postDestroyEvents).toHaveLength(0)
         })
-
-        it('setup() is a no-op', () => {
-            // Should not throw
-            expect(() => plugin.setup({})).not.toThrow()
-        })
     })
 
     // ────────────────────────────────────────────

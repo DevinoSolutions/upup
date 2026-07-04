@@ -132,10 +132,12 @@ describe('UpupCore — integration lifecycle', () => {
         const core = new UpupCore({ provider: 'aws', uploadEndpoint: '/api/upload' })
         core.use({
             name: 'counter',
-            setup: (c) => {
+            init: (emitter) => {
                 let count = 0
-                c.on('files-added', () => { count++ })
-                ;(c as any)._pluginCount = () => count
+                emitter.on('files-added', () => {
+                    count++
+                })
+                ;(core as any)._pluginCount = () => count
             },
         })
 

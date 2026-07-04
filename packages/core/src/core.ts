@@ -10,7 +10,6 @@ import { UploadStatus } from './types/upload-status'
 import { EventEmitter, type EventHandler } from './events'
 import type { CoreEvents } from './types/core-events'
 import { PluginManager, type UpupPlugin, type ExtensionMethods } from './plugin'
-import type { DrivePlugin } from './drives/plugin'
 import { FileManager, type FileManagerOptions } from './file-manager'
 import { validateFileRestrictions } from './validate-file-restrictions'
 import { PipelineEngine } from './pipeline/engine'
@@ -149,15 +148,12 @@ export class UpupCore {
 
     use(plugin: UpupPlugin): this {
         this.pluginManager.register(plugin, this)
-        // Drive plugins (Google Drive, Dropbox, OneDrive, Box) emit their events
-        // through an emitter handed to them via init(). Wire it to core's event bus
-        // here so events like 'google-drive:files-loaded' actually reach core.on()
-        // subscribers. Without this, drive plugins fetch successfully but every event is
-        // silently dropped — e.g. the drive browser stays stuck on its spinner.
-        const drivePlugin = plugin as Partial<DrivePlugin>
-        if (typeof drivePlugin.init === 'function') {
-            drivePlugin.init(this.emitter as unknown as EventEmitter)
-        }
+        // init(emitter) is the one plugin lifecycle hook (F-607). Drive plugins
+        // (Google Drive, Dropbox, OneDrive, Box) emit their events through this
+        // emitter, so wiring core's bus here is what makes events like
+        // 'google-drive:files-loaded' reach core.on() subscribers. Cast: core's bus
+        // is EventEmitter<CoreEvents>; the plugin contract accepts the untyped bus.
+        plugin.init?.(this.emitter as unknown as EventEmitter)
         this.emitter.emit('plugin-registered', { name: plugin.name })
         return this
     }

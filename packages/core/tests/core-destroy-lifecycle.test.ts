@@ -49,8 +49,10 @@ describe('UpupCore — destroy lifecycle', () => {
         const core = new UpupCore({})
         core.use({
             name: 'test-ext',
-            setup: (c) => {
-                (c as any).pluginManager.registerExtension('test', { val: 1 })
+            init: () => {
+                ;(core as any).pluginManager.registerExtension('test', {
+                    val: 1,
+                })
             },
         })
         expect(core.getExtension('test')).toBeDefined()
