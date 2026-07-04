@@ -24,15 +24,15 @@ describe('UpupErrorCode', () => {
             'PRESIGN_FAILED', 'CORS_ERROR', 'PIPELINE_STEP_FAILED',
             'HEIC_CONVERSION_FAILED', 'NETWORK_ERROR', 'TIMEOUT',
             'STORAGE_ERROR', 'QUOTA_EXCEEDED', 'NO_UPLOAD_TARGET',
-            'BAD_REQUEST',
+            'BAD_REQUEST', 'AUTH_REQUIRED',
         ]
         for (const code of expected) {
             expect(Object.values(UpupErrorCode)).toContain(code)
         }
     })
 
-    it('has 22 distinct error codes', () => {
-        expect(new Set(Object.values(UpupErrorCode)).size).toBe(22)
+    it('has 23 distinct error codes', () => {
+        expect(new Set(Object.values(UpupErrorCode)).size).toBe(23)
     })
 })
 

@@ -73,6 +73,15 @@ svelte/vanilla/angular/preact` (per-framework style-parity references),
    `packages/server/tests/handler-extended.test.ts` and
    `tests/integration/trust-model.integration.test.ts` assert this — a handler
    change that only passes by loosening a check is the wrong change.
+   `@upup/server` upload routes (`/presign`, `/multipart/init`) are
+   secure-by-default: they 403 `AUTH_REQUIRED` unless `auth`, `getUserId`, or
+   the explicit opt-in `allowAnonymousUploads:true` is configured. The upload
+   token's `uid` is enforced on the multipart continuation routes
+   (sign-part/complete/abort) whenever `getUserId` is set — a mismatch is 403
+   `AUTH_DENIED` — and skipped (token possession is the model) otherwise. The
+   server→S3 drive-transfer buffer is bounded at a fixed 5 MB
+   (`SINGLE_PUT_MAX_BYTES`); the configurable `multipartThreshold` knob is
+   removed so memory safety cannot be raised away.
 
 ## Gates — run before calling work done
 
