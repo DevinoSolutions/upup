@@ -68,15 +68,7 @@ export type {
 export type { PipelineStep, PipelineContext } from './contracts-pipeline'
 
 // ── i18n ─────────────────────────────────────────────────────
-export { enUS } from './i18n/locales/en-US'
-export { arSA } from './i18n/locales/ar-SA'
-export { deDE } from './i18n/locales/de-DE'
-export { esES } from './i18n/locales/es-ES'
-export { frFR } from './i18n/locales/fr-FR'
-export { jaJP } from './i18n/locales/ja-JP'
-export { koKR } from './i18n/locales/ko-KR'
-export { zhCN } from './i18n/locales/zh-CN'
-export { zhTW } from './i18n/locales/zh-TW'
+export * from './i18n/locales/registry'
 export type {
   UpupMessages,
   LocaleBundle,

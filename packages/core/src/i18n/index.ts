@@ -1,13 +1,5 @@
-// ── New namespaced locale packs (BCP 47 hyphenated) ──────────
-export { enUS } from './locales/en-US'
-export { arSA } from './locales/ar-SA'
-export { deDE } from './locales/de-DE'
-export { esES } from './locales/es-ES'
-export { frFR } from './locales/fr-FR'
-export { jaJP } from './locales/ja-JP'
-export { koKR } from './locales/ko-KR'
-export { zhCN } from './locales/zh-CN'
-export { zhTW } from './locales/zh-TW'
+// ── Locale registry (single source of truth — see locales/registry.ts) ──
+export * from './locales/registry'
 
 // ── Types ────────────────────────────────────────────────────
 export type {

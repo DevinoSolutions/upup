@@ -1,16 +1,12 @@
+import type { RegisteredLocaleCode } from './locales/registry'
+
 /**
- * Supported BCP 47 locale codes.
+ * Supported BCP 47 locale codes. Derived from the locale registry
+ * (packages/core/src/i18n/locales/registry.ts) — registering a new locale
+ * there automatically extends this union.
  */
 export type UpupLocaleCode =
-    | 'en-US'
-    | 'ar-SA'
-    | 'de-DE'
-    | 'es-ES'
-    | 'fr-FR'
-    | 'ja-JP'
-    | 'ko-KR'
-    | 'zh-CN'
-    | 'zh-TW'
+    | RegisteredLocaleCode
     | (string & {}) // allow custom locales while keeping autocomplete
 
 /**
