@@ -93,6 +93,7 @@ pnpm run build          # turbo, all packages
 pnpm run e2e            # the REAL gate — see next section
 pnpm run prettier-check # CI blocks on this (checks @upup/react src)
 pnpm run size           # size-limit bundle budgets
+pnpm run audit:prod     # high+ advisories in the publishable prod trees
 ```
 
 Baseline: every unit suite is green (16 packages, all 16 turbo `test` tasks
@@ -235,7 +236,13 @@ if needed; never silently "improve" them:
 
 - `main.yml` — PRs to master/dev: prettier → all-package unit suites
   (`pnpm run test`) + uniform v8 coverage floors on core/server/react
-  (`pnpm run test:coverage`) → typecheck → build → size-limit.
+  (`pnpm run test:coverage`) → typecheck → build → size-limit → a prod-scoped
+  dependency-audit gate (`pnpm run audit:prod`, `scripts/audit-prod.mjs`) that
+  fails on high+ advisories reachable from the 9 publishable packages'
+  production trees only (dev-only apps/private-package noise is excluded by
+  design). **Dependabot** (`.github/dependabot.yml`) now proposes weekly,
+  grouped dependency-update PRs against the workspace + `packages/*` +
+  CI-action pins; majors are paused (F-189's deferred migration clusters).
 - `e2e.yml` — PRs to master/dev: full `pnpm run e2e` gate (OAuth-free; MinIO
   env provisioned from the example file), plus `smoke:packages` as a
   sibling `Smoke-Packages` job (real npm-tarball consumer). The
