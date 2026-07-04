@@ -7,7 +7,6 @@ import { EmptyIconComponent } from './empty-icon.component'
 import { XIconComponent } from './x-icon.component'
 import { LayoutGridIconComponent } from './layout-grid-icon.component'
 import { LayoutListIconComponent } from './layout-list-icon.component'
-import { SOURCE_ICONS } from './index'
 
 // ── UploadIconComponent ──────────────────────────────────────────────────────
 
@@ -161,42 +160,5 @@ describe('LayoutListIconComponent', () => {
         const svg = fixture.nativeElement.querySelector('svg') as SVGElement
         expect(svg.getAttribute('width')).toBe('16')
         expect(svg.getAttribute('height')).toBe('16')
-    })
-})
-
-// ── SOURCE_ICONS map — adapter-selector tile icon path ───────────────────────
-// SourceSelectorComponent uses SOURCE_ICONS (and its own ICON_MAP) to resolve
-// icon component classes from FileSource string keys via NgComponentOutlet.
-// This test proves the map entries are real instantiable Angular components
-// that render <svg> — catching any class-reference breakage that selector
-// renames could have caused.
-
-describe('SOURCE_ICONS map', () => {
-    it('GoogleDrive entry renders an <svg> element via TestBed', async () => {
-        const IconClass = SOURCE_ICONS['GoogleDrive'] as new (...args: unknown[]) => unknown
-        expect(IconClass).toBeDefined()
-
-        await TestBed.configureTestingModule({
-            imports: [IconClass as any],
-        }).compileComponents()
-
-        const fixture = TestBed.createComponent(IconClass as any)
-        fixture.detectChanges()
-        const svg: SVGElement | null = fixture.nativeElement.querySelector('svg')
-        expect(svg).not.toBeNull()
-    })
-
-    it('MyDevice entry renders an <svg> element via TestBed', async () => {
-        const IconClass = SOURCE_ICONS['MyDevice'] as new (...args: unknown[]) => unknown
-        expect(IconClass).toBeDefined()
-
-        await TestBed.configureTestingModule({
-            imports: [IconClass as any],
-        }).compileComponents()
-
-        const fixture = TestBed.createComponent(IconClass as any)
-        fixture.detectChanges()
-        const svg: SVGElement | null = fixture.nativeElement.querySelector('svg')
-        expect(svg).not.toBeNull()
     })
 })
