@@ -12,31 +12,32 @@
 // Authorization headers into an event.
 
 export type UpupServerErrorEvent = {
-  route: string
-  method: string
-  status: number
-  code: string
-  message: string
-  requestId?: string
-  error?: { name: string; message: string; stack?: string }
-}
+  route: string;
+  method: string;
+  status: number;
+  code: string;
+  message: string;
+  requestId?: string;
+  error?: { name: string; message: string; stack?: string };
+};
 
-export type UpupServerLogger = (event: UpupServerErrorEvent) => void
+export type UpupServerLogger = (event: UpupServerErrorEvent) => void;
 
-export function toSafeError(e: unknown): NonNullable<UpupServerErrorEvent['error']> {
+export function toSafeError(
+  e: unknown,
+): NonNullable<UpupServerErrorEvent["error"]> {
   return e instanceof Error
     ? { name: e.name, message: e.message, stack: e.stack }
-    : { name: 'NonError', message: String(e) }
+    : { name: "NonError", message: String(e) };
 }
 
 const defaultLogger: UpupServerLogger = (event) => {
-   
-  console.error('[upup:server]', JSON.stringify(event))
-}
+  console.error("[upup:server]", JSON.stringify(event));
+};
 
 export function reportServerError(
   logger: UpupServerLogger | undefined,
   event: UpupServerErrorEvent,
 ): void {
-  ;(logger ?? defaultLogger)(event)
+  (logger ?? defaultLogger)(event);
 }

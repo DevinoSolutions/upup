@@ -1,7 +1,7 @@
-import { describe, it, expect, vi } from 'vitest'
-import { createUpupHandler } from '../src/handler'
+import { describe, it, expect, vi } from "vitest";
+import { createUpupHandler } from "../src/handler";
 
-vi.mock('../src/providers/aws', () => ({
+vi.mock("../src/providers/aws", () => ({
   generatePresignedUrl: vi.fn(),
   initiateMultipartUpload: vi.fn(),
   generatePresignedPartUrl: vi.fn(),
@@ -9,131 +9,158 @@ vi.mock('../src/providers/aws', () => ({
   abortMultipartUpload: vi.fn(),
   listMultipartParts: vi.fn(),
   getMultipartUploadedSize: vi.fn().mockResolvedValue(0),
-}))
+}));
 
 const baseConfig = {
   storage: {
-    type: 'aws' as const,
-    bucket: 'test-bucket',
-    region: 'us-east-1',
+    type: "aws" as const,
+    bucket: "test-bucket",
+    region: "us-east-1",
   },
-  uploadTokenSecret: 'cors-test-secret-0123456789abc',
-}
+  uploadTokenSecret: "cors-test-secret-0123456789abc",
+};
 
 function options(url: string, headers?: Record<string, string>) {
-  return new Request(url, { method: 'OPTIONS', headers })
+  return new Request(url, { method: "OPTIONS", headers });
 }
 
-describe('CORS — wildcard allowedOrigins with Origin present (audit S3)', () => {
-  it('reflects the matched origin instead of emitting literal *', async () => {
+describe("CORS — wildcard allowedOrigins with Origin present (audit S3)", () => {
+  it("reflects the matched origin instead of emitting literal *", async () => {
     const handler = createUpupHandler({
       ...baseConfig,
-      cors: { allowedOrigins: ['*'] },
-    })
-    const res = await handler(options('http://localhost/presign', { Origin: 'https://app.example' }))
-    expect(res.status).toBe(204)
-    expect(res.headers.get('Access-Control-Allow-Origin')).toBe('https://app.example')
-  })
+      cors: { allowedOrigins: ["*"] },
+    });
+    const res = await handler(
+      options("http://localhost/presign", { Origin: "https://app.example" }),
+    );
+    expect(res.status).toBe(204);
+    expect(res.headers.get("Access-Control-Allow-Origin")).toBe(
+      "https://app.example",
+    );
+  });
 
-  it('does NOT set credentials for a wildcard-only match (no concrete allowlist entry)', async () => {
+  it("does NOT set credentials for a wildcard-only match (no concrete allowlist entry)", async () => {
     // Security invariant: reflecting an origin allowed solely via '*' must never
     // be paired with Access-Control-Allow-Credentials, or any site could make
     // credentialed cross-origin reads.
     const handler = createUpupHandler({
       ...baseConfig,
-      cors: { allowedOrigins: ['*'] },
-    })
-    const res = await handler(options('http://localhost/presign', { Origin: 'https://app.example' }))
-    expect(res.headers.get('Access-Control-Allow-Credentials')).toBeNull()
-  })
+      cors: { allowedOrigins: ["*"] },
+    });
+    const res = await handler(
+      options("http://localhost/presign", { Origin: "https://app.example" }),
+    );
+    expect(res.headers.get("Access-Control-Allow-Credentials")).toBeNull();
+  });
 
-  it('includes Vary: Origin when origin is reflected', async () => {
+  it("includes Vary: Origin when origin is reflected", async () => {
     const handler = createUpupHandler({
       ...baseConfig,
-      cors: { allowedOrigins: ['*'] },
-    })
-    const res = await handler(options('http://localhost/presign', { Origin: 'https://app.example' }))
-    expect(res.headers.get('Vary')).toBe('Origin')
-  })
-})
+      cors: { allowedOrigins: ["*"] },
+    });
+    const res = await handler(
+      options("http://localhost/presign", { Origin: "https://app.example" }),
+    );
+    expect(res.headers.get("Vary")).toBe("Origin");
+  });
+});
 
-describe('CORS — wildcard allowedOrigins with NO Origin header', () => {
-  it('emits literal * when no Origin header is present (non-browser/curl)', async () => {
+describe("CORS — wildcard allowedOrigins with NO Origin header", () => {
+  it("emits literal * when no Origin header is present (non-browser/curl)", async () => {
     const handler = createUpupHandler({
       ...baseConfig,
-      cors: { allowedOrigins: ['*'] },
-    })
-    const res = await handler(options('http://localhost/presign'))
-    expect(res.status).toBe(204)
-    expect(res.headers.get('Access-Control-Allow-Origin')).toBe('*')
-  })
+      cors: { allowedOrigins: ["*"] },
+    });
+    const res = await handler(options("http://localhost/presign"));
+    expect(res.status).toBe(204);
+    expect(res.headers.get("Access-Control-Allow-Origin")).toBe("*");
+  });
 
-  it('does NOT include Access-Control-Allow-Credentials when emitting *', async () => {
+  it("does NOT include Access-Control-Allow-Credentials when emitting *", async () => {
     const handler = createUpupHandler({
       ...baseConfig,
-      cors: { allowedOrigins: ['*'] },
-    })
-    const res = await handler(options('http://localhost/presign'))
-    expect(res.headers.get('Access-Control-Allow-Credentials')).toBeNull()
-  })
-})
+      cors: { allowedOrigins: ["*"] },
+    });
+    const res = await handler(options("http://localhost/presign"));
+    expect(res.headers.get("Access-Control-Allow-Credentials")).toBeNull();
+  });
+});
 
-describe('CORS — specific allowlist', () => {
-  it('echoes origin and sets credentials when origin is in allowedOrigins', async () => {
+describe("CORS — specific allowlist", () => {
+  it("echoes origin and sets credentials when origin is in allowedOrigins", async () => {
     const handler = createUpupHandler({
       ...baseConfig,
-      cors: { allowedOrigins: ['https://app.example'] },
-    })
-    const res = await handler(options('http://localhost/presign', { Origin: 'https://app.example' }))
-    expect(res.headers.get('Access-Control-Allow-Origin')).toBe('https://app.example')
-    expect(res.headers.get('Access-Control-Allow-Credentials')).toBe('true')
-  })
+      cors: { allowedOrigins: ["https://app.example"] },
+    });
+    const res = await handler(
+      options("http://localhost/presign", { Origin: "https://app.example" }),
+    );
+    expect(res.headers.get("Access-Control-Allow-Origin")).toBe(
+      "https://app.example",
+    );
+    expect(res.headers.get("Access-Control-Allow-Credentials")).toBe("true");
+  });
 
-  it('returns no CORS headers for a non-allowlisted origin', async () => {
+  it("returns no CORS headers for a non-allowlisted origin", async () => {
     const handler = createUpupHandler({
       ...baseConfig,
-      cors: { allowedOrigins: ['https://app.example'] },
-    })
-    const res = await handler(options('http://localhost/presign', { Origin: 'https://evil.example' }))
-    expect(res.headers.get('Access-Control-Allow-Origin')).toBeNull()
-    expect(res.headers.get('Access-Control-Allow-Credentials')).toBeNull()
-  })
-})
+      cors: { allowedOrigins: ["https://app.example"] },
+    });
+    const res = await handler(
+      options("http://localhost/presign", { Origin: "https://evil.example" }),
+    );
+    expect(res.headers.get("Access-Control-Allow-Origin")).toBeNull();
+    expect(res.headers.get("Access-Control-Allow-Credentials")).toBeNull();
+  });
+});
 
-describe('CORS — mixed allowlist (wildcard + concrete origins)', () => {
-  it('credentials a CONCRETELY-listed origin even when * is also present', async () => {
+describe("CORS — mixed allowlist (wildcard + concrete origins)", () => {
+  it("credentials a CONCRETELY-listed origin even when * is also present", async () => {
     const handler = createUpupHandler({
       ...baseConfig,
-      cors: { allowedOrigins: ['*', 'https://app.example'] },
-    })
-    const res = await handler(options('http://localhost/presign', { Origin: 'https://app.example' }))
-    expect(res.headers.get('Access-Control-Allow-Origin')).toBe('https://app.example')
-    expect(res.headers.get('Access-Control-Allow-Credentials')).toBe('true')
-  })
+      cors: { allowedOrigins: ["*", "https://app.example"] },
+    });
+    const res = await handler(
+      options("http://localhost/presign", { Origin: "https://app.example" }),
+    );
+    expect(res.headers.get("Access-Control-Allow-Origin")).toBe(
+      "https://app.example",
+    );
+    expect(res.headers.get("Access-Control-Allow-Credentials")).toBe("true");
+  });
 
-  it('does NOT credential an origin matched only via the wildcard in a mixed list', async () => {
+  it("does NOT credential an origin matched only via the wildcard in a mixed list", async () => {
     const handler = createUpupHandler({
       ...baseConfig,
-      cors: { allowedOrigins: ['*', 'https://app.example'] },
-    })
-    const res = await handler(options('http://localhost/presign', { Origin: 'https://other.example' }))
-    expect(res.headers.get('Access-Control-Allow-Origin')).toBe('https://other.example')
-    expect(res.headers.get('Access-Control-Allow-Credentials')).toBeNull()
-  })
-})
+      cors: { allowedOrigins: ["*", "https://app.example"] },
+    });
+    const res = await handler(
+      options("http://localhost/presign", { Origin: "https://other.example" }),
+    );
+    expect(res.headers.get("Access-Control-Allow-Origin")).toBe(
+      "https://other.example",
+    );
+    expect(res.headers.get("Access-Control-Allow-Credentials")).toBeNull();
+  });
+});
 
-describe('CORS — credentialed reflection is never reachable under a wildcard-only config', () => {
+describe("CORS — credentialed reflection is never reachable under a wildcard-only config", () => {
   it.each([
-    'https://evil.example',
-    'http://localhost:1337',
-    'https://sub.attacker.test',
-    '*', // a non-browser client crafting a literal Origin: * must still never get credentials
-  ])('never emits Allow-Credentials for arbitrary origin %s under allowedOrigins:["*"]', async (origin) => {
-    const handler = createUpupHandler({
-      ...baseConfig,
-      cors: { allowedOrigins: ['*'] },
-    })
-    const res = await handler(options('http://localhost/files/google-drive', { Origin: origin }))
-    expect(res.headers.get('Access-Control-Allow-Credentials')).toBeNull()
-  })
-})
+    "https://evil.example",
+    "http://localhost:1337",
+    "https://sub.attacker.test",
+    "*", // a non-browser client crafting a literal Origin: * must still never get credentials
+  ])(
+    'never emits Allow-Credentials for arbitrary origin %s under allowedOrigins:["*"]',
+    async (origin) => {
+      const handler = createUpupHandler({
+        ...baseConfig,
+        cors: { allowedOrigins: ["*"] },
+      });
+      const res = await handler(
+        options("http://localhost/files/google-drive", { Origin: origin }),
+      );
+      expect(res.headers.get("Access-Control-Allow-Credentials")).toBeNull();
+    },
+  );
+});

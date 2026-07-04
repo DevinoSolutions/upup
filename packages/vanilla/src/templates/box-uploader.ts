@@ -1,10 +1,13 @@
-import { FileSource } from '@upup/core'
-import type { UploaderContext } from '../lib/types'
-import { clientDriveUploader } from './client-drive-uploader'
-import { serverModeDriveUploader } from './server-mode-drive-uploader'
+import { FileSource } from "@upup/core";
+import type { UploaderContext } from "../lib/types";
+import { clientDriveUploader } from "./client-drive-uploader";
+import { serverModeDriveUploader } from "./server-mode-drive-uploader";
 
 export function boxUploader(ctx: UploaderContext) {
-  return ctx.mode === 'server'
-    ? serverModeDriveUploader(ctx, { provider: 'box', onBack: () => ctx.setActiveSource(undefined) })
-    : clientDriveUploader(ctx, FileSource.BOX)
+  return ctx.mode === "server"
+    ? serverModeDriveUploader(ctx, {
+        provider: "box",
+        onBack: () => ctx.setActiveSource(undefined),
+      })
+    : clientDriveUploader(ctx, FileSource.BOX);
 }

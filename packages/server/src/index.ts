@@ -1,5 +1,5 @@
-export { createUpupHandler } from './handler'
-export type { RouteHandler } from './handler'
+export { createUpupHandler } from "./handler";
+export type { RouteHandler } from "./handler";
 export type {
   UpupServerConfig,
   TokenStore,
@@ -8,10 +8,10 @@ export type {
   FileMetadata,
   UploadedFile,
   KeyStrategyContext,
-} from './config'
+} from "./config";
 export {
   InMemoryTokenStore,
   getTokens,
   setTokens,
   deleteTokens,
-} from './tokenStore'
+} from "./tokenStore";

@@ -1,15 +1,15 @@
-import { signal, type Signal } from '@angular/core'
+import { signal, type Signal } from "@angular/core";
 
 /** The subscribe/getSnapshot contract every @upup/core headless store satisfies. */
 export interface HeadlessStore<S> {
-  subscribe(listener: () => void): () => void
-  getSnapshot(): S
+  subscribe(listener: () => void): () => void;
+  getSnapshot(): S;
 }
 
 /** The Angular-signal view returned by toSignalStore. Call destroy() in ngOnDestroy / DestroyRef. */
 export interface SignalStore<S> {
-  state: Signal<S>
-  destroy: () => void
+  state: Signal<S>;
+  destroy: () => void;
 }
 
 /**
@@ -21,15 +21,15 @@ export interface SignalStore<S> {
  * silently dropped. destroy() is idempotent — safe to call more than once.
  */
 export function toSignalStore<S>(store: HeadlessStore<S>): SignalStore<S> {
-  const state = signal<S>(store.getSnapshot())
-  let active = true
-  const unsub = store.subscribe(() => state.set(store.getSnapshot()))
+  const state = signal<S>(store.getSnapshot());
+  let active = true;
+  const unsub = store.subscribe(() => state.set(store.getSnapshot()));
   return {
     state,
     destroy: () => {
-      if (!active) return
-      active = false
-      unsub()
+      if (!active) return;
+      active = false;
+      unsub();
     },
-  }
+  };
 }

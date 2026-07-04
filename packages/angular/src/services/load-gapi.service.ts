@@ -1,5 +1,5 @@
-import { Injectable, signal } from '@angular/core'
-import { loadGoogleIdentityServices } from '@upup/core'
+import { Injectable, signal } from "@angular/core";
+import { loadGoogleIdentityServices } from "@upup/core";
 
 /**
  * Angular port of useLoadGAPI.ts (svelte composable).
@@ -9,11 +9,15 @@ import { loadGoogleIdentityServices } from '@upup/core'
  */
 @Injectable()
 export class LoadGapiService {
-    readonly gisLoaded = signal(false)
+  readonly gisLoaded = signal(false);
 
-    load(): void {
-        loadGoogleIdentityServices()
-            .then(() => { this.gisLoaded.set(true) })
-            .catch(() => { /* silently ignore — caller checks gisLoaded */ })
-    }
+  load(): void {
+    loadGoogleIdentityServices()
+      .then(() => {
+        this.gisLoaded.set(true);
+      })
+      .catch(() => {
+        /* silently ignore — caller checks gisLoaded */
+      });
+  }
 }

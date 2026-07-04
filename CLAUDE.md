@@ -29,7 +29,15 @@ Publishable (`packages/`):
   routers).
 - `@upup/server` — server-mode endpoints: S3/MinIO presign + proxy upload,
   drive-token exchange, HMAC-signed trust model (signed length, key/uploadId
-  binding, required secrets).
+  binding, required secrets). Node<->Web request/response bridging for the
+  Node adapters (express/fastify/`@upup/next`'s pages-handler) lives in ONE
+  place — `@upup/server/node-bridge` (`toWebRequest`/`writeWebResponse`); a
+  future custom Node adapter imports it rather than re-hand-rolling the
+  conversion. `createUpupHandler` requires `storage.type` to be an S3 /
+  S3-compatible provider — it throws at construct time for a value with no
+  S3 surface (`NON_S3_STORAGE_PROVIDERS` in `@upup/core`, currently just
+  `azure`); `hono.ts`/`next.ts` (App Router) are web-native and don't need
+  the bridge.
 
 Private (`packages/`): `interactive-example`, `storybook-config`,
 `tailwind-config` (shared Tailwind/postcss factory — theme edits happen in one

@@ -1,14 +1,14 @@
-import { Component, Input } from '@angular/core'
-import { IconComponent } from '../icon.component'
-import type { IconName } from '@upup/core'
+import { Component, Input } from "@angular/core";
+import { IconComponent } from "../icon.component";
+import type { IconName } from "@upup/core";
 
 @Component({
-    selector: 'upup-file-icon-svg',
-    standalone: true,
-    imports: [IconComponent],
-    template: `<upup-icon [name]="name" [class]="className" />`,
+  selector: "upup-file-icon-svg",
+  standalone: true,
+  imports: [IconComponent],
+  template: `<upup-icon [name]="name" [class]="className" />`,
 })
 export class FileIconSvgComponent {
-    @Input() name: IconName = 'file'
-    @Input('class') className: string = ''
+  @Input() name: IconName = "file";
+  @Input("class") className: string = "";
 }

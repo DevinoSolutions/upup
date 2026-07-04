@@ -1,9 +1,9 @@
-import { createUpupHandler } from './handler'
-import type { UpupServerConfig } from './config'
+import { createUpupHandler } from "./handler";
+import type { UpupServerConfig } from "./config";
 
 export function createUpupRoutes(config: UpupServerConfig) {
-  const handler = createUpupHandler(config)
-  return handler
+  const handler = createUpupHandler(config);
+  return handler;
 }
 
-export type { UpupServerConfig }
+export type { UpupServerConfig };

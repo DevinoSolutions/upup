@@ -1,20 +1,26 @@
-import { FileSource } from '@upup/core'
-import type { DriveFile, DriveFolder } from '@upup/core'
-import type { UploaderContext } from '../lib/types'
-import { driveAuthFallback } from './shared/drive-auth-fallback'
-import { driveBrowser } from './shared/drive-browser'
+import { FileSource } from "@upup/core";
+import type { DriveFile, DriveFolder } from "@upup/core";
+import type { UploaderContext } from "../lib/types";
+import { driveAuthFallback } from "./shared/drive-auth-fallback";
+import { driveBrowser } from "./shared/drive-browser";
 
 const META: Record<string, { providerName: string; slot: string }> = {
-  [FileSource.GOOGLE_DRIVE]: { providerName: 'Google Drive', slot: 'google-drive-uploader' },
-  [FileSource.ONE_DRIVE]: { providerName: 'OneDrive', slot: 'onedrive-uploader' },
-  [FileSource.DROPBOX]: { providerName: 'Dropbox', slot: 'dropbox-uploader' },
-  [FileSource.BOX]: { providerName: 'Box', slot: 'box-uploader' },
-}
+  [FileSource.GOOGLE_DRIVE]: {
+    providerName: "Google Drive",
+    slot: "google-drive-uploader",
+  },
+  [FileSource.ONE_DRIVE]: {
+    providerName: "OneDrive",
+    slot: "onedrive-uploader",
+  },
+  [FileSource.DROPBOX]: { providerName: "Dropbox", slot: "dropbox-uploader" },
+  [FileSource.BOX]: { providerName: "Box", slot: "box-uploader" },
+};
 
 export function clientDriveUploader(ctx: UploaderContext, source: FileSource) {
-  const controller = ctx.controllers.getDrive(source)
-  const st = controller.getSnapshot()
-  const meta = META[source]
+  const controller = ctx.controllers.getDrive(source);
+  const st = controller.getSnapshot();
+  const meta = META[source];
   // Unified auth gate over the real DriveBrowserState fields:
   //  - GIS (Google): readiness/cancel signalled by isAuthReady / authCancelled / token.
   //  - popup (OneDrive/Dropbox/Box): initGis never runs, so isAuthReady/authCancelled/token
@@ -22,7 +28,7 @@ export function clientDriveUploader(ctx: UploaderContext, source: FileSource) {
   //    synthetic alias of isAuthenticated). The `!isAuthenticated` term is a no-op on the GIS
   //    path, so Google behavior is unchanged.
   const notAuthed =
-    !st.token && !st.isAuthenticated && (st.isAuthReady || !st.isLoading)
+    !st.token && !st.isAuthenticated && (st.isAuthReady || !st.isLoading);
   if (notAuthed) {
     // Only the GIS provider (Google) wires error into the auth-fallback, matching
     // react/vue/svelte's GoogleDriveUploader — the popup providers (OneDrive/Dropbox/Box)
@@ -32,7 +38,7 @@ export function clientDriveUploader(ctx: UploaderContext, source: FileSource) {
       onRetry: () => controller.retryAuth(),
       error: source === FileSource.GOOGLE_DRIVE ? st.error : undefined,
       dataUpupSlot: meta.slot,
-    })
+    });
   }
   return driveBrowser(ctx, {
     driveFiles: st.folder as DriveFolder | undefined,
@@ -52,5 +58,5 @@ export function clientDriveUploader(ctx: UploaderContext, source: FileSource) {
     hasMore: st.hasMore,
     isLoadingMore: st.isLoadingMore,
     loadMore: () => controller.loadMore(),
-  })
+  });
 }
