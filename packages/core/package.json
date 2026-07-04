@@ -84,7 +84,6 @@
   "dependencies": {
     "clsx": "^2.1.1",
     "intl-messageformat": "^11.2.0",
-    "load-script": "^2.0.0",
     "tailwind-merge": "^3.6.0"
   },
   "optionalDependencies": {
