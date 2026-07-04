@@ -493,7 +493,7 @@ export class UpupCore {
           if (this.pauseRequested || this.cancelRequested || this.destroyed) return
           this._status = UploadStatus.FAILED
           this._error = err instanceof Error ? err : new Error(String(err))
-          this.emitter.emit('error', { error: this._error })
+          this.emitter.emit('upload-error', { error: this._error })
           this.emitter.emit('state-change', { status: this._status, error: this._error })
         })
     }

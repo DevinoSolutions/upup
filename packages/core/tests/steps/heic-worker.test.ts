@@ -30,10 +30,10 @@ describe('heicStep worker branch', () => {
     // No libheif/canvas in node → main-thread heicToJpegBlob returns null → original kept, no error emitted.
     const out = await heicStep().process(file, ctx)
     expect(out).toBe(file)
-    expect(emit).not.toHaveBeenCalledWith('error', expect.anything())
+    expect(emit).not.toHaveBeenCalledWith('pipeline-error', expect.anything())
   })
 
-  it('emits error (no silent swallow) when conversion throws, still returns original', async () => {
+  it('emits pipeline-error (no silent swallow) when conversion throws, still returns original', async () => {
     vi.resetModules()
     vi.doMock('../../src/steps/heic-decode', () => ({ heicToJpegBlob: vi.fn(async () => { throw new Error('boom decode') }) }))
     const { heicStep: step } = await import('../../src/steps/heic')
@@ -42,7 +42,7 @@ describe('heicStep worker branch', () => {
     const file = makeHeic()
     const out = await step().process(file, ctx)
     expect(out).toBe(file)
-    expect(emit).toHaveBeenCalledWith('error', expect.objectContaining({ scope: 'heic' }))
+    expect(emit).toHaveBeenCalledWith('pipeline-error', expect.objectContaining({ scope: 'heic' }))
     vi.doUnmock('../../src/steps/heic-decode')
   })
 })

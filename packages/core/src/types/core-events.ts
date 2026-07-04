@@ -29,7 +29,6 @@ export interface CoreEvents {
   'restriction-failed': { error: unknown }
   'plugin-registered': { name: string }
   'options-updated': { partial: Partial<CoreOptions> }
-  'error': { error: Error }
   'retry': { fileId: string }
   'snapshot-restored': { count: number; status: UploadStatus }
   'crash-recovery-restored': Record<string, never>

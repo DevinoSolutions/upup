@@ -40,7 +40,7 @@ export function heicStep(): PipelineStep {
         })
       } catch (err) {
         // Surface the failure instead of silently uploading the raw HEIC.
-        context.emit('error', { scope: 'heic', name: file.name, message: err instanceof Error ? err.message : String(err) })
+        context.emit('pipeline-error', { scope: 'heic', name: file.name, message: err instanceof Error ? err.message : String(err) })
          
         console.error('[upup] HEIC conversion failed for', file.name, err)
         return file

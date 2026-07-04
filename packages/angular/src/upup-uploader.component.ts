@@ -27,7 +27,9 @@ const FORWARDED: ReadonlyArray<
   ['file-removed', 'fileRemoved'],
   ['upload-progress', 'uploadProgress'],
   ['upload-all-complete', 'uploadAllComplete'],
-  ['error', 'error'],
+  // The `error` output now sources the single upload-failure channel (upload-error),
+  // so it fires for every upload failure — not the practically-dead resume-only path.
+  ['upload-error', 'error'],
 ]
 
 @Component({
@@ -149,7 +151,7 @@ export class UpupUploaderComponent implements OnInit, AfterViewInit {
   @Output() fileRemoved = new EventEmitter<UploadFile>()
   @Output() uploadProgress = new EventEmitter<{ fileId: string; loaded: number; total: number }>()
   @Output() uploadAllComplete = new EventEmitter<UploadFile[]>()
-  @Output() error = new EventEmitter<{ error: Error }>()
+  @Output() error = new EventEmitter<{ error: Error; file?: UploadFile }>()
 
   ngOnInit(): void {
     if (!isPlatformBrowser(this.platformId)) return // SSR-safe: no init on the server

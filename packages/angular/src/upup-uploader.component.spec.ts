@@ -43,7 +43,7 @@ describe('UpupUploaderComponent', () => {
         core.emit('file-removed', file)
         core.emit('upload-progress', { fileId: 'a', loaded: 1, total: 2 })
         core.emit('upload-all-complete', [file])
-        core.emit('error', { error: new Error('boom') })
+        core.emit('upload-error', { error: new Error('boom') })
         expect(seen['filesAdded']).toEqual([file])
         expect(seen['fileRemoved']).toEqual(file)
         expect(seen['uploadProgress']).toEqual({ fileId: 'a', loaded: 1, total: 2 })

@@ -6,7 +6,9 @@ const FORWARDED_EVENTS: Array<[coreEvent: string, domEvent: string]> = [
   ['file-removed', 'upup:file-removed'],
   ['upload-progress', 'upup:upload-progress'],
   ['upload-all-complete', 'upup:upload-complete'],
-  ['error', 'upup:error'],
+  // The public `upup:error` DOM event now sources the single upload-failure channel
+  // (upload-error), so it fires for every upload failure — not the resume-only path.
+  ['upload-error', 'upup:error'],
 ]
 
 export class UpupUploaderElement extends HTMLElement {

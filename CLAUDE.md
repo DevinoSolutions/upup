@@ -222,6 +222,13 @@ if needed; never silently "improve" them:
   parity-harness traps above); don't make the panel grow to fit content.
 - **Per-framework duplication is intentional** (principle 4). The parallel
   hooks/components across frameworks are not a refactor target.
+- **Core state/event contract (P6).** The core event surface has exactly ONE
+  upload-failure event — `upload-error`; the bare `'error'` event is retired
+  (`resume()` failures route through `upload-error`; the HEIC step diagnostic is
+  `pipeline-error`; angular's `@Output() error` and vanilla's `upup:error` DOM
+  event source `upload-error`). Do not reintroduce a second upload-failure
+  channel. (`DriveEventMap['error']` is a separate, drive-scoped type — plugins
+  emit namespaced `<provider>:error`, never bare `error`.)
 
 ## Git & commits
 

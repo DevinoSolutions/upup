@@ -27,7 +27,9 @@ async function fetchImage(ctx: UploaderContext, url: string): Promise<File | und
   } catch (error) {
     const message = (error as Error).message
     ctx.onError?.(message)
-    ctx.core.emit('error', { message })
+    // Route through the single upload-failure channel with the typed {error} shape,
+    // so the failure reaches uploadError/uploadStatus like every other upload error.
+    ctx.core.emit('upload-error', { error: error instanceof Error ? error : new Error(message) })
     return undefined
   } finally {
     s.loading = false; ctx.invalidate()
