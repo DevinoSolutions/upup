@@ -82,6 +82,8 @@ export const deDE: LocaleBundle = {
             search: 'Suche',
             authenticatePrompt: 'Authentifizieren Sie sich mit {provider}, um Dateien zum Hochladen auszuw\u00E4hlen',
             signInWith: 'Anmelden mit {provider}',
+            loadError: "Couldn't load files: {message}",
+            loadMore: 'Load more',
         },
 
         url: {

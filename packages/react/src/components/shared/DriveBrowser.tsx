@@ -1,5 +1,6 @@
 import React, { Dispatch, SetStateAction, useMemo, useState } from 'react'
 import {
+    type DriveBrowserError,
     type DriveFile,
     type DriveFolder,
     type DriveUser,
@@ -30,6 +31,12 @@ type Props = {
     handleSubmit: () => Promise<void>
     handleCancelDownload: () => void
     onSelectCurrentFolder?: () => Promise<void> | void
+    /** The one drive browse-failure surface (F-124). Set = show the banner, not the loader. */
+    error?: DriveBrowserError
+    /** Drives the "Load more" button (F-125). */
+    hasMore?: boolean
+    isLoadingMore?: boolean
+    loadMore?: () => void | Promise<void>
     'data-upup-slot'?: string
 }
 
@@ -56,6 +63,10 @@ export default function DriveBrowser({
     handleSubmit,
     handleCancelDownload,
     onSelectCurrentFolder,
+    error,
+    hasMore = false,
+    isLoadingMore = false,
+    loadMore,
     'data-upup-slot': dataUpupSlot = 'drive-browser',
     ...rest
 }: Readonly<Props>) {
@@ -73,7 +84,9 @@ export default function DriveBrowser({
         () => searchDriveFiles(items, searchTerm) || [],
         [searchTerm, items],
     )
-    const isLoading = isClickLoading || !driveFiles
+    // error short-circuits the perpetual loader — the exact F-123/F-124 symptom
+    // (a failed load or download previously left the spinner running forever).
+    const isLoading = !error && (isClickLoading || !driveFiles)
 
     return (
         <SourceViewContainer
@@ -106,6 +119,18 @@ export default function DriveBrowser({
                                 slotClasses.driveBody,
                             )}
                         >
+                            {!!error && (
+                                <p
+                                    data-testid="upup-drive-error"
+                                    data-upup-slot="drive-error"
+                                    role="alert"
+                                    className="upup-p-4 upup-text-sm upup-text-red-600 dark:upup-text-red-400"
+                                >
+                                    {t(tr.driveLoadError, {
+                                        message: error.message,
+                                    })}
+                                </p>
+                            )}
                             {!!displayedItems.length && (
                                 <ul className="upup-p-2">
                                     {displayedItems.map(file => {
@@ -124,12 +149,23 @@ export default function DriveBrowser({
                                     })}
                                 </ul>
                             )}
-                            {!displayedItems.length && (
+                            {!displayedItems.length && !error && (
                                 <div className="upup-flex upup-h-full upup-flex-col upup-items-center upup-justify-center">
                                     <p className="upup-text-xs upup-opacity-70">
                                         {tr.noAcceptedFilesFound}
                                     </p>
                                 </div>
+                            )}
+                            {!!hasMore && (
+                                <button
+                                    data-testid="upup-drive-load-more"
+                                    data-upup-slot="drive-load-more"
+                                    onClick={() => loadMore?.()}
+                                    disabled={isLoadingMore}
+                                    className="upup-mx-auto upup-my-2 upup-block upup-rounded-md upup-px-3 upup-py-1.5 upup-text-sm upup-text-blue-600 disabled:upup-opacity-50"
+                                >
+                                    {isLoadingMore ? tr.loading : tr.loadMore}
+                                </button>
                             )}
                         </div>
                     )}

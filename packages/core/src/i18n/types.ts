@@ -123,6 +123,9 @@ export interface DriveBrowserMessages {
     authenticatePrompt: string
     /** ICU: "Sign in with {provider}" */
     signInWith: string
+    /** ICU: "Couldn't load files: {message}" */
+    loadError: string
+    loadMore: string
 }
 
 export interface UrlMessages {

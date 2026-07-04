@@ -82,6 +82,8 @@ export const jaJP: LocaleBundle = {
             search: '\u691C\u7D22',
             authenticatePrompt: '{provider} \u3067\u8A8D\u8A3C\u3057\u3066\u30D5\u30A1\u30A4\u30EB\u3092\u30A2\u30C3\u30D7\u30ED\u30FC\u30C9\u7528\u306B\u9078\u629E',
             signInWith: '{provider} \u3067\u30B5\u30A4\u30F3\u30A4\u30F3',
+            loadError: "Couldn't load files: {message}",
+            loadMore: 'Load more',
         },
 
         url: {

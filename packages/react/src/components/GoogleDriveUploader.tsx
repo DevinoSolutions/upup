@@ -31,6 +31,7 @@ function ClientGoogleDriveUploader() {
         authCancelled,
         retryAuth,
         isAuthReady,
+        error,
         ...uploaderProps
     } = useGoogleDrive()
 
@@ -39,6 +40,7 @@ function ClientGoogleDriveUploader() {
             <DriveAuthFallback
                 providerName="Google Drive"
                 onRetry={retryAuth}
+                error={error}
                 data-upup-slot="google-drive-uploader"
             />
         )
@@ -49,6 +51,7 @@ function ClientGoogleDriveUploader() {
             driveFiles={driveFiles}
             user={user}
             handleSignOut={handleSignOut}
+            error={error}
             data-upup-slot="google-drive-uploader"
             {...uploaderProps}
         />

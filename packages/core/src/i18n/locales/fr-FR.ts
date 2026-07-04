@@ -82,6 +82,8 @@ export const frFR: LocaleBundle = {
             search: 'Rechercher',
             authenticatePrompt: 'Authentifiez-vous avec {provider} pour s\u00E9lectionner des fichiers \u00E0 t\u00E9l\u00E9verser',
             signInWith: 'Se connecter avec {provider}',
+            loadError: "Couldn't load files: {message}",
+            loadMore: 'Load more',
         },
 
         url: {

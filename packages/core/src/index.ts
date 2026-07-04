@@ -141,7 +141,15 @@ export { CrashRecoveryManager, IndexedDBStorage } from './crash-recovery'
 export type { PersistentStorage } from './crash-recovery'
 export type { DrivePlugin } from './drives/plugin'
 export { bindDriveEvents, type DriveEventCallbacks } from './drives/bind-drive-events'
-export type { DriveFile, DriveFolder, DriveUser, DriveState, DriveEventMap } from './drives/types'
+export type {
+    DriveFile,
+    DriveFolder,
+    DriveUser,
+    DriveState,
+    DriveEventMap,
+    DriveBrowserError,
+    DriveListPage,
+} from './drives/types'
 export type { GoogleDriveConfig, OneDriveConfig, DropboxConfig, BoxConfig } from './drives/configs'
 export { DropboxPlugin } from './drives/dropbox-plugin'
 export { GoogleDrivePlugin } from './drives/google-drive-plugin'

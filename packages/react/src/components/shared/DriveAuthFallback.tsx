@@ -1,5 +1,5 @@
 import React from 'react'
-import { cn, formatUiMessage as t } from '@upup/core'
+import { type DriveBrowserError, cn, formatUiMessage as t } from '@upup/core'
 import {
     useUploaderI18n,
     useUploaderTheme,
@@ -9,12 +9,15 @@ import SourceViewContainer from './SourceViewContainer'
 type Props = {
     providerName: string
     onRetry: () => void
+    /** initGis degradation (F-124) — missing config / GIS failed to attach. */
+    error?: DriveBrowserError
     'data-upup-slot'?: string
 }
 
 export default function DriveAuthFallback({
     providerName,
     onRetry,
+    error,
     'data-upup-slot': dataUpupSlot = 'drive-auth-fallback',
 }: Readonly<Props>) {
     const { isDark: dark, slotOverrides: slotClasses } = useUploaderTheme()
@@ -23,6 +26,16 @@ export default function DriveAuthFallback({
     return (
         <SourceViewContainer data-upup-slot={dataUpupSlot}>
             <div className="upup-flex upup-h-full upup-w-full upup-flex-col upup-items-center upup-justify-center upup-gap-4 upup-p-6 upup-text-center">
+                {!!error && (
+                    <p
+                        data-testid="upup-drive-error"
+                        data-upup-slot="drive-error"
+                        role="alert"
+                        className="upup-p-4 upup-text-sm upup-text-red-600 dark:upup-text-red-400"
+                    >
+                        {t(tr.driveLoadError, { message: error.message })}
+                    </p>
+                )}
                 <p
                     className={cn(
                         'upup-text-sm upup-text-[#333]',

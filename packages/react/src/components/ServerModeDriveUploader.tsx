@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import {
+    useUploaderI18n,
     useUploaderOptions,
     useUploaderTheme,
 } from '../context/UploaderContext'
@@ -10,7 +11,7 @@ import {
 } from '../hooks/useServerModeDrive'
 import SourceViewContainer from './shared/SourceViewContainer'
 import DriveAuthFallback from './shared/DriveAuthFallback'
-import { cn } from '@upup/core'
+import { cn, errorCodeToMessageKey } from '@upup/core'
 
 type Props = {
     provider: ServerModeProvider
@@ -34,6 +35,7 @@ export default function ServerModeDriveUploader({
     const {
         icons: { LoaderIcon },
     } = useUploaderOptions()
+    const { translator } = useUploaderI18n()
     const { state, search, setSearch, refresh, transfer, startAuth } =
         useServerModeDrive(provider)
     const [selected, setSelected] = useState<Set<string>>(new Set())
@@ -128,6 +130,9 @@ export default function ServerModeDriveUploader({
                     <div className="upup-overflow-auto">
                         {state.status === 'error' && (
                             <p
+                                data-testid="upup-drive-error"
+                                data-upup-slot="drive-error"
+                                role="alert"
                                 className={cn(
                                     'upup-p-4 upup-text-sm',
                                     dark
@@ -135,7 +140,12 @@ export default function ServerModeDriveUploader({
                                         : 'upup-text-red-600',
                                 )}
                             >
-                                {state.message}
+                                {state.code && translator
+                                    ? translator(
+                                          `errors.${errorCodeToMessageKey(state.code)}`,
+                                          { code: state.code },
+                                      )
+                                    : state.message}
                             </p>
                         )}
                         {files.map(file => (

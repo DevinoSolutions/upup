@@ -82,6 +82,8 @@ export const esES: LocaleBundle = {
             search: 'Buscar',
             authenticatePrompt: 'Autent\u00EDcate con {provider} para seleccionar archivos para subir',
             signInWith: 'Iniciar sesi\u00F3n con {provider}',
+            loadError: "Couldn't load files: {message}",
+            loadMore: 'Load more',
         },
 
         url: {

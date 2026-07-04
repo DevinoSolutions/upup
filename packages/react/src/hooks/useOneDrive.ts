@@ -109,5 +109,9 @@ export default function useOneDrive() {
         },
         onSelectCurrentFolder: () =>
             controller?.onSelectCurrentFolder() ?? Promise.resolve(),
+        error: state.error,
+        hasMore: state.hasMore,
+        isLoadingMore: state.isLoadingMore,
+        loadMore: () => controller?.loadMore() ?? Promise.resolve(),
     }
 }

@@ -76,6 +76,8 @@ export const koKR: LocaleBundle = {
             search: '검색',
             authenticatePrompt: '{provider}에서 인증하여 업로드할 파일을 선택하세요',
             signInWith: '{provider}로 로그인',
+            loadError: "Couldn't load files: {message}",
+            loadMore: 'Load more',
         },
         url: {
             enterFileUrl: '파일 URL 입력',

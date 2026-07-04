@@ -63,6 +63,8 @@ export type UiTranslations = {
     search: string
     authenticatePrompt: string
     signInWith: string
+    driveLoadError: string
+    loadMore: string
     enterFileUrl: string
     fetch: string
     capture: string
@@ -223,6 +225,8 @@ export function flattenTranslatorToUiTranslations(
         search: tr('driveBrowser.search'),
         authenticatePrompt: tr('driveBrowser.authenticatePrompt', { provider: '{{provider}}' }),
         signInWith: tr('driveBrowser.signInWith', { provider: '{{provider}}' }),
+        driveLoadError: tr('driveBrowser.loadError', { message: '{{message}}' }),
+        loadMore: tr('driveBrowser.loadMore'),
         enterFileUrl: tr('url.enterFileUrl'),
         fetch: tr('url.fetch'),
         capture: tr('camera.capture'),

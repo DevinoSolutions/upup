@@ -76,6 +76,8 @@ export const zhTW: LocaleBundle = {
             search: '搜尋',
             authenticatePrompt: '使用 {provider} 驗證以選取上傳檔案',
             signInWith: '使用 {provider} 登入',
+            loadError: "Couldn't load files: {message}",
+            loadMore: 'Load more',
         },
         url: {
             enterFileUrl: '輸入檔案 URL',

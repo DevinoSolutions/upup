@@ -82,6 +82,8 @@ export const arSA: LocaleBundle = {
             search: '\u0628\u062D\u062B',
             authenticatePrompt: '\u0642\u0645 \u0628\u0627\u0644\u0645\u0635\u0627\u062F\u0642\u0629 \u0645\u0639 {provider} \u0644\u0627\u062E\u062A\u064A\u0627\u0631 \u0627\u0644\u0645\u0644\u0641\u0627\u062A \u0644\u0644\u0631\u0641\u0639',
             signInWith: '\u062A\u0633\u062C\u064A\u0644 \u0627\u0644\u062F\u062E\u0648\u0644 \u0628\u0627\u0633\u062A\u062E\u062F\u0627\u0645 {provider}',
+            loadError: "Couldn't load files: {message}",
+            loadMore: 'Load more',
         },
 
         url: {
