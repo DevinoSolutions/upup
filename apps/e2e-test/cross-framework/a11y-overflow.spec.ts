@@ -11,8 +11,8 @@
 import { test, expect, type Page, type Locator } from '@playwright/test'
 import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
-import { readFileSync, readdirSync } from 'node:fs'
-import { join } from 'node:path'
+import { readFileSync, readdirSync, writeFileSync } from 'node:fs'
+import { dirname, join } from 'node:path'
 import { byName, storyUrl, PARITY_VARIANTS } from './framework-matrix'
 
 // ── axe-core source (injected via CDP evaluate, which bypasses page CSP) ──────
@@ -45,6 +45,19 @@ interface AxeViolation {
   help: string
 }
 
+// ── axe baseline (reviewed, per-framework serious/critical ceiling) ───────────
+const HERE = dirname(fileURLToPath(import.meta.url))
+const BASELINE_PATH = join(HERE, 'a11y-baseline.json')
+type A11yBaseline = Record<string, { rule: string; count: number }[]>
+
+function loadBaseline(): A11yBaseline {
+  try {
+    return JSON.parse(readFileSync(BASELINE_PATH, 'utf8')) as A11yBaseline
+  } catch {
+    return {}
+  }
+}
+
 async function runAxe(page: Page): Promise<AxeViolation[]> {
   await page.evaluate(AXE_SOURCE)
   const ok = await page.evaluate(() => typeof (window as unknown as { axe?: unknown }).axe !== 'undefined')
@@ -75,15 +88,21 @@ async function measureOverflow(container: Locator) {
 }
 
 test.describe('cross-framework a11y + overflow', () => {
-  // 4a — record axe violations (report-only; the ARIA gap on non-React frameworks
-  // is expected until the port). Attached to the report per project.
-  test('4a: axe-core a11y scan (record violations)', async ({ page }, testInfo) => {
+  // 4a — ratchet axe serious/critical violations against a reviewed baseline
+  // (a11y-baseline.json). New serious/critical (an unbaselined rule id, or a
+  // baselined rule at a HIGHER count) fails the run -- fix it or re-baseline
+  // deliberately (UPDATE_A11Y_BASELINE=1). Moderate/minor stay report-only
+  // (console.warn + attachment) -- noisier/lower-confidence than axe's top
+  // two tiers, so warning avoids flaky/opinionated failures while still
+  // surfacing them for triage.
+  test('4a: axe-core a11y scan (ratchet serious/critical against baseline)', async ({ page }, testInfo) => {
     const fw = byName(testInfo.project.name)
     await page.goto(PLAYGROUND(fw.name))
     await expect(page.locator('[data-testid="upup-root"]')).toBeVisible({ timeout: 30_000 })
 
     const violations = await runAxe(page)
     const serious = violations.filter((v) => v.impact === 'serious' || v.impact === 'critical')
+    const moderateMinor = violations.filter((v) => v.impact !== 'serious' && v.impact !== 'critical')
     const summary = violations.length
       ? violations.map((v) => `${v.id}[${v.impact}]x${v.nodes}`).join(', ')
       : '(none)'
@@ -93,8 +112,32 @@ test.describe('cross-framework a11y + overflow', () => {
       body: JSON.stringify(violations, null, 2),
       contentType: 'application/json',
     })
-    // Report-only: no hard fail here. Triage happens in the audit doc.
-    expect(Array.isArray(violations)).toBe(true)
+
+    if (moderateMinor.length) {
+      // eslint-disable-next-line no-console
+      console.warn(
+        `[axe][${fw.name}] moderate/minor (report-only): ${moderateMinor.map((v) => `${v.id}[${v.impact}]x${v.nodes}`).join(', ')}`,
+      )
+    }
+
+    if (process.env.UPDATE_A11Y_BASELINE) {
+      const baseline = loadBaseline()
+      baseline[fw.name] = serious.map((v) => ({ rule: v.id, count: v.nodes }))
+      writeFileSync(BASELINE_PATH, JSON.stringify(baseline, null, 2) + '\n')
+      test.info().annotations.push({ type: 'a11y-baseline', description: `baseline written for ${fw.name}` })
+      return
+    }
+
+    const baseline = loadBaseline()
+    const baselineForFw = baseline[fw.name] ?? []
+    const newSeriousCritical = serious.filter((v) => {
+      const baselined = baselineForFw.find((b) => b.rule === v.id)
+      return !baselined || v.nodes > baselined.count
+    })
+    expect(
+      newSeriousCritical,
+      `new axe serious/critical on ${fw.name} — fix or re-baseline (UPDATE_A11Y_BASELINE=1)`,
+    ).toEqual([])
   })
 
   // 4b — media/adapter views must not clip inside the fixed-height, overflow-hidden
