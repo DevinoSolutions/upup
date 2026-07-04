@@ -20,13 +20,11 @@ describe('ServerModeDriveController', () => {
         const files = [{ id: '1', name: 'a', isFolder: false }]
         vi.stubGlobal(
             'fetch',
-            vi
-                .fn()
-                .mockResolvedValue({
-                    status: 200,
-                    ok: true,
-                    json: async () => ({ files }),
-                }),
+            vi.fn().mockResolvedValue({
+                status: 200,
+                ok: true,
+                json: async () => ({ files }),
+            }),
         )
         const c = ctrl()
         await c.list()
@@ -112,13 +110,11 @@ describe('ServerModeDriveController', () => {
     it('transfer() ok returns {status:ok} without mutating list state', async () => {
         vi.stubGlobal(
             'fetch',
-            vi
-                .fn()
-                .mockResolvedValue({
-                    status: 200,
-                    ok: true,
-                    json: async () => ({ file: {} }),
-                }),
+            vi.fn().mockResolvedValue({
+                status: 200,
+                ok: true,
+                json: async () => ({ file: {} }),
+            }),
         )
         const c = ctrl()
         const before = c.getSnapshot().state
@@ -197,13 +193,11 @@ describe('ServerModeDriveController', () => {
     })
 
     it('startAuth opens a popup, arms a message listener, refreshes on success', async () => {
-        const fetchSpy = vi
-            .fn()
-            .mockResolvedValue({
-                status: 200,
-                ok: true,
-                json: async () => ({ files: [] }),
-            })
+        const fetchSpy = vi.fn().mockResolvedValue({
+            status: 200,
+            ok: true,
+            json: async () => ({ files: [] }),
+        })
         vi.stubGlobal('fetch', fetchSpy)
         let handler: ((e: any) => void) | null = null
         vi.stubGlobal('window', {
