@@ -277,6 +277,33 @@ if needed; never silently "improve" them:
     ownership story the previous ruling opened). No path mutates `FileManager`'s collection
     except through its own methods (`updateFile`/`applyProcessed`/`restore`/`setFiles`/
     `addFiles`/`removeFile`/`removeAll`/`reorderFiles`).
+- **Drive-plugin architecture (P16).** Four rulings:
+  - **`init(emitter)` is the ONE plugin lifecycle hook.** `UpupPlugin` is
+    `{ name; init?(emitter) }` — `setup()` is retired. `PluginManager.register` only
+    dedups + stores; `UpupCore.use()` invokes `init` with core's event bus (an
+    `EventEmitter`, NOT the core). Consequence: a plugin can't register extensions from
+    its lifecycle hook — `core.registerExtension()` is the path (no production plugin did
+    lifecycle-time registration). Do not reintroduce `setup`.
+  - **`PopupOAuthPlugin` (`drives/popup-oauth-plugin.ts`) owns the client-mode popup
+    skeleton** — PKCE, popup poll, token exchange/refresh, proactive-expiry
+    (`ensureValidToken` 60 s), lifecycle, and the `apiRequest` 401-retry. Box / OneDrive /
+    Dropbox are thin subclasses supplying a `PopupOAuthSpec` (endpoints, scopes, event
+    prefix, storage keys, `displayName`, `authParams`) + their genuinely provider-specific
+    domain methods (`loadFiles`/`loadMoreFiles`/`downloadFiles`/`mapEntry`/
+    `fetchUserProfile`/`searchFiles`), moved verbatim. It is INTERNAL (not in the public
+    barrel — that's a future ruling). GoogleDrive is NOT a subclass: its GIS access-token
+    model has no PKCE popup / refresh token, so it stays a standalone `implements
+    DrivePlugin`. All three popup providers now persist a token-expiry key and refresh
+    proactively (Box gained this — F-126); the base emits only the namespaced lifecycle
+    events (`<prefix>:state-change`/`:authenticated`/`:session-expired`/`:error`/
+    `:signed-out`/`:files-loaded`).
+  - **`ServerModeDriveController` is the single server-mode drive abstraction.** The
+    unused `ServerOAuth`/`OAuthStrategy` twin (plus the orphaned `OAuthTokens`/`RemoteFile`
+    types) is deleted — do not reintroduce a second server-drive path. `CloudProvider`
+    stays (consumed by `strategies/server-transfer.ts`).
+  - **Adding a provider = a subclass + spec, not a skeleton copy.** A new popup provider
+    supplies only its `spec` + domain methods; never re-hand-roll the auth/popup/refresh
+    skeleton (that is the F-121 duplication P16 removed).
 
 ## Git & commits
 
