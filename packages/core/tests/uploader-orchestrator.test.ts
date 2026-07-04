@@ -1372,6 +1372,25 @@ describe('UploaderOrchestrator', () => {
 
             expect(orch.getSnapshot().uploadStatus).toBe(UploadStatus.IDLE)
         })
+
+        it('revokes blob URLs for every still-selected file', () => {
+            const core = createMockCore()
+            const revokeObjectURL = vi.fn()
+            vi.stubGlobal('URL', { ...globalThis.URL, createObjectURL: () => 'blob:http://localhost/destroy', revokeObjectURL })
+
+            const orch = new UploaderOrchestrator(core, {})
+            ;(orch as any).setState({
+                files: new Map([
+                    ['f1', createUploadFile({ name: 'a.txt', id: 'f1', url: 'blob:http://localhost/destroy' })],
+                    ['f2', createUploadFile({ name: 'b.txt', id: 'f2', url: 'blob:http://localhost/destroy' })],
+                ]),
+            })
+
+            orch.destroy()
+
+            expect(revokeObjectURL).toHaveBeenCalledTimes(2)
+            vi.unstubAllGlobals()
+        })
     })
 
     // ── Tier 3.1 Task 1: files projection reflects ALL core mutations ──

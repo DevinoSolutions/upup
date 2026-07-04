@@ -428,6 +428,7 @@ export class UploaderOrchestrator {
     }
 
     destroy(): void {
+        this.state.files.forEach(file => revokeFileUrl(file))
         this.unsubs.forEach(u => u())
         this.unsubs = []
         this.speedSamples = []
