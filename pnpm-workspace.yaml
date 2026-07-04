@@ -10,5 +10,6 @@ packages:
   - packages/interactive-example
   - packages/storybook-config
   - packages/tailwind-config
+  - packages/eslint-config
   - packages/preact
   - packages/next

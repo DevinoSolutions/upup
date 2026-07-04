@@ -1,0 +1,19 @@
+{
+  "name": "@upup/eslint-config",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./index.mjs",
+  "exports": {
+    ".": "./index.mjs"
+  },
+  "files": ["index.mjs"],
+  "dependencies": {
+    "@eslint/js": "^9.19.0",
+    "typescript-eslint": "^8.46.2",
+    "globals": "^15.14.0"
+  },
+  "peerDependencies": {
+    "eslint": "^9"
+  }
+}
