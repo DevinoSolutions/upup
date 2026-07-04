@@ -211,6 +211,14 @@ export class UpupCore {
   /** Update options after construction (e.g. when React props change). */
   updateOptions(partial: Partial<CoreOptions>): void {
     const hadCrashRecovery = this.crashRecovery != null
+    const PIPELINE_FLAGS = [
+      'heicConversion',
+      'stripExifData',
+      'imageCompression',
+      'thumbnailGenerator',
+      'checksumVerification',
+    ] as const
+    const pipelineFlagChanged = PIPELINE_FLAGS.some(k => k in partial)
     Object.assign(this.options, partial)
 
     this.fileManager.updateOptions({
@@ -222,6 +230,13 @@ export class UpupCore {
       contentDeduplication: this.options.contentDeduplication,
       onBeforeFileAdded: this.options.onBeforeFileAdded,
     })
+
+    // Invalidate the cached auto-pipeline when a flag that shapes it changes, so the next
+    // upload() rebuilds from the new flags — unless an explicit pipeline was supplied
+    // (that is construction-only). (F-151)
+    if (pipelineFlagChanged && !this.options.pipeline) {
+      this.pipelineEngine = null
+    }
 
     if ('crashRecovery' in partial) {
       if (partial.crashRecovery) {

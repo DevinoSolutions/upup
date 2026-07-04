@@ -133,6 +133,32 @@ describe('P6 contract — immutable file-status transitions (F-144)', () => {
     expect(after.size).toBe(before.size)
     core.destroy()
   })
+})
+
+// ─────────────────────────────────────────────────────────────
+// C7 / F-151 — updateOptions invalidates the cached auto-pipeline
+// ─────────────────────────────────────────────────────────────
+describe('P6 contract — pipeline-flag invalidation (F-151)', () => {
+  it('toggling an auto-pipeline flag after the first upload nulls the cached pipelineEngine', async () => {
+    // imageCompression:true builds the auto-pipeline on upload → engine is cached.
+    const core = new UpupCore({ imageCompression: true, uploadEndpoint: '/api/presign' })
+    await core.upload().catch(() => {}) // builds the auto-pipeline (no files/network needed)
+    expect((core as any).pipelineEngine).not.toBeNull()
+
+    core.updateOptions({ imageCompression: false })
+    // Invalidated → next upload() rebuilds from the new flags.
+    expect((core as any).pipelineEngine).toBeNull()
+    core.destroy()
+  })
+
+  it('an explicit pipeline is NOT invalidated by a flag change (construction-only)', () => {
+    const core = new UpupCore({ pipeline: [], uploadEndpoint: '/api/presign' })
+    expect((core as any).pipelineEngine).not.toBeNull()
+
+    core.updateOptions({ imageCompression: true })
+    expect((core as any).pipelineEngine).not.toBeNull() // explicit pipeline survives
+    core.destroy()
+  })
 
   it('at the orchestrator boundary a real status transition yields a NEW files snapshot ref (ref-diff fires)', async () => {
     vi.stubGlobal('fetch', vi.fn(async () => { throw new Error('presign down') }))
