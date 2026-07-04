@@ -1,5 +1,5 @@
 import { defineConfig } from '@playwright/test'
-import { FRAMEWORKS } from './cross-framework/framework-matrix'
+import { frameworkProjects, frameworkWebServers } from './cross-framework/playwright-shared'
 
 // Dedicated config for the Phase 4a/4b a11y + overflow sweep. Unlike
 // playwright.crossframework.config.ts it has NO globalSetup/teardown — the
@@ -29,14 +29,6 @@ export default defineConfig({
       ],
     },
   },
-  projects: FRAMEWORKS.map((fw) => ({
-    name: fw.name,
-    use: { baseURL: `http://localhost:${fw.port}` },
-  })),
-  webServer: FRAMEWORKS.map((fw) => ({
-    command: `pnpm --filter @upup/storybook-${fw.name} storybook`,
-    port: fw.port,
-    reuseExistingServer: true,
-    timeout: 420_000,
-  })),
+  projects: frameworkProjects(),
+  webServer: frameworkWebServers(),
 })
