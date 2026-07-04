@@ -1122,9 +1122,6 @@ importers:
       konva:
         specifier: ^10.3.0
         version: 10.3.0
-      load-script:
-        specifier: ^2.0.0
-        version: 2.0.0
       pako:
         specifier: ^2.1.0
         version: 2.1.0
