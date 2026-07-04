@@ -60,6 +60,11 @@ export const uploaderArgTypes: Record<string, unknown> = {
   mini: { control: 'boolean', ...cat('Appearance') },
   showBranding: { control: 'boolean', ...cat('Appearance') },
   className: { control: 'text', ...cat('Appearance') },
+  // NOTE: themeMode/primaryColor are VIRTUAL controls — not real UploaderProps.
+  // Each framework's Appearance story folds them into a `theme` prop in its own
+  // render() (e.g. apps/storybook-react/.../Appearance.stories.tsx). Adding a new
+  // virtual control here makes it appear in ALL six storybooks' UI but do NOTHING
+  // until every framework's render() fold is updated too.
   themeMode: { control: { type: 'select' }, options: ['light', 'dark', 'system'], description: 'Virtual — mapped to theme.mode in render.', ...cat('Appearance') },
   primaryColor: { control: 'color', description: 'Virtual — mapped to theme.tokens.color.primary in render.', ...cat('Appearance') },
 
