@@ -1,6 +1,19 @@
-import type { LocaleBundle, UpupMessages, MessageNamespace } from './types'
+import type { LocaleBundle, UpupLocaleCode, UpupMessages, MessageNamespace } from './types'
 
 const DEFAULT_LOCALE = 'en-US'
+
+/**
+ * Return the candidate if it is already a LocaleBundle object; else undefined.
+ * (String codes need the locale registry — out of scope here, see P12.)
+ */
+export function resolveLocaleBundle(
+  candidate: LocaleBundle | UpupLocaleCode | undefined,
+): LocaleBundle | undefined {
+  return candidate && typeof candidate === 'object'
+    && 'code' in candidate && 'messages' in candidate
+    ? (candidate as LocaleBundle)
+    : undefined
+}
 
 /**
  * Build a fallback chain: fr-CA -> fr -> en-US

@@ -50,9 +50,12 @@ export interface CoreOptions extends FileManagerOptions {
   cors?: UpupCorsConfig
   /**
    * i18n configuration. Accepts either:
-   * - a full LocaleBundle (`import { enUS } from './contracts'`)
-   * - a BCP 47 locale code string (e.g. `'fr-FR'`) — consumers are
-   *   responsible for resolving codes to bundles via `i18n.loadLocale`.
+   * - a full LocaleBundle (`import { enUS } from './contracts'`) — also
+   *   drives the file-pipeline translator (`context.t` inside pipeline
+   *   steps), not just the UI translator.
+   * - a BCP 47 locale code string (e.g. `'fr-FR'`) — resolves to lang/dir
+   *   only until a locale registry exists; consumers are responsible for
+   *   resolving codes to bundles via `i18n.loadLocale`.
    */
   locale?: LocaleBundle | UpupLocaleCode
   cloudDrives?: CloudDrivesConfig

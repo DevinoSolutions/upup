@@ -2,6 +2,7 @@ import { normalizeSource, DEFAULT_SOURCES, DEFAULT_MAX_FILE_SIZE, getDir } from 
 import { resolveAccept } from '../utils/accept-presets'
 import { createTranslator } from '../i18n/create-translator'
 import { enUS } from '../i18n/locales/en-US'
+import { resolveLocaleBundle } from '../i18n/resolve-locale'
 import { flattenTranslatorToUiTranslations } from '../i18n/ui-translations'
 import type { FileSource } from '../types/file-source'
 import type { LocaleBundle, Translator } from '../i18n/types'
@@ -36,17 +37,8 @@ export function normalizeUploaderOptions(options: UploaderControllerOptions): No
 
   // -- i18n --
   const i18n = options.i18n
-  const localeCandidate = i18n?.locale as unknown
-  const bundle = i18n?.bundle ?? (
-    localeCandidate && typeof localeCandidate === 'object' && 'code' in localeCandidate && 'messages' in localeCandidate
-      ? (localeCandidate as LocaleBundle)
-      : undefined
-  )
-  const fallbackCandidate = i18n?.fallbackLocale as unknown
-  const fallbackBundle =
-    fallbackCandidate && typeof fallbackCandidate === 'object' && 'code' in fallbackCandidate && 'messages' in fallbackCandidate
-      ? (fallbackCandidate as LocaleBundle)
-      : undefined
+  const bundle = i18n?.bundle ?? resolveLocaleBundle(i18n?.locale)
+  const fallbackBundle = resolveLocaleBundle(i18n?.fallbackLocale)
   const translator: Translator = createTranslator({ bundle: bundle ?? enUS, fallback: fallbackBundle ?? enUS, overrides: i18n?.overrides })
   const translations = flattenTranslatorToUiTranslations(translator)
   const lang = bundle?.code ?? (typeof i18n?.locale === 'string' ? i18n.locale : 'en-US')
@@ -85,6 +77,7 @@ export function normalizeUploaderOptions(options: UploaderControllerOptions): No
     cors: options.cors,
     resumable: options.resumable,
     cloudDrives: options.cloudDrives,
+    locale: bundle,
   } as CoreOptions
 
   return { coreOptions, resolved }

@@ -1,6 +1,7 @@
 import { UpupConfigError, UpupErrorCode } from './errors'
 import { createTranslator } from './i18n/create-translator'
 import { enUS } from './i18n/locales/en-US'
+import { resolveLocaleBundle } from './i18n/resolve-locale'
 import type { LocaleBundle, UpupLocaleCode } from './i18n/types'
 import type { PipelineContext, PipelineStep } from './contracts-pipeline'
 import type { ResumableUploadOptions } from './types/upload-protocols'
@@ -385,7 +386,7 @@ export class UpupCore {
       }
 
       if (this.pipelineEngine) {
-        const translator = createTranslator({ bundle: enUS })
+        const translator = createTranslator({ bundle: resolveLocaleBundle(this.options.locale) ?? enUS, fallback: enUS })
         const provider = await this.maybeCreateWorkerProvider(this.pipelineEngine.stepCount)
         this.workerProvider = provider
         try {
