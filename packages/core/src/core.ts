@@ -424,9 +424,7 @@ export class UpupCore {
               : undefined,
           }
           const processed = await this.pipelineEngine.processAll([...this.files.values()], context)
-          for (const file of processed) {
-            this.files.set(file.id, file)
-          }
+          this.fileManager.applyProcessed(processed)
         } finally {
           provider?.terminate()
           this.workerProvider = null
@@ -619,11 +617,7 @@ export class UpupCore {
   }
 
   restore(snapshot: { files: [string, UploadFile][]; status: UploadStatus }): void {
-    const fileMap = this.fileManager.getFiles()
-    fileMap.clear()
-    for (const [id, file] of snapshot.files) {
-      fileMap.set(id, file)
-    }
+    this.fileManager.restore(snapshot.files)
     this._status = snapshot.status
     this.emitter.emit('state-change', { files: this.files, status: this._status })
     this.emitter.emit('snapshot-restored', { count: snapshot.files.length, status: snapshot.status })

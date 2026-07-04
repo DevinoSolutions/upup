@@ -320,6 +320,21 @@ export class FileManager {
     this.files.clear()
   }
 
+  /** Bulk-apply pipeline-produced files (already UploadFile with status/key set). */
+  applyProcessed(files: UploadFile[]): void {
+    for (const file of files) {
+      this.files.set(file.id, file)
+    }
+  }
+
+  /** Re-instate a prior snapshot: clear and repopulate from entries. */
+  restore(entries: [string, UploadFile][]): void {
+    this.files.clear()
+    for (const [id, file] of entries) {
+      this.files.set(id, file)
+    }
+  }
+
   async setFiles(nativeFiles: File[]): Promise<UploadFile[]> {
     const acceptedNativeFiles = await this.collectAcceptedFiles(nativeFiles)
     const dedupedFiles = await this.deduplicateByContent(acceptedNativeFiles, [])

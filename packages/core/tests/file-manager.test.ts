@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import { FileManager } from '../src/file-manager'
+import { UploadStatus } from '../src/types/upload-status'
 import type { UploadFile } from '@upup/core'
 
 const makeNativeFile = (name = 'test.jpg', size = 1024, type = 'image/jpeg'): File => {
@@ -143,5 +144,62 @@ describe('FileManager', () => {
 
     createObjectURL.mockRestore()
     revokeObjectURL.mockRestore()
+  })
+
+  // ─────────────────────────────────────────────────────────────
+  // P20 / F-143 — FileManager owns the two remaining bulk writes
+  // ─────────────────────────────────────────────────────────────
+  describe('applyProcessed (P20 / F-143)', () => {
+    it('patches an existing entry in place without changing the map size', async () => {
+      const fm = new FileManager({})
+      const [existing] = await fm.addFiles([makeNativeFile('a.jpg')])
+      const patched = { ...existing, status: UploadStatus.SUCCESSFUL, key: 'k' } as UploadFile
+
+      fm.applyProcessed([patched])
+
+      expect(fm.getFiles().size).toBe(1)
+      expect(fm.getFiles().get(existing.id)).toEqual(patched)
+    })
+
+    it('adds a file carrying a new id', async () => {
+      const fm = new FileManager({})
+      await fm.addFiles([makeNativeFile('a.jpg')])
+      const extra = { ...(await fm.addFiles([makeNativeFile('b.jpg')]))[0], id: 'brand-new-id' } as UploadFile
+
+      fm.applyProcessed([extra])
+
+      expect(fm.getFiles().size).toBe(3)
+      expect(fm.getFiles().get('brand-new-id')).toEqual(extra)
+    })
+  })
+
+  describe('restore (P20 / F-143)', () => {
+    it('clears existing entries and repopulates from exactly the given snapshot', async () => {
+      const fm = new FileManager({})
+      await fm.addFiles([makeNativeFile('stale.jpg')])
+      const [f1] = await fm.addFiles([makeNativeFile('one.jpg')])
+      const [f2] = await fm.addFiles([makeNativeFile('two.jpg')])
+
+      fm.restore([
+        [f1.id, f1],
+        [f2.id, f2],
+      ])
+
+      const files = fm.getFiles()
+      expect(files.size).toBe(2)
+      expect(files.get(f1.id)).toBe(f1)
+      expect(files.get(f2.id)).toBe(f2)
+    })
+
+    it('does not throw on an empty snapshot and does not revoke incoming files', async () => {
+      const revokeObjectURL = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {})
+      const fm = new FileManager({})
+      const [file] = await fm.addFiles([makeNativeFile('kept.jpg')])
+
+      expect(() => fm.restore([[file.id, file]])).not.toThrow()
+      expect(revokeObjectURL).not.toHaveBeenCalled()
+
+      revokeObjectURL.mockRestore()
+    })
   })
 })
