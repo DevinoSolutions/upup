@@ -30,5 +30,16 @@ export default defineConfig({
       { find: /^react-dom\/client$/, replacement: 'preact/compat' },
     ],
   },
-  test: { environment: 'jsdom', globals: true, include: ['src/**/*.spec.{ts,tsx}'] },
+  test: {
+    environment: 'jsdom',
+    globals: true,
+    include: ['src/**/*.spec.{ts,tsx}'],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json-summary', 'html'],
+      reportsDirectory: '../../coverage/preact',
+      // measured 2026-07-04: statements 19.33% branches 11.36% functions 23.14% lines 19.81%
+      thresholds: { statements: 16, branches: 8, functions: 20, lines: 16 },
+    },
+  },
 })

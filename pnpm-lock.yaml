@@ -895,6 +895,9 @@ importers:
       '@upup/tailwind-config':
         specifier: workspace:*
         version: link:../tailwind-config
+      '@vitest/coverage-v8':
+        specifier: ^4.1.2
+        version: 4.1.9(vitest@4.1.2(@opentelemetry/api@1.9.1)(@types/node@25.3.5)(jsdom@22.1.0)(msw@2.14.6(@types/node@25.3.5)(typescript@5.6.3))(vite@7.3.5(@types/node@25.3.5)(jiti@2.6.1)(less@4.6.4)(lightningcss@1.32.0)(sass@1.85.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.1)))
       eslint:
         specifier: ^9
         version: 9.39.4(jiti@2.6.1)
@@ -1067,6 +1070,9 @@ importers:
       '@upup/eslint-config':
         specifier: workspace:*
         version: link:../eslint-config
+      '@vitest/coverage-v8':
+        specifier: ^4.1.2
+        version: 4.1.9(vitest@4.1.2(@opentelemetry/api@1.9.1)(@types/node@20.19.37)(jsdom@22.1.0)(msw@2.14.6(@types/node@20.19.37)(typescript@5.6.3))(vite@8.0.13(@types/node@20.19.37)(esbuild@0.28.0)(jiti@2.6.1)(less@4.6.4)(sass@1.100.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.1)))
       eslint:
         specifier: ^9
         version: 9.39.4(jiti@2.6.1)
@@ -1116,6 +1122,9 @@ importers:
       '@upup/eslint-config':
         specifier: workspace:*
         version: link:../eslint-config
+      '@vitest/coverage-v8':
+        specifier: ^4.1.2
+        version: 4.1.9(vitest@4.1.2(@opentelemetry/api@1.9.1)(@types/node@20.19.37)(jsdom@22.1.0)(msw@2.14.6(@types/node@20.19.37)(typescript@5.6.3))(vite@8.0.13(@types/node@20.19.37)(esbuild@0.28.0)(jiti@2.6.1)(less@4.6.4)(sass@1.100.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.1)))
       eslint:
         specifier: ^9
         version: 9.39.4(jiti@2.6.1)
@@ -1345,6 +1354,9 @@ importers:
       '@upup/tailwind-config':
         specifier: workspace:*
         version: link:../tailwind-config
+      '@vitest/coverage-v8':
+        specifier: ^4.1.2
+        version: 4.1.9(vitest@4.1.2(@opentelemetry/api@1.9.1)(@types/node@25.3.5)(jsdom@22.1.0)(msw@2.14.6(@types/node@25.3.5)(typescript@5.6.3))(vite@7.3.5(@types/node@25.3.5)(jiti@2.6.1)(less@4.6.4)(lightningcss@1.32.0)(sass@1.100.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.1)))
       eslint:
         specifier: ^9
         version: 9.39.4(jiti@2.6.1)
@@ -1406,6 +1418,9 @@ importers:
       '@upup/tailwind-config':
         specifier: workspace:*
         version: link:../tailwind-config
+      '@vitest/coverage-v8':
+        specifier: ^4.1.2
+        version: 4.1.9(vitest@4.1.2(@opentelemetry/api@1.9.1)(@types/node@25.3.5)(jsdom@22.1.0)(msw@2.14.6(@types/node@25.3.5)(typescript@5.6.3))(vite@8.0.13(@types/node@25.3.5)(esbuild@0.28.0)(jiti@2.6.1)(less@4.6.4)(sass@1.100.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.1)))
       eslint:
         specifier: ^9
         version: 9.39.4(jiti@2.6.1)
@@ -1455,6 +1470,9 @@ importers:
       '@vitejs/plugin-vue':
         specifier: ^5.0.0
         version: 5.2.4(vite@8.0.13(@types/node@25.3.5)(esbuild@0.28.0)(jiti@2.6.1)(less@4.6.4)(sass@1.100.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.1))(vue@3.5.34(typescript@5.6.3))
+      '@vitest/coverage-v8':
+        specifier: ^4.1.2
+        version: 4.1.9(vitest@4.1.2(@opentelemetry/api@1.9.1)(@types/node@25.3.5)(jsdom@22.1.0)(msw@2.14.6(@types/node@25.3.5)(typescript@5.6.3))(vite@8.0.13(@types/node@25.3.5)(esbuild@0.28.0)(jiti@2.6.1)(less@4.6.4)(sass@1.100.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.1)))
       '@vue/test-utils':
         specifier: ^2.4.6
         version: 2.4.10(@vue/compiler-dom@3.5.34)(@vue/server-renderer@3.5.34(vue@3.5.34(typescript@5.6.3)))(vue@3.5.34(typescript@5.6.3))
@@ -23434,6 +23452,34 @@ snapshots:
       tinyrainbow: 3.1.0
       vitest: 4.1.2(@opentelemetry/api@1.9.1)(@types/node@22.19.21)(jsdom@22.1.0)(msw@2.14.6(@types/node@22.19.21)(typescript@5.6.3))(vite@8.0.13(@types/node@22.19.21)(esbuild@0.25.12)(jiti@2.6.1)(less@4.6.4)(sass@1.100.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.1))
 
+  '@vitest/coverage-v8@4.1.9(vitest@4.1.2(@opentelemetry/api@1.9.1)(@types/node@25.3.5)(jsdom@22.1.0)(msw@2.14.6(@types/node@25.3.5)(typescript@5.6.3))(vite@7.3.5(@types/node@25.3.5)(jiti@2.6.1)(less@4.6.4)(lightningcss@1.32.0)(sass@1.100.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.1)))':
+    dependencies:
+      '@bcoe/v8-coverage': 1.0.2
+      '@vitest/utils': 4.1.9
+      ast-v8-to-istanbul: 1.0.4
+      istanbul-lib-coverage: 3.2.2
+      istanbul-lib-report: 3.0.1
+      istanbul-reports: 3.2.0
+      magicast: 0.5.3
+      obug: 2.1.1
+      std-env: 4.0.0
+      tinyrainbow: 3.1.0
+      vitest: 4.1.2(@opentelemetry/api@1.9.1)(@types/node@25.3.5)(jsdom@22.1.0)(msw@2.14.6(@types/node@25.3.5)(typescript@5.6.3))(vite@7.3.5(@types/node@25.3.5)(jiti@2.6.1)(less@4.6.4)(lightningcss@1.32.0)(sass@1.100.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.1))
+
+  '@vitest/coverage-v8@4.1.9(vitest@4.1.2(@opentelemetry/api@1.9.1)(@types/node@25.3.5)(jsdom@22.1.0)(msw@2.14.6(@types/node@25.3.5)(typescript@5.6.3))(vite@7.3.5(@types/node@25.3.5)(jiti@2.6.1)(less@4.6.4)(lightningcss@1.32.0)(sass@1.85.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.1)))':
+    dependencies:
+      '@bcoe/v8-coverage': 1.0.2
+      '@vitest/utils': 4.1.9
+      ast-v8-to-istanbul: 1.0.4
+      istanbul-lib-coverage: 3.2.2
+      istanbul-lib-report: 3.0.1
+      istanbul-reports: 3.2.0
+      magicast: 0.5.3
+      obug: 2.1.1
+      std-env: 4.0.0
+      tinyrainbow: 3.1.0
+      vitest: 4.1.2(@opentelemetry/api@1.9.1)(@types/node@25.3.5)(jsdom@22.1.0)(msw@2.14.6(@types/node@25.3.5)(typescript@5.6.3))(vite@7.3.5(@types/node@25.3.5)(jiti@2.6.1)(less@4.6.4)(lightningcss@1.32.0)(sass@1.85.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.1))
+
   '@vitest/coverage-v8@4.1.9(vitest@4.1.2(@opentelemetry/api@1.9.1)(@types/node@25.3.5)(jsdom@22.1.0)(msw@2.14.6(@types/node@25.3.5)(typescript@5.6.3))(vite@8.0.13(@types/node@25.3.5)(esbuild@0.28.0)(jiti@2.6.1)(less@4.6.4)(sass@1.100.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.1)))':
     dependencies:
       '@bcoe/v8-coverage': 1.0.2
@@ -25986,7 +26032,7 @@ snapshots:
       eslint: 9.39.4(jiti@1.21.7)
       eslint-import-resolver-node: 0.3.9
       eslint-import-resolver-typescript: 3.10.1(eslint-plugin-import@2.32.0(eslint@9.39.4(jiti@1.21.7)))(eslint@9.39.4(jiti@1.21.7))
-      eslint-plugin-import: 2.32.0(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0(eslint@9.39.4(jiti@1.21.7)))(eslint@9.39.4(jiti@1.21.7)))(eslint@9.39.4(jiti@1.21.7))
+      eslint-plugin-import: 2.32.0(eslint-import-resolver-typescript@3.10.1)(eslint@9.39.4(jiti@1.21.7))
       eslint-plugin-jsx-a11y: 6.10.2(eslint@9.39.4(jiti@1.21.7))
       eslint-plugin-react: 7.37.5(eslint@9.39.4(jiti@1.21.7))
       eslint-plugin-react-hooks: 7.0.1(eslint@9.39.4(jiti@1.21.7))
@@ -26039,7 +26085,7 @@ snapshots:
       tinyglobby: 0.2.16
       unrs-resolver: 1.11.1
     optionalDependencies:
-      eslint-plugin-import: 2.32.0(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0(eslint@9.39.4(jiti@1.21.7)))(eslint@9.39.4(jiti@1.21.7)))(eslint@9.39.4(jiti@1.21.7))
+      eslint-plugin-import: 2.32.0(eslint-import-resolver-typescript@3.10.1)(eslint@9.39.4(jiti@1.21.7))
     transitivePeerDependencies:
       - supports-color
 
@@ -26078,7 +26124,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  eslint-plugin-import@2.32.0(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0(eslint@9.39.4(jiti@1.21.7)))(eslint@9.39.4(jiti@1.21.7)))(eslint@9.39.4(jiti@1.21.7)):
+  eslint-plugin-import@2.32.0(eslint-import-resolver-typescript@3.10.1)(eslint@9.39.4(jiti@1.21.7)):
     dependencies:
       '@rtsao/scc': 1.1.0
       array-includes: 3.1.9
@@ -34031,7 +34077,7 @@ snapshots:
   webpack@5.102.1:
     dependencies:
       '@types/eslint-scope': 3.7.7
-      '@types/estree': 1.0.8
+      '@types/estree': 1.0.9
       '@types/json-schema': 7.0.15
       '@webassemblyjs/ast': 1.14.1
       '@webassemblyjs/wasm-edit': 1.14.1
@@ -34063,7 +34109,7 @@ snapshots:
   webpack@5.102.1(esbuild@0.25.12):
     dependencies:
       '@types/eslint-scope': 3.7.7
-      '@types/estree': 1.0.8
+      '@types/estree': 1.0.9
       '@types/json-schema': 7.0.15
       '@webassemblyjs/ast': 1.14.1
       '@webassemblyjs/wasm-edit': 1.14.1

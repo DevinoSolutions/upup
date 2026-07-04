@@ -44,6 +44,7 @@
     "@upup/eslint-config": "workspace:*",
     "@upup/tailwind-config": "workspace:*",
     "@vitejs/plugin-vue": "^5.0.0",
+    "@vitest/coverage-v8": "^4.1.2",
     "@vue/test-utils": "^2.4.6",
     "eslint": "^9",
     "jsdom": "22.1.0",
