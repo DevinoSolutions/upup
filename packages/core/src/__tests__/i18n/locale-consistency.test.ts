@@ -1,25 +1,13 @@
 import { describe, it, expect } from 'vitest'
-import { enUS } from '../../i18n/locales/en-US'
-import { arSA } from '../../i18n/locales/ar-SA'
-import { deDE } from '../../i18n/locales/de-DE'
-import { esES } from '../../i18n/locales/es-ES'
-import { frFR } from '../../i18n/locales/fr-FR'
-import { jaJP } from '../../i18n/locales/ja-JP'
-import { koKR } from '../../i18n/locales/ko-KR'
-import { zhCN } from '../../i18n/locales/zh-CN'
-import { zhTW } from '../../i18n/locales/zh-TW'
+import { LOCALE_REGISTRY, LOCALE_CODES } from '../../i18n/locales/registry'
 import type { LocaleBundle } from '../../i18n/types'
 
-const bundles: { name: string; bundle: LocaleBundle }[] = [
-    { name: 'ar-SA', bundle: arSA },
-    { name: 'de-DE', bundle: deDE },
-    { name: 'es-ES', bundle: esES },
-    { name: 'fr-FR', bundle: frFR },
-    { name: 'ja-JP', bundle: jaJP },
-    { name: 'ko-KR', bundle: koKR },
-    { name: 'zh-CN', bundle: zhCN },
-    { name: 'zh-TW', bundle: zhTW },
-]
+const enUS = LOCALE_REGISTRY['en-US']
+const arSA = LOCALE_REGISTRY['ar-SA']
+
+const bundles: { name: string; bundle: LocaleBundle }[] = LOCALE_CODES
+    .filter(c => c !== 'en-US')
+    .map(name => ({ name, bundle: LOCALE_REGISTRY[name] }))
 
 const enNamespaces = Object.keys(enUS.messages) as (keyof typeof enUS.messages)[]
 

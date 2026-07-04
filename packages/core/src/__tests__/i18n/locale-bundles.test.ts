@@ -1,25 +1,17 @@
 import { describe, it, expect } from 'vitest'
-import { enUS } from '../../i18n/locales/en-US'
-import { arSA } from '../../i18n/locales/ar-SA'
-import { deDE } from '../../i18n/locales/de-DE'
-import { esES } from '../../i18n/locales/es-ES'
-import { frFR } from '../../i18n/locales/fr-FR'
-import { jaJP } from '../../i18n/locales/ja-JP'
-import { koKR } from '../../i18n/locales/ko-KR'
-import { zhCN } from '../../i18n/locales/zh-CN'
-import { zhTW } from '../../i18n/locales/zh-TW'
+import { LOCALE_REGISTRY, LOCALE_CODES } from '../../i18n/locales/registry'
 import type { UpupMessages } from '../../i18n/types'
 
-const ALL_LOCALES = [
-    { bundle: arSA, code: 'ar-SA', dir: 'rtl' },
-    { bundle: deDE, code: 'de-DE', dir: 'ltr' },
-    { bundle: esES, code: 'es-ES', dir: 'ltr' },
-    { bundle: frFR, code: 'fr-FR', dir: 'ltr' },
-    { bundle: jaJP, code: 'ja-JP', dir: 'ltr' },
-    { bundle: koKR, code: 'ko-KR', dir: 'ltr' },
-    { bundle: zhCN, code: 'zh-CN', dir: 'ltr' },
-    { bundle: zhTW, code: 'zh-TW', dir: 'ltr' },
-] as const
+const enUS = LOCALE_REGISTRY['en-US']
+const arSA = LOCALE_REGISTRY['ar-SA']
+
+// No `as const` needed here (unlike the plan's literal snippet): LocaleBundle.dir
+// is already the literal union 'ltr' | 'rtl' at its source in types.ts, so
+// `.dir` off a LOCALE_REGISTRY lookup is never widened to `string` in the first
+// place — `as const` on a .map() result is a TS1355 (only literals qualify).
+const ALL_LOCALES = LOCALE_CODES
+    .filter(c => c !== 'en-US')
+    .map(code => ({ code, bundle: LOCALE_REGISTRY[code], dir: LOCALE_REGISTRY[code].dir }))
 
 const REQUIRED_NAMESPACES: (keyof UpupMessages)[] = [
     'common',
@@ -107,12 +99,11 @@ describe('ar-SA specific', () => {
 // ─────────────────────────────────────────────
 // CJK locales — non-ASCII characters present
 // ─────────────────────────────────────────────
-describe.each([
-    { bundle: jaJP, code: 'ja-JP' },
-    { bundle: koKR, code: 'ko-KR' },
-    { bundle: zhCN, code: 'zh-CN' },
-    { bundle: zhTW, code: 'zh-TW' },
-])('$code non-ASCII content', ({ bundle, code }) => {
+describe.each(
+    LOCALE_CODES
+        .filter(c => /^(ja|ko|zh)/.test(c))
+        .map(code => ({ code, bundle: LOCALE_REGISTRY[code] })),
+)('$code non-ASCII content', ({ bundle, code }) => {
     it(`${code} language name contains non-ASCII characters`, () => {
         expect(/[^\x00-\x7F]/.test(bundle.language)).toBe(true)
     })
