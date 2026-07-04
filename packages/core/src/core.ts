@@ -245,7 +245,7 @@ export class UpupCore {
         import('./worker/create-worker-provider'),
         import('./runtime/browser'),
       ])
-      return createWorkerProvider(BrowserRuntime)
+      return createWorkerProvider(BrowserRuntime, { timeoutMs: this.options.workerTimeoutMs })
     } catch (err) {
       if (typeof process !== 'undefined' && process.env?.NODE_ENV !== 'production') {
         console.warn('[upup] worker offload unavailable, falling back to main thread', err)

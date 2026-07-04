@@ -1,5 +1,6 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { UpupCore } from '../src/core'
+import * as createWorkerProviderModule from '../src/worker/create-worker-provider'
 
 describe('core worker wiring (headless / node)', () => {
   it('accepts the webWorker option without affecting headless processing', async () => {
@@ -24,6 +25,47 @@ describe('core worker wiring (headless / node)', () => {
   it('exposes webWorker on CoreOptions type', () => {
     const core = new UpupCore({ webWorker: true })
     expect(core.options.webWorker).toBe(true)
+    core.destroy()
+  })
+})
+
+describe('workerTimeoutMs wiring', () => {
+  const realWorker = globalThis.Worker
+
+  class FakeWorker {
+    onmessage: ((e: unknown) => void) | null = null
+    onerror: ((e: unknown) => void) | null = null
+    postMessage() {}
+    terminate() {}
+  }
+
+  beforeEach(() => {
+    // isWorkerEligible() gates on typeof Worker !== 'undefined'
+    ;(globalThis as unknown as { Worker: unknown }).Worker = FakeWorker
+  })
+
+  afterEach(() => {
+    ;(globalThis as unknown as { Worker: unknown }).Worker = realWorker
+    vi.restoreAllMocks()
+  })
+
+  it('threads workerTimeoutMs into createWorkerProvider', async () => {
+    const spy = vi
+      .spyOn(createWorkerProviderModule, 'createWorkerProvider')
+      .mockReturnValue({
+        execute: async () => ({ kind: 'hash', checksum: 'stub' }),
+        terminate: () => {},
+      })
+
+    const core = new UpupCore({
+      checksumVerification: true,
+      webWorker: true,
+      workerTimeoutMs: 60000,
+    })
+    await core.setFiles([new File(['data'], 'c.txt', { type: 'text/plain' })])
+    try { await core.upload() } catch { /* no endpoint — expected */ }
+
+    expect(spy).toHaveBeenCalledWith(expect.anything(), { timeoutMs: 60000 })
     core.destroy()
   })
 })

@@ -39,6 +39,11 @@ export interface CoreOptions extends FileManagerOptions {
    * fallback otherwise). `false` = force the main thread.
    */
   webWorker?: boolean
+  /**
+   * Web-worker task timeout in ms. Default 30000. On timeout the task falls
+   * back to main-thread processing (it never fails the file).
+   */
+  workerTimeoutMs?: number
   maxRetries?: number
   maxConcurrentUploads?: number
   autoUpload?: boolean
