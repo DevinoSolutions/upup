@@ -23,7 +23,7 @@ test.describe('parity-dom normalizer', () => {
         // <svg> is a leaf: classes kept, internals NOT recursed
         { tag: 'svg', classes: ['upup-text-5xl', 'upup-text-blue-600'], children: [] },
         // the upup-hidden input subtree is skipped entirely
-        { tag: 'span', classes: ['upup-badge'], children: [] },
+        { tag: 'span', classes: ['upup-badge'], text: 'x', children: [] },
       ],
     })
   })
@@ -54,7 +54,7 @@ test.describe('parity-dom normalizer', () => {
           tag: 'upup-keep',
           testid: 'keep-me',
           classes: ['upup-styled'],
-          children: [{ tag: 'span', classes: ['upup-inner'], children: [] }],
+          children: [{ tag: 'span', classes: ['upup-inner'], text: 'label', children: [] }],
         },
       ],
     })
@@ -89,7 +89,7 @@ test.describe('parity-dom normalizer', () => {
               testid: 'upup-file-item',
               classes: ['upup-item'],
               // role="listitem" likewise dropped
-              children: [{ tag: 'span', classes: ['upup-name'], children: [] }],
+              children: [{ tag: 'span', classes: ['upup-name'], text: 'a.png', children: [] }],
             },
           ],
         },

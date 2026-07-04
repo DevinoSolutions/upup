@@ -48,7 +48,8 @@
                   "upup-text-[#242634]",
                   "upup-text-xs"
                 ],
-                "children": []
+                "children": [],
+                "text": "My Device"
               }
             ],
             "testid": "upup-source-local",
@@ -78,7 +79,8 @@
                   "upup-text-[#242634]",
                   "upup-text-xs"
                 ],
-                "children": []
+                "children": [],
+                "text": "Google Drive"
               }
             ],
             "testid": "upup-source-googleDrive",
@@ -113,7 +115,8 @@
                   "upup-text-[#0B0B0B]",
                   "upup-text-xs"
                 ],
-                "children": []
+                "children": [],
+                "text": "Drag your files or"
               },
               {
                 "tag": "button",
@@ -125,7 +128,8 @@
                 ],
                 "children": [],
                 "testid": "upup-browse-files",
-                "type": "button"
+                "type": "button",
+                "text": "browse files"
               }
             ]
           },
@@ -136,7 +140,8 @@
               "upup-text-center",
               "upup-text-xs"
             ],
-            "children": []
+            "children": [],
+            "text": "Add your documents here, you can upload up to 3 files max, Max 1 GB files are allowed"
           }
         ]
       }
@@ -271,7 +276,8 @@
                   "upup-text-gray-900",
                   "upup-truncate"
                 ],
-                "children": []
+                "children": [],
+                "text": "parity.pdf"
               },
               {
                 "tag": "div",
@@ -281,7 +287,8 @@
                   "upup-text-[11px]",
                   "upup-text-gray-500"
                 ],
-                "children": []
+                "children": [],
+                "text": "18 Bytes"
               },
               {
                 "tag": "button",
@@ -294,7 +301,8 @@
                   "upup-transition-all"
                 ],
                 "children": [],
-                "type": "button"
+                "type": "button",
+                "text": "Click to preview"
               }
             ]
           }
@@ -423,7 +431,8 @@
               "upup-text-gray-900",
               "upup-truncate"
             ],
-            "children": []
+            "children": [],
+            "text": "parity.pdf"
           },
           {
             "tag": "div",
@@ -433,7 +442,8 @@
               "upup-text-[11px]",
               "upup-text-gray-500"
             ],
-            "children": []
+            "children": [],
+            "text": "18 Bytes"
           },
           {
             "tag": "button",
@@ -446,7 +456,8 @@
               "upup-transition-all"
             ],
             "children": [],
-            "type": "button"
+            "type": "button",
+            "text": "Click to preview"
           }
         ]
       }

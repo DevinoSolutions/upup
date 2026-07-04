@@ -8,6 +8,15 @@ export interface NormalizedNode {
   ariaHidden?: string
   aria?: Record<string, string>
   classes: string[]
+  /** Direct Text-node children, whitespace-collapsed + trimmed. Hard parity: every
+   * port reads the same core i18n and renders the same content. */
+  text?: string
+  /** Presence of the `disabled` attribute. */
+  disabled?: boolean
+  /** Presence of `src` only -- blob/object URLs are per-run/per-framework unstable. */
+  hasSrc?: boolean
+  /** `href` value -- static in these components. */
+  href?: string
   children: NormalizedNode[]
 }
 
@@ -112,6 +121,21 @@ export function normalizeElement(el: Element): NormalizedNode {
       out.aria = {}
       for (const k of ariaKeys) out.aria[k] = aria[k]
     }
+
+    // Direct text (not descendant text): filename/size copy, button labels, etc.
+    // Hard parity field -- every port renders the same core i18n content, so a
+    // mistranslation or lost copy now diffs instead of hiding as an empty leaf.
+    const directText = Array.from(node.childNodes)
+      .filter((n) => n.nodeType === 3)
+      .map((n) => n.textContent || '')
+      .join('')
+      .replace(/\s+/g, ' ')
+      .trim()
+    if (directText) out.text = directText
+    if (node.hasAttribute('disabled')) out.disabled = true
+    if (node.hasAttribute('src')) out.hasSrc = true // presence only -- blob/object URLs are per-run
+    const href = node.getAttribute('href')
+    if (href) out.href = href
 
     // <svg> is a leaf — its internals are glyph data, verified elsewhere.
     if (tag === 'svg') return out
