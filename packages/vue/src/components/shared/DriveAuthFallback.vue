@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { formatUiMessage as t, cn } from '@upup/core'
+import { type DriveBrowserError, formatUiMessage as t, cn } from '@upup/core'
 import { useUploaderI18n, useUploaderTheme } from '../../context/uploader-context'
 import SourceViewContainer from './SourceViewContainer.vue'
 
 const props = withDefaults(defineProps<{
     providerName: string
     onRetry: () => void
+    error?: DriveBrowserError
     dataUpupSlot?: string
 }>(), {
     dataUpupSlot: 'drive-auth-fallback',
@@ -18,6 +19,15 @@ const { translations: tr } = useUploaderI18n()
 <template>
     <SourceViewContainer :data-upup-slot="props.dataUpupSlot">
         <div class="upup-flex upup-h-full upup-w-full upup-flex-col upup-items-center upup-justify-center upup-gap-4 upup-p-6 upup-text-center">
+            <p
+                v-if="!!props.error"
+                data-testid="upup-drive-error"
+                data-upup-slot="drive-error"
+                role="alert"
+                class="upup-p-4 upup-text-sm upup-text-red-600 dark:upup-text-red-400"
+            >
+                {{ t(tr.driveLoadError, { message: props.error.message }) }}
+            </p>
             <p
                 :class="cn(
                     'upup-text-sm upup-text-[#333]',

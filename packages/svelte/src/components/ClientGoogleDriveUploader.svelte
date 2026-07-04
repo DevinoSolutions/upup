@@ -20,6 +20,10 @@
     handleSubmit,
     handleCancelDownload,
     onSelectCurrentFolder,
+    error,
+    hasMore,
+    isLoadingMore,
+    loadMore,
   } = useGoogleDrive()
 </script>
 
@@ -27,6 +31,7 @@
   <DriveAuthFallback
     providerName="Google Drive"
     onRetry={retryAuth}
+    {error}
     dataUpupSlot="google-drive-uploader"
   />
 {:else}
@@ -44,5 +49,9 @@
     {handleSubmit}
     {handleCancelDownload}
     {onSelectCurrentFolder}
+    {error}
+    {hasMore}
+    {isLoadingMore}
+    {loadMore}
   />
 {/if}

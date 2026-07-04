@@ -48,6 +48,10 @@ export function useGoogleDrive() {
         handleCancelDownload: () => controller.handleCancelDownload(),
         onSelectCurrentFolder: () => controller.onSelectCurrentFolder(),
         isClickLoading: derived(state, ($s) => $s.isClickLoading),
+        error: derived(state, ($s) => $s.error),
+        hasMore: derived(state, ($s) => $s.hasMore),
+        isLoadingMore: derived(state, ($s) => $s.isLoadingMore),
+        loadMore: () => controller.loadMore(),
     }
 }
 

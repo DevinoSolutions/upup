@@ -41,6 +41,9 @@ export class BoxService {
     readonly selectedFiles = computed(() => this.state().selectedFiles)
     readonly showLoader = computed(() => this.state().showLoader)
     readonly isClickLoading = computed(() => this.state().isClickLoading)
+    readonly error = computed(() => this.state().error)
+    readonly hasMore = computed(() => this.state().hasMore)
+    readonly isLoadingMore = computed(() => this.state().isLoadingMore)
 
     // ── Lifecycle ─────────────────────────────────────────────────
     init(): void { this.controller.init() }
@@ -58,4 +61,5 @@ export class BoxService {
     handleSubmit(): Promise<void> { return this.controller.handleSubmit() }
     handleCancelDownload(): void { this.controller.handleCancelDownload() }
     onSelectCurrentFolder(): void { this.controller.onSelectCurrentFolder() }
+    loadMore(): Promise<void> { return this.controller.loadMore() }
 }

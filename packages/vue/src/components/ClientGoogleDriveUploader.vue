@@ -20,6 +20,10 @@ const {
     handleSubmit,
     handleCancelDownload,
     onSelectCurrentFolder,
+    error,
+    hasMore,
+    isLoadingMore,
+    loadMore,
 } = useGoogleDrive()
 </script>
 
@@ -28,6 +32,7 @@ const {
         v-if="!token && (authCancelled || isAuthReady)"
         provider-name="Google Drive"
         :on-retry="retryAuth"
+        :error="error"
         data-upup-slot="google-drive-uploader"
     />
     <DriveBrowser
@@ -45,5 +50,9 @@ const {
         :handle-submit="handleSubmit"
         :handle-cancel-download="handleCancelDownload"
         :on-select-current-folder="onSelectCurrentFolder"
+        :error="error"
+        :has-more="hasMore"
+        :is-loading-more="isLoadingMore"
+        :load-more="loadMore"
     />
 </template>

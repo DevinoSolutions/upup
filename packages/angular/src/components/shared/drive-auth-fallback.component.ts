@@ -1,5 +1,5 @@
 import { Component, Input, inject } from '@angular/core'
-import { formatUiMessage as t, cn } from '@upup/core'
+import { type DriveBrowserError, formatUiMessage as t, cn } from '@upup/core'
 import { UpupStore } from '../../upup-store.service'
 import { SourceViewContainerComponent } from '../source-view-container.component'
 
@@ -18,6 +18,14 @@ import { SourceViewContainerComponent } from '../source-view-container.component
     template: `
         <upup-adapter-view-container [slotName]="slotName">
             <div class="upup-flex upup-h-full upup-w-full upup-flex-col upup-items-center upup-justify-center upup-gap-4 upup-p-6 upup-text-center">
+                @if (!!error?.()) {
+                    <p
+                        data-testid="upup-drive-error"
+                        data-upup-slot="drive-error"
+                        role="alert"
+                        class="upup-p-4 upup-text-sm upup-text-red-600 dark:upup-text-red-400"
+                    >{{ errorText }}</p>
+                }
                 <p [class]="promptClass">{{ authenticatePrompt }}</p>
                 <button
                     type="button"
@@ -35,8 +43,15 @@ export class DriveAuthFallbackComponent {
 
     @Input({ required: true }) providerName!: string
     @Input({ required: true }) onRetry!: () => void
+    @Input() error: (() => DriveBrowserError | undefined) | undefined = undefined
     /** Maps to svelte's dataUpupSlot prop — forwarded to SourceViewContainer slotName. */
     @Input() slotName: string = 'drive-auth-fallback'
+
+    get errorText(): string {
+        const err = this.error?.()
+        const tr = this.store.translations()
+        return err ? t(tr.driveLoadError, { message: err.message }) : ''
+    }
 
     /** Resolved i18n string: "Sign in to access {{provider}}" → "Sign in to access Google Drive" */
     get authenticatePrompt(): string {

@@ -55,6 +55,10 @@ export function useOneDrive() {
         handleCancelDownload: () => controller.handleCancelDownload(),
         onSelectCurrentFolder: () => controller.onSelectCurrentFolder(),
         isClickLoading: computed(() => state.value.isClickLoading),
+        error: computed(() => state.value.error),
+        hasMore: computed(() => state.value.hasMore),
+        isLoadingMore: computed(() => state.value.isLoadingMore),
+        loadMore: () => controller.loadMore(),
     }
 }
 

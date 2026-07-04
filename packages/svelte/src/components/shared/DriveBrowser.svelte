@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { Readable } from 'svelte/store'
   import {
+    type DriveBrowserError,
     type DriveFile,
     type DriveFolder,
     type DriveUser,
@@ -31,6 +32,10 @@
     handleSubmit,
     handleCancelDownload,
     onSelectCurrentFolder,
+    error,
+    hasMore,
+    isLoadingMore,
+    loadMore,
     dataUpupSlot = 'drive-browser',
   }: {
     isClickLoading?: Readable<boolean>
@@ -45,6 +50,10 @@
     handleSubmit: () => Promise<void>
     handleCancelDownload: () => void
     onSelectCurrentFolder?: () => Promise<void> | void
+    error?: Readable<DriveBrowserError | undefined>
+    hasMore?: Readable<boolean>
+    isLoadingMore?: Readable<boolean>
+    loadMore?: () => void | Promise<void>
     dataUpupSlot?: string
   } = $props()
 
@@ -73,7 +82,8 @@
 
   const displayedItems = $derived(searchDriveFiles(items, searchTerm) || [])
 
-  const isLoading = $derived(($isClickLoading ?? false) || !$driveFiles)
+  // error short-circuits the perpetual loader — the exact F-123/F-124 symptom.
+  const isLoading = $derived(!$error && (($isClickLoading ?? false) || !$driveFiles))
 
   function noopClick() { /* disabled click */ }
 </script>
@@ -102,6 +112,16 @@
             $slotClasses.driveBody,
           )}
         >
+          {#if !!$error}
+            <p
+              data-testid="upup-drive-error"
+              data-upup-slot="drive-error"
+              role="alert"
+              class="upup-p-4 upup-text-sm upup-text-red-600 dark:upup-text-red-400"
+            >
+              {t(tr.driveLoadError, { message: $error.message })}
+            </p>
+          {/if}
           {#if !!displayedItems.length}
             <ul class="upup-p-2">
               {#each displayedItems as file (file.id)}
@@ -113,12 +133,23 @@
               {/each}
             </ul>
           {/if}
-          {#if !displayedItems.length}
+          {#if !displayedItems.length && !$error}
             <div class="upup-flex upup-h-full upup-flex-col upup-items-center upup-justify-center">
               <p class="upup-text-xs upup-opacity-70">
                 {tr.noAcceptedFilesFound}
               </p>
             </div>
+          {/if}
+          {#if !!$hasMore}
+            <button
+              data-testid="upup-drive-load-more"
+              data-upup-slot="drive-load-more"
+              class="upup-mx-auto upup-my-2 upup-block upup-rounded-md upup-px-3 upup-py-1.5 upup-text-sm upup-text-blue-600 disabled:upup-opacity-50"
+              disabled={$isLoadingMore}
+              onclick={() => loadMore?.()}
+            >
+              {$isLoadingMore ? tr.loading : tr.loadMore}
+            </button>
           {/if}
         </div>
       {/if}

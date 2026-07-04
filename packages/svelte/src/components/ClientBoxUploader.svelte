@@ -20,6 +20,10 @@
     handleSubmit,
     handleCancelDownload,
     onSelectCurrentFolder,
+    error,
+    hasMore,
+    isLoadingMore,
+    loadMore,
   } = useBox()
 
   async function handleSignOut() {
@@ -48,5 +52,9 @@
     {handleSubmit}
     {handleCancelDownload}
     {onSelectCurrentFolder}
+    {error}
+    {hasMore}
+    {isLoadingMore}
+    {loadMore}
   />
 {/if}

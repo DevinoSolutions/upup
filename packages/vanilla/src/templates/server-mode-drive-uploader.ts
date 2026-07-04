@@ -1,6 +1,6 @@
 import { html, nothing } from 'lit-html'
 import { repeat } from 'lit-html/directives/repeat.js'
-import { cn } from '@upup/core'
+import { cn, errorCodeToMessageKey } from '@upup/core'
 import type { ServerModeProvider, ServerDriveFile } from '@upup/core'
 export type { ServerModeProvider, ServerDriveFile }
 import type { UploaderContext } from '../lib/types'
@@ -9,7 +9,7 @@ import { driveAuthFallback } from './shared/drive-auth-fallback'
 
 type ListState =
   | { status: 'idle' } | { status: 'loading' } | { status: 'ready'; files: ServerDriveFile[] }
-  | { status: 'reauth' } | { status: 'error'; message: string }
+  | { status: 'reauth' } | { status: 'error'; message: string; code?: string }
 
 const PROVIDER_LABEL: Record<ServerModeProvider, string> = {
   'google-drive': 'Google Drive', onedrive: 'OneDrive', dropbox: 'Dropbox', box: 'Box',
@@ -155,7 +155,14 @@ export function serverModeDriveUploader(ctx: UploaderContext, opts: { provider: 
         />
       </div>
       <div class="upup-overflow-auto">
-        ${c.state.status === 'error' ? html`<p class=${cn('upup-p-4 upup-text-sm', isDark ? 'upup-text-red-400' : 'upup-text-red-600')}>${c.state.message}</p>` : nothing}
+        ${c.state.status === 'error' ? html`<p
+          data-testid="upup-drive-error"
+          data-upup-slot="drive-error"
+          role="alert"
+          class=${cn('upup-p-4 upup-text-sm', isDark ? 'upup-text-red-400' : 'upup-text-red-600')}
+        >${c.state.code && ctx.translator
+          ? ctx.translator(`errors.${errorCodeToMessageKey(c.state.code)}`, { code: c.state.code })
+          : c.state.message}</p>` : nothing}
         ${repeat(files, (f) => f.id, (file) => html`
           <button
             type="button" data-upup-slot="drive-browser-item" data-selected=${c.selected.has(file.id)}

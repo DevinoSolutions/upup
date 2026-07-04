@@ -23,6 +23,7 @@ import { DriveBrowserComponent } from './shared/drive-browser.component'
             <upup-drive-auth-fallback
                 providerName="Google Drive"
                 [onRetry]="retryAuth"
+                [error]="svc.error"
                 slotName="google-drive-uploader"
             />
         } @else {
@@ -40,6 +41,10 @@ import { DriveBrowserComponent } from './shared/drive-browser.component'
                 [handleSubmit]="handleSubmit"
                 [handleCancelDownload]="handleCancelDownload"
                 [onSelectCurrentFolder]="onSelectCurrentFolder"
+                [error]="svc.error"
+                [hasMore]="svc.hasMore"
+                [isLoadingMore]="svc.isLoadingMore"
+                [loadMore]="loadMore"
             />
         }
     `,
@@ -58,4 +63,5 @@ export class ClientGoogleDriveUploaderComponent implements OnInit, OnDestroy {
     readonly handleSubmit = () => this.svc.handleSubmit()
     readonly handleCancelDownload = () => { this.svc.handleCancelDownload() }
     readonly onSelectCurrentFolder = () => { this.svc.onSelectCurrentFolder() }
+    readonly loadMore = () => this.svc.loadMore()
 }

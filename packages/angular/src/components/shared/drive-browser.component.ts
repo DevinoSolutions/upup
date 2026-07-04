@@ -1,6 +1,7 @@
 import { Component, Input, inject, signal, computed, effect, Type } from '@angular/core'
 import { NgComponentOutlet } from '@angular/common'
 import {
+    type DriveBrowserError,
     type DriveFile,
     type DriveFolder,
     type DriveUser,
@@ -55,6 +56,14 @@ import { DriveBrowserItemComponent } from './drive-browser-item.component'
                     <!-- Body: file/folder list or empty message -->
                     @if (!!path()?.length) {
                         <div [class]="bodyClass">
+                            @if (!!error?.()) {
+                                <p
+                                    data-testid="upup-drive-error"
+                                    data-upup-slot="drive-error"
+                                    role="alert"
+                                    class="upup-p-4 upup-text-sm upup-text-red-600 dark:upup-text-red-400"
+                                >{{ errorText }}</p>
+                            }
                             @if (!!displayedItems().length) {
                                 <ul class="upup-p-2">
                                     @for (file of displayedItems(); track file.id) {
@@ -66,10 +75,19 @@ import { DriveBrowserItemComponent } from './drive-browser-item.component'
                                     }
                                 </ul>
                             }
-                            @if (!displayedItems().length) {
+                            @if (!displayedItems().length && !error?.()) {
                                 <div class="upup-flex upup-h-full upup-flex-col upup-items-center upup-justify-center">
                                     <p class="upup-text-xs upup-opacity-70">{{ tr.noAcceptedFilesFound }}</p>
                                 </div>
+                            }
+                            @if (!!hasMore?.()) {
+                                <button
+                                    data-testid="upup-drive-load-more"
+                                    data-upup-slot="drive-load-more"
+                                    class="upup-mx-auto upup-my-2 upup-block upup-rounded-md upup-px-3 upup-py-1.5 upup-text-sm upup-text-blue-600 disabled:upup-opacity-50"
+                                    [disabled]="isLoadingMore?.()"
+                                    (click)="loadMore?.()"
+                                >{{ isLoadingMore?.() ? tr.loading : tr.loadMore }}</button>
                             }
                         </div>
                     }
@@ -126,6 +144,10 @@ export class DriveBrowserComponent {
     @Input({ required: true }) handleCancelDownload!: () => void
     @Input({ required: true }) isClickLoading!: () => boolean
     @Input() onSelectCurrentFolder: (() => void) | undefined = undefined
+    @Input() error: (() => DriveBrowserError | undefined) | undefined = undefined
+    @Input() hasMore: (() => boolean) | undefined = undefined
+    @Input() isLoadingMore: (() => boolean) | undefined = undefined
+    @Input() loadMore: (() => void | Promise<void>) | undefined = undefined
     /** Maps to svelte's dataUpupSlot prop. */
     @Input() slotName: string = 'drive-browser'
 
@@ -134,7 +156,15 @@ export class DriveBrowserComponent {
     readonly onSearchChange = (v: string) => { this.searchTerm.set(v) }
 
     // ── Derived ───────────────────────────────────────────────────
-    readonly isLoading = computed(() => (this.isClickLoading?.() ?? false) || !this.driveFiles?.())
+    // error short-circuits the perpetual loader — the exact F-123/F-124 symptom.
+    readonly isLoading = computed(() =>
+        !this.error?.() && ((this.isClickLoading?.() ?? false) || !this.driveFiles?.()),
+    )
+
+    get errorText(): string {
+        const err = this.error?.()
+        return err ? t(this.tr.driveLoadError, { message: err.message }) : ''
+    }
 
     get loader(): Type<unknown> {
         return this.store.uiProps.icons.LoaderIcon as Type<unknown>

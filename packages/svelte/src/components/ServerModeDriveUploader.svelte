@@ -1,8 +1,12 @@
 <script lang="ts">
   import { writable, derived } from 'svelte/store'
   import { untrack } from 'svelte'
-  import { cn } from '@upup/core'
-  import { useUploaderOptions, useUploaderTheme } from '../context/uploader-context'
+  import { cn, errorCodeToMessageKey } from '@upup/core'
+  import {
+    useUploaderI18n,
+    useUploaderOptions,
+    useUploaderTheme,
+  } from '../context/uploader-context'
   import {
     useServerModeDrive,
     type ServerDriveFile,
@@ -36,7 +40,17 @@
 
   const { isDark: dark } = useUploaderTheme()
   const { icons } = useUploaderOptions()
+  const { translator } = useUploaderI18n()
   const Loader = icons.LoaderIcon
+
+  const errorText = derived(state, ($state) => {
+    if ($state.status !== 'error') return ''
+    return $state.code && translator
+      ? translator(`errors.${errorCodeToMessageKey($state.code)}`, {
+          code: $state.code,
+        })
+      : $state.message
+  })
 
   const selected = writable<Set<string>>(new Set())
   const transferring = writable(false)
@@ -132,12 +146,15 @@
         <div class="upup-overflow-auto">
           {#if $state.status === 'error'}
             <p
+              data-testid="upup-drive-error"
+              data-upup-slot="drive-error"
+              role="alert"
               class={cn(
                 'upup-p-4 upup-text-sm',
                 $dark ? 'upup-text-red-400' : 'upup-text-red-600',
               )}
             >
-              {$state.message}
+              {$errorText}
             </p>
           {/if}
           {#each $files as file (file.id)}

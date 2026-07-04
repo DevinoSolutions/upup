@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import {
+    type DriveBrowserError,
     type DriveFile,
     type DriveFolder,
     type DriveUser,
@@ -31,9 +32,15 @@ const props = withDefaults(defineProps<{
     handleSubmit: () => Promise<void>
     handleCancelDownload: () => void
     onSelectCurrentFolder?: () => Promise<void> | void
+    error?: DriveBrowserError
+    hasMore?: boolean
+    isLoadingMore?: boolean
+    loadMore?: () => void | Promise<void>
     dataUpupSlot?: string
 }>(), {
     isClickLoading: false,
+    hasMore: false,
+    isLoadingMore: false,
     dataUpupSlot: 'drive-browser',
 })
 
@@ -63,7 +70,8 @@ const displayedItems = computed(() =>
     searchDriveFiles(items.value, searchTerm.value) || [],
 )
 
-const isLoading = computed(() => props.isClickLoading || !props.driveFiles)
+// error short-circuits the perpetual loader — the exact F-123/F-124 symptom.
+const isLoading = computed(() => !props.error && (props.isClickLoading || !props.driveFiles))
 
 function noopClick() { /* disabled click */ }
 </script>
@@ -92,6 +100,16 @@ function noopClick() { /* disabled click */ }
                             slotClasses.driveBody,
                         )"
                     >
+                        <template v-if="!!props.error">
+                            <p
+                                data-testid="upup-drive-error"
+                                data-upup-slot="drive-error"
+                                role="alert"
+                                class="upup-p-4 upup-text-sm upup-text-red-600 dark:upup-text-red-400"
+                            >
+                                {{ t(tr.driveLoadError, { message: props.error.message }) }}
+                            </p>
+                        </template>
                         <template v-if="!!displayedItems.length">
                             <ul class="upup-p-2">
                                 <DriveBrowserItem
@@ -103,12 +121,23 @@ function noopClick() { /* disabled click */ }
                                 />
                             </ul>
                         </template>
-                        <template v-if="!displayedItems.length">
+                        <template v-if="!displayedItems.length && !props.error">
                             <div class="upup-flex upup-h-full upup-flex-col upup-items-center upup-justify-center">
                                 <p class="upup-text-xs upup-opacity-70">
                                     {{ tr.noAcceptedFilesFound }}
                                 </p>
                             </div>
+                        </template>
+                        <template v-if="!!props.hasMore">
+                            <button
+                                data-testid="upup-drive-load-more"
+                                data-upup-slot="drive-load-more"
+                                class="upup-mx-auto upup-my-2 upup-block upup-rounded-md upup-px-3 upup-py-1.5 upup-text-sm upup-text-blue-600 disabled:upup-opacity-50"
+                                :disabled="props.isLoadingMore"
+                                @click="props.loadMore?.()"
+                            >
+                                {{ props.isLoadingMore ? tr.loading : tr.loadMore }}
+                            </button>
                         </template>
                     </div>
                 </template>

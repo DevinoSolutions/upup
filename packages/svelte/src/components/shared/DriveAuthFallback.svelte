@@ -1,15 +1,18 @@
 <script lang="ts">
-  import { formatUiMessage as t, cn } from '@upup/core'
+  import type { Readable } from 'svelte/store'
+  import { type DriveBrowserError, formatUiMessage as t, cn } from '@upup/core'
   import { useUploaderI18n, useUploaderTheme } from '../../context/uploader-context'
   import SourceViewContainer from './SourceViewContainer.svelte'
 
   const {
     providerName,
     onRetry,
+    error,
     dataUpupSlot = 'drive-auth-fallback',
   }: {
     providerName: string
     onRetry: () => void
+    error?: Readable<DriveBrowserError | undefined>
     dataUpupSlot?: string
   } = $props()
 
@@ -19,6 +22,16 @@
 
 <SourceViewContainer data-upup-slot={dataUpupSlot}>
   <div class="upup-flex upup-h-full upup-w-full upup-flex-col upup-items-center upup-justify-center upup-gap-4 upup-p-6 upup-text-center">
+    {#if error && !!$error}
+      <p
+        data-testid="upup-drive-error"
+        data-upup-slot="drive-error"
+        role="alert"
+        class="upup-p-4 upup-text-sm upup-text-red-600 dark:upup-text-red-400"
+      >
+        {t(tr.driveLoadError, { message: $error.message })}
+      </p>
+    {/if}
     <p
       class={cn(
         'upup-text-sm upup-text-[#333]',

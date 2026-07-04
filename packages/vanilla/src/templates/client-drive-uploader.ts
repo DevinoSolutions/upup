@@ -24,7 +24,15 @@ export function clientDriveUploader(ctx: UploaderContext, source: FileSource) {
   const notAuthed =
     !st.token && !st.isAuthenticated && (st.isAuthReady || !st.isLoading)
   if (notAuthed) {
-    return driveAuthFallback(ctx, { providerName: meta.providerName, onRetry: () => controller.retryAuth(), dataUpupSlot: meta.slot })
+    // Only the GIS provider (Google) wires error into the auth-fallback, matching
+    // react/vue/svelte's GoogleDriveUploader — the popup providers (OneDrive/Dropbox/Box)
+    // never surface an error at this pre-auth stage in any other framework either.
+    return driveAuthFallback(ctx, {
+      providerName: meta.providerName,
+      onRetry: () => controller.retryAuth(),
+      error: source === FileSource.GOOGLE_DRIVE ? st.error : undefined,
+      dataUpupSlot: meta.slot,
+    })
   }
   return driveBrowser(ctx, {
     driveFiles: st.folder as DriveFolder | undefined,
@@ -40,5 +48,9 @@ export function clientDriveUploader(ctx: UploaderContext, source: FileSource) {
     handleSubmit: () => controller.handleSubmit(),
     handleCancelDownload: () => controller.handleCancelDownload(),
     onSelectCurrentFolder: () => controller.onSelectCurrentFolder(),
+    error: st.error,
+    hasMore: st.hasMore,
+    isLoadingMore: st.isLoadingMore,
+    loadMore: () => controller.loadMore(),
   })
 }

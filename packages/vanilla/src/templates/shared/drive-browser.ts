@@ -1,7 +1,7 @@
 import { html, nothing } from 'lit-html'
 import { repeat } from 'lit-html/directives/repeat.js'
 import { cn, formatUiMessage as t, pluralUiMessage as plural, searchDriveFiles } from '@upup/core'
-import type { DriveFile, DriveFolder, DriveUser } from '@upup/core'
+import type { DriveBrowserError, DriveFile, DriveFolder, DriveUser } from '@upup/core'
 import type { UploaderContext } from '../../lib/types'
 import { sourceViewContainer } from './source-view-container'
 import { driveBrowserHeader } from './drive-browser-header'
@@ -21,6 +21,10 @@ export interface DriveBrowserProps {
   handleSubmit: () => void
   handleCancelDownload: () => void
   onSelectCurrentFolder: () => void
+  error?: DriveBrowserError
+  hasMore?: boolean
+  isLoadingMore?: boolean
+  loadMore?: () => void | Promise<void>
 }
 
 // Per-context search state (reset when props key changes)
@@ -51,6 +55,7 @@ export function driveBrowser(ctx: UploaderContext, props: DriveBrowserProps) {
     driveFiles, user, handleSignOut, dataUpupSlot, path, setPath,
     isClickLoading, handleClick, selectedFiles, showLoader,
     handleSubmit, handleCancelDownload, onSelectCurrentFolder,
+    error, hasMore, isLoadingMore, loadMore,
   } = props
 
   const isDark = ctx.theme.getSnapshot().isDark
@@ -60,7 +65,8 @@ export function driveBrowser(ctx: UploaderContext, props: DriveBrowserProps) {
 
   const ss = getDriveSearchState(ctx, dataUpupSlot)
 
-  const isLoading = isClickLoading || !driveFiles
+  // error short-circuits the perpetual loader — the exact F-123/F-124 symptom.
+  const isLoading = !error && (isClickLoading || !driveFiles)
 
   const currentFolder = path[path.length - 1]
   const items = currentFolder?.children?.filter((item) =>
@@ -91,6 +97,16 @@ export function driveBrowser(ctx: UploaderContext, props: DriveBrowserProps) {
             slot.driveBody,
           )}
         >
+          ${error ? html`
+            <p
+              data-testid="upup-drive-error"
+              data-upup-slot="drive-error"
+              role="alert"
+              class="upup-p-4 upup-text-sm upup-text-red-600 dark:upup-text-red-400"
+            >
+              ${t(tr.driveLoadError, { message: error.message })}
+            </p>` : nothing}
+
           ${displayedItems.length > 0 ? html`
             <ul class="upup-p-2">
               ${repeat(
@@ -105,12 +121,23 @@ export function driveBrowser(ctx: UploaderContext, props: DriveBrowserProps) {
               )}
             </ul>` : nothing}
 
-          ${displayedItems.length === 0 ? html`
+          ${displayedItems.length === 0 && !error ? html`
             <div class="upup-flex upup-h-full upup-flex-col upup-items-center upup-justify-center">
               <p class="upup-text-xs upup-opacity-70">
                 ${tr.noAcceptedFilesFound}
               </p>
             </div>` : nothing}
+
+          ${hasMore ? html`
+            <button
+              data-testid="upup-drive-load-more"
+              data-upup-slot="drive-load-more"
+              class="upup-mx-auto upup-my-2 upup-block upup-rounded-md upup-px-3 upup-py-1.5 upup-text-sm upup-text-blue-600 disabled:upup-opacity-50"
+              ?disabled=${isLoadingMore}
+              @click=${() => { loadMore?.() }}
+            >
+              ${isLoadingMore ? tr.loading : tr.loadMore}
+            </button>` : nothing}
         </div>` : nothing}
 
       ${selectedFiles.length > 0 || !!onSelectCurrentFolder ? html`

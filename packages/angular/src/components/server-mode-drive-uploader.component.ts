@@ -1,6 +1,6 @@
 import { Component, Input, inject, OnInit, OnDestroy, Type } from '@angular/core'
 import { NgComponentOutlet } from '@angular/common'
-import { cn } from '@upup/core'
+import { cn, errorCodeToMessageKey } from '@upup/core'
 import { UpupStore } from '../upup-store.service'
 import {
     ServerModeDriveService,
@@ -75,7 +75,12 @@ import { SourceViewContainerComponent } from './source-view-container.component'
                         <!-- Body: file list -->
                         <div class="upup-overflow-auto">
                             @if (svc.listState().status === 'error') {
-                                <p [class]="errorClass">{{ errorMessage }}</p>
+                                <p
+                                    data-testid="upup-drive-error"
+                                    data-upup-slot="drive-error"
+                                    role="alert"
+                                    [class]="errorClass"
+                                >{{ errorMessage }}</p>
                             }
                             @for (file of displayFiles; track file.id) {
                                 <button
@@ -164,7 +169,10 @@ export class ServerModeDriveUploaderComponent implements OnInit, OnDestroy {
 
     get errorMessage(): string {
         const s = this.svc.listState()
-        return s.status === 'error' ? s.message : ''
+        if (s.status !== 'error') return ''
+        return s.code && this.store.translator
+            ? this.store.translator(`errors.${errorCodeToMessageKey(s.code)}`, { code: s.code })
+            : s.message
     }
 
     get addFilesLabel(): string {

@@ -1,6 +1,10 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { useUploaderOptions, useUploaderTheme } from '../context/uploader-context'
+import {
+    useUploaderI18n,
+    useUploaderOptions,
+    useUploaderTheme,
+} from '../context/uploader-context'
 import {
     useServerModeDrive,
     type ServerDriveFile,
@@ -8,7 +12,7 @@ import {
 } from '../composables/useServerModeDrive'
 import SourceViewContainer from './shared/SourceViewContainer.vue'
 import DriveAuthFallback from './shared/DriveAuthFallback.vue'
-import { cn } from '@upup/core'
+import { cn, errorCodeToMessageKey } from '@upup/core'
 
 const props = withDefaults(defineProps<{
     provider: ServerModeProvider
@@ -29,8 +33,18 @@ const resolvedSlot = computed(() => props.dataUpupSlot ?? `drive-browser-${props
 
 const { icons } = useUploaderOptions()
 const { isDark: dark } = useUploaderTheme()
+const { translator } = useUploaderI18n()
 const { state, search, setSearch, refresh, transfer, startAuth } =
     useServerModeDrive(props.provider)
+
+const errorText = computed(() => {
+    if (state.value.status !== 'error') return ''
+    return state.value.code && translator
+        ? translator(`errors.${errorCodeToMessageKey(state.value.code)}`, {
+              code: state.value.code,
+          })
+        : state.value.message
+})
 const selected = ref<Set<string>>(new Set())
 const transferring = ref(false)
 
@@ -119,12 +133,15 @@ function formatBytes(bytes: number): string {
                 <div class="upup-overflow-auto">
                     <p
                         v-if="state.status === 'error'"
+                        data-testid="upup-drive-error"
+                        data-upup-slot="drive-error"
+                        role="alert"
                         :class="cn(
                             'upup-p-4 upup-text-sm',
                             dark ? 'upup-text-red-400' : 'upup-text-red-600',
                         )"
                     >
-                        {{ state.message }}
+                        {{ errorText }}
                     </p>
                     <button
                         v-for="file in files"

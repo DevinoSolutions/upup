@@ -20,6 +20,10 @@ const {
     handleSubmit,
     handleCancelDownload,
     onSelectCurrentFolder,
+    error,
+    hasMore,
+    isLoadingMore,
+    loadMore,
 } = useOneDrive()
 
 async function handleSignOut() {
@@ -49,5 +53,9 @@ async function handleSignOut() {
         :handle-submit="handleSubmit"
         :handle-cancel-download="handleCancelDownload"
         :on-select-current-folder="onSelectCurrentFolder"
+        :error="error"
+        :has-more="hasMore"
+        :is-loading-more="isLoadingMore"
+        :load-more="loadMore"
     />
 </template>
