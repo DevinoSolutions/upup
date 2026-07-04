@@ -33,3 +33,4 @@ export {
 } from './ui-translations'
 
 export { mergeTranslations, plural, t } from './utils'
+export { errorCodeToMessageKey } from './error-code-map'

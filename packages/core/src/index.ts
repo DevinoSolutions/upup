@@ -97,6 +97,7 @@ export {
 } from './i18n/ui-translations'
 export type { Translations, UiTranslations } from './i18n/ui-translations'
 export { mergeTranslations, plural, t } from './i18n/utils'
+export { errorCodeToMessageKey } from './i18n/error-code-map'
 
 // ── Theme ────────────────────────────────────────────────────
 export type {
