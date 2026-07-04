@@ -391,7 +391,7 @@ describe('handler — presign edge cases', () => {
         expect([404, 405]).toContain(res.status)
     })
 
-    it('presign with empty body still processes (no field validation)', async () => {
+    it('presign rejects empty body (400)', async () => {
         const handler = createUpupHandler(config)
         const req = new Request('http://localhost/presign', {
             method: 'POST',
@@ -399,7 +399,32 @@ describe('handler — presign edge cases', () => {
             body: JSON.stringify({}),
         })
         const res = await handler(req)
-        // Server does not validate required fields — delegates to storage provider
+        const body = await res.json()
+        expect(res.status).toBe(400)
+        expect(body.code).toBe('BAD_REQUEST')
+    })
+
+    it('presign rejects malformed JSON (400, not an unhandled throw)', async () => {
+        const handler = createUpupHandler(config)
+        const req = new Request('http://localhost/presign', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: '{not valid json',
+        })
+        const res = await handler(req)
+        const body = await res.json()
+        expect(res.status).toBe(400)
+        expect(body.code).toBe('BAD_REQUEST')
+    })
+
+    it('presign with a full valid body still succeeds (200)', async () => {
+        const handler = createUpupHandler(config)
+        const req = new Request('http://localhost/presign', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: 'valid.jpg', size: 100, type: 'image/jpeg' }),
+        })
+        const res = await handler(req)
         expect(res.status).toBe(200)
     })
 
@@ -412,5 +437,110 @@ describe('handler — presign edge cases', () => {
         })
         const res = await handler(req)
         expect(res.status).toBe(200)
+    })
+})
+
+// ─────────────────────────────────────────────
+// Error channel — server observability (P4/C1)
+// ─────────────────────────────────────────────
+describe('handler — error channel: 500s carry a machine code + invoke onError', () => {
+    it('a presign failure returns {code: PRESIGN_FAILED} and fires config.onError once', async () => {
+        const { generatePresignedUrl } = await import('../src/providers/aws')
+        vi.mocked(generatePresignedUrl).mockRejectedValueOnce(new Error('S3 down'))
+
+        const onError = vi.fn()
+        const handler = createUpupHandler({ ...config, onError })
+        const req = new Request('http://localhost/presign', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: 'test.jpg', size: 100, type: 'image/jpeg' }),
+        })
+        const res = await handler(req)
+        const body = await res.json()
+
+        expect(res.status).toBe(500)
+        expect(body.code).toBe('PRESIGN_FAILED')
+        expect(onError).toHaveBeenCalledTimes(1)
+        expect(onError.mock.calls[0][0]).toMatchObject({
+            route: 'presign',
+            status: 500,
+            code: 'PRESIGN_FAILED',
+        })
+    })
+})
+
+// ─────────────────────────────────────────────
+// Error channel — upload-token codes surfaced at the boundary (P4/C2)
+// ─────────────────────────────────────────────
+describe('handler — error channel: upload-token codes', () => {
+    it('a forged token still 403s, and now carries {code: bad_signature} (well-shaped, wrong sig)', async () => {
+        const handler = createUpupHandler(config)
+        const res = await handler(new Request('http://localhost/multipart/sign-part', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token: 'forged.token', partNumber: 1 }),
+        }))
+        const body = await res.json()
+        // Keep-green: status semantics are UNCHANGED — code is additive.
+        // 'forged.token' has the body.sig SHAPE (one dot, two non-empty parts),
+        // so verifyUploadToken reaches the signature check and fails there —
+        // i.e. bad_signature, not malformed. A truly malformed (no-dot) token
+        // is covered separately below.
+        expect(res.status).toBe(403)
+        expect(body.code).toBe('bad_signature')
+    })
+
+    it('a token with no separator at all → 403 {code: malformed}', async () => {
+        const handler = createUpupHandler(config)
+        const res = await handler(new Request('http://localhost/multipart/sign-part', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token: 'not-a-token-at-all', partNumber: 1 }),
+        }))
+        const body = await res.json()
+        expect(res.status).toBe(403)
+        expect(body.code).toBe('malformed')
+    })
+
+    it('a validly-shaped token signed with the WRONG secret → 403 {code: bad_signature}', async () => {
+        const { signUploadToken } = await import('../src/uploadToken')
+        const wrongSecretToken = await signUploadToken('a-totally-different-secret-key-000', {
+            k: 'some-key.jpg',
+            u: 'mp-999',
+            uid: null,
+            smin: 0,
+            smax: 100,
+            exp: Math.floor(Date.now() / 1000) + 3600,
+        })
+        const handler = createUpupHandler(config)
+        const res = await handler(new Request('http://localhost/multipart/sign-part', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token: wrongSecretToken, partNumber: 1 }),
+        }))
+        const body = await res.json()
+        expect(res.status).toBe(403)
+        expect(body.code).toBe('bad_signature')
+    })
+
+    it('an expired token → 403 {code: expired}', async () => {
+        const { signUploadToken } = await import('../src/uploadToken')
+        const expiredToken = await signUploadToken(config.uploadTokenSecret, {
+            k: 'some-key.jpg',
+            u: 'mp-999',
+            uid: null,
+            smin: 0,
+            smax: 100,
+            exp: Math.floor(Date.now() / 1000) - 10, // already expired
+        })
+        const handler = createUpupHandler(config)
+        const res = await handler(new Request('http://localhost/multipart/sign-part', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token: expiredToken, partNumber: 1 }),
+        }))
+        const body = await res.json()
+        expect(res.status).toBe(403)
+        expect(body.code).toBe('expired')
     })
 })

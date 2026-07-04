@@ -1,4 +1,5 @@
 import type { StorageProvider, UpupCorsConfig } from '@upup/core'
+import type { UpupServerLogger } from './observability'
 
 /** Context passed to a custom keyStrategy. */
 export interface KeyStrategyContext {
@@ -78,6 +79,25 @@ export type UpupServerConfig = {
    * files stream through as a single PUT. Default: 100 MB.
    */
   multipartThreshold?: number
+
+  /**
+   * Called on every error path (500s, invalid upload tokens, OAuth/token-exchange
+   * failures, health-check storage failures). Never receives secrets, tokens,
+   * request bodies, or Authorization headers — only a route/method/status/code/
+   * message plus the caught error's name/message/stack. Default: logs a
+   * structured line via console.error.
+   */
+  onError?: UpupServerLogger
+
+  /** Options for the built-in GET /health route. */
+  health?: {
+    /**
+     * Expose the first 8 hex chars of SHA-256(uploadTokenSecret) on /health so
+     * operators can spot cross-instance secret drift without revealing the
+     * secret itself. Default: false.
+     */
+    exposeSecretFingerprint?: boolean
+  }
 }
 
 /**

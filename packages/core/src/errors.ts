@@ -20,6 +20,7 @@ export enum UpupErrorCode {
   STORAGE_ERROR = 'STORAGE_ERROR',
   QUOTA_EXCEEDED = 'QUOTA_EXCEEDED',
   NO_UPLOAD_TARGET = 'NO_UPLOAD_TARGET',
+  BAD_REQUEST = 'BAD_REQUEST',
 }
 
 export type RestrictionFailedReason =

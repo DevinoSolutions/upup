@@ -1,3 +1,4 @@
+import { UpupErrorCode } from '@upup/core'
 import type { UpupServerConfig, FileMetadata, DriveTokens } from './config'
 import {
   generatePresignedUrl,
@@ -13,6 +14,7 @@ import {
   verifyUploadToken,
   UploadTokenError,
   DEFAULT_UPLOAD_TOKEN_TTL_SECONDS,
+  type UploadTokenPayload,
 } from './uploadToken'
 import {
   generateOAuthState,
@@ -25,6 +27,7 @@ import {
   DEFAULT_USER_ID,
 } from './tokenStore'
 import { defaultKeyStrategy } from './key'
+import { reportServerError, toSafeError } from './observability'
 
 export type RouteHandler = (req: Request) => Promise<Response>
 type ResponseHeaders = Record<string, string>
@@ -68,6 +71,78 @@ function json(data: unknown, status = 200, headers: ResponseHeaders = {}): Respo
   })
 }
 
+/** One home for every non-2xx response: logs via the onError seam, then returns
+ *  the uniform `{ error: <generic human message>, code: <machine code> }` body.
+ *  The real cause (error.name/message/stack) goes to the logger, never the client. */
+function fail(
+  config: UpupServerConfig,
+  h: ResponseHeaders,
+  route: string,
+  method: string,
+  status: number,
+  code: string,
+  message: string,
+  error: unknown,
+): Response {
+  reportServerError(config.onError, {
+    route,
+    method,
+    status,
+    code,
+    message,
+    requestId: h['x-upup-request-id'],
+    error: toSafeError(error),
+  })
+  return json({ error: message, code }, status, h)
+}
+
+/** Verify an upload token, or return the 403 Response to send as-is. Collapses
+ *  the three duplicated inner try/catch blocks in sign-part/complete/abort into
+ *  one call site, and surfaces the token's own malformed/bad_signature/expired
+ *  code at the HTTP boundary (previously all three collapsed into one 403). */
+async function verifyTokenOrRespond(
+  config: UpupServerConfig,
+  token: string,
+  h: ResponseHeaders,
+  route: string,
+  method: string,
+): Promise<UploadTokenPayload | Response> {
+  assertUploadTokenSecret(config.uploadTokenSecret)
+  try {
+    return await verifyUploadToken(config.uploadTokenSecret, token, Date.now())
+  } catch (e) {
+    if (e instanceof UploadTokenError) {
+      reportServerError(config.onError, {
+        route,
+        method,
+        status: 403,
+        code: e.code,
+        message: 'Invalid upload token',
+        requestId: h['x-upup-request-id'],
+        error: toSafeError(e),
+      })
+      return json({ error: 'Invalid upload token', code: e.code }, 403, h)
+    }
+    throw e
+  }
+}
+
+/** Parse a JSON request body, returning a 400 Response (not an unhandled throw)
+ *  on malformed JSON. Collapses the two divergent body-parse sites. */
+async function parseJsonBody<T>(
+  req: Request,
+  h: ResponseHeaders,
+): Promise<{ ok: true; value: T } | { ok: false; response: Response }> {
+  try {
+    return { ok: true, value: (await req.json()) as T }
+  } catch {
+    return {
+      ok: false,
+      response: json({ error: 'Invalid JSON body', code: UpupErrorCode.BAD_REQUEST }, 400, h),
+    }
+  }
+}
+
 function matchesAllowedType(type: string, allowedTypes?: string[]): boolean {
   if (!allowedTypes?.length) return true
   return allowedTypes.some((allowed) => {
@@ -85,6 +160,21 @@ async function validateUploadMetadata(
   body: FileMetadata,
   responseHeaders: ResponseHeaders = {},
 ): Promise<Response | null> {
+  if (
+    typeof body?.name !== 'string' ||
+    body.name.length === 0 ||
+    typeof body?.type !== 'string' ||
+    typeof body?.size !== 'number' ||
+    !Number.isFinite(body.size) ||
+    body.size < 0
+  ) {
+    return json(
+      { error: 'Invalid file metadata', code: UpupErrorCode.BAD_REQUEST },
+      400,
+      responseHeaders,
+    )
+  }
+
   if (config.maxFileSize && body.size > config.maxFileSize) {
     return json({ error: 'File too large' }, 413, responseHeaders)
   }
@@ -124,66 +214,79 @@ export function createUpupHandler(config: UpupServerConfig): RouteHandler {
     const url = new URL(req.url)
     const path = url.pathname
     const responseHeaders = corsHeaders(req, config)
+    const requestId = crypto.randomUUID()
+    responseHeaders['x-upup-request-id'] = requestId
 
-    if (req.method === 'OPTIONS') {
-      return new Response(null, { status: 204, headers: responseHeaders })
-    }
-
-    // Auth check
-    if (config.auth) {
-      const authorized = await config.auth(req)
-      if (!authorized) {
-        return json({ error: 'Unauthorized' }, 401, responseHeaders)
+    try {
+      if (req.method === 'OPTIONS') {
+        return new Response(null, { status: 204, headers: responseHeaders })
       }
-    }
 
-    // Route matching
-    if (req.method === 'POST' && path.endsWith('/presign')) {
-      return handlePresign(req, config, responseHeaders)
-    }
-    if (req.method === 'POST' && path.endsWith('/multipart/init')) {
-      return handleMultipartInit(req, config, responseHeaders)
-    }
-    if (req.method === 'POST' && path.endsWith('/multipart/sign-part')) {
-      return handleMultipartSignPart(req, config, responseHeaders)
-    }
-    if (req.method === 'POST' && path.endsWith('/multipart/complete')) {
-      return handleMultipartComplete(req, config, responseHeaders)
-    }
-    if (req.method === 'POST' && path.endsWith('/multipart/abort')) {
-      return handleMultipartAbort(req, config, responseHeaders)
-    }
-
-    // OAuth routes: GET /auth/:provider and GET /auth/:provider/cb
-    const authMatch = path.match(/\/auth\/([\w-]+?)(?:\/(cb))?$/)
-    if (req.method === 'GET' && authMatch) {
-      const provider = authMatch[1]
-      const isCallback = authMatch[2] === 'cb'
-      if (isCallback) {
-        return handleOAuthCallback(req, config, provider)
+      // Auth check
+      if (config.auth) {
+        const authorized = await config.auth(req)
+        if (!authorized) {
+          return json({ error: 'Unauthorized' }, 401, responseHeaders)
+        }
       }
-      return handleOAuthRedirect(req, config, provider)
-    }
 
-    // File routes: GET /files/:provider and POST /files/:provider/transfer
-    const filesMatch = path.match(/\/files\/([\w-]+?)(?:\/(transfer))?$/)
-    if (filesMatch) {
-      const provider = filesMatch[1]
-      const isTransfer = filesMatch[2] === 'transfer'
-      if (req.method === 'POST' && isTransfer) {
-        return handleFileTransfer(req, config, provider, responseHeaders)
+      // Route matching
+      if (req.method === 'POST' && path.endsWith('/presign')) {
+        return handlePresign(req, config, responseHeaders)
       }
-      if (req.method === 'GET' && !isTransfer) {
-        return handleListFiles(req, config, provider, responseHeaders)
+      if (req.method === 'POST' && path.endsWith('/multipart/init')) {
+        return handleMultipartInit(req, config, responseHeaders)
       }
-    }
+      if (req.method === 'POST' && path.endsWith('/multipart/sign-part')) {
+        return handleMultipartSignPart(req, config, responseHeaders)
+      }
+      if (req.method === 'POST' && path.endsWith('/multipart/complete')) {
+        return handleMultipartComplete(req, config, responseHeaders)
+      }
+      if (req.method === 'POST' && path.endsWith('/multipart/abort')) {
+        return handleMultipartAbort(req, config, responseHeaders)
+      }
 
-    return json({ error: 'Not found' }, 404, responseHeaders)
+      // OAuth routes: GET /auth/:provider and GET /auth/:provider/cb
+      const authMatch = path.match(/\/auth\/([\w-]+?)(?:\/(cb))?$/)
+      if (req.method === 'GET' && authMatch) {
+        const provider = authMatch[1]
+        const isCallback = authMatch[2] === 'cb'
+        if (isCallback) {
+          return handleOAuthCallback(req, config, provider)
+        }
+        return handleOAuthRedirect(req, config, provider)
+      }
+
+      // File routes: GET /files/:provider and POST /files/:provider/transfer
+      const filesMatch = path.match(/\/files\/([\w-]+?)(?:\/(transfer))?$/)
+      if (filesMatch) {
+        const provider = filesMatch[1]
+        const isTransfer = filesMatch[2] === 'transfer'
+        if (req.method === 'POST' && isTransfer) {
+          return handleFileTransfer(req, config, provider, responseHeaders)
+        }
+        if (req.method === 'GET' && !isTransfer) {
+          return handleListFiles(req, config, provider, responseHeaders)
+        }
+      }
+
+      return json({ error: 'Not found' }, 404, responseHeaders)
+    } catch (error) {
+      // Transport safety net (F-421/F-104): a last-resort catch so an unhandled
+      // throw anywhere in routing surfaces as a logged, CORS-headered, coded 500
+      // instead of an uncaught framework exception with no log and no CORS. This
+      // is the single home for last-resort handling — the express/fastify/hono/
+      // next adapters need no per-adapter catch of their own.
+      return fail(config, responseHeaders, 'router', req.method, 500, UpupErrorCode.STORAGE_ERROR, 'Internal error', error)
+    }
   }
 }
 
 async function handlePresign(req: Request, config: UpupServerConfig, responseHeaders: ResponseHeaders): Promise<Response> {
-  const body = (await req.json()) as FileMetadata
+  const parsed = await parseJsonBody<FileMetadata>(req, responseHeaders)
+  if (!parsed.ok) return parsed.response
+  const body = parsed.value
 
   const validationError = await validateUploadMetadata(req, config, body, responseHeaders)
   if (validationError) return validationError
@@ -203,13 +306,16 @@ async function handlePresign(req: Request, config: UpupServerConfig, responseHea
     const result = await generatePresignedUrl(config.storage, key, body.type, body.size)
     return json(result, 200, responseHeaders)
   } catch (error) {
-    return json({ error: 'Presign failed' }, 500, responseHeaders)
+    return fail(config, responseHeaders, 'presign', req.method, 500, UpupErrorCode.PRESIGN_FAILED, 'Presign failed', error)
   }
 }
 
 async function handleMultipartInit(req: Request, config: UpupServerConfig, responseHeaders: ResponseHeaders): Promise<Response> {
+  const parsed = await parseJsonBody<{ name: string; type: string; size: number; chunkSizeBytes?: number }>(req, responseHeaders)
+  if (!parsed.ok) return parsed.response
+  const body = parsed.value
+
   try {
-    const body = (await req.json()) as { name: string; type: string; size: number; chunkSizeBytes?: number }
     const validationError = await validateUploadMetadata(req, config, body, responseHeaders)
     if (validationError) return validationError
 
@@ -243,39 +349,27 @@ async function handleMultipartInit(req: Request, config: UpupServerConfig, respo
     })
     return json({ ...result, token }, 200, responseHeaders)
   } catch (error) {
-    return json({ error: 'Multipart init failed' }, 500, responseHeaders)
+    return fail(config, responseHeaders, 'multipart/init', req.method, 500, UpupErrorCode.STORAGE_ERROR, 'Multipart init failed', error)
   }
 }
 
 async function handleMultipartSignPart(req: Request, config: UpupServerConfig, responseHeaders: ResponseHeaders): Promise<Response> {
   try {
-    assertUploadTokenSecret(config.uploadTokenSecret)
     const body = (await req.json()) as { token: string; partNumber: number }
-    let payload
-    try {
-      payload = await verifyUploadToken(config.uploadTokenSecret, body.token, Date.now())
-    } catch (e) {
-      if (e instanceof UploadTokenError) return json({ error: 'Invalid upload token' }, 403, responseHeaders)
-      throw e
-    }
+    const payload = await verifyTokenOrRespond(config, body.token, responseHeaders, 'multipart/sign-part', req.method)
+    if (payload instanceof Response) return payload
     const result = await generatePresignedPartUrl(config.storage, payload.k, payload.u, body.partNumber)
     return json(result, 200, responseHeaders)
   } catch (error) {
-    return json({ error: 'Multipart sign failed' }, 500, responseHeaders)
+    return fail(config, responseHeaders, 'multipart/sign-part', req.method, 500, UpupErrorCode.STORAGE_ERROR, 'Multipart sign failed', error)
   }
 }
 
 async function handleMultipartComplete(req: Request, config: UpupServerConfig, responseHeaders: ResponseHeaders): Promise<Response> {
   try {
-    assertUploadTokenSecret(config.uploadTokenSecret)
     const body = (await req.json()) as { token: string; parts: Array<{ partNumber: number; eTag: string }> }
-    let payload
-    try {
-      payload = await verifyUploadToken(config.uploadTokenSecret, body.token, Date.now())
-    } catch (e) {
-      if (e instanceof UploadTokenError) return json({ error: 'Invalid upload token' }, 403, responseHeaders)
-      throw e
-    }
+    const payload = await verifyTokenOrRespond(config, body.token, responseHeaders, 'multipart/complete', req.method)
+    if (payload instanceof Response) return payload
 
     // S1 (multipart): smin/smax are SIGNED at init but must be ENFORCED here —
     // otherwise a client can init with a tiny declared size (tiny smax) and
@@ -291,25 +385,19 @@ async function handleMultipartComplete(req: Request, config: UpupServerConfig, r
     const result = await completeMultipartUpload(config.storage, payload.k, payload.u, body.parts)
     return json(result, 200, responseHeaders)
   } catch (error) {
-    return json({ error: 'Multipart complete failed' }, 500, responseHeaders)
+    return fail(config, responseHeaders, 'multipart/complete', req.method, 500, UpupErrorCode.STORAGE_ERROR, 'Multipart complete failed', error)
   }
 }
 
 async function handleMultipartAbort(req: Request, config: UpupServerConfig, responseHeaders: ResponseHeaders): Promise<Response> {
   try {
-    assertUploadTokenSecret(config.uploadTokenSecret)
     const body = (await req.json()) as { token: string }
-    let payload
-    try {
-      payload = await verifyUploadToken(config.uploadTokenSecret, body.token, Date.now())
-    } catch (e) {
-      if (e instanceof UploadTokenError) return json({ error: 'Invalid upload token' }, 403, responseHeaders)
-      throw e
-    }
+    const payload = await verifyTokenOrRespond(config, body.token, responseHeaders, 'multipart/abort', req.method)
+    if (payload instanceof Response) return payload
     const result = await abortMultipartUpload(config.storage, payload.k, payload.u)
     return json(result, 200, responseHeaders)
   } catch (error) {
-    return json({ error: 'Multipart abort failed' }, 500, responseHeaders)
+    return fail(config, responseHeaders, 'multipart/abort', req.method, 500, UpupErrorCode.STORAGE_ERROR, 'Multipart abort failed', error)
   }
 }
 
@@ -477,10 +565,15 @@ async function handleOAuthCallback(
 
   if (!tokenRes.ok) {
     const body = await tokenRes.text()
-    return json(
-      { error: 'Token exchange failed', detail: body.slice(0, 500) },
-      502,
-    )
+    reportServerError(config.onError, {
+      route: `auth/${provider}/cb`,
+      method: req.method,
+      status: 502,
+      code: UpupErrorCode.AUTH_PROVIDER_ERROR,
+      message: 'Token exchange failed',
+      error: toSafeError(new Error(body.slice(0, 500))),
+    })
+    return json({ error: 'Token exchange failed', code: UpupErrorCode.AUTH_PROVIDER_ERROR }, 502)
   }
 
   const payload = (await tokenRes.json()) as {
@@ -610,6 +703,15 @@ async function refreshAccessToken(
   })
   if (!res.ok) {
     // Refresh token is dead/revoked -> force a clean re-auth.
+    const body = await res.text().catch(() => '')
+    reportServerError(config.onError, {
+      route: `auth/${provider}/refresh`,
+      method: 'POST',
+      status: res.status,
+      code: UpupErrorCode.AUTH_EXPIRED,
+      message: 'Drive token refresh failed',
+      error: toSafeError(new Error(body.slice(0, 500) || res.statusText)),
+    })
     await deleteTokens(config.tokenStore, userId, provider)
     return null
   }
@@ -678,7 +780,7 @@ async function handleListFiles(
       await deleteTokens(config.tokenStore, userId, provider)
       return json({ reauth: true, provider }, 401, responseHeaders)
     }
-    return json({ error: (err as Error).message }, 500, responseHeaders)
+    return fail(config, responseHeaders, `files/${provider}`, req.method, 500, UpupErrorCode.STORAGE_ERROR, 'Drive request failed', err)
   }
 }
 
@@ -763,7 +865,7 @@ async function handleFileTransfer(
       await deleteTokens(config.tokenStore, userId, provider)
       return json({ reauth: true, provider }, 401, responseHeaders)
     }
-    return json({ error: (err as Error).message }, 500, responseHeaders)
+    return fail(config, responseHeaders, `files/${provider}/transfer`, req.method, 500, UpupErrorCode.STORAGE_ERROR, 'Drive request failed', err)
   }
 }
 
