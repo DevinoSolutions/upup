@@ -1,6 +1,9 @@
 import type { ImageEditorOptions } from './image-editor'
 import type { LocaleBundle, PartialMessages } from '../i18n/types'
-import type { MaxFileSizeObject, ResumableUploadOptions } from './upload-protocols'
+import type {
+    MaxFileSizeObject,
+    ResumableUploadOptions,
+} from './upload-protocols'
 import type { UploadFile } from './upload-file'
 import type { UploadProvider, UploadSource } from './uploader-options'
 import type { UpupThemeConfig } from '../theme/types'

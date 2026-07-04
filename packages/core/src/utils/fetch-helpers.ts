@@ -51,7 +51,11 @@ export function fileNameFromContentDisposition(header: string | null) {
     return sanitized || undefined
 }
 
-export function deriveFetchedFileName(url: string, response: Response, blob: Blob) {
+export function deriveFetchedFileName(
+    url: string,
+    response: Response,
+    blob: Blob,
+) {
     const dispositionName = fileNameFromContentDisposition(
         response.headers.get('content-disposition'),
     )

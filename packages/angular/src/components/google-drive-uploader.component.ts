@@ -1,7 +1,7 @@
-import { Component, inject } from "@angular/core";
-import { UpupStore } from "../upup-store.service";
-import { ClientGoogleDriveUploaderComponent } from "./client-google-drive-uploader.component";
-import { ServerModeDriveUploaderComponent } from "./server-mode-drive-uploader.component";
+import { Component, inject } from '@angular/core'
+import { UpupStore } from '../upup-store.service'
+import { ClientGoogleDriveUploaderComponent } from './client-google-drive-uploader.component'
+import { ServerModeDriveUploaderComponent } from './server-mode-drive-uploader.component'
 
 /**
  * GoogleDriveUploaderComponent — Angular port of GoogleDriveUploader.svelte.
@@ -18,27 +18,27 @@ import { ServerModeDriveUploaderComponent } from "./server-mode-drive-uploader.c
  *   {/if}
  */
 @Component({
-  selector: "upup-google-drive-uploader",
-  standalone: true,
-  imports: [
-    ClientGoogleDriveUploaderComponent,
-    ServerModeDriveUploaderComponent,
-  ],
-  template: `
-    @if (store.mode === "server") {
-      <upup-server-mode-drive-uploader
-        provider="google-drive"
-        [onBack]="handleBack"
-      />
-    } @else {
-      <upup-client-google-drive-uploader />
-    }
-  `,
+    selector: 'upup-google-drive-uploader',
+    standalone: true,
+    imports: [
+        ClientGoogleDriveUploaderComponent,
+        ServerModeDriveUploaderComponent,
+    ],
+    template: `
+        @if (store.mode === 'server') {
+            <upup-server-mode-drive-uploader
+                provider="google-drive"
+                [onBack]="handleBack"
+            />
+        } @else {
+            <upup-client-google-drive-uploader />
+        }
+    `,
 })
 export class GoogleDriveUploaderComponent {
-  readonly store = inject(UpupStore);
+    readonly store = inject(UpupStore)
 
-  readonly handleBack = (): void => {
-    this.store.setActiveSource(undefined);
-  };
+    readonly handleBack = (): void => {
+        this.store.setActiveSource(undefined)
+    }
 }

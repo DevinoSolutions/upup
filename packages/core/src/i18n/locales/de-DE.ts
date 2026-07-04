@@ -25,33 +25,43 @@ export const deDE: LocaleBundle = {
         },
 
         dropzone: {
-            dragFilesOr: '{count, plural, one {Datei hierher ziehen oder} other {Dateien hierher ziehen oder}}',
-            dragFilesHere: '{count, plural, one {Datei hierher ziehen} other {Dateien hierher ziehen}}',
+            dragFilesOr:
+                '{count, plural, one {Datei hierher ziehen oder} other {Dateien hierher ziehen oder}}',
+            dragFilesHere:
+                '{count, plural, one {Datei hierher ziehen} other {Dateien hierher ziehen}}',
             browseFiles: 'Dateien durchsuchen',
             dragOrBrowse: 'Ziehen oder durchsuchen zum Hochladen',
             selectAFolder: 'Ordner ausw\u00E4hlen',
-            maxFileSizeAllowed: 'Maximal {size} {unit} {count, plural, one {Datei erlaubt} other {Dateien erlaubt}}',
+            maxFileSizeAllowed:
+                'Maximal {size} {unit} {count, plural, one {Datei erlaubt} other {Dateien erlaubt}}',
             minFileSizeDisplay: 'Min. {size} {unit}',
             allowedFileTypes: 'Erlaubte Typen: {types}',
-            maxFileCount: 'Bis zu {limit, plural, one {# Datei} other {# Dateien}}',
-            minFileCount: 'Mindestens {limit, plural, one {# Datei erforderlich} other {# Dateien erforderlich}}',
-            totalFileSizeExceeded: 'Gesamtdateigr\u00F6\u00DFe \u00FCberschreitet das Maximum von {size} {unit}',
-            maxTotalFileSizeDisplay: 'Maximale Gesamtgr\u00F6\u00DFe: {size} {unit}',
-            addDocumentsHere: 'Dokumente hier hinzuf\u00FCgen, maximal {limit} Dateien',
+            maxFileCount:
+                'Bis zu {limit, plural, one {# Datei} other {# Dateien}}',
+            minFileCount:
+                'Mindestens {limit, plural, one {# Datei erforderlich} other {# Dateien erforderlich}}',
+            totalFileSizeExceeded:
+                'Gesamtdateigr\u00F6\u00DFe \u00FCberschreitet das Maximum von {size} {unit}',
+            maxTotalFileSizeDisplay:
+                'Maximale Gesamtgr\u00F6\u00DFe: {size} {unit}',
+            addDocumentsHere:
+                'Dokumente hier hinzuf\u00FCgen, maximal {limit} Dateien',
             dropAriaLabel: 'Dateien hier ablegen oder klicken zum Durchsuchen',
         },
 
         header: {
             removeAllFiles: 'Alle Dateien entfernen',
             addingMoreFiles: 'Weitere Dateien hinzuf\u00FCgen',
-            filesSelected: '{count, plural, one {# Datei ausgew\u00E4hlt} other {# Dateien ausgew\u00E4hlt}}',
+            filesSelected:
+                '{count, plural, one {# Datei ausgew\u00E4hlt} other {# Dateien ausgew\u00E4hlt}}',
             addMore: 'Mehr hinzuf\u00FCgen',
             switchToListView: 'Switch to list view',
             switchToGridView: 'Switch to grid view',
         },
 
         fileList: {
-            uploadFiles: '{count, plural, one {# Datei hochladen} other {# Dateien hochladen}}',
+            uploadFiles:
+                '{count, plural, one {# Datei hochladen} other {# Dateien hochladen}}',
             resumeUpload: 'Fortsetzen',
             pauseUpload: 'Pausieren',
             retryUpload: 'Retry',
@@ -77,10 +87,12 @@ export const deDE: LocaleBundle = {
         driveBrowser: {
             noAcceptedFilesFound: 'Keine akzeptierten Dateien gefunden',
             selectThisFolder: 'Diesen Ordner ausw\u00E4hlen',
-            addFiles: '{count, plural, one {# Datei hinzuf\u00FCgen} other {# Dateien hinzuf\u00FCgen}}',
+            addFiles:
+                '{count, plural, one {# Datei hinzuf\u00FCgen} other {# Dateien hinzuf\u00FCgen}}',
             logOut: 'Abmelden',
             search: 'Suche',
-            authenticatePrompt: 'Authentifizieren Sie sich mit {provider}, um Dateien zum Hochladen auszuw\u00E4hlen',
+            authenticatePrompt:
+                'Authentifizieren Sie sich mit {provider}, um Dateien zum Hochladen auszuw\u00E4hlen',
             signInWith: 'Anmelden mit {provider}',
             loadError: "Couldn't load files: {message}",
             loadMore: 'Load more',
@@ -128,36 +140,55 @@ export const deDE: LocaleBundle = {
         },
 
         errors: {
-            multipleFilesNotAllowed: 'Mehrere Dateien d\u00FCrfen nicht hochgeladen werden',
+            multipleFilesNotAllowed:
+                'Mehrere Dateien d\u00FCrfen nicht hochgeladen werden',
             failedToGetUploadUrl: 'Fehler beim Abrufen der Upload-URL',
             statusError: 'Status: {status} ({statusText}). Details: {details}',
-            networkErrorDuringUpload: 'Netzwerkfehler w\u00E4hrend des Uploads - Status: {status} ({statusText})',
-            missingRequiredConfiguration: 'Fehlende erforderliche Konfiguration: {missing}',
-            invalidProvider: 'Ung\u00FCltiger Anbieter: {provider}. G\u00FCltige Optionen: {validOptions}',
-            invalidUploadEndpoint: 'Ung\u00FCltige uploadEndpoint-URL: {uploadEndpoint} {error}',
-            maxFileSizeMustBeGreater: 'maxFileSize muss gr\u00F6\u00DFer als 0 sein',
-            invalidAcceptFormat: 'Ung\u00FCltiges Accept-Format: {accept}. Verwenden Sie MIME-Typen, */*, * oder Erweiterungen (z.B. .fbx)',
+            networkErrorDuringUpload:
+                'Netzwerkfehler w\u00E4hrend des Uploads - Status: {status} ({statusText})',
+            missingRequiredConfiguration:
+                'Fehlende erforderliche Konfiguration: {missing}',
+            invalidProvider:
+                'Ung\u00FCltiger Anbieter: {provider}. G\u00FCltige Optionen: {validOptions}',
+            invalidUploadEndpoint:
+                'Ung\u00FCltige uploadEndpoint-URL: {uploadEndpoint} {error}',
+            maxFileSizeMustBeGreater:
+                'maxFileSize muss gr\u00F6\u00DFer als 0 sein',
+            invalidAcceptFormat:
+                'Ung\u00FCltiges Accept-Format: {accept}. Verwenden Sie MIME-Typen, */*, * oder Erweiterungen (z.B. .fbx)',
             unauthorizedAccess: 'Nicht autorisierter Zugriff auf den Anbieter',
-            presignedUrlInvalid: 'Vorsignierte URL ist abgelaufen oder ung\u00FCltig',
-            temporaryCredentialsInvalid: 'Tempor\u00E4re Anmeldedaten sind nicht mehr g\u00FCltig',
+            presignedUrlInvalid:
+                'Vorsignierte URL ist abgelaufen oder ung\u00FCltig',
+            temporaryCredentialsInvalid:
+                'Tempor\u00E4re Anmeldedaten sind nicht mehr g\u00FCltig',
             corsMisconfigured: 'CORS-Konfiguration verhindert den Datei-Upload',
-            fileTooLarge: 'Datei \u00FCberschreitet die maximale Gr\u00F6\u00DFe',
+            fileTooLarge:
+                'Datei \u00FCberschreitet die maximale Gr\u00F6\u00DFe',
             invalidFileType: 'Dateityp ist nicht erlaubt',
             storageQuotaExceeded: 'Speicherkontingent \u00FCberschritten',
-            signedUrlGenerationFailed: 'Signierte Upload-URL konnte nicht generiert werden',
-            uploadFailedWithCode: 'Upload fehlgeschlagen mit Fehlercode: {code}',
+            signedUrlGenerationFailed:
+                'Signierte Upload-URL konnte nicht generiert werden',
+            uploadFailedWithCode:
+                'Upload fehlgeschlagen mit Fehlercode: {code}',
             uploadFailed: 'Upload fehlgeschlagen: {message}',
-            dropboxSessionExpired: 'Ihre Dropbox-Sitzung ist abgelaufen. Bitte authentifizieren Sie sich erneut.',
-            dropboxMissingPermissions: 'Ihre Dropbox-App hat nicht die ben\u00F6tigten Berechtigungen. F\u00FCgen Sie bitte folgende Scopes in der Dropbox Developer Console hinzu: files.metadata.read, account_info.read',
-            failedToRefreshExpiredToken: 'Aktualisierung des abgelaufenen Tokens fehlgeschlagen',
+            dropboxSessionExpired:
+                'Ihre Dropbox-Sitzung ist abgelaufen. Bitte authentifizieren Sie sich erneut.',
+            dropboxMissingPermissions:
+                'Ihre Dropbox-App hat nicht die ben\u00F6tigten Berechtigungen. F\u00FCgen Sie bitte folgende Scopes in der Dropbox Developer Console hinzu: files.metadata.read, account_info.read',
+            failedToRefreshExpiredToken:
+                'Aktualisierung des abgelaufenen Tokens fehlgeschlagen',
             allowedLimitSurpassed: 'Erlaubtes Limit \u00FCberschritten!',
-            fileUnsupportedType: '{name} hat einen nicht unterst\u00FCtzten Typ!',
+            fileUnsupportedType:
+                '{name} hat einen nicht unterst\u00FCtzten Typ!',
             fileTooLargeName: '{name} ist gr\u00F6\u00DFer als {size} {unit}!',
             fileTooSmallName: '{name} ist kleiner als {size} {unit}!',
-            minFileSizeAllowed: 'Min. {size} {unit} {count, plural, one {Datei erforderlich} other {Dateien erforderlich}}',
-            minFileSizeMustBeGreater: 'minFileSize muss gr\u00F6\u00DFer als 0 sein',
+            minFileSizeAllowed:
+                'Min. {size} {unit} {count, plural, one {Datei erforderlich} other {Dateien erforderlich}}',
+            minFileSizeMustBeGreater:
+                'minFileSize muss gr\u00F6\u00DFer als 0 sein',
             filePreviouslySelected: '{name} wurde bereits ausgew\u00E4hlt',
-            fileWithUrlPreviouslySelected: 'Eine Datei mit dieser URL: {url} wurde bereits ausgew\u00E4hlt',
+            fileWithUrlPreviouslySelected:
+                'Eine Datei mit dieser URL: {url} wurde bereits ausgew\u00E4hlt',
             errorCompressingFile: 'Fehler beim Komprimieren von {name}',
             errorCompressingImage: 'Fehler beim Komprimieren des Bildes {name}',
             generatingThumbnails: 'Vorschaubilder werden generiert...',
@@ -167,18 +198,26 @@ export const deDE: LocaleBundle = {
             dropboxAuthFailed: 'Dropbox-Authentifizierung fehlgeschlagen',
             boxClientIdMissing: 'Box clientId missing',
             boxAuthFailed: 'Box authentication failed',
-            boxSessionExpired: 'Your Box session has expired. Please re-authenticate to continue.',
+            boxSessionExpired:
+                'Your Box session has expired. Please re-authenticate to continue.',
             boxNoAccessToken: 'No access token provided for Box download',
             genericErrorDetails: 'Fehler: {details}',
-            errorProcessingFiles: 'Fehler beim Verarbeiten der Dateien: {message}',
-            errorSelectingFolder: 'Fehler beim Ausw\u00E4hlen des Ordners: {message}',
+            errorProcessingFiles:
+                'Fehler beim Verarbeiten der Dateien: {message}',
+            errorSelectingFolder:
+                'Fehler beim Ausw\u00E4hlen des Ordners: {message}',
             graphClientNotInitialized: 'Graph-Client nicht initialisiert',
-            dropboxNoAccessToken: 'Kein Zugriffstoken f\u00FCr Dropbox-Download bereitgestellt',
-            silentTokenAcquisitionFailed: 'Stilles Token-Abrufen fehlgeschlagen: {details}',
-            msalInitializationFailed: 'MSAL-Initialisierung fehlgeschlagen: {details}',
-            silentTokenAcquisitionProceeding: 'Stilles Token-Abrufen fehlgeschlagen, fahre mit interaktivem Login fort{details}',
+            dropboxNoAccessToken:
+                'Kein Zugriffstoken f\u00FCr Dropbox-Download bereitgestellt',
+            silentTokenAcquisitionFailed:
+                'Stilles Token-Abrufen fehlgeschlagen: {details}',
+            msalInitializationFailed:
+                'MSAL-Initialisierung fehlgeschlagen: {details}',
+            silentTokenAcquisitionProceeding:
+                'Stilles Token-Abrufen fehlgeschlagen, fahre mit interaktivem Login fort{details}',
             signInFailed: 'Anmeldung fehlgeschlagen: {message}',
-            handleSignInFailed: 'Fehler beim Verarbeiten der Anmeldung: {message}',
+            handleSignInFailed:
+                'Fehler beim Verarbeiten der Anmeldung: {message}',
             signOutFailed: 'Abmeldung fehlgeschlagen: {message}',
             imageEditorFailed: 'Bildbearbeitung konnte nicht geladen werden...',
         },

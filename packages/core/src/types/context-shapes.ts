@@ -80,7 +80,9 @@ export type BaseContextFiles = {
     setFiles: (newFiles: File[]) => void
     replaceFiles: (files: File[] | UploadFile[]) => void
     resetState: () => void
-    uploadFiles: (files: File[] | UploadFile[]) => Promise<UploadFile[] | undefined>
+    uploadFiles: (
+        files: File[] | UploadFile[],
+    ) => Promise<UploadFile[] | undefined>
     handleFileRemove: (fileId: string) => void
 }
 

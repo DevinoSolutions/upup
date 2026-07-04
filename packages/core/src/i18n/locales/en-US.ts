@@ -58,8 +58,7 @@ export const enUS: LocaleBundle = {
         },
 
         fileList: {
-            uploadFiles:
-                'Upload {count, plural, one {# file} other {# files}}',
+            uploadFiles: 'Upload {count, plural, one {# file} other {# files}}',
             resumeUpload: 'Resume',
             pauseUpload: 'Pause',
             retryUpload: 'Retry',
@@ -85,8 +84,7 @@ export const enUS: LocaleBundle = {
         driveBrowser: {
             noAcceptedFilesFound: 'No accepted files found',
             selectThisFolder: 'Select this folder',
-            addFiles:
-                'Add {count, plural, one {# file} other {# files}}',
+            addFiles: 'Add {count, plural, one {# file} other {# files}}',
             logOut: 'Log out',
             search: 'Search',
             authenticatePrompt:
@@ -140,8 +138,7 @@ export const enUS: LocaleBundle = {
         errors: {
             multipleFilesNotAllowed: 'Multiple file uploads are not allowed',
             failedToGetUploadUrl: 'Failed to get upload URL',
-            statusError:
-                'Status: {status} ({statusText}). Details: {details}',
+            statusError: 'Status: {status} ({statusText}). Details: {details}',
             networkErrorDuringUpload:
                 'Network error during upload - Status: {status} ({statusText})',
             missingRequiredConfiguration:
@@ -188,7 +185,8 @@ export const enUS: LocaleBundle = {
             dropboxAuthFailed: 'Dropbox authentication failed',
             boxClientIdMissing: 'Box clientId missing',
             boxAuthFailed: 'Box authentication failed',
-            boxSessionExpired: 'Your Box session has expired. Please re-authenticate to continue.',
+            boxSessionExpired:
+                'Your Box session has expired. Please re-authenticate to continue.',
             boxNoAccessToken: 'No access token provided for Box download',
             genericErrorDetails: 'Error: {details}',
             errorProcessingFiles: 'Error processing files: {message}',
@@ -198,8 +196,7 @@ export const enUS: LocaleBundle = {
                 'No access token provided for Dropbox download',
             silentTokenAcquisitionFailed:
                 'Silent token acquisition failed: {details}',
-            msalInitializationFailed:
-                'MSAL initialization failed: {details}',
+            msalInitializationFailed: 'MSAL initialization failed: {details}',
             silentTokenAcquisitionProceeding:
                 'Silent token acquisition failed, proceeding with interactive login{details}',
             signInFailed: 'Sign-in failed: {message}',

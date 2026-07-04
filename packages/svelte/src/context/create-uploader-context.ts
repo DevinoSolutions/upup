@@ -116,7 +116,9 @@ export function createUploaderContext(props: UploaderProps): IUploaderContext {
         autoUpload,
         maxConcurrentUploads,
         crashRecovery,
-        allowedFileTypes: (typeof acceptProp === 'string' ? acceptProp : (acceptProp as string[]).join(',')) as string | undefined,
+        allowedFileTypes: (typeof acceptProp === 'string'
+            ? acceptProp
+            : (acceptProp as string[]).join(',')) as string | undefined,
         mini,
         isProcessing,
         allowPreview,
@@ -161,14 +163,14 @@ export function createUploaderContext(props: UploaderProps): IUploaderContext {
     const { connectSSE } = useSSEProcessing({
         processingEndpoint,
         onFileProcessed,
-        onError: (err) => onError(err.message),
+        onError: err => onError(err.message),
         processingTimeout,
     })
 
     // ── Root controller (created once, owns orchestrator/theme/plugins/commands) ──
     const root = createUploaderController(
         { core: upload.core, options: factoryOptions, normalized },
-        { connectSSE: (file) => connectSSE(file) },
+        { connectSSE: file => connectSSE(file) },
     )
     root.updateCallbacks({
         onError,
@@ -207,13 +209,15 @@ export function createUploaderContext(props: UploaderProps): IUploaderContext {
     // ── Input ref: delegate to factory (Svelte bind:this registration) ──────
     // UpupUploader.svelte: $effect(() => ctx.registerFileInput(inputEl))
     // must keep these field names; bodies delegate to root.*.
-    const registerFileInput = (el: HTMLInputElement | null) => root.registerFileInput(el)
+    const registerFileInput = (el: HTMLInputElement | null) =>
+        root.registerFileInput(el)
     const getFileInput = (): HTMLInputElement | null => root.getFileInput()
     const openFilePicker = () => root.openFilePicker()
 
     // ── Icons resolution (framework-specific) ───────────────────
     const resolvedIcons = {
-        ContainerAddMoreIcon: icons.ContainerAddMoreIcon ?? (EmptyIcon as Component),
+        ContainerAddMoreIcon:
+            icons.ContainerAddMoreIcon ?? (EmptyIcon as Component),
         FileDeleteIcon: icons.FileDeleteIcon ?? (TrashIcon as Component),
         CameraCaptureIcon: icons.CameraCaptureIcon ?? (EmptyIcon as Component),
         CameraRotateIcon: icons.CameraRotateIcon ?? (EmptyIcon as Component),
@@ -235,7 +239,8 @@ export function createUploaderContext(props: UploaderProps): IUploaderContext {
         // Reactive so consumers (SourceView/UploaderPanel/FileList) re-render when the
         // active source changes.
         activeSource: derived(orchState, $s => $s.activeSource),
-        setActiveSource: (source: FileSource | undefined) => root.commands.setActiveSource(source),
+        setActiveSource: (source: FileSource | undefined) =>
+            root.commands.setActiveSource(source),
         isAddingMore: derived(orchState, $s => $s.isAddingMore),
         setIsAddingMore: (v: boolean) => root.commands.setIsAddingMore(v),
         viewMode: derived(orchState, $s => $s.viewMode),
@@ -258,20 +263,27 @@ export function createUploaderContext(props: UploaderProps): IUploaderContext {
             slots: derived(themeState, $s => $s.slots),
         },
         files: derived(orchState, $s => $s.files),
-        setFiles: (newFiles: File[]) => root.commands.handleSetSelectedFiles(newFiles),
-        uploadFiles: (newFiles: File[] | UploadFile[]) => root.commands.uploadFiles(newFiles),
+        setFiles: (newFiles: File[]) =>
+            root.commands.handleSetSelectedFiles(newFiles),
+        uploadFiles: (newFiles: File[] | UploadFile[]) =>
+            root.commands.uploadFiles(newFiles),
         resetState: () => root.commands.resetState(),
-        replaceFiles: (newFiles: File[] | UploadFile[]) => root.commands.replaceFiles(newFiles),
+        replaceFiles: (newFiles: File[] | UploadFile[]) =>
+            root.commands.replaceFiles(newFiles),
         handleDone: () => root.commands.handleDone(),
         handleCancel: () => root.commands.handleCancel(),
         handlePause: () => root.commands.handlePause(),
         handleResume: () => root.commands.handleResume(),
-        handleFileRemove: (fileId: string) => root.commands.handleFileRemove(fileId),
+        handleFileRemove: (fileId: string) =>
+            root.commands.handleFileRemove(fileId),
         editingFile: derived(orchState, $s => $s.editingFile),
-        openImageEditor: (file: UploadFile) => root.commands.openImageEditor(file),
+        openImageEditor: (file: UploadFile) =>
+            root.commands.openImageEditor(file),
         closeImageEditor: () => root.commands.closeImageEditor(),
-        saveImageEdit: (editedImageData: string, mimeType?: string) => root.commands.saveImageEdit(editedImageData, mimeType),
-        replaceFile: (fileId: string, newFile: UploadFile) => root.commands.replaceFile(fileId, newFile),
+        saveImageEdit: (editedImageData: string, mimeType?: string) =>
+            root.commands.saveImageEdit(editedImageData, mimeType),
+        replaceFile: (fileId: string, newFile: UploadFile) =>
+            root.commands.replaceFile(fileId, newFile),
         cloudDrives: resolved.cloudDrives,
         upload: {
             totalProgress: derived(orchState, $s => $s.totalProgress),

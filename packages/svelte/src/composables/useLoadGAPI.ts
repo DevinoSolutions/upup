@@ -11,8 +11,12 @@ export default function useLoadGAPI() {
 
     onMount(() => {
         loadGoogleIdentityServices()
-            .then(() => { gisLoaded.set(true) })
-            .catch(() => {/* silently ignore — caller checks gisLoaded */})
+            .then(() => {
+                gisLoaded.set(true)
+            })
+            .catch(() => {
+                /* silently ignore — caller checks gisLoaded */
+            })
     })
 
     return { gisLoaded }

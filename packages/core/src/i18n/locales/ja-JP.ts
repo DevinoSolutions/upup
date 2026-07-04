@@ -25,33 +25,46 @@ export const jaJP: LocaleBundle = {
         },
 
         dropzone: {
-            dragFilesOr: '\u30D5\u30A1\u30A4\u30EB\u3092\u30C9\u30E9\u30C3\u30B0\u3059\u308B\u304B\u3001',
-            dragFilesHere: '\u3053\u3053\u306B\u30D5\u30A1\u30A4\u30EB\u3092\u30C9\u30E9\u30C3\u30B0',
+            dragFilesOr:
+                '\u30D5\u30A1\u30A4\u30EB\u3092\u30C9\u30E9\u30C3\u30B0\u3059\u308B\u304B\u3001',
+            dragFilesHere:
+                '\u3053\u3053\u306B\u30D5\u30A1\u30A4\u30EB\u3092\u30C9\u30E9\u30C3\u30B0',
             browseFiles: '\u53C2\u7167',
-            dragOrBrowse: '\u30C9\u30E9\u30C3\u30B0\u307E\u305F\u306F\u53C2\u7167\u3057\u3066\u30A2\u30C3\u30D7\u30ED\u30FC\u30C9',
+            dragOrBrowse:
+                '\u30C9\u30E9\u30C3\u30B0\u307E\u305F\u306F\u53C2\u7167\u3057\u3066\u30A2\u30C3\u30D7\u30ED\u30FC\u30C9',
             selectAFolder: '\u30D5\u30A9\u30EB\u30C0\u3092\u9078\u629E',
-            maxFileSizeAllowed: '\u6700\u5927 {size} {unit} \u306E\u30D5\u30A1\u30A4\u30EB\u304C\u30A2\u30C3\u30D7\u30ED\u30FC\u30C9\u53EF\u80FD\u3067\u3059',
+            maxFileSizeAllowed:
+                '\u6700\u5927 {size} {unit} \u306E\u30D5\u30A1\u30A4\u30EB\u304C\u30A2\u30C3\u30D7\u30ED\u30FC\u30C9\u53EF\u80FD\u3067\u3059',
             minFileSizeDisplay: '\u6700\u5C0F {size} {unit}',
-            allowedFileTypes: '\u8A31\u53EF\u3055\u308C\u305F\u30BF\u30A4\u30D7: {types}',
-            maxFileCount: '\u6700\u5927 {limit, plural, other {# \u30D5\u30A1\u30A4\u30EB}}',
-            minFileCount: '\u6700\u4F4E {limit, plural, other {# \u30D5\u30A1\u30A4\u30EB\u5FC5\u8981\u3067\u3059}}',
-            totalFileSizeExceeded: '\u5408\u8A08\u30D5\u30A1\u30A4\u30EB\u30B5\u30A4\u30BA\u304C\u6700\u5927 {size} {unit} \u3092\u8D85\u3048\u3066\u3044\u307E\u3059',
-            maxTotalFileSizeDisplay: '\u5408\u8A08\u6700\u5927\u30B5\u30A4\u30BA: {size} {unit}',
-            addDocumentsHere: '\u3053\u3053\u306B\u30D5\u30A1\u30A4\u30EB\u3092\u30C9\u30ED\u30C3\u30D7\u3059\u308B\u304B\u3001\u8CBC\u308A\u4ED8\u3051\u308B\u304B\u3001\u53C2\u7167\u3059\u308B\u304B\u3001\u4EE5\u4E0B\u304B\u3089\u30A4\u30F3\u30DD\u30FC\u30C8\u3057\u3066\u304F\u3060\u3055\u3044',
-            dropAriaLabel: '\u30D5\u30A1\u30A4\u30EB\u3092\u3053\u3053\u306B\u30C9\u30ED\u30C3\u30D7\u307E\u305F\u306F\u30AF\u30EA\u30C3\u30AF\u3057\u3066\u53C2\u7167',
+            allowedFileTypes:
+                '\u8A31\u53EF\u3055\u308C\u305F\u30BF\u30A4\u30D7: {types}',
+            maxFileCount:
+                '\u6700\u5927 {limit, plural, other {# \u30D5\u30A1\u30A4\u30EB}}',
+            minFileCount:
+                '\u6700\u4F4E {limit, plural, other {# \u30D5\u30A1\u30A4\u30EB\u5FC5\u8981\u3067\u3059}}',
+            totalFileSizeExceeded:
+                '\u5408\u8A08\u30D5\u30A1\u30A4\u30EB\u30B5\u30A4\u30BA\u304C\u6700\u5927 {size} {unit} \u3092\u8D85\u3048\u3066\u3044\u307E\u3059',
+            maxTotalFileSizeDisplay:
+                '\u5408\u8A08\u6700\u5927\u30B5\u30A4\u30BA: {size} {unit}',
+            addDocumentsHere:
+                '\u3053\u3053\u306B\u30D5\u30A1\u30A4\u30EB\u3092\u30C9\u30ED\u30C3\u30D7\u3059\u308B\u304B\u3001\u8CBC\u308A\u4ED8\u3051\u308B\u304B\u3001\u53C2\u7167\u3059\u308B\u304B\u3001\u4EE5\u4E0B\u304B\u3089\u30A4\u30F3\u30DD\u30FC\u30C8\u3057\u3066\u304F\u3060\u3055\u3044',
+            dropAriaLabel:
+                '\u30D5\u30A1\u30A4\u30EB\u3092\u3053\u3053\u306B\u30C9\u30ED\u30C3\u30D7\u307E\u305F\u306F\u30AF\u30EA\u30C3\u30AF\u3057\u3066\u53C2\u7167',
         },
 
         header: {
             removeAllFiles: '\u3059\u3079\u3066\u524A\u9664',
             addingMoreFiles: '\u30D5\u30A1\u30A4\u30EB\u3092\u8FFD\u52A0\u4E2D',
-            filesSelected: '{count, plural, other {# \u30D5\u30A1\u30A4\u30EB\u9078\u629E\u6E08\u307F}}',
+            filesSelected:
+                '{count, plural, other {# \u30D5\u30A1\u30A4\u30EB\u9078\u629E\u6E08\u307F}}',
             addMore: '\u8FFD\u52A0',
             switchToListView: 'Switch to list view',
             switchToGridView: 'Switch to grid view',
         },
 
         fileList: {
-            uploadFiles: '{count, plural, other {# \u30D5\u30A1\u30A4\u30EB\u3092\u30A2\u30C3\u30D7\u30ED\u30FC\u30C9}}',
+            uploadFiles:
+                '{count, plural, other {# \u30D5\u30A1\u30A4\u30EB\u3092\u30A2\u30C3\u30D7\u30ED\u30FC\u30C9}}',
             resumeUpload: '\u518D\u958B',
             pauseUpload: '\u4E00\u6642\u505C\u6B62',
             retryUpload: 'Retry',
@@ -61,7 +74,8 @@ export const jaJP: LocaleBundle = {
 
         filePreview: {
             removeFile: '\u30D5\u30A1\u30A4\u30EB\u3092\u524A\u9664',
-            renameFile: '\u30AF\u30EA\u30C3\u30AF\u3057\u3066\u540D\u524D\u3092\u5909\u66F4',
+            renameFile:
+                '\u30AF\u30EA\u30C3\u30AF\u3057\u3066\u540D\u524D\u3092\u5909\u66F4',
             clickToPreview: '\u30D7\u30EC\u30D3\u30E5\u30FC',
             editImage: '\u753B\u50CF\u3092\u7DE8\u96C6',
             closeEditor: 'Close editor',
@@ -75,12 +89,16 @@ export const jaJP: LocaleBundle = {
         },
 
         driveBrowser: {
-            noAcceptedFilesFound: '\u5BFE\u5FDC\u3059\u308B\u30D5\u30A1\u30A4\u30EB\u304C\u898B\u3064\u304B\u308A\u307E\u305B\u3093',
-            selectThisFolder: '\u3053\u306E\u30D5\u30A9\u30EB\u30C0\u3092\u9078\u629E',
-            addFiles: '{count, plural, other {# \u30D5\u30A1\u30A4\u30EB\u3092\u8FFD\u52A0}}',
+            noAcceptedFilesFound:
+                '\u5BFE\u5FDC\u3059\u308B\u30D5\u30A1\u30A4\u30EB\u304C\u898B\u3064\u304B\u308A\u307E\u305B\u3093',
+            selectThisFolder:
+                '\u3053\u306E\u30D5\u30A9\u30EB\u30C0\u3092\u9078\u629E',
+            addFiles:
+                '{count, plural, other {# \u30D5\u30A1\u30A4\u30EB\u3092\u8FFD\u52A0}}',
             logOut: '\u30ED\u30B0\u30A2\u30A6\u30C8',
             search: '\u691C\u7D22',
-            authenticatePrompt: '{provider} \u3067\u8A8D\u8A3C\u3057\u3066\u30D5\u30A1\u30A4\u30EB\u3092\u30A2\u30C3\u30D7\u30ED\u30FC\u30C9\u7528\u306B\u9078\u629E',
+            authenticatePrompt:
+                '{provider} \u3067\u8A8D\u8A3C\u3057\u3066\u30D5\u30A1\u30A4\u30EB\u3092\u30A2\u30C3\u30D7\u30ED\u30FC\u30C9\u7528\u306B\u9078\u629E',
             signInWith: '{provider} \u3067\u30B5\u30A4\u30F3\u30A4\u30F3',
             loadError: "Couldn't load files: {message}",
             loadMore: 'Load more',
@@ -115,10 +133,12 @@ export const jaJP: LocaleBundle = {
         },
 
         screenCapture: {
-            startScreenCapture: '\u753B\u9762\u30AD\u30E3\u30D7\u30C1\u30E3\u958B\u59CB',
+            startScreenCapture:
+                '\u753B\u9762\u30AD\u30E3\u30D7\u30C1\u30E3\u958B\u59CB',
             stopScreenCapture: '\u30AD\u30E3\u30D7\u30C1\u30E3\u505C\u6B62',
             screenRecording: '\u753B\u9762\u9332\u753B\u4E2D...',
-            addScreenCapture: '\u753B\u9762\u30AD\u30E3\u30D7\u30C1\u30E3\u3092\u8FFD\u52A0',
+            addScreenCapture:
+                '\u753B\u9762\u30AD\u30E3\u30D7\u30C1\u30E3\u3092\u8FFD\u52A0',
             deleteScreenCapture: '\u9332\u753B\u3092\u524A\u9664',
         },
 
@@ -128,59 +148,108 @@ export const jaJP: LocaleBundle = {
         },
 
         errors: {
-            multipleFilesNotAllowed: '\u8907\u6570\u30D5\u30A1\u30A4\u30EB\u306E\u30A2\u30C3\u30D7\u30ED\u30FC\u30C9\u306F\u8A31\u53EF\u3055\u308C\u3066\u3044\u307E\u305B\u3093',
-            failedToGetUploadUrl: '\u30A2\u30C3\u30D7\u30ED\u30FC\u30C9URL\u306E\u53D6\u5F97\u306B\u5931\u6557\u3057\u307E\u3057\u305F',
-            statusError: '\u30B9\u30C6\u30FC\u30BF\u30B9\uFF1A{status}\uFF08{statusText}\uFF09\u3002\u8A73\u7D30\uFF1A{details}',
-            networkErrorDuringUpload: '\u30A2\u30C3\u30D7\u30ED\u30FC\u30C9\u4E2D\u306E\u30CD\u30C3\u30C8\u30EF\u30FC\u30AF\u30A8\u30E9\u30FC - \u30B9\u30C6\u30FC\u30BF\u30B9\uFF1A{status}\uFF08{statusText}\uFF09',
-            missingRequiredConfiguration: '\u5FC5\u8981\u306A\u8A2D\u5B9A\u304C\u4E0D\u8DB3\u3057\u3066\u3044\u307E\u3059\uFF1A{missing}',
-            invalidProvider: '\u7121\u52B9\u306A\u30D7\u30ED\u30D0\u30A4\u30C0\uFF1A{provider}\u3002\u6709\u52B9\u306A\u30AA\u30D7\u30B7\u30E7\u30F3\uFF1A{validOptions}',
-            invalidUploadEndpoint: '\u7121\u52B9\u306A uploadEndpoint URL\uFF1A{uploadEndpoint} {error}',
-            maxFileSizeMustBeGreater: 'maxFileSize \u306F 0 \u3088\u308A\u5927\u304D\u304F\u306A\u3051\u308C\u3070\u306A\u308A\u307E\u305B\u3093',
-            invalidAcceptFormat: '\u7121\u52B9\u306A accept \u30D5\u30A9\u30FC\u30DE\u30C3\u30C8\uFF1A{accept}\u3002MIME \u30BF\u30A4\u30D7\u3001*/*\u3001*\u3001\u307E\u305F\u306F\u62E1\u5F35\u5B50\uFF08\u4F8B\uFF1A.fbx\uFF09\u3092\u4F7F\u7528\u3057\u3066\u304F\u3060\u3055\u3044',
-            unauthorizedAccess: '\u30D7\u30ED\u30D0\u30A4\u30C0\u30FC\u3078\u306E\u30A2\u30AF\u30BB\u30B9\u304C\u8A31\u53EF\u3055\u308C\u3066\u3044\u307E\u305B\u3093',
-            presignedUrlInvalid: '\u4E8B\u524D\u7F72\u540D\u3055\u308C\u305FURL\u304C\u671F\u9650\u5207\u308C\u307E\u305F\u306F\u7121\u52B9\u3067\u3059',
-            temporaryCredentialsInvalid: '\u4E00\u6642\u7684\u306A\u8CC7\u683C\u60C5\u5831\u306F\u7121\u52B9\u306B\u306A\u3063\u3066\u3044\u307E\u3059',
-            corsMisconfigured: 'CORS \u306E\u8A2D\u5B9A\u306B\u3088\u308A\u30D5\u30A1\u30A4\u30EB\u306E\u30A2\u30C3\u30D7\u30ED\u30FC\u30C9\u304C\u3067\u304D\u307E\u305B\u3093',
-            fileTooLarge: '\u30D5\u30A1\u30A4\u30EB\u304C\u6700\u5927\u30B5\u30A4\u30BA\u3092\u8D85\u3048\u3066\u3044\u307E\u3059',
-            invalidFileType: '\u30D5\u30A1\u30A4\u30EB\u30BF\u30A4\u30D7\u304C\u8A31\u53EF\u3055\u308C\u3066\u3044\u307E\u305B\u3093',
-            storageQuotaExceeded: '\u30B9\u30C8\u30EC\u30FC\u30B8\u306E\u5BB9\u91CF\u5236\u9650\u3092\u8D85\u3048\u3066\u3044\u307E\u3059',
-            signedUrlGenerationFailed: '\u7F72\u540D\u4ED8\u304D\u30A2\u30C3\u30D7\u30ED\u30FC\u30C9URL\u306E\u751F\u6210\u306B\u5931\u6557\u3057\u307E\u3057\u305F',
-            uploadFailedWithCode: '\u30A8\u30E9\u30FC\u30B3\u30FC\u30C9\u3067\u30A2\u30C3\u30D7\u30ED\u30FC\u30C9\u306B\u5931\u6557\u3057\u307E\u3057\u305F\uFF1A{code}',
-            uploadFailed: '\u30A2\u30C3\u30D7\u30ED\u30FC\u30C9\u306B\u5931\u6557\u3057\u307E\u3057\u305F\uFF1A{message}',
-            dropboxSessionExpired: 'Dropbox \u30BB\u30C3\u30B7\u30E7\u30F3\u306E\u6709\u52B9\u671F\u9650\u304C\u5207\u308C\u307E\u3057\u305F\u3002\u518D\u8A8D\u8A3C\u3057\u3066\u304F\u3060\u3055\u3044\u3002',
-            dropboxMissingPermissions: 'Dropbox \u30A2\u30D7\u30EA\u306B\u5FC5\u8981\u306A\u6A29\u9650\u304C\u4E0D\u8DB3\u3057\u3066\u3044\u307E\u3059\u3002Dropbox Developer Console \u306B\u6B21\u306E\u30B9\u30B3\u30FC\u30D7\u3092\u8FFD\u52A0\u3057\u3066\u304F\u3060\u3055\u3044\uFF1Afiles.metadata.read\u3001account_info.read',
-            failedToRefreshExpiredToken: '\u671F\u9650\u5207\u308C\u30C8\u30FC\u30AF\u30F3\u306E\u66F4\u65B0\u306B\u5931\u6557\u3057\u307E\u3057\u305F',
-            allowedLimitSurpassed: '\u8A31\u53EF\u3055\u308C\u305F\u4E0A\u9650\u3092\u8D85\u3048\u307E\u3057\u305F\uFF01',
-            fileUnsupportedType: '{name} \u306F\u30B5\u30DD\u30FC\u30C8\u3055\u308C\u3066\u3044\u306A\u3044\u30BF\u30A4\u30D7\u3067\u3059\uFF01',
-            fileTooLargeName: '{name} \u306F {size} {unit} \u3088\u308A\u5927\u304D\u3044\u3067\u3059\uFF01',
-            fileTooSmallName: '{name} \u306F {size} {unit} \u3088\u308A\u5C0F\u3055\u3044\u3067\u3059\uFF01',
-            minFileSizeAllowed: '\u6700\u5C0F {size} {unit} \u306E\u30D5\u30A1\u30A4\u30EB\u304C\u5FC5\u8981\u3067\u3059',
-            minFileSizeMustBeGreater: 'minFileSize \u306F 0 \u3088\u308A\u5927\u304D\u304F\u306A\u3051\u308C\u3070\u306A\u308A\u307E\u305B\u3093',
-            filePreviouslySelected: '{name} \u306F\u65E2\u306B\u9078\u629E\u3055\u308C\u3066\u3044\u307E\u3059',
-            fileWithUrlPreviouslySelected: '\u3053\u306EURL\u306E\u30D5\u30A1\u30A4\u30EB\uFF1A{url} \u306F\u65E2\u306B\u9078\u629E\u3055\u308C\u3066\u3044\u307E\u3059',
-            errorCompressingFile: '{name} \u306E\u5727\u7E2E\u4E2D\u306B\u30A8\u30E9\u30FC\u304C\u767A\u751F\u3057\u307E\u3057\u305F',
-            errorCompressingImage: '\u753B\u50CF {name} \u306E\u5727\u7E2E\u4E2D\u306B\u30A8\u30E9\u30FC\u304C\u767A\u751F\u3057\u307E\u3057\u305F',
-            generatingThumbnails: '\u30B5\u30E0\u30CD\u30A4\u30EB\u3092\u751F\u6210\u4E2D...',
-            clientIdRequired: '\u30AF\u30E9\u30A4\u30A2\u30F3\u30C8ID\u304C\u5FC5\u8981\u3067\u3059...',
-            popupBlocked: '\u30DD\u30C3\u30D7\u30A2\u30C3\u30D7\u304C\u30D6\u30ED\u30C3\u30AF\u3055\u308C\u307E\u3057\u305F',
-            dropboxClientIdMissing: 'Dropbox \u306E clientId \u304C\u3042\u308A\u307E\u305B\u3093',
-            dropboxAuthFailed: 'Dropbox \u8A8D\u8A3C\u306B\u5931\u6557\u3057\u307E\u3057\u305F',
+            multipleFilesNotAllowed:
+                '\u8907\u6570\u30D5\u30A1\u30A4\u30EB\u306E\u30A2\u30C3\u30D7\u30ED\u30FC\u30C9\u306F\u8A31\u53EF\u3055\u308C\u3066\u3044\u307E\u305B\u3093',
+            failedToGetUploadUrl:
+                '\u30A2\u30C3\u30D7\u30ED\u30FC\u30C9URL\u306E\u53D6\u5F97\u306B\u5931\u6557\u3057\u307E\u3057\u305F',
+            statusError:
+                '\u30B9\u30C6\u30FC\u30BF\u30B9\uFF1A{status}\uFF08{statusText}\uFF09\u3002\u8A73\u7D30\uFF1A{details}',
+            networkErrorDuringUpload:
+                '\u30A2\u30C3\u30D7\u30ED\u30FC\u30C9\u4E2D\u306E\u30CD\u30C3\u30C8\u30EF\u30FC\u30AF\u30A8\u30E9\u30FC - \u30B9\u30C6\u30FC\u30BF\u30B9\uFF1A{status}\uFF08{statusText}\uFF09',
+            missingRequiredConfiguration:
+                '\u5FC5\u8981\u306A\u8A2D\u5B9A\u304C\u4E0D\u8DB3\u3057\u3066\u3044\u307E\u3059\uFF1A{missing}',
+            invalidProvider:
+                '\u7121\u52B9\u306A\u30D7\u30ED\u30D0\u30A4\u30C0\uFF1A{provider}\u3002\u6709\u52B9\u306A\u30AA\u30D7\u30B7\u30E7\u30F3\uFF1A{validOptions}',
+            invalidUploadEndpoint:
+                '\u7121\u52B9\u306A uploadEndpoint URL\uFF1A{uploadEndpoint} {error}',
+            maxFileSizeMustBeGreater:
+                'maxFileSize \u306F 0 \u3088\u308A\u5927\u304D\u304F\u306A\u3051\u308C\u3070\u306A\u308A\u307E\u305B\u3093',
+            invalidAcceptFormat:
+                '\u7121\u52B9\u306A accept \u30D5\u30A9\u30FC\u30DE\u30C3\u30C8\uFF1A{accept}\u3002MIME \u30BF\u30A4\u30D7\u3001*/*\u3001*\u3001\u307E\u305F\u306F\u62E1\u5F35\u5B50\uFF08\u4F8B\uFF1A.fbx\uFF09\u3092\u4F7F\u7528\u3057\u3066\u304F\u3060\u3055\u3044',
+            unauthorizedAccess:
+                '\u30D7\u30ED\u30D0\u30A4\u30C0\u30FC\u3078\u306E\u30A2\u30AF\u30BB\u30B9\u304C\u8A31\u53EF\u3055\u308C\u3066\u3044\u307E\u305B\u3093',
+            presignedUrlInvalid:
+                '\u4E8B\u524D\u7F72\u540D\u3055\u308C\u305FURL\u304C\u671F\u9650\u5207\u308C\u307E\u305F\u306F\u7121\u52B9\u3067\u3059',
+            temporaryCredentialsInvalid:
+                '\u4E00\u6642\u7684\u306A\u8CC7\u683C\u60C5\u5831\u306F\u7121\u52B9\u306B\u306A\u3063\u3066\u3044\u307E\u3059',
+            corsMisconfigured:
+                'CORS \u306E\u8A2D\u5B9A\u306B\u3088\u308A\u30D5\u30A1\u30A4\u30EB\u306E\u30A2\u30C3\u30D7\u30ED\u30FC\u30C9\u304C\u3067\u304D\u307E\u305B\u3093',
+            fileTooLarge:
+                '\u30D5\u30A1\u30A4\u30EB\u304C\u6700\u5927\u30B5\u30A4\u30BA\u3092\u8D85\u3048\u3066\u3044\u307E\u3059',
+            invalidFileType:
+                '\u30D5\u30A1\u30A4\u30EB\u30BF\u30A4\u30D7\u304C\u8A31\u53EF\u3055\u308C\u3066\u3044\u307E\u305B\u3093',
+            storageQuotaExceeded:
+                '\u30B9\u30C8\u30EC\u30FC\u30B8\u306E\u5BB9\u91CF\u5236\u9650\u3092\u8D85\u3048\u3066\u3044\u307E\u3059',
+            signedUrlGenerationFailed:
+                '\u7F72\u540D\u4ED8\u304D\u30A2\u30C3\u30D7\u30ED\u30FC\u30C9URL\u306E\u751F\u6210\u306B\u5931\u6557\u3057\u307E\u3057\u305F',
+            uploadFailedWithCode:
+                '\u30A8\u30E9\u30FC\u30B3\u30FC\u30C9\u3067\u30A2\u30C3\u30D7\u30ED\u30FC\u30C9\u306B\u5931\u6557\u3057\u307E\u3057\u305F\uFF1A{code}',
+            uploadFailed:
+                '\u30A2\u30C3\u30D7\u30ED\u30FC\u30C9\u306B\u5931\u6557\u3057\u307E\u3057\u305F\uFF1A{message}',
+            dropboxSessionExpired:
+                'Dropbox \u30BB\u30C3\u30B7\u30E7\u30F3\u306E\u6709\u52B9\u671F\u9650\u304C\u5207\u308C\u307E\u3057\u305F\u3002\u518D\u8A8D\u8A3C\u3057\u3066\u304F\u3060\u3055\u3044\u3002',
+            dropboxMissingPermissions:
+                'Dropbox \u30A2\u30D7\u30EA\u306B\u5FC5\u8981\u306A\u6A29\u9650\u304C\u4E0D\u8DB3\u3057\u3066\u3044\u307E\u3059\u3002Dropbox Developer Console \u306B\u6B21\u306E\u30B9\u30B3\u30FC\u30D7\u3092\u8FFD\u52A0\u3057\u3066\u304F\u3060\u3055\u3044\uFF1Afiles.metadata.read\u3001account_info.read',
+            failedToRefreshExpiredToken:
+                '\u671F\u9650\u5207\u308C\u30C8\u30FC\u30AF\u30F3\u306E\u66F4\u65B0\u306B\u5931\u6557\u3057\u307E\u3057\u305F',
+            allowedLimitSurpassed:
+                '\u8A31\u53EF\u3055\u308C\u305F\u4E0A\u9650\u3092\u8D85\u3048\u307E\u3057\u305F\uFF01',
+            fileUnsupportedType:
+                '{name} \u306F\u30B5\u30DD\u30FC\u30C8\u3055\u308C\u3066\u3044\u306A\u3044\u30BF\u30A4\u30D7\u3067\u3059\uFF01',
+            fileTooLargeName:
+                '{name} \u306F {size} {unit} \u3088\u308A\u5927\u304D\u3044\u3067\u3059\uFF01',
+            fileTooSmallName:
+                '{name} \u306F {size} {unit} \u3088\u308A\u5C0F\u3055\u3044\u3067\u3059\uFF01',
+            minFileSizeAllowed:
+                '\u6700\u5C0F {size} {unit} \u306E\u30D5\u30A1\u30A4\u30EB\u304C\u5FC5\u8981\u3067\u3059',
+            minFileSizeMustBeGreater:
+                'minFileSize \u306F 0 \u3088\u308A\u5927\u304D\u304F\u306A\u3051\u308C\u3070\u306A\u308A\u307E\u305B\u3093',
+            filePreviouslySelected:
+                '{name} \u306F\u65E2\u306B\u9078\u629E\u3055\u308C\u3066\u3044\u307E\u3059',
+            fileWithUrlPreviouslySelected:
+                '\u3053\u306EURL\u306E\u30D5\u30A1\u30A4\u30EB\uFF1A{url} \u306F\u65E2\u306B\u9078\u629E\u3055\u308C\u3066\u3044\u307E\u3059',
+            errorCompressingFile:
+                '{name} \u306E\u5727\u7E2E\u4E2D\u306B\u30A8\u30E9\u30FC\u304C\u767A\u751F\u3057\u307E\u3057\u305F',
+            errorCompressingImage:
+                '\u753B\u50CF {name} \u306E\u5727\u7E2E\u4E2D\u306B\u30A8\u30E9\u30FC\u304C\u767A\u751F\u3057\u307E\u3057\u305F',
+            generatingThumbnails:
+                '\u30B5\u30E0\u30CD\u30A4\u30EB\u3092\u751F\u6210\u4E2D...',
+            clientIdRequired:
+                '\u30AF\u30E9\u30A4\u30A2\u30F3\u30C8ID\u304C\u5FC5\u8981\u3067\u3059...',
+            popupBlocked:
+                '\u30DD\u30C3\u30D7\u30A2\u30C3\u30D7\u304C\u30D6\u30ED\u30C3\u30AF\u3055\u308C\u307E\u3057\u305F',
+            dropboxClientIdMissing:
+                'Dropbox \u306E clientId \u304C\u3042\u308A\u307E\u305B\u3093',
+            dropboxAuthFailed:
+                'Dropbox \u8A8D\u8A3C\u306B\u5931\u6557\u3057\u307E\u3057\u305F',
             boxClientIdMissing: 'Box clientId missing',
             boxAuthFailed: 'Box authentication failed',
-            boxSessionExpired: 'Your Box session has expired. Please re-authenticate to continue.',
+            boxSessionExpired:
+                'Your Box session has expired. Please re-authenticate to continue.',
             boxNoAccessToken: 'No access token provided for Box download',
             genericErrorDetails: '\u30A8\u30E9\u30FC\uFF1A{details}',
-            errorProcessingFiles: '\u30D5\u30A1\u30A4\u30EB\u51E6\u7406\u30A8\u30E9\u30FC\uFF1A{message}',
-            errorSelectingFolder: '\u30D5\u30A9\u30EB\u30C0\u9078\u629E\u30A8\u30E9\u30FC\uFF1A{message}',
-            graphClientNotInitialized: 'Graph \u30AF\u30E9\u30A4\u30A2\u30F3\u30C8\u304C\u521D\u671F\u5316\u3055\u308C\u3066\u3044\u307E\u305B\u3093',
-            dropboxNoAccessToken: 'Dropbox \u30C0\u30A6\u30F3\u30ED\u30FC\u30C9\u7528\u306E\u30A2\u30AF\u30BB\u30B9\u30C8\u30FC\u30AF\u30F3\u304C\u63D0\u4F9B\u3055\u308C\u3066\u3044\u307E\u305B\u3093',
-            silentTokenAcquisitionFailed: '\u30B5\u30A4\u30EC\u30F3\u30C8\u306A\u30C8\u30FC\u30AF\u30F3\u53D6\u5F97\u306B\u5931\u6557\u3057\u307E\u3057\u305F\uFF1A{details}',
-            msalInitializationFailed: 'MSAL \u306E\u521D\u671F\u5316\u306B\u5931\u6557\u3057\u307E\u3057\u305F\uFF1A{details}',
-            silentTokenAcquisitionProceeding: '\u30B5\u30A4\u30EC\u30F3\u30C8\u306A\u30C8\u30FC\u30AF\u30F3\u53D6\u5F97\u306B\u5931\u6557\u3057\u305F\u305F\u3081\u3001\u5BFE\u8A71\u578B\u30ED\u30B0\u30A4\u30F3\u3092\u7D9A\u884C\u3057\u307E\u3059{details}',
-            signInFailed: '\u30B5\u30A4\u30F3\u30A4\u30F3\u306B\u5931\u6557\u3057\u307E\u3057\u305F\uFF1A{message}',
-            handleSignInFailed: '\u30B5\u30A4\u30F3\u30A4\u30F3\u51E6\u7406\u306B\u5931\u6557\u3057\u307E\u3057\u305F\uFF1A{message}',
-            signOutFailed: '\u30B5\u30A4\u30F3\u30A2\u30A6\u30C8\u306B\u5931\u6557\u3057\u307E\u3057\u305F\uFF1A{message}',
-            imageEditorFailed: '\u753B\u50CF\u30A8\u30C7\u30A3\u30BF\u306E\u8AAD\u307F\u8FBC\u307F\u306B\u5931\u6557\u3057\u307E\u3057\u305F...',
+            errorProcessingFiles:
+                '\u30D5\u30A1\u30A4\u30EB\u51E6\u7406\u30A8\u30E9\u30FC\uFF1A{message}',
+            errorSelectingFolder:
+                '\u30D5\u30A9\u30EB\u30C0\u9078\u629E\u30A8\u30E9\u30FC\uFF1A{message}',
+            graphClientNotInitialized:
+                'Graph \u30AF\u30E9\u30A4\u30A2\u30F3\u30C8\u304C\u521D\u671F\u5316\u3055\u308C\u3066\u3044\u307E\u305B\u3093',
+            dropboxNoAccessToken:
+                'Dropbox \u30C0\u30A6\u30F3\u30ED\u30FC\u30C9\u7528\u306E\u30A2\u30AF\u30BB\u30B9\u30C8\u30FC\u30AF\u30F3\u304C\u63D0\u4F9B\u3055\u308C\u3066\u3044\u307E\u305B\u3093',
+            silentTokenAcquisitionFailed:
+                '\u30B5\u30A4\u30EC\u30F3\u30C8\u306A\u30C8\u30FC\u30AF\u30F3\u53D6\u5F97\u306B\u5931\u6557\u3057\u307E\u3057\u305F\uFF1A{details}',
+            msalInitializationFailed:
+                'MSAL \u306E\u521D\u671F\u5316\u306B\u5931\u6557\u3057\u307E\u3057\u305F\uFF1A{details}',
+            silentTokenAcquisitionProceeding:
+                '\u30B5\u30A4\u30EC\u30F3\u30C8\u306A\u30C8\u30FC\u30AF\u30F3\u53D6\u5F97\u306B\u5931\u6557\u3057\u305F\u305F\u3081\u3001\u5BFE\u8A71\u578B\u30ED\u30B0\u30A4\u30F3\u3092\u7D9A\u884C\u3057\u307E\u3059{details}',
+            signInFailed:
+                '\u30B5\u30A4\u30F3\u30A4\u30F3\u306B\u5931\u6557\u3057\u307E\u3057\u305F\uFF1A{message}',
+            handleSignInFailed:
+                '\u30B5\u30A4\u30F3\u30A4\u30F3\u51E6\u7406\u306B\u5931\u6557\u3057\u307E\u3057\u305F\uFF1A{message}',
+            signOutFailed:
+                '\u30B5\u30A4\u30F3\u30A2\u30A6\u30C8\u306B\u5931\u6557\u3057\u307E\u3057\u305F\uFF1A{message}',
+            imageEditorFailed:
+                '\u753B\u50CF\u30A8\u30C7\u30A3\u30BF\u306E\u8AAD\u307F\u8FBC\u307F\u306B\u5931\u6557\u3057\u307E\u3057\u305F...',
         },
     },
 }

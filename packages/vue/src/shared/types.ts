@@ -14,4 +14,3 @@ export type UploaderProps = UploaderBaseProps & {
     icons?: UploaderIcons
     style?: Record<string, string>
 }
-

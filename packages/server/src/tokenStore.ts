@@ -1,9 +1,9 @@
 import type {
-  TokenStore,
-  DriveTokens,
-  OAuthState,
-  UpupServerConfig,
-} from "./config";
+    TokenStore,
+    DriveTokens,
+    OAuthState,
+    UpupServerConfig,
+} from './config'
 
 /**
  * Zero-dependency reference implementation. Fine for demos, single-process
@@ -12,124 +12,127 @@ import type {
  * workers. Ship a Redis / KV / DB-backed store for real deployments.
  */
 export class InMemoryTokenStore implements TokenStore {
-  private store = new Map<
-    string,
-    { value: string; expiresAt: number | null }
-  >();
+    private store = new Map<
+        string,
+        { value: string; expiresAt: number | null }
+    >()
 
-  async get(key: string): Promise<string | null> {
-    const entry = this.store.get(key);
-    if (!entry) return null;
-    if (entry.expiresAt !== null && Date.now() >= entry.expiresAt) {
-      this.store.delete(key);
-      return null;
+    async get(key: string): Promise<string | null> {
+        const entry = this.store.get(key)
+        if (!entry) return null
+        if (entry.expiresAt !== null && Date.now() >= entry.expiresAt) {
+            this.store.delete(key)
+            return null
+        }
+        return entry.value
     }
-    return entry.value;
-  }
 
-  async set(key: string, value: string, ttlSeconds?: number): Promise<void> {
-    // ttlSeconds === 0 means "already expired", NOT "no expiry". Only an
-    // omitted ttl (undefined) stores without expiry.
-    const expiresAt =
-      ttlSeconds != null ? Date.now() + ttlSeconds * 1000 : null;
-    this.store.set(key, { value, expiresAt });
-  }
+    async set(key: string, value: string, ttlSeconds?: number): Promise<void> {
+        // ttlSeconds === 0 means "already expired", NOT "no expiry". Only an
+        // omitted ttl (undefined) stores without expiry.
+        const expiresAt =
+            ttlSeconds != null ? Date.now() + ttlSeconds * 1000 : null
+        this.store.set(key, { value, expiresAt })
+    }
 
-  async delete(key: string): Promise<void> {
-    this.store.delete(key);
-  }
+    async delete(key: string): Promise<void> {
+        this.store.delete(key)
+    }
 }
 
-const OAUTH_STATE_TTL_SECONDS = 600;
+const OAUTH_STATE_TTL_SECONDS = 600
 
 const tokensKey = (userId: string, provider: string) =>
-  `upup:tokens:${userId}:${provider}`;
-const oauthStateKey = (state: string) => `upup:oauth-state:${state}`;
+    `upup:tokens:${userId}:${provider}`
+const oauthStateKey = (state: string) => `upup:oauth-state:${state}`
 
 export async function getTokens(
-  store: TokenStore,
-  userId: string,
-  provider: string,
+    store: TokenStore,
+    userId: string,
+    provider: string,
 ): Promise<DriveTokens | null> {
-  const raw = await store.get(tokensKey(userId, provider));
-  if (!raw) return null;
-  try {
-    return JSON.parse(raw) as DriveTokens;
-  } catch {
-    return null;
-  }
+    const raw = await store.get(tokensKey(userId, provider))
+    if (!raw) return null
+    try {
+        return JSON.parse(raw) as DriveTokens
+    } catch {
+        return null
+    }
 }
 
 export async function setTokens(
-  store: TokenStore,
-  userId: string,
-  provider: string,
-  tokens: DriveTokens,
+    store: TokenStore,
+    userId: string,
+    provider: string,
+    tokens: DriveTokens,
 ): Promise<void> {
-  // Refresh-aware TTL (audit S8): when a refresh token exists the blob must
-  // outlive the short-lived access token so it can be refreshed, so store it
-  // without expiry. Only a dead, non-refreshable access token self-evicts.
-  let ttlSeconds: number | undefined;
-  if (!tokens.refreshToken && tokens.expiresAt) {
-    ttlSeconds = Math.max(0, Math.ceil((tokens.expiresAt - Date.now()) / 1000));
-  }
-  await store.set(
-    tokensKey(userId, provider),
-    JSON.stringify(tokens),
-    ttlSeconds,
-  );
+    // Refresh-aware TTL (audit S8): when a refresh token exists the blob must
+    // outlive the short-lived access token so it can be refreshed, so store it
+    // without expiry. Only a dead, non-refreshable access token self-evicts.
+    let ttlSeconds: number | undefined
+    if (!tokens.refreshToken && tokens.expiresAt) {
+        ttlSeconds = Math.max(
+            0,
+            Math.ceil((tokens.expiresAt - Date.now()) / 1000),
+        )
+    }
+    await store.set(
+        tokensKey(userId, provider),
+        JSON.stringify(tokens),
+        ttlSeconds,
+    )
 }
 
 export async function deleteTokens(
-  store: TokenStore,
-  userId: string,
-  provider: string,
+    store: TokenStore,
+    userId: string,
+    provider: string,
 ): Promise<void> {
-  await store.delete(tokensKey(userId, provider));
+    await store.delete(tokensKey(userId, provider))
 }
 
 export async function saveOAuthState(
-  store: TokenStore,
-  state: string,
-  payload: OAuthState,
+    store: TokenStore,
+    state: string,
+    payload: OAuthState,
 ): Promise<void> {
-  await store.set(
-    oauthStateKey(state),
-    JSON.stringify(payload),
-    OAUTH_STATE_TTL_SECONDS,
-  );
+    await store.set(
+        oauthStateKey(state),
+        JSON.stringify(payload),
+        OAUTH_STATE_TTL_SECONDS,
+    )
 }
 
 export async function consumeOAuthState(
-  store: TokenStore,
-  state: string,
+    store: TokenStore,
+    state: string,
 ): Promise<OAuthState | null> {
-  const raw = await store.get(oauthStateKey(state));
-  if (!raw) return null;
-  await store.delete(oauthStateKey(state));
-  try {
-    return JSON.parse(raw) as OAuthState;
-  } catch {
-    return null;
-  }
+    const raw = await store.get(oauthStateKey(state))
+    if (!raw) return null
+    await store.delete(oauthStateKey(state))
+    try {
+        return JSON.parse(raw) as OAuthState
+    } catch {
+        return null
+    }
 }
 
 export function generateOAuthState(): string {
-  const bytes = new Uint8Array(32);
-  crypto.getRandomValues(bytes);
-  return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
+    const bytes = new Uint8Array(32)
+    crypto.getRandomValues(bytes)
+    return Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('')
 }
 
-export const DEFAULT_USER_ID = "default";
+export const DEFAULT_USER_ID = 'default'
 
 /**
  * Resolve the authenticated userId for this request, honouring the
  * consumer's getUserId hook. Returns null if the hook says unauthenticated.
  */
 export async function resolveUserId(
-  config: UpupServerConfig,
-  req: Request,
+    config: UpupServerConfig,
+    req: Request,
 ): Promise<string | null> {
-  if (config.getUserId) return config.getUserId(req);
-  return DEFAULT_USER_ID;
+    if (config.getUserId) return config.getUserId(req)
+    return DEFAULT_USER_ID
 }

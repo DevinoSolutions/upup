@@ -3,9 +3,15 @@ type WebkitEntry = {
     isDirectory?: boolean
     fullPath?: string
     name?: string
-    file?: (resolve: (file: File) => void, reject?: (error: unknown) => void) => void
+    file?: (
+        resolve: (file: File) => void,
+        reject?: (error: unknown) => void,
+    ) => void
     createReader?: () => {
-        readEntries: (resolve: (entries: WebkitEntry[]) => void, reject?: (error: unknown) => void) => void
+        readEntries: (
+            resolve: (entries: WebkitEntry[]) => void,
+            reject?: (error: unknown) => void,
+        ) => void
     }
 }
 
@@ -36,7 +42,7 @@ function setRelativePath(file: File, path: string): void {
 
 function fileFromWebkitEntry(entry: WebkitEntry): Promise<File[]> {
     return new Promise<File[]>((resolve, reject) => {
-        entry.file?.((file) => {
+        entry.file?.(file => {
             setRelativePath(file, entry.fullPath || `/${file.name}`)
             resolve([file])
         }, reject)
@@ -61,7 +67,9 @@ async function traverseWebkitEntry(
         reader.readEntries(resolve, reject)
     })
     const nested = await Promise.all(
-        entries.map((child) => traverseWebkitEntry(child, allowFolderDrop, state)),
+        entries.map(child =>
+            traverseWebkitEntry(child, allowFolderDrop, state),
+        ),
     )
     return nested.flat()
 }
@@ -86,7 +94,14 @@ async function traverseHandle(
 
     const out: File[] = []
     for await (const [name, child] of handle.entries()) {
-        out.push(...(await traverseHandle(child, allowFolderDrop, state, path + name + '/')))
+        out.push(
+            ...(await traverseHandle(
+                child,
+                allowFolderDrop,
+                state,
+                path + name + '/',
+            )),
+        )
     }
     return out
 }
@@ -98,14 +113,20 @@ export async function collectDroppedFiles(
     const items = Array.from(dataTransfer.items || [])
     const state = { skippedDirectory: false }
     const firstItem = items[0] as DataTransferItem | undefined
-    const supportsWebkitEntries = typeof (firstItem as any)?.webkitGetAsEntry === 'function'
+    const supportsWebkitEntries =
+        typeof (firstItem as any)?.webkitGetAsEntry === 'function'
 
     if (supportsWebkitEntries) {
         const entries = items
-            .map((item) => (item as any).webkitGetAsEntry?.() as WebkitEntry | null)
+            .map(
+                item =>
+                    (item as any).webkitGetAsEntry?.() as WebkitEntry | null,
+            )
             .filter((entry): entry is WebkitEntry => Boolean(entry))
         const nested = await Promise.all(
-            entries.map((entry) => traverseWebkitEntry(entry, allowFolderDrop, state)),
+            entries.map(entry =>
+                traverseWebkitEntry(entry, allowFolderDrop, state),
+            ),
         )
         const files = nested.flat()
         if (files.length > 0 || state.skippedDirectory) {
@@ -113,15 +134,20 @@ export async function collectDroppedFiles(
         }
     }
 
-    const supportsHandles = 'getAsFileSystemHandle' in (firstItem || ({} as DataTransferItem))
+    const supportsHandles =
+        'getAsFileSystemHandle' in (firstItem || ({} as DataTransferItem))
     if (supportsHandles) {
         const handles = await Promise.all(
-            items.map(async (item) => await (item as any).getAsFileSystemHandle?.()),
+            items.map(
+                async item => await (item as any).getAsFileSystemHandle?.(),
+            ),
         )
         const nested = await Promise.all(
             handles
-                .filter((handle): handle is FileSystemHandleLike => Boolean(handle))
-                .map((handle) => traverseHandle(handle, allowFolderDrop, state)),
+                .filter((handle): handle is FileSystemHandleLike =>
+                    Boolean(handle),
+                )
+                .map(handle => traverseHandle(handle, allowFolderDrop, state)),
         )
         const files = nested.flat()
         if (files.length > 0 || state.skippedDirectory) {

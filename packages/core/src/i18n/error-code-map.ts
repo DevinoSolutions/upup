@@ -15,7 +15,9 @@ import type { ErrorMessages } from './types'
  * Unknown or absent codes fall back to a generic message so the UI never
  * shows a raw, unlocalized machine code to the end user.
  */
-export function errorCodeToMessageKey(code: string | undefined): keyof ErrorMessages {
+export function errorCodeToMessageKey(
+    code: string | undefined,
+): keyof ErrorMessages {
     if (!code) return 'uploadFailed'
 
     switch (code) {

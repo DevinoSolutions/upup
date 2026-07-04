@@ -1,7 +1,7 @@
-import { createUpupHandler } from "./handler";
-import type { UpupServerConfig } from "./config";
-import { normalizeRequestOrigin } from "./normalize-origin";
-import type { UpupNextOptions } from "./normalize-origin";
+import { createUpupHandler } from './handler'
+import type { UpupServerConfig } from './config'
+import { normalizeRequestOrigin } from './normalize-origin'
+import type { UpupNextOptions } from './normalize-origin'
 
 /**
  * App Router handler. Returns the GET/POST/PUT/DELETE methods Next expects.
@@ -9,14 +9,14 @@ import type { UpupNextOptions } from "./normalize-origin";
  * origin behind a proxy/CDN; a no-op on Vercel (req.url is already public).
  */
 export function createUpupNextHandler(
-  config: UpupServerConfig,
-  opts?: UpupNextOptions,
+    config: UpupServerConfig,
+    opts?: UpupNextOptions,
 ) {
-  const handler = createUpupHandler(config);
-  const wrapped = (req: Request) => handler(normalizeRequestOrigin(req, opts));
-  return { GET: wrapped, POST: wrapped, PUT: wrapped, DELETE: wrapped };
+    const handler = createUpupHandler(config)
+    const wrapped = (req: Request) => handler(normalizeRequestOrigin(req, opts))
+    return { GET: wrapped, POST: wrapped, PUT: wrapped, DELETE: wrapped }
 }
 
-export { normalizeRequestOrigin, resolveOrigin } from "./normalize-origin";
-export type { UpupNextOptions } from "./normalize-origin";
-export type { UpupServerConfig };
+export { normalizeRequestOrigin, resolveOrigin } from './normalize-origin'
+export type { UpupNextOptions } from './normalize-origin'
+export type { UpupServerConfig }

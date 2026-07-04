@@ -1,38 +1,38 @@
-import { Component, Input, inject } from "@angular/core";
-import { cn, fileTypeIconName, type IconName } from "@upup/core";
-import { UpupStore } from "../upup-store.service";
-import { FileIconSvgComponent } from "./icons/file-icon-svg.component";
+import { Component, Input, inject } from '@angular/core'
+import { cn, fileTypeIconName, type IconName } from '@upup/core'
+import { UpupStore } from '../upup-store.service'
+import { FileIconSvgComponent } from './icons/file-icon-svg.component'
 
 @Component({
-  selector: "upup-file-icon",
-  standalone: true,
-  imports: [FileIconSvgComponent],
-  template: `
-    <span
-      class="upup-inline-flex"
-      data-testid="upup-file-icon"
-      data-upup-slot="file-icon"
-    >
-      <upup-file-icon-svg [name]="iconName" [class]="iconClass" />
-    </span>
-  `,
+    selector: 'upup-file-icon',
+    standalone: true,
+    imports: [FileIconSvgComponent],
+    template: `
+        <span
+            class="upup-inline-flex"
+            data-testid="upup-file-icon"
+            data-upup-slot="file-icon"
+        >
+            <upup-file-icon-svg [name]="iconName" [class]="iconClass" />
+        </span>
+    `,
 })
 export class FileIconComponent {
-  readonly store = inject(UpupStore);
+    readonly store = inject(UpupStore)
 
-  @Input() extension: string = "";
-  @Input("class") extraClass: string = "";
+    @Input() extension: string = ''
+    @Input('class') extraClass: string = ''
 
-  get iconName(): IconName {
-    return fileTypeIconName(this.extension);
-  }
+    get iconName(): IconName {
+        return fileTypeIconName(this.extension)
+    }
 
-  get iconClass(): string {
-    const dark = this.store.isDark();
-    return cn(
-      "upup-text-5xl upup-text-blue-600",
-      this.extraClass,
-      dark ? "upup-text-[#59D1F9] dark:upup-text-[#59D1F9]" : "",
-    );
-  }
+    get iconClass(): string {
+        const dark = this.store.isDark()
+        return cn(
+            'upup-text-5xl upup-text-blue-600',
+            this.extraClass,
+            dark ? 'upup-text-[#59D1F9] dark:upup-text-[#59D1F9]' : '',
+        )
+    }
 }

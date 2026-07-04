@@ -1,7 +1,7 @@
 import { createRoot, type Root } from 'react-dom/client'
 import { StyleSheetManager } from 'styled-components'
 import FilerobotImageEditor, {
-  type FilerobotImageEditorConfig,
+    type FilerobotImageEditorConfig,
 } from 'react-filerobot-image-editor'
 import type { IslandHandle, IslandProps } from './filerobot-island-types'
 
@@ -17,35 +17,38 @@ import type { IslandHandle, IslandProps } from './filerobot-island-types'
 // Filerobot's styled-components leak these custom props to the DOM; filter them
 // (mirrors FILEROBOT_CUSTOM_PROPS in @upup/react's editor chrome).
 const FILEROBOT_CUSTOM_PROPS = new Set([
-  'active',
-  'noMargin',
-  'showBackButton',
-  'isPhoneScreen',
-  'showTabsDrawer',
-  'hasChildren',
-  'isAccordion',
+    'active',
+    'noMargin',
+    'showBackButton',
+    'isPhoneScreen',
+    'showTabsDrawer',
+    'hasChildren',
+    'isAccordion',
 ])
 const shouldForwardProp = (prop: string) => !FILEROBOT_CUSTOM_PROPS.has(prop)
 
 function Editor(props: IslandProps) {
-  return (
-    <StyleSheetManager shouldForwardProp={shouldForwardProp}>
-      <FilerobotImageEditor
-        {...(props as unknown as FilerobotImageEditorConfig)}
-      />
-    </StyleSheetManager>
-  )
+    return (
+        <StyleSheetManager shouldForwardProp={shouldForwardProp}>
+            <FilerobotImageEditor
+                {...(props as unknown as FilerobotImageEditorConfig)}
+            />
+        </StyleSheetManager>
+    )
 }
 
-export function mount(container: HTMLElement, props: IslandProps): IslandHandle {
-  const root: Root = createRoot(container)
-  root.render(<Editor {...props} />)
-  return {
-    update(next: IslandProps) {
-      root.render(<Editor {...next} />)
-    },
-    unmount() {
-      root.unmount()
-    },
-  }
+export function mount(
+    container: HTMLElement,
+    props: IslandProps,
+): IslandHandle {
+    const root: Root = createRoot(container)
+    root.render(<Editor {...props} />)
+    return {
+        update(next: IslandProps) {
+            root.render(<Editor {...next} />)
+        },
+        unmount() {
+            root.unmount()
+        },
+    }
 }

@@ -1,4 +1,9 @@
-import type { LocaleBundle, UpupLocaleCode, UpupMessages, MessageNamespace } from './types'
+import type {
+    LocaleBundle,
+    UpupLocaleCode,
+    UpupMessages,
+    MessageNamespace,
+} from './types'
 import type { RegisteredLocaleCode } from './locales/registry'
 import { LOCALE_REGISTRY } from './locales/registry'
 import { normalizeBcp47 } from './locale-meta'
@@ -13,16 +18,21 @@ const DEFAULT_LOCALE = 'en-US'
  *  - anything else (undefined, an unregistered code) → undefined.
  */
 export function resolveLocaleBundle(
-  candidate: LocaleBundle | UpupLocaleCode | undefined,
+    candidate: LocaleBundle | UpupLocaleCode | undefined,
 ): LocaleBundle | undefined {
-  if (candidate && typeof candidate === 'object' && 'code' in candidate && 'messages' in candidate) {
-    return candidate as LocaleBundle
-  }
-  if (typeof candidate === 'string') {
-    const code = normalizeBcp47(candidate)
-    return LOCALE_REGISTRY[code as RegisteredLocaleCode] ?? undefined
-  }
-  return undefined
+    if (
+        candidate &&
+        typeof candidate === 'object' &&
+        'code' in candidate &&
+        'messages' in candidate
+    ) {
+        return candidate as LocaleBundle
+    }
+    if (typeof candidate === 'string') {
+        const code = normalizeBcp47(candidate)
+        return LOCALE_REGISTRY[code as RegisteredLocaleCode] ?? undefined
+    }
+    return undefined
 }
 
 /**
@@ -60,7 +70,9 @@ export function resolveMessage(
     for (const code of chain) {
         const bundle = bundles.get(code)
         if (!bundle) continue
-        const nsObj = bundle.messages[ns] as unknown as Record<string, string> | undefined
+        const nsObj = bundle.messages[ns] as unknown as
+            | Record<string, string>
+            | undefined
         if (nsObj && key in nsObj) {
             return nsObj[key]
         }

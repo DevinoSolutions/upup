@@ -62,7 +62,9 @@ describe('FlatMessageKey type', () => {
 
 describe('Translator type', () => {
     it('is callable with key and optional values', () => {
-        expectTypeOf<Translator>().toBeCallableWith('common.cancel' as FlatMessageKey)
+        expectTypeOf<Translator>().toBeCallableWith(
+            'common.cancel' as FlatMessageKey,
+        )
         expectTypeOf<Translator>().toBeCallableWith(
             'errors.uploadFailed' as FlatMessageKey,
             { message: 'timeout' },

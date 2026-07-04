@@ -136,7 +136,10 @@ const UI_LOCALE = Symbol('upupUiLocale')
 
 const pluralRulesCache = new Map<string, Intl.PluralRules>()
 
-function selectPluralCategory(locale: string, count: number): Intl.LDMLPluralRule {
+function selectPluralCategory(
+    locale: string,
+    count: number,
+): Intl.LDMLPluralRule {
     let pr = pluralRulesCache.get(locale)
     if (!pr) {
         try {
@@ -150,7 +153,11 @@ function selectPluralCategory(locale: string, count: number): Intl.LDMLPluralRul
 }
 
 function localeOf(translations: UiTranslations): string {
-    return ((translations as Record<symbol, unknown>)[UI_LOCALE] as string | undefined) ?? 'en-US'
+    return (
+        ((translations as Record<symbol, unknown>)[UI_LOCALE] as
+            | string
+            | undefined) ?? 'en-US'
+    )
 }
 
 export function formatUiMessage(
@@ -172,14 +179,21 @@ export function pluralUiMessage(
     const category = selectPluralCategory(locale, count) // zero|one|two|few|many|other
     const exact = `${baseKey}_${category}` as keyof UiTranslations
     const other = `${baseKey}_other` as keyof UiTranslations
-    return translations[exact] ?? translations[other] ?? translations[baseKey as keyof UiTranslations] ?? ''
+    return (
+        translations[exact] ??
+        translations[other] ??
+        translations[baseKey as keyof UiTranslations] ??
+        ''
+    )
 }
 
 export function flattenTranslatorToUiTranslations(
     translator: Translator,
 ): UiTranslations {
-    const tr = (key: Parameters<Translator>[0], values?: Record<string, unknown>) =>
-        translator(key, values)
+    const tr = (
+        key: Parameters<Translator>[0],
+        values?: Record<string, unknown>,
+    ) => translator(key, values)
 
     // Count-based ICU plurals use `#`, which bakes the number in when the form
     // is pre-evaluated. Render the requested form with a sample count, then
@@ -223,7 +237,9 @@ export function flattenTranslatorToUiTranslations(
             unit: '{{unit}}',
             count: 2,
         }),
-        addDocumentsHere: tr('dropzone.addDocumentsHere', { limit: '{{limit}}' }),
+        addDocumentsHere: tr('dropzone.addDocumentsHere', {
+            limit: '{{limit}}',
+        }),
         removeAllFiles: tr('header.removeAllFiles'),
         addingMoreFiles: tr('header.addingMoreFiles'),
         filesSelected_one: countPluralForm('header.filesSelected', 1),
@@ -249,16 +265,22 @@ export function flattenTranslatorToUiTranslations(
         mb: tr('filePreview.mb'),
         gb: tr('filePreview.gb'),
         tb: tr('filePreview.tb'),
-        previewError: tr('filePreview.previewError', { message: '{{message}}' }),
+        previewError: tr('filePreview.previewError', {
+            message: '{{message}}',
+        }),
         noAcceptedFilesFound: tr('driveBrowser.noAcceptedFilesFound'),
         selectThisFolder: tr('driveBrowser.selectThisFolder'),
         addFiles_one: countPluralForm('driveBrowser.addFiles', 1),
         addFiles_other: countPluralForm('driveBrowser.addFiles', 2),
         logOut: tr('driveBrowser.logOut'),
         search: tr('driveBrowser.search'),
-        authenticatePrompt: tr('driveBrowser.authenticatePrompt', { provider: '{{provider}}' }),
+        authenticatePrompt: tr('driveBrowser.authenticatePrompt', {
+            provider: '{{provider}}',
+        }),
         signInWith: tr('driveBrowser.signInWith', { provider: '{{provider}}' }),
-        driveLoadError: tr('driveBrowser.loadError', { message: '{{message}}' }),
+        driveLoadError: tr('driveBrowser.loadError', {
+            message: '{{message}}',
+        }),
         loadMore: tr('driveBrowser.loadMore'),
         enterFileUrl: tr('url.enterFileUrl'),
         fetch: tr('url.fetch'),
@@ -280,7 +302,10 @@ export function flattenTranslatorToUiTranslations(
             status: '{{status}}',
             statusText: '{{statusText}}',
         }),
-        missingRequiredConfiguration: tr('errors.missingRequiredConfiguration', { missing: '{{missing}}' }),
+        missingRequiredConfiguration: tr(
+            'errors.missingRequiredConfiguration',
+            { missing: '{{missing}}' },
+        ),
         invalidProvider: tr('errors.invalidProvider', {
             provider: '{{provider}}',
             validOptions: '{{validOptions}}',
@@ -290,7 +315,9 @@ export function flattenTranslatorToUiTranslations(
             error: '{{error}}',
         }),
         maxFileSizeMustBeGreater: tr('errors.maxFileSizeMustBeGreater'),
-        invalidAcceptFormat: tr('errors.invalidAcceptFormat', { accept: '{{accept}}' }),
+        invalidAcceptFormat: tr('errors.invalidAcceptFormat', {
+            accept: '{{accept}}',
+        }),
         unauthorizedAccess: tr('errors.unauthorizedAccess'),
         presignedUrlInvalid: tr('errors.presignedUrlInvalid'),
         temporaryCredentialsInvalid: tr('errors.temporaryCredentialsInvalid'),
@@ -299,13 +326,17 @@ export function flattenTranslatorToUiTranslations(
         invalidFileType: tr('errors.invalidFileType'),
         storageQuotaExceeded: tr('errors.storageQuotaExceeded'),
         signedUrlGenerationFailed: tr('errors.signedUrlGenerationFailed'),
-        uploadFailedWithCode: tr('errors.uploadFailedWithCode', { code: '{{code}}' }),
+        uploadFailedWithCode: tr('errors.uploadFailedWithCode', {
+            code: '{{code}}',
+        }),
         uploadFailed: tr('errors.uploadFailed', { message: '{{message}}' }),
         dropboxSessionExpired: tr('errors.dropboxSessionExpired'),
         dropboxMissingPermissions: tr('errors.dropboxMissingPermissions'),
         failedToRefreshExpiredToken: tr('errors.failedToRefreshExpiredToken'),
         allowedLimitSurpassed: tr('errors.allowedLimitSurpassed'),
-        fileUnsupportedType: tr('errors.fileUnsupportedType', { name: '{{name}}' }),
+        fileUnsupportedType: tr('errors.fileUnsupportedType', {
+            name: '{{name}}',
+        }),
         fileTooLargeName: tr('errors.fileTooLargeName', {
             name: '{{name}}',
             size: '{{size}}',
@@ -316,9 +347,16 @@ export function flattenTranslatorToUiTranslations(
             size: '{{size}}',
             unit: '{{unit}}',
         }),
-        filePreviouslySelected: tr('errors.filePreviouslySelected', { name: '{{name}}' }),
-        fileWithUrlPreviouslySelected: tr('errors.fileWithUrlPreviouslySelected', { url: '{{url}}' }),
-        errorCompressingFile: tr('errors.errorCompressingFile', { name: '{{name}}' }),
+        filePreviouslySelected: tr('errors.filePreviouslySelected', {
+            name: '{{name}}',
+        }),
+        fileWithUrlPreviouslySelected: tr(
+            'errors.fileWithUrlPreviouslySelected',
+            { url: '{{url}}' },
+        ),
+        errorCompressingFile: tr('errors.errorCompressingFile', {
+            name: '{{name}}',
+        }),
         clientIdRequired: tr('errors.clientIdRequired'),
         popupBlocked: tr('errors.popupBlocked'),
         dropboxClientIdMissing: tr('errors.dropboxClientIdMissing'),
@@ -327,21 +365,40 @@ export function flattenTranslatorToUiTranslations(
         boxAuthFailed: tr('errors.boxAuthFailed'),
         boxSessionExpired: tr('errors.boxSessionExpired'),
         boxNoAccessToken: tr('errors.boxNoAccessToken'),
-        genericErrorDetails: tr('errors.genericErrorDetails', { details: '{{details}}' }),
-        errorProcessingFiles: tr('errors.errorProcessingFiles', { message: '{{message}}' }),
-        errorSelectingFolder: tr('errors.errorSelectingFolder', { message: '{{message}}' }),
+        genericErrorDetails: tr('errors.genericErrorDetails', {
+            details: '{{details}}',
+        }),
+        errorProcessingFiles: tr('errors.errorProcessingFiles', {
+            message: '{{message}}',
+        }),
+        errorSelectingFolder: tr('errors.errorSelectingFolder', {
+            message: '{{message}}',
+        }),
         graphClientNotInitialized: tr('errors.graphClientNotInitialized'),
         dropboxNoAccessToken: tr('errors.dropboxNoAccessToken'),
-        silentTokenAcquisitionFailed: tr('errors.silentTokenAcquisitionFailed', { details: '{{details}}' }),
-        msalInitializationFailed: tr('errors.msalInitializationFailed', { details: '{{details}}' }),
-        silentTokenAcquisitionProceeding: tr('errors.silentTokenAcquisitionProceeding', { details: '{{details}}' }),
+        silentTokenAcquisitionFailed: tr(
+            'errors.silentTokenAcquisitionFailed',
+            { details: '{{details}}' },
+        ),
+        msalInitializationFailed: tr('errors.msalInitializationFailed', {
+            details: '{{details}}',
+        }),
+        silentTokenAcquisitionProceeding: tr(
+            'errors.silentTokenAcquisitionProceeding',
+            { details: '{{details}}' },
+        ),
         signInFailed: tr('errors.signInFailed', { message: '{{message}}' }),
-        handleSignInFailed: tr('errors.handleSignInFailed', { message: '{{message}}' }),
+        handleSignInFailed: tr('errors.handleSignInFailed', {
+            message: '{{message}}',
+        }),
         signOutFailed: tr('errors.signOutFailed', { message: '{{message}}' }),
     }
 
     // Stamp the bundle's locale onto the flattened object (non-enumerable —
     // stays invisible to Object.keys/JSON.stringify/spread) so pluralUiMessage
     // can select the CLDR-correct category without a threaded `locale` arg.
-    return Object.defineProperty(result, UI_LOCALE, { value: translator.locale, enumerable: false })
+    return Object.defineProperty(result, UI_LOCALE, {
+        value: translator.locale,
+        enumerable: false,
+    })
 }

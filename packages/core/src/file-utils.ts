@@ -54,7 +54,10 @@ export const PREVIEW_TEXT_TRUNCATE_LENGTH = 100_000 // ~100 KB of text
 /**
  * Determines whether a file is a text-based file that could be previewed as text.
  */
-export function fileGetIsText(fileType: string | undefined, fileName?: string): boolean {
+export function fileGetIsText(
+    fileType: string | undefined,
+    fileName?: string,
+): boolean {
     if (!fileType) return false
     if (fileType.startsWith('text/')) return true
     const lower = (fileName ?? '').toLowerCase()
@@ -88,12 +91,18 @@ export function fileGetIsImage(fileType?: string) {
     return typeof fileType === 'string' && fileType.startsWith('image/')
 }
 
-export function fileGetIsPdf(fileType: string | undefined, fileName?: string): boolean {
+export function fileGetIsPdf(
+    fileType: string | undefined,
+    fileName?: string,
+): boolean {
     if (fileType === 'application/pdf') return true
     return (fileName ?? '').toLowerCase().endsWith('.pdf')
 }
 
-export function fileGetExtension(fileType: string | undefined, fileName?: string) {
+export function fileGetExtension(
+    fileType: string | undefined,
+    fileName?: string,
+) {
     const safeName = fileName ?? ''
     if (!fileType) {
         return safeName.split('.').pop()?.toLowerCase() || ''

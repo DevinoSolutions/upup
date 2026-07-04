@@ -1,73 +1,77 @@
 import type { RuntimeAdapter } from '../contracts'
 
 export const BrowserRuntime: RuntimeAdapter = {
-  async computeHash(data: ArrayBuffer): Promise<string> {
-    const hashBuffer = await crypto.subtle.digest('SHA-256', data)
-    return Array.from(new Uint8Array(hashBuffer))
-      .map((b) => b.toString(16).padStart(2, '0'))
-      .join('')
-  },
+    async computeHash(data: ArrayBuffer): Promise<string> {
+        const hashBuffer = await crypto.subtle.digest('SHA-256', data)
+        return Array.from(new Uint8Array(hashBuffer))
+            .map(b => b.toString(16).padStart(2, '0'))
+            .join('')
+    },
 
-  createImageBitmap:
-    typeof createImageBitmap !== 'undefined'
-      ? (blob: Blob) => createImageBitmap(blob)
-      : undefined,
+    createImageBitmap:
+        typeof createImageBitmap !== 'undefined'
+            ? (blob: Blob) => createImageBitmap(blob)
+            : undefined,
 
-  createWorker:
-    typeof Worker !== 'undefined'
-      ? () => {
-          try {
-            return new Worker(new URL('./pipeline-worker.js', import.meta.url), {
-              type: 'module',
+    createWorker:
+        typeof Worker !== 'undefined'
+            ? () => {
+                  try {
+                      return new Worker(
+                          new URL('./pipeline-worker.js', import.meta.url),
+                          {
+                              type: 'module',
+                          },
+                      )
+                  } catch {
+                      return null
+                  }
+              }
+            : undefined,
+
+    async upload(url, body, options) {
+        return new Promise((resolve, reject) => {
+            const xhr = new XMLHttpRequest()
+
+            xhr.upload.addEventListener('progress', e => {
+                if (e.lengthComputable) options.onProgress(e.loaded, e.total)
             })
-          } catch {
-            return null
-          }
-        }
-      : undefined,
 
-  async upload(url, body, options) {
-    return new Promise((resolve, reject) => {
-      const xhr = new XMLHttpRequest()
+            xhr.addEventListener('load', () => {
+                const headers: Record<string, string> = {}
+                xhr.getAllResponseHeaders()
+                    .split('\r\n')
+                    .forEach(line => {
+                        const [key, ...vals] = line.split(': ')
+                        if (key) headers[key.toLowerCase()] = vals.join(': ')
+                    })
+                resolve({ status: xhr.status, headers, body: xhr.responseText })
+            })
 
-      xhr.upload.addEventListener('progress', (e) => {
-        if (e.lengthComputable) options.onProgress(e.loaded, e.total)
-      })
+            xhr.addEventListener('error', () =>
+                reject(new Error('Network error')),
+            )
+            options.signal.addEventListener('abort', () => xhr.abort())
 
-      xhr.addEventListener('load', () => {
-        const headers: Record<string, string> = {}
-        xhr
-          .getAllResponseHeaders()
-          .split('\r\n')
-          .forEach((line) => {
-            const [key, ...vals] = line.split(': ')
-            if (key) headers[key.toLowerCase()] = vals.join(': ')
-          })
-        resolve({ status: xhr.status, headers, body: xhr.responseText })
-      })
+            xhr.open(options.method, url)
+            for (const [k, v] of Object.entries(options.headers)) {
+                xhr.setRequestHeader(k, v)
+            }
+            xhr.send(body)
+        })
+    },
 
-      xhr.addEventListener('error', () => reject(new Error('Network error')))
-      options.signal.addEventListener('abort', () => xhr.abort())
+    async readAsArrayBuffer(file: File | Blob): Promise<ArrayBuffer> {
+        return file.arrayBuffer()
+    },
 
-      xhr.open(options.method, url)
-      for (const [k, v] of Object.entries(options.headers)) {
-        xhr.setRequestHeader(k, v)
-      }
-      xhr.send(body)
-    })
-  },
+    createObjectURL:
+        typeof URL !== 'undefined' && URL.createObjectURL
+            ? (blob: Blob) => URL.createObjectURL(blob)
+            : undefined,
 
-  async readAsArrayBuffer(file: File | Blob): Promise<ArrayBuffer> {
-    return file.arrayBuffer()
-  },
-
-  createObjectURL:
-    typeof URL !== 'undefined' && URL.createObjectURL
-      ? (blob: Blob) => URL.createObjectURL(blob)
-      : undefined,
-
-  revokeObjectURL:
-    typeof URL !== 'undefined' && URL.revokeObjectURL
-      ? (url: string) => URL.revokeObjectURL(url)
-      : undefined,
+    revokeObjectURL:
+        typeof URL !== 'undefined' && URL.revokeObjectURL
+            ? (url: string) => URL.revokeObjectURL(url)
+            : undefined,
 }

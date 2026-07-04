@@ -5,23 +5,23 @@
  * the @upup/react chrome passes to <EditorComponent> (see ImageEditorModal.tsx).
  */
 export interface IslandProps {
-  source: string
-  savingPixelRatio?: number
-  previewPixelRatio?: number
-  theme?: unknown
-  defaultTabId?: unknown
-  tabsIds?: unknown[]
-  onSave?: (imageData: unknown, designState?: unknown) => void
-  onClose?: () => void
-  onBeforeSave?: (imageData?: unknown) => boolean | void
-  [key: string]: unknown
+    source: string
+    savingPixelRatio?: number
+    previewPixelRatio?: number
+    theme?: unknown
+    defaultTabId?: unknown
+    tabsIds?: unknown[]
+    onSave?: (imageData: unknown, designState?: unknown) => void
+    onClose?: () => void
+    onBeforeSave?: (imageData?: unknown) => boolean | void
+    [key: string]: unknown
 }
 
 export interface IslandHandle {
-  update(props: IslandProps): void
-  unmount(): void
+    update(props: IslandProps): void
+    unmount(): void
 }
 
 export interface IslandModule {
-  mount(container: HTMLElement, props: IslandProps): IslandHandle
+    mount(container: HTMLElement, props: IslandProps): IslandHandle
 }

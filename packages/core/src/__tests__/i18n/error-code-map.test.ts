@@ -27,7 +27,9 @@ describe('errorCodeToMessageKey', () => {
     })
 
     it('maps an unknown code to uploadFailedWithCode', () => {
-        expect(errorCodeToMessageKey('totally-unrecognized-code')).toBe('uploadFailedWithCode')
+        expect(errorCodeToMessageKey('totally-unrecognized-code')).toBe(
+            'uploadFailedWithCode',
+        )
     })
 
     it('maps undefined to uploadFailed (no code to report)', () => {
@@ -35,10 +37,14 @@ describe('errorCodeToMessageKey', () => {
     })
 
     it('maps the expired token code to failedToRefreshExpiredToken', () => {
-        expect(errorCodeToMessageKey('expired')).toBe('failedToRefreshExpiredToken')
+        expect(errorCodeToMessageKey('expired')).toBe(
+            'failedToRefreshExpiredToken',
+        )
     })
 
     it('maps the S3 SignatureDoesNotMatch code to temporaryCredentialsInvalid', () => {
-        expect(errorCodeToMessageKey('SignatureDoesNotMatch')).toBe('temporaryCredentialsInvalid')
+        expect(errorCodeToMessageKey('SignatureDoesNotMatch')).toBe(
+            'temporaryCredentialsInvalid',
+        )
     })
 })

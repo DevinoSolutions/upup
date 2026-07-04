@@ -19,17 +19,22 @@ const AudioUploader = () => import('../components/AudioUploader.svelte')
 const BoxUploader = () => import('../components/BoxUploader.svelte')
 const CameraUploader = () => import('../components/CameraUploader.svelte')
 const DropboxUploader = () => import('../components/DropboxUploader.svelte')
-const GoogleDriveUploader = () => import('../components/GoogleDriveUploader.svelte')
+const GoogleDriveUploader = () =>
+    import('../components/GoogleDriveUploader.svelte')
 const OneDriveUploader = () => import('../components/OneDriveUploader.svelte')
-const ScreenCaptureUploader = () => import('../components/ScreenCaptureUploader.svelte')
+const ScreenCaptureUploader = () =>
+    import('../components/ScreenCaptureUploader.svelte')
 const UrlUploader = () => import('../components/UrlUploader.svelte')
 
-export const uploadSourceObject: Record<string, {
-    id: FileSource
-    nameKey: keyof Translations
-    Icon: Component
-    Component: (() => Promise<{ default: Component }>) | undefined
-}> = {
+export const uploadSourceObject: Record<
+    string,
+    {
+        id: FileSource
+        nameKey: keyof Translations
+        Icon: Component
+        Component: (() => Promise<{ default: Component }>) | undefined
+    }
+> = {
     [FileSource.LOCAL]: {
         id: FileSource.LOCAL,
         nameKey: 'myDevice' as keyof Translations,

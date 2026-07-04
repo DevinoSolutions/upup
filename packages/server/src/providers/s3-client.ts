@@ -1,5 +1,5 @@
-import { S3Client, type S3ClientConfig } from "@aws-sdk/client-s3";
-import type { UpupServerConfig } from "../config";
+import { S3Client, type S3ClientConfig } from '@aws-sdk/client-s3'
+import type { UpupServerConfig } from '../config'
 
 /**
  * Build the AWS SDK S3 client config from upup storage settings.
@@ -8,22 +8,22 @@ import type { UpupServerConfig } from "../config";
  * addressing is enabled by default — MinIO requires it.
  */
 export function buildS3ClientConfig(
-  storage: UpupServerConfig["storage"],
+    storage: UpupServerConfig['storage'],
 ): S3ClientConfig {
-  const config: S3ClientConfig = { region: storage.region };
-  if (storage.accessKeyId && storage.secretAccessKey) {
-    config.credentials = {
-      accessKeyId: storage.accessKeyId,
-      secretAccessKey: storage.secretAccessKey,
-    };
-  }
-  if (storage.endpoint) {
-    config.endpoint = storage.endpoint;
-    config.forcePathStyle = storage.forcePathStyle ?? true;
-  }
-  return config;
+    const config: S3ClientConfig = { region: storage.region }
+    if (storage.accessKeyId && storage.secretAccessKey) {
+        config.credentials = {
+            accessKeyId: storage.accessKeyId,
+            secretAccessKey: storage.secretAccessKey,
+        }
+    }
+    if (storage.endpoint) {
+        config.endpoint = storage.endpoint
+        config.forcePathStyle = storage.forcePathStyle ?? true
+    }
+    return config
 }
 
-export function createS3Client(storage: UpupServerConfig["storage"]): S3Client {
-  return new S3Client(buildS3ClientConfig(storage));
+export function createS3Client(storage: UpupServerConfig['storage']): S3Client {
+    return new S3Client(buildS3ClientConfig(storage))
 }

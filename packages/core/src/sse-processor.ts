@@ -40,7 +40,7 @@ export class SSEProcessor {
         }, timeout)
         this.timers.set(key, timer)
 
-        source.onmessage = (event) => {
+        source.onmessage = event => {
             clearTimeout(timer)
             this.timers.delete(key)
             let data: Record<string, unknown>

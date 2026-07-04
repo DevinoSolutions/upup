@@ -232,9 +232,7 @@ export class GoogleDrivePlugin implements DrivePlugin {
 
     // ── File operations: list files ──
 
-    async loadFiles(
-        folderId?: string,
-    ): Promise<{
+    async loadFiles(folderId?: string): Promise<{
         files: DriveFile[]
         folderId: string
         hasMore: boolean
@@ -262,7 +260,10 @@ export class GoogleDrivePlugin implements DrivePlugin {
             const files: DriveFile[] = (data.files ?? []).map(mapGoogleEntry)
             const hasMore = !!data.nextPageToken
             const cursor = hasMore
-                ? JSON.stringify({ folderId: parentId, pageToken: data.nextPageToken })
+                ? JSON.stringify({
+                      folderId: parentId,
+                      pageToken: data.nextPageToken,
+                  })
                 : undefined
 
             this.setState('authenticated')
@@ -379,8 +380,7 @@ export class GoogleDrivePlugin implements DrivePlugin {
 
         const blob = await res.blob()
         return new File([blob], driveFile.name, {
-            type:
-                blob.type || driveFile.mimeType || 'application/octet-stream',
+            type: blob.type || driveFile.mimeType || 'application/octet-stream',
         })
     }
 
@@ -431,9 +431,7 @@ export class GoogleDrivePlugin implements DrivePlugin {
             this.setState('session-expired')
         }
 
-        throw new Error(
-            `Google Drive API error (${res.status}): ${errorText}`,
-        )
+        throw new Error(`Google Drive API error (${res.status}): ${errorText}`)
     }
 
     // ── Private: token management ──

@@ -21,29 +21,29 @@ import { describe, expect, test } from 'vitest'
 import { UpupUploader } from './index'
 
 describe('@upup/preact SSR (preact-render-to-string, no window/document)', () => {
-  test('renders without throwing', () => {
-    expect(() => renderToString(<UpupUploader />)).not.toThrow()
-  })
+    test('renders without throwing', () => {
+        expect(() => renderToString(<UpupUploader />)).not.toThrow()
+    })
 
-  test('renders the root + container shell', () => {
-    const html = renderToString(<UpupUploader />)
-    expect(html).toContain('data-testid="upup-root"')
-    expect(html).toContain('data-testid="upup-container"')
-  })
+    test('renders the root + container shell', () => {
+        const html = renderToString(<UpupUploader />)
+        expect(html).toContain('data-testid="upup-root"')
+        expect(html).toContain('data-testid="upup-container"')
+    })
 
-  test('renders the adapter selector on SSR (online branch)', () => {
-    const html = renderToString(<UpupUploader />)
-    expect(html).toContain('data-upup-slot="adapter-selector"')
-  })
+    test('renders the adapter selector on SSR (online branch)', () => {
+        const html = renderToString(<UpupUploader />)
+        expect(html).toContain('data-upup-slot="adapter-selector"')
+    })
 
-  test('does not render the offline banner on SSR (isOnline defaults to true)', () => {
-    const html = renderToString(<UpupUploader />)
-    expect(html).not.toContain('No internet connection')
-  })
+    test('does not render the offline banner on SSR (isOnline defaults to true)', () => {
+        const html = renderToString(<UpupUploader />)
+        expect(html).not.toContain('No internet connection')
+    })
 
-  test('renders a deterministic data-theme on SSR when mode is system', () => {
-    const html = renderToString(<UpupUploader />)
-    expect(html).toContain('data-theme="light"')
-    expect(html).not.toContain('data-theme="dark"')
-  })
+    test('renders a deterministic data-theme on SSR when mode is system', () => {
+        const html = renderToString(<UpupUploader />)
+        expect(html).toContain('data-theme="light"')
+        expect(html).not.toContain('data-theme="dark"')
+    })
 })

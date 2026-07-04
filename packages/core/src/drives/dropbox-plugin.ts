@@ -146,7 +146,9 @@ export class DropboxPlugin implements DrivePlugin {
 
             const res = await fetch(TOKEN_URL, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
                 body,
             })
 
@@ -186,7 +188,9 @@ export class DropboxPlugin implements DrivePlugin {
 
     async authenticateViaPopup(): Promise<void> {
         if (typeof window === 'undefined') {
-            throw new Error('authenticateViaPopup requires a browser environment')
+            throw new Error(
+                'authenticateViaPopup requires a browser environment',
+            )
         }
 
         const url = await this.getAuthUrl()
@@ -194,10 +198,8 @@ export class DropboxPlugin implements DrivePlugin {
         // Close any existing popup
         this.cleanupPopup()
 
-        const left =
-            (typeof window !== 'undefined' ? window.screenX : 0) + 60
-        const top =
-            (typeof window !== 'undefined' ? window.screenY : 0) + 60
+        const left = (typeof window !== 'undefined' ? window.screenX : 0) + 60
+        const top = (typeof window !== 'undefined' ? window.screenY : 0) + 60
 
         this.popupWindow = window.open(
             url,
@@ -235,7 +237,10 @@ export class DropboxPlugin implements DrivePlugin {
                         return
                     }
 
-                    if (!href.startsWith(redirectUri) || !href.includes('code=')) {
+                    if (
+                        !href.startsWith(redirectUri) ||
+                        !href.includes('code=')
+                    ) {
                         return
                     }
 
@@ -296,7 +301,9 @@ export class DropboxPlugin implements DrivePlugin {
         try {
             const res = await fetch(TOKEN_URL, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
                 body: new URLSearchParams({
                     grant_type: 'refresh_token',
                     refresh_token: this.refreshTokenValue,
@@ -375,9 +382,7 @@ export class DropboxPlugin implements DrivePlugin {
 
     // ── File operations: list folder ──
 
-    async loadFiles(
-        path = '',
-    ): Promise<{
+    async loadFiles(path = ''): Promise<{
         files: DriveFile[]
         hasMore: boolean
         cursor?: string
@@ -523,10 +528,7 @@ export class DropboxPlugin implements DrivePlugin {
 
     // ── File operations: search ──
 
-    async searchFiles(
-        query: string,
-        path?: string,
-    ): Promise<DriveFile[]> {
+    async searchFiles(query: string, path?: string): Promise<DriveFile[]> {
         try {
             const body: Record<string, unknown> = {
                 query,
@@ -584,8 +586,7 @@ export class DropboxPlugin implements DrivePlugin {
         // Handle 401 — attempt token refresh
         if (res.status === 401 && !isRetry) {
             const isExpired =
-                errorText.includes('expired_access_token') ||
-                res.status === 401
+                errorText.includes('expired_access_token') || res.status === 401
 
             if (isExpired && this.refreshTokenValue) {
                 const newToken = await this.refreshAccessToken()
@@ -600,14 +601,14 @@ export class DropboxPlugin implements DrivePlugin {
             this.setState('session-expired')
         }
 
-        throw new Error(
-            `Dropbox API error (${res.status}): ${errorText}`,
-        )
+        throw new Error(`Dropbox API error (${res.status}): ${errorText}`)
     }
 
     // ── Private: download a single file via temporary link ──
 
-    private async downloadSingleFile(driveFile: DriveFile): Promise<File | null> {
+    private async downloadSingleFile(
+        driveFile: DriveFile,
+    ): Promise<File | null> {
         // Get temporary download link
         const linkRes = await this.apiRequest(TEMP_LINK_URL, {
             method: 'POST',

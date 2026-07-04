@@ -8,99 +8,99 @@
 // drift (a rolling redeploy that didn't share the same uploadTokenSecret)
 // without being reversible to the secret itself.
 
-import type { UpupServerConfig } from "./config";
-import { checkStorageReachable } from "./providers/aws";
-import { reportServerError } from "./observability";
+import type { UpupServerConfig } from './config'
+import { checkStorageReachable } from './providers/aws'
+import { reportServerError } from './observability'
 
-type ResponseHeaders = Record<string, string>;
+type ResponseHeaders = Record<string, string>
 
-type StorageCheckCache = { ok: true } | { ok: false } | undefined;
-let cachedStorageCheck: StorageCheckCache;
-let cachedAt = 0;
-const STORAGE_CHECK_TTL_MS = 30_000;
+type StorageCheckCache = { ok: true } | { ok: false } | undefined
+let cachedStorageCheck: StorageCheckCache
+let cachedAt = 0
+const STORAGE_CHECK_TTL_MS = 30_000
 
 /** Test-only: force the next handleHealth() call to re-probe storage instead
  *  of serving the TTL-cached result. Not exported from the package's public
  *  entry (index.ts) — internal to this module's test suite. */
 export function _resetStorageCheckCacheForTests(): void {
-  cachedStorageCheck = undefined;
-  cachedAt = 0;
+    cachedStorageCheck = undefined
+    cachedAt = 0
 }
 
 function json(
-  data: unknown,
-  status = 200,
-  headers: ResponseHeaders = {},
+    data: unknown,
+    status = 200,
+    headers: ResponseHeaders = {},
 ): Response {
-  return new Response(JSON.stringify(data), {
-    status,
-    headers: { "Content-Type": "application/json", ...headers },
-  });
+    return new Response(JSON.stringify(data), {
+        status,
+        headers: { 'Content-Type': 'application/json', ...headers },
+    })
 }
 
 function isConfigComplete(config: UpupServerConfig): boolean {
-  return Boolean(
-    config.storage?.bucket &&
-    config.storage?.region &&
-    config.uploadTokenSecret &&
-    config.uploadTokenSecret.length >= 16,
-  );
+    return Boolean(
+        config.storage?.bucket &&
+        config.storage?.region &&
+        config.uploadTokenSecret &&
+        config.uploadTokenSecret.length >= 16,
+    )
 }
 
 async function sha256Hex(input: string): Promise<string> {
-  const bytes = new TextEncoder().encode(input);
-  const digest = await crypto.subtle.digest("SHA-256", bytes);
-  return Array.from(new Uint8Array(digest))
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
+    const bytes = new TextEncoder().encode(input)
+    const digest = await crypto.subtle.digest('SHA-256', bytes)
+    return Array.from(new Uint8Array(digest))
+        .map(b => b.toString(16).padStart(2, '0'))
+        .join('')
 }
 
 export async function handleHealth(
-  config: UpupServerConfig,
-  responseHeaders: ResponseHeaders,
+    config: UpupServerConfig,
+    responseHeaders: ResponseHeaders,
 ): Promise<Response> {
-  const configOk = isConfigComplete(config);
+    const configOk = isConfigComplete(config)
 
-  const now = Date.now();
-  if (!cachedStorageCheck || now - cachedAt > STORAGE_CHECK_TTL_MS) {
-    const result = await checkStorageReachable(config.storage);
-    if (!result.ok) {
-      reportServerError(config.onError, {
-        route: "health",
-        method: "GET",
-        status: 200,
-        code: "STORAGE_ERROR",
-        message: "Health check: storage unreachable",
-        error:
-          result.error instanceof Error
-            ? {
-                name: result.error.name,
-                message: result.error.message,
-                stack: result.error.stack,
-              }
-            : { name: "NonError", message: String(result.error) },
-      });
+    const now = Date.now()
+    if (!cachedStorageCheck || now - cachedAt > STORAGE_CHECK_TTL_MS) {
+        const result = await checkStorageReachable(config.storage)
+        if (!result.ok) {
+            reportServerError(config.onError, {
+                route: 'health',
+                method: 'GET',
+                status: 200,
+                code: 'STORAGE_ERROR',
+                message: 'Health check: storage unreachable',
+                error:
+                    result.error instanceof Error
+                        ? {
+                              name: result.error.name,
+                              message: result.error.message,
+                              stack: result.error.stack,
+                          }
+                        : { name: 'NonError', message: String(result.error) },
+            })
+        }
+        cachedStorageCheck = result.ok ? { ok: true } : { ok: false }
+        cachedAt = now
     }
-    cachedStorageCheck = result.ok ? { ok: true } : { ok: false };
-    cachedAt = now;
-  }
 
-  const body: Record<string, unknown> = {
-    status: configOk && cachedStorageCheck.ok ? "ok" : "degraded",
-    checks: {
-      config: configOk ? "ok" : "incomplete",
-      storage: cachedStorageCheck.ok ? "ok" : "error",
-    },
-  };
+    const body: Record<string, unknown> = {
+        status: configOk && cachedStorageCheck.ok ? 'ok' : 'degraded',
+        checks: {
+            config: configOk ? 'ok' : 'incomplete',
+            storage: cachedStorageCheck.ok ? 'ok' : 'error',
+        },
+    }
 
-  if (config.health?.exposeSecretFingerprint && config.uploadTokenSecret) {
-    body.uploadTokenFingerprint = (
-      await sha256Hex(config.uploadTokenSecret)
-    ).slice(0, 8);
-  }
+    if (config.health?.exposeSecretFingerprint && config.uploadTokenSecret) {
+        body.uploadTokenFingerprint = (
+            await sha256Hex(config.uploadTokenSecret)
+        ).slice(0, 8)
+    }
 
-  // Always 200: this is a liveness-friendly endpoint (deploy/orchestration
-  // probes should not 5xx a container just because S3 blipped); the `status`
-  // field carries the actual health signal for humans/dashboards.
-  return json(body, 200, responseHeaders);
+    // Always 200: this is a liveness-friendly endpoint (deploy/orchestration
+    // probes should not 5xx a container just because S3 blipped); the `status`
+    // field carries the actual health signal for humans/dashboards.
+    return json(body, 200, responseHeaders)
 }

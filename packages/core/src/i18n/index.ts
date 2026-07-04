@@ -14,7 +14,11 @@ export type {
 
 // ── Utilities ────────────────────────────────────────────────
 export { createTranslator, type TranslatorOptions } from './create-translator'
-export { buildFallbackChain, resolveMessage, resolveLocaleBundle } from './resolve-locale'
+export {
+    buildFallbackChain,
+    resolveMessage,
+    resolveLocaleBundle,
+} from './resolve-locale'
 export { LOCALE_META, normalizeBcp47, type LocaleMeta } from './locale-meta'
 export {
     flattenTranslatorToUiTranslations,

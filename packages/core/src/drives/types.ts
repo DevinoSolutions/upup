@@ -19,7 +19,12 @@ export type DriveUser = {
     picture?: string
 }
 
-export type DriveState = 'idle' | 'authenticating' | 'authenticated' | 'browsing' | 'session-expired'
+export type DriveState =
+    | 'idle'
+    | 'authenticating'
+    | 'authenticated'
+    | 'browsing'
+    | 'session-expired'
 
 /** The one drive browse-failure surface (F-124). `action` names the operation that failed. */
 export type DriveBrowserError = {
@@ -41,10 +46,15 @@ export type DriveListPage = {
 }
 
 export type DriveEventMap = {
-    'authenticated': { token: string }
+    authenticated: { token: string }
     'signed-out': Record<string, never>
     'session-expired': Record<string, never>
-    'files-loaded': { files: DriveFile[]; path: string; hasMore?: boolean; cursor?: string }
-    'error': { error: Error; action: string }
+    'files-loaded': {
+        files: DriveFile[]
+        path: string
+        hasMore?: boolean
+        cursor?: string
+    }
+    error: { error: Error; action: string }
     'state-change': { state: DriveState }
 }

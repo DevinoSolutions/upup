@@ -39,12 +39,16 @@ describe('tokensToVars', () => {
 
     it('maps color.primaryHover with camelCase converted to kebab-case', () => {
         const vars = tokensToVars(lightPreset)
-        expect(vars['--upup-color-primary-hover']).toBe(lightPreset.color.primaryHover)
+        expect(vars['--upup-color-primary-hover']).toBe(
+            lightPreset.color.primaryHover,
+        )
     })
 
     it('maps color.surfaceAlt to --upup-color-surface-alt', () => {
         const vars = tokensToVars(lightPreset)
-        expect(vars['--upup-color-surface-alt']).toBe(lightPreset.color.surfaceAlt)
+        expect(vars['--upup-color-surface-alt']).toBe(
+            lightPreset.color.surfaceAlt,
+        )
     })
 
     it('maps radius.sm to --upup-radius-sm', () => {

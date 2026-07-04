@@ -26,10 +26,15 @@ export default function useUploaderPanel() {
     const snapshot = shallowRef(controller.getSnapshot())
     let unsub: (() => void) | null = null
     onMounted(() => {
-        unsub = controller.subscribe(() => { snapshot.value = controller.getSnapshot() })
+        unsub = controller.subscribe(() => {
+            snapshot.value = controller.getSnapshot()
+        })
         controller.init()
     })
-    onUnmounted(() => { controller.destroy(); unsub?.() })
+    onUnmounted(() => {
+        controller.destroy()
+        unsub?.()
+    })
 
     return {
         isDragging: computed(() => snapshot.value.isDragging),

@@ -5,9 +5,7 @@ import type { RegisteredLocaleCode } from './locales/registry'
  * (packages/core/src/i18n/locales/registry.ts) — registering a new locale
  * there automatically extends this union.
  */
-export type UpupLocaleCode =
-    | RegisteredLocaleCode
-    | (string & {}) // allow custom locales while keeping autocomplete
+export type UpupLocaleCode = RegisteredLocaleCode | (string & {}) // allow custom locales while keeping autocomplete
 
 /**
  * Metadata + messages for a locale.
@@ -301,4 +299,3 @@ export interface Translator {
     /** Switch locale at runtime (only available if loadLocale was provided) */
     setLocale?: (code: string) => Promise<void>
 }
-

@@ -18,8 +18,8 @@ export default function useSourceSelector() {
     // translations and sources are plain (non-reactive) values in the Svelte context
     // (ContextI18n = BaseContextI18n; ContextProps fields are plain JS values).
     const chosenSources = Object.values(uploadSourceObject)
-        .filter((item) => sources.includes(item.id))
-        .map((item) => ({
+        .filter(item => sources.includes(item.id))
+        .map(item => ({
             ...item,
             name: translations[item.nameKey],
         }))

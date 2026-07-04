@@ -35,7 +35,9 @@ describe('en-US locale — content validity', () => {
             for (const [key, val] of Object.entries(obj)) {
                 const fullPath = path ? `${path}.${key}` : key
                 if (typeof val === 'string') {
-                    expect(val.length, `${fullPath} is empty`).toBeGreaterThan(0)
+                    expect(val.length, `${fullPath} is empty`).toBeGreaterThan(
+                        0,
+                    )
                 } else if (typeof val === 'object' && val !== null) {
                     checkNoEmpty(val as Record<string, unknown>, fullPath)
                 }

@@ -19,7 +19,7 @@ export function useBox() {
     const { setFiles } = useUploaderFiles()
 
     const controller = new DriveBrowserController(core!, BOX_DESCRIPTOR, {
-        onFilesSelected: (files) => {
+        onFilesSelected: files => {
             setFiles(files)
         },
         onClose: () => setActiveSource(undefined),
@@ -31,25 +31,27 @@ export function useBox() {
     onDestroy(() => controller.destroy())
 
     return {
-        user: derived(state, ($s) => $s.user),
-        boxFiles: derived(state, ($s) => $s.folder),
+        user: derived(state, $s => $s.user),
+        boxFiles: derived(state, $s => $s.folder),
         logout: () => controller.signOut(),
         authenticate: () => controller.signIn(),
-        token: derived(state, ($s) => ($s.isAuthenticated ? 'active' : undefined)),
-        isAuthenticated: derived(state, ($s) => $s.isAuthenticated),
-        isLoading: derived(state, ($s) => $s.isLoading),
-        path: derived(state, ($s) => $s.path),
+        token: derived(state, $s =>
+            $s.isAuthenticated ? 'active' : undefined,
+        ),
+        isAuthenticated: derived(state, $s => $s.isAuthenticated),
+        isLoading: derived(state, $s => $s.isLoading),
+        path: derived(state, $s => $s.path),
         setPath: (newPath: DriveFolder[]) => controller.setPath(newPath),
         handleClick: (file: DriveFile) => controller.handleClick(file),
-        selectedFiles: derived(state, ($s) => $s.selectedFiles),
-        showLoader: derived(state, ($s) => $s.showLoader),
+        selectedFiles: derived(state, $s => $s.selectedFiles),
+        showLoader: derived(state, $s => $s.showLoader),
         handleSubmit: () => controller.handleSubmit(),
         handleCancelDownload: () => controller.handleCancelDownload(),
         onSelectCurrentFolder: () => controller.onSelectCurrentFolder(),
-        isClickLoading: derived(state, ($s) => $s.isClickLoading),
-        error: derived(state, ($s) => $s.error),
-        hasMore: derived(state, ($s) => $s.hasMore),
-        isLoadingMore: derived(state, ($s) => $s.isLoadingMore),
+        isClickLoading: derived(state, $s => $s.isClickLoading),
+        error: derived(state, $s => $s.error),
+        hasMore: derived(state, $s => $s.hasMore),
+        isLoadingMore: derived(state, $s => $s.isLoadingMore),
         loadMore: () => controller.loadMore(),
     }
 }

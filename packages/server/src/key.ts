@@ -1,5 +1,5 @@
 // packages/server/src/key.ts
-import type { KeyStrategyContext } from "./config";
+import type { KeyStrategyContext } from './config'
 
 /**
  * Make a user-supplied filename safe to embed in an object key: drop directory
@@ -7,11 +7,11 @@ import type { KeyStrategyContext } from "./config";
  * leading dots/underscores (no '.'/'..'), bound length. Never empty.
  */
 export function sanitizeFilename(name: string): string {
-  const cleaned = (name ?? "")
-    .replace(/[^A-Za-z0-9._-]+/g, "_")
-    .replace(/^[._]+/, "")
-    .slice(0, 128);
-  return cleaned || "file";
+    const cleaned = (name ?? '')
+        .replace(/[^A-Za-z0-9._-]+/g, '_')
+        .replace(/^[._]+/, '')
+        .slice(0, 128)
+    return cleaned || 'file'
 }
 
 /**
@@ -20,6 +20,6 @@ export function sanitizeFilename(name: string): string {
  * or overwrite another's object; the uuid guarantees uniqueness even anonymously.
  */
 export function defaultKeyStrategy(ctx: KeyStrategyContext): string {
-  const owner = ctx.userId ?? "anon";
-  return `${owner}/${crypto.randomUUID()}/${sanitizeFilename(ctx.fileName)}`;
+    const owner = ctx.userId ?? 'anon'
+    return `${owner}/${crypto.randomUUID()}/${sanitizeFilename(ctx.fileName)}`
 }

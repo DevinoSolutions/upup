@@ -17,7 +17,7 @@ export function useOneDrive() {
     const { setFiles } = useUploaderFiles()
 
     const controller = new DriveBrowserController(core!, ONE_DRIVE_DESCRIPTOR, {
-        onFilesSelected: (files) => {
+        onFilesSelected: files => {
             setFiles(files)
         },
         onClose: () => setActiveSource(undefined),
@@ -43,7 +43,9 @@ export function useOneDrive() {
         signOut: () => controller.signOut(),
         signIn: () => controller.signIn(),
         authenticate: () => controller.signIn(),
-        token: computed(() => (state.value.isAuthenticated ? 'active' : undefined)),
+        token: computed(() =>
+            state.value.isAuthenticated ? 'active' : undefined,
+        ),
         isAuthenticated: computed(() => state.value.isAuthenticated),
         isLoading: computed(() => state.value.isLoading),
         path: computed(() => state.value.path),

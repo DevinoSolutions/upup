@@ -14,8 +14,7 @@ const SK_EXPIRY = 'upup_onedrive_token_expiry'
 // ── Microsoft OAuth2 / Graph API endpoints ──
 const AUTH_URL =
     'https://login.microsoftonline.com/common/oauth2/v2.0/authorize'
-const TOKEN_URL =
-    'https://login.microsoftonline.com/common/oauth2/v2.0/token'
+const TOKEN_URL = 'https://login.microsoftonline.com/common/oauth2/v2.0/token'
 const GRAPH_BASE = 'https://graph.microsoft.com/v1.0'
 
 const OAUTH_SCOPES = 'user.read files.readwrite.all offline_access'
@@ -23,8 +22,7 @@ const OAUTH_SCOPES = 'user.read files.readwrite.all offline_access'
 const POPUP_NAME = 'UpupOneDriveAuth'
 
 // ── Graph API query params for file listing ──
-const FILE_SELECT =
-    'id,name,folder,file,size,@microsoft.graph.downloadUrl'
+const FILE_SELECT = 'id,name,folder,file,size,@microsoft.graph.downloadUrl'
 const FILE_EXPAND = 'thumbnails'
 
 // ── Microsoft Graph item → DriveFile mapper ──
@@ -34,9 +32,11 @@ function mapGraphItem(item: Record<string, unknown>): DriveFile {
     const file = item.file as Record<string, unknown> | undefined
     const mimeType = isFolder
         ? 'folder'
-        : (file?.mimeType as string) ?? guessMimeType(item.name as string)
+        : ((file?.mimeType as string) ?? guessMimeType(item.name as string))
 
-    const thumbnails = item.thumbnails as Array<Record<string, unknown>> | undefined
+    const thumbnails = item.thumbnails as
+        | Array<Record<string, unknown>>
+        | undefined
     let thumbnail: string | undefined
     if (thumbnails && thumbnails.length > 0) {
         const thumbSet = thumbnails[0]
@@ -159,7 +159,9 @@ export class OneDrivePlugin implements DrivePlugin {
 
             const res = await fetch(TOKEN_URL, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
                 body,
             })
 
@@ -201,7 +203,9 @@ export class OneDrivePlugin implements DrivePlugin {
 
     async authenticateViaPopup(): Promise<void> {
         if (typeof window === 'undefined') {
-            throw new Error('authenticateViaPopup requires a browser environment')
+            throw new Error(
+                'authenticateViaPopup requires a browser environment',
+            )
         }
 
         const url = await this.getAuthUrl()
@@ -209,10 +213,8 @@ export class OneDrivePlugin implements DrivePlugin {
         // Close any existing popup
         this.cleanupPopup()
 
-        const left =
-            (typeof window !== 'undefined' ? window.screenX : 0) + 60
-        const top =
-            (typeof window !== 'undefined' ? window.screenY : 0) + 60
+        const left = (typeof window !== 'undefined' ? window.screenX : 0) + 60
+        const top = (typeof window !== 'undefined' ? window.screenY : 0) + 60
 
         this.popupWindow = window.open(
             url,
@@ -250,7 +252,10 @@ export class OneDrivePlugin implements DrivePlugin {
                         return
                     }
 
-                    if (!href.startsWith(redirectUri) || !href.includes('code=')) {
+                    if (
+                        !href.startsWith(redirectUri) ||
+                        !href.includes('code=')
+                    ) {
                         return
                     }
 
@@ -311,7 +316,9 @@ export class OneDrivePlugin implements DrivePlugin {
         try {
             const res = await fetch(TOKEN_URL, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
                 body: new URLSearchParams({
                     grant_type: 'refresh_token',
                     refresh_token: this.refreshTokenValue,
@@ -382,9 +389,7 @@ export class OneDrivePlugin implements DrivePlugin {
 
     // ── File operations: list files ──
 
-    async loadFiles(
-        folderId?: string,
-    ): Promise<{
+    async loadFiles(folderId?: string): Promise<{
         files: DriveFile[]
         folderId: string
         hasMore: boolean
@@ -404,7 +409,9 @@ export class OneDrivePlugin implements DrivePlugin {
             })
 
             const data = await this.graphRequest(`${path}?${params.toString()}`)
-            const items: Record<string, unknown>[] = (Array.isArray(data.value) ? data.value : []) as Record<string, unknown>[]
+            const items: Record<string, unknown>[] = (
+                Array.isArray(data.value) ? data.value : []
+            ) as Record<string, unknown>[]
             const files: DriveFile[] = items.map(mapGraphItem)
             const nextLink = data['@odata.nextLink'] as string | undefined
             const hasMore = !!nextLink
@@ -417,7 +424,12 @@ export class OneDrivePlugin implements DrivePlugin {
                 cursor: nextLink,
             })
 
-            return { files, folderId: folderId ?? 'root', hasMore, cursor: nextLink }
+            return {
+                files,
+                folderId: folderId ?? 'root',
+                hasMore,
+                cursor: nextLink,
+            }
         } catch (err) {
             this.setState('authenticated')
             this.emitter?.emit('onedrive:error', {
@@ -440,7 +452,9 @@ export class OneDrivePlugin implements DrivePlugin {
             // tolerates an absolute URL (path.startsWith('http')), so no new fetch
             // plumbing is needed here.
             const data = await this.graphRequest(cursor)
-            const items: Record<string, unknown>[] = (Array.isArray(data.value) ? data.value : []) as Record<string, unknown>[]
+            const items: Record<string, unknown>[] = (
+                Array.isArray(data.value) ? data.value : []
+            ) as Record<string, unknown>[]
             const files: DriveFile[] = items.map(mapGraphItem)
             const nextLink = data['@odata.nextLink'] as string | undefined
 
@@ -567,14 +581,14 @@ export class OneDrivePlugin implements DrivePlugin {
             this.setState('session-expired')
         }
 
-        throw new Error(
-            `OneDrive API error (${res.status}): ${errorText}`,
-        )
+        throw new Error(`OneDrive API error (${res.status}): ${errorText}`)
     }
 
     // ── Private: download a single file ──
 
-    private async downloadSingleFile(driveFile: DriveFile): Promise<File | null> {
+    private async downloadSingleFile(
+        driveFile: DriveFile,
+    ): Promise<File | null> {
         // First try to get the download URL from item metadata
         const itemData = await this.graphRequest(
             `/me/drive/items/${driveFile.id}?select=@microsoft.graph.downloadUrl`,

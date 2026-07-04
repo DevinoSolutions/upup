@@ -10,12 +10,8 @@ describe('createTranslator', () => {
 
     it('formats ICU plurals', () => {
         const t = createTranslator({ bundle: enUS })
-        expect(t('header.filesSelected', { count: 1 })).toBe(
-            '1 file selected',
-        )
-        expect(t('header.filesSelected', { count: 5 })).toBe(
-            '5 files selected',
-        )
+        expect(t('header.filesSelected', { count: 1 })).toBe('1 file selected')
+        expect(t('header.filesSelected', { count: 5 })).toBe('5 files selected')
     })
 
     it('formats ICU interpolation', () => {

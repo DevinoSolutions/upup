@@ -31,15 +31,9 @@ describe('en-US locale bundle', () => {
     })
 
     it('uses ICU plural syntax', () => {
-        expect(enUS.messages.header.filesSelected).toContain(
-            '{count, plural,',
-        )
-        expect(enUS.messages.fileList.uploadFiles).toContain(
-            '{count, plural,',
-        )
-        expect(enUS.messages.dropzone.maxFileCount).toContain(
-            '{limit, plural,',
-        )
+        expect(enUS.messages.header.filesSelected).toContain('{count, plural,')
+        expect(enUS.messages.fileList.uploadFiles).toContain('{count, plural,')
+        expect(enUS.messages.dropzone.maxFileCount).toContain('{limit, plural,')
     })
 
     it('uses ICU {var} syntax, not {{var}}', () => {
@@ -48,7 +42,10 @@ describe('en-US locale bundle', () => {
             for (const [key, val] of Object.entries(obj)) {
                 const fullPath = path ? `${path}.${key}` : key
                 if (typeof val === 'string') {
-                    expect(val, `${fullPath} still uses {{var}} syntax`).not.toMatch(/\{\{/)
+                    expect(
+                        val,
+                        `${fullPath} still uses {{var}} syntax`,
+                    ).not.toMatch(/\{\{/)
                 } else if (typeof val === 'object' && val !== null) {
                     checkLeaves(val as Record<string, unknown>, fullPath)
                 }

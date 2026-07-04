@@ -30,9 +30,9 @@ export default function useUploaderPanel() {
     onDestroy(() => controller.destroy())
 
     return {
-        isDragging: derived(state, ($s) => $s.isDragging),
-        absoluteIsDragging: derived(state, ($s) => $s.absoluteIsDragging),
-        absoluteHasBorder: derived(state, ($s) => $s.absoluteHasBorder),
+        isDragging: derived(state, $s => $s.isDragging),
+        absoluteIsDragging: derived(state, $s => $s.absoluteIsDragging),
+        absoluteHasBorder: derived(state, $s => $s.absoluteHasBorder),
         handleDragOver: controller.handleDragOver,
         handleDragLeave: controller.handleDragLeave,
         handleDrop: controller.handleDrop,

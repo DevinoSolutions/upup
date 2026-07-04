@@ -1,9 +1,15 @@
 import { resolveTheme } from './resolve-theme'
 import { flattenSlotsToClassNames } from './slots'
 import type { DeepPartialSlots, InternalFlatClassNames } from './slots'
-import type { UpupThemeConfig, UpupThemeTokens, UpupResolvedTheme } from './types'
+import type {
+    UpupThemeConfig,
+    UpupThemeTokens,
+    UpupResolvedTheme,
+} from './types'
 
-type ResolvedLightDark = Omit<UpupResolvedTheme, 'mode'> & { mode: 'light' | 'dark' }
+type ResolvedLightDark = Omit<UpupResolvedTheme, 'mode'> & {
+    mode: 'light' | 'dark'
+}
 
 export interface ThemeStoreState {
     themeMode: 'light' | 'dark'
@@ -43,7 +49,11 @@ export class ThemeStore {
     init(): void {
         const requested = this.config?.mode ?? 'light'
         if (requested !== 'system') return
-        if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return
+        if (
+            typeof window === 'undefined' ||
+            typeof window.matchMedia !== 'function'
+        )
+            return
         const media = window.matchMedia('(prefers-color-scheme: dark)')
         const update = () => {
             this.systemMode = media.matches ? 'dark' : 'light'

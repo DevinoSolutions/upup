@@ -1,0 +1,12 @@
+**/dist/**
+**/.next/**
+**/storybook-static/**
+**/coverage/**
+**/node_modules/**
+pnpm-lock.yaml
+**/*.snap
+**/*.d.ts
+docs/superpowers/**
+audit/**
+test-results/**
+apps/e2e-test/dist/**

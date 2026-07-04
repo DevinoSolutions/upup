@@ -15,21 +15,40 @@ import {
 
 export { sourceNameKeys } from '@upup/core'
 
-const AudioUploader = defineAsyncComponent(() => import('../components/AudioUploader.vue'))
-const BoxUploader = defineAsyncComponent(() => import('../components/BoxUploader.vue'))
-const CameraUploader = defineAsyncComponent(() => import('../components/CameraUploader.vue'))
-const DropboxUploader = defineAsyncComponent(() => import('../components/DropboxUploader.vue'))
-const GoogleDriveUploader = defineAsyncComponent(() => import('../components/GoogleDriveUploader.vue'))
-const OneDriveUploader = defineAsyncComponent(() => import('../components/OneDriveUploader.vue'))
-const ScreenCaptureUploader = defineAsyncComponent(() => import('../components/ScreenCaptureUploader.vue'))
-const UrlUploader = defineAsyncComponent(() => import('../components/UrlUploader.vue'))
+const AudioUploader = defineAsyncComponent(
+    () => import('../components/AudioUploader.vue'),
+)
+const BoxUploader = defineAsyncComponent(
+    () => import('../components/BoxUploader.vue'),
+)
+const CameraUploader = defineAsyncComponent(
+    () => import('../components/CameraUploader.vue'),
+)
+const DropboxUploader = defineAsyncComponent(
+    () => import('../components/DropboxUploader.vue'),
+)
+const GoogleDriveUploader = defineAsyncComponent(
+    () => import('../components/GoogleDriveUploader.vue'),
+)
+const OneDriveUploader = defineAsyncComponent(
+    () => import('../components/OneDriveUploader.vue'),
+)
+const ScreenCaptureUploader = defineAsyncComponent(
+    () => import('../components/ScreenCaptureUploader.vue'),
+)
+const UrlUploader = defineAsyncComponent(
+    () => import('../components/UrlUploader.vue'),
+)
 
-export const uploadSourceObject: Record<string, {
-    id: FileSource
-    nameKey: keyof Translations
-    Icon: Component
-    Component: Component | undefined
-}> = {
+export const uploadSourceObject: Record<
+    string,
+    {
+        id: FileSource
+        nameKey: keyof Translations
+        Icon: Component
+        Component: Component | undefined
+    }
+> = {
     [FileSource.LOCAL]: {
         id: FileSource.LOCAL,
         nameKey: 'myDevice' as keyof Translations,

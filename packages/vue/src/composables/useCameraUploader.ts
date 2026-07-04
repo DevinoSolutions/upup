@@ -82,7 +82,9 @@ export default function useCameraUploader() {
 
         const response = await fetch(capturedUrl.value)
         const blob = await response.blob()
-        const file = new File([blob], `capture-${Date.now()}.jpg`, { type: 'image/jpeg' })
+        const file = new File([blob], `capture-${Date.now()}.jpg`, {
+            type: 'image/jpeg',
+        })
         setFiles([file])
         capturedUrl.value = ''
         setActiveSource(undefined)

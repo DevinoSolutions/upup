@@ -5,11 +5,13 @@ import type { LocaleBundle } from '../../i18n/types'
 const enUS = LOCALE_REGISTRY['en-US']
 const arSA = LOCALE_REGISTRY['ar-SA']
 
-const bundles: { name: string; bundle: LocaleBundle }[] = LOCALE_CODES
-    .filter(c => c !== 'en-US')
-    .map(name => ({ name, bundle: LOCALE_REGISTRY[name] }))
+const bundles: { name: string; bundle: LocaleBundle }[] = LOCALE_CODES.filter(
+    c => c !== 'en-US',
+).map(name => ({ name, bundle: LOCALE_REGISTRY[name] }))
 
-const enNamespaces = Object.keys(enUS.messages) as (keyof typeof enUS.messages)[]
+const enNamespaces = Object.keys(
+    enUS.messages,
+) as (keyof typeof enUS.messages)[]
 
 describe.each(bundles)('$name locale consistency', ({ name, bundle }) => {
     it(`${name} has code, language, and dir`, () => {
@@ -21,7 +23,9 @@ describe.each(bundles)('$name locale consistency', ({ name, bundle }) => {
 
     it(`${name} has all en-US namespaces`, () => {
         for (const ns of enNamespaces) {
-            expect(bundle.messages, `missing namespace: ${ns}`).toHaveProperty(ns)
+            expect(bundle.messages, `missing namespace: ${ns}`).toHaveProperty(
+                ns,
+            )
         }
     })
 

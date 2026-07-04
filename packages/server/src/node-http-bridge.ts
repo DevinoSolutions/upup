@@ -12,52 +12,52 @@
  */
 
 export function nodeHeadersToWeb(
-  h: Record<string, string | string[] | undefined>,
+    h: Record<string, string | string[] | undefined>,
 ): Headers {
-  const headers = new Headers();
-  for (const [k, v] of Object.entries(h)) {
-    if (v === undefined) continue;
-    if (Array.isArray(v)) for (const one of v) headers.append(k, one);
-    else headers.set(k, v);
-  }
-  return headers;
+    const headers = new Headers()
+    for (const [k, v] of Object.entries(h)) {
+        if (v === undefined) continue
+        if (Array.isArray(v)) for (const one of v) headers.append(k, one)
+        else headers.set(k, v)
+    }
+    return headers
 }
 
 export function toWebRequest(input: {
-  url: string;
-  method: string;
-  headers: Record<string, string | string[] | undefined>;
-  // RequestInit['body'] (not the bare BodyInit alias): this tsconfig's
-  // lib:["ES2020"] + @types/node resolve the composite RequestInit interface
-  // globally (used elsewhere in this package, e.g. normalize-origin.ts) but
-  // not every constituent type alias as its own global name.
-  body?: RequestInit["body"];
+    url: string
+    method: string
+    headers: Record<string, string | string[] | undefined>
+    // RequestInit['body'] (not the bare BodyInit alias): this tsconfig's
+    // lib:["ES2020"] + @types/node resolve the composite RequestInit interface
+    // globally (used elsewhere in this package, e.g. normalize-origin.ts) but
+    // not every constituent type alias as its own global name.
+    body?: RequestInit['body']
 }): Request {
-  const hasBody = input.method !== "GET" && input.method !== "HEAD";
-  return new Request(input.url, {
-    method: input.method,
-    headers: nodeHeadersToWeb(input.headers),
-    body: hasBody ? input.body : undefined,
-  });
+    const hasBody = input.method !== 'GET' && input.method !== 'HEAD'
+    return new Request(input.url, {
+        method: input.method,
+        headers: nodeHeadersToWeb(input.headers),
+        body: hasBody ? input.body : undefined,
+    })
 }
 
 /** Minimal Node-response sink. Express's res, Fastify's reply (via a thin
  *  method-name adapter), and Next's NextApiResponse all satisfy this shape. */
 export interface NodeResponseSink {
-  status(code: number): void;
-  setHeader(name: string, value: string): void;
-  send(body: Buffer): void;
+    status(code: number): void
+    setHeader(name: string, value: string): void
+    send(body: Buffer): void
 }
 
 export async function writeWebResponse(
-  sink: NodeResponseSink,
-  webRes: Response,
+    sink: NodeResponseSink,
+    webRes: Response,
 ): Promise<void> {
-  sink.status(webRes.status);
-  webRes.headers.forEach((value, key) => {
-    // Node recomputes content-length from the payload; copying it risks a mismatch.
-    if (key.toLowerCase() === "content-length") return;
-    sink.setHeader(key, value);
-  });
-  sink.send(Buffer.from(await webRes.arrayBuffer()));
+    sink.status(webRes.status)
+    webRes.headers.forEach((value, key) => {
+        // Node recomputes content-length from the payload; copying it risks a mismatch.
+        if (key.toLowerCase() === 'content-length') return
+        sink.setHeader(key, value)
+    })
+    sink.send(Buffer.from(await webRes.arrayBuffer()))
 }

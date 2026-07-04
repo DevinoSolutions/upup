@@ -17,12 +17,16 @@ export function useGoogleDrive() {
     const { setFiles } = useUploaderFiles()
 
     // core is always non-null inside <UpupUploader /> — the injection throws otherwise.
-    const controller = new DriveBrowserController(core!, GOOGLE_DRIVE_DESCRIPTOR, {
-        onFilesSelected: (files) => {
-            setFiles(files)
+    const controller = new DriveBrowserController(
+        core!,
+        GOOGLE_DRIVE_DESCRIPTOR,
+        {
+            onFilesSelected: files => {
+                setFiles(files)
+            },
+            onClose: () => setActiveSource(undefined),
         },
-        onClose: () => setActiveSource(undefined),
-    })
+    )
 
     const state = shallowRef(controller.getSnapshot())
     let unsub: (() => void) | null = null
@@ -45,7 +49,9 @@ export function useGoogleDrive() {
         authCancelled: computed(() => state.value.authCancelled),
         isAuthReady: computed(() => state.value.isAuthReady),
         retryAuth: () => controller.retryAuth(),
-        handleSignOut: async () => { controller.signOut() },
+        handleSignOut: async () => {
+            controller.signOut()
+        },
         path: computed(() => state.value.path),
         setPath: (newPath: DriveFolder[]) => controller.setPath(newPath),
         handleClick: (file: DriveFile) => controller.handleClick(file),

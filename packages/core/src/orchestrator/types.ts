@@ -37,7 +37,10 @@ export interface OrchestratorCallbacks {
     onUploadComplete?: (files: UploadFile[]) => void
     onUploadStart?: () => void
     onFileUploadStart?: (file: UploadFile) => void
-    onFileUploadProgress?: (file: UploadFile, progress: UploadProgressInfo) => void
+    onFileUploadProgress?: (
+        file: UploadFile,
+        progress: UploadProgressInfo,
+    ) => void
     onFileUploadComplete?: (file: UploadFile, key: string) => void
     onFilesUploadProgress?: (completedFiles: number, totalFiles: number) => void
     onFilesUploadComplete?: (files: UploadFile[]) => void
@@ -45,7 +48,9 @@ export interface OrchestratorCallbacks {
     onFilesSelected?: (files: UploadFile[]) => void
     onFileDrop?: (files: File[]) => void
     onDoneClicked?: () => void
-    onPrepareFiles?: (files: UploadFile[]) => Promise<UploadFile[] | File[]> | UploadFile[] | File[]
+    onPrepareFiles?: (
+        files: UploadFile[],
+    ) => Promise<UploadFile[] | File[]> | UploadFile[] | File[]
     imageEditorOptions?: ResolvedImageEditorOptions
     /** When true, triggers upload automatically after files are added. */
     autoUpload?: boolean

@@ -7,22 +7,36 @@ export type { ServerModeProvider, ServerDriveFile }
 
 export function useServerModeDrive(provider: ServerModeProvider) {
     const { serverUrl } = useUploaderRuntime()
-    const controller = new ServerModeDriveController({ provider, serverUrl: () => serverUrl })
+    const controller = new ServerModeDriveController({
+        provider,
+        serverUrl: () => serverUrl,
+    })
 
     const snap = shallowRef(controller.getSnapshot())
     let unsub: (() => void) | null = null
     onMounted(() => {
-        unsub = controller.subscribe(() => { snap.value = controller.getSnapshot() })
+        unsub = controller.subscribe(() => {
+            snap.value = controller.getSnapshot()
+        })
         controller.init()
     })
-    onUnmounted(() => { controller.destroy(); unsub?.() })
+    onUnmounted(() => {
+        controller.destroy()
+        unsub?.()
+    })
 
     return {
         state: computed(() => snap.value.state),
         folderId: computed(() => snap.value.folderId),
-        setFolderId(id: string | undefined) { controller.setFolderId(id); void controller.refresh() },
+        setFolderId(id: string | undefined) {
+            controller.setFolderId(id)
+            void controller.refresh()
+        },
         search: computed(() => snap.value.search),
-        setSearch(s: string) { controller.setSearch(s); void controller.refresh() },
+        setSearch(s: string) {
+            controller.setSearch(s)
+            void controller.refresh()
+        },
         refresh: controller.refresh,
         transfer: controller.transfer,
         startAuth: controller.startAuth,

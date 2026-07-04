@@ -1,6 +1,11 @@
 import type { UpupCore } from '../core'
 import { bindDriveEvents } from './bind-drive-events'
-import type { DriveBrowserError, DriveFile, DriveFolder, DriveUser } from './types'
+import type {
+    DriveBrowserError,
+    DriveFile,
+    DriveFolder,
+    DriveUser,
+} from './types'
 import type { DriveProviderDescriptor } from './drive-browser-descriptors'
 import { loadGoogleIdentityServices } from '../utils/load-gapi'
 import type { DrivePlugin } from './plugin'
@@ -149,7 +154,10 @@ export class DriveBrowserController {
         if (this.descriptor.auth === 'gis') {
             if (!restored) return
             this.setState({
-                token: { access_token: plugin.getAccessToken() || '', expires_in: 3600 },
+                token: {
+                    access_token: plugin.getAccessToken() || '',
+                    expires_in: 3600,
+                },
             })
             void (async () => {
                 try {
@@ -221,20 +229,28 @@ export class DriveBrowserController {
             onStateChange: (payload: unknown) => {
                 const data = payload as { state: string }
                 if (isGis) {
-                    if (data.state === 'browsing') this.setState({ isClickLoading: true })
+                    if (data.state === 'browsing')
+                        this.setState({ isClickLoading: true })
                 } else {
                     this.setState({
-                        isLoading: data.state === 'authenticating' || data.state === 'browsing',
+                        isLoading:
+                            data.state === 'authenticating' ||
+                            data.state === 'browsing',
                     })
                 }
             },
             onError: (payload?: unknown) => {
-                const p = payload as { error?: Error; action?: string } | undefined
+                const p = payload as
+                    | { error?: Error; action?: string }
+                    | undefined
                 this.setState({
                     isClickLoading: false,
                     showLoader: false,
                     isLoadingMore: false,
-                    error: { message: p?.error?.message || 'Unknown error', action: p?.action },
+                    error: {
+                        message: p?.error?.message || 'Unknown error',
+                        action: p?.action,
+                    },
                 })
             },
         })
@@ -263,7 +279,8 @@ export class DriveBrowserController {
 
     private buildRootFolder(payload: FilesLoadedPayload): DriveFolder {
         const d = this.descriptor
-        const rawId = d.folderIdField === 'path' ? payload.path : payload.folderId
+        const rawId =
+            d.folderIdField === 'path' ? payload.path : payload.folderId
         const id = rawId || d.rootFolderId
         const isRoot = !rawId || id === d.rootFolderId
         let name: string
@@ -273,7 +290,8 @@ export class DriveBrowserController {
         // (the only navigated-load path today); a future reload-ancestor flow would
         // need to thread the name through too, else it falls back to the id/path below.
         else if (this.pendingFolder?.id === id) name = this.pendingFolder.name
-        else if (d.folderKey === 'path') name = id.split('/').pop() || d.rootFolderName
+        else if (d.folderKey === 'path')
+            name = id.split('/').pop() || d.rootFolderName
         else name = id
         return {
             id,
@@ -295,7 +313,11 @@ export class DriveBrowserController {
             // otherwise be a silent dead end with no token client wired up.
             this.setState({
                 isAuthReady: true,
-                error: { message: 'Google Drive is not configured (missing clientId/apiKey)', action: 'init' },
+                error: {
+                    message:
+                        'Google Drive is not configured (missing clientId/apiKey)',
+                    action: 'init',
+                },
             })
             return
         }
@@ -307,7 +329,11 @@ export class DriveBrowserController {
         const google = (
             window as unknown as {
                 google?: {
-                    accounts: { oauth2: { initTokenClient(config: object): GisTokenClient } }
+                    accounts: {
+                        oauth2: {
+                            initTokenClient(config: object): GisTokenClient
+                        }
+                    }
                 }
             }
         ).google
@@ -316,7 +342,10 @@ export class DriveBrowserController {
             // to attach the global — same dead-end sign-in button symptom.
             this.setState({
                 isAuthReady: true,
-                error: { message: 'Google Identity Services failed to load', action: 'init' },
+                error: {
+                    message: 'Google Identity Services failed to load',
+                    action: 'init',
+                },
             })
             return
         }
@@ -330,12 +359,18 @@ export class DriveBrowserController {
                     authCancelled: false,
                     token: {
                         access_token: tokenResponse.access_token,
-                        expires_in: Date.now() + (tokenResponse.expires_in - 20) * 1000,
+                        expires_in:
+                            Date.now() + (tokenResponse.expires_in - 20) * 1000,
                     },
                 })
                 void plugin
-                    .authenticate?.(tokenResponse.access_token, tokenResponse.expires_in)
-                    .then(() => plugin.loadFiles(this.descriptor.loadFilesRootArg))
+                    .authenticate?.(
+                        tokenResponse.access_token,
+                        tokenResponse.expires_in,
+                    )
+                    .then(() =>
+                        plugin.loadFiles(this.descriptor.loadFilesRootArg),
+                    )
             },
             error_callback: () => {
                 this.setState({ authCancelled: true })
@@ -409,7 +444,8 @@ export class DriveBrowserController {
             // loading + requests the folder. (Was: pushed this.state.folder here, which
             // duplicated the seeded id → duplicate breadcrumb keys + collapsed trail.)
             this.setState({ isClickLoading: true })
-            const arg = this.descriptor.folderKey === 'path' ? file.path : file.id
+            const arg =
+                this.descriptor.folderKey === 'path' ? file.path : file.id
             // Stash the real name (keyed by the value that comes back as the loaded
             // folder id) so buildRootFolder can label the breadcrumb crumb with it.
             this.pendingFolder = { id: arg, name: file.name }
@@ -484,7 +520,12 @@ export class DriveBrowserController {
      */
     async loadMore(): Promise<void> {
         const plugin = this.plugin
-        if (!plugin?.loadMoreFiles || !this.state.hasMore || !this.cursor || this.state.isLoadingMore) {
+        if (
+            !plugin?.loadMoreFiles ||
+            !this.state.hasMore ||
+            !this.cursor ||
+            this.state.isLoadingMore
+        ) {
             return
         }
         this.setState({ isLoadingMore: true, error: undefined })
@@ -495,13 +536,21 @@ export class DriveBrowserController {
                 this.setState({ isLoadingMore: false })
                 return
             }
-            const merged = { ...folder, children: [...folder.children, ...page.files] }
+            const merged = {
+                ...folder,
+                children: [...folder.children, ...page.files],
+            }
             const path = this.state.path.slice()
             if (path.length && path[path.length - 1].id === folder.id) {
                 path[path.length - 1] = merged
             }
             this.cursor = page.cursor
-            this.setState({ folder: merged, path, hasMore: page.hasMore, isLoadingMore: false })
+            this.setState({
+                folder: merged,
+                path,
+                hasMore: page.hasMore,
+                isLoadingMore: false,
+            })
         } catch {
             // error already surfaced via the plugin's error emit → onError
             this.setState({ isLoadingMore: false })
@@ -514,7 +563,8 @@ export class DriveBrowserController {
         const fileOnly = files.filter(f => !f.isFolder)
         if (fileOnly.length > 0) {
             const downloaded = await plugin.downloadFiles(fileOnly)
-            if (downloaded.length > 0) this.callbacks.onFilesSelected(downloaded)
+            if (downloaded.length > 0)
+                this.callbacks.onFilesSelected(downloaded)
         }
         this.setState({ selectedFiles: [] })
         this.callbacks.onClose()

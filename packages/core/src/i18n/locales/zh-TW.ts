@@ -119,12 +119,16 @@ export const zhTW: LocaleBundle = {
             multipleFilesNotAllowed: '不允許上傳多個檔案',
             failedToGetUploadUrl: '取得上傳 URL 失敗',
             statusError: '狀態: {status} ({statusText})。詳情: {details}',
-            networkErrorDuringUpload: '上傳過程中網路錯誤 - 狀態: {status} ({statusText})',
+            networkErrorDuringUpload:
+                '上傳過程中網路錯誤 - 狀態: {status} ({statusText})',
             missingRequiredConfiguration: '缺少必要的設定: {missing}',
-            invalidProvider: '無效的提供者: {provider}。有效選項: {validOptions}',
-            invalidUploadEndpoint: '無效的 uploadEndpoint URL: {uploadEndpoint} {error}',
+            invalidProvider:
+                '無效的提供者: {provider}。有效選項: {validOptions}',
+            invalidUploadEndpoint:
+                '無效的 uploadEndpoint URL: {uploadEndpoint} {error}',
             maxFileSizeMustBeGreater: 'maxFileSize 必須大於 0',
-            invalidAcceptFormat: '無效的 accept 格式: {accept}。請使用 MIME 類型、*/*、* 或副檔名（如 .fbx）',
+            invalidAcceptFormat:
+                '無效的 accept 格式: {accept}。請使用 MIME 類型、*/*、* 或副檔名（如 .fbx）',
             unauthorizedAccess: '未經授權訪問提供者',
             presignedUrlInvalid: '預簽名 URL 已過期或無效',
             temporaryCredentialsInvalid: '臨時憑證已失效',
@@ -135,8 +139,10 @@ export const zhTW: LocaleBundle = {
             signedUrlGenerationFailed: '生成簽名上傳 URL 失敗',
             uploadFailedWithCode: '上傳失敗，錯誤代碼：{code}',
             uploadFailed: '上傳失敗：{message}',
-            dropboxSessionExpired: '您的 Dropbox 會話已過期。請重新驗證以繼續。',
-            dropboxMissingPermissions: '您的 Dropbox 應用缺少所需權限。請在 Dropbox 開發者控制台新增以下作用域：files.metadata.read, account_info.read',
+            dropboxSessionExpired:
+                '您的 Dropbox 會話已過期。請重新驗證以繼續。',
+            dropboxMissingPermissions:
+                '您的 Dropbox 應用缺少所需權限。請在 Dropbox 開發者控制台新增以下作用域：files.metadata.read, account_info.read',
             failedToRefreshExpiredToken: '刷新已過期的 token 失敗',
             allowedLimitSurpassed: '已超出允許的限制！',
             fileUnsupportedType: '{name} 的類型不受支援！',
@@ -145,7 +151,8 @@ export const zhTW: LocaleBundle = {
             minFileSizeAllowed: '最小需要 {size} {unit} 的檔案',
             minFileSizeMustBeGreater: 'minFileSize 必須大於 0',
             filePreviouslySelected: '{name} 先前已被選取',
-            fileWithUrlPreviouslySelected: '具有此 URL 的檔案：{url} 先前已被選取',
+            fileWithUrlPreviouslySelected:
+                '具有此 URL 的檔案：{url} 先前已被選取',
             errorCompressingFile: '壓縮 {name} 時發生錯誤',
             errorCompressingImage: '壓縮圖片 {name} 時發生錯誤',
             generatingThumbnails: '正在產生縮圖...',
@@ -155,7 +162,8 @@ export const zhTW: LocaleBundle = {
             dropboxAuthFailed: 'Dropbox 驗證失敗',
             boxClientIdMissing: 'Box clientId missing',
             boxAuthFailed: 'Box authentication failed',
-            boxSessionExpired: 'Your Box session has expired. Please re-authenticate to continue.',
+            boxSessionExpired:
+                'Your Box session has expired. Please re-authenticate to continue.',
             boxNoAccessToken: 'No access token provided for Box download',
             genericErrorDetails: '錯誤：{details}',
             errorProcessingFiles: '處理檔案時發生錯誤：{message}',
@@ -164,7 +172,8 @@ export const zhTW: LocaleBundle = {
             dropboxNoAccessToken: '未提供 Dropbox 下載的存取權杖',
             silentTokenAcquisitionFailed: '靜默令牌取得失敗：{details}',
             msalInitializationFailed: 'MSAL 初始化失敗：{details}',
-            silentTokenAcquisitionProceeding: '靜默令牌取得失敗，繼續互動式登入{details}',
+            silentTokenAcquisitionProceeding:
+                '靜默令牌取得失敗，繼續互動式登入{details}',
             signInFailed: '登入失敗：{message}',
             handleSignInFailed: '處理登入失敗：{message}',
             signOutFailed: '登出失敗：{message}',

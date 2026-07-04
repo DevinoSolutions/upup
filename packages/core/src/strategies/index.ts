@@ -1,15 +1,15 @@
 export type {
-  CloudProvider,
-  CredentialStrategy,
-  FileMetadata,
-  OAuthStrategy,
-  OAuthTokens,
-  ProgressInfo,
-  RemoteFile,
-  RuntimeAdapter,
-  UploadCredentials,
-  UploadResult,
-  UploadStrategy,
+    CloudProvider,
+    CredentialStrategy,
+    FileMetadata,
+    OAuthStrategy,
+    OAuthTokens,
+    ProgressInfo,
+    RemoteFile,
+    RuntimeAdapter,
+    UploadCredentials,
+    UploadResult,
+    UploadStrategy,
 } from '../contracts-strategies'
 export { DirectUpload } from './direct-upload'
 export { TokenEndpointCredentials } from './token-endpoint'

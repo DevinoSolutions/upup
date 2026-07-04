@@ -1,5 +1,5 @@
-import { describe, it, expect } from "vitest";
-import { FileSource, sourceNameKeys } from "@upup/core";
+import { describe, it, expect } from 'vitest'
+import { FileSource, sourceNameKeys } from '@upup/core'
 
 /**
  * source-constants.spec.ts — angular has no `uploadSourceObject` map (its
@@ -11,16 +11,16 @@ import { FileSource, sourceNameKeys } from "@upup/core";
  * `@default` arms in source-view.component.ts (not unit-testable without
  * TestBed, deliberately avoided here).
  */
-describe("sourceNameKeys", () => {
-  it("covers all FileSource values", () => {
-    const sourceCount = Object.keys(FileSource).length;
-    const mappingCount = Object.keys(sourceNameKeys).length;
-    expect(mappingCount).toBe(sourceCount);
-  });
+describe('sourceNameKeys', () => {
+    it('covers all FileSource values', () => {
+        const sourceCount = Object.keys(FileSource).length
+        const mappingCount = Object.keys(sourceNameKeys).length
+        expect(mappingCount).toBe(sourceCount)
+    })
 
-  it("every FileSource key resolves to a truthy name", () => {
-    for (const s of Object.values(FileSource)) {
-      expect(sourceNameKeys[s], `sourceNameKeys[${s}]`).toBeTruthy();
-    }
-  });
-});
+    it('every FileSource key resolves to a truthy name', () => {
+        for (const s of Object.values(FileSource)) {
+            expect(sourceNameKeys[s], `sourceNameKeys[${s}]`).toBeTruthy()
+        }
+    })
+})

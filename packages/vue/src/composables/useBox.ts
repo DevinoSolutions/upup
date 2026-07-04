@@ -17,7 +17,7 @@ export function useBox() {
     const { setFiles } = useUploaderFiles()
 
     const controller = new DriveBrowserController(core!, BOX_DESCRIPTOR, {
-        onFilesSelected: (files) => {
+        onFilesSelected: files => {
             setFiles(files)
         },
         onClose: () => setActiveSource(undefined),
@@ -42,7 +42,9 @@ export function useBox() {
         boxFiles: computed(() => state.value.folder),
         logout: () => controller.signOut(),
         authenticate: () => controller.signIn(),
-        token: computed(() => (state.value.isAuthenticated ? 'active' : undefined)),
+        token: computed(() =>
+            state.value.isAuthenticated ? 'active' : undefined,
+        ),
         isAuthenticated: computed(() => state.value.isAuthenticated),
         isLoading: computed(() => state.value.isLoading),
         path: computed(() => state.value.path),

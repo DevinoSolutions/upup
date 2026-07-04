@@ -2,9 +2,18 @@ import { describe, it, expect } from 'vitest'
 import { lightPreset, darkPreset } from '../theme/presets'
 
 const REQUIRED_COLOR_KEYS = [
-    'surface', 'surfaceAlt', 'primary', 'primaryHover',
-    'text', 'textMuted', 'border', 'borderActive',
-    'danger', 'success', 'dragBg', 'overlay',
+    'surface',
+    'surfaceAlt',
+    'primary',
+    'primaryHover',
+    'text',
+    'textMuted',
+    'border',
+    'borderActive',
+    'danger',
+    'success',
+    'dragBg',
+    'overlay',
 ]
 const REQUIRED_RADIUS_KEYS = ['sm', 'md', 'lg', 'full']
 const REQUIRED_SHADOW_KEYS = ['sm', 'md', 'lg']

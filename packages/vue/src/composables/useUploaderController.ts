@@ -1,4 +1,13 @@
-import { ref, shallowRef, computed, onMounted, onUnmounted, defineComponent, h, type Ref } from 'vue'
+import {
+    ref,
+    shallowRef,
+    computed,
+    onMounted,
+    onUnmounted,
+    defineComponent,
+    h,
+    type Ref,
+} from 'vue'
 import {
     FileSource,
     normalizeUploaderOptions,
@@ -22,17 +31,21 @@ const DefaultFileDeleteIcon = defineComponent({
     name: 'UpupDefaultFileDeleteIcon',
     inheritAttrs: false,
     // attrs is Record<string, unknown> (SetupContext); narrow the two props Icon accepts.
-    setup: (_props, { attrs }) => () =>
-        h(Icon, {
-            name: 'trash',
-            class: attrs.class as string | undefined,
-            size: attrs.size as number | undefined,
-        }),
+    setup:
+        (_props, { attrs }) =>
+        () =>
+            h(Icon, {
+                name: 'trash',
+                class: attrs.class as string | undefined,
+                size: attrs.size as number | undefined,
+            }),
 })
 
 const EMPTY_STYLE: Record<string, string> = {}
 
-export default function useUploaderController(props: UploaderProps): IUploaderContext {
+export default function useUploaderController(
+    props: UploaderProps,
+): IUploaderContext {
     // ── Destructure props with defaults ──────────────────────────
     const {
         allowedFileTypes: acceptProp = '*',
@@ -132,7 +145,9 @@ export default function useUploaderController(props: UploaderProps): IUploaderCo
         autoUpload,
         maxConcurrentUploads,
         crashRecovery,
-        allowedFileTypes: (typeof acceptProp === 'string' ? acceptProp : (acceptProp as string[]).join(',')) as string | undefined,
+        allowedFileTypes: (typeof acceptProp === 'string'
+            ? acceptProp
+            : (acceptProp as string[]).join(',')) as string | undefined,
         mini,
         isProcessing,
         allowPreview,
@@ -178,14 +193,14 @@ export default function useUploaderController(props: UploaderProps): IUploaderCo
     const { connectSSE } = useSSEProcessing({
         processingEndpoint,
         onFileProcessed,
-        onError: (err) => onError(err.message),
+        onError: err => onError(err.message),
         processingTimeout,
     })
 
     // ── Root controller (created once, owns orchestrator/theme/plugins/commands) ──
     const root = createUploaderController(
         { core, options: factoryOptions, normalized },
-        { connectSSE: (file) => connectSSE(file) },
+        { connectSSE: file => connectSSE(file) },
     )
     root.updateCallbacks({
         onError,
@@ -267,7 +282,8 @@ export default function useUploaderController(props: UploaderProps): IUploaderCo
         openFilePicker,
         // Reactive so consumers re-render when the active source changes.
         activeSource: computed(() => state.value.activeSource),
-        setActiveSource: (source: FileSource | undefined) => root.commands.setActiveSource(source),
+        setActiveSource: (source: FileSource | undefined) =>
+            root.commands.setActiveSource(source),
         isAddingMore: computed(() => state.value.isAddingMore),
         setIsAddingMore: (v: boolean) => root.commands.setIsAddingMore(v),
         viewMode: computed(() => state.value.viewMode),
@@ -289,20 +305,27 @@ export default function useUploaderController(props: UploaderProps): IUploaderCo
             slots: themeState.value.slots,
         },
         files: computed(() => state.value.files),
-        setFiles: async (newFiles: File[]) => root.commands.handleSetSelectedFiles(newFiles),
-        uploadFiles: async (newFiles: File[] | UploadFile[]) => root.commands.uploadFiles(newFiles),
+        setFiles: async (newFiles: File[]) =>
+            root.commands.handleSetSelectedFiles(newFiles),
+        uploadFiles: async (newFiles: File[] | UploadFile[]) =>
+            root.commands.uploadFiles(newFiles),
         resetState: () => root.commands.resetState(),
-        replaceFiles: (newFiles: File[] | UploadFile[]) => root.commands.replaceFiles(newFiles),
+        replaceFiles: (newFiles: File[] | UploadFile[]) =>
+            root.commands.replaceFiles(newFiles),
         handleDone: () => root.commands.handleDone(),
         handleCancel: () => root.commands.handleCancel(),
         handlePause: () => root.commands.handlePause(),
         handleResume: () => root.commands.handleResume(),
-        handleFileRemove: (fileId: string) => root.commands.handleFileRemove(fileId),
+        handleFileRemove: (fileId: string) =>
+            root.commands.handleFileRemove(fileId),
         editingFile: computed(() => state.value.editingFile),
-        openImageEditor: (file: UploadFile) => root.commands.openImageEditor(file),
+        openImageEditor: (file: UploadFile) =>
+            root.commands.openImageEditor(file),
         closeImageEditor: () => root.commands.closeImageEditor(),
-        saveImageEdit: (editedImageData: string, mimeType?: string) => root.commands.saveImageEdit(editedImageData, mimeType),
-        replaceFile: (fileId: string, newFile: UploadFile) => root.commands.replaceFile(fileId, newFile),
+        saveImageEdit: (editedImageData: string, mimeType?: string) =>
+            root.commands.saveImageEdit(editedImageData, mimeType),
+        replaceFile: (fileId: string, newFile: UploadFile) =>
+            root.commands.replaceFile(fileId, newFile),
         cloudDrives: resolved.cloudDrives,
         upload: {
             totalProgress: computed(() => state.value.totalProgress),

@@ -1,25 +1,25 @@
 export enum StorageProvider {
-  AWS = 'aws',
-  Azure = 'azure',
-  BackBlaze = 'backblaze',
-  DigitalOcean = 'digitalocean',
-  CloudflareR2 = 'r2',
-  Wasabi = 'wasabi',
-  MinIO = 'minio',
-  GCS = 'gcs',
-  Supabase = 'supabase',
-  Hetzner = 'hetzner',
-  Linode = 'linode',
-  Vultr = 'vultr',
-  UpCloud = 'upcloud',
-  Scaleway = 'scaleway',
-  OVHcloud = 'ovhcloud',
-  Alibaba = 'alibaba',
-  Oracle = 'oracle',
-  Contabo = 'contabo',
-  Storj = 'storj',
-  IDrive = 'idrive',
-  Ceph = 'ceph',
+    AWS = 'aws',
+    Azure = 'azure',
+    BackBlaze = 'backblaze',
+    DigitalOcean = 'digitalocean',
+    CloudflareR2 = 'r2',
+    Wasabi = 'wasabi',
+    MinIO = 'minio',
+    GCS = 'gcs',
+    Supabase = 'supabase',
+    Hetzner = 'hetzner',
+    Linode = 'linode',
+    Vultr = 'vultr',
+    UpCloud = 'upcloud',
+    Scaleway = 'scaleway',
+    OVHcloud = 'ovhcloud',
+    Alibaba = 'alibaba',
+    Oracle = 'oracle',
+    Contabo = 'contabo',
+    Storj = 'storj',
+    IDrive = 'idrive',
+    Ceph = 'ceph',
 }
 
 /**
@@ -31,5 +31,5 @@ export enum StorageProvider {
  * consumer.
  */
 export const NON_S3_STORAGE_PROVIDERS: ReadonlySet<StorageProvider> = new Set([
-  StorageProvider.Azure,
+    StorageProvider.Azure,
 ])

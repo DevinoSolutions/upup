@@ -74,12 +74,16 @@ describe('resolveTheme — system mode', () => {
 // ─────────────────────────────────────────────
 describe('resolveTheme — provider token overrides', () => {
     it('overrides a top-level color token', () => {
-        const result = resolveTheme(undefined, { color: { primary: '#FF0000' } })
+        const result = resolveTheme(undefined, {
+            color: { primary: '#FF0000' },
+        })
         expect(result.tokens.color.primary).toBe('#FF0000')
     })
 
     it('preserves sibling tokens not touched by the override', () => {
-        const result = resolveTheme(undefined, { color: { primary: '#FF0000' } })
+        const result = resolveTheme(undefined, {
+            color: { primary: '#FF0000' },
+        })
         expect(result.tokens.color.surface).toBe(lightPreset.color.surface)
     })
 
@@ -123,7 +127,9 @@ describe('resolveTheme — instance token overrides', () => {
 // ─────────────────────────────────────────────
 describe('resolveTheme — slot merging', () => {
     it('provider slots appear in result', () => {
-        const result = resolveTheme(undefined, undefined, { root: 'provider-root' } as any)
+        const result = resolveTheme(undefined, undefined, {
+            root: 'provider-root',
+        } as any)
         expect((result.slots as any).root).toBe('provider-root')
     })
 

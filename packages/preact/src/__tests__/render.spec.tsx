@@ -23,89 +23,89 @@ import { UpupUploader, useUpupUpload, FileSource } from '../index'
 afterEach(cleanup)
 
 describe('@upup/preact render parity on compat', () => {
-  // ── Root structure ──────────────────────────────────────────────────────────
+    // ── Root structure ──────────────────────────────────────────────────────────
 
-  test('mounts root + container', () => {
-    render(<UpupUploader />)
-    // upup-root: outermost div (upup-uploader.tsx:66)
-    expect(screen.getByTestId('upup-root')).toBeTruthy()
-    // upup-container: the section element inside (upup-uploader.tsx:81)
-    expect(screen.getByTestId('upup-container')).toBeTruthy()
-  })
+    test('mounts root + container', () => {
+        render(<UpupUploader />)
+        // upup-root: outermost div (upup-uploader.tsx:66)
+        expect(screen.getByTestId('upup-root')).toBeTruthy()
+        // upup-container: the section element inside (upup-uploader.tsx:81)
+        expect(screen.getByTestId('upup-container')).toBeTruthy()
+    })
 
-  test('mounts dropzone inside the container', () => {
-    render(<UpupUploader />)
-    // upup-dropzone: UploaderPanel.tsx:36, role="button" with drag/drop handlers
-    const dropzone = screen.getByTestId('upup-dropzone')
-    expect(dropzone).toBeTruthy()
-    // The dropzone also carries the correct role
-    expect(dropzone.getAttribute('role')).toBe('button')
-  })
+    test('mounts dropzone inside the container', () => {
+        render(<UpupUploader />)
+        // upup-dropzone: UploaderPanel.tsx:36, role="button" with drag/drop handlers
+        const dropzone = screen.getByTestId('upup-dropzone')
+        expect(dropzone).toBeTruthy()
+        // The dropzone also carries the correct role
+        expect(dropzone.getAttribute('role')).toBe('button')
+    })
 
-  // ── Branding ────────────────────────────────────────────────────────────────
+    // ── Branding ────────────────────────────────────────────────────────────────
 
-  test('renders branding in default (non-mini) mode', () => {
-    render(<UpupUploader />)
-    // upup-branding: upup-uploader.tsx:142, shown when !mini && showBranding !== false
-    expect(screen.getByTestId('upup-branding')).toBeTruthy()
-  })
+    test('renders branding in default (non-mini) mode', () => {
+        render(<UpupUploader />)
+        // upup-branding: upup-uploader.tsx:142, shown when !mini && showBranding !== false
+        expect(screen.getByTestId('upup-branding')).toBeTruthy()
+    })
 
-  test('honors mini prop — branding absent in mini mode', () => {
-    render(<UpupUploader mini />)
-    // Branding renders only when !mini && showBranding !== false
-    expect(screen.queryByTestId('upup-branding')).toBeNull()
-  })
+    test('honors mini prop — branding absent in mini mode', () => {
+        render(<UpupUploader mini />)
+        // Branding renders only when !mini && showBranding !== false
+        expect(screen.queryByTestId('upup-branding')).toBeNull()
+    })
 
-  test('honors showBranding=false — branding absent when explicitly hidden', () => {
-    render(<UpupUploader showBranding={false} />)
-    expect(screen.queryByTestId('upup-branding')).toBeNull()
-  })
+    test('honors showBranding=false — branding absent when explicitly hidden', () => {
+        render(<UpupUploader showBranding={false} />)
+        expect(screen.queryByTestId('upup-branding')).toBeNull()
+    })
 
-  // ── File input ───────────────────────────────────────────────────────────────
+    // ── File input ───────────────────────────────────────────────────────────────
 
-  test('hidden file input is present in non-mini mode', () => {
-    render(<UpupUploader />)
-    // upup-file-input: SourceSelector.tsx:244, type="file" aria-hidden="true"
-    const input = screen.getByTestId('upup-file-input')
-    expect(input).toBeTruthy()
-    expect(input.getAttribute('type')).toBe('file')
-  })
+    test('hidden file input is present in non-mini mode', () => {
+        render(<UpupUploader />)
+        // upup-file-input: SourceSelector.tsx:244, type="file" aria-hidden="true"
+        const input = screen.getByTestId('upup-file-input')
+        expect(input).toBeTruthy()
+        expect(input.getAttribute('type')).toBe('file')
+    })
 
-  test('hidden file input is present in mini mode too', () => {
-    render(<UpupUploader mini />)
-    // File input renders regardless of mini — it is not gated by the mini branch
-    const input = screen.getByTestId('upup-file-input')
-    expect(input).toBeTruthy()
-    expect(input.getAttribute('type')).toBe('file')
-  })
+    test('hidden file input is present in mini mode too', () => {
+        render(<UpupUploader mini />)
+        // File input renders regardless of mini — it is not gated by the mini branch
+        const input = screen.getByTestId('upup-file-input')
+        expect(input).toBeTruthy()
+        expect(input.getAttribute('type')).toBe('file')
+    })
 
-  // ── Source tiles (non-mini only, via SourceSelector) ──────────────────────
+    // ── Source tiles (non-mini only, via SourceSelector) ──────────────────────
 
-  test('renders the local (device) source tile', () => {
-    render(<UpupUploader />)
-    // FileSource.LOCAL = 'local' → data-testid="upup-source-local"
-    // SourceSelector.tsx:208: data-testid={`upup-source-${id}`}
-    expect(screen.getByTestId('upup-source-local')).toBeTruthy()
-  })
+    test('renders the local (device) source tile', () => {
+        render(<UpupUploader />)
+        // FileSource.LOCAL = 'local' → data-testid="upup-source-local"
+        // SourceSelector.tsx:208: data-testid={`upup-source-${id}`}
+        expect(screen.getByTestId('upup-source-local')).toBeTruthy()
+    })
 
-  test('renders the browse-files button in non-mini mode', () => {
-    render(<UpupUploader />)
-    // upup-browse-files: SourceSelector.tsx:293
-    expect(screen.getByTestId('upup-browse-files')).toBeTruthy()
-  })
+    test('renders the browse-files button in non-mini mode', () => {
+        render(<UpupUploader />)
+        // upup-browse-files: SourceSelector.tsx:293
+        expect(screen.getByTestId('upup-browse-files')).toBeTruthy()
+    })
 
-  // ── Re-exports: hook + enum ─────────────────────────────────────────────────
+    // ── Re-exports: hook + enum ─────────────────────────────────────────────────
 
-  test('useUpupUpload is a function (headless hook re-exported)', () => {
-    // Stronger than toBeTruthy() — confirms the hook exported correctly
-    expect(typeof useUpupUpload).toBe('function')
-  })
+    test('useUpupUpload is a function (headless hook re-exported)', () => {
+        // Stronger than toBeTruthy() — confirms the hook exported correctly
+        expect(typeof useUpupUpload).toBe('function')
+    })
 
-  test('FileSource exposes known enum members with correct string values', () => {
-    // Derived from packages/core/src/types/file-source.ts
-    expect(FileSource.LOCAL).toBe('local')
-    expect(FileSource.GOOGLE_DRIVE).toBe('googleDrive')
-    expect(FileSource.URL).toBe('url')
-    expect(FileSource.CAMERA).toBe('camera')
-  })
+    test('FileSource exposes known enum members with correct string values', () => {
+        // Derived from packages/core/src/types/file-source.ts
+        expect(FileSource.LOCAL).toBe('local')
+        expect(FileSource.GOOGLE_DRIVE).toBe('googleDrive')
+        expect(FileSource.URL).toBe('url')
+        expect(FileSource.CAMERA).toBe('camera')
+    })
 })

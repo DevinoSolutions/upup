@@ -29,7 +29,7 @@ export default function useCameraUploader() {
     const facingMode = writable<FacingMode>(FacingMode.Environment)
     const stream = writable<MediaStream | null>(null)
 
-    const newCameraSide = derived(facingMode, ($fm) =>
+    const newCameraSide = derived(facingMode, $fm =>
         $fm === FacingMode.Environment ? 'front' : 'back',
     )
 
@@ -40,12 +40,18 @@ export default function useCameraUploader() {
     async function startCamera() {
         try {
             let currentStream: MediaStream | null = null
-            stream.subscribe((s) => { currentStream = s })()
+            stream.subscribe(s => {
+                currentStream = s
+            })()
             if (currentStream) {
-                (currentStream as MediaStream).getTracks().forEach((t) => t.stop())
+                ;(currentStream as MediaStream)
+                    .getTracks()
+                    .forEach(t => t.stop())
             }
             let currentFacing: FacingMode = FacingMode.Environment
-            facingMode.subscribe((f) => { currentFacing = f })()
+            facingMode.subscribe(f => {
+                currentFacing = f
+            })()
             const mediaStream = await navigator.mediaDevices.getUserMedia({
                 video: { facingMode: currentFacing },
             })
@@ -60,8 +66,8 @@ export default function useCameraUploader() {
     }
 
     function stopCamera() {
-        stream.update((s) => {
-            if (s) s.getTracks().forEach((t) => t.stop())
+        stream.update(s => {
+            if (s) s.getTracks().forEach(t => t.stop())
             return null
         })
         if (videoEl) {
@@ -90,12 +96,16 @@ export default function useCameraUploader() {
 
     async function handleFetchImage() {
         let currentUrl = ''
-        capturedUrl.subscribe((u) => { currentUrl = u })()
+        capturedUrl.subscribe(u => {
+            currentUrl = u
+        })()
         if (!currentUrl) return
 
         const response = await fetch(currentUrl)
         const blob = await response.blob()
-        const file = new File([blob], `capture-${Date.now()}.jpg`, { type: 'image/jpeg' })
+        const file = new File([blob], `capture-${Date.now()}.jpg`, {
+            type: 'image/jpeg',
+        })
         setFiles([file])
         capturedUrl.set('')
         setActiveSource(undefined)
@@ -103,8 +113,10 @@ export default function useCameraUploader() {
     }
 
     function handleCameraSwitch() {
-        facingMode.update((fm) =>
-            fm === FacingMode.Environment ? FacingMode.User : FacingMode.Environment,
+        facingMode.update(fm =>
+            fm === FacingMode.Environment
+                ? FacingMode.User
+                : FacingMode.Environment,
         )
     }
 

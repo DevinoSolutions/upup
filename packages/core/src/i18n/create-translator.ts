@@ -32,10 +32,7 @@ export function createTranslator(options: TranslatorOptions): Translator {
     const cache = new Map<string, IntlMessageFormat>()
     const MAX_CACHE = 500
 
-    function getFormatter(
-        pattern: string,
-        locale: string,
-    ): IntlMessageFormat {
+    function getFormatter(pattern: string, locale: string): IntlMessageFormat {
         const cacheKey = `${locale}:${pattern}`
         let fmt = cache.get(cacheKey)
         if (!fmt) {

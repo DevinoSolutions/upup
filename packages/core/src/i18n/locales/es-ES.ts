@@ -25,33 +25,43 @@ export const esES: LocaleBundle = {
         },
 
         dropzone: {
-            dragFilesOr: '{count, plural, one {Arrastra tu archivo o} other {Arrastra tus archivos o}}',
-            dragFilesHere: '{count, plural, one {Arrastra tu archivo aqu\u00ED} other {Arrastra tus archivos aqu\u00ED}}',
+            dragFilesOr:
+                '{count, plural, one {Arrastra tu archivo o} other {Arrastra tus archivos o}}',
+            dragFilesHere:
+                '{count, plural, one {Arrastra tu archivo aqu\u00ED} other {Arrastra tus archivos aqu\u00ED}}',
             browseFiles: 'buscar archivos',
             dragOrBrowse: 'Arrastra o busca para subir',
             selectAFolder: 'seleccionar una carpeta',
-            maxFileSizeAllowed: 'M\u00E1x. {size} {unit} {count, plural, one {archivo permitido} other {archivos permitidos}}',
+            maxFileSizeAllowed:
+                'M\u00E1x. {size} {unit} {count, plural, one {archivo permitido} other {archivos permitidos}}',
             minFileSizeDisplay: 'M\u00EDn. {size} {unit}',
             allowedFileTypes: 'Tipos permitidos: {types}',
-            maxFileCount: 'Hasta {limit, plural, one {# archivo} other {# archivos}}',
-            minFileCount: 'Al menos {limit, plural, one {# archivo requerido} other {# archivos requeridos}}',
-            totalFileSizeExceeded: 'El tama\u00F1o total de archivos supera el m\u00E1ximo de {size} {unit}',
-            maxTotalFileSizeDisplay: 'Tama\u00F1o total m\u00E1ximo: {size} {unit}',
-            addDocumentsHere: 'A\u00F1ade tus documentos aqu\u00ED, puedes subir hasta {limit} archivos m\u00E1x.',
+            maxFileCount:
+                'Hasta {limit, plural, one {# archivo} other {# archivos}}',
+            minFileCount:
+                'Al menos {limit, plural, one {# archivo requerido} other {# archivos requeridos}}',
+            totalFileSizeExceeded:
+                'El tama\u00F1o total de archivos supera el m\u00E1ximo de {size} {unit}',
+            maxTotalFileSizeDisplay:
+                'Tama\u00F1o total m\u00E1ximo: {size} {unit}',
+            addDocumentsHere:
+                'A\u00F1ade tus documentos aqu\u00ED, puedes subir hasta {limit} archivos m\u00E1x.',
             dropAriaLabel: 'Suelta archivos aqu\u00ED o haz clic para buscar',
         },
 
         header: {
             removeAllFiles: 'Eliminar todos los archivos',
             addingMoreFiles: 'A\u00F1adiendo m\u00E1s archivos',
-            filesSelected: '{count, plural, one {# archivo seleccionado} other {# archivos seleccionados}}',
+            filesSelected:
+                '{count, plural, one {# archivo seleccionado} other {# archivos seleccionados}}',
             addMore: 'A\u00F1adir m\u00E1s',
             switchToListView: 'Switch to list view',
             switchToGridView: 'Switch to grid view',
         },
 
         fileList: {
-            uploadFiles: 'Subir {count, plural, one {# archivo} other {# archivos}}',
+            uploadFiles:
+                'Subir {count, plural, one {# archivo} other {# archivos}}',
             resumeUpload: 'Reanudar',
             pauseUpload: 'Pausar',
             retryUpload: 'Retry',
@@ -77,10 +87,12 @@ export const esES: LocaleBundle = {
         driveBrowser: {
             noAcceptedFilesFound: 'No se encontraron archivos aceptados',
             selectThisFolder: 'Seleccionar esta carpeta',
-            addFiles: 'A\u00F1adir {count, plural, one {# archivo} other {# archivos}}',
+            addFiles:
+                'A\u00F1adir {count, plural, one {# archivo} other {# archivos}}',
             logOut: 'Cerrar sesi\u00F3n',
             search: 'Buscar',
-            authenticatePrompt: 'Autent\u00EDcate con {provider} para seleccionar archivos para subir',
+            authenticatePrompt:
+                'Autent\u00EDcate con {provider} para seleccionar archivos para subir',
             signInWith: 'Iniciar sesi\u00F3n con {provider}',
             loadError: "Couldn't load files: {message}",
             loadMore: 'Load more',
@@ -128,36 +140,53 @@ export const esES: LocaleBundle = {
         },
 
         errors: {
-            multipleFilesNotAllowed: 'No se permiten cargas de m\u00FAltiples archivos',
+            multipleFilesNotAllowed:
+                'No se permiten cargas de m\u00FAltiples archivos',
             failedToGetUploadUrl: 'Error al obtener la URL de carga',
             statusError: 'Estado: {status} ({statusText}). Detalles: {details}',
-            networkErrorDuringUpload: 'Error de red durante la subida - Estado: {status} ({statusText})',
-            missingRequiredConfiguration: 'Falta la configuraci\u00F3n requerida: {missing}',
-            invalidProvider: 'Proveedor inv\u00E1lido: {provider}. Opciones v\u00E1lidas: {validOptions}',
-            invalidUploadEndpoint: 'URL de uploadEndpoint inv\u00E1lida: {uploadEndpoint} {error}',
+            networkErrorDuringUpload:
+                'Error de red durante la subida - Estado: {status} ({statusText})',
+            missingRequiredConfiguration:
+                'Falta la configuraci\u00F3n requerida: {missing}',
+            invalidProvider:
+                'Proveedor inv\u00E1lido: {provider}. Opciones v\u00E1lidas: {validOptions}',
+            invalidUploadEndpoint:
+                'URL de uploadEndpoint inv\u00E1lida: {uploadEndpoint} {error}',
             maxFileSizeMustBeGreater: 'maxFileSize debe ser mayor que 0',
-            invalidAcceptFormat: 'Formato accept inv\u00E1lido: {accept}. Use tipos MIME, */*, * o extensiones (como .fbx)',
+            invalidAcceptFormat:
+                'Formato accept inv\u00E1lido: {accept}. Use tipos MIME, */*, * o extensiones (como .fbx)',
             unauthorizedAccess: 'Acceso no autorizado al proveedor',
-            presignedUrlInvalid: 'La URL prefirmada ha expirado o no es v\u00E1lida',
-            temporaryCredentialsInvalid: 'Las credenciales temporales ya no son v\u00E1lidas',
-            corsMisconfigured: 'La configuraci\u00F3n CORS impide la subida de archivos',
-            fileTooLarge: 'El archivo excede el tama\u00F1o m\u00E1ximo permitido',
+            presignedUrlInvalid:
+                'La URL prefirmada ha expirado o no es v\u00E1lida',
+            temporaryCredentialsInvalid:
+                'Las credenciales temporales ya no son v\u00E1lidas',
+            corsMisconfigured:
+                'La configuraci\u00F3n CORS impide la subida de archivos',
+            fileTooLarge:
+                'El archivo excede el tama\u00F1o m\u00E1ximo permitido',
             invalidFileType: 'El tipo de archivo no est\u00E1 permitido',
             storageQuotaExceeded: 'Se ha superado la cuota de almacenamiento',
-            signedUrlGenerationFailed: 'Error al generar la URL firmada de subida',
-            uploadFailedWithCode: 'La subida fall\u00F3 con el c\u00F3digo de error: {code}',
+            signedUrlGenerationFailed:
+                'Error al generar la URL firmada de subida',
+            uploadFailedWithCode:
+                'La subida fall\u00F3 con el c\u00F3digo de error: {code}',
             uploadFailed: 'La subida fall\u00F3: {message}',
-            dropboxSessionExpired: 'Su sesi\u00F3n de Dropbox ha expirado. Por favor, vuelva a autenticarse.',
-            dropboxMissingPermissions: 'Su app de Dropbox no tiene los permisos necesarios. A\u00F1ada los siguientes scopes en Dropbox Developer Console: files.metadata.read, account_info.read',
+            dropboxSessionExpired:
+                'Su sesi\u00F3n de Dropbox ha expirado. Por favor, vuelva a autenticarse.',
+            dropboxMissingPermissions:
+                'Su app de Dropbox no tiene los permisos necesarios. A\u00F1ada los siguientes scopes en Dropbox Developer Console: files.metadata.read, account_info.read',
             failedToRefreshExpiredToken: 'Error al renovar el token caducado',
-            allowedLimitSurpassed: '\u00A1Se ha superado el l\u00EDmite permitido!',
+            allowedLimitSurpassed:
+                '\u00A1Se ha superado el l\u00EDmite permitido!',
             fileUnsupportedType: '\u00A1{name} tiene un tipo no compatible!',
             fileTooLargeName: '{name} es mayor que {size} {unit}!',
             fileTooSmallName: '{name} es menor que {size} {unit}!',
-            minFileSizeAllowed: 'M\u00EDn. {size} {unit} {count, plural, one {archivo requerido} other {archivos requeridos}}',
+            minFileSizeAllowed:
+                'M\u00EDn. {size} {unit} {count, plural, one {archivo requerido} other {archivos requeridos}}',
             minFileSizeMustBeGreater: 'minFileSize debe ser mayor que 0',
             filePreviouslySelected: '{name} ya ha sido seleccionado',
-            fileWithUrlPreviouslySelected: 'Un archivo con esta URL: {url} ya ha sido seleccionado',
+            fileWithUrlPreviouslySelected:
+                'Un archivo con esta URL: {url} ya ha sido seleccionado',
             errorCompressingFile: 'Error al comprimir {name}',
             errorCompressingImage: 'Error al comprimir la imagen {name}',
             generatingThumbnails: 'Generando miniaturas...',
@@ -167,20 +196,27 @@ export const esES: LocaleBundle = {
             dropboxAuthFailed: 'Autenticaci\u00F3n de Dropbox fallida',
             boxClientIdMissing: 'Box clientId missing',
             boxAuthFailed: 'Box authentication failed',
-            boxSessionExpired: 'Your Box session has expired. Please re-authenticate to continue.',
+            boxSessionExpired:
+                'Your Box session has expired. Please re-authenticate to continue.',
             boxNoAccessToken: 'No access token provided for Box download',
             genericErrorDetails: 'Error: {details}',
             errorProcessingFiles: 'Error al procesar archivos: {message}',
             errorSelectingFolder: 'Error al seleccionar carpeta: {message}',
             graphClientNotInitialized: 'Graph client no inicializado',
-            dropboxNoAccessToken: 'No se proporcion\u00F3 token de acceso para la descarga desde Dropbox',
-            silentTokenAcquisitionFailed: 'Fallo en adquisici\u00F3n silenciosa del token: {details}',
-            msalInitializationFailed: 'Fallo en inicializaci\u00F3n MSAL: {details}',
-            silentTokenAcquisitionProceeding: 'Fallo en adquisici\u00F3n silenciosa del token, procediendo con inicio de sesi\u00F3n interactivo{details}',
+            dropboxNoAccessToken:
+                'No se proporcion\u00F3 token de acceso para la descarga desde Dropbox',
+            silentTokenAcquisitionFailed:
+                'Fallo en adquisici\u00F3n silenciosa del token: {details}',
+            msalInitializationFailed:
+                'Fallo en inicializaci\u00F3n MSAL: {details}',
+            silentTokenAcquisitionProceeding:
+                'Fallo en adquisici\u00F3n silenciosa del token, procediendo con inicio de sesi\u00F3n interactivo{details}',
             signInFailed: 'Inicio de sesi\u00F3n fallido: {message}',
-            handleSignInFailed: 'Error al gestionar inicio de sesi\u00F3n: {message}',
+            handleSignInFailed:
+                'Error al gestionar inicio de sesi\u00F3n: {message}',
             signOutFailed: 'Cierre de sesi\u00F3n fallido: {message}',
-            imageEditorFailed: 'El editor de im\u00E1genes no se pudo cargar...',
+            imageEditorFailed:
+                'El editor de im\u00E1genes no se pudo cargar...',
         },
     },
 }

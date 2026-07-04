@@ -1,5 +1,5 @@
-import { Component, Input } from "@angular/core";
-import { IconComponent } from "../icon.component";
+import { Component, Input } from '@angular/core'
+import { IconComponent } from '../icon.component'
 
 /**
  * Default file-delete glyph — renders the shared registry 'trash' icon (parity with
@@ -10,11 +10,11 @@ import { IconComponent } from "../icon.component";
  * is baked as the default class.
  */
 @Component({
-  selector: "upup-icon-trash",
-  standalone: true,
-  imports: [IconComponent],
-  template: `<upup-icon name="trash" [class]="className" />`,
+    selector: 'upup-icon-trash',
+    standalone: true,
+    imports: [IconComponent],
+    template: `<upup-icon name="trash" [class]="className" />`,
 })
 export class TrashIconComponent {
-  @Input("class") className: string = "upup-h-3 upup-w-3";
+    @Input('class') className: string = 'upup-h-3 upup-w-3'
 }

@@ -1,4 +1,10 @@
-import { inject, provide, type ComputedRef, type InjectionKey, type Ref } from 'vue'
+import {
+    inject,
+    provide,
+    type ComputedRef,
+    type InjectionKey,
+    type Ref,
+} from 'vue'
 import type {
     BaseContextUpload,
     BaseContextRuntime,
@@ -16,17 +22,25 @@ import type {
     FilesProgressMap,
 } from '@upup/core'
 import { UploadStatus } from '@upup/core'
-import type {
-    UploaderProps,
-    UploaderIcons,
-} from '../shared/types'
+import type { UploaderProps, UploaderIcons } from '../shared/types'
 
 export { UploadStatus }
 
 // ─── Context type shapes ───────────────────────────────────
 
 // Reactive so upload progress / status changes reach consumers post-mount.
-export type ContextUpload = Omit<BaseContextUpload, 'uploadStatus' | 'uploadError' | 'uploadErrorCode' | 'totalProgress' | 'filesProgressMap' | 'uploadSpeed' | 'uploadEta' | 'uploadedBytes' | 'totalBytes'> & {
+export type ContextUpload = Omit<
+    BaseContextUpload,
+    | 'uploadStatus'
+    | 'uploadError'
+    | 'uploadErrorCode'
+    | 'totalProgress'
+    | 'filesProgressMap'
+    | 'uploadSpeed'
+    | 'uploadEta'
+    | 'uploadedBytes'
+    | 'totalBytes'
+> & {
     uploadStatus: ComputedRef<UploadStatus>
     uploadError: ComputedRef<string | undefined>
     uploadErrorCode: ComputedRef<string | undefined>
@@ -56,7 +70,10 @@ export type ContextFiles = Omit<BaseContextFiles, 'files'> & {
     files: ComputedRef<Map<string, UploadFile>>
 }
 
-export type ContextUploadControls = Omit<BaseContextUploadControls, 'upload'> & {
+export type ContextUploadControls = Omit<
+    BaseContextUploadControls,
+    'upload'
+> & {
     upload: ContextUpload
 }
 
@@ -108,14 +125,15 @@ export type ContextProps = Required<
         imageEditor: ResolvedImageEditorOptions
     }
 
-export interface IUploaderContext extends
-    ContextRuntime,
-    ContextSource,
-    ContextI18n,
-    ContextFiles,
-    ContextUploadControls,
-    ContextView,
-    ContextEditor {
+export interface IUploaderContext
+    extends
+        ContextRuntime,
+        ContextSource,
+        ContextI18n,
+        ContextFiles,
+        ContextUploadControls,
+        ContextView,
+        ContextEditor {
     props: ContextProps
     theme: ContextTheme
 }
@@ -126,7 +144,9 @@ const RuntimeKey: InjectionKey<ContextRuntime> = Symbol('upup-runtime')
 const SourceKey: InjectionKey<ContextSource> = Symbol('upup-source')
 const I18nKey: InjectionKey<ContextI18n> = Symbol('upup-i18n')
 const FilesKey: InjectionKey<ContextFiles> = Symbol('upup-files')
-const UploadControlsKey: InjectionKey<ContextUploadControls> = Symbol('upup-upload-controls')
+const UploadControlsKey: InjectionKey<ContextUploadControls> = Symbol(
+    'upup-upload-controls',
+)
 const ViewKey: InjectionKey<ContextView> = Symbol('upup-view')
 const EditorKey: InjectionKey<ContextEditor> = Symbol('upup-editor')
 const OptionsKey: InjectionKey<ContextProps> = Symbol('upup-options')
@@ -197,13 +217,33 @@ function readInjection<T>(key: InjectionKey<T>, name: string): T {
     return value
 }
 
-export function useUploaderContext() { return readInjection(RootKey, 'useUploaderContext') }
-export function useUploaderRuntime() { return readInjection(RuntimeKey, 'useUploaderRuntime') }
-export function useUploaderSource() { return readInjection(SourceKey, 'useUploaderSource') }
-export function useUploaderI18n() { return readInjection(I18nKey, 'useUploaderI18n') }
-export function useUploaderFiles() { return readInjection(FilesKey, 'useUploaderFiles') }
-export function useUploaderUploadControls() { return readInjection(UploadControlsKey, 'useUploaderUploadControls') }
-export function useUploaderView() { return readInjection(ViewKey, 'useUploaderView') }
-export function useUploaderEditor() { return readInjection(EditorKey, 'useUploaderEditor') }
-export function useUploaderOptions() { return readInjection(OptionsKey, 'useUploaderOptions') }
-export function useUploaderTheme() { return readInjection(ThemeKey, 'useUploaderTheme') }
+export function useUploaderContext() {
+    return readInjection(RootKey, 'useUploaderContext')
+}
+export function useUploaderRuntime() {
+    return readInjection(RuntimeKey, 'useUploaderRuntime')
+}
+export function useUploaderSource() {
+    return readInjection(SourceKey, 'useUploaderSource')
+}
+export function useUploaderI18n() {
+    return readInjection(I18nKey, 'useUploaderI18n')
+}
+export function useUploaderFiles() {
+    return readInjection(FilesKey, 'useUploaderFiles')
+}
+export function useUploaderUploadControls() {
+    return readInjection(UploadControlsKey, 'useUploaderUploadControls')
+}
+export function useUploaderView() {
+    return readInjection(ViewKey, 'useUploaderView')
+}
+export function useUploaderEditor() {
+    return readInjection(EditorKey, 'useUploaderEditor')
+}
+export function useUploaderOptions() {
+    return readInjection(OptionsKey, 'useUploaderOptions')
+}
+export function useUploaderTheme() {
+    return readInjection(ThemeKey, 'useUploaderTheme')
+}

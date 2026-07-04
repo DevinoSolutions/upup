@@ -20,14 +20,29 @@ import { zhTW } from './zh-TW'
  * missing compiler cross-check F-401 identified.
  */
 export const LOCALE_CODES = [
-    'en-US', 'ar-SA', 'de-DE', 'es-ES', 'fr-FR', 'ja-JP', 'ko-KR', 'zh-CN', 'zh-TW',
+    'en-US',
+    'ar-SA',
+    'de-DE',
+    'es-ES',
+    'fr-FR',
+    'ja-JP',
+    'ko-KR',
+    'zh-CN',
+    'zh-TW',
 ] as const
 
 export type RegisteredLocaleCode = (typeof LOCALE_CODES)[number]
 
 export const LOCALE_REGISTRY: Record<RegisteredLocaleCode, LocaleBundle> = {
-    'en-US': enUS, 'ar-SA': arSA, 'de-DE': deDE, 'es-ES': esES,
-    'fr-FR': frFR, 'ja-JP': jaJP, 'ko-KR': koKR, 'zh-CN': zhCN, 'zh-TW': zhTW,
+    'en-US': enUS,
+    'ar-SA': arSA,
+    'de-DE': deDE,
+    'es-ES': esES,
+    'fr-FR': frFR,
+    'ja-JP': jaJP,
+    'ko-KR': koKR,
+    'zh-CN': zhCN,
+    'zh-TW': zhTW,
 }
 
 // Named bundle re-exports kept public (consumed by core.ts, options, react,

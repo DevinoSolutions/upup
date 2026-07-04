@@ -119,12 +119,16 @@ export const zhCN: LocaleBundle = {
             multipleFilesNotAllowed: '不允许上传多个文件',
             failedToGetUploadUrl: '获取上传 URL 失败',
             statusError: '状态: {status} ({statusText})。详情: {details}',
-            networkErrorDuringUpload: '上传过程中网络错误 - 状态: {status} ({statusText})',
+            networkErrorDuringUpload:
+                '上传过程中网络错误 - 状态: {status} ({statusText})',
             missingRequiredConfiguration: '缺少必需的配置: {missing}',
-            invalidProvider: '无效的提供者: {provider}。有效选项: {validOptions}',
-            invalidUploadEndpoint: '无效的 uploadEndpoint URL: {uploadEndpoint} {error}',
+            invalidProvider:
+                '无效的提供者: {provider}。有效选项: {validOptions}',
+            invalidUploadEndpoint:
+                '无效的 uploadEndpoint URL: {uploadEndpoint} {error}',
             maxFileSizeMustBeGreater: 'maxFileSize 必须大于 0',
-            invalidAcceptFormat: '无效的 accept 格式: {accept}。请使用 MIME 类型、*/*、* 或扩展名（如 .fbx）',
+            invalidAcceptFormat:
+                '无效的 accept 格式: {accept}。请使用 MIME 类型、*/*、* 或扩展名（如 .fbx）',
             unauthorizedAccess: '未经授权访问提供者',
             presignedUrlInvalid: '预签名 URL 已过期或无效',
             temporaryCredentialsInvalid: '临时凭证已失效',
@@ -135,8 +139,10 @@ export const zhCN: LocaleBundle = {
             signedUrlGenerationFailed: '生成签名上传 URL 失败',
             uploadFailedWithCode: '上传失败，错误代码：{code}',
             uploadFailed: '上传失败：{message}',
-            dropboxSessionExpired: '您的 Dropbox 会话已过期。请重新验证以继续。',
-            dropboxMissingPermissions: '您的 Dropbox 应用缺少所需权限。请在 Dropbox 开发者控制台添加以下作用域：files.metadata.read, account_info.read',
+            dropboxSessionExpired:
+                '您的 Dropbox 会话已过期。请重新验证以继续。',
+            dropboxMissingPermissions:
+                '您的 Dropbox 应用缺少所需权限。请在 Dropbox 开发者控制台添加以下作用域：files.metadata.read, account_info.read',
             failedToRefreshExpiredToken: '刷新已过期 token 失败',
             allowedLimitSurpassed: '已超出允许的限制！',
             fileUnsupportedType: '{name} 的类型不受支持！',
@@ -145,7 +151,8 @@ export const zhCN: LocaleBundle = {
             minFileSizeAllowed: '最小需要 {size} {unit} 的文件',
             minFileSizeMustBeGreater: 'minFileSize 必须大于 0',
             filePreviouslySelected: '{name} 已被选择过',
-            fileWithUrlPreviouslySelected: '具有此 URL 的文件：{url} 已被选择过',
+            fileWithUrlPreviouslySelected:
+                '具有此 URL 的文件：{url} 已被选择过',
             errorCompressingFile: '压缩 {name} 时出错',
             errorCompressingImage: '压缩图片 {name} 时出错',
             generatingThumbnails: '正在生成缩略图...',
@@ -155,7 +162,8 @@ export const zhCN: LocaleBundle = {
             dropboxAuthFailed: 'Dropbox 验证失败',
             boxClientIdMissing: 'Box clientId missing',
             boxAuthFailed: 'Box authentication failed',
-            boxSessionExpired: 'Your Box session has expired. Please re-authenticate to continue.',
+            boxSessionExpired:
+                'Your Box session has expired. Please re-authenticate to continue.',
             boxNoAccessToken: 'No access token provided for Box download',
             genericErrorDetails: '错误：{details}',
             errorProcessingFiles: '处理文件时出错：{message}',
@@ -164,7 +172,8 @@ export const zhCN: LocaleBundle = {
             dropboxNoAccessToken: '未提供用于 Dropbox 下载的访问令牌',
             silentTokenAcquisitionFailed: '静默令牌获取失败：{details}',
             msalInitializationFailed: 'MSAL 初始化失败：{details}',
-            silentTokenAcquisitionProceeding: '静默令牌获取失败，继续交互式登录{details}',
+            silentTokenAcquisitionProceeding:
+                '静默令牌获取失败，继续交互式登录{details}',
             signInFailed: '登录失败：{message}',
             handleSignInFailed: '处理登录失败：{message}',
             signOutFailed: '登出失败：{message}',

@@ -24,7 +24,15 @@ export { UploadStatus }
 // ─── Context type shapes (Readable<T> wherever Vue used ComputedRef<T>) ───
 export type ContextUpload = Omit<
     BaseContextUpload,
-    'uploadStatus' | 'uploadError' | 'uploadErrorCode' | 'totalProgress' | 'filesProgressMap' | 'uploadSpeed' | 'uploadEta' | 'uploadedBytes' | 'totalBytes'
+    | 'uploadStatus'
+    | 'uploadError'
+    | 'uploadErrorCode'
+    | 'totalProgress'
+    | 'filesProgressMap'
+    | 'uploadSpeed'
+    | 'uploadEta'
+    | 'uploadedBytes'
+    | 'totalBytes'
 > & {
     uploadStatus: Readable<UploadStatus>
     uploadError: Readable<string | undefined>
@@ -55,7 +63,10 @@ export type ContextFiles = Omit<BaseContextFiles, 'files'> & {
     files: Readable<Map<string, UploadFile>>
 }
 
-export type ContextUploadControls = Omit<BaseContextUploadControls, 'upload'> & {
+export type ContextUploadControls = Omit<
+    BaseContextUploadControls,
+    'upload'
+> & {
     upload: ContextUpload
 }
 
@@ -86,10 +97,22 @@ export type ContextTheme = Omit<
 export type ContextProps = Required<
     Pick<
         UploaderProps,
-        | 'sources' | 'isProcessing' | 'allowPreview' | 'mini' | 'onFileClick'
-        | 'onIntegrationClick' | 'onFilesDragOver' | 'onFilesDragLeave' | 'onFilesDrop'
-        | 'onWarn' | 'enablePaste' | 'onError' | 'showBranding' | 'className'
-        | 'style' | 'disableDragDrop'
+        | 'sources'
+        | 'isProcessing'
+        | 'allowPreview'
+        | 'mini'
+        | 'onFileClick'
+        | 'onIntegrationClick'
+        | 'onFilesDragOver'
+        | 'onFilesDragLeave'
+        | 'onFilesDrop'
+        | 'onWarn'
+        | 'enablePaste'
+        | 'onError'
+        | 'showBranding'
+        | 'className'
+        | 'style'
+        | 'disableDragDrop'
     >
 > &
     Pick<UploaderProps, 'maxFileSize' | 'maxRetries' | 'resumable'> & {
@@ -103,8 +126,14 @@ export type ContextProps = Required<
     }
 
 export interface IUploaderContext
-    extends ContextRuntime, ContextSource, ContextI18n, ContextFiles,
-        ContextUploadControls, ContextView, ContextEditor {
+    extends
+        ContextRuntime,
+        ContextSource,
+        ContextI18n,
+        ContextFiles,
+        ContextUploadControls,
+        ContextView,
+        ContextEditor {
     props: ContextProps
     theme: ContextTheme
 }
@@ -184,13 +213,23 @@ function read<T>(key: symbol, name: string): T {
     return value
 }
 
-export const useUploaderContext = () => read<IUploaderContext>(RootKey, 'useUploaderContext')
-export const useUploaderRuntime = () => read<ContextRuntime>(RuntimeKey, 'useUploaderRuntime')
-export const useUploaderSource = () => read<ContextSource>(SourceKey, 'useUploaderSource')
-export const useUploaderI18n = () => read<ContextI18n>(I18nKey, 'useUploaderI18n')
-export const useUploaderFiles = () => read<ContextFiles>(FilesKey, 'useUploaderFiles')
-export const useUploaderUploadControls = () => read<ContextUploadControls>(UploadControlsKey, 'useUploaderUploadControls')
-export const useUploaderView = () => read<ContextView>(ViewKey, 'useUploaderView')
-export const useUploaderEditor = () => read<ContextEditor>(EditorKey, 'useUploaderEditor')
-export const useUploaderOptions = () => read<ContextProps>(OptionsKey, 'useUploaderOptions')
-export const useUploaderTheme = () => read<ContextTheme>(ThemeKey, 'useUploaderTheme')
+export const useUploaderContext = () =>
+    read<IUploaderContext>(RootKey, 'useUploaderContext')
+export const useUploaderRuntime = () =>
+    read<ContextRuntime>(RuntimeKey, 'useUploaderRuntime')
+export const useUploaderSource = () =>
+    read<ContextSource>(SourceKey, 'useUploaderSource')
+export const useUploaderI18n = () =>
+    read<ContextI18n>(I18nKey, 'useUploaderI18n')
+export const useUploaderFiles = () =>
+    read<ContextFiles>(FilesKey, 'useUploaderFiles')
+export const useUploaderUploadControls = () =>
+    read<ContextUploadControls>(UploadControlsKey, 'useUploaderUploadControls')
+export const useUploaderView = () =>
+    read<ContextView>(ViewKey, 'useUploaderView')
+export const useUploaderEditor = () =>
+    read<ContextEditor>(EditorKey, 'useUploaderEditor')
+export const useUploaderOptions = () =>
+    read<ContextProps>(OptionsKey, 'useUploaderOptions')
+export const useUploaderTheme = () =>
+    read<ContextTheme>(ThemeKey, 'useUploaderTheme')

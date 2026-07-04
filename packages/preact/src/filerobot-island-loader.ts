@@ -14,5 +14,5 @@ import type { IslandModule } from './filerobot-island-types'
  * (vi.mock('../filerobot-island-loader')).
  */
 export function loadIsland(): Promise<IslandModule> {
-  return import('./filerobot-island.js' as string) as Promise<IslandModule>
+    return import('./filerobot-island.js' as string) as Promise<IslandModule>
 }

@@ -136,7 +136,9 @@ export class BoxPlugin implements DrivePlugin {
 
             const res = await fetch(TOKEN_URL, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
                 body,
             })
 
@@ -146,10 +148,7 @@ export class BoxPlugin implements DrivePlugin {
             }
 
             const data = await res.json()
-            this.setTokens(
-                data.access_token,
-                data.refresh_token ?? null,
-            )
+            this.setTokens(data.access_token, data.refresh_token ?? null)
 
             // Fetch user profile
             let user: { name: string; email: string } | undefined
@@ -175,7 +174,9 @@ export class BoxPlugin implements DrivePlugin {
 
     async authenticateViaPopup(): Promise<void> {
         if (typeof window === 'undefined') {
-            throw new Error('authenticateViaPopup requires a browser environment')
+            throw new Error(
+                'authenticateViaPopup requires a browser environment',
+            )
         }
 
         const url = await this.getAuthUrl()
@@ -183,10 +184,8 @@ export class BoxPlugin implements DrivePlugin {
         // Close any existing popup
         this.cleanupPopup()
 
-        const left =
-            (typeof window !== 'undefined' ? window.screenX : 0) + 60
-        const top =
-            (typeof window !== 'undefined' ? window.screenY : 0) + 60
+        const left = (typeof window !== 'undefined' ? window.screenX : 0) + 60
+        const top = (typeof window !== 'undefined' ? window.screenY : 0) + 60
 
         this.popupWindow = window.open(
             url,
@@ -224,7 +223,10 @@ export class BoxPlugin implements DrivePlugin {
                         return
                     }
 
-                    if (!href.startsWith(redirectUri) || !href.includes('code=')) {
+                    if (
+                        !href.startsWith(redirectUri) ||
+                        !href.includes('code=')
+                    ) {
                         return
                     }
 
@@ -285,7 +287,9 @@ export class BoxPlugin implements DrivePlugin {
         try {
             const res = await fetch(TOKEN_URL, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
                 body: new URLSearchParams({
                     grant_type: 'refresh_token',
                     refresh_token: this.refreshTokenValue,
@@ -396,7 +400,12 @@ export class BoxPlugin implements DrivePlugin {
             const cursor = hasMore ? `${folderId}:${loaded}` : undefined
 
             this.setState('authenticated')
-            this.emitter?.emit('box:files-loaded', { files, folderId, hasMore, cursor })
+            this.emitter?.emit('box:files-loaded', {
+                files,
+                folderId,
+                hasMore,
+                cursor,
+            })
 
             return { files, folderId, hasMore, cursor }
         } catch (err) {
@@ -559,14 +568,14 @@ export class BoxPlugin implements DrivePlugin {
             this.setState('session-expired')
         }
 
-        throw new Error(
-            `Box API error (${res.status}): ${errorText}`,
-        )
+        throw new Error(`Box API error (${res.status}): ${errorText}`)
     }
 
     // ── Private: download a single file ──
 
-    private async downloadSingleFile(driveFile: DriveFile): Promise<File | null> {
+    private async downloadSingleFile(
+        driveFile: DriveFile,
+    ): Promise<File | null> {
         const res = await this.apiRequest(
             `${FILES_URL}/${driveFile.id}/content`,
             { method: 'GET' },
@@ -594,10 +603,7 @@ export class BoxPlugin implements DrivePlugin {
 
     // ── Private: token management ──
 
-    private setTokens(
-        access: string,
-        refresh: string | null,
-    ): void {
+    private setTokens(access: string, refresh: string | null): void {
         this.accessToken = access
         this.refreshTokenValue = refresh
 

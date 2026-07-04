@@ -15,26 +15,26 @@ import type { DriveFile, DriveListPage, DriveUser } from './types'
  * so the declared lifecycle interface and the driven runtime surface are one type.
  */
 export interface DrivePlugin extends UpupPlugin {
-  readonly id: string
-  init(emitter: EventEmitter): void
-  destroy(): void
-  // ── runtime surface the DriveBrowserController drives ──
-  restoreSession(): boolean
-  isAuthenticated(): boolean
-  getAccessToken(): string | null
-  // box/dropbox/onedrive resolve to `… | null`; keep all three so a typed getPlugin()
-  // still satisfies this — the `if (userInfo)` guards in the controller handle it.
-  getUserInfo(): Promise<DriveUser | null | undefined>
-  loadFiles(folderArg?: string): Promise<unknown>
-  downloadFiles(files: DriveFile[]): Promise<File[]>
-  signOut(): void
-  authenticate?(token: string, expiresIn?: number): Promise<void>
-  authenticateViaPopup?(): Promise<void>
-  loadAllFilesInFolder?(folderArg: string): Promise<DriveFile[]>
-  getConfig?(): unknown
-  // optional (matches the existing authenticateViaPopup/loadAllFilesInFolder style);
-  // the controller guards with `plugin.loadMoreFiles?`. All four current providers
-  // implement it (F-125) — cursor is the opaque continuation token from the most
-  // recent files-loaded/loadMoreFiles payload.
-  loadMoreFiles?(cursor: string): Promise<DriveListPage>
+    readonly id: string
+    init(emitter: EventEmitter): void
+    destroy(): void
+    // ── runtime surface the DriveBrowserController drives ──
+    restoreSession(): boolean
+    isAuthenticated(): boolean
+    getAccessToken(): string | null
+    // box/dropbox/onedrive resolve to `… | null`; keep all three so a typed getPlugin()
+    // still satisfies this — the `if (userInfo)` guards in the controller handle it.
+    getUserInfo(): Promise<DriveUser | null | undefined>
+    loadFiles(folderArg?: string): Promise<unknown>
+    downloadFiles(files: DriveFile[]): Promise<File[]>
+    signOut(): void
+    authenticate?(token: string, expiresIn?: number): Promise<void>
+    authenticateViaPopup?(): Promise<void>
+    loadAllFilesInFolder?(folderArg: string): Promise<DriveFile[]>
+    getConfig?(): unknown
+    // optional (matches the existing authenticateViaPopup/loadAllFilesInFolder style);
+    // the controller guards with `plugin.loadMoreFiles?`. All four current providers
+    // implement it (F-125) — cursor is the opaque continuation token from the most
+    // recent files-loaded/loadMoreFiles payload.
+    loadMoreFiles?(cursor: string): Promise<DriveListPage>
 }

@@ -17,14 +17,29 @@ import {
 describe('UpupErrorCode', () => {
     it('defines all expected error codes', () => {
         const expected = [
-            'AUTH_EXPIRED', 'AUTH_DENIED', 'AUTH_PROVIDER_ERROR',
-            'FILE_TOO_LARGE', 'FILE_TOO_SMALL', 'TYPE_MISMATCH',
-            'LIMIT_EXCEEDED', 'TOTAL_SIZE_EXCEEDED', 'DUPLICATE',
-            'MIN_FILES_NOT_MET', 'UPLOAD_FAILED', 'UPLOAD_ABORTED',
-            'PRESIGN_FAILED', 'CORS_ERROR', 'PIPELINE_STEP_FAILED',
-            'HEIC_CONVERSION_FAILED', 'NETWORK_ERROR', 'TIMEOUT',
-            'STORAGE_ERROR', 'QUOTA_EXCEEDED', 'NO_UPLOAD_TARGET',
-            'BAD_REQUEST', 'AUTH_REQUIRED',
+            'AUTH_EXPIRED',
+            'AUTH_DENIED',
+            'AUTH_PROVIDER_ERROR',
+            'FILE_TOO_LARGE',
+            'FILE_TOO_SMALL',
+            'TYPE_MISMATCH',
+            'LIMIT_EXCEEDED',
+            'TOTAL_SIZE_EXCEEDED',
+            'DUPLICATE',
+            'MIN_FILES_NOT_MET',
+            'UPLOAD_FAILED',
+            'UPLOAD_ABORTED',
+            'PRESIGN_FAILED',
+            'CORS_ERROR',
+            'PIPELINE_STEP_FAILED',
+            'HEIC_CONVERSION_FAILED',
+            'NETWORK_ERROR',
+            'TIMEOUT',
+            'STORAGE_ERROR',
+            'QUOTA_EXCEEDED',
+            'NO_UPLOAD_TARGET',
+            'BAD_REQUEST',
+            'AUTH_REQUIRED',
         ]
         for (const code of expected) {
             expect(Object.values(UpupErrorCode)).toContain(code)
@@ -41,7 +56,10 @@ describe('UpupErrorCode', () => {
 // ─────────────────────────────────────────────
 describe('UpupError', () => {
     it('is an instance of Error', () => {
-        const err = new UpupError('Something went wrong', UpupErrorCode.UPLOAD_FAILED)
+        const err = new UpupError(
+            'Something went wrong',
+            UpupErrorCode.UPLOAD_FAILED,
+        )
         expect(err).toBeInstanceOf(Error)
     })
 
@@ -89,7 +107,9 @@ describe('UpupAuthError', () => {
     })
 
     it('sets code to AUTH_PROVIDER_ERROR', () => {
-        expect(new UpupAuthError('msg', 'S3').code).toBe(UpupErrorCode.AUTH_PROVIDER_ERROR)
+        expect(new UpupAuthError('msg', 'S3').code).toBe(
+            UpupErrorCode.AUTH_PROVIDER_ERROR,
+        )
     })
 
     it('stores the provider', () => {
@@ -110,7 +130,9 @@ describe('UpupNetworkError', () => {
     })
 
     it('sets code to NETWORK_ERROR', () => {
-        expect(new UpupNetworkError('msg').code).toBe(UpupErrorCode.NETWORK_ERROR)
+        expect(new UpupNetworkError('msg').code).toBe(
+            UpupErrorCode.NETWORK_ERROR,
+        )
     })
 
     it('is retryable', () => {
@@ -133,26 +155,47 @@ describe('UpupValidationError', () => {
     const file = new File(['data'], 'test.txt')
 
     it('is an instance of UpupError', () => {
-        expect(new UpupValidationError('too large', UpupErrorCode.FILE_TOO_LARGE, file)).toBeInstanceOf(UpupError)
+        expect(
+            new UpupValidationError(
+                'too large',
+                UpupErrorCode.FILE_TOO_LARGE,
+                file,
+            ),
+        ).toBeInstanceOf(UpupError)
     })
 
     it('sets code to the reason', () => {
-        const err = new UpupValidationError('too large', UpupErrorCode.FILE_TOO_LARGE, file)
+        const err = new UpupValidationError(
+            'too large',
+            UpupErrorCode.FILE_TOO_LARGE,
+            file,
+        )
         expect(err.code).toBe(UpupErrorCode.FILE_TOO_LARGE)
     })
 
     it('stores the reason', () => {
-        const err = new UpupValidationError('type mismatch', UpupErrorCode.TYPE_MISMATCH, file)
+        const err = new UpupValidationError(
+            'type mismatch',
+            UpupErrorCode.TYPE_MISMATCH,
+            file,
+        )
         expect(err.reason).toBe(UpupErrorCode.TYPE_MISMATCH)
     })
 
     it('stores the file reference', () => {
-        const err = new UpupValidationError('duplicate', UpupErrorCode.DUPLICATE, file)
+        const err = new UpupValidationError(
+            'duplicate',
+            UpupErrorCode.DUPLICATE,
+            file,
+        )
         expect(err.file).toBe(file)
     })
 
     it('is not retryable', () => {
-        expect(new UpupValidationError('msg', UpupErrorCode.LIMIT_EXCEEDED, file).retryable).toBe(false)
+        expect(
+            new UpupValidationError('msg', UpupErrorCode.LIMIT_EXCEEDED, file)
+                .retryable,
+        ).toBe(false)
     })
 })
 
@@ -161,11 +204,15 @@ describe('UpupValidationError', () => {
 // ─────────────────────────────────────────────
 describe('UpupQuotaError', () => {
     it('is an instance of UpupError', () => {
-        expect(new UpupQuotaError('quota exceeded', 100, 110)).toBeInstanceOf(UpupError)
+        expect(new UpupQuotaError('quota exceeded', 100, 110)).toBeInstanceOf(
+            UpupError,
+        )
     })
 
     it('sets code to QUOTA_EXCEEDED', () => {
-        expect(new UpupQuotaError('msg', 100, 110).code).toBe(UpupErrorCode.QUOTA_EXCEEDED)
+        expect(new UpupQuotaError('msg', 100, 110).code).toBe(
+            UpupErrorCode.QUOTA_EXCEEDED,
+        )
     })
 
     it('stores limit and used', () => {
@@ -184,11 +231,15 @@ describe('UpupQuotaError', () => {
 // ─────────────────────────────────────────────
 describe('UpupStorageError', () => {
     it('is an instance of UpupError', () => {
-        expect(new UpupStorageError('msg', 'S3', 'upload')).toBeInstanceOf(UpupError)
+        expect(new UpupStorageError('msg', 'S3', 'upload')).toBeInstanceOf(
+            UpupError,
+        )
     })
 
     it('sets code to STORAGE_ERROR', () => {
-        expect(new UpupStorageError('msg', 'S3', 'presign').code).toBe(UpupErrorCode.STORAGE_ERROR)
+        expect(new UpupStorageError('msg', 'S3', 'presign').code).toBe(
+            UpupErrorCode.STORAGE_ERROR,
+        )
     })
 
     it('stores provider and operation', () => {
@@ -198,12 +249,18 @@ describe('UpupStorageError', () => {
     })
 
     it('is not retryable', () => {
-        expect(new UpupStorageError('msg', 'S3', 'upload').retryable).toBe(false)
+        expect(new UpupStorageError('msg', 'S3', 'upload').retryable).toBe(
+            false,
+        )
     })
 
     it('accepts the widened multipart-sign-part and multipart-abort operations', () => {
-        expect(new UpupStorageError('msg', 'S3', 'multipart-sign-part').operation).toBe('multipart-sign-part')
-        expect(new UpupStorageError('msg', 'S3', 'multipart-abort').operation).toBe('multipart-abort')
+        expect(
+            new UpupStorageError('msg', 'S3', 'multipart-sign-part').operation,
+        ).toBe('multipart-sign-part')
+        expect(
+            new UpupStorageError('msg', 'S3', 'multipart-abort').operation,
+        ).toBe('multipart-abort')
     })
 })
 
@@ -212,27 +269,48 @@ describe('UpupStorageError', () => {
 // ─────────────────────────────────────────────
 describe('parseErrorBody', () => {
     it('parses a JSON server error body with code+error', () => {
-        const parsed = parseErrorBody(JSON.stringify({ error: 'Invalid upload token', code: 'bad_signature' }))
-        expect(parsed).toEqual({ code: 'bad_signature', message: 'Invalid upload token' })
+        const parsed = parseErrorBody(
+            JSON.stringify({
+                error: 'Invalid upload token',
+                code: 'bad_signature',
+            }),
+        )
+        expect(parsed).toEqual({
+            code: 'bad_signature',
+            message: 'Invalid upload token',
+        })
     })
 
     it('parses a JSON server error body with code+message', () => {
-        const parsed = parseErrorBody(JSON.stringify({ message: 'Presign failed', code: 'PRESIGN_FAILED' }))
-        expect(parsed).toEqual({ code: 'PRESIGN_FAILED', message: 'Presign failed' })
+        const parsed = parseErrorBody(
+            JSON.stringify({
+                message: 'Presign failed',
+                code: 'PRESIGN_FAILED',
+            }),
+        )
+        expect(parsed).toEqual({
+            code: 'PRESIGN_FAILED',
+            message: 'Presign failed',
+        })
     })
 
     it('parses an S3 XML error body', () => {
-        const xml = '<?xml version="1.0" encoding="UTF-8"?>\n<Error><Code>SignatureDoesNotMatch</Code><Message>The request signature we calculated does not match the signature you provided.</Message></Error>'
+        const xml =
+            '<?xml version="1.0" encoding="UTF-8"?>\n<Error><Code>SignatureDoesNotMatch</Code><Message>The request signature we calculated does not match the signature you provided.</Message></Error>'
         const parsed = parseErrorBody(xml)
         expect(parsed).toEqual({
             code: 'SignatureDoesNotMatch',
-            message: 'The request signature we calculated does not match the signature you provided.',
+            message:
+                'The request signature we calculated does not match the signature you provided.',
         })
     })
 
     it('falls back to a truncated text snippet for an unrecognized body', () => {
         const parsed = parseErrorBody('plain text failure, not json or xml')
-        expect(parsed).toEqual({ code: undefined, message: 'plain text failure, not json or xml' })
+        expect(parsed).toEqual({
+            code: undefined,
+            message: 'plain text failure, not json or xml',
+        })
     })
 
     it('truncates a long plain-text body to 200 chars', () => {
@@ -242,7 +320,10 @@ describe('parseErrorBody', () => {
     })
 
     it('handles an undefined/empty body gracefully', () => {
-        expect(parseErrorBody(undefined)).toEqual({ code: undefined, message: '' })
+        expect(parseErrorBody(undefined)).toEqual({
+            code: undefined,
+            message: '',
+        })
         expect(parseErrorBody('')).toEqual({ code: undefined, message: '' })
     })
 })
@@ -252,7 +333,8 @@ describe('parseErrorBody', () => {
 // ─────────────────────────────────────────────
 describe('uploadErrorFromResponse', () => {
     it('builds a UpupStorageError from an S3 XML body (kind: storage)', () => {
-        const xml = '<Error><Code>SignatureDoesNotMatch</Code><Message>bad sig</Message></Error>'
+        const xml =
+            '<Error><Code>SignatureDoesNotMatch</Code><Message>bad sig</Message></Error>'
         const err = uploadErrorFromResponse({
             status: 403,
             statusText: 'Forbidden',
@@ -269,7 +351,10 @@ describe('uploadErrorFromResponse', () => {
         const err = uploadErrorFromResponse({
             status: 403,
             statusText: 'Forbidden',
-            body: JSON.stringify({ error: 'Invalid upload token', code: 'bad_signature' }),
+            body: JSON.stringify({
+                error: 'Invalid upload token',
+                code: 'bad_signature',
+            }),
             kind: 'storage',
             operation: 'multipart-sign-part',
         })
@@ -281,7 +366,10 @@ describe('uploadErrorFromResponse', () => {
         const err = uploadErrorFromResponse({
             status: 401,
             statusText: 'Unauthorized',
-            body: JSON.stringify({ error: 'Unauthorized', code: 'UNAUTHENTICATED' }),
+            body: JSON.stringify({
+                error: 'Unauthorized',
+                code: 'UNAUTHENTICATED',
+            }),
             kind: 'auth',
             provider: 'google-drive',
         })

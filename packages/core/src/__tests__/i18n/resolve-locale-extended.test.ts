@@ -1,5 +1,9 @@
 import { describe, it, expect } from 'vitest'
-import { buildFallbackChain, resolveMessage, resolveLocaleBundle } from '../../i18n/resolve-locale'
+import {
+    buildFallbackChain,
+    resolveMessage,
+    resolveLocaleBundle,
+} from '../../i18n/resolve-locale'
 import { enUS } from '../../i18n/locales/en-US'
 import { frFR } from '../../i18n/locales/fr-FR'
 import type { LocaleBundle } from '../../i18n/types'
@@ -45,17 +49,32 @@ describe('resolveMessage — extended', () => {
     bundles.set('en-US', enUS)
 
     it('returns undefined for completely unknown namespace', () => {
-        const result = resolveMessage(bundles, ['en-US'], 'nonexistent' as any, 'key')
+        const result = resolveMessage(
+            bundles,
+            ['en-US'],
+            'nonexistent' as any,
+            'key',
+        )
         expect(result).toBeUndefined()
     })
 
     it('returns undefined for unknown key in existing namespace', () => {
-        const result = resolveMessage(bundles, ['en-US'], 'common', 'totallyFakeKey')
+        const result = resolveMessage(
+            bundles,
+            ['en-US'],
+            'common',
+            'totallyFakeKey',
+        )
         expect(result).toBeUndefined()
     })
 
     it('returns undefined when no bundles match the chain', () => {
-        const result = resolveMessage(bundles, ['xx-XX', 'xx'], 'common', 'cancel')
+        const result = resolveMessage(
+            bundles,
+            ['xx-XX', 'xx'],
+            'common',
+            'cancel',
+        )
         expect(result).toBeUndefined()
     })
 
@@ -66,7 +85,12 @@ describe('resolveMessage — extended', () => {
 
     it('skips missing bundles in chain gracefully', () => {
         // Chain has codes that don't exist in the map
-        const result = resolveMessage(bundles, ['fr-FR', 'fr', 'en-US'], 'common', 'cancel')
+        const result = resolveMessage(
+            bundles,
+            ['fr-FR', 'fr', 'en-US'],
+            'common',
+            'cancel',
+        )
         expect(result).toBe('Cancel') // falls through to en-US
     })
 
@@ -84,7 +108,12 @@ describe('resolveMessage — extended', () => {
         testBundles.set('en-US', enUS)
         testBundles.set('de-DE', deBund)
 
-        const result = resolveMessage(testBundles, ['de-DE', 'de', 'en-US'], 'common', 'cancel')
+        const result = resolveMessage(
+            testBundles,
+            ['de-DE', 'de', 'en-US'],
+            'common',
+            'cancel',
+        )
         expect(result).toBe('Abbrechen')
     })
 

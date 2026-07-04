@@ -9,18 +9,25 @@ export type { ServerModeProvider, ServerDriveFile }
 
 export function useServerModeDrive(provider: ServerModeProvider) {
     const { serverUrl } = useUploaderRuntime()
-    const controller = new ServerModeDriveController({ provider, serverUrl: () => serverUrl })
+    const controller = new ServerModeDriveController({
+        provider,
+        serverUrl: () => serverUrl,
+    })
 
     const state = toReadable(controller)
     onMount(() => controller.init())
     onDestroy(() => controller.destroy())
 
     return {
-        state: derived(state, ($s) => $s.state),
-        folderId: derived(state, ($s) => $s.folderId),
-        setFolderId(id: string | undefined) { controller.setFolderId(id) },   // svelte: NO auto-relist (matches today)
-        search: derived(state, ($s) => $s.search),
-        setSearch(s: string) { controller.setSearch(s) },                     // svelte: NO auto-relist
+        state: derived(state, $s => $s.state),
+        folderId: derived(state, $s => $s.folderId),
+        setFolderId(id: string | undefined) {
+            controller.setFolderId(id)
+        }, // svelte: NO auto-relist (matches today)
+        search: derived(state, $s => $s.search),
+        setSearch(s: string) {
+            controller.setSearch(s)
+        }, // svelte: NO auto-relist
         refresh: controller.refresh,
         transfer: controller.transfer,
         startAuth: controller.startAuth,
