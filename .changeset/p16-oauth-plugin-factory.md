@@ -10,9 +10,10 @@ production consumers:
 
 - **`init(emitter)` is the single plugin lifecycle hook (F-607).** `UpupPlugin.setup(core)`
   is removed; `UpupPlugin` is now `{ name; init?(emitter) }`. `PluginManager.register`
-  only dedups + stores; `UpupCore.use()` invokes `init` with core's event bus. A plugin
-  can no longer register extensions from its lifecycle hook — use `core.registerExtension()`
-  (no production plugin did lifecycle-time registration).
+  only dedups + stores; `UpupCore.use()` invokes `init` with core's event bus. **The
+  lifecycle hook now receives the event emitter, not the core instance** — so a plugin can
+  no longer register extensions from within its hook; register them via the public
+  `core.registerExtension()` instead. (No production plugin did lifecycle-time registration.)
 
 - **`BoxPlugin` gains proactive token refresh (F-126).** Box now parses `expires_in`,
   persists `upup_box_token_expiry`, and proactively refreshes within the 60 s window

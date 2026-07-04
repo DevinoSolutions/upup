@@ -33,4 +33,20 @@ describe('useUpupUpload — plugin integration', () => {
 
         expect(fileHandler).toHaveBeenCalled()
     })
+
+    // Re-pin of the former "ext getter reflects registered extensions" test through
+    // the supported API: F-607 removed lifecycle-time registration (init receives the
+    // emitter, not core), so extensions are registered via the public
+    // core.registerExtension() and read back through core.ext. (The hook's `ext` field
+    // is a render-time snapshot of core.ext; core.ext is the live getter, so we assert
+    // against it after a post-mount registration.)
+    it('ext getter reflects extensions registered via core.registerExtension()', () => {
+        const { result } = renderHook(() =>
+            useUpupUpload({ provider: 'S3' as const }),
+        )
+        act(() => {
+            result.current.core.registerExtension('myExt', { value: 42 })
+        })
+        expect(result.current.core.ext.myExt).toEqual({ value: 42 })
+    })
 })
