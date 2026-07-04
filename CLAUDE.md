@@ -238,6 +238,10 @@ if needed; never silently "improve" them:
     in-place mutation) — an object-spread clone would strip File's blob slots. `uploadStatus`
     is a single-source projection of core's `state-change{status}` in the orchestrator;
     a run is single-flight (`activeRun`).
+  - **The `core.files` getter is a read-only view** (a defensive copy — completes the
+    ownership story the previous ruling opened). No path mutates `FileManager`'s collection
+    except through its own methods (`updateFile`/`applyProcessed`/`restore`/`setFiles`/
+    `addFiles`/`removeFile`/`removeAll`/`reorderFiles`).
 
 ## Git & commits
 
