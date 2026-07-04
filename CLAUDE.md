@@ -37,7 +37,22 @@ Publishable (`packages/`):
   S3-compatible provider — it throws at construct time for a value with no
   S3 surface (`NON_S3_STORAGE_PROVIDERS` in `@upup/core`, currently just
   `azure`); `hono.ts`/`next.ts` (App Router) are web-native and don't need
-  the bridge.
+  the bridge. `handler.ts` is decomposed by concern (the deferred N4 server
+  decomposition, now done — P15): `respond.ts` is the single CORS-safe response
+  home — a per-request `Responder` closes over the CORS headers + an
+  `x-upup-request-id`, every route returns through `res.json`/`html`/`redirect`/
+  `noContent`/`fail`, and **a route composing its own `Response` (any
+  `new Response(` outside `respond.ts`) is now a defect**; `upload-routes.ts` is
+  the HMAC upload trust boundary in isolation (metadata validation + presign +
+  multipart lifecycle + token issue/verify/owner-bind/size-envelope);
+  `oauth.ts` is the drive OAuth flow + provider identity; `drive-routes.ts` is
+  the authenticated drive list/transfer HTTP routes; `drive-clients.ts` is the
+  per-provider drive API calls behind the `DRIVE_CLIENTS` registry
+  (`getDriveClient(provider)` — adding a provider is one client-fn pair + one
+  row, no dual switch). Residual `handler.ts` is the thin router:
+  secret/identity/`storage.type` construct guards + route dispatch building one
+  `Responder`. `health.ts` keeps its own self-contained response construction
+  (the router hands it `res.headers`).
 
 Private (`packages/`): `interactive-example`, `storybook-config`,
 `tailwind-config` (shared Tailwind/postcss factory — theme edits happen in one
