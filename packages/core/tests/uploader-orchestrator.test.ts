@@ -1014,16 +1014,18 @@ describe('UploaderOrchestrator', () => {
         })
 
         describe('upload-start handler', () => {
-            it('sets uploadStatus to UPLOADING and calls onUploadStart', () => {
+            it('calls onUploadStart and does NOT itself write uploadStatus (projection owns it)', () => {
                 const { core, handlers } = createMockCoreWithHandlers()
                 const onUploadStart = vi.fn()
                 const orch = new UploaderOrchestrator(core, { onUploadStart })
                 orch.init()
 
+                const before = orch.getSnapshot().uploadStatus
                 handlers['upload-start']({})
 
-                expect(orch.getSnapshot().uploadStatus).toBe(UploadStatus.UPLOADING)
                 expect(onUploadStart).toHaveBeenCalledTimes(1)
+                // uploadStatus now arrives via state-change{status}, not the discrete listener.
+                expect(orch.getSnapshot().uploadStatus).toBe(before)
             })
         })
 
@@ -1260,14 +1262,16 @@ describe('UploaderOrchestrator', () => {
         })
 
         describe('upload-all-complete handler', () => {
-            it('sets uploadStatus to DONE', () => {
+            it('does NOT itself write uploadStatus (projection owns it)', () => {
                 const { core, handlers } = createMockCoreWithHandlers()
                 const orch = new UploaderOrchestrator(core, {})
                 orch.init()
 
+                const before = orch.getSnapshot().uploadStatus
                 handlers['upload-all-complete']([])
 
-                expect(orch.getSnapshot().uploadStatus).toBe(UploadStatus.SUCCESSFUL)
+                // SUCCESSFUL now arrives via the state-change{status} core emits alongside.
+                expect(orch.getSnapshot().uploadStatus).toBe(before)
             })
 
             it('calls onFilesUploadComplete and onUploadComplete', () => {
@@ -1286,15 +1290,17 @@ describe('UploaderOrchestrator', () => {
         })
 
         describe('upload-error handler', () => {
-            it('sets uploadStatus to ERROR and uploadError message', () => {
+            it('sets uploadError message but does NOT itself write uploadStatus (projection owns it)', () => {
                 const { core, handlers } = createMockCoreWithHandlers()
                 const orch = new UploaderOrchestrator(core, {})
                 orch.init()
 
+                const before = orch.getSnapshot().uploadStatus
                 handlers['upload-error']({ error: new Error('Network failure') })
 
-                expect(orch.getSnapshot().uploadStatus).toBe(UploadStatus.FAILED)
                 expect(orch.getSnapshot().uploadError).toBe('Network failure')
+                // FAILED now arrives via the state-change{status: FAILED} core emits right after.
+                expect(orch.getSnapshot().uploadStatus).toBe(before)
             })
 
             it('calls onError callback', () => {
@@ -1329,6 +1335,87 @@ describe('UploaderOrchestrator', () => {
                 handlers['upload-error']({ error: new Error('plain failure') })
 
                 expect(orch.getSnapshot().uploadErrorCode).toBeUndefined()
+            })
+        })
+
+        // ── F-145: uploadStatus is a projection of core's state-change{status} ──
+        describe('uploadStatus projection (F-145)', () => {
+            it('state-change{status} drives uploadStatus for every status', () => {
+                const { core, handlers } = createMockCoreWithHandlers()
+                const orch = new UploaderOrchestrator(core, {})
+                orch.init()
+
+                for (const status of [
+                    UploadStatus.PROCESSING,
+                    UploadStatus.UPLOADING,
+                    UploadStatus.SUCCESSFUL,
+                    UploadStatus.FAILED,
+                    UploadStatus.PAUSED,
+                    UploadStatus.IDLE,
+                ]) {
+                    handlers['state-change']({ status })
+                    expect(orch.getSnapshot().uploadStatus).toBe(status)
+                }
+            })
+
+            it('a state-change without a status leaves uploadStatus unchanged', () => {
+                const { core, handlers } = createMockCoreWithHandlers()
+                const orch = new UploaderOrchestrator(core, {})
+                orch.init()
+
+                handlers['state-change']({ status: UploadStatus.UPLOADING })
+                handlers['state-change']({}) // e.g. a files-only or progress-only change
+                expect(orch.getSnapshot().uploadStatus).toBe(UploadStatus.UPLOADING)
+            })
+
+            it('there is exactly ONE writer of uploadStatus (the discrete listeners do not touch it)', () => {
+                const { core, handlers } = createMockCoreWithHandlers()
+                const orch = new UploaderOrchestrator(core, {})
+                orch.init()
+
+                handlers['state-change']({ status: UploadStatus.UPLOADING })
+                handlers['upload-start']({})
+                handlers['upload-all-complete']([])
+                handlers['upload-error']({ error: new Error('x') })
+                // None of the three discrete listeners moved uploadStatus off UPLOADING.
+                expect(orch.getSnapshot().uploadStatus).toBe(UploadStatus.UPLOADING)
+            })
+        })
+
+        // ── F-145: real core ⇄ orchestrator — pause/resume/cancel now propagate ──
+        describe('real-core status convergence (F-145)', () => {
+            const makeRealCore = () =>
+                new UpupCore({ provider: 'aws', uploadEndpoint: '/api/presign' })
+            const realFile = (name: string) =>
+                new File(['x'], name, { type: 'text/plain' })
+
+            it('core.pause() → orchestrator PAUSED', () => {
+                const core = makeRealCore()
+                const orch = new UploaderOrchestrator(core, {})
+                orch.init()
+                core.pause()
+                expect(orch.getSnapshot().uploadStatus).toBe(UploadStatus.PAUSED)
+                orch.destroy()
+            })
+
+            it('core.resume() → orchestrator UPLOADING', () => {
+                const core = makeRealCore()
+                const orch = new UploaderOrchestrator(core, {})
+                orch.init()
+                core.resume()
+                expect(orch.getSnapshot().uploadStatus).toBe(UploadStatus.UPLOADING)
+                orch.destroy()
+            })
+
+            it('upload-then-cancel resets uploadStatus to IDLE (no stale SUCCESSFUL over empty list)', async () => {
+                const core = makeRealCore()
+                const orch = new UploaderOrchestrator(core, {})
+                orch.init()
+                await core.addFiles([realFile('a.txt')])
+                orch.handleCancel()
+                expect(orch.getSnapshot().uploadStatus).toBe(UploadStatus.IDLE)
+                expect(orch.getSnapshot().files.size).toBe(0)
+                orch.destroy()
             })
         })
     })

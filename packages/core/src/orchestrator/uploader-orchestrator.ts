@@ -62,7 +62,7 @@ export class UploaderOrchestrator {
 
     /** Remove a file by id: revoke its blob URL, then delegate to core. */
     removeFile(fileId: string): void {
-        const file = this.core.files.get(fileId)
+        const file = this.state.files.get(fileId)
         if (file) revokeFileUrl(file)
         this.core.removeFile(fileId)
     }
@@ -227,18 +227,24 @@ export class UploaderOrchestrator {
     private speedSamples: { time: number; bytes: number }[] = []
 
     /**
-     * Rebuild the projected files map from core (the single source of truth).
-     * No-op when the file set is unchanged (same size + ordered ids + same
-     * UploadFile refs) so the `files` reference stays stable across the many
-     * status-only `state-change` events core emits during upload — preserving
-     * referential stability for useSyncExternalStore / computed consumers.
+     * Project orchestrator state from core — the single source of truth (F-145).
+     * `uploadStatus` is derived from the `status` each status-carrying `state-change`
+     * event supplies (core sets `_status` before every such emit); the discrete
+     * upload-start/upload-all-complete/upload-error listeners no longer write it. `files`
+     * is rebuilt from `core.files`, and is a no-op when the file set is unchanged (same
+     * size + ordered ids + same UploadFile refs) so the `files` reference stays stable
+     * across the many status-only `state-change` events core emits during upload —
+     * preserving referential stability for useSyncExternalStore / computed consumers.
      */
-    private rebuildFilesProjection(): void {
+    private projectFromCore(payload?: { status?: UploadStatus }): void {
+        const partial: Partial<OrchestratorState> = {}
+        if (payload?.status !== undefined) partial.uploadStatus = payload.status
         const coreFiles = this.core.files
-        if (!this.filesProjectionChanged(coreFiles)) return
-        const files = new Map(coreFiles)
-        const totalBytes = [...files.values()].reduce((sum, f) => sum + f.size, 0)
-        this.setState({ files, totalBytes })
+        if (this.filesProjectionChanged(coreFiles)) {
+            partial.files = new Map(coreFiles)
+            partial.totalBytes = [...coreFiles.values()].reduce((sum, f) => sum + f.size, 0)
+        }
+        if (Object.keys(partial).length > 0) this.setState(partial)
     }
 
     private filesProjectionChanged(coreFiles: Map<string, UploadFile>): boolean {
@@ -254,10 +260,9 @@ export class UploaderOrchestrator {
     }
 
     init(): void {
-        // ── upload-start ────────────────────────────────────────
+        // ── upload-start (callback only; uploadStatus is projected from state-change) ──
         this.unsubs.push(
             this.core.on('upload-start', () => {
-                this.setState({ uploadStatus: UploadStatus.UPLOADING })
                 this.callbacks.onUploadStart?.()
             }),
         )
@@ -269,9 +274,9 @@ export class UploaderOrchestrator {
             }),
         )
 
-        // ── files (projection of core.files — single source of truth) ──
+        // ── state-change (single source: projects uploadStatus + files from core) ──
         this.unsubs.push(
-            this.core.on('state-change', () => this.rebuildFilesProjection()),
+            this.core.on('state-change', (payload: { status?: UploadStatus }) => this.projectFromCore(payload)),
         )
 
         // ── files-added (side-effects only; the map is owned by state-change) ──
@@ -384,21 +389,20 @@ export class UploaderOrchestrator {
             }),
         )
 
-        // ── upload-all-complete ─────────────────────────────────
+        // ── upload-all-complete (callbacks only; SUCCESSFUL is projected from state-change) ──
         this.unsubs.push(
             this.core.on('upload-all-complete', (completed: UploadFile[]) => {
-                this.setState({ uploadStatus: UploadStatus.SUCCESSFUL })
                 this.callbacks.onFilesUploadComplete?.(completed)
                 this.callbacks.onUploadComplete?.(completed)
             }),
         )
 
-        // ── upload-error ────────────────────────────────────────
+        // ── upload-error (error message + code only; FAILED is projected from state-change) ──
         this.unsubs.push(
             this.core.on('upload-error', (payload: { error: Error; file?: UploadFile }) => {
                 const message = payload.error.message
                 const code = payload.error instanceof UpupError ? payload.error.code : undefined
-                this.setState({ uploadStatus: UploadStatus.FAILED, uploadError: message, uploadErrorCode: code })
+                this.setState({ uploadError: message, uploadErrorCode: code })
                 this.callbacks.onError?.(message)
             }),
         )
