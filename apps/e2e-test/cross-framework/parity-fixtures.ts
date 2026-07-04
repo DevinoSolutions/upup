@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import type { NormalizedNode } from './parity-dom'
+import type { ParityVariant } from './framework-matrix'
 
 export type ParityComponent = 'fileIcon' | 'filePreview' | 'fileItem' | 'fileList' | 'sourceSelector'
 
@@ -12,9 +13,9 @@ export type ParityComponent = 'fileIcon' | 'filePreview' | 'fileItem' | 'fileLis
 const HERE = dirname(fileURLToPath(import.meta.url))
 const fixtures = JSON.parse(
   readFileSync(join(HERE, 'parity-fixtures.json'), 'utf8'),
-) as Record<ParityComponent, NormalizedNode>
+) as Record<ParityVariant, Record<ParityComponent, NormalizedNode>>
 
-export const PARITY_FIXTURES: Record<ParityComponent, NormalizedNode> = fixtures
+export const PARITY_FIXTURES: Record<ParityVariant, Record<ParityComponent, NormalizedNode>> = fixtures
 
 /**
  * Self-liquidating exception list: a component whose canon (react) fixture is

@@ -1,8 +1,8 @@
 import { test, expect, type Page } from '@playwright/test'
-import { writeFileSync } from 'node:fs'
+import { readFileSync, writeFileSync } from 'node:fs'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { byName, storyUrl } from './framework-matrix'
+import { byName, storyUrl, PARITY_VARIANTS, type ParityVariant } from './framework-matrix'
 import { normalizeElement, type NormalizedNode } from './parity-dom'
 import { PARITY_FIXTURES, KNOWN_DIVERGENCES, type ParityComponent } from './parity-fixtures'
 
@@ -42,14 +42,16 @@ async function normalize(page: Page, selector: string): Promise<NormalizedNode> 
  * instead of silently going stale.
  */
 function assertComponentParity(
+  variant: ParityVariant,
   component: ParityComponent,
   captured: NormalizedNode,
   fwName: string,
   label: string,
 ) {
+  const canon = PARITY_FIXTURES[variant][component]
   const divergence = KNOWN_DIVERGENCES[component]
   if (!divergence || divergence.assertOnly.includes(fwName)) {
-    expect.soft(captured, label).toEqual(PARITY_FIXTURES[component])
+    expect.soft(captured, label).toEqual(canon)
     return
   }
   // Excepted framework: prove the documented divergence still holds. If this
@@ -57,72 +59,75 @@ function assertComponentParity(
   // KNOWN_DIVERGENCES entry for `component` instead of leaving it stale.
   expect
     .soft(captured, `${label} — divergence healed, remove the KNOWN_DIVERGENCES entry for ${component} (${divergence.reason})`)
-    .not.toEqual(PARITY_FIXTURES[component])
+    .not.toEqual(canon)
 }
 
 test.describe('cross-framework DOM + a11y parity', () => {
-  test('renders the agreed contract on every framework', async ({ page }, testInfo) => {
-    const fw = byName(testInfo.project.name)
+  for (const variant of PARITY_VARIANTS) {
+    test(`renders the agreed contract on every framework (variant: ${variant})`, async ({ page }, testInfo) => {
+      const fw = byName(testInfo.project.name)
 
-    await page.goto(storyUrl(fw.parityStoryId))
-    await expect(page.locator('[data-testid="upup-root"]')).toBeVisible({ timeout: 30_000 })
-    await clearCrashRecovery(page)
-    await page.reload()
-    await expect(page.locator('[data-testid="upup-root"]')).toBeVisible({ timeout: 30_000 })
+      await page.goto(storyUrl(fw.parityStoryIds[variant]))
+      await expect(page.locator('[data-testid="upup-root"]')).toBeVisible({ timeout: 30_000 })
+      await clearCrashRecovery(page)
+      await page.reload()
+      await expect(page.locator('[data-testid="upup-root"]')).toBeVisible({ timeout: 30_000 })
 
-    // SourceSelector is present at mount (files.size === 0).
-    const sourceSelector = await normalize(page, '[data-testid="upup-adapter-selector"]')
+      // SourceSelector is present at mount (files.size === 0).
+      const sourceSelector = await normalize(page, '[data-testid="upup-adapter-selector"]')
 
-    // Add an image (→ FilePreview) and a PDF (→ FileItem + FileIcon).
-    const fileInput = page.locator('[data-testid="upup-file-input"]')
-    if ((await fileInput.count()) === 0) {
-      const localSource = page.locator('[data-testid="upup-source-local"]')
-      if (await localSource.count()) await localSource.first().click()
-    }
-    await fileInput.first().waitFor({ state: 'attached', timeout: 15_000 })
-    await fileInput.first().setInputFiles([
-      { name: 'parity.png', mimeType: 'image/png', buffer: PNG_1x1 },
-      { name: 'parity.pdf', mimeType: 'application/pdf', buffer: PDF_BYTES },
-    ])
+      // Add an image (→ FilePreview) and a PDF (→ FileItem + FileIcon).
+      const fileInput = page.locator('[data-testid="upup-file-input"]')
+      if ((await fileInput.count()) === 0) {
+        const localSource = page.locator('[data-testid="upup-source-local"]')
+        if (await localSource.count()) await localSource.first().click()
+      }
+      await fileInput.first().waitFor({ state: 'attached', timeout: 15_000 })
+      await fileInput.first().setInputFiles([
+        { name: 'parity.png', mimeType: 'image/png', buffer: PNG_1x1 },
+        { name: 'parity.pdf', mimeType: 'application/pdf', buffer: PDF_BYTES },
+      ])
 
-    await expect(page.locator('[data-testid="upup-file-item"]').first()).toBeVisible({ timeout: 15_000 })
+      await expect(page.locator('[data-testid="upup-file-item"]').first()).toBeVisible({ timeout: 15_000 })
 
-    const fileItem = await normalize(page, '[data-testid="upup-file-item"]')
-    const filePreview = await normalize(page, '[data-testid="upup-file-preview"]')
-    const fileIcon = await normalize(page, '[data-testid="upup-file-icon"]')
-    const fileList = await normalize(page, '[data-testid="upup-file-list"]')
+      const fileItem = await normalize(page, '[data-testid="upup-file-item"]')
+      const filePreview = await normalize(page, '[data-testid="upup-file-preview"]')
+      const fileIcon = await normalize(page, '[data-testid="upup-file-icon"]')
+      const fileList = await normalize(page, '[data-testid="upup-file-list"]')
 
-    const captured: Record<ParityComponent, NormalizedNode> = {
-      sourceSelector,
-      fileItem,
-      filePreview,
-      fileIcon,
-      fileList,
-    }
+      const captured: Record<ParityComponent, NormalizedNode> = {
+        sourceSelector,
+        fileItem,
+        filePreview,
+        fileIcon,
+        fileList,
+      }
 
-    // Capture mode (react only): seed/refresh the fixtures, then hand-edit to target.
-    if (process.env.UPDATE_PARITY && fw.name === 'react') {
-      writeFileSync(FIXTURE_PATH, JSON.stringify(captured, null, 2) + '\n')
-      test.info().annotations.push({ type: 'parity', description: 'fixtures written' })
-      return
-    }
+      // Capture mode (react only): seed/refresh the fixtures for this variant, then hand-edit to target.
+      if (process.env.UPDATE_PARITY && fw.name === 'react') {
+        const existing = JSON.parse(readFileSync(FIXTURE_PATH, 'utf8'))
+        writeFileSync(FIXTURE_PATH, JSON.stringify({ ...existing, [variant]: captured }, null, 2) + '\n')
+        test.info().annotations.push({ type: 'parity', description: `fixtures written (variant: ${variant})` })
+        return
+      }
 
-    // Soft assertions so a single run reports ALL five component mismatches at
-    // once (the composite fileItem embeds the fileIcon + filePreview subtrees, so
-    // a hard assert would mask the leaf results behind the first failure).
-    //
-    // Fix 4 (D1): the hidden file input is `upup-hidden` (display:none) + aria-hidden
-    // + tabindex=-1 — invisible plumbing. React/Vue render it inside SourceSelector;
-    // Svelte/Angular own it in the shell. The normalizer skips `upup-hidden` subtrees,
-    // so this asserts the VISIBLE + a11y SourceSelector contract only. The input's DOM
-    // location stays a per-framework implementation detail (no runtime-contract rewrite).
-    assertComponentParity('sourceSelector', captured.sourceSelector, fw.name, 'SourceSelector parity')
-    assertComponentParity('fileItem', captured.fileItem, fw.name, 'FileItem parity')
-    assertComponentParity('filePreview', captured.filePreview, fw.name, 'FilePreview parity')
-    assertComponentParity('fileIcon', captured.fileIcon, fw.name, 'FileIcon parity')
-    // fileList: react/preact hard-asserted; vue/svelte/vanilla/angular carry the
-    // documented F-711/F-712 divergences (KNOWN_DIVERGENCES) -- inverse forcing
-    // check keeps the exception from silently outliving the bugs it names.
-    assertComponentParity('fileList', captured.fileList, fw.name, 'FileList parity')
-  })
+      // Soft assertions so a single run reports ALL five component mismatches at
+      // once (the composite fileItem embeds the fileIcon + filePreview subtrees, so
+      // a hard assert would mask the leaf results behind the first failure).
+      //
+      // Fix 4 (D1): the hidden file input is `upup-hidden` (display:none) + aria-hidden
+      // + tabindex=-1 — invisible plumbing. React/Vue render it inside SourceSelector;
+      // Svelte/Angular own it in the shell. The normalizer skips `upup-hidden` subtrees,
+      // so this asserts the VISIBLE + a11y SourceSelector contract only. The input's DOM
+      // location stays a per-framework implementation detail (no runtime-contract rewrite).
+      assertComponentParity(variant, 'sourceSelector', captured.sourceSelector, fw.name, 'SourceSelector parity')
+      assertComponentParity(variant, 'fileItem', captured.fileItem, fw.name, 'FileItem parity')
+      assertComponentParity(variant, 'filePreview', captured.filePreview, fw.name, 'FilePreview parity')
+      assertComponentParity(variant, 'fileIcon', captured.fileIcon, fw.name, 'FileIcon parity')
+      // fileList: react/preact hard-asserted; vue/svelte/vanilla/angular carry the
+      // documented F-711/F-712 divergences (KNOWN_DIVERGENCES) -- inverse forcing
+      // check keeps the exception from silently outliving the bugs it names.
+      assertComponentParity(variant, 'fileList', captured.fileList, fw.name, 'FileList parity')
+    })
+  }
 })

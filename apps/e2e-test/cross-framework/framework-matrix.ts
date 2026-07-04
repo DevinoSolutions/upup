@@ -3,6 +3,16 @@
 // `RealUploadClient` story (MSW disabled, serverUrl -> harness on :53060).
 // Story id = <title kebab>--<export kebab>, e.g. React/Uploader + RealUploadClient
 // -> "react-uploader--real-upload-client".
+//
+// Adding a variant/density: add the variant to PARITY_VARIANTS, add a
+// `<fw>-uploader--<variant>` story per framework, regen the parity fixtures
+// for that variant (`UPDATE_PARITY=1` + `--project react`, review the diff),
+// run the 4b overflow sweep for that variant, and do a live per-framework
+// visual check (the harness catches DOM structure, never geometry/spacing).
+
+/** UI variants the parity + overflow harnesses are keyed by. */
+export type ParityVariant = 'default'
+export const PARITY_VARIANTS: readonly ParityVariant[] = ['default']
 
 export interface FrameworkEntry {
   /** Playwright project name AND the `@upup/storybook-<name>` package suffix. */
@@ -11,17 +21,17 @@ export interface FrameworkEntry {
   port: number
   /** Storybook story id for the real-upload smoke. */
   storyId: string
-  /** Story id for the deterministic DOM-parity fixture (autoUpload off). */
-  parityStoryId: string
+  /** Story id for the deterministic DOM-parity fixture (autoUpload off), per variant. */
+  parityStoryIds: Record<ParityVariant, string>
 }
 
 export const FRAMEWORKS: FrameworkEntry[] = [
-  { name: 'react',   port: 53050, storyId: 'react-uploader--real-upload-client',   parityStoryId: 'react-uploader--parity' },
-  { name: 'vue',     port: 53051, storyId: 'vue-uploader--real-upload-client',     parityStoryId: 'vue-uploader--parity' },
-  { name: 'svelte',  port: 53052, storyId: 'svelte-uploader--real-upload-client',  parityStoryId: 'svelte-uploader--parity' },
-  { name: 'vanilla', port: 53053, storyId: 'vanilla-uploader--real-upload-client', parityStoryId: 'vanilla-uploader--parity' },
-  { name: 'angular', port: 53054, storyId: 'angular-uploader--real-upload-client', parityStoryId: 'angular-uploader--parity' },
-  { name: 'preact',  port: 53055, storyId: 'preact-uploader--real-upload-client',  parityStoryId: 'preact-uploader--parity' },
+  { name: 'react',   port: 53050, storyId: 'react-uploader--real-upload-client',   parityStoryIds: { default: 'react-uploader--parity' } },
+  { name: 'vue',     port: 53051, storyId: 'vue-uploader--real-upload-client',     parityStoryIds: { default: 'vue-uploader--parity' } },
+  { name: 'svelte',  port: 53052, storyId: 'svelte-uploader--real-upload-client',  parityStoryIds: { default: 'svelte-uploader--parity' } },
+  { name: 'vanilla', port: 53053, storyId: 'vanilla-uploader--real-upload-client', parityStoryIds: { default: 'vanilla-uploader--parity' } },
+  { name: 'angular', port: 53054, storyId: 'angular-uploader--real-upload-client', parityStoryIds: { default: 'angular-uploader--parity' } },
+  { name: 'preact',  port: 53055, storyId: 'preact-uploader--real-upload-client',  parityStoryIds: { default: 'preact-uploader--parity' } },
 ]
 
 /** All six storybook origins, comma-joined (for the harness CORS allowlist). */
