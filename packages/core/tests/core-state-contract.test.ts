@@ -79,3 +79,31 @@ describe('P6 contract — one upload-failure channel (F-146)', () => {
     core.destroy()
   })
 })
+
+// ─────────────────────────────────────────────────────────────
+// C2 / F-147 — a consumer's listener throwing is NOT an upload failure
+// ─────────────────────────────────────────────────────────────
+describe('P6 contract — listener isolation (F-147)', () => {
+  it('a throwing state-change handler does not abort later handlers nor throw out of emit', () => {
+    const core = new UpupCore({})
+    const second = vi.fn()
+    core.on('state-change', () => { throw new Error('render bug') })
+    core.on('state-change', second)
+
+    // Drive a state mutation that emits state-change (pause emits {status: PAUSED}).
+    expect(() => core.pause()).not.toThrow()
+    expect(second).toHaveBeenCalled()
+    core.destroy()
+  })
+
+  it('a render-bug listener throw does not corrupt upload status (no-op local flow stays SUCCESSFUL)', async () => {
+    // Target configured, zero files → upload() runs the empty no-op flow to SUCCESSFUL
+    // without any network call. A throwing state-change listener must not derail it.
+    const core = new UpupCore({ provider: 'aws', uploadEndpoint: '/api/presign' })
+    core.on('state-change', () => { throw new Error('render bug in a listener') })
+
+    await expect(core.upload()).resolves.toBeDefined()
+    expect(core.status).toBe(UploadStatus.SUCCESSFUL)
+    core.destroy()
+  })
+})

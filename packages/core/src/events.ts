@@ -26,7 +26,16 @@ export class EventEmitter<TEvents extends object = Record<string, unknown>> {
     const handlers = this.handlers.get(event)
     if (handlers) {
       for (const handler of handlers) {
-        handler(payload)
+        // A consumer's listener throwing is NOT a state/upload failure. Isolate each
+        // handler so one throw can't abort the others or escape emit() and misattribute
+        // a render bug as a pipeline error. Report dev-only; never re-emit.
+        try {
+          handler(payload)
+        } catch (err) {
+          if (typeof process !== 'undefined' && process.env?.NODE_ENV !== 'production') {
+            console.error(`[upup] listener for "${event}" threw:`, err)
+          }
+        }
       }
     }
   }
