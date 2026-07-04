@@ -107,3 +107,47 @@ describe('P6 contract — listener isolation (F-147)', () => {
     core.destroy()
   })
 })
+
+// ─────────────────────────────────────────────────────────────
+// C3 / F-144 — file-status transitions are immutable (new reference)
+// ─────────────────────────────────────────────────────────────
+describe('P6 contract — immutable file-status transitions (F-144)', () => {
+  it('a status transition replaces the map object (new ref) and leaves the original unmutated', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => { throw new Error('presign down') }))
+
+    const core = makeFailingCore()
+    await core.addFiles([realFile('a.txt')])
+    const id = [...core.files.keys()][0]
+    const before = core.files.get(id)!
+    expect(before.status).toBe(UploadStatus.IDLE)
+
+    await core.upload().catch(() => {})
+
+    const after = core.files.get(id)!
+    expect(after.status).toBe(UploadStatus.FAILED)
+    expect(after).not.toBe(before) // NEW object reference
+    expect(before.status).toBe(UploadStatus.IDLE) // original object untouched
+    // File-integrity tripwire (S3-D11 rider): the transition must NOT strip File-ness —
+    // an object-spread clone would leave a plain object here and silently break xhr.send.
+    expect(after).toBeInstanceOf(File)
+    expect(after.size).toBe(before.size)
+    core.destroy()
+  })
+
+  it('at the orchestrator boundary a real status transition yields a NEW files snapshot ref (ref-diff fires)', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => { throw new Error('presign down') }))
+
+    const core = makeFailingCore()
+    const orch = new UploaderOrchestrator(core, {})
+    orch.init()
+    await core.addFiles([realFile('a.txt')])
+    const filesBefore = orch.getSnapshot().files
+
+    await core.upload().catch(() => {})
+
+    const filesAfter = orch.getSnapshot().files
+    expect(filesAfter).not.toBe(filesBefore) // the projection rebuilt on the status change
+    orch.destroy()
+    core.destroy()
+  })
+})

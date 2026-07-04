@@ -52,7 +52,7 @@ describe('UpupCore upload target resolution', () => {
     })
   })
 
-  it('preserves the native File instance through upload status transitions', async () => {
+  it('preserves the native File data through upload status transitions', async () => {
     vi.stubGlobal('fetch', vi.fn(async () =>
       new Response(JSON.stringify({
         key: 'uploads/hello.txt',
@@ -84,8 +84,13 @@ describe('UpupCore upload target resolution', () => {
     xhr.triggerLoad()
     await uploadPromise
 
-    expect(sentBody).toBe(file)
+    // Status transitions are immutable (F-144): each yields a NEW File reference, so the
+    // uploaded body is no longer the exact object added — but it MUST remain a real File
+    // carrying the same name and bytes (a plain-object clone would break xhr.send).
     expect(sentBody).toBeInstanceOf(File)
+    const sent = sentBody as File
+    expect(sent.name).toBe(file.name)
+    expect(await sent.text()).toBe('hello')
     expect(core.files.values().next().value).toBeInstanceOf(File)
   })
 

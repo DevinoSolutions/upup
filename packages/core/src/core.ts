@@ -267,8 +267,8 @@ export class UpupCore {
     return new UploadManager({
       ...config,
       onFileStart: (file) => {
-        const uploading = Object.assign(file, { status: UploadStatus.UPLOADING }) as UploadFile
-        this.files.set(file.id, uploading)
+        const uploading = this.fileManager.updateFile(file.id, { status: UploadStatus.UPLOADING })
+        if (!uploading) return
         this.emitter.emit('file-upload-start', { file: uploading })
         this.emitter.emit('state-change', { files: this.files })
       },
@@ -280,11 +280,10 @@ export class UpupCore {
         if (
           this.pauseRequested ||
           this.cancelRequested ||
-          this.destroyed ||
-          !this.files.has(file.id)
+          this.destroyed
         ) return
-        const updated = Object.assign(file, { key: result.key, status: UploadStatus.SUCCESSFUL }) as UploadFile
-        this.files.set(file.id, updated)
+        const updated = this.fileManager.updateFile(file.id, { key: result.key, status: UploadStatus.SUCCESSFUL })
+        if (!updated) return
         this.emitter.emit('upload-success', { file: updated, result })
         this.emitter.emit('state-change', { files: this.files })
       },
@@ -292,11 +291,10 @@ export class UpupCore {
         if (
           this.pauseRequested ||
           this.cancelRequested ||
-          this.destroyed ||
-          !this.files.has(file.id)
+          this.destroyed
         ) return
-        const failed = Object.assign(file, { status: UploadStatus.FAILED }) as UploadFile
-        this.files.set(file.id, failed)
+        const failed = this.fileManager.updateFile(file.id, { status: UploadStatus.FAILED })
+        if (!failed) return
         this.emitter.emit('upload-error', { file: failed, error })
         this.emitter.emit('state-change', { files: this.files })
       },
@@ -304,23 +302,23 @@ export class UpupCore {
   }
 
   private markFilesReady(files: UploadFile[]): UploadFile[] {
-    return files.map(file => {
-      const overrides = this.fileOverrides.get(file.id)
-      const ready = Object.assign(file, {
-        status: UploadStatus.READY,
-        metadata: {
-          ...file.metadata,
-          ...this.options.metadata,
-          ...overrides?.metadata,
-        },
-      }) as UploadFile
-      this.files.set(file.id, ready)
-      return ready
-    })
+    return files
+      .map(file => {
+        const overrides = this.fileOverrides.get(file.id)
+        return this.fileManager.updateFile(file.id, {
+          status: UploadStatus.READY,
+          metadata: {
+            ...file.metadata,
+            ...this.options.metadata,
+            ...overrides?.metadata,
+          },
+        })
+      })
+      .filter((file): file is UploadFile => file !== undefined)
   }
 
   private updatePendingFileStatuses(status: UploadStatus): void {
-    for (const file of this.files.values()) {
+    for (const file of [...this.files.values()]) {
       if (
         file.key == null &&
         (
@@ -330,17 +328,15 @@ export class UpupCore {
         file.status === UploadStatus.PAUSED
       )
     ) {
-        Object.assign(file, { status })
-        this.files.set(file.id, file)
+        this.fileManager.updateFile(file.id, { status })
       }
     }
   }
 
   private markUnsuccessfulFilesFailed(): void {
-    for (const file of this.files.values()) {
+    for (const file of [...this.files.values()]) {
       if (file.key == null && file.status !== UploadStatus.SUCCESSFUL) {
-        Object.assign(file, { status: UploadStatus.FAILED })
-        this.files.set(file.id, file)
+        this.fileManager.updateFile(file.id, { status: UploadStatus.FAILED })
       }
     }
   }

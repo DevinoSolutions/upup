@@ -157,6 +157,35 @@ export class FileManager {
     return this.files
   }
 
+  /**
+   * Immutable file-status transition: produce a NEW UploadFile carrying the patch,
+   * store and return it. FileManager is the sole writer of a file's status/key/metadata
+   * (F-144), and the new reference lets the orchestrator's ref-diff projection track the
+   * transition (F-145).
+   *
+   * Constraint: object-spread (`{ ...prev }`) would strip File's blob data and methods —
+   * they live in internal slots / on the prototype, not as own-enumerable props — leaving
+   * a plain object that breaks `xhr.send(file)` in the direct-upload strategy. So we
+   * re-wrap the same backing bytes into a fresh File (a view, not a copy) and copy the
+   * UploadFile fields onto it — mirroring `cloneUploadFile` (steps/image-utils.ts). Do
+   * NOT "simplify" this back to a spread.
+   */
+  updateFile(id: string, patch: Partial<UploadFile>): UploadFile | undefined {
+    const prev = this.files.get(id)
+    if (!prev) return undefined
+    const next = new File([prev], prev.name, {
+      type: prev.type,
+      lastModified: prev.lastModified,
+    })
+    // Spread carries the own-enumerable UploadFile fields; relativePath is defined
+    // non-enumerable (nativeToUploadFile) so it is copied explicitly, exactly as
+    // cloneUploadFile does. Then the patch wins.
+    Object.assign(next, { ...prev }, { relativePath: prev.relativePath }, patch)
+    const updated = next as UploadFile
+    this.files.set(id, updated)
+    return updated
+  }
+
   private validateFile(file: File): void {
     const [violation] = validateFileRestrictions(file, this.options)
     if (violation) {
