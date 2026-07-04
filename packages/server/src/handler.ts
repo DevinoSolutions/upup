@@ -34,81 +34,9 @@ import {
 import { defaultKeyStrategy } from './key'
 import { reportServerError, toSafeError } from './observability'
 import { handleHealth } from './health'
+import { createResponder, parseJsonBody, type Responder } from './respond'
 
 export type RouteHandler = (req: Request) => Promise<Response>
-type ResponseHeaders = Record<string, string>
-
-function corsHeaders(req: Request, config: UpupServerConfig): ResponseHeaders {
-    const cors = config.cors
-    if (!cors) return {}
-
-    const origin = req.headers.get('origin') ?? ''
-    const allowsWildcard = cors.allowedOrigins.includes('*')
-    const allowsOrigin = origin && cors.allowedOrigins.includes(origin)
-    if (!allowsWildcard && !allowsOrigin) return {}
-
-    // Never send a literal '*' to a browser (Origin present): reflect the matched
-    // origin so no route (incl. /files/*, /presign) exposes a bare wildcard. '*'
-    // is emitted only for origin-less (non-browser) requests (audit S3).
-    const allowOrigin = origin ? origin : '*'
-    const headers: ResponseHeaders = {
-        'Access-Control-Allow-Origin': allowOrigin,
-        'Access-Control-Allow-Methods': (
-            cors.allowedMethods ?? ['GET', 'POST', 'OPTIONS']
-        ).join(', '),
-        'Access-Control-Allow-Headers': (
-            cors.allowedHeaders ?? ['Content-Type', 'Authorization']
-        ).join(', '),
-        'Access-Control-Max-Age': String(cors.maxAgeSeconds ?? 600),
-        Vary: 'Origin',
-    }
-    // Credentialed CORS is gated on a CONCRETE allowlist match only — NEVER a
-    // wildcard-only match. Reflecting an arbitrary origin (allowed solely via '*')
-    // together with credentials would let any site make credentialed cross-origin
-    // reads, so a '*'-configured server gets public, NON-credentialed CORS. To use
-    // the server-mode drive client (`credentials: 'include'`), operators must
-    // enumerate their app origin(s) in `allowedOrigins` (audit S3 / CORS review).
-    if (allowsOrigin && allowOrigin !== '*') {
-        headers['Access-Control-Allow-Credentials'] = 'true'
-    }
-    return headers
-}
-
-function json(
-    data: unknown,
-    status = 200,
-    headers: ResponseHeaders = {},
-): Response {
-    return new Response(JSON.stringify(data), {
-        status,
-        headers: { 'Content-Type': 'application/json', ...headers },
-    })
-}
-
-/** One home for every non-2xx response: logs via the onError seam, then returns
- *  the uniform `{ error: <generic human message>, code: <machine code> }` body.
- *  The real cause (error.name/message/stack) goes to the logger, never the client. */
-function fail(
-    config: UpupServerConfig,
-    h: ResponseHeaders,
-    route: string,
-    method: string,
-    status: number,
-    code: string,
-    message: string,
-    error: unknown,
-): Response {
-    reportServerError(config.onError, {
-        route,
-        method,
-        status,
-        code,
-        message,
-        requestId: h['x-upup-request-id'],
-        error: toSafeError(error),
-    })
-    return json({ error: message, code }, status, h)
-}
 
 /** Secure-by-default gate for the capability-granting upload routes (/presign,
  *  /multipart/init): reject an unauthenticated, unidentified caller unless the
@@ -120,14 +48,12 @@ function fail(
  *  DEFAULT_USER_ID and let the upload proceed (F-110). */
 function requireUploadAuthorization(
     config: UpupServerConfig,
-    h: ResponseHeaders,
+    res: Responder,
     route: string,
     method: string,
 ): Response | null {
     if (!config.auth && !config.getUserId && !config.allowAnonymousUploads) {
-        return fail(
-            config,
-            h,
+        return res.fail(
             route,
             method,
             403,
@@ -146,7 +72,7 @@ function requireUploadAuthorization(
 async function verifyTokenOrRespond(
     config: UpupServerConfig,
     token: string,
-    h: ResponseHeaders,
+    res: Responder,
     route: string,
     method: string,
 ): Promise<UploadTokenPayload | Response> {
@@ -165,10 +91,13 @@ async function verifyTokenOrRespond(
                 status: 403,
                 code: e.code,
                 message: 'Invalid upload token',
-                requestId: h['x-upup-request-id'],
+                requestId: res.headers['x-upup-request-id'],
                 error: toSafeError(e),
             })
-            return json({ error: 'Invalid upload token', code: e.code }, 403, h)
+            return res.json(
+                { error: 'Invalid upload token', code: e.code },
+                403,
+            )
         }
         throw e
     }
@@ -185,7 +114,7 @@ async function enforceTokenOwner(
     config: UpupServerConfig,
     req: Request,
     payload: UploadTokenPayload,
-    h: ResponseHeaders,
+    res: Responder,
     route: string,
     method: string,
 ): Promise<Response | null> {
@@ -194,9 +123,7 @@ async function enforceTokenOwner(
     const currentOwner =
         currentUserId === DEFAULT_USER_ID ? null : currentUserId
     if (currentOwner !== payload.uid) {
-        return fail(
-            config,
-            h,
+        return res.fail(
             route,
             method,
             403,
@@ -206,26 +133,6 @@ async function enforceTokenOwner(
         )
     }
     return null
-}
-
-/** Parse a JSON request body, returning a 400 Response (not an unhandled throw)
- *  on malformed JSON. Collapses the two divergent body-parse sites. */
-async function parseJsonBody<T>(
-    req: Request,
-    h: ResponseHeaders,
-): Promise<{ ok: true; value: T } | { ok: false; response: Response }> {
-    try {
-        return { ok: true, value: (await req.json()) as T }
-    } catch {
-        return {
-            ok: false,
-            response: json(
-                { error: 'Invalid JSON body', code: UpupErrorCode.BAD_REQUEST },
-                400,
-                h,
-            ),
-        }
-    }
 }
 
 function matchesAllowedType(type: string, allowedTypes?: string[]): boolean {
@@ -243,7 +150,7 @@ async function validateUploadMetadata(
     req: Request,
     config: UpupServerConfig,
     body: FileMetadata,
-    responseHeaders: ResponseHeaders = {},
+    res: Responder,
 ): Promise<Response | null> {
     if (
         typeof body?.name !== 'string' ||
@@ -253,25 +160,24 @@ async function validateUploadMetadata(
         !Number.isFinite(body.size) ||
         body.size < 0
     ) {
-        return json(
+        return res.json(
             { error: 'Invalid file metadata', code: UpupErrorCode.BAD_REQUEST },
             400,
-            responseHeaders,
         )
     }
 
     if (config.maxFileSize && body.size > config.maxFileSize) {
-        return json({ error: 'File too large' }, 413, responseHeaders)
+        return res.json({ error: 'File too large' }, 413)
     }
 
     if (!matchesAllowedType(body.type, config.allowedTypes)) {
-        return json({ error: 'File type not allowed' }, 415, responseHeaders)
+        return res.json({ error: 'File type not allowed' }, 415)
     }
 
     if (config.hooks?.onBeforeUpload) {
         const allowed = await config.hooks.onBeforeUpload(body, req)
         if (!allowed) {
-            return json({ error: 'Upload rejected' }, 403, responseHeaders)
+            return res.json({ error: 'Upload rejected' }, 403)
         }
     }
 
@@ -316,50 +222,45 @@ export function createUpupHandler(config: UpupServerConfig): RouteHandler {
     return async (req: Request): Promise<Response> => {
         const url = new URL(req.url)
         const path = url.pathname
-        const responseHeaders = corsHeaders(req, config)
-        const requestId = crypto.randomUUID()
-        responseHeaders['x-upup-request-id'] = requestId
+        const res = createResponder(req, config)
 
         try {
             if (req.method === 'OPTIONS') {
-                return new Response(null, {
-                    status: 204,
-                    headers: responseHeaders,
-                })
+                return res.noContent()
             }
 
             // Health check sits BEFORE the auth gate so uptime/deploy probes work
             // unauthenticated (F-426/F-428).
             if (req.method === 'GET' && path.endsWith('/health')) {
-                return handleHealth(config, responseHeaders)
+                return handleHealth(config, res.headers)
             }
 
             // Auth check
             if (config.auth) {
                 const authorized = await config.auth(req)
                 if (!authorized) {
-                    return json({ error: 'Unauthorized' }, 401, responseHeaders)
+                    return res.json({ error: 'Unauthorized' }, 401)
                 }
             }
 
             // Route matching
             if (req.method === 'POST' && path.endsWith('/presign')) {
-                return handlePresign(req, config, responseHeaders)
+                return handlePresign(req, config, res)
             }
             if (req.method === 'POST' && path.endsWith('/multipart/init')) {
-                return handleMultipartInit(req, config, responseHeaders)
+                return handleMultipartInit(req, config, res)
             }
             if (
                 req.method === 'POST' &&
                 path.endsWith('/multipart/sign-part')
             ) {
-                return handleMultipartSignPart(req, config, responseHeaders)
+                return handleMultipartSignPart(req, config, res)
             }
             if (req.method === 'POST' && path.endsWith('/multipart/complete')) {
-                return handleMultipartComplete(req, config, responseHeaders)
+                return handleMultipartComplete(req, config, res)
             }
             if (req.method === 'POST' && path.endsWith('/multipart/abort')) {
-                return handleMultipartAbort(req, config, responseHeaders)
+                return handleMultipartAbort(req, config, res)
             }
 
             // OAuth routes: GET /auth/:provider and GET /auth/:provider/cb
@@ -368,9 +269,9 @@ export function createUpupHandler(config: UpupServerConfig): RouteHandler {
                 const provider = authMatch[1]
                 const isCallback = authMatch[2] === 'cb'
                 if (isCallback) {
-                    return handleOAuthCallback(req, config, provider)
+                    return handleOAuthCallback(req, config, provider, res)
                 }
-                return handleOAuthRedirect(req, config, provider)
+                return handleOAuthRedirect(req, config, provider, res)
             }
 
             // File routes: GET /files/:provider and POST /files/:provider/transfer
@@ -381,33 +282,21 @@ export function createUpupHandler(config: UpupServerConfig): RouteHandler {
                 const provider = filesMatch[1]
                 const isTransfer = filesMatch[2] === 'transfer'
                 if (req.method === 'POST' && isTransfer) {
-                    return handleFileTransfer(
-                        req,
-                        config,
-                        provider,
-                        responseHeaders,
-                    )
+                    return handleFileTransfer(req, config, provider, res)
                 }
                 if (req.method === 'GET' && !isTransfer) {
-                    return handleListFiles(
-                        req,
-                        config,
-                        provider,
-                        responseHeaders,
-                    )
+                    return handleListFiles(req, config, provider, res)
                 }
             }
 
-            return json({ error: 'Not found' }, 404, responseHeaders)
+            return res.json({ error: 'Not found' }, 404)
         } catch (error) {
             // Transport safety net (F-421/F-104): a last-resort catch so an unhandled
             // throw anywhere in routing surfaces as a logged, CORS-headered, coded 500
             // instead of an uncaught framework exception with no log and no CORS. This
             // is the single home for last-resort handling — the express/fastify/hono/
             // next adapters need no per-adapter catch of their own.
-            return fail(
-                config,
-                responseHeaders,
+            return res.fail(
                 'router',
                 req.method,
                 500,
@@ -422,31 +311,20 @@ export function createUpupHandler(config: UpupServerConfig): RouteHandler {
 async function handlePresign(
     req: Request,
     config: UpupServerConfig,
-    responseHeaders: ResponseHeaders,
+    res: Responder,
 ): Promise<Response> {
-    const gate = requireUploadAuthorization(
-        config,
-        responseHeaders,
-        'presign',
-        req.method,
-    )
+    const gate = requireUploadAuthorization(config, res, 'presign', req.method)
     if (gate) return gate
 
-    const parsed = await parseJsonBody<FileMetadata>(req, responseHeaders)
+    const parsed = await parseJsonBody<FileMetadata>(req, res)
     if (!parsed.ok) return parsed.response
     const body = parsed.value
 
-    const validationError = await validateUploadMetadata(
-        req,
-        config,
-        body,
-        responseHeaders,
-    )
+    const validationError = await validateUploadMetadata(req, config, body, res)
     if (validationError) return validationError
 
     const userId = await resolveUserId(config, req)
-    if (userId === null)
-        return json({ error: 'Unauthenticated' }, 401, responseHeaders)
+    if (userId === null) return res.json({ error: 'Unauthenticated' }, 401)
     const owner = userId === DEFAULT_USER_ID ? null : userId
 
     const key = (config.keyStrategy ?? defaultKeyStrategy)({
@@ -463,11 +341,9 @@ async function handlePresign(
             body.type,
             body.size,
         )
-        return json(result, 200, responseHeaders)
+        return res.json(result, 200)
     } catch (error) {
-        return fail(
-            config,
-            responseHeaders,
+        return res.fail(
             'presign',
             req.method,
             500,
@@ -481,11 +357,11 @@ async function handlePresign(
 async function handleMultipartInit(
     req: Request,
     config: UpupServerConfig,
-    responseHeaders: ResponseHeaders,
+    res: Responder,
 ): Promise<Response> {
     const gate = requireUploadAuthorization(
         config,
-        responseHeaders,
+        res,
         'multipart/init',
         req.method,
     )
@@ -496,7 +372,7 @@ async function handleMultipartInit(
         type: string
         size: number
         chunkSizeBytes?: number
-    }>(req, responseHeaders)
+    }>(req, res)
     if (!parsed.ok) return parsed.response
     const body = parsed.value
 
@@ -505,13 +381,12 @@ async function handleMultipartInit(
             req,
             config,
             body,
-            responseHeaders,
+            res,
         )
         if (validationError) return validationError
 
         const userId = await resolveUserId(config, req)
-        if (userId === null)
-            return json({ error: 'Unauthenticated' }, 401, responseHeaders)
+        if (userId === null) return res.json({ error: 'Unauthenticated' }, 401)
         const owner = userId === DEFAULT_USER_ID ? null : userId
 
         const key = (config.keyStrategy ?? defaultKeyStrategy)({
@@ -540,11 +415,9 @@ async function handleMultipartInit(
                 Math.floor(Date.now() / 1000) +
                 DEFAULT_UPLOAD_TOKEN_TTL_SECONDS,
         })
-        return json({ ...result, token }, 200, responseHeaders)
+        return res.json({ ...result, token }, 200)
     } catch (error) {
-        return fail(
-            config,
-            responseHeaders,
+        return res.fail(
             'multipart/init',
             req.method,
             500,
@@ -558,14 +431,14 @@ async function handleMultipartInit(
 async function handleMultipartSignPart(
     req: Request,
     config: UpupServerConfig,
-    responseHeaders: ResponseHeaders,
+    res: Responder,
 ): Promise<Response> {
     try {
         const body = (await req.json()) as { token: string; partNumber: number }
         const payload = await verifyTokenOrRespond(
             config,
             body.token,
-            responseHeaders,
+            res,
             'multipart/sign-part',
             req.method,
         )
@@ -574,7 +447,7 @@ async function handleMultipartSignPart(
             config,
             req,
             payload,
-            responseHeaders,
+            res,
             'multipart/sign-part',
             req.method,
         )
@@ -585,11 +458,9 @@ async function handleMultipartSignPart(
             payload.u,
             body.partNumber,
         )
-        return json(result, 200, responseHeaders)
+        return res.json(result, 200)
     } catch (error) {
-        return fail(
-            config,
-            responseHeaders,
+        return res.fail(
             'multipart/sign-part',
             req.method,
             500,
@@ -603,7 +474,7 @@ async function handleMultipartSignPart(
 async function handleMultipartComplete(
     req: Request,
     config: UpupServerConfig,
-    responseHeaders: ResponseHeaders,
+    res: Responder,
 ): Promise<Response> {
     try {
         const body = (await req.json()) as {
@@ -613,7 +484,7 @@ async function handleMultipartComplete(
         const payload = await verifyTokenOrRespond(
             config,
             body.token,
-            responseHeaders,
+            res,
             'multipart/complete',
             req.method,
         )
@@ -622,7 +493,7 @@ async function handleMultipartComplete(
             config,
             req,
             payload,
-            responseHeaders,
+            res,
             'multipart/complete',
             req.method,
         )
@@ -640,10 +511,9 @@ async function handleMultipartComplete(
         )
         if (uploadedSize < payload.smin || uploadedSize > payload.smax) {
             await abortMultipartUpload(config.storage, payload.k, payload.u)
-            return json(
+            return res.json(
                 { error: 'Upload size outside signed envelope' },
                 403,
-                responseHeaders,
             )
         }
 
@@ -666,11 +536,9 @@ async function handleMultipartComplete(
         if (config.hooks?.onUploadComplete)
             await config.hooks.onUploadComplete([uploaded], req)
 
-        return json(result, 200, responseHeaders)
+        return res.json(result, 200)
     } catch (error) {
-        return fail(
-            config,
-            responseHeaders,
+        return res.fail(
             'multipart/complete',
             req.method,
             500,
@@ -684,14 +552,14 @@ async function handleMultipartComplete(
 async function handleMultipartAbort(
     req: Request,
     config: UpupServerConfig,
-    responseHeaders: ResponseHeaders,
+    res: Responder,
 ): Promise<Response> {
     try {
         const body = (await req.json()) as { token: string }
         const payload = await verifyTokenOrRespond(
             config,
             body.token,
-            responseHeaders,
+            res,
             'multipart/abort',
             req.method,
         )
@@ -700,7 +568,7 @@ async function handleMultipartAbort(
             config,
             req,
             payload,
-            responseHeaders,
+            res,
             'multipart/abort',
             req.method,
         )
@@ -710,11 +578,9 @@ async function handleMultipartAbort(
             payload.k,
             payload.u,
         )
-        return json(result, 200, responseHeaders)
+        return res.json(result, 200)
     } catch (error) {
-        return fail(
-            config,
-            responseHeaders,
+        return res.fail(
             'multipart/abort',
             req.method,
             500,
@@ -815,20 +681,24 @@ async function handleOAuthRedirect(
     req: Request,
     config: UpupServerConfig,
     provider: string,
+    res: Responder,
 ): Promise<Response> {
     if (!isValidProvider(provider)) {
-        return json({ error: `Unknown provider: ${provider}` }, 400)
+        return res.json({ error: `Unknown provider: ${provider}` }, 400)
     }
 
     if (!config.tokenStore) {
-        return json({ error: 'tokenStore is required for OAuth flows' }, 500)
+        return res.json(
+            { error: 'tokenStore is required for OAuth flows' },
+            500,
+        )
     }
 
     const userId = await resolveUserId(config, req)
-    if (!userId) return json({ error: 'Unauthenticated' }, 401)
+    if (!userId) return res.json({ error: 'Unauthenticated' }, 401)
 
     const meta = getProviderMeta(config, provider)
-    if ('error' in meta) return json({ error: meta.error }, meta.status)
+    if ('error' in meta) return res.json({ error: meta.error }, meta.status)
 
     const state = generateOAuthState()
     const returnTo = new URL(req.url).searchParams.get('returnTo') ?? undefined
@@ -847,22 +717,20 @@ async function handleOAuthRedirect(
         ...(meta.extra ?? {}),
     })
 
-    return new Response(null, {
-        status: 302,
-        headers: { Location: `${meta.authUrl}?${params.toString()}` },
-    })
+    return res.redirect(`${meta.authUrl}?${params.toString()}`)
 }
 
 async function handleOAuthCallback(
     req: Request,
     config: UpupServerConfig,
     provider: string,
+    res: Responder,
 ): Promise<Response> {
     if (!isValidProvider(provider)) {
-        return json({ error: `Unknown provider: ${provider}` }, 400)
+        return res.json({ error: `Unknown provider: ${provider}` }, 400)
     }
     if (!config.tokenStore) {
-        return json({ error: 'tokenStore is required' }, 500)
+        return res.json({ error: 'tokenStore is required' }, 500)
     }
 
     const url = new URL(req.url)
@@ -870,16 +738,17 @@ async function handleOAuthCallback(
     const state = url.searchParams.get('state')
     const error = url.searchParams.get('error')
 
-    if (error) return json({ error: `OAuth error: ${error}` }, 400)
-    if (!code || !state) return json({ error: 'Missing code or state' }, 400)
+    if (error) return res.json({ error: `OAuth error: ${error}` }, 400)
+    if (!code || !state)
+        return res.json({ error: 'Missing code or state' }, 400)
 
     const stateData = await consumeOAuthState(config.tokenStore, state)
     if (!stateData || stateData.provider !== provider) {
-        return json({ error: 'Invalid or expired state' }, 400)
+        return res.json({ error: 'Invalid or expired state' }, 400)
     }
 
     const meta = getProviderMeta(config, provider)
-    if ('error' in meta) return json({ error: meta.error }, meta.status)
+    if ('error' in meta) return res.json({ error: meta.error }, meta.status)
 
     const tokenRes = await fetch(meta.tokenUrl, {
         method: 'POST',
@@ -903,7 +772,7 @@ async function handleOAuthCallback(
             message: 'Token exchange failed',
             error: toSafeError(new Error(body.slice(0, 500))),
         })
-        return json(
+        return res.json(
             {
                 error: 'Token exchange failed',
                 code: UpupErrorCode.AUTH_PROVIDER_ERROR,
@@ -937,19 +806,12 @@ async function handleOAuthCallback(
         config.cors,
     )
     const targetOrigins = concreteAllowedOrigins(config.cors)
-    return htmlResponse(
+    return res.html(
         buildOAuthSuccessPage(provider, {
             returnTo: validatedReturn,
             targetOrigins,
         }),
     )
-}
-
-function htmlResponse(body: string, status = 200): Response {
-    return new Response(body, {
-        status,
-        headers: { 'Content-Type': 'text/html; charset=utf-8' },
-    })
 }
 
 /** Validate an OAuth returnTo against same-origin + the CORS allowlist (audit S7).
@@ -1087,24 +949,20 @@ async function handleListFiles(
     req: Request,
     config: UpupServerConfig,
     provider: string,
-    responseHeaders: ResponseHeaders = {},
+    res: Responder,
 ): Promise<Response> {
     if (!isValidProvider(provider)) {
-        return json(
-            { error: `Unknown provider: ${provider}` },
-            400,
-            responseHeaders,
-        )
+        return res.json({ error: `Unknown provider: ${provider}` }, 400)
     }
     if (!config.tokenStore)
-        return json({ error: 'tokenStore is required' }, 500, responseHeaders)
+        return res.json({ error: 'tokenStore is required' }, 500)
 
     const userId = await resolveUserId(config, req)
-    if (!userId) return json({ error: 'Unauthenticated' }, 401, responseHeaders)
+    if (!userId) return res.json({ error: 'Unauthenticated' }, 401)
 
     let tokens = await getTokens(config.tokenStore, userId, provider)
     if (!tokens) {
-        return json({ reauth: true, provider }, 401, responseHeaders)
+        return res.json({ reauth: true, provider }, 401)
     }
     if (
         tokens.refreshToken &&
@@ -1118,7 +976,7 @@ async function handleListFiles(
             tokens,
         )
         if (!refreshed) {
-            return json({ reauth: true, provider }, 401, responseHeaders)
+            return res.json({ reauth: true, provider }, 401)
         }
         tokens = refreshed
     }
@@ -1132,15 +990,13 @@ async function handleListFiles(
             folderId,
             search,
         })
-        return json({ provider, files }, 200, responseHeaders)
+        return res.json({ provider, files }, 200)
     } catch (err) {
         if ((err as { status?: number }).status === 401) {
             await deleteTokens(config.tokenStore, userId, provider)
-            return json({ reauth: true, provider }, 401, responseHeaders)
+            return res.json({ reauth: true, provider }, 401)
         }
-        return fail(
-            config,
-            responseHeaders,
+        return res.fail(
             `files/${provider}`,
             req.method,
             500,
@@ -1155,23 +1011,19 @@ async function handleFileTransfer(
     req: Request,
     config: UpupServerConfig,
     provider: string,
-    responseHeaders: ResponseHeaders = {},
+    res: Responder,
 ): Promise<Response> {
     if (!isValidProvider(provider)) {
-        return json(
-            { error: `Unknown provider: ${provider}` },
-            400,
-            responseHeaders,
-        )
+        return res.json({ error: `Unknown provider: ${provider}` }, 400)
     }
     if (!config.tokenStore)
-        return json({ error: 'tokenStore is required' }, 500, responseHeaders)
+        return res.json({ error: 'tokenStore is required' }, 500)
 
     const userId = await resolveUserId(config, req)
-    if (!userId) return json({ error: 'Unauthenticated' }, 401, responseHeaders)
+    if (!userId) return res.json({ error: 'Unauthenticated' }, 401)
 
     let tokens = await getTokens(config.tokenStore, userId, provider)
-    if (!tokens) return json({ reauth: true, provider }, 401, responseHeaders)
+    if (!tokens) return res.json({ reauth: true, provider }, 401)
     if (
         tokens.refreshToken &&
         tokens.expiresAt &&
@@ -1184,7 +1036,7 @@ async function handleFileTransfer(
             tokens,
         )
         if (!refreshed) {
-            return json({ reauth: true, provider }, 401, responseHeaders)
+            return res.json({ reauth: true, provider }, 401)
         }
         tokens = refreshed
     }
@@ -1198,24 +1050,23 @@ async function handleFileTransfer(
     try {
         body = (await req.json()) as typeof body
     } catch {
-        return json({ error: 'Invalid JSON body' }, 400, responseHeaders)
+        return res.json({ error: 'Invalid JSON body' }, 400)
     }
-    if (!body.fileId)
-        return json({ error: 'Missing fileId' }, 400, responseHeaders)
+    if (!body.fileId) return res.json({ error: 'Missing fileId' }, 400)
 
     if (
         config.maxFileSize &&
         typeof body.size === 'number' &&
         body.size > config.maxFileSize
     ) {
-        return json({ error: 'File too large' }, 413, responseHeaders)
+        return res.json({ error: 'File too large' }, 413)
     }
     if (
         config.allowedTypes?.length &&
         body.mimeType &&
         !config.allowedTypes.includes(body.mimeType)
     ) {
-        return json({ error: 'File type not allowed' }, 415, responseHeaders)
+        return res.json({ error: 'File type not allowed' }, 415)
     }
 
     try {
@@ -1235,15 +1086,13 @@ async function handleFileTransfer(
         if (config.hooks?.onFileUploaded) {
             await config.hooks.onFileUploaded(result, req)
         }
-        return json({ provider, ...result }, 200, responseHeaders)
+        return res.json({ provider, ...result }, 200)
     } catch (err) {
         if ((err as { status?: number }).status === 401) {
             await deleteTokens(config.tokenStore, userId, provider)
-            return json({ reauth: true, provider }, 401, responseHeaders)
+            return res.json({ reauth: true, provider }, 401)
         }
-        return fail(
-            config,
-            responseHeaders,
+        return res.fail(
             `files/${provider}/transfer`,
             req.method,
             500,

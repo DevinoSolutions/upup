@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import { createUpupHandler } from "../src/handler";
+import { InMemoryTokenStore } from "../src/tokenStore";
 
 vi.mock("../src/providers/aws", () => ({
   generatePresignedUrl: vi.fn(),
@@ -163,4 +164,47 @@ describe("CORS — credentialed reflection is never reachable under a wildcard-o
       expect(res.headers.get("Access-Control-Allow-Credentials")).toBeNull();
     },
   );
+});
+
+// The un-back-filled half of F-108: OAuth routes were dispatched with NO
+// responseHeaders at all, so their error bodies shipped corsless. Every route
+// (incl. OAuth) must now carry the matched Access-Control-Allow-Origin.
+describe("CORS — OAuth routes carry ACAO (F-108)", () => {
+  function get(url: string, headers?: Record<string, string>) {
+    return new Request(url, { method: "GET", headers });
+  }
+
+  const oauthConfig = () => ({
+    ...baseConfig,
+    cors: { allowedOrigins: ["https://app.example"] },
+    tokenStore: new InMemoryTokenStore(),
+    allowAnonymous: true,
+    providers: { googleDrive: { clientId: "gid", clientSecret: "gsec" } },
+  });
+
+  it("unknown-provider OAuth redirect (400) carries the matched ACAO", async () => {
+    const handler = createUpupHandler(oauthConfig());
+    const res = await handler(
+      get("http://localhost/api/upup/auth/unknown-x", {
+        Origin: "https://app.example",
+      }),
+    );
+    expect(res.status).toBe(400);
+    expect(res.headers.get("Access-Control-Allow-Origin")).toBe(
+      "https://app.example",
+    );
+  });
+
+  it("OAuth callback missing code (400) carries the matched ACAO", async () => {
+    const handler = createUpupHandler(oauthConfig());
+    const res = await handler(
+      get("http://localhost/api/upup/auth/google-drive/cb", {
+        Origin: "https://app.example",
+      }),
+    );
+    expect(res.status).toBe(400);
+    expect(res.headers.get("Access-Control-Allow-Origin")).toBe(
+      "https://app.example",
+    );
+  });
 });
