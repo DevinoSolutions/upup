@@ -99,7 +99,7 @@ pnpm run e2e            # the REAL gate — see next section
 pnpm run prettier-check # CI blocks on this (checks @upup/react src)
 pnpm run size           # size-limit bundle budgets
 pnpm run audit:prod     # high+ advisories in the publishable prod trees
-pnpm run lint           # eslint flat-config: 9 @upup/* packages + 3 apps
+pnpm run lint           # eslint flat-config: 9 @upup/* packages + 3 apps — CI's Lint job scopes to the publishable packages only (`turbo run lint --filter='./packages/*'`); the 3 apps' lint is local-only until two pre-existing app-config defects (F-708, F-709) land
 ```
 
 Baseline: every unit suite is green (16 packages, all 16 turbo `test` tasks

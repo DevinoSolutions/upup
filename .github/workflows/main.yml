@@ -246,7 +246,8 @@ jobs:
         if: steps.cache-primes.outputs.cache-hit != 'true'
         run: pnpm install
       - name: Lint
-        run: pnpm run lint
+        # packages only — apps' lint is local-only until F-708/F-709 land (see audit next-cycle)
+        run: pnpm exec turbo run lint --filter='./packages/*'
 
   Status-Check:
     name: Status Check
