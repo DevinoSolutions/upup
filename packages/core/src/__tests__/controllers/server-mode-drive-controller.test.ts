@@ -18,11 +18,38 @@ describe('ServerModeDriveController', () => {
     expect(c.getSnapshot().state).toEqual({ status: 'ready', files })
   })
 
-  it('list() 401 → reauth', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ status: 401, ok: false }))
+  it('list() 401 with {reauth:true} body → reauth', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      status: 401, ok: false,
+      clone: function () { return this },
+      json: async () => ({ reauth: true, provider: 'google-drive' }),
+    }))
     const c = ctrl()
     await c.list()
     expect(c.getSnapshot().state).toEqual({ status: 'reauth' })
+  })
+
+  it('list() 401 with a plain app-auth body (no reauth flag) → error, NOT reauth (P4/C8, F-427)', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      status: 401, ok: false,
+      clone: function () { return this },
+      json: async () => ({ error: 'Unauthorized' }),
+    }))
+    const c = ctrl()
+    await c.list()
+    expect(c.getSnapshot().state).toEqual({ status: 'error', message: 'Unauthorized', code: 'UNAUTHENTICATED' })
+  })
+
+  it('list() 401 with an unparsable body → error, NOT reauth (fails closed, not open)', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      status: 401, ok: false,
+      clone: function () { return this },
+      json: async () => { throw new Error('not json') },
+    }))
+    const c = ctrl()
+    await c.list()
+    expect(c.getSnapshot().state.status).toBe('error')
+    expect((c.getSnapshot().state as { code?: string }).code).toBe('UNAUTHENTICATED')
   })
 
   it('list() network error → error', async () => {
@@ -47,12 +74,27 @@ describe('ServerModeDriveController', () => {
     expect(c.getSnapshot().state).toBe(before)   // unchanged ref
   })
 
-  it('transfer() 401 → {status:reauth}, no state mutation', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ status: 401, ok: false }))
+  it('transfer() 401 with {reauth:true} body → {status:reauth}, no state mutation', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      status: 401, ok: false,
+      clone: function () { return this },
+      json: async () => ({ reauth: true, provider: 'google-drive' }),
+    }))
     const c = ctrl()
     const r = await c.transfer({ id: '1', name: 'a', isFolder: false })
     expect(r).toEqual({ status: 'reauth' })
     expect(c.getSnapshot().state.status).toBe('idle')
+  })
+
+  it('transfer() 401 with a plain app-auth body → {status:error, code:UNAUTHENTICATED}, NOT reauth (P4/C8, F-427)', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      status: 401, ok: false,
+      clone: function () { return this },
+      json: async () => ({ error: 'Unauthorized' }),
+    }))
+    const c = ctrl()
+    const r = await c.transfer({ id: '1', name: 'a', isFolder: false })
+    expect(r).toEqual({ status: 'error', message: 'Unauthorized', code: 'UNAUTHENTICATED' })
   })
 
   it('setFolderId/setSearch update snapshot but do NOT auto-list', () => {

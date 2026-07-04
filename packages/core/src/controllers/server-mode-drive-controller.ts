@@ -17,12 +17,12 @@ export type ServerDriveListState =
   | { status: 'loading' }
   | { status: 'ready'; files: ServerDriveFile[] }
   | { status: 'reauth' }
-  | { status: 'error'; message: string }
+  | { status: 'error'; message: string; code?: string }
 
 export type ServerDriveTransferResult =
   | { status: 'ok'; result: unknown }
   | { status: 'reauth' }
-  | { status: 'error'; message: string }
+  | { status: 'error'; message: string; code?: string }
 
 export interface ServerDriveSnapshot {
   state: ServerDriveListState
@@ -88,7 +88,20 @@ export class ServerModeDriveController implements ObservableController<ServerDri
         `${serverUrl}/files/${this.deps.provider}${params.toString() ? `?${params}` : ''}`,
         { credentials: 'include', signal: ac.signal },
       )
-      if (res.status === 401) { this.setState({ state: { status: 'reauth' } }); return }
+      if (res.status === 401) {
+        // Drive-token 401 (server's tokenStore has no/expired provider token)
+        // means "reconnect Drive"; an app-level 401 (e.g. config.auth denied
+        // the request) is a DIFFERENT failure and must not show the reconnect
+        // prompt (F-427). The server signals the former with {reauth:true}
+        // on that exact response; anything else on a 401 is app-auth.
+        const body = await res.clone().json().catch(() => ({}) as { reauth?: boolean; error?: string })
+        if (body?.reauth) {
+          this.setState({ state: { status: 'reauth' } })
+        } else {
+          this.setState({ state: { status: 'error', message: body?.error ?? 'Unauthorized', code: 'UNAUTHENTICATED' } })
+        }
+        return
+      }
       if (!res.ok) {
         const text = await res.text().catch(() => '')
         throw new Error(text || `${res.status}`)
@@ -117,7 +130,13 @@ export class ServerModeDriveController implements ObservableController<ServerDri
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ fileId: file.id, fileName: file.name, size: file.size, mimeType: file.mimeType }),
       })
-      if (res.status === 401) return { status: 'reauth' }
+      if (res.status === 401) {
+        // Same reauth-vs-app-auth distinction as list() above (F-427): only
+        // a body-flagged {reauth:true} means "reconnect Drive".
+        const body = await res.clone().json().catch(() => ({}) as { reauth?: boolean; error?: string })
+        if (body?.reauth) return { status: 'reauth' }
+        return { status: 'error', message: body?.error ?? 'Unauthorized', code: 'UNAUTHENTICATED' }
+      }
       if (!res.ok) {
         const text = await res.text().catch(() => '')
         return { status: 'error', message: text || `${res.status}` }
