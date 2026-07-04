@@ -2,6 +2,7 @@ import type { EventEmitter } from '../events'
 import type { DrivePlugin } from './plugin'
 import type { GoogleDriveConfig } from './configs'
 import type { DriveFile, DriveState } from './types'
+import { storageGet, storageSet, storageDel } from './session-storage'
 
 // ── Session storage keys ──
 const SK_ACCESS = 'upup_gdrive_access_token'
@@ -48,35 +49,6 @@ const FORMAT_MAP: Record<string, string> = {
     xlsx: 'xlsx',
     pptx: 'pptx',
     png: 'png',
-}
-
-// ── Storage helpers (guarded for SSR) ──
-
-function storageGet(key: string): string | null {
-    if (typeof window === 'undefined') return null
-    try {
-        return sessionStorage.getItem(key)
-    } catch {
-        return null
-    }
-}
-
-function storageSet(key: string, value: string): void {
-    if (typeof window === 'undefined') return
-    try {
-        sessionStorage.setItem(key, value)
-    } catch {
-        // quota exceeded or private browsing — silently ignore
-    }
-}
-
-function storageDel(key: string): void {
-    if (typeof window === 'undefined') return
-    try {
-        sessionStorage.removeItem(key)
-    } catch {
-        // ignore
-    }
 }
 
 // ── Helpers ──
