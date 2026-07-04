@@ -11,8 +11,8 @@ For UpUp we use the `53000` range:
 | Landing (Next.js)         | `PORT` / `LANDING_PORT`      | 53000   | Next reads `PORT`. We also copy it into `LANDING_PORT` for reference. |
 | Documentation (Docusaurus)| `PORT` / `DOCS_PORT`         | 53002   | Docusaurus reads `PORT`; `DOCS_PORT` just documents the assignment. |
 | Playground (Next.js)      | `PLAYGROUND_PORT`            | 53004   | Standalone `@upup/playground` app. Auto-picks next free port if reserved (e.g. Windows Hyper-V holds 53088–53187). |
-| Dev upload backend        | `UPUP_DEV_SERVER_PORT`       | 53010   | Used when running `packages/upup/server`. |
-| Storybook (component lib) | `STORYBOOK_PORT`             | 53050   | Optional, only when you run `pnpm --filter @upup/react storybook`. |
+| Dev upload backend        | `UPUP_DEV_SERVER_PORT`       | 53010   | Used when running the dev upload backend in `packages/server`. |
+| Storybook (component lib) | `STORYBOOK_PORT`             | 53050   | Optional, only when you run `pnpm --filter @upup/storybook-react storybook`. |
 
 Feel free to extend this list as new local services are added—just stay inside the same range so it is obvious which project owns a given port.
 
@@ -48,7 +48,7 @@ pnpm --filter @upup/landing dev
 pnpm --filter docs dev
 
 # component package storybook
-pnpm --filter @upup/react storybook -- --port $STORYBOOK_PORT
+pnpm --filter @upup/storybook-react storybook -- --port $STORYBOOK_PORT
 ```
 
 Each script reads from `local-dev/.env.ports`, so as soon as the file is present you no longer need to pass `--port` manually (the example above just shows how to keep overrides explicit).
