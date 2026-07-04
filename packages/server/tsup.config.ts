@@ -6,6 +6,7 @@ export default defineConfig({
     'src/express.ts',
     'src/hono.ts',
     'src/fastify.ts',
+    'src/node-http-bridge.ts',
   ],
   format: ['esm', 'cjs'],
   dts: true,

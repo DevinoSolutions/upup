@@ -1,5 +1,6 @@
 import { createUpupHandler } from './handler'
 import type { UpupServerConfig } from './config'
+import { toWebRequest, writeWebResponse } from './node-http-bridge'
 
 interface ExpressReq {
   protocol: string
@@ -13,7 +14,7 @@ interface ExpressReq {
 interface ExpressRes {
   status(code: number): ExpressRes
   setHeader(name: string, value: string): ExpressRes
-  send(body: string): void
+  send(body: string | Buffer): void
 }
 
 export function createUpupMiddleware(config: UpupServerConfig) {
@@ -21,9 +22,10 @@ export function createUpupMiddleware(config: UpupServerConfig) {
 
   return async (req: ExpressReq, res: ExpressRes, _next: () => void) => {
     const url = `${req.protocol}://${req.get('host')}${req.originalUrl}`
-    const webReq = new Request(url, {
+    const webReq = toWebRequest({
+      url,
       method: req.method,
-      headers: req.headers as Record<string, string>,
+      headers: req.headers,
       body:
         req.method !== 'GET' && req.method !== 'HEAD'
           ? JSON.stringify(req.body)
@@ -31,11 +33,15 @@ export function createUpupMiddleware(config: UpupServerConfig) {
     })
 
     const webRes = await handler(webReq)
-    const body = await webRes.text()
 
-    res.status(webRes.status)
-    webRes.headers.forEach((value, key) => res.setHeader(key, value))
-    res.send(body)
+    await writeWebResponse(
+      {
+        status: (c) => res.status(c),
+        setHeader: (k, v) => res.setHeader(k, v),
+        send: (b) => res.send(b),
+      },
+      webRes,
+    )
   }
 }
 

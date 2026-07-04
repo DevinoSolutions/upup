@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from 'next'
 import { createUpupHandler } from '@upup/server'
 import type { UpupServerConfig } from '@upup/server'
 import type { UpupNextOptions } from '@upup/server/next'
+import { toWebRequest, writeWebResponse } from '@upup/server/node-bridge'
 
 function firstHeaderValue(
   value: string | string[] | undefined,
@@ -33,35 +34,6 @@ async function readBody(req: NextApiRequest): Promise<Buffer | undefined> {
   return chunks.length ? Buffer.concat(chunks) : undefined
 }
 
-async function toWebRequest(
-  req: NextApiRequest,
-  base: string,
-): Promise<Request> {
-  const body = await readBody(req)
-  const url = new URL(req.url ?? '/', base).toString()
-  const headers = new Headers()
-  for (const [key, value] of Object.entries(req.headers)) {
-    if (value === undefined) continue
-    if (Array.isArray(value)) for (const v of value) headers.append(key, v)
-    else headers.set(key, value)
-  }
-  return new Request(url, { method: req.method ?? 'GET', headers, body })
-}
-
-async function sendWebResponse(
-  res: NextApiResponse,
-  webRes: Response,
-): Promise<void> {
-  res.status(webRes.status)
-  webRes.headers.forEach((value, key) => {
-    // Node recomputes content-length from the buffer; copying it risks a mismatch.
-    if (key.toLowerCase() === 'content-length') return
-    res.setHeader(key, value)
-  })
-  const buf = Buffer.from(await webRes.arrayBuffer())
-  res.send(buf)
-}
-
 /**
  * Pages Router (`pages/api/...`) adapter. Bridges Node req/res to the
  * framework-agnostic Web handler. The route MUST set
@@ -77,9 +49,22 @@ export function createUpupPagesHandler(
   return async (req, res) => {
     try {
       const base = resolveBase(req, opts)
-      const webReq = await toWebRequest(req, base)
+      const body = await readBody(req)
+      const webReq = toWebRequest({
+        url: new URL(req.url ?? '/', base).toString(),
+        method: req.method ?? 'GET',
+        headers: req.headers,
+        body,
+      })
       const webRes = await handler(webReq)
-      await sendWebResponse(res, webRes)
+      await writeWebResponse(
+        {
+          status: (c) => res.status(c),
+          setHeader: (k, v) => res.setHeader(k, v),
+          send: (b) => res.send(b),
+        },
+        webRes,
+      )
     } catch (err) {
       res.status(500).json({ error: (err as Error).message || 'Internal error' })
     }

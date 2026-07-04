@@ -32,6 +32,11 @@
       "types": "./dist/fastify.d.ts",
       "import": "./dist/fastify.js",
       "require": "./dist/fastify.cjs"
+    },
+    "./node-bridge": {
+      "types": "./dist/node-http-bridge.d.ts",
+      "import": "./dist/node-http-bridge.js",
+      "require": "./dist/node-http-bridge.cjs"
     }
   },
   "main": "./dist/index.cjs",

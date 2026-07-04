@@ -61,11 +61,11 @@ describe('Hono adapter', () => {
 })
 
 describe('Express adapter', () => {
-  it('translates Express req/res into Web Fetch handler', async () => {
+  it('translates Express req/res into Web Fetch handler through the shared node-http-bridge (F-651)', async () => {
     const middleware = createUpupMiddleware(config)
     let capturedStatus = 0
     const headers: Record<string, string> = {}
-    let sentBody = ''
+    let sentBody: string | Buffer = ''
     const req = {
       protocol: 'http',
       get: (_: string) => 'localhost',
@@ -83,18 +83,25 @@ describe('Express adapter', () => {
         headers[k] = v
         return res
       },
-      send(b: string) {
+      send(b: string | Buffer) {
         sentBody = b
       },
     }
     await middleware(req, res, () => {})
     expect(capturedStatus).toBe(200)
-    expect(JSON.parse(sentBody).uploadUrl).toBeDefined()
+    // The shared bridge sends a lossless Buffer (F-651), not the pre-fix `.text()`
+    // string -- JSON.parse still accepts it (Node coerces via toString()), but the
+    // explicit Buffer check proves writeWebResponse is genuinely wired in.
+    expect(Buffer.isBuffer(sentBody)).toBe(true)
+    expect(JSON.parse(sentBody.toString()).uploadUrl).toBeDefined()
+    // content-length must never be forwarded verbatim -- Node recomputes it from
+    // the Buffer payload; a stale copied value risks a mismatch.
+    expect(Object.keys(headers).map((k) => k.toLowerCase())).not.toContain('content-length')
   })
 })
 
 describe('Fastify adapter', () => {
-  it('registers a catch-all route and translates reply', async () => {
+  it('registers a catch-all route and translates reply through the shared node-http-bridge (F-651)', async () => {
     const plugin = createUpupPlugin(config)
     const registered: Array<{ path: string; handler: unknown }> = []
     const fastify = {
@@ -107,7 +114,8 @@ describe('Fastify adapter', () => {
     expect(registered[0].path).toBe('/upup/*')
 
     let capturedStatus = 0
-    let sentBody = ''
+    let sentBody: string | Buffer = ''
+    const headers: Record<string, string> = {}
     const request = {
       protocol: 'http',
       hostname: 'localhost',
@@ -121,10 +129,11 @@ describe('Fastify adapter', () => {
         capturedStatus = c
         return reply
       },
-      header() {
+      header(k: string, v: string) {
+        headers[k] = v
         return reply
       },
-      send(b: string) {
+      send(b: string | Buffer) {
         sentBody = b
         return reply
       },
@@ -132,6 +141,8 @@ describe('Fastify adapter', () => {
     const fastifyHandler = registered[0].handler as (req: unknown, reply: unknown) => Promise<void>
     await fastifyHandler(request, reply)
     expect(capturedStatus).toBe(200)
-    expect(JSON.parse(sentBody).uploadUrl).toBeDefined()
+    expect(Buffer.isBuffer(sentBody)).toBe(true)
+    expect(JSON.parse(sentBody.toString()).uploadUrl).toBeDefined()
+    expect(Object.keys(headers).map((k) => k.toLowerCase())).not.toContain('content-length')
   })
 })

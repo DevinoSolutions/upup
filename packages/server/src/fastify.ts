@@ -1,5 +1,6 @@
 import { createUpupHandler } from './handler'
 import type { UpupServerConfig } from './config'
+import { toWebRequest, writeWebResponse } from './node-http-bridge'
 
 interface FastifyInstance {
   all(path: string, handler: (request: FastifyRequest, reply: FastifyReply) => Promise<void>): void
@@ -17,7 +18,7 @@ interface FastifyRequest {
 interface FastifyReply {
   code(statusCode: number): FastifyReply
   header(key: string, value: string): FastifyReply
-  send(payload: string): FastifyReply
+  send(payload: string | Buffer): FastifyReply
 }
 
 export function createUpupPlugin(config: UpupServerConfig) {
@@ -26,9 +27,10 @@ export function createUpupPlugin(config: UpupServerConfig) {
   return async (fastify: FastifyInstance) => {
     fastify.all('/upup/*', async (request: FastifyRequest, reply: FastifyReply) => {
       const url = `${request.protocol}://${request.hostname}${request.url}`
-      const webReq = new Request(url, {
+      const webReq = toWebRequest({
+        url,
         method: request.method,
-        headers: request.headers as Record<string, string>,
+        headers: request.headers,
         body:
           request.method !== 'GET' && request.method !== 'HEAD'
             ? JSON.stringify(request.body)
@@ -36,11 +38,15 @@ export function createUpupPlugin(config: UpupServerConfig) {
       })
 
       const webRes = await handler(webReq)
-      const body = await webRes.text()
 
-      reply.code(webRes.status)
-      webRes.headers.forEach((value: string, key: string) => reply.header(key, value))
-      reply.send(body)
+      await writeWebResponse(
+        {
+          status: (c) => reply.code(c),
+          setHeader: (k, v) => reply.header(k, v),
+          send: (b) => reply.send(b),
+        },
+        webRes,
+      )
     })
   }
 }
