@@ -14,6 +14,7 @@ export class UploaderOrchestrator {
     private core: UpupCore
     private callbacks: OrchestratorCallbacks
     private unsubs: (() => void)[] = []
+    private disposed = false
 
     constructor(core: UpupCore, callbacks: OrchestratorCallbacks) {
         this.core = core
@@ -301,7 +302,12 @@ export class UploaderOrchestrator {
                 // Auto-upload
                 if (this.callbacks.autoUpload) {
                     this.core.emit('auto-upload', { count: added.length })
-                    setTimeout(() => { void this.core.upload() }, 0)
+                    // Guard the deferred run: an unmount that races this 0-ms timer must not
+                    // hit the now-terminal core.upload() (F-148). Swallow if it still does.
+                    setTimeout(() => {
+                        if (this.disposed) return
+                        void this.core.upload().catch(() => {})
+                    }, 0)
                 }
             }),
         )
@@ -432,6 +438,7 @@ export class UploaderOrchestrator {
     }
 
     destroy(): void {
+        this.disposed = true
         this.state.files.forEach(file => revokeFileUrl(file))
         this.unsubs.forEach(u => u())
         this.unsubs = []

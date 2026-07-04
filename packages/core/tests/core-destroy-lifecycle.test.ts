@@ -98,4 +98,34 @@ describe('UpupCore — destroy lifecycle', () => {
         expect([...core2.files.values()][0].name).toBe('new.txt')
         core2.destroy()
     })
+
+    // ── F-148: destroy() is terminal ──────────────────────────────
+    describe('terminal destroy (F-148)', () => {
+        it('the run/mutation entry points throw after destroy()', async () => {
+            const core = new UpupCore({ provider: 'aws', uploadEndpoint: '/api/upload' })
+            core.destroy()
+
+            await expect(core.upload()).rejects.toThrow(/after destroy/)
+            await expect(core.retry()).rejects.toThrow(/after destroy/)
+            expect(() => core.resume()).toThrow(/after destroy/)
+            await expect(core.addFiles([makeFile('a.txt')])).rejects.toThrow(/after destroy/)
+            await expect(core.setFiles([makeFile('b.txt')])).rejects.toThrow(/after destroy/)
+        })
+
+        it('releases the crashRecovery and pipelineEngine manager refs', () => {
+            const core = new UpupCore({ crashRecovery: true, imageCompression: true })
+            core.destroy()
+            expect((core as any).crashRecovery).toBeNull()
+            expect((core as any).pipelineEngine).toBeNull()
+        })
+
+        it('post-destroy getters still work (fileManager is not nulled)', async () => {
+            const core = new UpupCore({})
+            await core.addFiles([makeFile('a.txt')])
+            core.destroy()
+            // getters read through fileManager; nulling it would NPE these.
+            expect(core.files.size).toBe(0)
+            expect(core.progress).toEqual({ totalFiles: 0, completedFiles: 0, percentage: 0 })
+        })
+    })
 })

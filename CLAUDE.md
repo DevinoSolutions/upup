@@ -222,13 +222,22 @@ if needed; never silently "improve" them:
   parity-harness traps above); don't make the panel grow to fit content.
 - **Per-framework duplication is intentional** (principle 4). The parallel
   hooks/components across frameworks are not a refactor target.
-- **Core state/event contract (P6).** The core event surface has exactly ONE
-  upload-failure event — `upload-error`; the bare `'error'` event is retired
-  (`resume()` failures route through `upload-error`; the HEIC step diagnostic is
-  `pipeline-error`; angular's `@Output() error` and vanilla's `upup:error` DOM
-  event source `upload-error`). Do not reintroduce a second upload-failure
-  channel. (`DriveEventMap['error']` is a separate, drive-scoped type — plugins
-  emit namespaced `<provider>:error`, never bare `error`.)
+- **Core state/event contract (P6).** Three rulings future changes must not break:
+  - **One upload-failure event.** The core event surface has exactly ONE — `upload-error`;
+    the bare `'error'` event is retired (`resume()` failures route through `upload-error`;
+    the HEIC step diagnostic is `pipeline-error`; angular's `@Output() error` and vanilla's
+    `upup:error` DOM event source `upload-error`). Do not reintroduce a second upload-failure
+    channel. (`DriveEventMap['error']` is a separate, drive-scoped type — plugins emit
+    namespaced `<provider>:error`, never bare `error`.)
+  - **`destroy()` is terminal.** After it, `upload/resume/retry/addFiles/setFiles` throw;
+    `crashRecovery`/`pipelineEngine` refs are released (but crash-recovery STORAGE is not
+    cleared — a normal unmount stays recoverable); `fileManager` is kept so the
+    `files`/`progress` getters keep working. Frameworks create a fresh core per mount.
+  - **`UploadFile` is immutable in the state layer.** Status/key/metadata transitions go
+    through `FileManager.updateFile`, which produces a NEW `File` reference (never an
+    in-place mutation) — an object-spread clone would strip File's blob slots. `uploadStatus`
+    is a single-source projection of core's `state-change{status}` in the orchestrator;
+    a run is single-flight (`activeRun`).
 
 ## Git & commits
 

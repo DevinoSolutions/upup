@@ -162,6 +162,7 @@ export class UpupCore {
   }
 
   async addFiles(files: File[], overrides?: Partial<UploadOptions>): Promise<void> {
+    if (this.destroyed) throw new Error('UpupCore: addFiles() after destroy()')
     try {
       const added = await this.fileManager.addFiles(files)
       if (added.length > 0) {
@@ -201,6 +202,7 @@ export class UpupCore {
   }
 
   async setFiles(files: File[]): Promise<void> {
+    if (this.destroyed) throw new Error('UpupCore: setFiles() after destroy()')
     await this.fileManager.setFiles(files)
     this.emitter.emit('state-change', { files: this.files })
     this.emitter.emit('files-set', { count: this.files.size })
@@ -379,7 +381,6 @@ export class UpupCore {
   private async runUpload(): Promise<UploadFile[]> {
     this.pauseRequested = false
     this.cancelRequested = false
-    this.destroyed = false
     this._status = UploadStatus.PROCESSING
     this.emitter.emit('upload-start', {})
     this.emitter.emit('state-change', { status: this._status })
@@ -484,6 +485,7 @@ export class UpupCore {
    * complete successfully (those without a `key` set).
    */
   resume(): void {
+    if (this.destroyed) throw new Error('UpupCore: resume() after destroy()')
     if (this.activeRun) return
     this.pauseRequested = false
     this._status = UploadStatus.UPLOADING
@@ -527,6 +529,7 @@ export class UpupCore {
   }
 
   async retry(fileId?: string): Promise<UploadFile[]> {
+    if (this.destroyed) throw new Error('UpupCore: retry() after destroy()')
     if (this.activeRun) return this.activeRun
     this.activeRun = this.runRetry(fileId)
     try {
@@ -657,6 +660,11 @@ export class UpupCore {
     this.emitter.emit('destroyed', {})
     this.crashRecoveryUnsubscribe?.()
     this.crashRecoveryUnsubscribe = null
+    // Release the manager refs (F-148). Do NOT clear crash-recovery storage — a normal
+    // unmount must leave a recoverable snapshot behind. fileManager is deliberately kept
+    // (not nulled) so the files/progress getters keep working post-destroy.
+    this.crashRecovery = null
+    this.pipelineEngine = null
     this.fileOverrides.clear()
     this.emitter.removeAllListeners()
     this.pluginManager.destroy()

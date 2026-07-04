@@ -1133,7 +1133,23 @@ describe('UploaderOrchestrator', () => {
                 vi.useRealTimers()
             })
 
-            // totalBytes is now computed in rebuildFilesProjection (owned by state-change).
+            it('does NOT auto-upload after orch.destroy() races the 0-ms timer (F-148 companion)', () => {
+                vi.useFakeTimers()
+                const { core, handlers } = createMockCoreWithHandlers()
+                core.upload = vi.fn().mockResolvedValue([])
+                const orch = new UploaderOrchestrator(core, { autoUpload: true })
+                orch.init()
+
+                const file = createUploadFile({ name: 'a.txt', id: 'a' })
+                handlers['files-added']([file]) // schedules the 0-ms auto-upload timer
+                orch.destroy() // unmount before the timer fires
+                vi.runAllTimers()
+
+                expect(core.upload).not.toHaveBeenCalled()
+                vi.useRealTimers()
+            })
+
+            // totalBytes is now computed in projectFromCore (owned by state-change).
             // Coverage for totalBytes correctness is provided by the integration tests
             // in "files projection reflects ALL core file mutations (Tier 3.1)" which
             // use real core and verify the full projected state.
