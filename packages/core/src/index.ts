@@ -34,6 +34,7 @@ export type {
   ThumbnailGeneratorOptions,
 } from './types/image-editor'
 export type { UploadSource, UploadProvider } from './types/uploader-options'
+export type { UploaderBaseProps } from './types/uploader-props'
 
 // ── Errors ───────────────────────────────────────────────────
 export {
