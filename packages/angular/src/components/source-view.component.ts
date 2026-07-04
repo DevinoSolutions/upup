@@ -85,6 +85,7 @@ import { NgComponentOutlet } from '@angular/common'
                         @case ('camera') { <upup-camera-icon /> }
                         @case ('microphone') { <upup-audio-icon /> }
                         @case ('screen') { <upup-screen-capture-icon /> }
+                        @default {}
                     }
                     <button
                         [class]="cancelBtnClass"
@@ -121,6 +122,11 @@ import { NgComponentOutlet } from '@angular/common'
                         }
                         @case ('box') {
                             <upup-box-uploader />
+                        }
+                        @default {
+                            <div class="upup-flex upup-h-full upup-items-center upup-justify-center">
+                                <upup-default-loader-icon />
+                            </div>
                         }
                     }
                 </div>
