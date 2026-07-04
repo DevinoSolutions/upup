@@ -215,7 +215,3 @@ jobs:
             exit 1
           fi
           echo "All jobs passed successfully"
-
-  # Playwright E2E removed in v2.1 — the v1 local Express dev server
-  # (`pnpm run dev:server`, `/health`, `/api/upload`) was retired with
-  # packages/upup. Re-add when v2 Server Mode e2e spec lands.
