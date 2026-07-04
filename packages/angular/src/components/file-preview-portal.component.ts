@@ -176,14 +176,25 @@ export class FilePreviewPortalComponent implements OnInit, OnDestroy {
 
     // ── lifecycle ─────────────────────────────────────────────────────────────
 
+    /**
+     * Bound on `window`, not just the dialog div: the modal is opened by a click
+     * outside the portal subtree and never calls .focus(), so a listener scoped
+     * to the dialog element would never receive the key (F-605). Mirrors the
+     * react/vue/svelte canon (FilePreviewPortal.tsx).
+     */
+    private readonly handleKeyDown = (e: KeyboardEvent): void => {
+        if (e.key === 'Escape') this.onClose.emit()
+    }
+
     ngOnInit(): void {
         if (this.isText) {
             void this.loadTextContent()
         }
+        window.addEventListener('keydown', this.handleKeyDown)
     }
 
     ngOnDestroy(): void {
-        // nothing to tear down (no object URL created here)
+        window.removeEventListener('keydown', this.handleKeyDown)
     }
 
     // ── event handlers ────────────────────────────────────────────────────────

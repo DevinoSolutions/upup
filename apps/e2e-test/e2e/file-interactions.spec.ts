@@ -1,6 +1,11 @@
 import { test, expect } from '@playwright/test'
 import { FILE_2KB, clearCrashRecovery } from './helpers'
 
+// Filler-byte buffer with an image/png mimeType — same pattern as restrictions.spec.ts.
+// Only the MIME type needs to read as image/* for the eager-canPreview gate that
+// shows the "Click to preview" trigger; the bytes need not decode as a real PNG.
+const IMAGE_2KB = { name: 'photo.png', mimeType: 'image/png', buffer: Buffer.alloc(2 * 1024, 0x89) }
+
 test.describe('File selection via input', () => {
     test.beforeEach(async ({ page }) => {
         await page.goto('/')
@@ -105,5 +110,31 @@ test.describe('Paste upload', () => {
             dropzone?.dispatchEvent(new ClipboardEvent('paste', { clipboardData: dt, bubbles: true }))
         })
         await expect(page.locator('[data-testid="upup-file-item"]')).toBeVisible()
+    })
+})
+
+test.describe('File preview — Escape closes (F-605)', () => {
+    test.beforeEach(async ({ page }) => {
+        await page.goto('/')
+        await clearCrashRecovery(page)
+        await page.reload()
+    })
+
+    test('pressing Escape closes the open file preview', async ({ page }) => {
+        await page.setInputFiles('[data-testid="upup-file-input"]', IMAGE_2KB)
+        await expect(page.locator('[data-testid="upup-file-item"]')).toBeVisible()
+
+        await page.getByText('Click to preview').click()
+        // Assert on the dialog itself, not the [data-upup-slot="file-preview-portal"]
+        // wrapper: that wrapper carries no layout CSS of its own (`.upup-scope` is a
+        // pure Tailwind-scoping selector prefix, not a sizing class) and its only
+        // child is `position:fixed` (taken out of flow), so the wrapper collapses to
+        // a 0x0 box and Playwright's toBeVisible() reports it hidden even while the
+        // dialog is genuinely on screen. The dialog role IS the fixed, sized element.
+        const dialog = page.getByRole('dialog', { name: 'photo.png' })
+        await expect(dialog).toBeVisible()
+
+        await page.keyboard.press('Escape')
+        await expect(dialog).not.toBeVisible()
     })
 })

@@ -6,7 +6,15 @@ import type { UploaderContext } from '../lib/types'
 import { filePreview } from './file-preview'
 import { filePreviewPortal, type TextState } from './file-preview-portal'
 
-export interface FileItemState { canPreview: boolean; showPreviewPortal: boolean; textState?: TextState }
+export interface FileItemState {
+  canPreview: boolean
+  showPreviewPortal: boolean
+  textState?: TextState
+  /** Escape-close listener (F-605), stored here — not a local closure — because
+   *  fileItem() reruns every ctx.invalidate(), so a local reference would be lost
+   *  between the add in openPortal and the remove in closePortal. */
+  escHandler?: (e: KeyboardEvent) => void
+}
 const stateMap = new WeakMap<UploadFile, FileItemState>()
 function computeEagerCanPreview(file: UploadFile): boolean {
   const type = file.type ?? ''
@@ -23,8 +31,22 @@ export function fileItem(ctx: UploaderContext, file: UploadFile) {
   const state = stateFor(file)
   const slot = ctx.theme.getSnapshot().slotOverrides
   const filesSize = ctx.core.files.size
-  const openPortal = () => { state.showPreviewPortal = true; ctx.core.emit('file-preview-open', { fileId: file.id, fileName: file.name }); ctx.invalidate() }
-  const closePortal = () => { state.showPreviewPortal = false; ctx.core.emit('file-preview-close', { fileId: file.id, fileName: file.name }); ctx.invalidate() }
+  const openPortal = () => {
+    state.showPreviewPortal = true
+    ctx.core.emit('file-preview-open', { fileId: file.id, fileName: file.name })
+    // Window-level (not dialog-scoped): the modal opens from this button click,
+    // which never moves focus into the portal, so a dialog-scoped keydown would
+    // never receive Escape (F-605). Mirrors the react/vue/svelte canon.
+    state.escHandler = (e: KeyboardEvent) => { if (e.key === 'Escape') closePortal() }
+    window.addEventListener('keydown', state.escHandler)
+    ctx.invalidate()
+  }
+  const closePortal = () => {
+    state.showPreviewPortal = false
+    ctx.core.emit('file-preview-close', { fileId: file.id, fileName: file.name })
+    if (state.escHandler) { window.removeEventListener('keydown', state.escHandler); state.escHandler = undefined }
+    ctx.invalidate()
+  }
   const stop = (e: MouseEvent) => e.stopPropagation()
   return html`
     <div
