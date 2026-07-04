@@ -253,10 +253,12 @@ export class OneDrivePlugin implements DrivePlugin {
                 data.expires_in ? Date.now() + data.expires_in * 1000 : 0,
             )
 
-            // Fetch user profile
+            // Fetch user profile. Calls the private fetchUserProfile(), not the public
+            // getUserInfo() — isAuthenticated() (gating getUserInfo since F-123) doesn't
+            // flip true until this.setState('authenticated') below.
             let user: { name: string; email: string } | undefined
             try {
-                user = await this.getUserInfo()
+                user = await this.fetchUserProfile()
             } catch {
                 // Profile fetch is non-critical
             }
@@ -549,7 +551,24 @@ export class OneDrivePlugin implements DrivePlugin {
 
     // ── User profile ──
 
-    async getUserInfo(): Promise<{ name: string; email: string }> {
+    // Guarded public entry point the controller drives (F-123): swallow-to-null
+    // instead of throwing, so a failed profile fetch never strands the restore
+    // flow in an unhandled rejection. Requires isAuthenticated() — unlike
+    // authenticate()'s internal call below, which fetches before the
+    // 'authenticated' state flag flips.
+    async getUserInfo(): Promise<{ name: string; email: string } | null> {
+        if (!this.isAuthenticated()) return null
+        try {
+            return await this.fetchUserProfile()
+        } catch {
+            return null
+        }
+    }
+
+    // ── Private: fetch user profile (unguarded — called once tokens are set
+    // but before isAuthenticated() flips, and again via the public getUserInfo) ──
+
+    private async fetchUserProfile(): Promise<{ name: string; email: string }> {
         const data = await this.graphRequest('/me')
         return {
             name: String(data.displayName ?? ''),

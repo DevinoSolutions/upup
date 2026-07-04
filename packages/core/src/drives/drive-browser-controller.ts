@@ -1,6 +1,6 @@
 import type { UpupCore } from '../core'
 import { bindDriveEvents } from './bind-drive-events'
-import type { DriveFile, DriveFolder, DriveUser } from './types'
+import type { DriveBrowserError, DriveFile, DriveFolder, DriveUser } from './types'
 import type { DriveProviderDescriptor } from './drive-browser-descriptors'
 import { loadGoogleIdentityServices } from '../utils/load-gapi'
 import type { DrivePlugin } from './plugin'
@@ -21,6 +21,12 @@ export interface DriveBrowserState {
     authCancelled: boolean
     /** GIS only: the acquired access token. */
     token?: { access_token: string; expires_in: number }
+    /** The one drive-failure surface (auth/load/download/search, any provider). undefined = no error. */
+    error?: DriveBrowserError
+    /** Drives the "Load more" button. Wired in F-125 (hasMore/loadMore); defaults false until then. */
+    hasMore: boolean
+    /** Load-more button spinner/disabled state. */
+    isLoadingMore: boolean
 }
 
 export interface DriveBrowserCallbacks {
@@ -85,6 +91,9 @@ export class DriveBrowserController {
             isLoading: true,
             authCancelled: false,
             token: undefined,
+            error: undefined,
+            hasMore: false,
+            isLoadingMore: false,
         }
     }
 
@@ -150,10 +159,21 @@ export class DriveBrowserController {
         } else {
             this.setState({ isAuthenticated: restored, isLoading: false })
             if (!restored) return
+            // Fire-and-forget: neither branch may reject, else it strands the UI in an
+            // unhandled rejection (F-123 — getUserInfo previously had no guard here).
+            // loadFiles failures are still surfaced via the plugin's own error emit.
             void (async () => {
-                const userInfo = await plugin.getUserInfo()
-                if (userInfo) this.setState({ user: userInfo })
-                await plugin.loadFiles(this.descriptor.loadFilesRootArg)
+                try {
+                    const userInfo = await plugin.getUserInfo()
+                    if (userInfo) this.setState({ user: userInfo })
+                } catch {
+                    // non-critical — mirrors the GIS branch above
+                }
+                try {
+                    await plugin.loadFiles(this.descriptor.loadFilesRootArg)
+                } catch {
+                    // surfaced via the plugin's error emit → onError
+                }
             })()
         }
     }
@@ -177,28 +197,19 @@ export class DriveBrowserController {
                 }
             },
             onSignedOut: () => {
-                this.pendingFolder = undefined
-                this.setState({
-                    user: undefined,
-                    folder: undefined,
-                    token: undefined,
-                    path: [],
-                    selectedFiles: [],
-                    isAuthenticated: false,
-                })
+                this.resetSession()
             },
             onSessionExpired: () => {
-                this.setState({
-                    user: undefined,
-                    folder: undefined,
-                    token: undefined,
-                    path: [],
-                    isAuthenticated: false,
-                })
+                this.resetSession()
             },
             onFilesLoaded: (payload: unknown) => {
                 const folder = this.buildRootFolder(payload as FilesLoadedPayload)
-                this.setState({ folder, path: this.nextPath(folder), isClickLoading: false })
+                this.setState({
+                    folder,
+                    path: this.nextPath(folder),
+                    isClickLoading: false,
+                    error: undefined,
+                })
             },
             onStateChange: (payload: unknown) => {
                 const data = payload as { state: string }
@@ -210,9 +221,35 @@ export class DriveBrowserController {
                     })
                 }
             },
-            onError: () => {
-                this.setState({ isClickLoading: false, showLoader: false })
+            onError: (payload?: unknown) => {
+                const p = payload as { error?: Error; action?: string } | undefined
+                this.setState({
+                    isClickLoading: false,
+                    showLoader: false,
+                    isLoadingMore: false,
+                    error: { message: p?.error?.message || 'Unknown error', action: p?.action },
+                })
             },
+        })
+    }
+
+    /**
+     * The single session-teardown home (F-127). onSignedOut and onSessionExpired
+     * previously drifted independently — onSessionExpired forgot to clear
+     * selectedFiles/pendingFolder, leaking a stale selection into the next
+     * sign-in. Both now delegate here.
+     */
+    private resetSession(): void {
+        this.pendingFolder = undefined
+        this.setState({
+            user: undefined,
+            folder: undefined,
+            token: undefined,
+            path: [],
+            selectedFiles: [],
+            isAuthenticated: false,
+            hasMore: false,
+            error: undefined,
         })
     }
 
@@ -246,7 +283,12 @@ export class DriveBrowserController {
     private async initGis(plugin: DrivePlugin): Promise<void> {
         const cfg = (plugin.getConfig?.() ?? {}) as GoogleDriveConfigLike
         if (!cfg.clientId || !cfg.apiKey) {
-            this.setState({ isAuthReady: true })
+            // Degradation, not a normal path (F-124): the sign-in button would
+            // otherwise be a silent dead end with no token client wired up.
+            this.setState({
+                isAuthReady: true,
+                error: { message: 'Google Drive is not configured (missing clientId/apiKey)', action: 'init' },
+            })
             return
         }
         if (plugin.isAuthenticated()) {
@@ -262,7 +304,12 @@ export class DriveBrowserController {
             }
         ).google
         if (!google) {
-            this.setState({ isAuthReady: true })
+            // Degradation, not a normal path (F-124): Google Identity Services failed
+            // to attach the global — same dead-end sign-in button symptom.
+            this.setState({
+                isAuthReady: true,
+                error: { message: 'Google Identity Services failed to load', action: 'init' },
+            })
             return
         }
         this.tokenClient = google.accounts.oauth2.initTokenClient({

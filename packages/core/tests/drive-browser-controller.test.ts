@@ -37,6 +37,10 @@ class FakeDrivePlugin {
     name: string
     id: string
     authed = false
+    /** When true, restoreSession() returns true (session restored) and popup-branch restore() runs. */
+    restoreOk = false
+    /** When true, getUserInfo() rejects instead of resolving — pins the F-123 restore-throw guard. */
+    getUserInfoThrows = false
     constructor(id: string) {
         this.id = id
         this.name = id
@@ -45,7 +49,7 @@ class FakeDrivePlugin {
     init(): void {}
     destroy(): void {}
     restoreSession(): boolean {
-        return false
+        return this.restoreOk
     }
     isAuthenticated(): boolean {
         return this.authed
@@ -54,6 +58,7 @@ class FakeDrivePlugin {
         return this.authed ? 'tok' : null
     }
     async getUserInfo() {
+        if (this.getUserInfoThrows) throw new Error('profile fetch failed')
         return { name: 'Test User', email: 't@example.com' }
     }
     async loadFiles(): Promise<unknown> {
@@ -164,6 +169,29 @@ describe('DriveBrowserController — events', () => {
         expect(snap.isAuthenticated).toBe(true)
         expect(snap.isLoading).toBe(false)
         expect(snap.user?.name).toBe('Jo')
+    })
+
+    it('onError surfaces the payload (F-124)', () => {
+        const { core, controller } = setup()
+        core.emit('google-drive:error', {
+            error: new Error('boom'),
+            action: 'loadFiles',
+        })
+        const snap = controller.getSnapshot()
+        expect(snap.error).toEqual({ message: 'boom', action: 'loadFiles' })
+        expect(snap.isClickLoading).toBe(false)
+    })
+
+    it('session-expired clears selection + pending folder (F-127)', () => {
+        const { core, controller } = setup()
+        core.emit('google-drive:files-loaded', {
+            files: [file('f1', 'Folder', true)],
+            folderId: 'root',
+        })
+        controller.handleClick(file('1', 'a.txt'))
+        expect(controller.getSnapshot().selectedFiles).toHaveLength(1)
+        core.emit('google-drive:session-expired', {})
+        expect(controller.getSnapshot().selectedFiles).toHaveLength(0)
     })
 })
 
@@ -322,5 +350,34 @@ describe('DriveBrowserController — actions', () => {
         expect(controller.getSnapshot().path.map(p => p.id)).toEqual(['root'])
         core.emit('dropbox:files-loaded', { files: [], path: '/Photos' })
         expect(controller.getSnapshot().path.map(p => p.id)).toEqual(['root', '/Photos'])
+    })
+})
+
+describe('DriveBrowserController — restore (F-123)', () => {
+    it('restore tolerates a throwing getUserInfo and still calls loadFiles', async () => {
+        const core = new UpupCore({})
+        const plugin = new FakeDrivePlugin(BOX_DESCRIPTOR.pluginId)
+        plugin.restoreOk = true
+        plugin.getUserInfoThrows = true
+        core.use(plugin)
+        const loadSpy = vi.spyOn(plugin, 'loadFiles')
+        const onUnhandledRejection = vi.fn()
+        process.on('unhandledRejection', onUnhandledRejection)
+
+        const controller = new DriveBrowserController(core, BOX_DESCRIPTOR, {
+            onFilesSelected: vi.fn(),
+            onClose: vi.fn(),
+        })
+        controller.init()
+
+        // Flush the fire-and-forget restore IIFE's microtasks.
+        await Promise.resolve()
+        await Promise.resolve()
+        await Promise.resolve()
+
+        process.off('unhandledRejection', onUnhandledRejection)
+        expect(onUnhandledRejection).not.toHaveBeenCalled()
+        expect(loadSpy).toHaveBeenCalled()
+        expect(controller.getSnapshot().isAuthenticated).toBe(true)
     })
 })

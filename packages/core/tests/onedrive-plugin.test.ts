@@ -1034,6 +1034,15 @@ describe('OneDrivePlugin', () => {
             const user = await plugin.getUserInfo()
             expect(user.email).toBe('jane@org.onmicrosoft.com')
         })
+
+        it('resolves null instead of throwing when the Graph request fails (F-123)', async () => {
+            vi.stubGlobal(
+                'fetch',
+                mockFetchResponse('server error', 500, false),
+            )
+
+            await expect(plugin.getUserInfo()).resolves.toBeNull()
+        })
     })
 
     // ────────────────────────────────────────────

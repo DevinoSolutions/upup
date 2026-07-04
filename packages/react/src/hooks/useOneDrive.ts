@@ -33,6 +33,9 @@ const SERVER_SNAPSHOT: DriveBrowserState = {
     isLoading: true,
     authCancelled: false,
     token: undefined,
+    error: undefined,
+    hasMore: false,
+    isLoadingMore: false,
 }
 
 export default function useOneDrive() {

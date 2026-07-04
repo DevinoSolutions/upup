@@ -21,6 +21,12 @@ export type DriveUser = {
 
 export type DriveState = 'idle' | 'authenticating' | 'authenticated' | 'browsing' | 'session-expired'
 
+/** The one drive browse-failure surface (F-124). `action` names the operation that failed. */
+export type DriveBrowserError = {
+    message: string
+    action?: string
+}
+
 export type DriveEventMap = {
     'authenticated': { token: string }
     'signed-out': Record<string, never>
