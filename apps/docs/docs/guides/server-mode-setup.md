@@ -71,7 +71,7 @@ mount it at.
   mode="server"
   serverUrl="/api/upup"
   provider="aws"
-  sources={['local', 'google_drive', 'dropbox']}
+  sources={['local', 'googleDrive', 'dropbox']}
 />
 ```
 
