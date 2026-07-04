@@ -45,6 +45,9 @@ jobs:
       - name: Provision MinIO env (defaults; smoke is OAuth-free)
         run: cp local-dev/.env.minio.example local-dev/.env.minio
 
+      - name: Guard against fixture/baseline regen in CI (F-205)
+        run: if [ -n "$UPDATE_PARITY" ] || [ -n "$UPDATE_A11Y_BASELINE" ]; then echo "regen env forbidden in CI"; exit 1; fi
+
       - name: Run e2e gate (deep React + cross-framework smoke)
         run: pnpm run e2e
 

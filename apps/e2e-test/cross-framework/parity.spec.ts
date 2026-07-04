@@ -66,6 +66,16 @@ function assertComponentParity(
 test.describe('cross-framework DOM + a11y parity', () => {
   for (const variant of PARITY_VARIANTS) {
     test(`renders the agreed contract on every framework (variant: ${variant})`, async ({ page }, testInfo) => {
+      // Fixture/baseline regen must never run in CI -- it would launder a
+      // regression into the canon regardless of which workflow invokes this
+      // spec. Provider-agnostic (throws here) + the fail-fast e2e.yml guard
+      // (Fix 10) are two independent layers against the same mistake.
+      if (process.env.CI && (process.env.UPDATE_PARITY || process.env.UPDATE_A11Y_BASELINE)) {
+        throw new Error(
+          'Fixture/baseline regen (UPDATE_PARITY/UPDATE_A11Y_BASELINE) must never run in CI — it would launder a regression into the canon.',
+        )
+      }
+
       const fw = byName(testInfo.project.name)
 
       await page.goto(storyUrl(fw.parityStoryIds[variant]))
