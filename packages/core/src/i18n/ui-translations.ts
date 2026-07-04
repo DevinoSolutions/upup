@@ -126,6 +126,33 @@ export type UiTranslations = {
 /** Compatibility alias for older internal names. */
 export type Translations = UiTranslations
 
+/**
+ * Non-enumerable tag carrying the bundle's BCP 47 locale on the flattened
+ * translations object (stamped once at `flattenTranslatorToUiTranslations`),
+ * so `pluralUiMessage` can select the CLDR-correct plural category without
+ * threading a `locale` argument through every one of its call sites.
+ */
+const UI_LOCALE = Symbol('upupUiLocale')
+
+const pluralRulesCache = new Map<string, Intl.PluralRules>()
+
+function selectPluralCategory(locale: string, count: number): Intl.LDMLPluralRule {
+    let pr = pluralRulesCache.get(locale)
+    if (!pr) {
+        try {
+            pr = new Intl.PluralRules(locale)
+        } catch {
+            pr = new Intl.PluralRules('en-US') // invalid code → English rules
+        }
+        pluralRulesCache.set(locale, pr)
+    }
+    return pr.select(count)
+}
+
+function localeOf(translations: UiTranslations): string {
+    return ((translations as Record<symbol, unknown>)[UI_LOCALE] as string | undefined) ?? 'en-US'
+}
+
 export function formatUiMessage(
     template: string,
     values?: Record<string, string | number>,
@@ -140,10 +167,12 @@ export function pluralUiMessage(
     translations: UiTranslations,
     baseKey: string,
     count: number,
+    locale: string = localeOf(translations),
 ): string {
-    const suffix = count === 1 ? '_one' : '_other'
-    const key = `${baseKey}${suffix}` as keyof UiTranslations
-    return translations[key] ?? translations[baseKey as keyof UiTranslations] ?? ''
+    const category = selectPluralCategory(locale, count) // zero|one|two|few|many|other
+    const exact = `${baseKey}_${category}` as keyof UiTranslations
+    const other = `${baseKey}_other` as keyof UiTranslations
+    return translations[exact] ?? translations[other] ?? translations[baseKey as keyof UiTranslations] ?? ''
 }
 
 export function flattenTranslatorToUiTranslations(
@@ -153,16 +182,20 @@ export function flattenTranslatorToUiTranslations(
         translator(key, values)
 
     // Count-based ICU plurals use `#`, which bakes the number in when the form
-    // is pre-evaluated. Render the "other" form with a sample count, then swap
-    // the rendered digits back to a `{{count}}` placeholder so the renderer can
-    // interpolate the real count at runtime (same convention as the
-    // `{{size}}` / `{{unit}}` placeholders below). `\p{Nd}` covers non-Latin
-    // digit scripts; count: 2 is small enough to never trigger grouping
-    // separators, so the first digit run is always exactly the count.
-    const countPluralOther = (key: Parameters<Translator>[0]) =>
-        tr(key, { count: 2 }).replace(/\p{Nd}+/u, '{{count}}')
+    // is pre-evaluated. Render the requested form with a sample count, then
+    // swap the rendered digits back to a `{{count}}` placeholder so the
+    // renderer can interpolate the real count at runtime (same convention as
+    // the `{{size}}` / `{{unit}}` placeholders below). `\p{Nd}` covers
+    // non-Latin digit scripts; sample counts of 1/2 are small enough to
+    // never trigger grouping separators, so the first digit run is always
+    // exactly the count. BOTH `_one` and `_other` must be placeholder-
+    // preserving (not just `_other`): once plural selection is CLDR-correct,
+    // `one` can be chosen for counts other than 1 (e.g. French `one` = {0,1}),
+    // so a baked-in "1" would render wrong for count 0.
+    const countPluralForm = (key: Parameters<Translator>[0], count: number) =>
+        tr(key, { count }).replace(/\p{Nd}+/u, '{{count}}')
 
-    return {
+    const result: UiTranslations = {
         cancel: tr('common.cancel'),
         done: tr('common.done'),
         loading: tr('common.loading'),
@@ -193,14 +226,14 @@ export function flattenTranslatorToUiTranslations(
         addDocumentsHere: tr('dropzone.addDocumentsHere', { limit: '{{limit}}' }),
         removeAllFiles: tr('header.removeAllFiles'),
         addingMoreFiles: tr('header.addingMoreFiles'),
-        filesSelected_one: tr('header.filesSelected', { count: 1 }),
-        filesSelected_other: countPluralOther('header.filesSelected'),
+        filesSelected_one: countPluralForm('header.filesSelected', 1),
+        filesSelected_other: countPluralForm('header.filesSelected', 2),
         addMore: tr('header.addMore'),
         switchToListView: tr('header.switchToListView'),
         switchToGridView: tr('header.switchToGridView'),
         dropzoneLabel: tr('dropzone.dropAriaLabel'),
-        uploadFiles_one: tr('fileList.uploadFiles', { count: 1 }),
-        uploadFiles_other: countPluralOther('fileList.uploadFiles'),
+        uploadFiles_one: countPluralForm('fileList.uploadFiles', 1),
+        uploadFiles_other: countPluralForm('fileList.uploadFiles', 2),
         resumeUpload: tr('fileList.resumeUpload'),
         retryUpload: tr('fileList.retryUpload'),
         pauseUpload: tr('fileList.pauseUpload'),
@@ -219,8 +252,8 @@ export function flattenTranslatorToUiTranslations(
         previewError: tr('filePreview.previewError', { message: '{{message}}' }),
         noAcceptedFilesFound: tr('driveBrowser.noAcceptedFilesFound'),
         selectThisFolder: tr('driveBrowser.selectThisFolder'),
-        addFiles_one: tr('driveBrowser.addFiles', { count: 1 }),
-        addFiles_other: countPluralOther('driveBrowser.addFiles'),
+        addFiles_one: countPluralForm('driveBrowser.addFiles', 1),
+        addFiles_other: countPluralForm('driveBrowser.addFiles', 2),
         logOut: tr('driveBrowser.logOut'),
         search: tr('driveBrowser.search'),
         authenticatePrompt: tr('driveBrowser.authenticatePrompt', { provider: '{{provider}}' }),
@@ -306,4 +339,9 @@ export function flattenTranslatorToUiTranslations(
         handleSignInFailed: tr('errors.handleSignInFailed', { message: '{{message}}' }),
         signOutFailed: tr('errors.signOutFailed', { message: '{{message}}' }),
     }
+
+    // Stamp the bundle's locale onto the flattened object (non-enumerable —
+    // stays invisible to Object.keys/JSON.stringify/spread) so pluralUiMessage
+    // can select the CLDR-correct category without a threaded `locale` arg.
+    return Object.defineProperty(result, UI_LOCALE, { value: translator.locale, enumerable: false })
 }
