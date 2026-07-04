@@ -719,3 +719,41 @@ describe('handler — multipart uid binding (F-106)', () => {
         expect(second.status).toBe(200)
     })
 })
+
+// ─────────────────────────────────────────────
+// F-107: pin + document the upload-token replay window
+// ─────────────────────────────────────────────
+describe('handler — upload-token replay (F-107)', () => {
+    it('a valid token may be replayed to sign-part any number of times within its TTL', async () => {
+        const replayConfig = {
+            storage: { type: 'aws', bucket: 'test-bucket', region: 'us-east-1' },
+            uploadTokenSecret: 'handler-ext-f107-secret-0123456789',
+            allowAnonymousUploads: true,
+        }
+        const handler = createUpupHandler(replayConfig)
+        const init = await (await handler(new Request('http://localhost/multipart/init', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: 'big.zip', size: 50 * 1024 * 1024, type: 'application/zip' }),
+        }))).json()
+
+        const first = await handler(new Request('http://localhost/multipart/sign-part', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token: init.token, partNumber: 1 }),
+        }))
+        const second = await handler(new Request('http://localhost/multipart/sign-part', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token: init.token, partNumber: 1 }),
+        }))
+        const third = await handler(new Request('http://localhost/multipart/sign-part', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token: init.token, partNumber: 1 }),
+        }))
+        expect(first.status).toBe(200)
+        expect(second.status).toBe(200)
+        expect(third.status).toBe(200)
+    })
+})

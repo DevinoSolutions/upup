@@ -33,6 +33,19 @@ const handler = createUpupHandler({
 })
 ```
 
+By default, `POST /presign` and `POST /multipart/init` reject anonymous
+callers with `403 AUTH_REQUIRED` unless you configure `auth`, `getUserId`, or
+opt in explicitly:
+
+```ts
+createUpupHandler({ /* ... */, allowAnonymousUploads: true })
+```
+
+`allowAnonymousUploads` collapses every caller into one shared anonymous
+namespace — fine for demos and upstream-auth deployments (tus/companion-style,
+where authentication happens before the request reaches this handler), never
+for multi-tenant production.
+
 ### `uploadTokenSecret` is REQUIRED — and must match across every instance
 
 `createUpupHandler` throws at construction time if `uploadTokenSecret` is
@@ -57,6 +70,34 @@ openssl rand -hex 32
 See [`/health`](#health) below for a way to detect this drift across a fleet
 without comparing the secret value directly.
 
+#### Token semantics: TTL & replay
+
+An upload token is issued once at `/multipart/init` and re-verified on every
+`/multipart/sign-part`, `/multipart/complete`, and `/multipart/abort` call. It
+carries no nonce — expiry is the only freshness check:
+
+- **TTL.** `exp` is set to `now + DEFAULT_UPLOAD_TOKEN_TTL_SECONDS` (3600s / 1
+  hour) at init and is not refreshable. Once `exp` passes, every continuation
+  route rejects it with `403 {code: 'expired'}`.
+- **Replay window.** Within that hour, the *same* token may be sent to
+  sign-part/complete/abort **any number of times** — this is by design, not a
+  bug: a client legitimately re-signs a part after a network retry, or drives
+  a multi-part upload with many sequential sign-part calls, all against one
+  init-issued token. `handler-extended.test.ts`'s `F-107` suite pins this
+  accepted property at the HTTP boundary.
+- **What replay is bounded by.** A replayed token can only re-drive parts
+  within the S3 `uploadId` it was issued for, and only within the `smin`/`smax`
+  byte envelope signed at init (enforced at `/multipart/complete` — see
+  [Error codes](#error-codes)). When `getUserId` is configured, replay is
+  further bound to the uid that owned the token at init — a different
+  authenticated user replaying a leaked token gets `403 AUTH_DENIED` (see
+  `allowAnonymousUploads` below and the F-106 uid-binding tests).
+- **No single-use / nonce enforcement, by design.** This token model is
+  intentionally stateless — there is no consumed-nonce tracking, so a token is
+  valid for every call until `exp`, not just the first. If your deployment
+  needs single-use tokens, back the token verification with a nonce/jti store
+  in your `TokenStore` implementation (not provided out of the box).
+
 ## Error codes
 
 Every non-2xx JSON response body is `{ error: <generic human message>, code:
@@ -70,7 +111,8 @@ to the client — it goes only to the [`onError`](#onerror-logging-seam) seam.
 | `PRESIGN_FAILED` | `POST /presign` 500 | Storage provider rejected the presign call |
 | `STORAGE_ERROR` | multipart init/sign-part/complete/abort 500, drive list/transfer 500, uncaught router error | S3/MinIO call failed, or an unhandled exception anywhere in routing |
 | `BAD_REQUEST` | any route, 400 | Empty body, malformed JSON, or invalid file metadata (missing/wrong-typed `name`/`type`/`size`) |
-| `AUTH_DENIED` | (reserved) | — |
+| `AUTH_REQUIRED` | `POST /presign`, `POST /multipart/init`, 403 | Neither `auth`, `getUserId`, nor `allowAnonymousUploads` is configured — anonymous uploads are rejected by default |
+| `AUTH_DENIED` | multipart sign-part/complete/abort, 403 | The resolved caller (via `getUserId`) doesn't match the uid the upload token was issued to |
 | `AUTH_PROVIDER_ERROR` | OAuth token exchange, 502 | The provider's token endpoint rejected the code/refresh-token exchange |
 | `AUTH_EXPIRED` | drive token refresh failure (internal) | Refresh token dead/revoked — forces a clean re-auth |
 
