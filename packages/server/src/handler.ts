@@ -1,9 +1,8 @@
 import { UpupErrorCode, NON_S3_STORAGE_PROVIDERS } from '@upup/core'
 import type { UpupServerConfig } from './config'
 import { assertUploadTokenSecret } from './uploadToken'
-import { getTokens, deleteTokens, resolveUserId } from './tokenStore'
 import { handleHealth } from './health'
-import { createResponder, type Responder } from './respond'
+import { createResponder } from './respond'
 import {
     handlePresign,
     handleMultipartInit,
@@ -11,13 +10,8 @@ import {
     handleMultipartComplete,
     handleMultipartAbort,
 } from './upload-routes'
-import {
-    handleOAuthRedirect,
-    handleOAuthCallback,
-    isValidProvider,
-    refreshAccessToken,
-} from './oauth'
-import { listDriveFiles, fetchDriveFile } from './drive-clients'
+import { handleOAuthRedirect, handleOAuthCallback } from './oauth'
+import { handleListFiles, handleFileTransfer } from './drive-routes'
 
 export type RouteHandler = (req: Request) => Promise<Response>
 
@@ -142,163 +136,5 @@ export function createUpupHandler(config: UpupServerConfig): RouteHandler {
                 error,
             )
         }
-    }
-}
-
-async function handleListFiles(
-    req: Request,
-    config: UpupServerConfig,
-    provider: string,
-    res: Responder,
-): Promise<Response> {
-    if (!isValidProvider(provider)) {
-        return res.json({ error: `Unknown provider: ${provider}` }, 400)
-    }
-    if (!config.tokenStore)
-        return res.json({ error: 'tokenStore is required' }, 500)
-
-    const userId = await resolveUserId(config, req)
-    if (!userId) return res.json({ error: 'Unauthenticated' }, 401)
-
-    let tokens = await getTokens(config.tokenStore, userId, provider)
-    if (!tokens) {
-        return res.json({ reauth: true, provider }, 401)
-    }
-    if (
-        tokens.refreshToken &&
-        tokens.expiresAt &&
-        Date.now() > tokens.expiresAt - 30_000
-    ) {
-        const refreshed = await refreshAccessToken(
-            config,
-            provider,
-            userId,
-            tokens,
-        )
-        if (!refreshed) {
-            return res.json({ reauth: true, provider }, 401)
-        }
-        tokens = refreshed
-    }
-
-    const url = new URL(req.url)
-    const folderId = url.searchParams.get('folderId') ?? undefined
-    const search = url.searchParams.get('search') ?? undefined
-
-    try {
-        const files = await listDriveFiles(provider, tokens.accessToken, {
-            folderId,
-            search,
-        })
-        return res.json({ provider, files }, 200)
-    } catch (err) {
-        if ((err as { status?: number }).status === 401) {
-            await deleteTokens(config.tokenStore, userId, provider)
-            return res.json({ reauth: true, provider }, 401)
-        }
-        return res.fail(
-            `files/${provider}`,
-            req.method,
-            500,
-            UpupErrorCode.STORAGE_ERROR,
-            'Drive request failed',
-            err,
-        )
-    }
-}
-
-async function handleFileTransfer(
-    req: Request,
-    config: UpupServerConfig,
-    provider: string,
-    res: Responder,
-): Promise<Response> {
-    if (!isValidProvider(provider)) {
-        return res.json({ error: `Unknown provider: ${provider}` }, 400)
-    }
-    if (!config.tokenStore)
-        return res.json({ error: 'tokenStore is required' }, 500)
-
-    const userId = await resolveUserId(config, req)
-    if (!userId) return res.json({ error: 'Unauthenticated' }, 401)
-
-    let tokens = await getTokens(config.tokenStore, userId, provider)
-    if (!tokens) return res.json({ reauth: true, provider }, 401)
-    if (
-        tokens.refreshToken &&
-        tokens.expiresAt &&
-        Date.now() > tokens.expiresAt - 30_000
-    ) {
-        const refreshed = await refreshAccessToken(
-            config,
-            provider,
-            userId,
-            tokens,
-        )
-        if (!refreshed) {
-            return res.json({ reauth: true, provider }, 401)
-        }
-        tokens = refreshed
-    }
-
-    let body: {
-        fileId: string
-        fileName?: string
-        size?: number
-        mimeType?: string
-    }
-    try {
-        body = (await req.json()) as typeof body
-    } catch {
-        return res.json({ error: 'Invalid JSON body' }, 400)
-    }
-    if (!body.fileId) return res.json({ error: 'Missing fileId' }, 400)
-
-    if (
-        config.maxFileSize &&
-        typeof body.size === 'number' &&
-        body.size > config.maxFileSize
-    ) {
-        return res.json({ error: 'File too large' }, 413)
-    }
-    if (
-        config.allowedTypes?.length &&
-        body.mimeType &&
-        !config.allowedTypes.includes(body.mimeType)
-    ) {
-        return res.json({ error: 'File type not allowed' }, 415)
-    }
-
-    try {
-        const { stream, size, fileName, mimeType } = await fetchDriveFile(
-            provider,
-            tokens.accessToken,
-            body,
-        )
-        const { transferDriveFileToS3 } = await import('./transfer')
-        const result = await transferDriveFileToS3({
-            stream,
-            size,
-            fileName,
-            mimeType,
-            storage: config.storage,
-        })
-        if (config.hooks?.onFileUploaded) {
-            await config.hooks.onFileUploaded(result, req)
-        }
-        return res.json({ provider, ...result }, 200)
-    } catch (err) {
-        if ((err as { status?: number }).status === 401) {
-            await deleteTokens(config.tokenStore, userId, provider)
-            return res.json({ reauth: true, provider }, 401)
-        }
-        return res.fail(
-            `files/${provider}/transfer`,
-            req.method,
-            500,
-            UpupErrorCode.STORAGE_ERROR,
-            'Drive request failed',
-            err,
-        )
     }
 }
