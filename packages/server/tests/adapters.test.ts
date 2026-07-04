@@ -145,4 +145,29 @@ describe('Fastify adapter', () => {
     expect(JSON.parse(sentBody.toString()).uploadUrl).toBeDefined()
     expect(Object.keys(headers).map((k) => k.toLowerCase())).not.toContain('content-length')
   })
+
+  it('mounts at a custom path when opts.path is supplied (F-652)', async () => {
+    const plugin = createUpupPlugin(config, { path: '/custom/*' })
+    const registered: Array<{ path: string; handler: unknown }> = []
+    const fastify = {
+      all: (path: string, handler: unknown) => {
+        registered.push({ path, handler })
+      },
+    }
+    await plugin(fastify as never)
+    expect(registered).toHaveLength(1)
+    expect(registered[0].path).toBe('/custom/*')
+  })
+
+  it('still mounts at /upup/* when no opts are supplied (default preserved)', async () => {
+    const plugin = createUpupPlugin(config)
+    const registered: Array<{ path: string; handler: unknown }> = []
+    const fastify = {
+      all: (path: string, handler: unknown) => {
+        registered.push({ path, handler })
+      },
+    }
+    await plugin(fastify as never)
+    expect(registered[0].path).toBe('/upup/*')
+  })
 })

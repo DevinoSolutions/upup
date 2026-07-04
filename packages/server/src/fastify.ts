@@ -21,11 +21,23 @@ interface FastifyReply {
   send(payload: string | Buffer): FastifyReply
 }
 
-export function createUpupPlugin(config: UpupServerConfig) {
+/**
+ * @param opts.path Mount path passed to `fastify.all`. Defaults to `/upup/*`.
+ *   Every other adapter (express is plain middleware the consumer mounts
+ *   anywhere, hono returns the raw handler, next uses file-based routing)
+ *   never dictates its own route — this override brings fastify in line
+ *   (F-652). `fastify.all` structurally requires a path be registered inside
+ *   the plugin, so this is a defaulted override rather than "no default."
+ */
+export function createUpupPlugin(
+  config: UpupServerConfig,
+  opts?: { path?: string },
+) {
   const handler = createUpupHandler(config)
+  const routePath = opts?.path ?? '/upup/*'
 
   return async (fastify: FastifyInstance) => {
-    fastify.all('/upup/*', async (request: FastifyRequest, reply: FastifyReply) => {
+    fastify.all(routePath, async (request: FastifyRequest, reply: FastifyReply) => {
       const url = `${request.protocol}://${request.hostname}${request.url}`
       const webReq = toWebRequest({
         url,
