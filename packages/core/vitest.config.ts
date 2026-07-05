@@ -3,6 +3,11 @@ import { fileURLToPath } from 'node:url'
 
 export default defineConfig({
   resolve: {
+    // ORDER CONSTRAINT: every '@upup/core/<subpath>' key must precede the
+    // bare '@upup/core' key below. Vite matches alias keys in object order;
+    // the bare key prefix-matches any subpath specifier, so listing it first
+    // silently shadows all subpath aliases for real (non-type-only) runtime
+    // imports. Do not alphabetize this object.
     alias: {
       '@upup/core/contracts': fileURLToPath(new URL('./src/contracts.ts', import.meta.url)),
       '@upup/core/internal': fileURLToPath(new URL('./src/internal.ts', import.meta.url)),
