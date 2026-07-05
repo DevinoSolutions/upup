@@ -1,5 +1,5 @@
 import { Component, Input, inject } from '@angular/core'
-import { isUploadActive } from '@upup/core'
+import { isUploadActive } from '@upup/core/internal'
 import { UpupStore } from '../upup-store.service'
 
 /**

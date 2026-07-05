@@ -1,5 +1,5 @@
 import { IUploaderContext } from '../context/UploaderContext'
-import { isUploadActive } from '@upup/core'
+import { isUploadActive } from '@upup/core/internal'
 
 export default function useUpload({
     upload,

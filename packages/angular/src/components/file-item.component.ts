@@ -1,5 +1,5 @@
 import { Component, Input, inject } from '@angular/core'
-import { cn } from '@upup/core'
+import { cn } from '@upup/core/internal'
 import type { UploadFile } from '@upup/core'
 import { UpupStore } from '../upup-store.service'
 import { FilePreviewComponent } from './file-preview.component'

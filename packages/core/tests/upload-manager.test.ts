@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { UploadManager, type UploadManagerOptions } from '../src/upload-manager'
-import type { CredentialStrategy, UploadStrategy, UploadFile } from '@upup/core'
+import type { CredentialStrategy, UploadStrategy } from '../src/contracts-strategies'
+import type { UploadFile } from '@upup/core'
 
 // Helper to create a minimal UploadFile using a plain object
 function makeFile(id: string, name: string): UploadFile {

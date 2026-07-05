@@ -8,7 +8,7 @@ import {
     useUploaderView,
 } from '../context/uploader-context'
 import useUploaderPanel from '../composables/useUploaderPanel'
-import { cn } from '@upup/core'
+import { cn } from '@upup/core/internal'
 import SourceSelector from './SourceSelector.vue'
 import SourceView from './SourceView.vue'
 import FileList from './FileList.vue'

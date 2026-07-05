@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte'
-  import { formatUiMessage as t, cn } from '@upup/core'
+  import { formatUiMessage as t } from '@upup/core'
+import { cn } from '@upup/core/internal'
   import useCameraUploader from '../composables/useCameraUploader'
   import SourceViewContainer from './shared/SourceViewContainer.svelte'
 

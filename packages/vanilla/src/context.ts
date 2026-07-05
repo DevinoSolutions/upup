@@ -1,17 +1,5 @@
-import {
-    UpupCore,
-    DriveBrowserController,
-    DragDropController,
-    FileSource,
-    GOOGLE_DRIVE_DESCRIPTOR,
-    ONE_DRIVE_DESCRIPTOR,
-    DROPBOX_DESCRIPTOR,
-    BOX_DESCRIPTOR,
-    normalizeUploaderOptions,
-    createUploaderController,
-    createChildController,
-    type UploadFile,
-} from '@upup/core'
+import { UpupCore, FileSource, GOOGLE_DRIVE_DESCRIPTOR, ONE_DRIVE_DESCRIPTOR, DROPBOX_DESCRIPTOR, BOX_DESCRIPTOR, type UploadFile } from '@upup/core'
+import { DriveBrowserController, DragDropController, normalizeUploaderOptions, createUploaderController, createChildController } from '@upup/core/internal'
 import type {
     CreateUploaderOptions,
     UploaderContext,

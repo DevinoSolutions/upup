@@ -5,13 +5,8 @@ import {
     useSyncExternalStore,
     type SetStateAction,
 } from 'react'
-import {
-    DriveBrowserController,
-    ONE_DRIVE_DESCRIPTOR,
-    type DriveBrowserState,
-    type DriveFile,
-    type DriveFolder,
-} from '@upup/core'
+import { ONE_DRIVE_DESCRIPTOR, type DriveFile, type DriveFolder } from '@upup/core'
+import { DriveBrowserController, type DriveBrowserState } from '@upup/core/internal'
 import {
     useUploaderFiles,
     useUploaderRuntime,

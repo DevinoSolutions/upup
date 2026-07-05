@@ -1,5 +1,5 @@
 import { useEffect, useRef, useSyncExternalStore } from 'react'
-import { ServerModeDriveController } from '@upup/core'
+import { ServerModeDriveController } from '@upup/core/internal'
 import type { ServerModeProvider, ServerDriveFile } from '@upup/core'
 import { useUploaderRuntime } from '../context/UploaderContext'
 

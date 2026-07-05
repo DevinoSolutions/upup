@@ -1,7 +1,7 @@
 import { html, nothing } from 'lit-html'
 import type { TemplateResult } from 'lit-html'
 import type { UploadFile, Translations } from '@upup/core'
-import { fileGetIsImage, cn } from '@upup/core'
+import { fileGetIsImage, cn } from '@upup/core/internal'
 import type { UploaderContext } from '../lib/types'
 import { progressBar } from './shared/progress-bar'
 import { filePreviewThumbnail } from './file-preview-thumbnail'

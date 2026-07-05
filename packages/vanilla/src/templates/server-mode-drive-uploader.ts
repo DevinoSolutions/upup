@@ -1,6 +1,7 @@
 import { html, nothing } from 'lit-html'
 import { repeat } from 'lit-html/directives/repeat.js'
-import { cn, errorCodeToMessageKey } from '@upup/core'
+import { errorCodeToMessageKey } from '@upup/core'
+import { cn } from '@upup/core/internal'
 import type { ServerModeProvider, ServerDriveFile } from '@upup/core'
 export type { ServerModeProvider, ServerDriveFile }
 import type { UploaderContext } from '../lib/types'

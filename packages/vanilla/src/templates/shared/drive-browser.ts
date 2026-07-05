@@ -1,11 +1,7 @@
 import { html, nothing } from 'lit-html'
 import { repeat } from 'lit-html/directives/repeat.js'
-import {
-    cn,
-    formatUiMessage as t,
-    pluralUiMessage as plural,
-    searchDriveFiles,
-} from '@upup/core'
+import { formatUiMessage as t, pluralUiMessage as plural } from '@upup/core'
+import { cn, searchDriveFiles } from '@upup/core/internal'
 import type {
     DriveBrowserError,
     DriveFile,

@@ -1,11 +1,7 @@
 import { onMount, onDestroy } from 'svelte'
 import { derived } from 'svelte/store'
-import {
-    DriveBrowserController,
-    GOOGLE_DRIVE_DESCRIPTOR,
-    type DriveFile,
-    type DriveFolder,
-} from '@upup/core'
+import { GOOGLE_DRIVE_DESCRIPTOR, type DriveFile, type DriveFolder } from '@upup/core'
+import { DriveBrowserController } from '@upup/core/internal'
 import {
     useUploaderFiles,
     useUploaderRuntime,

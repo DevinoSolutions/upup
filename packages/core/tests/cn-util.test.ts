@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { cn } from '@upup/core'
+import { cn } from '../src/utils/tailwind'
 
 // ─────────────────────────────────────────────
 // cn (clsx + tailwind-merge)

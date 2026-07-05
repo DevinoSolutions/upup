@@ -1,5 +1,6 @@
 import { Component, Input, inject } from '@angular/core'
-import { type DriveBrowserError, formatUiMessage as t, cn } from '@upup/core'
+import { type DriveBrowserError, formatUiMessage as t } from '@upup/core'
+import { cn } from '@upup/core/internal'
 import { UpupStore } from '../../upup-store.service'
 import { SourceViewContainerComponent } from '../source-view-container.component'
 

@@ -7,7 +7,7 @@ import {
     useUploaderTheme,
 } from '../context/UploaderContext'
 import { uploadSourceObject } from '../lib/constants'
-import { cn } from '@upup/core'
+import { cn } from '@upup/core/internal'
 import DefaultLoaderIcon from './DefaultLoaderIcon'
 
 export default function SourceView() {

@@ -1,5 +1,6 @@
 import { Component, Input, inject } from '@angular/core'
-import { type DriveFile, cn } from '@upup/core'
+import { type DriveFile } from '@upup/core'
+import { cn } from '@upup/core/internal'
 import { UpupStore } from '../../upup-store.service'
 import { DriveBrowserIconComponent } from './drive-browser-icon.component'
 

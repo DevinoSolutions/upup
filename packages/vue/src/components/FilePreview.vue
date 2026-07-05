@@ -9,8 +9,8 @@ import {
     useUploaderTheme,
     useUploaderUploadControls,
 } from '../context/uploader-context'
-import { fileCanPreviewText, fileGetIsImage, fileGetIsPdf, fileGetIsText } from '@upup/core'
-import { cn } from '@upup/core'
+import { fileCanPreviewText, fileGetIsImage, fileGetIsPdf, fileGetIsText } from '@upup/core/internal'
+import { cn } from '@upup/core/internal'
 import FilePreviewThumbnail from './FilePreviewThumbnail.vue'
 import ProgressBar from './shared/ProgressBar.vue'
 

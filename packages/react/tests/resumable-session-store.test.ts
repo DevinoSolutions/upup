@@ -1,13 +1,5 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
-import {
-    fileFingerprint,
-    saveSession,
-    loadSession,
-    updateSessionProgress,
-    removeSession,
-    clearAllSessions,
-    MultipartSession,
-} from '@upup/core'
+import { fileFingerprint, saveSession, loadSession, updateSessionProgress, removeSession, clearAllSessions, MultipartSession } from '@upup/core/internal'
 
 const STORAGE_PREFIX = 'upup_mp_'
 

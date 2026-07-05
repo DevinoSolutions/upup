@@ -4,7 +4,7 @@ import {
     useUploaderSource,
     useUploaderTheme,
 } from '../context/UploaderContext'
-import { cn } from '@upup/core'
+import { cn } from '@upup/core/internal'
 import SourceViewContainer from './shared/SourceViewContainer'
 
 type RecordingState = 'idle' | 'recording' | 'recorded'

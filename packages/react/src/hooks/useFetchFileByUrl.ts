@@ -1,10 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import {
-    sanitizeFileName,
-    extensionFromMime,
-    fileNameFromContentDisposition,
-    deriveFetchedFileName,
-} from '@upup/core'
+import { sanitizeFileName, extensionFromMime, fileNameFromContentDisposition, deriveFetchedFileName } from '@upup/core/internal'
 import {
     useUploaderOptions,
     useUploaderRuntime,

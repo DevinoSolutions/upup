@@ -22,7 +22,7 @@ import { oneDriveUploader } from '../templates/one-drive-uploader'
 import { dropboxUploader } from '../templates/dropbox-uploader'
 import { boxUploader } from '../templates/box-uploader'
 
-export { sourceNameKeys } from '@upup/core'
+export { sourceNameKeys } from '@upup/core/internal'
 
 type SourceEntry = {
     id: FileSource

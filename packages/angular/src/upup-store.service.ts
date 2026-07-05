@@ -1,19 +1,6 @@
 import { Injectable, computed, signal, type Signal } from '@angular/core'
-import {
-    FileSource,
-    UploadStatus,
-    UploaderOrchestrator,
-    ThemeStore,
-    normalizeUploaderOptions,
-    createUploaderController,
-    type UploaderControllerOptions,
-    type UploaderController,
-    type CloudDrivesConfig,
-    type UploadFile,
-    type UiTranslations,
-    type Translator,
-    type ResolvedImageEditorOptions,
-} from '@upup/core'
+import { FileSource, UploadStatus, type CloudDrivesConfig, type UploadFile, type UiTranslations, type Translator, type ResolvedImageEditorOptions } from '@upup/core'
+import { UploaderOrchestrator, ThemeStore, normalizeUploaderOptions, createUploaderController, type UploaderControllerOptions, type UploaderController } from '@upup/core/internal'
 import { createUpupUpload, type UpupUploadHandle } from './lib/use-upup-upload'
 import { createSSEProcessing } from './lib/use-sse-processing'
 import { toSignalStore, type SignalStore } from './lib/to-signal-store'

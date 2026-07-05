@@ -8,7 +8,7 @@
     useUploaderTheme,
   } from '../context/uploader-context'
   import useFetchFileByUrl from '../composables/useFetchFileByUrl'
-  import { cn } from '@upup/core'
+  import { cn } from '@upup/core/internal'
   import SourceViewContainer from './shared/SourceViewContainer.svelte'
 
   const { core } = useUploaderRuntime()

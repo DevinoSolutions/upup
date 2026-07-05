@@ -8,7 +8,7 @@ import {
     useUploaderTheme,
 } from '../context/UploaderContext'
 import useFetchFileByUrl from '../hooks/useFetchFileByUrl'
-import { cn } from '@upup/core'
+import { cn } from '@upup/core/internal'
 import SourceViewContainer from './shared/SourceViewContainer'
 
 export default function UrlUploader() {

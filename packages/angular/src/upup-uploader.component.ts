@@ -12,7 +12,7 @@ import {
     inject,
 } from '@angular/core'
 import { isPlatformBrowser } from '@angular/common'
-import { cn } from '@upup/core'
+import { cn } from '@upup/core/internal'
 import { UpupStore } from './upup-store.service'
 import type { UploaderProps } from './shared/types'
 import type { UploadFile } from '@upup/core'

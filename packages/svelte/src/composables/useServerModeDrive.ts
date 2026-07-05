@@ -1,6 +1,6 @@
 import { onMount, onDestroy } from 'svelte'
 import { derived } from 'svelte/store'
-import { ServerModeDriveController } from '@upup/core'
+import { ServerModeDriveController } from '@upup/core/internal'
 import type { ServerModeProvider, ServerDriveFile } from '@upup/core'
 import { useUploaderRuntime } from '../context/uploader-context'
 import { toReadable } from '../lib/to-readable'

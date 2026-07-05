@@ -1,10 +1,7 @@
 import { Component, Input, inject, Type } from '@angular/core'
 import { NgComponentOutlet } from '@angular/common'
-import {
-    formatUiMessage as t,
-    pluralUiMessage as plural,
-    isUploadActive,
-} from '@upup/core'
+import { formatUiMessage as t, pluralUiMessage as plural } from '@upup/core'
+import { isUploadActive } from '@upup/core/internal'
 import { UpupStore } from '../upup-store.service'
 import { LayoutGridIconComponent } from './icons/layout-grid-icon.component'
 import { LayoutListIconComponent } from './icons/layout-list-icon.component'

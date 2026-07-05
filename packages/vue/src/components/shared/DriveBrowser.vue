@@ -13,8 +13,8 @@ import {
     useUploaderOptions,
     useUploaderTheme,
 } from '../../context/uploader-context'
-import { searchDriveFiles } from '@upup/core'
-import { cn } from '@upup/core'
+import { searchDriveFiles } from '@upup/core/internal'
+import { cn } from '@upup/core/internal'
 import SourceViewContainer from './SourceViewContainer.vue'
 import DriveBrowserHeader from './DriveBrowserHeader.vue'
 import DriveBrowserItem from './DriveBrowserItem.vue'

@@ -1,5 +1,6 @@
 <script lang="ts">
-  import { type DriveFile, cn, b64EncodeUnicode } from '@upup/core'
+  import { type DriveFile } from '@upup/core'
+import { cn, b64EncodeUnicode } from '@upup/core/internal'
   import { useUploaderTheme } from '../../context/uploader-context'
   import Icon from '../Icon.svelte'
 

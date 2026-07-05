@@ -1,5 +1,6 @@
 import React from 'react'
-import { type DriveBrowserError, cn, formatUiMessage as t } from '@upup/core'
+import { type DriveBrowserError, formatUiMessage as t } from '@upup/core'
+import { cn } from '@upup/core/internal'
 import {
     useUploaderI18n,
     useUploaderTheme,

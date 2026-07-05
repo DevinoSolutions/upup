@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { type DriveFile } from '@upup/core'
 import { useUploaderTheme } from '../../context/uploader-context'
-import { cn } from '@upup/core'
+import { cn } from '@upup/core/internal'
 import DriveBrowserIcon from './DriveBrowserIcon.vue'
 
 const props = defineProps<{

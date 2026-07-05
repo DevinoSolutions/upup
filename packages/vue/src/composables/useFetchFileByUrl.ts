@@ -1,10 +1,5 @@
 import { ref } from 'vue'
-import {
-    sanitizeFileName,
-    extensionFromMime,
-    fileNameFromContentDisposition,
-    deriveFetchedFileName,
-} from '@upup/core'
+import { sanitizeFileName, extensionFromMime, fileNameFromContentDisposition, deriveFetchedFileName } from '@upup/core/internal'
 import {
     useUploaderOptions,
     useUploaderRuntime,

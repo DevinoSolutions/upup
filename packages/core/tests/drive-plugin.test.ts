@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import type { DrivePlugin } from '../src/drives/plugin'
-import { EventEmitter } from '../src'
+import { EventEmitter } from '../src/events'
 
 describe('DrivePlugin interface', () => {
   it('can be implemented and called', () => {

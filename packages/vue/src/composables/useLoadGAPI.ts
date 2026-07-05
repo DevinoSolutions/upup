@@ -1,4 +1,4 @@
-import { loadGoogleIdentityServices } from '@upup/core'
+import { loadGoogleIdentityServices } from '@upup/core/internal'
 import { ref, onMounted } from 'vue'
 
 /**

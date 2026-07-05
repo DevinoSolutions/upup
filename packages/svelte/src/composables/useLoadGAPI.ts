@@ -1,6 +1,6 @@
 import { onMount } from 'svelte'
 import { writable } from 'svelte/store'
-import { loadGoogleIdentityServices } from '@upup/core'
+import { loadGoogleIdentityServices } from '@upup/core/internal'
 
 /**
  * Loads the Google Identity Services API.

@@ -1,6 +1,7 @@
 import { html, nothing } from 'lit-html'
 import { ref } from 'lit-html/directives/ref.js'
-import { formatUiMessage as t, cn } from '@upup/core'
+import { formatUiMessage as t } from '@upup/core'
+import { cn } from '@upup/core/internal'
 import type { UploaderContext } from '../lib/types'
 import { sourceViewContainer } from './shared/source-view-container'
 

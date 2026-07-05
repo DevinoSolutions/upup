@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { formatUiMessage as t, pluralUiMessage as plural, cn } from '@upup/core'
+import { formatUiMessage as t, pluralUiMessage as plural } from '@upup/core'
+import { cn } from '@upup/core/internal'
 import {
     useUploaderFiles,
     useUploaderI18n,

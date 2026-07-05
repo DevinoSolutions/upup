@@ -2,7 +2,7 @@
 
 import React, { forwardRef, lazy, Suspense, useImperativeHandle } from 'react'
 import { devinoDark, devinoLight, logoDark, logoLight } from './assets/logos'
-import { cn } from '@upup/core'
+import { cn } from '@upup/core/internal'
 import type { UploadFile } from '@upup/core'
 import { UploaderProps } from './shared/types'
 import Icon from './components/Icon'

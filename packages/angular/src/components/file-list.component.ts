@@ -16,15 +16,8 @@ import {
     elementScroll,
     type VirtualItem,
 } from '@tanstack/virtual-core'
-import {
-    formatUiMessage as t,
-    pluralUiMessage as plural,
-    UploadStatus,
-    isUploadActive,
-    cn,
-    type UploadFile,
-    type Translations,
-} from '@upup/core'
+import { formatUiMessage as t, pluralUiMessage as plural, UploadStatus, type UploadFile, type Translations } from '@upup/core'
+import { isUploadActive, cn } from '@upup/core/internal'
 import { UpupStore } from '../upup-store.service'
 import { UploaderHeaderComponent } from './uploader-header.component'
 import { ProgressBarComponent } from './progress-bar.component'

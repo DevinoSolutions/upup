@@ -1,10 +1,6 @@
 import { html, nothing } from 'lit-html'
-import {
-    formatUiMessage as t,
-    pluralUiMessage as plural,
-    isUploadActive,
-    cn,
-} from '@upup/core'
+import { formatUiMessage as t, pluralUiMessage as plural } from '@upup/core'
+import { isUploadActive, cn } from '@upup/core/internal'
 import type { UploaderContext } from '../../lib/types'
 import { icon } from '../icon'
 

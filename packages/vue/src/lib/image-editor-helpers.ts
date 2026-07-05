@@ -1,1 +1,1 @@
-export { dataURLtoBlob, blobToUploadFile, revokeAndReplace } from '@upup/core'
+export { dataURLtoBlob, blobToUploadFile, revokeAndReplace } from '@upup/core/internal'

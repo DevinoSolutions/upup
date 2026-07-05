@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { EventEmitter } from '../src'
+import { EventEmitter } from '../src/events'
 import { UpupCore } from '../src/core'
 import { DropboxPlugin } from '../src/drives/dropbox-plugin'
 import { GoogleDrivePlugin } from '../src/drives/google-drive-plugin'

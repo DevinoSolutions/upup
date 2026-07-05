@@ -1,11 +1,7 @@
 import React, { useMemo } from 'react'
 import Icon from '../Icon'
-import {
-    cn,
-    formatUiMessage as t,
-    isUploadActive,
-    pluralUiMessage as plural,
-} from '@upup/core'
+import { formatUiMessage as t, pluralUiMessage as plural } from '@upup/core'
+import { cn, isUploadActive } from '@upup/core/internal'
 import {
     useUploaderFiles,
     useUploaderI18n,

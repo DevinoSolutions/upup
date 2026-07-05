@@ -8,12 +8,8 @@ import {
     useState,
     useSyncExternalStore,
 } from 'react'
-import {
-    DragDropController,
-    UploaderOrchestrator,
-    UpupCore,
-    type CoreOptions,
-} from '@upup/core'
+import { UpupCore, type CoreOptions } from '@upup/core'
+import { DragDropController, UploaderOrchestrator } from '@upup/core/internal'
 import { UploadStatus, type UploadFile, type UpupError } from '@upup/core'
 import type { ExtensionMethods } from '@upup/core'
 import { createPropGetters } from './prop-getters'

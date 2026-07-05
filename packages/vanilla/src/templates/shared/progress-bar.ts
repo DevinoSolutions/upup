@@ -1,5 +1,5 @@
 import { html, nothing } from 'lit-html'
-import { isUploadActive, cn } from '@upup/core'
+import { isUploadActive, cn } from '@upup/core/internal'
 import type { UploaderContext } from '../../lib/types'
 
 export function progressBar(

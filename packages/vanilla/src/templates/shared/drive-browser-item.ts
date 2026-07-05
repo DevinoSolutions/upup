@@ -1,5 +1,5 @@
 import { html } from 'lit-html'
-import { cn } from '@upup/core'
+import { cn } from '@upup/core/internal'
 import type { DriveFile, DriveFolder } from '@upup/core'
 import type { UploaderContext } from '../../lib/types'
 import { driveBrowserIcon } from './drive-browser-icon'

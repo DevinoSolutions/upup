@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { type DriveBrowserError, formatUiMessage as t, cn } from '@upup/core'
+import { type DriveBrowserError, formatUiMessage as t } from '@upup/core'
+import { cn } from '@upup/core/internal'
 import { useUploaderI18n, useUploaderTheme } from '../../context/uploader-context'
 import SourceViewContainer from './SourceViewContainer.vue'
 

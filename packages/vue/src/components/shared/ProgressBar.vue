@@ -4,7 +4,7 @@ import {
     useUploaderTheme,
     useUploaderUploadControls,
 } from '../../context/uploader-context'
-import { isUploadActive, cn } from '@upup/core'
+import { isUploadActive, cn } from '@upup/core/internal'
 
 const props = withDefaults(
     defineProps<{

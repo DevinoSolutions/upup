@@ -13,7 +13,7 @@ import {
     ScreenCaptureIcon,
 } from '../components/Icons'
 
-export { sourceNameKeys } from '@upup/core'
+export { sourceNameKeys } from '@upup/core/internal'
 
 const AudioUploader = () => import('../components/AudioUploader.svelte')
 const BoxUploader = () => import('../components/BoxUploader.svelte')

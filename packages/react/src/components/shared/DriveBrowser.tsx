@@ -1,13 +1,6 @@
 import React, { Dispatch, SetStateAction, useMemo, useState } from 'react'
-import {
-    type DriveBrowserError,
-    type DriveFile,
-    type DriveFolder,
-    type DriveUser,
-    cn,
-    formatUiMessage as t,
-    pluralUiMessage as plural,
-} from '@upup/core'
+import { type DriveBrowserError, type DriveFile, type DriveFolder, type DriveUser, formatUiMessage as t, pluralUiMessage as plural } from '@upup/core'
+import { cn } from '@upup/core/internal'
 import {
     useUploaderI18n,
     useUploaderOptions,

@@ -1,21 +1,7 @@
 import { getContext, setContext } from 'svelte'
 import type { Readable } from 'svelte/store'
-import type {
-    BaseContextUpload,
-    BaseContextRuntime,
-    BaseContextSource,
-    BaseContextI18n,
-    BaseContextFiles,
-    BaseContextUploadControls,
-    BaseContextView,
-    BaseContextEditor,
-    BaseContextTheme,
-    FileSource,
-    UploadFile,
-    UpupThemeMode,
-    ResolvedImageEditorOptions,
-    FilesProgressMap,
-} from '@upup/core'
+import type { FileSource, UploadFile, UpupThemeMode, ResolvedImageEditorOptions, FilesProgressMap } from '@upup/core'
+import type { BaseContextUpload, BaseContextRuntime, BaseContextSource, BaseContextI18n, BaseContextFiles, BaseContextUploadControls, BaseContextView, BaseContextEditor, BaseContextTheme } from '@upup/core/internal'
 import { UploadStatus } from '@upup/core'
 import type { UploaderProps, UploaderIcons } from '../shared/types'
 

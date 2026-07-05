@@ -5,7 +5,7 @@
     useUploaderSource,
     useUploaderTheme,
   } from '../context/uploader-context'
-  import { cn } from '@upup/core'
+  import { cn } from '@upup/core/internal'
   import SourceViewContainer from './shared/SourceViewContainer.svelte'
 
   type RecordingState = 'idle' | 'recording' | 'recorded'

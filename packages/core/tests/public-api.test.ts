@@ -1,73 +1,171 @@
 import { describe, it, expect } from 'vitest'
 import * as core from '@upup/core'
+import type * as coreInternal from '@upup/core/internal'
 
-// Compile-time reachability checks for the three types/ sub-barrel files
-// F-602 says are omitted (context-shapes, core-events, uploader-options).
-// These types are erased at runtime (all three source files are export-type-only
-// -- verified: zero `export const`/`export function` in any of them), so the
-// oracle for this half of the assertion is `pnpm --filter @upup/core typecheck`,
-// not this file's vitest run (per the plan's binding executor note 3). A relative
-// import is used because `@upup/core/src/types` is not on the package `exports`
-// map and would not resolve.
-import type { BaseContextUpload } from '../src/types'
-import type { CoreEvents } from '../src/types'
-import type { UploadSource, UploadProvider } from '../src/types'
+// ─────────────────────────────────────────────────────────────
+// IMPORTANT — how this file's type-level assertions are verified:
+// packages/core/tsconfig.json's `include` is `["src"]` only (true of every
+// package in this workspace -- react/vue/svelte/angular/vanilla/server all
+// scope `include` to their src equivalent), so `pnpm --filter @upup/core
+// typecheck` (`tsc --noEmit`) never actually compiles this file. The type
+// aliases and `@ts-expect-error` directives below therefore have NO effect
+// on any command in the gate -- they are correct-or-not only as far as a
+// manual, scoped `tsc` invocation says so. Verified via:
+//   npx tsc --noEmit --strict --esModuleInterop --skipLibCheck
+//     --moduleResolution bundler --module ESNext --target ES2019
+//     packages/core/tests/public-api.test.ts
+// (see audit/fixes/P18-report.md, Phase D, for the exact output). This is a
+// pre-existing repo-wide gap this plan inherits rather than introduces --
+// flagged as a candidate finding, out of P18's own scope to fix (it would
+// mean auditing every existing test file across all nine packages for
+// latent type errors before safely widening any tsconfig `include`).
+// The runtime value-list assertion below is NOT subject to this gap -- it
+// runs and is enforced by ordinary `vitest run`.
+// ─────────────────────────────────────────────────────────────
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-type _TypesBarrelExposesContextShapes = BaseContextUpload
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-type _TypesBarrelExposesCoreEvents = CoreEvents
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-type _TypesBarrelExposesUploadSource = UploadSource
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-type _TypesBarrelExposesUploadProvider = UploadProvider
+// Positive: every KEEP-public type is reachable from '@upup/core'. One line
+// per symbol in the reviewed audit/tmp/p18-sets.json `keepPublic.types` set
+// (74 symbols) -- if a future edit accidentally drops one from the barrel,
+// this fails to compile (per the manual-tsc caveat above).
+// eslint-disable @typescript-eslint/no-unused-vars
+type _Check_AcceptPreset = core.AcceptPreset
+type _Check_AcceptPresetDefinition = core.AcceptPresetDefinition
+type _Check_BoxConfig = core.BoxConfig
+type _Check_CloudDrivesConfig = core.CloudDrivesConfig
+type _Check_CoreOptions = core.CoreOptions
+type _Check_CrashRecoveryOptions = core.CrashRecoveryOptions
+type _Check_DriveBrowserError = core.DriveBrowserError
+type _Check_DriveEventMap = core.DriveEventMap
+type _Check_DriveFile = core.DriveFile
+type _Check_DriveFolder = core.DriveFolder
+type _Check_DriveListPage = core.DriveListPage
+type _Check_DrivePlugin = core.DrivePlugin
+type _Check_DriveState = core.DriveState
+type _Check_DriveUser = core.DriveUser
+type _Check_DropboxConfig = core.DropboxConfig
+type _Check_ExtensionMethods = core.ExtensionMethods
+type _Check_FileProgress = core.FileProgress
+type _Check_FileTypeIconName = core.FileTypeIconName
+type _Check_FileUploadResult = core.FileUploadResult
+type _Check_FilesProgressMap = core.FilesProgressMap
+type _Check_GoogleDriveConfig = core.GoogleDriveConfig
+type _Check_IconDef = core.IconDef
+type _Check_IconName = core.IconName
+type _Check_ImageCompressionOptions = core.ImageCompressionOptions
+type _Check_ImageEditorOptions = core.ImageEditorOptions
+type _Check_LocaleBundle = core.LocaleBundle
+type _Check_LocaleMeta = core.LocaleMeta
+type _Check_MaxFileSizeObject = core.MaxFileSizeObject
+type _Check_MultipartAbortResponse = core.MultipartAbortResponse
+type _Check_MultipartCompleteResponse = core.MultipartCompleteResponse
+type _Check_MultipartInitResponse = core.MultipartInitResponse
+type _Check_MultipartListPartsResponse = core.MultipartListPartsResponse
+type _Check_MultipartPart = core.MultipartPart
+type _Check_MultipartSignPartResponse = core.MultipartSignPartResponse
+type _Check_ObservableController = core.ObservableController
+type _Check_OneDriveConfig = core.OneDriveConfig
+type _Check_PartialMessages = core.PartialMessages
+type _Check_PipelineContext = core.PipelineContext
+type _Check_PipelineStep = core.PipelineStep
+type _Check_PopupOAuthSpec = core.PopupOAuthSpec
+type _Check_PresignedUrlResponse = core.PresignedUrlResponse
+type _Check_RegisteredLocaleCode = core.RegisteredLocaleCode
+type _Check_ResolvedImageEditorOptions = core.ResolvedImageEditorOptions
+type _Check_RestrictionFailedReason = core.RestrictionFailedReason
+type _Check_ResumableUploadOptions = core.ResumableUploadOptions
+type _Check_ServerDriveFile = core.ServerDriveFile
+type _Check_ServerDriveListState = core.ServerDriveListState
+type _Check_ServerModeProvider = core.ServerModeProvider
+type _Check_ThumbnailGeneratorOptions = core.ThumbnailGeneratorOptions
+type _Check_Translations = core.Translations
+type _Check_Translator = core.Translator
+type _Check_TranslatorOptions = core.TranslatorOptions
+type _Check_UiTranslations = core.UiTranslations
+type _Check_UploadFile = core.UploadFile
+type _Check_UploadFileMetadata = core.UploadFileMetadata
+type _Check_UploadFileWithProgress = core.UploadFileWithProgress
+type _Check_UploadOptions = core.UploadOptions
+type _Check_UploadProvider = core.UploadProvider
+type _Check_UploadSource = core.UploadSource
+type _Check_UploaderBaseProps = core.UploaderBaseProps
+type _Check_UpupColorTokens = core.UpupColorTokens
+type _Check_UpupCorsConfig = core.UpupCorsConfig
+type _Check_UpupLocaleCode = core.UpupLocaleCode
+type _Check_UpupMessages = core.UpupMessages
+type _Check_UpupPlugin = core.UpupPlugin
+type _Check_UpupRadiusTokens = core.UpupRadiusTokens
+type _Check_UpupShadowTokens = core.UpupShadowTokens
+type _Check_UpupSlotPath = core.UpupSlotPath
+type _Check_UpupSpacingTokens = core.UpupSpacingTokens
+type _Check_UpupThemeConfig = core.UpupThemeConfig
+type _Check_UpupThemeMode = core.UpupThemeMode
+type _Check_UpupThemeSlots = core.UpupThemeSlots
+type _Check_UpupThemeTokens = core.UpupThemeTokens
+type _Check_ValidationResult = core.ValidationResult
 
-// Direct-from-'@upup/core' type reachability (these already resolve today via
-// index.ts's own manual export lines -- this assertion is about keeping them
-// reachable through the curation, not about the sub-barrel completion).
-type _CoreExposesUploadSource = core.UploadSource
-type _CoreExposesUploadProvider = core.UploadProvider
-type _CoreExposesCoreEvents = core.CoreEvents
+// Negative: a representative sample of MOVE-internal types must NOT be
+// reachable from '@upup/core' any more -- each line below should fail to
+// compile without the `@ts-expect-error`, proving the curation actually cut
+// them from the public barrel (not just that Phase D happened to leave them
+// out by coincidence). NOTE per the plan's own B1 wording, `CoreEvents` was
+// expected to stay public -- but §2.2's own tier-2 enumeration explicitly
+// lists `CoreEvents` as internal, and it has no public construction surface
+// that needs it by name (a consumer calls `core.on(name, handler)`; the
+// handler signature is inferred from UpupCore's own binding, not from an
+// imported `CoreEvents` type). Resolved in favor of the explicit tier-2
+// listing -- CoreEvents is internal. See audit/fixes/P18-report.md.
+// @ts-expect-error -- FileManager is internal (moved to @upup/core/internal)
+type _NotPublic_FileManager = core.FileManager
+// @ts-expect-error -- UploadManager is internal
+type _NotPublic_UploadManager = core.UploadManager
+// @ts-expect-error -- CoreEvents is internal (see note above)
+type _NotPublic_CoreEvents = core.CoreEvents
+// @ts-expect-error -- BaseContextUpload (context-shapes) is internal
+type _NotPublic_BaseContextUpload = core.BaseContextUpload
+// @ts-expect-error -- OrchestratorState is internal
+type _NotPublic_OrchestratorState = core.OrchestratorState
+
+// Positive: the moved symbols above ARE reachable via '@upup/core/internal'
+// -- proves the seam isn't accidentally emptied (companion to
+// internal-surface.test.ts's runtime check).
+type _Internal_FileManager = coreInternal.FileManager
+type _Internal_CoreEvents = coreInternal.CoreEvents
+type _Internal_BaseContextUpload = coreInternal.BaseContextUpload
+type _Internal_OrchestratorState = coreInternal.OrchestratorState
 
 describe('@upup/core public API surface (pin test)', () => {
-    it('runtime value export list matches the checked-in list', () => {
-        // PRE-CURATION SNAPSHOT (P18 Phase B/C checkpoint): this is the
-        // uncurated, pre-Phase-D reality (114 names -- everything the fat
-        // barrel + both wildcards currently expose), not the target public
-        // surface. It exists in this state only so every checkpoint commit
-        // through Phase C stays green (the pre-commit hook runs this suite).
-        // Proven RED against an empty placeholder via a direct `vitest run`
-        // before this list was filled in (see audit/fixes/P18-report.md,
-        // Phase B) -- that is this test's TDD red. Phase D2 replaces this
-        // array with the final curated public list and this comment.
+    it('runtime value export list matches the curated, checked-in list', () => {
+        // The final curated public surface (D2). Dumped from the built
+        // dist/index.cjs via Object.keys() to avoid hand-transcription error;
+        // matches audit/tmp/p18-sets.json's keepPublic.values (53 entries,
+        // including the new PopupOAuthPlugin) exactly.
         const EXPECTED_PUBLIC_VALUE_EXPORTS: string[] = [
-            "ACCEPT_PRESETS","BOX_DESCRIPTOR","BoxPlugin","BrowserRuntime","CrashRecoveryManager",
-            "DEFAULT_MAX_FILE_SIZE","DEFAULT_SOURCES","DROPBOX_DESCRIPTOR","DirectUpload",
-            "DragDropController","DriveBrowserController","DropboxPlugin","EventEmitter",
-            "FILE_TYPE_EXTENSIONS","FileManager","FileSource","GOOGLE_DRIVE_DESCRIPTOR",
-            "GoogleDrivePlugin","ICONS","IndexedDBStorage","LOCALE_CODES","LOCALE_META",
-            "LOCALE_REGISTRY","MIME_EXTENSION_MAP","NON_S3_STORAGE_PROVIDERS","ONE_DRIVE_DESCRIPTOR",
-            "OneDrivePlugin","PREVIEW_MAX_TEXT_SIZE","PREVIEW_TEXT_TRUNCATE_LENGTH","PipelineEngine",
-            "PluginManager","SSEProcessor","ServerModeDriveController","StorageProvider","ThemeStore",
-            "TokenEndpointCredentials","UPUP_VAR_PREFIX","UploadError","UploadErrorType",
-            "UploadManager","UploadStatus","UploaderOrchestrator","UpupAuthError","UpupConfigError",
-            "UpupCore","UpupError","UpupErrorCode","UpupNetworkError","UpupQuotaError",
-            "UpupStorageError","UpupValidationError","arSA","b64EncodeUnicode","bindDriveEvents",
-            "blobToUploadFile","buildFallbackChain","bytesToSize","checkFileSize","clearAllSessions",
-            "cn","collectDroppedFiles","createChildController","createTranslator",
-            "createUploaderController","darkPreset","dataURLtoBlob","deDE","deriveFetchedFileName",
-            "enUS","errorCodeToMessageKey","esES","extensionFromMime","fileAppendParams",
-            "fileCanPreviewText","fileFingerprint","fileGetExtension","fileGetIsImage","fileGetIsPdf",
-            "fileGetIsText","fileIs3D","fileNameFromContentDisposition","fileTypeIconName",
+            "ACCEPT_PRESETS","BOX_DESCRIPTOR","BoxPlugin","DROPBOX_DESCRIPTOR","DropboxPlugin",
+            "FILE_TYPE_EXTENSIONS","FileSource","GOOGLE_DRIVE_DESCRIPTOR","GoogleDrivePlugin","ICONS",
+            "LOCALE_CODES","LOCALE_META","LOCALE_REGISTRY","NON_S3_STORAGE_PROVIDERS",
+            "ONE_DRIVE_DESCRIPTOR","OneDrivePlugin","PopupOAuthPlugin","StorageProvider",
+            "UPUP_VAR_PREFIX","UploadError","UploadErrorType","UploadStatus","UpupAuthError",
+            "UpupConfigError","UpupCore","UpupError","UpupErrorCode","UpupNetworkError",
+            "UpupQuotaError","UpupStorageError","UpupValidationError","arSA","createTranslator",
+            "darkPreset","deDE","enUS","errorCodeToMessageKey","esES","fileTypeIconName",
             "flattenSlotsToClassNames","flattenTranslatorToUiTranslations","formatUiMessage","frFR",
-            "getDir","isUploadActive","isUploadIdle","jaJP","koKR","lightPreset",
-            "loadGoogleIdentityServices","loadSession","normalizeBcp47","normalizeSource",
-            "normalizeUploaderOptions","pluralUiMessage","removeSession","resolveAccept",
-            "resolveMessage","resolveTheme","revokeAndReplace","revokeFileUrl","sanitizeFileName",
-            "saveSession","searchDriveFiles","sizeToBytes","sourceNameKeys","tokensToVarRefs",
-            "tokensToVars","updateSessionProgress","zhCN","zhTW",
+            "jaJP","koKR","lightPreset","normalizeBcp47","pluralUiMessage","resolveAccept",
+            "resolveTheme","tokensToVars","zhCN","zhTW",
         ]
         const actual = Object.keys(core).sort()
         expect(actual).toEqual(EXPECTED_PUBLIC_VALUE_EXPORTS)
+    })
+
+    it('the 11-name app-level oracle survives untouched (worst-case tripwire, §7)', () => {
+        // enUS...zhTW, LocaleBundle (type, not asserted at runtime), ACCEPT_PRESETS.
+        // If any of these ever fails to resolve, the KEEP set is wrong -- STOP,
+        // don't patch around it (per the plan's §7 tripwire).
+        const ORACLE_VALUE_NAMES = [
+            'enUS', 'arSA', 'deDE', 'esES', 'frFR', 'jaJP', 'koKR', 'zhCN', 'zhTW',
+            'ACCEPT_PRESETS',
+        ]
+        for (const name of ORACLE_VALUE_NAMES) {
+            expect(core).toHaveProperty(name)
+        }
     })
 })

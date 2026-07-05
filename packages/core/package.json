@@ -75,6 +75,22 @@
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "contracts": ["dist/contracts.d.ts"],
+      "internal": ["dist/internal.d.ts"],
+      "i18n": ["dist/i18n/index.d.ts"],
+      "theme": ["dist/theme/index.d.ts"],
+      "strategies": ["dist/strategies/index.d.ts"],
+      "strategies/tus-upload": ["dist/strategies/tus-upload.d.ts"],
+      "pipeline": ["dist/pipeline/index.d.ts"],
+      "steps/hash": ["dist/steps/hash.d.ts"],
+      "steps/heic": ["dist/steps/heic.d.ts"],
+      "steps/exif": ["dist/steps/exif.d.ts"],
+      "steps/compress": ["dist/steps/compress.d.ts"],
+      "steps/thumbnail": ["dist/steps/thumbnail.d.ts"]
+    }
+  },
   "files": [
     "dist",
     "NOTICE"

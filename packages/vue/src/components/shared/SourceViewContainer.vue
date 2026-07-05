@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useUploaderTheme } from '../../context/uploader-context'
-import { cn } from '@upup/core'
+import { cn } from '@upup/core/internal'
 
 withDefaults(defineProps<{ isLoading?: boolean }>(), { isLoading: false })
 

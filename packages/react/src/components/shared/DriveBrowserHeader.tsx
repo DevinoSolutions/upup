@@ -1,5 +1,6 @@
 import React, { Dispatch, SetStateAction } from 'react'
-import { cn, type DriveFolder, type DriveUser } from '@upup/core'
+import { type DriveFolder, type DriveUser } from '@upup/core'
+import { cn } from '@upup/core/internal'
 import Icon from '../Icon'
 import {
     useUploaderI18n,

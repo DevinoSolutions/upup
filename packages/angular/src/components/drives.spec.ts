@@ -14,11 +14,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { TestBed } from '@angular/core/testing'
 import { Component, Injectable, signal, computed } from '@angular/core'
-import {
-    type DriveBrowserState,
-    type DriveFile,
-    type DriveFolder,
-} from '@upup/core'
+import { type DriveFile, type DriveFolder } from '@upup/core'
+import { type DriveBrowserState } from '@upup/core/internal'
 import { UpupStore } from '../upup-store.service'
 import { DriveAuthFallbackComponent } from './shared/drive-auth-fallback.component'
 import { DriveBrowserComponent } from './shared/drive-browser.component'

@@ -1,5 +1,6 @@
 <script lang="ts">
-  import { type DriveFolder, type DriveUser, cn } from '@upup/core'
+  import { type DriveFolder, type DriveUser } from '@upup/core'
+import { cn } from '@upup/core/internal'
   import {
     useUploaderI18n,
     useUploaderSource,

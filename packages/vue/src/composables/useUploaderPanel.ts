@@ -1,5 +1,5 @@
 import { computed, shallowRef, onMounted, onUnmounted } from 'vue'
-import { DragDropController } from '@upup/core'
+import { DragDropController } from '@upup/core/internal'
 import {
     useUploaderFiles,
     useUploaderOptions,

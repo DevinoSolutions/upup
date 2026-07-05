@@ -5,7 +5,7 @@ import {
     useUploaderSource,
     useUploaderTheme,
 } from '../../context/uploader-context'
-import { cn } from '@upup/core'
+import { cn } from '@upup/core/internal'
 import Icon from '../Icon'
 
 const props = defineProps<{

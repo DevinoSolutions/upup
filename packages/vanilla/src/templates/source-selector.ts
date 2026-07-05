@@ -1,11 +1,7 @@
 import { html, nothing } from 'lit-html'
 import { repeat } from 'lit-html/directives/repeat.js'
-import {
-    formatUiMessage as t,
-    pluralUiMessage as plural,
-    cn,
-    FileSource,
-} from '@upup/core'
+import { formatUiMessage as t, pluralUiMessage as plural, FileSource } from '@upup/core'
+import { cn } from '@upup/core/internal'
 import type { UploaderContext } from '../lib/types'
 import { uploadSourceObject } from '../lib/constants'
 import { icon } from './icon'

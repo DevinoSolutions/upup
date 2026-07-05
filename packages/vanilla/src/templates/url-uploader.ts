@@ -1,5 +1,5 @@
 import { html } from 'lit-html'
-import { cn, deriveFetchedFileName } from '@upup/core'
+import { cn, deriveFetchedFileName } from '@upup/core/internal'
 import type { UploaderContext } from '../lib/types'
 import { sourceViewContainer } from './shared/source-view-container'
 import { icon } from './icon'

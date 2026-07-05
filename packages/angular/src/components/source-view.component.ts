@@ -1,5 +1,6 @@
 import { Component, inject } from '@angular/core'
-import { cn, FileSource } from '@upup/core'
+import { FileSource } from '@upup/core'
+import { cn } from '@upup/core/internal'
 import { UpupStore } from '../upup-store.service'
 import { UrlUploaderComponent } from './url-uploader.component'
 import { CameraUploaderComponent } from './camera-uploader.component'

@@ -1,6 +1,7 @@
 import React, { useCallback } from 'react'
 import Icon from './Icon'
-import { cn, formatUiMessage as t, pluralUiMessage as plural } from '@upup/core'
+import { formatUiMessage as t, pluralUiMessage as plural } from '@upup/core'
+import { cn } from '@upup/core/internal'
 import {
     useUploaderFiles,
     useUploaderI18n,

@@ -8,19 +8,8 @@ import {
     useRef,
     useSyncExternalStore,
 } from 'react'
-import {
-    FileSource,
-    UploadStatus,
-    normalizeUploaderOptions,
-    createUploaderController,
-    resolveTheme,
-    flattenSlotsToClassNames,
-    type UploaderController,
-    type UploaderControllerOptions,
-    type OrchestratorState,
-    type ThemeStoreState,
-    type UploadFile,
-} from '@upup/core'
+import { FileSource, UploadStatus, resolveTheme, flattenSlotsToClassNames, type UploadFile } from '@upup/core'
+import { normalizeUploaderOptions, createUploaderController, type UploaderController, type UploaderControllerOptions, type OrchestratorState, type ThemeStoreState } from '@upup/core/internal'
 import Icon from '../components/Icon'
 import { UploaderProps } from '../shared/types'
 import { IUploaderContext } from '../context/UploaderContext'
