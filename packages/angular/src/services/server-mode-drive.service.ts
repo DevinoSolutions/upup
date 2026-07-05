@@ -1,5 +1,9 @@
 import { Injectable, inject, signal, computed } from '@angular/core'
-import { type ServerModeProvider, type ServerDriveFile, type ServerDriveListState } from '@upup/core'
+import {
+    type ServerModeProvider,
+    type ServerDriveFile,
+    type ServerDriveListState,
+} from '@upup/core'
 import { ServerModeDriveController } from '@upup/core/internal'
 import { UpupStore } from '../upup-store.service'
 import { toSignalStore, type SignalStore } from '../lib/to-signal-store'
@@ -19,7 +23,9 @@ export const PROVIDER_LABEL: Record<ServerModeProvider, string> = {
 export class ServerModeDriveService {
     private store = inject(UpupStore)
     private controller!: ServerModeDriveController
-    private bridge!: SignalStore<import('@upup/core/internal').ServerDriveSnapshot>
+    private bridge!: SignalStore<
+        import('@upup/core/internal').ServerDriveSnapshot
+    >
     private provider!: ServerModeProvider
 
     // ── Drive list state — mirrored from the controller snapshot ──

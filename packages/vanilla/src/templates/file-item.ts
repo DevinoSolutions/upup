@@ -1,6 +1,11 @@
 import { html, nothing } from 'lit-html'
 import type { UploadFile } from '@upup/core'
-import { fileGetIsImage, fileGetIsPdf, fileGetIsText, fileCanPreviewText } from '@upup/core/internal'
+import {
+    fileGetIsImage,
+    fileGetIsPdf,
+    fileGetIsText,
+    fileCanPreviewText,
+} from '@upup/core/internal'
 import { cn } from '../lib/cn'
 import type { UploaderContext } from '../lib/types'
 import { filePreview } from './file-preview'

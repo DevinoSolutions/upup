@@ -1,6 +1,13 @@
 import { Injectable, inject, computed, type Signal } from '@angular/core'
-import { ONE_DRIVE_DESCRIPTOR, type DriveFile, type DriveFolder } from '@upup/core'
-import { DriveBrowserController, type DriveBrowserState } from '@upup/core/internal'
+import {
+    ONE_DRIVE_DESCRIPTOR,
+    type DriveFile,
+    type DriveFolder,
+} from '@upup/core'
+import {
+    DriveBrowserController,
+    type DriveBrowserState,
+} from '@upup/core/internal'
 import { UpupStore } from '../upup-store.service'
 import { toSignalStore } from '../lib/to-signal-store'
 

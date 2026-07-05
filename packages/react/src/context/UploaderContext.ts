@@ -10,7 +10,17 @@ import {
     type ReactNode,
 } from 'react'
 import type { FileSource, ResolvedImageEditorOptions } from '@upup/core'
-import type { BaseContextUpload, BaseContextRuntime, BaseContextSource, BaseContextI18n, BaseContextFiles, BaseContextUploadControls, BaseContextView, BaseContextEditor, BaseContextTheme } from '@upup/core/internal'
+import type {
+    BaseContextUpload,
+    BaseContextRuntime,
+    BaseContextSource,
+    BaseContextI18n,
+    BaseContextFiles,
+    BaseContextUploadControls,
+    BaseContextView,
+    BaseContextEditor,
+    BaseContextTheme,
+} from '@upup/core/internal'
 import { UploadStatus } from '@upup/core'
 import type { UploaderProps, UploaderIcons } from '../shared/types'
 

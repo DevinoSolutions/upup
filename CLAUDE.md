@@ -19,7 +19,21 @@ Publishable (`packages/`):
 
 - `@upup/core` — headless engine: file state + orchestrator, upload pipeline
   (compression, HEIC, web-worker offload), cloud-drive plugins, UI controllers,
-  i18n, theme. **Zero framework dependencies — keep it that way.**
+  i18n, theme. **Zero framework dependencies — keep it that way.** The public
+  `.` entry is a curated allow-list — every export is named explicitly, no
+  `export *` — currently 53 values / 74 types (a snapshot, not a ceiling to
+  preserve). Implementation details (`FileManager`, `UploadManager`,
+  `PipelineEngine`, the orchestrator, controllers, context shapes, the
+  multipart-session store, low-level utils) live behind `@upup/core/internal`,
+  a deep-import-only subpath alongside the existing `./contracts`/`./i18n`/
+  `./theme`/`./strategies` pattern — if you need one of them outside core's own
+  `src/`, import it from `./internal`, never re-add it to the public entry.
+  Every one of the nine `@upup/*` packages carries a `public-api.test.ts`
+  (or `.spec.ts`, matching that package's own vitest convention) pinning its
+  exact runtime export list, plus core alone also pins `./internal`'s list
+  (`tests/internal-surface.test.ts`) — a name silently added or removed from
+  either surface is a real API change the pin will catch; update the checked-in
+  list deliberately, don't loosen the assertion to make it pass.
 - `@upup/react` — the canonical UI. Every other framework matches its DOM.
 - `@upup/vue`, `@upup/svelte`, `@upup/angular`, `@upup/vanilla` — native ports
   of the React UI (same DOM contract, same Tailwind classes).

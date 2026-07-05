@@ -38,10 +38,7 @@ export type {
     ImageCompressionOptions,
     ThumbnailGeneratorOptions,
 } from './types/image-editor'
-export type {
-    UploadSource,
-    UploadProvider,
-} from './types/uploader-options'
+export type { UploadSource, UploadProvider } from './types/uploader-options'
 export type { UploaderBaseProps } from './types/uploader-props'
 
 // ── Errors ───────────────────────────────────────────────────
@@ -60,10 +57,7 @@ export {
 export type { RestrictionFailedReason } from './errors'
 
 // ── Contract interfaces (pipeline authoring surface) ─────────
-export type {
-    PipelineStep,
-    PipelineContext,
-} from './contracts-pipeline'
+export type { PipelineStep, PipelineContext } from './contracts-pipeline'
 
 // ── i18n ─────────────────────────────────────────────────────
 export {
@@ -96,10 +90,7 @@ export {
     formatUiMessage,
     pluralUiMessage,
 } from './i18n/ui-translations'
-export type {
-    Translations,
-    UiTranslations,
-} from './i18n/ui-translations'
+export type { Translations, UiTranslations } from './i18n/ui-translations'
 export { errorCodeToMessageKey } from './i18n/error-code-map'
 
 // ── Theme ────────────────────────────────────────────────────
@@ -115,10 +106,7 @@ export type {
 export { lightPreset, darkPreset } from './theme/presets'
 export { resolveTheme } from './theme/resolve-theme'
 export { UPUP_VAR_PREFIX, tokensToVars } from './theme/vars'
-export type {
-    UpupThemeSlots,
-    UpupSlotPath,
-} from './theme/slots'
+export type { UpupThemeSlots, UpupSlotPath } from './theme/slots'
 export { flattenSlotsToClassNames } from './theme/slots'
 
 // ── Core ─────────────────────────────────────────────────────
@@ -169,10 +157,7 @@ export type {
     ServerDriveFile,
     ServerDriveListState,
 } from './controllers/server-mode-drive-controller'
-export type {
-    FileProgress,
-    FilesProgressMap,
-} from './file-utils'
+export type { FileProgress, FilesProgressMap } from './file-utils'
 
 // ── Shared utilities ─────────────────────────────────────
 export { ACCEPT_PRESETS, resolveAccept } from './utils/accept-presets'

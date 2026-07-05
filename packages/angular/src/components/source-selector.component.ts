@@ -1,5 +1,9 @@
 import { Component, inject } from '@angular/core'
-import { FileSource, formatUiMessage as t, pluralUiMessage as plural } from '@upup/core'
+import {
+    FileSource,
+    formatUiMessage as t,
+    pluralUiMessage as plural,
+} from '@upup/core'
 import { cn, sourceNameKeys } from '@upup/core/internal'
 import { UpupStore } from '../upup-store.service'
 import {

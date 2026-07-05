@@ -21,9 +21,7 @@ const EXPECTED_SERVER_VALUE_EXPORTS = [
 
 describe('public API surface (F-142)', () => {
     it('client entry exposes exactly the same runtime export list as @upup/react', () => {
-        expect(Object.keys(client).sort()).toEqual(
-            Object.keys(reactPkg).sort(),
-        )
+        expect(Object.keys(client).sort()).toEqual(Object.keys(reactPkg).sort())
     })
 
     it('server entry exposes exactly the curated runtime export list', () => {

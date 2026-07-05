@@ -54,7 +54,13 @@ export type {
 export type { UploaderProps, UploaderIcons } from './shared/types'
 
 // ── v2 core contract re-exports ───────────────────────
-export type { UploadFile, UploadFileWithProgress, UploadStatus, UpupThemeSlots, UpupSlotPath } from '@upup/core'
+export type {
+    UploadFile,
+    UploadFileWithProgress,
+    UploadStatus,
+    UpupThemeSlots,
+    UpupSlotPath,
+} from '@upup/core'
 export type { DeepPartialSlots } from '@upup/core/internal'
 
 // ── Brand icons (authentic colours, matches uploader adapter buttons) ──

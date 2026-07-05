@@ -1,6 +1,12 @@
 import { html, nothing } from 'lit-html'
 import type { TemplateResult } from 'lit-html'
-import { fileGetExtension, fileGetIsPdf, fileGetIsText, fileIs3D, cn } from '@upup/core/internal'
+import {
+    fileGetExtension,
+    fileGetIsPdf,
+    fileGetIsText,
+    fileIs3D,
+    cn,
+} from '@upup/core/internal'
 import type { UploaderContext } from '../lib/types'
 import { fileIcon } from './file-icon'
 

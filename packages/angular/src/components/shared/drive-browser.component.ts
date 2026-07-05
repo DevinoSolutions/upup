@@ -8,7 +8,14 @@ import {
     Type,
 } from '@angular/core'
 import { NgComponentOutlet } from '@angular/common'
-import { type DriveBrowserError, type DriveFile, type DriveFolder, type DriveUser, formatUiMessage as t, pluralUiMessage as plural } from '@upup/core'
+import {
+    type DriveBrowserError,
+    type DriveFile,
+    type DriveFolder,
+    type DriveUser,
+    formatUiMessage as t,
+    pluralUiMessage as plural,
+} from '@upup/core'
 import { searchDriveFiles, cn } from '@upup/core/internal'
 import { UpupStore } from '../../upup-store.service'
 import { SourceViewContainerComponent } from '../source-view-container.component'

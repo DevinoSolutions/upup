@@ -6,7 +6,10 @@ import {
     type SetStateAction,
 } from 'react'
 import { BOX_DESCRIPTOR, type DriveFile, type DriveFolder } from '@upup/core'
-import { DriveBrowserController, type DriveBrowserState } from '@upup/core/internal'
+import {
+    DriveBrowserController,
+    type DriveBrowserState,
+} from '@upup/core/internal'
 import {
     useUploaderFiles,
     useUploaderRuntime,

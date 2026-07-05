@@ -11,7 +11,14 @@ import {
 import { NgComponentOutlet } from '@angular/common'
 import { DomSanitizer, type SafeStyle } from '@angular/platform-browser'
 import { type Translations } from '@upup/core'
-import { fileCanPreviewText, fileGetIsImage, fileGetIsPdf, fileGetIsText, cn, isUploadActive } from '@upup/core/internal'
+import {
+    fileCanPreviewText,
+    fileGetIsImage,
+    fileGetIsPdf,
+    fileGetIsText,
+    cn,
+    isUploadActive,
+} from '@upup/core/internal'
 import type { UploadFile } from '@upup/core'
 import { UpupStore } from '../upup-store.service'
 import { ProgressBarComponent } from './progress-bar.component'

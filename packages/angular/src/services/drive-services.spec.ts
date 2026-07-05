@@ -75,7 +75,10 @@ describe('LoadGapiService', () => {
 
     it('load() calls loadGoogleIdentityServices', async () => {
         const spy = vi
-            .spyOn(await import('@upup/core/internal'), 'loadGoogleIdentityServices')
+            .spyOn(
+                await import('@upup/core/internal'),
+                'loadGoogleIdentityServices',
+            )
             .mockResolvedValue(undefined as any)
         TestBed.configureTestingModule({ providers: [LoadGapiService] })
         const svc = TestBed.inject(LoadGapiService)

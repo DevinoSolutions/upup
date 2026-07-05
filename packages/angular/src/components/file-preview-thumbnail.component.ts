@@ -1,6 +1,12 @@
 import { Component, Input, Output, EventEmitter, inject } from '@angular/core'
 import { DomSanitizer, type SafeResourceUrl } from '@angular/platform-browser'
-import { fileGetExtension, fileGetIsPdf, fileGetIsText, fileIs3D, cn } from '@upup/core/internal'
+import {
+    fileGetExtension,
+    fileGetIsPdf,
+    fileGetIsText,
+    fileIs3D,
+    cn,
+} from '@upup/core/internal'
 import type { Translations } from '@upup/core'
 import type { InternalFlatClassNames } from '@upup/core/internal'
 import { UpupStore } from '../upup-store.service'

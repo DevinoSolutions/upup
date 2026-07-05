@@ -1,5 +1,9 @@
 import { Component, OnDestroy, OnInit, computed, inject } from '@angular/core'
-import { cn, DragDropController, type DragDropSnapshot } from '@upup/core/internal'
+import {
+    cn,
+    DragDropController,
+    type DragDropSnapshot,
+} from '@upup/core/internal'
 import { UpupStore } from '../upup-store.service'
 import { toSignalStore, type SignalStore } from '../lib/to-signal-store'
 import { SourceViewComponent } from './source-view.component'

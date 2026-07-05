@@ -7,7 +7,11 @@ import {
     observeElementOffset,
     elementScroll,
 } from '@tanstack/virtual-core'
-import { formatUiMessage as t, pluralUiMessage as plural, UploadStatus } from '@upup/core'
+import {
+    formatUiMessage as t,
+    pluralUiMessage as plural,
+    UploadStatus,
+} from '@upup/core'
 import { isUploadActive, cn } from '@upup/core/internal'
 import type { UploadFile } from '@upup/core'
 import type { UploaderContext } from '../lib/types'

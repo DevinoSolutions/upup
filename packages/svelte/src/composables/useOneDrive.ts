@@ -1,6 +1,10 @@
 import { onMount, onDestroy } from 'svelte'
 import { derived } from 'svelte/store'
-import { ONE_DRIVE_DESCRIPTOR, type DriveFile, type DriveFolder } from '@upup/core'
+import {
+    ONE_DRIVE_DESCRIPTOR,
+    type DriveFile,
+    type DriveFolder,
+} from '@upup/core'
 import { DriveBrowserController } from '@upup/core/internal'
 import {
     useUploaderFiles,

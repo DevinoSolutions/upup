@@ -1,6 +1,29 @@
 // src/lib/types.ts
-import type { UpupCore, UploadFile, UploadStatus, FileSource, CoreOptions, ExtensionMethods, Translations, Translator, MaxFileSizeObject, ResolvedImageEditorOptions, UpupThemeConfig, UploadSource, LocaleBundle, PartialMessages, DriveFile, DriveFolder, CloudDrivesConfig } from '@upup/core'
-import type { UploaderOrchestrator, ThemeStore, DriveBrowserController, DragDropController } from '@upup/core/internal'
+import type {
+    UpupCore,
+    UploadFile,
+    UploadStatus,
+    FileSource,
+    CoreOptions,
+    ExtensionMethods,
+    Translations,
+    Translator,
+    MaxFileSizeObject,
+    ResolvedImageEditorOptions,
+    UpupThemeConfig,
+    UploadSource,
+    LocaleBundle,
+    PartialMessages,
+    DriveFile,
+    DriveFolder,
+    CloudDrivesConfig,
+} from '@upup/core'
+import type {
+    UploaderOrchestrator,
+    ThemeStore,
+    DriveBrowserController,
+    DragDropController,
+} from '@upup/core/internal'
 
 // Dropzone controller now lives in @upup/core (hoisted in Workstream C-1 Unit 2).
 export type {
