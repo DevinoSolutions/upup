@@ -71,12 +71,12 @@ export default function Uploader({
             addMoreButton: `uploader-add-${currentTheme}`,
         },
         sourceSelector: {
-            sourceButton: `uploader-adapter-${currentTheme}`,
+            sourceButton: `uploader-source-${currentTheme}`,
             sourceButtonIcon: `uploader-file-list-${currentTheme}`,
             sourceButtonText: `uploader-preview-${currentTheme}`,
         },
         sourceView: {
-            root: `uploader-adapter-view-${currentTheme}`,
+            root: `uploader-source-view-${currentTheme}`,
         },
         driveBrowser: {
             body: `uploader-drive-body-${currentTheme}`,
