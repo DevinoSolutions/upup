@@ -43,7 +43,7 @@ import { SourceViewContainerComponent } from './source-view-container.component'
     imports: [NgComponentOutlet, SourceViewContainerComponent],
     providers: [CameraUploaderService],
     template: `
-        <upup-adapter-view-container slotName="camera-uploader">
+        <upup-source-view-container slotName="camera-uploader">
             <div
                 data-testid="upup-camera-uploader"
                 class="upup-flex upup-h-full upup-w-full upup-flex-col upup-justify-center upup-overflow-hidden upup-px-3 upup-py-2"
@@ -115,7 +115,7 @@ import { SourceViewContainerComponent } from './source-view-container.component'
                     }
                 </div>
             </div>
-        </upup-adapter-view-container>
+        </upup-source-view-container>
     `,
 })
 export class CameraUploaderComponent implements AfterViewInit, OnDestroy {

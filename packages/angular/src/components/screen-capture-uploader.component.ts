@@ -35,7 +35,7 @@ type RecordingState = 'idle' | 'recording' | 'recorded'
     template: `
         @if (error) {
             <!-- Error state -->
-            <upup-adapter-view-container slotName="screen-capture-uploader">
+            <upup-source-view-container slotName="screen-capture-uploader">
                 <div
                     class="upup-flex upup-flex-col upup-items-center upup-gap-3 upup-p-6 upup-text-center"
                 >
@@ -48,10 +48,10 @@ type RecordingState = 'idle' | 'recording' | 'recorded'
                         Try Again
                     </button>
                 </div>
-            </upup-adapter-view-container>
+            </upup-source-view-container>
         } @else {
             <!-- Normal state -->
-            <upup-adapter-view-container slotName="screen-capture-uploader">
+            <upup-source-view-container slotName="screen-capture-uploader">
                 <div
                     class="upup-flex upup-h-full upup-w-full upup-flex-col upup-items-center upup-justify-center upup-gap-4 upup-p-4"
                 >
@@ -148,7 +148,7 @@ type RecordingState = 'idle' | 'recording' | 'recorded'
                         </div>
                     }
                 </div>
-            </upup-adapter-view-container>
+            </upup-source-view-container>
         }
     `,
 })

@@ -129,8 +129,8 @@ function onSourceKeydown(e: KeyboardEvent) {
 
 <template>
     <div
-        data-testid="upup-adapter-selector"
-        data-upup-slot="adapter-selector"
+        data-testid="upup-source-selector"
+        data-upup-slot="source-selector"
         :class="cn(
             'upup-relative upup-flex upup-h-full upup-gap-3 upup-rounded-lg',
             {

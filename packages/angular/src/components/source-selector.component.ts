@@ -45,13 +45,13 @@ interface SourceEntry {
 }
 
 @Component({
-    selector: 'upup-adapter-selector',
+    selector: 'upup-source-selector',
     standalone: true,
     imports: [NgComponentOutlet, IconComponent],
     template: `
         <div
-            data-testid="upup-adapter-selector"
-            data-upup-slot="adapter-selector"
+            data-testid="upup-source-selector"
+            data-upup-slot="source-selector"
             [class]="containerClass"
         >
             <!-- Adding-more header (Back + label) -->

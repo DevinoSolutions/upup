@@ -8,7 +8,7 @@
  *     { provide: UpupStore, useValue: store }. The store is destroyed in afterEach.
  *
  * Content-projection tests use inline host components (a @Component wrapper that projects
- * a marker element via <upup-adapter-view-container>…</upup-adapter-view-container>).
+ * a marker element via <upup-source-view-container>…</upup-source-view-container>).
  */
 import { describe, it, expect, afterEach } from 'vitest'
 import { TestBed } from '@angular/core/testing'
@@ -251,7 +251,7 @@ describe('SourceViewContainerComponent', () => {
 
     afterEach(() => store?.destroy())
 
-    it('renders data-testid="upup-adapter-view"', async () => {
+    it('renders data-testid="upup-source-view"', async () => {
         store = makeStore()
         await TestBed.configureTestingModule({
             imports: [SourceViewContainerComponent],
@@ -262,7 +262,7 @@ describe('SourceViewContainerComponent', () => {
         fixture.detectChanges()
 
         const el = fixture.nativeElement.querySelector(
-            '[data-testid="upup-adapter-view"]',
+            '[data-testid="upup-source-view"]',
         )
         expect(el).not.toBeNull()
     })
@@ -274,9 +274,9 @@ describe('SourceViewContainerComponent', () => {
             standalone: true,
             imports: [SourceViewContainerComponent],
             template: `
-                <upup-adapter-view-container>
+                <upup-source-view-container>
                     <span data-testid="projected">inner</span>
-                </upup-adapter-view-container>
+                </upup-source-view-container>
             `,
         })
         class Host {}
@@ -296,7 +296,7 @@ describe('SourceViewContainerComponent', () => {
         expect(projected.textContent.trim()).toBe('inner')
     })
 
-    it('defaults data-upup-slot to "adapter-view"', async () => {
+    it('defaults data-upup-slot to "source-view"', async () => {
         store = makeStore()
         await TestBed.configureTestingModule({
             imports: [SourceViewContainerComponent],
@@ -307,7 +307,7 @@ describe('SourceViewContainerComponent', () => {
         fixture.detectChanges()
 
         const el = fixture.nativeElement.querySelector(
-            '[data-upup-slot="adapter-view"]',
+            '[data-upup-slot="source-view"]',
         )
         expect(el).not.toBeNull()
     })
@@ -318,9 +318,9 @@ describe('SourceViewContainerComponent', () => {
         @Component({
             standalone: true,
             imports: [SourceViewContainerComponent],
-            template: `<upup-adapter-view-container
+            template: `<upup-source-view-container
                 slotName="audio-uploader"
-            ></upup-adapter-view-container>`,
+            ></upup-source-view-container>`,
         })
         class Host {}
 
@@ -340,11 +340,11 @@ describe('SourceViewContainerComponent', () => {
         // …and the default value is no longer present.
         expect(
             fixture.nativeElement.querySelector(
-                '[data-upup-slot="adapter-view"]',
+                '[data-upup-slot="source-view"]',
             ),
         ).toBeNull()
-        // It is still the same adapter-view element.
-        expect(el.getAttribute('data-testid')).toBe('upup-adapter-view')
+        // It is still the same source-view element.
+        expect(el.getAttribute('data-testid')).toBe('upup-source-view')
     })
 
     it('container has base flex classes in classList', async () => {
@@ -358,7 +358,7 @@ describe('SourceViewContainerComponent', () => {
         fixture.detectChanges()
 
         const el = fixture.nativeElement.querySelector(
-            '[data-testid="upup-adapter-view"]',
+            '[data-testid="upup-source-view"]',
         ) as HTMLElement
         expect(el).not.toBeNull()
         // Base class always present

@@ -13,7 +13,7 @@ export default function SourceViewContainer({
 
     return (
         <div
-            data-testid="upup-adapter-view"
+            data-testid="upup-source-view"
             className={cn(
                 'upup-flex upup-items-center upup-justify-center upup-overflow-hidden upup-bg-black/[0.075]',
                 {

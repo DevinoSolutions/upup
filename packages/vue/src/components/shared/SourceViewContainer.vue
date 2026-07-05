@@ -9,7 +9,7 @@ const { isDark: dark, slotOverrides: slotClasses } = useUploaderTheme()
 
 <template>
     <div
-        data-testid="upup-adapter-view"
+        data-testid="upup-source-view"
         :class="cn(
             'upup-flex upup-items-center upup-justify-center upup-overflow-hidden upup-bg-black/[0.075]',
             {

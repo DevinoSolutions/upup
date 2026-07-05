@@ -12,7 +12,7 @@ export function sourceViewContainer(
     const isDark = ctx.theme.getSnapshot().isDark
     const slot = ctx.theme.getSnapshot().slotOverrides
     return html` <div
-        data-testid=${opts.dataTestid ?? 'upup-adapter-view'}
+        data-testid=${opts.dataTestid ?? 'upup-source-view'}
         data-upup-slot=${opts.dataUpupSlot ?? ''}
         class=${cn(
             'upup-flex upup-items-center upup-justify-center upup-overflow-hidden upup-bg-black/[0.075]',

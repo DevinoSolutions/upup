@@ -29,16 +29,16 @@ type RecordingState = 'idle' | 'recording' | 'recorded'
     template: `
         @if (error) {
             <!-- Error state -->
-            <upup-adapter-view-container slotName="audio-uploader">
+            <upup-source-view-container slotName="audio-uploader">
                 <div
                     class="upup-flex upup-flex-col upup-items-center upup-gap-3 upup-p-6 upup-text-center"
                 >
                     <p [class]="errorTextClass">{{ error }}</p>
                 </div>
-            </upup-adapter-view-container>
+            </upup-source-view-container>
         } @else {
             <!-- Normal state -->
-            <upup-adapter-view-container slotName="audio-uploader">
+            <upup-source-view-container slotName="audio-uploader">
                 <div
                     class="upup-flex upup-h-full upup-w-full upup-flex-col upup-items-center upup-justify-center upup-gap-6 upup-p-6"
                 >
@@ -115,7 +115,7 @@ type RecordingState = 'idle' | 'recording' | 'recorded'
                         }
                     </div>
                 </div>
-            </upup-adapter-view-container>
+            </upup-source-view-container>
         }
     `,
 })

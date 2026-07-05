@@ -17,7 +17,7 @@ import { SourceViewContainerComponent } from '../source-view-container.component
     standalone: true,
     imports: [SourceViewContainerComponent],
     template: `
-        <upup-adapter-view-container [slotName]="slotName">
+        <upup-source-view-container [slotName]="slotName">
             <div
                 class="upup-flex upup-h-full upup-w-full upup-flex-col upup-items-center upup-justify-center upup-gap-4 upup-p-6 upup-text-center"
             >
@@ -40,7 +40,7 @@ import { SourceViewContainerComponent } from '../source-view-container.component
                     {{ signInLabel }}
                 </button>
             </div>
-        </upup-adapter-view-container>
+        </upup-source-view-container>
     `,
 })
 export class DriveAuthFallbackComponent {

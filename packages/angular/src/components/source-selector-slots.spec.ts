@@ -60,7 +60,7 @@ describe('SourceSelectorComponent — source* theme slots', () => {
     it('applies sourceButton override to every tile button', async () => {
         store = makeThemedStore()
         const el = await mount()
-        const tiles = el.querySelectorAll('[data-testid^="upup-source-"]')
+        const tiles = el.querySelectorAll('button[data-testid^="upup-source-"]')
         expect(tiles.length).toBeGreaterThan(0)
         for (const tile of tiles) {
             expect(tile.classList.contains('test-slot-button')).toBe(true)

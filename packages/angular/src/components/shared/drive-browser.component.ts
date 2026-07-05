@@ -41,7 +41,7 @@ import { DriveBrowserItemComponent } from './drive-browser-item.component'
         DriveBrowserItemComponent,
     ],
     template: `
-        <upup-adapter-view-container
+        <upup-source-view-container
             [isLoading]="isLoading()"
             [slotName]="slotName"
         >
@@ -150,7 +150,7 @@ import { DriveBrowserItemComponent } from './drive-browser-item.component'
                     }
                 </div>
             }
-        </upup-adapter-view-container>
+        </upup-source-view-container>
     `,
 })
 export class DriveBrowserComponent {

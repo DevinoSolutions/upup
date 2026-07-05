@@ -85,7 +85,7 @@ test.describe('cross-framework DOM + a11y parity', () => {
       await expect(page.locator('[data-testid="upup-root"]')).toBeVisible({ timeout: 30_000 })
 
       // SourceSelector is present at mount (files.size === 0).
-      const sourceSelector = await normalize(page, '[data-testid="upup-adapter-selector"]')
+      const sourceSelector = await normalize(page, '[data-testid="upup-source-selector"]')
 
       // Add an image (→ FilePreview) and a PDF (→ FileItem + FileIcon).
       const fileInput = page.locator('[data-testid="upup-file-input"]')

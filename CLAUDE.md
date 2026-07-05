@@ -240,14 +240,18 @@ recurring visual traps it will never flag — check these live:
 - The `Adapter*`/`Root*` → `Drive*`/`Uploader*`/`Source*` vocabulary sweep is
   COMPLETE in code, i18n keys, and theme slots (N1, 2026-07-01); the cloud-drive
   config is ONE camelCase `cloudDrives` shape end-to-end (N2, 2026-07-02 — the
-  snake_case maps are gone). What legacy remains, deliberately: DOM contract
-  strings (`upup-adapter-selector`, `data-upup-slot="adapter-selector"`,
-  `.uploader-adapter-*` CSS — frozen until the N4 unfreeze), `RuntimeAdapter`
-  (kept: environment abstraction), and drive-domain `RootArg`/`RootFolder`/
-  `getRootProps` (kept: filesystem-root / dropzone conventions). Do not
-  introduce new `Adapter*`/`Root*` names, and do not partially rename — a
-  vocabulary change must sweep all packages, locales, and parity fixtures in
-  one pass.
+  snake_case maps are gone). What legacy remains, deliberately: `RuntimeAdapter`
+  (kept: environment abstraction) and drive-domain `RootArg`/`RootFolder`/
+  `getRootProps` (kept: filesystem-root / dropzone conventions). The DOM
+  contract strings were swept to the `source` vocabulary in N4 (2026-07-05):
+  the canon is now `data-testid="upup-source-selector"` /
+  `data-testid="upup-source-view"`, `data-upup-slot="source-selector"` /
+  `"source-view"`, and the `upup-source-*` / `uploader-source-*` CSS hooks.
+  Renaming any of these is again a cross-framework breaking change — sweep
+  every package, the e2e helpers, and `parity-fixtures.json` in one pass (same
+  codemod method). Do not introduce new `Adapter*`/`Root*` names, and do not
+  partially rename — a vocabulary change must sweep all packages, locales, and
+  parity fixtures in one pass.
 
 How sweeps are done: a small Node codemod — exact-substring replacement,
 longest-name-first ordering, an explicit KEEP-list for intentional exceptions —

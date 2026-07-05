@@ -74,9 +74,9 @@ async function runAxe(page: Page): Promise<AxeViolation[]> {
 
 // Measure the fixed-height, overflow-hidden container. We key on the per-view
 // `data-upup-slot` (present on the SourceViewContainer root for EVERY view) rather
-// than `data-testid="upup-adapter-view"`: some views (e.g. UrlUploader) pass their
+// than `data-testid="upup-source-view"`: some views (e.g. UrlUploader) pass their
 // own data-testid to SourceViewContainer, which spreads {...rest} last and thus
-// OVERRIDES the default upup-adapter-view testid. The slot attribute is the stable
+// OVERRIDES the default upup-source-view testid. The slot attribute is the stable
 // handle to the same clipping box across all views.
 async function measureOverflow(container: Locator) {
   return container.evaluate((el) => ({

@@ -26,7 +26,7 @@ import { SourceViewContainerComponent } from './source-view-container.component'
     imports: [NgComponentOutlet, SourceViewContainerComponent],
     providers: [FetchFileByUrlService],
     template: `
-        <upup-adapter-view-container slotName="url-uploader">
+        <upup-source-view-container slotName="url-uploader">
             <form (ngSubmit)="handleFormSubmit()" class="upup-px-3 upup-py-2">
                 <input
                     type="url"
@@ -49,7 +49,7 @@ import { SourceViewContainerComponent } from './source-view-container.component'
                     }
                 </button>
             </form>
-        </upup-adapter-view-container>
+        </upup-source-view-container>
     `,
 })
 export class UrlUploaderComponent {

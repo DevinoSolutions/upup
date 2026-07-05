@@ -15,7 +15,7 @@ describe("shell templates", () => {
     const up = createUploader(host, { sources: ["local", "url", "camera"] });
     expect(host.querySelector('[data-testid="upup-dropzone"]')).toBeTruthy();
     expect(
-      host.querySelector('[data-upup-slot="adapter-selector"]'),
+      host.querySelector('[data-upup-slot="source-selector"]'),
     ).toBeTruthy();
     expect(
       host.querySelector('[data-testid="upup-browse-files"]'),

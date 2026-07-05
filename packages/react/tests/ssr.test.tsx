@@ -48,7 +48,7 @@ describe('UpupUploader SSR', () => {
         const html = renderToString(
             <UpupUploader provider="s3" serverUrl="https://example.com" />,
         )
-        expect(html).toContain('data-upup-slot="adapter-selector"')
+        expect(html).toContain('data-upup-slot="source-selector"')
     })
 
     it('renders a deterministic data-theme on SSR when mode is system', () => {

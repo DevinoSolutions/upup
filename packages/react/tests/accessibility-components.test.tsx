@@ -109,7 +109,7 @@ describe('axe — UploaderPanel (DropZone)', () => {
 describe('axe — SourceSelector (SourceSelector)', () => {
     it('has no violations in default state', async () => {
         const { container } = renderUploader()
-        const results = await scanSlot(container, 'adapter-selector')
+        const results = await scanSlot(container, 'source-selector')
         expect(results).toHaveNoViolations()
     })
 })
@@ -269,7 +269,7 @@ describe('axe — SourceView (SourceView)', () => {
         await activateSource(container, 'url')
 
         const sourceView = container.querySelector(
-            '[data-upup-slot="adapter-view"]',
+            '[data-upup-slot="source-view"]',
         ) as HTMLElement
         expect(sourceView).not.toBeNull()
 

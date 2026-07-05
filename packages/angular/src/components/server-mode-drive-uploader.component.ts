@@ -51,7 +51,7 @@ import { SourceViewContainerComponent } from './source-view-container.component'
                 [slotName]="slotName"
             />
         } @else {
-            <upup-adapter-view-container
+            <upup-source-view-container
                 [isLoading]="isLoading"
                 [slotName]="slotName"
             >
@@ -145,7 +145,7 @@ import { SourceViewContainerComponent } from './source-view-container.component'
                         </div>
                     </div>
                 }
-            </upup-adapter-view-container>
+            </upup-source-view-container>
         }
     `,
 })

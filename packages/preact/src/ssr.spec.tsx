@@ -11,7 +11,7 @@
  * Markers verified against react source (see render.spec.tsx for the full map):
  *   upup-root                              → packages/react/src/upup-uploader.tsx:66
  *   upup-container                         → packages/react/src/upup-uploader.tsx:81
- *   data-upup-slot="adapter-selector"      → packages/react/src/components/SourceSelector.tsx:139
+ *   data-upup-slot="source-selector"      → packages/react/src/components/SourceSelector.tsx:139
  *   "No internet connection" (offline banner) → packages/react/src/components/UploaderPanel.tsx:77
  *   data-theme                             → packages/react/src/theme/UpupThemeProvider.tsx:39
  */
@@ -33,7 +33,7 @@ describe('@upup/preact SSR (preact-render-to-string, no window/document)', () =>
 
     test('renders the adapter selector on SSR (online branch)', () => {
         const html = renderToString(<UpupUploader />)
-        expect(html).toContain('data-upup-slot="adapter-selector"')
+        expect(html).toContain('data-upup-slot="source-selector"')
     })
 
     test('does not render the offline banner on SSR (isOnline defaults to true)', () => {

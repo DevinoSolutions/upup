@@ -43,10 +43,10 @@ import { NgComponentOutlet } from '@angular/common'
  *
  * The image editor stub is shown when store.editingFile() is set.
  *
- * data-upup-slot="adapter-view" is on the outer div (parity with svelte).
+ * data-upup-slot="source-view" is on the outer div (parity with svelte).
  */
 @Component({
-    selector: 'upup-adapter-view',
+    selector: 'upup-source-view',
     standalone: true,
     imports: [
         NgComponentOutlet,
@@ -73,7 +73,7 @@ import { NgComponentOutlet } from '@angular/common'
         @if (shouldRender) {
             <div
                 class="upup-grid upup-h-full upup-w-full upup-grid-rows-[auto,1fr]"
-                data-upup-slot="adapter-view"
+                data-upup-slot="source-view"
             >
                 <!-- Header row with icon + cancel -->
                 <div [class]="headerClass">

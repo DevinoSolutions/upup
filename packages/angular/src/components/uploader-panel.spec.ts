@@ -87,7 +87,7 @@ describe('UploaderPanelComponent', () => {
         const fixture = await setup(store)
         const el: HTMLElement = fixture.nativeElement
         // No adapter, no files → selector visible
-        expect(el.querySelector('upup-adapter-selector')).not.toBeNull()
+        expect(el.querySelector('upup-source-selector')).not.toBeNull()
     })
 
     it('hides SourceSelector when an adapter is active', async () => {
@@ -97,7 +97,7 @@ describe('UploaderPanelComponent', () => {
         store.setActiveSource('google-drive' as any)
         fixture.detectChanges()
         const el: HTMLElement = fixture.nativeElement
-        expect(el.querySelector('upup-adapter-selector')).toBeNull()
+        expect(el.querySelector('upup-source-selector')).toBeNull()
     })
 
     it('shows SourceView when an adapter is active', async () => {
@@ -106,14 +106,14 @@ describe('UploaderPanelComponent', () => {
         store.setActiveSource('google-drive' as any)
         fixture.detectChanges()
         const el: HTMLElement = fixture.nativeElement
-        expect(el.querySelector('upup-adapter-view')).not.toBeNull()
+        expect(el.querySelector('upup-source-view')).not.toBeNull()
     })
 
     it('hides SourceView when no adapter is active', async () => {
         store = makeStore()
         const fixture = await setup(store)
         const el: HTMLElement = fixture.nativeElement
-        expect(el.querySelector('upup-adapter-view')).toBeNull()
+        expect(el.querySelector('upup-source-view')).toBeNull()
     })
 
     it('shows offline banner when isOnline=false', async () => {

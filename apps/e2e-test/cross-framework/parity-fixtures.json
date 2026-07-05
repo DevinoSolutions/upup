@@ -147,8 +147,8 @@
           ]
         }
       ],
-      "testid": "upup-adapter-selector",
-      "slot": "adapter-selector"
+      "testid": "upup-source-selector",
+      "slot": "source-selector"
     },
     "fileItem": {
       "tag": "div",

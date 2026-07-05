@@ -279,7 +279,7 @@ describe('SourceSelectorComponent', () => {
         })
     })
 
-    it('renders the adapter-selector slot container', async () => {
+    it('renders the source-selector slot container', async () => {
         store = makeStore()
         await TestBed.configureTestingModule({
             imports: [SourceSelectorComponent],
@@ -290,7 +290,7 @@ describe('SourceSelectorComponent', () => {
         fixture.detectChanges()
 
         const slot = fixture.nativeElement.querySelector(
-            '[data-upup-slot="adapter-selector"]',
+            '[data-upup-slot="source-selector"]',
         )
         expect(slot).not.toBeNull()
     })
@@ -349,9 +349,9 @@ describe('SourceViewComponent', () => {
         const fixture = TestBed.createComponent(SourceViewComponent)
         fixture.detectChanges()
 
-        // No adapter-view slot rendered
+        // No source-view slot rendered
         const slot = fixture.nativeElement.querySelector(
-            '[data-upup-slot="adapter-view"]',
+            '[data-upup-slot="source-view"]',
         )
         expect(slot).toBeNull()
     })
@@ -369,9 +369,9 @@ describe('SourceViewComponent', () => {
         fixture.detectChanges()
         await fixture.whenStable()
 
-        // The adapter-view container should be present
+        // The source-view container should be present
         const slot = fixture.nativeElement.querySelector(
-            '[data-upup-slot="adapter-view"]',
+            '[data-upup-slot="source-view"]',
         )
         expect(slot).not.toBeNull()
 
@@ -396,7 +396,7 @@ describe('SourceViewComponent', () => {
         await fixture.whenStable()
 
         const slot = fixture.nativeElement.querySelector(
-            '[data-upup-slot="adapter-view"]',
+            '[data-upup-slot="source-view"]',
         )
         expect(slot).not.toBeNull()
 
@@ -422,9 +422,9 @@ describe('SourceViewComponent', () => {
         const fixture = TestBed.createComponent(SourceViewComponent)
         fixture.detectChanges()
 
-        // mini=true → shouldRender = false → adapter-view not shown
+        // mini=true → shouldRender = false → source-view not shown
         const slot = fixture.nativeElement.querySelector(
-            '[data-upup-slot="adapter-view"]',
+            '[data-upup-slot="source-view"]',
         )
         expect(slot).toBeNull()
     })

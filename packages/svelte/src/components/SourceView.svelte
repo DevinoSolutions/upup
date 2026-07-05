@@ -36,7 +36,7 @@
 {#if shouldRender}
   <div
     class="upup-grid upup-h-full upup-w-full upup-grid-rows-[auto,1fr]"
-    data-upup-slot="adapter-view"
+    data-upup-slot="source-view"
   >
     <div
       class={cn(

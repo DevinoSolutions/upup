@@ -48,14 +48,14 @@ import { FileListComponent } from './file-list.component'
             }
 
             @if (!!store.activeSource?.()) {
-                <upup-adapter-view />
+                <upup-source-view />
             }
 
             @if (
                 !store.activeSource?.() &&
                 (store.isAddingMore?.() || !store.files?.().size)
             ) {
-                <upup-adapter-selector />
+                <upup-source-selector />
             }
 
             <upup-file-list />
