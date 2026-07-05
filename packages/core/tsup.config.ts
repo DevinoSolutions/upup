@@ -6,6 +6,7 @@ export default defineConfig({
   entry: {
     'index': 'src/index.ts',
     'contracts': 'src/contracts.ts',
+    'internal': 'src/internal.ts',
     'i18n/index': 'src/i18n/index.ts',
     'theme/index': 'src/theme/index.ts',
     'pipeline/index': 'src/pipeline/index.ts',

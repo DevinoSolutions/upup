@@ -6,6 +6,7 @@ export default defineConfig({
     alias: {
       '@upup/core': fileURLToPath(new URL('./src/index.ts', import.meta.url)),
       '@upup/core/contracts': fileURLToPath(new URL('./src/contracts.ts', import.meta.url)),
+      '@upup/core/internal': fileURLToPath(new URL('./src/internal.ts', import.meta.url)),
       '@upup/core/i18n': fileURLToPath(new URL('./src/i18n/index.ts', import.meta.url)),
       '@upup/core/theme': fileURLToPath(new URL('./src/theme/index.ts', import.meta.url)),
       '@upup/core/strategies': fileURLToPath(new URL('./src/strategies/index.ts', import.meta.url)),
