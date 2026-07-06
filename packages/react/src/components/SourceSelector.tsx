@@ -247,7 +247,7 @@ export default function SourceSelector() {
                         >
                             <Icon
                                 className={
-                                    slotClasses.sourceButtonIcon || undefined
+                                    slotClasses.sourceButtonIcon ?? undefined
                                 }
                             />
                             <span

@@ -32,10 +32,10 @@ type Props = {
     fileType: string
     fileId: string
     fileUrl: string
-    fileSize?: number
+    fileSize?: number | undefined
     canPreview: boolean
     setCanPreview: Dispatch<SetStateAction<boolean>>
-    onRequestPreview?: () => void
+    onRequestPreview?: (() => void) | undefined
 } & HTMLAttributes<HTMLDivElement>
 
 export default memo(function FilePreview(props: Props) {

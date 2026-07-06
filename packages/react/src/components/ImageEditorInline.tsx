@@ -253,7 +253,9 @@ export default memo(function ImageEditorInline(props: Props) {
                                       ).ADJUST
                                     : undefined
                             }
-                            tabsIds={resolvedTabs}
+                            {...(resolvedTabs !== undefined
+                                ? { tabsIds: resolvedTabs }
+                                : {})}
                             onBeforeSave={() => false}
                         />
                     </EditorWrapper>

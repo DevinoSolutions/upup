@@ -43,14 +43,16 @@ export interface UseUpupUploadReturn {
 }
 
 export interface UseUpupUploadOptions extends CoreOptions {
-    onFileAdded?: (files: UploadFile[]) => void
-    onFileRemoved?: (file: UploadFile) => void
-    onUploadProgress?: (progress: {
-        fileId: string
-        loaded: number
-        total: number
-    }) => void
-    onUploadComplete?: (files: UploadFile[]) => void
+    onFileAdded?: ((files: UploadFile[]) => void) | undefined
+    onFileRemoved?: ((file: UploadFile) => void) | undefined
+    onUploadProgress?:
+        | ((progress: {
+              fileId: string
+              loaded: number
+              total: number
+          }) => void)
+        | undefined
+    onUploadComplete?: ((files: UploadFile[]) => void) | undefined
 
     // ── F-606: drag/drop/paste gating, mirroring <UpupUploader>'s own props ──
     // (packages/core/src/types/uploader-props.ts's UploaderBaseProps) so the
@@ -59,14 +61,14 @@ export interface UseUpupUploadOptions extends CoreOptions {
     // CoreOptions (packages/core/src/options/types.ts) — @upup/core stays
     // framework-agnostic with zero opinions on drag/drop UI gating.
     /** Enable clipboard paste uploads (Ctrl+V / Cmd+V). Default false. */
-    enablePaste?: boolean
+    enablePaste?: boolean | undefined
     /** Disable drag-and-drop (keep browse/click functional). Default false. */
-    disableDragDrop?: boolean
+    disableDragDrop?: boolean | undefined
     /** When true, drag/drop/paste are no-ops (e.g. while another action is mid-flight). */
-    isProcessing?: boolean
+    isProcessing?: boolean | undefined
     /** Folder upload configuration (drag-and-drop folder traversal). */
-    folderUpload?: { allowDrop?: boolean }
-    onWarn?: (warningMessage: string) => void
+    folderUpload?: { allowDrop?: boolean | undefined } | undefined
+    onWarn?: ((warningMessage: string) => void) | undefined
 }
 
 const EMPTY_DRAG_SNAPSHOT = {
@@ -123,8 +125,12 @@ export function useUpupUpload(
             setFiles: files => core.addFiles(files),
             filesSize: () => orchestrator.getSnapshot().files.size,
             options: () => ({
-                enablePaste: optionsRef.current.enablePaste,
-                onWarn: optionsRef.current.onWarn,
+                ...(optionsRef.current.enablePaste !== undefined
+                    ? { enablePaste: optionsRef.current.enablePaste }
+                    : {}),
+                ...(optionsRef.current.onWarn !== undefined
+                    ? { onWarn: optionsRef.current.onWarn }
+                    : {}),
             }),
             props: () => ({
                 disableDragDrop: optionsRef.current.disableDragDrop ?? false,

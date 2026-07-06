@@ -26,9 +26,11 @@ export async function compressFile(oldFile: UploadFile) {
     })
     const newUploadFile = fileAppendParams(compressed)
     newUploadFile.id = oldFile.id
-    newUploadFile.thumbnail = oldFile.thumbnail
-    newUploadFile.fileHash = oldFile.fileHash
-    newUploadFile.key = oldFile.key
+    if (oldFile.thumbnail !== undefined)
+        newUploadFile.thumbnail = oldFile.thumbnail
+    if (oldFile.fileHash !== undefined)
+        newUploadFile.fileHash = oldFile.fileHash
+    if (oldFile.key !== undefined) newUploadFile.key = oldFile.key
     newUploadFile.source = oldFile.source
     newUploadFile.status = oldFile.status
     newUploadFile.metadata = oldFile.metadata

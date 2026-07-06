@@ -18,7 +18,7 @@ const ImageEditorModal = lazy(() => import('./components/ImageEditorModal'))
 
 export type UploaderRef = {
     useUpload(): {
-        error?: string
+        error?: string | undefined
         files: UploadFile[]
         loading: boolean
         progress: number

@@ -4,8 +4,8 @@ import { cn } from '@upup/core/internal'
 
 export interface IconProps {
     name: IconName
-    size?: number
-    className?: string
+    size?: number | undefined
+    className?: string | undefined
 }
 
 // React uses camelCase SVG prop names; the registry stores kebab-case (raw-SVG) keys.

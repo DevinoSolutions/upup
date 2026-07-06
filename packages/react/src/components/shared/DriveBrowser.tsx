@@ -19,25 +19,26 @@ import DriveBrowserHeader from './DriveBrowserHeader'
 import DriveBrowserItem from './DriveBrowserItem'
 
 type Props = {
-    isClickLoading?: boolean
-    driveFiles?: DriveFolder
+    isClickLoading?: boolean | undefined
+    driveFiles?: DriveFolder | undefined
     path: DriveFolder[]
     setPath: Dispatch<SetStateAction<DriveFolder[]>>
-    user?: DriveUser
+    user?: DriveUser | undefined
     handleSignOut: () => Promise<void>
     handleClick: (file: DriveFile) => void | Promise<void>
     selectedFiles: DriveFile[]
     showLoader: boolean
     handleSubmit: () => Promise<void>
     handleCancelDownload: () => void
-    onSelectCurrentFolder?: () => Promise<void> | void
+    onSelectCurrentFolder?: (() => Promise<void> | void) | undefined
     /** The one drive browse-failure surface (F-124). Set = show the banner, not the loader. */
-    error?: DriveBrowserError
+    error?: DriveBrowserError | undefined
     /** Drives the "Load more" button (F-125). */
-    hasMore?: boolean
-    isLoadingMore?: boolean
-    loadMore?: () => void | Promise<void>
-    'data-upup-slot'?: string
+    hasMore?: boolean | undefined
+    isLoadingMore?: boolean | undefined
+    loadMore?: (() => void | Promise<void>) | undefined
+    'data-upup-slot'?: string | undefined
+    signIn?: (() => void) | undefined
 }
 
 function filterItems(item: DriveFile, accept: string) {

@@ -21,7 +21,7 @@ export interface PropGetterDeps {
      * direct createPropGetters caller predating the controller wiring; the
      * shipped useUpupUpload hook always supplies one.
      */
-    dragDrop?: DragDropController
+    dragDrop?: DragDropController | undefined
 }
 
 function composeEventHandlers<E>(

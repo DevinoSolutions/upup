@@ -11,8 +11,8 @@ type Props = {
     providerName: string
     onRetry: () => void
     /** initGis degradation (F-124) — missing config / GIS failed to attach. */
-    error?: DriveBrowserError
-    'data-upup-slot'?: string
+    error?: DriveBrowserError | undefined
+    'data-upup-slot'?: string | undefined
 }
 
 export default function DriveAuthFallback({

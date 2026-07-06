@@ -4,7 +4,7 @@ import { resolveTheme, tokensToVars } from '@upup/core'
 import type { UpupThemeConfig } from '@upup/core'
 
 interface UpupThemeProviderProps {
-    theme?: UpupThemeConfig
+    theme?: UpupThemeConfig | undefined
     children: React.ReactNode
 }
 

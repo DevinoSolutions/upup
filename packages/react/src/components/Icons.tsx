@@ -1,6 +1,6 @@
 import Icon from './Icon'
 
-type SourceIconProps = { className?: string }
+type SourceIconProps = { className?: string | undefined }
 
 export const MyDeviceIcon = ({ className }: SourceIconProps) => (
     <Icon name="my-device" className={className} />

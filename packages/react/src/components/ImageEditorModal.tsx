@@ -317,7 +317,9 @@ export default memo(function ImageEditorModal(props: Props) {
                                               ).ADJUST
                                             : undefined
                                     }
-                                    tabsIds={resolvedTabs}
+                                    {...(resolvedTabs !== undefined
+                                        ? { tabsIds: resolvedTabs }
+                                        : {})}
                                     onBeforeSave={() => false}
                                 />
                             </EditorWrapper>

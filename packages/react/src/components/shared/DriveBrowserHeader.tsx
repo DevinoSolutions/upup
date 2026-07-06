@@ -15,7 +15,8 @@ type Props = {
     showSearch: boolean
     searchTerm: string
     onSearch: Dispatch<SetStateAction<string>>
-    user?: DriveUser
+    user?: DriveUser | undefined
+    signIn?: (() => void) | undefined
 }
 
 export default function DriveBrowserHeader({

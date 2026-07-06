@@ -30,27 +30,30 @@ export type ContextUpload = BaseContextUpload & {
     setUploadStatus: Dispatch<SetStateAction<UploadStatus>>
 }
 
-export type ContextProps = Required<
-    Pick<
-        UploaderProps,
-        | 'sources'
-        | 'isProcessing'
-        | 'allowPreview'
-        | 'mini'
-        | 'onFileClick'
-        | 'onIntegrationClick'
-        | 'onFilesDragOver'
-        | 'onFilesDragLeave'
-        | 'onFilesDrop'
-        | 'onWarn'
-        | 'enablePaste'
-        | 'onError'
-        | 'icons'
-        | 'showBranding'
-        | 'className'
-        | 'style'
-        | 'disableDragDrop'
-    >
+/** Like Required but also strips `| undefined` — necessary under exactOptionalPropertyTypes. */
+type RequiredDefined<T, K extends keyof T> = {
+    [P in K]-?: NonNullable<T[P]>
+}
+
+export type ContextProps = RequiredDefined<
+    UploaderProps,
+    | 'sources'
+    | 'isProcessing'
+    | 'allowPreview'
+    | 'mini'
+    | 'onFileClick'
+    | 'onIntegrationClick'
+    | 'onFilesDragOver'
+    | 'onFilesDragLeave'
+    | 'onFilesDrop'
+    | 'onWarn'
+    | 'enablePaste'
+    | 'onError'
+    | 'icons'
+    | 'showBranding'
+    | 'className'
+    | 'style'
+    | 'disableDragDrop'
 > &
     Pick<UploaderProps, 'maxFileSize' | 'maxRetries' | 'resumable'> & {
         allowedFileTypes: string
@@ -58,7 +61,7 @@ export type ContextProps = Required<
         folderUploadAllowDrop: boolean
         folderPickerButtonVisible: boolean
         multiple: boolean
-        icons: Required<UploaderIcons>
+        icons: { [K in keyof UploaderIcons]-?: NonNullable<UploaderIcons[K]> }
         imageEditor: ResolvedImageEditorOptions
     }
 

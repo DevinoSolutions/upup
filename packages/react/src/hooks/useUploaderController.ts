@@ -33,32 +33,32 @@ import { useSSEProcessing } from './useSSEProcessing'
  *  (which applies the stroke attrs, so the glyph is visible). Forwards size/class like the
  *  former react-icons default did. */
 const DefaultLoaderIconComponent = (props: {
-    size?: number
-    className?: string
+    size?: number | undefined
+    className?: string | undefined
 }) => createElement(Icon, { name: 'loader', ...props })
 
 /** Default 'add more' icon — renders the registry 'plus' glyph (was react-icons TbPlus). */
 const DefaultPlusIconComponent = (props: {
-    size?: number
-    className?: string
+    size?: number | undefined
+    className?: string | undefined
 }) => createElement(Icon, { name: 'plus', ...props })
 
 /** Default camera-capture icon — renders the registry 'capture' glyph (was react-icons TbCapture). */
 const DefaultCaptureIconComponent = (props: {
-    size?: number
-    className?: string
+    size?: number | undefined
+    className?: string | undefined
 }) => createElement(Icon, { name: 'capture', ...props })
 
 /** Default camera-rotate icon — renders the registry 'camera-rotate' glyph (was react-icons TbCameraRotate). */
 const DefaultCameraRotateIconComponent = (props: {
-    size?: number
-    className?: string
+    size?: number | undefined
+    className?: string | undefined
 }) => createElement(Icon, { name: 'camera-rotate', ...props })
 
 /** Default delete icon (file + camera slots) — renders the registry 'trash' glyph (was react-icons TbTrash). */
 const DefaultTrashIconComponent = (props: {
-    size?: number
-    className?: string
+    size?: number | undefined
+    className?: string | undefined
 }) => createElement(Icon, { name: 'trash', ...props })
 
 const EMPTY_THEME_SLOTS = {}
