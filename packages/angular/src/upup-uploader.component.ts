@@ -196,7 +196,9 @@ export class UpupUploaderComponent implements OnInit, AfterViewInit {
         this.storeReady = true
         this.wireOutputs()
         this.destroyRef.onDestroy(() => {
-            this.forwardUnsubs.forEach(u => u())
+            this.forwardUnsubs.forEach(u => {
+                u()
+            })
             this.forwardUnsubs = []
             this.store.destroy()
         })
@@ -222,7 +224,7 @@ export class UpupUploaderComponent implements OnInit, AfterViewInit {
         const mini = this.store.uiProps?.mini
         return cn('upup-w-full', {
             'upup-h-[480px] upup-max-w-[600px]': !mini,
-            'upup-h-auto upup-max-w-[280px]': !!mini,
+            'upup-h-auto upup-max-w-[280px]': mini,
         })
     }
 
@@ -236,11 +238,11 @@ export class UpupUploaderComponent implements OnInit, AfterViewInit {
                 dark ? 'upup-bg-[#232323]' : 'upup-bg-white'
             } upup-flex upup-h-full upup-w-full upup-select-none upup-flex-col upup-gap-3 upup-overflow-hidden upup-rounded-2xl upup-px-5 upup-py-4`,
             {
-                [slotOverrides['containerFull']!]: !!(
+                [slotOverrides['containerFull'] ?? '']: !!(
                     slotOverrides['containerFull'] && !mini
                 ),
 
-                [slotOverrides['containerMini']!]: !!(
+                [slotOverrides['containerMini'] ?? '']: !!(
                     slotOverrides['containerMini'] && mini
                 ),
             },
@@ -258,7 +260,9 @@ export class UpupUploaderComponent implements OnInit, AfterViewInit {
     }
 
     private wireOutputs(): void {
-        this.forwardUnsubs.forEach(u => u())
+        this.forwardUnsubs.forEach(u => {
+            u()
+        })
         this.forwardUnsubs = []
         for (const [evt, out] of FORWARDED) {
             this.forwardUnsubs.push(

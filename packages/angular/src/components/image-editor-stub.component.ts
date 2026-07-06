@@ -13,4 +13,5 @@ import { Component } from '@angular/core'
     standalone: true,
     template: `<!-- Image editor is not supported in Angular. Use @upup/react if image editing is required. -->`,
 })
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class -- Angular requires a class as the component host; this is an intentional no-op stub
 export class ImageEditorStubComponent {}

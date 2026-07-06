@@ -26,7 +26,7 @@ export class OneDriveService {
         ONE_DRIVE_DESCRIPTOR,
         {
             onFilesSelected: files => {
-                void this.store.handleSetSelectedFiles(files as File[])
+                void this.store.handleSetSelectedFiles(files)
             },
             onClose: () => {
                 this.store.setActiveSource(undefined)
@@ -82,7 +82,7 @@ export class OneDriveService {
         this.controller.handleCancelDownload()
     }
     onSelectCurrentFolder(): void {
-        this.controller.onSelectCurrentFolder()
+        void this.controller.onSelectCurrentFolder()
     }
     loadMore(): Promise<void> {
         return this.controller.loadMore()

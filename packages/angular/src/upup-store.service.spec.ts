@@ -392,7 +392,9 @@ describe('UpupStore', () => {
             store.setConfig({ onStatusChange })
             store.init()
             // At minimum the status-change unsub was pushed
-            expect((store as unknown as { cleanups: unknown[] }).cleanups.length).toBeGreaterThan(0)
+            expect(
+                (store as unknown as { cleanups: unknown[] }).cleanups.length,
+            ).toBeGreaterThan(0)
             store.destroy()
         })
 
@@ -403,7 +405,9 @@ describe('UpupStore', () => {
             store.init()
             expect(() => store.destroy()).not.toThrow()
             // cleanups array should be cleared
-            expect((store as unknown as { cleanups: unknown[] }).cleanups.length).toBe(0)
+            expect(
+                (store as unknown as { cleanups: unknown[] }).cleanups.length,
+            ).toBe(0)
         })
 
         it('status subscription deduplicates: a repeat notification with unchanged status does not re-emit', () => {
@@ -485,10 +489,14 @@ describe('UpupStore', () => {
             // After C-2 Task 8: plugin cleanup + status-change subscription are managed by
             // createUploaderController internally (via root.destroy()). The store's own cleanups
             // array holds exactly the SSE destroy — lock that invariant against a future leak.
-            expect((store as unknown as { cleanups: unknown[] }).cleanups.length).toBe(1)
+            expect(
+                (store as unknown as { cleanups: unknown[] }).cleanups.length,
+            ).toBe(1)
             store.destroy()
             // All cleanups should have been flushed
-            expect((store as unknown as { cleanups: unknown[] }).cleanups.length).toBe(0)
+            expect(
+                (store as unknown as { cleanups: unknown[] }).cleanups.length,
+            ).toBe(0)
         })
 
         it('destroy() is idempotent even with all cleanups active', () => {

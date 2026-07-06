@@ -279,6 +279,7 @@ describe('SourceViewContainerComponent', () => {
                 </upup-source-view-container>
             `,
         })
+        // eslint-disable-next-line @typescript-eslint/no-extraneous-class -- Angular test host requires a class as the component
         class Host {}
 
         await TestBed.configureTestingModule({
@@ -322,6 +323,7 @@ describe('SourceViewContainerComponent', () => {
                 slotName="audio-uploader"
             ></upup-source-view-container>`,
         })
+        // eslint-disable-next-line @typescript-eslint/no-extraneous-class -- Angular test host requires a class as the component
         class Host {}
 
         await TestBed.configureTestingModule({

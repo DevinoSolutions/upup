@@ -1,6 +1,6 @@
 import { Component, Input, inject } from '@angular/core'
 import { type DriveFile } from '@upup/core'
-import { b64EncodeUnicode, cn } from '@upup/core/internal'
+import { b64EncodeUnicode } from '@upup/core/internal'
 import { UpupStore } from '../../upup-store.service'
 import { FolderIconComponent } from '../icons/folder-icon.component'
 import { FileIconSvgComponent } from '../icons/file-icon-svg.component'

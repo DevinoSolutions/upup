@@ -198,7 +198,7 @@ export class ServerModeDriveUploaderComponent implements OnInit, OnDestroy {
     get errorMessage(): string {
         const s = this.svc.listState()
         if (s.status !== 'error') return ''
-        return s.code && this.store.translator
+        return s.code
             ? this.store.translator(`errors.${errorCodeToMessageKey(s.code)}`, {
                   code: s.code,
               })

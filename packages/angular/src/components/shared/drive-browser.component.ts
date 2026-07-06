@@ -1,18 +1,11 @@
-import {
-    Component,
-    Input,
-    inject,
-    signal,
-    computed,
-    effect,
-    Type,
-} from '@angular/core'
+import { Component, Input, inject, signal, computed, Type } from '@angular/core'
 import { NgComponentOutlet } from '@angular/common'
 import {
     type DriveBrowserError,
     type DriveFile,
     type DriveFolder,
     type DriveUser,
+    type UiTranslations,
     formatUiMessage as t,
     pluralUiMessage as plural,
 } from '@upup/core'
@@ -179,7 +172,7 @@ export class DriveBrowserComponent {
 
     // ── Local state ───────────────────────────────────────────────
     readonly searchTerm = signal('')
-    readonly onSearchChange = (v: string) => {
+    readonly onSearchChange = (v: string): void => {
         this.searchTerm.set(v)
     }
 
@@ -201,7 +194,7 @@ export class DriveBrowserComponent {
     }
 
     readonly items = computed(() => {
-        const currentFolder = this.path()?.at(-1)
+        const currentFolder = this.path().at(-1)
         if (!currentFolder?.children) return []
         const accept = this.store.uiProps.allowedFileTypes
         return currentFolder.children.filter(item =>
@@ -213,13 +206,13 @@ export class DriveBrowserComponent {
         () => searchDriveFiles(this.items(), this.searchTerm()) ?? [],
     )
 
-    get tr() {
+    get tr(): UiTranslations {
         return this.store.translations()
     }
 
     /** Click handler that is a noop when loading (passed to DriveBrowserItem). */
     get clickHandler(): (file: DriveFile) => void {
-        return this.isClickLoading?.() || this.showLoader?.()
+        return this.isClickLoading() || this.showLoader()
             ? () => {
                   /* disabled */
               }

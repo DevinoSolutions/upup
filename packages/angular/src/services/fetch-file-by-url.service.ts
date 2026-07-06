@@ -29,7 +29,7 @@ export class FetchFileByUrlService {
             const blob = await response.blob()
             const fileName = deriveFetchedFileName(url, response, blob)
             const file = new File([blob], fileName, { type: blob.type })
-            this.store.core?.emit('url-fetch', { file })
+            this.store.core.emit('url-fetch', { file })
             return file
         } catch (error) {
             this.store.uiProps.onError((error as Error).message)

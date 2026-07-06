@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest'
 import { TestBed } from '@angular/core/testing'
-import { Component } from '@angular/core'
 import { UploadIconComponent } from './upload-icon.component'
 import { GoogleDriveIconComponent } from './google-drive-icon.component'
 import { EmptyIconComponent } from './empty-icon.component'

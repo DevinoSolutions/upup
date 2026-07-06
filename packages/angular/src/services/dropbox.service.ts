@@ -26,7 +26,7 @@ export class DropboxService {
         DROPBOX_DESCRIPTOR,
         {
             onFilesSelected: files => {
-                void this.store.handleSetSelectedFiles(files as File[])
+                void this.store.handleSetSelectedFiles(files)
             },
             onClose: () => {
                 this.store.setActiveSource(undefined)
@@ -85,7 +85,7 @@ export class DropboxService {
         this.controller.handleCancelDownload()
     }
     onSelectCurrentFolder(): void {
-        this.controller.onSelectCurrentFolder()
+        void this.controller.onSelectCurrentFolder()
     }
     loadMore(): Promise<void> {
         return this.controller.loadMore()

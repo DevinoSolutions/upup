@@ -31,7 +31,7 @@ export class GoogleDriveService {
         GOOGLE_DRIVE_DESCRIPTOR,
         {
             onFilesSelected: files => {
-                void this.store.handleSetSelectedFiles(files as File[])
+                void this.store.handleSetSelectedFiles(files)
             },
             onClose: () => {
                 this.store.setActiveSource(undefined)
@@ -85,7 +85,7 @@ export class GoogleDriveService {
         this.controller.handleCancelDownload()
     }
     onSelectCurrentFolder(): void {
-        this.controller.onSelectCurrentFolder()
+        void this.controller.onSelectCurrentFolder()
     }
     loadMore(): Promise<void> {
         return this.controller.loadMore()

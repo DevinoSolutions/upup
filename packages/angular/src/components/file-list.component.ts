@@ -246,7 +246,7 @@ export class FileListComponent implements AfterViewInit, OnDestroy {
     readonly isUploadActive = isUploadActive
 
     @ViewChild('scrollContainer')
-    scrollContainerRef!: ElementRef<HTMLDivElement>
+    scrollContainerRef?: ElementRef<HTMLDivElement>
 
     // ── Virtualizer state ─────────────────────────────────────────────────────
     virtualizer: Virtualizer<HTMLDivElement, HTMLDivElement> | null = null

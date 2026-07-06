@@ -19,7 +19,6 @@ import {
     cn,
     isUploadActive,
 } from '@upup/core/internal'
-import type { UploadFile } from '@upup/core'
 import { UpupStore } from '../upup-store.service'
 import { ProgressBarComponent } from './progress-bar.component'
 import { FilePreviewThumbnailComponent } from './file-preview-thumbnail.component'
@@ -210,7 +209,7 @@ export class FilePreviewComponent implements OnChanges {
 
     get rootClass(): string {
         const themeSlots = this.store.slots()
-        return (themeSlots as any)?.filePreview?.root ?? ''
+        return themeSlots.filePreview?.root ?? ''
     }
 
     get thumbnailWrapperClass(): string {
@@ -226,7 +225,7 @@ export class FilePreviewComponent implements OnChanges {
                 [slotClasses.fileThumbnailSingle ?? '']:
                     !!slotClasses.fileThumbnailSingle && filesSize === 1,
             },
-            (themeSlots as any)?.filePreview?.thumbnail ?? '',
+            themeSlots.filePreview?.thumbnail ?? '',
         )
     }
 
@@ -241,7 +240,7 @@ export class FilePreviewComponent implements OnChanges {
             'upup-ring-1 upup-ring-black/5',
             'disabled:upup-cursor-not-allowed disabled:upup-opacity-50',
             slotClasses.fileDeleteButton ?? '',
-            (themeSlots as any)?.filePreview?.deleteButton ?? '',
+            themeSlots.filePreview?.deleteButton ?? '',
         )
     }
 
@@ -251,7 +250,7 @@ export class FilePreviewComponent implements OnChanges {
         return cn(
             'upup-truncate upup-text-[13px] upup-font-normal upup-leading-tight upup-text-gray-900',
             dark ? 'upup-text-white' : '',
-            (themeSlots as any)?.filePreview?.name ?? '',
+            themeSlots.filePreview?.name ?? '',
         )
     }
 
@@ -261,7 +260,7 @@ export class FilePreviewComponent implements OnChanges {
         return cn(
             'upup-mt-0.5 upup-text-[11px] upup-leading-tight upup-text-gray-500',
             dark ? 'upup-text-gray-400' : '',
-            (themeSlots as any)?.filePreview?.size ?? '',
+            themeSlots.filePreview?.size ?? '',
         )
     }
 
@@ -271,7 +270,7 @@ export class FilePreviewComponent implements OnChanges {
         return cn(
             'upup-mt-1 upup-text-[11px] upup-font-normal upup-leading-tight upup-text-[#2563eb] upup-transition-all hover:upup-text-blue-700 hover:upup-underline',
             dark ? 'upup-text-[#4A9EFF] hover:upup-text-blue-300' : '',
-            (themeSlots as any)?.filePreview?.previewButton ?? '',
+            themeSlots.filePreview?.previewButton ?? '',
         )
     }
 
@@ -312,7 +311,9 @@ export class FilePreviewComponent implements OnChanges {
             // Defer to next microtask to avoid NG0100 ExpressionChangedAfterItHasBeenChecked —
             // ngOnChanges fires during parent's change detection cycle; emitting synchronously
             // would mutate parent state that Angular has already snapshotted for this cycle.
-            queueMicrotask(() => this.updateCanPreview.emit(true))
+            queueMicrotask(() => {
+                this.updateCanPreview.emit(true)
+            })
         }
     }
 

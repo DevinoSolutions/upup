@@ -26,7 +26,7 @@
  *     exactly as vanilla does: { authenticatePrompt: '...{{provider}}', signInWith: 'Sign in with {{provider}}' }
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, vi, afterEach } from 'vitest'
 import { TestBed } from '@angular/core/testing'
 import { signal } from '@angular/core'
 import { UpupStore } from '../upup-store.service'
@@ -63,7 +63,7 @@ function makeStoreMock() {
         translations: signal({
             authenticatePrompt: 'Sign in to {{provider}}',
             signInWith: 'Sign in with {{provider}}',
-        } as any),
+        }),
         uiProps: {
             icons: {
                 LoaderIcon: EmptyIconComponent,
@@ -74,7 +74,7 @@ function makeStoreMock() {
                 CameraDeleteIcon: EmptyIconComponent,
             },
             allowedFileTypes: '*',
-        } as any,
+        },
         handleSetSelectedFiles: vi.fn().mockResolvedValue(undefined),
         setActiveSource: vi.fn(),
     } as unknown as UpupStore

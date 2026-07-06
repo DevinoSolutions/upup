@@ -1,5 +1,9 @@
 import { Component, Input, inject } from '@angular/core'
-import { type DriveFolder, type DriveUser } from '@upup/core'
+import {
+    type DriveFolder,
+    type DriveUser,
+    type UiTranslations,
+} from '@upup/core'
 import { cn } from '@upup/core/internal'
 import { UpupStore } from '../../upup-store.service'
 import { SearchIconComponent } from '../icons/search-icon.component'
@@ -105,7 +109,7 @@ export class DriveBrowserHeaderComponent {
     }
     @Input() user: DriveUser | undefined = undefined
 
-    get tr() {
+    get tr(): UiTranslations {
         return this.store.translations()
     }
 

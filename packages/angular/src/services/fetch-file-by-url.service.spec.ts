@@ -16,7 +16,7 @@ import { FetchFileByUrlService } from './fetch-file-by-url.service'
 
 function makeStore(): UpupStore {
     const store = new UpupStore()
-    store.setConfig({} as any)
+    store.setConfig({})
     store.init()
     return store
 }

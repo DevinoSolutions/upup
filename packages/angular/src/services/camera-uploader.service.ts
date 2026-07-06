@@ -41,7 +41,9 @@ export class CameraUploaderService {
     async startCamera(): Promise<void> {
         try {
             if (this.stream) {
-                this.stream.getTracks().forEach(t => t.stop())
+                this.stream.getTracks().forEach(t => {
+                    t.stop()
+                })
             }
             const mediaStream = await navigator.mediaDevices.getUserMedia({
                 video: { facingMode: this.facingMode() },
@@ -53,13 +55,16 @@ export class CameraUploaderService {
                 void this.videoEl.play()?.catch(() => {})
             }
         } catch {
-            // camera unavailable — leave stream null (svelte parity)
+            // upup-catch: camera unavailable (permission denied / no device) —
+            // leave stream null (svelte parity)
         }
     }
 
     stopCamera(): void {
         if (this.stream) {
-            this.stream.getTracks().forEach(t => t.stop())
+            this.stream.getTracks().forEach(t => {
+                t.stop()
+            })
             this.stream = null
         }
         if (this.videoEl) {
@@ -81,7 +86,7 @@ export class CameraUploaderService {
         ctx.drawImage(this.videoEl, 0, 0)
         const dataUrl = canvas.toDataURL('image/jpeg')
         this.capturedUrl.set(dataUrl)
-        this.store.core?.emit('camera-capture', { dataUrl })
+        this.store.core.emit('camera-capture', { dataUrl })
     }
 
     clearUrl(): void {
@@ -100,7 +105,7 @@ export class CameraUploaderService {
         await this.store.handleSetSelectedFiles([file])
         this.capturedUrl.set('')
         this.store.setActiveSource(undefined)
-        this.store.core?.emit('camera-confirm', { file })
+        this.store.core.emit('camera-confirm', { file })
     }
 
     handleCameraSwitch(): void {

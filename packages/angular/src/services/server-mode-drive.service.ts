@@ -91,7 +91,7 @@ export class ServerModeDriveService {
                     return
                 }
                 const result = r.result as { file?: File }
-                if (result?.file) {
+                if (result.file) {
                     void this.store.handleSetSelectedFiles([result.file])
                 }
             }

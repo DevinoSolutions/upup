@@ -1,6 +1,8 @@
 import { describe, it, expect, afterEach, vi } from 'vitest'
 import { PLATFORM_ID } from '@angular/core'
 import { TestBed } from '@angular/core/testing'
+import type { UploadFile } from '@upup/core'
+import type { UploaderProps } from './shared/types'
 import { UpupUploaderComponent } from './upup-uploader.component'
 
 afterEach(() => {
@@ -10,7 +12,7 @@ afterEach(() => {
 describe('UpupUploaderComponent', () => {
     it('mounts and renders the uploader root', () => {
         const f = TestBed.createComponent(UpupUploaderComponent)
-        f.componentInstance.config = {} as any
+        f.componentInstance.config = {} as unknown as UploaderProps
         f.detectChanges() // triggers ngOnInit → store.init()
         expect(
             (f.nativeElement as HTMLElement).querySelector(
@@ -21,17 +23,19 @@ describe('UpupUploaderComponent', () => {
 
     it('re-initializes the store when config changes after init', () => {
         const f = TestBed.createComponent(UpupUploaderComponent)
-        f.componentInstance.config = {} as any
+        f.componentInstance.config = {} as unknown as UploaderProps
         f.detectChanges()
         const core1 = f.componentInstance.store.core
-        f.componentInstance.config = { showBranding: false } as any // setter runs, started=true → destroy+init
+        f.componentInstance.config = {
+            showBranding: false,
+        } as unknown as UploaderProps // setter runs, started=true → destroy+init
         const core2 = f.componentInstance.store.core
         expect(core1).not.toBe(core2)
     })
 
     it('forwards the 5 core events to the matching outputs', () => {
         const f = TestBed.createComponent(UpupUploaderComponent)
-        f.componentInstance.config = {} as any
+        f.componentInstance.config = {} as unknown as UploaderProps
         f.detectChanges()
         const seen: Record<string, unknown> = {}
         f.componentInstance.filesAdded.subscribe(v => (seen['filesAdded'] = v))
@@ -46,7 +50,7 @@ describe('UpupUploaderComponent', () => {
         )
         f.componentInstance.error.subscribe(v => (seen['error'] = v))
         const core = f.componentInstance.store.core
-        const file = { id: 'a', name: 'a.txt' } as any
+        const file = { id: 'a', name: 'a.txt' } as unknown as UploadFile
         core.emit('files-added', [file])
         core.emit('file-removed', file)
         core.emit('upload-progress', { fileId: 'a', loaded: 1, total: 2 })
@@ -66,14 +70,14 @@ describe('UpupUploaderComponent', () => {
     it('skips store init on the server (SSR-safe)', () => {
         TestBed.overrideProvider(PLATFORM_ID, { useValue: 'server' })
         const f = TestBed.createComponent(UpupUploaderComponent)
-        f.componentInstance.config = {} as any
+        f.componentInstance.config = {} as unknown as UploaderProps
         f.detectChanges()
         expect(f.componentInstance['started']).toBe(false) // ngOnInit guard returned early
     })
 
     it('destroys the store on destroy', () => {
         const f = TestBed.createComponent(UpupUploaderComponent)
-        f.componentInstance.config = {} as any
+        f.componentInstance.config = {} as unknown as UploaderProps
         f.detectChanges()
         const destroySpy = vi.spyOn(f.componentInstance.store, 'destroy')
         f.destroy()
@@ -84,7 +88,7 @@ describe('UpupUploaderComponent', () => {
 
     it('renders upup-container section', () => {
         const f = TestBed.createComponent(UpupUploaderComponent)
-        f.componentInstance.config = {} as any
+        f.componentInstance.config = {} as unknown as UploaderProps
         f.detectChanges()
         expect(
             (f.nativeElement as HTMLElement).querySelector(
@@ -95,7 +99,9 @@ describe('UpupUploaderComponent', () => {
 
     it('renders upup-branding when not mini and showBranding is not false', () => {
         const f = TestBed.createComponent(UpupUploaderComponent)
-        f.componentInstance.config = { showBranding: true } as any
+        f.componentInstance.config = {
+            showBranding: true,
+        } as unknown as UploaderProps
         f.detectChanges()
         expect(
             (f.nativeElement as HTMLElement).querySelector(
@@ -106,7 +112,7 @@ describe('UpupUploaderComponent', () => {
 
     it('hides upup-branding when mini=true', () => {
         const f = TestBed.createComponent(UpupUploaderComponent)
-        f.componentInstance.config = { mini: true } as any
+        f.componentInstance.config = { mini: true } as unknown as UploaderProps
         f.detectChanges()
         expect(
             (f.nativeElement as HTMLElement).querySelector(
@@ -117,7 +123,9 @@ describe('UpupUploaderComponent', () => {
 
     it('hides upup-branding when showBranding=false', () => {
         const f = TestBed.createComponent(UpupUploaderComponent)
-        f.componentInstance.config = { showBranding: false } as any
+        f.componentInstance.config = {
+            showBranding: false,
+        } as unknown as UploaderProps
         f.detectChanges()
         expect(
             (f.nativeElement as HTMLElement).querySelector(
@@ -128,7 +136,7 @@ describe('UpupUploaderComponent', () => {
 
     it('renders hidden upup-file-input', () => {
         const f = TestBed.createComponent(UpupUploaderComponent)
-        f.componentInstance.config = {} as any
+        f.componentInstance.config = {} as unknown as UploaderProps
         f.detectChanges()
         const input = (f.nativeElement as HTMLElement).querySelector(
             '[data-testid="upup-file-input"]',
@@ -140,7 +148,7 @@ describe('UpupUploaderComponent', () => {
 
     it('onInputChange with files calls store.handleSetSelectedFiles', () => {
         const f = TestBed.createComponent(UpupUploaderComponent)
-        f.componentInstance.config = {} as any
+        f.componentInstance.config = {} as unknown as UploaderProps
         f.detectChanges()
 
         const handleSetSpy = vi
@@ -166,7 +174,9 @@ describe('UpupUploaderComponent', () => {
 
     it('does not render upup-image-editor-stub when imageEditor.enabled is false', () => {
         const f = TestBed.createComponent(UpupUploaderComponent)
-        f.componentInstance.config = { imageEditor: { enabled: false } } as any
+        f.componentInstance.config = {
+            imageEditor: { enabled: false },
+        } as unknown as UploaderProps
         f.detectChanges()
         expect(
             (f.nativeElement as HTMLElement).querySelector(

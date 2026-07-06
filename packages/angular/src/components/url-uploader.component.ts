@@ -89,7 +89,7 @@ export class UrlUploaderComponent {
     }
 
     async handleFormSubmit(): Promise<void> {
-        this.store.core?.emit('url-submit', { url: this.url })
+        this.store.core.emit('url-submit', { url: this.url })
         const file = await this.fetchSvc.fetchImage(this.url)
         if (file) {
             Object.assign(file, { url: this.url })

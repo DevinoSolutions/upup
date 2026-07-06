@@ -11,4 +11,5 @@ import { LoaderIconComponent } from './loader-icon.component'
         />
     `,
 })
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class -- Angular requires a class as the component host; behavior lives in the template
 export class DefaultLoaderIconComponent {}

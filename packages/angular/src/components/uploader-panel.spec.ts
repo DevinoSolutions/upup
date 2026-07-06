@@ -17,6 +17,8 @@
 import { describe, it, expect, afterEach, vi } from 'vitest'
 import { TestBed } from '@angular/core/testing'
 import { signal } from '@angular/core'
+import { FileSource } from '@upup/core'
+import type { UploaderProps } from '../shared/types'
 import { UpupStore } from '../upup-store.service'
 import { UploaderPanelComponent } from './uploader-panel.component'
 
@@ -25,7 +27,7 @@ import { UploaderPanelComponent } from './uploader-panel.component'
 /** Create + init a real UpupStore. */
 function makeStore(): UpupStore {
     const store = new UpupStore()
-    store.setConfig({} as any)
+    store.setConfig({} as unknown as UploaderProps)
     store.init()
     return store
 }
@@ -94,7 +96,7 @@ describe('UploaderPanelComponent', () => {
         store = makeStore()
         const fixture = await setup(store)
         // Set active adapter
-        store.setActiveSource('google-drive' as any)
+        store.setActiveSource(FileSource.GOOGLE_DRIVE)
         fixture.detectChanges()
         const el: HTMLElement = fixture.nativeElement
         expect(el.querySelector('upup-source-selector')).toBeNull()
@@ -103,7 +105,7 @@ describe('UploaderPanelComponent', () => {
     it('shows SourceView when an adapter is active', async () => {
         store = makeStore()
         const fixture = await setup(store)
-        store.setActiveSource('google-drive' as any)
+        store.setActiveSource(FileSource.GOOGLE_DRIVE)
         fixture.detectChanges()
         const el: HTMLElement = fixture.nativeElement
         expect(el.querySelector('upup-source-view')).not.toBeNull()
@@ -158,7 +160,7 @@ describe('UploaderPanelComponent', () => {
     it('disableDragDrop suppresses drag handlers — handleSetSelectedFiles not called', async () => {
         // Must set disableDragDrop BEFORE init() so uiProps picks it up
         store = new UpupStore()
-        store.setConfig({ disableDragDrop: true } as any)
+        store.setConfig({ disableDragDrop: true } as unknown as UploaderProps)
         store.init()
         const fixture = await setup(store)
         const comp = fixture.componentInstance
@@ -192,7 +194,7 @@ describe('UploaderPanelComponent', () => {
         const fixture = await setup(store)
         const comp = fixture.componentInstance
 
-        store.setActiveSource('google-drive' as any)
+        store.setActiveSource(FileSource.GOOGLE_DRIVE)
         fixture.detectChanges()
 
         const handleSetSpy = vi.spyOn(store, 'handleSetSelectedFiles')
@@ -213,7 +215,7 @@ describe('UploaderPanelComponent', () => {
     it('handlePaste with clipboard files calls handleSetSelectedFiles and emits paste', async () => {
         // enablePaste defaults to false — must opt-in before init()
         store = new UpupStore()
-        store.setConfig({ enablePaste: true } as any)
+        store.setConfig({ enablePaste: true } as unknown as UploaderProps)
         store.init()
         const fixture = await setup(store)
         const comp = fixture.componentInstance
@@ -244,7 +246,7 @@ describe('UploaderPanelComponent', () => {
 
     it('handlePaste keeps a named file (report.pdf) UNRENAMED', async () => {
         store = new UpupStore()
-        store.setConfig({ enablePaste: true } as any)
+        store.setConfig({ enablePaste: true } as unknown as UploaderProps)
         store.init()
         const fixture = await setup(store)
         const comp = fixture.componentInstance
@@ -277,7 +279,7 @@ describe('UploaderPanelComponent', () => {
 
     it('handlePaste renames an unnamed image.png to pasted-<digits>.png', async () => {
         store = new UpupStore()
-        store.setConfig({ enablePaste: true } as any)
+        store.setConfig({ enablePaste: true } as unknown as UploaderProps)
         store.init()
         const fixture = await setup(store)
         const comp = fixture.componentInstance

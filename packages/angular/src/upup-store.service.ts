@@ -31,7 +31,7 @@ type ThemeSnapshot = ReturnType<ThemeStore['getSnapshot']>
 
 @Injectable() // component-scoped: add to the component's providers:[UpupStore]
 export class UpupStore {
-    private props!: UploaderProps
+    private props?: UploaderProps
     private upload!: UpupUploadHandle
     private root!: UploaderController
     core!: UpupUploadHandle['core']
@@ -153,7 +153,7 @@ export class UpupStore {
         const factoryOptions: UploaderControllerOptions = {
             provider: p.provider,
             mode: p.mode,
-            sources: p.sources as UploaderControllerOptions['sources'],
+            sources: p.sources,
             uploadEndpoint: p.uploadEndpoint,
             serverUrl: p.serverUrl,
             maxFiles: p.maxFiles,
@@ -171,9 +171,10 @@ export class UpupStore {
             autoUpload: p.autoUpload ?? false,
             maxConcurrentUploads: p.maxConcurrentUploads,
             crashRecovery: p.crashRecovery ?? false,
-            allowedFileTypes: (typeof acceptProp === 'string'
-                ? acceptProp
-                : (acceptProp as string[]).join(',')) as string | undefined,
+            allowedFileTypes:
+                typeof acceptProp === 'string'
+                    ? acceptProp
+                    : acceptProp.join(','),
             mini: p.mini ?? false,
             isProcessing: p.isProcessing ?? false,
             allowPreview: p.allowPreview ?? true,
@@ -212,7 +213,7 @@ export class UpupStore {
         const { resolved } = normalized
 
         // Store resolved scalars for consumers
-        this.mode = resolved.mode as 'client' | 'server'
+        this.mode = resolved.mode
         this.serverUrl = resolved.serverUrl
 
         // ── Core construction via createUpupUpload (FRESH per init() call) ────────
@@ -220,10 +221,11 @@ export class UpupStore {
         // cleanly (plugin.use() throws on duplicate; no unregister; fresh core avoids this).
         this.upload = createUpupUpload({
             ...normalized.coreOptions,
-            onError: (err: unknown) =>
+            onError: (err: unknown) => {
                 this.onError(
                     typeof err === 'string' ? err : (err as Error).message,
-                ),
+                )
+            },
         })
         this.upload.start()
         this.core = this.upload.core
@@ -232,23 +234,35 @@ export class UpupStore {
         const sse = createSSEProcessing({
             processingEndpoint: p.processingEndpoint,
             onFileProcessed: p.onFileProcessed,
-            onError: (err: Error) => this.onError(err.message),
+            onError: (err: Error) => {
+                this.onError(err.message)
+            },
             processingTimeout: p.processingTimeout,
         })
-        this.cleanups.push(() => sse.destroy())
+        this.cleanups.push(() => {
+            sse.destroy()
+        })
 
         // ── Root controller (FRESH per init() call) ──────────────
         // Owns orchestrator, theme, plugin registration, callback proxy,
         // status-change dedup, crash recovery, file-input registration.
         this.root = createUploaderController(
             { core: this.upload.core, options: factoryOptions, normalized },
-            { connectSSE: file => sse.connectSSE(file) },
+            {
+                connectSSE: file => {
+                    sse.connectSSE(file)
+                },
+            },
         )
 
         // ── Callback proxy — updateCallbacks feeds the proxy's mutable ref ──
         this.root.updateCallbacks({
-            onError: (message: string) => this.onError(message),
-            onWarn: (message: string) => this.onWarn(message),
+            onError: (message: string) => {
+                this.onError(message)
+            },
+            onWarn: (message: string) => {
+                this.onWarn(message)
+            },
             onUploadStart: p.onUploadStart ?? (() => {}),
             onFileUploadStart: p.onFileUploadStart ?? (() => {}),
             onFileUploadProgress: p.onFileUploadProgress ?? (() => {}),
@@ -337,13 +351,17 @@ export class UpupStore {
             mini: resolved.mini,
             maxRetries: p.maxRetries,
             resumable: p.resumable,
-            onError: (message: string) => this.onError(message),
+            onError: (message: string) => {
+                this.onError(message)
+            },
             onIntegrationClick: p.onIntegrationClick ?? (() => {}),
             onFileClick: p.onFileClick ?? (() => {}),
             onFilesDragOver: p.onFilesDragOver ?? (() => {}),
             onFilesDragLeave: p.onFilesDragLeave ?? (() => {}),
             onFilesDrop: p.onFilesDrop ?? (() => {}),
-            onWarn: (message: string) => this.onWarn(message),
+            onWarn: (message: string) => {
+                this.onWarn(message)
+            },
             enablePaste: p.enablePaste ?? false,
             sources: resolved.sources,
             allowedFileTypes: resolved.allowedFileTypes,
@@ -455,7 +473,9 @@ export class UpupStore {
         this.destroyed = true
         this.started = false
         // cleanups: SSE destroy (+ any other per-init cleanups)
-        this.cleanups.forEach(c => c())
+        this.cleanups.forEach(c => {
+            c()
+        })
         this.cleanups.length = 0
         this.root?.destroy() // orchestrator/theme/plugins/status — idempotent
         this.orchState?.destroy()

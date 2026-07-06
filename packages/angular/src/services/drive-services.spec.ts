@@ -15,7 +15,7 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { TestBed } from '@angular/core/testing'
-import { signal } from '@angular/core'
+import type { DriveFile, DriveFolder } from '@upup/core/internal'
 import { DriveBrowserController } from '@upup/core/internal'
 import { UpupStore } from '../upup-store.service'
 import { GoogleDriveService } from './google-drive.service'
@@ -29,7 +29,7 @@ import { LoadGapiService } from './load-gapi.service'
 /** Minimal UpupStore mock with only the methods drive services need. */
 function makeStoreMock() {
     return {
-        core: {} as any,
+        core: {},
         handleSetSelectedFiles: vi.fn().mockResolvedValue(undefined),
         setActiveSource: vi.fn(),
     } as unknown as UpupStore
@@ -44,15 +44,16 @@ function setupService<
     T extends
         GoogleDriveService | OneDriveService | DropboxService | BoxService,
 >(
-    ServiceCls: new (...args: any[]) => T,
+    ServiceCls: new (...args: unknown[]) => T,
     store: UpupStore,
 ): { svc: T; ctrl: DriveBrowserController } {
     TestBed.configureTestingModule({
         providers: [{ provide: UpupStore, useValue: store }, ServiceCls],
     })
-    const svc = TestBed.inject(ServiceCls as any) as T
+    const svc = TestBed.inject(ServiceCls)
     // Access the private controller via bracket notation for test purposes
-    const ctrl = (svc as any)['controller'] as DriveBrowserController
+    const ctrl = (svc as unknown as { controller: DriveBrowserController })
+        .controller
     return { svc, ctrl }
 }
 
@@ -76,7 +77,7 @@ describe('LoadGapiService', () => {
                 await import('@upup/core/internal'),
                 'loadGoogleIdentityServices',
             )
-            .mockResolvedValue(undefined as any)
+            .mockResolvedValue(undefined)
         TestBed.configureTestingModule({ providers: [LoadGapiService] })
         const svc = TestBed.inject(LoadGapiService)
         svc.load()
@@ -98,7 +99,10 @@ describe('GoogleDriveService delegation', () => {
         // Silence controller.init() — it would try to call core.getPlugin which is missing
         vi.spyOn(ctrl, 'init').mockImplementation(() => {})
         vi.spyOn(ctrl, 'destroy').mockImplementation(() => {})
-        vi.spyOn(ctrl as any, 'retryAuth').mockImplementation(() => {})
+        vi.spyOn(
+            ctrl as unknown as { retryAuth: () => void },
+            'retryAuth',
+        ).mockImplementation(() => {})
         vi.spyOn(ctrl, 'signOut').mockImplementation(() => {})
         vi.spyOn(ctrl, 'setPath').mockImplementation(() => {})
         vi.spyOn(ctrl, 'handleClick').mockImplementation(() => {})
@@ -124,7 +128,9 @@ describe('GoogleDriveService delegation', () => {
 
     it('retryAuth() delegates to controller.retryAuth()', () => {
         svc.retryAuth()
-        expect((ctrl as any).retryAuth).toHaveBeenCalled()
+        expect(
+            (ctrl as unknown as { retryAuth: () => void }).retryAuth,
+        ).toHaveBeenCalled()
     })
 
     it('handleSignOut() delegates to controller.signOut()', () => {
@@ -133,13 +139,19 @@ describe('GoogleDriveService delegation', () => {
     })
 
     it('setPath() delegates to controller.setPath()', () => {
-        const path = [{ id: 'root', name: 'Drive', children: [] }] as any
+        const path = [
+            { id: 'root', name: 'Drive', children: [] },
+        ] as unknown as DriveFolder[]
         svc.setPath(path)
         expect(ctrl.setPath).toHaveBeenCalledWith(path)
     })
 
     it('handleClick() delegates to controller.handleClick()', () => {
-        const file = { id: 'f1', name: 'doc.pdf', isFolder: false } as any
+        const file = {
+            id: 'f1',
+            name: 'doc.pdf',
+            isFolder: false,
+        } as unknown as DriveFile
         svc.handleClick(file)
         expect(ctrl.handleClick).toHaveBeenCalledWith(file)
     })
@@ -209,12 +221,12 @@ describe('OneDriveService delegation', () => {
         expect(ctrl.signOut).toHaveBeenCalled()
     })
     it('setPath() delegates to controller.setPath()', () => {
-        const p = [] as any
+        const p: DriveFolder[] = []
         svc.setPath(p)
         expect(ctrl.setPath).toHaveBeenCalledWith(p)
     })
     it('handleClick() delegates to controller.handleClick()', () => {
-        const f = { id: 'f1' } as any
+        const f = { id: 'f1' } as unknown as DriveFile
         svc.handleClick(f)
         expect(ctrl.handleClick).toHaveBeenCalledWith(f)
     })
@@ -262,12 +274,12 @@ describe('DropboxService delegation', () => {
         expect(ctrl.signOut).toHaveBeenCalled()
     })
     it('handleClick() delegates to controller.handleClick()', () => {
-        const f = { id: 'f2' } as any
+        const f = { id: 'f2' } as unknown as DriveFile
         svc.handleClick(f)
         expect(ctrl.handleClick).toHaveBeenCalledWith(f)
     })
     it('setPath() delegates to controller.setPath()', () => {
-        const p = [] as any
+        const p: DriveFolder[] = []
         svc.setPath(p)
         expect(ctrl.setPath).toHaveBeenCalledWith(p)
     })
@@ -310,7 +322,7 @@ describe('BoxService delegation', () => {
         expect(ctrl.signOut).toHaveBeenCalled()
     })
     it('handleClick() delegates', () => {
-        const f = { id: 'f3' } as any
+        const f = { id: 'f3' } as unknown as DriveFile
         svc.handleClick(f)
         expect(ctrl.handleClick).toHaveBeenCalledWith(f)
     })
@@ -337,8 +349,16 @@ describe('Drive service callback wiring', () => {
             ],
         })
         const svc = TestBed.inject(GoogleDriveService)
-        const ctrl = (svc as any)['controller'] as DriveBrowserController
-        const callbacks = (ctrl as any)['callbacks']
+        const ctrl = (svc as unknown as { controller: DriveBrowserController })
+            .controller
+        const callbacks = (
+            ctrl as unknown as {
+                callbacks: {
+                    onFilesSelected: (files: unknown) => void
+                    onClose: () => void
+                }
+            }
+        ).callbacks
         // Invoke the callback directly — it should call the store
         const fakeFiles = [{ id: 'x', name: 'x.txt' }]
         callbacks.onFilesSelected(fakeFiles)
@@ -354,8 +374,16 @@ describe('Drive service callback wiring', () => {
             ],
         })
         const svc = TestBed.inject(GoogleDriveService)
-        const ctrl = (svc as any)['controller'] as DriveBrowserController
-        const callbacks = (ctrl as any)['callbacks']
+        const ctrl = (svc as unknown as { controller: DriveBrowserController })
+            .controller
+        const callbacks = (
+            ctrl as unknown as {
+                callbacks: {
+                    onFilesSelected: (files: unknown) => void
+                    onClose: () => void
+                }
+            }
+        ).callbacks
         callbacks.onClose()
         expect(store.setActiveSource).toHaveBeenCalledWith(undefined)
     })
@@ -369,8 +397,16 @@ describe('Drive service callback wiring', () => {
             ],
         })
         const svc = TestBed.inject(DropboxService)
-        const ctrl = (svc as any)['controller'] as DriveBrowserController
-        const callbacks = (ctrl as any)['callbacks']
+        const ctrl = (svc as unknown as { controller: DriveBrowserController })
+            .controller
+        const callbacks = (
+            ctrl as unknown as {
+                callbacks: {
+                    onFilesSelected: (files: unknown) => void
+                    onClose: () => void
+                }
+            }
+        ).callbacks
         const fakeFiles = [{ id: 'y', name: 'y.pdf' }]
         callbacks.onFilesSelected(fakeFiles)
         expect(store.handleSetSelectedFiles).toHaveBeenCalledWith(fakeFiles)
@@ -382,8 +418,16 @@ describe('Drive service callback wiring', () => {
             providers: [{ provide: UpupStore, useValue: store }, BoxService],
         })
         const svc = TestBed.inject(BoxService)
-        const ctrl = (svc as any)['controller'] as DriveBrowserController
-        const callbacks = (ctrl as any)['callbacks']
+        const ctrl = (svc as unknown as { controller: DriveBrowserController })
+            .controller
+        const callbacks = (
+            ctrl as unknown as {
+                callbacks: {
+                    onFilesSelected: (files: unknown) => void
+                    onClose: () => void
+                }
+            }
+        ).callbacks
         callbacks.onClose()
         expect(store.setActiveSource).toHaveBeenCalledWith(undefined)
     })

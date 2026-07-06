@@ -67,16 +67,16 @@ export class UploaderPanelComponent implements OnInit, OnDestroy {
 
     // ── Dropzone controller (shared @upup/core) + its Angular-signal view ─────
     private dragController!: DragDropController
-    private dragStore!: SignalStore<DragDropSnapshot>
+    private dragStore?: SignalStore<DragDropSnapshot>
 
     ngOnInit(): void {
         this.dragController = new DragDropController({
-            core: this.store.core!,
-            orchestrator: this.store.orchestrator!,
+            core: this.store.core,
+            orchestrator: this.store.orchestrator,
             setFiles: files => this.store.handleSetSelectedFiles(files),
             // The file list derives from the orchestrator snapshot — derive the
             // border's file count from the same source so it stays in lockstep.
-            filesSize: () => this.store.orchestrator!.getSnapshot().files.size,
+            filesSize: () => this.store.orchestrator.getSnapshot().files.size,
             options: () => this.store.uiProps,
             props: () => ({
                 disableDragDrop: this.store.uiProps.disableDragDrop,
@@ -122,7 +122,7 @@ export class UploaderPanelComponent implements OnInit, OnDestroy {
     readonly offlineBannerClass = computed(() =>
         cn(
             'upup-absolute upup-inset-x-0 upup-top-0 upup-z-20 upup-px-3 upup-py-1.5 upup-text-center upup-text-xs upup-font-medium upup-text-white upup-bg-yellow-500',
-            { 'upup-bg-yellow-600': this.store.isDark?.() ?? false },
+            { 'upup-bg-yellow-600': this.store.isDark() },
         ),
     )
 

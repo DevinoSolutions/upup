@@ -420,7 +420,12 @@ describe('DriveBrowserComponent', () => {
     afterEach(() => TestBed.resetTestingModule())
 
     function makeFolder(children: DriveFile[] = []): DriveFolder {
-        return { id: 'root', name: 'Drive', isFolder: true, children } as DriveFolder
+        return {
+            id: 'root',
+            name: 'Drive',
+            isFolder: true,
+            children,
+        } as DriveFolder
     }
 
     function mountWithItems(items: DriveFile[]) {

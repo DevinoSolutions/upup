@@ -71,6 +71,8 @@ export class FileItemComponent {
 
     openPreviewPortal(): void {
         this.showPreviewPortal = true
+        // core is null before init()/after destroy() — guard the runtime null
+        // (the type is too narrow, so the no-unnecessary-condition warning is a false positive)
         this.store.core?.emit('file-preview-open', {
             fileId: this.file.id,
             fileName: this.file.name,

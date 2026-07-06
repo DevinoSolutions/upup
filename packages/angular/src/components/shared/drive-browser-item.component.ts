@@ -35,7 +35,7 @@ export class DriveBrowserItemComponent {
     @Input({ required: true }) selectedFiles!: DriveFile[]
 
     get isFolder(): boolean {
-        return !!this.file.isFolder
+        return this.file.isFolder
     }
 
     get isFileSelected(): boolean {
@@ -43,7 +43,6 @@ export class DriveBrowserItemComponent {
     }
 
     get containerClass(): string {
-        const dark = this.store.isDark()
         const slotClasses = this.store.slotOverrides()
         const parts: string[] = [
             'upup-hover:bg-[#bab4b499] upup-group upup-mb-1 upup-flex upup-cursor-pointer upup-items-center upup-justify-between upup-gap-2 upup-rounded-md upup-p-1 upup-py-2 upup-transition-colors upup-duration-150',

@@ -162,33 +162,15 @@ export class SourceSelectorComponent {
         string,
         new (...args: unknown[]) => unknown
     > = {
-        [FileSource.LOCAL]: MyDeviceIconComponent as new (
-            ...args: unknown[]
-        ) => unknown,
-        [FileSource.GOOGLE_DRIVE]: GoogleDriveIconComponent as new (
-            ...args: unknown[]
-        ) => unknown,
-        [FileSource.ONE_DRIVE]: OneDriveIconComponent as new (
-            ...args: unknown[]
-        ) => unknown,
-        [FileSource.DROPBOX]: DropboxIconComponent as new (
-            ...args: unknown[]
-        ) => unknown,
-        [FileSource.BOX]: BoxIconComponent as new (
-            ...args: unknown[]
-        ) => unknown,
-        [FileSource.URL]: LinkIconComponent as new (
-            ...args: unknown[]
-        ) => unknown,
-        [FileSource.CAMERA]: CameraIconComponent as new (
-            ...args: unknown[]
-        ) => unknown,
-        [FileSource.MICROPHONE]: AudioIconComponent as new (
-            ...args: unknown[]
-        ) => unknown,
-        [FileSource.SCREEN]: ScreenCaptureIconComponent as new (
-            ...args: unknown[]
-        ) => unknown,
+        [FileSource.LOCAL]: MyDeviceIconComponent,
+        [FileSource.GOOGLE_DRIVE]: GoogleDriveIconComponent,
+        [FileSource.ONE_DRIVE]: OneDriveIconComponent,
+        [FileSource.DROPBOX]: DropboxIconComponent,
+        [FileSource.BOX]: BoxIconComponent,
+        [FileSource.URL]: LinkIconComponent,
+        [FileSource.CAMERA]: CameraIconComponent,
+        [FileSource.MICROPHONE]: AudioIconComponent,
+        [FileSource.SCREEN]: ScreenCaptureIconComponent,
     }
 
     get chosenSources(): SourceEntry[] {
@@ -205,7 +187,7 @@ export class SourceSelectorComponent {
                         (translations as Record<string, string>)[nameKey] ??
                         nameKey,
                     iconType,
-                } as SourceEntry
+                }
             })
             .filter((s): s is SourceEntry => s !== null)
     }
@@ -363,7 +345,7 @@ export class SourceSelectorComponent {
         if (limit > 1) {
             parts.push(t(tr.addDocumentsHere, { limit }))
         }
-        if (maxFileSize?.size && maxFileSize?.unit) {
+        if (maxFileSize?.size) {
             parts.push(
                 t(plural(tr, 'maxFileSizeAllowed', limit), {
                     size: maxFileSize.size,
@@ -385,7 +367,7 @@ export class SourceSelectorComponent {
      */
     handleSourceClick(sourceId: FileSource): void {
         this.store.uiProps.onIntegrationClick(sourceId)
-        this.store.core?.emit('source-click', { sourceId })
+        this.store.core.emit('source-click', { sourceId })
         if (sourceId === FileSource.LOCAL) {
             this.store.openFilePicker()
         } else {
@@ -408,7 +390,7 @@ export class SourceSelectorComponent {
             el.removeAttribute('directory')
         }
         this.store.openFilePicker()
-        this.store.core?.emit('browse-files', {})
+        this.store.core.emit('browse-files', {})
     }
 
     async handleSelectFolderClick(): Promise<void> {
@@ -462,6 +444,8 @@ export class SourceSelectorComponent {
                                     writable: true,
                                 })
                             } catch {
+                                // upup-catch: defineProperty rejected (non-configurable
+                                // slot) — fall back to a plain assign
                                 Object.assign(file, { relativePath: newPath })
                             }
                             collectedFiles.push(file)
@@ -475,8 +459,8 @@ export class SourceSelectorComponent {
                 }
                 await getFiles(directoryHandle as unknown as IterableDirHandle)
                 if (collectedFiles.length > 0) {
-                    this.store.handleSetSelectedFiles(collectedFiles)
-                    this.store.core?.emit('folder-select', {
+                    void this.store.handleSetSelectedFiles(collectedFiles)
+                    this.store.core.emit('folder-select', {
                         count: collectedFiles.length,
                     })
                     const el = this.store.getFileInput()
@@ -493,7 +477,7 @@ export class SourceSelectorComponent {
                 el.setAttribute('directory', 'true')
             }
             this.store.openFilePicker()
-            this.store.core?.emit('folder-select', { count: 0 })
+            this.store.core.emit('folder-select', { count: 0 })
         }
     }
 }
