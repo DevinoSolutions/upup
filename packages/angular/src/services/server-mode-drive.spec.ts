@@ -371,7 +371,7 @@ describe('ServerModeDriveService — startAuth() de-dups the re-auth message lis
         )
         expect(messageAddCalls.length).toBe(2)
         const secondHandler =
-            messageAddCalls[1][1] as EventListenerOrEventListenerObject
+            messageAddCalls[1]![1] as EventListenerOrEventListenerObject
         expect(secondHandler).not.toBe(firstHandler)
     })
 })

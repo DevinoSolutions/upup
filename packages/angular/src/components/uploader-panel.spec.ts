@@ -79,7 +79,7 @@ describe('UploaderPanelComponent', () => {
         // "files selected" band in the empty state.
         const headers = el.querySelectorAll('upup-main-box-header')
         expect(headers.length).toBe(1)
-        expect(headers[0].closest('upup-file-list')).not.toBeNull()
+        expect(headers[0]!.closest('upup-file-list')).not.toBeNull()
     })
 
     it('shows SourceSelector when no active adapter and no files', async () => {
@@ -270,8 +270,8 @@ describe('UploaderPanelComponent', () => {
         comp.handlePaste(pasteEvent)
 
         expect(handleSetSpy).toHaveBeenCalled()
-        const passed = handleSetSpy.mock.calls[0][0] as File[]
-        expect(passed[0].name).toBe('report.pdf')
+        const passed = handleSetSpy.mock.calls[0]![0] as File[]
+        expect(passed[0]!.name).toBe('report.pdf')
         expect(emitSpy).toHaveBeenCalledWith('paste', expect.any(Object))
     })
 
@@ -300,8 +300,8 @@ describe('UploaderPanelComponent', () => {
         comp.handlePaste(pasteEvent)
 
         expect(handleSetSpy).toHaveBeenCalled()
-        const passed = handleSetSpy.mock.calls[0][0] as File[]
-        expect(passed[0].name).toMatch(/^pasted-\d+\.png$/)
+        const passed = handleSetSpy.mock.calls[0]![0] as File[]
+        expect(passed[0]!.name).toMatch(/^pasted-\d+\.png$/)
     })
 
     // ── Keyboard ────────────────────────────────────────────────────────────

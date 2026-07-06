@@ -49,7 +49,7 @@ export class UpupStore {
 
     /** Set during init(); undefined before init() is called. */
     mode!: 'client' | 'server'
-    serverUrl?: string
+    serverUrl?: string | undefined
 
     // ── i18n (set during init()) ─────────────────────────────────
     translations!: Signal<UiTranslations>
@@ -58,13 +58,13 @@ export class UpupStore {
     dir!: string
 
     // ── Cloud drive config (set during init()) ───────────────────
-    cloudDrives?: CloudDrivesConfig
+    cloudDrives?: CloudDrivesConfig | undefined
 
     // ── Resolved UI options aggregate (set during init()) ────────
     uiProps!: {
         mini: boolean
-        maxRetries?: number
-        resumable?: UploaderProps['resumable']
+        maxRetries?: number | undefined
+        resumable?: UploaderProps['resumable'] | undefined
         onError: (message: string) => void
         onIntegrationClick: (integrationType: string) => void
         onFileClick: (file: UploadFile) => void
@@ -75,7 +75,7 @@ export class UpupStore {
         enablePaste: boolean
         sources: FileSource[]
         allowedFileTypes: string
-        maxFileSize?: UploaderProps['maxFileSize']
+        maxFileSize?: UploaderProps['maxFileSize'] | undefined
         limit: number
         isProcessing: boolean
         allowPreview: boolean

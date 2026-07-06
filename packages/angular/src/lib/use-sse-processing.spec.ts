@@ -130,7 +130,7 @@ describe('createSSEProcessing', () => {
         lastInstance!.onerror!()
 
         expect(onError).toHaveBeenCalledOnce()
-        expect(onError.mock.calls[0][0]).toBeInstanceOf(Error)
+        expect(onError.mock.calls[0]![0]).toBeInstanceOf(Error)
         expect(lastInstance!.close).toHaveBeenCalled()
         destroy()
     })
@@ -167,7 +167,7 @@ describe('createSSEProcessing', () => {
         vi.advanceTimersByTime(5_001)
 
         expect(onError).toHaveBeenCalledOnce()
-        expect(onError.mock.calls[0][0]).toBeInstanceOf(Error)
+        expect(onError.mock.calls[0]![0]).toBeInstanceOf(Error)
         expect(lastInstance!.close).toHaveBeenCalled()
         destroy()
     })

@@ -2,10 +2,11 @@ import type { UploadFile } from '@upup/core'
 import { SSEProcessor } from '@upup/core/internal'
 
 export type SSEProcessingOptions = {
-    processingEndpoint?: string
-    onFileProcessed?: (file: UploadFile, data: Record<string, unknown>) => void
-    onError?: (error: Error) => void
-    processingTimeout?: number
+    processingEndpoint?: string | undefined
+    onFileProcessed?:
+        ((file: UploadFile, data: Record<string, unknown>) => void) | undefined
+    onError?: ((error: Error) => void) | undefined
+    processingTimeout?: number | undefined
 }
 
 /**
