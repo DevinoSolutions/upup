@@ -31,9 +31,9 @@ import type { CloudDrivesConfig } from '../drives/configs'
 
 export type BaseContextUpload = {
     uploadStatus: UploadStatus
-    uploadError?: string
+    uploadError?: string | undefined
     /** Machine code from a typed UpupError, when the failure carried one. */
-    uploadErrorCode?: string
+    uploadErrorCode?: string | undefined
     totalProgress: number
     filesProgressMap: FilesProgressMap
     startUpload: () => Promise<UploadFile[] | undefined>
@@ -51,7 +51,7 @@ export type BaseContextRuntime = {
     core: UpupCore | null
     orchestrator: UploaderOrchestrator | null
     mode: 'client' | 'server'
-    serverUrl?: string
+    serverUrl?: string | undefined
     openFilePicker: () => void
     isOnline: boolean
 }
@@ -59,9 +59,9 @@ export type BaseContextRuntime = {
 // ─── Source ───────────────────────────────────────────────────
 
 export type BaseContextSource = {
-    activeSource?: FileSource
+    activeSource?: FileSource | undefined
     setActiveSource: (source: FileSource | undefined) => void
-    cloudDrives?: CloudDrivesConfig
+    cloudDrives?: CloudDrivesConfig | undefined
 }
 
 // ─── I18n ─────────────────────────────────────────────────────
