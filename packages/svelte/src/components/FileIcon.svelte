@@ -4,7 +4,10 @@ import { cn } from '@upup/core/internal'
   import { useUploaderTheme } from '../context/uploader-context'
   import Icon from './Icon.svelte'
 
-  let { extension = '', class: className = '' }: { extension?: string; class?: string } = $props()
+  let {
+    extension = '',
+    class: className = '',
+  }: { extension?: string; class?: string | undefined } = $props()
 
   const { isDark: dark } = useUploaderTheme()
 

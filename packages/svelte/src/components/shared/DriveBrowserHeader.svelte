@@ -23,7 +23,7 @@ import { cn } from '@upup/core/internal'
     showSearch: boolean
     searchTerm: string
     onSearch: (value: string) => void
-    user?: DriveUser
+    user?: DriveUser | undefined
   } = $props()
 
   const { setActiveSource } = useUploaderSource()

@@ -19,11 +19,11 @@ import type { InternalFlatClassNames } from '@upup/core/internal'
     fileType: string
     fileName: string
     fileUrl: string
-    fileSize?: number
+    fileSize?: number | undefined
     slotClasses: InternalFlatClassNames
     allowPreview: boolean
     labels: Translations
-    onUpdateCanPreview?: (val: boolean) => void
+    onUpdateCanPreview?: ((val: boolean) => void) | undefined
   } = $props()
 
   const extension = $derived(fileGetExtension(fileType, fileName))

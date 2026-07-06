@@ -117,15 +117,22 @@ export type ContextProps = Required<
         | 'disableDragDrop'
     >
 > &
-    Pick<UploaderProps, 'maxFileSize' | 'maxRetries' | 'resumable'> & {
-        allowedFileTypes: string
-        limit: number
-        folderUploadAllowDrop: boolean
-        folderPickerButtonVisible: boolean
-        multiple: boolean
-        icons: Required<UploaderIcons>
-        imageEditor: ResolvedImageEditorOptions
-    }
+    // Explicit `| undefined` (via indexed access) rather than `Pick`: under
+    // `exactOptionalPropertyTypes` the bridge assigns these from destructured
+    // props (each `T | undefined`), so the target must accept undefined.
+    {
+        maxFileSize?: UploaderProps['maxFileSize']
+        maxRetries?: UploaderProps['maxRetries']
+        resumable?: UploaderProps['resumable']
+    } & {
+    allowedFileTypes: string
+    limit: number
+    folderUploadAllowDrop: boolean
+    folderPickerButtonVisible: boolean
+    multiple: boolean
+    icons: Required<UploaderIcons>
+    imageEditor: ResolvedImageEditorOptions
+}
 
 export interface IUploaderContext
     extends

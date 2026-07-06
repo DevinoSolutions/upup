@@ -5,7 +5,11 @@ import { cn } from '@upup/core/internal'
     name,
     size = undefined,
     class: className = '',
-  }: { name: IconName; size?: number; class?: string } = $props()
+  }: {
+    name: IconName
+    size?: number | undefined
+    class?: string | undefined
+  } = $props()
   const def = $derived(ICONS[name])
   const px = $derived(size ?? def.defaultSize)
 </script>
