@@ -281,8 +281,7 @@ export function flattenSlotsToClassNames(
         const component = slots[componentKey]
         if (!component) continue
         const mapping = SLOT_TO_FLAT[componentKey] as
-            | Record<string, string | string[]>
-            | undefined
+            Record<string, string | string[]> | undefined
         if (!mapping) continue
         for (const slotName of Object.keys(component)) {
             const value = (component as Record<string, string | undefined>)[

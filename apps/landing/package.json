@@ -44,13 +44,13 @@
     "@types/react-dom": "^19",
     "@types/three": "^0.178.1",
     "autoprefixer": "^10.4.19",
-    "eslint": "^9",
+    "eslint": "^10.6.0",
     "eslint-config-next": "16.1.6",
     "eslint-plugin-react": "^7.37.4",
     "react-syntax-highlighter": "^15.6.1",
     "tailwindcss": "^3.4.3",
     "tailwindcss-elevation": "^2.0.0",
     "typescript": "^5",
-    "typescript-eslint": "^8.46.2"
+    "typescript-eslint": "^8.63.0"
   }
 }

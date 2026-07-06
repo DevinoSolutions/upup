@@ -88,16 +88,18 @@ export function fileItem(ctx: UploaderContext, file: UploadFile) {
         )}
     >
         ${filePreview(ctx, file, state, { onRequestPreview: openPortal })}
-        ${state.canPreview && state.showPreviewPortal
-            ? filePreviewPortal(ctx, {
-                  fileType: file.type ?? '',
-                  fileUrl: file.url ?? '',
-                  fileName: file.name,
-                  fileSize: file.size,
-                  onClose: closePortal,
-                  onStopPropagation: stop,
-                  cell: state,
-              })
-            : nothing}
+        ${
+            state.canPreview && state.showPreviewPortal
+                ? filePreviewPortal(ctx, {
+                      fileType: file.type ?? '',
+                      fileUrl: file.url ?? '',
+                      fileName: file.name,
+                      fileSize: file.size,
+                      onClose: closePortal,
+                      onStopPropagation: stop,
+                      cell: state,
+                  })
+                : nothing
+        }
     </div>`
 }

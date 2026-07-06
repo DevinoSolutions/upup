@@ -20,11 +20,7 @@ export type DriveUser = {
 }
 
 export type DriveState =
-    | 'idle'
-    | 'authenticating'
-    | 'authenticated'
-    | 'browsing'
-    | 'session-expired'
+    'idle' | 'authenticating' | 'authenticated' | 'browsing' | 'session-expired'
 
 /** The one drive browse-failure surface (F-124). `action` names the operation that failed. */
 export type DriveBrowserError = {

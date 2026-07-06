@@ -49,48 +49,58 @@ export function uploaderHeader(ctx: UploaderContext, handleCancel: () => void) {
                 { 'upup-text-gray-300 dark:upup-text-gray-300': isDark },
             )}
         >
-            ${isAddingMore
-                ? tr.addingMoreFiles
-                : t(plural(tr, 'filesSelected', size), { count: size })}
+            ${
+                isAddingMore
+                    ? tr.addingMoreFiles
+                    : t(plural(tr, 'filesSelected', size), { count: size })
+            }
         </span>
         <div
             class="upup-col-start-3 upup-col-end-5 upup-flex upup-items-center upup-justify-end upup-gap-2 md:upup-col-start-4"
         >
-            ${size > 1
-                ? html` <button
-                      class=${cn(
-                          'upup-flex upup-h-7 upup-w-7 upup-items-center upup-justify-center upup-rounded upup-text-gray-500 upup-transition-colors hover:upup-bg-black/10',
-                          {
-                              'upup-text-gray-300 hover:upup-bg-white/10':
-                                  isDark,
-                          },
-                      )}
-                      @click=${toggleViewMode}
-                      title=${viewMode === 'grid'
-                          ? tr.switchToListView
-                          : tr.switchToGridView}
-                  >
-                      ${viewMode === 'grid'
-                          ? icon('layout-list', { size: 16 })
-                          : icon('layout-grid', { size: 16 })}
-                  </button>`
-                : nothing}
-            ${!isAddingMore && limit > 1 && !isLimitReached
-                ? html` <button
-                      class=${cn(
-                          'upup-flex upup-items-center upup-gap-1 upup-rounded-md upup-border upup-border-dashed upup-border-blue-400/50 upup-px-2 upup-py-1 upup-text-sm upup-text-blue-600',
-                          {
-                              'upup-text-[#30C5F7] dark:upup-text-[#30C5F7]':
-                                  isDark,
-                          },
-                          slotClasses.containerAddMoreButton,
-                      )}
-                      @click=${() => ctx.setIsAddingMore(true)}
-                      ?disabled=${isUploading || isProcessing}
-                  >
-                      ${nothing} ${tr.addMore}
-                  </button>`
-                : nothing}
+            ${
+                size > 1
+                    ? html` <button
+                          class=${cn(
+                              'upup-flex upup-h-7 upup-w-7 upup-items-center upup-justify-center upup-rounded upup-text-gray-500 upup-transition-colors hover:upup-bg-black/10',
+                              {
+                                  'upup-text-gray-300 hover:upup-bg-white/10':
+                                      isDark,
+                              },
+                          )}
+                          @click=${toggleViewMode}
+                          title=${
+                              viewMode === 'grid'
+                                  ? tr.switchToListView
+                                  : tr.switchToGridView
+                          }
+                      >
+                          ${
+                              viewMode === 'grid'
+                                  ? icon('layout-list', { size: 16 })
+                                  : icon('layout-grid', { size: 16 })
+                          }
+                      </button>`
+                    : nothing
+            }
+            ${
+                !isAddingMore && limit > 1 && !isLimitReached
+                    ? html` <button
+                          class=${cn(
+                              'upup-flex upup-items-center upup-gap-1 upup-rounded-md upup-border upup-border-dashed upup-border-blue-400/50 upup-px-2 upup-py-1 upup-text-sm upup-text-blue-600',
+                              {
+                                  'upup-text-[#30C5F7] dark:upup-text-[#30C5F7]':
+                                      isDark,
+                              },
+                              slotClasses.containerAddMoreButton,
+                          )}
+                          @click=${() => ctx.setIsAddingMore(true)}
+                          ?disabled=${isUploading || isProcessing}
+                      >
+                          ${nothing} ${tr.addMore}
+                      </button>`
+                    : nothing
+            }
         </div>
     </div>`
 }

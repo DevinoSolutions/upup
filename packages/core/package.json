@@ -117,7 +117,7 @@
     "@upup/eslint-config": "workspace:*",
     "@vitest/coverage-v8": "^4.1.2",
     "esbuild": "^0.25.0",
-    "eslint": "^9",
+    "eslint": "^10.6.0",
     "rollup": "^4.60.0",
     "tsup": "^8.4.0",
     "typescript": "^5.3.2",

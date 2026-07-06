@@ -296,24 +296,30 @@ export function serverModeDriveUploader(
             />
         </div>
         <div class="upup-overflow-auto">
-            ${c.state.status === 'error'
-                ? html`<p
-                      data-testid="upup-drive-error"
-                      data-upup-slot="drive-error"
-                      role="alert"
-                      class=${cn(
-                          'upup-p-4 upup-text-sm',
-                          isDark ? 'upup-text-red-400' : 'upup-text-red-600',
-                      )}
-                  >
-                      ${c.state.code && ctx.translator
-                          ? ctx.translator(
-                                `errors.${errorCodeToMessageKey(c.state.code)}`,
-                                { code: c.state.code },
-                            )
-                          : c.state.message}
-                  </p>`
-                : nothing}
+            ${
+                c.state.status === 'error'
+                    ? html`<p
+                          data-testid="upup-drive-error"
+                          data-upup-slot="drive-error"
+                          role="alert"
+                          class=${cn(
+                              'upup-p-4 upup-text-sm',
+                              isDark
+                                  ? 'upup-text-red-400'
+                                  : 'upup-text-red-600',
+                          )}
+                      >
+                          ${
+                              c.state.code && ctx.translator
+                                  ? ctx.translator(
+                                        `errors.${errorCodeToMessageKey(c.state.code)}`,
+                                        { code: c.state.code },
+                                    )
+                                  : c.state.message
+                          }
+                      </p>`
+                    : nothing
+            }
             ${repeat(
                 files,
                 f => f.id,
@@ -343,11 +349,14 @@ export function serverModeDriveUploader(
                         <span class="upup-flex-1 upup-truncate"
                             >${file.name}</span
                         >
-                        ${file.size != null && !file.isFolder
-                            ? html`<span class="upup-text-xs upup-opacity-60"
-                                  >${formatBytes(file.size)}</span
-                              >`
-                            : nothing}
+                        ${
+                            file.size != null && !file.isFolder
+                                ? html`<span
+                                      class="upup-text-xs upup-opacity-60"
+                                      >${formatBytes(file.size)}</span
+                                  >`
+                                : nothing
+                        }
                     </button>`,
             )}
         </div>
@@ -367,9 +376,11 @@ export function serverModeDriveUploader(
                 class="upup-rounded upup-bg-blue-600 upup-px-3 upup-py-1.5 upup-text-sm upup-text-white disabled:upup-opacity-50"
                 @click=${handleTransfer}
             >
-                ${c.transferring
-                    ? 'Uploading...'
-                    : `Add files${c.selected.size ? ` (${c.selected.size})` : ''}`}
+                ${
+                    c.transferring
+                        ? 'Uploading...'
+                        : `Add files${c.selected.size ? ` (${c.selected.size})` : ''}`
+                }
             </button>
         </div>
     </div>`

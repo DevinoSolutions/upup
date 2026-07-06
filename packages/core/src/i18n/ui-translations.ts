@@ -155,8 +155,7 @@ function selectPluralCategory(
 function localeOf(translations: UiTranslations): string {
     return (
         ((translations as Record<symbol, unknown>)[UI_LOCALE] as
-            | string
-            | undefined) ?? 'en-US'
+            string | undefined) ?? 'en-US'
     )
 }
 

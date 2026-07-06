@@ -128,7 +128,7 @@ svelte/vanilla/angular/preact` (per-framework style-parity references),
 ## Gates — run before calling work done
 
 ```bash
-pnpm install            # Node 20.18.2 (.nvmrc), pnpm 10.11.0 (packageManager)
+pnpm install            # Node 20.20.2 (.nvmrc), pnpm 10.11.0 (packageManager)
 pnpm run typecheck      # turbo, all packages
 pnpm run test           # turbo, all unit suites
 pnpm run build          # turbo, all packages

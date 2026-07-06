@@ -146,88 +146,115 @@ export function filePreviewPortal(
                         x
                     </button>
 
-                    ${isImage
-                        ? html`
-                              <img
-                                  src=${fileUrl}
-                                  alt=${fileName}
-                                  class="upup-h-full upup-w-full upup-rounded upup-object-contain"
-                              />
-                          `
-                        : nothing}
-                    ${isPdf
-                        ? html`
-                              <embed
-                                  src=${fileUrl}
-                                  type="application/pdf"
-                                  width="100%"
-                                  height="100%"
-                                  class="upup-rounded"
-                                  title=${fileName}
-                              />
-                          `
-                        : nothing}
-                    ${!isImage && !isPdf
-                        ? html`
-                              ${isText
-                                  ? html`
-                                        <div
-                                            class="upup-h-full upup-w-full upup-overflow-auto upup-p-4 upup-font-mono upup-text-xs"
-                                        >
-                                            ${textState.loading
-                                                ? html`<p>${tr.loading}</p>`
-                                                : nothing}
-                                            ${textState.error
-                                                ? html`<p>
-                                                      ${t(tr.previewError, {
-                                                          message:
-                                                              textState.error,
-                                                      })}
-                                                  </p>`
-                                                : nothing}
-                                            ${!textState.loading &&
-                                            !textState.error
-                                                ? html`
-                                                      <pre
-                                                          class="upup-whitespace-pre-wrap"
-                                                      >
-${textState.content}</pre
-                                                      >
-                                                      ${textState.truncated
-                                                          ? html`
-                                                                <div
-                                                                    class="upup-mt-4 upup-rounded upup-border upup-border-yellow-500/30 upup-bg-yellow-500/10 upup-px-3 upup-py-2 upup-text-xs upup-text-yellow-400"
-                                                                >
-                                                                    Content
-                                                                    truncated -
-                                                                    file is too
-                                                                    large to
-                                                                    preview in
-                                                                    full.
-                                                                </div>
-                                                            `
-                                                          : nothing}
-                                                  `
-                                                : nothing}
-                                        </div>
-                                    `
-                                  : nothing}
-                              ${!isText
-                                  ? html`
-                                        <object
-                                            data=${fileUrl}
-                                            width="100%"
-                                            height="100%"
-                                            name=${fileName}
-                                            title=${fileName}
-                                            type=${fileType}
-                                        >
-                                            <p>${tr.loading}</p>
-                                        </object>
-                                    `
-                                  : nothing}
-                          `
-                        : nothing}
+                    ${
+                        isImage
+                            ? html`
+                                  <img
+                                      src=${fileUrl}
+                                      alt=${fileName}
+                                      class="upup-h-full upup-w-full upup-rounded upup-object-contain"
+                                  />
+                              `
+                            : nothing
+                    }
+                    ${
+                        isPdf
+                            ? html`
+                                  <embed
+                                      src=${fileUrl}
+                                      type="application/pdf"
+                                      width="100%"
+                                      height="100%"
+                                      class="upup-rounded"
+                                      title=${fileName}
+                                  />
+                              `
+                            : nothing
+                    }
+                    ${
+                        !isImage && !isPdf
+                            ? html`
+                                  ${
+                                      isText
+                                          ? html`
+                                                <div
+                                                    class="upup-h-full upup-w-full upup-overflow-auto upup-p-4 upup-font-mono upup-text-xs"
+                                                >
+                                                    ${
+                                                        textState.loading
+                                                            ? html`<p>
+                                                                  ${tr.loading}
+                                                              </p>`
+                                                            : nothing
+                                                    }
+                                                    ${
+                                                        textState.error
+                                                            ? html`<p>
+                                                                  ${t(
+                                                                      tr.previewError,
+                                                                      {
+                                                                          message:
+                                                                              textState.error,
+                                                                      },
+                                                                  )}
+                                                              </p>`
+                                                            : nothing
+                                                    }
+                                                    ${
+                                                        !textState.loading &&
+                                                        !textState.error
+                                                            ? html`
+                                                                  <pre
+                                                                      class="upup-whitespace-pre-wrap"
+                                                                  >
+${textState.content}</pre>
+                                                                  ${
+                                                                      textState.truncated
+                                                                          ? html`
+                                                                                <div
+                                                                                    class="upup-mt-4 upup-rounded upup-border upup-border-yellow-500/30 upup-bg-yellow-500/10 upup-px-3 upup-py-2 upup-text-xs upup-text-yellow-400"
+                                                                                >
+                                                                                    Content
+                                                                                    truncated
+                                                                                    -
+                                                                                    file
+                                                                                    is
+                                                                                    too
+                                                                                    large
+                                                                                    to
+                                                                                    preview
+                                                                                    in
+                                                                                    full.
+                                                                                </div>
+                                                                            `
+                                                                          : nothing
+                                                                  }
+                                                              `
+                                                            : nothing
+                                                    }
+                                                </div>
+                                            `
+                                          : nothing
+                                  }
+                                  ${
+                                      !isText
+                                          ? html`
+                                                <object
+                                                    data=${fileUrl}
+                                                    width="100%"
+                                                    height="100%"
+                                                    name=${fileName}
+                                                    title=${fileName}
+                                                    type=${fileType}
+                                                >
+                                                    <p>${tr.loading}</p>
+                                                </object>
+                                            `
+                                          : nothing
+                                  }
+                              `
+                            : nothing
+                    }
                 </div>
             </div>
         </div>

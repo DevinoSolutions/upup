@@ -126,8 +126,7 @@ export class DriveBrowserController {
 
     init(): void {
         const plugin = this.core.getPlugin(this.descriptor.pluginId) as
-            | DrivePlugin
-            | undefined
+            DrivePlugin | undefined
         if (!plugin) return
         this.plugin = plugin
 
@@ -241,8 +240,7 @@ export class DriveBrowserController {
             },
             onError: (payload?: unknown) => {
                 const p = payload as
-                    | { error?: Error; action?: string }
-                    | undefined
+                    { error?: Error; action?: string } | undefined
                 this.setState({
                     isClickLoading: false,
                     showLoader: false,

@@ -161,7 +161,7 @@ single-package (`packages/upup`) release, so a bare clone lands on the wrong tre
 git clone https://github.com/DevinoSolutions/upup.git
 cd upup
 git checkout v2-clean   # active v2 branch (master is the pre-v2 monolith)
-nvm use                 # Node 20.18.2, pinned in .nvmrc
+nvm use                 # Node 20.20.2, pinned in .nvmrc
 pnpm install
 pnpm dev                # runs landing + docs + playground + package watchers via Turborepo
 ```

@@ -42,7 +42,7 @@
     "@upup/eslint-config": "workspace:*",
     "@upup/tailwind-config": "workspace:*",
     "@vitest/coverage-v8": "^4.1.2",
-    "eslint": "^9",
+    "eslint": "^10.6.0",
     "jsdom": "22.1.0",
     "postcss": "^8.5.2",
     "postcss-cli": "^11.0.1",

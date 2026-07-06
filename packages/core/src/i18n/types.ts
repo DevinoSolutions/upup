@@ -274,7 +274,9 @@ export type MessageNamespace = keyof UpupMessages
  * Dot-notation key type: "common.cancel" | "errors.uploadFailed" | ...
  */
 export type FlatMessageKey = {
-    [NS in keyof UpupMessages]: `${NS & string}.${keyof UpupMessages[NS] & string}`
+    [
+        NS in keyof UpupMessages
+    ]: `${NS & string}.${keyof UpupMessages[NS] & string}`
 }[keyof UpupMessages]
 
 /**

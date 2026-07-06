@@ -55,17 +55,19 @@ export function progressBar(
                 )}
             ></div>
         </div>
-        ${showValue
-            ? html`<p
-                  class=${cn(
-                      'upup-text-xs upup-font-semibold',
-                      { 'upup-text-white': isDark },
-                      slot.progressBarText,
-                      themeSlots?.progressBar?.text,
-                  )}
-              >
-                  ${progress}%
-              </p>`
-            : nothing}
+        ${
+            showValue
+                ? html`<p
+                      class=${cn(
+                          'upup-text-xs upup-font-semibold',
+                          { 'upup-text-white': isDark },
+                          slot.progressBarText,
+                          themeSlots?.progressBar?.text,
+                      )}
+                  >
+                      ${progress}%
+                  </p>`
+                : nothing
+        }
     </div>`
 }

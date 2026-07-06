@@ -176,107 +176,135 @@ export function fileList(ctx: UploaderContext) {
             slot.fileListFooter,
         )}
     >
-        ${uploadStatus !== UploadStatus.SUCCESSFUL &&
-        uploadStatus !== UploadStatus.FAILED
-            ? html` <button
-                  data-testid="upup-upload-btn"
-                  class=${cn(
-                      'upup-disabled:animate-pulse upup-ml-auto upup-rounded-full upup-bg-blue-600 upup-px-4 upup-py-2 upup-text-sm upup-font-medium upup-text-white',
-                      { 'upup-bg-[#30C5F7] dark:upup-bg-[#30C5F7]': isDark },
-                      slot.uploadButton,
-                  )}
-                  @click=${onUploadClick}
-                  ?disabled=${uploading ||
-                  uploadStatus === UploadStatus.PAUSED ||
-                  isProcessing}
-              >
-                  ${t(plural(tr, 'uploadFiles', sortedFiles.length), {
-                      count: sortedFiles.length,
-                  })}
-              </button>`
-            : nothing}
-        ${uploadStatus === UploadStatus.FAILED && uploadError
-            ? html` <p
-                  data-testid="upup-upload-error"
-                  data-upup-slot="upload-error"
-                  title=${uploadErrorCode ?? ''}
-                  class="upup-mr-auto upup-text-sm upup-text-red-600 dark:upup-text-red-400"
-              >
-                  ${uploadErrorCode
-                      ? t(tr.uploadFailedWithCode, { code: uploadErrorCode })
-                      : t(tr.uploadFailed, { message: uploadError })}
-              </p>`
-            : nothing}
-        ${uploadStatus === UploadStatus.FAILED
-            ? html` <button
-                  data-testid="upup-retry-btn"
-                  class=${cn(
-                      'upup-disabled:animate-pulse upup-ml-auto upup-rounded-full upup-bg-red-600 upup-px-4 upup-py-2 upup-text-sm upup-font-medium upup-text-white',
-                      { 'upup-bg-red-500 dark:upup-bg-red-500': isDark },
-                      slot.uploadButton,
-                  )}
-                  @click=${onRetryClick}
-              >
-                  ${isMultipart ? tr.resumeUpload : tr.retryUpload}
-              </button>`
-            : nothing}
-        ${uploadStatus === UploadStatus.SUCCESSFUL
-            ? html` <button
-                  class=${cn(
-                      'upup-disabled:animate-pulse upup-ml-auto upup-rounded-lg upup-bg-blue-600 upup-px-3 upup-py-2 upup-text-sm upup-font-medium upup-text-white',
-                      { 'upup-bg-[#30C5F7] dark:upup-bg-[#30C5F7]': isDark },
-                      slot.uploadDoneButton,
-                  )}
-                  @click=${() => ctx.handleDone()}
-              >
-                  ${tr.done}
-              </button>`
-            : nothing}
+        ${
+            uploadStatus !== UploadStatus.SUCCESSFUL &&
+            uploadStatus !== UploadStatus.FAILED
+                ? html` <button
+                      data-testid="upup-upload-btn"
+                      class=${cn(
+                          'upup-disabled:animate-pulse upup-ml-auto upup-rounded-full upup-bg-blue-600 upup-px-4 upup-py-2 upup-text-sm upup-font-medium upup-text-white',
+                          {
+                              'upup-bg-[#30C5F7] dark:upup-bg-[#30C5F7]':
+                                  isDark,
+                          },
+                          slot.uploadButton,
+                      )}
+                      @click=${onUploadClick}
+                      ?disabled=${
+                          uploading ||
+                          uploadStatus === UploadStatus.PAUSED ||
+                          isProcessing
+                      }
+                  >
+                      ${t(plural(tr, 'uploadFiles', sortedFiles.length), {
+                          count: sortedFiles.length,
+                      })}
+                  </button>`
+                : nothing
+        }
+        ${
+            uploadStatus === UploadStatus.FAILED && uploadError
+                ? html` <p
+                      data-testid="upup-upload-error"
+                      data-upup-slot="upload-error"
+                      title=${uploadErrorCode ?? ''}
+                      class="upup-mr-auto upup-text-sm upup-text-red-600 dark:upup-text-red-400"
+                  >
+                      ${
+                          uploadErrorCode
+                              ? t(tr.uploadFailedWithCode, {
+                                    code: uploadErrorCode,
+                                })
+                              : t(tr.uploadFailed, { message: uploadError })
+                      }
+                  </p>`
+                : nothing
+        }
+        ${
+            uploadStatus === UploadStatus.FAILED
+                ? html` <button
+                      data-testid="upup-retry-btn"
+                      class=${cn(
+                          'upup-disabled:animate-pulse upup-ml-auto upup-rounded-full upup-bg-red-600 upup-px-4 upup-py-2 upup-text-sm upup-font-medium upup-text-white',
+                          { 'upup-bg-red-500 dark:upup-bg-red-500': isDark },
+                          slot.uploadButton,
+                      )}
+                      @click=${onRetryClick}
+                  >
+                      ${isMultipart ? tr.resumeUpload : tr.retryUpload}
+                  </button>`
+                : nothing
+        }
+        ${
+            uploadStatus === UploadStatus.SUCCESSFUL
+                ? html` <button
+                      class=${cn(
+                          'upup-disabled:animate-pulse upup-ml-auto upup-rounded-lg upup-bg-blue-600 upup-px-3 upup-py-2 upup-text-sm upup-font-medium upup-text-white',
+                          {
+                              'upup-bg-[#30C5F7] dark:upup-bg-[#30C5F7]':
+                                  isDark,
+                          },
+                          slot.uploadDoneButton,
+                      )}
+                      @click=${() => ctx.handleDone()}
+                  >
+                      ${tr.done}
+                  </button>`
+                : nothing
+        }
 
         <div class="upup-flex upup-flex-1 upup-flex-col upup-gap-1">
             <div class="upup-flex upup-items-center upup-gap-2">
-                ${isMultipart &&
-                (uploading || uploadStatus === UploadStatus.PAUSED)
-                    ? html` <button
-                              data-testid="upup-upload-pause-toggle"
-                              class=${cn(
-                                  'upup-flex upup-h-7 upup-w-7 upup-items-center upup-justify-center upup-rounded-full upup-bg-gray-200 upup-text-gray-700 upup-transition-colors hover:upup-bg-gray-300',
-                                  {
-                                      'upup-bg-white/10 upup-text-white hover:upup-bg-white/20':
-                                          isDark,
-                                  },
-                              )}
-                              @click=${() =>
-                                  uploadStatus === UploadStatus.PAUSED
-                                      ? ctx.handleResume()
-                                      : ctx.handlePause()}
-                              aria-label=${uploadStatus === UploadStatus.PAUSED
-                                  ? tr.resumeUpload
-                                  : tr.pauseUpload}
-                              title=${uploadStatus === UploadStatus.PAUSED
-                                  ? tr.resumeUpload
-                                  : tr.pauseUpload}
-                          >
-                              ${uploadStatus === UploadStatus.PAUSED
-                                  ? icon('player-play', { size: 14 })
-                                  : icon('player-pause', { size: 14 })}
-                          </button>
-                          <button
-                              data-testid="upup-upload-cancel-btn"
-                              class=${cn(
-                                  'upup-flex upup-h-7 upup-w-7 upup-items-center upup-justify-center upup-rounded-full upup-bg-red-100 upup-text-red-700 upup-transition-colors hover:upup-bg-red-200',
-                                  {
-                                      'upup-bg-red-500/20 upup-text-red-100 hover:upup-bg-red-500/30':
-                                          isDark,
-                                  },
-                              )}
-                              @click=${() => ctx.handleCancel()}
-                              aria-label=${tr.cancel}
-                              title=${tr.cancel}
-                          >
-                              ${icon('x', { size: 14 })}
-                          </button>`
-                    : nothing}
+                ${
+                    isMultipart &&
+                    (uploading || uploadStatus === UploadStatus.PAUSED)
+                        ? html` <button
+                                  data-testid="upup-upload-pause-toggle"
+                                  class=${cn(
+                                      'upup-flex upup-h-7 upup-w-7 upup-items-center upup-justify-center upup-rounded-full upup-bg-gray-200 upup-text-gray-700 upup-transition-colors hover:upup-bg-gray-300',
+                                      {
+                                          'upup-bg-white/10 upup-text-white hover:upup-bg-white/20':
+                                              isDark,
+                                      },
+                                  )}
+                                  @click=${() =>
+                                      uploadStatus === UploadStatus.PAUSED
+                                          ? ctx.handleResume()
+                                          : ctx.handlePause()}
+                                  aria-label=${
+                                      uploadStatus === UploadStatus.PAUSED
+                                          ? tr.resumeUpload
+                                          : tr.pauseUpload
+                                  }
+                                  title=${
+                                      uploadStatus === UploadStatus.PAUSED
+                                          ? tr.resumeUpload
+                                          : tr.pauseUpload
+                                  }
+                              >
+                                  ${
+                                      uploadStatus === UploadStatus.PAUSED
+                                          ? icon('player-play', { size: 14 })
+                                          : icon('player-pause', { size: 14 })
+                                  }
+                              </button>
+                              <button
+                                  data-testid="upup-upload-cancel-btn"
+                                  class=${cn(
+                                      'upup-flex upup-h-7 upup-w-7 upup-items-center upup-justify-center upup-rounded-full upup-bg-red-100 upup-text-red-700 upup-transition-colors hover:upup-bg-red-200',
+                                      {
+                                          'upup-bg-red-500/20 upup-text-red-100 hover:upup-bg-red-500/30':
+                                              isDark,
+                                      },
+                                  )}
+                                  @click=${() => ctx.handleCancel()}
+                                  aria-label=${tr.cancel}
+                                  title=${tr.cancel}
+                              >
+                                  ${icon('x', { size: 14 })}
+                              </button>`
+                        : nothing
+                }
                 ${progressBar(ctx, {
                     progress: totalProgress,
                     showValue: true,
@@ -285,29 +313,38 @@ export function fileList(ctx: UploaderContext) {
                 })}
             </div>
 
-            ${(uploading || uploadStatus === UploadStatus.PAUSED) &&
-            totalBytes > 0
-                ? html` <div
-                      class=${cn(
-                          'upup-flex upup-items-center upup-justify-between upup-text-[11px] upup-text-gray-500',
-                          { 'upup-text-gray-400': isDark },
-                      )}
-                  >
-                      <span>
-                          ${formatBytes(uploadedBytes)} of
-                          ${formatBytes(totalBytes)}
-                          ${uploadSpeed > 0
-                              ? html`&middot; ${formatBytes(uploadSpeed)}/s`
-                              : nothing}
-                      </span>
-                      ${uploading && uploadEta > 0
-                          ? html`<span>${formatEta(uploadEta)}</span>`
-                          : nothing}
-                      ${uploadStatus === UploadStatus.PAUSED
-                          ? html`<span>${tr.paused}</span>`
-                          : nothing}
-                  </div>`
-                : nothing}
+            ${
+                (uploading || uploadStatus === UploadStatus.PAUSED) &&
+                totalBytes > 0
+                    ? html` <div
+                          class=${cn(
+                              'upup-flex upup-items-center upup-justify-between upup-text-[11px] upup-text-gray-500',
+                              { 'upup-text-gray-400': isDark },
+                          )}
+                      >
+                          <span>
+                              ${formatBytes(uploadedBytes)} of
+                              ${formatBytes(totalBytes)}
+                              ${
+                                  uploadSpeed > 0
+                                      ? html`&middot;
+                                        ${formatBytes(uploadSpeed)}/s`
+                                      : nothing
+                              }
+                          </span>
+                          ${
+                              uploading && uploadEta > 0
+                                  ? html`<span>${formatEta(uploadEta)}</span>`
+                                  : nothing
+                          }
+                          ${
+                              uploadStatus === UploadStatus.PAUSED
+                                  ? html`<span>${tr.paused}</span>`
+                                  : nothing
+                          }
+                      </div>`
+                    : nothing
+            }
         </div>
     </div>`
 
@@ -331,66 +368,68 @@ export function fileList(ctx: UploaderContext) {
                 slot.fileListContainer,
             )}
         >
-            ${shouldVirtualize && persistedScrollEl
-                ? (() => {
-                      const v = getVirtualizer(
-                          ctx,
-                          sortedFiles.length,
-                          persistedScrollEl,
-                      )
-                      return html` <div
-                          data-upup-slot="file-list-virtual"
-                          style=${`height: ${v.getTotalSize()}px; position: relative;`}
+            ${
+                shouldVirtualize && persistedScrollEl
+                    ? (() => {
+                          const v = getVirtualizer(
+                              ctx,
+                              sortedFiles.length,
+                              persistedScrollEl,
+                          )
+                          return html` <div
+                              data-upup-slot="file-list-virtual"
+                              style=${`height: ${v.getTotalSize()}px; position: relative;`}
+                              class=${cn(
+                                  isProcessing
+                                      ? 'upup-pointer-events-none upup-opacity-75'
+                                      : '',
+                                  'upup-font-[Arial,Helvetica,sans-serif]',
+                              )}
+                          >
+                              ${repeat(
+                                  v.getVirtualItems(),
+                                  vi => String(vi.key),
+                                  vi => {
+                                      const file = sortedFiles[vi.index]
+                                      return html` <div
+                                          data-index=${vi.index}
+                                          style=${`position: absolute; top: 0; left: 0; width: 100%; transform: translateY(${vi.start}px); padding-bottom: 12px;`}
+                                      >
+                                          ${file ? fileItem(ctx, file) : ''}
+                                      </div>`
+                                  },
+                              )}
+                          </div>`
+                      })()
+                    : html` <div
                           class=${cn(
                               isProcessing
                                   ? 'upup-pointer-events-none upup-opacity-75'
                                   : '',
-                              'upup-font-[Arial,Helvetica,sans-serif]',
+                              'upup-flex upup-flex-col upup-gap-3 upup-font-[Arial,Helvetica,sans-serif]',
+                              {
+                                  'md:upup-grid md:upup-gap-y-6':
+                                      sortedFiles.length > 1 && grid,
+                                  'md:upup-grid-cols-2':
+                                      sortedFiles.length > 1 && grid,
+                              },
+                              {
+                                  [slot.fileListContainerInnerMultiple ?? '']:
+                                      !!slot.fileListContainerInnerMultiple &&
+                                      sortedFiles.length > 1,
+                                  [slot.fileListContainerInnerSingle ?? '']:
+                                      !!slot.fileListContainerInnerSingle &&
+                                      sortedFiles.length === 1,
+                              },
                           )}
                       >
                           ${repeat(
-                              v.getVirtualItems(),
-                              vi => String(vi.key),
-                              vi => {
-                                  const file = sortedFiles[vi.index]
-                                  return html` <div
-                                      data-index=${vi.index}
-                                      style=${`position: absolute; top: 0; left: 0; width: 100%; transform: translateY(${vi.start}px); padding-bottom: 12px;`}
-                                  >
-                                      ${file ? fileItem(ctx, file) : ''}
-                                  </div>`
-                              },
+                              sortedFiles,
+                              f => f.id,
+                              f => fileItem(ctx, f),
                           )}
                       </div>`
-                  })()
-                : html` <div
-                      class=${cn(
-                          isProcessing
-                              ? 'upup-pointer-events-none upup-opacity-75'
-                              : '',
-                          'upup-flex upup-flex-col upup-gap-3 upup-font-[Arial,Helvetica,sans-serif]',
-                          {
-                              'md:upup-grid md:upup-gap-y-6':
-                                  sortedFiles.length > 1 && grid,
-                              'md:upup-grid-cols-2':
-                                  sortedFiles.length > 1 && grid,
-                          },
-                          {
-                              [slot.fileListContainerInnerMultiple ?? '']:
-                                  !!slot.fileListContainerInnerMultiple &&
-                                  sortedFiles.length > 1,
-                              [slot.fileListContainerInnerSingle ?? '']:
-                                  !!slot.fileListContainerInnerSingle &&
-                                  sortedFiles.length === 1,
-                          },
-                      )}
-                  >
-                      ${repeat(
-                          sortedFiles,
-                          f => f.id,
-                          f => fileItem(ctx, f),
-                      )}
-                  </div>`}
+            }
         </div>
         ${progressBar(ctx, {
             progress: ctx.core.progress.percentage,

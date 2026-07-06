@@ -77,8 +77,7 @@ export function normalizeUploaderOptions(
         (typeof i18n?.locale === 'string' ? i18n.locale : 'en-US')
     const dir = (bundle?.dir ??
         getDir(i18n?.locale as string | LocaleBundle | undefined)) as
-        | 'ltr'
-        | 'rtl'
+        'ltr' | 'rtl'
 
     const resolved: UploaderResolved = {
         mini,

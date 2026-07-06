@@ -78,60 +78,68 @@ export function audioUploader(ctx: UploaderContext) {
             })}
             >${a.formatTime(s.duration)}</span
         >
-        ${s.recordingState === 'recorded' && s.audioUrl
-            ? html`<audio
-                  controls
-                  src=${s.audioUrl}
-                  class="upup-w-full upup-max-w-xs"
-              ></audio>`
-            : nothing}
+        ${
+            s.recordingState === 'recorded' && s.audioUrl
+                ? html`<audio
+                      controls
+                      src=${s.audioUrl}
+                      class="upup-w-full upup-max-w-xs"
+                  ></audio>`
+                : nothing
+        }
         <div class="upup-flex upup-gap-3">
-            ${s.recordingState === 'idle'
-                ? html`<button
-                      type="button"
-                      class=${cn(
-                          'upup-rounded-lg upup-bg-blue-600 upup-px-6 upup-py-2.5 upup-text-sm upup-font-medium upup-text-white upup-transition-colors hover:upup-bg-blue-700',
-                          {
-                              'upup-bg-[#59D1F9] hover:upup-bg-[#40b8e0] dark:upup-bg-[#59D1F9]':
-                                  isDark,
-                          },
-                      )}
-                      @click=${() => void a.startRecording()}
-                  >
-                      Start Recording
-                  </button>`
-                : nothing}
-            ${s.recordingState === 'recording'
-                ? html`<button
-                      type="button"
-                      class="upup-rounded-lg upup-bg-red-500 upup-px-6 upup-py-2.5 upup-text-sm upup-font-medium upup-text-white upup-transition-colors hover:upup-bg-red-600"
-                      @click=${() => a.stopRecording()}
-                  >
-                      Stop Recording
-                  </button>`
-                : nothing}
-            ${s.recordingState === 'recorded'
-                ? html` <button
-                          type="button"
-                          class="upup-rounded-lg upup-bg-gray-500 upup-px-4 upup-py-2.5 upup-text-sm upup-font-medium upup-text-white upup-transition-colors hover:upup-bg-gray-600"
-                          @click=${() => a.discardRecording()}
-                      >
-                          Discard
-                      </button>
-                      <button
+            ${
+                s.recordingState === 'idle'
+                    ? html`<button
                           type="button"
                           class=${cn(
-                              'upup-rounded-lg upup-bg-blue-600 upup-px-4 upup-py-2.5 upup-text-sm upup-font-medium upup-text-white upup-transition-colors hover:upup-bg-blue-700',
+                              'upup-rounded-lg upup-bg-blue-600 upup-px-6 upup-py-2.5 upup-text-sm upup-font-medium upup-text-white upup-transition-colors hover:upup-bg-blue-700',
                               {
                                   'upup-bg-[#59D1F9] hover:upup-bg-[#40b8e0] dark:upup-bg-[#59D1F9]':
                                       isDark,
                               },
                           )}
-                          @click=${() => a.addRecording()}
+                          @click=${() => void a.startRecording()}
                       >
-                          Add Recording
+                          Start Recording
                       </button>`
-                : nothing}
+                    : nothing
+            }
+            ${
+                s.recordingState === 'recording'
+                    ? html`<button
+                          type="button"
+                          class="upup-rounded-lg upup-bg-red-500 upup-px-6 upup-py-2.5 upup-text-sm upup-font-medium upup-text-white upup-transition-colors hover:upup-bg-red-600"
+                          @click=${() => a.stopRecording()}
+                      >
+                          Stop Recording
+                      </button>`
+                    : nothing
+            }
+            ${
+                s.recordingState === 'recorded'
+                    ? html` <button
+                              type="button"
+                              class="upup-rounded-lg upup-bg-gray-500 upup-px-4 upup-py-2.5 upup-text-sm upup-font-medium upup-text-white upup-transition-colors hover:upup-bg-gray-600"
+                              @click=${() => a.discardRecording()}
+                          >
+                              Discard
+                          </button>
+                          <button
+                              type="button"
+                              class=${cn(
+                                  'upup-rounded-lg upup-bg-blue-600 upup-px-4 upup-py-2.5 upup-text-sm upup-font-medium upup-text-white upup-transition-colors hover:upup-bg-blue-700',
+                                  {
+                                      'upup-bg-[#59D1F9] hover:upup-bg-[#40b8e0] dark:upup-bg-[#59D1F9]':
+                                          isDark,
+                                  },
+                              )}
+                              @click=${() => a.addRecording()}
+                          >
+                              Add Recording
+                          </button>`
+                    : nothing
+            }
         </div>
     </div>`
 

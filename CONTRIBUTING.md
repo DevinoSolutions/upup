@@ -14,7 +14,7 @@ We love your input! We want to make contributing to Upup as easy and transparent
    development line. (`master` is the pre-v2 single-package release; the package
    layout this project documents lives on `v2-clean`, which is intentionally
    unmerged.)
-2. Use the pinned Node version — this repo ships a `.nvmrc` (Node 20.18.2), so
+2. Use the pinned Node version — this repo ships a `.nvmrc` (Node 20.20.2), so
    run `nvm use` — then install with `pnpm install`. This is a pnpm workspace
    (corepack pins `pnpm@10.11.0`); other package managers will not resolve the
    `workspace:*` links.

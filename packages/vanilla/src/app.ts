@@ -49,68 +49,76 @@ export function App(ctx: UploaderContext) {
                     )}
                 >
                     ${uploaderPanel(ctx)}
-                    ${ctx.props.imageEditor.enabled
-                        ? imageEditorStub()
-                        : nothing}
-                    ${!ctx.props.mini && ctx.props.showBranding
-                        ? html`
-                              <div
-                                  data-testid="upup-branding"
-                                  class="upup-flex upup-w-full upup-flex-col upup-items-center upup-justify-between upup-gap-1 md:upup-flex-row"
-                              >
-                                  <a
-                                      href="https://useupup.com/"
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      class="upup-flex upup-items-center upup-gap-[5px]"
+                    ${
+                        ctx.props.imageEditor.enabled
+                            ? imageEditorStub()
+                            : nothing
+                    }
+                    ${
+                        !ctx.props.mini && ctx.props.showBranding
+                            ? html`
+                                  <div
+                                      data-testid="upup-branding"
+                                      class="upup-flex upup-w-full upup-flex-col upup-items-center upup-justify-between upup-gap-1 md:upup-flex-row"
                                   >
-                                      ${isDark
-                                          ? html`<img
-                                                src=${logoDark}
-                                                width="61"
-                                                height="13"
-                                                alt="logo-dark"
-                                            />`
-                                          : html`<img
-                                                src=${logoLight}
-                                                width="61"
-                                                height="13"
-                                                alt="logo-light"
-                                            />`}
-                                  </a>
-                                  <a
-                                      href="https://devino.ca/"
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      class="upup-flex upup-flex-row upup-items-center upup-justify-end upup-gap-1"
-                                  >
-                                      <span
-                                          class=${cn(
-                                              'upup-mr-0.5 upup-text-xs upup-leading-5 upup-text-[#6D6D6D] md:upup-text-sm',
-                                              {
-                                                  'upup-text-gray-300 dark:upup-text-gray-300':
-                                                      isDark,
-                                              },
-                                          )}
-                                          >${ctx.translations.builtBy}</span
+                                      <a
+                                          href="https://useupup.com/"
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          class="upup-flex upup-items-center upup-gap-[5px]"
                                       >
-                                      ${isDark
-                                          ? html`<img
-                                                src=${devinoDark}
-                                                width="61"
-                                                height="13"
-                                                alt="logo-dark"
-                                            />`
-                                          : html`<img
-                                                src=${devinoLight}
-                                                width="61"
-                                                height="13"
-                                                alt="logo-light"
-                                            />`}
-                                  </a>
-                              </div>
-                          `
-                        : nothing}
+                                          ${
+                                              isDark
+                                                  ? html`<img
+                                                        src=${logoDark}
+                                                        width="61"
+                                                        height="13"
+                                                        alt="logo-dark"
+                                                    />`
+                                                  : html`<img
+                                                        src=${logoLight}
+                                                        width="61"
+                                                        height="13"
+                                                        alt="logo-light"
+                                                    />`
+                                          }
+                                      </a>
+                                      <a
+                                          href="https://devino.ca/"
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          class="upup-flex upup-flex-row upup-items-center upup-justify-end upup-gap-1"
+                                      >
+                                          <span
+                                              class=${cn(
+                                                  'upup-mr-0.5 upup-text-xs upup-leading-5 upup-text-[#6D6D6D] md:upup-text-sm',
+                                                  {
+                                                      'upup-text-gray-300 dark:upup-text-gray-300':
+                                                          isDark,
+                                                  },
+                                              )}
+                                              >${ctx.translations.builtBy}</span
+                                          >
+                                          ${
+                                              isDark
+                                                  ? html`<img
+                                                        src=${devinoDark}
+                                                        width="61"
+                                                        height="13"
+                                                        alt="logo-dark"
+                                                    />`
+                                                  : html`<img
+                                                        src=${devinoLight}
+                                                        width="61"
+                                                        height="13"
+                                                        alt="logo-light"
+                                                    />`
+                                          }
+                                      </a>
+                                  </div>
+                              `
+                            : nothing
+                    }
                 </section>
             </div>
             <input

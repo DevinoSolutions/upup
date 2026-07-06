@@ -42,10 +42,7 @@ function makeStoreMock() {
  */
 function setupService<
     T extends
-        | GoogleDriveService
-        | OneDriveService
-        | DropboxService
-        | BoxService,
+        GoogleDriveService | OneDriveService | DropboxService | BoxService,
 >(
     ServiceCls: new (...args: any[]) => T,
     store: UpupStore,

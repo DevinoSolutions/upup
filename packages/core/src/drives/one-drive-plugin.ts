@@ -25,8 +25,7 @@ function mapGraphItem(item: Record<string, unknown>): DriveFile {
         : ((file?.mimeType as string) ?? guessMimeType(item.name as string))
 
     const thumbnails = item.thumbnails as
-        | Array<Record<string, unknown>>
-        | undefined
+        Array<Record<string, unknown>> | undefined
     let thumbnail: string | undefined
     if (thumbnails && thumbnails.length > 0) {
         const thumbSet = thumbnails[0]

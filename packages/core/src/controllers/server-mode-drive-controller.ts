@@ -210,8 +210,7 @@ export class ServerModeDriveController implements ObservableController<ServerDri
         }
         const onMessage = (ev: MessageEvent) => {
             const data = ev.data as
-                | { type?: string; provider?: string }
-                | undefined
+                { type?: string; provider?: string } | undefined
             if (
                 data?.type === 'upup:oauth-success' &&
                 data.provider === this.deps.provider

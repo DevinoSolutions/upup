@@ -56,23 +56,27 @@ export function uploaderPanel(ctx: UploaderContext) {
                 },
             )}
         >
-            ${!isOnline
-                ? html`
-                      <div
-                          class=${cn(
-                              'upup-absolute upup-inset-x-0 upup-top-0 upup-z-20 upup-px-3 upup-py-1.5 upup-text-center upup-text-xs upup-font-medium upup-text-white upup-bg-yellow-500',
-                              { 'upup-bg-yellow-600': isDark },
-                          )}
-                      >
-                          No internet connection — uploads will resume when you
-                          reconnect.
-                      </div>
-                  `
-                : nothing}
+            ${
+                !isOnline
+                    ? html`
+                          <div
+                              class=${cn(
+                                  'upup-absolute upup-inset-x-0 upup-top-0 upup-z-20 upup-px-3 upup-py-1.5 upup-text-center upup-text-xs upup-font-medium upup-text-white upup-bg-yellow-500',
+                                  { 'upup-bg-yellow-600': isDark },
+                              )}
+                          >
+                              No internet connection — uploads will resume when
+                              you reconnect.
+                          </div>
+                      `
+                    : nothing
+            }
             ${activeSource ? sourceView(ctx) : nothing}
-            ${!activeSource && (isAddingMore || !filesSize)
-                ? sourceSelector(ctx)
-                : nothing}
+            ${
+                !activeSource && (isAddingMore || !filesSize)
+                    ? sourceSelector(ctx)
+                    : nothing
+            }
             ${fileList(ctx)}
         </div>
     `

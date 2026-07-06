@@ -184,211 +184,224 @@ export function sourceSelector(ctx: UploaderContext) {
                 },
             )}
         >
-            ${isAddingMore
-                ? html`
-                      <div
-                          class=${cn(
-                              'upup-shadow-bottom upup-flex upup-w-full upup-items-center upup-rounded-t-lg upup-bg-black/[0.025] upup-px-3 upup-py-2',
-                              {
-                                  'upup-bg-white/5 dark:upup-bg-white/5':
-                                      isDark,
-                              },
-                              slot.containerHeader,
-                          )}
-                      >
-                          <button
-                              class=${cn(
-                                  'upup-flex upup-items-center upup-gap-1 upup-text-sm upup-font-medium upup-text-blue-600',
-                                  {
-                                      'upup-text-[#30C5F7] dark:upup-text-[#30C5F7]':
-                                          isDark,
-                                  },
-                                  slot.containerCancelButton,
-                              )}
-                              @click=${() => ctx.setIsAddingMore(false)}
-                          >
-                              <svg
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  width="16"
-                                  height="16"
-                                  viewBox="0 0 24 24"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  stroke-width="2"
-                                  stroke-linecap="round"
-                                  stroke-linejoin="round"
-                              >
-                                  <polyline points="15 18 9 12 15 6" />
-                              </svg>
-                              Back
-                          </button>
-                          <span
-                              class=${cn(
-                                  'upup-flex-1 upup-text-center upup-text-sm upup-text-[#6D6D6D]',
-                                  {
-                                      'upup-text-gray-300 dark:upup-text-gray-300':
-                                          isDark,
-                                  },
-                              )}
-                          >
-                              Adding more files
-                          </span>
-                      </div>
-                  `
-                : nothing}
-            ${!mini
-                ? html`
-                      <div
-                          class=${cn(
-                              'upup-flex upup-w-full upup-flex-col upup-justify-center upup-gap-1 md:upup-flex-row md:upup-flex-wrap md:upup-items-center md:upup-gap-[30px] md:upup-px-[30px]',
-                              slot.sourceButtonList,
-                          )}
-                      >
-                          ${repeat(
-                              chosenSources,
-                              s => s.id,
-                              ({ Icon, id, name }) => html`
-                                  <button
-                                      type="button"
-                                      data-testid=${`upup-source-${id}`}
-                                      class=${cn(
-                                          'upup-group upup-flex upup-items-center upup-gap-[6px] upup-border-b upup-border-gray-200 upup-px-2 upup-py-1 md:upup-flex-col md:upup-justify-center md:upup-rounded-lg md:upup-border-none md:upup-p-0',
-                                          {
-                                              'upup-border-[#6D6D6D] dark:upup-border-[#6D6D6D]':
-                                                  isDark,
-                                          },
-                                          slot.sourceButton,
-                                      )}
-                                      @keydown=${onSourceKeydown}
-                                      @click=${() => handleSourceClick(id)}
-                                  >
-                                      ${Icon({ class: slot.sourceButtonIcon })}
-                                      <span
-                                          class=${cn(
-                                              'upup-text-xs upup-text-[#242634]',
-                                              {
-                                                  'upup-text-gray-300 dark:upup-text-gray-300':
-                                                      isDark,
-                                              },
-                                              slot.sourceButtonText,
-                                          )}
-                                      >
-                                          ${name}
-                                      </span>
-                                  </button>
-                              `,
-                          )}
-                      </div>
-                  `
-                : nothing}
-            ${mini
-                ? html`
-                      <button
-                          type="button"
-                          @click=${handleBrowseFilesClick}
-                          class="upup-flex upup-cursor-pointer upup-flex-col upup-items-center upup-justify-center upup-gap-2 upup-rounded-lg upup-p-2"
-                      >
-                          ${icon('upload', {
-                              size: 32,
-                              class: cn(
-                                  'upup-h-16 upup-w-16 md:upup-h-20 md:upup-w-20',
-                                  {
-                                      'upup-text-[#0B0B0B]': !isDark,
-                                      'upup-text-white dark:upup-text-white':
-                                          isDark,
-                                  },
-                              ),
-                          })}
-                          <p
-                              class=${cn('px-6 upup-text-center upup-text-xs', {
-                                  'upup-text-[#6D6D6D] dark:upup-text-gray-400':
-                                      !isDark,
-                                  'upup-text-gray-400 dark:upup-text-gray-500':
-                                      isDark,
-                              })}
-                          >
-                              Drag or browse to upload
-                          </p>
-                      </button>
-                  `
-                : html`
-                      <div
-                          class="upup-flex upup-flex-col upup-items-center upup-gap-1 upup-px-3 upup-text-center md:upup-gap-2 md:upup-px-[30px]"
-                      >
+            ${
+                isAddingMore
+                    ? html`
                           <div
-                              class="upup-flex upup-flex-wrap upup-items-center upup-justify-center upup-gap-1"
+                              class=${cn(
+                                  'upup-shadow-bottom upup-flex upup-w-full upup-items-center upup-rounded-t-lg upup-bg-black/[0.025] upup-px-3 upup-py-2',
+                                  {
+                                      'upup-bg-white/5 dark:upup-bg-white/5':
+                                          isDark,
+                                  },
+                                  slot.containerHeader,
+                              )}
                           >
+                              <button
+                                  class=${cn(
+                                      'upup-flex upup-items-center upup-gap-1 upup-text-sm upup-font-medium upup-text-blue-600',
+                                      {
+                                          'upup-text-[#30C5F7] dark:upup-text-[#30C5F7]':
+                                              isDark,
+                                      },
+                                      slot.containerCancelButton,
+                                  )}
+                                  @click=${() => ctx.setIsAddingMore(false)}
+                              >
+                                  <svg
+                                      xmlns="http://www.w3.org/2000/svg"
+                                      width="16"
+                                      height="16"
+                                      viewBox="0 0 24 24"
+                                      fill="none"
+                                      stroke="currentColor"
+                                      stroke-width="2"
+                                      stroke-linecap="round"
+                                      stroke-linejoin="round"
+                                  >
+                                      <polyline points="15 18 9 12 15 6" />
+                                  </svg>
+                                  Back
+                              </button>
                               <span
                                   class=${cn(
-                                      'upup-text-xs upup-text-[#0B0B0B] md:upup-text-sm',
+                                      'upup-flex-1 upup-text-center upup-text-sm upup-text-[#6D6D6D]',
                                       {
+                                          'upup-text-gray-300 dark:upup-text-gray-300':
+                                              isDark,
+                                      },
+                                  )}
+                              >
+                                  Adding more files
+                              </span>
+                          </div>
+                      `
+                    : nothing
+            }
+            ${
+                !mini
+                    ? html`
+                          <div
+                              class=${cn(
+                                  'upup-flex upup-w-full upup-flex-col upup-justify-center upup-gap-1 md:upup-flex-row md:upup-flex-wrap md:upup-items-center md:upup-gap-[30px] md:upup-px-[30px]',
+                                  slot.sourceButtonList,
+                              )}
+                          >
+                              ${repeat(
+                                  chosenSources,
+                                  s => s.id,
+                                  ({ Icon, id, name }) => html`
+                                      <button
+                                          type="button"
+                                          data-testid=${`upup-source-${id}`}
+                                          class=${cn(
+                                              'upup-group upup-flex upup-items-center upup-gap-[6px] upup-border-b upup-border-gray-200 upup-px-2 upup-py-1 md:upup-flex-col md:upup-justify-center md:upup-rounded-lg md:upup-border-none md:upup-p-0',
+                                              {
+                                                  'upup-border-[#6D6D6D] dark:upup-border-[#6D6D6D]':
+                                                      isDark,
+                                              },
+                                              slot.sourceButton,
+                                          )}
+                                          @keydown=${onSourceKeydown}
+                                          @click=${() => handleSourceClick(id)}
+                                      >
+                                          ${Icon({ class: slot.sourceButtonIcon })}
+                                          <span
+                                              class=${cn(
+                                                  'upup-text-xs upup-text-[#242634]',
+                                                  {
+                                                      'upup-text-gray-300 dark:upup-text-gray-300':
+                                                          isDark,
+                                                  },
+                                                  slot.sourceButtonText,
+                                              )}
+                                          >
+                                              ${name}
+                                          </span>
+                                      </button>
+                                  `,
+                              )}
+                          </div>
+                      `
+                    : nothing
+            }
+            ${
+                mini
+                    ? html`
+                          <button
+                              type="button"
+                              @click=${handleBrowseFilesClick}
+                              class="upup-flex upup-cursor-pointer upup-flex-col upup-items-center upup-justify-center upup-gap-2 upup-rounded-lg upup-p-2"
+                          >
+                              ${icon('upload', {
+                                  size: 32,
+                                  class: cn(
+                                      'upup-h-16 upup-w-16 md:upup-h-20 md:upup-w-20',
+                                      {
+                                          'upup-text-[#0B0B0B]': !isDark,
                                           'upup-text-white dark:upup-text-white':
                                               isDark,
                                       },
-                                  )}
-                              >
-                                  ${limit > 1 ? tr.dragFilesOr : tr.dragFileOr}
-                              </span>
-                              <button
-                                  type="button"
-                                  data-testid="upup-browse-files"
+                                  ),
+                              })}
+                              <p
                                   class=${cn(
-                                      'upup-cursor-pointer upup-text-xs upup-font-semibold upup-text-[#0E2ADD] md:upup-text-sm',
+                                      'px-6 upup-text-center upup-text-xs',
                                       {
-                                          'upup-text-[#59D1F9] dark:upup-text-[#59D1F9]':
+                                          'upup-text-[#6D6D6D] dark:upup-text-gray-400':
+                                              !isDark,
+                                          'upup-text-gray-400 dark:upup-text-gray-500':
                                               isDark,
                                       },
                                   )}
-                                  @click=${handleBrowseFilesClick}
                               >
-                                  ${tr.browseFiles}
-                              </button>
-                              ${folderPickerButtonVisible
-                                  ? html`
-                                        <span
-                                            class=${cn(
-                                                'upup-text-xs upup-text-[#0B0B0B] md:upup-text-sm',
-                                                {
-                                                    'upup-text-white dark:upup-text-white':
-                                                        isDark,
-                                                },
-                                            )}
-                                        >
-                                            ${' '}${tr.or}
-                                        </span>
-                                        <button
-                                            type="button"
-                                            class=${cn(
-                                                'upup-cursor-pointer upup-text-xs upup-font-semibold upup-text-[#0E2ADD] md:upup-text-sm',
-                                                {
-                                                    'upup-text-[#59D1F9] dark:upup-text-[#59D1F9]':
-                                                        isDark,
-                                                },
-                                            )}
-                                            @click=${handleSelectFolderClick}
-                                        >
-                                            ${tr.selectAFolder}
-                                        </button>
-                                    `
-                                  : nothing}
+                                  Drag or browse to upload
+                              </p>
+                          </button>
+                      `
+                    : html`
+                          <div
+                              class="upup-flex upup-flex-col upup-items-center upup-gap-1 upup-px-3 upup-text-center md:upup-gap-2 md:upup-px-[30px]"
+                          >
+                              <div
+                                  class="upup-flex upup-flex-wrap upup-items-center upup-justify-center upup-gap-1"
+                              >
+                                  <span
+                                      class=${cn(
+                                          'upup-text-xs upup-text-[#0B0B0B] md:upup-text-sm',
+                                          {
+                                              'upup-text-white dark:upup-text-white':
+                                                  isDark,
+                                          },
+                                      )}
+                                  >
+                                      ${limit > 1 ? tr.dragFilesOr : tr.dragFileOr}
+                                  </span>
+                                  <button
+                                      type="button"
+                                      data-testid="upup-browse-files"
+                                      class=${cn(
+                                          'upup-cursor-pointer upup-text-xs upup-font-semibold upup-text-[#0E2ADD] md:upup-text-sm',
+                                          {
+                                              'upup-text-[#59D1F9] dark:upup-text-[#59D1F9]':
+                                                  isDark,
+                                          },
+                                      )}
+                                      @click=${handleBrowseFilesClick}
+                                  >
+                                      ${tr.browseFiles}
+                                  </button>
+                                  ${
+                                      folderPickerButtonVisible
+                                          ? html`
+                                                <span
+                                                    class=${cn(
+                                                        'upup-text-xs upup-text-[#0B0B0B] md:upup-text-sm',
+                                                        {
+                                                            'upup-text-white dark:upup-text-white':
+                                                                isDark,
+                                                        },
+                                                    )}
+                                                >
+                                                    ${' '}${tr.or}
+                                                </span>
+                                                <button
+                                                    type="button"
+                                                    class=${cn(
+                                                        'upup-cursor-pointer upup-text-xs upup-font-semibold upup-text-[#0E2ADD] md:upup-text-sm',
+                                                        {
+                                                            'upup-text-[#59D1F9] dark:upup-text-[#59D1F9]':
+                                                                isDark,
+                                                        },
+                                                    )}
+                                                    @click=${handleSelectFolderClick}
+                                                >
+                                                    ${tr.selectAFolder}
+                                                </button>
+                                            `
+                                          : nothing
+                                  }
+                              </div>
+                              ${
+                                  constraintLine
+                                      ? html`
+                                            <p
+                                                class=${cn(
+                                                    'upup-text-center upup-text-xs upup-text-[#6D6D6D] md:upup-text-sm',
+                                                    {
+                                                        'upup-text-gray-300 dark:upup-text-gray-300':
+                                                            isDark,
+                                                    },
+                                                )}
+                                            >
+                                                ${constraintLine}
+                                            </p>
+                                        `
+                                      : nothing
+                              }
                           </div>
-                          ${constraintLine
-                              ? html`
-                                    <p
-                                        class=${cn(
-                                            'upup-text-center upup-text-xs upup-text-[#6D6D6D] md:upup-text-sm',
-                                            {
-                                                'upup-text-gray-300 dark:upup-text-gray-300':
-                                                    isDark,
-                                            },
-                                        )}
-                                    >
-                                        ${constraintLine}
-                                    </p>
-                                `
-                              : nothing}
-                      </div>
-                  `}
+                      `
+            }
         </div>
     `
 }

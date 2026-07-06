@@ -10,12 +10,7 @@ export type ImageEditorOptions = {
         fileName?: (original: File) => string
     }
     tabs?: (
-        | 'Adjust'
-        | 'Annotate'
-        | 'Filters'
-        | 'Finetune'
-        | 'Resize'
-        | 'Watermark'
+        'Adjust' | 'Annotate' | 'Filters' | 'Finetune' | 'Resize' | 'Watermark'
     )[]
     tools?: (
         | 'Crop'

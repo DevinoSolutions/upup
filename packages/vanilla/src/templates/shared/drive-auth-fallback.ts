@@ -21,16 +21,18 @@ export function driveAuthFallback(
     const inner = html` <div
         class="upup-flex upup-h-full upup-w-full upup-flex-col upup-items-center upup-justify-center upup-gap-4 upup-p-6 upup-text-center"
     >
-        ${opts.error
-            ? html` <p
-                  data-testid="upup-drive-error"
-                  data-upup-slot="drive-error"
-                  role="alert"
-                  class="upup-p-4 upup-text-sm upup-text-red-600 dark:upup-text-red-400"
-              >
-                  ${t(tr.driveLoadError, { message: opts.error.message })}
-              </p>`
-            : nothing}
+        ${
+            opts.error
+                ? html` <p
+                      data-testid="upup-drive-error"
+                      data-upup-slot="drive-error"
+                      role="alert"
+                      class="upup-p-4 upup-text-sm upup-text-red-600 dark:upup-text-red-400"
+                  >
+                      ${t(tr.driveLoadError, { message: opts.error.message })}
+                  </p>`
+                : nothing
+        }
         <p
             class=${cn('upup-text-sm upup-text-[#333]', {
                 'upup-text-[#FAFAFA] dark:upup-text-[#FAFAFA]': isDark,

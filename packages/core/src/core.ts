@@ -56,8 +56,7 @@ export class UpupCore {
     private destroyed = false
     private activeRun: Promise<UploadFile[]> | null = null
     private workerProvider:
-        | import('./worker/create-worker-provider').WorkerProvider
-        | null = null
+        import('./worker/create-worker-provider').WorkerProvider | null = null
     options: CoreOptions
 
     constructor(options: CoreOptions) {

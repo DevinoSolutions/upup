@@ -149,8 +149,7 @@ export class GoogleDrivePlugin implements DrivePlugin {
 
             // Fetch user profile
             let user:
-                | { name: string; email: string; picture?: string }
-                | undefined
+                { name: string; email: string; picture?: string } | undefined
             try {
                 user = await this.getUserInfo()
             } catch {

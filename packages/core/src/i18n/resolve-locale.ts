@@ -71,8 +71,7 @@ export function resolveMessage(
         const bundle = bundles.get(code)
         if (!bundle) continue
         const nsObj = bundle.messages[ns] as unknown as
-            | Record<string, string>
-            | undefined
+            Record<string, string> | undefined
         if (nsObj && key in nsObj) {
             return nsObj[key]
         }

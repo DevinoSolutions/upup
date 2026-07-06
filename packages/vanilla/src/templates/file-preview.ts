@@ -83,54 +83,58 @@ export function filePreview(
             )}
             style=${isImage ? `background-image: url(${fileUrl})` : ''}
         >
-            ${!isImage
-                ? html`
-                      <div
-                          class="upup-flex upup-h-full upup-items-center upup-justify-center upup-p-6"
-                      >
-                          ${filePreviewThumbnail(
-                              ctx,
-                              {
-                                  canPreview: state.canPreview,
-                                  fileType,
-                                  fileName,
-                                  fileUrl,
-                                  fileSize,
-                                  allowPreview,
-                              },
-                              onCanPreview,
+            ${
+                !isImage
+                    ? html`
+                          <div
+                              class="upup-flex upup-h-full upup-items-center upup-justify-center upup-p-6"
+                          >
+                              ${filePreviewThumbnail(
+                                  ctx,
+                                  {
+                                      canPreview: state.canPreview,
+                                      fileType,
+                                      fileName,
+                                      fileUrl,
+                                      fileSize,
+                                      allowPreview,
+                                  },
+                                  onCanPreview,
+                              )}
+                          </div>
+                      `
+                    : nothing
+            }
+            ${
+                isImage && imageEditor.enabled
+                    ? html` <button
+                          class=${cn(
+                              'upup-absolute upup-right-1.5 upup-top-8 upup-z-10',
+                              'upup-flex upup-h-5 upup-w-5 upup-items-center upup-justify-center',
+                              'upup-rounded-full upup-bg-white upup-text-blue-600 upup-shadow-sm',
+                              'hover:upup-bg-white hover:upup-text-blue-700',
+                              'upup-ring-1 upup-ring-black/5',
+                              'disabled:upup-cursor-not-allowed disabled:upup-opacity-50',
                           )}
-                      </div>
-                  `
-                : nothing}
-            ${isImage && imageEditor.enabled
-                ? html` <button
-                      class=${cn(
-                          'upup-absolute upup-right-1.5 upup-top-8 upup-z-10',
-                          'upup-flex upup-h-5 upup-w-5 upup-items-center upup-justify-center',
-                          'upup-rounded-full upup-bg-white upup-text-blue-600 upup-shadow-sm',
-                          'hover:upup-bg-white hover:upup-text-blue-700',
-                          'upup-ring-1 upup-ring-black/5',
-                          'disabled:upup-cursor-not-allowed disabled:upup-opacity-50',
-                      )}
-                      @click=${onHandleEditImage}
-                      type="button"
-                      ?disabled=${!!progress || isProcessing}
-                      aria-label=${tr.editImage}
-                  >
-                      <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          viewBox="0 0 20 20"
-                          fill="currentColor"
-                          class="upup-h-3 upup-w-3"
-                          aria-hidden="true"
+                          @click=${onHandleEditImage}
+                          type="button"
+                          ?disabled=${!!progress || isProcessing}
+                          aria-label=${tr.editImage}
                       >
-                          <path
-                              d="M2.695 14.763l-1.262 3.154a.5.5 0 00.65.65l3.155-1.262a4 4 0 001.343-.885L17.5 5.5a2.121 2.121 0 00-3-3L3.58 13.42a4 4 0 00-.885 1.343z"
-                          />
-                      </svg>
-                  </button>`
-                : nothing}
+                          <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              viewBox="0 0 20 20"
+                              fill="currentColor"
+                              class="upup-h-3 upup-w-3"
+                              aria-hidden="true"
+                          >
+                              <path
+                                  d="M2.695 14.763l-1.262 3.154a.5.5 0 00.65.65l3.155-1.262a4 4 0 001.343-.885L17.5 5.5a2.121 2.121 0 00-3-3L3.58 13.42a4 4 0 00-.885 1.343z"
+                              />
+                          </svg>
+                      </button>`
+                    : nothing
+            }
 
             <button
                 class=${cn(
@@ -178,22 +182,24 @@ export function filePreview(
             >
                 ${formatFileSize(fileSize, tr)}
             </div>
-            ${allowPreview && state.canPreview
-                ? html` <button
-                      type="button"
-                      class=${cn(
-                          'upup-mt-1 upup-text-[11px] upup-font-normal upup-leading-tight upup-text-[#2563eb] upup-transition-all hover:upup-text-blue-700 hover:upup-underline',
-                          {
-                              'upup-text-[#4A9EFF] hover:upup-text-blue-300':
-                                  isDark,
-                          },
-                          themeSlots?.filePreview?.previewButton,
-                      )}
-                      @click=${() => opts.onRequestPreview()}
-                  >
-                      ${tr.clickToPreview}
-                  </button>`
-                : nothing}
+            ${
+                allowPreview && state.canPreview
+                    ? html` <button
+                          type="button"
+                          class=${cn(
+                              'upup-mt-1 upup-text-[11px] upup-font-normal upup-leading-tight upup-text-[#2563eb] upup-transition-all hover:upup-text-blue-700 hover:upup-underline',
+                              {
+                                  'upup-text-[#4A9EFF] hover:upup-text-blue-300':
+                                      isDark,
+                              },
+                              themeSlots?.filePreview?.previewButton,
+                          )}
+                          @click=${() => opts.onRequestPreview()}
+                      >
+                          ${tr.clickToPreview}
+                      </button>`
+                    : nothing
+            }
         </div>
     </div>`
 }

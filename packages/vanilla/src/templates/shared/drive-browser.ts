@@ -119,138 +119,159 @@ export function driveBrowser(ctx: UploaderContext, props: DriveBrowserProps) {
                 ctx.invalidate()
             },
         })}
-        ${path.length > 0
-            ? html` <div
-                  class=${cn(
-                      'upup-h-full upup-overflow-y-scroll upup-bg-black/[0.075] upup-pt-2',
-                      {
-                          'upup-bg-white/10 upup-text-[#fafafa] dark:upup-bg-white/10 dark:upup-text-[#fafafa]':
-                              isDark,
-                      },
-                      slot.driveBody,
-                  )}
-              >
-                  ${error
-                      ? html` <p
-                            data-testid="upup-drive-error"
-                            data-upup-slot="drive-error"
-                            role="alert"
-                            class="upup-p-4 upup-text-sm upup-text-red-600 dark:upup-text-red-400"
-                        >
-                            ${t(tr.driveLoadError, { message: error.message })}
-                        </p>`
-                      : nothing}
-                  ${displayedItems.length > 0
-                      ? html` <ul class="upup-p-2">
-                            ${repeat(
-                                displayedItems,
-                                file => (file as DriveFile).id,
-                                file =>
-                                    driveBrowserItem(ctx, {
-                                        item: file as DriveFile,
-                                        isSelected: selectedFiles.some(
-                                            f =>
-                                                f.id === (file as DriveFile).id,
-                                        ),
-                                        isClickLoading:
-                                            isClickLoading || showLoader,
-                                        onClick: () => {
-                                            if (!isClickLoading && !showLoader)
-                                                handleClick(file as DriveFile)
+        ${
+            path.length > 0
+                ? html` <div
+                      class=${cn(
+                          'upup-h-full upup-overflow-y-scroll upup-bg-black/[0.075] upup-pt-2',
+                          {
+                              'upup-bg-white/10 upup-text-[#fafafa] dark:upup-bg-white/10 dark:upup-text-[#fafafa]':
+                                  isDark,
+                          },
+                          slot.driveBody,
+                      )}
+                  >
+                      ${
+                          error
+                              ? html` <p
+                                    data-testid="upup-drive-error"
+                                    data-upup-slot="drive-error"
+                                    role="alert"
+                                    class="upup-p-4 upup-text-sm upup-text-red-600 dark:upup-text-red-400"
+                                >
+                                    ${t(tr.driveLoadError, { message: error.message })}
+                                </p>`
+                              : nothing
+                      }
+                      ${
+                          displayedItems.length > 0
+                              ? html` <ul class="upup-p-2">
+                                    ${repeat(
+                                        displayedItems,
+                                        file => (file as DriveFile).id,
+                                        file =>
+                                            driveBrowserItem(ctx, {
+                                                item: file as DriveFile,
+                                                isSelected: selectedFiles.some(
+                                                    f =>
+                                                        f.id ===
+                                                        (file as DriveFile).id,
+                                                ),
+                                                isClickLoading:
+                                                    isClickLoading ||
+                                                    showLoader,
+                                                onClick: () => {
+                                                    if (
+                                                        !isClickLoading &&
+                                                        !showLoader
+                                                    )
+                                                        handleClick(
+                                                            file as DriveFile,
+                                                        )
+                                                },
+                                            }),
+                                    )}
+                                </ul>`
+                              : nothing
+                      }
+                      ${
+                          displayedItems.length === 0 && !error
+                              ? html` <div
+                                    class="upup-flex upup-h-full upup-flex-col upup-items-center upup-justify-center"
+                                >
+                                    <p class="upup-text-xs upup-opacity-70">
+                                        ${tr.noAcceptedFilesFound}
+                                    </p>
+                                </div>`
+                              : nothing
+                      }
+                      ${
+                          hasMore
+                              ? html` <button
+                                    data-testid="upup-drive-load-more"
+                                    data-upup-slot="drive-load-more"
+                                    class="upup-mx-auto upup-my-2 upup-block upup-rounded-md upup-px-3 upup-py-1.5 upup-text-sm upup-text-blue-600 disabled:upup-opacity-50"
+                                    ?disabled=${isLoadingMore}
+                                    @click=${() => {
+                                        loadMore?.()
+                                    }}
+                                >
+                                    ${isLoadingMore ? tr.loading : tr.loadMore}
+                                </button>`
+                              : nothing
+                      }
+                  </div>`
+                : nothing
+        }
+        ${
+            selectedFiles.length > 0 || !!onSelectCurrentFolder
+                ? html` <div
+                      class=${cn(
+                          'upup-flex upup-origin-bottom upup-items-center upup-justify-start upup-gap-4 upup-bg-black/[0.025] upup-px-3 upup-py-2',
+                          {
+                              'upup-bg-white/5 upup-text-[#fafafa] dark:upup-bg-white/5 dark:upup-text-[#fafafa]':
+                                  isDark,
+                          },
+                          slot.driveFooter,
+                      )}
+                  >
+                      ${
+                          onSelectCurrentFolder
+                              ? html` <button
+                                    class=${cn(
+                                        'upup-rounded-md upup-bg-transparent upup-px-3 upup-py-2 upup-text-sm upup-font-medium upup-text-blue-600 upup-transition-all upup-duration-300',
+                                        {
+                                            'upup-text-[#30C5F7] dark:upup-text-[#30C5F7]':
+                                                isDark,
                                         },
-                                    }),
-                            )}
-                        </ul>`
-                      : nothing}
-                  ${displayedItems.length === 0 && !error
-                      ? html` <div
-                            class="upup-flex upup-h-full upup-flex-col upup-items-center upup-justify-center"
-                        >
-                            <p class="upup-text-xs upup-opacity-70">
-                                ${tr.noAcceptedFilesFound}
-                            </p>
-                        </div>`
-                      : nothing}
-                  ${hasMore
-                      ? html` <button
-                            data-testid="upup-drive-load-more"
-                            data-upup-slot="drive-load-more"
-                            class="upup-mx-auto upup-my-2 upup-block upup-rounded-md upup-px-3 upup-py-1.5 upup-text-sm upup-text-blue-600 disabled:upup-opacity-50"
-                            ?disabled=${isLoadingMore}
-                            @click=${() => {
-                                loadMore?.()
-                            }}
-                        >
-                            ${isLoadingMore ? tr.loading : tr.loadMore}
-                        </button>`
-                      : nothing}
-              </div>`
-            : nothing}
-        ${selectedFiles.length > 0 || !!onSelectCurrentFolder
-            ? html` <div
-                  class=${cn(
-                      'upup-flex upup-origin-bottom upup-items-center upup-justify-start upup-gap-4 upup-bg-black/[0.025] upup-px-3 upup-py-2',
-                      {
-                          'upup-bg-white/5 upup-text-[#fafafa] dark:upup-bg-white/5 dark:upup-text-[#fafafa]':
-                              isDark,
-                      },
-                      slot.driveFooter,
-                  )}
-              >
-                  ${onSelectCurrentFolder
-                      ? html` <button
-                            class=${cn(
-                                'upup-rounded-md upup-bg-transparent upup-px-3 upup-py-2 upup-text-sm upup-font-medium upup-text-blue-600 upup-transition-all upup-duration-300',
-                                {
-                                    'upup-text-[#30C5F7] dark:upup-text-[#30C5F7]':
-                                        isDark,
-                                },
-                            )}
-                            ?disabled=${showLoader}
-                            @click=${() => {
-                                onSelectCurrentFolder()
-                            }}
-                        >
-                            ${tr.selectThisFolder}
-                        </button>`
-                      : nothing}
-                  <button
-                      class=${cn(
-                          'upup-rounded-md upup-bg-blue-600 upup-px-3 upup-py-2 upup-text-sm upup-font-medium upup-text-white upup-transition-all upup-duration-300',
-                          {
-                              'upup-animate-pulse': showLoader,
-                              'upup-bg-[#30C5F7] dark:upup-bg-[#30C5F7]':
-                                  isDark,
-                          },
-                          slot.driveAddFilesButton,
-                      )}
-                      ?disabled=${showLoader}
-                      @click=${() => {
-                          handleSubmit()
-                      }}
-                  >
-                      ${t(plural(tr, 'addFiles', selectedFiles.length), {
-                          count: selectedFiles.length,
-                      })}
-                  </button>
-                  <button
-                      class=${cn(
-                          'upup-ml-auto upup-rounded-md upup-p-1 upup-text-sm upup-text-blue-600 upup-transition-all upup-duration-300',
-                          {
-                              'upup-text-[#30C5F7] dark:upup-text-[#30C5F7]':
-                                  isDark,
-                          },
-                          slot.driveCancelFilesButton,
-                      )}
-                      ?disabled=${showLoader}
-                      @click=${() => {
-                          handleCancelDownload()
-                      }}
-                  >
-                      ${tr.cancel}
-                  </button>
-              </div>`
-            : nothing}
+                                    )}
+                                    ?disabled=${showLoader}
+                                    @click=${() => {
+                                        onSelectCurrentFolder()
+                                    }}
+                                >
+                                    ${tr.selectThisFolder}
+                                </button>`
+                              : nothing
+                      }
+                      <button
+                          class=${cn(
+                              'upup-rounded-md upup-bg-blue-600 upup-px-3 upup-py-2 upup-text-sm upup-font-medium upup-text-white upup-transition-all upup-duration-300',
+                              {
+                                  'upup-animate-pulse': showLoader,
+                                  'upup-bg-[#30C5F7] dark:upup-bg-[#30C5F7]':
+                                      isDark,
+                              },
+                              slot.driveAddFilesButton,
+                          )}
+                          ?disabled=${showLoader}
+                          @click=${() => {
+                              handleSubmit()
+                          }}
+                      >
+                          ${t(plural(tr, 'addFiles', selectedFiles.length), {
+                              count: selectedFiles.length,
+                          })}
+                      </button>
+                      <button
+                          class=${cn(
+                              'upup-ml-auto upup-rounded-md upup-p-1 upup-text-sm upup-text-blue-600 upup-transition-all upup-duration-300',
+                              {
+                                  'upup-text-[#30C5F7] dark:upup-text-[#30C5F7]':
+                                      isDark,
+                              },
+                              slot.driveCancelFilesButton,
+                          )}
+                          ?disabled=${showLoader}
+                          @click=${() => {
+                              handleCancelDownload()
+                          }}
+                      >
+                          ${tr.cancel}
+                      </button>
+                  </div>`
+                : nothing
+        }
     </div>`
 
     return sourceViewContainer(ctx, { isLoading, dataUpupSlot }, inner)

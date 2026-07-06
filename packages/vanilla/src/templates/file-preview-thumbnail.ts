@@ -41,46 +41,50 @@ export function filePreviewThumbnail(
         </div>`
     }
 
-    return html` ${!canPreview
-        ? html`
-              <object
-                  data=${fileUrl}
-                  width="0%"
-                  height="0%"
-                  name=${fileName}
-                  title=${fileName}
-                  type=${fileType}
-                  @load=${() => onCanPreview()}
-              >
-                  <p>${ctx.translations.loading}</p>
-              </object>
-              ${fileIcon(ctx, extension ?? '')}
-          `
-        : nothing}
-    ${canPreview
-        ? html`
-              ${fileIcon(
-                  ctx,
-                  extension ?? '',
-                  cn({ 'md:upup-hidden': allowPreview }, slot.fileIcon),
-              )}
-              <div
-                  class=${cn(
-                      `upup-relative upup-hidden upup-h-full upup-w-full ${allowPreview ? 'md:upup-block' : ''}`,
-                  )}
-              >
+    return html` ${
+        !canPreview
+            ? html`
                   <object
                       data=${fileUrl}
-                      width="100%"
-                      height="100%"
+                      width="0%"
+                      height="0%"
                       name=${fileName}
                       title=${fileName}
                       type=${fileType}
-                      class="upup-absolute upup-h-full upup-w-full"
+                      @load=${() => onCanPreview()}
                   >
                       <p>${ctx.translations.loading}</p>
                   </object>
-              </div>
-          `
-        : nothing}`
+                  ${fileIcon(ctx, extension ?? '')}
+              `
+            : nothing
+    }
+    ${
+        canPreview
+            ? html`
+                  ${fileIcon(
+                      ctx,
+                      extension ?? '',
+                      cn({ 'md:upup-hidden': allowPreview }, slot.fileIcon),
+                  )}
+                  <div
+                      class=${cn(
+                          `upup-relative upup-hidden upup-h-full upup-w-full ${allowPreview ? 'md:upup-block' : ''}`,
+                      )}
+                  >
+                      <object
+                          data=${fileUrl}
+                          width="100%"
+                          height="100%"
+                          name=${fileName}
+                          title=${fileName}
+                          type=${fileType}
+                          class="upup-absolute upup-h-full upup-w-full"
+                      >
+                          <p>${ctx.translations.loading}</p>
+                      </object>
+                  </div>
+              `
+            : nothing
+    }`
 }
