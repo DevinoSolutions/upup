@@ -165,6 +165,7 @@ export class ScreenCaptureUploaderComponent implements OnDestroy {
         const el = ref?.nativeElement
         if (el && this.streamRef) {
             el.srcObject = this.streamRef
+            // upup-catch: play() may reject if autoplay is blocked — swallow since preview is best-effort
             void el.play()?.catch(() => {})
         }
     }
@@ -177,7 +178,9 @@ export class ScreenCaptureUploaderComponent implements OnDestroy {
     ngOnDestroy(): void {
         if (this.timerHandle) clearInterval(this.timerHandle)
         if (this.videoUrl) URL.revokeObjectURL(this.videoUrl)
-        this.streamRef?.getTracks().forEach(t => t.stop())
+        this.streamRef?.getTracks().forEach(t => {
+            t.stop()
+        })
     }
 
     async startRecording(): Promise<void> {
@@ -215,7 +218,9 @@ export class ScreenCaptureUploaderComponent implements OnDestroy {
                     type: recorder.mimeType || 'video/webm',
                 })
                 this.videoUrl = URL.createObjectURL(blob)
-                stream.getTracks().forEach(t => t.stop())
+                stream.getTracks().forEach(t => {
+                    t.stop()
+                })
             }
 
             recorder.start()
@@ -225,6 +230,7 @@ export class ScreenCaptureUploaderComponent implements OnDestroy {
                 this.duration++
             }, 1000)
         } catch {
+            // upup-catch: screen-share cancel/denial is surfaced to the user via the error snapshot the screen-capture template renders
             this.error =
                 'Screen sharing is not supported or was denied. Please try again.'
         }
@@ -257,6 +263,12 @@ export class ScreenCaptureUploaderComponent implements OnDestroy {
                 )
                 void this.store.handleSetSelectedFiles([file])
                 this.store.setActiveSource(undefined)
+            })
+            .catch((err: unknown) => {
+                this.error =
+                    err instanceof Error
+                        ? err.message
+                        : 'Failed to add the recording. Please try again.'
             })
     }
 

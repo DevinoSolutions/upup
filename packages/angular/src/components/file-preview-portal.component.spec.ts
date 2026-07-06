@@ -12,6 +12,7 @@
 
 import { describe, it, expect, vi } from 'vitest'
 import { TestBed } from '@angular/core/testing'
+import type { Translations } from '@upup/core'
 import { UpupStore } from '../upup-store.service'
 import { FilePreviewPortalComponent } from './file-preview-portal.component'
 
@@ -21,12 +22,11 @@ function makeStoreMock() {
     return {
         isDark: () => false,
         slotOverrides: () => ({ filePreviewPortal: '' }),
-        translations: () =>
-            ({
-                cancel: 'Cancel',
-                loading: 'Loading…',
-                previewError: 'Error:',
-            }) as any,
+        translations: (): Partial<Translations> => ({
+            cancel: 'Cancel',
+            loading: 'Loading…',
+            previewError: 'Error:',
+        }),
     }
 }
 

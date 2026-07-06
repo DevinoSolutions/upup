@@ -13,8 +13,8 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { TestBed } from '@angular/core/testing'
-import { Component, Injectable, signal, computed } from '@angular/core'
-import { type DriveFile, type DriveFolder } from '@upup/core'
+import { Injectable, signal, computed } from '@angular/core'
+import { type DriveFile, type DriveFolder, type DriveUser } from '@upup/core'
 import { type DriveBrowserState } from '@upup/core/internal'
 import { UpupStore } from '../upup-store.service'
 import { DriveAuthFallbackComponent } from './shared/drive-auth-fallback.component'
@@ -59,13 +59,13 @@ function makeStoreMock() {
         addFile: 'Add 1 file',
         addFiles: 'Add {{count}} files',
         addFile_plural: 'Add {{count}} files',
-    } as any
+    }
     return {
-        core: {} as any,
+        core: {},
         isDark: signal(false),
         slotOverrides: signal(slotOverrides),
         translations: signal(translations),
-        uiProps: { allowedFileTypes: '*' } as any,
+        uiProps: { allowedFileTypes: '*' },
         handleSetSelectedFiles: vi.fn().mockResolvedValue(undefined),
         setActiveSource: vi.fn(),
     } as unknown as UpupStore
@@ -350,7 +350,7 @@ describe('DriveBrowserItemComponent', () => {
             name: 'report.pdf',
             isFolder: false,
             mimeType: 'application/pdf',
-        } as any
+        } as DriveFile
         const fixture = mountItem(file)
         expect(fixture.nativeElement.textContent).toContain('report.pdf')
     })
@@ -361,7 +361,7 @@ describe('DriveBrowserItemComponent', () => {
             name: 'a.txt',
             isFolder: false,
             mimeType: 'text/plain',
-        } as any
+        } as DriveFile
         const fixture = mountItem(file)
         expect(
             fixture.nativeElement.querySelector(
@@ -376,7 +376,7 @@ describe('DriveBrowserItemComponent', () => {
             name: 'doc.pdf',
             isFolder: false,
             mimeType: 'application/pdf',
-        } as any
+        } as DriveFile
         const fixture = mountItem(file)
         const handleClick = fixture.componentInstance.handleClick as ReturnType<
             typeof vi.fn
@@ -395,7 +395,7 @@ describe('DriveBrowserItemComponent', () => {
             name: 'a.txt',
             isFolder: false,
             mimeType: 'text/plain',
-        } as any
+        } as DriveFile
         const fixture = mountItem(file, [file])
         const el = fixture.nativeElement.querySelector(
             '[data-upup-slot="drive-browser-item"]',
@@ -420,7 +420,7 @@ describe('DriveBrowserComponent', () => {
     afterEach(() => TestBed.resetTestingModule())
 
     function makeFolder(children: DriveFile[] = []): DriveFolder {
-        return { id: 'root', name: 'Drive', isFolder: true, children } as any
+        return { id: 'root', name: 'Drive', isFolder: true, children } as DriveFolder
     }
 
     function mountWithItems(items: DriveFile[]) {
@@ -430,17 +430,17 @@ describe('DriveBrowserComponent', () => {
 
         const fixture = TestBed.createComponent(DriveBrowserComponent)
         const comp = fixture.componentInstance
-        comp.driveFiles = driveFilesSig as any
-        comp.path = pathSig as any
+        comp.driveFiles = driveFilesSig
+        comp.path = pathSig
         comp.setPath = vi.fn()
-        comp.user = signal(undefined) as any
+        comp.user = signal<DriveUser | undefined>(undefined)
         comp.handleSignOut = vi.fn()
         comp.handleClick = vi.fn()
-        comp.selectedFiles = signal([]) as any
-        comp.showLoader = signal(false) as any
+        comp.selectedFiles = signal<DriveFile[]>([])
+        comp.showLoader = signal(false)
         comp.handleSubmit = vi.fn().mockResolvedValue(undefined)
         comp.handleCancelDownload = vi.fn()
-        comp.isClickLoading = signal(false) as any
+        comp.isClickLoading = signal(false)
         fixture.detectChanges()
         return fixture
     }
@@ -573,12 +573,12 @@ describe('ClientGoogleDriveUploaderComponent', () => {
             name: 'Drive',
             children: [],
             isFolder: true,
-        } as any
+        } as DriveFolder
         const { fixture } = mountWithState({
             token: { access_token: 'tok', expires_in: 3600 },
             path: [folder],
             folder,
-            user: { id: 'u1', name: 'User' } as any,
+            user: { id: 'u1', name: 'User' } as DriveUser,
         })
         expect(
             fixture.nativeElement.querySelector(
@@ -641,13 +641,13 @@ describe('ClientDropboxUploaderComponent', () => {
             name: 'Dropbox',
             children: [],
             isFolder: true,
-        } as any
+        } as DriveFolder
         const fixture = mountWithState({
             isAuthenticated: true,
             isLoading: false,
             path: [folder],
             folder,
-            user: { id: 'u1', name: 'User' } as any,
+            user: { id: 'u1', name: 'User' } as DriveUser,
         })
         expect(
             fixture.nativeElement.querySelector(

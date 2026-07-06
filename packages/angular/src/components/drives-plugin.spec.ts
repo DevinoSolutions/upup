@@ -20,7 +20,6 @@
  */
 import { describe, it, expect, afterEach, vi } from 'vitest'
 import { TestBed } from '@angular/core/testing'
-import { Component, Injectable, computed, signal } from '@angular/core'
 import { UpupStore } from '../upup-store.service'
 import { SourceSelectorComponent } from './source-selector.component'
 import { SourceViewComponent } from './source-view.component'
@@ -29,10 +28,7 @@ import { OneDriveUploaderComponent } from './onedrive-uploader.component'
 import { DropboxUploaderComponent } from './dropbox-uploader.component'
 import { BoxUploaderComponent } from './box-uploader.component'
 import { ImageEditorStubComponent } from './image-editor-stub.component'
-import { ClientGoogleDriveUploaderComponent } from './client-google-drive-uploader.component'
-import { ServerModeDriveUploaderComponent } from './server-mode-drive-uploader.component'
-import { type DriveFile, type DriveFolder } from '@upup/core'
-import { type DriveBrowserState } from '@upup/core/internal'
+import { type FileSource } from '@upup/core'
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -52,46 +48,20 @@ function makeStore(overrides: Record<string, unknown> = {}): UpupStore {
             'screen',
         ],
         ...overrides,
-    } as any)
+    })
     store.init()
     return store
 }
 
 /** Make a server-mode store (serverUrl triggers mode='server'). */
-function makeServerStore(provider?: string): UpupStore {
+function makeServerStore(_provider?: string): UpupStore {
     const store = new UpupStore()
     store.setConfig({
         sources: ['googleDrive', 'oneDrive', 'dropbox', 'box'],
         serverUrl: 'http://localhost:9000',
-    } as any)
+    })
     store.init()
     return store
-}
-
-// ── Fake services to prevent real OAuth/network in wrapper tests ──────────────
-
-function makeFakeGoogleDriveService() {
-    @Injectable()
-    class FakeGDService {
-        readonly token = computed(() => undefined)
-        readonly authCancelled = computed(() => false)
-        readonly isAuthReady = computed(() => false)
-        readonly user = computed(() => undefined)
-        readonly folder = computed(
-            () => ({ files: [], folders: [] }) as unknown as DriveFolder,
-        )
-        readonly isLoading = computed(() => false)
-        readonly breadcrumbs = computed(() => [])
-        readonly isAuthenticated = computed(() => false)
-        readonly currentFolderId = computed(() => undefined)
-        readonly isClickLoading = computed(() => false)
-        authenticate = vi.fn()
-        handleSignOut = vi.fn()
-        handleSubmit = vi.fn()
-        handleCancelDownload = vi.fn()
-        onSelectCurrentFolder = vi.fn()
-    }
-    return FakeGDService
 }
 
 // ── SourceSelectorComponent ──────────────────────────────────────────────────
@@ -297,7 +267,7 @@ describe('SourceSelectorComponent', () => {
 
     it('only renders sources configured in the store', async () => {
         const store2 = new UpupStore()
-        store2.setConfig({ sources: ['googleDrive', 'url'] } as any)
+        store2.setConfig({ sources: ['googleDrive', 'url'] })
         store2.init()
         store = store2
 
@@ -358,7 +328,7 @@ describe('SourceViewComponent', () => {
 
     it('renders the url-uploader when activeSource is "url"', async () => {
         store = makeStore()
-        store.setActiveSource('url' as any)
+        store.setActiveSource('url' as FileSource)
 
         await TestBed.configureTestingModule({
             imports: [SourceViewComponent],
@@ -384,7 +354,7 @@ describe('SourceViewComponent', () => {
 
     it('renders the google-drive wrapper when activeSource is "googleDrive"', async () => {
         store = makeStore()
-        store.setActiveSource('googleDrive' as any)
+        store.setActiveSource('googleDrive' as FileSource)
 
         await TestBed.configureTestingModule({
             imports: [SourceViewComponent],
@@ -409,9 +379,9 @@ describe('SourceViewComponent', () => {
 
     it('renders nothing when mini=true even if source is active', async () => {
         const miniStore = new UpupStore()
-        miniStore.setConfig({ mini: true, sources: ['url'] } as any)
+        miniStore.setConfig({ mini: true, sources: ['url'] })
         miniStore.init()
-        miniStore.setActiveSource('url' as any)
+        miniStore.setActiveSource('url' as FileSource)
         store = miniStore
 
         await TestBed.configureTestingModule({

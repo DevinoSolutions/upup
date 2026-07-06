@@ -135,7 +135,9 @@ export class AudioUploaderComponent implements OnDestroy {
     ngOnDestroy(): void {
         if (this.timerHandle) clearInterval(this.timerHandle)
         if (this.audioUrl) URL.revokeObjectURL(this.audioUrl)
-        this.streamRef?.getTracks().forEach(t => t.stop())
+        this.streamRef?.getTracks().forEach(t => {
+            t.stop()
+        })
     }
 
     async startRecording(): Promise<void> {
@@ -157,7 +159,9 @@ export class AudioUploaderComponent implements OnDestroy {
                     type: recorder.mimeType || 'audio/webm',
                 })
                 this.audioUrl = URL.createObjectURL(blob)
-                stream.getTracks().forEach(t => t.stop())
+                stream.getTracks().forEach(t => {
+                    t.stop()
+                })
             }
 
             recorder.start()
@@ -167,6 +171,7 @@ export class AudioUploaderComponent implements OnDestroy {
                 this.duration++
             }, 1000)
         } catch {
+            // upup-catch: mic permission denial is surfaced to the user via the error snapshot the audio template renders
             this.error =
                 'Microphone access denied. Please allow microphone access and try again.'
         }
@@ -187,7 +192,7 @@ export class AudioUploaderComponent implements OnDestroy {
 
     addRecording(): void {
         if (!this.audioUrl) return
-        const ext = this.mediaRecorder?.mimeType?.includes('webm')
+        const ext = this.mediaRecorder?.mimeType.includes('webm')
             ? 'webm'
             : 'ogg'
         fetch(this.audioUrl)
@@ -202,6 +207,12 @@ export class AudioUploaderComponent implements OnDestroy {
                 )
                 void this.store.handleSetSelectedFiles([file])
                 this.store.setActiveSource(undefined)
+            })
+            .catch((err: unknown) => {
+                this.error =
+                    err instanceof Error
+                        ? err.message
+                        : 'Failed to add the recording. Please try again.'
             })
     }
 

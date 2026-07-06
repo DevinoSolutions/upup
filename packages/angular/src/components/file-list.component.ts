@@ -7,7 +7,6 @@ import {
     ElementRef,
     ChangeDetectorRef,
     ChangeDetectionStrategy,
-    Type,
 } from '@angular/core'
 import {
     Virtualizer,
@@ -300,7 +299,7 @@ export class FileListComponent implements AfterViewInit, OnDestroy {
         return cn(
             'upup-relative upup-flex upup-h-full upup-flex-col upup-rounded-lg upup-shadow',
             { 'upup-hidden': isAddingMore || !!activeSource || !files.size },
-            (themeSlots as any)?.fileList?.root ?? '',
+            themeSlots.fileList?.root ?? '',
         )
     }
 
@@ -460,7 +459,9 @@ export class FileListComponent implements AfterViewInit, OnDestroy {
     }
 
     // Bound fn for UploaderHeader (avoids arrow-fn re-creation in template)
-    readonly handleCancelFn = () => this.store.handleCancel()
+    readonly handleCancelFn = (): void => {
+        this.store.handleCancel()
+    }
 
     // ── Upload action handlers ─────────────────────────────────────────────────
 

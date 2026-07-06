@@ -36,7 +36,9 @@ export function createSSEProcessing({
         processor.subscribe(
             key,
             processingEndpoint,
-            (data: Record<string, unknown>) => onFileProcessed(file, data),
+            (data: Record<string, unknown>) => {
+                onFileProcessed(file, data)
+            },
             (error: Error) => onError?.(error),
             processingTimeout,
         )

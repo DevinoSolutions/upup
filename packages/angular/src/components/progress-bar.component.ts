@@ -61,7 +61,7 @@ export class ProgressBarComponent {
             'upup-flex upup-items-center upup-gap-2',
             this.className,
             slotClasses.progressBarContainer ?? '',
-            themeSlots?.progressBar?.root ?? '',
+            themeSlots.progressBar?.root ?? '',
         ]
             .filter(Boolean)
             .join(' ')
@@ -74,7 +74,7 @@ export class ProgressBarComponent {
             'upup-h-[6px] upup-flex-1 upup-overflow-hidden upup-rounded-[4px] upup-bg-[#F5F5F5]',
             this.progressBarClassName,
             slotClasses.progressBar ?? '',
-            themeSlots?.progressBar?.track ?? '',
+            themeSlots.progressBar?.track ?? '',
         ]
             .filter(Boolean)
             .join(' ')
@@ -86,7 +86,7 @@ export class ProgressBarComponent {
         return [
             'upup-h-full upup-bg-[#8EA5E7]',
             slotClasses.progressBarInner ?? '',
-            themeSlots?.progressBar?.fill ?? '',
+            themeSlots.progressBar?.fill ?? '',
         ]
             .filter(Boolean)
             .join(' ')
@@ -100,7 +100,7 @@ export class ProgressBarComponent {
             'upup-text-xs upup-font-semibold',
             dark ? 'upup-text-white' : '',
             slotClasses.progressBarText ?? '',
-            themeSlots?.progressBar?.text ?? '',
+            themeSlots.progressBar?.text ?? '',
         ]
             .filter(Boolean)
             .join(' ')

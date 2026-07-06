@@ -6,7 +6,6 @@ import {
     inject,
     OnInit,
     OnDestroy,
-    Type,
 } from '@angular/core'
 import {
     DomSanitizer,
@@ -18,7 +17,6 @@ import {
     fileGetIsImage,
     fileGetIsPdf,
     fileGetIsText,
-    fileCanPreviewText,
     cn,
 } from '@upup/core/internal'
 import { UpupStore } from '../upup-store.service'
@@ -222,7 +220,7 @@ export class FilePreviewPortalComponent implements OnInit, OnDestroy {
 
     // ── event handlers ────────────────────────────────────────────────────────
 
-    onBackdropClick(e: MouseEvent): void {
+    onBackdropClick(_e: MouseEvent): void {
         this.onClose.emit()
     }
 
@@ -255,6 +253,7 @@ export class FilePreviewPortalComponent implements OnInit, OnDestroy {
             }
             this.textContent = text
         } catch (err) {
+            // upup-catch: text-preview fetch/read failure is surfaced to the user via textError, which the portal template renders
             this.textError = err instanceof Error ? err.message : String(err)
         } finally {
             this.textLoading = false

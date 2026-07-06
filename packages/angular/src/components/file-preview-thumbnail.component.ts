@@ -9,7 +9,6 @@ import {
 } from '@upup/core/internal'
 import type { Translations } from '@upup/core'
 import type { InternalFlatClassNames } from '@upup/core/internal'
-import { UpupStore } from '../upup-store.service'
 import { FileIconComponent } from './file-icon.component'
 
 /**
@@ -84,7 +83,7 @@ export class FilePreviewThumbnailComponent {
     @Input() fileName: string = ''
     @Input() fileUrl: string = ''
     @Input() fileSize?: number
-    @Input() slotClasses: InternalFlatClassNames = {} as InternalFlatClassNames
+    @Input() slotClasses: InternalFlatClassNames = {}
     @Input() allowPreview: boolean = false
     @Input() labels: Translations = {} as Translations
 
@@ -97,7 +96,7 @@ export class FilePreviewThumbnailComponent {
     // ── Derived getters ────────────────────────────────────────────────────────
 
     get extension(): string {
-        return fileGetExtension(this.fileType, this.fileName) ?? ''
+        return fileGetExtension(this.fileType, this.fileName)
     }
 
     get is3D(): boolean {

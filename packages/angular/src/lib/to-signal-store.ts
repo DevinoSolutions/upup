@@ -23,7 +23,9 @@ export interface SignalStore<S> {
 export function toSignalStore<S>(store: HeadlessStore<S>): SignalStore<S> {
     const state = signal<S>(store.getSnapshot())
     let active = true
-    const unsub = store.subscribe(() => state.set(store.getSnapshot()))
+    const unsub = store.subscribe(() => {
+        state.set(store.getSnapshot())
+    })
     return {
         state,
         destroy: () => {

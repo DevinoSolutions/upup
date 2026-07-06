@@ -58,14 +58,26 @@ export function createUpupUpload(
         progress,
         error,
         addFiles: (f: File[]) => core.addFiles(f),
-        removeFile: (id: string) => core.removeFile(id),
-        removeAll: () => core.removeAll(),
+        removeFile: (id: string) => {
+            core.removeFile(id)
+        },
+        removeAll: () => {
+            core.removeAll()
+        },
         setFiles: (f: File[]) => core.setFiles(f),
-        reorderFiles: (ids: string[]) => core.reorderFiles(ids),
+        reorderFiles: (ids: string[]) => {
+            core.reorderFiles(ids)
+        },
         upload: () => core.upload(),
-        pause: () => core.pause(),
-        resume: () => core.resume(),
-        cancel: () => core.cancel(),
+        pause: () => {
+            core.pause()
+        },
+        resume: () => {
+            core.resume()
+        },
+        cancel: () => {
+            core.cancel()
+        },
         retry: (id?: string) => core.retry(id),
         on: (e: string, h: (payload: unknown) => void) => core.on(e, h),
         ext: core.ext,
@@ -87,37 +99,35 @@ export function createUpupUpload(
 
             // Forward optional callbacks.
             // core.emit(event, payload) calls handler(payload) — single payload arg.
-            if (options.onFileAdded) {
+            const onFileAdded = options.onFileAdded
+            if (onFileAdded) {
                 unsubs.push(
                     core.on('files-added', payload => {
-                        options.onFileAdded!(payload as UploadFile[])
+                        onFileAdded(payload)
                     }),
                 )
             }
-            if (options.onFileRemoved) {
+            const onFileRemoved = options.onFileRemoved
+            if (onFileRemoved) {
                 unsubs.push(
                     core.on('file-removed', payload => {
-                        options.onFileRemoved!(payload as UploadFile)
+                        onFileRemoved(payload)
                     }),
                 )
             }
-            if (options.onUploadProgress) {
+            const onUploadProgress = options.onUploadProgress
+            if (onUploadProgress) {
                 unsubs.push(
                     core.on('upload-progress', payload => {
-                        options.onUploadProgress!(
-                            payload as {
-                                fileId: string
-                                loaded: number
-                                total: number
-                            },
-                        )
+                        onUploadProgress(payload)
                     }),
                 )
             }
-            if (options.onUploadComplete) {
+            const onUploadComplete = options.onUploadComplete
+            if (onUploadComplete) {
                 unsubs.push(
                     core.on('upload-all-complete', payload => {
-                        options.onUploadComplete!(payload as UploadFile[])
+                        onUploadComplete(payload)
                     }),
                 )
             }
@@ -126,7 +136,9 @@ export function createUpupUpload(
         destroy() {
             if (destroyed) return
             destroyed = true
-            unsubs.forEach(u => u())
+            unsubs.forEach(u => {
+                u()
+            })
             unsubs.length = 0
             core.destroy()
         },

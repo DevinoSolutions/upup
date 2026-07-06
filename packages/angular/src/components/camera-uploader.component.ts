@@ -1,7 +1,6 @@
 import {
     Component,
     inject,
-    OnInit,
     OnDestroy,
     AfterViewInit,
     ViewChild,

@@ -13,9 +13,8 @@
  *   The virtualizer-init smoke test confirms no exception is thrown on creation.
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { TestBed } from '@angular/core/testing'
-import { Component, signal } from '@angular/core'
 import { UpupStore } from '../upup-store.service'
 import { FileListComponent } from './file-list.component'
 import { FileItemComponent } from './file-item.component'
@@ -25,7 +24,7 @@ import { FilePreviewPortalComponent } from './file-preview-portal.component'
 import { FilePreviewThumbnailComponent } from './file-preview-thumbnail.component'
 import { EmptyIconComponent } from './icons/empty-icon.component'
 import { UploadStatus } from '@upup/core'
-import type { UploadFile } from '@upup/core'
+import type { UploadFile, Translations } from '@upup/core'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -44,6 +43,38 @@ function makeFile(
         url: `blob:http://localhost/${id}`,
         relativePath: undefined,
     } as unknown as UploadFile
+}
+
+/**
+ * Minimal translations shape actually read by the components under test —
+ * intentionally narrower than the full `Translations` interface (a local
+ * test double, not a `Partial<Translations>`; the real interface's plural
+ * keys are suffixed `_one`/`_other`, which these flat mock keys predate).
+ */
+interface MockTranslations {
+    uploadFiles: string
+    filesSelected: string
+    addMore: string
+    addingMoreFiles: string
+    cancel: string
+    removeAllFiles: string
+    done: string
+    paused: string
+    resumeUpload: string
+    pauseUpload: string
+    retryUpload: string
+    removeFile: string
+    editImage: string
+    clickToPreview: string
+    loading: string
+    previewError: string
+    uploadFailedWithCode: string
+    uploadFailed: string
+    zeroBytes: string
+    bytes: string
+    kb: string
+    mb: string
+    gb: string
 }
 
 /** Return a minimal UpupStore mock that satisfies the component's reads. */
@@ -66,7 +97,7 @@ function makeStoreMock(files: Map<string, UploadFile>) {
         containerCancelButton: '',
         containerAddMoreButton: '',
     }
-    const translations = {
+    const translations: MockTranslations = {
         uploadFiles: 'Upload {{count}} file(s)',
         filesSelected: '{{count}} file(s) selected',
         addMore: 'Add more',
@@ -90,7 +121,7 @@ function makeStoreMock(files: Map<string, UploadFile>) {
         kb: 'KB',
         mb: 'MB',
         gb: 'GB',
-    } as any
+    }
 
     return {
         files: () => files,
@@ -581,6 +612,8 @@ describe('FileListComponent', () => {
             const fixture = TestBed.createComponent(FileListComponent)
             fixture.detectChanges()
         } catch (e) {
+            // upup-catch: test harness captures a thrown error so the assertion
+            // below can prove the virtualizer initializes cleanly under jsdom
             caught = e
         }
         expect(caught).toBeUndefined()
@@ -632,9 +665,11 @@ describe('FilePreviewThumbnailComponent', () => {
         fixture.componentInstance.fileName = 'doc.pdf'
         fixture.componentInstance.fileUrl = 'blob:http://localhost/doc'
         fixture.componentInstance.canPreview = false
-        fixture.componentInstance.slotClasses = { fileIcon: '' } as any
+        fixture.componentInstance.slotClasses = { fileIcon: '' }
         fixture.componentInstance.allowPreview = false
-        fixture.componentInstance.labels = { loading: 'Loading…' } as any
+        fixture.componentInstance.labels = {
+            loading: 'Loading…',
+        } as Translations
         fixture.detectChanges()
 
         const el: HTMLElement = fixture.nativeElement

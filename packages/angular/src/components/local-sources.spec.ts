@@ -34,7 +34,7 @@ import { CameraUploaderService } from '../services/camera-uploader.service'
 
 function makeStore(): UpupStore {
     const store = new UpupStore()
-    store.setConfig({} as any)
+    store.setConfig({})
     store.init()
     return store
 }
@@ -73,7 +73,8 @@ function restoreMediaDevices(): void {
             writable: true,
         })
     } catch {
-        /* ignore */
+        // upup-catch: best-effort test-global cleanup; a jsdom environment that
+        // won't allow redefining navigator.mediaDevices has nothing left to restore
     }
 }
 
@@ -431,7 +432,7 @@ describe('AudioUploaderComponent', () => {
             mimeType: 'audio/webm',
             state: 'inactive',
         }
-        // @ts-expect-error — stub global
+        // @ts-expect-error: stub global — jsdom has no native MediaRecorder
         globalThis.MediaRecorder = function MediaRecorder() {
             return recorderStub
         }
@@ -604,7 +605,7 @@ describe('ScreenCaptureUploaderComponent', () => {
             mimeType: 'video/webm',
             state: 'inactive',
         }
-        // @ts-expect-error — stub global
+        // @ts-expect-error: stub global — jsdom has no native MediaRecorder
         globalThis.MediaRecorder = function MediaRecorder() {
             return recorderStub
         }
@@ -647,7 +648,7 @@ describe('ScreenCaptureUploaderComponent', () => {
             mimeType: 'video/webm',
             state: 'recording',
         }
-        // @ts-expect-error — stub global
+        // @ts-expect-error: stub global — jsdom has no native MediaRecorder
         globalThis.MediaRecorder = function MediaRecorder() {
             return recorderStub
         }
@@ -715,7 +716,7 @@ describe('ScreenCaptureUploaderComponent', () => {
             mimeType: 'video/webm',
             state: 'inactive',
         }
-        // @ts-expect-error — stub global
+        // @ts-expect-error: stub global — jsdom has no native MediaRecorder
         globalThis.MediaRecorder = function MediaRecorder() {
             return recorderStub
         }

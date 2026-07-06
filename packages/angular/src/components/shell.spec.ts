@@ -23,7 +23,7 @@ import { SourceViewContainerComponent } from './source-view-container.component'
 /** Create + init a real UpupStore (plain-class, no DI needed outside of TestBed). */
 function makeStore(): UpupStore {
     const store = new UpupStore()
-    store.setConfig({} as any)
+    store.setConfig({})
     store.init()
     return store
 }
@@ -187,7 +187,7 @@ describe('UploaderHeaderComponent', () => {
 
     it('renders nothing when mini=true', async () => {
         const s = new UpupStore()
-        s.setConfig({ mini: true } as any)
+        s.setConfig({ mini: true })
         s.init()
         store = s
 

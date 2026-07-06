@@ -1,8 +1,9 @@
 import { vi } from 'vitest'
-import { createUpupUpload } from './use-upup-upload'
+import type { UploadFile } from '@upup/core'
+import { createUpupUpload, type UseUpupUploadOptions } from './use-upup-upload'
 
 // Minimal valid CoreOptions — all fields are optional; empty object is sufficient.
-const baseOptions = {} as any
+const baseOptions: UseUpupUploadOptions = {}
 
 describe('createUpupUpload', () => {
     it('delegates to core and forwards events after start()', () => {
@@ -20,7 +21,7 @@ describe('createUpupUpload', () => {
         // core.emit('files-added', payload) calls handler(payload) — payload is UploadFile[]
         // The listener registered in start() forwards it to onFileAdded.
         // core.emit signature: emit(event, payload) — single payload arg.
-        const fakeFiles = [{ id: 'f1', name: 'test.txt' }] as any[]
+        const fakeFiles = [{ id: 'f1', name: 'test.txt' }] as UploadFile[]
         u.core.emit('files-added', fakeFiles)
 
         expect(onAdded).toHaveBeenCalledWith(fakeFiles)
@@ -57,7 +58,7 @@ describe('createUpupUpload', () => {
         u.start()
         u.start() // second call must be a no-op
 
-        const fakeFiles = [{ id: 'f2', name: 'b.txt' }] as any[]
+        const fakeFiles = [{ id: 'f2', name: 'b.txt' }] as UploadFile[]
         u.core.emit('files-added', fakeFiles)
 
         // Must have been called exactly once, not twice
@@ -69,17 +70,21 @@ describe('createUpupUpload', () => {
         const onAdded = vi.fn()
         const u = createUpupUpload({ ...baseOptions, onFileAdded: onAdded })
         u.start()
-        u.core.emit('files-added', [{ id: 'pre', name: 'pre.txt' }] as any)
+        u.core.emit('files-added', [
+            { id: 'pre', name: 'pre.txt' },
+        ] as UploadFile[])
         expect(onAdded).toHaveBeenCalledTimes(1) // wired before destroy
         u.destroy()
-        u.core.emit('files-added', [{ id: 'post', name: 'post.txt' }] as any)
+        u.core.emit('files-added', [
+            { id: 'post', name: 'post.txt' },
+        ] as UploadFile[])
         expect(onAdded).toHaveBeenCalledTimes(1) // still 1 — listener removed
     })
 
     it('state-change syncs signals from core', () => {
         const u = createUpupUpload(baseOptions)
         u.start()
-        u.core.emit('state-change', undefined as any)
+        u.core.emit('state-change', {})
         expect(u.status()).toBe(u.core.status)
         expect(u.files().length).toBe([...u.core.files.values()].length)
         u.destroy()
@@ -92,7 +97,7 @@ describe('createUpupUpload', () => {
             onUploadComplete: onComplete,
         })
         u.start()
-        const done = [{ id: 'a', name: 'a.txt' }] as any
+        const done = [{ id: 'a', name: 'a.txt' }] as UploadFile[]
         u.core.emit('upload-all-complete', done)
         expect(onComplete).toHaveBeenCalledWith(done)
         u.destroy()
