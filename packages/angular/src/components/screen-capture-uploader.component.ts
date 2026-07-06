@@ -189,14 +189,17 @@ export class ScreenCaptureUploaderComponent implements OnDestroy {
             this.streamRef = stream
             this.chunks = []
 
-            stream.getVideoTracks()[0].onended = () => {
-                if (
-                    this.mediaRecorder &&
-                    this.mediaRecorder.state !== 'inactive'
-                ) {
-                    this.mediaRecorder.stop()
-                    if (this.timerHandle) clearInterval(this.timerHandle)
-                    this.recordingState = 'recorded'
+            const [videoTrack] = stream.getVideoTracks()
+            if (videoTrack) {
+                videoTrack.onended = () => {
+                    if (
+                        this.mediaRecorder &&
+                        this.mediaRecorder.state !== 'inactive'
+                    ) {
+                        this.mediaRecorder.stop()
+                        if (this.timerHandle) clearInterval(this.timerHandle)
+                        this.recordingState = 'recorded'
+                    }
                 }
             }
 
