@@ -33,6 +33,6 @@ describe('CodeTab', () => {
         )
         await user.click(screen.getByRole('button', { name: /copy/i }))
         expect(writeText).toHaveBeenCalledTimes(1)
-        expect(writeText.mock.calls[0][0]).toContain('provider="backblaze"')
+        expect(writeText.mock.calls[0]?.[0]).toContain('provider="backblaze"')
     })
 })

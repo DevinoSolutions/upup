@@ -30,7 +30,9 @@ describe('NestedConfig', () => {
             </ConfigProvider>,
         )
         const inputs = screen.getAllByRole('textbox')
-        await user.type(inputs[0], 'abc123')
-        expect((inputs[0] as HTMLInputElement).value).toBe('abc123')
+        const firstInput = inputs[0]
+        if (!firstInput) throw new Error('expected a textbox')
+        await user.type(firstInput, 'abc123')
+        expect((firstInput as HTMLInputElement).value).toBe('abc123')
     })
 })

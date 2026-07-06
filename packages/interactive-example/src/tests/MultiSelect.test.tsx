@@ -34,9 +34,9 @@ describe('MultiSelect', () => {
             </ConfigProvider>,
         )
         const boxes = screen.getAllByRole('checkbox') as HTMLInputElement[]
-        expect(boxes[0].checked).toBe(true)
-        expect(boxes[1].checked).toBe(true)
-        expect(boxes[2].checked).toBe(false)
+        expect(boxes[0]?.checked).toBe(true)
+        expect(boxes[1]?.checked).toBe(true)
+        expect(boxes[2]?.checked).toBe(false)
     })
 
     it('toggles an option on click', async () => {
@@ -53,7 +53,9 @@ describe('MultiSelect', () => {
             </ConfigProvider>,
         )
         const boxes = screen.getAllByRole('checkbox') as HTMLInputElement[]
-        await user.click(boxes[1])
-        expect(boxes[1].checked).toBe(true)
+        const secondBox = boxes[1]
+        if (!secondBox) throw new Error('expected a second checkbox')
+        await user.click(secondBox)
+        expect(secondBox.checked).toBe(true)
     })
 })

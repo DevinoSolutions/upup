@@ -40,12 +40,14 @@ function setByPath(target: Record<string, unknown>, path: string, value: unknown
     let cursor: Record<string, unknown> = target
     for (let i = 0; i < parts.length - 1; i++) {
         const key = parts[i]
+        if (key === undefined) continue
         if (typeof cursor[key] !== 'object' || cursor[key] === null) {
             cursor[key] = {}
         }
         cursor = cursor[key] as Record<string, unknown>
     }
-    cursor[parts[parts.length - 1]] = value
+    const lastKey = parts[parts.length - 1]
+    if (lastKey !== undefined) cursor[lastKey] = value
 }
 
 /**

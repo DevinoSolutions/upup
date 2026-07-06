@@ -38,9 +38,9 @@ export const SOURCE_META: Record<string, SourceMeta> = {
     screen: { label: 'Screen capture', Icon: ScreenCaptureIcon },
 }
 
-export const CLOUD_DRIVE_META: Record<string, SourceMeta> = {
+export const CLOUD_DRIVE_META = {
     googleDrive: { label: 'Google Drive', Icon: GoogleDriveIcon },
     oneDrive: { label: 'OneDrive', Icon: OneDriveIcon },
     dropbox: { label: 'Dropbox', Icon: DropboxIcon },
     box: { label: 'Box', Icon: BoxIcon },
-}
+} satisfies Record<string, SourceMeta>
