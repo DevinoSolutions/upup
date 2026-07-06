@@ -156,7 +156,7 @@ export interface UploaderContext {
     lang: string
     dir: 'ltr' | 'rtl'
     props: UploaderContextProps
-    cloudDrives?: CloudDrivesConfig
+    cloudDrives?: CloudDrivesConfig | undefined
     registerFileInput(el: HTMLInputElement | null): void
     getFileInput(): HTMLInputElement | null
     openFilePicker(): void

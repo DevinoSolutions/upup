@@ -36,7 +36,6 @@ export const uploadSourceObject: Record<string, SourceEntry> = {
         id: FileSource.LOCAL,
         nameKey: 'myDevice',
         Icon: MyDeviceIcon,
-        View: undefined,
     },
     [FileSource.GOOGLE_DRIVE]: {
         id: FileSource.GOOGLE_DRIVE,

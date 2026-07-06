@@ -27,7 +27,7 @@ export interface DriveBrowserProps {
     handleSubmit: () => void
     handleCancelDownload: () => void
     onSelectCurrentFolder: () => void
-    error?: DriveBrowserError
+    error?: DriveBrowserError | undefined
     hasMore?: boolean
     isLoadingMore?: boolean
     loadMore?: () => void | Promise<void>

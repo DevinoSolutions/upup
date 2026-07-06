@@ -10,7 +10,7 @@ export function driveAuthFallback(
     opts: {
         providerName: string
         onRetry: () => void
-        error?: DriveBrowserError
+        error?: DriveBrowserError | undefined
         dataUpupSlot?: string
     },
 ) {

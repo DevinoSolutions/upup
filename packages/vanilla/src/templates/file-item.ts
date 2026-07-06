@@ -18,7 +18,7 @@ export interface FileItemState {
     /** Escape-close listener (F-605), stored here — not a local closure — because
      *  fileItem() reruns every ctx.invalidate(), so a local reference would be lost
      *  between the add in openPortal and the remove in closePortal. */
-    escHandler?: (e: KeyboardEvent) => void
+    escHandler?: ((e: KeyboardEvent) => void) | undefined
 }
 const stateMap = new WeakMap<UploadFile, FileItemState>()
 function computeEagerCanPreview(file: UploadFile): boolean {

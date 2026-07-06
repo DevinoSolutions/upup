@@ -265,7 +265,7 @@ export function sourceSelector(ctx: UploaderContext) {
                                           @keydown=${onSourceKeydown}
                                           @click=${() => handleSourceClick(id)}
                                       >
-                                          ${Icon({ class: slot.sourceButtonIcon })}
+                                          ${Icon(slot.sourceButtonIcon ? { class: slot.sourceButtonIcon } : {})}
                                           <span
                                               class=${cn(
                                                   'upup-text-xs upup-text-[#242634]',
