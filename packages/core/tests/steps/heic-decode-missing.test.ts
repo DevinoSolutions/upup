@@ -30,8 +30,7 @@ describe('heicToJpegBlob — optional dep missing', () => {
       if (origDescriptor) {
         Object.defineProperty(globalThis, 'document', origDescriptor)
       } else {
-         
-        delete (globalThis as any).document
+        delete (globalThis as { document?: Document }).document
       }
       vi.doUnmock('libheif-js/libheif-wasm/libheif-bundle.mjs')
       vi.resetModules()

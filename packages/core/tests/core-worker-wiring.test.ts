@@ -7,7 +7,7 @@ describe('core worker wiring (headless / node)', () => {
     const core = new UpupCore({ checksumVerification: true, webWorker: false })
     const f = new File(['hello'], 'a.txt', { type: 'text/plain' })
     await core.setFiles([f])
-    try { await core.upload() } catch { /* no endpoint — expected */ }
+    try { await core.upload() } catch { /* upup-catch: no upload endpoint configured; only the pipeline's checksum step is under test here */ }
     const processed = [...core.files.values()][0]
     expect(processed.checksumSHA256).toBeDefined()
     expect(processed.checksumSHA256!.length).toBe(64)
@@ -17,7 +17,7 @@ describe('core worker wiring (headless / node)', () => {
   it('runs the pipeline on the main thread when workers are unavailable (default auto)', async () => {
     const core = new UpupCore({ checksumVerification: true })
     await core.setFiles([new File(['data'], 'b.txt', { type: 'text/plain' })])
-    try { await core.upload() } catch { /* expected */ }
+    try { await core.upload() } catch { /* upup-catch: no upload endpoint configured; only the pipeline's checksum step is under test here */ }
     expect([...core.files.values()][0].checksumSHA256).toBeDefined()
     core.destroy()
   })
@@ -63,7 +63,7 @@ describe('workerTimeoutMs wiring', () => {
       workerTimeoutMs: 60000,
     })
     await core.setFiles([new File(['data'], 'c.txt', { type: 'text/plain' })])
-    try { await core.upload() } catch { /* no endpoint — expected */ }
+    try { await core.upload() } catch { /* upup-catch: no upload endpoint configured; only the pipeline's checksum step is under test here */ }
 
     expect(spy).toHaveBeenCalledWith(expect.anything(), { timeoutMs: 60000 })
     core.destroy()

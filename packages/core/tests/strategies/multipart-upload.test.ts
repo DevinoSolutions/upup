@@ -3,8 +3,8 @@ import { MultipartUpload } from '../../src/strategies/multipart-upload'
 import type { CredentialStrategy } from '../../src/contracts-strategies'
 import type {
   MultipartInitResponse,
-  MultipartSignPartResponse,
   MultipartCompleteResponse,
+  PresignedUrlResponse,
 } from '@upup/core'
 
 describe('MultipartUpload', () => {
@@ -14,6 +14,15 @@ describe('MultipartUpload', () => {
     signPart: vi.fn(),
     completeMultipartUpload: vi.fn(),
     abortMultipartUpload: vi.fn(),
+  }
+
+  // MultipartUpload never reads its `credentials` param (see the `_credentials`
+  // name in src/strategies/multipart-upload.ts) — a minimal, type-correct
+  // stand-in satisfies the UploadStrategy#upload signature.
+  const unusedCredentials: PresignedUrlResponse = {
+    key: '',
+    uploadUrl: '',
+    expiresIn: 0,
   }
 
   const mockFetch = vi.fn()
@@ -50,7 +59,7 @@ describe('MultipartUpload', () => {
       expiresIn: 3600,
     }))
 
-    mockFetch.mockImplementation(async (url: string, init: RequestInit) => ({
+    mockFetch.mockImplementation(async (url: string, _init: RequestInit) => ({
       ok: true,
       status: 200,
       headers: new Headers({ ETag: `"etag-${url.match(/part(\d)/)?.[1]}"` }),
@@ -64,7 +73,7 @@ describe('MultipartUpload', () => {
     vi.mocked(mockCredentials.completeMultipartUpload!).mockResolvedValue(completeResponse)
 
     const onProgress = vi.fn()
-    const result = await strategy.upload(file, {} as any, {
+    const result = await strategy.upload(file, unusedCredentials, {
       onProgress,
       signal: new AbortController().signal,
     })
@@ -114,7 +123,7 @@ describe('MultipartUpload', () => {
     mockFetch.mockRejectedValue(new DOMException('Aborted', 'AbortError'))
 
     await expect(
-      strategy.upload(file, {} as any, {
+      strategy.upload(file, unusedCredentials, {
         onProgress: vi.fn(),
         signal: controller.signal,
       }),
@@ -147,7 +156,7 @@ describe('MultipartUpload', () => {
     })
 
     const err = await strategy
-      .upload(file, {} as any, { onProgress: vi.fn(), signal: new AbortController().signal })
+      .upload(file, unusedCredentials, { onProgress: vi.fn(), signal: new AbortController().signal })
       .catch((e) => e)
 
     expect(err.code).toBe('SignatureDoesNotMatch')

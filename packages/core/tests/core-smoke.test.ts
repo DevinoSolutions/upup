@@ -1,9 +1,26 @@
 import { describe, it, expect, vi } from 'vitest'
 import { UpupCore } from '../src/core'
 import { UploadStatus } from '@upup/core'
+import type { FileManager } from '@upup/core/internal'
 
 const makeFile = (name: string, size = 10) =>
     new File(['x'.repeat(size)], name, { type: 'text/plain' })
+
+/**
+ * Test-only escape hatch: `pluginManager`/`fileManager` are private on
+ * UpupCore. `registerExtension`'s production type (ExtensionMethods) expects
+ * a record of functions, but these smoke tests intentionally probe with
+ * plain data payloads, so `unknown` is used for that parameter here instead
+ * of reusing the production type.
+ */
+type CoreInternals = {
+    pluginManager: {
+        registerExtension: (name: string, methods: unknown) => void
+    }
+    fileManager: FileManager
+}
+const internals = (core: UpupCore): CoreInternals =>
+    core as unknown as CoreInternals
 
 /**
  * Smoke tests: exercise the complete UpupCore public API surface
@@ -147,7 +164,7 @@ describe('UpupCore — smoke tests', () => {
         core.use({
             name: 'smoke-plugin',
             init: () => {
-                ;(core as any).pluginManager.registerExtension('smoke', {
+                internals(core).pluginManager.registerExtension('smoke', {
                     ok: true,
                 })
             },
@@ -166,7 +183,7 @@ describe('UpupCore — smoke tests', () => {
 
         // Simulate one file completed
         const [id] = [...core.files.keys()]
-        ;(core as any).fileManager.updateFile(id, { key: 'uploaded/a.txt' })
+        internals(core).fileManager.updateFile(id, { key: 'uploaded/a.txt' })
         expect(core.progress.completedFiles).toBe(1)
         expect(core.progress.percentage).toBe(50)
         core.destroy()
@@ -179,7 +196,9 @@ describe('UpupCore — smoke tests', () => {
         core.use({
             name: 'tmp',
             init: () => {
-                ;(core as any).pluginManager.registerExtension('tmp', { v: 1 })
+                internals(core).pluginManager.registerExtension('tmp', {
+                    v: 1,
+                })
             },
         })
         core.pause()

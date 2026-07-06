@@ -1,15 +1,25 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { SSEProcessor } from '../src/sse-processor'
 
+// The real EventSource#onmessage receives a MessageEvent; the processor only
+// ever reads `.data` off it, so the fixture only needs to fake that much.
+type FakeMessageEvent = { data: string }
+
+interface FakeEventSourceInstance {
+    onmessage: ((event: FakeMessageEvent) => void) | null
+    onerror: (() => void) | null
+    close: ReturnType<typeof vi.fn>
+}
+
 describe('SSEProcessor', () => {
     let mockClose: ReturnType<typeof vi.fn>
-    let mockSource: { onmessage: ((event: any) => void) | null; onerror: (() => void) | null; close: typeof mockClose }
+    let mockSource: FakeEventSourceInstance
 
     beforeEach(() => {
         mockClose = vi.fn()
         mockSource = { onmessage: null, onerror: null, close: mockClose }
         // Must be a real constructor function for `new EventSource(url)` to work
-        const FakeEventSource = vi.fn(function (this: any) {
+        const FakeEventSource = vi.fn(function (this: FakeEventSourceInstance) {
             Object.assign(this, mockSource)
             // Keep reference so handlers set on `this` are visible via mockSource
             mockSource.close = mockClose
@@ -25,7 +35,7 @@ describe('SSEProcessor', () => {
                 get() { return mockSource.onerror },
             })
             this.close = mockClose
-        }) as any
+        })
         vi.stubGlobal('EventSource', FakeEventSource)
     })
 

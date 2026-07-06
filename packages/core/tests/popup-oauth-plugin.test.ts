@@ -288,7 +288,7 @@ describe('PopupOAuthPlugin (base skeleton)', () => {
             plugin.restoreSession()
 
             const fetchMock = vi.fn(
-                (url: string, opts: { body?: URLSearchParams }) => {
+                (url: string) => {
                     // token endpoint = refresh; everything else = the data call
                     if (url === 'https://api.example.com/token') {
                         return Promise.resolve({

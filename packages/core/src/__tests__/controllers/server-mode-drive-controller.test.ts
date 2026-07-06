@@ -1,5 +1,6 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, vi, afterEach } from 'vitest'
 import { ServerModeDriveController } from '../../controllers/server-mode-drive-controller'
+import { UpupNetworkError } from '../../errors'
 
 const SERVER = 'http://localhost:9999'
 
@@ -79,7 +80,7 @@ describe('ServerModeDriveController', () => {
                     return this
                 },
                 json: async () => {
-                    throw new Error('not json')
+                    throw new UpupNetworkError('not json', 401)
                 },
             }),
         )
@@ -199,20 +200,23 @@ describe('ServerModeDriveController', () => {
             json: async () => ({ files: [] }),
         })
         vi.stubGlobal('fetch', fetchSpy)
-        let handler: ((e: any) => void) | null = null
-        vi.stubGlobal('window', {
+        let handler: ((e: MessageEvent) => void) | null = null
+        const windowStub = {
             open: vi.fn().mockReturnValue({}),
-            addEventListener: vi.fn((_: string, h: any) => {
+            addEventListener: vi.fn((_type: string, h: (e: MessageEvent) => void) => {
                 handler = h
             }),
             removeEventListener: vi.fn(),
-        })
+        }
+        vi.stubGlobal('window', windowStub)
         const c = ctrl()
         c.startAuth()
-        expect((window as any).open).toHaveBeenCalled()
-        handler!({
-            data: { type: 'upup:oauth-success', provider: 'google-drive' },
-        })
+        expect(windowStub.open).toHaveBeenCalled()
+        handler!(
+            new MessageEvent('message', {
+                data: { type: 'upup:oauth-success', provider: 'google-drive' },
+            }),
+        )
         await Promise.resolve()
         expect(fetchSpy).toHaveBeenCalled()
     })

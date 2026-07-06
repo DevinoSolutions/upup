@@ -20,9 +20,9 @@ function makeFile(name: string, type: string): UploadFile {
 
 const ctx: PipelineContext = {
     files: new Map(),
-    options: {} as any,
+    options: {},
     emit: () => {},
-    t: ((k: string) => k) as any,
+    t: (k: string) => k,
 }
 
 // ─────────────────────────────────────────────

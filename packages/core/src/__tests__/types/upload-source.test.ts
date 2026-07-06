@@ -19,7 +19,7 @@ describe('UploadSource accept-set', () => {
     })
 
     it('rejects unknown source values', () => {
-        // @ts-expect-error 'nope' is not a valid UploadSource
+        // @ts-expect-error: 'nope' is not a valid UploadSource
         const f: UploadSource = 'nope'
         expect(f).toBe('nope')
     })

@@ -5,6 +5,7 @@ export function storageGet(key: string): string | null {
     try {
         return sessionStorage.getItem(key)
     } catch {
+        // upup-catch: sessionStorage may be unavailable (private mode) or throw on access; best-effort read
         return null
     }
 }
@@ -14,7 +15,7 @@ export function storageSet(key: string, value: string): void {
     try {
         sessionStorage.setItem(key, value)
     } catch {
-        // quota exceeded or private browsing — silently ignore
+        // upup-catch: quota exceeded or private browsing — best-effort write, safe to drop
     }
 }
 
@@ -23,6 +24,6 @@ export function storageDel(key: string): void {
     try {
         sessionStorage.removeItem(key)
     } catch {
-        // ignore
+        // upup-catch: sessionStorage may be unavailable (private mode); best-effort cleanup
     }
 }

@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from 'vitest'
 import { UpupCore } from '../src/core'
 import { UploadStatus } from '@upup/core'
 import type { UpupPlugin } from '../src/plugin'
+import type { UploadFile } from '../src/contracts'
 
 const makeNativeFile = (name = 'test.jpg', size = 1024, type = 'image/jpeg'): File => {
   return new File(['x'.repeat(size)], name, { type })
@@ -26,7 +27,8 @@ describe('UpupCore', () => {
     const core = new UpupCore({ provider: 'aws', uploadEndpoint: '/api/upload' })
     const handler = vi.fn()
     core.on('file-removed', handler)
-    const file = { id: 'test-1', name: 'test.jpg' } as any
+    // Minimal test fixture — only `id`/`name` are exercised by removeFile/size assertions.
+    const file = { id: 'test-1', name: 'test.jpg' } as unknown as UploadFile
     core['fileManager']['files'].set('test-1', file)
     core.removeFile('test-1')
     expect(core.files.size).toBe(0)
@@ -59,7 +61,7 @@ describe('UpupCore', () => {
   it('registers plugins via options.plugins', () => {
     const init = vi.fn()
     const plugin: UpupPlugin = { name: 'opt-plugin', init }
-    const core = new UpupCore({
+    const _core = new UpupCore({
       provider: 'aws',
       uploadEndpoint: '/api/upload',
       plugins: [plugin],

@@ -2,6 +2,7 @@ import type { OneDriveConfig } from './configs'
 import type { DriveFile, DriveUser } from './types'
 import { guessMimeType } from './mime'
 import { PopupOAuthPlugin, type PopupOAuthSpec } from './popup-oauth-plugin'
+import { UpupNetworkError } from '../errors'
 
 // ── Microsoft OAuth2 / Graph API endpoints ──
 const AUTH_URL =
@@ -22,7 +23,8 @@ function mapGraphItem(item: Record<string, unknown>): DriveFile {
     const file = item.file as Record<string, unknown> | undefined
     const mimeType = isFolder
         ? 'folder'
-        : ((file?.mimeType as string) ?? guessMimeType(item.name as string))
+        : ((file?.mimeType as string | undefined) ??
+          guessMimeType(item.name as string))
 
     const thumbnails = item.thumbnails as
         Array<Record<string, unknown>> | undefined
@@ -30,18 +32,18 @@ function mapGraphItem(item: Record<string, unknown>): DriveFile {
     if (thumbnails && thumbnails.length > 0) {
         const thumbSet = thumbnails[0]
         const medium = thumbSet?.medium as Record<string, unknown> | undefined
-        thumbnail = (medium?.url as string) ?? undefined
+        thumbnail = (medium?.url as string | undefined) ?? undefined
     }
 
     return {
-        id: (item.id as string) ?? '',
-        name: (item.name as string) ?? '',
-        path: (item.id as string) ?? '', // OneDrive uses id-based navigation
-        size: isFolder ? 0 : ((item.size as number) ?? 0),
+        id: (item.id as string | undefined) ?? '',
+        name: (item.name as string | undefined) ?? '',
+        path: (item.id as string | undefined) ?? '', // OneDrive uses id-based navigation
+        size: isFolder ? 0 : ((item.size as number | undefined) ?? 0),
         mimeType,
         isFolder,
         thumbnail,
-        modifiedAt: (item.lastModifiedDateTime as string) ?? undefined,
+        modifiedAt: (item.lastModifiedDateTime as string | undefined) ?? undefined,
     }
 }
 
@@ -219,9 +221,17 @@ export class OneDrivePlugin extends PopupOAuthPlugin {
 
     protected async fetchUserProfile(): Promise<DriveUser> {
         const data = await this.graphRequest('/me')
+        const displayName = data.displayName
+        const mail = data.mail
+        const userPrincipalName = data.userPrincipalName
         return {
-            name: String(data.displayName ?? ''),
-            email: String(data.mail ?? data.userPrincipalName ?? ''),
+            name: typeof displayName === 'string' ? displayName : '',
+            email:
+                typeof mail === 'string'
+                    ? mail
+                    : typeof userPrincipalName === 'string'
+                      ? userPrincipalName
+                      : '',
         }
     }
 
@@ -234,7 +244,7 @@ export class OneDrivePlugin extends PopupOAuthPlugin {
     ): Promise<Record<string, unknown>> {
         const url = path.startsWith('http') ? path : `${GRAPH_BASE}${path}`
         const res = await this.apiRequest(url, options)
-        return res.json()
+        return (await res.json()) as Record<string, unknown>
     }
 
     // ── Private: download a single file ──
@@ -248,18 +258,21 @@ export class OneDrivePlugin extends PopupOAuthPlugin {
         )
 
         const downloadUrl =
-            (itemData['@microsoft.graph.downloadUrl'] as string) ??
-            (itemData['@content.downloadUrl'] as string)
+            (itemData['@microsoft.graph.downloadUrl'] as string | undefined) ??
+            (itemData['@content.downloadUrl'] as string | undefined)
 
         if (!downloadUrl) {
-            throw new Error(`No download URL available for ${driveFile.name}`)
+            throw new UpupNetworkError(
+                `No download URL available for ${driveFile.name}`,
+            )
         }
 
         // Download the file content via the download URL (no auth needed)
         const downloadRes = await fetch(downloadUrl, { method: 'GET' })
         if (!downloadRes.ok) {
-            throw new Error(
+            throw new UpupNetworkError(
                 `Download failed (${downloadRes.status}) for ${driveFile.name}`,
+                downloadRes.status,
             )
         }
 

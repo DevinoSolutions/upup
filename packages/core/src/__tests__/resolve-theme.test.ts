@@ -128,27 +128,27 @@ describe('resolveTheme — instance token overrides', () => {
 describe('resolveTheme — slot merging', () => {
     it('provider slots appear in result', () => {
         const result = resolveTheme(undefined, undefined, {
-            root: 'provider-root',
-        } as any)
-        expect((result.slots as any).root).toBe('provider-root')
+            uploader: { root: 'provider-root' },
+        })
+        expect(result.slots.uploader?.root).toBe('provider-root')
     })
 
     it('instance slots override provider slots for the same key', () => {
         const result = resolveTheme(
-            { slots: { root: 'instance-root' } as any },
+            { slots: { uploader: { root: 'instance-root' } } },
             undefined,
-            { root: 'provider-root' } as any,
+            { uploader: { root: 'provider-root' } },
         )
-        expect((result.slots as any).root).toBe('instance-root')
+        expect(result.slots.uploader?.root).toBe('instance-root')
     })
 
     it('provider slot keys not overridden by instance are preserved', () => {
         const result = resolveTheme(
-            { slots: { dropzone: 'instance-dz' } as any },
+            { slots: { dropZone: { root: 'instance-dz' } } },
             undefined,
-            { root: 'provider-root', dropzone: 'provider-dz' } as any,
+            { uploader: { root: 'provider-root' }, dropZone: { root: 'provider-dz' } },
         )
-        expect((result.slots as any).root).toBe('provider-root')
-        expect((result.slots as any).dropzone).toBe('instance-dz')
+        expect(result.slots.uploader?.root).toBe('provider-root')
+        expect(result.slots.dropZone?.root).toBe('instance-dz')
     })
 })

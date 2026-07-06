@@ -1,6 +1,31 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { MultipartUpload } from '../../src/strategies/multipart-upload'
-import type { CredentialStrategy } from '../../src/contracts-strategies'
+import type {
+    CredentialStrategy,
+    UploadCredentials,
+} from '../../src/contracts-strategies'
+
+// MultipartUpload's `_credentials` param is unused by the implementation
+// (multipart auth flows through `credentials.signPart`/`initMultipartUpload`
+// instead) — a minimal well-typed stub satisfies the signature.
+const dummyCredentials: UploadCredentials = {
+    key: 'unused',
+    uploadUrl: 'unused',
+    expiresIn: 0,
+}
+
+// Test-only accessor for MultipartUpload's private tuning fields — there is
+// no public getter, and these tests exist specifically to pin the
+// default/override behavior of the constructor options.
+function internals(strategy: MultipartUpload): {
+    chunkSizeBytes: number
+    maxConcurrentParts: number
+} {
+    return strategy as unknown as {
+        chunkSizeBytes: number
+        maxConcurrentParts: number
+    }
+}
 
 function makeCredentials(): CredentialStrategy {
     return {
@@ -30,7 +55,7 @@ vi.stubGlobal('fetch', mockFetch)
 
 beforeEach(() => {
     vi.clearAllMocks()
-    mockFetch.mockImplementation(async (url: string) => ({
+    mockFetch.mockImplementation(async (_url: string) => ({
         ok: true,
         status: 200,
         headers: new Headers({ ETag: '"etag"' }),
@@ -46,7 +71,7 @@ describe('MultipartUpload — extended', () => {
         })
         const file = new File([new ArrayBuffer(1024)], 'tiny.txt', { type: 'text/plain' })
 
-        await strategy.upload(file, {} as any, {
+        await strategy.upload(file, dummyCredentials, {
             onProgress: vi.fn(),
             signal: new AbortController().signal,
         })
@@ -59,13 +84,13 @@ describe('MultipartUpload — extended', () => {
         const creds = makeCredentials()
         const strategy = new MultipartUpload({ credentials: creds })
         // Should not throw — defaults are applied
-        expect((strategy as any).chunkSizeBytes).toBe(5 * 1024 * 1024)
+        expect(internals(strategy).chunkSizeBytes).toBe(5 * 1024 * 1024)
     })
 
     it('uses default maxConcurrentParts when not specified', () => {
         const creds = makeCredentials()
         const strategy = new MultipartUpload({ credentials: creds })
-        expect((strategy as any).maxConcurrentParts).toBe(3)
+        expect(internals(strategy).maxConcurrentParts).toBe(3)
     })
 
     it('respects custom chunkSizeBytes', () => {
@@ -74,7 +99,7 @@ describe('MultipartUpload — extended', () => {
             credentials: creds,
             chunkSizeBytes: 1024,
         })
-        expect((strategy as any).chunkSizeBytes).toBe(1024)
+        expect(internals(strategy).chunkSizeBytes).toBe(1024)
     })
 
     it('respects custom maxConcurrentParts', () => {
@@ -83,7 +108,7 @@ describe('MultipartUpload — extended', () => {
             credentials: creds,
             maxConcurrentParts: 8,
         })
-        expect((strategy as any).maxConcurrentParts).toBe(8)
+        expect(internals(strategy).maxConcurrentParts).toBe(8)
     })
 
     it('calls onProgress during upload', async () => {
@@ -96,7 +121,7 @@ describe('MultipartUpload — extended', () => {
         const file = new File([new ArrayBuffer(fileSize)], 'big.bin', { type: 'application/octet-stream' })
         const onProgress = vi.fn()
 
-        await strategy.upload(file, {} as any, {
+        await strategy.upload(file, dummyCredentials, {
             onProgress,
             signal: new AbortController().signal,
         })
@@ -124,7 +149,7 @@ describe('MultipartUpload — extended', () => {
         })
 
         await expect(
-            strategy.upload(file, {} as any, {
+            strategy.upload(file, dummyCredentials, {
                 onProgress: vi.fn(),
                 signal: new AbortController().signal,
             }),
@@ -136,7 +161,7 @@ describe('MultipartUpload — extended', () => {
         const strategy = new MultipartUpload({ credentials: creds })
         const file = new File([new ArrayBuffer(1024)], 'result.txt')
 
-        const result = await strategy.upload(file, {} as any, {
+        const result = await strategy.upload(file, dummyCredentials, {
             onProgress: vi.fn(),
             signal: new AbortController().signal,
         })

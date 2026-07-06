@@ -47,7 +47,7 @@ describe('UpupCore — options-updated event', () => {
 
     it('emits options-updated before the options object is mutated (same reference)', () => {
         const core = makeCore()
-        let capturedOptions: any
+        let capturedOptions: number | undefined
         core.on('options-updated', () => {
             // By the time the event fires, options should already be updated
             capturedOptions = core.options.maxRetries

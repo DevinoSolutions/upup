@@ -18,9 +18,9 @@ const makeFile = (content: string): UploadFile => {
 
 const makeContext = (): PipelineContext => ({
   files: new Map(),
-  options: {} as any,
+  options: {},
   emit: () => {},
-  t: ((k: string) => k) as any,
+  t: (k: string) => k,
 })
 
 describe('hashStep', () => {

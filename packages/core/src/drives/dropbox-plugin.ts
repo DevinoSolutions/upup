@@ -2,6 +2,7 @@ import type { DropboxConfig } from './configs'
 import type { DriveFile, DriveUser } from './types'
 import { guessMimeType } from './mime'
 import { PopupOAuthPlugin, type PopupOAuthSpec } from './popup-oauth-plugin'
+import { UpupNetworkError } from '../errors'
 
 // ── Dropbox API endpoints ──
 const AUTH_URL = 'https://www.dropbox.com/oauth2/authorize'
@@ -16,20 +17,45 @@ const TEMP_LINK_URL = 'https://api.dropbox.com/2/files/get_temporary_link'
 const OAUTH_SCOPES =
     'files.metadata.read files.content.read files.content.write account_info.read'
 
+// ── Dropbox API response shapes (only the fields this file reads) ──
+
+interface DropboxListFolderResponse {
+    entries?: Record<string, unknown>[]
+    cursor?: string
+    has_more?: boolean
+}
+
+interface DropboxSearchMatch {
+    metadata: { metadata: Record<string, unknown> }
+}
+
+interface DropboxSearchResponse {
+    matches?: DropboxSearchMatch[]
+}
+
+interface DropboxTempLinkResponse {
+    link?: string
+}
+
+interface DropboxUserResponse {
+    name?: { display_name?: string }
+    email?: string
+}
+
 // ── Dropbox entry → DriveFile mapper ──
 
 function mapEntry(entry: Record<string, unknown>): DriveFile {
     const tag = entry['.tag'] as string
     const isFolder = tag === 'folder'
     return {
-        id: (entry.id as string) ?? '',
-        name: (entry.name as string) ?? '',
-        path: (entry.path_display as string) ?? '',
-        size: isFolder ? 0 : ((entry.size as number) ?? 0),
+        id: (entry.id as string | undefined) ?? '',
+        name: (entry.name as string | undefined) ?? '',
+        path: (entry.path_display as string | undefined) ?? '',
+        size: isFolder ? 0 : ((entry.size as number | undefined) ?? 0),
         mimeType: isFolder ? 'folder' : guessMimeType(entry.name as string),
         isFolder,
         thumbnail: undefined,
-        modifiedAt: (entry.server_modified as string) ?? undefined,
+        modifiedAt: (entry.server_modified as string | undefined) ?? undefined,
     }
 }
 
@@ -83,7 +109,7 @@ export class DropboxPlugin extends PopupOAuthPlugin {
                 }),
             })
 
-            const data = await res.json()
+            const data = (await res.json()) as DropboxListFolderResponse
             const files: DriveFile[] = (data.entries ?? []).map(mapEntry)
 
             this.setState('authenticated')
@@ -119,7 +145,7 @@ export class DropboxPlugin extends PopupOAuthPlugin {
                 body: JSON.stringify({ cursor }),
             })
 
-            const data = await res.json()
+            const data = (await res.json()) as DropboxListFolderResponse
             const files: DriveFile[] = (data.entries ?? []).map(mapEntry)
 
             // No files-loaded emit here: the controller's loadMore() appends this
@@ -151,7 +177,7 @@ export class DropboxPlugin extends PopupOAuthPlugin {
                 }),
             })
 
-            let data = await initialRes.json()
+            let data = (await initialRes.json()) as DropboxListFolderResponse
             const entries: Record<string, unknown>[] = data.entries ?? []
 
             while (data.has_more) {
@@ -163,7 +189,7 @@ export class DropboxPlugin extends PopupOAuthPlugin {
                         body: JSON.stringify({ cursor: data.cursor }),
                     },
                 )
-                data = await contRes.json()
+                data = (await contRes.json()) as DropboxListFolderResponse
                 entries.push(...(data.entries ?? []))
             }
 
@@ -231,12 +257,9 @@ export class DropboxPlugin extends PopupOAuthPlugin {
                 body: JSON.stringify(body),
             })
 
-            const data = await res.json()
+            const data = (await res.json()) as DropboxSearchResponse
             const matches = data.matches ?? []
-            return matches.map(
-                (m: { metadata: { metadata: Record<string, unknown> } }) =>
-                    mapEntry(m.metadata.metadata),
-            )
+            return matches.map(m => mapEntry(m.metadata.metadata))
         } catch (err) {
             this.emitter?.emit('dropbox:error', {
                 error: err instanceof Error ? err : new Error(String(err)),
@@ -264,18 +287,21 @@ export class DropboxPlugin extends PopupOAuthPlugin {
             body: JSON.stringify({ path: driveFile.path }),
         })
 
-        const linkData = await linkRes.json()
-        const downloadLink: string = linkData.link
+        const linkData = (await linkRes.json()) as DropboxTempLinkResponse
+        const downloadLink = linkData.link
 
         if (!downloadLink) {
-            throw new Error(`No download link returned for ${driveFile.name}`)
+            throw new UpupNetworkError(
+                `No download link returned for ${driveFile.name}`,
+            )
         }
 
         // Download the file content via the temporary link
         const downloadRes = await fetch(downloadLink, { method: 'GET' })
         if (!downloadRes.ok) {
-            throw new Error(
+            throw new UpupNetworkError(
                 `Download failed (${downloadRes.status}) for ${driveFile.name}`,
+                downloadRes.status,
             )
         }
 
@@ -294,7 +320,7 @@ export class DropboxPlugin extends PopupOAuthPlugin {
             body: null,
         })
 
-        const data = await res.json()
+        const data = (await res.json()) as DropboxUserResponse
         return {
             name: data.name?.display_name ?? '',
             email: data.email ?? '',

@@ -3,6 +3,7 @@ import type { DrivePlugin } from './plugin'
 import type { GoogleDriveConfig } from './configs'
 import type { DriveFile, DriveState } from './types'
 import { storageGet, storageSet, storageDel } from './session-storage'
+import { UpupAuthError, UpupNetworkError } from '../errors'
 
 // ── Session storage keys ──
 const SK_ACCESS = 'upup_gdrive_access_token'
@@ -11,6 +12,19 @@ const SK_EXPIRY = 'upup_gdrive_token_expiry'
 // ── Google API endpoints ──
 const FILES_URL = 'https://www.googleapis.com/drive/v3/files'
 const USER_INFO_URL = 'https://www.googleapis.com/oauth2/v3/userinfo'
+
+// ── Google Drive API response shapes (only the fields this file reads) ──
+
+interface GoogleUserInfoResponse {
+    name?: string
+    email?: string
+    picture?: string
+}
+
+interface GoogleFilesListResponse {
+    files?: Record<string, unknown>[]
+    nextPageToken?: string
+}
 
 // ── Google Workspace export mapping ──
 
@@ -65,17 +79,23 @@ function getExportUrl(fileId: string, mimeType: string): string | null {
 }
 
 function mapGoogleEntry(entry: Record<string, unknown>): DriveFile {
-    const mimeType = (entry.mimeType as string) ?? ''
+    const mimeType = (entry.mimeType as string | undefined) ?? ''
     const isFolder = mimeType === 'application/vnd.google-apps.folder'
 
     return {
-        id: (entry.id as string) ?? '',
-        name: (entry.name as string) ?? '',
+        id: (entry.id as string | undefined) ?? '',
+        name: (entry.name as string | undefined) ?? '',
         path: '', // Google Drive doesn't return a path, uses parent IDs
-        size: isFolder ? 0 : parseInt(String(entry.size ?? '0'), 10),
+        size: isFolder
+            ? 0
+            : typeof entry.size === 'number'
+              ? entry.size
+              : typeof entry.size === 'string'
+                ? parseInt(entry.size, 10) || 0
+                : 0,
         mimeType: isFolder ? 'folder' : mimeType,
         isFolder,
-        thumbnail: (entry.thumbnailLink as string) ?? undefined,
+        thumbnail: (entry.thumbnailLink as string | undefined) ?? undefined,
         modifiedAt: undefined,
     }
 }
@@ -153,7 +173,7 @@ export class GoogleDrivePlugin implements DrivePlugin {
             try {
                 user = await this.getUserInfo()
             } catch {
-                // Profile fetch is non-critical
+                // upup-catch: profile fetch is non-critical — authenticated event still emits without a user
             }
 
             this.setState('authenticated')
@@ -217,7 +237,7 @@ export class GoogleDrivePlugin implements DrivePlugin {
         picture?: string
     }> {
         const res = await this.apiRequest(USER_INFO_URL, { method: 'GET' })
-        const data = await res.json()
+        const data = (await res.json()) as GoogleUserInfoResponse
         return {
             name: data.name ?? '',
             email: data.email ?? '',
@@ -251,7 +271,7 @@ export class GoogleDrivePlugin implements DrivePlugin {
                 { method: 'GET' },
             )
 
-            const data = await res.json()
+            const data = (await res.json()) as GoogleFilesListResponse
             const files: DriveFile[] = (data.files ?? []).map(mapGoogleEntry)
             const hasMore = !!data.nextPageToken
             const cursor = hasMore
@@ -312,7 +332,7 @@ export class GoogleDrivePlugin implements DrivePlugin {
                 { method: 'GET' },
             )
 
-            const data = await res.json()
+            const data = (await res.json()) as GoogleFilesListResponse
             const files: DriveFile[] = (data.files ?? []).map(mapGoogleEntry)
             const hasMore = !!data.nextPageToken
             const nextCursor = hasMore
@@ -435,7 +455,10 @@ export class GoogleDrivePlugin implements DrivePlugin {
             this.setState('session-expired')
         }
 
-        throw new Error(`Google Drive API error (${res.status}): ${errorText}`)
+        throw new UpupNetworkError(
+            `Google Drive API error (${res.status}): ${errorText}`,
+            res.status,
+        )
     }
 
     // ── Private: token management ──
@@ -449,7 +472,10 @@ export class GoogleDrivePlugin implements DrivePlugin {
 
     private ensureValidToken(): void {
         if (!this.accessToken) {
-            throw new Error('Not authenticated — no access token')
+            throw new UpupAuthError(
+                'Not authenticated — no access token',
+                'Google Drive',
+            )
         }
 
         // Check if token has expired
@@ -457,7 +483,7 @@ export class GoogleDrivePlugin implements DrivePlugin {
             this.clearTokens()
             this.emitter?.emit('google-drive:session-expired', {})
             this.setState('session-expired')
-            throw new Error('Access token has expired')
+            throw new UpupAuthError('Access token has expired', 'Google Drive')
         }
     }
 }

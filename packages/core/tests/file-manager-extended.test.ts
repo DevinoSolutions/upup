@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { FileManager, fileSizeInBytes, matchesAccept } from '../src/file-manager'
+import type { MaxFileSizeObject } from '../src/contracts'
 
 function makeFile(name = 'test.txt', size = 100, type = 'text/plain'): File {
     return Object.assign(new File([new Uint8Array(size)], name, { type }), {})
@@ -30,7 +31,7 @@ describe('fileSizeInBytes', () => {
     })
 
     it('falls back to 1 for unknown unit', () => {
-        expect(fileSizeInBytes({ size: 10, unit: 'XB' as any })).toBe(10)
+        expect(fileSizeInBytes({ size: 10, unit: 'XB' as unknown as MaxFileSizeObject['unit'] })).toBe(10)
     })
 })
 

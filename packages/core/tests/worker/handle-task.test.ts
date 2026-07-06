@@ -77,7 +77,6 @@ describe('handleTask', () => {
     }))
     // Stub a canvas so the helper's backend guard passes and decode() actually runs (and throws).
     vi.stubGlobal('OffscreenCanvas', class {
-      constructor(_w: number, _h: number) {}
       getContext() { return { createImageData: () => ({ data: new Uint8ClampedArray(4) }), putImageData: vi.fn() } }
       async convertToBlob() { return new Blob([]) }
     })
@@ -88,7 +87,7 @@ describe('handleTask', () => {
   })
 
   it('never throws on unknown task type', async () => {
-    // @ts-expect-error intentional bad type
+    // @ts-expect-error: intentional bad type — 'nope' is not a valid task type
     const res = await handleTask({ id: 9, type: 'nope', data: new ArrayBuffer(2) })
     expect(res.ok).toBe(false)
   })

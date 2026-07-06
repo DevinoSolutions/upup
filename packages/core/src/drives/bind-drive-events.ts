@@ -22,5 +22,9 @@ export function bindDriveEvents(
         core.on(`${provider}:state-change`, callbacks.onStateChange),
         core.on(`${provider}:error`, callbacks.onError),
     ]
-    return () => unsubs.forEach(u => u())
+    return () => {
+        unsubs.forEach(u => {
+            u()
+        })
+    }
 }

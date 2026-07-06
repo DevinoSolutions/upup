@@ -1,6 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
 import { UpupCore } from '../src/core'
-import { UploadStatus } from '@upup/core'
 
 /**
  * Catalog test: ensures every documented UpupCore event can be emitted

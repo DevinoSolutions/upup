@@ -3,7 +3,6 @@ import type { UploadStatus } from '../types/upload-status'
 import type { FileSource } from '../types/file-source'
 import type { FilesProgressMap } from '../file-utils'
 import type { ResolvedImageEditorOptions } from '../types/image-editor'
-import type { UploadResult } from '../contracts-strategies'
 
 export interface UploadProgressInfo {
     loaded: number

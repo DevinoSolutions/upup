@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect } from 'vitest'
 import { createWorkerProvider } from '../../src/worker/create-worker-provider'
 import type { WorkerRequest, WorkerResponse } from '../../src/worker/protocol'
 

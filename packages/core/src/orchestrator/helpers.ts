@@ -8,7 +8,7 @@ export function getDir(
     if (locale && typeof locale === 'object' && 'dir' in locale)
         return locale.dir
     const code = typeof locale === 'string' ? locale : 'en-US'
-    const base = code.split('-')[0]
+    const base = code.split('-')[0] ?? ''
     const meta =
         LOCALE_META[code] ??
         Object.values(LOCALE_META).find(m => m.code.startsWith(base + '-'))

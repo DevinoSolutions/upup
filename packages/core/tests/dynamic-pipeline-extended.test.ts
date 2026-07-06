@@ -1,11 +1,17 @@
 import { describe, it, expect, vi } from 'vitest'
 import { UpupCore } from '../src/core'
-import { FileSource, UploadStatus } from '../src/contracts'
+import { FileSource, UploadStatus, type UploadFile } from '../src/contracts'
+import type { PipelineEngine } from '../src/pipeline/engine'
+
+// Reaches into UpupCore's/PipelineEngine's private fields — there is no public
+// accessor for the built step list, which is what these tests assert on.
+type CoreInternals = { pipelineEngine: PipelineEngine | null }
+type EngineInternals = { steps: Array<{ name: string }> }
 
 function getStepNames(core: UpupCore): string[] {
-    const engine = (core as any).pipelineEngine
+    const engine = (core as unknown as CoreInternals).pipelineEngine
     if (!engine) return []
-    return ((engine as any).steps as Array<{ name: string }>).map(s => s.name)
+    return (engine as unknown as EngineInternals).steps.map(s => s.name)
 }
 
 // ─────────────────────────────────────────────
@@ -14,28 +20,44 @@ function getStepNames(core: UpupCore): string[] {
 describe('Dynamic pipeline — boolean option → step', () => {
     it('heicConversion adds a heic step', async () => {
         const core = new UpupCore({ heicConversion: true })
-        try { await core.upload() } catch { /* no endpoint */ }
+        try { await core.upload() } catch {
+            // upup-catch: no endpoint configured; upload() is only called to trigger
+            // lazy pipeline construction before inspecting step names — the rejection
+            // itself is expected and irrelevant to this assertion.
+        }
         expect(getStepNames(core).some(n => n.includes('heic'))).toBe(true)
         core.destroy()
     })
 
     it('stripExifData adds an exif step', async () => {
         const core = new UpupCore({ stripExifData: true })
-        try { await core.upload() } catch { /* no endpoint */ }
+        try { await core.upload() } catch {
+            // upup-catch: no endpoint configured; upload() is only called to trigger
+            // lazy pipeline construction before inspecting step names — the rejection
+            // itself is expected and irrelevant to this assertion.
+        }
         expect(getStepNames(core).some(n => n.includes('exif'))).toBe(true)
         core.destroy()
     })
 
     it('imageCompression adds a compress step', async () => {
         const core = new UpupCore({ imageCompression: true })
-        try { await core.upload() } catch { /* no endpoint */ }
+        try { await core.upload() } catch {
+            // upup-catch: no endpoint configured; upload() is only called to trigger
+            // lazy pipeline construction before inspecting step names — the rejection
+            // itself is expected and irrelevant to this assertion.
+        }
         expect(getStepNames(core).some(n => n.includes('compress'))).toBe(true)
         core.destroy()
     })
 
     it('checksumVerification adds a hash step', async () => {
         const core = new UpupCore({ checksumVerification: true })
-        try { await core.upload() } catch { /* no endpoint */ }
+        try { await core.upload() } catch {
+            // upup-catch: no endpoint configured; upload() is only called to trigger
+            // lazy pipeline construction before inspecting step names — the rejection
+            // itself is expected and irrelevant to this assertion.
+        }
         expect(getStepNames(core).some(n => n.includes('hash'))).toBe(true)
         core.destroy()
     })
@@ -47,7 +69,11 @@ describe('Dynamic pipeline — boolean option → step', () => {
             imageCompression: true,
             checksumVerification: true,
         })
-        try { await core.upload() } catch { /* no endpoint */ }
+        try { await core.upload() } catch {
+            // upup-catch: no endpoint configured; upload() is only called to trigger
+            // lazy pipeline construction before inspecting step names — the rejection
+            // itself is expected and irrelevant to this assertion.
+        }
         const names = getStepNames(core)
         expect(names.length).toBeGreaterThanOrEqual(4)
         core.destroy()
@@ -55,8 +81,12 @@ describe('Dynamic pipeline — boolean option → step', () => {
 
     it('no boolean flags produce an empty pipeline', async () => {
         const core = new UpupCore({})
-        try { await core.upload() } catch { /* no endpoint */ }
-        expect((core as any).pipelineEngine).toBeNull()
+        try { await core.upload() } catch {
+            // upup-catch: no endpoint configured; upload() is only called to trigger
+            // lazy pipeline construction before inspecting step names — the rejection
+            // itself is expected and irrelevant to this assertion.
+        }
+        expect((core as unknown as CoreInternals).pipelineEngine).toBeNull()
         core.destroy()
     })
 })
@@ -68,7 +98,7 @@ describe('Dynamic pipeline — explicit pipeline', () => {
     it('explicit pipeline overrides boolean flags', async () => {
         const customStep = {
             name: 'my-custom',
-            process: vi.fn(async (file: any) => file),
+            process: vi.fn(async (file: UploadFile) => file),
         }
         const core = new UpupCore({
             heicConversion: true,
@@ -93,9 +123,9 @@ describe('Dynamic pipeline — explicit pipeline', () => {
 
     it('explicit pipeline with multiple steps preserves order', () => {
         const steps = [
-            { name: 'first', process: vi.fn(async (f: any) => f) },
-            { name: 'second', process: vi.fn(async (f: any) => f) },
-            { name: 'third', process: vi.fn(async (f: any) => f) },
+            { name: 'first', process: vi.fn(async (f: UploadFile) => f) },
+            { name: 'second', process: vi.fn(async (f: UploadFile) => f) },
+            { name: 'third', process: vi.fn(async (f: UploadFile) => f) },
         ]
         const core = new UpupCore({ pipeline: steps })
         expect(getStepNames(core)).toEqual(['first', 'second', 'third'])

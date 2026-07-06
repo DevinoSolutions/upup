@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
 import { createTranslator } from '../../i18n/create-translator'
 import { enUS } from '../../i18n/locales/en-US'
+import type { FlatMessageKey } from '../../i18n/types'
 
 describe('createTranslator', () => {
     it('formats a simple message', () => {
@@ -32,7 +33,9 @@ describe('createTranslator', () => {
     it('calls onMissingKey for unknown keys', () => {
         const onMissingKey = vi.fn()
         const t = createTranslator({ bundle: enUS, onMissingKey })
-        const result = t('common.nonexistent' as any)
+        // Deliberately force a key that doesn't exist in the bundle to
+        // exercise the missing-key fallback path.
+        const result = t('common.nonexistent' as unknown as FlatMessageKey)
         expect(onMissingKey).toHaveBeenCalledWith('common.nonexistent')
         expect(result).toBe('common.nonexistent')
     })

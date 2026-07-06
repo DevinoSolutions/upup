@@ -119,7 +119,9 @@ export class DriveBrowserController {
     }
 
     private notify(): void {
-        this.listeners.forEach(fn => fn())
+        this.listeners.forEach(fn => {
+            fn()
+        })
     }
 
     // ── Lifecycle ────────────────────────────────────────────────
@@ -139,7 +141,9 @@ export class DriveBrowserController {
     }
 
     destroy(): void {
-        this.unsubs.forEach(u => u())
+        this.unsubs.forEach(u => {
+            u()
+        })
         this.unsubs = []
         this.listeners.clear()
         this.plugin = null
@@ -163,7 +167,7 @@ export class DriveBrowserController {
                     const userInfo = await plugin.getUserInfo()
                     if (userInfo) this.setState({ user: userInfo })
                 } catch {
-                    // non-critical
+                    // upup-catch: getUserInfo failure is non-critical — still proceed to loadFiles
                 }
                 await plugin.loadFiles(this.descriptor.loadFilesRootArg)
             })()
@@ -178,12 +182,12 @@ export class DriveBrowserController {
                     const userInfo = await plugin.getUserInfo()
                     if (userInfo) this.setState({ user: userInfo })
                 } catch {
-                    // non-critical — mirrors the GIS branch above
+                    // upup-catch: getUserInfo failure is non-critical — mirrors the GIS branch above
                 }
                 try {
                     await plugin.loadFiles(this.descriptor.loadFilesRootArg)
                 } catch {
-                    // surfaced via the plugin's error emit → onError
+                    // upup-catch: failure already surfaced via the plugin's error emit → onError
                 }
             })()
         }
@@ -352,7 +356,7 @@ export class DriveBrowserController {
             scope: GIS_SCOPE,
             ux_mode: 'popup',
             callback: (tokenResponse: GisTokenResponse) => {
-                if (tokenResponse?.error) return
+                if (tokenResponse.error) return
                 this.setState({
                     authCancelled: false,
                     token: {
@@ -464,7 +468,7 @@ export class DriveBrowserController {
         try {
             await this.downloadAndClose(this.state.selectedFiles)
         } catch {
-            // error surfaced via plugin event
+            // upup-catch: error already surfaced via the plugin's error emit → onError
         } finally {
             this.setState({ showLoader: false })
         }
@@ -485,7 +489,7 @@ export class DriveBrowserController {
             try {
                 await this.downloadAndClose(current.children)
             } catch {
-                // error surfaced via plugin event
+                // upup-catch: error already surfaced via the plugin's error emit → onError
             } finally {
                 this.setState({ showLoader: false })
             }
@@ -503,7 +507,7 @@ export class DriveBrowserController {
             const all = await plugin.loadAllFilesInFolder(folderArg)
             await this.downloadAndClose(all)
         } catch {
-            // error surfaced via plugin event
+            // upup-catch: error already surfaced via the plugin's error emit → onError
         } finally {
             this.setState({ showLoader: false })
         }
@@ -551,7 +555,7 @@ export class DriveBrowserController {
                 isLoadingMore: false,
             })
         } catch {
-            // error already surfaced via the plugin's error emit → onError
+            // upup-catch: error already surfaced via the plugin's error emit → onError
             this.setState({ isLoadingMore: false })
         }
     }

@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { compressStep } from '../../src/steps/compress'
 import { exifStep } from '../../src/steps/exif'
 import { heicStep } from '../../src/steps/heic'
-import type { UploadFile } from '@upup/core'
+import type { UploadFile, PipelineContext } from '@upup/core'
 
 // Minimal UploadFile stub
 function makeFile(name: string, type: string): UploadFile {
@@ -10,12 +10,12 @@ function makeFile(name: string, type: string): UploadFile {
 }
 
 // Minimal PipelineContext stub
-const ctx = {
+const ctx: PipelineContext = {
     files: new Map(),
     options: {},
     emit: () => {},
     t: (k: string) => k,
-} as any
+}
 
 // ─────────────────────────────────────────────
 // compressStep

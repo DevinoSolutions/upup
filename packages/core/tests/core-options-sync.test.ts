@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { UpupCore } from '../src/core'
+import { UpupCore, type CoreOptions } from '../src/core'
 
 describe('UpupCore — updateOptions sync behavior', () => {
     it('merges partial options without overwriting unrelated fields', () => {
@@ -12,7 +12,7 @@ describe('UpupCore — updateOptions sync behavior', () => {
 
     it('syncs provider at runtime', () => {
         const core = new UpupCore({ provider: 'aws' })
-        core.updateOptions({ provider: 'gcs' as any })
+        core.updateOptions({ provider: 'gcs' })
         expect(core.options.provider).toBe('gcs')
         core.destroy()
     })
@@ -25,8 +25,12 @@ describe('UpupCore — updateOptions sync behavior', () => {
     })
 
     it('does not infer serverUrl from apiKey-like legacy input at runtime', () => {
-        const core = new UpupCore({} as any)
-        core.updateOptions({ apiKey: 'new-key' } as any)
+        const core = new UpupCore({})
+        // Legacy callers may still pass an `apiKey` field that predates the
+        // current CoreOptions shape; assert it's inert, not derived from.
+        core.updateOptions({
+            apiKey: 'new-key',
+        } as Partial<CoreOptions> & { apiKey?: string })
         expect(core.options.serverUrl).toBeUndefined()
         core.destroy()
     })

@@ -26,9 +26,9 @@ function makeFile(id: string, type = 'text/plain'): UploadFile {
 function makeContext(overrides: Partial<PipelineContext> = {}): PipelineContext {
     return {
         files: new Map(),
-        options: {} as any,
+        options: {},
         emit: vi.fn(),
-        t: ((k: string) => k) as any,
+        t: (k: string) => k,
         ...overrides,
     }
 }

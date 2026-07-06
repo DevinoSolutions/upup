@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect } from 'vitest'
 import { hashStep } from '../../src/steps/hash'
 import type { UploadFile, PipelineContext } from '@upup/core'
 
@@ -18,9 +18,9 @@ function makeFile(content: string, id = 'f1'): UploadFile {
 
 const ctx: PipelineContext = {
     files: new Map(),
-    options: {} as any,
+    options: {},
     emit: () => {},
-    t: ((k: string) => k) as any,
+    t: (k: string) => k,
 }
 
 describe('hashStep — extended', () => {
@@ -28,25 +28,25 @@ describe('hashStep — extended', () => {
         const step = hashStep()
         const file = makeFile('hello')
         const result = await step.process(file, ctx)
-        expect((result as any).metadata.checksum).toBeDefined()
-        expect((result as any).metadata.checksum).toBe(result.checksumSHA256)
+        expect(result.metadata.checksum).toBeDefined()
+        expect(result.metadata.checksum).toBe(result.checksumSHA256)
     })
 
     it('sets file.metadata.originalContentHash', async () => {
         const step = hashStep()
         const file = makeFile('content')
         const result = await step.process(file, ctx)
-        expect((result as any).metadata.originalContentHash).toBeDefined()
-        expect((result as any).metadata.originalContentHash).toBe(result.checksumSHA256)
+        expect(result.metadata.originalContentHash).toBeDefined()
+        expect(result.metadata.originalContentHash).toBe(result.checksumSHA256)
     })
 
     it('preserves existing metadata fields', async () => {
         const step = hashStep()
         const file = makeFile('data')
-        ;(file as any).metadata = { custom: 'value' }
+        file.metadata = { width: 100 }
         const result = await step.process(file, ctx)
-        expect((result as any).metadata.custom).toBe('value')
-        expect((result as any).metadata.checksum).toBeDefined()
+        expect(result.metadata.width).toBe(100)
+        expect(result.metadata.checksum).toBeDefined()
     })
 
     it('hash is lowercase hex', async () => {

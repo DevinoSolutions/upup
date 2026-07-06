@@ -1,17 +1,17 @@
 import { describe, it, expect } from 'vitest'
 import { thumbnailStep } from '../../src/steps/thumbnail'
-import type { UploadFile } from '@upup/core'
+import type { UploadFile, PipelineContext } from '@upup/core'
 
 function makeFile(name: string, type: string): UploadFile {
     return { id: 'f1', name, type, size: 512, status: 'idle' } as unknown as UploadFile
 }
 
-const ctx = {
+const ctx: PipelineContext = {
     files: new Map(),
     options: {},
     emit: () => {},
     t: (k: string) => k,
-} as any
+}
 
 // ─────────────────────────────────────────────
 // thumbnailStep

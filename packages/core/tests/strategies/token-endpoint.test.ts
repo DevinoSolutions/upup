@@ -4,6 +4,15 @@ import { UpupNetworkError } from '@upup/core'
 
 const FILE_META = { name: 'photo.jpg', size: 1024, type: 'image/jpeg' }
 
+// The mocked global fetch's recorded call args, typed to what these tests
+// actually read off them (narrower than the real RequestInit union, which
+// isn't directly indexable) — cast at this mock-introspection boundary.
+interface FetchCallOpts {
+    method: string
+    headers: Record<string, string>
+    body: string
+}
+
 // ─────────────────────────────────────────────
 // Constructor behaviour
 // ─────────────────────────────────────────────
@@ -56,21 +65,30 @@ describe('TokenEndpointCredentials — getPresignedUrl success', () => {
     it('sends a POST request', async () => {
         const creds = new TokenEndpointCredentials({ url: 'https://example.com/presign' })
         await creds.getPresignedUrl(FILE_META)
-        const [, opts] = (fetch as any).mock.calls[0]
+        const [, opts] = vi.mocked(fetch).mock.calls[0] as unknown as [
+            string,
+            FetchCallOpts,
+        ]
         expect(opts.method).toBe('POST')
     })
 
     it('sends Content-Type: application/json', async () => {
         const creds = new TokenEndpointCredentials({ url: 'https://example.com/presign' })
         await creds.getPresignedUrl(FILE_META)
-        const [, opts] = (fetch as any).mock.calls[0]
+        const [, opts] = vi.mocked(fetch).mock.calls[0] as unknown as [
+            string,
+            FetchCallOpts,
+        ]
         expect(opts.headers['Content-Type']).toBe('application/json')
     })
 
     it('sends file metadata in the request body', async () => {
         const creds = new TokenEndpointCredentials({ url: 'https://example.com/presign' })
         await creds.getPresignedUrl(FILE_META)
-        const [, opts] = (fetch as any).mock.calls[0]
+        const [, opts] = vi.mocked(fetch).mock.calls[0] as unknown as [
+            string,
+            FetchCallOpts,
+        ]
         const body = JSON.parse(opts.body)
         expect(body.name).toBe('photo.jpg')
         expect(body.size).toBe(1024)
@@ -83,7 +101,10 @@ describe('TokenEndpointCredentials — getPresignedUrl success', () => {
             headers: { Authorization: 'Bearer abc' },
         })
         await creds.getPresignedUrl(FILE_META)
-        const [, opts] = (fetch as any).mock.calls[0]
+        const [, opts] = vi.mocked(fetch).mock.calls[0] as unknown as [
+            string,
+            FetchCallOpts,
+        ]
         expect(opts.headers['Authorization']).toBe('Bearer abc')
         expect(opts.headers['Content-Type']).toBe('application/json')
     })

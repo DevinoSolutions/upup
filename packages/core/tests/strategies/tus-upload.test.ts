@@ -1,13 +1,18 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { TusUpload } from '../../src/strategies/tus-upload'
 
-const tusCalls = vi.hoisted(() => [] as Array<{ source: File | Blob; options: Record<string, any> }>)
+// Mirrors tus-js-client's own (unexported) `UploadOptions` type via the same
+// inline-import pattern the real strategy uses (src/strategies/tus-upload.ts),
+// without a static value import of the optional dependency.
+type TusUploadOptions = ConstructorParameters<typeof import('tus-js-client').Upload>[1]
+
+const tusCalls = vi.hoisted(() => [] as Array<{ source: File | Blob; options: TusUploadOptions }>)
 
 vi.mock('tus-js-client', () => ({
   Upload: class MockTusUpload {
     url = 'https://tus.example/uploads/1'
 
-    constructor(source: File | Blob, options: Record<string, any>) {
+    constructor(source: File | Blob, options: TusUploadOptions) {
       tusCalls.push({ source, options })
     }
 

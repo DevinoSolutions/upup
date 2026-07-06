@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
 import { UpupCore } from '../src/core'
 import { UploadStatus } from '@upup/core'
+import type { UploadFile } from '@upup/core'
 
 const makeFile = (name: string) =>
     new File(['x'], name, { type: 'text/plain' })
@@ -29,7 +30,7 @@ describe('UpupCore — snapshot extended', () => {
         const core = new UpupCore({})
         await core.addFiles([makeFile('a.txt')])
         const snap = core.getSnapshot()
-        snap.files.push(['fake', {} as any])
+        snap.files.push(['fake', {} as unknown as UploadFile])
         expect(core.files.size).toBe(1) // core unaffected
         core.destroy()
     })
@@ -56,7 +57,7 @@ describe('UpupCore — snapshot extended', () => {
         core.pause()
 
         const newSnap = {
-            files: [] as [string, any][],
+            files: [] as [string, UploadFile][],
             status: UploadStatus.IDLE,
         }
         core.restore(newSnap)
@@ -92,7 +93,10 @@ describe('UpupCore — snapshot extended', () => {
         core.on('snapshot-restored', handler)
 
         const snap = {
-            files: [['f1', { id: 'f1', name: 'test.txt' }]] as [string, any][],
+            files: [['f1', { id: 'f1', name: 'test.txt' }]] as unknown as [
+                string,
+                UploadFile,
+            ][],
             status: UploadStatus.PAUSED,
         }
         core.restore(snap)

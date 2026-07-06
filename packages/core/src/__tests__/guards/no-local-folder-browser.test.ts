@@ -27,6 +27,8 @@ describe('LocalFolderBrowser is fully removed', () => {
             try {
                 statSync(srcDir)
             } catch {
+                // upup-catch: not every package dir has a src/ (e.g. non-code
+                // packages); absence just means nothing to scan here.
                 continue
             }
             for (const file of walk(srcDir)) {

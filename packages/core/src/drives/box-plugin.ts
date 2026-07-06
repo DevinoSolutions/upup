@@ -11,20 +11,33 @@ const FOLDERS_URL = 'https://api.box.com/2.0/folders'
 const FILES_URL = 'https://api.box.com/2.0/files'
 const SEARCH_URL = 'https://api.box.com/2.0/search'
 
+// ── Box API response shapes (only the fields this file reads) ──
+
+interface BoxListResponse {
+    entries?: Record<string, unknown>[]
+    offset?: number
+    total_count?: number
+}
+
+interface BoxUserResponse {
+    name?: string
+    login?: string
+}
+
 // ── Box entry → DriveFile mapper ──
 
 function mapEntry(entry: Record<string, unknown>): DriveFile {
     const type = entry.type as string
     const isFolder = type === 'folder'
     return {
-        id: (entry.id as string) ?? '',
-        name: (entry.name as string) ?? '',
-        path: (entry.id as string) ?? '', // Box uses IDs for navigation, not paths
-        size: isFolder ? 0 : ((entry.size as number) ?? 0),
+        id: (entry.id as string | undefined) ?? '',
+        name: (entry.name as string | undefined) ?? '',
+        path: (entry.id as string | undefined) ?? '', // Box uses IDs for navigation, not paths
+        size: isFolder ? 0 : ((entry.size as number | undefined) ?? 0),
         mimeType: isFolder ? 'folder' : guessMimeType(entry.name as string),
         isFolder,
         thumbnail: undefined,
-        modifiedAt: (entry.modified_at as string) ?? undefined,
+        modifiedAt: (entry.modified_at as string | undefined) ?? undefined,
     }
 }
 
@@ -80,15 +93,15 @@ export class BoxPlugin extends PopupOAuthPlugin {
                 { method: 'GET' },
             )
 
-            const data = await res.json()
+            const data = (await res.json()) as BoxListResponse
             const files: DriveFile[] = (data.entries ?? []).map(mapEntry)
 
             // Box's /folders/{id}/items returns total_count by default (independent
             // of the fields param). When it's absent, loaded < loaded is always
             // false — a safe length-based fallback rather than assuming more pages.
-            const off = Number(data.offset ?? offset ?? 0)
+            const off = Number(data.offset ?? offset)
             const loaded = off + files.length
-            const hasMore = loaded < Number(data.total_count ?? loaded)
+            const hasMore = loaded < (data.total_count ?? loaded)
             const cursor = hasMore ? `${folderId}:${loaded}` : undefined
 
             this.setState('authenticated')
@@ -135,12 +148,12 @@ export class BoxPlugin extends PopupOAuthPlugin {
                 { method: 'GET' },
             )
 
-            const data = await res.json()
+            const data = (await res.json()) as BoxListResponse
             const files: DriveFile[] = (data.entries ?? []).map(mapEntry)
 
             const off = Number(data.offset ?? offsetStr ?? 0)
             const loaded = off + files.length
-            const hasMore = loaded < Number(data.total_count ?? loaded)
+            const hasMore = loaded < (data.total_count ?? loaded)
             const nextCursor = hasMore ? `${folderId}:${loaded}` : undefined
 
             return {
@@ -222,7 +235,7 @@ export class BoxPlugin extends PopupOAuthPlugin {
                 { method: 'GET' },
             )
 
-            const data = await res.json()
+            const data = (await res.json()) as BoxListResponse
             const entries = data.entries ?? []
             return entries.map(mapEntry)
         } catch (err) {
@@ -260,7 +273,7 @@ export class BoxPlugin extends PopupOAuthPlugin {
 
     protected async fetchUserProfile(): Promise<DriveUser> {
         const res = await this.apiRequest(USER_URL, { method: 'GET' })
-        const data = await res.json()
+        const data = (await res.json()) as BoxUserResponse
         return {
             name: data.name ?? '',
             email: data.login ?? '',

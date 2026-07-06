@@ -1,18 +1,22 @@
 import { describe, it, expect } from 'vitest'
 import { UpupCore } from '../src/core'
+import type { CoreOptions } from '../src/options/types'
 
-// ─────────────────────────────────────────────
-// Legacy hosted apiKey behavior
-// ─────────────────────────────────────────────
+// `apiKey` was a legacy hosted-service option; it is not part of CoreOptions
+// any more. These two casts simulate a caller still passing it, to prove core
+// no longer special-cases that shape.
 describe('UpupCore constructor — no implicit hosted apiKey URL', () => {
     it('does not set serverUrl from apiKey-like legacy input', () => {
-        const core = new UpupCore({ apiKey: 'key_123' } as any)
+        const core = new UpupCore({ apiKey: 'key_123' } as unknown as CoreOptions)
         expect(core.options.serverUrl).toBeUndefined()
         core.destroy()
     })
 
     it('keeps an explicit serverUrl', () => {
-        const core = new UpupCore({ apiKey: 'key_123', serverUrl: 'https://custom.api' } as any)
+        const core = new UpupCore({
+            apiKey: 'key_123',
+            serverUrl: 'https://custom.api',
+        } as unknown as CoreOptions)
         expect(core.options.serverUrl).toBe('https://custom.api')
         core.destroy()
     })

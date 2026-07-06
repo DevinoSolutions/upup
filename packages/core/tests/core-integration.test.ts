@@ -5,6 +5,10 @@ import { UploadStatus } from '@upup/core'
 const makeFile = (name: string, size = 10, type = 'text/plain') =>
     new File(['x'.repeat(size)], name, { type })
 
+// Test-only probe the plugin below attaches to `core` to observe its own
+// init(emitter) callback firing; not part of UpupCore's public surface.
+type CoreWithPluginCount = UpupCore & { _pluginCount?: () => number }
+
 describe('UpupCore — integration lifecycle', () => {
     it('add → getSnapshot → destroy → restore round-trip', async () => {
         const core = new UpupCore({ provider: 'aws', uploadEndpoint: '/api/upload' })
@@ -137,19 +141,19 @@ describe('UpupCore — integration lifecycle', () => {
                 emitter.on('files-added', () => {
                     count++
                 })
-                ;(core as any)._pluginCount = () => count
+                ;(core as CoreWithPluginCount)._pluginCount = () => count
             },
         })
 
         await core.addFiles([makeFile('a.txt')])
         await core.addFiles([makeFile('b.txt')])
-        expect((core as any)._pluginCount()).toBe(2)
+        expect((core as CoreWithPluginCount)._pluginCount!()).toBe(2)
 
         core.removeAll()
         expect(core.files.size).toBe(0)
         // Plugin still works
         await core.addFiles([makeFile('c.txt')])
-        expect((core as any)._pluginCount()).toBe(3)
+        expect((core as CoreWithPluginCount)._pluginCount!()).toBe(3)
         core.destroy()
     })
 })

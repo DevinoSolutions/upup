@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import { UpupCore } from '../src/core'
-import { UploadStatus } from '@upup/core'
+import type { FileManager } from '../src/file-manager'
 
 const makeCore = () =>
     new UpupCore({ provider: 'aws', uploadEndpoint: '/api/upload' })
@@ -101,7 +101,9 @@ describe('UpupCore — progress getter', () => {
         ])
         // Simulate one file completed by setting its key
         const [id] = [...core.files.keys()]
-        ;(core as any).fileManager.updateFile(id, { key: 'uploaded/a.txt' })
+        ;(core as unknown as { fileManager: FileManager }).fileManager.updateFile(id, {
+            key: 'uploaded/a.txt',
+        })
 
         expect(core.progress.totalFiles).toBe(2)
         expect(core.progress.completedFiles).toBe(1)
@@ -112,7 +114,9 @@ describe('UpupCore — progress getter', () => {
         const core = makeCore()
         await core.addFiles([new File(['x'], 'x.txt', { type: 'text/plain' })])
         const [id] = [...core.files.keys()]
-        ;(core as any).fileManager.updateFile(id, { key: 'uploaded/x.txt' })
+        ;(core as unknown as { fileManager: FileManager }).fileManager.updateFile(id, {
+            key: 'uploaded/x.txt',
+        })
 
         expect(core.progress.percentage).toBe(100)
     })

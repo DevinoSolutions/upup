@@ -6,8 +6,8 @@ import { UpupNetworkError, UpupStorageError, UpupError } from '@upup/core'
 // Fake XHR factory
 // ─────────────────────────────────────────────
 function makeFakeXhr(statusCode = 200, statusText = 'OK') {
-    const listeners: Record<string, ((...args: any[]) => void)[]> = {}
-    const uploadListeners: Record<string, ((...args: any[]) => void)[]> = {}
+    const listeners: Record<string, ((...args: unknown[]) => void)[]> = {}
+    const uploadListeners: Record<string, ((...args: unknown[]) => void)[]> = {}
 
     const xhr = {
         status: statusCode,
@@ -18,12 +18,12 @@ function makeFakeXhr(statusCode = 200, statusText = 'OK') {
         send: vi.fn(),
         abort: vi.fn(),
         upload: {
-            addEventListener: vi.fn((event: string, cb: (...args: any[]) => void) => {
+            addEventListener: vi.fn((event: string, cb: (...args: unknown[]) => void) => {
                 uploadListeners[event] = uploadListeners[event] ?? []
                 uploadListeners[event].push(cb)
             }),
         },
-        addEventListener: vi.fn((event: string, cb: (...args: any[]) => void) => {
+        addEventListener: vi.fn((event: string, cb: (...args: unknown[]) => void) => {
             listeners[event] = listeners[event] ?? []
             listeners[event].push(cb)
         }),
@@ -144,9 +144,9 @@ describe('DirectUpload — success', () => {
             signal: controller.signal,
         })
         // Fire a non-computable event manually
-        ;(fakeXhr.upload.addEventListener as any).mock.calls
-            .filter(([ev]: [string]) => ev === 'progress')
-            .forEach(([, cb]: [string, Function]) =>
+        ;(fakeXhr.upload.addEventListener.mock.calls)
+            .filter(([ev]) => ev === 'progress')
+            .forEach(([, cb]) =>
                 cb({ lengthComputable: false, loaded: 0, total: 0 }),
             )
         fakeXhr._triggerLoad()

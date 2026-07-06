@@ -76,9 +76,8 @@ describe('EventEmitter — extended', () => {
     it('handler can unsubscribe itself during emit', () => {
         const emitter = new EventEmitter()
         const other = vi.fn()
-        let unsub: () => void
         const selfRemove = () => { unsub() }
-        unsub = emitter.on('self-remove', selfRemove)
+        const unsub = emitter.on('self-remove', selfRemove)
         emitter.on('self-remove', other)
         emitter.emit('self-remove')
         // Second emit — selfRemove should not fire, other should

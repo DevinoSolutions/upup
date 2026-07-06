@@ -6,7 +6,7 @@ import {
 } from '../../i18n/resolve-locale'
 import { enUS } from '../../i18n/locales/en-US'
 import { frFR } from '../../i18n/locales/fr-FR'
-import type { LocaleBundle } from '../../i18n/types'
+import type { LocaleBundle, MessageNamespace } from '../../i18n/types'
 
 // ─────────────────────────────────────────────
 // buildFallbackChain — extended
@@ -52,7 +52,9 @@ describe('resolveMessage — extended', () => {
         const result = resolveMessage(
             bundles,
             ['en-US'],
-            'nonexistent' as any,
+            // Deliberately not a real namespace: proves the runtime guard
+            // for an unknown namespace, not just the type-checked path.
+            'nonexistent' as unknown as MessageNamespace,
             'key',
         )
         expect(result).toBeUndefined()

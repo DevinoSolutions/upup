@@ -3,6 +3,7 @@ import { UpupCore } from '../src/core'
 import { UploaderOrchestrator } from '../src/orchestrator/uploader-orchestrator'
 import { UploadStatus } from '../src/types/upload-status'
 import type { UploadFile } from '../src/types/upload-file'
+import type { PipelineEngine } from '../src/pipeline/engine'
 
 /**
  * P6 — the core state/event contract (§0). Cross-cutting pins that encode the
@@ -11,6 +12,10 @@ import type { UploadFile } from '../src/types/upload-file'
 
 const realFile = (name: string, bytes = 4): File =>
   new File([new Uint8Array(bytes)], name, { type: 'text/plain' })
+
+/** Reach the private pipelineEngine cache for cache-invalidation assertions (P6/C7). */
+const pipelineEngineOf = (core: UpupCore): PipelineEngine | null =>
+  (core as unknown as { pipelineEngine: PipelineEngine | null }).pipelineEngine
 
 /** A core whose upload target always fails deterministically (presign fetch rejects). */
 const makeFailingCore = () =>
@@ -144,20 +149,20 @@ describe('P6 contract — pipeline-flag invalidation (F-151)', () => {
     // imageCompression:true builds the auto-pipeline on upload → engine is cached.
     const core = new UpupCore({ imageCompression: true, uploadEndpoint: '/api/presign' })
     await core.upload().catch(() => {}) // builds the auto-pipeline (no files/network needed)
-    expect((core as any).pipelineEngine).not.toBeNull()
+    expect(pipelineEngineOf(core)).not.toBeNull()
 
     core.updateOptions({ imageCompression: false })
     // Invalidated → next upload() rebuilds from the new flags.
-    expect((core as any).pipelineEngine).toBeNull()
+    expect(pipelineEngineOf(core)).toBeNull()
     core.destroy()
   })
 
   it('an explicit pipeline is NOT invalidated by a flag change (construction-only)', () => {
     const core = new UpupCore({ pipeline: [], uploadEndpoint: '/api/presign' })
-    expect((core as any).pipelineEngine).not.toBeNull()
+    expect(pipelineEngineOf(core)).not.toBeNull()
 
     core.updateOptions({ imageCompression: true })
-    expect((core as any).pipelineEngine).not.toBeNull() // explicit pipeline survives
+    expect(pipelineEngineOf(core)).not.toBeNull() // explicit pipeline survives
     core.destroy()
   })
 

@@ -1,10 +1,13 @@
 import { describe, it, expect, vi } from 'vitest'
 import { bindDriveEvents } from '../src/drives/bind-drive-events'
+import type { UpupCore } from '../src/core'
+
+type MockEventHandler = (payload?: unknown) => void
 
 function createMockCore() {
-    const listeners = new Map<string, Function>()
+    const listeners = new Map<string, MockEventHandler>()
     return {
-        on: vi.fn((event: string, cb: Function) => {
+        on: vi.fn((event: string, cb: MockEventHandler) => {
             listeners.set(event, cb)
             return () => listeners.delete(event)
         }),
@@ -25,7 +28,7 @@ describe('bindDriveEvents', () => {
             onStateChange: vi.fn(),
             onError: vi.fn(),
         }
-        bindDriveEvents(core as any, 'box', callbacks)
+        bindDriveEvents(core as unknown as UpupCore, 'box', callbacks)
         expect(core.on).toHaveBeenCalledTimes(6)
         expect(core.on).toHaveBeenCalledWith('box:authenticated', expect.any(Function))
         expect(core.on).toHaveBeenCalledWith('box:error', expect.any(Function))
@@ -41,7 +44,7 @@ describe('bindDriveEvents', () => {
             onStateChange: vi.fn(),
             onError: vi.fn(),
         }
-        bindDriveEvents(core as any, 'box', callbacks)
+        bindDriveEvents(core as unknown as UpupCore, 'box', callbacks)
         core._emit('box:authenticated', { user: { name: 'Test' } })
         expect(callbacks.onAuthenticated).toHaveBeenCalledWith({ user: { name: 'Test' } })
     })
@@ -56,7 +59,7 @@ describe('bindDriveEvents', () => {
             onStateChange: vi.fn(),
             onError: vi.fn(),
         }
-        const cleanup = bindDriveEvents(core as any, 'box', callbacks)
+        const cleanup = bindDriveEvents(core as unknown as UpupCore, 'box', callbacks)
         cleanup()
         core._emit('box:authenticated', { user: { name: 'Test' } })
         expect(callbacks.onAuthenticated).not.toHaveBeenCalled()
@@ -72,7 +75,7 @@ describe('bindDriveEvents', () => {
             onStateChange: vi.fn(),
             onError: vi.fn(),
         }
-        bindDriveEvents(core as any, 'google-drive', callbacks)
+        bindDriveEvents(core as unknown as UpupCore, 'google-drive', callbacks)
         expect(core.on).toHaveBeenCalledWith('google-drive:authenticated', expect.any(Function))
     })
 })

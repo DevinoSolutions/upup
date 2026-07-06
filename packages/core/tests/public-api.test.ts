@@ -114,15 +114,15 @@ type _Check_ValidationResult = core.ValidationResult
 // handler signature is inferred from UpupCore's own binding, not from an
 // imported `CoreEvents` type). Resolved in favor of the explicit tier-2
 // listing -- CoreEvents is internal. See audit/fixes/P18-report.md.
-// @ts-expect-error -- FileManager is internal (moved to @upup/core/internal)
+// @ts-expect-error: FileManager is internal (moved to @upup/core/internal)
 type _NotPublic_FileManager = core.FileManager
-// @ts-expect-error -- UploadManager is internal
+// @ts-expect-error: UploadManager is internal
 type _NotPublic_UploadManager = core.UploadManager
-// @ts-expect-error -- CoreEvents is internal (see note above)
+// @ts-expect-error: CoreEvents is internal (see note above)
 type _NotPublic_CoreEvents = core.CoreEvents
-// @ts-expect-error -- BaseContextUpload (context-shapes) is internal
+// @ts-expect-error: BaseContextUpload (context-shapes) is internal
 type _NotPublic_BaseContextUpload = core.BaseContextUpload
-// @ts-expect-error -- OrchestratorState is internal
+// @ts-expect-error: OrchestratorState is internal
 type _NotPublic_OrchestratorState = core.OrchestratorState
 
 // Positive: the moved symbols above ARE reachable via '@upup/core/internal'

@@ -1,9 +1,20 @@
 import { describe, it, expect, vi } from 'vitest'
 import { UpupCore } from '../src/core'
 import { UploadStatus } from '@upup/core'
+import type { PluginManager } from '../src/plugin'
+import type { CrashRecoveryManager } from '../src/crash-recovery'
+import type { PipelineEngine } from '../src/pipeline/engine'
 
 const makeFile = (name: string) =>
     new File(['x'], name, { type: 'text/plain' })
+
+// Reaches into UpupCore's private fields for lifecycle assertions the public
+// API doesn't expose (plugin registry + manager refs released on destroy).
+type CoreInternals = {
+    pluginManager: PluginManager
+    crashRecovery: CrashRecoveryManager | null
+    pipelineEngine: PipelineEngine | null
+}
 
 describe('UpupCore — destroy lifecycle', () => {
     it('clears all files on destroy', async () => {
@@ -50,8 +61,8 @@ describe('UpupCore — destroy lifecycle', () => {
         core.use({
             name: 'test-ext',
             init: () => {
-                ;(core as any).pluginManager.registerExtension('test', {
-                    val: 1,
+                ;(core as unknown as CoreInternals).pluginManager.registerExtension('test', {
+                    val: () => 1,
                 })
             },
         })
@@ -117,8 +128,8 @@ describe('UpupCore — destroy lifecycle', () => {
         it('releases the crashRecovery and pipelineEngine manager refs', () => {
             const core = new UpupCore({ crashRecovery: true, imageCompression: true })
             core.destroy()
-            expect((core as any).crashRecovery).toBeNull()
-            expect((core as any).pipelineEngine).toBeNull()
+            expect((core as unknown as CoreInternals).crashRecovery).toBeNull()
+            expect((core as unknown as CoreInternals).pipelineEngine).toBeNull()
         })
 
         it('post-destroy getters still work (fileManager is not nulled)', async () => {

@@ -62,14 +62,14 @@ describe('UpupCore.getExtension() — extension access', () => {
         core.use({
             name: 'math-ext',
             init: () => {
-                ;(core as any).pluginManager.registerExtension('math', {
+                core.registerExtension('math', {
                     add: (a: number, b: number) => a + b,
                 })
             },
         })
-        const math = core.getExtension('math') as any
+        const math = core.getExtension('math')
         expect(math).toBeDefined()
-        expect(math.add(2, 3)).toBe(5)
+        expect(math!.add(2, 3)).toBe(5)
         core.destroy()
     })
 
@@ -80,7 +80,7 @@ describe('UpupCore.getExtension() — extension access', () => {
             init: (emitter) => {
                 let count = 0
                 emitter.on('files-added', () => count++)
-                ;(core as any).pluginManager.registerExtension('counter', {
+                core.registerExtension('counter', {
                     getCount: () => count,
                 })
             },
@@ -89,8 +89,8 @@ describe('UpupCore.getExtension() — extension access', () => {
         await core.addFiles([new File(['a'], 'a.txt', { type: 'text/plain' })])
         await core.addFiles([new File(['b'], 'b.txt', { type: 'text/plain' })])
 
-        const counter = core.getExtension('counter') as any
-        expect(counter.getCount()).toBe(2)
+        const counter = core.getExtension('counter')
+        expect(counter!.getCount()).toBe(2)
         core.destroy()
     })
 
@@ -99,8 +99,8 @@ describe('UpupCore.getExtension() — extension access', () => {
         core.use({
             name: 'temp-ext',
             init: () => {
-                ;(core as any).pluginManager.registerExtension('temp', {
-                    val: 42,
+                core.registerExtension('temp', {
+                    val: () => 42,
                 })
             },
         })

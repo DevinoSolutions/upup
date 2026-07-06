@@ -1,9 +1,23 @@
 import { describe, it, expect, vi } from 'vitest'
 import { UpupCore } from '../src/core'
-import { UploadStatus } from '@upup/core'
 
 const makeFile = (name: string, size = 10) =>
     new File(['x'.repeat(size)], name, { type: 'text/plain' })
+
+// The plugin event bus (`init(emitter)`) is intentionally untyped — plugins
+// receive `EventEmitter` (defaults to `Record<string, unknown>`), not the
+// app's `CoreEvents` — so payloads are narrowed at this boundary.
+interface RetryEventPayload {
+    fileId?: string
+}
+
+interface AnalyticsExtension {
+    getMetrics: () => {
+        filesAdded: number
+        filesRemoved: number
+        reorders: number
+    }
+}
 
 // ─────────────────────────────────────────────
 // Plugin observing file lifecycle
@@ -82,7 +96,9 @@ describe('Plugin integration — upload control observer', () => {
         core.use({
             name: 'retry-logger',
             init: (emitter) => {
-                emitter.on('retry', (data: any) => retries.push(data.fileId))
+                emitter.on('retry', (data: unknown) =>
+                    retries.push((data as RetryEventPayload).fileId),
+                )
             },
         })
 
@@ -110,7 +126,7 @@ describe('Plugin integration — extension with event reaction', () => {
                 emitter.on('files-added', () => metrics.filesAdded++)
                 emitter.on('file-removed', () => metrics.filesRemoved++)
                 emitter.on('files-reordered', () => metrics.reorders++)
-                ;(core as any).pluginManager.registerExtension('analytics', {
+                core.registerExtension('analytics', {
                     getMetrics: () => ({ ...metrics }),
                 })
             },
@@ -121,7 +137,9 @@ describe('Plugin integration — extension with event reaction', () => {
         core.reorderFiles([...ids].reverse())
         core.removeFile(ids[0])
 
-        const analytics = core.getExtension('analytics') as any
+        const analytics = core.getExtension(
+            'analytics',
+        ) as unknown as AnalyticsExtension
         expect(analytics.getMetrics()).toEqual({
             filesAdded: 1,
             filesRemoved: 1,

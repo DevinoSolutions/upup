@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest'
 import { UpupCore } from '../src/core'
+import type { UploadOptions } from '../src/core'
+
+// UpupCore.fileOverrides is a private implementation detail; these tests do
+// white-box assertions on it, so cast at that boundary instead of widening
+// its real type (Map<string, Partial<UploadOptions>>, per src/core.ts).
+type CoreWithOverrides = { fileOverrides: Map<string, Partial<UploadOptions>> }
 
 describe('addFiles with overrides', () => {
   it('should store per-batch overrides for later use in upload', async () => {
@@ -9,7 +15,7 @@ describe('addFiles with overrides', () => {
     await core.addFiles([f1], { checksumVerification: true, maxRetries: 5 })
 
     // Overrides should be stored internally
-    const overrides = (core as any).fileOverrides as Map<string, any>
+    const overrides = (core as unknown as CoreWithOverrides).fileOverrides
     expect(overrides).toBeDefined()
     const fileId = [...core.files.keys()][0]
     expect(overrides.get(fileId)).toEqual({ checksumVerification: true, maxRetries: 5 })
@@ -23,7 +29,7 @@ describe('addFiles with overrides', () => {
     const f1 = new File(['hello'], 'test.txt', { type: 'text/plain' })
     await core.addFiles([f1], { metadata: { customKey: 'customValue' } })
 
-    const overrides = (core as any).fileOverrides as Map<string, any>
+    const overrides = (core as unknown as CoreWithOverrides).fileOverrides
     const fileId = [...core.files.keys()][0]
     expect(overrides.get(fileId)?.metadata).toEqual({ customKey: 'customValue' })
 
@@ -39,7 +45,7 @@ describe('addFiles with overrides', () => {
     const fileId = [...core.files.keys()][0]
     core.removeFile(fileId)
 
-    const overrides = (core as any).fileOverrides as Map<string, any>
+    const overrides = (core as unknown as CoreWithOverrides).fileOverrides
     expect(overrides.has(fileId)).toBe(false)
 
     core.destroy()
@@ -54,7 +60,7 @@ describe('addFiles with overrides', () => {
 
     core.removeAll()
 
-    const overrides = (core as any).fileOverrides as Map<string, any>
+    const overrides = (core as unknown as CoreWithOverrides).fileOverrides
     expect(overrides.size).toBe(0)
 
     core.destroy()

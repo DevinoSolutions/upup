@@ -25,9 +25,9 @@ const makeFile = (overrides: Partial<UploadFile> = {}): UploadFile => ({
 
 const makeContext = (overrides: Partial<PipelineContext> = {}): PipelineContext => ({
   files: new Map(),
-  options: {} as any,
+  options: {},
   emit: vi.fn(),
-  t: ((key: string) => key) as any,
+  t: (key: string) => key,
   ...overrides,
 })
 

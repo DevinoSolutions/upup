@@ -3,6 +3,17 @@ import type { DrivePlugin } from './plugin'
 import type { DriveFile, DriveState, DriveUser } from './types'
 import { generateCodeVerifier, generateCodeChallenge } from './pkce'
 import { storageGet, storageSet, storageDel } from './session-storage'
+import { UpupAuthError, UpupNetworkError } from '../errors'
+
+/**
+ * The fields this class reads off an OAuth2 token-endpoint response (RFC 6749 §5.1),
+ * shared by the authorization-code exchange and the refresh-token exchange.
+ */
+interface OAuthTokenResponse {
+    access_token: string
+    refresh_token?: string
+    expires_in?: number
+}
 
 /**
  * Shared config for the popup-OAuth providers (Box / OneDrive / Dropbox). All
@@ -117,8 +128,9 @@ export abstract class PopupOAuthPlugin implements DrivePlugin {
     async getAuthUrl(): Promise<string> {
         const clientId = this.config.clientId
         if (!clientId) {
-            throw new Error(
+            throw new UpupAuthError(
                 `${this.spec.displayName} client_id is not configured`,
+                this.spec.displayName,
             )
         }
 
@@ -146,12 +158,16 @@ export abstract class PopupOAuthPlugin implements DrivePlugin {
     async authenticate(code: string): Promise<void> {
         const clientId = this.config.clientId
         if (!clientId) {
-            throw new Error(
+            throw new UpupAuthError(
                 `${this.spec.displayName} client_id is not configured`,
+                this.spec.displayName,
             )
         }
         if (!this.codeVerifier) {
-            throw new Error('No PKCE code verifier — call getAuthUrl() first')
+            throw new UpupAuthError(
+                'No PKCE code verifier — call getAuthUrl() first',
+                this.spec.displayName,
+            )
         }
 
         this.setState('authenticating')
@@ -178,10 +194,13 @@ export abstract class PopupOAuthPlugin implements DrivePlugin {
 
             if (!res.ok) {
                 const text = await res.text()
-                throw new Error(`Token exchange failed: ${text}`)
+                throw new UpupAuthError(
+                    `Token exchange failed: ${text}`,
+                    this.spec.displayName,
+                )
             }
 
-            const data = await res.json()
+            const data = (await res.json()) as OAuthTokenResponse
             this.setTokens(
                 data.access_token,
                 data.refresh_token ?? null,
@@ -195,7 +214,7 @@ export abstract class PopupOAuthPlugin implements DrivePlugin {
             try {
                 user = await this.fetchUserProfile()
             } catch {
-                // Profile fetch is non-critical
+                // upup-catch: profile fetch is non-critical — authenticated event still emits without a user
             }
 
             this.setState('authenticated')
@@ -216,8 +235,9 @@ export abstract class PopupOAuthPlugin implements DrivePlugin {
 
     async authenticateViaPopup(): Promise<void> {
         if (typeof window === 'undefined') {
-            throw new Error(
+            throw new UpupAuthError(
                 'authenticateViaPopup requires a browser environment',
+                this.spec.displayName,
             )
         }
 
@@ -240,7 +260,10 @@ export abstract class PopupOAuthPlugin implements DrivePlugin {
                 error: new Error('Popup was blocked by the browser'),
                 action: 'authenticateViaPopup',
             })
-            throw new Error('Popup was blocked by the browser')
+            throw new UpupAuthError(
+                'Popup was blocked by the browser',
+                this.spec.displayName,
+            )
         }
 
         this.setState('authenticating')
@@ -248,7 +271,8 @@ export abstract class PopupOAuthPlugin implements DrivePlugin {
         return new Promise<void>((resolve, reject) => {
             const redirectUri = this.getRedirectUri()
 
-            this.pollTimer = setInterval(async () => {
+            this.pollTimer = setInterval(() => {
+                void (async (): Promise<void> => {
                 try {
                     if (!this.popupWindow || this.popupWindow.closed) {
                         this.cleanupPopup()
@@ -261,7 +285,7 @@ export abstract class PopupOAuthPlugin implements DrivePlugin {
                     try {
                         href = this.popupWindow.location.href
                     } catch {
-                        // Cross-origin while still on the provider domain — expected
+                        // upup-catch: cross-origin read while still on the provider's domain — expected until the redirect lands
                         return
                     }
 
@@ -295,7 +319,8 @@ export abstract class PopupOAuthPlugin implements DrivePlugin {
                     await this.authenticate(code)
                     resolve()
                 } catch (err) {
-                    const message = (err as Error).message ?? ''
+                    const message =
+                        err instanceof Error ? err.message : String(err)
 
                     // Ignore cross-origin errors — they're expected while polling
                     if (
@@ -309,13 +334,15 @@ export abstract class PopupOAuthPlugin implements DrivePlugin {
 
                     this.cleanupPopup()
                     this.setState('idle')
+                    // upup-catch: real popup-poll failure — emitted via the provider's error event and rejected to the authenticateViaPopup() caller
                     this.emitter?.emit(`${this.spec.eventPrefix}:error`, {
                         error:
                             err instanceof Error ? err : new Error(String(err)),
                         action: 'authenticateViaPopup',
                     })
-                    reject(err)
+                    reject(err instanceof Error ? err : new Error(message))
                 }
+                })()
             }, 500)
         })
     }
@@ -346,10 +373,13 @@ export abstract class PopupOAuthPlugin implements DrivePlugin {
 
             if (!res.ok) {
                 const text = await res.text()
-                throw new Error(`Token refresh failed: ${text}`)
+                throw new UpupAuthError(
+                    `Token refresh failed: ${text}`,
+                    this.spec.displayName,
+                )
             }
 
-            const data = await res.json()
+            const data = (await res.json()) as OAuthTokenResponse
             this.setTokens(
                 data.access_token,
                 data.refresh_token ?? this.refreshTokenValue,
@@ -358,6 +388,9 @@ export abstract class PopupOAuthPlugin implements DrivePlugin {
 
             return data.access_token
         } catch (err) {
+            // upup-catch: refresh failure already emitted via the provider's
+            // session-expired + error events; the null return signals the
+            // caller (apiRequest/ensureValidToken) that refresh did not succeed.
             this.emitter?.emit(`${this.spec.eventPrefix}:session-expired`, {})
             this.emitter?.emit(`${this.spec.eventPrefix}:error`, {
                 error: err instanceof Error ? err : new Error(String(err)),
@@ -413,6 +446,8 @@ export abstract class PopupOAuthPlugin implements DrivePlugin {
         try {
             return await this.fetchUserProfile()
         } catch {
+            // upup-catch: F-123 — swallow to null so a failed profile fetch never
+            // strands the restore flow in an unhandled rejection
             return null
         }
     }
@@ -450,8 +485,9 @@ export abstract class PopupOAuthPlugin implements DrivePlugin {
             this.setState('session-expired')
         }
 
-        throw new Error(
+        throw new UpupNetworkError(
             `${this.spec.displayName} API error (${res.status}): ${errorText}`,
+            res.status,
         )
     }
 
@@ -484,7 +520,10 @@ export abstract class PopupOAuthPlugin implements DrivePlugin {
 
     protected async ensureValidToken(): Promise<void> {
         if (!this.accessToken) {
-            throw new Error('Not authenticated — no access token')
+            throw new UpupAuthError(
+                'Not authenticated — no access token',
+                this.spec.displayName,
+            )
         }
 
         // If token expires within 60s, proactively refresh

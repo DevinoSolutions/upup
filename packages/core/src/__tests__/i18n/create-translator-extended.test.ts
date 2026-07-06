@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
 import { createTranslator } from '../../i18n/create-translator'
 import { enUS } from '../../i18n/locales/en-US'
+import type { FlatMessageKey, UpupMessages } from '../../i18n/types'
 
 describe('createTranslator — extended', () => {
     it('handles zero count in plurals', () => {
@@ -11,7 +12,7 @@ describe('createTranslator — extended', () => {
 
     it('returns key string for missing key without onMissingKey', () => {
         const t = createTranslator({ bundle: enUS })
-        const result = t('totally.fake.key' as any)
+        const result = t('totally.fake.key' as unknown as FlatMessageKey)
         expect(result).toBe('totally.fake.key')
     })
 
@@ -70,7 +71,8 @@ describe('createTranslator — extended', () => {
         const sparse = {
             ...enUS,
             code: 'xx-XX' as const,
-            messages: { common: { cancel: 'XX Cancel' } } as any,
+            // Deliberately sparse — only `common` is populated to exercise the fallback chain.
+            messages: { common: { cancel: 'XX Cancel' } } as unknown as UpupMessages,
         }
         const t = createTranslator({ bundle: sparse, fallback: enUS })
         expect(t('common.cancel')).toBe('XX Cancel')

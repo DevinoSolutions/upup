@@ -1,12 +1,30 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { UploaderOrchestrator } from '../src/orchestrator/uploader-orchestrator'
 import { UpupCore } from '../src/core'
 import { UploadStatus } from '../src/types/upload-status'
 import { FileSource } from '../src/types/file-source'
 import type { UploadFile } from '../src/types/upload-file'
+import type { OrchestratorState } from '../src/orchestrator/types'
 import { UpupStorageError } from '../src/errors'
 
-function createMockCore() {
+interface MockCoreProgress {
+    totalFiles: number
+    completedFiles: number
+    percentage: number
+}
+
+const idleProgress: MockCoreProgress = {
+    totalFiles: 0,
+    completedFiles: 0,
+    percentage: 0,
+}
+
+/**
+ * Build the plain mock-core object shape. Kept unbranded (not yet cast to
+ * UpupCore) so callers can still freely set `progress` before the one-time
+ * escape-hatch cast happens in createMockCore()/createMockCoreWithHandlers().
+ */
+function buildMockCore(progress: MockCoreProgress = idleProgress) {
     return {
         on: vi.fn(() => () => {}),
         addFiles: vi.fn(),
@@ -21,28 +39,49 @@ function createMockCore() {
         emit: vi.fn(),
         replaceFile: vi.fn(),
         getPlugin: vi.fn(),
-        files: new Map(),
-        progress: { totalFiles: 0, completedFiles: 0, percentage: 0 },
-    } as any
+        files: new Map<string, UploadFile>(),
+        progress,
+    }
+}
+
+// UpupCore has private fields, so a plain mock object can only satisfy its
+// type via an explicit escape-hatch cast at this one boundary.
+function createMockCore(): UpupCore {
+    return buildMockCore() as unknown as UpupCore
 }
 
 /**
  * Create a mock core where `on` captures handlers by event name,
  * so tests can simulate events via `handlers[eventName](payload)`.
  */
-function createMockCoreWithHandlers() {
-    const handlers: Record<string, (payload: any) => void> = {}
+function createMockCoreWithHandlers(progress?: MockCoreProgress) {
+    const handlers: Record<string, (payload: unknown) => void> = {}
     const unsubs: Array<() => void> = []
     const core = {
-        ...createMockCore(),
-        on: vi.fn((event: string, handler: (payload: any) => void) => {
+        ...buildMockCore(progress),
+        on: vi.fn((event: string, handler: (payload: unknown) => void) => {
             handlers[event] = handler
             const unsub = vi.fn()
             unsubs.push(unsub)
             return unsub
         }),
-    }
+    } as unknown as UpupCore
     return { core, handlers, unsubs }
+}
+
+/**
+ * Test-only escape hatch: `setState` is protected on UploaderOrchestrator;
+ * these tests seed state directly to set up scenarios.
+ */
+function setOrchState(
+    orch: UploaderOrchestrator,
+    partial: Partial<OrchestratorState>,
+): void {
+    ;(
+        orch as unknown as {
+            setState: (partial: Partial<OrchestratorState>) => void
+        }
+    ).setState(partial)
 }
 
 /** Create a minimal UploadFile for testing. */
@@ -317,7 +356,7 @@ describe('UploaderOrchestrator', () => {
             const mockFiles = [createUploadFile({ name: 'a.txt' })]
             core.upload.mockResolvedValue(mockFiles)
             const orch = new UploaderOrchestrator(core, {})
-            ;(orch as any).setState({ files: new Map([['f1', createUploadFile({ name: 'a.txt', id: 'f1' })]]) })
+            setOrchState(orch, { files: new Map([['f1', createUploadFile({ name: 'a.txt', id: 'f1' })]]) })
 
             const result = await orch.startUpload()
 
@@ -339,7 +378,7 @@ describe('UploaderOrchestrator', () => {
             const core = createMockCore()
             core.upload.mockResolvedValue([])
             const orch = new UploaderOrchestrator(core, {})
-            ;(orch as any).setState({ files: new Map([['f1', createUploadFile({ name: 'a.txt', id: 'f1' })]]) })
+            setOrchState(orch, { files: new Map([['f1', createUploadFile({ name: 'a.txt', id: 'f1' })]]) })
             await orch.startUpload()
 
             expect(orch.getSnapshot().uploadError).toBe('')
@@ -349,7 +388,7 @@ describe('UploaderOrchestrator', () => {
             const core = createMockCore()
             core.upload.mockResolvedValue([])
             const orch = new UploaderOrchestrator(core, {})
-            ;(orch as any).setState({
+            setOrchState(orch, {
                 files: new Map([['f1', createUploadFile({ name: 'a.txt', id: 'f1' })]]),
                 uploadErrorCode: 'SignatureDoesNotMatch',
             })
@@ -365,7 +404,7 @@ describe('UploaderOrchestrator', () => {
             const prepared = [new File(['prepared'], 'prepared.txt')]
             const onPrepareFiles = vi.fn().mockResolvedValue(prepared)
             const orch = new UploaderOrchestrator(core, { onPrepareFiles })
-            ;(orch as any).setState({ files: new Map([['f1', createUploadFile({ name: 'a.txt', id: 'f1' })]]) })
+            setOrchState(orch, { files: new Map([['f1', createUploadFile({ name: 'a.txt', id: 'f1' })]]) })
 
             await orch.startUpload()
 
@@ -380,7 +419,7 @@ describe('UploaderOrchestrator', () => {
             const orch = new UploaderOrchestrator(core, {
                 onPrepareFiles: (files) => files,
             })
-            ;(orch as any).setState({ files: new Map([['f1', createUploadFile({ name: 'a.txt', id: 'f1' })]]) })
+            setOrchState(orch, { files: new Map([['f1', createUploadFile({ name: 'a.txt', id: 'f1' })]]) })
 
             await orch.startUpload()
 
@@ -395,7 +434,7 @@ describe('UploaderOrchestrator', () => {
             const mockFiles = [createUploadFile({ name: 'a.txt' })]
             core.retry.mockResolvedValue(mockFiles)
             const orch = new UploaderOrchestrator(core, {})
-            ;(orch as any).setState({ files: new Map([['f1', createUploadFile({ name: 'a.txt', id: 'f1' })]]) })
+            setOrchState(orch, { files: new Map([['f1', createUploadFile({ name: 'a.txt', id: 'f1' })]]) })
 
             const result = await orch.retryUpload()
 
@@ -407,7 +446,7 @@ describe('UploaderOrchestrator', () => {
             const core = createMockCore()
             core.retry.mockResolvedValue([])
             const orch = new UploaderOrchestrator(core, {})
-            ;(orch as any).setState({ files: new Map([['f1', createUploadFile({ name: 'a.txt', id: 'f1' })]]) })
+            setOrchState(orch, { files: new Map([['f1', createUploadFile({ name: 'a.txt', id: 'f1' })]]) })
 
             await orch.retryUpload('file-123')
 
@@ -428,7 +467,7 @@ describe('UploaderOrchestrator', () => {
             const core = createMockCore()
             core.retry.mockResolvedValue([])
             const orch = new UploaderOrchestrator(core, {})
-            ;(orch as any).setState({ files: new Map([['f1', createUploadFile({ name: 'a.txt', id: 'f1' })]]) })
+            setOrchState(orch, { files: new Map([['f1', createUploadFile({ name: 'a.txt', id: 'f1' })]]) })
 
             await orch.retryUpload()
 
@@ -439,7 +478,7 @@ describe('UploaderOrchestrator', () => {
             const core = createMockCore()
             core.retry.mockResolvedValue([])
             const orch = new UploaderOrchestrator(core, {})
-            ;(orch as any).setState({
+            setOrchState(orch, {
                 files: new Map([['f1', createUploadFile({ name: 'a.txt', id: 'f1' })]]),
                 uploadErrorCode: 'bad_signature',
             })
@@ -467,7 +506,7 @@ describe('UploaderOrchestrator', () => {
             vi.stubGlobal('URL', { ...globalThis.URL, createObjectURL: () => 'blob:http://localhost/cancel', revokeObjectURL })
 
             const orch = new UploaderOrchestrator(core, {})
-            ;(orch as any).setState({
+            setOrchState(orch, {
                 files: new Map([
                     ['f1', createUploadFile({ name: 'a.txt', id: 'f1', url: 'blob:http://localhost/cancel' })],
                     ['f2', createUploadFile({ name: 'b.txt', id: 'f2', url: 'blob:http://localhost/cancel' })],
@@ -604,7 +643,7 @@ describe('UploaderOrchestrator', () => {
             vi.stubGlobal('URL', { ...globalThis.URL, createObjectURL: () => 'blob:http://localhost/reset', revokeObjectURL })
 
             const orch = new UploaderOrchestrator(core, {})
-            ;(orch as any).setState({
+            setOrchState(orch, {
                 files: new Map([['f1', createUploadFile({ name: 'a.txt', id: 'f1', url: 'blob:http://localhost/reset' })]]),
             })
 
@@ -841,7 +880,7 @@ describe('UploaderOrchestrator', () => {
             const core = createMockCore()
             const orch = new UploaderOrchestrator(core, {})
             const original = createUploadFile({ name: 'original.txt', id: 'file-1' })
-            ;(orch as any).setState({ files: new Map([['file-1', original]]) })
+            setOrchState(orch, { files: new Map([['file-1', original]]) })
 
             const replacement = createUploadFile({ name: 'replacement.txt', id: 'file-1' })
             orch.replaceFile('file-1', replacement)
@@ -853,7 +892,7 @@ describe('UploaderOrchestrator', () => {
             const core = createMockCore()
             const orch = new UploaderOrchestrator(core, {})
             const original = createUploadFile({ name: 'original.txt', id: 'file-1' })
-            ;(orch as any).setState({ files: new Map([['file-1', original]]) })
+            setOrchState(orch, { files: new Map([['file-1', original]]) })
 
             const replacement = createUploadFile({ name: 'replacement.txt', id: 'file-1' })
             orch.replaceFile('file-1', replacement)
@@ -868,7 +907,7 @@ describe('UploaderOrchestrator', () => {
 
             const orch = new UploaderOrchestrator(core, {})
             const original = createUploadFile({ name: 'original.txt', id: 'file-1', url: 'blob:http://localhost/old' })
-            ;(orch as any).setState({ files: new Map([['file-1', original]]) })
+            setOrchState(orch, { files: new Map([['file-1', original]]) })
 
             const replacement = createUploadFile({ name: 'replacement.txt', id: 'file-1' })
             orch.replaceFile('file-1', replacement)
@@ -881,7 +920,7 @@ describe('UploaderOrchestrator', () => {
             const core = createMockCore()
             const orch = new UploaderOrchestrator(core, {})
             const original = createUploadFile({ name: 'original.txt', id: 'file-1' })
-            ;(orch as any).setState({ files: new Map([['file-1', original]]) })
+            setOrchState(orch, { files: new Map([['file-1', original]]) })
 
             const listener = vi.fn()
             orch.subscribe(listener)
@@ -997,7 +1036,7 @@ describe('UploaderOrchestrator', () => {
             orch.init()
 
             const subscribedEvents = (core.on as ReturnType<typeof vi.fn>).mock.calls.map(
-                (call: any[]) => call[0],
+                (call: unknown[]) => call[0],
             )
             expect(subscribedEvents).toContain('upload-start')
             expect(subscribedEvents).toContain('file-upload-start')
@@ -1198,8 +1237,11 @@ describe('UploaderOrchestrator', () => {
 
         describe('upload-progress handler', () => {
             it('updates filesProgressMap and uploadedBytes', () => {
-                const { core, handlers } = createMockCoreWithHandlers()
-                core.progress = { totalFiles: 1, completedFiles: 0, percentage: 50 }
+                const { core, handlers } = createMockCoreWithHandlers({
+                    totalFiles: 1,
+                    completedFiles: 0,
+                    percentage: 50,
+                })
                 const orch = new UploaderOrchestrator(core, {})
                 orch.init()
 
@@ -1236,8 +1278,11 @@ describe('UploaderOrchestrator', () => {
             })
 
             it('calls onFilesUploadProgress with core progress', () => {
-                const { core, handlers } = createMockCoreWithHandlers()
-                core.progress = { totalFiles: 2, completedFiles: 1, percentage: 50 }
+                const { core, handlers } = createMockCoreWithHandlers({
+                    totalFiles: 2,
+                    completedFiles: 1,
+                    percentage: 50,
+                })
                 const onFilesUploadProgress = vi.fn()
                 const orch = new UploaderOrchestrator(core, { onFilesUploadProgress })
                 orch.init()
@@ -1482,7 +1527,7 @@ describe('UploaderOrchestrator', () => {
             vi.stubGlobal('URL', { ...globalThis.URL, createObjectURL: () => 'blob:http://localhost/destroy', revokeObjectURL })
 
             const orch = new UploaderOrchestrator(core, {})
-            ;(orch as any).setState({
+            setOrchState(orch, {
                 files: new Map([
                     ['f1', createUploadFile({ name: 'a.txt', id: 'f1', url: 'blob:http://localhost/destroy' })],
                     ['f2', createUploadFile({ name: 'b.txt', id: 'f2', url: 'blob:http://localhost/destroy' })],

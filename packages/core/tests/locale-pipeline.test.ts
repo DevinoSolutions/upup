@@ -55,7 +55,8 @@ describe('pipeline translator honours CoreOptions.locale', () => {
     try {
       await core.upload()
     } catch {
-      /* no files / network — expected in this unit test */
+      // upup-catch: no files / network — expected in this unit test; this only
+      // proves createTranslator was invoked with the right bundle, not that upload succeeds.
     }
     expect(spy).toHaveBeenCalledWith(expect.objectContaining({ bundle: frFR }))
     core.destroy()

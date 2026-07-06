@@ -1,12 +1,26 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import {
     DragDropController,
     type DragDropDeps,
+    type DragDropOptions,
+    type DragDropProps,
 } from '../../controllers/drag-drop-controller'
 import { UploadStatus } from '../../types/upload-status'
+import type { UpupCore } from '../../core'
+import type { UploaderOrchestrator } from '../../orchestrator/uploader-orchestrator'
+import type { OrchestratorState } from '../../orchestrator/types'
 
-function makeOrchestrator(initial: any) {
-    let state = initial
+interface FakeOrchestrator {
+    getSnapshot: () => OrchestratorState
+    subscribe: (l: () => void) => () => void
+    _set: (p: Partial<OrchestratorState>) => void
+}
+
+function makeOrchestrator(initial: Partial<OrchestratorState>): FakeOrchestrator {
+    // The fixture only ever seeds the fields DragDropController actually reads
+    // (activeSource/uploadStatus/isAddingMore/files); cast to the full state
+    // shape rather than hand-populate every OrchestratorState field.
+    let state = initial as OrchestratorState
     const listeners = new Set<() => void>()
     return {
         getSnapshot: () => state,
@@ -14,18 +28,28 @@ function makeOrchestrator(initial: any) {
             listeners.add(l)
             return () => listeners.delete(l)
         },
-        _set(p: any) {
+        _set(p: Partial<OrchestratorState>) {
             state = { ...state, ...p }
             listeners.forEach(f => f())
         },
     }
 }
 
-function makeDeps(over: Partial<any> = {}): {
+interface FakeCore {
+    files: Map<string, unknown>
+    emit: ReturnType<typeof vi.fn>
+}
+
+interface MakeDepsOverrides {
+    options?: Partial<DragDropOptions>
+    props?: Partial<DragDropProps>
+}
+
+function makeDeps(over: MakeDepsOverrides = {}): {
     deps: DragDropDeps
-    orch: any
-    core: any
-    setFiles: any
+    orch: FakeOrchestrator
+    core: FakeCore
+    setFiles: ReturnType<typeof vi.fn>
 } {
     const orch = makeOrchestrator({
         activeSource: undefined,
@@ -33,11 +57,14 @@ function makeDeps(over: Partial<any> = {}): {
         isAddingMore: false,
         files: new Map(),
     })
-    const core = { files: new Map<string, unknown>(), emit: vi.fn() }
+    const core: FakeCore = { files: new Map<string, unknown>(), emit: vi.fn() }
     const setFiles = vi.fn()
     const deps: DragDropDeps = {
-        core: core as any,
-        orchestrator: orch as any,
+        // Fakes are intentionally partial (only the members the controller
+        // reads) — cast at this fixture boundary rather than hand-implement
+        // the full UpupCore/UploaderOrchestrator surface.
+        core: core as unknown as UpupCore,
+        orchestrator: orch as unknown as UploaderOrchestrator,
         setFiles,
         // Vanilla-style source: the file count tracks core.files directly. The
         // React-style (orchestrator-snapshot) source is exercised explicitly below.
@@ -60,11 +87,13 @@ function makeDeps(over: Partial<any> = {}): {
     return { deps, orch, core, setFiles }
 }
 
-function dragEvent(files: File[] = []): any {
+// Minimal fake DragEvent — cast at this DOM-mocking boundary since a real
+// DragEvent's full property set is irrelevant to the controller under test.
+function dragEvent(files: File[] = []): DragEvent {
     return {
         preventDefault: vi.fn(),
         dataTransfer: { files, dropEffect: '', items: [] },
-    }
+    } as unknown as DragEvent
 }
 
 describe('DragDropController', () => {
@@ -87,7 +116,7 @@ describe('DragDropController', () => {
         const e = dragEvent()
         c.handleDragOver(e)
         expect(e.preventDefault).toHaveBeenCalled()
-        expect(e.dataTransfer.dropEffect).toBe('copy')
+        expect(e.dataTransfer!.dropEffect).toBe('copy')
         expect(core.emit).toHaveBeenCalledWith('drag-over', {})
         expect(listener).toHaveBeenCalled()
     })
@@ -128,10 +157,10 @@ describe('DragDropController', () => {
         const { deps, setFiles } = makeDeps()
         const c = new DragDropController(deps)
         const png = new File(['x'], 'image.png', { type: 'image/png' })
-        const e: any = {
+        const e = {
             preventDefault: vi.fn(),
             clipboardData: { items: [{ kind: 'file', getAsFile: () => png }] },
-        }
+        } as unknown as ClipboardEvent
         c.handlePaste(e)
         expect(setFiles).toHaveBeenCalledTimes(1)
         const passed = setFiles.mock.calls[0][0][0] as File
@@ -141,7 +170,7 @@ describe('DragDropController', () => {
     it('handlePaste is a no-op when enablePaste is false', () => {
         const { deps, setFiles } = makeDeps({ options: { enablePaste: false } })
         const c = new DragDropController(deps)
-        const e: any = {
+        const e = {
             preventDefault: vi.fn(),
             clipboardData: {
                 items: [
@@ -152,7 +181,7 @@ describe('DragDropController', () => {
                     },
                 ],
             },
-        }
+        } as unknown as ClipboardEvent
         c.handlePaste(e)
         expect(setFiles).not.toHaveBeenCalled()
     })
