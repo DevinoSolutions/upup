@@ -62,11 +62,11 @@
     }
   })
 
-  const progress = $derived(
-    Math.floor(
-      ($filesProgressMap[fileId]?.loaded / $filesProgressMap[fileId]?.total) * 100,
-    ),
-  )
+  const progress = $derived.by(() => {
+    const fileProgress = $filesProgressMap[fileId]
+    if (!fileProgress) return NaN
+    return Math.floor((fileProgress.loaded / fileProgress.total) * 100)
+  })
 
   function formatFileSize(bytes: number | undefined, tr: Translations) {
     if (!bytes || bytes === 0) return tr.zeroBytes

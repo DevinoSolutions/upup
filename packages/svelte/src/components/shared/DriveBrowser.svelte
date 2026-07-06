@@ -72,7 +72,7 @@ import { searchDriveFiles, cn } from '@upup/core/internal'
     ),
   )
 
-  const displayedItems = $derived(searchDriveFiles(items, searchTerm) || [])
+  const displayedItems = $derived(searchDriveFiles(items ?? [], searchTerm) || [])
 
   // error short-circuits the perpetual loader — the exact F-123/F-124 symptom.
   const isLoading = $derived(!$error && (($isClickLoading ?? false) || !$driveFiles))

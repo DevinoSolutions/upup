@@ -53,12 +53,15 @@
       streamRef = stream
       chunks.length = 0
 
-      stream.getVideoTracks()[0].onended = () => {
-        if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-          mediaRecorder.stop()
+      const videoTrack = stream.getVideoTracks()[0]
+      if (videoTrack) {
+        videoTrack.onended = () => {
+          if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+            mediaRecorder.stop()
+          }
+          if (timerHandle) clearInterval(timerHandle)
+          recordingState = 'recorded'
         }
-        if (timerHandle) clearInterval(timerHandle)
-        recordingState = 'recorded'
       }
 
       const recorder = new MediaRecorder(stream)

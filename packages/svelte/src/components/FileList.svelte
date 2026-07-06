@@ -156,12 +156,15 @@ import { isUploadActive, cn } from '@upup/core/internal'
         )}
       >
         {#each $virtualizer.getVirtualItems() as virtualItem (String(virtualItem.key))}
-          <div
-            data-index={virtualItem.index}
-            style={`position: absolute; top: 0; left: 0; width: 100%; transform: translateY(${virtualItem.start}px); padding-bottom: 12px;`}
-          >
-            <FileItem file={sortedFiles[virtualItem.index]} />
-          </div>
+          {@const file = sortedFiles[virtualItem.index]}
+          {#if file}
+            <div
+              data-index={virtualItem.index}
+              style={`position: absolute; top: 0; left: 0; width: 100%; transform: translateY(${virtualItem.start}px); padding-bottom: 12px;`}
+            >
+              <FileItem {file} />
+            </div>
+          {/if}
         {/each}
       </div>
     {:else}
