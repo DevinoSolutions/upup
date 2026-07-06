@@ -20,6 +20,7 @@
     "dev:all": "turbo run dev --parallel",
     "dev:package": "dotenv -e local-dev/.env.ports -- pnpm run dev:package-watch",
     "lint": "turbo run lint",
+    "lint:ox": "oxlint .",
     "prettier-check": "prettier --check \"packages/{core,server,react,vue,svelte,vanilla,angular,preact,next}/src/**/*.{ts,tsx}\"",
     "prettier-write": "prettier --write \"packages/{core,server,react,vue,svelte,vanilla,angular,preact,next}/src/**/*.{ts,tsx}\"",
     "docs:build": "pnpm --filter docs run build",
@@ -46,6 +47,7 @@
     "dotenv-cli": "^7.4.2",
     "express": "^4.21.0",
     "husky": "^9.1.7",
+    "oxlint": "^1.72.0",
     "prettier": "^3.8.3",
     "size-limit": "^11.0.0",
     "turbo": "2.5.8"
