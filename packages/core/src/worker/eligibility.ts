@@ -1,5 +1,5 @@
 export function isWorkerEligible(
-    opts: { webWorker?: boolean },
+    opts: { webWorker?: boolean | undefined },
     hasWorker: boolean,
     stepCount: number,
 ): boolean {

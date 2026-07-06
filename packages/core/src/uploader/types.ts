@@ -25,47 +25,50 @@ export interface UploaderI18nOptions {
 /** Every callback the orchestrator/commands/proxy may invoke (framework-agnostic superset). */
 export interface UploaderCallbacks extends OrchestratorCallbacks {
     // convenience (core-event bridges; wired by the host's upload hook, not the factory)
-    onFileAdded?: (files: UploadFile[]) => void
-    onUploadProgress?: (p: {
-        fileId: string
-        loaded: number
-        total: number
-    }) => void
+    onFileAdded?: ((files: UploadFile[]) => void) | undefined
+    onUploadProgress?:
+        | ((p: { fileId: string; loaded: number; total: number }) => void)
+        | undefined
     // restriction / status (read by commands + status-change)
-    onStatusChange?: (status: string) => void
-    onFileTypeMismatch?: (file: File, acceptedTypes: string) => void
-    onRestrictionFailed?: (
-        file: File,
-        reason:
-            | 'TYPE_MISMATCH'
-            | 'FILE_TOO_LARGE'
-            | 'FILE_TOO_SMALL'
-            | 'LIMIT_EXCEEDED',
-    ) => void
-    onDoneClicked?: () => void
-    autoUpload?: boolean
+    onStatusChange?: ((status: string) => void) | undefined
+    onFileTypeMismatch?:
+        ((file: File, acceptedTypes: string) => void) | undefined
+    onRestrictionFailed?:
+        | ((
+              file: File,
+              reason:
+                  | 'TYPE_MISMATCH'
+                  | 'FILE_TOO_LARGE'
+                  | 'FILE_TOO_SMALL'
+                  | 'LIMIT_EXCEEDED',
+          ) => void)
+        | undefined
+    onDoneClicked?: (() => void) | undefined
+    autoUpload?: boolean | undefined
 }
 
 /** Options accepted by the factory (framework-agnostic superset; each framework's props satisfy this structurally). */
 export interface UploaderControllerOptions
     extends Omit<CoreOptions, 'onError'>, UploaderCallbacks {
-    dark?: boolean
-    theme?: UpupThemeConfig
-    sources?: Array<FileSource | string>
-    mini?: boolean
-    isProcessing?: boolean
-    allowPreview?: boolean
-    showBranding?: boolean
-    disableDragDrop?: boolean
-    className?: string
-    folderUpload?: { allowDrop?: boolean; showSelectFolderButton?: boolean }
-    imageEditor?: boolean | ImageEditorOptions
-    enablePaste?: boolean
-    resumable?: ResumableUploadOptions
-    i18n?: UploaderI18nOptions
-    onIntegrationClick?: (sourceId: string) => void
-    onPrepareFiles?: (files: UploadFile[]) => Promise<UploadFile[]>
-    maxFiles?: number
+    dark?: boolean | undefined
+    theme?: UpupThemeConfig | undefined
+    sources?: Array<FileSource | string> | undefined
+    mini?: boolean | undefined
+    isProcessing?: boolean | undefined
+    allowPreview?: boolean | undefined
+    showBranding?: boolean | undefined
+    disableDragDrop?: boolean | undefined
+    className?: string | undefined
+    folderUpload?:
+        { allowDrop?: boolean; showSelectFolderButton?: boolean } | undefined
+    imageEditor?: boolean | ImageEditorOptions | undefined
+    enablePaste?: boolean | undefined
+    resumable?: ResumableUploadOptions | undefined
+    i18n?: UploaderI18nOptions | undefined
+    onIntegrationClick?: ((sourceId: string) => void) | undefined
+    onPrepareFiles?:
+        ((files: UploadFile[]) => Promise<UploadFile[]>) | undefined
+    maxFiles?: number | undefined
 }
 
 /** All resolved scalars + i18n + cloud-drive config (static, computed once). */

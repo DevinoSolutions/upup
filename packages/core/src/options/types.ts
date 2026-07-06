@@ -26,43 +26,51 @@ export interface CrashRecoveryOptions {
     storage?: PersistentStorage
 }
 
+// Options-bag input type: every field is optional and each framework bridge
+// constructs it by spreading its own optional props (all `T | undefined`).
+// Under `exactOptionalPropertyTypes`, `{ x: undefined }` is not assignable to
+// `x?: T`, so each field is widened to `?: T | undefined` — "omit or pass
+// undefined, same thing". Widening is backward-compatible (readers of an
+// optional already saw `T | undefined`) and pin-safe (pins check export names).
 export interface CoreOptions extends FileManagerOptions {
-    uploadEndpoint?: string
-    serverUrl?: string
-    provider?: string
-    mode?: 'client' | 'server'
-    plugins?: UpupPlugin[]
-    pipeline?: PipelineStep[]
-    resumable?: ResumableUploadOptions
-    heicConversion?: boolean
-    stripExifData?: boolean
-    imageCompression?: boolean | object
-    thumbnailGenerator?: boolean | object
-    checksumVerification?: boolean
+    uploadEndpoint?: string | undefined
+    serverUrl?: string | undefined
+    provider?: string | undefined
+    mode?: 'client' | 'server' | undefined
+    plugins?: UpupPlugin[] | undefined
+    pipeline?: PipelineStep[] | undefined
+    resumable?: ResumableUploadOptions | undefined
+    heicConversion?: boolean | undefined
+    stripExifData?: boolean | undefined
+    imageCompression?: boolean | object | undefined
+    thumbnailGenerator?: boolean | object | undefined
+    checksumVerification?: boolean | undefined
     /**
      * Web Worker offload for the file pipeline (hash/heic/exif/thumbnail/compress).
      * Unset/`true` = auto (workers used when supported, transparent main-thread
      * fallback otherwise). `false` = force the main thread.
      */
-    webWorker?: boolean
+    webWorker?: boolean | undefined
     /**
      * Web-worker task timeout in ms. Default 30000. On timeout the task falls
      * back to main-thread processing (it never fails the file).
      */
-    workerTimeoutMs?: number
-    maxRetries?: number
-    maxConcurrentUploads?: number
-    autoUpload?: boolean
-    fastAbortThreshold?: number
-    isSuccessfulCall?: (response: {
-        status: number
-        headers: Record<string, string>
-        body: unknown
-    }) => boolean | Promise<boolean>
-    crashRecovery?: boolean | CrashRecoveryOptions
-    onError?: (error: string | Error) => void
-    metadata?: Record<string, unknown>
-    cors?: UpupCorsConfig
+    workerTimeoutMs?: number | undefined
+    maxRetries?: number | undefined
+    maxConcurrentUploads?: number | undefined
+    autoUpload?: boolean | undefined
+    fastAbortThreshold?: number | undefined
+    isSuccessfulCall?:
+        | ((response: {
+              status: number
+              headers: Record<string, string>
+              body: unknown
+          }) => boolean | Promise<boolean>)
+        | undefined
+    crashRecovery?: boolean | CrashRecoveryOptions | undefined
+    onError?: ((error: string | Error) => void) | undefined
+    metadata?: Record<string, unknown> | undefined
+    cors?: UpupCorsConfig | undefined
     /**
      * i18n configuration. Accepts either:
      * - a full LocaleBundle (`import { enUS } from './contracts'`) — also
@@ -72,8 +80,8 @@ export interface CoreOptions extends FileManagerOptions {
      *   only until a locale registry exists; consumers are responsible for
      *   resolving codes to bundles via `i18n.loadLocale`.
      */
-    locale?: LocaleBundle | UpupLocaleCode
-    cloudDrives?: CloudDrivesConfig
+    locale?: LocaleBundle | UpupLocaleCode | undefined
+    cloudDrives?: CloudDrivesConfig | undefined
 }
 
 export type ValidationResult = {
