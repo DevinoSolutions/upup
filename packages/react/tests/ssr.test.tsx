@@ -24,7 +24,7 @@ describe('UpupUploader SSR', () => {
         if (originalNavigator) {
             Object.defineProperty(globalThis, 'navigator', originalNavigator)
         } else {
-            // @ts-expect-error — cleanup
+            // @ts-expect-error: cleanup
             delete globalThis.navigator
         }
     })
@@ -60,8 +60,8 @@ describe('UpupUploader SSR', () => {
     })
 
     it('renders without matchMedia (simulating Node environment)', () => {
-        const originalWindow = (globalThis as any).window
-        delete (globalThis as any).window
+        const originalWindow = (globalThis as Record<string, unknown>).window
+        delete (globalThis as Record<string, unknown>).window
         try {
             expect(() =>
                 renderToString(
@@ -69,7 +69,7 @@ describe('UpupUploader SSR', () => {
                 ),
             ).not.toThrow()
         } finally {
-            if (originalWindow !== undefined) (globalThis as any).window = originalWindow
+            if (originalWindow !== undefined) (globalThis as Record<string, unknown>).window = originalWindow
         }
     })
 })

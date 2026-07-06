@@ -3,6 +3,7 @@ import { render } from '@testing-library/react'
 import React from 'react'
 import { UpupUploader } from '../src'
 import { frFR } from '@upup/core'
+import type { LocaleBundle } from '@upup/core'
 
 describe('Locale switching', () => {
     it('renders English strings by default', () => {
@@ -55,7 +56,7 @@ describe('Locale switching', () => {
             language: 'Sparse',
             dir: 'ltr',
             messages: {},
-        } as any
+        } as unknown as LocaleBundle
 
         const { container } = render(
             <UpupUploader

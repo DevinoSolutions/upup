@@ -47,21 +47,21 @@ describe('fileAppendParams', () => {
     })
 
     it('does not overwrite an existing id', () => {
-        const f = new File(['data'], 'photo.png') as any
+        const f = new File(['data'], 'photo.png') as unknown as UploadFile
         f.id = 'existing-id'
         const result = fileAppendParams(f)
         expect(result.id).toBe('existing-id')
     })
 
     it('does not overwrite an existing url', () => {
-        const f = new File(['data'], 'photo.png') as any
+        const f = new File(['data'], 'photo.png') as unknown as UploadFile
         f.url = 'blob:already-set'
         const result = fileAppendParams(f)
         expect(result.url).toBe('blob:already-set')
     })
 
     it('uses webkitRelativePath for id when present', () => {
-        const f = new File(['data'], 'photo.png') as any
+        const f = new File(['data'], 'photo.png') as unknown as UploadFile & { webkitRelativePath?: string }
         f.webkitRelativePath = 'folder/photo.png'
         const result = fileAppendParams(f)
         // id should be based on the relative path, not just the name

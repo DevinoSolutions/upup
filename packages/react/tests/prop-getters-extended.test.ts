@@ -1,4 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
+import type React from 'react'
+import type { DragDropController } from '@upup/core/internal'
 import { createPropGetters } from '../src/prop-getters'
 
 // F-606: getDropzoneProps' onDragOver/onDragLeave/onDrop/onPaste now DELEGATE to a
@@ -17,7 +19,7 @@ function makeFakeDragDrop(overrides: Partial<Record<'handleDragOver' | 'handleDr
         handleDrop: vi.fn(),
         handlePaste: vi.fn(),
         ...overrides,
-    } as any
+    } as unknown as DragDropController
 }
 
 function makeDeps(overrides: Partial<Parameters<typeof createPropGetters>[0]> = {}) {
@@ -39,14 +41,14 @@ function makeDragEvent(files: File[] = []) {
             dropEffect: '',
             files,
         },
-    } as any
+    } as unknown as React.DragEvent<HTMLElement>
 }
 
 function makeClipboardEvent(items: { kind: string; getAsFile?: () => File | null }[]) {
     return {
         preventDefault: vi.fn(),
         clipboardData: { items },
-    } as any
+    } as unknown as React.ClipboardEvent<HTMLElement>
 }
 
 // ─────────────────────────────────────────────

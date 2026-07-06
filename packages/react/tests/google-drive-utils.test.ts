@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest'
+import type { DriveFile } from '@upup/core'
 import {
     GOOGLE_WORKSPACE_EXPORTS,
     getWorkspaceExportInfo,
@@ -78,33 +79,33 @@ describe('getWorkspaceExportInfo', () => {
 describe('getDriveEffectiveExtension', () => {
     it('returns docx for Google Docs files', () => {
         const file: MockFile = { name: 'My Doc', mimeType: 'application/vnd.google-apps.document' }
-        expect(getDriveEffectiveExtension(file as any)).toBe('docx')
+        expect(getDriveEffectiveExtension(file as unknown as DriveFile)).toBe('docx')
     })
 
     it('returns xlsx for Google Sheets files', () => {
         const file: MockFile = { name: 'Budget', mimeType: 'application/vnd.google-apps.spreadsheet' }
-        expect(getDriveEffectiveExtension(file as any)).toBe('xlsx')
+        expect(getDriveEffectiveExtension(file as unknown as DriveFile)).toBe('xlsx')
     })
 
     it('returns pptx for Google Slides files', () => {
         const file: MockFile = { name: 'Pitch', mimeType: 'application/vnd.google-apps.presentation' }
-        expect(getDriveEffectiveExtension(file as any)).toBe('pptx')
+        expect(getDriveEffectiveExtension(file as unknown as DriveFile)).toBe('pptx')
     })
 
     it('returns filename extension for a regular PDF', () => {
         const file: MockFile = { name: 'report.pdf', mimeType: 'application/pdf' }
-        expect(getDriveEffectiveExtension(file as any)).toBe('pdf')
+        expect(getDriveEffectiveExtension(file as unknown as DriveFile)).toBe('pdf')
     })
 
     it('returns lowercase extension for mixed-case filenames', () => {
         const file: MockFile = { name: 'Photo.JPG', mimeType: 'image/jpeg' }
-        expect(getDriveEffectiveExtension(file as any)).toBe('jpg')
+        expect(getDriveEffectiveExtension(file as unknown as DriveFile)).toBe('jpg')
     })
 
     it('returns the full name when filename has no dot', () => {
         // split('.').pop() returns the whole string when no '.' is present
         const file: MockFile = { name: 'noextension', mimeType: 'application/octet-stream' }
-        expect(getDriveEffectiveExtension(file as any)).toBe('noextension')
+        expect(getDriveEffectiveExtension(file as unknown as DriveFile)).toBe('noextension')
     })
 })
 
@@ -117,55 +118,55 @@ describe('isDriveFileAccepted', () => {
     const doc: MockFile = { name: 'My Doc', mimeType: 'application/vnd.google-apps.document' }
 
     it('accepts all files when accept is empty', () => {
-        expect(isDriveFileAccepted(pdf as any, '')).toBe(true)
+        expect(isDriveFileAccepted(pdf as unknown as DriveFile, '')).toBe(true)
     })
 
     it('accepts all files when accept is *', () => {
-        expect(isDriveFileAccepted(pdf as any, '*')).toBe(true)
+        expect(isDriveFileAccepted(pdf as unknown as DriveFile, '*')).toBe(true)
     })
 
     it('accepts file matching exact MIME type', () => {
-        expect(isDriveFileAccepted(pdf as any, 'application/pdf')).toBe(true)
+        expect(isDriveFileAccepted(pdf as unknown as DriveFile, 'application/pdf')).toBe(true)
     })
 
     it('rejects file not matching MIME type', () => {
-        expect(isDriveFileAccepted(pdf as any, 'image/png')).toBe(false)
+        expect(isDriveFileAccepted(pdf as unknown as DriveFile, 'image/png')).toBe(false)
     })
 
     it('accepts file matching wildcard MIME (image/*)', () => {
-        expect(isDriveFileAccepted(png as any, 'image/*')).toBe(true)
+        expect(isDriveFileAccepted(png as unknown as DriveFile, 'image/*')).toBe(true)
     })
 
     it('rejects file not matching wildcard MIME', () => {
-        expect(isDriveFileAccepted(pdf as any, 'image/*')).toBe(false)
+        expect(isDriveFileAccepted(pdf as unknown as DriveFile, 'image/*')).toBe(false)
     })
 
     it('accepts file matching dotted extension (.pdf)', () => {
-        expect(isDriveFileAccepted(pdf as any, '.pdf')).toBe(true)
+        expect(isDriveFileAccepted(pdf as unknown as DriveFile, '.pdf')).toBe(true)
     })
 
     it('accepts file matching bare extension (pdf)', () => {
-        expect(isDriveFileAccepted(pdf as any, 'pdf')).toBe(true)
+        expect(isDriveFileAccepted(pdf as unknown as DriveFile, 'pdf')).toBe(true)
     })
 
     it('rejects file not matching extension', () => {
-        expect(isDriveFileAccepted(pdf as any, '.png')).toBe(false)
+        expect(isDriveFileAccepted(pdf as unknown as DriveFile, '.png')).toBe(false)
     })
 
     it('accepts file with multiple accept tokens (comma-separated)', () => {
-        expect(isDriveFileAccepted(pdf as any, 'image/png, application/pdf')).toBe(true)
+        expect(isDriveFileAccepted(pdf as unknown as DriveFile, 'image/png, application/pdf')).toBe(true)
     })
 
     it('accepts Google Docs file by exported extension (docx)', () => {
-        expect(isDriveFileAccepted(doc as any, '.docx')).toBe(true)
+        expect(isDriveFileAccepted(doc as unknown as DriveFile, '.docx')).toBe(true)
     })
 
     it('accepts Google Docs file by exported MIME type', () => {
         const exportMime = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-        expect(isDriveFileAccepted(doc as any, exportMime)).toBe(true)
+        expect(isDriveFileAccepted(doc as unknown as DriveFile, exportMime)).toBe(true)
     })
 
     it('rejects Google Docs file when only image/* is accepted', () => {
-        expect(isDriveFileAccepted(doc as any, 'image/*')).toBe(false)
+        expect(isDriveFileAccepted(doc as unknown as DriveFile, 'image/*')).toBe(false)
     })
 })

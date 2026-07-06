@@ -1,4 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
+import type React from 'react'
+import type { DragDropController } from '@upup/core/internal'
 import { createPropGetters } from '../src/prop-getters'
 
 // F-606: getDropzoneProps' onDragOver/onDragLeave/onDrop/onPaste now delegate to a
@@ -14,7 +16,7 @@ function makeFakeDragDrop(overrides: Partial<Record<'handleDragOver' | 'handleDr
     handleDrop: vi.fn(),
     handlePaste: vi.fn(),
     ...overrides,
-  } as any
+  } as unknown as DragDropController
 }
 
 function makeDeps(overrides: Partial<Parameters<typeof createPropGetters>[0]> = {}) {
@@ -52,10 +54,15 @@ describe('getDropzoneProps', () => {
   it('composes override event handlers', () => {
     const customDragOver = vi.fn()
     const { getDropzoneProps } = createPropGetters(makeDeps())
-    const props = getDropzoneProps({ onDragOver: customDragOver } as any)
+    const props = getDropzoneProps({
+      onDragOver: customDragOver,
+    } as React.HTMLAttributes<HTMLElement>)
 
     // Call the composed handler
-    const mockEvent = { preventDefault: vi.fn(), dataTransfer: { dropEffect: '' } } as any
+    const mockEvent = {
+      preventDefault: vi.fn(),
+      dataTransfer: { dropEffect: '' },
+    } as unknown as React.DragEvent<HTMLElement>
     props.onDragOver(mockEvent)
 
     expect(customDragOver).toHaveBeenCalled()
@@ -64,7 +71,10 @@ describe('getDropzoneProps', () => {
   it('delegates onDragOver to the DragDropController (gating lives there — F-606)', () => {
     const dragDrop = makeFakeDragDrop()
     const { getDropzoneProps } = createPropGetters(makeDeps({ dragDrop }))
-    const mockEvent = { preventDefault: vi.fn(), dataTransfer: { dropEffect: '' } } as any
+    const mockEvent = {
+      preventDefault: vi.fn(),
+      dataTransfer: { dropEffect: '' },
+    } as unknown as React.DragEvent<HTMLElement>
 
     getDropzoneProps().onDragOver(mockEvent)
 
@@ -73,7 +83,10 @@ describe('getDropzoneProps', () => {
 
   it('is a no-op when no dragDrop controller is supplied (back-compat)', () => {
     const { getDropzoneProps } = createPropGetters(makeDeps({ dragDrop: undefined }))
-    const mockEvent = { preventDefault: vi.fn(), dataTransfer: { dropEffect: '' } } as any
+    const mockEvent = {
+      preventDefault: vi.fn(),
+      dataTransfer: { dropEffect: '' },
+    } as unknown as React.DragEvent<HTMLElement>
 
     expect(() => getDropzoneProps().onDragOver(mockEvent)).not.toThrow()
   })
@@ -96,7 +109,9 @@ describe('getRootProps', () => {
 
   it('merges override props', () => {
     const { getRootProps } = createPropGetters(makeDeps())
-    const props = getRootProps({ id: 'my-uploader' } as any)
+    const props = getRootProps({
+      id: 'my-uploader',
+    } as React.HTMLAttributes<HTMLElement>)
     expect(props.id).toBe('my-uploader')
     expect(props.role).toBe('application')
   })
@@ -133,7 +148,9 @@ describe('getInputProps', () => {
     const props = getInputProps()
 
     const file = new File(['test'], 'test.txt', { type: 'text/plain' })
-    const mockEvent = { target: { files: [file] } } as any
+    const mockEvent = {
+      target: { files: [file] },
+    } as unknown as React.ChangeEvent<HTMLInputElement>
     props.onChange(mockEvent)
 
     expect(deps.addFiles).toHaveBeenCalledWith([file])
@@ -141,7 +158,9 @@ describe('getInputProps', () => {
 
   it('merges override props', () => {
     const { getInputProps } = createPropGetters(makeDeps())
-    const props = getInputProps({ name: 'upload' } as any)
+    const props = getInputProps({
+      name: 'upload',
+    } as React.InputHTMLAttributes<HTMLInputElement>)
     expect(props.name).toBe('upload')
     expect(props.type).toBe('file')
   })

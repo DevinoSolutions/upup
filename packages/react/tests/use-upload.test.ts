@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
 import useUpload from '../src/hooks/useUpload'
 import { UploadStatus } from '@upup/core'
+import type { UploadFile } from '@upup/core'
 
 function makeUploadCtx(overrides: Record<string, unknown> = {}) {
     return {
@@ -20,7 +21,7 @@ function makeUploadCtx(overrides: Record<string, unknown> = {}) {
 }
 
 function makeFiles(...names: string[]) {
-    const map = new Map<string, any>()
+    const map = new Map<string, UploadFile>()
     for (const name of names) {
         const f = Object.assign(new File(['x'], name, { type: 'text/plain' }), { id: name })
         map.set(name, f)
@@ -38,7 +39,7 @@ describe('useUpload', () => {
             replaceFiles: vi.fn(),
             uploadFiles: vi.fn(),
             resetState: vi.fn(),
-        } as any)
+        } as unknown as Parameters<typeof useUpload>[0])
         expect(result.upload).toBe(fn)
     })
 
@@ -50,7 +51,7 @@ describe('useUpload', () => {
             replaceFiles: vi.fn(),
             uploadFiles: vi.fn(),
             resetState: vi.fn(),
-        } as any)
+        } as unknown as Parameters<typeof useUpload>[0])
         expect(result.loading).toBe(true)
     })
 
@@ -62,7 +63,7 @@ describe('useUpload', () => {
             replaceFiles: vi.fn(),
             uploadFiles: vi.fn(),
             resetState: vi.fn(),
-        } as any)
+        } as unknown as Parameters<typeof useUpload>[0])
         expect(result.loading).toBe(false)
     })
 
@@ -74,7 +75,7 @@ describe('useUpload', () => {
             replaceFiles: vi.fn(),
             uploadFiles: vi.fn(),
             resetState: vi.fn(),
-        } as any)
+        } as unknown as Parameters<typeof useUpload>[0])
         expect(result.loading).toBe(false)
     })
 
@@ -86,7 +87,7 @@ describe('useUpload', () => {
             replaceFiles: vi.fn(),
             uploadFiles: vi.fn(),
             resetState: vi.fn(),
-        } as any)
+        } as unknown as Parameters<typeof useUpload>[0])
         expect(result.loading).toBe(false)
     })
 
@@ -98,7 +99,7 @@ describe('useUpload', () => {
             replaceFiles: vi.fn(),
             uploadFiles: vi.fn(),
             resetState: vi.fn(),
-        } as any)
+        } as unknown as Parameters<typeof useUpload>[0])
         expect(result.error).toBe('Network timeout')
     })
 
@@ -110,7 +111,7 @@ describe('useUpload', () => {
             replaceFiles: vi.fn(),
             uploadFiles: vi.fn(),
             resetState: vi.fn(),
-        } as any)
+        } as unknown as Parameters<typeof useUpload>[0])
         expect(result.progress).toBe(75)
     })
 
@@ -122,7 +123,7 @@ describe('useUpload', () => {
             replaceFiles: vi.fn(),
             uploadFiles: vi.fn(),
             resetState: vi.fn(),
-        } as any)
+        } as unknown as Parameters<typeof useUpload>[0])
         expect(Array.isArray(result.files)).toBe(true)
         expect(result.files).toHaveLength(3)
     })
@@ -135,7 +136,7 @@ describe('useUpload', () => {
             replaceFiles: vi.fn(),
             uploadFiles: vi.fn(),
             resetState: vi.fn(),
-        } as any)
+        } as unknown as Parameters<typeof useUpload>[0])
         expect(result.files).toHaveLength(0)
     })
 
@@ -151,7 +152,7 @@ describe('useUpload', () => {
             replaceFiles,
             uploadFiles,
             resetState,
-        } as any)
+        } as unknown as Parameters<typeof useUpload>[0])
         expect(result.setFiles).toBe(setFiles)
         expect(result.replaceFiles).toBe(replaceFiles)
         expect(result.uploadFiles).toBe(uploadFiles)
@@ -160,13 +161,13 @@ describe('useUpload', () => {
 
     it('handles undefined upload gracefully', () => {
         const result = useUpload({
-            upload: undefined as any,
+            upload: undefined as unknown as Parameters<typeof useUpload>[0]['upload'],
             files: new Map(),
             setFiles: vi.fn(),
             replaceFiles: vi.fn(),
             uploadFiles: vi.fn(),
             resetState: vi.fn(),
-        } as any)
+        } as unknown as Parameters<typeof useUpload>[0])
         expect(result.upload).toBeUndefined()
         expect(result.loading).toBe(false)
         expect(result.error).toBeUndefined()

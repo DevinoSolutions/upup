@@ -101,12 +101,12 @@ describe('UpupCore lifecycle', () => {
   })
 
   it('does not infer hosted serverUrl from apiKey-like legacy input', () => {
-    const core = new UpupCore({ apiKey: 'test-key' } as any)
+    const core = new UpupCore({ apiKey: 'test-key' } as unknown as ConstructorParameters<typeof UpupCore>[0])
     expect(core.options.serverUrl).toBeUndefined()
   })
 
   it('keeps explicit serverUrl when legacy apiKey-like input is present', () => {
-    const core = new UpupCore({ apiKey: 'test-key', serverUrl: 'https://custom.api' } as any)
+    const core = new UpupCore({ apiKey: 'test-key', serverUrl: 'https://custom.api' } as unknown as ConstructorParameters<typeof UpupCore>[0])
     expect(core.options.serverUrl).toBe('https://custom.api')
   })
 })

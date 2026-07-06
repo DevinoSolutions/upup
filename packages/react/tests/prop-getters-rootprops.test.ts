@@ -1,4 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
+import type React from 'react'
 import { createPropGetters } from '../src/prop-getters'
 
 // getRootProps/getInputProps carry no drag/drop/paste logic (F-606 only touched
@@ -41,7 +42,10 @@ describe('getRootProps', () => {
 
     it('merges custom overrides', () => {
         const { getRootProps } = createPropGetters(makeDeps())
-        const props = getRootProps({ className: 'my-root', 'data-testid': 'root' } as any)
+        const props = getRootProps({
+            className: 'my-root',
+            'data-testid': 'root',
+        } as React.HTMLAttributes<HTMLElement>)
         expect(props.className).toBe('my-root')
         expect(props['data-testid']).toBe('root')
         expect(props.role).toBe('application') // base preserved
@@ -88,7 +92,7 @@ describe('getInputProps — edge cases', () => {
         const file = new File(['x'], 'test.txt', { type: 'text/plain' })
         const event = {
             target: { files: [file] },
-        } as any
+        } as unknown as React.ChangeEvent<HTMLInputElement>
         getInputProps().onChange(event)
         expect(deps.addFiles).toHaveBeenCalledWith([file])
     })

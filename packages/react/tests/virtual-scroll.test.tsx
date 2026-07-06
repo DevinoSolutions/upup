@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render } from '@testing-library/react'
 import React from 'react'
+import type { UploadFile } from '@upup/core'
 
 // Mutable state so individual tests can control file count + viewMode
 let _fileCount = 0
@@ -9,10 +10,10 @@ let _viewMode: 'list' | 'grid' = 'list'
 function makeFile(id: string) {
     return { id, name: `file-${id}.txt`, size: 1000, type: 'text/plain' }
 }
-function makeFilesMap(count: number): Map<string, any> {
-    const map = new Map<string, any>()
+function makeFilesMap(count: number): Map<string, UploadFile> {
+    const map = new Map<string, UploadFile>()
     for (let i = 0; i < count; i++) {
-        map.set(`f${i}`, makeFile(`f${i}`))
+        map.set(`f${i}`, makeFile(`f${i}`) as unknown as UploadFile)
     }
     return map
 }
@@ -75,13 +76,13 @@ vi.mock('../src/context/UploaderContext', () => ({
 }))
 
 vi.mock('../src/components/FileItem', () => ({
-    default: ({ file }: any) => <div data-testid="file-item">{file.name}</div>,
+    default: ({ file }: { file: UploadFile }) => <div data-testid="file-item">{file.name}</div>,
 }))
 vi.mock('../src/components/shared/UploaderHeader', () => ({
     default: () => <div data-testid="uploader-header" />,
 }))
 vi.mock('../src/components/shared/MyAnimatePresence', () => ({
-    default: ({ children }: any) => <>{children}</>,
+    default: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }))
 vi.mock('../src/components/shared/ProgressBar', () => ({
     default: () => null,

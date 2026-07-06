@@ -16,15 +16,29 @@ describe('@upup/react public exports', () => {
   })
 
   it('does not export v1/internal component surface from the main entry', () => {
-    expect((ReactPackage as any).UpupCore).toBeUndefined()
-    expect((ReactPackage as any).SourceSelector).toBeUndefined()
-    expect((ReactPackage as any).SourceView).toBeUndefined()
-    expect((ReactPackage as any).CameraUploader).toBeUndefined()
-    expect((ReactPackage as any).FileList).toBeUndefined()
-    expect((ReactPackage as any).FilePreview).toBeUndefined()
-    expect((ReactPackage as any).UploaderPanel).toBeUndefined()
-    expect((ReactPackage as any).UrlUploader).toBeUndefined()
-    expect((ReactPackage as any).createPropGetters).toBeUndefined()
+    expect((ReactPackage as Record<string, unknown>).UpupCore).toBeUndefined()
+    expect(
+      (ReactPackage as Record<string, unknown>).SourceSelector,
+    ).toBeUndefined()
+    expect(
+      (ReactPackage as Record<string, unknown>).SourceView,
+    ).toBeUndefined()
+    expect(
+      (ReactPackage as Record<string, unknown>).CameraUploader,
+    ).toBeUndefined()
+    expect((ReactPackage as Record<string, unknown>).FileList).toBeUndefined()
+    expect(
+      (ReactPackage as Record<string, unknown>).FilePreview,
+    ).toBeUndefined()
+    expect(
+      (ReactPackage as Record<string, unknown>).UploaderPanel,
+    ).toBeUndefined()
+    expect(
+      (ReactPackage as Record<string, unknown>).UrlUploader,
+    ).toBeUndefined()
+    expect(
+      (ReactPackage as Record<string, unknown>).createPropGetters,
+    ).toBeUndefined()
   })
 
   it('exports the headless context hooks (parity with @upup/vue and @upup/svelte)', () => {

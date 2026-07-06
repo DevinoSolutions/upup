@@ -1,16 +1,18 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render } from '@testing-library/react'
 import React from 'react'
+import type { ReactNode } from 'react'
+import type { UploadFile } from '@upup/core'
 
 // Mutable state so individual tests can control uploadStatus/uploadError/uploadErrorCode.
 let _uploadStatus = 'PENDING'
 let _uploadError = ''
 let _uploadErrorCode: string | undefined = undefined
 
-function makeFilesMap(count: number): Map<string, any> {
-    const map = new Map<string, any>()
+function makeFilesMap(count: number): Map<string, UploadFile> {
+    const map = new Map<string, UploadFile>()
     for (let i = 0; i < count; i++) {
-        map.set(`f${i}`, { id: `f${i}`, name: `file-${i}.txt`, size: 1000, type: 'text/plain' })
+        map.set(`f${i}`, { id: `f${i}`, name: `file-${i}.txt`, size: 1000, type: 'text/plain' } as unknown as UploadFile)
     }
     return map
 }
@@ -77,13 +79,13 @@ vi.mock('../src/context/UploaderContext', () => ({
 }))
 
 vi.mock('../src/components/FileItem', () => ({
-    default: ({ file }: any) => <div data-testid="file-item">{file.name}</div>,
+    default: ({ file }: { file: UploadFile }) => <div data-testid="file-item">{file.name}</div>,
 }))
 vi.mock('../src/components/shared/UploaderHeader', () => ({
     default: () => <div data-testid="uploader-header" />,
 }))
 vi.mock('../src/components/shared/MyAnimatePresence', () => ({
-    default: ({ children }: any) => <>{children}</>,
+    default: ({ children }: { children: ReactNode }) => <>{children}</>,
 }))
 vi.mock('../src/components/shared/ProgressBar', () => ({
     default: () => null,

@@ -54,7 +54,9 @@ describe('collectDroppedFiles', () => {
 
         expect(result.files).toHaveLength(1)
         expect(result.files[0].name).toBe('nested.txt')
-        expect((result.files[0] as any).relativePath).toBe('folder/nested.txt')
+        expect(
+            (result.files[0] as Record<string, unknown>).relativePath,
+        ).toBe('folder/nested.txt')
         expect(result.skippedDirectory).toBe(false)
     })
 
