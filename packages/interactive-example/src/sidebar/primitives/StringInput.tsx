@@ -10,8 +10,8 @@ export function StringInput({
 }: {
     propId: string
     label: string
-    placeholder?: string
-    description?: string
+    placeholder?: string | undefined
+    description?: string | undefined
 }) {
     const id = useId()
     const { value, set } = useConfig(propId)

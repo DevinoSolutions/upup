@@ -25,8 +25,8 @@ export function ColorInput({
 }: {
     propId: string
     label: string
-    placeholder?: string
-    defaultValue?: string
+    placeholder?: string | undefined
+    defaultValue?: string | undefined
 }) {
     const id = useId()
     const { value, set } = useConfig(propId)

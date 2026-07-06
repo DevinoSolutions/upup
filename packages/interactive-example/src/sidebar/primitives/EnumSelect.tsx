@@ -16,11 +16,11 @@ export function EnumSelect({
     propId: string
     label: string
     options: string[]
-    layout?: 'segmented' | 'select'
-    defaultValue?: string
-    description?: string
-    meta?: Record<string, SourceMeta>
-    expandAfter?: number
+    layout?: 'segmented' | 'select' | undefined
+    defaultValue?: string | undefined
+    description?: string | undefined
+    meta?: Record<string, SourceMeta> | undefined
+    expandAfter?: number | undefined
 }) {
     const id = useId()
     const { value, set } = useConfig(propId)

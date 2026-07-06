@@ -16,13 +16,13 @@ export function MultiSelect({
      * Optional per-option icon + humanised label. When present the options
      * render as brand tiles instead of plain checkboxes.
      */
-    meta?: Record<string, SourceMeta>
+    meta?: Record<string, SourceMeta> | undefined
     /**
      * Options that are visible but not selectable — each entry is a reason
      * string rendered as a tooltip. Used when a cloud-drive tile needs
      * credentials (NEXT_PUBLIC_*_CLIENT_ID) that the host env never set.
      */
-    unavailable?: Record<string, string>
+    unavailable?: Record<string, string> | undefined
 }) {
     const { value, set } = useConfig(propId)
     const selected = Array.isArray(value) ? (value as string[]) : []

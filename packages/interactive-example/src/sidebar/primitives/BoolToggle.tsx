@@ -9,7 +9,7 @@ export function BoolToggle({
 }: {
     propId: string
     label: string
-    description?: string
+    description?: string | undefined
     /**
      * The declared default for this prop. Determines what unchecking writes
      * to config: when the user toggles AWAY from the default we record the
@@ -17,7 +17,7 @@ export function BoolToggle({
      * `false`); when they toggle BACK to the default we clear the entry to
      * `undefined` so the URL/code snippet stays minimal.
      */
-    defaultValue?: boolean
+    defaultValue?: boolean | undefined
 }) {
     const id = useId()
     const { value, set } = useConfig(propId)

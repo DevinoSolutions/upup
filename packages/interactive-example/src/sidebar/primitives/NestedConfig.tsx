@@ -21,7 +21,7 @@ export function NestedConfig({
     label: string
     fields: ToggleEntry[]
     /** Optional icon shown alongside the legend — used for cloud drive blocks. */
-    legendIcon?: React.FC
+    legendIcon?: React.FC | undefined
 }) {
     const Icon = legendIcon
     const ctx = useContext(ConfigContext)

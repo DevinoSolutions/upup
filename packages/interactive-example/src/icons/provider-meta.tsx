@@ -1,5 +1,5 @@
 import React from "react"
-import { Cloud, Layers, Repeat2, Sun, Moon, Monitor, Landmark, Shield, HardDrive } from "lucide-react"
+import { Cloud, Layers, Repeat2, Sun, Moon, Monitor, Landmark, Shield, HardDrive, type LucideIcon } from "lucide-react"
 import { LOCALE_CODES } from "@upup/core"
 import type { SourceMeta } from "./source-meta"
 
@@ -17,7 +17,7 @@ function make(d: string, color?: string): React.FC {
     }
 }
 
-function lucide(Icon: React.FC<{ size?: number; color?: string }>, color?: string): React.FC {
+function lucide(Icon: LucideIcon, color?: string): React.FC {
     return function LucideIcon() {
         return <Icon size={20} color={color} />
     }

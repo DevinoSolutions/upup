@@ -59,7 +59,7 @@ export function ConfigProvider({
     initialConfig,
 }: {
     children: ReactNode
-    initialConfig?: UpupConfig
+    initialConfig?: UpupConfig | undefined
 }) {
     const defaults = useMemo(() => buildDefaultConfig(), [])
     const [config, setConfigState] = useState<UpupConfig>(

@@ -32,16 +32,16 @@ export function SizeUnitInput({
 }: {
     propId: string
     label: string
-    defaultSize?: number
-    defaultUnit?: Unit
-    placeholder?: string
+    defaultSize?: number | undefined
+    defaultUnit?: Unit | undefined
+    placeholder?: string | undefined
     /**
      * 'object' (default) writes `{ size, unit }` to config — what the v2
      * file-size props expect. 'bytes' multiplies size×unit and writes a raw
      * number, used for props like `chunkSizeBytes` whose API takes a plain
      * number but whose UX still benefits from a unit picker.
      */
-    serialize?: 'object' | 'bytes'
+    serialize?: 'object' | 'bytes' | undefined
 }) {
     const groupId = useId()
     const inputId = useId()
@@ -63,7 +63,7 @@ export function SizeUnitInput({
         : (objValue.size ?? '')
     const unit: string = isBytes ? byteUnit : (objValue.unit ?? '')
 
-    const update = (next: { size?: number; unit?: string }) => {
+    const update = (next: { size?: number | undefined; unit?: string | undefined }) => {
         if (!isBytes) {
             const merged = { size: objValue.size, unit: objValue.unit, ...next }
             if (merged.size === undefined && !merged.unit) {

@@ -27,8 +27,8 @@ export function ComboInput({
 }: {
     propId: string
     label: string
-    description?: string
-    placeholder?: string
+    description?: string | undefined
+    placeholder?: string | undefined
     presets: ComboPreset[]
 }) {
     const id = useId()

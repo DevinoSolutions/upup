@@ -11,9 +11,9 @@ export function FieldLabel({
     label,
     description,
 }: {
-    id?: string
+    id?: string | undefined
     label: string
-    description?: string
+    description?: string | undefined
 }) {
     return (
         <>

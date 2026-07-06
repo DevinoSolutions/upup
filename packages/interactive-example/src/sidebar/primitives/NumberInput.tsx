@@ -15,20 +15,20 @@ export function NumberInput({
 }: {
     propId: string
     label: string
-    min?: number
-    max?: number
-    step?: number
+    min?: number | undefined
+    max?: number | undefined
+    step?: number | undefined
     /** Declared default — shown as placeholder so consumers know the baseline. */
-    defaultValue?: number
+    defaultValue?: number | undefined
     /** 'slider' renders a range input with a live readout (for 0-1 style props). */
-    display?: 'number' | 'slider'
+    display?: 'number' | 'slider' | undefined
     /**
      * 'percent' renders the slider readout as `Math.round(v*100) + '%'` so a
      * 0-1 value is visually anchored to a 0–100% range without changing what
      * gets stored on the underlying numeric prop.
      */
-    format?: 'percent'
-    description?: string
+    format?: 'percent' | undefined
+    description?: string | undefined
 }) {
     const id = useId()
     const { value, set } = useConfig(propId)
