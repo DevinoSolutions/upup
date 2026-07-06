@@ -47,11 +47,11 @@ export class BoxPlugin extends PopupOAuthPlugin {
         // Box scopes are configured on the Box app, not sent on the authorize URL.
     }
 
-    configure(config: BoxConfig): this {
+    override configure(config: BoxConfig): this {
         return super.configure(config)
     }
 
-    getConfig(): Readonly<BoxConfig> {
+    override getConfig(): Readonly<BoxConfig> {
         return this.config
     }
 

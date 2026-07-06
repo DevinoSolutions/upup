@@ -1,6 +1,8 @@
 {
   "compilerOptions": {
     "strict": true, "moduleResolution": "bundler", "module": "ESNext", "target": "ES2022",
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
     "experimentalDecorators": true, "useDefineForClassFields": false,
     "lib": ["ES2022", "DOM", "DOM.Iterable"], "skipLibCheck": true
   },

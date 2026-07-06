@@ -66,11 +66,11 @@ export class OneDrivePlugin extends PopupOAuthPlugin {
         authParams: { response_mode: 'query' },
     }
 
-    configure(config: OneDriveConfig): this {
+    override configure(config: OneDriveConfig): this {
         return super.configure(config)
     }
 
-    getConfig(): Readonly<OneDriveConfig> {
+    override getConfig(): Readonly<OneDriveConfig> {
         return this.config
     }
 

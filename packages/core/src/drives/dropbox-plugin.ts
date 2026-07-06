@@ -53,11 +53,11 @@ export class DropboxPlugin extends PopupOAuthPlugin {
         authParams: { token_access_type: 'offline' },
     }
 
-    configure(config: DropboxConfig): this {
+    override configure(config: DropboxConfig): this {
         return super.configure(config)
     }
 
-    getConfig(): Readonly<DropboxConfig> {
+    override getConfig(): Readonly<DropboxConfig> {
         return this.config
     }
 
