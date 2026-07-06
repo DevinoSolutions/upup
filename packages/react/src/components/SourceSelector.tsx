@@ -12,7 +12,7 @@ import {
 } from '../context/UploaderContext'
 import useSourceSelector from '../hooks/useSourceSelector'
 
-export default function SourceSelector() {
+export default function SourceSelector(): React.ReactElement | null {
     const { core, inputRef, openFilePicker } = useUploaderRuntime()
     const { translations: tr } = useUploaderI18n()
     const { isAddingMore, setIsAddingMore } = useUploaderView()
@@ -190,7 +190,7 @@ export default function SourceSelector() {
                             },
                             slotClasses.containerCancelButton,
                         )}
-                        onClick={() => setIsAddingMore(false)}
+                        onClick={() => { setIsAddingMore(false); }}
                     >
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -243,7 +243,7 @@ export default function SourceSelector() {
                             onKeyDown={e => {
                                 if (e.key === 'Enter') e.preventDefault()
                             }}
-                            onClick={() => handleSourceClick(id)}
+                            onClick={() => { handleSourceClick(id); }}
                         >
                             <Icon
                                 className={

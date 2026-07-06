@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
 import { useUpupUpload } from '../src/use-upup-upload'
 import { UploadStatus } from '@upup/core'
@@ -14,7 +14,7 @@ describe('useUpupUpload — restrictions enforcement', () => {
         await act(async () => {
             try {
                 await result.current.addFiles([makeFile('big.txt', 50)])
-            } catch { /* expected */ }
+            } catch { /* upup-catch: expected rejection — the restriction is asserted below */ }
         })
         expect(result.current.files.length).toBe(0)
     })
@@ -36,7 +36,7 @@ describe('useUpupUpload — restrictions enforcement', () => {
         await act(async () => {
             try {
                 await result.current.addFiles([makeFile('doc.txt', 10, 'text/plain')])
-            } catch { /* expected */ }
+            } catch { /* upup-catch: expected rejection — the restriction is asserted below */ }
         })
         expect(result.current.files.length).toBe(0)
     })
@@ -62,7 +62,7 @@ describe('useUpupUpload — restrictions enforcement', () => {
         await act(async () => {
             try {
                 await result.current.addFiles([makeFile('c.txt')])
-            } catch { /* expected */ }
+            } catch { /* upup-catch: expected rejection — the restriction is asserted below */ }
         })
         expect(result.current.files.length).toBe(2)
     })
@@ -74,7 +74,7 @@ describe('useUpupUpload — restrictions enforcement', () => {
         await act(async () => {
             try {
                 await result.current.addFiles([makeFile('tiny.txt', 5)])
-            } catch { /* expected */ }
+            } catch { /* upup-catch: expected rejection — the restriction is asserted below */ }
         })
         expect(result.current.files.length).toBe(0)
     })

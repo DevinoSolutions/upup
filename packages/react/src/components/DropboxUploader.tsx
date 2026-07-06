@@ -8,14 +8,14 @@ import DriveAuthFallback from './shared/DriveAuthFallback'
 import DriveBrowser from './shared/DriveBrowser'
 import ServerModeDriveUploader from './ServerModeDriveUploader'
 
-export default function DropboxUploader() {
+export default function DropboxUploader(): React.ReactElement | null {
     const { mode } = useUploaderRuntime()
     const { setActiveSource } = useUploaderSource()
     if (mode === 'server') {
         return (
             <ServerModeDriveUploader
                 provider="dropbox"
-                onBack={() => setActiveSource(undefined)}
+                onBack={() => { setActiveSource(undefined); }}
             />
         )
     }

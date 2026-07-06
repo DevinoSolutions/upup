@@ -52,8 +52,8 @@ export function useGoogleDrive() {
             core,
             GOOGLE_DRIVE_DESCRIPTOR,
             {
-                onFilesSelected: files => setFiles(files),
-                onClose: () => setActiveSource(undefined),
+                onFilesSelected: files => { setFiles(files); },
+                onClose: () => { setActiveSource(undefined); },
             },
         )
     }

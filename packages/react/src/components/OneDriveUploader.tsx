@@ -8,14 +8,14 @@ import DriveAuthFallback from './shared/DriveAuthFallback'
 import DriveBrowser from './shared/DriveBrowser'
 import ServerModeDriveUploader from './ServerModeDriveUploader'
 
-export default function OneDriveUploader() {
+export default function OneDriveUploader(): React.ReactElement | null {
     const { mode } = useUploaderRuntime()
     const { setActiveSource } = useUploaderSource()
     if (mode === 'server') {
         return (
             <ServerModeDriveUploader
                 provider="onedrive"
-                onBack={() => setActiveSource(undefined)}
+                onBack={() => { setActiveSource(undefined); }}
             />
         )
     }

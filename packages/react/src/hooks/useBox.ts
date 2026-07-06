@@ -48,8 +48,8 @@ export function useBox() {
             core,
             BOX_DESCRIPTOR,
             {
-                onFilesSelected: files => setFiles(files),
-                onClose: () => setActiveSource(undefined),
+                onFilesSelected: files => { setFiles(files); },
+                onClose: () => { setActiveSource(undefined); },
             },
         )
     }

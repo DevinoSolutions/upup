@@ -9,7 +9,7 @@ import SourceViewContainer from './shared/SourceViewContainer'
 
 type RecordingState = 'idle' | 'recording' | 'recorded'
 
-export default function ScreenCaptureUploader() {
+export default function ScreenCaptureUploader(): React.ReactElement | null {
     const { setFiles } = useUploaderFiles()
     const { setActiveSource } = useUploaderSource()
     const { isDark: dark } = useUploaderTheme()
@@ -30,7 +30,7 @@ export default function ScreenCaptureUploader() {
         return () => {
             if (timerRef.current) clearInterval(timerRef.current)
             if (videoUrl) URL.revokeObjectURL(videoUrl)
-            streamRef.current?.getTracks().forEach(t => t.stop())
+            streamRef.current?.getTracks().forEach(t => { t.stop(); })
         }
     }, [videoUrl])
 
@@ -77,14 +77,14 @@ export default function ScreenCaptureUploader() {
                     type: recorder.mimeType || 'video/webm',
                 })
                 setVideoUrl(URL.createObjectURL(blob))
-                stream.getTracks().forEach(t => t.stop())
+                stream.getTracks().forEach(t => { t.stop(); })
                 if (previewRef.current) previewRef.current.srcObject = null
             }
 
             recorder.start()
             setState('recording')
             setDuration(0)
-            timerRef.current = setInterval(() => setDuration(d => d + 1), 1000)
+            timerRef.current = setInterval(() => { setDuration(d => d + 1); }, 1000)
         } catch {
             setError(
                 'Screen sharing was cancelled or denied. Please try again.',

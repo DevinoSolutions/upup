@@ -168,7 +168,7 @@ export default memo(function ImageEditorInline(props: Props) {
     const resolvedTabs = editorConstants?.TABS
         ? editorConfig.tabs?.map(
               tab =>
-                  (editorConstants.TABS as Record<string, unknown>)[
+                  (editorConstants.TABS)[
                       tab.toUpperCase()
                   ] ?? tab,
           )
@@ -246,10 +246,7 @@ export default memo(function ImageEditorInline(props: Props) {
                             defaultTabId={
                                 editorConstants?.TABS
                                     ? (
-                                          editorConstants.TABS as Record<
-                                              string,
-                                              unknown
-                                          >
+                                          editorConstants.TABS
                                       ).ADJUST
                                     : undefined
                             }

@@ -107,7 +107,7 @@ describe('useUpupUpload — end-to-end smoke test', () => {
         await act(async () => {
             try {
                 await result.current.addFiles([new File(['x'], 'bad.png', { type: 'image/png' })])
-            } catch {}
+            } catch { /* upup-catch: expected rejection in this negative-path test; asserted below */ }
         })
         expect(result.current.files.length).toBe(1)
 
@@ -115,7 +115,7 @@ describe('useUpupUpload — end-to-end smoke test', () => {
         await act(async () => {
             try {
                 await result.current.addFiles([makeFile('huge.txt', 100)])
-            } catch {}
+            } catch { /* upup-catch: expected rejection in this negative-path test; asserted below */ }
         })
         expect(result.current.files.length).toBe(1)
 
@@ -129,7 +129,7 @@ describe('useUpupUpload — end-to-end smoke test', () => {
         await act(async () => {
             try {
                 await result.current.addFiles([makeFile('over.txt', 5)])
-            } catch {}
+            } catch { /* upup-catch: expected rejection in this negative-path test; asserted below */ }
         })
         expect(result.current.files.length).toBe(2) // limit enforced
     })

@@ -27,7 +27,7 @@ export default function DriveBrowserHeader({
     showSearch,
     onSearch,
     searchTerm,
-}: Readonly<Props>) {
+}: Readonly<Props>): React.ReactElement | null {
     const { setActiveSource } = useUploaderSource()
     const { translations: tr } = useUploaderI18n()
     const { isDark: dark, slotOverrides: slotClasses } = useUploaderTheme()
@@ -64,7 +64,7 @@ export default function DriveBrowserHeader({
                                         i === path.length - 1 ? 'none' : 'auto',
                                 }}
                                 onClick={() =>
-                                    setPath(prev => prev.slice(0, i + 1))
+                                    { setPath(prev => prev.slice(0, i + 1)); }
                                 }
                             >
                                 <span className="upup-group-hover:upup-underline upup-truncate">
@@ -133,7 +133,7 @@ export default function DriveBrowserHeader({
                         )}
                         placeholder={tr.search}
                         value={searchTerm}
-                        onChange={e => onSearch(e.currentTarget.value)}
+                        onChange={e => { onSearch(e.currentTarget.value); }}
                     />
                     <Icon
                         name="search"

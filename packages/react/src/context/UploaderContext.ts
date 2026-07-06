@@ -121,7 +121,7 @@ const EditorContext = createContext<ContextEditor | null>(null)
 const OptionsContext = createContext<ContextProps | null>(null)
 const ThemeContext = createContext<ContextTheme | null>(null)
 
-function readContext<T>(context: Context<T | null>, name: string): T {
+function useContextOrThrow<T>(context: Context<T | null>, name: string): T {
     const value = useContext(context)
     if (!value) {
         throw new Error(`${name} must be used inside <UpupUploader />`)
@@ -135,13 +135,14 @@ export function UploaderContextProvider({
 }: {
     value: IUploaderContext
     children: ReactNode
-}) {
+}): ReactNode {
     const runtime = useMemo<ContextRuntime>(
         () => ({
             core: value.core,
             orchestrator: value.orchestrator,
             mode: value.mode,
             serverUrl: value.serverUrl,
+            // eslint-disable-next-line @typescript-eslint/no-deprecated -- runtime context must still expose inputRef for back-compat consumers; v3 removal tracked
             inputRef: value.inputRef,
             openFilePicker: value.openFilePicker,
             isOnline: value.isOnline,
@@ -149,6 +150,7 @@ export function UploaderContextProvider({
         [
             value.core,
             value.orchestrator,
+            // eslint-disable-next-line @typescript-eslint/no-deprecated -- see above
             value.inputRef,
             value.isOnline,
             value.mode,
@@ -246,6 +248,7 @@ export function UploaderContextProvider({
 
     const options = useMemo(
         () => value.props,
+        // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: memoize on granular prop fields, not the parent object identity (which changes every render)
         [
             value.props.allowedFileTypes,
             value.props.allowPreview,
@@ -278,6 +281,7 @@ export function UploaderContextProvider({
 
     const theme = useMemo(
         () => value.theme,
+        // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: memoize on granular theme fields, not the parent object identity (which changes every render)
         [
             value.theme.isDark,
             value.theme.resolved,
@@ -332,44 +336,44 @@ export function UploaderContextProvider({
 }
 
 /** Compatibility aggregate hook. New internals should use the focused hooks. */
-export function useUploaderContext() {
-    return readContext(UploaderContext, 'useUploaderContext')
+export function useUploaderContext(): IUploaderContext {
+    return useContextOrThrow(UploaderContext, 'useUploaderContext')
 }
 
-export function useUploaderRuntime() {
-    return readContext(RuntimeContext, 'useUploaderRuntime')
+export function useUploaderRuntime(): ContextRuntime {
+    return useContextOrThrow(RuntimeContext, 'useUploaderRuntime')
 }
 
-export function useUploaderSource() {
-    return readContext(SourceContext, 'useUploaderSource')
+export function useUploaderSource(): ContextSource {
+    return useContextOrThrow(SourceContext, 'useUploaderSource')
 }
 
-export function useUploaderI18n() {
-    return readContext(I18nContext, 'useUploaderI18n')
+export function useUploaderI18n(): ContextI18n {
+    return useContextOrThrow(I18nContext, 'useUploaderI18n')
 }
 
-export function useUploaderFiles() {
-    return readContext(FilesContext, 'useUploaderFiles')
+export function useUploaderFiles(): ContextFiles {
+    return useContextOrThrow(FilesContext, 'useUploaderFiles')
 }
 
-export function useUploaderUploadControls() {
-    return readContext(UploadControlsContext, 'useUploaderUploadControls')
+export function useUploaderUploadControls(): ContextUploadControls {
+    return useContextOrThrow(UploadControlsContext, 'useUploaderUploadControls')
 }
 
-export function useUploaderView() {
-    return readContext(ViewContext, 'useUploaderView')
+export function useUploaderView(): ContextView {
+    return useContextOrThrow(ViewContext, 'useUploaderView')
 }
 
-export function useUploaderEditor() {
-    return readContext(EditorContext, 'useUploaderEditor')
+export function useUploaderEditor(): ContextEditor {
+    return useContextOrThrow(EditorContext, 'useUploaderEditor')
 }
 
-export function useUploaderOptions() {
-    return readContext(OptionsContext, 'useUploaderOptions')
+export function useUploaderOptions(): ContextProps {
+    return useContextOrThrow(OptionsContext, 'useUploaderOptions')
 }
 
-export function useUploaderTheme() {
-    return readContext(ThemeContext, 'useUploaderTheme')
+export function useUploaderTheme(): ContextTheme {
+    return useContextOrThrow(ThemeContext, 'useUploaderTheme')
 }
 
 export default UploaderContext

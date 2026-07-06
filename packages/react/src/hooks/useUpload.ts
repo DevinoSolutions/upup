@@ -22,7 +22,7 @@ export default function useUpload({
 
     return {
         upload: startUpload,
-        loading: isUploadActive(uploadStatus!),
+        loading: isUploadActive(uploadStatus),
         error: uploadError,
         progress: totalProgress,
         files: Array.from(files.values()).map(file => {

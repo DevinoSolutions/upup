@@ -67,7 +67,7 @@ export default memo(function FileItem({ file }: Props) {
                 canPreview={canPreview}
                 setCanPreview={setCanPreview}
                 onRequestPreview={openPreviewPortal}
-                onClick={() => onFileClick(file)}
+                onClick={() => { onFileClick(file); }}
             />
             {/* Keep preview portal mounted without showing duplicate info */}
             {canPreview && showPreviewPortal && (

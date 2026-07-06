@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { renderHook } from '@testing-library/react'
 import { useUpupUpload } from '../src/use-upup-upload'
-import { UploadStatus } from '@upup/core'
+import { UploadStatus, type UploadFile } from '@upup/core'
 
 describe('useUpupUpload — configuration variants', () => {
     it('accepts cloudDrives nested config', () => {
@@ -21,14 +21,14 @@ describe('useUpupUpload — configuration variants', () => {
 
     it('does not infer hosted serverUrl from apiKey-like legacy input', () => {
         const { result } = renderHook(() =>
-            useUpupUpload({ provider: 'S3' as const, apiKey: 'key-123' } as any),
+            useUpupUpload({ provider: 'S3' as const, apiKey: 'key-123' } as unknown as Parameters<typeof useUpupUpload>[0]),
         )
         expect(result.current.core.options.serverUrl).toBeUndefined()
     })
 
     it('keeps explicit serverUrl when legacy apiKey-like input is present', () => {
         const { result } = renderHook(() =>
-            useUpupUpload({ provider: 'S3' as const, apiKey: 'key', serverUrl: 'https://custom.api' } as any),
+            useUpupUpload({ provider: 'S3' as const, apiKey: 'key', serverUrl: 'https://custom.api' } as unknown as Parameters<typeof useUpupUpload>[0]),
         )
         expect(result.current.core.options.serverUrl).toBe('https://custom.api')
     })
@@ -50,7 +50,7 @@ describe('useUpupUpload — configuration variants', () => {
     it('accepts pipeline option', () => {
         const customStep = {
             name: 'custom',
-            process: async (file: any) => file,
+            process: async (file: UploadFile) => file,
         }
         const { result } = renderHook(() =>
             useUpupUpload({ provider: 'S3' as const, pipeline: [customStep] }),

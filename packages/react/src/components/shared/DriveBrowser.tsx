@@ -70,7 +70,7 @@ export default function DriveBrowser({
     loadMore,
     'data-upup-slot': dataUpupSlot = 'drive-browser',
     ...rest
-}: Readonly<Props>) {
+}: Readonly<Props>): React.ReactElement | null {
     const {
         allowedFileTypes,
         icons: { LoaderIcon },

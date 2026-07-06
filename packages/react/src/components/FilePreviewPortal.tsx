@@ -73,7 +73,7 @@ export default memo(
                 if (event.key === 'Escape') onClose()
             }
             window.addEventListener('keydown', handleKeyDown)
-            return () => window.removeEventListener('keydown', handleKeyDown)
+            return () => { window.removeEventListener('keydown', handleKeyDown); }
         }, [onClose])
 
         useEffect(() => {

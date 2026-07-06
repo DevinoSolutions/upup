@@ -10,7 +10,7 @@ import { uploadSourceObject } from '../lib/constants'
 import { cn } from '@upup/core/internal'
 import DefaultLoaderIcon from './DefaultLoaderIcon'
 
-export default function SourceView() {
+export default function SourceView(): React.ReactElement | null {
     const { core } = useUploaderRuntime()
     const { activeSource, setActiveSource } = useUploaderSource()
     const { translations: tr } = useUploaderI18n()

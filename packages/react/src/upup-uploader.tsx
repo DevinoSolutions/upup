@@ -148,8 +148,7 @@ export default forwardRef<UploaderRef, UploaderProps>(
                                     )}
 
                                 {!providerValues.props.mini &&
-                                    providerValues.props.showBranding !==
-                                        false && (
+                                    providerValues.props.showBranding && (
                                         <div
                                             data-testid="upup-branding"
                                             className={cn(

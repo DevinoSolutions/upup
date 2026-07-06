@@ -20,7 +20,7 @@ export default function DriveAuthFallback({
     onRetry,
     error,
     'data-upup-slot': dataUpupSlot = 'drive-auth-fallback',
-}: Readonly<Props>) {
+}: Readonly<Props>): React.ReactElement | null {
     const { isDark: dark, slotOverrides: slotClasses } = useUploaderTheme()
     const { translations: tr } = useUploaderI18n()
 

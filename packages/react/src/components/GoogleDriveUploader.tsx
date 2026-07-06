@@ -8,14 +8,14 @@ import DriveAuthFallback from './shared/DriveAuthFallback'
 import DriveBrowser from './shared/DriveBrowser'
 import ServerModeDriveUploader from './ServerModeDriveUploader'
 
-export default function GoogleDriveUploader() {
+export default function GoogleDriveUploader(): React.ReactElement | null {
     const { mode } = useUploaderRuntime()
     const { setActiveSource } = useUploaderSource()
     if (mode === 'server') {
         return (
             <ServerModeDriveUploader
                 provider="google-drive"
-                onBack={() => setActiveSource(undefined)}
+                onBack={() => { setActiveSource(undefined); }}
             />
         )
     }

@@ -12,7 +12,7 @@ import { cn } from '@upup/core/internal'
 import SourceSelector from './SourceSelector'
 import SourceView from './SourceView'
 import FileList from './FileList'
-export default function UploaderPanel() {
+export default function UploaderPanel(): React.ReactElement | null {
     const { files } = useUploaderFiles()
     const { activeSource } = useUploaderSource()
     const { isAddingMore } = useUploaderView()

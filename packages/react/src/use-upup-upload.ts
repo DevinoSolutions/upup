@@ -149,7 +149,7 @@ export function useUpupUpload(
         const unsub = core.on('state-change', () => {
             forceUpdate(n => n + 1)
         })
-        const unsubDragDrop = dragDrop.subscribe(() => forceUpdate(n => n + 1))
+        const unsubDragDrop = dragDrop.subscribe(() => { forceUpdate(n => n + 1); })
 
         // Wire convenience callbacks through refs for freshness
         const unsubCallbacks: Array<() => void> = [
@@ -198,7 +198,7 @@ export function useUpupUpload(
         addFiles: files =>
             coreRef.current?.addFiles(files) ?? Promise.resolve(),
         status: fallbackCore?.status ?? UploadStatus.IDLE,
-        allowedFileTypes: options.allowedFileTypes as string | undefined,
+        allowedFileTypes: options.allowedFileTypes,
         multiple: options.limit !== 1,
         isDragging: dragSnapshot.isDragging,
         dragDrop: dragDropRef.current ?? undefined,

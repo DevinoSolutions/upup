@@ -14,7 +14,7 @@ export default function DriveBrowserItem({
     file,
     selectedFiles,
     handleClick,
-}: Readonly<DriveBrowserItemProps>) {
+}: Readonly<DriveBrowserItemProps>): React.ReactElement | null {
     const { isDark: dark, slotOverrides: slotClasses } = useUploaderTheme()
     const isFolder = file.isFolder
     const isFileSelected = selectedFiles.filter(f => f.id === file.id).length

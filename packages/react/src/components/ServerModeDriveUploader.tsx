@@ -31,7 +31,7 @@ export default function ServerModeDriveUploader({
     provider,
     onBack,
     'data-upup-slot': dataUpupSlot = `drive-browser-${provider}`,
-}: Readonly<Props>) {
+}: Readonly<Props>): React.ReactElement | null {
     const { isDark: dark } = useUploaderTheme()
     const {
         icons: { LoaderIcon },
@@ -154,9 +154,9 @@ export default function ServerModeDriveUploader({
                                 key={file.id}
                                 type="button"
                                 onClick={() =>
-                                    file.isFolder
+                                    { file.isFolder
                                         ? void refresh({ folderId: file.id })
-                                        : toggle(file.id)
+                                        : toggle(file.id); }
                                 }
                                 data-upup-slot="drive-browser-item"
                                 data-selected={selected.has(file.id)}

@@ -188,7 +188,7 @@ export default function useUploaderController(
         () => ({
             provider,
             mode: modeProp,
-            sources: sources as UploaderControllerOptions['sources'],
+            sources: sources,
             uploadEndpoint,
             serverUrl,
             maxFiles,
@@ -208,7 +208,7 @@ export default function useUploaderController(
             crashRecovery,
             allowedFileTypes: (typeof acceptProp === 'string'
                 ? acceptProp
-                : (acceptProp as string[]).join(',')) as string | undefined,
+                : (acceptProp).join(',')),
             mini,
             isProcessing,
             allowPreview,
@@ -241,7 +241,7 @@ export default function useUploaderController(
             onStatusChange,
             onFileTypeMismatch,
             onRestrictionFailed,
-            // eslint-disable-next-line react-hooks/exhaustive-deps
+             
         }),
         [props],
     ) // props identity memoization — same as normalizeUploaderOptions below
@@ -261,7 +261,7 @@ export default function useUploaderController(
     const { connectSSE } = useSSEProcessing({
         processingEndpoint,
         onFileProcessed,
-        onError: err => onError(err.message),
+        onError: err => { onError(err.message); },
         processingTimeout,
     })
 
@@ -274,7 +274,7 @@ export default function useUploaderController(
     if (!rootRef.current && core) {
         rootRef.current = createUploaderController(
             { core, options: factoryOptions, normalized },
-            { connectSSE: file => connectSSERef.current(file) },
+            { connectSSE: file => { connectSSERef.current(file); } },
         )
     }
     const root = rootRef.current!
@@ -363,7 +363,7 @@ export default function useUploaderController(
     // This is NOT a regression — the original React adapter had the same behavior.
     useEffect(() => {
         root?.init()
-        return () => root?.destroy()
+        return () => { root?.destroy(); }
     }, [root])
 
     // ── Input ref (React-specific) ──────────────────────────────

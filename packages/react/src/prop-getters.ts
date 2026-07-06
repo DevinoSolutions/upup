@@ -76,8 +76,7 @@ export function createPropGetters(deps: PropGetterDeps) {
             ),
             role: 'region' as const,
             'aria-label': 'Drop files here or click to browse',
-            'aria-dropeffect': (isDragging ? 'copy' : 'none') as
-                'copy' | 'none',
+            'aria-dropeffect': (isDragging ? 'copy' : 'none'),
             tabIndex: 0,
         }
     }

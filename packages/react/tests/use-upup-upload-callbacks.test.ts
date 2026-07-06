@@ -22,7 +22,7 @@ describe('useUpupUpload — onBeforeFileAdded File replacement', () => {
     })
 
     it('callback receives the file being added', async () => {
-        const cb = vi.fn(async (file: File) => true)
+        const cb = vi.fn(async (_file: File) => true)
         const { result } = renderHook(() =>
             useUpupUpload({
                 provider: 'S3' as const,
@@ -68,7 +68,7 @@ describe('useUpupUpload — getRootProps', () => {
         const props = result.current.getRootProps({
             className: 'my-uploader',
             'data-testid': 'root',
-        } as any)
+        } as unknown as HTMLAttributes<HTMLElement>)
         expect(props.className).toBe('my-uploader')
         expect(props['data-testid']).toBe('root')
         expect(props.role).toBe('application')

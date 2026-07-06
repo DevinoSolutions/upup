@@ -1,7 +1,7 @@
 import React from 'react'
 import Icon from './Icon'
 
-export default function DefaultLoaderIcon() {
+export default function DefaultLoaderIcon(): React.ReactElement | null {
     return (
         <Icon
             name="loader"

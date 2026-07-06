@@ -30,7 +30,7 @@ export default function useCameraUploader() {
     )
     const newCameraSide =
         facingMode === FacingMode.Environment ? 'front' : 'back'
-    const clearUrl = () => setUrl('')
+    const clearUrl = () => { setUrl(''); }
 
     const capture = async () => {
         const url = webcamRef.current?.getScreenshot()
@@ -51,11 +51,11 @@ export default function useCameraUploader() {
     }
 
     const handleCameraSwitch = () =>
-        setFacingMode(prevState =>
+        { setFacingMode(prevState =>
             prevState === FacingMode.Environment
                 ? FacingMode.User
                 : FacingMode.Environment,
-        )
+        ); }
 
     return {
         url,

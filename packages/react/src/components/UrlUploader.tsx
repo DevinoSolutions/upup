@@ -11,7 +11,7 @@ import useFetchFileByUrl from '../hooks/useFetchFileByUrl'
 import { cn } from '@upup/core/internal'
 import SourceViewContainer from './shared/SourceViewContainer'
 
-export default function UrlUploader() {
+export default function UrlUploader(): React.ReactElement | null {
     const { core } = useUploaderRuntime()
     const { setFiles } = useUploaderFiles()
     const { setActiveSource } = useUploaderSource()
@@ -57,7 +57,7 @@ export default function UrlUploader() {
                         slotClasses.urlInput,
                     )}
                     value={url}
-                    onChange={e => setUrl(e.currentTarget.value)}
+                    onChange={e => { setUrl(e.currentTarget.value); }}
                 />
                 <button
                     className={cn(

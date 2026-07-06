@@ -36,7 +36,7 @@ export default function useUploaderPanel() {
         controllerRef.current = new DragDropController({
             core,
             orchestrator,
-            setFiles: files => latest.current.setFiles(files),
+            setFiles: files => { latest.current.setFiles(files); },
             // The file list derives from the orchestrator snapshot — derive the
             // border's file count from the same source so it stays in lockstep.
             filesSize: () => orchestrator.getSnapshot().files.size,
@@ -64,10 +64,10 @@ export default function useUploaderPanel() {
 
     // React synthetic events extend the native DOM events, so casting to DragEvent is safe.
     const handleDragOver: DragEventHandler<HTMLDivElement> = controller
-        ? e => controller.handleDragOver(e as unknown as DragEvent)
+        ? e => { controller.handleDragOver(e as unknown as DragEvent); }
         : NOOP
     const handleDragLeave: DragEventHandler<HTMLDivElement> = controller
-        ? e => controller.handleDragLeave(e as unknown as DragEvent)
+        ? e => { controller.handleDragLeave(e as unknown as DragEvent); }
         : NOOP
     const handleDrop: DragEventHandler<HTMLDivElement> = controller
         ? e => {
@@ -75,7 +75,7 @@ export default function useUploaderPanel() {
           }
         : NOOP
     const handlePaste: ClipboardEventHandler<HTMLDivElement> = controller
-        ? e => controller.handlePaste(e as unknown as ClipboardEvent)
+        ? e => { controller.handlePaste(e as unknown as ClipboardEvent); }
         : NOOP
 
     return {

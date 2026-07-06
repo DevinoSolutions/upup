@@ -52,8 +52,8 @@ export function useDropbox() {
             core,
             DROPBOX_DESCRIPTOR,
             {
-                onFilesSelected: files => setFiles(files),
-                onClose: () => setActiveSource(undefined),
+                onFilesSelected: files => { setFiles(files); },
+                onClose: () => { setActiveSource(undefined); },
             },
         )
     }

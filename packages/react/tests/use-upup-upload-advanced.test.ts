@@ -19,7 +19,7 @@ describe('useUpupUpload — flat file restrictions', () => {
         expect(result.current.files.length).toBe(2)
 
         await act(async () => {
-            try { await result.current.addFiles([makeFile('c.txt')]) } catch {}
+            try { await result.current.addFiles([makeFile('c.txt')]) } catch { /* upup-catch: expected rejection in this negative-path test; asserted below */ }
         })
         expect(result.current.files.length).toBe(2) // still 2
     })
@@ -32,7 +32,7 @@ describe('useUpupUpload — flat file restrictions', () => {
             }),
         )
         await act(async () => {
-            try { await result.current.addFiles([makeFile('big.txt', 50)]) } catch {}
+            try { await result.current.addFiles([makeFile('big.txt', 50)]) } catch { /* upup-catch: expected rejection in this negative-path test; asserted below */ }
         })
         expect(result.current.files.length).toBe(0)
     })
@@ -45,7 +45,7 @@ describe('useUpupUpload — flat file restrictions', () => {
             }),
         )
         await act(async () => {
-            try { await result.current.addFiles([makeFile('doc.txt', 10, 'text/plain')]) } catch {}
+            try { await result.current.addFiles([makeFile('doc.txt', 10, 'text/plain')]) } catch { /* upup-catch: expected rejection in this negative-path test; asserted below */ }
         })
         expect(result.current.files.length).toBe(0)
 

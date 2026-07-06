@@ -8,7 +8,7 @@ export default function SourceViewContainer({
     ...rest
 }: PropsWithChildren<
     { isLoading?: boolean } & HTMLAttributes<HTMLDivElement>
->) {
+>): React.ReactElement | null {
     const { isDark: dark, slotOverrides: slotClasses } = useUploaderTheme()
 
     return (

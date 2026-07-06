@@ -1,4 +1,4 @@
-import { createElement } from 'react'
+import { createElement, type ReactElement } from 'react'
 import { ICONS, type IconName } from '@upup/core'
 import { cn } from '@upup/core/internal'
 
@@ -25,7 +25,7 @@ function toReactAttrs(attrs?: Record<string, string>): Record<string, string> {
     return out
 }
 
-export function Icon({ name, size, className }: IconProps) {
+export function Icon({ name, size, className }: IconProps): ReactElement {
     const def = ICONS[name]
     const px = size ?? def.defaultSize
     return createElement('svg', {

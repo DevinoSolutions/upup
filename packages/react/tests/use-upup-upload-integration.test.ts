@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
 import { useUpupUpload } from '../src/use-upup-upload'
 import { UploadStatus } from '@upup/core'
@@ -131,13 +131,13 @@ describe('useUpupUpload — capstone integration', () => {
 
         // Wrong type — rejected
         await act(async () => {
-            try { await result.current.addFiles([makeFile('bad.png', 10, 'image/png')]) } catch {}
+            try { await result.current.addFiles([makeFile('bad.png', 10, 'image/png')]) } catch { /* upup-catch: expected rejection in this negative-path test; asserted below */ }
         })
         expect(result.current.files.length).toBe(1)
 
         // Too large — rejected
         await act(async () => {
-            try { await result.current.addFiles([makeFile('huge.txt', 100)]) } catch {}
+            try { await result.current.addFiles([makeFile('huge.txt', 100)]) } catch { /* upup-catch: expected rejection in this negative-path test; asserted below */ }
         })
         expect(result.current.files.length).toBe(1)
 
@@ -149,7 +149,7 @@ describe('useUpupUpload — capstone integration', () => {
 
         // Over limit — rejected
         await act(async () => {
-            try { await result.current.addFiles([makeFile('over.txt', 5)]) } catch {}
+            try { await result.current.addFiles([makeFile('over.txt', 5)]) } catch { /* upup-catch: expected rejection in this negative-path test; asserted below */ }
         })
         expect(result.current.files.length).toBe(2)
 

@@ -196,7 +196,7 @@ export default memo(function ImageEditorModal(props: Props) {
 
     // Prevent clicks on the inner content from closing the modal
     const handleContentClick = useCallback(
-        (e: React.MouseEvent) => e.stopPropagation(),
+        (e: React.MouseEvent) => { e.stopPropagation(); },
         [],
     )
 
@@ -225,7 +225,7 @@ export default memo(function ImageEditorModal(props: Props) {
     const resolvedTabs = editorConstants?.TABS
         ? editorConfig.tabs?.map(
               tab =>
-                  (editorConstants.TABS as Record<string, unknown>)[
+                  (editorConstants.TABS)[
                       tab.toUpperCase()
                   ] ?? tab,
           )
@@ -310,10 +310,7 @@ export default memo(function ImageEditorModal(props: Props) {
                                     defaultTabId={
                                         editorConstants?.TABS
                                             ? (
-                                                  editorConstants.TABS as Record<
-                                                      string,
-                                                      unknown
-                                                  >
+                                                  editorConstants.TABS
                                               ).ADJUST
                                             : undefined
                                     }

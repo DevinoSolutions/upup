@@ -5,7 +5,7 @@ import { cn } from '@upup/core/internal'
 import useCameraUploader from '../hooks/useCameraUploader'
 import SourceViewContainer from './shared/SourceViewContainer'
 
-export default function CameraUploader() {
+export default function CameraUploader(): React.ReactElement | null {
     const {
         capture,
         handleFetchImage,

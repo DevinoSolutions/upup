@@ -8,14 +8,14 @@ import DriveAuthFallback from './shared/DriveAuthFallback'
 import DriveBrowser from './shared/DriveBrowser'
 import ServerModeDriveUploader from './ServerModeDriveUploader'
 
-export default function BoxUploader() {
+export default function BoxUploader(): React.ReactElement | null {
     const { mode } = useUploaderRuntime()
     const { setActiveSource } = useUploaderSource()
     if (mode === 'server') {
         return (
             <ServerModeDriveUploader
                 provider="box"
-                onBack={() => setActiveSource(undefined)}
+                onBack={() => { setActiveSource(undefined); }}
             />
         )
     }
