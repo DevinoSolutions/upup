@@ -42,7 +42,9 @@ export class AudioRecorderController implements SourceController<AudioSnapshot> 
                 audio: true,
             })
             if (this.destroyed) {
-                stream.getTracks().forEach(t => { t.stop(); })
+                stream.getTracks().forEach(t => {
+                    t.stop()
+                })
                 return
             }
             this.streamRef = stream
@@ -57,7 +59,9 @@ export class AudioRecorderController implements SourceController<AudioSnapshot> 
                     type: recorder.mimeType || 'audio/webm',
                 })
                 this.audioUrl = URL.createObjectURL(blob)
-                stream.getTracks().forEach(t => { t.stop(); })
+                stream.getTracks().forEach(t => {
+                    t.stop()
+                })
                 this.deps.invalidate()
             }
             recorder.start()
@@ -137,7 +141,9 @@ export class AudioRecorderController implements SourceController<AudioSnapshot> 
             this.mediaRecorder = null
         }
         if (this.audioUrl) URL.revokeObjectURL(this.audioUrl)
-        this.streamRef?.getTracks().forEach(t => { t.stop(); })
+        this.streamRef?.getTracks().forEach(t => {
+            t.stop()
+        })
         this.streamRef = null
     }
 }

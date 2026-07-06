@@ -61,13 +61,13 @@ export function createUpupPagesHandler(
             const webRes = await handler(webReq)
             await writeWebResponse(
                 {
-                    status: (c) => {
+                    status: c => {
                         res.status(c)
                     },
                     setHeader: (k, v) => {
                         res.setHeader(k, v)
                     },
-                    send: (b) => {
+                    send: b => {
                         res.send(b)
                     },
                 },

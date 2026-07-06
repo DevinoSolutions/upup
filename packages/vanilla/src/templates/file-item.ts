@@ -42,7 +42,10 @@ function stateFor(file: UploadFile): FileItemState {
     return s
 }
 
-export function fileItem(ctx: UploaderContext, file: UploadFile): TemplateResult {
+export function fileItem(
+    ctx: UploaderContext,
+    file: UploadFile,
+): TemplateResult {
     const state = stateFor(file)
     const slot = ctx.theme.getSnapshot().slotOverrides
     const filesSize = ctx.core.files.size
@@ -73,7 +76,9 @@ export function fileItem(ctx: UploaderContext, file: UploadFile): TemplateResult
         }
         ctx.invalidate()
     }
-    const stop = (e: MouseEvent) => { e.stopPropagation(); }
+    const stop = (e: MouseEvent) => {
+        e.stopPropagation()
+    }
     return html` <div
         data-testid="upup-file-item"
         data-upup-slot="file-item"

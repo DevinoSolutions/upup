@@ -8,7 +8,9 @@ export function googleDriveUploader(ctx: UploaderContext): TemplateResult {
     return ctx.mode === 'server'
         ? serverModeDriveUploader(ctx, {
               provider: 'google-drive',
-              onBack: () => { ctx.setActiveSource(undefined); },
+              onBack: () => {
+                  ctx.setActiveSource(undefined)
+              },
           })
         : clientDriveUploader(ctx, FileSource.GOOGLE_DRIVE)
 }

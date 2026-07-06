@@ -4,7 +4,11 @@ import { fileTypeIconName } from '@upup/core'
 import type { UploaderContext } from '../lib/types'
 import { icon } from './icon'
 
-export function fileIcon(ctx: UploaderContext, extension = '', className = ''): TemplateResult {
+export function fileIcon(
+    ctx: UploaderContext,
+    extension = '',
+    className = '',
+): TemplateResult {
     const isDark = ctx.theme.getSnapshot().isDark
     const iconClass = cn('upup-text-5xl upup-text-blue-600', className, {
         'upup-text-[#59D1F9] dark:upup-text-[#59D1F9]': isDark,

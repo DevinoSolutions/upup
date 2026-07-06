@@ -170,8 +170,7 @@ function reviveCrashRecoveryFile(
         const uploadFileRecord = uploadFile as unknown as {
             thumbnail?: UploadFile['thumbnail']
         }
-        uploadFileRecord.thumbnail =
-            props.thumbnail as UploadFile['thumbnail']
+        uploadFileRecord.thumbnail = props.thumbnail as UploadFile['thumbnail']
     }
 
     return uploadFile

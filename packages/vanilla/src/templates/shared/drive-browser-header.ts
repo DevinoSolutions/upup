@@ -65,7 +65,9 @@ export function driveBrowserHeader(
                                               ? 'none'
                                               : 'auto'
                                       }"
-                                      @click=${() => { setPath(path.slice(0, i + 1)); }}
+                                      @click=${() => {
+                                          setPath(path.slice(0, i + 1))
+                                      }}
                                   >
                                       <span
                                           class="upup-group-hover:upup-underline upup-truncate"

@@ -124,13 +124,9 @@ export async function collectDroppedFiles(
             ?.webkitGetAsEntry === 'function'
 
     if (supportsWebkitEntries) {
-        const entries = (
-            items
-                .map(item =>
-                    (item as WebkitDataTransferItem).webkitGetAsEntry(),
-                )
-                .filter(Boolean) as WebkitEntry[]
-        )
+        const entries = items
+            .map(item => (item as WebkitDataTransferItem).webkitGetAsEntry())
+            .filter(Boolean) as WebkitEntry[]
         const nested = await Promise.all(
             entries.map(entry =>
                 traverseWebkitEntry(entry, allowFolderDrop, state),

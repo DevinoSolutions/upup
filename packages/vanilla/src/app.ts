@@ -122,13 +122,11 @@ export function App(ctx: UploaderContext): TemplateResult {
                 </section>
             </div>
             <input
-                ${ref(el =>
-                    {
-                        ctx.registerFileInput(
-                            (el as HTMLInputElement | undefined) ?? null,
-                        );
-                    },
-                )}
+                ${ref(el => {
+                    ctx.registerFileInput(
+                        (el as HTMLInputElement | undefined) ?? null,
+                    )
+                })}
                 type="file"
                 accept=${ctx.props.allowedFileTypes}
                 ?multiple=${ctx.props.multiple}
@@ -141,7 +139,10 @@ export function App(ctx: UploaderContext): TemplateResult {
 }
 
 /** Mounts the render loop into rootEl and toggles the dark class on the scope element. */
-export function createRenderLoop(ctx: UploaderContext, rootEl: HTMLElement): { renderApp: () => void; invalidate: () => void; stop: () => void; } {
+export function createRenderLoop(
+    ctx: UploaderContext,
+    rootEl: HTMLElement,
+): { renderApp: () => void; invalidate: () => void; stop: () => void } {
     let scheduled = false
     let stopped = false
 

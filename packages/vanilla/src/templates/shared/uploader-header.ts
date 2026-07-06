@@ -4,7 +4,10 @@ import { isUploadActive, cn } from '@upup/core/internal'
 import type { UploaderContext } from '../../lib/types'
 import { icon } from '../icon'
 
-export function uploaderHeader(ctx: UploaderContext, handleCancel: () => void): TemplateResult | typeof nothing {
+export function uploaderHeader(
+    ctx: UploaderContext,
+    handleCancel: () => void,
+): TemplateResult | typeof nothing {
     const mini = ctx.props.mini
     if (mini) return nothing
 
@@ -94,7 +97,9 @@ export function uploaderHeader(ctx: UploaderContext, handleCancel: () => void): 
                               },
                               slotClasses.containerAddMoreButton,
                           )}
-                          @click=${() => { ctx.setIsAddingMore(true); }}
+                          @click=${() => {
+                              ctx.setIsAddingMore(true)
+                          }}
                           ?disabled=${isUploading || isProcessing}
                       >
                           ${nothing} ${tr.addMore}

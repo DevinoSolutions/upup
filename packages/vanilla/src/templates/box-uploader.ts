@@ -8,7 +8,9 @@ export function boxUploader(ctx: UploaderContext): TemplateResult {
     return ctx.mode === 'server'
         ? serverModeDriveUploader(ctx, {
               provider: 'box',
-              onBack: () => { ctx.setActiveSource(undefined); },
+              onBack: () => {
+                  ctx.setActiveSource(undefined)
+              },
           })
         : clientDriveUploader(ctx, FileSource.BOX)
 }

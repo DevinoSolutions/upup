@@ -110,7 +110,9 @@ export function audioUploader(ctx: UploaderContext): TemplateResult {
                     ? html`<button
                           type="button"
                           class="upup-rounded-lg upup-bg-red-500 upup-px-6 upup-py-2.5 upup-text-sm upup-font-medium upup-text-white upup-transition-colors hover:upup-bg-red-600"
-                          @click=${() => { a.stopRecording(); }}
+                          @click=${() => {
+                              a.stopRecording()
+                          }}
                       >
                           Stop Recording
                       </button>`
@@ -121,7 +123,9 @@ export function audioUploader(ctx: UploaderContext): TemplateResult {
                     ? html` <button
                               type="button"
                               class="upup-rounded-lg upup-bg-gray-500 upup-px-4 upup-py-2.5 upup-text-sm upup-font-medium upup-text-white upup-transition-colors hover:upup-bg-gray-600"
-                              @click=${() => { a.discardRecording(); }}
+                              @click=${() => {
+                                  a.discardRecording()
+                              }}
                           >
                               Discard
                           </button>
@@ -134,7 +138,9 @@ export function audioUploader(ctx: UploaderContext): TemplateResult {
                                           isDark,
                                   },
                               )}
-                              @click=${() => { a.addRecording(); }}
+                              @click=${() => {
+                                  a.addRecording()
+                              }}
                           >
                               Add Recording
                           </button>`

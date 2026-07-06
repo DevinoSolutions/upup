@@ -63,7 +63,10 @@ function filterItems(item: DriveFile, accept: string): boolean {
     })
 }
 
-export function driveBrowser(ctx: UploaderContext, props: DriveBrowserProps): TemplateResult {
+export function driveBrowser(
+    ctx: UploaderContext,
+    props: DriveBrowserProps,
+): TemplateResult {
     const {
         driveFiles,
         user,
@@ -147,14 +150,12 @@ export function driveBrowser(ctx: UploaderContext, props: DriveBrowserProps): Te
                               ? html` <ul class="upup-p-2">
                                     ${repeat(
                                         displayedItems,
-                                        file => (file).id,
+                                        file => file.id,
                                         file =>
                                             driveBrowserItem(ctx, {
                                                 item: file,
                                                 isSelected: selectedFiles.some(
-                                                    f =>
-                                                        f.id ===
-                                                        (file).id,
+                                                    f => f.id === file.id,
                                                 ),
                                                 isClickLoading:
                                                     isClickLoading ||
@@ -164,9 +165,7 @@ export function driveBrowser(ctx: UploaderContext, props: DriveBrowserProps): Te
                                                         !isClickLoading &&
                                                         !showLoader
                                                     )
-                                                        handleClick(
-                                                            file,
-                                                        )
+                                                        handleClick(file)
                                                 },
                                             }),
                                     )}

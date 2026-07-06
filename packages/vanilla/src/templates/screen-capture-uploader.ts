@@ -29,7 +29,9 @@ export function screenCaptureUploader(ctx: UploaderContext): TemplateResult {
                         'upup-rounded-lg upup-bg-blue-600 upup-px-4 upup-py-2 upup-text-sm upup-font-medium upup-text-white',
                         { 'upup-bg-[#59D1F9] dark:upup-bg-[#59D1F9]': isDark },
                     )}
-                    @click=${() => { sc.retryRecording(); }}
+                    @click=${() => {
+                        sc.retryRecording()
+                    }}
                 >
                     Try Again
                 </button>
@@ -105,7 +107,9 @@ export function screenCaptureUploader(ctx: UploaderContext): TemplateResult {
                       <button
                           type="button"
                           class="upup-rounded-lg upup-bg-red-500 upup-px-6 upup-py-2.5 upup-text-sm upup-font-medium upup-text-white upup-transition-colors hover:upup-bg-red-600"
-                          @click=${() => { sc.stopRecording(); }}
+                          @click=${() => {
+                              sc.stopRecording()
+                          }}
                       >
                           Stop Recording
                       </button>`
@@ -122,7 +126,9 @@ export function screenCaptureUploader(ctx: UploaderContext): TemplateResult {
                           <button
                               type="button"
                               class="upup-rounded-lg upup-bg-gray-500 upup-px-4 upup-py-2.5 upup-text-sm upup-font-medium upup-text-white upup-transition-colors hover:upup-bg-gray-600"
-                              @click=${() => { sc.discardRecording(); }}
+                              @click=${() => {
+                                  sc.discardRecording()
+                              }}
                           >
                               Discard
                           </button>
@@ -135,7 +141,9 @@ export function screenCaptureUploader(ctx: UploaderContext): TemplateResult {
                                           isDark,
                                   },
                               )}
-                              @click=${() => { sc.addRecording(); }}
+                              @click=${() => {
+                                  sc.addRecording()
+                              }}
                           >
                               Add Recording
                           </button>

@@ -71,7 +71,9 @@ function getVirtualizer(
             observeElementRect,
             observeElementOffset,
             scrollToFn: elementScroll,
-            onChange: () => { ctx.invalidate(); },
+            onChange: () => {
+                ctx.invalidate()
+            },
         })
         // _willUpdate() wires the scroll element (attaches ResizeObserver + scroll listeners via
         // observeElementRect/observeElementOffset) on first call; must be called before first render.
@@ -123,7 +125,9 @@ function formatEta(seconds: number): string {
     return `${s}s left`
 }
 
-export function fileList(ctx: UploaderContext): TemplateResult | typeof nothing {
+export function fileList(
+    ctx: UploaderContext,
+): TemplateResult | typeof nothing {
     const o = ctx.orchestrator.getSnapshot()
     const files = [...ctx.core.files.values()]
     // Sort by relativePath || name (mirrors FileList.svelte sort)
@@ -246,7 +250,9 @@ export function fileList(ctx: UploaderContext): TemplateResult | typeof nothing 
                           },
                           slot.uploadDoneButton,
                       )}
-                      @click=${() => { ctx.handleDone(); }}
+                      @click=${() => {
+                          ctx.handleDone()
+                      }}
                   >
                       ${tr.done}
                   </button>`
@@ -267,10 +273,11 @@ export function fileList(ctx: UploaderContext): TemplateResult | typeof nothing 
                                               isDark,
                                       },
                                   )}
-                                  @click=${() =>
-                                      { uploadStatus === UploadStatus.PAUSED
+                                  @click=${() => {
+                                      uploadStatus === UploadStatus.PAUSED
                                           ? ctx.handleResume()
-                                          : ctx.handlePause(); }}
+                                          : ctx.handlePause()
+                                  }}
                                   aria-label=${
                                       uploadStatus === UploadStatus.PAUSED
                                           ? tr.resumeUpload
@@ -297,7 +304,9 @@ export function fileList(ctx: UploaderContext): TemplateResult | typeof nothing 
                                               isDark,
                                       },
                                   )}
-                                  @click=${() => { ctx.handleCancel(); }}
+                                  @click=${() => {
+                                      ctx.handleCancel()
+                                  }}
                                   aria-label=${tr.cancel}
                                   title=${tr.cancel}
                               >
@@ -359,7 +368,9 @@ export function fileList(ctx: UploaderContext): TemplateResult | typeof nothing 
         data-testid="upup-file-list"
         data-upup-slot="file-list"
     >
-        ${uploaderHeader(ctx, () => { ctx.handleCancel(); })}
+        ${uploaderHeader(ctx, () => {
+            ctx.handleCancel()
+        })}
         <div
             ${ref(getScrollRefCb(ctx))}
             class=${cn(

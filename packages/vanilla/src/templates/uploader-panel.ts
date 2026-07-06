@@ -35,13 +35,16 @@ export function uploaderPanel(ctx: UploaderContext): TemplateResult {
             aria-label=${tr.dropzoneLabel}
             aria-dropeffect=${dd.isDragging ? 'copy' : 'none'}
             @keydown=${onKeyDown}
-            @dragover=${(e: DragEvent) =>
-                { ctx.controllers.dragDrop.handleDragOver(e); }}
-            @dragleave=${(e: DragEvent) =>
-                { ctx.controllers.dragDrop.handleDragLeave(e); }}
+            @dragover=${(e: DragEvent) => {
+                ctx.controllers.dragDrop.handleDragOver(e)
+            }}
+            @dragleave=${(e: DragEvent) => {
+                ctx.controllers.dragDrop.handleDragLeave(e)
+            }}
             @drop=${(e: DragEvent) => ctx.controllers.dragDrop.handleDrop(e)}
-            @paste=${(e: ClipboardEvent) =>
-                { ctx.controllers.dragDrop.handlePaste(e); }}
+            @paste=${(e: ClipboardEvent) => {
+                ctx.controllers.dragDrop.handlePaste(e)
+            }}
             class=${cn(
                 'upup-relative upup-flex-1 upup-overflow-hidden upup-rounded-lg',
                 {

@@ -120,7 +120,11 @@ export class DropboxPlugin extends PopupOAuthPlugin {
                 cursor: data.cursor,
             })
 
-            return { files, hasMore: !!data.has_more, ...(data.cursor !== undefined ? { cursor: data.cursor } : {}) }
+            return {
+                files,
+                hasMore: !!data.has_more,
+                ...(data.cursor !== undefined ? { cursor: data.cursor } : {}),
+            }
         } catch (err) {
             this.setState('authenticated')
             this.emitter?.emit('dropbox:error', {
@@ -151,7 +155,11 @@ export class DropboxPlugin extends PopupOAuthPlugin {
             // No files-loaded emit here: the controller's loadMore() appends this
             // return value directly (F-125) — re-emitting would make the controller
             // process it a second time as if it were a fresh folder load.
-            return { files, hasMore: !!data.has_more, ...(data.cursor !== undefined ? { cursor: data.cursor } : {}) }
+            return {
+                files,
+                hasMore: !!data.has_more,
+                ...(data.cursor !== undefined ? { cursor: data.cursor } : {}),
+            }
         } catch (err) {
             this.emitter?.emit('dropbox:error', {
                 error: err instanceof Error ? err : new Error(String(err)),

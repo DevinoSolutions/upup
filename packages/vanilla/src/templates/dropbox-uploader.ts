@@ -8,7 +8,9 @@ export function dropboxUploader(ctx: UploaderContext): TemplateResult {
     return ctx.mode === 'server'
         ? serverModeDriveUploader(ctx, {
               provider: 'dropbox',
-              onBack: () => { ctx.setActiveSource(undefined); },
+              onBack: () => {
+                  ctx.setActiveSource(undefined)
+              },
           })
         : clientDriveUploader(ctx, FileSource.DROPBOX)
 }

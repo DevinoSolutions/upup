@@ -231,7 +231,9 @@ export function serverModeDriveUploader(
     if (c.state.status === 'reauth') {
         return driveAuthFallback(ctx, {
             providerName: PROVIDER_LABEL[provider],
-            onRetry: () => { startAuth(ctx, provider); },
+            onRetry: () => {
+                startAuth(ctx, provider)
+            },
         })
     }
 
@@ -338,12 +340,13 @@ export function serverModeDriveUploader(
                                 ? 'upup-border-gray-700 upup-text-gray-100 hover:upup-bg-gray-700'
                                 : 'upup-border-gray-200 hover:upup-bg-gray-50',
                         )}
-                        @click=${() =>
-                            { file.isFolder
+                        @click=${() => {
+                            file.isFolder
                                 ? void list(ctx, provider, {
                                       folderId: file.id,
                                   })
-                                : toggle(file.id); }}
+                                : toggle(file.id)
+                        }}
                     >
                         <span
                             >${file.isFolder ? '\u{1F4C1}' : '\u{1F4C4}'}</span

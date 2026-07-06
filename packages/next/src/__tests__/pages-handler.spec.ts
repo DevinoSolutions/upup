@@ -173,7 +173,9 @@ describe('createUpupPagesHandler', () => {
     })
 
     it('derives the origin from the first x-forwarded-* value when trustProxy is set', async () => {
-        const handler = createUpupPagesHandler({} as UpupServerConfig, { trustProxy: true })
+        const handler = createUpupPagesHandler({} as UpupServerConfig, {
+            trustProxy: true,
+        })
         await handler(
             mockReq({
                 method: 'GET',

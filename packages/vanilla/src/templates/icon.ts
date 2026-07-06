@@ -3,7 +3,10 @@ import { unsafeSVG } from 'lit-html/directives/unsafe-svg.js'
 import { ICONS, type IconName } from '@upup/core'
 import { cn } from '../lib/cn'
 
-export function icon(name: IconName, opts?: { size?: number; class?: string }): TemplateResult {
+export function icon(
+    name: IconName,
+    opts?: { size?: number; class?: string },
+): TemplateResult {
     const def = ICONS[name]
     const px = opts?.size ?? def.defaultSize
     const attrs = def.attrs ?? {}

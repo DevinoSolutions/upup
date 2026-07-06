@@ -57,7 +57,9 @@ export class ScreenCaptureController implements SourceController<ScreenSnapshot>
                 audio: true,
             })
             if (this.destroyed) {
-                stream.getTracks().forEach(t => { t.stop(); })
+                stream.getTracks().forEach(t => {
+                    t.stop()
+                })
                 return
             }
             this.streamRef = stream
@@ -89,7 +91,9 @@ export class ScreenCaptureController implements SourceController<ScreenSnapshot>
                     type: recorder.mimeType || 'video/webm',
                 })
                 this.videoUrl = URL.createObjectURL(blob)
-                stream.getTracks().forEach(t => { t.stop(); })
+                stream.getTracks().forEach(t => {
+                    t.stop()
+                })
                 if (this.previewEl) this.previewEl.srcObject = null
                 this.deps.invalidate()
             }
@@ -177,7 +181,9 @@ export class ScreenCaptureController implements SourceController<ScreenSnapshot>
         }
         if (this.videoUrl) URL.revokeObjectURL(this.videoUrl)
         if (this.previewEl) this.previewEl.srcObject = null
-        this.streamRef?.getTracks().forEach(t => { t.stop(); })
+        this.streamRef?.getTracks().forEach(t => {
+            t.stop()
+        })
         this.streamRef = null
     }
 }

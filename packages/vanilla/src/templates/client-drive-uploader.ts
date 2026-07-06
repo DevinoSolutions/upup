@@ -18,7 +18,10 @@ const META: Record<string, { providerName: string; slot: string }> = {
     [FileSource.BOX]: { providerName: 'Box', slot: 'box-uploader' },
 }
 
-export function clientDriveUploader(ctx: UploaderContext, source: FileSource): TemplateResult {
+export function clientDriveUploader(
+    ctx: UploaderContext,
+    source: FileSource,
+): TemplateResult {
     const controller = ctx.controllers.getDrive(source)
     const st = controller.getSnapshot()
     const meta = META[source]
@@ -37,7 +40,9 @@ export function clientDriveUploader(ctx: UploaderContext, source: FileSource): T
         // never surface an error at this pre-auth stage in any other framework either.
         return driveAuthFallback(ctx, {
             providerName: meta.providerName,
-            onRetry: () => { controller.retryAuth(); },
+            onRetry: () => {
+                controller.retryAuth()
+            },
             error: source === FileSource.GOOGLE_DRIVE ? st.error : undefined,
             dataUpupSlot: meta.slot,
         })
@@ -45,18 +50,26 @@ export function clientDriveUploader(ctx: UploaderContext, source: FileSource): T
     return driveBrowser(ctx, {
         driveFiles: st.folder,
         user: st.user,
-        handleSignOut: () => { controller.signOut(); },
+        handleSignOut: () => {
+            controller.signOut()
+        },
         dataUpupSlot: meta.slot,
         path: st.path,
-        setPath: (p: DriveFolder[]) => { controller.setPath(p); },
+        setPath: (p: DriveFolder[]) => {
+            controller.setPath(p)
+        },
         isClickLoading: st.isClickLoading,
-        handleClick: (file: DriveFile) => { controller.handleClick(file); },
+        handleClick: (file: DriveFile) => {
+            controller.handleClick(file)
+        },
         selectedFiles: st.selectedFiles,
         showLoader: st.showLoader,
         handleSubmit: () => {
             void controller.handleSubmit()
         },
-        handleCancelDownload: () => { controller.handleCancelDownload(); },
+        handleCancelDownload: () => {
+            controller.handleCancelDownload()
+        },
         onSelectCurrentFolder: () => {
             void controller.onSelectCurrentFolder()
         },
