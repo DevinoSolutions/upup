@@ -1,10 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { CameraController } from "../src/controllers/camera";
+import type { UpupCore } from "@upup/core";
 
 function mockMedia() {
   const track = { stop: vi.fn() };
   const stream = { getTracks: () => [track] } as unknown as MediaStream;
-  (navigator as any).mediaDevices = { getUserMedia: vi.fn(async () => stream) };
+  (navigator as { mediaDevices: MediaDevices }).mediaDevices = {
+    getUserMedia: vi.fn(async () => stream),
+  } as unknown as MediaDevices;
   return { track, stream };
 }
 
@@ -16,7 +19,7 @@ describe("CameraController", () => {
   it("starts and stops the camera, stopping all tracks on destroy", async () => {
     const { track } = mockMedia();
     const c = new CameraController({
-      core: { emit: vi.fn() } as any,
+      core: { emit: vi.fn() } as unknown as UpupCore,
       setFiles: vi.fn(async () => {}),
       setActiveSource: vi.fn(),
       invalidate: vi.fn(),
@@ -29,7 +32,7 @@ describe("CameraController", () => {
   it("toggles facing mode", () => {
     mockMedia();
     const c = new CameraController({
-      core: { emit: vi.fn() } as any,
+      core: { emit: vi.fn() } as unknown as UpupCore,
       setFiles: vi.fn(async () => {}),
       setActiveSource: vi.fn(),
       invalidate: vi.fn(),
@@ -43,17 +46,17 @@ describe("CameraController", () => {
     const track = { stop: vi.fn() };
     const lateStream = { getTracks: () => [track] } as unknown as MediaStream;
     let resolveGum!: (s: MediaStream) => void;
-    (navigator as any).mediaDevices = {
+    (navigator as { mediaDevices: MediaDevices }).mediaDevices = {
       getUserMedia: vi.fn(
         () =>
           new Promise<MediaStream>((r) => {
             resolveGum = r;
           }),
       ),
-    };
+    } as unknown as MediaDevices;
     const invalidate = vi.fn();
     const c = new CameraController({
-      core: { emit: vi.fn() } as any,
+      core: { emit: vi.fn() } as unknown as UpupCore,
       setFiles: vi.fn(async () => {}),
       setActiveSource: vi.fn(),
       invalidate,

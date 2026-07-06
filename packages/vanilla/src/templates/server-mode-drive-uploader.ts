@@ -1,4 +1,4 @@
-import { html, nothing } from 'lit-html'
+import { html, nothing, type TemplateResult } from 'lit-html'
 import { repeat } from 'lit-html/directives/repeat.js'
 import { errorCodeToMessageKey } from '@upup/core'
 import { cn } from '@upup/core/internal'
@@ -108,6 +108,7 @@ async function list(
         c.state = { status: 'ready', files: data.files }
         ctx.invalidate()
     } catch (err) {
+        // upup-catch: drive-list failure is surfaced via the c.state error snapshot the template renders
         if ((err as Error).name === 'AbortError') return
         c.state = { status: 'error', message: (err as Error).message }
         ctx.invalidate()
@@ -147,6 +148,7 @@ async function transfer(
         await res.json()
         return { status: 'ok' }
     } catch (err) {
+        // upup-catch: transfer failure is returned as an error result the caller surfaces to the user
         return { status: 'error', message: (err as Error).message }
     }
 }
@@ -193,7 +195,7 @@ function formatBytes(bytes: number): string {
 }
 
 /** Teardown: abort in-flight + remove auth listeners + drop the ctx's cells. Called from create-uploader.destroy. */
-export function destroyServerDrives(ctx: UploaderContext) {
+export function destroyServerDrives(ctx: UploaderContext): void {
     const m = cells.get(ctx)
     if (!m) return
     for (const c of m.values()) {
@@ -213,7 +215,7 @@ export function serverModeDriveUploader(
         onBack?: () => void
         dataUpupSlot?: string
     },
-) {
+): TemplateResult {
     const { provider, onBack } = opts
     const c = cell(ctx, provider)
     if (!c.inited) {
@@ -310,7 +312,7 @@ export function serverModeDriveUploader(
                           )}
                       >
                           ${
-                              c.state.code && ctx.translator
+                              c.state.code
                                   ? ctx.translator(
                                         `errors.${errorCodeToMessageKey(c.state.code)}`,
                                         { code: c.state.code },

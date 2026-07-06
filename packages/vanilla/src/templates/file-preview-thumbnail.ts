@@ -22,13 +22,12 @@ export function filePreviewThumbnail(
     },
     onCanPreview: () => void,
 ): TemplateResult | typeof nothing {
-    const { canPreview, fileType, fileName, fileUrl, fileSize, allowPreview } =
-        args
+    const { canPreview, fileType, fileName, fileUrl, allowPreview } = args
     const slot = ctx.theme.getSnapshot().slotOverrides
 
     const extension = fileGetExtension(fileType, fileName)
     const isPdf = fileGetIsPdf(fileType, fileName)
-    const is3D = fileIs3D(extension?.toLowerCase() ?? '')
+    const is3D = fileIs3D(extension.toLowerCase())
     // Text files render as a static doc icon (cross-framework parity).
     const isText = fileGetIsText(fileType, fileName)
 
@@ -37,7 +36,7 @@ export function filePreviewThumbnail(
         return html` <div
             class="upup-flex upup-flex-col upup-items-center upup-gap-2"
         >
-            ${fileIcon(ctx, extension ?? '', slot.fileIcon)}
+            ${fileIcon(ctx, extension, slot.fileIcon)}
         </div>`
     }
 
@@ -55,7 +54,7 @@ export function filePreviewThumbnail(
                   >
                       <p>${ctx.translations.loading}</p>
                   </object>
-                  ${fileIcon(ctx, extension ?? '')}
+                  ${fileIcon(ctx, extension)}
               `
             : nothing
     }
@@ -64,7 +63,7 @@ export function filePreviewThumbnail(
             ? html`
                   ${fileIcon(
                       ctx,
-                      extension ?? '',
+                      extension,
                       cn({ 'md:upup-hidden': allowPreview }, slot.fileIcon),
                   )}
                   <div

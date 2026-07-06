@@ -11,7 +11,7 @@ export type FileInputSnapshot = Record<string, never>
 export class FileInputController implements UploaderController<FileInputSnapshot> {
     constructor(private deps: FileInputDeps) {}
 
-    open() {
+    open(): void {
         const el = this.deps.getFileInput()
         if (el) {
             el.removeAttribute('webkitdirectory')
@@ -20,7 +20,7 @@ export class FileInputController implements UploaderController<FileInputSnapshot
         }
     }
 
-    openFolder() {
+    openFolder(): void {
         const el = this.deps.getFileInput()
         if (el) {
             el.setAttribute('webkitdirectory', 'true')
@@ -33,7 +33,7 @@ export class FileInputController implements UploaderController<FileInputSnapshot
         return {}
     }
 
-    destroy() {
+    destroy(): void {
         /* the input element is owned/cleared by the render loop on destroy */
     }
 }

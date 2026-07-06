@@ -1,4 +1,4 @@
-import { html } from 'lit-html'
+import { html, type TemplateResult } from 'lit-html'
 import { cn, deriveFetchedFileName } from '@upup/core/internal'
 import type { UploaderContext } from '../lib/types'
 import { sourceViewContainer } from './shared/source-view-container'
@@ -50,7 +50,7 @@ async function fetchImage(
     }
 }
 
-export function urlUploader(ctx: UploaderContext) {
+export function urlUploader(ctx: UploaderContext): TemplateResult {
     const s = urlState(ctx)
     const isDark = ctx.theme.getSnapshot().isDark
     const slot = ctx.theme.getSnapshot().slotOverrides

@@ -43,7 +43,7 @@ async function loadText(
                 done = streamDone
                 if (value) result += decoder.decode(value, { stream: !done })
             }
-            reader.cancel()
+            void reader.cancel()
             const wasTruncated =
                 !done || result.length > PREVIEW_TEXT_TRUNCATE_LENGTH
             if (wasTruncated)
@@ -56,7 +56,8 @@ async function loadText(
         }
         state.fetched = true
     } catch (e) {
-        state.error = (e as Error)?.message || 'Preview error'
+        // upup-catch: preview-fetch failure is surfaced via state.error the portal renders
+        state.error = (e as Error).message || 'Preview error'
     } finally {
         state.loading = false
         ctx.invalidate()

@@ -19,12 +19,12 @@ class FakeRecorder {
 
 beforeEach(() => {
   vi.restoreAllMocks();
-  (navigator as any).mediaDevices = {
+  (navigator as { mediaDevices: MediaDevices }).mediaDevices = {
     getUserMedia: vi.fn(
       async () =>
         ({ getTracks: () => [{ stop: vi.fn() }] }) as unknown as MediaStream,
     ),
-  };
+  } as unknown as MediaDevices;
   vi.stubGlobal(
     "MediaRecorder",
     FakeRecorder as unknown as typeof MediaRecorder,
@@ -54,14 +54,14 @@ describe("AudioRecorderController", () => {
     const track = { stop: vi.fn() };
     const lateStream = { getTracks: () => [track] } as unknown as MediaStream;
     let resolveGum!: (s: MediaStream) => void;
-    (navigator as any).mediaDevices = {
+    (navigator as { mediaDevices: MediaDevices }).mediaDevices = {
       getUserMedia: vi.fn(
         () =>
           new Promise<MediaStream>((r) => {
             resolveGum = r;
           }),
       ),
-    };
+    } as unknown as MediaDevices;
     const invalidate = vi.fn();
     const c = new AudioRecorderController({
       setFiles: vi.fn(async () => {}),

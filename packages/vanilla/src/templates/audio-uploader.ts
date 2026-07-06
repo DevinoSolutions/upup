@@ -1,9 +1,9 @@
-import { html, nothing } from 'lit-html'
+import { html, nothing, type TemplateResult } from 'lit-html'
 import { cn } from '@upup/core/internal'
 import type { UploaderContext } from '../lib/types'
 import { sourceViewContainer } from './shared/source-view-container'
 
-export function audioUploader(ctx: UploaderContext) {
+export function audioUploader(ctx: UploaderContext): TemplateResult {
     const a = ctx.controllers.getAudio()
     const s = a.getSnapshot()
     const isDark = ctx.theme.getSnapshot().isDark

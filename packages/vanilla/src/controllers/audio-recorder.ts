@@ -29,14 +29,14 @@ export class AudioRecorderController implements SourceController<AudioSnapshot> 
 
     constructor(private deps: AudioDeps) {}
 
-    activate() {
+    activate(): void {
         /* no auto-start; user clicks Start Recording */
     }
-    deactivate() {
+    deactivate(): void {
         this.destroy()
     }
 
-    async startRecording() {
+    async startRecording(): Promise<void> {
         try {
             const stream = await navigator.mediaDevices.getUserMedia({
                 audio: true,
@@ -69,20 +69,21 @@ export class AudioRecorderController implements SourceController<AudioSnapshot> 
             }, 1000)
             this.deps.invalidate()
         } catch {
+            // upup-catch: mic permission denial is surfaced to the user via the error snapshot the audio template renders
             this.error =
                 'Microphone access denied. Please allow microphone access and try again.'
             this.deps.invalidate()
         }
     }
 
-    stopRecording() {
+    stopRecording(): void {
         this.mediaRecorder?.stop()
         if (this.timerHandle) clearInterval(this.timerHandle)
         this.recordingState = 'recorded'
         this.deps.invalidate()
     }
 
-    discardRecording() {
+    discardRecording(): void {
         if (this.audioUrl) URL.revokeObjectURL(this.audioUrl)
         this.audioUrl = null
         this.duration = 0
@@ -90,9 +91,9 @@ export class AudioRecorderController implements SourceController<AudioSnapshot> 
         this.deps.invalidate()
     }
 
-    addRecording() {
+    addRecording(): void {
         if (!this.audioUrl) return
-        const ext = this.mediaRecorder?.mimeType?.includes('webm')
+        const ext = this.mediaRecorder?.mimeType.includes('webm')
             ? 'webm'
             : 'ogg'
         void fetch(this.audioUrl)
@@ -110,7 +111,7 @@ export class AudioRecorderController implements SourceController<AudioSnapshot> 
             })
     }
 
-    formatTime(s: number) {
+    formatTime(s: number): string {
         const m = Math.floor(s / 60)
         const sec = s % 60
         return `${m}:${sec.toString().padStart(2, '0')}`
@@ -125,7 +126,7 @@ export class AudioRecorderController implements SourceController<AudioSnapshot> 
         }
     }
 
-    destroy() {
+    destroy(): void {
         this.destroyed = true
         if (this.timerHandle) clearInterval(this.timerHandle)
         if (this.mediaRecorder) {

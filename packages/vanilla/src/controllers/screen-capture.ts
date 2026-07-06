@@ -33,16 +33,16 @@ export class ScreenCaptureController implements SourceController<ScreenSnapshot>
     /** STABLE ref (one identity per controller life) so lit-html only invokes it on real <video>
      *  mount/unmount. An inline-arrow ref re-fires every render; the recording timer invalidates
      *  each second, so an inline ref would re-bind srcObject + re-call play() every frame. */
-    readonly previewRef = (el: Element | undefined) => {
+    readonly previewRef = (el: Element | undefined): void => {
         this.setPreviewEl((el as HTMLVideoElement | undefined) ?? null)
     }
 
-    activate() {}
-    deactivate() {
+    activate(): void {}
+    deactivate(): void {
         this.destroy()
     }
 
-    setPreviewEl(el: HTMLVideoElement | null) {
+    setPreviewEl(el: HTMLVideoElement | null): void {
         this.previewEl = el
         if (el && this.streamRef && this.recordingState === 'recording') {
             el.srcObject = this.streamRef
@@ -50,7 +50,7 @@ export class ScreenCaptureController implements SourceController<ScreenSnapshot>
         }
     }
 
-    async startRecording() {
+    async startRecording(): Promise<void> {
         try {
             const stream = await navigator.mediaDevices.getDisplayMedia({
                 video: true,
@@ -102,20 +102,21 @@ export class ScreenCaptureController implements SourceController<ScreenSnapshot>
             }, 1000)
             this.deps.invalidate()
         } catch {
+            // upup-catch: screen-share cancel/denial is surfaced to the user via the error snapshot the screen-capture template renders
             this.error =
                 'Screen sharing was cancelled or denied. Please try again.'
             this.deps.invalidate()
         }
     }
 
-    stopRecording() {
+    stopRecording(): void {
         this.mediaRecorder?.stop()
         if (this.timerHandle) clearInterval(this.timerHandle)
         this.recordingState = 'recorded'
         this.deps.invalidate()
     }
 
-    discardRecording() {
+    discardRecording(): void {
         if (this.videoUrl) URL.revokeObjectURL(this.videoUrl)
         this.videoUrl = null
         this.duration = 0
@@ -123,7 +124,7 @@ export class ScreenCaptureController implements SourceController<ScreenSnapshot>
         this.deps.invalidate()
     }
 
-    addRecording() {
+    addRecording(): void {
         if (!this.videoUrl) return
         void fetch(this.videoUrl)
             .then(r => r.blob())
@@ -140,12 +141,12 @@ export class ScreenCaptureController implements SourceController<ScreenSnapshot>
             })
     }
 
-    retryRecording() {
+    retryRecording(): void {
         this.error = null
         void this.startRecording()
     }
 
-    formatTime(s: number) {
+    formatTime(s: number): string {
         const m = Math.floor(s / 60)
         const sec = s % 60
         return `${m}:${sec.toString().padStart(2, '0')}`
@@ -160,7 +161,7 @@ export class ScreenCaptureController implements SourceController<ScreenSnapshot>
         }
     }
 
-    destroy() {
+    destroy(): void {
         this.destroyed = true
         if (this.timerHandle) clearInterval(this.timerHandle)
         if (this.streamRef)

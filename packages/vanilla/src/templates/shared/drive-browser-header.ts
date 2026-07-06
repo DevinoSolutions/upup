@@ -1,4 +1,4 @@
-import { html, nothing } from 'lit-html'
+import { html, nothing, type TemplateResult } from 'lit-html'
 import { repeat } from 'lit-html/directives/repeat.js'
 import { cn } from '@upup/core/internal'
 import type { DriveFolder } from '@upup/core'
@@ -16,7 +16,7 @@ export function driveBrowserHeader(
         searchTerm: string
         showSearch: boolean
     },
-) {
+): TemplateResult | typeof nothing {
     const {
         user,
         path,

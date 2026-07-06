@@ -21,7 +21,7 @@ export class UpupUploaderElement extends HTMLElement {
         return this._instance
     }
 
-    set config(value: CreateUploaderOptions) {
+    set config(value: CreateUploaderOptions | null | undefined) {
         this._config = value ?? {}
         if (this.isConnected) this.remount()
     }
@@ -29,10 +29,10 @@ export class UpupUploaderElement extends HTMLElement {
         return this._config
     }
 
-    connectedCallback() {
+    connectedCallback(): void {
         this.mount()
     }
-    disconnectedCallback() {
+    disconnectedCallback(): void {
         this.unmount()
     }
 

@@ -1,4 +1,4 @@
-import { html, nothing } from 'lit-html'
+import { html, nothing, type TemplateResult } from 'lit-html'
 import { formatUiMessage as t } from '@upup/core'
 import { cn } from '@upup/core/internal'
 import type { DriveBrowserError } from '@upup/core'
@@ -13,7 +13,7 @@ export function driveAuthFallback(
         error?: DriveBrowserError | undefined
         dataUpupSlot?: string
     },
-) {
+): TemplateResult {
     const isDark = ctx.theme.getSnapshot().isDark
     const tr = ctx.translations
     // NOTE: the `sourceView` slot class is applied by sourceViewContainer's wrapper

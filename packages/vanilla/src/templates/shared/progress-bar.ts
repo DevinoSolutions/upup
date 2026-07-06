@@ -1,4 +1,4 @@
-import { html, nothing } from 'lit-html'
+import { html, nothing, type TemplateResult } from 'lit-html'
 import { isUploadActive, cn } from '@upup/core/internal'
 import type { UploaderContext } from '../../lib/types'
 
@@ -10,7 +10,7 @@ export function progressBar(
         progressBarClassName?: string
         class?: string
     },
-) {
+): TemplateResult | typeof nothing {
     const {
         progress,
         showValue = false,
@@ -35,7 +35,7 @@ export function progressBar(
             'upup-flex upup-items-center upup-gap-2',
             className,
             slot.progressBarContainer,
-            themeSlots?.progressBar?.root,
+            themeSlots.progressBar?.root,
         )}
     >
         <div
@@ -43,7 +43,7 @@ export function progressBar(
                 'upup-h-[6px] upup-flex-1 upup-overflow-hidden upup-rounded-[4px] upup-bg-[#F5F5F5]',
                 progressBarClassName,
                 slot.progressBar,
-                themeSlots?.progressBar?.track,
+                themeSlots.progressBar?.track,
             )}
         >
             <div
@@ -51,7 +51,7 @@ export function progressBar(
                 class=${cn(
                     'upup-h-full upup-bg-[#8EA5E7]',
                     slot.progressBarInner,
-                    themeSlots?.progressBar?.fill,
+                    themeSlots.progressBar?.fill,
                 )}
             ></div>
         </div>
@@ -62,7 +62,7 @@ export function progressBar(
                           'upup-text-xs upup-font-semibold',
                           { 'upup-text-white': isDark },
                           slot.progressBarText,
-                          themeSlots?.progressBar?.text,
+                          themeSlots.progressBar?.text,
                       )}
                   >
                       ${progress}%

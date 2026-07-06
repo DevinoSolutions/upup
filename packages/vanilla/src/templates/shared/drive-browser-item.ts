@@ -1,4 +1,4 @@
-import { html } from 'lit-html'
+import { html, type TemplateResult } from 'lit-html'
 import { cn } from '@upup/core/internal'
 import type { DriveFile, DriveFolder } from '@upup/core'
 import type { UploaderContext } from '../../lib/types'
@@ -12,12 +12,12 @@ export function driveBrowserItem(
         isClickLoading: boolean
         onClick: () => void
     },
-) {
+): TemplateResult {
     const { item, isSelected, onClick } = args
     const file = item
     const isDark = ctx.theme.getSnapshot().isDark
     const slot = ctx.theme.getSnapshot().slotOverrides
-    const isFolder = !!file.isFolder
+    const isFolder = file.isFolder
 
     return html` <div
         data-upup-slot="drive-browser-item"
@@ -27,9 +27,9 @@ export function driveBrowserItem(
                 'upup-font-medium': isFolder,
                 'upup-bg-[#bab4b499]': isSelected,
                 'upup-bg-[#e9ecef00]': !isSelected,
-                [slot.driveItemContainerDefault!]:
+                [slot.driveItemContainerDefault ?? '']:
                     !isSelected && !!slot.driveItemContainerDefault,
-                [slot.driveItemContainerSelected!]:
+                [slot.driveItemContainerSelected ?? '']:
                     isSelected && !!slot.driveItemContainerSelected,
             },
         )}

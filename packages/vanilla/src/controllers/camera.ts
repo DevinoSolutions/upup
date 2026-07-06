@@ -31,13 +31,13 @@ export class CameraController implements SourceController<CameraSnapshot> {
     /** STABLE ref callback (one identity for the controller's life) so lit-html only invokes it
      *  on real <video> mount/unmount. An inline-arrow ref re-fires every render; since startCamera()
      *  calls invalidate() on success, that would loop getUserMedia and restart the camera endlessly. */
-    readonly videoRef = (el: Element | undefined) => {
+    readonly videoRef = (el: Element | undefined): void => {
         const v = (el as HTMLVideoElement | undefined) ?? null
         this.setVideoEl(v)
         if (v && !this.stream) void this.startCamera()
     }
 
-    setVideoEl(el: HTMLVideoElement | null) {
+    setVideoEl(el: HTMLVideoElement | null): void {
         this.videoEl = el
         if (el && this.stream) {
             el.srcObject = this.stream
@@ -45,14 +45,14 @@ export class CameraController implements SourceController<CameraSnapshot> {
         }
     }
 
-    activate() {
+    activate(): void {
         /* startCamera() is driven by the <video> ref on mount */
     }
-    deactivate() {
+    deactivate(): void {
         this.stopCamera()
     }
 
-    async startCamera() {
+    async startCamera(): Promise<void> {
         try {
             if (this.stream) this.stream.getTracks().forEach(t => { t.stop(); })
             const mediaStream = await navigator.mediaDevices.getUserMedia({
@@ -69,17 +69,17 @@ export class CameraController implements SourceController<CameraSnapshot> {
             }
             this.deps.invalidate()
         } catch {
-            /* camera unavailable — leave stream null */
+            // upup-catch: camera unavailable or autoplay blocked — leave stream null
         }
     }
 
-    stopCamera() {
+    stopCamera(): void {
         if (this.stream) this.stream.getTracks().forEach(t => { t.stop(); })
         this.stream = null
         if (this.videoEl) this.videoEl.srcObject = null
     }
 
-    capture() {
+    capture(): void {
         if (!this.videoEl) return
         const canvas = document.createElement('canvas')
         canvas.width = this.videoEl.videoWidth
@@ -92,12 +92,12 @@ export class CameraController implements SourceController<CameraSnapshot> {
         this.deps.invalidate()
     }
 
-    clearUrl() {
+    clearUrl(): void {
         this.capturedUrl = ''
         this.deps.invalidate()
     }
 
-    async handleFetchImage() {
+    async handleFetchImage(): Promise<void> {
         if (!this.capturedUrl) return
         const response = await fetch(this.capturedUrl)
         const blob = await response.blob()
@@ -110,7 +110,7 @@ export class CameraController implements SourceController<CameraSnapshot> {
         this.deps.core.emit('camera-confirm', { file })
     }
 
-    handleCameraSwitch() {
+    handleCameraSwitch(): void {
         this.facingMode =
             this.facingMode === FacingMode.Environment
                 ? FacingMode.User
@@ -128,7 +128,7 @@ export class CameraController implements SourceController<CameraSnapshot> {
         }
     }
 
-    destroy() {
+    destroy(): void {
         this.destroyed = true
         this.stopCamera()
     }

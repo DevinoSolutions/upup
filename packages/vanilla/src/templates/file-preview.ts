@@ -12,7 +12,7 @@ function formatFileSize(bytes: number | undefined, tr: Translations): string {
     const k = 1024
     const sizes = [tr.bytes, tr.kb, tr.mb, tr.gb]
     const i = Math.floor(Math.log(bytes) / Math.log(k))
-    return Math.round((bytes / Math.pow(k, i)) * 10) / 10 + ' ' + sizes[i]
+    return `${Math.round((bytes / Math.pow(k, i)) * 10) / 10} ${sizes[i] ?? ''}`
 }
 
 export function filePreview(
@@ -26,7 +26,7 @@ export function filePreview(
     const themeSlots = ctx.theme.getSnapshot().slots
     const { isDark } = ctx.theme.getSnapshot()
 
-    const fileType = file.type ?? ''
+    const fileType = file.type
     const fileName = file.name
     const fileUrl = file.url ?? ''
     const fileSize = file.size
@@ -59,7 +59,7 @@ export function filePreview(
     const onFileClick = () => {}
 
     return html` <div
-        class=${cn('upup-inline-block', themeSlots?.filePreview?.root)}
+        class=${cn('upup-inline-block', themeSlots.filePreview?.root)}
         data-testid="upup-file-preview"
         data-upup-slot="file-preview"
         role="button"
@@ -79,7 +79,7 @@ export function filePreview(
                     [slot.fileThumbnailSingle ?? '']:
                         !!slot.fileThumbnailSingle && filesSize === 1,
                 },
-                themeSlots?.filePreview?.thumbnail,
+                themeSlots.filePreview?.thumbnail,
             )}
             style=${isImage ? `background-image: url(${fileUrl})` : ''}
         >
@@ -145,7 +145,7 @@ export function filePreview(
                     'upup-ring-1 upup-ring-black/5',
                     'disabled:upup-cursor-not-allowed disabled:upup-opacity-50',
                     slot.fileDeleteButton,
-                    themeSlots?.filePreview?.deleteButton,
+                    themeSlots.filePreview?.deleteButton,
                 )}
                 @click=${onHandleFileRemove}
                 type="button"
@@ -168,7 +168,7 @@ export function filePreview(
                 class=${cn(
                     'upup-truncate upup-text-[13px] upup-font-normal upup-leading-tight upup-text-gray-900',
                     { 'upup-text-white': isDark },
-                    themeSlots?.filePreview?.name,
+                    themeSlots.filePreview?.name,
                 )}
             >
                 ${fileName}
@@ -177,7 +177,7 @@ export function filePreview(
                 class=${cn(
                     'upup-mt-0.5 upup-text-[11px] upup-leading-tight upup-text-gray-500',
                     { 'upup-text-gray-400': isDark },
-                    themeSlots?.filePreview?.size,
+                    themeSlots.filePreview?.size,
                 )}
             >
                 ${formatFileSize(fileSize, tr)}
@@ -192,7 +192,7 @@ export function filePreview(
                                   'upup-text-[#4A9EFF] hover:upup-text-blue-300':
                                       isDark,
                               },
-                              themeSlots?.filePreview?.previewButton,
+                              themeSlots.filePreview?.previewButton,
                           )}
                           @click=${() => { opts.onRequestPreview(); }}
                       >

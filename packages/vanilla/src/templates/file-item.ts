@@ -1,4 +1,4 @@
-import { html, nothing } from 'lit-html'
+import { html, nothing, type TemplateResult } from 'lit-html'
 import type { UploadFile } from '@upup/core'
 import {
     fileGetIsImage,
@@ -22,7 +22,7 @@ export interface FileItemState {
 }
 const stateMap = new WeakMap<UploadFile, FileItemState>()
 function computeEagerCanPreview(file: UploadFile): boolean {
-    const type = file.type ?? ''
+    const type = file.type
     const name = file.name
     return (
         fileGetIsImage(type) ||
@@ -42,7 +42,7 @@ function stateFor(file: UploadFile): FileItemState {
     return s
 }
 
-export function fileItem(ctx: UploaderContext, file: UploadFile) {
+export function fileItem(ctx: UploaderContext, file: UploadFile): TemplateResult {
     const state = stateFor(file)
     const slot = ctx.theme.getSnapshot().slotOverrides
     const filesSize = ctx.core.files.size
@@ -91,7 +91,7 @@ export function fileItem(ctx: UploaderContext, file: UploadFile) {
         ${
             state.canPreview && state.showPreviewPortal
                 ? filePreviewPortal(ctx, {
-                      fileType: file.type ?? '',
+                      fileType: file.type,
                       fileUrl: file.url ?? '',
                       fileName: file.name,
                       fileSize: file.size,

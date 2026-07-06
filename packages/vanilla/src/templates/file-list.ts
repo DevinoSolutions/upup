@@ -1,4 +1,4 @@
-import { html, nothing } from 'lit-html'
+import { html, nothing, type TemplateResult } from 'lit-html'
 import { ref } from 'lit-html/directives/ref.js'
 import { repeat } from 'lit-html/directives/repeat.js'
 import {
@@ -94,7 +94,7 @@ function getVirtualizer(
     }
 }
 
-export function destroyFileList(ctx: UploaderContext) {
+export function destroyFileList(ctx: UploaderContext): void {
     const entry = virtualizers.get(ctx)
     if (entry) {
         // Call the cleanup fn returned by _didMount() — this is the public API for teardown.
@@ -112,7 +112,7 @@ function formatBytes(bytes: number): string {
     const k = 1024
     const sizes = ['B', 'KB', 'MB', 'GB', 'TB']
     const i = Math.floor(Math.log(bytes) / Math.log(k))
-    return Math.round((bytes / Math.pow(k, i)) * 10) / 10 + ' ' + sizes[i]
+    return `${Math.round((bytes / Math.pow(k, i)) * 10) / 10} ${sizes[i] ?? ''}`
 }
 
 function formatEta(seconds: number): string {
@@ -123,7 +123,7 @@ function formatEta(seconds: number): string {
     return `${s}s left`
 }
 
-export function fileList(ctx: UploaderContext) {
+export function fileList(ctx: UploaderContext): TemplateResult | typeof nothing {
     const o = ctx.orchestrator.getSnapshot()
     const files = [...ctx.core.files.values()]
     // Sort by relativePath || name (mirrors FileList.svelte sort)
@@ -354,7 +354,7 @@ export function fileList(ctx: UploaderContext) {
         class=${cn(
             'upup-relative upup-flex upup-h-full upup-flex-col upup-rounded-lg upup-shadow',
             { 'upup-hidden': isAddingMore },
-            themeSlots?.fileList?.root,
+            themeSlots.fileList?.root,
         )}
         data-testid="upup-file-list"
         data-upup-slot="file-list"

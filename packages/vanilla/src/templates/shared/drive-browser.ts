@@ -1,4 +1,4 @@
-import { html, nothing } from 'lit-html'
+import { html, nothing, type TemplateResult } from 'lit-html'
 import { repeat } from 'lit-html/directives/repeat.js'
 import { formatUiMessage as t, pluralUiMessage as plural } from '@upup/core'
 import { cn, searchDriveFiles } from '@upup/core/internal'
@@ -26,7 +26,7 @@ export interface DriveBrowserProps {
     showLoader: boolean
     handleSubmit: () => void
     handleCancelDownload: () => void
-    onSelectCurrentFolder: () => void
+    onSelectCurrentFolder?: () => void
     error?: DriveBrowserError | undefined
     hasMore?: boolean
     isLoadingMore?: boolean
@@ -58,12 +58,12 @@ function filterItems(item: DriveFile, accept: string): boolean {
         const p = pattern.trim()
         if (p.startsWith('.')) return item.name.endsWith(p)
         if (p.endsWith('/*'))
-            return item.mimeType?.startsWith(p.replace('/*', '/')) ?? false
+            return item.mimeType.startsWith(p.replace('/*', '/'))
         return item.mimeType === p
     })
 }
 
-export function driveBrowser(ctx: UploaderContext, props: DriveBrowserProps) {
+export function driveBrowser(ctx: UploaderContext, props: DriveBrowserProps): TemplateResult {
     const {
         driveFiles,
         user,
@@ -96,12 +96,11 @@ export function driveBrowser(ctx: UploaderContext, props: DriveBrowserProps) {
 
     const currentFolder = path[path.length - 1]
     const items =
-        currentFolder?.children?.filter(item =>
+        currentFolder?.children.filter(item =>
             filterItems(item, allowedFileTypes),
         ) ?? []
 
-    const displayedItems =
-        searchDriveFiles(items, ss.searchTerm) ?? []
+    const displayedItems = searchDriveFiles(items, ss.searchTerm)
 
     const inner = html` <div
         data-testid="upup-drive-browser"
@@ -112,7 +111,7 @@ export function driveBrowser(ctx: UploaderContext, props: DriveBrowserProps) {
             path,
             setPath,
             handleSignOut,
-            showSearch: !!items?.length,
+            showSearch: !!items.length,
             searchTerm: ss.searchTerm,
             onSearch: (v: string) => {
                 ss.searchTerm = v
@@ -193,7 +192,7 @@ export function driveBrowser(ctx: UploaderContext, props: DriveBrowserProps) {
                                     class="upup-mx-auto upup-my-2 upup-block upup-rounded-md upup-px-3 upup-py-1.5 upup-text-sm upup-text-blue-600 disabled:upup-opacity-50"
                                     ?disabled=${isLoadingMore}
                                     @click=${() => {
-                                        loadMore?.()
+                                        void loadMore?.()
                                     }}
                                 >
                                     ${isLoadingMore ? tr.loading : tr.loadMore}

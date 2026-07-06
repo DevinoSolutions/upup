@@ -1,9 +1,9 @@
-import { html, nothing } from 'lit-html'
+import { html, nothing, type TemplateResult } from 'lit-html'
 import { cn } from '../lib/cn'
 import type { UploaderContext } from '../lib/types'
 import { uploadSourceObject } from '../lib/constants'
 
-export function sourceView(ctx: UploaderContext) {
+export function sourceView(ctx: UploaderContext): TemplateResult | typeof nothing {
     const active = ctx.orchestrator.getSnapshot().activeSource
     const entry = active ? uploadSourceObject[active] : undefined
     const View = entry?.View
@@ -33,7 +33,7 @@ export function sourceView(ctx: UploaderContext) {
                     slot.sourceViewHeader,
                 )}
             >
-                ${Icon ? Icon() : nothing}
+                ${Icon()}
                 <button
                     class=${cn(
                         'upup-rounded-md upup-p-1 upup-text-blue-600 upup-transition-all upup-duration-300',
@@ -49,7 +49,7 @@ export function sourceView(ctx: UploaderContext) {
                     ${tr.cancel}
                 </button>
             </div>
-            ${View ? View(ctx) : nothing}
+            ${View(ctx)}
         </div>
     `
 }

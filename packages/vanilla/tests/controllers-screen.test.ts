@@ -32,11 +32,11 @@ beforeEach(() => {
 
 describe("ScreenCaptureController", () => {
   it("sets error when the user cancels the share dialog", async () => {
-    (navigator as any).mediaDevices = {
+    (navigator as { mediaDevices: MediaDevices }).mediaDevices = {
       getDisplayMedia: vi.fn(async () => {
         throw new Error("denied");
       }),
-    };
+    } as unknown as MediaDevices;
     const c = new ScreenCaptureController({
       setFiles: vi.fn(async () => {}),
       setActiveSource: vi.fn(),
@@ -47,7 +47,7 @@ describe("ScreenCaptureController", () => {
   });
   it("records and stops", async () => {
     const track = { stop: vi.fn(), onended: null as null | (() => void) };
-    (navigator as any).mediaDevices = {
+    (navigator as { mediaDevices: MediaDevices }).mediaDevices = {
       getDisplayMedia: vi.fn(
         async () =>
           ({
@@ -55,7 +55,7 @@ describe("ScreenCaptureController", () => {
             getVideoTracks: () => [track],
           }) as unknown as MediaStream,
       ),
-    };
+    } as unknown as MediaDevices;
     const c = new ScreenCaptureController({
       setFiles: vi.fn(async () => {}),
       setActiveSource: vi.fn(),
@@ -74,14 +74,14 @@ describe("ScreenCaptureController", () => {
       getVideoTracks: () => [track],
     } as unknown as MediaStream;
     let resolveGdm!: (s: MediaStream) => void;
-    (navigator as any).mediaDevices = {
+    (navigator as { mediaDevices: MediaDevices }).mediaDevices = {
       getDisplayMedia: vi.fn(
         () =>
           new Promise<MediaStream>((r) => {
             resolveGdm = r;
           }),
       ),
-    };
+    } as unknown as MediaDevices;
     const invalidate = vi.fn();
     const c = new ScreenCaptureController({
       setFiles: vi.fn(async () => {}),

@@ -1,4 +1,4 @@
-import { html, nothing } from 'lit-html'
+import { html, type TemplateResult } from 'lit-html'
 import { cn, b64EncodeUnicode } from '@upup/core/internal'
 import type { DriveFile } from '@upup/core'
 import type { UploaderContext } from '../../lib/types'
@@ -14,7 +14,7 @@ function handleImgError(e: Event) {
 export function driveBrowserIcon(
     ctx: UploaderContext,
     args: { isFolder: boolean; file: DriveFile },
-) {
+): TemplateResult {
     const { isFolder, file } = args
     const isDark = ctx.theme.getSnapshot().isDark
 

@@ -1,4 +1,4 @@
-import { html } from 'lit-html'
+import { html, type TemplateResult } from 'lit-html'
 import { FileSource } from '@upup/core'
 import type { DriveFile, DriveFolder } from '@upup/core'
 import type { UploaderContext } from '../lib/types'
@@ -18,7 +18,7 @@ const META: Record<string, { providerName: string; slot: string }> = {
     [FileSource.BOX]: { providerName: 'Box', slot: 'box-uploader' },
 }
 
-export function clientDriveUploader(ctx: UploaderContext, source: FileSource) {
+export function clientDriveUploader(ctx: UploaderContext, source: FileSource): TemplateResult {
     const controller = ctx.controllers.getDrive(source)
     const st = controller.getSnapshot()
     const meta = META[source]
@@ -53,9 +53,13 @@ export function clientDriveUploader(ctx: UploaderContext, source: FileSource) {
         handleClick: (file: DriveFile) => { controller.handleClick(file); },
         selectedFiles: st.selectedFiles,
         showLoader: st.showLoader,
-        handleSubmit: () => controller.handleSubmit(),
+        handleSubmit: () => {
+            void controller.handleSubmit()
+        },
         handleCancelDownload: () => { controller.handleCancelDownload(); },
-        onSelectCurrentFolder: () => controller.onSelectCurrentFolder(),
+        onSelectCurrentFolder: () => {
+            void controller.onSelectCurrentFolder()
+        },
         error: st.error,
         hasMore: st.hasMore,
         isLoadingMore: st.isLoadingMore,

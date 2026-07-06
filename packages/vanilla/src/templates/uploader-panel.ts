@@ -1,11 +1,11 @@
-import { html, nothing } from 'lit-html'
+import { html, nothing, type TemplateResult } from 'lit-html'
 import { cn } from '../lib/cn'
 import type { UploaderContext } from '../lib/types'
 import { sourceView } from './source-view'
 import { sourceSelector } from './source-selector'
 import { fileList } from './file-list'
 
-export function uploaderPanel(ctx: UploaderContext) {
+export function uploaderPanel(ctx: UploaderContext): TemplateResult {
     const o = ctx.orchestrator.getSnapshot()
     const isDark = ctx.theme.getSnapshot().isDark
     const tr = ctx.translations

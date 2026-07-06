@@ -1,4 +1,4 @@
-import { html, nothing, render } from 'lit-html'
+import { html, nothing, render, type TemplateResult } from 'lit-html'
 import { ref } from 'lit-html/directives/ref.js'
 import { cn } from './lib/cn'
 import type { UploaderContext } from './lib/types'
@@ -7,7 +7,7 @@ import { imageEditorStub } from './templates/image-editor-stub'
 import { devinoDark, devinoLight, logoDark, logoLight } from './assets/logos'
 
 /** Root App template. Pure function of ctx + current store snapshots. */
-export function App(ctx: UploaderContext) {
+export function App(ctx: UploaderContext): TemplateResult {
     const isDark = ctx.theme.getSnapshot().isDark
     const slotOverrides = ctx.theme.getSnapshot().slotOverrides
     const status = ctx.orchestrator.getSnapshot().uploadStatus
@@ -23,7 +23,7 @@ export function App(ctx: UploaderContext) {
             class=${`upup-scope upup-h-full upup-w-full ${ctx.props.className}`}
             data-testid="upup-root"
             data-upup-slot="root"
-            data-state=${String(status ?? 'idle').toLowerCase()}
+            data-state=${status.toLowerCase()}
             lang=${ctx.lang}
             dir=${ctx.dir}
         >
@@ -123,7 +123,11 @@ export function App(ctx: UploaderContext) {
             </div>
             <input
                 ${ref(el =>
-                    { ctx.registerFileInput((el as HTMLInputElement) ?? null); },
+                    {
+                        ctx.registerFileInput(
+                            (el as HTMLInputElement | undefined) ?? null,
+                        );
+                    },
                 )}
                 type="file"
                 accept=${ctx.props.allowedFileTypes}
@@ -137,7 +141,7 @@ export function App(ctx: UploaderContext) {
 }
 
 /** Mounts the render loop into rootEl and toggles the dark class on the scope element. */
-export function createRenderLoop(ctx: UploaderContext, rootEl: HTMLElement) {
+export function createRenderLoop(ctx: UploaderContext, rootEl: HTMLElement): { renderApp: () => void; invalidate: () => void; stop: () => void; } {
     let scheduled = false
     let stopped = false
 

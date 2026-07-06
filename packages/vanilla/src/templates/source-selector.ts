@@ -1,4 +1,4 @@
-import { html, nothing } from 'lit-html'
+import { html, nothing, type TemplateResult } from 'lit-html'
 import { repeat } from 'lit-html/directives/repeat.js'
 import {
     formatUiMessage as t,
@@ -10,7 +10,7 @@ import type { UploaderContext } from '../lib/types'
 import { uploadSourceObject } from '../lib/constants'
 import { icon } from './icon'
 
-export function sourceSelector(ctx: UploaderContext) {
+export function sourceSelector(ctx: UploaderContext): TemplateResult {
     const isDark = ctx.theme.getSnapshot().isDark
     const slot = ctx.theme.getSnapshot().slotOverrides
     const tr = ctx.translations
@@ -49,7 +49,7 @@ export function sourceSelector(ctx: UploaderContext) {
         if (limit > 1) {
             parts.push(t(tr.addDocumentsHere, { limit }))
         }
-        if (maxFileSize?.size && maxFileSize?.unit) {
+        if (maxFileSize?.size) {
             parts.push(
                 t(plural(tr, 'maxFileSizeAllowed', limit), {
                     size: maxFileSize.size,
@@ -132,10 +132,11 @@ export function sourceSelector(ctx: UploaderContext) {
                                     writable: true,
                                 })
                             } catch {
+                                // upup-catch: defineProperty unsupported here — fall back to a plain assign
                                 Object.assign(file, { relativePath: newPath })
                             }
                             collectedFiles.push(file)
-                        } else if (entry.kind === 'directory') {
+                        } else {
                             await getFiles(
                                 entry as unknown as IterableDirHandle,
                                 newPath,
@@ -145,7 +146,7 @@ export function sourceSelector(ctx: UploaderContext) {
                 }
                 await getFiles(directoryHandle as unknown as IterableDirHandle)
                 if (collectedFiles.length > 0) {
-                    ctx.setFiles(collectedFiles)
+                    void ctx.setFiles(collectedFiles)
                     ctx.core.emit('folder-select', {
                         count: collectedFiles.length,
                     })

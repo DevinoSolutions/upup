@@ -7,7 +7,7 @@ export function sourceViewContainer(
     ctx: UploaderContext,
     opts: { isLoading?: boolean; dataUpupSlot?: string; dataTestid?: string },
     children: TemplateResult,
-) {
+): TemplateResult {
     const isLoading = opts.isLoading ?? false
     const isDark = ctx.theme.getSnapshot().isDark
     const slot = ctx.theme.getSnapshot().slotOverrides

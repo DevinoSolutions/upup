@@ -15,7 +15,7 @@ function makeCtx(invalidate: () => void) {
       signInWith: "Sign in with {{provider}}",
     },
     invalidate,
-  } as any;
+  } as Parameters<typeof serverModeDriveUploader>[0];
 }
 const flush = async () => {
   await Promise.resolve();
@@ -85,8 +85,8 @@ describe("serverModeDriveUploader", () => {
     let captured: AbortSignal | undefined;
     vi.stubGlobal(
       "fetch",
-      vi.fn((_url: string, init: any) => {
-        captured = init.signal;
+      vi.fn((_url: string, init: RequestInit) => {
+        captured = init.signal as AbortSignal;
         return new Promise<Response>(() => {});
       }),
     );
@@ -109,9 +109,9 @@ describe("serverModeDriveUploader", () => {
       "fetch",
       vi.fn(async () => new Response("", { status: 401 })),
     );
-    const openSpy = vi
-      .spyOn(window, "open")
-      .mockReturnValue({ closed: false } as any);
+    vi.spyOn(window, "open").mockReturnValue({
+      closed: false,
+    } as unknown as Window);
     const addSpy = vi.spyOn(window, "addEventListener");
     const removeSpy = vi.spyOn(window, "removeEventListener");
     serverModeDriveUploader(ctx, {

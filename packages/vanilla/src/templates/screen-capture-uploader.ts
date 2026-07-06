@@ -1,10 +1,10 @@
-import { html, nothing } from 'lit-html'
+import { html, nothing, type TemplateResult } from 'lit-html'
 import { ref } from 'lit-html/directives/ref.js'
 import { cn } from '@upup/core/internal'
 import type { UploaderContext } from '../lib/types'
 import { sourceViewContainer } from './shared/source-view-container'
 
-export function screenCaptureUploader(ctx: UploaderContext) {
+export function screenCaptureUploader(ctx: UploaderContext): TemplateResult {
     const sc = ctx.controllers.getScreen()
     const s = sc.getSnapshot()
     const isDark = ctx.theme.getSnapshot().isDark
