@@ -57,9 +57,11 @@ function toCrashRecoveryFileSnapshot(
     }
     // Legacy top-level `thumbnail` (superseded by metadata.thumbnailUrl but still
     // persisted for snapshot backwards-compat) — read through a non-deprecated view.
-    const legacyThumbnail = (file as Record<string, unknown>).thumbnail
+    const legacyThumbnail = (
+        file as unknown as { thumbnail?: UploadFile['thumbnail'] }
+    ).thumbnail
     if (legacyThumbnail) {
-        snapshot.thumbnail = legacyThumbnail as UploadFile['thumbnail']
+        snapshot.thumbnail = legacyThumbnail
     }
 
     return snapshot
@@ -165,8 +167,11 @@ function reviveCrashRecoveryFile(
     if (isRecord(props.thumbnail)) {
         // Legacy top-level `thumbnail` — restored for snapshot backwards-compat
         // through a non-deprecated view (superseded by metadata.thumbnailUrl).
-        const uploadFileRecord = uploadFile as Record<string, unknown>
-        uploadFileRecord.thumbnail = props.thumbnail
+        const uploadFileRecord = uploadFile as unknown as {
+            thumbnail?: UploadFile['thumbnail']
+        }
+        uploadFileRecord.thumbnail =
+            props.thumbnail as UploadFile['thumbnail']
     }
 
     return uploadFile

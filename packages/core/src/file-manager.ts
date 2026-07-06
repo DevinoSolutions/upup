@@ -64,9 +64,6 @@ async function computeContentHash(file: File): Promise<string> {
 
 function storedContentHash(file: UploadFile): string | undefined {
     const metadata = file.metadata as Record<string, unknown> | undefined
-    // Grandfathered top-level hash fields on pre-metadata snapshots — read through
-    // a non-deprecated view (superseded by metadata.originalContentHash/checksum).
-    const legacy = file as Record<string, unknown>
     return (
         (typeof metadata?.originalContentHash === 'string'
             ? metadata.originalContentHash
@@ -74,17 +71,17 @@ function storedContentHash(file: UploadFile): string | undefined {
         (typeof metadata?.checksum === 'string'
             ? metadata.checksum
             : undefined) ??
-        (typeof legacy.checksumSHA256 === 'string'
-            ? legacy.checksumSHA256
-            : undefined) ??
-        (typeof legacy.fileHash === 'string' ? legacy.fileHash : undefined)
+        // eslint-disable-next-line @typescript-eslint/no-deprecated -- v3 removal tracked
+        file.checksumSHA256 ??
+        // eslint-disable-next-line @typescript-eslint/no-deprecated -- v3 removal tracked
+        file.fileHash
     )
 }
 
 function applyContentHash(file: UploadFile, hash: string): UploadFile {
     // Keep the grandfathered top-level `fileHash` in sync (superseded by
     // metadata.originalContentHash) through a non-deprecated view.
-    const fileRecord = file as Record<string, unknown>
+    const fileRecord = file as unknown as Record<string, unknown>
     fileRecord.fileHash = hash
     file.metadata = {
         ...file.metadata,

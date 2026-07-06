@@ -6,6 +6,8 @@ import {
     type DragDropProps,
 } from '../../controllers/drag-drop-controller'
 import { UploadStatus } from '../../types/upload-status'
+import { FileSource } from '../../types/file-source'
+import type { UploadFile } from '../../types/upload-file'
 import type { UpupCore } from '../../core'
 import type { UploaderOrchestrator } from '../../orchestrator/uploader-orchestrator'
 import type { OrchestratorState } from '../../orchestrator/types'
@@ -134,7 +136,7 @@ describe('DragDropController', () => {
     it('is a no-op when an adapter is active or an upload is in progress', () => {
         const { deps, orch, core } = makeDeps()
         const c = new DragDropController(deps)
-        orch._set({ activeSource: 'GOOGLE_DRIVE' })
+        orch._set({ activeSource: FileSource.GOOGLE_DRIVE })
         c.handleDragOver(dragEvent())
         expect(core.emit).not.toHaveBeenCalled()
         orch._set({
@@ -165,7 +167,7 @@ describe('DragDropController', () => {
         } as unknown as ClipboardEvent
         c.handlePaste(e)
         expect(setFiles).toHaveBeenCalledTimes(1)
-        const passed = setFiles.mock.calls[0][0][0] as File
+        const passed = setFiles.mock.calls[0]![0][0] as File
         expect(passed.name).toMatch(/^pasted-\d+\.png$/)
     })
 
@@ -194,7 +196,7 @@ describe('DragDropController', () => {
         c.init()
         c.handleDragOver(dragEvent())
         expect(c.getSnapshot().absoluteIsDragging).toBe(true)
-        orch._set({ activeSource: 'GOOGLE_DRIVE' })
+        orch._set({ activeSource: FileSource.GOOGLE_DRIVE })
         expect(c.getSnapshot().absoluteIsDragging).toBe(false)
     })
 
@@ -220,7 +222,7 @@ describe('DragDropController', () => {
         const c = new DragDropController(deps)
         c.init()
         expect(c.getSnapshot().absoluteHasBorder).toBe(true) // empty → border
-        orch._set({ files: new Map([['a', {}]]) }) // add → notify
+        orch._set({ files: new Map([['a', {} as unknown as UploadFile]]) }) // add → notify
         expect(c.getSnapshot().absoluteHasBorder).toBe(false) // a file present → no border
         orch._set({ files: new Map() }) // remove last → notify
         expect(c.getSnapshot().absoluteHasBorder).toBe(true) // border recovers

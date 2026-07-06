@@ -93,14 +93,10 @@ export class TusUpload implements UploadStrategy {
             }
 
             // `chunkSize` is the deprecated alias of `chunkSizeBytes`; still honored
-            // for backwards-compat via a non-deprecated view.
-            const legacyChunkSize = (this.options as Record<string, unknown>)
-                .chunkSize
-            const chunkSize =
-                this.options.chunkSizeBytes ??
-                (typeof legacyChunkSize === 'number'
-                    ? legacyChunkSize
-                    : undefined)
+            // for backwards-compat.
+            // eslint-disable-next-line @typescript-eslint/no-deprecated -- v3 removal tracked
+            const legacyChunkSize = this.options.chunkSize
+            const chunkSize = this.options.chunkSizeBytes ?? legacyChunkSize
             if (this.options.headers !== undefined)
                 uploadOptions.headers = this.options.headers
             if (chunkSize !== undefined) uploadOptions.chunkSize = chunkSize

@@ -37,10 +37,9 @@ export function thumbnailStep(
                             thumbnailUrl: result.thumbnailUrl,
                         }
                         // Legacy top-level `thumbnail` still carries the actual File
-                        // blob (metadata.thumbnailUrl is only a URL); write it through
-                        // a non-deprecated view.
-                        const fileRecord = file as Record<string, unknown>
-                        fileRecord.thumbnail = {
+                        // blob (metadata.thumbnailUrl is only a URL).
+                        // eslint-disable-next-line @typescript-eslint/no-deprecated -- v3 removal tracked
+                        file.thumbnail = {
                             file: new File([result.bytes], result.name, {
                                 type: result.type,
                                 lastModified: file.lastModified,
@@ -58,7 +57,7 @@ export function thumbnailStep(
                 ...file.metadata,
                 thumbnailUrl: thumbnail.dataUrl,
             }
-            const fileRecord = file as Record<string, unknown>
+            const fileRecord = file as unknown as Record<string, unknown>
             fileRecord.thumbnail = { file: thumbnail.file }
             return file
         },

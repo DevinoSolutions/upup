@@ -56,12 +56,18 @@ export function blobToUploadFile(
     // Grandfathered top-level hash/thumbnail fields (superseded by metadata.*,
     // already copied above) — propagated for backwards-compat through a
     // non-deprecated view.
-    const originalRecord = original as Record<string, unknown>
-    const targetRecord = fileWithParams as Record<string, unknown>
-    if (originalRecord.fileHash !== undefined)
-        targetRecord.fileHash = originalRecord.fileHash
-    if (originalRecord.thumbnail !== undefined)
-        targetRecord.thumbnail = originalRecord.thumbnail
+    const originalLegacy = original as unknown as {
+        fileHash?: string
+        thumbnail?: UploadFile['thumbnail']
+    }
+    const targetLegacy = fileWithParams as unknown as {
+        fileHash?: string
+        thumbnail?: UploadFile['thumbnail']
+    }
+    if (originalLegacy.fileHash !== undefined)
+        targetLegacy.fileHash = originalLegacy.fileHash
+    if (originalLegacy.thumbnail !== undefined)
+        targetLegacy.thumbnail = originalLegacy.thumbnail
 
     return fileWithParams
 }

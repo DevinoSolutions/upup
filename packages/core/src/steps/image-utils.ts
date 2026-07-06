@@ -287,8 +287,7 @@ export function cloneUploadFile(
     metadata: Partial<UploadFileMetadata> = {},
 ): UploadFile {
     // Grandfathered top-level hash/thumbnail fields (superseded by metadata.*) are
-    // still propagated for backwards-compat; read them through a non-deprecated view.
-    const legacy = original as Record<string, unknown>
+    // still propagated for backwards-compat.
     return Object.assign(replacement, {
         id: original.id,
         source: original.source,
@@ -301,9 +300,12 @@ export function cloneUploadFile(
         relativePath: original.relativePath,
         key: original.key,
         etag: original.etag,
-        fileHash: legacy.fileHash,
-        checksumSHA256: legacy.checksumSHA256,
-        thumbnail: legacy.thumbnail,
+        // eslint-disable-next-line @typescript-eslint/no-deprecated -- v3 removal tracked
+        fileHash: original.fileHash,
+        // eslint-disable-next-line @typescript-eslint/no-deprecated -- v3 removal tracked
+        checksumSHA256: original.checksumSHA256,
+        // eslint-disable-next-line @typescript-eslint/no-deprecated -- v3 removal tracked
+        thumbnail: original.thumbnail,
     }) as UploadFile
 }
 

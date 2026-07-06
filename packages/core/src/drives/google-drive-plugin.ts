@@ -241,7 +241,7 @@ export class GoogleDrivePlugin implements DrivePlugin {
         return {
             name: data.name ?? '',
             email: data.email ?? '',
-            picture: data.picture ?? undefined,
+            ...(data.picture !== undefined ? { picture: data.picture } : {}),
         }
     }
 
