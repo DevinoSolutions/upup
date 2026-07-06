@@ -85,15 +85,12 @@ export default memo(function FilePreview(props: Props) {
         [fileType, fileName, fileSize],
     )
 
-    const progress = useMemo(
-        () =>
-            Math.floor(
-                (filesProgressMap[fileId]?.loaded /
-                    filesProgressMap[fileId]?.total) *
-                    100,
-            ),
-        [fileId, filesProgressMap],
-    )
+    const progress = useMemo(() => {
+        const fileProgress = filesProgressMap[fileId]
+        const loaded = fileProgress?.loaded ?? NaN
+        const total = fileProgress?.total ?? NaN
+        return Math.floor((loaded / total) * 100)
+    }, [fileId, filesProgressMap])
 
     useEffect(() => {
         // Images and PDFs are always previewable; text only if below the safe size threshold.

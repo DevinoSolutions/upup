@@ -131,25 +131,27 @@ export default memo(function FileList() {
                             'upup-font-[Arial,Helvetica,sans-serif]',
                         )}
                     >
-                        {virtualizer.getVirtualItems().map(virtualItem => (
-                            <div
-                                key={virtualItem.key}
-                                data-index={virtualItem.index}
-                                ref={virtualizer.measureElement}
-                                style={{
-                                    position: 'absolute',
-                                    top: 0,
-                                    left: 0,
-                                    width: '100%',
-                                    transform: `translateY(${virtualItem.start}px)`,
-                                    paddingBottom: 12,
-                                }}
-                            >
-                                <FileItem
-                                    file={sortedFiles[virtualItem.index]}
-                                />
-                            </div>
-                        ))}
+                        {virtualizer.getVirtualItems().map(virtualItem => {
+                            const file = sortedFiles[virtualItem.index]
+                            if (!file) return null
+                            return (
+                                <div
+                                    key={virtualItem.key}
+                                    data-index={virtualItem.index}
+                                    ref={virtualizer.measureElement}
+                                    style={{
+                                        position: 'absolute',
+                                        top: 0,
+                                        left: 0,
+                                        width: '100%',
+                                        transform: `translateY(${virtualItem.start}px)`,
+                                        paddingBottom: 12,
+                                    }}
+                                >
+                                    <FileItem file={file} />
+                                </div>
+                            )
+                        })}
                     </div>
                 ) : (
                     // Standard rendering for small lists and grid mode

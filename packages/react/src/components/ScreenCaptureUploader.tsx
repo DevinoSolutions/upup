@@ -51,15 +51,18 @@ export default function ScreenCaptureUploader() {
             streamRef.current = stream
             chunks.current = []
 
-            stream.getVideoTracks()[0].onended = () => {
-                if (
-                    mediaRecorder.current &&
-                    mediaRecorder.current.state !== 'inactive'
-                ) {
-                    mediaRecorder.current.stop()
+            const videoTrack = stream.getVideoTracks()[0]
+            if (videoTrack) {
+                videoTrack.onended = () => {
+                    if (
+                        mediaRecorder.current &&
+                        mediaRecorder.current.state !== 'inactive'
+                    ) {
+                        mediaRecorder.current.stop()
+                    }
+                    if (timerRef.current) clearInterval(timerRef.current)
+                    setState('recorded')
                 }
-                if (timerRef.current) clearInterval(timerRef.current)
-                setState('recorded')
             }
 
             const recorder = new MediaRecorder(stream)

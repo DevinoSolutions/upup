@@ -39,6 +39,7 @@ export default function SourceSelector() {
             .map(m => {
                 if (m.startsWith('.')) return m
                 const [type, sub] = m.split('/')
+                if (!type || !sub) return m
                 if (sub === '*')
                     return type.charAt(0).toUpperCase() + type.slice(1) + 's'
                 return sub.toUpperCase()

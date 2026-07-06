@@ -81,7 +81,7 @@ export default function DriveBrowser({
         filterItems(item, allowedFileTypes),
     )
     const displayedItems = useMemo(
-        () => searchDriveFiles(items, searchTerm) || [],
+        () => searchDriveFiles(items ?? [], searchTerm) || [],
         [searchTerm, items],
     )
     // error short-circuits the perpetual loader — the exact F-123/F-124 symptom
