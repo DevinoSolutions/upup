@@ -15,7 +15,9 @@ export default function GoogleDriveUploader(): React.ReactElement | null {
         return (
             <ServerModeDriveUploader
                 provider="google-drive"
-                onBack={() => { setActiveSource(undefined); }}
+                onBack={() => {
+                    setActiveSource(undefined)
+                }}
             />
         )
     }

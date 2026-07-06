@@ -94,13 +94,13 @@ export default forwardRef<UploaderRef, UploaderProps>(
                                     } upup-flex upup-h-full upup-w-full upup-select-none upup-flex-col upup-gap-3 upup-overflow-hidden upup-rounded-2xl upup-px-5 upup-py-4`,
                                     {
                                         [providerValues.theme.slotOverrides
-                                            .containerFull!]:
+                                            .containerFull ?? '']:
                                             providerValues.theme.slotOverrides
                                                 .containerFull &&
                                             !providerValues.props.mini,
 
                                         [providerValues.theme.slotOverrides
-                                            .containerMini!]:
+                                            .containerMini ?? '']:
                                             providerValues.theme.slotOverrides
                                                 .containerMini &&
                                             providerValues.props.mini,

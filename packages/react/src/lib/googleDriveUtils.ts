@@ -44,7 +44,9 @@ export const GOOGLE_WORKSPACE_EXPORTS: Record<
  * Returns the export info for a Google Workspace mimeType, or undefined for
  * non-Workspace files.
  */
-export function getWorkspaceExportInfo(mimeType: string) {
+export function getWorkspaceExportInfo(
+    mimeType: string,
+): (typeof GOOGLE_WORKSPACE_EXPORTS)[string] | undefined {
     return GOOGLE_WORKSPACE_EXPORTS[mimeType]
 }
 

@@ -15,7 +15,9 @@ type Props = {
     handleCancel(): void
 }
 
-export default function UploaderHeader({ handleCancel }: Readonly<Props>): React.ReactElement | null {
+export default function UploaderHeader({
+    handleCancel,
+}: Readonly<Props>): React.ReactElement | null {
     const { files } = useUploaderFiles()
     const { setIsAddingMore, isAddingMore, viewMode, setViewMode } =
         useUploaderView()
@@ -88,9 +90,9 @@ export default function UploaderHeader({ handleCancel }: Readonly<Props>): React
                                     dark,
                             },
                         )}
-                        onClick={() =>
-                            { setViewMode(v => (v === 'grid' ? 'list' : 'grid')); }
-                        }
+                        onClick={() => {
+                            setViewMode(v => (v === 'grid' ? 'list' : 'grid'))
+                        }}
                         title={
                             viewMode === 'grid'
                                 ? tr.switchToListView
@@ -114,7 +116,9 @@ export default function UploaderHeader({ handleCancel }: Readonly<Props>): React
                             },
                             slotClasses.containerAddMoreButton,
                         )}
-                        onClick={() => { setIsAddingMore(true); }}
+                        onClick={() => {
+                            setIsAddingMore(true)
+                        }}
                         disabled={isUploading || isProcessing}
                     >
                         <ContainerAddMoreIcon /> {tr.addMore}

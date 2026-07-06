@@ -73,7 +73,9 @@ export default memo(
                 if (event.key === 'Escape') onClose()
             }
             window.addEventListener('keydown', handleKeyDown)
-            return () => { window.removeEventListener('keydown', handleKeyDown); }
+            return () => {
+                window.removeEventListener('keydown', handleKeyDown)
+            }
         }, [onClose])
 
         useEffect(() => {
@@ -107,7 +109,7 @@ export default memo(
                                 })
                             }
                         }
-                        reader.cancel()
+                        void reader.cancel()
 
                         if (!cancelled) {
                             const wasTruncated =
@@ -128,13 +130,14 @@ export default memo(
                         if (!cancelled) setTextContent(txt)
                     }
                 } catch (e) {
+                    // upup-catch: text-preview fetch/decode failure is shown inline via setTextError, not a system fault
                     if (!cancelled)
                         setTextError((e as Error)?.message || 'Preview error')
                 } finally {
                     if (!cancelled) setTextLoading(false)
                 }
             }
-            loadText()
+            void loadText()
             return () => {
                 cancelled = true
             }

@@ -15,7 +15,9 @@ export default function DropboxUploader(): React.ReactElement | null {
         return (
             <ServerModeDriveUploader
                 provider="dropbox"
-                onBack={() => { setActiveSource(undefined); }}
+                onBack={() => {
+                    setActiveSource(undefined)
+                }}
             />
         )
     }

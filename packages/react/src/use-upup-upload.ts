@@ -149,7 +149,9 @@ export function useUpupUpload(
         const unsub = core.on('state-change', () => {
             forceUpdate(n => n + 1)
         })
-        const unsubDragDrop = dragDrop.subscribe(() => { forceUpdate(n => n + 1); })
+        const unsubDragDrop = dragDrop.subscribe(() => {
+            forceUpdate(n => n + 1)
+        })
 
         // Wire convenience callbacks through refs for freshness
         const unsubCallbacks: Array<() => void> = [
@@ -180,7 +182,8 @@ export function useUpupUpload(
             core.destroy()
             coreRef.current = null
         }
-    }, []) // eslint-disable-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps -- mount-once: create/destroy the core exactly once per mount; options are synced by the separate effect below
+    }, [])
 
     useEffect(() => {
         coreRef.current?.updateOptions(options)
@@ -215,11 +218,11 @@ export function useUpupUpload(
             removeAll: () => {},
             setFiles: async () => {},
             reorderFiles: () => {},
-            upload: async () => [],
+            upload: () => Promise.resolve([]),
             pause: () => {},
             resume: () => {},
             cancel: () => {},
-            retry: async () => [],
+            retry: () => Promise.resolve([]),
             on: () => () => {},
             ext: {},
             core: null as unknown as UpupCore,

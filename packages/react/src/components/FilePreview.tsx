@@ -114,7 +114,7 @@ export default memo(function FilePreview(props: Props) {
         const k = 1024
         const sizes = [tr.bytes, tr.kb, tr.mb, tr.gb]
         const i = Math.floor(Math.log(bytes) / Math.log(k))
-        return Math.round((bytes / Math.pow(k, i)) * 10) / 10 + ' ' + sizes[i]
+        return `${Math.round((bytes / Math.pow(k, i)) * 10) / 10} ${sizes[i] ?? ''}`
     }
 
     return (
@@ -137,9 +137,9 @@ export default memo(function FilePreview(props: Props) {
                     'upup-relative upup-h-[145px] upup-w-[145px] upup-overflow-hidden upup-rounded-lg upup-bg-white upup-shadow-sm',
                     'upup-bg-contain upup-bg-center upup-bg-no-repeat',
                     {
-                        [slotClasses.fileThumbnailMultiple!]:
+                        [slotClasses.fileThumbnailMultiple ?? '']:
                             slotClasses.fileThumbnailMultiple && files.size > 1,
-                        [slotClasses.fileThumbnailSingle!]:
+                        [slotClasses.fileThumbnailSingle ?? '']:
                             slotClasses.fileThumbnailSingle && files.size === 1,
                     },
                     themeSlots?.filePreview?.thumbnail,

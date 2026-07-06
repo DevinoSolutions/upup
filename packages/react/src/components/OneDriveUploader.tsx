@@ -15,7 +15,9 @@ export default function OneDriveUploader(): React.ReactElement | null {
         return (
             <ServerModeDriveUploader
                 provider="onedrive"
-                onBack={() => { setActiveSource(undefined); }}
+                onBack={() => {
+                    setActiveSource(undefined)
+                }}
             />
         )
     }

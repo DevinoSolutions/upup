@@ -206,9 +206,10 @@ export default function useUploaderController(
             autoUpload,
             maxConcurrentUploads,
             crashRecovery,
-            allowedFileTypes: (typeof acceptProp === 'string'
-                ? acceptProp
-                : (acceptProp).join(',')),
+            allowedFileTypes:
+                typeof acceptProp === 'string'
+                    ? acceptProp
+                    : acceptProp.join(','),
             mini,
             isProcessing,
             allowPreview,
@@ -241,8 +242,8 @@ export default function useUploaderController(
             onStatusChange,
             onFileTypeMismatch,
             onRestrictionFailed,
-             
         }),
+        // eslint-disable-next-line react-hooks/exhaustive-deps -- every field is destructured from `props`; memoizing on props identity is equivalent to listing all ~50 and intentional (mirrors normalizeUploaderOptions below)
         [props],
     ) // props identity memoization — same as normalizeUploaderOptions below
 
@@ -261,7 +262,9 @@ export default function useUploaderController(
     const { connectSSE } = useSSEProcessing({
         processingEndpoint,
         onFileProcessed,
-        onError: err => { onError(err.message); },
+        onError: err => {
+            onError(err.message)
+        },
         processingTimeout,
     })
 
@@ -274,10 +277,14 @@ export default function useUploaderController(
     if (!rootRef.current && core) {
         rootRef.current = createUploaderController(
             { core, options: factoryOptions, normalized },
-            { connectSSE: file => { connectSSERef.current(file); } },
+            {
+                connectSSE: file => {
+                    connectSSERef.current(file)
+                },
+            },
         )
     }
-    const root = rootRef.current!
+    const root = rootRef.current
 
     // Refresh proxied callbacks every render (replaces old callbackRefs.current overwrite).
     // Must call before any render-path reads from the proxy.
@@ -363,7 +370,9 @@ export default function useUploaderController(
     // This is NOT a regression — the original React adapter had the same behavior.
     useEffect(() => {
         root?.init()
-        return () => { root?.destroy(); }
+        return () => {
+            root?.destroy()
+        }
     }, [root])
 
     // ── Input ref (React-specific) ──────────────────────────────
@@ -374,8 +383,8 @@ export default function useUploaderController(
 
     // ── Commands (delegate to factory commands) ──────────────────
     const handleSetSelectedFiles = useCallback(
-        async (newFiles: File[]) => {
-            return root?.commands.handleSetSelectedFiles(newFiles)
+        (newFiles: File[]) => {
+            void root?.commands.handleSetSelectedFiles(newFiles)
         },
         [root],
     )
@@ -528,7 +537,7 @@ export default function useUploaderController(
     // themeState fields match ContextTheme 1:1 (ThemeStoreState ≡ ContextTheme shape)
     return {
         core,
-        orchestrator: root?.orchestrator,
+        orchestrator: root?.orchestrator ?? null,
         mode: resolved.mode,
         serverUrl: resolved.serverUrl,
         inputRef,

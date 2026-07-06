@@ -51,9 +51,9 @@ export default memo(function FileItem({ file }: Props) {
             className={cn(
                 'upup-relative upup-flex upup-flex-1 upup-flex-col upup-items-start upup-gap-1 upup-bg-transparent',
                 {
-                    [slotClasses.fileItemMultiple!]:
+                    [slotClasses.fileItemMultiple ?? '']:
                         slotClasses.fileItemMultiple && files.size > 1,
-                    [slotClasses.fileItemSingle!]:
+                    [slotClasses.fileItemSingle ?? '']:
                         slotClasses.fileItemSingle && files.size === 1,
                 },
             )}
@@ -67,7 +67,9 @@ export default memo(function FileItem({ file }: Props) {
                 canPreview={canPreview}
                 setCanPreview={setCanPreview}
                 onRequestPreview={openPreviewPortal}
-                onClick={() => { onFileClick(file); }}
+                onClick={() => {
+                    onFileClick(file)
+                }}
             />
             {/* Keep preview portal mounted without showing duplicate info */}
             {canPreview && showPreviewPortal && (

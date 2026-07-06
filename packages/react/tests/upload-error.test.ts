@@ -90,6 +90,7 @@ describe('UploadError — catch behavior', () => {
         try {
             throw new UploadError('err', UploadErrorType.EXPIRED_URL)
         } catch (e) {
+            // upup-catch: test deliberately captures the thrown error to assert its identity survives the catch
             caught = e
         }
         expect((caught as UploadError).type).toBe(UploadErrorType.EXPIRED_URL)
@@ -100,6 +101,7 @@ describe('UploadError — catch behavior', () => {
         try {
             throw new UploadError('retry me', UploadErrorType.CORS_CONFIG_ERROR, true)
         } catch (e) {
+            // upup-catch: test deliberately captures the thrown error to assert its retryable flag survives the catch
             caught = e
         }
         expect((caught as UploadError).retryable).toBe(true)

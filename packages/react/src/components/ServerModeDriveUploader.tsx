@@ -153,11 +153,11 @@ export default function ServerModeDriveUploader({
                             <button
                                 key={file.id}
                                 type="button"
-                                onClick={() =>
-                                    { file.isFolder
+                                onClick={() => {
+                                    file.isFolder
                                         ? void refresh({ folderId: file.id })
-                                        : toggle(file.id); }
-                                }
+                                        : toggle(file.id)
+                                }}
                                 data-upup-slot="drive-browser-item"
                                 data-selected={selected.has(file.id)}
                                 className={cn(

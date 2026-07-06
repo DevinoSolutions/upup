@@ -29,7 +29,7 @@ export default memo(
         fileUrl,
         fileName,
         fileType,
-        fileSize,
+        fileSize: _fileSize,
         slotClasses,
         allowPreview,
         labels: tr,
@@ -79,7 +79,9 @@ export default memo(
                             height="0%"
                             name={fileName}
                             type={fileType}
-                            onLoad={() => { setCanPreview(true); }}
+                            onLoad={() => {
+                                setCanPreview(true)
+                            }}
                         >
                             <p>{tr.loading}</p>
                         </object>

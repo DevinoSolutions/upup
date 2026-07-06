@@ -19,9 +19,9 @@ export default function SourceViewContainer({
                 {
                     'upup-bg-white/10 upup-text-[#FAFAFA] dark:upup-bg-white/10 dark:upup-text-[#FAFAFA]':
                         isLoading && dark,
-                    [slotClasses.sourceView!]:
+                    [slotClasses.sourceView ?? '']:
                         !isLoading && slotClasses.sourceView,
-                    [slotClasses.driveLoading!]:
+                    [slotClasses.driveLoading ?? '']:
                         isLoading && slotClasses.driveLoading,
                 },
             )}

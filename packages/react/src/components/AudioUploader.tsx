@@ -28,7 +28,9 @@ export default function AudioUploader(): React.ReactElement | null {
         return () => {
             if (timerRef.current) clearInterval(timerRef.current)
             if (audioUrl) URL.revokeObjectURL(audioUrl)
-            streamRef.current?.getTracks().forEach(t => { t.stop(); })
+            streamRef.current?.getTracks().forEach(t => {
+                t.stop()
+            })
         }
     }, [audioUrl])
 
@@ -51,14 +53,19 @@ export default function AudioUploader(): React.ReactElement | null {
                     type: recorder.mimeType || 'audio/webm',
                 })
                 setAudioUrl(URL.createObjectURL(blob))
-                stream.getTracks().forEach(t => { t.stop(); })
+                stream.getTracks().forEach(t => {
+                    t.stop()
+                })
             }
 
             recorder.start()
             setState('recording')
             setDuration(0)
-            timerRef.current = setInterval(() => { setDuration(d => d + 1); }, 1000)
+            timerRef.current = setInterval(() => {
+                setDuration(d => d + 1)
+            }, 1000)
         } catch {
+            // upup-catch: getUserMedia rejection (permission denied / no device) is surfaced to the user via setError, not a system fault
             setError(
                 'Microphone access denied. Please allow microphone access and try again.',
             )
@@ -83,7 +90,7 @@ export default function AudioUploader(): React.ReactElement | null {
         const ext = mediaRecorder.current?.mimeType?.includes('webm')
             ? 'webm'
             : 'ogg'
-        fetch(audioUrl)
+        void fetch(audioUrl)
             .then(r => r.blob())
             .then(blob => {
                 const file = new File(
@@ -93,6 +100,9 @@ export default function AudioUploader(): React.ReactElement | null {
                 )
                 setFiles([file])
                 setActiveSource(undefined)
+            })
+            .catch(() => {
+                // upup-catch: replaying an in-memory object URL cannot fail in practice; ignore
             })
     }, [audioUrl, setFiles, setActiveSource])
 
@@ -191,7 +201,9 @@ export default function AudioUploader(): React.ReactElement | null {
                                         dark,
                                 },
                             )}
-                            onClick={startRecording}
+                            onClick={() => {
+                                void startRecording()
+                            }}
                         >
                             Start Recording
                         </button>

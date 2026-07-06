@@ -54,7 +54,7 @@ export default forwardRef<HTMLDivElement, Props>(function ProgressBar(
                 >
                     <div
                         style={{
-                            width: progress + '%',
+                            width: `${progress}%`,
                         }}
                         className={cn(
                             'upup-h-full upup-bg-[#8EA5E7]',
@@ -63,7 +63,7 @@ export default forwardRef<HTMLDivElement, Props>(function ProgressBar(
                         )}
                     />
                 </div>
-                {!!showValue && (
+                {showValue && (
                     <p
                         className={cn(
                             'upup-text-xs upup-font-semibold',

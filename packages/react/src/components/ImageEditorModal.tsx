@@ -52,7 +52,7 @@ type FilerobotEditorProps = {
         designState: FilerobotDesignState,
     ) => void
     onClose?: () => void
-    onBeforeSave?: (imageData: FilerobotImageState) => boolean | void
+    onBeforeSave?: (imageData: FilerobotImageState) => boolean | undefined
     annotationsCommon?: Record<string, unknown>
     Rotate?: Record<string, unknown>
     Crop?: Record<string, unknown>
@@ -101,7 +101,7 @@ export default memo(function ImageEditorModal(props: Props) {
         if (typeof window === 'undefined') return
 
         let cancelled = false
-        ;(async () => {
+        void (async () => {
             try {
                 const [mod, scMod] = await Promise.all([
                     import('react-filerobot-image-editor'),
@@ -131,6 +131,7 @@ export default memo(function ImageEditorModal(props: Props) {
                     )
                 }
             } catch {
+                // upup-catch: dynamic import failure (editor dep not installed) is surfaced to the user via setLoadError
                 if (cancelled) return
                 setLoadError(
                     'Image editor failed to load. Make sure "react-filerobot-image-editor" is installed.',
@@ -195,10 +196,9 @@ export default memo(function ImageEditorModal(props: Props) {
     )
 
     // Prevent clicks on the inner content from closing the modal
-    const handleContentClick = useCallback(
-        (e: React.MouseEvent) => { e.stopPropagation(); },
-        [],
-    )
+    const handleContentClick = useCallback((e: React.MouseEvent) => {
+        e.stopPropagation()
+    }, [])
 
     // Filerobot onSave handler
     const handleEditorSave = useCallback(
@@ -224,10 +224,7 @@ export default memo(function ImageEditorModal(props: Props) {
     // Build Filerobot tabs from config
     const resolvedTabs = editorConstants?.TABS
         ? editorConfig.tabs?.map(
-              tab =>
-                  (editorConstants.TABS)[
-                      tab.toUpperCase()
-                  ] ?? tab,
+              tab => editorConstants.TABS[tab.toUpperCase()] ?? tab,
           )
         : undefined
 
@@ -309,9 +306,7 @@ export default memo(function ImageEditorModal(props: Props) {
                                     theme={filerobotTheme}
                                     defaultTabId={
                                         editorConstants?.TABS
-                                            ? (
-                                                  editorConstants.TABS
-                                              ).ADJUST
+                                            ? editorConstants.TABS.ADJUST
                                             : undefined
                                     }
                                     {...(resolvedTabs !== undefined

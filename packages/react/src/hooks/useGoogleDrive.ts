@@ -38,7 +38,30 @@ const SERVER_SNAPSHOT: DriveBrowserState = {
     isLoadingMore: false,
 }
 
-export function useGoogleDrive() {
+export interface UseGoogleDriveResult {
+    user: DriveBrowserState['user']
+    googleFiles: DriveBrowserState['folder']
+    handleSignOut: () => Promise<void>
+    token: DriveBrowserState['token']
+    authCancelled: boolean
+    retryAuth: () => void
+    isAuthReady: boolean
+    path: DriveFolder[]
+    setPath: (value: SetStateAction<DriveFolder[]>) => void
+    handleClick: (file: DriveFile) => void
+    selectedFiles: DriveFile[]
+    showLoader: boolean
+    handleSubmit: () => Promise<void>
+    handleCancelDownload: () => void
+    onSelectCurrentFolder: () => Promise<void>
+    error: DriveBrowserState['error']
+    hasMore: boolean
+    isLoadingMore: boolean
+    loadMore: () => Promise<void>
+    isClickLoading: boolean
+}
+
+export function useGoogleDrive(): UseGoogleDriveResult {
     const { core } = useUploaderRuntime()
     const { setActiveSource } = useUploaderSource()
     const { setFiles } = useUploaderFiles()
@@ -52,8 +75,12 @@ export function useGoogleDrive() {
             core,
             GOOGLE_DRIVE_DESCRIPTOR,
             {
-                onFilesSelected: files => { setFiles(files); },
-                onClose: () => { setActiveSource(undefined); },
+                onFilesSelected: files => {
+                    setFiles(files)
+                },
+                onClose: () => {
+                    setActiveSource(undefined)
+                },
             },
         )
     }
@@ -89,8 +116,9 @@ export function useGoogleDrive() {
     return {
         user: state.user,
         googleFiles: state.folder,
-        handleSignOut: async () => {
+        handleSignOut: () => {
             controller?.signOut()
+            return Promise.resolve()
         },
         token: state.token,
         authCancelled: state.authCancelled,

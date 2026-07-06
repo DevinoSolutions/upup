@@ -16,6 +16,7 @@ export default function UploaderPanel(): React.ReactElement | null {
     const { files } = useUploaderFiles()
     const { activeSource } = useUploaderSource()
     const { isAddingMore } = useUploaderView()
+    // eslint-disable-next-line @typescript-eslint/no-deprecated -- inputRef is required for keyboard-activated file-picker DOM wiring; openFilePicker() alone can't focus the native input
     const { isOnline, inputRef, openFilePicker } = useUploaderRuntime()
     const { translations: tr } = useUploaderI18n()
     const { isDark: dark } = useUploaderTheme()
@@ -29,6 +30,11 @@ export default function UploaderPanel(): React.ReactElement | null {
         handlePaste,
     } = useUploaderPanel()
 
+    const dropEffectProps: React.AriaAttributes = {
+        // eslint-disable-next-line @typescript-eslint/no-deprecated -- aria-dropeffect is intentionally set for drag-and-drop assistive-tech feedback; still honored by current screen readers
+        'aria-dropeffect': isDragging ? 'copy' : 'none',
+    }
+
     return (
         <div
             data-testid="upup-dropzone"
@@ -36,7 +42,7 @@ export default function UploaderPanel(): React.ReactElement | null {
             role="button"
             tabIndex={0}
             aria-label={tr.dropzoneLabel}
-            aria-dropeffect={isDragging ? 'copy' : 'none'}
+            {...dropEffectProps}
             onKeyDown={e => {
                 if (e.key === 'Enter' || e.key === ' ') {
                     e.preventDefault()

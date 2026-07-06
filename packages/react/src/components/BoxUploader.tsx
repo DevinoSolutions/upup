@@ -15,7 +15,9 @@ export default function BoxUploader(): React.ReactElement | null {
         return (
             <ServerModeDriveUploader
                 provider="box"
-                onBack={() => { setActiveSource(undefined); }}
+                onBack={() => {
+                    setActiveSource(undefined)
+                }}
             />
         )
     }

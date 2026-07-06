@@ -1,4 +1,4 @@
-import React, { FormEventHandler, useState } from 'react'
+import React, { useState } from 'react'
 import {
     useUploaderFiles,
     useUploaderI18n,
@@ -23,7 +23,9 @@ export default function UrlUploader(): React.ReactElement | null {
     const [url, setUrl] = useState('')
     const { loading, fetchImage } = useFetchFileByUrl()
 
-    const handleFormSubmit: FormEventHandler<HTMLFormElement> = async e => {
+    const handleFormSubmit = async (
+        e: React.SyntheticEvent<HTMLFormElement>,
+    ) => {
         e.preventDefault()
         core?.emit('url-submit', { url })
         const file = await fetchImage(url)
@@ -42,7 +44,12 @@ export default function UrlUploader(): React.ReactElement | null {
             data-testid="upup-url-uploader"
             data-upup-slot="url-uploader"
         >
-            <form onSubmit={handleFormSubmit} className="upup-px-3 upup-py-2">
+            <form
+                onSubmit={e => {
+                    void handleFormSubmit(e)
+                }}
+                className="upup-px-3 upup-py-2"
+            >
                 <input
                     type="url"
                     name="upup-url"
@@ -57,7 +64,9 @@ export default function UrlUploader(): React.ReactElement | null {
                         slotClasses.urlInput,
                     )}
                     value={url}
-                    onChange={e => { setUrl(e.currentTarget.value); }}
+                    onChange={e => {
+                        setUrl(e.currentTarget.value)
+                    }}
                 />
                 <button
                     className={cn(

@@ -40,7 +40,31 @@ const SERVER_SNAPSHOT: DriveBrowserState = {
     isLoadingMore: false,
 }
 
-export default function useOneDrive() {
+export interface UseOneDriveResult {
+    user: DriveBrowserState['user']
+    oneDriveFiles: DriveBrowserState['folder']
+    signOut: () => void
+    signIn: () => void
+    authenticate: () => void
+    token: string | undefined
+    isAuthenticated: boolean
+    isLoading: boolean
+    path: DriveFolder[]
+    setPath: (value: SetStateAction<DriveFolder[]>) => void
+    isClickLoading: boolean
+    handleClick: (file: DriveFile) => void
+    selectedFiles: DriveFile[]
+    showLoader: boolean
+    handleSubmit: () => Promise<void>
+    handleCancelDownload: () => void
+    onSelectCurrentFolder: () => Promise<void>
+    error: DriveBrowserState['error']
+    hasMore: boolean
+    isLoadingMore: boolean
+    loadMore: () => Promise<void>
+}
+
+export default function useOneDrive(): UseOneDriveResult {
     const { core } = useUploaderRuntime()
     const { setActiveSource } = useUploaderSource()
     const { setFiles } = useUploaderFiles()
@@ -54,8 +78,12 @@ export default function useOneDrive() {
             core,
             ONE_DRIVE_DESCRIPTOR,
             {
-                onFilesSelected: files => { setFiles(files); },
-                onClose: () => { setActiveSource(undefined); },
+                onFilesSelected: files => {
+                    setFiles(files)
+                },
+                onClose: () => {
+                    setActiveSource(undefined)
+                },
             },
         )
     }

@@ -30,7 +30,9 @@ export default function ScreenCaptureUploader(): React.ReactElement | null {
         return () => {
             if (timerRef.current) clearInterval(timerRef.current)
             if (videoUrl) URL.revokeObjectURL(videoUrl)
-            streamRef.current?.getTracks().forEach(t => { t.stop(); })
+            streamRef.current?.getTracks().forEach(t => {
+                t.stop()
+            })
         }
     }, [videoUrl])
 
@@ -77,15 +79,20 @@ export default function ScreenCaptureUploader(): React.ReactElement | null {
                     type: recorder.mimeType || 'video/webm',
                 })
                 setVideoUrl(URL.createObjectURL(blob))
-                stream.getTracks().forEach(t => { t.stop(); })
+                stream.getTracks().forEach(t => {
+                    t.stop()
+                })
                 if (previewRef.current) previewRef.current.srcObject = null
             }
 
             recorder.start()
             setState('recording')
             setDuration(0)
-            timerRef.current = setInterval(() => { setDuration(d => d + 1); }, 1000)
+            timerRef.current = setInterval(() => {
+                setDuration(d => d + 1)
+            }, 1000)
         } catch {
+            // upup-catch: getDisplayMedia rejection (user cancelled / denied) is surfaced to the user via setError
             setError(
                 'Screen sharing was cancelled or denied. Please try again.',
             )
@@ -107,7 +114,7 @@ export default function ScreenCaptureUploader(): React.ReactElement | null {
 
     const addRecording = useCallback(() => {
         if (!videoUrl) return
-        fetch(videoUrl)
+        void fetch(videoUrl)
             .then(r => r.blob())
             .then(blob => {
                 const file = new File(
@@ -117,6 +124,9 @@ export default function ScreenCaptureUploader(): React.ReactElement | null {
                 )
                 setFiles([file])
                 setActiveSource(undefined)
+            })
+            .catch(() => {
+                // upup-catch: replaying an in-memory object URL cannot fail in practice; ignore
             })
     }, [videoUrl, setFiles, setActiveSource])
 
@@ -148,7 +158,7 @@ export default function ScreenCaptureUploader(): React.ReactElement | null {
                         )}
                         onClick={() => {
                             setError(null)
-                            startRecording()
+                            void startRecording()
                         }}
                     >
                         Try Again
@@ -199,7 +209,9 @@ export default function ScreenCaptureUploader(): React.ReactElement | null {
                                         dark,
                                 },
                             )}
-                            onClick={startRecording}
+                            onClick={() => {
+                                void startRecording()
+                            }}
                         >
                             Share Screen
                         </button>

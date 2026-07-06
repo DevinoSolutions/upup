@@ -34,7 +34,19 @@ function composeEventHandlers<E>(
     }
 }
 
-export function createPropGetters(deps: PropGetterDeps) {
+export interface PropGetters {
+    getDropzoneProps: (
+        overrides?: HTMLAttributes<HTMLElement>,
+    ) => HTMLAttributes<HTMLElement>
+    getRootProps: (
+        overrides?: HTMLAttributes<HTMLElement>,
+    ) => HTMLAttributes<HTMLElement>
+    getInputProps: (
+        overrides?: InputHTMLAttributes<HTMLInputElement>,
+    ) => InputHTMLAttributes<HTMLInputElement>
+}
+
+export function createPropGetters(deps: PropGetterDeps): PropGetters {
     const {
         addFiles,
         status,
@@ -44,18 +56,24 @@ export function createPropGetters(deps: PropGetterDeps) {
         dragDrop,
     } = deps
 
-    function getDropzoneProps(overrides: HTMLAttributes<HTMLElement> = {}) {
+    function getDropzoneProps(
+        overrides: HTMLAttributes<HTMLElement> = {},
+    ): HTMLAttributes<HTMLElement> {
         // React synthetic events extend the native DOM events, so casting is
         // safe — byte-identical to useUploaderPanel.ts's handoff to the same
         // controller class.
-        const onDragOver = (e: React.DragEvent<HTMLElement>) =>
+        const onDragOver = (e: React.DragEvent<HTMLElement>): void => {
             dragDrop?.handleDragOver(e as unknown as DragEvent)
-        const onDragLeave = (e: React.DragEvent<HTMLElement>) =>
+        }
+        const onDragLeave = (e: React.DragEvent<HTMLElement>): void => {
             dragDrop?.handleDragLeave(e as unknown as DragEvent)
-        const onDrop = (e: React.DragEvent<HTMLElement>) =>
-            dragDrop?.handleDrop(e as unknown as DragEvent)
-        const onPaste = (e: React.ClipboardEvent<HTMLElement>) =>
+        }
+        const onDrop = (e: React.DragEvent<HTMLElement>): void => {
+            void dragDrop?.handleDrop(e as unknown as DragEvent)
+        }
+        const onPaste = (e: React.ClipboardEvent<HTMLElement>): void => {
             dragDrop?.handlePaste(e as unknown as ClipboardEvent)
+        }
 
         return {
             onDragOver: composeEventHandlers<React.DragEvent<HTMLElement>>(
@@ -76,12 +94,14 @@ export function createPropGetters(deps: PropGetterDeps) {
             ),
             role: 'region' as const,
             'aria-label': 'Drop files here or click to browse',
-            'aria-dropeffect': (isDragging ? 'copy' : 'none'),
+            'aria-dropeffect': isDragging ? 'copy' : 'none',
             tabIndex: 0,
         }
     }
 
-    function getRootProps(overrides: HTMLAttributes<HTMLElement> = {}) {
+    function getRootProps(
+        overrides: HTMLAttributes<HTMLElement> = {},
+    ): HTMLAttributes<HTMLElement> {
         const isUploading = status === 'uploading'
         return {
             ...overrides,
@@ -94,11 +114,11 @@ export function createPropGetters(deps: PropGetterDeps) {
 
     function getInputProps(
         overrides: InputHTMLAttributes<HTMLInputElement> = {},
-    ) {
+    ): InputHTMLAttributes<HTMLInputElement> {
         const onChange: ChangeEventHandler<HTMLInputElement> = e => {
             const fileList = e.target.files
             if (fileList) {
-                addFiles(Array.from(fileList))
+                void addFiles(Array.from(fileList))
             }
         }
         return {

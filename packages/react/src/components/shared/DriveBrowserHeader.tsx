@@ -59,13 +59,13 @@ export default function DriveBrowserHeader({
                                     },
                                 )}
                                 style={{
-                                    maxWidth: 100 / path.length + '%',
+                                    maxWidth: `${100 / path.length}%`,
                                     pointerEvents:
                                         i === path.length - 1 ? 'none' : 'auto',
                                 }}
-                                onClick={() =>
-                                    { setPath(prev => prev.slice(0, i + 1)); }
-                                }
+                                onClick={() => {
+                                    setPath(prev => prev.slice(0, i + 1))
+                                }}
                             >
                                 <span className="upup-group-hover:upup-underline upup-truncate">
                                     {p.name}
@@ -99,7 +99,7 @@ export default function DriveBrowserHeader({
                             slotClasses.driveLogoutButton,
                         )}
                         onClick={() => {
-                            handleSignOut()
+                            void handleSignOut()
                             setActiveSource(undefined)
                         }}
                     >
@@ -133,7 +133,9 @@ export default function DriveBrowserHeader({
                         )}
                         placeholder={tr.search}
                         value={searchTerm}
-                        onChange={e => { onSearch(e.currentTarget.value); }}
+                        onChange={e => {
+                            onSearch(e.currentTarget.value)
+                        }}
                     />
                     <Icon
                         name="search"

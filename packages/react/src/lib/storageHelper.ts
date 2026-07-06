@@ -21,6 +21,7 @@ export const createSecureStorage = (): SecureStorageAPI => {
         try {
             return atob(str)
         } catch {
+            // upup-catch: not valid base64 (e.g. legacy plaintext) — return as-is
             return str
         }
     }
@@ -39,6 +40,8 @@ export const createSecureStorage = (): SecureStorageAPI => {
                 const encrypted = encode(wrap(value))
                 localStorage.setItem(storeKey, encrypted)
             } catch (err) {
+                // upup-catch: encode/quota failure — degrade to an unencrypted
+                // plaintext write so the token still persists
                 console.error('secureStorage setItem error:', err)
                 localStorage.setItem(key, value) // fallback
             }
@@ -55,13 +58,17 @@ export const createSecureStorage = (): SecureStorageAPI => {
             const decrypted = decode(stored)
 
             try {
-                const { value, timestamp } = JSON.parse(decrypted)
+                const { value, timestamp } = JSON.parse(decrypted) as {
+                    value?: string
+                    timestamp?: number
+                }
                 if (value && timestamp && !isExpired(timestamp)) return value
                 if (value) {
                     localStorage.removeItem(storeKey)
                     localStorage.removeItem(key)
                 }
             } catch {
+                // upup-catch: stored value predates the JSON envelope — return the raw decoded string
                 return decrypted
             }
             return null

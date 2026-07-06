@@ -28,15 +28,17 @@ export default function DriveBrowserItem({
                     'upup-font-medium': isFolder,
                     'upup-bg-[#bab4b499]': isFileSelected,
                     'upup-bg-[#e9ecef00]': !isFileSelected,
-                    [slotClasses.driveItemContainerDefault!]:
+                    [slotClasses.driveItemContainerDefault ?? '']:
                         !isFileSelected &&
                         slotClasses.driveItemContainerDefault,
-                    [slotClasses.driveItemContainerSelected!]:
+                    [slotClasses.driveItemContainerSelected ?? '']:
                         isFileSelected &&
                         slotClasses.driveItemContainerSelected,
                 },
             )}
-            onClick={() => handleClick(file)}
+            onClick={() => {
+                void handleClick(file)
+            }}
         >
             <div
                 className={cn(

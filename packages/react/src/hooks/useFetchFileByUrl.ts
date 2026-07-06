@@ -1,10 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import {
-    sanitizeFileName,
-    extensionFromMime,
-    fileNameFromContentDisposition,
-    deriveFetchedFileName,
-} from '@upup/core/internal'
+import { deriveFetchedFileName } from '@upup/core/internal'
 import {
     useUploaderOptions,
     useUploaderRuntime,
@@ -12,7 +7,11 @@ import {
 
 export { deriveFetchedFileName }
 
-export default function useFetchFileByUrl() {
+export default function useFetchFileByUrl(): {
+    loading: boolean
+    fetchImage: (url: string) => Promise<File | undefined>
+    cancelFetch: () => void
+} {
     const { core } = useUploaderRuntime()
     const { onError } = useUploaderOptions()
     const [loading, setLoading] = useState(false)

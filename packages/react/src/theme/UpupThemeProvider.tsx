@@ -8,7 +8,10 @@ interface UpupThemeProviderProps {
     children: React.ReactNode
 }
 
-export function UpupThemeProvider({ theme, children }: UpupThemeProviderProps): React.ReactElement | null {
+export function UpupThemeProvider({
+    theme,
+    children,
+}: UpupThemeProviderProps): React.ReactElement | null {
     const resolved = resolveTheme(theme)
     const cssVars = tokensToVars(resolved.tokens)
 
@@ -31,23 +34,25 @@ export function UpupThemeProvider({ theme, children }: UpupThemeProviderProps): 
             return
         }
         const mq = window.matchMedia('(prefers-color-scheme: dark)')
-        const apply = () => { setResolvedMode(mq.matches ? 'dark' : 'light'); }
+        const apply = () => {
+            setResolvedMode(mq.matches ? 'dark' : 'light')
+        }
         apply()
         mq.addEventListener?.('change', apply)
-        return () => { mq.removeEventListener?.('change', apply); }
+        return () => {
+            mq.removeEventListener?.('change', apply)
+        }
     }, [resolved.mode])
 
     return (
         <div
             data-theme={resolvedMode}
-            style={
-                {
-                    display: 'block',
-                    width: '100%',
-                    height: '100%',
-                    ...cssVars,
-                }
-            }
+            style={{
+                display: 'block',
+                width: '100%',
+                height: '100%',
+                ...cssVars,
+            }}
         >
             {children}
         </div>

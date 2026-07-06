@@ -25,7 +25,7 @@ function formatBytes(bytes: number): string {
     const k = 1024
     const sizes = ['B', 'KB', 'MB', 'GB']
     const i = Math.floor(Math.log(bytes) / Math.log(k))
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i]
+    return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i] ?? ''}`
 }
 
 function formatEta(seconds: number): string {
@@ -165,10 +165,12 @@ export default memo(function FileList() {
                                 'md:upup-grid-cols-2':
                                     files.size > 1 && viewMode === 'grid',
                                 'upup-flex-1': files.size === 1,
-                                [slotClasses.fileListContainerInnerMultiple!]:
+                                [slotClasses.fileListContainerInnerMultiple ??
+                                '']:
                                     slotClasses.fileListContainerInnerMultiple &&
                                     files.size > 1,
-                                [slotClasses.fileListContainerInnerSingle!]:
+                                [slotClasses.fileListContainerInnerSingle ??
+                                '']:
                                     slotClasses.fileListContainerInnerSingle &&
                                     files.size === 1,
                             },

@@ -157,11 +157,13 @@ export default function DriveBrowser({
                                     </p>
                                 </div>
                             )}
-                            {!!hasMore && (
+                            {hasMore && (
                                 <button
                                     data-testid="upup-drive-load-more"
                                     data-upup-slot="drive-load-more"
-                                    onClick={() => loadMore?.()}
+                                    onClick={() => {
+                                        void loadMore?.()
+                                    }}
                                     disabled={isLoadingMore}
                                     className="upup-mx-auto upup-my-2 upup-block upup-rounded-md upup-px-3 upup-py-1.5 upup-text-sm upup-text-blue-600 disabled:upup-opacity-50"
                                 >
@@ -191,7 +193,9 @@ export default function DriveBrowser({
                                                 dark,
                                         },
                                     )}
-                                    onClick={() => onSelectCurrentFolder?.()}
+                                    onClick={() => {
+                                        void onSelectCurrentFolder?.()
+                                    }}
                                     disabled={showLoader}
                                 >
                                     {tr.selectThisFolder}
@@ -207,7 +211,9 @@ export default function DriveBrowser({
                                     },
                                     slotClasses.driveAddFilesButton,
                                 )}
-                                onClick={handleSubmit}
+                                onClick={() => {
+                                    void handleSubmit()
+                                }}
                                 disabled={showLoader}
                             >
                                 {t(

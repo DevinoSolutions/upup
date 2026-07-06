@@ -17,13 +17,9 @@ export default memo(function FileIcon({
         >
             <Icon
                 name={fileTypeIconName(extension)}
-                className={cn(
-                    'upup-text-5xl upup-text-blue-600',
-                    className,
-                    {
-                        'upup-text-[#59D1F9] dark:upup-text-[#59D1F9]': dark,
-                    },
-                )}
+                className={cn('upup-text-5xl upup-text-blue-600', className, {
+                    'upup-text-[#59D1F9] dark:upup-text-[#59D1F9]': dark,
+                })}
             />
         </span>
     )

@@ -1,12 +1,25 @@
 import { useEffect, useRef, useSyncExternalStore } from 'react'
 import { ServerModeDriveController } from '@upup/core/internal'
+import type {
+    ServerDriveSnapshot,
+    ServerDriveTransferResult,
+} from '@upup/core/internal'
 import type { ServerModeProvider, ServerDriveFile } from '@upup/core'
 import { useUploaderRuntime } from '../context/UploaderContext'
 
 // Re-export so existing consumers that imported these from this module keep working.
 export type { ServerModeProvider, ServerDriveFile }
 
-export function useServerModeDrive(provider: ServerModeProvider) {
+export function useServerModeDrive(provider: ServerModeProvider): {
+    state: ServerDriveSnapshot['state']
+    folderId: ServerDriveSnapshot['folderId']
+    setFolderId: (id: string | undefined) => void
+    search: ServerDriveSnapshot['search']
+    setSearch: (s: string) => void
+    refresh: (opts?: { folderId?: string; search?: string }) => Promise<void>
+    transfer: (file: ServerDriveFile) => Promise<ServerDriveTransferResult>
+    startAuth: () => void
+} {
     const { serverUrl } = useUploaderRuntime()
     const latest = useRef({ serverUrl })
     latest.current = { serverUrl }
@@ -29,7 +42,9 @@ export function useServerModeDrive(provider: ServerModeProvider) {
 
     useEffect(() => {
         controller.init()
-        return () => { controller.destroy(); }
+        return () => {
+            controller.destroy()
+        }
     }, [controller])
 
     return {
@@ -44,8 +59,11 @@ export function useServerModeDrive(provider: ServerModeProvider) {
             controller.setSearch(s)
             void controller.refresh()
         },
-        refresh: controller.refresh,
-        transfer: controller.transfer,
-        startAuth: controller.startAuth,
+        refresh: (opts?: { folderId?: string; search?: string }) =>
+            controller.refresh(opts),
+        transfer: (file: ServerDriveFile) => controller.transfer(file),
+        startAuth: () => {
+            controller.startAuth()
+        },
     }
 }
