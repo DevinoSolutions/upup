@@ -33,7 +33,7 @@
     "e2e:minio:test": "dotenv -e local-dev/.env.minio -- pnpm --filter @upup/server exec vitest run tests/integration",
     "smoke:packages": "node scripts/package-smoke-consumer.mjs",
     "audit:prod": "node scripts/audit-prod.mjs",
-    "typecheck": "turbo run typecheck",
+    "typecheck": "turbo run typecheck --continue",
     "size": "size-limit",
     "release": "pnpm run build:package && changeset publish",
     "test-release": "pnpm run build:package && pnpm -r publish --dry-run --no-git-checks"
