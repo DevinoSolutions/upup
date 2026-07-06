@@ -15,13 +15,11 @@ import DriveAuthFallback from './shared/DriveAuthFallback.vue'
 import { errorCodeToMessageKey } from '@upup/core'
 import { cn } from '@upup/core/internal'
 
-const props = withDefaults(defineProps<{
+const props = defineProps<{
     provider: ServerModeProvider
     onBack?: () => void
-    dataUpupSlot?: string
-}>(), {
-    dataUpupSlot: undefined,
-})
+    dataUpupSlot?: string | undefined
+}>()
 
 const PROVIDER_LABEL: Record<ServerModeProvider, string> = {
     'google-drive': 'Google Drive',

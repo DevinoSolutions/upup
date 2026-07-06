@@ -8,7 +8,7 @@ import Icon from './Icon'
 const props = withDefaults(
     defineProps<{
         extension?: string
-        class?: string
+        class?: string | undefined
     }>(),
     { extension: '' },
 )

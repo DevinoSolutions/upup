@@ -11,6 +11,6 @@ export type UploaderIcons = {
 }
 
 export type UploaderProps = UploaderBaseProps & {
-    icons?: UploaderIcons
-    style?: Record<string, string>
+    icons?: UploaderIcons | undefined
+    style?: Record<string, string> | undefined
 }

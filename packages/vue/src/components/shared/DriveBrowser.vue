@@ -21,10 +21,10 @@ import DriveBrowserItem from './DriveBrowserItem.vue'
 
 const props = withDefaults(defineProps<{
     isClickLoading?: boolean
-    driveFiles?: DriveFolder
+    driveFiles?: DriveFolder | undefined
     path: DriveFolder[]
     setPath: (newPath: DriveFolder[]) => void
-    user?: DriveUser
+    user?: DriveUser | undefined
     handleSignOut: () => Promise<void>
     handleClick: (file: DriveFile) => void | Promise<void>
     selectedFiles: DriveFile[]
@@ -32,7 +32,7 @@ const props = withDefaults(defineProps<{
     handleSubmit: () => Promise<void>
     handleCancelDownload: () => void
     onSelectCurrentFolder?: () => Promise<void> | void
-    error?: DriveBrowserError
+    error?: DriveBrowserError | undefined
     hasMore?: boolean
     isLoadingMore?: boolean
     loadMore?: () => void | Promise<void>

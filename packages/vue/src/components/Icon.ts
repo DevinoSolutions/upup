@@ -6,8 +6,14 @@ export const Icon = defineComponent({
     name: 'UpupIcon',
     props: {
         name: { type: String as PropType<IconName>, required: true },
-        size: { type: Number, default: undefined },
-        class: { type: String, default: undefined },
+        size: {
+            type: Number as PropType<number | undefined>,
+            default: undefined,
+        },
+        class: {
+            type: String as PropType<string | undefined>,
+            default: undefined,
+        },
     },
     setup(props) {
         return () => {

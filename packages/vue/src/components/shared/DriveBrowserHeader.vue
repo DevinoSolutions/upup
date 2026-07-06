@@ -15,7 +15,7 @@ const props = defineProps<{
     showSearch: boolean
     searchTerm: string
     onSearch: (value: string) => void
-    user?: DriveUser
+    user?: DriveUser | undefined
 }>()
 
 const { setActiveSource } = useUploaderSource()

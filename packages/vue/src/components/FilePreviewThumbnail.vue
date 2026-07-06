@@ -11,7 +11,7 @@ const props = defineProps<{
     fileType: string
     fileName: string
     fileUrl: string
-    fileSize?: number
+    fileSize?: number | undefined
     slotClasses: InternalFlatClassNames
     allowPreview: boolean
     labels: Translations

@@ -7,7 +7,7 @@ import SourceViewContainer from './SourceViewContainer.vue'
 const props = withDefaults(defineProps<{
     providerName: string
     onRetry: () => void
-    error?: DriveBrowserError
+    error?: DriveBrowserError | undefined
     dataUpupSlot?: string
 }>(), {
     dataUpupSlot: 'drive-auth-fallback',

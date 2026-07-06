@@ -96,36 +96,49 @@ export type ContextTheme = Omit<BaseContextTheme, 'themeMode' | 'isDark'> & {
     isDark: ComputedRef<boolean>
 }
 
-export type ContextProps = Required<
-    Pick<
-        UploaderProps,
-        | 'sources'
-        | 'isProcessing'
-        | 'allowPreview'
-        | 'mini'
-        | 'onFileClick'
-        | 'onIntegrationClick'
-        | 'onFilesDragOver'
-        | 'onFilesDragLeave'
-        | 'onFilesDrop'
-        | 'onWarn'
-        | 'enablePaste'
-        | 'onError'
-        | 'showBranding'
-        | 'className'
-        | 'style'
-        | 'disableDragDrop'
-    >
+// Under `exactOptionalPropertyTypes`, `Required<Pick<T, K>>` strips the `?`
+// modifier but keeps the explicit `| undefined` from the widened base props.
+// These fields are always assigned with defaults by the controller, so
+// consumers see non-undefined values — strip both `?` and `undefined`.
+type RequiredDefined<T, K extends keyof T> = {
+    [P in K]-?: NonNullable<T[P]>
+}
+
+export type ContextProps = RequiredDefined<
+    UploaderProps,
+    | 'sources'
+    | 'isProcessing'
+    | 'allowPreview'
+    | 'mini'
+    | 'onFileClick'
+    | 'onIntegrationClick'
+    | 'onFilesDragOver'
+    | 'onFilesDragLeave'
+    | 'onFilesDrop'
+    | 'onWarn'
+    | 'enablePaste'
+    | 'onError'
+    | 'showBranding'
+    | 'className'
+    | 'style'
+    | 'disableDragDrop'
 > &
-    Pick<UploaderProps, 'maxFileSize' | 'maxRetries' | 'resumable'> & {
-        allowedFileTypes: string
-        limit: number
-        folderUploadAllowDrop: boolean
-        folderPickerButtonVisible: boolean
-        multiple: boolean
-        icons: Required<UploaderIcons>
-        imageEditor: ResolvedImageEditorOptions
-    }
+    // Explicit `| undefined` (via indexed access) rather than `Pick`: under
+    // `exactOptionalPropertyTypes` the controller assigns these from destructured
+    // props (each `T | undefined`), so the target must accept undefined.
+    {
+        maxFileSize?: UploaderProps['maxFileSize']
+        maxRetries?: UploaderProps['maxRetries']
+        resumable?: UploaderProps['resumable']
+    } & {
+    allowedFileTypes: string
+    limit: number
+    folderUploadAllowDrop: boolean
+    folderPickerButtonVisible: boolean
+    multiple: boolean
+    icons: Required<UploaderIcons>
+    imageEditor: ResolvedImageEditorOptions
+}
 
 export interface IUploaderContext
     extends
