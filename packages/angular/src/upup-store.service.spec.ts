@@ -19,11 +19,12 @@ import {
     GoogleDrivePlugin,
 } from '@upup/core'
 import { UpupStore } from './upup-store.service'
+import type { UploaderProps } from './shared/types'
 import { EmptyIconComponent } from './components/icons/empty-icon.component'
 import { TrashIconComponent } from './components/icons/trash-icon.component'
 
 /** Minimal valid props — all optional fields omitted. */
-const baseProps = {} as any
+const baseProps: UploaderProps = {}
 
 function makeStore(props = baseProps): UpupStore {
     const store = new UpupStore()
@@ -317,7 +318,7 @@ describe('UpupStore', () => {
                         appId: 'gappid',
                     },
                 },
-            } as any)
+            })
             store.init()
 
             const useSpy = vi.spyOn(store.core, 'use')
@@ -331,7 +332,7 @@ describe('UpupStore', () => {
         })
 
         it('with no cloudDrives → store.cloudDrives is undefined', () => {
-            const store = makeStore({} as any)
+            const store = makeStore({})
             expect(store.cloudDrives).toBeUndefined()
             store.destroy()
         })
@@ -345,7 +346,7 @@ describe('UpupStore', () => {
                         redirectUri: 'https://example.com/cb',
                     },
                 },
-            } as any)
+            })
             store.init()
             expect(store.cloudDrives?.dropbox).toBeDefined()
             expect(store.cloudDrives!.dropbox!.clientId).toBe('dbcid')
@@ -362,7 +363,7 @@ describe('UpupStore', () => {
                 cloudDrives: {
                     googleDrive: { clientId: 'c', apiKey: 'k', appId: 'a' },
                 },
-            } as any)
+            })
             store.init()
             expect(useSpy).toHaveBeenCalledWith(expect.any(GoogleDrivePlugin))
             useSpy.mockRestore()
@@ -372,7 +373,7 @@ describe('UpupStore', () => {
         it('core.use registers no drive plugin when no cloudDrives configured', () => {
             const useSpy = vi.spyOn(UpupCore.prototype, 'use')
             const store = new UpupStore()
-            store.setConfig({} as any)
+            store.setConfig({})
             store.init()
             expect(useSpy).not.toHaveBeenCalledWith(
                 expect.any(GoogleDrivePlugin),
@@ -388,21 +389,21 @@ describe('UpupStore', () => {
         it('cleanups array grows after init() with onStatusChange', () => {
             const onStatusChange = vi.fn()
             const store = new UpupStore()
-            store.setConfig({ onStatusChange } as any)
+            store.setConfig({ onStatusChange })
             store.init()
             // At minimum the status-change unsub was pushed
-            expect((store as any).cleanups.length).toBeGreaterThan(0)
+            expect((store as unknown as { cleanups: unknown[] }).cleanups.length).toBeGreaterThan(0)
             store.destroy()
         })
 
         it('destroy() runs cleanups without throwing', () => {
             const onStatusChange = vi.fn()
             const store = new UpupStore()
-            store.setConfig({ onStatusChange } as any)
+            store.setConfig({ onStatusChange })
             store.init()
             expect(() => store.destroy()).not.toThrow()
             // cleanups array should be cleared
-            expect((store as any).cleanups.length).toBe(0)
+            expect((store as unknown as { cleanups: unknown[] }).cleanups.length).toBe(0)
         })
 
         it('status subscription deduplicates: a repeat notification with unchanged status does not re-emit', () => {
@@ -413,7 +414,7 @@ describe('UpupStore', () => {
             // that does NOT change uploadStatus (setIsAddingMore) must NOT emit again.
             const onStatusChange = vi.fn()
             const store = new UpupStore()
-            store.setConfig({ onStatusChange } as any)
+            store.setConfig({ onStatusChange })
             store.init()
 
             // Flush the initial emit deterministically via one orch notification.
@@ -479,15 +480,15 @@ describe('UpupStore', () => {
                 cloudDrives: {
                     googleDrive: { clientId: 'c', apiKey: 'k', appId: 'a' },
                 },
-            } as any)
+            })
             store.init()
             // After C-2 Task 8: plugin cleanup + status-change subscription are managed by
             // createUploaderController internally (via root.destroy()). The store's own cleanups
             // array holds exactly the SSE destroy — lock that invariant against a future leak.
-            expect((store as any).cleanups.length).toBe(1)
+            expect((store as unknown as { cleanups: unknown[] }).cleanups.length).toBe(1)
             store.destroy()
             // All cleanups should have been flushed
-            expect((store as any).cleanups.length).toBe(0)
+            expect((store as unknown as { cleanups: unknown[] }).cleanups.length).toBe(0)
         })
 
         it('destroy() is idempotent even with all cleanups active', () => {
@@ -497,7 +498,7 @@ describe('UpupStore', () => {
                 cloudDrives: {
                     googleDrive: { clientId: 'c', apiKey: 'k', appId: 'a' },
                 },
-            } as any)
+            })
             store.init()
             expect(() => {
                 store.destroy()
@@ -519,7 +520,7 @@ describe('UpupStore', () => {
             const onRestrictionFailed = vi.fn()
             const onFileTypeMismatch = vi.fn()
             const s = new UpupStore()
-            s.setConfig({ onRestrictionFailed, onFileTypeMismatch } as any)
+            s.setConfig({ onRestrictionFailed, onFileTypeMismatch })
             s.init()
             vi.spyOn(s.core, 'addFiles').mockRejectedValue(
                 new Error('File type not allowed'),
@@ -537,7 +538,7 @@ describe('UpupStore', () => {
             const onRestrictionFailed = vi.fn()
             const onFileTypeMismatch = vi.fn()
             const s = new UpupStore()
-            s.setConfig({ onRestrictionFailed, onFileTypeMismatch } as any)
+            s.setConfig({ onRestrictionFailed, onFileTypeMismatch })
             s.init()
             vi.spyOn(s.core, 'addFiles').mockRejectedValue(
                 new Error('Number of files exceeds limit'),
@@ -555,7 +556,7 @@ describe('UpupStore', () => {
             const onRestrictionFailed = vi.fn()
             const onFileTypeMismatch = vi.fn()
             const s = new UpupStore()
-            s.setConfig({ onRestrictionFailed, onFileTypeMismatch } as any)
+            s.setConfig({ onRestrictionFailed, onFileTypeMismatch })
             s.init()
             vi.spyOn(s.core, 'addFiles').mockRejectedValue(
                 new Error('File is below the minimum size'),
@@ -573,7 +574,7 @@ describe('UpupStore', () => {
             const onRestrictionFailed = vi.fn()
             const onFileTypeMismatch = vi.fn()
             const s = new UpupStore()
-            s.setConfig({ onRestrictionFailed, onFileTypeMismatch } as any)
+            s.setConfig({ onRestrictionFailed, onFileTypeMismatch })
             s.init()
             vi.spyOn(s.core, 'addFiles').mockRejectedValue(
                 new Error('File exceeds the maximum size'),

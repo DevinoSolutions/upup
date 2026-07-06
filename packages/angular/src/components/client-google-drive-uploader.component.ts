@@ -60,26 +60,28 @@ export class ClientGoogleDriveUploaderComponent implements OnInit, OnDestroy {
     }
 
     // Bound handlers passed as inputs to DriveBrowser / DriveAuthFallback
-    readonly retryAuth = () => {
+    readonly retryAuth = (): void => {
         this.svc.retryAuth()
     }
-    readonly handleSignOut = () => {
+    readonly handleSignOut = (): void => {
         this.svc.handleSignOut()
     }
-    readonly setPath = (path: Parameters<GoogleDriveService['setPath']>[0]) => {
+    readonly setPath = (
+        path: Parameters<GoogleDriveService['setPath']>[0],
+    ): void => {
         this.svc.setPath(path)
     }
     readonly handleClick = (
         file: Parameters<GoogleDriveService['handleClick']>[0],
-    ) => {
+    ): void => {
         this.svc.handleClick(file)
     }
-    readonly handleSubmit = () => this.svc.handleSubmit()
-    readonly handleCancelDownload = () => {
+    readonly handleSubmit = (): Promise<void> => this.svc.handleSubmit()
+    readonly handleCancelDownload = (): void => {
         this.svc.handleCancelDownload()
     }
-    readonly onSelectCurrentFolder = () => {
+    readonly onSelectCurrentFolder = (): void => {
         this.svc.onSelectCurrentFolder()
     }
-    readonly loadMore = () => this.svc.loadMore()
+    readonly loadMore = (): Promise<void> => this.svc.loadMore()
 }
