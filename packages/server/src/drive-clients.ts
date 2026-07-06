@@ -12,11 +12,11 @@ import { type OAuthProvider } from './oauth'
 export type DriveFile = {
     id: string
     name: string
-    size?: number
-    mimeType?: string
-    thumbnailUrl?: string
+    size?: number | undefined
+    mimeType?: string | undefined
+    thumbnailUrl?: string | undefined
     isFolder: boolean
-    modifiedAt?: string
+    modifiedAt?: string | undefined
 }
 
 /** One provider's drive surface: list a folder/search, and fetch a file's bytes.
@@ -25,7 +25,7 @@ export type DriveFile = {
 export type DriveClient = {
     listFiles(
         accessToken: string,
-        opts: { folderId?: string; search?: string },
+        opts: { folderId?: string | undefined; search?: string | undefined },
     ): Promise<DriveFile[]>
     fetchFile(
         accessToken: string,

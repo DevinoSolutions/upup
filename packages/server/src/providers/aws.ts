@@ -160,7 +160,11 @@ export async function completeMultipartUpload(
     const result = await client.send(command)
     const downloadUrl = await generateSignedPublicUrl(storage, key)
 
-    return { key, downloadUrl, etag: result.ETag }
+    return {
+        key,
+        downloadUrl,
+        ...(result.ETag !== undefined ? { etag: result.ETag } : {}),
+    }
 }
 
 export async function abortMultipartUpload(

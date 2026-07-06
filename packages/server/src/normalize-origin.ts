@@ -52,8 +52,10 @@ export function normalizeRequestOrigin(
         method,
         headers: req.headers,
         redirect: req.redirect,
-        body: hasBody ? req.body : undefined,
     }
-    if (hasBody && req.body) init.duplex = 'half'
+    if (hasBody && req.body) {
+        init.body = req.body
+        init.duplex = 'half'
+    }
     return new Request(nextUrl, init)
 }

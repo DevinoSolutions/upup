@@ -17,8 +17,8 @@ export type UpupServerErrorEvent = {
     status: number
     code: string
     message: string
-    requestId?: string
-    error?: { name: string; message: string; stack?: string }
+    requestId?: string | undefined
+    error?: { name: string; message: string; stack?: string | undefined }
 }
 
 export type UpupServerLogger = (event: UpupServerErrorEvent) => void

@@ -242,8 +242,10 @@ export async function handleOAuthCallback(
     const targetOrigins = concreteAllowedOrigins(config.cors)
     return res.html(
         buildOAuthSuccessPage(provider, {
-            returnTo: validatedReturn,
             targetOrigins,
+            ...(validatedReturn !== undefined
+                ? { returnTo: validatedReturn }
+                : {}),
         }),
     )
 }

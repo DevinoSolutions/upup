@@ -133,17 +133,17 @@ export interface TokenStore {
 /** Drive OAuth tokens we persist after a successful /auth/:provider/cb. */
 export interface DriveTokens {
     accessToken: string
-    expiresAt?: number
-    scope?: string
-    tokenType?: string
-    refreshToken?: string
+    expiresAt?: number | undefined
+    scope?: string | undefined
+    tokenType?: string | undefined
+    refreshToken?: string | undefined
 }
 
 /** Short-lived OAuth state map, keyed by the random state param. */
 export interface OAuthState {
     userId: string
     provider: string
-    returnTo?: string
+    returnTo?: string | undefined
 }
 
 export interface FileMetadata {

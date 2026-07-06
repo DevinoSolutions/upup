@@ -37,7 +37,7 @@ export function toWebRequest(input: {
     return new Request(input.url, {
         method: input.method,
         headers: nodeHeadersToWeb(input.headers),
-        body: hasBody ? input.body : undefined,
+        ...(hasBody && input.body != null ? { body: input.body } : {}),
     })
 }
 
