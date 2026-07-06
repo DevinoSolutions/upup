@@ -40,8 +40,8 @@ function json(
 
 function isConfigComplete(config: UpupServerConfig): boolean {
     return Boolean(
-        config.storage?.bucket &&
-        config.storage?.region &&
+        config.storage.bucket &&
+        config.storage.region &&
         config.uploadTokenSecret &&
         config.uploadTokenSecret.length >= 16,
     )

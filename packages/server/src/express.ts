@@ -20,7 +20,11 @@ interface ExpressRes {
 export function createUpupMiddleware(config: UpupServerConfig) {
     const handler = createUpupHandler(config)
 
-    return async (req: ExpressReq, res: ExpressRes, _next: () => void) => {
+    return async (
+        req: ExpressReq,
+        res: ExpressRes,
+        _next: () => void,
+    ): Promise<void> => {
         const url = `${req.protocol}://${req.get('host')}${req.originalUrl}`
         const webReq = toWebRequest({
             url,
@@ -38,7 +42,9 @@ export function createUpupMiddleware(config: UpupServerConfig) {
             {
                 status: c => res.status(c),
                 setHeader: (k, v) => res.setHeader(k, v),
-                send: b => res.send(b),
+                send: b => {
+                    res.send(b)
+                },
             },
             webRes,
         )

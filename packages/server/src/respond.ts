@@ -121,13 +121,16 @@ export function createResponder(
 
 /** Parse a JSON request body, returning a 400 Response (not an unhandled throw)
  *  on malformed JSON. Collapses the two divergent body-parse sites. */
-export async function parseJsonBody<T>(
+export async function parseJsonBody(
     req: Request,
     res: Responder,
-): Promise<{ ok: true; value: T } | { ok: false; response: Response }> {
+): Promise<{ ok: true; value: unknown } | { ok: false; response: Response }> {
     try {
-        return { ok: true, value: (await req.json()) as T }
+        const value: unknown = await req.json()
+        return { ok: true, value }
     } catch {
+        // upup-catch: malformed JSON becomes a 400 Result the caller returns —
+        // the parse failure is surfaced to the client, not swallowed.
         return {
             ok: false,
             response: res.json(

@@ -42,7 +42,7 @@ export function createUpupPlugin(
     const handler = createUpupHandler(config)
     const routePath = opts?.path ?? '/upup/*'
 
-    return async (fastify: FastifyInstance) => {
+    return (fastify: FastifyInstance): Promise<void> => {
         fastify.all(
             routePath,
             async (request: FastifyRequest, reply: FastifyReply) => {
@@ -69,6 +69,7 @@ export function createUpupPlugin(
                 )
             },
         )
+        return Promise.resolve()
     }
 }
 

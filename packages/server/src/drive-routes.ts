@@ -118,6 +118,8 @@ export async function handleFileTransfer(
     try {
         body = (await req.json()) as typeof body
     } catch {
+        // upup-catch: a malformed JSON body is surfaced to the client as 400 —
+        // returned, not swallowed.
         return res.json({ error: 'Invalid JSON body' }, 400)
     }
     if (!body.fileId) return res.json({ error: 'Missing fileId' }, 400)

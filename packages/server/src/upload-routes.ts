@@ -145,10 +145,10 @@ async function validateUploadMetadata(
     res: Responder,
 ): Promise<Response | null> {
     if (
-        typeof body?.name !== 'string' ||
+        typeof body.name !== 'string' ||
         body.name.length === 0 ||
-        typeof body?.type !== 'string' ||
-        typeof body?.size !== 'number' ||
+        typeof body.type !== 'string' ||
+        typeof body.size !== 'number' ||
         !Number.isFinite(body.size) ||
         body.size < 0
     ) {
@@ -184,9 +184,9 @@ export async function handlePresign(
     const gate = requireUploadAuthorization(config, res, 'presign', req.method)
     if (gate) return gate
 
-    const parsed = await parseJsonBody<FileMetadata>(req, res)
+    const parsed = await parseJsonBody(req, res)
     if (!parsed.ok) return parsed.response
-    const body = parsed.value
+    const body = parsed.value as FileMetadata
 
     const validationError = await validateUploadMetadata(req, config, body, res)
     if (validationError) return validationError
@@ -235,14 +235,14 @@ export async function handleMultipartInit(
     )
     if (gate) return gate
 
-    const parsed = await parseJsonBody<{
+    const parsed = await parseJsonBody(req, res)
+    if (!parsed.ok) return parsed.response
+    const body = parsed.value as {
         name: string
         type: string
         size: number
         chunkSizeBytes?: number
-    }>(req, res)
-    if (!parsed.ok) return parsed.response
-    const body = parsed.value
+    }
 
     try {
         const validationError = await validateUploadMetadata(

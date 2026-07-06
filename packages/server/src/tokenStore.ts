@@ -17,26 +17,28 @@ export class InMemoryTokenStore implements TokenStore {
         { value: string; expiresAt: number | null }
     >()
 
-    async get(key: string): Promise<string | null> {
+    get(key: string): Promise<string | null> {
         const entry = this.store.get(key)
-        if (!entry) return null
+        if (!entry) return Promise.resolve(null)
         if (entry.expiresAt !== null && Date.now() >= entry.expiresAt) {
             this.store.delete(key)
-            return null
+            return Promise.resolve(null)
         }
-        return entry.value
+        return Promise.resolve(entry.value)
     }
 
-    async set(key: string, value: string, ttlSeconds?: number): Promise<void> {
+    set(key: string, value: string, ttlSeconds?: number): Promise<void> {
         // ttlSeconds === 0 means "already expired", NOT "no expiry". Only an
         // omitted ttl (undefined) stores without expiry.
         const expiresAt =
             ttlSeconds != null ? Date.now() + ttlSeconds * 1000 : null
         this.store.set(key, { value, expiresAt })
+        return Promise.resolve()
     }
 
-    async delete(key: string): Promise<void> {
+    delete(key: string): Promise<void> {
         this.store.delete(key)
+        return Promise.resolve()
     }
 }
 
@@ -56,6 +58,8 @@ export async function getTokens(
     try {
         return JSON.parse(raw) as DriveTokens
     } catch {
+        // upup-catch: a corrupt/legacy token blob is treated as absent — the
+        // caller re-authenticates rather than crashing on bad stored JSON.
         return null
     }
 }
@@ -113,6 +117,8 @@ export async function consumeOAuthState(
     try {
         return JSON.parse(raw) as OAuthState
     } catch {
+        // upup-catch: a corrupt oauth-state blob is treated as absent — the OAuth
+        // flow restarts rather than crashing on bad stored JSON.
         return null
     }
 }

@@ -1,6 +1,7 @@
 // packages/server/tests/handler-trust.test.ts
 import { describe, it, expect, vi } from "vitest";
 import { createUpupHandler } from "../src/handler";
+import type { UpupServerConfig } from "../src/config";
 
 vi.mock("../src/providers/aws", () => ({
   generatePresignedUrl: vi.fn(),
@@ -17,14 +18,14 @@ const SECRET = "construction-test-secret-0123456789";
 
 describe("createUpupHandler — construction validation", () => {
   it("throws without uploadTokenSecret", () => {
-    expect(() => createUpupHandler({ storage } as any)).toThrow(
+    expect(() => createUpupHandler({ storage } as UpupServerConfig)).toThrow(
       /uploadTokenSecret/,
     );
   });
 
   it("throws with a too-short secret", () => {
     expect(() =>
-      createUpupHandler({ storage, uploadTokenSecret: "short" } as any),
+      createUpupHandler({ storage, uploadTokenSecret: "short" } as UpupServerConfig),
     ).toThrow(/uploadTokenSecret/);
   });
 
@@ -34,7 +35,7 @@ describe("createUpupHandler — construction validation", () => {
         storage,
         uploadTokenSecret: SECRET,
         providers: { googleDrive: { clientId: "x", clientSecret: "y" } },
-      } as any),
+      } as UpupServerConfig),
     ).toThrow(/getUserId/);
   });
 
@@ -45,7 +46,7 @@ describe("createUpupHandler — construction validation", () => {
         uploadTokenSecret: SECRET,
         providers: { googleDrive: { clientId: "x", clientSecret: "y" } },
         allowAnonymous: true,
-      } as any),
+      } as UpupServerConfig),
     ).not.toThrow();
   });
 
@@ -56,13 +57,13 @@ describe("createUpupHandler — construction validation", () => {
         uploadTokenSecret: SECRET,
         providers: { googleDrive: { clientId: "x", clientSecret: "y" } },
         getUserId: async () => "u1",
-      } as any),
+      } as UpupServerConfig),
     ).not.toThrow();
   });
 
   it("upload-only needs the secret but no getUserId", () => {
     expect(() =>
-      createUpupHandler({ storage, uploadTokenSecret: SECRET } as any),
+      createUpupHandler({ storage, uploadTokenSecret: SECRET } as UpupServerConfig),
     ).not.toThrow();
   });
 });

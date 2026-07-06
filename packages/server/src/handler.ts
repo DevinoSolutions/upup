@@ -1,4 +1,8 @@
-import { UpupErrorCode, NON_S3_STORAGE_PROVIDERS } from '@upup/core'
+import {
+    UpupErrorCode,
+    UpupConfigError,
+    NON_S3_STORAGE_PROVIDERS,
+} from '@upup/core'
 import type { UpupServerConfig } from './config'
 import { assertUploadTokenSecret } from './uploadToken'
 import { handleHealth } from './health'
@@ -27,12 +31,12 @@ export function createUpupHandler(config: UpupServerConfig): RouteHandler {
     // credentials/region. A provider with no S3-compatible surface (currently
     // just Azure) could never function, with zero compile- or startup-time
     // signal until now.
-    const storageType = config.storage?.type
+    const storageType = config.storage.type
     if (
         typeof storageType === 'string' &&
         (NON_S3_STORAGE_PROVIDERS as ReadonlySet<string>).has(storageType)
     ) {
-        throw new Error(
+        throw new UpupConfigError(
             `[@upup/server] storage.type "${storageType}" has no S3-compatible API and cannot be served. ` +
                 'upup uploads via the S3 API — use an S3-compatible provider ' +
                 '(aws, minio, r2, wasabi, …) and set storage.endpoint for non-AWS backends.',
@@ -43,7 +47,7 @@ export function createUpupHandler(config: UpupServerConfig): RouteHandler {
         !config.getUserId &&
         !config.allowAnonymous
     ) {
-        throw new Error(
+        throw new UpupConfigError(
             '[@upup/server] drive providers / tokenStore require config.getUserId to ' +
                 'scope tokens per user. Set getUserId, or set allowAnonymous:true to ' +
                 'intentionally share ONE anonymous namespace (demos only).',
@@ -63,7 +67,7 @@ export function createUpupHandler(config: UpupServerConfig): RouteHandler {
             // Health check sits BEFORE the auth gate so uptime/deploy probes work
             // unauthenticated (F-426/F-428).
             if (req.method === 'GET' && path.endsWith('/health')) {
-                return handleHealth(config, res.headers)
+                return await handleHealth(config, res.headers)
             }
 
             // Auth check
@@ -76,22 +80,22 @@ export function createUpupHandler(config: UpupServerConfig): RouteHandler {
 
             // Route matching
             if (req.method === 'POST' && path.endsWith('/presign')) {
-                return handlePresign(req, config, res)
+                return await handlePresign(req, config, res)
             }
             if (req.method === 'POST' && path.endsWith('/multipart/init')) {
-                return handleMultipartInit(req, config, res)
+                return await handleMultipartInit(req, config, res)
             }
             if (
                 req.method === 'POST' &&
                 path.endsWith('/multipart/sign-part')
             ) {
-                return handleMultipartSignPart(req, config, res)
+                return await handleMultipartSignPart(req, config, res)
             }
             if (req.method === 'POST' && path.endsWith('/multipart/complete')) {
-                return handleMultipartComplete(req, config, res)
+                return await handleMultipartComplete(req, config, res)
             }
             if (req.method === 'POST' && path.endsWith('/multipart/abort')) {
-                return handleMultipartAbort(req, config, res)
+                return await handleMultipartAbort(req, config, res)
             }
 
             // OAuth routes: GET /auth/:provider and GET /auth/:provider/cb
@@ -103,9 +107,9 @@ export function createUpupHandler(config: UpupServerConfig): RouteHandler {
                 }
                 const isCallback = authMatch[2] === 'cb'
                 if (isCallback) {
-                    return handleOAuthCallback(req, config, provider, res)
+                    return await handleOAuthCallback(req, config, provider, res)
                 }
-                return handleOAuthRedirect(req, config, provider, res)
+                return await handleOAuthRedirect(req, config, provider, res)
             }
 
             // File routes: GET /files/:provider and POST /files/:provider/transfer
@@ -119,10 +123,10 @@ export function createUpupHandler(config: UpupServerConfig): RouteHandler {
                 }
                 const isTransfer = filesMatch[2] === 'transfer'
                 if (req.method === 'POST' && isTransfer) {
-                    return handleFileTransfer(req, config, provider, res)
+                    return await handleFileTransfer(req, config, provider, res)
                 }
                 if (req.method === 'GET' && !isTransfer) {
-                    return handleListFiles(req, config, provider, res)
+                    return await handleListFiles(req, config, provider, res)
                 }
             }
 

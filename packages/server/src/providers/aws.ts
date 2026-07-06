@@ -9,6 +9,7 @@ import {
     HeadBucketCommand,
 } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
+import { UpupStorageError } from '@upup/core'
 import type {
     PresignedUrlResponse,
     MultipartInitResponse,
@@ -109,7 +110,11 @@ export async function initiateMultipartUpload(
     const response = await client.send(command)
 
     if (!response.UploadId) {
-        throw new Error('Failed to initiate multipart upload: no UploadId')
+        throw new UpupStorageError(
+            'Failed to initiate multipart upload: no UploadId',
+            storage.type,
+            'multipart-init',
+        )
     }
 
     const partSize = computePartSize(fileSize, chunkSizeBytes)
@@ -194,7 +199,7 @@ export async function listMultipartParts(
     const parts: MultipartPart[] = []
     let partNumberMarker: string | undefined
 
-    while (true) {
+    for (;;) {
         const command = new ListPartsCommand({
             Bucket: storage.bucket,
             Key: key,
@@ -239,7 +244,7 @@ export async function getMultipartUploadedSize(
     let total = 0
     let partNumberMarker: string | undefined
 
-    while (true) {
+    for (;;) {
         const command = new ListPartsCommand({
             Bucket: storage.bucket,
             Key: key,
@@ -277,6 +282,8 @@ export async function checkStorageReachable(
         await client.send(new HeadBucketCommand({ Bucket: storage.bucket }))
         return { ok: true }
     } catch (error) {
+        // upup-catch: reachability probe returns the failure in a Result for the
+        // caller (handleHealth) to log/shape — deliberately not thrown here.
         return { ok: false, error }
     }
 }

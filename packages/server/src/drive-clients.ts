@@ -7,6 +7,7 @@
 // a provider registry in C6 (F-407). Imports only the provider identity type
 // from ./oauth (acyclic DAG).
 
+import { UpupNetworkError } from '@upup/core'
 import { type OAuthProvider } from './oauth'
 
 export type DriveFile = {
@@ -69,8 +70,9 @@ async function driveFetch(
     }
     if (!res.ok) {
         const text = await res.text().catch(() => '')
-        throw new Error(
+        throw new UpupNetworkError(
             `Drive API ${res.status}: ${text.slice(0, 200) || res.statusText}`,
+            res.status,
         )
     }
     return res
@@ -156,7 +158,7 @@ async function fetchGoogleDriveFile(
         )}?alt=media`,
         { headers: { Authorization: `Bearer ${accessToken}` } },
     )
-    if (!dlRes.body) throw new Error('Empty download body')
+    if (!dlRes.body) throw new UpupNetworkError('Empty download body')
     return {
         stream: dlRes.body,
         size: Number(meta.size ?? body.size ?? 0),
@@ -223,7 +225,7 @@ async function fetchOneDriveFile(
         )}/content`,
         { headers: { Authorization: `Bearer ${accessToken}` } },
     )
-    if (!dlRes.body) throw new Error('Empty download body')
+    if (!dlRes.body) throw new UpupNetworkError('Empty download body')
     return {
         stream: dlRes.body,
         size: meta.size ?? body.size ?? 0,
@@ -309,7 +311,7 @@ async function fetchDropboxFile(
             },
         },
     )
-    if (!dlRes.body) throw new Error('Empty download body')
+    if (!dlRes.body) throw new UpupNetworkError('Empty download body')
     const apiResult = dlRes.headers.get('Dropbox-API-Result')
     let name = body.fileName ?? 'download'
     let size = body.size ?? 0
@@ -321,7 +323,10 @@ async function fetchDropboxFile(
             }
             name = body.fileName ?? parsed.name ?? name
             size = parsed.size ?? size
-        } catch {}
+        } catch {
+            // upup-catch: the Dropbox-API-Result header is best-effort metadata; a
+            // malformed value just falls back to the request body / defaults.
+        }
     }
     return {
         stream: dlRes.body,
@@ -408,7 +413,7 @@ async function fetchBoxFile(
             redirect: 'follow',
         },
     )
-    if (!dlRes.body) throw new Error('Empty download body')
+    if (!dlRes.body) throw new UpupNetworkError('Empty download body')
     return {
         stream: dlRes.body,
         size: meta.size ?? body.size ?? 0,

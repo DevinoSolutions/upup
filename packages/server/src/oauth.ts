@@ -269,6 +269,8 @@ export function validateReturnTo(
     try {
         resolved = new URL(returnTo, serverOrigin) // relative returnTo resolves to same-origin
     } catch {
+        // upup-catch: a malformed returnTo is rejected (fail-closed) so it can
+        // never become an open redirect — absence of a valid URL means "deny".
         return undefined
     }
     if (resolved.origin === serverOrigin) return resolved.toString()

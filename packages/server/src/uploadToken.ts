@@ -7,6 +7,8 @@
 // runs on Node 18+, edge, and Cloudflare Workers — matching the rest of the
 // package (already uses global crypto.randomUUID / getRandomValues).
 
+import { UpupConfigError } from '@upup/core'
+
 export interface UploadTokenPayload {
     /** Object key the upload is bound to. */
     k: string
@@ -41,7 +43,7 @@ export function assertUploadTokenSecret(
     secret: string | undefined,
 ): asserts secret is string {
     if (!secret || secret.length < MIN_SECRET_LENGTH) {
-        throw new Error(
+        throw new UpupConfigError(
             `[@upup/server] config.uploadTokenSecret is required and must be at least ${MIN_SECRET_LENGTH} characters. ` +
                 'Generate a stable, high-entropy secret (e.g. `openssl rand -hex 32`) and share the SAME value across every server instance/worker.',
         )
@@ -119,7 +121,9 @@ export async function verifyUploadToken(
     }
     let payload: UploadTokenPayload
     try {
-        payload = JSON.parse(new TextDecoder().decode(base64UrlToBytes(body)))
+        payload = JSON.parse(
+            new TextDecoder().decode(base64UrlToBytes(body)),
+        ) as UploadTokenPayload
     } catch {
         throw new UploadTokenError(
             'malformed',

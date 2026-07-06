@@ -1,4 +1,4 @@
-import { createUpupHandler } from './handler'
+import { createUpupHandler, type RouteHandler } from './handler'
 import type { UpupServerConfig } from './config'
 import { normalizeRequestOrigin } from './normalize-origin'
 import type { UpupNextOptions } from './normalize-origin'
@@ -11,7 +11,7 @@ import type { UpupNextOptions } from './normalize-origin'
 export function createUpupNextHandler(
     config: UpupServerConfig,
     opts?: UpupNextOptions,
-) {
+): Record<'GET' | 'POST' | 'PUT' | 'DELETE', RouteHandler> {
     const handler = createUpupHandler(config)
     const wrapped = (req: Request) => handler(normalizeRequestOrigin(req, opts))
     return { GET: wrapped, POST: wrapped, PUT: wrapped, DELETE: wrapped }

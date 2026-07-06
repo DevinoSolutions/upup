@@ -5,6 +5,7 @@ import {
     CompleteMultipartUploadCommand,
     AbortMultipartUploadCommand,
 } from '@aws-sdk/client-s3'
+import { UpupStorageError } from '@upup/core'
 import type { UpupServerConfig, UploadedFile } from './config'
 import { createS3Client } from './providers/s3-client'
 import { MIN_PART_SIZE, generateSignedPublicUrl } from './providers/aws'
@@ -78,7 +79,12 @@ async function streamingMultipart(opts: {
         }),
     )
     const uploadId = init.UploadId
-    if (!uploadId) throw new Error('Missing UploadId on multipart init')
+    if (!uploadId)
+        throw new UpupStorageError(
+            'Missing UploadId on multipart init',
+            opts.storage.type,
+            'multipart-init',
+        )
 
     const parts: Array<{ PartNumber: number; ETag: string }> = []
     let totalBytes = 0
@@ -97,7 +103,11 @@ async function streamingMultipart(opts: {
                 }),
             )
             if (!res.ETag) {
-                throw new Error(`Missing ETag for part ${partNumber}`)
+                throw new UpupStorageError(
+                    `Missing ETag for part ${partNumber}`,
+                    opts.storage.type,
+                    'multipart-sign-part',
+                )
             }
             parts.push({ PartNumber: partNumber, ETag: res.ETag })
             totalBytes += chunk.byteLength
@@ -105,7 +115,11 @@ async function streamingMultipart(opts: {
         }
 
         if (parts.length === 0) {
-            throw new Error('Drive download produced no bytes')
+            throw new UpupStorageError(
+                'Drive download produced no bytes',
+                opts.storage.type,
+                'upload',
+            )
         }
 
         await client.send(
@@ -145,13 +159,11 @@ async function streamToUint8Array(
     const reader = stream.getReader()
     const chunks: Uint8Array[] = []
     let total = 0
-    while (true) {
+    for (;;) {
         const { value, done } = await reader.read()
         if (done) break
-        if (value) {
-            chunks.push(value)
-            total += value.byteLength
-        }
+        chunks.push(value)
+        total += value.byteLength
     }
     const out = new Uint8Array(total)
     let offset = 0
@@ -182,10 +194,9 @@ async function* chunkedStream(
         return out
     }
 
-    while (true) {
+    for (;;) {
         const { value, done } = await reader.read()
         if (done) break
-        if (!value) continue
         buffered.push(value)
         bufferedSize += value.byteLength
         while (bufferedSize >= chunkSize) {

@@ -31,7 +31,7 @@ describe("uploadToken", () => {
 
   it("rejects a tampered payload", async () => {
     const tok = await signUploadToken(SECRET, payload());
-    const [body, sig] = tok.split(".");
+    const [, sig] = tok.split(".");
     const forgedBody = Buffer.from(
       JSON.stringify(payload({ k: "attacker/evil.bin" })),
     ).toString("base64url");

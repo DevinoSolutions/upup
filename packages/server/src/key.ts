@@ -7,7 +7,7 @@ import type { KeyStrategyContext } from './config'
  * leading dots/underscores (no '.'/'..'), bound length. Never empty.
  */
 export function sanitizeFilename(name: string): string {
-    const cleaned = (name ?? '')
+    const cleaned = name
         .replace(/[^A-Za-z0-9._-]+/g, '_')
         .replace(/^[._]+/, '')
         .slice(0, 128)

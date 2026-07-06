@@ -46,7 +46,7 @@ export function normalizeRequestOrigin(
         current.pathname + current.search,
         target,
     ).toString()
-    const method = req.method ?? 'GET'
+    const method = req.method
     const hasBody = method !== 'GET' && method !== 'HEAD'
     const init: RequestInit & { duplex?: 'half' } = {
         method,

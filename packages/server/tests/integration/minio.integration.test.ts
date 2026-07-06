@@ -70,6 +70,7 @@ describe.skipIf(!RUN)("MinIO real-storage upload validation", () => {
       throw new Error(
         `MinIO unreachable at ${storage.endpoint} (bucket ${storage.bucket}). ` +
           `Run "pnpm e2e:minio:up" first. Underlying: ${(err as Error).message}`,
+        { cause: err },
       );
     }
   });
