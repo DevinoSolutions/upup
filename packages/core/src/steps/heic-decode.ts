@@ -62,10 +62,9 @@ export async function heicToJpegBlob(
     let images: ReturnType<typeof decoder.decode> = []
     try {
         images = decoder.decode(new Uint8Array(buffer))
-        if (!images || images.length === 0)
-            throw new Error('HEIC: no image found in file')
+        const image = images?.[0]
+        if (!image) throw new Error('HEIC: no image found in file')
 
-        const image = images[0]
         const width = image.get_width()
         const height = image.get_height()
 

@@ -12,7 +12,7 @@ type ImageOutputOptions = {
  * Works with any MIME type encoded as `data:<mime>;base64,<data>`.
  */
 export function dataURLtoBlob(dataURL: string): Blob {
-    const [header, base64Data] = dataURL.split(',')
+    const [header = '', base64Data = ''] = dataURL.split(',')
     const mime = header.match(/:(.*?);/)?.[1] ?? 'application/octet-stream'
     const binary = atob(base64Data)
     const bytes = new Uint8Array(binary.length)

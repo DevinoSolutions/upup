@@ -541,7 +541,8 @@ export class DriveBrowserController {
                 children: [...folder.children, ...page.files],
             }
             const path = this.state.path.slice()
-            if (path.length && path[path.length - 1].id === folder.id) {
+            const tail = path[path.length - 1]
+            if (tail && tail.id === folder.id) {
                 path[path.length - 1] = merged
             }
             this.cursor = page.cursor

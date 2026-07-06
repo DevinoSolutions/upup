@@ -66,11 +66,11 @@ describe('LOCALE_META', () => {
     })
 
     it('en-US is ltr', () => {
-        expect(LOCALE_META['en-US'].dir).toBe('ltr')
+        expect(LOCALE_META['en-US']?.dir).toBe('ltr')
     })
 
     it('ar-SA is rtl', () => {
-        expect(LOCALE_META['ar-SA'].dir).toBe('rtl')
+        expect(LOCALE_META['ar-SA']?.dir).toBe('rtl')
     })
 
     it('every entry has code, language, and dir fields', () => {

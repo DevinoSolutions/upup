@@ -182,9 +182,11 @@ export function searchDriveFiles<
 
     return files
         .filter((_file, index) => {
+            const name = fileNames[index]
+            if (name === undefined) return false
             return exactMatch
-                ? fileNames[index] === searchString
-                : fileNames[index].includes(searchString)
+                ? name === searchString
+                : name.includes(searchString)
         })
         .slice(0, maxResults)
 }

@@ -45,7 +45,7 @@ export function buildFallbackChain(code: string): string[] {
     // Skip if the code IS the default locale (en-US → don't add 'en')
     if (code.includes('-') && code !== DEFAULT_LOCALE) {
         const base = code.split('-')[0]
-        if (base !== code) {
+        if (base !== undefined && base !== code) {
             chain.push(base)
         }
     }

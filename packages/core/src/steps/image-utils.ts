@@ -176,8 +176,7 @@ export async function blobToDataUrl(blob: Blob): Promise<string> {
 
     const bytes = new Uint8Array(await blob.arrayBuffer())
     let binary = ''
-    for (let i = 0; i < bytes.length; i += 1)
-        binary += String.fromCharCode(bytes[i])
+    for (const byte of bytes) binary += String.fromCharCode(byte)
     const encode =
         typeof btoa === 'function'
             ? btoa

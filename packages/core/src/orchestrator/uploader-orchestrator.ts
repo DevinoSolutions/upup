@@ -233,6 +233,7 @@ export class UploaderOrchestrator {
         if (this.state.editingFile || this.state.editorQueue.length === 0)
             return
         const [next, ...rest] = this.state.editorQueue
+        if (!next) return
         this.setState({ editorQueue: rest })
         this.openImageEditor(next)
     }
@@ -326,7 +327,8 @@ export class UploaderOrchestrator {
                         editorOpts.autoOpen === 'single' &&
                         images.length === 1
                     ) {
-                        this.enqueueForEditor([images[0]])
+                        const [firstImage] = images
+                        if (firstImage) this.enqueueForEditor([firstImage])
                     }
                     if (editorOpts.autoOpen === 'always' && images.length > 0) {
                         this.enqueueForEditor(images)
@@ -395,15 +397,18 @@ export class UploaderOrchestrator {
                         const oldest = this.speedSamples[0]
                         const newest =
                             this.speedSamples[this.speedSamples.length - 1]
-                        const elapsed = (newest.time - oldest.time) / 1000
-                        if (elapsed > 0) {
-                            speed = Math.max(
-                                0,
-                                (newest.bytes - oldest.bytes) / elapsed,
-                            )
-                            const remaining =
-                                this.state.totalBytes - nextUploaded
-                            eta = speed > 0 ? Math.ceil(remaining / speed) : 0
+                        if (oldest && newest) {
+                            const elapsed = (newest.time - oldest.time) / 1000
+                            if (elapsed > 0) {
+                                speed = Math.max(
+                                    0,
+                                    (newest.bytes - oldest.bytes) / elapsed,
+                                )
+                                const remaining =
+                                    this.state.totalBytes - nextUploaded
+                                eta =
+                                    speed > 0 ? Math.ceil(remaining / speed) : 0
+                            }
                         }
                     }
 
