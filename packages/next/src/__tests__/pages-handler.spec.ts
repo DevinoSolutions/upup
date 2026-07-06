@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { Readable } from 'node:stream'
+import type { NextApiResponse } from 'next'
 import type { UpupServerConfig } from '@upup/server'
 
 // Capture the Web Request the core handler receives, and control its Response.
@@ -40,7 +41,7 @@ interface MockRes {
     end: ReturnType<typeof vi.fn>
 }
 
-function mockRes(): MockRes {
+function mockRes(): MockRes & NextApiResponse {
     const res: MockRes = {
         statusCode: 0,
         headers: {},
@@ -60,7 +61,7 @@ function mockRes(): MockRes {
         }),
         end: vi.fn(),
     }
-    return res
+    return res as unknown as MockRes & NextApiResponse
 }
 
 beforeEach(() => {

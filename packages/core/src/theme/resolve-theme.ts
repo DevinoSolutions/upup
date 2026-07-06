@@ -42,7 +42,8 @@ function deepMerge<T>(base: T, overrides: DeepPartial<T> | undefined): T {
 function detectSystemMode(): 'light' | 'dark' {
     if (
         typeof window !== 'undefined' &&
-        window.matchMedia('(prefers-color-scheme: dark)').matches
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- matchMedia is absent in jsdom/SSR
+        window.matchMedia?.('(prefers-color-scheme: dark)').matches
     ) {
         return 'dark'
     }

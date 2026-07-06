@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { loadIsland } from './filerobot-island-loader'
 import type { IslandHandle, IslandProps } from './filerobot-island-types'
 
@@ -14,7 +14,7 @@ export { TABS, TOOLS } from './filerobot-constants'
  * Props mirror what the chrome passes to <EditorComponent> and are forwarded
  * verbatim to the island (no transformation — save logic stays in the chrome).
  */
-export default function FilerobotBridge(props: IslandProps): JSX.Element {
+export default function FilerobotBridge(props: IslandProps): React.JSX.Element {
     const hostRef = useRef<HTMLDivElement | null>(null)
     const handleRef = useRef<IslandHandle | null>(null)
     const propsRef = useRef<IslandProps>(props)
