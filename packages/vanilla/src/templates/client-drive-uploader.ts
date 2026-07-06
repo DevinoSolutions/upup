@@ -1,3 +1,4 @@
+import { html } from 'lit-html'
 import { FileSource } from '@upup/core'
 import type { DriveFile, DriveFolder } from '@upup/core'
 import type { UploaderContext } from '../lib/types'
@@ -21,6 +22,7 @@ export function clientDriveUploader(ctx: UploaderContext, source: FileSource) {
     const controller = ctx.controllers.getDrive(source)
     const st = controller.getSnapshot()
     const meta = META[source]
+    if (!meta) return html``
     // Unified auth gate over the real DriveBrowserState fields:
     //  - GIS (Google): readiness/cancel signalled by isAuthReady / authCancelled / token.
     //  - popup (OneDrive/Dropbox/Box): initGis never runs, so isAuthReady/authCancelled/token

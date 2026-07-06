@@ -66,15 +66,18 @@ export class ScreenCaptureController implements SourceController<ScreenSnapshot>
                 this.previewEl.srcObject = stream
                 void this.previewEl.play()
             }
-            stream.getVideoTracks()[0].onended = () => {
-                if (
-                    this.mediaRecorder &&
-                    this.mediaRecorder.state !== 'inactive'
-                )
-                    this.mediaRecorder.stop()
-                if (this.timerHandle) clearInterval(this.timerHandle)
-                this.recordingState = 'recorded'
-                this.deps.invalidate()
+            const videoTrack = stream.getVideoTracks()[0]
+            if (videoTrack) {
+                videoTrack.onended = () => {
+                    if (
+                        this.mediaRecorder &&
+                        this.mediaRecorder.state !== 'inactive'
+                    )
+                        this.mediaRecorder.stop()
+                    if (this.timerHandle) clearInterval(this.timerHandle)
+                    this.recordingState = 'recorded'
+                    this.deps.invalidate()
+                }
             }
             const recorder = new MediaRecorder(stream)
             this.mediaRecorder = recorder

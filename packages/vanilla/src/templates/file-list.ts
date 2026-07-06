@@ -351,13 +351,15 @@ export function fileList(ctx: UploaderContext) {
                           ${repeat(
                               v.getVirtualItems(),
                               vi => String(vi.key),
-                              vi =>
-                                  html` <div
+                              vi => {
+                                  const file = sortedFiles[vi.index]
+                                  return html` <div
                                       data-index=${vi.index}
                                       style=${`position: absolute; top: 0; left: 0; width: 100%; transform: translateY(${vi.start}px); padding-bottom: 12px;`}
                                   >
-                                      ${fileItem(ctx, sortedFiles[vi.index])}
-                                  </div>`,
+                                      ${file ? fileItem(ctx, file) : ''}
+                                  </div>`
+                              },
                           )}
                       </div>`
                   })()
