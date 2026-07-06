@@ -1,4 +1,10 @@
-import { computed, shallowRef, onMounted, onUnmounted } from 'vue'
+import {
+    computed,
+    shallowRef,
+    onMounted,
+    onUnmounted,
+    type ComputedRef,
+} from 'vue'
 import { DragDropController } from '@upup/core/internal'
 import {
     useUploaderFiles,
@@ -6,19 +12,33 @@ import {
     useUploaderRuntime,
 } from '../context/uploader-context'
 
-export default function useUploaderPanel() {
+interface UseUploaderPanelReturn {
+    isDragging: ComputedRef<boolean>
+    absoluteIsDragging: ComputedRef<boolean>
+    absoluteHasBorder: ComputedRef<boolean>
+    handleDragOver: (e: DragEvent) => void
+    handleDragLeave: (e: DragEvent) => void
+    handleDrop: (e: DragEvent) => Promise<void>
+    handlePaste: (e: ClipboardEvent) => void
+}
+
+export default function useUploaderPanel(): UseUploaderPanelReturn {
     const { core, orchestrator } = useUploaderRuntime()
     const { setFiles } = useUploaderFiles()
     const options = useUploaderOptions()
     const { disableDragDrop, isProcessing, folderUploadAllowDrop } = options
 
+    if (!core || !orchestrator) {
+        throw new Error('useUploaderPanel must be used inside <UpupUploader />')
+    }
+
     const controller = new DragDropController({
-        core: core!,
-        orchestrator: orchestrator!,
+        core,
+        orchestrator,
         setFiles,
         // The file list derives from the orchestrator snapshot — derive the
         // border's file count from the same source so it stays in lockstep.
-        filesSize: () => orchestrator!.getSnapshot().files.size,
+        filesSize: () => orchestrator.getSnapshot().files.size,
         options: () => options,
         props: () => ({ disableDragDrop, isProcessing, folderUploadAllowDrop }),
     })
@@ -40,9 +60,15 @@ export default function useUploaderPanel() {
         isDragging: computed(() => snapshot.value.isDragging),
         absoluteIsDragging: computed(() => snapshot.value.absoluteIsDragging),
         absoluteHasBorder: computed(() => snapshot.value.absoluteHasBorder),
-        handleDragOver: controller.handleDragOver,
-        handleDragLeave: controller.handleDragLeave,
-        handleDrop: controller.handleDrop,
-        handlePaste: controller.handlePaste,
+        handleDragOver: (e: DragEvent) => {
+            controller.handleDragOver(e)
+        },
+        handleDragLeave: (e: DragEvent) => {
+            controller.handleDragLeave(e)
+        },
+        handleDrop: (e: DragEvent) => controller.handleDrop(e),
+        handlePaste: (e: ClipboardEvent) => {
+            controller.handlePaste(e)
+        },
     }
 }

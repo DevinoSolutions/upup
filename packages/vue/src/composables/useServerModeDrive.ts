@@ -1,11 +1,32 @@
-import { computed, shallowRef, onMounted, onUnmounted } from 'vue'
+import {
+    computed,
+    shallowRef,
+    onMounted,
+    onUnmounted,
+    type ComputedRef,
+} from 'vue'
 import { ServerModeDriveController } from '@upup/core/internal'
 import type { ServerModeProvider, ServerDriveFile } from '@upup/core'
 import { useUploaderRuntime } from '../context/uploader-context'
 
 export type { ServerModeProvider, ServerDriveFile }
 
-export function useServerModeDrive(provider: ServerModeProvider) {
+type ServerDriveSnapshot = ReturnType<ServerModeDriveController['getSnapshot']>
+
+interface UseServerModeDriveReturn {
+    state: ComputedRef<ServerDriveSnapshot['state']>
+    folderId: ComputedRef<ServerDriveSnapshot['folderId']>
+    setFolderId: (id: string | undefined) => void
+    search: ComputedRef<ServerDriveSnapshot['search']>
+    setSearch: (s: string) => void
+    refresh: ServerModeDriveController['refresh']
+    transfer: ServerModeDriveController['transfer']
+    startAuth: ServerModeDriveController['startAuth']
+}
+
+export function useServerModeDrive(
+    provider: ServerModeProvider,
+): UseServerModeDriveReturn {
     const { serverUrl } = useUploaderRuntime()
     const controller = new ServerModeDriveController({
         provider,
@@ -37,8 +58,10 @@ export function useServerModeDrive(provider: ServerModeProvider) {
             controller.setSearch(s)
             void controller.refresh()
         },
-        refresh: controller.refresh,
-        transfer: controller.transfer,
-        startAuth: controller.startAuth,
+        refresh: opts => controller.refresh(opts),
+        transfer: file => controller.transfer(file),
+        startAuth: () => {
+            controller.startAuth()
+        },
     }
 }

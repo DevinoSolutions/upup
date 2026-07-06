@@ -1,4 +1,4 @@
-import { computed } from 'vue'
+import { computed, type ComputedRef } from 'vue'
 import { FileSource } from '@upup/core'
 import {
     useUploaderFiles,
@@ -9,7 +9,13 @@ import {
 } from '../context/uploader-context'
 import { uploadSourceObject } from '../lib/constants'
 
-export default function useSourceSelector() {
+type SourceOption = (typeof uploadSourceObject)[string] & { name: string }
+
+export default function useSourceSelector(): {
+    chosenSources: ComputedRef<SourceOption[]>
+    handleSourceClick: (sourceId: FileSource) => void
+    handleInputFileChange: (e: Event) => void
+} {
     const { core, openFilePicker } = useUploaderRuntime()
     const { setActiveSource } = useUploaderSource()
     const { setFiles } = useUploaderFiles()

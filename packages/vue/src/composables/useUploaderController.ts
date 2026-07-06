@@ -126,7 +126,7 @@ export default function useUploaderController(
     const factoryOptions: UploaderControllerOptions = {
         provider,
         mode: modeProp,
-        sources: sources as UploaderControllerOptions['sources'],
+        sources,
         uploadEndpoint,
         serverUrl,
         maxFiles,
@@ -144,9 +144,8 @@ export default function useUploaderController(
         autoUpload,
         maxConcurrentUploads,
         crashRecovery,
-        allowedFileTypes: (typeof acceptProp === 'string'
-            ? acceptProp
-            : (acceptProp as string[]).join(',')) as string | undefined,
+        allowedFileTypes:
+            typeof acceptProp === 'string' ? acceptProp : acceptProp.join(','),
         mini,
         isProcessing,
         allowPreview,
@@ -192,14 +191,20 @@ export default function useUploaderController(
     const { connectSSE } = useSSEProcessing({
         processingEndpoint,
         onFileProcessed,
-        onError: err => onError(err.message),
+        onError: err => {
+            onError(err.message)
+        },
         processingTimeout,
     })
 
     // ── Root controller (created once, owns orchestrator/theme/plugins/commands) ──
     const root = createUploaderController(
         { core, options: factoryOptions, normalized },
-        { connectSSE: file => connectSSE(file) },
+        {
+            connectSSE: file => {
+                connectSSE(file)
+            },
+        },
     )
     root.updateCallbacks({
         onError,
@@ -245,7 +250,9 @@ export default function useUploaderController(
     //   status-change dedup, crash recovery.
     // root.destroy() owns: orchestrator.destroy, theme.destroy, plugin cleanup.
     // core lifecycle remains owned by useUpupUpload's onUnmounted.
-    onMounted(() => root.init())
+    onMounted(() => {
+        root.init()
+    })
     onUnmounted(() => {
         root.destroy()
         unsub()
@@ -281,12 +288,17 @@ export default function useUploaderController(
         openFilePicker,
         // Reactive so consumers re-render when the active source changes.
         activeSource: computed(() => state.value.activeSource),
-        setActiveSource: (source: FileSource | undefined) =>
-            root.commands.setActiveSource(source),
+        setActiveSource: (source: FileSource | undefined) => {
+            root.commands.setActiveSource(source)
+        },
         isAddingMore: computed(() => state.value.isAddingMore),
-        setIsAddingMore: (v: boolean) => root.commands.setIsAddingMore(v),
+        setIsAddingMore: (v: boolean) => {
+            root.commands.setIsAddingMore(v)
+        },
         viewMode: computed(() => state.value.viewMode),
-        setViewMode: (m: 'grid' | 'list') => root.commands.setViewMode(m),
+        setViewMode: (m: 'grid' | 'list') => {
+            root.commands.setViewMode(m)
+        },
         isOnline: computed(() => state.value.isOnline),
         translations: resolved.translations,
         translator: resolved.translator,
@@ -304,27 +316,51 @@ export default function useUploaderController(
             slots: themeState.value.slots,
         },
         files: computed(() => state.value.files),
-        setFiles: async (newFiles: File[]) =>
-            root.commands.handleSetSelectedFiles(newFiles),
+        // handleSetSelectedFiles self-handles addFiles errors and never rejects;
+        // route any unexpected rejection to onError to honor the void contract.
+        setFiles: (newFiles: File[]) => {
+            root.commands
+                .handleSetSelectedFiles(newFiles)
+                .catch((err: unknown) => {
+                    onError(err instanceof Error ? err.message : String(err))
+                })
+        },
         uploadFiles: async (newFiles: File[] | UploadFile[]) =>
             root.commands.uploadFiles(newFiles),
-        resetState: () => root.commands.resetState(),
-        replaceFiles: (newFiles: File[] | UploadFile[]) =>
-            root.commands.replaceFiles(newFiles),
-        handleDone: () => root.commands.handleDone(),
-        handleCancel: () => root.commands.handleCancel(),
-        handlePause: () => root.commands.handlePause(),
-        handleResume: () => root.commands.handleResume(),
-        handleFileRemove: (fileId: string) =>
-            root.commands.handleFileRemove(fileId),
+        resetState: () => {
+            root.commands.resetState()
+        },
+        replaceFiles: (newFiles: File[] | UploadFile[]) => {
+            root.commands.replaceFiles(newFiles)
+        },
+        handleDone: () => {
+            root.commands.handleDone()
+        },
+        handleCancel: () => {
+            root.commands.handleCancel()
+        },
+        handlePause: () => {
+            root.commands.handlePause()
+        },
+        handleResume: () => {
+            root.commands.handleResume()
+        },
+        handleFileRemove: (fileId: string) => {
+            root.commands.handleFileRemove(fileId)
+        },
         editingFile: computed(() => state.value.editingFile),
-        openImageEditor: (file: UploadFile) =>
-            root.commands.openImageEditor(file),
-        closeImageEditor: () => root.commands.closeImageEditor(),
-        saveImageEdit: (editedImageData: string, mimeType?: string) =>
-            root.commands.saveImageEdit(editedImageData, mimeType),
-        replaceFile: (fileId: string, newFile: UploadFile) =>
-            root.commands.replaceFile(fileId, newFile),
+        openImageEditor: (file: UploadFile) => {
+            root.commands.openImageEditor(file)
+        },
+        closeImageEditor: () => {
+            root.commands.closeImageEditor()
+        },
+        saveImageEdit: (editedImageData: string, mimeType?: string) => {
+            root.commands.saveImageEdit(editedImageData, mimeType)
+        },
+        replaceFile: (fileId: string, newFile: UploadFile) => {
+            root.commands.replaceFile(fileId, newFile)
+        },
         cloudDrives: resolved.cloudDrives,
         upload: {
             totalProgress: computed(() => state.value.totalProgress),

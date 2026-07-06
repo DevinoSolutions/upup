@@ -65,42 +65,50 @@ export function useUpupUpload(
             }),
         )
 
-        if (options.onFileAdded) {
+        const {
+            onFileAdded,
+            onFileRemoved,
+            onUploadProgress,
+            onUploadComplete,
+        } = options
+        if (onFileAdded) {
             unsubs.push(
-                core.on('files-added', (...args: unknown[]) =>
-                    options.onFileAdded!(...(args as [UploadFile[]])),
-                ),
+                core.on('files-added', (...args: unknown[]) => {
+                    onFileAdded(...(args as [UploadFile[]]))
+                }),
             )
         }
-        if (options.onFileRemoved) {
+        if (onFileRemoved) {
             unsubs.push(
-                core.on('file-removed', (...args: unknown[]) =>
-                    options.onFileRemoved!(...(args as [UploadFile])),
-                ),
+                core.on('file-removed', (...args: unknown[]) => {
+                    onFileRemoved(...(args as [UploadFile]))
+                }),
             )
         }
-        if (options.onUploadProgress) {
+        if (onUploadProgress) {
             unsubs.push(
-                core.on('upload-progress', (...args: unknown[]) =>
-                    options.onUploadProgress!(
+                core.on('upload-progress', (...args: unknown[]) => {
+                    onUploadProgress(
                         ...(args as [
                             { fileId: string; loaded: number; total: number },
                         ]),
-                    ),
-                ),
+                    )
+                }),
             )
         }
-        if (options.onUploadComplete) {
+        if (onUploadComplete) {
             unsubs.push(
-                core.on('upload-all-complete', (...args: unknown[]) =>
-                    options.onUploadComplete!(...(args as [UploadFile[]])),
-                ),
+                core.on('upload-all-complete', (...args: unknown[]) => {
+                    onUploadComplete(...(args as [UploadFile[]]))
+                }),
             )
         }
     })
 
     onUnmounted(() => {
-        unsubs.forEach(u => u())
+        unsubs.forEach(u => {
+            u()
+        })
         core.destroy()
     })
 
@@ -111,15 +119,27 @@ export function useUpupUpload(
         error,
 
         addFiles: (f: File[]) => core.addFiles(f),
-        removeFile: (id: string) => core.removeFile(id),
-        removeAll: () => core.removeAll(),
+        removeFile: (id: string) => {
+            core.removeFile(id)
+        },
+        removeAll: () => {
+            core.removeAll()
+        },
         setFiles: (f: File[]) => core.setFiles(f),
-        reorderFiles: (ids: string[]) => core.reorderFiles(ids),
+        reorderFiles: (ids: string[]) => {
+            core.reorderFiles(ids)
+        },
 
         upload: () => core.upload(),
-        pause: () => core.pause(),
-        resume: () => core.resume(),
-        cancel: () => core.cancel(),
+        pause: () => {
+            core.pause()
+        },
+        resume: () => {
+            core.resume()
+        },
+        cancel: () => {
+            core.cancel()
+        },
         retry: (id?: string) => core.retry(id),
 
         on: (event: string, handler: (...args: unknown[]) => void) =>

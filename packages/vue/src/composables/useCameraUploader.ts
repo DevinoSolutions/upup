@@ -1,4 +1,5 @@
-import { computed, onUnmounted, ref } from 'vue'
+import { computed, onUnmounted, ref, type Ref, type ComputedRef } from 'vue'
+import type { Translations } from '@upup/core'
 import {
     useUploaderFiles,
     useUploaderI18n,
@@ -7,13 +8,30 @@ import {
     useUploaderSource,
     useUploaderTheme,
 } from '../context/uploader-context'
+import type { ContextProps, ContextTheme } from '../context/uploader-context'
 
 export enum FacingMode {
     Environment = 'environment',
     User = 'user',
 }
 
-export default function useCameraUploader() {
+interface UseCameraUploaderReturn {
+    videoRef: Ref<HTMLVideoElement | null>
+    capturedUrl: Ref<string>
+    facingMode: Ref<FacingMode>
+    newCameraSide: ComputedRef<'front' | 'back'>
+    startCamera: () => Promise<void>
+    stopCamera: () => void
+    capture: () => void
+    clearUrl: () => void
+    handleFetchImage: () => Promise<void>
+    handleCameraSwitch: () => void
+    translations: Translations
+    props: ContextProps
+    theme: ContextTheme
+}
+
+export default function useCameraUploader(): UseCameraUploaderReturn {
     const { core } = useUploaderRuntime()
     const { setFiles } = useUploaderFiles()
     const { setActiveSource } = useUploaderSource()
@@ -33,7 +51,9 @@ export default function useCameraUploader() {
     async function startCamera() {
         try {
             if (stream.value) {
-                stream.value.getTracks().forEach(t => t.stop())
+                stream.value.getTracks().forEach(t => {
+                    t.stop()
+                })
             }
             const mediaStream = await navigator.mediaDevices.getUserMedia({
                 video: { facingMode: facingMode.value },
@@ -41,16 +61,18 @@ export default function useCameraUploader() {
             stream.value = mediaStream
             if (videoRef.value) {
                 videoRef.value.srcObject = mediaStream
-                videoRef.value.play()
+                await videoRef.value.play()
             }
         } catch {
-            // camera unavailable — leave stream null
+            // upup-catch: camera unavailable or autoplay blocked — leave stream null
         }
     }
 
     function stopCamera() {
         if (stream.value) {
-            stream.value.getTracks().forEach(t => t.stop())
+            stream.value.getTracks().forEach(t => {
+                t.stop()
+            })
             stream.value = null
         }
         if (videoRef.value) {

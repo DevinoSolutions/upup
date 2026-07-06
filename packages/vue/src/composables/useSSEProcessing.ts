@@ -22,10 +22,12 @@ export function useSSEProcessing({
     onFileProcessed,
     onError,
     processingTimeout = 60_000,
-}: Options) {
+}: Options): { connectSSE: (file: UploadFile) => void } {
     const processor = new SSEProcessor()
 
-    onUnmounted(() => processor.destroy())
+    onUnmounted(() => {
+        processor.destroy()
+    })
 
     function connectSSE(file: UploadFile) {
         const key = file.key
@@ -34,7 +36,9 @@ export function useSSEProcessing({
         processor.subscribe(
             key,
             processingEndpoint,
-            (data: Record<string, unknown>) => onFileProcessed(file, data),
+            (data: Record<string, unknown>) => {
+                onFileProcessed(file, data)
+            },
             (error: Error) => onError?.(error),
             processingTimeout,
         )

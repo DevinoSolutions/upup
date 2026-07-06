@@ -1,22 +1,60 @@
-import { shallowRef, computed, onMounted, onUnmounted } from 'vue'
+import {
+    shallowRef,
+    computed,
+    onMounted,
+    onUnmounted,
+    type ComputedRef,
+} from 'vue'
 import { BOX_DESCRIPTOR, type DriveFile, type DriveFolder } from '@upup/core'
-import { DriveBrowserController } from '@upup/core/internal'
+import {
+    DriveBrowserController,
+    type DriveBrowserState,
+} from '@upup/core/internal'
 import {
     useUploaderFiles,
     useUploaderRuntime,
     useUploaderSource,
 } from '../context/uploader-context'
 
-export function useBox() {
+interface UseBoxReturn {
+    user: ComputedRef<DriveBrowserState['user']>
+    boxFiles: ComputedRef<DriveBrowserState['folder']>
+    logout: () => void
+    authenticate: () => void
+    token: ComputedRef<'active' | undefined>
+    isAuthenticated: ComputedRef<DriveBrowserState['isAuthenticated']>
+    isLoading: ComputedRef<DriveBrowserState['isLoading']>
+    path: ComputedRef<DriveBrowserState['path']>
+    setPath: (newPath: DriveFolder[]) => void
+    handleClick: (file: DriveFile) => void
+    selectedFiles: ComputedRef<DriveBrowserState['selectedFiles']>
+    showLoader: ComputedRef<DriveBrowserState['showLoader']>
+    handleSubmit: () => Promise<void>
+    handleCancelDownload: () => void
+    onSelectCurrentFolder: () => Promise<void>
+    isClickLoading: ComputedRef<DriveBrowserState['isClickLoading']>
+    error: ComputedRef<DriveBrowserState['error']>
+    hasMore: ComputedRef<DriveBrowserState['hasMore']>
+    isLoadingMore: ComputedRef<DriveBrowserState['isLoadingMore']>
+    loadMore: () => Promise<void>
+}
+
+export function useBox(): UseBoxReturn {
     const { core } = useUploaderRuntime()
     const { setActiveSource } = useUploaderSource()
     const { setFiles } = useUploaderFiles()
 
-    const controller = new DriveBrowserController(core!, BOX_DESCRIPTOR, {
+    if (!core) {
+        throw new Error('useBox must be used inside <UpupUploader />')
+    }
+
+    const controller = new DriveBrowserController(core, BOX_DESCRIPTOR, {
         onFilesSelected: files => {
             setFiles(files)
         },
-        onClose: () => setActiveSource(undefined),
+        onClose: () => {
+            setActiveSource(undefined)
+        },
     })
 
     const state = shallowRef(controller.getSnapshot())
@@ -36,20 +74,30 @@ export function useBox() {
     return {
         user: computed(() => state.value.user),
         boxFiles: computed(() => state.value.folder),
-        logout: () => controller.signOut(),
-        authenticate: () => controller.signIn(),
+        logout: () => {
+            controller.signOut()
+        },
+        authenticate: () => {
+            controller.signIn()
+        },
         token: computed(() =>
             state.value.isAuthenticated ? 'active' : undefined,
         ),
         isAuthenticated: computed(() => state.value.isAuthenticated),
         isLoading: computed(() => state.value.isLoading),
         path: computed(() => state.value.path),
-        setPath: (newPath: DriveFolder[]) => controller.setPath(newPath),
-        handleClick: (file: DriveFile) => controller.handleClick(file),
+        setPath: (newPath: DriveFolder[]) => {
+            controller.setPath(newPath)
+        },
+        handleClick: (file: DriveFile) => {
+            controller.handleClick(file)
+        },
         selectedFiles: computed(() => state.value.selectedFiles),
         showLoader: computed(() => state.value.showLoader),
         handleSubmit: () => controller.handleSubmit(),
-        handleCancelDownload: () => controller.handleCancelDownload(),
+        handleCancelDownload: () => {
+            controller.handleCancelDownload()
+        },
         onSelectCurrentFolder: () => controller.onSelectCurrentFolder(),
         isClickLoading: computed(() => state.value.isClickLoading),
         error: computed(() => state.value.error),

@@ -1,10 +1,10 @@
 import { loadGoogleIdentityServices } from '@upup/core/internal'
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, type Ref } from 'vue'
 
 /**
  * Loads the Google Identity Services API.
  */
-export default function useLoadGAPI() {
+export default function useLoadGAPI(): { gisLoaded: Ref<boolean> } {
     const gisLoaded = ref(false)
 
     onMounted(() => {

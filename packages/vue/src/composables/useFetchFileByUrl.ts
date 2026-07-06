@@ -1,10 +1,5 @@
-import { ref } from 'vue'
-import {
-    sanitizeFileName,
-    extensionFromMime,
-    fileNameFromContentDisposition,
-    deriveFetchedFileName,
-} from '@upup/core/internal'
+import { ref, type Ref } from 'vue'
+import { deriveFetchedFileName } from '@upup/core/internal'
 import {
     useUploaderOptions,
     useUploaderRuntime,
@@ -12,7 +7,10 @@ import {
 
 export { deriveFetchedFileName }
 
-export default function useFetchFileByUrl() {
+export default function useFetchFileByUrl(): {
+    loading: Ref<boolean>
+    fetchImage: (url: string) => Promise<File | undefined>
+} {
     const { core } = useUploaderRuntime()
     const { onError } = useUploaderOptions()
     const loading = ref(false)

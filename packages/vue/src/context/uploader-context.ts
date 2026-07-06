@@ -170,7 +170,7 @@ const RootKey: InjectionKey<IUploaderContext> = Symbol('upup-root')
 
 // ─── Provider function ─────────────────────────────────────
 
-export function provideUploaderContext(value: IUploaderContext) {
+export function provideUploaderContext(value: IUploaderContext): void {
     provide(RootKey, value)
     provide(RuntimeKey, {
         core: value.core,
@@ -232,33 +232,33 @@ function readInjection<T>(key: InjectionKey<T>, name: string): T {
     return value
 }
 
-export function useUploaderContext() {
+export function useUploaderContext(): IUploaderContext {
     return readInjection(RootKey, 'useUploaderContext')
 }
-export function useUploaderRuntime() {
+export function useUploaderRuntime(): ContextRuntime {
     return readInjection(RuntimeKey, 'useUploaderRuntime')
 }
-export function useUploaderSource() {
+export function useUploaderSource(): ContextSource {
     return readInjection(SourceKey, 'useUploaderSource')
 }
-export function useUploaderI18n() {
+export function useUploaderI18n(): ContextI18n {
     return readInjection(I18nKey, 'useUploaderI18n')
 }
-export function useUploaderFiles() {
+export function useUploaderFiles(): ContextFiles {
     return readInjection(FilesKey, 'useUploaderFiles')
 }
-export function useUploaderUploadControls() {
+export function useUploaderUploadControls(): ContextUploadControls {
     return readInjection(UploadControlsKey, 'useUploaderUploadControls')
 }
-export function useUploaderView() {
+export function useUploaderView(): ContextView {
     return readInjection(ViewKey, 'useUploaderView')
 }
-export function useUploaderEditor() {
+export function useUploaderEditor(): ContextEditor {
     return readInjection(EditorKey, 'useUploaderEditor')
 }
-export function useUploaderOptions() {
+export function useUploaderOptions(): ContextProps {
     return readInjection(OptionsKey, 'useUploaderOptions')
 }
-export function useUploaderTheme() {
+export function useUploaderTheme(): ContextTheme {
     return readInjection(ThemeKey, 'useUploaderTheme')
 }
