@@ -9,11 +9,12 @@ export const MIME_EXTENSION_MAP: Record<string, string> = {
     'text/plain': 'txt',
 }
 
-export function sanitizeFileName(value: string) {
-    let decoded = value
+export function sanitizeFileName(value: string): string {
+    let decoded: string
     try {
         decoded = decodeURIComponent(value)
     } catch {
+        // upup-catch: value isn't valid percent-encoding — fall back to the raw string
         decoded = value
     }
     decoded = decoded.trim()
@@ -21,7 +22,7 @@ export function sanitizeFileName(value: string) {
     return lastSegment.replace(/[\x00-\x1f\x7f<>:"/\\|?*]+/g, '_')
 }
 
-export function extensionFromMime(type: string) {
+export function extensionFromMime(type: string): string {
     const mime = type.split(';')[0]?.trim().toLowerCase()
     if (!mime) return 'bin'
 
@@ -33,7 +34,9 @@ export function extensionFromMime(type: string) {
     return subtype.split('+').pop() || subtype
 }
 
-export function fileNameFromContentDisposition(header: string | null) {
+export function fileNameFromContentDisposition(
+    header: string | null,
+): string | undefined {
     if (!header) return undefined
 
     const encodedMatch = header.match(/filename\*=([^;]+)/i)
@@ -55,20 +58,20 @@ export function deriveFetchedFileName(
     url: string,
     response: Response,
     blob: Blob,
-) {
+): string {
     const dispositionName = fileNameFromContentDisposition(
         response.headers.get('content-disposition'),
     )
     if (dispositionName) return dispositionName
 
     try {
-        const parsedUrl = new URL(url, globalThis.location?.href)
+        const parsedUrl = new URL(url, globalThis.location.href)
         if (['http:', 'https:', 'file:'].includes(parsedUrl.protocol)) {
             const urlName = sanitizeFileName(parsedUrl.pathname)
             if (urlName) return urlName
         }
     } catch {
-        // Data/blob URLs and malformed user input fall through to a generated name.
+        // upup-catch: data/blob URLs and malformed user input fall through to a generated name
     }
 
     return `${crypto.randomUUID()}.${extensionFromMime(blob.type || response.headers.get('content-type') || '')}`

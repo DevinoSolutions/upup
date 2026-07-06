@@ -30,7 +30,7 @@ export function heicStep(): PipelineStep {
                     if (result.kind === 'image')
                         return uploadFileFromImageResult(file, result)
                 } catch {
-                    /* fall through to main thread */
+                    // upup-catch: worker execution failed — fall through to the main-thread HEIC decode path
                 }
             }
             try {

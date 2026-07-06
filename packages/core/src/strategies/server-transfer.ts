@@ -65,14 +65,15 @@ export class ServerTransfer {
 
         if (!response.ok) {
             const body = await response.text().catch(() => '')
-            throw uploadErrorFromResponse({
+            const err = uploadErrorFromResponse({
                 status: response.status,
                 statusText: response.statusText,
                 body,
                 kind: 'network',
             })
+            throw err
         }
 
-        return response.json()
+        return response.json() as Promise<TransferResult>
     }
 }

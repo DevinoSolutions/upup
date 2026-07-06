@@ -23,5 +23,5 @@ export const LOCALE_META: Record<string, LocaleMeta> = Object.fromEntries(
  * e.g. "en_US" -> "en-US", "fr_FR" -> "fr-FR"
  */
 export function normalizeBcp47(code: string): UpupLocaleCode {
-    return code.replace(/_/g, '-') as UpupLocaleCode
+    return code.replace(/_/g, '-')
 }

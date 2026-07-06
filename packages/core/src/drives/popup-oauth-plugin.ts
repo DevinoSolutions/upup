@@ -273,75 +273,80 @@ export abstract class PopupOAuthPlugin implements DrivePlugin {
 
             this.pollTimer = setInterval(() => {
                 void (async (): Promise<void> => {
-                try {
-                    if (!this.popupWindow || this.popupWindow.closed) {
+                    try {
+                        if (!this.popupWindow || this.popupWindow.closed) {
+                            this.cleanupPopup()
+                            this.setState('idle')
+                            resolve() // User closed popup — not an error
+                            return
+                        }
+
+                        let href: string
+                        try {
+                            href = this.popupWindow.location.href
+                        } catch {
+                            // upup-catch: cross-origin read while still on the provider's domain — expected until the redirect lands
+                            return
+                        }
+
+                        if (
+                            !href.startsWith(redirectUri) ||
+                            !href.includes('code=')
+                        ) {
+                            return
+                        }
+
+                        // Got the redirect with the code
+                        this.cleanupPollTimer()
+
+                        const code = new URL(href).searchParams.get('code')
+                        this.popupWindow.close()
+                        this.popupWindow = null
+
+                        if (!code) {
+                            const err = new Error(
+                                'No authorization code found in redirect URL',
+                            )
+                            this.setState('idle')
+                            this.emitter?.emit(
+                                `${this.spec.eventPrefix}:error`,
+                                {
+                                    error: err,
+                                    action: 'authenticateViaPopup',
+                                },
+                            )
+                            reject(err)
+                            return
+                        }
+
+                        await this.authenticate(code)
+                        resolve()
+                    } catch (err) {
+                        const message =
+                            err instanceof Error ? err.message : String(err)
+
+                        // Ignore cross-origin errors — they're expected while polling
+                        if (
+                            message.includes('cross-origin') ||
+                            message.includes('Cross-Origin') ||
+                            message.includes('Permission denied') ||
+                            message.includes('Failed to read')
+                        ) {
+                            return
+                        }
+
                         this.cleanupPopup()
                         this.setState('idle')
-                        resolve() // User closed popup — not an error
-                        return
-                    }
-
-                    let href: string
-                    try {
-                        href = this.popupWindow.location.href
-                    } catch {
-                        // upup-catch: cross-origin read while still on the provider's domain — expected until the redirect lands
-                        return
-                    }
-
-                    if (
-                        !href.startsWith(redirectUri) ||
-                        !href.includes('code=')
-                    ) {
-                        return
-                    }
-
-                    // Got the redirect with the code
-                    this.cleanupPollTimer()
-
-                    const code = new URL(href).searchParams.get('code')
-                    this.popupWindow.close()
-                    this.popupWindow = null
-
-                    if (!code) {
-                        const err = new Error(
-                            'No authorization code found in redirect URL',
-                        )
-                        this.setState('idle')
+                        // upup-catch: real popup-poll failure — emitted via the provider's error event and rejected to the authenticateViaPopup() caller
                         this.emitter?.emit(`${this.spec.eventPrefix}:error`, {
-                            error: err,
+                            error:
+                                err instanceof Error
+                                    ? err
+                                    : new Error(String(err)),
                             action: 'authenticateViaPopup',
                         })
-                        reject(err)
-                        return
+                        reject(err instanceof Error ? err : new Error(message))
                     }
-
-                    await this.authenticate(code)
-                    resolve()
-                } catch (err) {
-                    const message =
-                        err instanceof Error ? err.message : String(err)
-
-                    // Ignore cross-origin errors — they're expected while polling
-                    if (
-                        message.includes('cross-origin') ||
-                        message.includes('Cross-Origin') ||
-                        message.includes('Permission denied') ||
-                        message.includes('Failed to read')
-                    ) {
-                        return
-                    }
-
-                    this.cleanupPopup()
-                    this.setState('idle')
-                    // upup-catch: real popup-poll failure — emitted via the provider's error event and rejected to the authenticateViaPopup() caller
-                    this.emitter?.emit(`${this.spec.eventPrefix}:error`, {
-                        error:
-                            err instanceof Error ? err : new Error(String(err)),
-                        action: 'authenticateViaPopup',
-                    })
-                    reject(err instanceof Error ? err : new Error(message))
-                }
                 })()
             }, 500)
         })

@@ -165,25 +165,27 @@ export function parseErrorBody(body: string | undefined): {
     if (!body) return { message: '' }
 
     try {
-        const parsed = JSON.parse(body) as {
-            code?: string
-            error?: string
-            message?: string
-        }
+        const parsed: unknown = JSON.parse(body)
         if (parsed && typeof parsed === 'object') {
-            const message = parsed.error ?? parsed.message
-            if (
-                typeof message === 'string' ||
-                typeof parsed.code === 'string'
-            ) {
+            const {
+                code,
+                error,
+                message: msg,
+            } = parsed as {
+                code?: string
+                error?: string
+                message?: string
+            }
+            const message = error ?? msg
+            if (typeof message === 'string' || typeof code === 'string') {
                 return {
                     message: message ?? '',
-                    ...(parsed.code !== undefined ? { code: parsed.code } : {}),
+                    ...(code !== undefined ? { code } : {}),
                 }
             }
         }
     } catch {
-        // not JSON — fall through to XML/text
+        // upup-catch: body isn't JSON — fall through to XML/text parsing below
     }
 
     const xmlCode = /<Code>([^<]*)<\/Code>/.exec(body)?.[1]

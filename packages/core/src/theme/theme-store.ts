@@ -60,8 +60,10 @@ export class ThemeStore {
             this.recompute()
         }
         update()
-        media.addEventListener?.('change', update)
-        this.mediaCleanup = () => media.removeEventListener?.('change', update)
+        media.addEventListener('change', update)
+        this.mediaCleanup = () => {
+            media.removeEventListener('change', update)
+        }
     }
 
     /** Re-resolve when the host's theme config prop changes. */
@@ -84,7 +86,7 @@ export class ThemeStore {
             tokens: resolved.tokens,
             resolved,
             slotOverrides: flattenSlotsToClassNames(resolved.slots),
-            slots: resolved.slots ?? {},
+            slots: resolved.slots,
         }
     }
 
@@ -94,7 +96,9 @@ export class ThemeStore {
     }
 
     private notify(): void {
-        this.listeners.forEach(fn => fn())
+        this.listeners.forEach(fn => {
+            fn()
+        })
     }
 
     destroy(): void {

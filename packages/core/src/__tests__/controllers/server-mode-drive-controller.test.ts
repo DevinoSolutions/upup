@@ -203,9 +203,11 @@ describe('ServerModeDriveController', () => {
         let handler: ((e: MessageEvent) => void) | null = null
         const windowStub = {
             open: vi.fn().mockReturnValue({}),
-            addEventListener: vi.fn((_type: string, h: (e: MessageEvent) => void) => {
-                handler = h
-            }),
+            addEventListener: vi.fn(
+                (_type: string, h: (e: MessageEvent) => void) => {
+                    handler = h
+                },
+            ),
             removeEventListener: vi.fn(),
         }
         vi.stubGlobal('window', windowStub)

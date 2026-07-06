@@ -10,8 +10,11 @@ import { enUS } from '../i18n/locales/en-US'
 import { resolveLocaleBundle } from '../i18n/resolve-locale'
 import { flattenTranslatorToUiTranslations } from '../i18n/ui-translations'
 import type { FileSource } from '../types/file-source'
-import type { LocaleBundle, Translator } from '../i18n/types'
-import type { ResolvedImageEditorOptions } from '../types/image-editor'
+import type { Translator } from '../i18n/types'
+import type {
+    ImageEditorOptions,
+    ResolvedImageEditorOptions,
+} from '../types/image-editor'
 import type { CoreOptions } from '../core'
 import type {
     NormalizedUploaderOptions,
@@ -45,7 +48,13 @@ export function normalizeUploaderOptions(
         options.folderUpload?.showSelectFolderButton ?? false
 
     const imageEditor: ResolvedImageEditorOptions = (() => {
-        const ie = options.imageEditor
+        // Widened to include `null`: options is a public JS-reachable surface
+        // and a plain-JS caller (no TS enforcement) may pass it explicitly.
+        // (Cast on the initializer, not a variable annotation — a `const`'s
+        // flow-narrowing tracks the initializer expression's type, not a
+        // wider redundant declared type.)
+        const ie = options.imageEditor as
+            boolean | ImageEditorOptions | null | undefined
         if (ie === true)
             return { enabled: true, autoOpen: 'never', display: 'inline' }
         if (typeof ie === 'object' && ie !== null) {
@@ -75,9 +84,7 @@ export function normalizeUploaderOptions(
     const lang =
         bundle?.code ??
         (typeof i18n?.locale === 'string' ? i18n.locale : 'en-US')
-    const dir = (bundle?.dir ??
-        getDir(i18n?.locale as string | LocaleBundle | undefined)) as
-        'ltr' | 'rtl'
+    const dir = bundle?.dir ?? getDir(i18n?.locale)
 
     const resolved: UploaderResolved = {
         mini,
@@ -125,7 +132,7 @@ export function normalizeUploaderOptions(
         resumable: options.resumable,
         cloudDrives: options.cloudDrives,
         locale: bundle,
-    } as CoreOptions
+    }
 
     return { coreOptions, resolved }
 }

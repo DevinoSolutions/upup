@@ -1,16 +1,14 @@
-import { UpupConfigError, UpupErrorCode } from './errors'
+import { UpupConfigError, UpupError, UpupErrorCode } from './errors'
 import { createTranslator } from './i18n/create-translator'
 import { enUS } from './i18n/locales/en-US'
 import { resolveLocaleBundle } from './i18n/resolve-locale'
-import type { LocaleBundle, UpupLocaleCode } from './i18n/types'
-import type { PipelineContext, PipelineStep } from './contracts-pipeline'
-import type { ResumableUploadOptions } from './types/upload-protocols'
+import type { PipelineContext } from './contracts-pipeline'
 import type { UploadFile } from './types/upload-file'
 import { UploadStatus } from './types/upload-status'
-import { EventEmitter, type EventHandler } from './events'
+import { EventEmitter } from './events'
 import type { CoreEvents } from './types/core-events'
 import { PluginManager, type UpupPlugin, type ExtensionMethods } from './plugin'
-import { FileManager, type FileManagerOptions } from './file-manager'
+import { FileManager } from './file-manager'
 import { validateFileRestrictions } from './validate-file-restrictions'
 import { PipelineEngine } from './pipeline/engine'
 import { buildAutoPipeline } from './pipeline/build-auto-pipeline'
@@ -119,9 +117,7 @@ export class UpupCore {
         if (!crashRecovery || this.crashRecovery) return
 
         const crashOptions =
-            typeof crashRecovery === 'object' && crashRecovery !== null
-                ? crashRecovery
-                : {}
+            typeof crashRecovery === 'object' ? crashRecovery : {}
         this.crashRecovery = new CrashRecoveryManager(
             crashOptions.storage ?? new IndexedDBStorage(),
         )
@@ -178,7 +174,10 @@ export class UpupCore {
         overrides?: Partial<UploadOptions>,
     ): Promise<void> {
         if (this.destroyed)
-            throw new Error('UpupCore: addFiles() after destroy()')
+            throw new UpupError(
+                'UpupCore: addFiles() after destroy()',
+                UpupErrorCode.BAD_REQUEST,
+            )
         try {
             const added = await this.fileManager.addFiles(files)
             if (added.length > 0) {
@@ -219,7 +218,10 @@ export class UpupCore {
 
     async setFiles(files: File[]): Promise<void> {
         if (this.destroyed)
-            throw new Error('UpupCore: setFiles() after destroy()')
+            throw new UpupError(
+                'UpupCore: setFiles() after destroy()',
+                UpupErrorCode.BAD_REQUEST,
+            )
         await this.fileManager.setFiles(files)
         this.emitter.emit('state-change', { files: this.files })
         this.emitter.emit('files-set', { count: this.files.size })
@@ -299,9 +301,12 @@ export class UpupCore {
                     : {},
             )
         } catch (err) {
+            // upup-catch: worker offload is optional — any failure to spin up the
+            // worker falls back to the main-thread pipeline, so this is degradation,
+            // not an upload error. Surface dev-only for diagnostics.
             if (
                 typeof process !== 'undefined' &&
-                process.env?.NODE_ENV !== 'production'
+                process.env.NODE_ENV !== 'production'
             ) {
                 console.warn(
                     '[upup] worker offload unavailable, falling back to main thread',
@@ -424,16 +429,21 @@ export class UpupCore {
         return [...this.files.values()]
     }
 
-    async validateFiles(files: File[]): Promise<ValidationResult[]> {
-        return files.map(file => {
-            const errors = validateFileRestrictions(file, this.options)
-            return { file, valid: errors.length === 0, errors }
-        })
+    validateFiles(files: File[]): Promise<ValidationResult[]> {
+        return Promise.resolve(
+            files.map(file => {
+                const errors = validateFileRestrictions(file, this.options)
+                return { file, valid: errors.length === 0, errors }
+            }),
+        )
     }
 
     async upload(): Promise<UploadFile[]> {
         if (this.destroyed)
-            throw new Error('UpupCore: upload() after destroy()')
+            throw new UpupError(
+                'UpupCore: upload() after destroy()',
+                UpupErrorCode.BAD_REQUEST,
+            )
         if (this.activeRun) return this.activeRun
         this.activeRun = this.runUpload()
         try {
@@ -443,9 +453,13 @@ export class UpupCore {
         }
     }
 
-    private async runUpload(): Promise<UploadFile[]> {
+    private resetRunFlags(): void {
         this.pauseRequested = false
         this.cancelRequested = false
+    }
+
+    private async runUpload(): Promise<UploadFile[]> {
+        this.resetRunFlags()
         this._status = UploadStatus.PROCESSING
         this.emitter.emit('upload-start', {})
         this.emitter.emit('state-change', { status: this._status })
@@ -472,7 +486,9 @@ export class UpupCore {
                     const context: PipelineContext = {
                         files: this.files,
                         options: this.options as Record<string, unknown>,
-                        emit: (event, data) => this.emitter.emit(event, data),
+                        emit: (event, data) => {
+                            this.emitter.emit(event, data)
+                        },
                         t: (key: string, vars?: Record<string, unknown>) =>
                             translator(
                                 key as Parameters<typeof translator>[0],
@@ -572,7 +588,10 @@ export class UpupCore {
      */
     resume(): void {
         if (this.destroyed)
-            throw new Error('UpupCore: resume() after destroy()')
+            throw new UpupError(
+                'UpupCore: resume() after destroy()',
+                UpupErrorCode.BAD_REQUEST,
+            )
         if (this.activeRun) return
         this.pauseRequested = false
         this._status = UploadStatus.UPLOADING
@@ -592,7 +611,7 @@ export class UpupCore {
                     : UploadStatus.IDLE
                 this.emitter.emit('state-change', { status: this._status })
             })
-                .catch(err => {
+                .catch((err: unknown) => {
                     if (
                         this.pauseRequested ||
                         this.cancelRequested ||
@@ -628,7 +647,11 @@ export class UpupCore {
     }
 
     async retry(fileId?: string): Promise<UploadFile[]> {
-        if (this.destroyed) throw new Error('UpupCore: retry() after destroy()')
+        if (this.destroyed)
+            throw new UpupError(
+                'UpupCore: retry() after destroy()',
+                UpupErrorCode.BAD_REQUEST,
+            )
         if (this.activeRun) return this.activeRun
         this.activeRun = this.runRetry(fileId)
         try {
@@ -692,27 +715,21 @@ export class UpupCore {
         }
     }
 
-    on<K extends string & keyof CoreEvents>(
+    on<K extends keyof CoreEvents>(
         event: K,
         handler: (payload: CoreEvents[K]) => void,
     ): () => void
-    on<K extends string>(
-        event: K,
-        handler: (payload: unknown) => void,
-    ): () => void
+    on(event: string, handler: (payload: unknown) => void): () => void
     on(event: string, handler: (payload: unknown) => void): () => void {
-        return this.emitter.on(event, handler as EventHandler<unknown>)
+        return this.emitter.on(event, handler)
     }
 
     off(event: string, handler: (payload: unknown) => void): void {
-        this.emitter.off(event, handler as EventHandler<unknown>)
+        this.emitter.off(event, handler)
     }
 
-    emit<K extends string & keyof CoreEvents>(
-        event: K,
-        payload: CoreEvents[K],
-    ): void
-    emit<K extends string>(event: K, data?: unknown): void
+    emit<K extends keyof CoreEvents>(event: K, payload: CoreEvents[K]): void
+    emit(event: string, data?: unknown): void
     emit(event: string, data?: unknown): void {
         this.emitter.emit(event, data)
     }

@@ -2,7 +2,6 @@ import { describe, it, expectTypeOf } from 'vitest'
 import type {
     UpupColorTokens,
     UpupRadiusTokens,
-    UpupShadowTokens,
     UpupSpacingTokens,
     UpupThemeTokens,
     UpupThemeMode,

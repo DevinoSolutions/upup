@@ -20,7 +20,7 @@ export function exifStep(): PipelineStep {
                     if (result.kind === 'image')
                         return uploadFileFromImageResult(file, result)
                 } catch {
-                    /* fall through to main thread */
+                    // upup-catch: worker execution failed — fall through to the main-thread encode path
                 }
             }
             const processed = await encodeImageFile(file, {

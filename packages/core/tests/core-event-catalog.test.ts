@@ -24,7 +24,7 @@ describe('UpupCore — event catalog', () => {
         // Restrictions
         'restriction-failed',
         // UI interactions
-        'adapter-click', 'adapter-view-cancel',
+        'source-click', 'source-view-cancel',
         'browse-files', 'folder-select',
         'drag-over', 'drag-leave', 'drop', 'paste',
         'url-submit', 'url-fetch', 'url-fetch-cancel',

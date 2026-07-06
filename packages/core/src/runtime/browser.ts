@@ -24,6 +24,7 @@ export const BrowserRuntime: RuntimeAdapter = {
                           },
                       )
                   } catch {
+                      // upup-catch: worker construction can fail (CSP, unsupported bundler resolution) — fall back to no worker
                       return null
                   }
               }
@@ -48,10 +49,12 @@ export const BrowserRuntime: RuntimeAdapter = {
                 resolve({ status: xhr.status, headers, body: xhr.responseText })
             })
 
-            xhr.addEventListener('error', () =>
-                reject(new Error('Network error')),
-            )
-            options.signal.addEventListener('abort', () => xhr.abort())
+            xhr.addEventListener('error', () => {
+                reject(new Error('Network error'))
+            })
+            options.signal.addEventListener('abort', () => {
+                xhr.abort()
+            })
 
             xhr.open(options.method, url)
             for (const [k, v] of Object.entries(options.headers)) {
@@ -66,12 +69,14 @@ export const BrowserRuntime: RuntimeAdapter = {
     },
 
     createObjectURL:
-        typeof URL !== 'undefined' && URL.createObjectURL
+        typeof URL !== 'undefined' && typeof URL.createObjectURL === 'function'
             ? (blob: Blob) => URL.createObjectURL(blob)
             : undefined,
 
     revokeObjectURL:
-        typeof URL !== 'undefined' && URL.revokeObjectURL
-            ? (url: string) => URL.revokeObjectURL(url)
+        typeof URL !== 'undefined' && typeof URL.revokeObjectURL === 'function'
+            ? (url: string) => {
+                  URL.revokeObjectURL(url)
+              }
             : undefined,
 }

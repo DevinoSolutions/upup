@@ -1,9 +1,4 @@
-import type {
-    LocaleBundle,
-    UpupLocaleCode,
-    UpupMessages,
-    MessageNamespace,
-} from './types'
+import type { LocaleBundle, UpupLocaleCode, MessageNamespace } from './types'
 import type { RegisteredLocaleCode } from './locales/registry'
 import { LOCALE_REGISTRY } from './locales/registry'
 import { normalizeBcp47 } from './locale-meta'
@@ -26,11 +21,11 @@ export function resolveLocaleBundle(
         'code' in candidate &&
         'messages' in candidate
     ) {
-        return candidate as LocaleBundle
+        return candidate
     }
     if (typeof candidate === 'string') {
         const code = normalizeBcp47(candidate)
-        return LOCALE_REGISTRY[code as RegisteredLocaleCode] ?? undefined
+        return LOCALE_REGISTRY[code as RegisteredLocaleCode]
     }
     return undefined
 }

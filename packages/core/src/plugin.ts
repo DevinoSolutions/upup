@@ -1,4 +1,5 @@
 import type { EventEmitter } from './events'
+import { UpupConfigError } from './errors'
 
 export interface UpupPlugin {
     /** Unique name — used for deduplication and debugging */
@@ -12,7 +13,7 @@ export interface UpupPlugin {
     init?(emitter: EventEmitter): void
 }
 
-export type ExtensionMethods = Record<string, (...args: any[]) => any>
+export type ExtensionMethods = Record<string, (...args: unknown[]) => unknown>
 
 export class PluginManager {
     private plugins = new Map<string, UpupPlugin>()
@@ -21,7 +22,10 @@ export class PluginManager {
     register(plugin: UpupPlugin, core: unknown): void {
         void core
         if (this.plugins.has(plugin.name)) {
-            throw new Error(`Plugin "${plugin.name}" is already registered`)
+            throw new UpupConfigError(
+                `Plugin "${plugin.name}" is already registered`,
+                'PLUGIN_ALREADY_REGISTERED',
+            )
         }
         this.plugins.set(plugin.name, plugin)
         // The plugin's lifecycle hook is init(emitter), invoked by UpupCore.use()
@@ -30,7 +34,10 @@ export class PluginManager {
 
     registerExtension(name: string, methods: ExtensionMethods): void {
         if (this.extensions.has(name)) {
-            throw new Error(`Extension "${name}" is already registered`)
+            throw new UpupConfigError(
+                `Extension "${name}" is already registered`,
+                'EXTENSION_ALREADY_REGISTERED',
+            )
         }
         this.extensions.set(name, methods)
     }

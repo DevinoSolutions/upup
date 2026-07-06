@@ -13,7 +13,6 @@
 import type { FileSource } from './file-source'
 import type { UploadFile } from './upload-file'
 import type { UploadStatus } from './upload-status'
-import type { ResolvedImageEditorOptions } from './image-editor'
 import type { FilesProgressMap } from '../file-utils'
 import type { Translator } from '../i18n/types'
 import type { Translations } from '../i18n/ui-translations'

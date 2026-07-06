@@ -42,7 +42,7 @@ function deepMerge<T>(base: T, overrides: DeepPartial<T> | undefined): T {
 function detectSystemMode(): 'light' | 'dark' {
     if (
         typeof window !== 'undefined' &&
-        window.matchMedia?.('(prefers-color-scheme: dark)').matches
+        window.matchMedia('(prefers-color-scheme: dark)').matches
     ) {
         return 'dark'
     }
@@ -79,7 +79,7 @@ export function resolveTheme(
     // Merge slots: provider -> instance
     const mergedSlots = deepMerge<DeepPartial<UpupThemeSlots>>(
         providerSlots ?? {},
-        config?.slots as DeepPartial<DeepPartial<UpupThemeSlots>> | undefined,
+        config?.slots,
     )
 
     return { mode, tokens: final, slots: mergedSlots }

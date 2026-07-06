@@ -1,4 +1,5 @@
 import type { UploadFile, UploadFileMetadata } from '../contracts'
+import { UpupError, UpupErrorCode } from '../errors'
 
 type DecodedImage = {
     source: CanvasImageSource
@@ -22,10 +23,7 @@ export type EncodeImageOptions = {
 }
 
 function hasDocument(): boolean {
-    return (
-        typeof document !== 'undefined' &&
-        typeof document.createElement === 'function'
-    )
+    return typeof document !== 'undefined' && 'createElement' in document
 }
 
 function clampQuality(value: unknown, fallback: number): number {
@@ -79,7 +77,9 @@ export async function canvasToBlob(
     }
     return new Promise(resolve => {
         ;(canvas as HTMLCanvasElement).toBlob(
-            blob => resolve(blob),
+            blob => {
+                resolve(blob)
+            },
             type,
             quality,
         )
@@ -94,11 +94,13 @@ async function decodeImage(file: UploadFile): Promise<DecodedImage | null> {
                 source: bitmap,
                 width: bitmap.width,
                 height: bitmap.height,
-                close: () => bitmap.close(),
+                close: () => {
+                    bitmap.close()
+                },
             }
         } catch {
-            // Fall through to the HTMLImageElement path when this browser cannot
-            // decode a specific image blob via createImageBitmap.
+            // upup-catch: createImageBitmap failed for this blob — fall through to the
+            // HTMLImageElement decode path
         }
     }
 
@@ -107,7 +109,9 @@ async function decodeImage(file: UploadFile): Promise<DecodedImage | null> {
     return new Promise(resolve => {
         const img = new Image()
         const url = URL.createObjectURL(file)
-        const cleanup = () => URL.revokeObjectURL(url)
+        const cleanup = () => {
+            URL.revokeObjectURL(url)
+        }
         img.onload = () => {
             cleanup()
             resolve({
@@ -167,9 +171,13 @@ export async function blobToDataUrl(blob: Blob): Promise<string> {
     if (typeof FileReader !== 'undefined') {
         return new Promise((resolve, reject) => {
             const reader = new FileReader()
-            reader.onload = () => resolve(String(reader.result))
-            reader.onerror = () =>
+            reader.onload = () => {
+                const result = reader.result
+                resolve(typeof result === 'string' ? result : '')
+            }
+            reader.onerror = () => {
                 reject(reader.error ?? new Error('Failed to read blob'))
+            }
             reader.readAsDataURL(blob)
         })
     }
@@ -202,7 +210,11 @@ export async function blobToDataUrl(blob: Blob): Promise<string> {
                         }
                     ).Buffer.from(input, 'binary').toString('base64')
               : null
-    if (!encode) throw new Error('No base64 encoder available')
+    if (!encode)
+        throw new UpupError(
+            'No base64 encoder available',
+            UpupErrorCode.BAD_REQUEST,
+        )
     return `data:${blob.type || 'application/octet-stream'};base64,${encode(binary)}`
 }
 
@@ -274,21 +286,24 @@ export function cloneUploadFile(
     replacement: File,
     metadata: Partial<UploadFileMetadata> = {},
 ): UploadFile {
+    // Grandfathered top-level hash/thumbnail fields (superseded by metadata.*) are
+    // still propagated for backwards-compat; read them through a non-deprecated view.
+    const legacy = original as Record<string, unknown>
     return Object.assign(replacement, {
         id: original.id,
         source: original.source,
         status: original.status,
         metadata: {
-            ...(original.metadata ?? {}),
+            ...original.metadata,
             ...metadata,
         },
         url: original.url,
         relativePath: original.relativePath,
         key: original.key,
         etag: original.etag,
-        fileHash: original.fileHash,
-        checksumSHA256: original.checksumSHA256,
-        thumbnail: original.thumbnail,
+        fileHash: legacy.fileHash,
+        checksumSHA256: legacy.checksumSHA256,
+        thumbnail: legacy.thumbnail,
     }) as UploadFile
 }
 
@@ -305,9 +320,5 @@ export function uploadFileFromImageResult(
         type: result.type || original.type,
         lastModified: original.lastModified,
     })
-    return cloneUploadFile(
-        original,
-        file,
-        (result.metadata ?? {}) as Partial<UploadFileMetadata>,
-    )
+    return cloneUploadFile(original, file, result.metadata ?? {})
 }

@@ -1,4 +1,5 @@
 import {
+    UpupError,
     UpupValidationError,
     UpupErrorCode,
     FileSource,
@@ -39,8 +40,15 @@ async function computeContentHash(file: File): Promise<string> {
     const buffer = await file.arrayBuffer()
     const bytes = new Uint8Array(buffer)
 
-    if (typeof crypto !== 'undefined' && crypto.subtle) {
-        const hashBuffer = await crypto.subtle.digest('SHA-256', buffer)
+    // `.subtle` is typed as always-present on `Crypto`, but is genuinely absent
+    // in some runtimes (older Node, restricted/partial polyfills) — widen the
+    // access locally so the feature-detection stays a real runtime check.
+    const subtleCrypto =
+        typeof crypto !== 'undefined'
+            ? (crypto as Partial<Crypto>).subtle
+            : undefined
+    if (subtleCrypto) {
+        const hashBuffer = await subtleCrypto.digest('SHA-256', buffer)
         return Array.from(new Uint8Array(hashBuffer))
             .map(b => b.toString(16).padStart(2, '0'))
             .join('')
@@ -56,6 +64,9 @@ async function computeContentHash(file: File): Promise<string> {
 
 function storedContentHash(file: UploadFile): string | undefined {
     const metadata = file.metadata as Record<string, unknown> | undefined
+    // Grandfathered top-level hash fields on pre-metadata snapshots — read through
+    // a non-deprecated view (superseded by metadata.originalContentHash/checksum).
+    const legacy = file as Record<string, unknown>
     return (
         (typeof metadata?.originalContentHash === 'string'
             ? metadata.originalContentHash
@@ -63,14 +74,18 @@ function storedContentHash(file: UploadFile): string | undefined {
         (typeof metadata?.checksum === 'string'
             ? metadata.checksum
             : undefined) ??
-        file.checksumSHA256 ??
-        file.fileHash ??
-        undefined
+        (typeof legacy.checksumSHA256 === 'string'
+            ? legacy.checksumSHA256
+            : undefined) ??
+        (typeof legacy.fileHash === 'string' ? legacy.fileHash : undefined)
     )
 }
 
 function applyContentHash(file: UploadFile, hash: string): UploadFile {
-    file.fileHash = hash
+    // Keep the grandfathered top-level `fileHash` in sync (superseded by
+    // metadata.originalContentHash) through a non-deprecated view.
+    const fileRecord = file as Record<string, unknown>
+    fileRecord.fileHash = hash
     file.metadata = {
         ...file.metadata,
         originalContentHash: hash,
@@ -126,11 +141,14 @@ function nativeToUploadFile(
                 writable: true,
             })
         } catch {
+            // upup-catch: defineProperty can throw on a frozen/non-configurable
+            // File-like — fall back to a plain assignment attempt below.
             try {
                 uploadFile.relativePath = relativePath
             } catch {
-                // Some File-like objects expose read-only path metadata. Preserve it
-                // through metadata and avoid failing file admission.
+                // upup-catch: some File-like objects expose read-only path
+                // metadata. Preserve it through metadata and avoid failing
+                // file admission.
             }
         }
     }
@@ -188,15 +206,13 @@ export class FileManager {
             type: prev.type,
             lastModified: prev.lastModified,
         })
-        // Spread carries the own-enumerable UploadFile fields; relativePath is defined
-        // non-enumerable (nativeToUploadFile) so it is copied explicitly, exactly as
-        // cloneUploadFile does. Then the patch wins.
-        Object.assign(
-            next,
-            { ...prev },
-            { relativePath: prev.relativePath },
-            patch,
-        )
+        // Object.assign only ever reads OWN enumerable properties from `prev`
+        // (it never walks the prototype chain), so passing `prev` directly is
+        // identical to spreading it first — without the redundant intermediate
+        // plain-object copy that a spread of a File instance would produce.
+        // relativePath is defined non-enumerable (nativeToUploadFile) so it is
+        // copied explicitly, exactly as cloneUploadFile does. Then the patch wins.
+        Object.assign(next, prev, { relativePath: prev.relativePath }, patch)
         const updated = next as UploadFile
         this.files.set(id, updated)
         return updated
@@ -271,6 +287,17 @@ export class FileManager {
     ): void {
         if (files.length === 0) return
 
+        // files.length > 0 here, so files[0] is always defined in practice;
+        // fallbackFile is the caller's second-chance value for the violation
+        // error's required `file` argument.
+        const violatingFile = files[0] ?? fallbackFile
+        if (!violatingFile) {
+            throw new UpupError(
+                'assertBatchFits: no file available to attach to the violation error',
+                UpupErrorCode.BAD_REQUEST,
+            )
+        }
+
         const existing = [...existingFiles]
         if (this.options.limit) {
             const remainingSlots = this.options.limit - existing.length
@@ -278,7 +305,7 @@ export class FileManager {
                 throw new UpupValidationError(
                     `Adding ${files.length} files would exceed the limit of ${this.options.limit}`,
                     UpupErrorCode.LIMIT_EXCEEDED,
-                    files[0] ?? fallbackFile!,
+                    violatingFile,
                 )
             }
         }
@@ -291,7 +318,7 @@ export class FileManager {
                 throw new UpupValidationError(
                     'Total file size exceeds maximum',
                     UpupErrorCode.TOTAL_SIZE_EXCEEDED,
-                    files[0] ?? fallbackFile!,
+                    violatingFile,
                 )
             }
         }
@@ -332,15 +359,17 @@ export class FileManager {
     replaceFile(id: string, file: File | UploadFile): UploadFile {
         const current = this.files.get(id)
         if (!current) {
-            throw new Error(`replaceFile: unknown file ID "${id}"`)
+            throw new UpupError(
+                `replaceFile: unknown file ID "${id}"`,
+                UpupErrorCode.BAD_REQUEST,
+            )
         }
         const next =
             'metadata' in file && 'source' in file && 'status' in file
-                ? (Object.assign(file, { id }) as UploadFile)
-                : (Object.assign(
-                      nativeToUploadFile(file as File, current.source),
-                      { id },
-                  ) as UploadFile)
+                ? Object.assign(file, { id })
+                : Object.assign(nativeToUploadFile(file, current.source), {
+                      id,
+                  })
         if (current.url !== next.url) {
             revokeObjectUrl(current)
         }
@@ -397,8 +426,9 @@ export class FileManager {
 
     reorderFiles(fileIds: string[]): void {
         if (fileIds.length !== this.files.size) {
-            throw new Error(
+            throw new UpupError(
                 `reorderFiles: expected ${this.files.size} IDs but received ${fileIds.length}`,
+                UpupErrorCode.BAD_REQUEST,
             )
         }
 
@@ -406,7 +436,10 @@ export class FileManager {
         for (const id of fileIds) {
             const file = this.files.get(id)
             if (!file) {
-                throw new Error(`reorderFiles: unknown file ID "${id}"`)
+                throw new UpupError(
+                    `reorderFiles: unknown file ID "${id}"`,
+                    UpupErrorCode.BAD_REQUEST,
+                )
             }
             newMap.set(id, file)
         }

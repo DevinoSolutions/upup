@@ -45,16 +45,17 @@ export class ServerCredentials implements CredentialStrategy {
 
         if (!response.ok) {
             const responseBody = await response.text().catch(() => '')
-            throw uploadErrorFromResponse({
+            const err = uploadErrorFromResponse({
                 status: response.status,
                 statusText: response.statusText,
                 body: responseBody,
                 kind: 'storage',
                 operation: operationForPath(path),
             })
+            throw err
         }
 
-        return response.json()
+        return response.json() as Promise<T>
     }
 
     async getPresignedUrl(file: FileMetadata): Promise<PresignedUrlResponse> {

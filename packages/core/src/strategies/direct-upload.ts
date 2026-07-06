@@ -52,7 +52,9 @@ export class DirectUpload implements UploadStrategy {
                 reject(new UpupNetworkError('Upload aborted'))
             })
 
-            options.signal.addEventListener('abort', () => xhr.abort())
+            options.signal.addEventListener('abort', () => {
+                xhr.abort()
+            })
 
             xhr.open('PUT', credentials.uploadUrl)
             for (const [key, value] of Object.entries(

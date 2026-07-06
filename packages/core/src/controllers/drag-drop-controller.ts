@@ -74,9 +74,9 @@ export class DragDropController implements ObservableController<DragDropSnapshot
     /** Subscribe to the orchestrator so border/dragging derive on change. Call on mount. Idempotent. */
     init(): void {
         if (this.unsubOrchestrator) return
-        this.unsubOrchestrator = this.deps.orchestrator.subscribe(() =>
-            this.recompute(),
-        )
+        this.unsubOrchestrator = this.deps.orchestrator.subscribe(() => {
+            this.recompute()
+        })
         this.recompute()
     }
 
@@ -125,7 +125,9 @@ export class DragDropController implements ObservableController<DragDropSnapshot
     }
 
     private notify(): void {
-        this.listeners.forEach(fn => fn())
+        this.listeners.forEach(fn => {
+            fn()
+        })
     }
 
     handleDragOver(e: DragEvent): void {

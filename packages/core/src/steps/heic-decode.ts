@@ -24,7 +24,7 @@ function loadLibheif(): Promise<Libheif> {
             }
             const factory =
                 (mod as { default?: () => Promise<Libheif> }).default ??
-                (mod as unknown as () => Promise<Libheif>)
+                (mod as () => Promise<Libheif>)
             return factory()
         })()
     }
@@ -34,8 +34,7 @@ function loadLibheif(): Promise<Libheif> {
 function canvasBackendAvailable(): boolean {
     return (
         typeof OffscreenCanvas !== 'undefined' ||
-        (typeof document !== 'undefined' &&
-            typeof document.createElement === 'function')
+        (typeof document !== 'undefined' && 'createElement' in document)
     )
 }
 
@@ -62,8 +61,12 @@ export async function heicToJpegBlob(
     let images: ReturnType<typeof decoder.decode> = []
     try {
         images = decoder.decode(new Uint8Array(buffer))
-        const image = images?.[0]
-        if (!image) throw new Error('HEIC: no image found in file')
+        const image = images[0]
+        if (!image)
+            throw new UpupError(
+                'HEIC: no image found in file',
+                UpupErrorCode.HEIC_CONVERSION_FAILED,
+            )
 
         const width = image.get_width()
         const height = image.get_height()
@@ -75,9 +78,10 @@ export async function heicToJpegBlob(
         const imageData = ctx.createImageData(width, height)
         await new Promise<void>((resolve, reject) => {
             // libheif fills `imageData.data` in place, then calls back with it (truthy) or a falsy value on error.
-            image.display(imageData, result =>
-                result ? resolve() : reject(new Error('HEIC: display failed')),
-            )
+            image.display(imageData, result => {
+                if (result) resolve()
+                else reject(new Error('HEIC: display failed'))
+            })
         })
         ctx.putImageData(imageData, 0, 0)
 
@@ -85,15 +89,15 @@ export async function heicToJpegBlob(
     } finally {
         for (const img of images) {
             try {
-                img.free?.()
+                img.free()
             } catch {
-                /* already freed */
+                // upup-catch: handle may already be freed — safe to ignore during cleanup
             }
         }
         try {
-            libheif.heif_context_free?.(decoder.decoder)
+            libheif.heif_context_free(decoder.decoder)
         } catch {
-            /* already freed */
+            // upup-catch: context may already be freed — safe to ignore during cleanup
         }
         decoder.decoder = null
     }

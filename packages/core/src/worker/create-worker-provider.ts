@@ -1,5 +1,5 @@
 import type { RuntimeAdapter } from '../contracts'
-import type { WorkerRequest, WorkerResponse, WorkerParams } from './protocol'
+import type { WorkerRequest, WorkerResponse } from './protocol'
 
 export interface WorkerProvider {
     execute<T>(task: {
@@ -72,7 +72,7 @@ export function createWorkerProvider(
                     id,
                     type: task.type as WorkerRequest['type'],
                     data: task.data,
-                    params: task.params as WorkerParams | undefined,
+                    params: task.params,
                 }
                 worker.postMessage(req, [task.data])
             })

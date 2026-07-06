@@ -59,7 +59,8 @@ export class UploadManager {
                 }
 
                 while (active < maxConcurrentUploads && queue.length > 0) {
-                    const file = queue.shift()!
+                    const file = queue.shift()
+                    if (!file) break
                     active++
 
                     this.uploadFile(file)
@@ -67,7 +68,7 @@ export class UploadManager {
                             results.push(result)
                             this.options.onFileComplete(file, result)
                         })
-                        .catch(err => {
+                        .catch((err: unknown) => {
                             const error =
                                 err instanceof Error
                                     ? err
@@ -102,6 +103,15 @@ export class UploadManager {
         return results
     }
 
+    // A method (rather than inlining `this.abortController.signal.aborted`,
+    // or a getter — TS's control-flow narrowing treats a no-setter accessor
+    // like a readonly field) so each call is re-evaluated fresh:
+    // `abortController` can be replaced concurrently by `pause()`/`abort()`
+    // while an attempt is in flight, across the `await`s below.
+    private checkAborted(): boolean {
+        return this.abortController.signal.aborted
+    }
+
     private async uploadFile(file: UploadFile): Promise<UploadResult> {
         const {
             credentials,
@@ -113,7 +123,7 @@ export class UploadManager {
         let lastError: Error | null = null
 
         for (let attempt = 0; attempt < maxAttempts; attempt++) {
-            if (this.abortController.signal.aborted) {
+            if (this.checkAborted()) {
                 throw new UpupNetworkError('Upload aborted')
             }
 
@@ -123,10 +133,7 @@ export class UploadManager {
                     uploadStrategy,
                     presign: true,
                 }
-                const currentMetadata = (file.metadata ?? {}) as Record<
-                    string,
-                    unknown
-                >
+                const currentMetadata = file.metadata as Record<string, unknown>
                 const metadata = {
                     ...currentMetadata,
                     ...(file.relativePath &&
@@ -149,11 +156,12 @@ export class UploadManager {
                       }
 
                 const result = await plan.uploadStrategy.upload(
-                    file as unknown as File,
+                    file,
                     presigned,
                     {
-                        onProgress: (loaded, total) =>
-                            this.options.onProgress(file.id, loaded, total),
+                        onProgress: (loaded, total) => {
+                            this.options.onProgress(file.id, loaded, total)
+                        },
                         signal: this.abortController.signal,
                     },
                 )
@@ -177,7 +185,7 @@ export class UploadManager {
                 return result
             } catch (err) {
                 // Don't retry on abort
-                if (this.abortController.signal.aborted) {
+                if (this.checkAborted()) {
                     throw err
                 }
 
@@ -207,7 +215,9 @@ export class UploadManager {
             }
         }
 
-        throw lastError ?? new UpupNetworkError('Upload failed after retries')
+        const finalError =
+            lastError ?? new UpupNetworkError('Upload failed after retries')
+        throw finalError
     }
 
     abort(): void {

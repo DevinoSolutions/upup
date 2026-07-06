@@ -145,7 +145,8 @@ function selectPluralCategory(
         try {
             pr = new Intl.PluralRules(locale)
         } catch {
-            pr = new Intl.PluralRules('en-US') // invalid code → English rules
+            // upup-catch: invalid/unsupported locale code — fall back to English plural rules
+            pr = new Intl.PluralRules('en-US')
         }
         pluralRulesCache.set(locale, pr)
     }
@@ -176,14 +177,13 @@ export function pluralUiMessage(
     locale: string = localeOf(translations),
 ): string {
     const category = selectPluralCategory(locale, count) // zero|one|two|few|many|other
-    const exact = `${baseKey}_${category}` as keyof UiTranslations
-    const other = `${baseKey}_other` as keyof UiTranslations
-    return (
-        translations[exact] ??
-        translations[other] ??
-        translations[baseKey as keyof UiTranslations] ??
-        ''
-    )
+    // The constructed keys aren't guaranteed to be real UiTranslations properties (e.g.
+    // "_few" may not exist for a locale that only defines _one/_other) — index through a
+    // generic dict so the type honestly reflects that a lookup can miss.
+    const dict = translations as unknown as Record<string, string>
+    const exact = `${baseKey}_${category}`
+    const other = `${baseKey}_other`
+    return dict[exact] ?? dict[other] ?? dict[baseKey] ?? ''
 }
 
 export function flattenTranslatorToUiTranslations(

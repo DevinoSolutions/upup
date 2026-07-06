@@ -1,22 +1,26 @@
 export type EventHandler<T = unknown> = (payload: T) => void
 
 export class EventEmitter<TEvents extends object = Record<string, unknown>> {
-    private handlers = new Map<string, Set<EventHandler<unknown>>>()
+    private handlers = new Map<string, Set<EventHandler>>()
 
     on<K extends string & keyof TEvents>(
         event: K,
         handler: EventHandler<TEvents[K]>,
     ): () => void
-    on(event: string, handler: EventHandler<unknown>): () => void
-    on(event: string, handler: EventHandler<unknown>): () => void {
-        if (!this.handlers.has(event)) {
-            this.handlers.set(event, new Set())
+    on(event: string, handler: EventHandler): () => void
+    on(event: string, handler: EventHandler): () => void {
+        let handlers = this.handlers.get(event)
+        if (!handlers) {
+            handlers = new Set()
+            this.handlers.set(event, handlers)
         }
-        this.handlers.get(event)!.add(handler as EventHandler<unknown>)
-        return () => this.off(event, handler as EventHandler<unknown>)
+        handlers.add(handler)
+        return () => {
+            this.off(event, handler)
+        }
     }
 
-    off(event: string, handler: EventHandler<unknown>): void {
+    off(event: string, handler: EventHandler): void {
         this.handlers.get(event)?.delete(handler)
     }
 
@@ -32,9 +36,12 @@ export class EventEmitter<TEvents extends object = Record<string, unknown>> {
                 try {
                     handler(payload)
                 } catch (err) {
+                    // upup-catch: a consumer listener throwing is not a state/upload
+                    // failure — isolate it so siblings still run and it can't escape
+                    // emit(); surfaced dev-only, never re-emitted (see note above).
                     if (
                         typeof process !== 'undefined' &&
-                        process.env?.NODE_ENV !== 'production'
+                        process.env.NODE_ENV !== 'production'
                     ) {
                         console.error(
                             `[upup] listener for "${event}" threw:`,

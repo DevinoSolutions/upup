@@ -22,6 +22,12 @@ type FileSystemHandleLike = {
     entries?: () => AsyncIterable<[string, FileSystemHandleLike]>
 }
 
+/** Legacy webkit-prefixed DataTransferItem members not in the standard DOM types. */
+type WebkitDataTransferItem = DataTransferItem & {
+    webkitGetAsEntry?: () => WebkitEntry | null
+    getAsFileSystemHandle?: () => Promise<FileSystemHandleLike | null>
+}
+
 export type DroppedFilesResult = {
     files: File[]
     skippedDirectory: boolean
@@ -36,7 +42,7 @@ function setRelativePath(file: File, path: string): void {
             writable: true,
         })
     } catch {
-        // Best effort: File is immutable in some runtimes.
+        // upup-catch: File is immutable in some runtimes — best-effort property definition
     }
 }
 
@@ -110,18 +116,16 @@ export async function collectDroppedFiles(
     dataTransfer: Pick<DataTransfer, 'items' | 'files'>,
     allowFolderDrop: boolean,
 ): Promise<DroppedFilesResult> {
-    const items = Array.from(dataTransfer.items || [])
+    const items = Array.from(dataTransfer.items)
     const state = { skippedDirectory: false }
-    const firstItem = items[0] as DataTransferItem | undefined
+    const firstItem = items[0]
     const supportsWebkitEntries =
-        typeof (firstItem as any)?.webkitGetAsEntry === 'function'
+        typeof (firstItem as WebkitDataTransferItem | undefined)
+            ?.webkitGetAsEntry === 'function'
 
     if (supportsWebkitEntries) {
         const entries = items
-            .map(
-                item =>
-                    (item as any).webkitGetAsEntry?.() as WebkitEntry | null,
-            )
+            .map(item => (item as WebkitDataTransferItem).webkitGetAsEntry())
             .filter((entry): entry is WebkitEntry => Boolean(entry))
         const nested = await Promise.all(
             entries.map(entry =>
@@ -139,7 +143,10 @@ export async function collectDroppedFiles(
     if (supportsHandles) {
         const handles = await Promise.all(
             items.map(
-                async item => await (item as any).getAsFileSystemHandle?.(),
+                async item =>
+                    await (
+                        item as WebkitDataTransferItem
+                    ).getAsFileSystemHandle?.(),
             ),
         )
         const nested = await Promise.all(
@@ -156,7 +163,7 @@ export async function collectDroppedFiles(
     }
 
     return {
-        files: Array.from(dataTransfer.files || []),
+        files: Array.from(dataTransfer.files),
         skippedDirectory: false,
     }
 }

@@ -53,10 +53,15 @@ export function blobToUploadFile(
     fileWithParams.status = original.status
     fileWithParams.metadata = original.metadata
     if (original.key !== undefined) fileWithParams.key = original.key
-    if (original.fileHash !== undefined)
-        fileWithParams.fileHash = original.fileHash
-    if (original.thumbnail !== undefined)
-        fileWithParams.thumbnail = original.thumbnail
+    // Grandfathered top-level hash/thumbnail fields (superseded by metadata.*,
+    // already copied above) — propagated for backwards-compat through a
+    // non-deprecated view.
+    const originalRecord = original as Record<string, unknown>
+    const targetRecord = fileWithParams as Record<string, unknown>
+    if (originalRecord.fileHash !== undefined)
+        targetRecord.fileHash = originalRecord.fileHash
+    if (originalRecord.thumbnail !== undefined)
+        targetRecord.thumbnail = originalRecord.thumbnail
 
     return fileWithParams
 }

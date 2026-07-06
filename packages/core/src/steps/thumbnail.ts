@@ -36,7 +36,11 @@ export function thumbnailStep(
                             ...file.metadata,
                             thumbnailUrl: result.thumbnailUrl,
                         }
-                        file.thumbnail = {
+                        // Legacy top-level `thumbnail` still carries the actual File
+                        // blob (metadata.thumbnailUrl is only a URL); write it through
+                        // a non-deprecated view.
+                        const fileRecord = file as Record<string, unknown>
+                        fileRecord.thumbnail = {
                             file: new File([result.bytes], result.name, {
                                 type: result.type,
                                 lastModified: file.lastModified,
@@ -45,7 +49,7 @@ export function thumbnailStep(
                         return file
                     }
                 } catch {
-                    /* fall through to main thread */
+                    // upup-catch: worker execution failed — fall through to the main-thread thumbnail path
                 }
             }
             const thumbnail = await createThumbnail(file, _options)
@@ -54,7 +58,8 @@ export function thumbnailStep(
                 ...file.metadata,
                 thumbnailUrl: thumbnail.dataUrl,
             }
-            file.thumbnail = { file: thumbnail.file }
+            const fileRecord = file as Record<string, unknown>
+            fileRecord.thumbnail = { file: thumbnail.file }
             return file
         },
     }

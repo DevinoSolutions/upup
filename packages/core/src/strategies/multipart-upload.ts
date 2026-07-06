@@ -1,5 +1,6 @@
 import {
     UpupNetworkError,
+    UpupConfigError,
     uploadErrorFromResponse,
     type UploadStrategy,
     type UploadCredentials,
@@ -17,22 +18,45 @@ export interface MultipartUploadOptions {
 const DEFAULT_CHUNK_SIZE = 5 * 1024 * 1024 // 5 MiB
 const DEFAULT_MAX_CONCURRENT = 3
 
+/** Reads a live AbortSignal through a call boundary so a repeat check after an
+ *  `await` isn't (incorrectly) narrowed away as "always false" by TS — `.aborted`
+ *  is `readonly`, but its value can genuinely change while we're awaiting. */
+function isAborted(signal: AbortSignal): boolean {
+    return signal.aborted
+}
+
 export class MultipartUpload implements UploadStrategy {
     private credentials: CredentialStrategy
+    private initMultipartUpload: NonNullable<
+        CredentialStrategy['initMultipartUpload']
+    >
+    private signPart: NonNullable<CredentialStrategy['signPart']>
+    private completeMultipartUpload: NonNullable<
+        CredentialStrategy['completeMultipartUpload']
+    >
     private chunkSizeBytes: number
     private maxConcurrentParts: number
 
     constructor(options: MultipartUploadOptions) {
+        const { credentials } = options
         if (
-            !options.credentials.initMultipartUpload ||
-            !options.credentials.signPart ||
-            !options.credentials.completeMultipartUpload
+            !credentials.initMultipartUpload ||
+            !credentials.signPart ||
+            !credentials.completeMultipartUpload
         ) {
-            throw new Error(
+            throw new UpupConfigError(
                 'CredentialStrategy must implement multipart methods (initMultipartUpload, signPart, completeMultipartUpload)',
             )
         }
-        this.credentials = options.credentials
+        // Bound to the original `credentials` object — these are detached from
+        // their owning instance below, and implementations (e.g. ServerCredentials)
+        // rely on `this` internally (e.g. `this.post(...)`).
+        this.credentials = credentials
+        this.initMultipartUpload =
+            credentials.initMultipartUpload.bind(credentials)
+        this.signPart = credentials.signPart.bind(credentials)
+        this.completeMultipartUpload =
+            credentials.completeMultipartUpload.bind(credentials)
         this.chunkSizeBytes = options.chunkSizeBytes ?? DEFAULT_CHUNK_SIZE
         this.maxConcurrentParts =
             options.maxConcurrentParts ?? DEFAULT_MAX_CONCURRENT
@@ -51,7 +75,7 @@ export class MultipartUpload implements UploadStrategy {
         const fileType = file.type || 'application/octet-stream'
 
         // 1. Initiate multipart upload
-        const init = await this.credentials.initMultipartUpload!({
+        const init = await this.initMultipartUpload({
             name: fileName,
             size: fileSize,
             type: fileType,
@@ -78,7 +102,7 @@ export class MultipartUpload implements UploadStrategy {
             const activeParts: Promise<void>[] = []
 
             const uploadPart = async (partNumber: number): Promise<void> => {
-                if (options.signal.aborted) {
+                if (isAborted(options.signal)) {
                     throw new UpupNetworkError('Upload aborted')
                 }
 
@@ -87,12 +111,12 @@ export class MultipartUpload implements UploadStrategy {
                 const chunk = file.slice(start, end)
 
                 // Sign the part
-                const signed = await this.credentials.signPart!({
+                const signed = await this.signPart({
                     token,
                     partNumber,
                 })
 
-                if (options.signal.aborted) {
+                if (isAborted(options.signal)) {
                     throw new UpupNetworkError('Upload aborted')
                 }
 
@@ -106,13 +130,14 @@ export class MultipartUpload implements UploadStrategy {
 
                 if (!response.ok) {
                     const body = await response.text().catch(() => '')
-                    throw uploadErrorFromResponse({
+                    const err = uploadErrorFromResponse({
                         status: response.status,
                         statusText: response.statusText,
                         body,
                         kind: 'storage',
                         operation: 'multipart-sign-part',
                     })
+                    throw err
                 }
 
                 const eTag =
@@ -129,7 +154,7 @@ export class MultipartUpload implements UploadStrategy {
 
                 const partPromise = uploadPart(partNumber).then(() => {
                     const idx = activeParts.indexOf(partPromise)
-                    if (idx !== -1) activeParts.splice(idx, 1)
+                    if (idx !== -1) void activeParts.splice(idx, 1)
                 })
                 activeParts.push(partPromise)
 
@@ -144,7 +169,7 @@ export class MultipartUpload implements UploadStrategy {
             // 3. Complete multipart upload
             completedParts.sort((a, b) => a.partNumber - b.partNumber)
 
-            const result = await this.credentials.completeMultipartUpload!({
+            const result = await this.completeMultipartUpload({
                 token,
                 parts: completedParts,
             })

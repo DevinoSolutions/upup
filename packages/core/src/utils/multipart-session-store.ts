@@ -34,7 +34,7 @@ export function saveSession(
     try {
         localStorage.setItem(storageKey(fingerprint), JSON.stringify(session))
     } catch {
-        // localStorage may be unavailable; silently ignore
+        // upup-catch: localStorage may be unavailable (private mode/quota) — best-effort save
     }
 }
 
@@ -46,7 +46,7 @@ export function loadSession(fingerprint: string): MultipartSession | null {
         const raw = localStorage.getItem(storageKey(fingerprint))
         if (!raw) return null
 
-        const session: MultipartSession = JSON.parse(raw)
+        const session = JSON.parse(raw) as MultipartSession
 
         // Expire stale sessions
         if (Date.now() - session.updatedAt > SESSION_TTL_MS) {
@@ -56,6 +56,7 @@ export function loadSession(fingerprint: string): MultipartSession | null {
 
         return session
     } catch {
+        // upup-catch: corrupted/missing session data — treat as no resumable session
         return null
     }
 }
@@ -70,12 +71,12 @@ export function updateSessionProgress(
     try {
         const raw = localStorage.getItem(storageKey(fingerprint))
         if (!raw) return
-        const session: MultipartSession = JSON.parse(raw)
+        const session = JSON.parse(raw) as MultipartSession
         session.uploadedBytes = uploadedBytes
         session.updatedAt = Date.now()
         localStorage.setItem(storageKey(fingerprint), JSON.stringify(session))
     } catch {
-        // silently ignore
+        // upup-catch: localStorage may be unavailable — best-effort progress update
     }
 }
 
@@ -86,7 +87,7 @@ export function removeSession(fingerprint: string): void {
     try {
         localStorage.removeItem(storageKey(fingerprint))
     } catch {
-        // silently ignore
+        // upup-catch: localStorage may be unavailable — best-effort cleanup
     }
 }
 
@@ -102,8 +103,10 @@ export function clearAllSessions(): void {
                 keysToRemove.push(key)
             }
         }
-        keysToRemove.forEach(k => localStorage.removeItem(k))
+        keysToRemove.forEach(k => {
+            localStorage.removeItem(k)
+        })
     } catch {
-        // silently ignore
+        // upup-catch: localStorage may be unavailable — best-effort bulk cleanup
     }
 }

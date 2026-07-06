@@ -50,7 +50,7 @@ export function resolveUploadConfig(
                 url: options.uploadEndpoint,
             })
           : {
-                getPresignedUrl: async () => {
+                getPresignedUrl: () => {
                     throw new UpupConfigError(
                         'Tus uploads do not use presigned upload URLs.',
                     )
@@ -77,12 +77,10 @@ export function resolveUploadConfig(
             if (tusUpload) {
                 return { uploadStrategy: tusUpload, presign: false }
             }
-            const shouldUseMultipart = Boolean(
-                multipartUpload && file.size >= multipartThreshold,
-            )
-            return shouldUseMultipart
-                ? { uploadStrategy: multipartUpload!, presign: false }
-                : { uploadStrategy: directUpload, presign: true }
+            if (multipartUpload && file.size >= multipartThreshold) {
+                return { uploadStrategy: multipartUpload, presign: false }
+            }
+            return { uploadStrategy: directUpload, presign: true }
         },
         maxConcurrentUploads: options.maxConcurrentUploads ?? 3,
         ...(options.maxRetries !== undefined

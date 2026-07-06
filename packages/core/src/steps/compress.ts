@@ -32,7 +32,7 @@ export function compressStep(_options?: ImageCompressionOptions): PipelineStep {
                     if (result.kind === 'image')
                         return uploadFileFromImageResult(file, result)
                 } catch {
-                    /* fall through to main thread */
+                    // upup-catch: worker execution failed — fall through to the main-thread encode path
                 }
             }
 

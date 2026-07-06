@@ -17,7 +17,7 @@ export class CrashRecoveryManager {
         await this.storage.set(STORAGE_KEY, snapshot)
     }
 
-    async restore(): Promise<unknown | null> {
+    async restore(): Promise<unknown> {
         const data = await this.storage.get(STORAGE_KEY)
         return data ?? null
     }
@@ -45,24 +45,39 @@ export class IndexedDBStorage implements PersistentStorage {
             request.onupgradeneeded = () => {
                 request.result.createObjectStore(this.storeName)
             }
-            request.onsuccess = () => resolve(request.result)
-            request.onerror = () => reject(request.error)
+            request.onsuccess = () => {
+                resolve(request.result)
+            }
+            request.onerror = () => {
+                reject(request.error ?? new Error('IndexedDB open failed'))
+            }
         })
     }
 
     async get(key: string): Promise<unknown> {
         try {
             const db = await this.getDB()
-            return new Promise((resolve, reject) => {
+            return await new Promise<unknown>((resolve, reject) => {
                 const tx = db.transaction(this.storeName, 'readonly')
                 const store = tx.objectStore(this.storeName)
                 const request = store.get(key)
-                request.onsuccess = () => resolve(request.result)
-                request.onerror = () => reject(request.error)
-                tx.oncomplete = () => db.close()
-                tx.onerror = () => db.close()
+                request.onsuccess = () => {
+                    resolve(request.result)
+                }
+                request.onerror = () => {
+                    reject(request.error ?? new Error('IndexedDB get failed'))
+                }
+                tx.oncomplete = () => {
+                    db.close()
+                }
+                tx.onerror = () => {
+                    db.close()
+                }
             })
         } catch {
+            // upup-catch: crash recovery is best-effort — a missing or blocked
+            // IndexedDB (SSR, privacy mode, quota) degrades to "no snapshot"
+            // rather than surfacing as an error to the host app.
             return undefined
         }
     }
@@ -70,34 +85,55 @@ export class IndexedDBStorage implements PersistentStorage {
     async set(key: string, value: unknown): Promise<void> {
         try {
             const db = await this.getDB()
-            return new Promise((resolve, reject) => {
+            await new Promise<void>((resolve, reject) => {
                 const tx = db.transaction(this.storeName, 'readwrite')
                 const store = tx.objectStore(this.storeName)
                 const request = store.put(value, key)
-                request.onsuccess = () => resolve()
-                request.onerror = () => reject(request.error)
-                tx.oncomplete = () => db.close()
-                tx.onerror = () => db.close()
+                request.onsuccess = () => {
+                    resolve()
+                }
+                request.onerror = () => {
+                    reject(request.error ?? new Error('IndexedDB put failed'))
+                }
+                tx.oncomplete = () => {
+                    db.close()
+                }
+                tx.onerror = () => {
+                    db.close()
+                }
             })
         } catch {
-            // Silently fail — crash recovery is best-effort
+            // upup-catch: crash recovery is best-effort — persistence failures
+            // (blocked/absent IndexedDB, quota) must not surface as upload errors;
+            // silently degrade.
         }
     }
 
     async delete(key: string): Promise<void> {
         try {
             const db = await this.getDB()
-            return new Promise((resolve, reject) => {
+            await new Promise<void>((resolve, reject) => {
                 const tx = db.transaction(this.storeName, 'readwrite')
                 const store = tx.objectStore(this.storeName)
                 const request = store.delete(key)
-                request.onsuccess = () => resolve()
-                request.onerror = () => reject(request.error)
-                tx.oncomplete = () => db.close()
-                tx.onerror = () => db.close()
+                request.onsuccess = () => {
+                    resolve()
+                }
+                request.onerror = () => {
+                    reject(
+                        request.error ?? new Error('IndexedDB delete failed'),
+                    )
+                }
+                tx.oncomplete = () => {
+                    db.close()
+                }
+                tx.onerror = () => {
+                    db.close()
+                }
             })
         } catch {
-            // Silently fail
+            // upup-catch: crash recovery is best-effort — a failed delete (blocked/
+            // absent IndexedDB) must not surface as an upload error; silently degrade.
         }
     }
 }

@@ -54,7 +54,7 @@ export function createTranslator(options: TranslatorOptions): Translator {
 
         // 1. Check user overrides first
         if (overrides?.[ns]) {
-            const val = (overrides[ns] as Record<string, string>)?.[msgKey]
+            const val = (overrides[ns] as Record<string, string>)[msgKey]
             if (val) return val
         }
 
@@ -100,7 +100,7 @@ export function createTranslator(options: TranslatorOptions): Translator {
                 const fmt = getFormatter(pattern, bundle.code)
                 return fmt.format(values) as string
             } catch {
-                // If ICU parsing fails, fall back to raw pattern
+                // upup-catch: ICU parsing failed — fall back to the raw pattern
                 return pattern
             }
         },

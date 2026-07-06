@@ -60,7 +60,9 @@ export class UploaderOrchestrator {
     }
 
     private notify(): void {
-        this.listeners.forEach(fn => fn())
+        this.listeners.forEach(fn => {
+            fn()
+        })
     }
 
     // ── File management methods ──────────────────────────────────────
@@ -102,7 +104,7 @@ export class UploaderOrchestrator {
         // If onPrepareFiles returned different files, replace them in core
         if (prepared !== currentFiles) {
             this.core.removeAll()
-            await this.core.addFiles(prepared as File[])
+            await this.core.addFiles(prepared)
         }
 
         return await this.core.upload()
@@ -118,7 +120,9 @@ export class UploaderOrchestrator {
     /** Cancel in-progress upload, revoke blob URLs, clear all files and progress. */
     handleCancel(): void {
         this.core.cancel()
-        this.state.files.forEach(file => revokeFileUrl(file))
+        this.state.files.forEach(file => {
+            revokeFileUrl(file)
+        })
         this.core.removeAll()
         this.setState({
             filesProgressMap: {},
@@ -305,8 +309,11 @@ export class UploaderOrchestrator {
 
         // ── state-change (single source: projects uploadStatus + files from core) ──
         this.unsubs.push(
-            this.core.on('state-change', (payload: { status?: UploadStatus }) =>
-                this.projectFromCore(payload),
+            this.core.on(
+                'state-change',
+                (payload: { status?: UploadStatus }) => {
+                    this.projectFromCore(payload)
+                },
             ),
         )
 
@@ -449,12 +456,14 @@ export class UploaderOrchestrator {
             this.core.on(
                 'upload-success',
                 (payload: { file: UploadFile; result: UploadResult }) => {
+                    // `.key` is required on UploadResult, but a third-party
+                    // UploadStrategy (a public extension point) could still
+                    // return a malformed result at runtime — keep the
+                    // fallback chain by widening the read, not the contract.
+                    const resultKey = (payload.result as { key?: string }).key
                     this.callbacks.onFileUploadComplete?.(
                         payload.file,
-                        payload.result?.key ??
-                            (payload.file as UploadFile & { key?: string })
-                                .key ??
-                            '',
+                        resultKey ?? payload.file.key ?? '',
                     )
                 },
             ),
@@ -519,8 +528,12 @@ export class UploaderOrchestrator {
 
     destroy(): void {
         this.disposed = true
-        this.state.files.forEach(file => revokeFileUrl(file))
-        this.unsubs.forEach(u => u())
+        this.state.files.forEach(file => {
+            revokeFileUrl(file)
+        })
+        this.unsubs.forEach(u => {
+            u()
+        })
         this.unsubs = []
         this.speedSamples = []
         this.listeners.clear()

@@ -3,11 +3,11 @@ import type { MaxFileSizeObject } from './contracts'
 /**
  * @param bytes assign keyword depend on size
  */
-export const bytesToSize = (bytes: number) => {
+export const bytesToSize = (bytes: number): string => {
     const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB']
     if (bytes === 0) return '0 Byte'
     const i = parseInt(Math.floor(Math.log(bytes) / Math.log(1024)).toString())
-    return Math.round(bytes / Math.pow(1024, i)) + ' ' + sizes[i]
+    return `${Math.round(bytes / Math.pow(1024, i))} ${sizes[i] ?? ''}`
 }
 
 /**
@@ -17,7 +17,7 @@ export const bytesToSize = (bytes: number) => {
 export const sizeToBytes = (
     size: number,
     unit: 'B' | 'KB' | 'MB' | 'GB' | 'TB' | 'PB' | 'EB' | 'ZB' | 'YB' = 'B',
-) => {
+): number => {
     const sizes = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
     const i = sizes.indexOf(unit)
     return size * Math.pow(1024, i)
@@ -32,8 +32,9 @@ export function checkFileSize(
     file: File,
     sizeLimit: MaxFileSizeObject | undefined,
     mode: 'max' | 'min' = 'max',
-) {
-    const limitBytes = sizeToBytes(sizeLimit!.size, sizeLimit!.unit)
+): boolean {
+    if (!sizeLimit) return true
+    const limitBytes = sizeToBytes(sizeLimit.size, sizeLimit.unit)
     if (mode === 'min') return file.size >= limitBytes
     return file.size <= limitBytes
 }
@@ -87,7 +88,7 @@ export function fileCanPreviewText(
     return fileSize <= PREVIEW_MAX_TEXT_SIZE
 }
 
-export function fileGetIsImage(fileType?: string) {
+export function fileGetIsImage(fileType?: string): boolean {
     return typeof fileType === 'string' && fileType.startsWith('image/')
 }
 
@@ -102,7 +103,7 @@ export function fileGetIsPdf(
 export function fileGetExtension(
     fileType: string | undefined,
     fileName?: string,
-) {
+): string {
     const safeName = fileName ?? ''
     if (!fileType) {
         return safeName.split('.').pop()?.toLowerCase() || ''
@@ -119,7 +120,7 @@ export function fileGetExtension(
     return typeSplit[1].toLowerCase()
 }
 
-export function fileIs3D(ext: string) {
+export function fileIs3D(ext: string): boolean {
     const threeDExtensions = [
         '3ds',
         '3dm',
@@ -168,7 +169,7 @@ export function searchDriveFiles<
         maxResults = 100,
     } = options
 
-    if (!searchTerm) return files?.slice(0, maxResults)
+    if (!searchTerm) return files.slice(0, maxResults)
 
     let searchString = searchTerm
     let fileNames: string[]

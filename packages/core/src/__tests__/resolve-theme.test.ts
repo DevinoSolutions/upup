@@ -146,7 +146,10 @@ describe('resolveTheme — slot merging', () => {
         const result = resolveTheme(
             { slots: { dropZone: { root: 'instance-dz' } } },
             undefined,
-            { uploader: { root: 'provider-root' }, dropZone: { root: 'provider-dz' } },
+            {
+                uploader: { root: 'provider-root' },
+                dropZone: { root: 'provider-dz' },
+            },
         )
         expect(result.slots.uploader?.root).toBe('provider-root')
         expect(result.slots.dropZone?.root).toBe('instance-dz')

@@ -3,7 +3,7 @@ import { UploadStatus } from '../contracts'
 import type { UploadFile } from '../contracts'
 import { b64EncodeUnicode } from './encoder'
 
-export const fileAppendParams = (file: File) => {
+export const fileAppendParams = (file: File): UploadFile => {
     const partial = file as Partial<UploadFile>
     const rel =
         partial.relativePath ||
@@ -19,7 +19,7 @@ export const fileAppendParams = (file: File) => {
     return file as UploadFile
 }
 
-export const revokeFileUrl = (file: UploadFile) => {
+export const revokeFileUrl = (file: UploadFile): void => {
     if (file.url?.startsWith('blob:')) {
         URL.revokeObjectURL(file.url)
     }

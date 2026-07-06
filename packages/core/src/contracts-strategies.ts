@@ -1,4 +1,3 @@
-import type { UploadFile } from './types/upload-file'
 import type {
     PresignedUrlResponse,
     MultipartInitResponse,

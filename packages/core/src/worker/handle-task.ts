@@ -38,7 +38,7 @@ async function toImageResult(
         bytes,
         type: processed.type,
         name: processed.name,
-        metadata: (processed.metadata ?? {}) as Record<string, unknown>,
+        metadata: processed.metadata,
     }
 }
 
@@ -103,7 +103,8 @@ export async function handleTask(req: WorkerRequest): Promise<WorkerResponse> {
                         ok: false,
                         error: 'exif: encode failed',
                     }
-                result.metadata!.processedSize = result.bytes.byteLength
+                if (result.metadata)
+                    result.metadata.processedSize = result.bytes.byteLength
                 return { id: req.id, ok: true, result }
             }
 
@@ -170,7 +171,8 @@ export async function handleTask(req: WorkerRequest): Promise<WorkerResponse> {
                         ok: false,
                         error: 'compress: encode failed',
                     }
-                result.metadata!.processedSize = result.bytes.byteLength
+                if (result.metadata)
+                    result.metadata.processedSize = result.bytes.byteLength
                 return { id: req.id, ok: true, result }
             }
 
@@ -210,6 +212,9 @@ export async function handleTask(req: WorkerRequest): Promise<WorkerResponse> {
                 }
         }
     } catch (e) {
+        // upup-catch: converts to a typed {ok:false} response so the caller
+        // (createWorkerProvider) can reject the awaiting promise instead of an
+        // unhandled worker exception
         return {
             id: req.id,
             ok: false,

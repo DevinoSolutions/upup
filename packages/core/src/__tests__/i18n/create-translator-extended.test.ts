@@ -72,7 +72,9 @@ describe('createTranslator — extended', () => {
             ...enUS,
             code: 'xx-XX' as const,
             // Deliberately sparse — only `common` is populated to exercise the fallback chain.
-            messages: { common: { cancel: 'XX Cancel' } } as unknown as UpupMessages,
+            messages: {
+                common: { cancel: 'XX Cancel' },
+            } as unknown as UpupMessages,
         }
         const t = createTranslator({ bundle: sparse, fallback: enUS })
         expect(t('common.cancel')).toBe('XX Cancel')

@@ -54,7 +54,9 @@ export function createUploaderController(
             return (files: UploadFile[]) => {
                 callbackRefs.onFilesUploadComplete?.(files)
                 if (connectSSE && Array.isArray(files))
-                    files.forEach(f => connectSSE(f))
+                    files.forEach(f => {
+                        connectSSE(f)
+                    })
             }
         },
         get onUploadComplete() {
@@ -99,7 +101,8 @@ export function createUploaderController(
             try {
                 core.use(p)
             } catch {
-                /* already registered */
+                // upup-catch: core.use() throws only when this provider is already
+                // registered — registration is idempotent, so ignore.
             }
             drivePlugins.push(p)
         }
@@ -109,7 +112,8 @@ export function createUploaderController(
             try {
                 core.use(p)
             } catch {
-                /* already */
+                // upup-catch: core.use() throws only when this provider is already
+                // registered — registration is idempotent, so ignore.
             }
             drivePlugins.push(p)
         }
@@ -119,7 +123,8 @@ export function createUploaderController(
             try {
                 core.use(p)
             } catch {
-                /* already */
+                // upup-catch: core.use() throws only when this provider is already
+                // registered — registration is idempotent, so ignore.
             }
             drivePlugins.push(p)
         }
@@ -129,7 +134,8 @@ export function createUploaderController(
             try {
                 core.use(p)
             } catch {
-                /* already */
+                // upup-catch: core.use() throws only when this provider is already
+                // registered — registration is idempotent, so ignore.
             }
             drivePlugins.push(p)
         }
@@ -198,7 +204,9 @@ export function createUploaderController(
             return core.upload()
         },
         replaceFiles(newFiles: File[] | UploadFile[]) {
-            filesArray().forEach(f => revokeFileUrl(f))
+            filesArray().forEach(f => {
+                revokeFileUrl(f)
+            })
             void core.setFiles(newFiles as File[])
         },
         async startUpload() {
@@ -207,7 +215,7 @@ export function createUploaderController(
             const prepared = callbackRefs.onPrepareFiles
                 ? await callbackRefs.onPrepareFiles(current)
                 : current
-            if (prepared !== current) await core.setFiles(prepared as File[])
+            if (prepared !== current) await core.setFiles(prepared)
             return core.upload()
         },
         async retryUpload(fileId?: string) {
@@ -216,7 +224,9 @@ export function createUploaderController(
         },
         handleCancel() {
             core.cancel()
-            filesArray().forEach(f => revokeFileUrl(f))
+            filesArray().forEach(f => {
+                revokeFileUrl(f)
+            })
             core.removeAll()
             orchestrator.handleCancel()
         },
@@ -269,15 +279,22 @@ export function createUploaderController(
 
     function ensureFanIn() {
         if (fanInUnsubs.length > 0) return
+        const notifyAll = () => {
+            subscribers.forEach(l => {
+                l()
+            })
+        }
         fanInUnsubs = [
-            core.on('state-change', () => subscribers.forEach(l => l())),
-            orchestrator.subscribe(() => subscribers.forEach(l => l())),
-            theme.subscribe(() => subscribers.forEach(l => l())),
+            core.on('state-change', notifyAll),
+            orchestrator.subscribe(notifyAll),
+            theme.subscribe(notifyAll),
         ]
     }
 
     function tearDownFanIn() {
-        fanInUnsubs.forEach(u => u())
+        fanInUnsubs.forEach(u => {
+            u()
+        })
         fanInUnsubs = []
     }
 
@@ -295,7 +312,7 @@ export function createUploaderController(
         // Status-change dedup: subscribe to orchestrator notifications
         statusUnsub = orchestrator.subscribe(() => {
             const s = orchestrator.getSnapshot().uploadStatus
-            const str = String(s).toLowerCase()
+            const str = s.toLowerCase()
             if (str !== lastStatus) {
                 lastStatus = str
                 callbackRefs.onStatusChange?.(str)
@@ -312,7 +329,9 @@ export function createUploaderController(
         statusUnsub?.()
         statusUnsub = null
         lastStatus = undefined
-        drivePlugins.splice(0).forEach(p => p.destroy())
+        drivePlugins.splice(0).forEach(p => {
+            p.destroy()
+        })
         tearDownFanIn()
         orchestrator.destroy()
         theme.destroy()

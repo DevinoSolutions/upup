@@ -13,18 +13,23 @@ export function loadGoogleIdentityServices(): Promise<void> {
             `script[src="${GIS_SCRIPT_SRC}"]`,
         )
         if (existing) {
-            existing.addEventListener('load', () => resolve())
-            existing.addEventListener('error', () =>
-                reject(new Error(`Failed to load script: ${GIS_SCRIPT_SRC}`)),
-            )
+            existing.addEventListener('load', () => {
+                resolve()
+            })
+            existing.addEventListener('error', () => {
+                reject(new Error(`Failed to load script: ${GIS_SCRIPT_SRC}`))
+            })
             return
         }
         const script = document.createElement('script')
         script.src = GIS_SCRIPT_SRC
         script.async = true
-        script.onload = () => resolve()
-        script.onerror = () =>
+        script.onload = () => {
+            resolve()
+        }
+        script.onerror = () => {
             reject(new Error(`Failed to load script: ${GIS_SCRIPT_SRC}`))
+        }
         document.head.appendChild(script)
     })
     return gisPromise

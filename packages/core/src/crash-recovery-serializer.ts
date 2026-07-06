@@ -31,13 +31,13 @@ function toCrashRecoveryFileSnapshot(
 ): CrashRecoveryFileSnapshot {
     const snapshot: CrashRecoveryFileSnapshot = {
         file,
-        id: file.id ?? id,
+        id: file.id,
         name: file.name,
         type: file.type,
         lastModified: file.lastModified,
-        source: file.source ?? FileSource.LOCAL,
-        status: file.status ?? UploadStatus.IDLE,
-        metadata: file.metadata ?? {},
+        source: file.source,
+        status: file.status,
+        metadata: file.metadata,
     }
 
     if (file.url && !file.url.startsWith('blob:')) {
@@ -55,8 +55,11 @@ function toCrashRecoveryFileSnapshot(
             Object.assign(snapshot, { [key]: file[key] })
         }
     }
-    if (file.thumbnail) {
-        snapshot.thumbnail = file.thumbnail
+    // Legacy top-level `thumbnail` (superseded by metadata.thumbnailUrl but still
+    // persisted for snapshot backwards-compat) — read through a non-deprecated view.
+    const legacyThumbnail = (file as Record<string, unknown>).thumbnail
+    if (legacyThumbnail) {
+        snapshot.thumbnail = legacyThumbnail as UploadFile['thumbnail']
     }
 
     return snapshot
@@ -119,7 +122,7 @@ function reviveCrashRecoveryFile(
     const file = wrappedBlob
         ? toRecoverableFile(wrappedBlob, nameFromProps ?? id, props)
         : isFileLike
-          ? (value as File)
+          ? value
           : null
     if (!file) return null
 
@@ -160,9 +163,10 @@ function reviveCrashRecoveryFile(
         }
     }
     if (isRecord(props.thumbnail)) {
-        uploadFile.thumbnail = props.thumbnail as NonNullable<
-            UploadFile['thumbnail']
-        >
+        // Legacy top-level `thumbnail` — restored for snapshot backwards-compat
+        // through a non-deprecated view (superseded by metadata.thumbnailUrl).
+        const uploadFileRecord = uploadFile as Record<string, unknown>
+        uploadFileRecord.thumbnail = props.thumbnail
     }
 
     return uploadFile

@@ -31,7 +31,7 @@ export function hashStep(): PipelineStep {
                         })
                     }
                 } catch {
-                    /* fall through to main thread */
+                    // upup-catch: worker execution failed — fall through to the main-thread hash path
                 }
             }
             const buffer = await file.arrayBuffer()

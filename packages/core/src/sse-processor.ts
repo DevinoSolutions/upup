@@ -43,11 +43,20 @@ export class SSEProcessor {
         source.onmessage = event => {
             clearTimeout(timer)
             this.timers.delete(key)
+            // event.data is `any` per DOM's MessageEvent<T = any>; narrow to
+            // unknown and check before parsing (SSE data is always a string
+            // in practice, but we don't trust that without verifying).
+            const raw: unknown = event.data
             let data: Record<string, unknown>
             try {
-                data = JSON.parse(event.data) as Record<string, unknown>
+                data =
+                    typeof raw === 'string'
+                        ? (JSON.parse(raw) as Record<string, unknown>)
+                        : { raw }
             } catch {
-                data = { raw: event.data }
+                // upup-catch: malformed SSE payload — degrade to delivering
+                // the raw value instead of failing the whole subscription.
+                data = { raw }
             }
             onMessage(data)
             cleanup()
@@ -75,9 +84,13 @@ export class SSEProcessor {
     }
 
     destroy(): void {
-        this.sources.forEach(s => s.close())
+        this.sources.forEach(s => {
+            s.close()
+        })
         this.sources.clear()
-        this.timers.forEach(t => clearTimeout(t))
+        this.timers.forEach(t => {
+            clearTimeout(t)
+        })
         this.timers.clear()
     }
 }

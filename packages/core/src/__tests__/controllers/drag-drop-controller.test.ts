@@ -16,7 +16,9 @@ interface FakeOrchestrator {
     _set: (p: Partial<OrchestratorState>) => void
 }
 
-function makeOrchestrator(initial: Partial<OrchestratorState>): FakeOrchestrator {
+function makeOrchestrator(
+    initial: Partial<OrchestratorState>,
+): FakeOrchestrator {
     // The fixture only ever seeds the fields DragDropController actually reads
     // (activeSource/uploadStatus/isAddingMore/files); cast to the full state
     // shape rather than hand-populate every OrchestratorState field.

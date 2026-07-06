@@ -36,6 +36,6 @@ export class TokenEndpointCredentials implements CredentialStrategy {
             )
         }
 
-        return response.json()
+        return response.json() as Promise<PresignedUrlResponse>
     }
 }

@@ -43,7 +43,8 @@ function mapGraphItem(item: Record<string, unknown>): DriveFile {
         mimeType,
         isFolder,
         thumbnail,
-        modifiedAt: (item.lastModifiedDateTime as string | undefined) ?? undefined,
+        modifiedAt:
+            (item.lastModifiedDateTime as string | undefined) ?? undefined,
     }
 }
 

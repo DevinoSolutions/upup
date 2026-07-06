@@ -1,3 +1,4 @@
+import { UpupNetworkError } from '../errors'
 import type { ObservableController } from './types'
 
 export type ServerModeProvider = 'google-drive' | 'onedrive' | 'dropbox' | 'box'
@@ -62,7 +63,9 @@ export class ServerModeDriveController implements ObservableController<ServerDri
 
     private setState(p: Partial<ServerDriveSnapshot>): void {
         this.snapshot = { ...this.snapshot, ...p }
-        this.listeners.forEach(fn => fn())
+        this.listeners.forEach(fn => {
+            fn()
+        })
     }
 
     /** Initial list. Call on mount. */
@@ -103,17 +106,17 @@ export class ServerModeDriveController implements ObservableController<ServerDri
                 // the request) is a DIFFERENT failure and must not show the reconnect
                 // prompt (F-427). The server signals the former with {reauth:true}
                 // on that exact response; anything else on a 401 is app-auth.
-                const body = await res
+                const body = (await res
                     .clone()
                     .json()
-                    .catch(() => ({}) as { reauth?: boolean; error?: string })
-                if (body?.reauth) {
+                    .catch(() => ({}))) as { reauth?: boolean; error?: string }
+                if (body.reauth) {
                     this.setState({ state: { status: 'reauth' } })
                 } else {
                     this.setState({
                         state: {
                             status: 'error',
-                            message: body?.error ?? 'Unauthorized',
+                            message: body.error ?? 'Unauthorized',
                             code: 'UNAUTHENTICATED',
                         },
                     })
@@ -122,11 +125,14 @@ export class ServerModeDriveController implements ObservableController<ServerDri
             }
             if (!res.ok) {
                 const text = await res.text().catch(() => '')
-                throw new Error(text || `${res.status}`)
+                throw new UpupNetworkError(text || `${res.status}`, res.status)
             }
             const data = (await res.json()) as { files: ServerDriveFile[] }
             this.setState({ state: { status: 'ready', files: data.files } })
         } catch (err) {
+            // upup-catch: a failed drive list is surfaced to the user via the
+            // 'error' list state (message rendered in the drive browser), not
+            // swallowed; AbortError is the expected outcome of a superseded list.
             if ((err as Error).name === 'AbortError') return
             this.setState({
                 state: { status: 'error', message: (err as Error).message },
@@ -165,14 +171,14 @@ export class ServerModeDriveController implements ObservableController<ServerDri
             if (res.status === 401) {
                 // Same reauth-vs-app-auth distinction as list() above (F-427): only
                 // a body-flagged {reauth:true} means "reconnect Drive".
-                const body = await res
+                const body = (await res
                     .clone()
                     .json()
-                    .catch(() => ({}) as { reauth?: boolean; error?: string })
-                if (body?.reauth) return { status: 'reauth' }
+                    .catch(() => ({}))) as { reauth?: boolean; error?: string }
+                if (body.reauth) return { status: 'reauth' }
                 return {
                     status: 'error',
-                    message: body?.error ?? 'Unauthorized',
+                    message: body.error ?? 'Unauthorized',
                     code: 'UNAUTHENTICATED',
                 }
             }
@@ -180,9 +186,11 @@ export class ServerModeDriveController implements ObservableController<ServerDri
                 const text = await res.text().catch(() => '')
                 return { status: 'error', message: text || `${res.status}` }
             }
-            const result = await res.json()
+            const result: unknown = await res.json()
             return { status: 'ok', result }
         } catch (err) {
+            // upup-catch: transfer failures are returned to the caller as a typed
+            // { status: 'error' } result (surfaced in the UI), not swallowed.
             return { status: 'error', message: (err as Error).message }
         }
     }
