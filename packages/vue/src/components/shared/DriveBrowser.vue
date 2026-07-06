@@ -67,7 +67,7 @@ const items = computed(() =>
 )
 
 const displayedItems = computed(() =>
-    searchDriveFiles(items.value, searchTerm.value) || [],
+    searchDriveFiles(items.value ?? [], searchTerm.value) || [],
 )
 
 // error short-circuits the perpetual loader — the exact F-123/F-124 symptom.

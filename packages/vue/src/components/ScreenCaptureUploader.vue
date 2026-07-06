@@ -54,12 +54,15 @@ async function startRecording() {
         streamRef.value = stream
         chunks.length = 0
 
-        stream.getVideoTracks()[0].onended = () => {
-            if (mediaRecorder.value && mediaRecorder.value.state !== 'inactive') {
-                mediaRecorder.value.stop()
+        const [videoTrack] = stream.getVideoTracks()
+        if (videoTrack) {
+            videoTrack.onended = () => {
+                if (mediaRecorder.value && mediaRecorder.value.state !== 'inactive') {
+                    mediaRecorder.value.stop()
+                }
+                if (timerRef.value) clearInterval(timerRef.value)
+                state.value = 'recorded'
             }
-            if (timerRef.value) clearInterval(timerRef.value)
-            state.value = 'recorded'
         }
 
         const recorder = new MediaRecorder(stream)

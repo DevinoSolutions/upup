@@ -51,13 +51,11 @@ const canPreviewText = computed(() =>
     fileCanPreviewText(props.fileType, props.fileName, props.fileSize),
 )
 
-const progress = computed(() =>
-    Math.floor(
-        (filesProgressMap.value[props.fileId]?.loaded /
-            filesProgressMap.value[props.fileId]?.total) *
-            100,
-    ),
-)
+const progress = computed(() => {
+    const fileProgress = filesProgressMap.value[props.fileId]
+    if (!fileProgress) return NaN
+    return Math.floor((fileProgress.loaded / fileProgress.total) * 100)
+})
 
 watch(
     [isImage, isPdf, isText, canPreviewText],

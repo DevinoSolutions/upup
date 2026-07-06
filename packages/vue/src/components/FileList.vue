@@ -86,6 +86,12 @@ const virtualizer = useVirtualizer(
 )
 
 const virtualItems = computed(() => virtualizer.value.getVirtualItems())
+const virtualRows = computed(() =>
+    virtualItems.value.flatMap((virtualItem) => {
+        const file = sortedFiles.value[virtualItem.index]
+        return file ? [{ virtualItem, file }] : []
+    }),
+)
 const totalSize = computed(() => virtualizer.value.getTotalSize())
 
 function onUploadClick() {
@@ -128,7 +134,7 @@ function onRetryClick() {
                 )"
             >
                 <div
-                    v-for="virtualItem in virtualItems"
+                    v-for="{ virtualItem, file } in virtualRows"
                     :key="String(virtualItem.key)"
                     :data-index="virtualItem.index"
                     :style="{
@@ -140,7 +146,7 @@ function onRetryClick() {
                         paddingBottom: '12px',
                     }"
                 >
-                    <FileItem :file="sortedFiles[virtualItem.index]" />
+                    <FileItem :file="file" />
                 </div>
             </div>
 

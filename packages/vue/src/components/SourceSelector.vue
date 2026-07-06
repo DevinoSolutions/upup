@@ -36,6 +36,7 @@ const constraintLine = computed(() => {
             .map((m) => {
                 if (m.startsWith('.')) return m
                 const [type, sub] = m.split('/')
+                if (type === undefined || sub === undefined) return m
                 if (sub === '*') return type.charAt(0).toUpperCase() + type.slice(1) + 's'
                 return sub.toUpperCase()
             })
