@@ -194,7 +194,7 @@ export function filePreview(
                               },
                               themeSlots?.filePreview?.previewButton,
                           )}
-                          @click=${() => opts.onRequestPreview()}
+                          @click=${() => { opts.onRequestPreview(); }}
                       >
                           ${tr.clickToPreview}
                       </button>`

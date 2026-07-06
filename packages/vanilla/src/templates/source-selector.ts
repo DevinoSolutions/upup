@@ -206,7 +206,7 @@ export function sourceSelector(ctx: UploaderContext) {
                                       },
                                       slot.containerCancelButton,
                                   )}
-                                  @click=${() => ctx.setIsAddingMore(false)}
+                                  @click=${() => { ctx.setIsAddingMore(false); }}
                               >
                                   <svg
                                       xmlns="http://www.w3.org/2000/svg"
@@ -263,7 +263,7 @@ export function sourceSelector(ctx: UploaderContext) {
                                               slot.sourceButton,
                                           )}
                                           @keydown=${onSourceKeydown}
-                                          @click=${() => handleSourceClick(id)}
+                                          @click=${() => { handleSourceClick(id); }}
                                       >
                                           ${Icon(slot.sourceButtonIcon ? { class: slot.sourceButtonIcon } : {})}
                                           <span

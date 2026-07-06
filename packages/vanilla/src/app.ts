@@ -123,7 +123,7 @@ export function App(ctx: UploaderContext) {
             </div>
             <input
                 ${ref(el =>
-                    ctx.registerFileInput((el as HTMLInputElement) ?? null),
+                    { ctx.registerFileInput((el as HTMLInputElement) ?? null); },
                 )}
                 type="file"
                 accept=${ctx.props.allowedFileTypes}

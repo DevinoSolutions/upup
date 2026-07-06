@@ -36,12 +36,12 @@ export function uploaderPanel(ctx: UploaderContext) {
             aria-dropeffect=${dd.isDragging ? 'copy' : 'none'}
             @keydown=${onKeyDown}
             @dragover=${(e: DragEvent) =>
-                ctx.controllers.dragDrop.handleDragOver(e)}
+                { ctx.controllers.dragDrop.handleDragOver(e); }}
             @dragleave=${(e: DragEvent) =>
-                ctx.controllers.dragDrop.handleDragLeave(e)}
+                { ctx.controllers.dragDrop.handleDragLeave(e); }}
             @drop=${(e: DragEvent) => ctx.controllers.dragDrop.handleDrop(e)}
             @paste=${(e: ClipboardEvent) =>
-                ctx.controllers.dragDrop.handlePaste(e)}
+                { ctx.controllers.dragDrop.handlePaste(e); }}
             class=${cn(
                 'upup-relative upup-flex-1 upup-overflow-hidden upup-rounded-lg',
                 {

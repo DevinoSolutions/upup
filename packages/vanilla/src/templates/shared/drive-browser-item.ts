@@ -14,7 +14,7 @@ export function driveBrowserItem(
     },
 ) {
     const { item, isSelected, onClick } = args
-    const file = item as DriveFile
+    const file = item
     const isDark = ctx.theme.getSnapshot().isDark
     const slot = ctx.theme.getSnapshot().slotOverrides
     const isFolder = !!file.isFolder

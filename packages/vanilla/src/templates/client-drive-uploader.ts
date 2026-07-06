@@ -37,24 +37,24 @@ export function clientDriveUploader(ctx: UploaderContext, source: FileSource) {
         // never surface an error at this pre-auth stage in any other framework either.
         return driveAuthFallback(ctx, {
             providerName: meta.providerName,
-            onRetry: () => controller.retryAuth(),
+            onRetry: () => { controller.retryAuth(); },
             error: source === FileSource.GOOGLE_DRIVE ? st.error : undefined,
             dataUpupSlot: meta.slot,
         })
     }
     return driveBrowser(ctx, {
-        driveFiles: st.folder as DriveFolder | undefined,
+        driveFiles: st.folder,
         user: st.user,
-        handleSignOut: () => controller.signOut(),
+        handleSignOut: () => { controller.signOut(); },
         dataUpupSlot: meta.slot,
-        path: st.path as DriveFolder[],
-        setPath: (p: DriveFolder[]) => controller.setPath(p),
+        path: st.path,
+        setPath: (p: DriveFolder[]) => { controller.setPath(p); },
         isClickLoading: st.isClickLoading,
-        handleClick: (file: DriveFile) => controller.handleClick(file),
-        selectedFiles: st.selectedFiles as DriveFile[],
+        handleClick: (file: DriveFile) => { controller.handleClick(file); },
+        selectedFiles: st.selectedFiles,
         showLoader: st.showLoader,
         handleSubmit: () => controller.handleSubmit(),
-        handleCancelDownload: () => controller.handleCancelDownload(),
+        handleCancelDownload: () => { controller.handleCancelDownload(); },
         onSelectCurrentFolder: () => controller.onSelectCurrentFolder(),
         error: st.error,
         hasMore: st.hasMore,

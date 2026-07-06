@@ -48,33 +48,37 @@ export function buildUploaderContext(
     const unsubs: Array<() => void> = []
 
     // ── 3. Convenience callbacks → core events (vanilla has no useUpupUpload; this is its core-event bridge) ──
-    if (options.onFileAdded)
+    // Captured as consts so the `if` guard narrows into the event closure (options.* is mutable, so the
+    // property access would not stay narrowed across the callback boundary).
+    const { onFileAdded, onFileRemoved, onUploadProgress, onUploadComplete } =
+        options
+    if (onFileAdded)
         unsubs.push(
-            core.on('files-added', (...a: unknown[]) =>
-                options.onFileAdded!(...(a as [UploadFile[]])),
-            ),
+            core.on('files-added', (...a: unknown[]) => {
+                onFileAdded(...(a as [UploadFile[]]))
+            }),
         )
-    if (options.onFileRemoved)
+    if (onFileRemoved)
         unsubs.push(
-            core.on('file-removed', (...a: unknown[]) =>
-                options.onFileRemoved!(...(a as [UploadFile])),
-            ),
+            core.on('file-removed', (...a: unknown[]) => {
+                onFileRemoved(...(a as [UploadFile]))
+            }),
         )
-    if (options.onUploadProgress)
+    if (onUploadProgress)
         unsubs.push(
-            core.on('upload-progress', (...a: unknown[]) =>
-                options.onUploadProgress!(
+            core.on('upload-progress', (...a: unknown[]) => {
+                onUploadProgress(
                     ...(a as [
                         { fileId: string; loaded: number; total: number },
                     ]),
-                ),
-            ),
+                )
+            }),
         )
-    if (options.onUploadComplete)
+    if (onUploadComplete)
         unsubs.push(
-            core.on('upload-all-complete', (...a: unknown[]) =>
-                options.onUploadComplete!(...(a as [UploadFile[]])),
-            ),
+            core.on('upload-all-complete', (...a: unknown[]) => {
+                onUploadComplete(...(a as [UploadFile[]]))
+            }),
         )
 
     // ── 4. Root controller (owns orchestrator, theme, plugins, commands, crash recovery) ──
@@ -92,7 +96,7 @@ export function buildUploaderContext(
     const fileInputHandle = createChildController(
         () =>
             new FileInputController({
-                getFileInput: root.getFileInput,
+                getFileInput: () => root.getFileInput(),
                 setFiles,
                 invalidate,
             }),
@@ -170,10 +174,14 @@ export function buildUploaderContext(
                     onFilesSelected: files => {
                         void setFiles(files)
                     },
-                    onClose: () => setActiveSource(undefined),
+                    onClose: () => {
+                        setActiveSource(undefined)
+                    },
                 })
                 c.init()
-                c.subscribe(() => invalidate())
+                c.subscribe(() => {
+                    invalidate()
+                })
                 driveControllers.set(source, c)
             }
             return c
@@ -185,7 +193,9 @@ export function buildUploaderContext(
             audio = null
             screen?.destroy()
             screen = null
-            driveControllers.forEach(c => c.destroy())
+            driveControllers.forEach(c => {
+                c.destroy()
+            })
             driveControllers.clear()
         },
         destroyAll() {
@@ -250,21 +260,37 @@ export function buildUploaderContext(
         dir: resolved.dir,
         props,
         cloudDrives: resolved.cloudDrives,
-        registerFileInput: root.registerFileInput,
-        getFileInput: root.getFileInput,
-        openFilePicker: root.openFilePicker,
+        registerFileInput: el => {
+            root.registerFileInput(el)
+        },
+        getFileInput: () => root.getFileInput(),
+        openFilePicker: () => {
+            root.openFilePicker()
+        },
         setActiveSource,
-        setIsAddingMore: root.commands.setIsAddingMore,
-        setViewMode: root.commands.setViewMode,
+        setIsAddingMore: v => {
+            root.commands.setIsAddingMore(v)
+        },
+        setViewMode: m => {
+            root.commands.setViewMode(m)
+        },
         setFiles,
         handleFileRemove,
         handleRemoveAll,
         startUpload: () => root.commands.startUpload(),
         retryUpload: (fileId?: string) => root.commands.retryUpload(fileId),
-        handleDone: () => root.commands.handleDone(),
-        handleCancel: () => root.commands.handleCancel(),
-        handlePause: () => root.commands.handlePause(),
-        handleResume: () => root.commands.handleResume(),
+        handleDone: () => {
+            root.commands.handleDone()
+        },
+        handleCancel: () => {
+            root.commands.handleCancel()
+        },
+        handlePause: () => {
+            root.commands.handlePause()
+        },
+        handleResume: () => {
+            root.commands.handleResume()
+        },
         controllers,
         invalidate,
         onError: (message: string) => options.onError?.(message),
@@ -278,7 +304,11 @@ export function buildUploaderContext(
                 root.subscribe(onChange),
                 dragDropHandle.controller.subscribe(onChange),
             ]
-            return () => subs.forEach(u => u())
+            return () => {
+                subs.forEach(u => {
+                    u()
+                })
+            }
         },
         init() {
             root.init()
@@ -290,7 +320,9 @@ export function buildUploaderContext(
             destroyed = true
             controllers.destroyAll()
             root.destroy()
-            unsubs.forEach(u => u())
+            unsubs.forEach(u => {
+                u()
+            })
             core.destroy() // vanilla owns core — destroyed exactly once here
         },
     }

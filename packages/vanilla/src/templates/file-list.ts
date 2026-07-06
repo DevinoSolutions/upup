@@ -71,7 +71,7 @@ function getVirtualizer(
             observeElementRect,
             observeElementOffset,
             scrollToFn: elementScroll,
-            onChange: () => ctx.invalidate(),
+            onChange: () => { ctx.invalidate(); },
         })
         // _willUpdate() wires the scroll element (attaches ResizeObserver + scroll listeners via
         // observeElementRect/observeElementOffset) on first call; must be called before first render.
@@ -246,7 +246,7 @@ export function fileList(ctx: UploaderContext) {
                           },
                           slot.uploadDoneButton,
                       )}
-                      @click=${() => ctx.handleDone()}
+                      @click=${() => { ctx.handleDone(); }}
                   >
                       ${tr.done}
                   </button>`
@@ -268,9 +268,9 @@ export function fileList(ctx: UploaderContext) {
                                       },
                                   )}
                                   @click=${() =>
-                                      uploadStatus === UploadStatus.PAUSED
+                                      { uploadStatus === UploadStatus.PAUSED
                                           ? ctx.handleResume()
-                                          : ctx.handlePause()}
+                                          : ctx.handlePause(); }}
                                   aria-label=${
                                       uploadStatus === UploadStatus.PAUSED
                                           ? tr.resumeUpload
@@ -297,7 +297,7 @@ export function fileList(ctx: UploaderContext) {
                                               isDark,
                                       },
                                   )}
-                                  @click=${() => ctx.handleCancel()}
+                                  @click=${() => { ctx.handleCancel(); }}
                                   aria-label=${tr.cancel}
                                   title=${tr.cancel}
                               >
@@ -359,7 +359,7 @@ export function fileList(ctx: UploaderContext) {
         data-testid="upup-file-list"
         data-upup-slot="file-list"
     >
-        ${uploaderHeader(ctx, () => ctx.handleCancel())}
+        ${uploaderHeader(ctx, () => { ctx.handleCancel(); })}
         <div
             ${ref(getScrollRefCb(ctx))}
             class=${cn(

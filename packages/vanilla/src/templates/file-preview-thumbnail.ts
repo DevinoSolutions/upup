@@ -51,7 +51,7 @@ export function filePreviewThumbnail(
                       name=${fileName}
                       title=${fileName}
                       type=${fileType}
-                      @load=${() => onCanPreview()}
+                      @load=${() => { onCanPreview(); }}
                   >
                       <p>${ctx.translations.loading}</p>
                   </object>

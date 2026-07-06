@@ -7,7 +7,7 @@ export function oneDriveUploader(ctx: UploaderContext) {
     return ctx.mode === 'server'
         ? serverModeDriveUploader(ctx, {
               provider: 'onedrive',
-              onBack: () => ctx.setActiveSource(undefined),
+              onBack: () => { ctx.setActiveSource(undefined); },
           })
         : clientDriveUploader(ctx, FileSource.ONE_DRIVE)
 }

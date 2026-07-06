@@ -73,7 +73,7 @@ export function fileItem(ctx: UploaderContext, file: UploadFile) {
         }
         ctx.invalidate()
     }
-    const stop = (e: MouseEvent) => e.stopPropagation()
+    const stop = (e: MouseEvent) => { e.stopPropagation(); }
     return html` <div
         data-testid="upup-file-item"
         data-upup-slot="file-item"

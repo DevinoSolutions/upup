@@ -18,7 +18,7 @@ export function createUploader(
 
     // forward-ref invalidate cell (loop is created after context)
     let loopInvalidate: () => void = () => {}
-    const built = buildUploaderContext(options, () => loopInvalidate())
+    const built = buildUploaderContext(options, () => { loopInvalidate(); })
     const { ctx } = built
     const loop = createRenderLoop(ctx, el)
     loopInvalidate = loop.invalidate
@@ -38,7 +38,7 @@ export function createUploader(
     }
     const emit = () => {
         const s = snapshot()
-        subscribers.forEach(cb => cb(s))
+        subscribers.forEach(cb => { cb(s); })
     }
     const unsubAll = built.subscribeAll(() => {
         loop.invalidate()
@@ -59,14 +59,14 @@ export function createUploader(
             return () => subscribers.delete(cb)
         },
         addFiles: files => ctx.core.addFiles(files),
-        removeFile: id => ctx.handleFileRemove(id),
-        removeAll: () => ctx.handleRemoveAll(),
+        removeFile: id => { ctx.handleFileRemove(id); },
+        removeAll: () => { ctx.handleRemoveAll(); },
         setFiles: files => ctx.setFiles(files),
-        reorderFiles: ids => ctx.core.reorderFiles(ids),
+        reorderFiles: ids => { ctx.core.reorderFiles(ids); },
         upload: () => ctx.core.upload(),
-        pause: () => ctx.handlePause(),
-        resume: () => ctx.handleResume(),
-        cancel: () => ctx.handleCancel(),
+        pause: () => { ctx.handlePause(); },
+        resume: () => { ctx.handleResume(); },
+        cancel: () => { ctx.handleCancel(); },
         retry: (id?: string) => ctx.core.retry(id),
         on: (event, h) => ctx.core.on(event, h),
         ext: ctx.core.ext,

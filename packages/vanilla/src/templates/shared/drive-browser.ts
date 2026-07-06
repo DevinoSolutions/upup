@@ -97,11 +97,11 @@ export function driveBrowser(ctx: UploaderContext, props: DriveBrowserProps) {
     const currentFolder = path[path.length - 1]
     const items =
         currentFolder?.children?.filter(item =>
-            filterItems(item as DriveFile, allowedFileTypes),
+            filterItems(item, allowedFileTypes),
         ) ?? []
 
     const displayedItems =
-        searchDriveFiles(items as DriveFile[], ss.searchTerm) ?? []
+        searchDriveFiles(items, ss.searchTerm) ?? []
 
     const inner = html` <div
         data-testid="upup-drive-browser"
@@ -148,14 +148,14 @@ export function driveBrowser(ctx: UploaderContext, props: DriveBrowserProps) {
                               ? html` <ul class="upup-p-2">
                                     ${repeat(
                                         displayedItems,
-                                        file => (file as DriveFile).id,
+                                        file => (file).id,
                                         file =>
                                             driveBrowserItem(ctx, {
-                                                item: file as DriveFile,
+                                                item: file,
                                                 isSelected: selectedFiles.some(
                                                     f =>
                                                         f.id ===
-                                                        (file as DriveFile).id,
+                                                        (file).id,
                                                 ),
                                                 isClickLoading:
                                                     isClickLoading ||
@@ -166,7 +166,7 @@ export function driveBrowser(ctx: UploaderContext, props: DriveBrowserProps) {
                                                         !showLoader
                                                     )
                                                         handleClick(
-                                                            file as DriveFile,
+                                                            file,
                                                         )
                                                 },
                                             }),

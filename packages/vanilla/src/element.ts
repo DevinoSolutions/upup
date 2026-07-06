@@ -55,7 +55,7 @@ export class UpupUploaderElement extends HTMLElement {
     }
 
     private unmount() {
-        this.forwardUnsubs.forEach(u => u())
+        this.forwardUnsubs.forEach(u => { u(); })
         this.forwardUnsubs = []
         this._instance?.destroy()
         this._instance = null

@@ -54,12 +54,12 @@ export class CameraController implements SourceController<CameraSnapshot> {
 
     async startCamera() {
         try {
-            if (this.stream) this.stream.getTracks().forEach(t => t.stop())
+            if (this.stream) this.stream.getTracks().forEach(t => { t.stop(); })
             const mediaStream = await navigator.mediaDevices.getUserMedia({
                 video: { facingMode: this.facingMode },
             })
             if (this.destroyed) {
-                mediaStream.getTracks().forEach(t => t.stop())
+                mediaStream.getTracks().forEach(t => { t.stop(); })
                 return
             }
             this.stream = mediaStream
@@ -74,7 +74,7 @@ export class CameraController implements SourceController<CameraSnapshot> {
     }
 
     stopCamera() {
-        if (this.stream) this.stream.getTracks().forEach(t => t.stop())
+        if (this.stream) this.stream.getTracks().forEach(t => { t.stop(); })
         this.stream = null
         if (this.videoEl) this.videoEl.srcObject = null
     }

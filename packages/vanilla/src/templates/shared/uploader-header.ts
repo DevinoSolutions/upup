@@ -94,7 +94,7 @@ export function uploaderHeader(ctx: UploaderContext, handleCancel: () => void) {
                               },
                               slotClasses.containerAddMoreButton,
                           )}
-                          @click=${() => ctx.setIsAddingMore(true)}
+                          @click=${() => { ctx.setIsAddingMore(true); }}
                           ?disabled=${isUploading || isProcessing}
                       >
                           ${nothing} ${tr.addMore}

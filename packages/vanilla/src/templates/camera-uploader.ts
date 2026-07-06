@@ -33,7 +33,7 @@ export function cameraUploader(ctx: UploaderContext) {
                           style=${`background-image: url(${s.capturedUrl})`}
                       >
                           <button
-                              @click=${() => cam.clearUrl()}
+                              @click=${() => { cam.clearUrl(); }}
                               class=${cn(
                                   'upup-absolute upup--right-2 upup--top-2 upup-z-10 upup-rounded-full upup-bg-[#272727] upup-p-1 upup-text-xl upup-text-[#f5f5f5]',
                                   slot.cameraDeleteButton,
@@ -64,7 +64,7 @@ export function cameraUploader(ctx: UploaderContext) {
                                   },
                                   slot.cameraCaptureButton,
                               )}
-                              @click=${() => cam.capture()}
+                              @click=${() => { cam.capture(); }}
                               type="button"
                           >
                               <span>${nothing}</span><span>${tr.capture}</span>
@@ -74,7 +74,7 @@ export function cameraUploader(ctx: UploaderContext) {
                                   'upup-mt-2 upup-flex upup-w-1/3 upup-flex-col upup-items-center upup-rounded-md upup-bg-gray-500 upup-p-2 upup-text-white upup-transition-all upup-duration-300 hover:upup-bg-gray-600',
                                   slot.cameraRotateButton,
                               )}
-                              @click=${() => cam.handleCameraSwitch()}
+                              @click=${() => { cam.handleCameraSwitch(); }}
                               type="button"
                           >
                               <span>${nothing}</span
