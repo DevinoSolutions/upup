@@ -52,7 +52,7 @@ function mockRes() {
 }
 
 beforeEach(() => {
-    received.req = undefined
+    delete received.req
     respond = async () => new Response('{}', { status: 200 })
 })
 
