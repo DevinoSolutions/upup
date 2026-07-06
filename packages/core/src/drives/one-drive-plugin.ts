@@ -114,7 +114,7 @@ export class OneDrivePlugin extends PopupOAuthPlugin {
                 files,
                 folderId: folderId ?? 'root',
                 hasMore,
-                cursor: nextLink,
+                ...(nextLink !== undefined ? { cursor: nextLink } : {}),
             }
         } catch (err) {
             this.setState('authenticated')
@@ -144,7 +144,11 @@ export class OneDrivePlugin extends PopupOAuthPlugin {
             const files: DriveFile[] = items.map(mapGraphItem)
             const nextLink = data['@odata.nextLink'] as string | undefined
 
-            return { files, hasMore: !!nextLink, cursor: nextLink }
+            return {
+                files,
+                hasMore: !!nextLink,
+                ...(nextLink !== undefined ? { cursor: nextLink } : {}),
+            }
         } catch (err) {
             this.emitter?.emit('onedrive:error', {
                 error: err instanceof Error ? err : new Error(String(err)),

@@ -10,8 +10,8 @@ import {
 
 export interface MultipartUploadOptions {
     credentials: CredentialStrategy
-    chunkSizeBytes?: number
-    maxConcurrentParts?: number
+    chunkSizeBytes?: number | undefined
+    maxConcurrentParts?: number | undefined
 }
 
 const DEFAULT_CHUNK_SIZE = 5 * 1024 * 1024 // 5 MiB
@@ -99,7 +99,7 @@ export class MultipartUpload implements UploadStrategy {
                 // Upload the chunk
                 const response = await fetch(signed.uploadUrl, {
                     method: 'PUT',
-                    headers: signed.uploadHeaders,
+                    headers: signed.uploadHeaders ?? {},
                     body: chunk,
                     signal: options.signal,
                 })

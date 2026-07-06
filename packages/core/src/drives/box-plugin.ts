@@ -99,7 +99,12 @@ export class BoxPlugin extends PopupOAuthPlugin {
                 cursor,
             })
 
-            return { files, folderId, hasMore, cursor }
+            return {
+                files,
+                folderId,
+                hasMore,
+                ...(cursor !== undefined ? { cursor } : {}),
+            }
         } catch (err) {
             this.setState('authenticated')
             this.emitter?.emit('box:error', {
@@ -138,7 +143,11 @@ export class BoxPlugin extends PopupOAuthPlugin {
             const hasMore = loaded < Number(data.total_count ?? loaded)
             const nextCursor = hasMore ? `${folderId}:${loaded}` : undefined
 
-            return { files, hasMore, cursor: nextCursor }
+            return {
+                files,
+                hasMore,
+                ...(nextCursor !== undefined ? { cursor: nextCursor } : {}),
+            }
         } catch (err) {
             this.emitter?.emit('box:error', {
                 error: err instanceof Error ? err : new Error(String(err)),

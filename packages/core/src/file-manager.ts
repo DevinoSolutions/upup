@@ -16,15 +16,17 @@ import {
 export { fileSizeInBytes, matchesAccept }
 
 export interface FileManagerOptions {
-    allowedFileTypes?: string
-    limit?: number
-    maxFileSize?: MaxFileSizeObject
-    minFileSize?: MaxFileSizeObject
-    maxTotalFileSize?: MaxFileSizeObject
-    contentDeduplication?: boolean
-    onBeforeFileAdded?: (
-        file: File,
-    ) => boolean | File | undefined | Promise<boolean | File | undefined>
+    allowedFileTypes?: string | undefined
+    limit?: number | undefined
+    maxFileSize?: MaxFileSizeObject | undefined
+    minFileSize?: MaxFileSizeObject | undefined
+    maxTotalFileSize?: MaxFileSizeObject | undefined
+    contentDeduplication?: boolean | undefined
+    onBeforeFileAdded?:
+        | ((
+              file: File,
+          ) => boolean | File | undefined | Promise<boolean | File | undefined>)
+        | undefined
 }
 
 let fileIdCounter = 0
@@ -112,12 +114,7 @@ function nativeToUploadFile(
             ...existingMetadata,
             ...(relativePath ? { relativePath } : {}),
         },
-        url,
-        key: undefined,
-        etag: undefined,
-        fileHash: undefined,
-        checksumSHA256: undefined,
-        thumbnail: undefined,
+        ...(url !== undefined ? { url } : {}),
     }) as UploadFile
 
     if (relativePath) {

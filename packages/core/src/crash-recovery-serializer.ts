@@ -160,7 +160,9 @@ function reviveCrashRecoveryFile(
         }
     }
     if (isRecord(props.thumbnail)) {
-        uploadFile.thumbnail = props.thumbnail as UploadFile['thumbnail']
+        uploadFile.thumbnail = props.thumbnail as NonNullable<
+            UploadFile['thumbnail']
+        >
     }
 
     return uploadFile

@@ -5,8 +5,8 @@ export type DriveFile = {
     size: number
     mimeType: string
     isFolder: boolean
-    thumbnail?: string
-    modifiedAt?: string
+    thumbnail?: string | undefined
+    modifiedAt?: string | undefined
 }
 
 export type DriveFolder = DriveFile & {
@@ -25,7 +25,7 @@ export type DriveState =
 /** The one drive browse-failure surface (F-124). `action` names the operation that failed. */
 export type DriveBrowserError = {
     message: string
-    action?: string
+    action?: string | undefined
 }
 
 /**
@@ -38,7 +38,7 @@ export type DriveBrowserError = {
 export type DriveListPage = {
     files: DriveFile[]
     hasMore: boolean
-    cursor?: string
+    cursor?: string | undefined
 }
 
 export type DriveEventMap = {

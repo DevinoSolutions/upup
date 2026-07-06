@@ -16,14 +16,14 @@ export interface OrchestratorState {
     uploadStatus: UploadStatus
     uploadError: string
     /** Machine code from a typed UpupError (e.g. 'SignatureDoesNotMatch', 'bad_signature'), when the failure carried one. */
-    uploadErrorCode?: string
+    uploadErrorCode?: string | undefined
     totalProgress: number
     filesProgressMap: FilesProgressMap
     uploadSpeed: number
     uploadEta: number
     uploadedBytes: number
     totalBytes: number
-    activeSource?: FileSource
+    activeSource?: FileSource | undefined
     editingFile: UploadFile | null
     editorQueue: UploadFile[]
     isAddingMore: boolean
@@ -32,26 +32,27 @@ export interface OrchestratorState {
 }
 
 export interface OrchestratorCallbacks {
-    onError?: (message: string) => void
-    onWarn?: (message: string) => void
-    onUploadComplete?: (files: UploadFile[]) => void
-    onUploadStart?: () => void
-    onFileUploadStart?: (file: UploadFile) => void
-    onFileUploadProgress?: (
-        file: UploadFile,
-        progress: UploadProgressInfo,
-    ) => void
-    onFileUploadComplete?: (file: UploadFile, key: string) => void
-    onFilesUploadProgress?: (completedFiles: number, totalFiles: number) => void
-    onFilesUploadComplete?: (files: UploadFile[]) => void
-    onFileRemoved?: (file: UploadFile) => void
-    onFilesSelected?: (files: UploadFile[]) => void
-    onFileDrop?: (files: File[]) => void
-    onDoneClicked?: () => void
-    onPrepareFiles?: (
-        files: UploadFile[],
-    ) => Promise<UploadFile[] | File[]> | UploadFile[] | File[]
-    imageEditorOptions?: ResolvedImageEditorOptions
+    onError?: ((message: string) => void) | undefined
+    onWarn?: ((message: string) => void) | undefined
+    onUploadComplete?: ((files: UploadFile[]) => void) | undefined
+    onUploadStart?: (() => void) | undefined
+    onFileUploadStart?: ((file: UploadFile) => void) | undefined
+    onFileUploadProgress?:
+        ((file: UploadFile, progress: UploadProgressInfo) => void) | undefined
+    onFileUploadComplete?: ((file: UploadFile, key: string) => void) | undefined
+    onFilesUploadProgress?:
+        ((completedFiles: number, totalFiles: number) => void) | undefined
+    onFilesUploadComplete?: ((files: UploadFile[]) => void) | undefined
+    onFileRemoved?: ((file: UploadFile) => void) | undefined
+    onFilesSelected?: ((files: UploadFile[]) => void) | undefined
+    onFileDrop?: ((files: File[]) => void) | undefined
+    onDoneClicked?: (() => void) | undefined
+    onPrepareFiles?:
+        | ((
+              files: UploadFile[],
+          ) => Promise<UploadFile[] | File[]> | UploadFile[] | File[])
+        | undefined
+    imageEditorOptions?: ResolvedImageEditorOptions | undefined
     /** When true, triggers upload automatically after files are added. */
-    autoUpload?: boolean
+    autoUpload?: boolean | undefined
 }

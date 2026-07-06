@@ -13,7 +13,7 @@ export interface TranslatorOptions {
     /** Fallback bundle (typically en-US) */
     fallback?: LocaleBundle
     /** Partial message overrides merged on top */
-    overrides?: PartialMessages
+    overrides?: PartialMessages | undefined
     /** Called when a key is missing from all sources */
     onMissingKey?: (key: string) => void
     /** Async loader for switching locale at runtime */

@@ -59,7 +59,7 @@ export class UpupNetworkError extends UpupError {
     constructor(message: string, status?: number) {
         super(message, UpupErrorCode.NETWORK_ERROR, true)
         this.name = 'UpupNetworkError'
-        this.status = status
+        if (status !== undefined) this.status = status
     }
 }
 
@@ -162,7 +162,7 @@ export function parseErrorBody(body: string | undefined): {
     code?: string
     message: string
 } {
-    if (!body) return { code: undefined, message: '' }
+    if (!body) return { message: '' }
 
     try {
         const parsed = JSON.parse(body) as {
@@ -176,7 +176,10 @@ export function parseErrorBody(body: string | undefined): {
                 typeof message === 'string' ||
                 typeof parsed.code === 'string'
             ) {
-                return { code: parsed.code, message: message ?? '' }
+                return {
+                    message: message ?? '',
+                    ...(parsed.code !== undefined ? { code: parsed.code } : {}),
+                }
             }
         }
     } catch {
@@ -186,10 +189,13 @@ export function parseErrorBody(body: string | undefined): {
     const xmlCode = /<Code>([^<]*)<\/Code>/.exec(body)?.[1]
     const xmlMessage = /<Message>([^<]*)<\/Message>/.exec(body)?.[1]
     if (xmlCode || xmlMessage) {
-        return { code: xmlCode, message: xmlMessage ?? '' }
+        return {
+            message: xmlMessage ?? '',
+            ...(xmlCode !== undefined ? { code: xmlCode } : {}),
+        }
     }
 
-    return { code: undefined, message: body.slice(0, MAX_ERROR_BODY_SNIPPET) }
+    return { message: body.slice(0, MAX_ERROR_BODY_SNIPPET) }
 }
 
 export interface UploadErrorFromResponseArgs {

@@ -178,8 +178,12 @@ export async function handleTask(req: WorkerRequest): Promise<WorkerResponse> {
                 const thumb = await createThumbnail(
                     asUploadFile(req.data, mime, name),
                     {
-                        width: params.maxWidthOrHeight,
-                        quality: params.quality,
+                        ...(params.maxWidthOrHeight !== undefined
+                            ? { width: params.maxWidthOrHeight }
+                            : {}),
+                        ...(params.quality !== undefined
+                            ? { quality: params.quality }
+                            : {}),
                     },
                 )
                 if (!thumb)

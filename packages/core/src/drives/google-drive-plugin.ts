@@ -269,7 +269,12 @@ export class GoogleDrivePlugin implements DrivePlugin {
                 cursor,
             })
 
-            return { files, folderId: parentId, hasMore, cursor }
+            return {
+                files,
+                folderId: parentId,
+                hasMore,
+                ...(cursor !== undefined ? { cursor } : {}),
+            }
         } catch (err) {
             this.setState('authenticated')
             this.emitter?.emit('google-drive:error', {
@@ -314,7 +319,11 @@ export class GoogleDrivePlugin implements DrivePlugin {
                 ? JSON.stringify({ folderId, pageToken: data.nextPageToken })
                 : undefined
 
-            return { files, hasMore, cursor: nextCursor }
+            return {
+                files,
+                hasMore,
+                ...(nextCursor !== undefined ? { cursor: nextCursor } : {}),
+            }
         } catch (err) {
             this.emitter?.emit('google-drive:error', {
                 error: err instanceof Error ? err : new Error(String(err)),

@@ -14,7 +14,7 @@ export interface WorkerRequest {
     id: number
     type: WorkerTaskType
     data: ArrayBuffer
-    params?: WorkerParams
+    params?: WorkerParams | undefined
 }
 
 export type WorkerResult =

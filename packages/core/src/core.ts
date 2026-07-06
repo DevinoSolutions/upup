@@ -292,9 +292,12 @@ export class UpupCore {
                     import('./worker/create-worker-provider'),
                     import('./runtime/browser'),
                 ])
-            return createWorkerProvider(BrowserRuntime, {
-                timeoutMs: this.options.workerTimeoutMs,
-            })
+            return createWorkerProvider(
+                BrowserRuntime,
+                this.options.workerTimeoutMs !== undefined
+                    ? { timeoutMs: this.options.workerTimeoutMs }
+                    : {},
+            )
         } catch (err) {
             if (
                 typeof process !== 'undefined' &&

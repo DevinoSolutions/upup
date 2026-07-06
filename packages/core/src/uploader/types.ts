@@ -70,7 +70,7 @@ export interface UploaderControllerOptions
 
 /** All resolved scalars + i18n + cloud-drive config (static, computed once). */
 export interface UploaderResolved {
-    cloudDrives?: CloudDrivesConfig
+    cloudDrives?: CloudDrivesConfig | undefined
     mini: boolean
     sources: FileSource[]
     allowedFileTypes: string
@@ -78,11 +78,11 @@ export interface UploaderResolved {
     maxFileSize: import('../contracts').MaxFileSizeObject
     multiple: boolean
     mode: 'client' | 'server'
-    serverUrl?: string
+    serverUrl?: string | undefined
     folderUploadAllowDrop: boolean
     folderPickerButtonVisible: boolean
     imageEditor: ResolvedImageEditorOptions
-    resumable?: ResumableUploadOptions
+    resumable?: ResumableUploadOptions | undefined
     translator: Translator
     translations: UiTranslations
     lang: string

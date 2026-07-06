@@ -85,8 +85,14 @@ export function resolveUploadConfig(
                 : { uploadStrategy: directUpload, presign: true }
         },
         maxConcurrentUploads: options.maxConcurrentUploads ?? 3,
-        maxRetries: options.maxRetries,
-        fastAbortThreshold: options.fastAbortThreshold,
-        isSuccessfulCall: options.isSuccessfulCall,
+        ...(options.maxRetries !== undefined
+            ? { maxRetries: options.maxRetries }
+            : {}),
+        ...(options.fastAbortThreshold !== undefined
+            ? { fastAbortThreshold: options.fastAbortThreshold }
+            : {}),
+        ...(options.isSuccessfulCall !== undefined
+            ? { isSuccessfulCall: options.isSuccessfulCall }
+            : {}),
     }
 }

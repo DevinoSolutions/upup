@@ -29,7 +29,7 @@ export interface ThemeStoreState {
 export class ThemeStore {
     private state: ThemeStoreState
     private listeners = new Set<() => void>()
-    private config?: UpupThemeConfig
+    private config?: UpupThemeConfig | undefined
     private systemMode: 'light' | 'dark' = 'light'
     private mediaCleanup: (() => void) | null = null
 

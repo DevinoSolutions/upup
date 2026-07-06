@@ -18,9 +18,9 @@ export type UploadCredentials = PresignedUrlResponse
 
 export type UploadResult = {
     key: string
-    publicUrl?: string
-    downloadUrl?: string
-    etag?: string
+    publicUrl?: string | undefined
+    downloadUrl?: string | undefined
+    etag?: string | undefined
 }
 
 export type ProgressInfo = {
@@ -59,8 +59,8 @@ export interface UploadStrategy {
 
 export interface RuntimeAdapter {
     computeHash(data: ArrayBuffer): Promise<string>
-    createImageBitmap?(blob: Blob): Promise<ImageBitmap>
-    createWorker?(): Worker | null
+    createImageBitmap?: ((blob: Blob) => Promise<ImageBitmap>) | undefined
+    createWorker?: (() => Worker | null) | undefined
     upload(
         url: string,
         body: Blob | ArrayBuffer,
@@ -76,11 +76,13 @@ export interface RuntimeAdapter {
         body: string
     }>
     readAsArrayBuffer(file: File | Blob): Promise<ArrayBuffer>
-    createObjectURL?(blob: Blob): string
-    revokeObjectURL?(url: string): void
-    storage?: {
-        get(key: string): Promise<unknown>
-        set(key: string, value: unknown): Promise<void>
-        delete(key: string): Promise<void>
-    }
+    createObjectURL?: ((blob: Blob) => string) | undefined
+    revokeObjectURL?: ((url: string) => void) | undefined
+    storage?:
+        | {
+              get(key: string): Promise<unknown>
+              set(key: string, value: unknown): Promise<void>
+              delete(key: string): Promise<void>
+          }
+        | undefined
 }

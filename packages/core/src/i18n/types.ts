@@ -299,5 +299,5 @@ export interface Translator {
     /** Text direction for the current locale */
     readonly dir: 'ltr' | 'rtl'
     /** Switch locale at runtime (only available if loadLocale was provided) */
-    setLocale?: (code: string) => Promise<void>
+    setLocale?: ((code: string) => Promise<void>) | undefined
 }

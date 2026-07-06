@@ -52,9 +52,11 @@ export function blobToUploadFile(
     fileWithParams.source = original.source
     fileWithParams.status = original.status
     fileWithParams.metadata = original.metadata
-    fileWithParams.key = original.key
-    fileWithParams.fileHash = original.fileHash
-    fileWithParams.thumbnail = original.thumbnail
+    if (original.key !== undefined) fileWithParams.key = original.key
+    if (original.fileHash !== undefined)
+        fileWithParams.fileHash = original.fileHash
+    if (original.thumbnail !== undefined)
+        fileWithParams.thumbnail = original.thumbnail
 
     return fileWithParams
 }

@@ -34,9 +34,9 @@ export function matchesAccept(file: File, accept: string): boolean {
 }
 
 export interface FileRestrictionOptions {
-    allowedFileTypes?: string
-    maxFileSize?: MaxFileSizeObject
-    minFileSize?: MaxFileSizeObject
+    allowedFileTypes?: string | undefined
+    maxFileSize?: MaxFileSizeObject | undefined
+    minFileSize?: MaxFileSizeObject | undefined
 }
 
 export type FileRestrictionViolation = {

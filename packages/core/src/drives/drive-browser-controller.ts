@@ -11,9 +11,9 @@ import { loadGoogleIdentityServices } from '../utils/load-gapi'
 import type { DrivePlugin } from './plugin'
 
 export interface DriveBrowserState {
-    user?: DriveUser
+    user?: DriveUser | undefined
     /** Contents of the currently displayed folder (legacy: googleFiles/oneDriveFiles/…). */
-    folder?: DriveFolder
+    folder?: DriveFolder | undefined
     path: DriveFolder[]
     selectedFiles: DriveFile[]
     isClickLoading: boolean
@@ -25,9 +25,9 @@ export interface DriveBrowserState {
     /** GIS only: user dismissed the consent popup. */
     authCancelled: boolean
     /** GIS only: the acquired access token. */
-    token?: { access_token: string; expires_in: number }
+    token?: { access_token: string; expires_in: number } | undefined
     /** The one drive-failure surface (auth/load/download/search, any provider). undefined = no error. */
-    error?: DriveBrowserError
+    error?: DriveBrowserError | undefined
     /** Drives the "Load more" button. Wired in F-125 (hasMore/loadMore); defaults false until then. */
     hasMore: boolean
     /** Load-more button spinner/disabled state. */
@@ -76,9 +76,9 @@ export class DriveBrowserController {
     private tokenClient: GisTokenClient | null = null
     private unsubs: (() => void)[] = []
     /** Real name of the folder being navigated into, captured at click time. */
-    private pendingFolder?: { id: string; name: string }
+    private pendingFolder?: { id: string; name: string } | undefined
     /** Opaque continuation token from the most recent files-loaded/loadMoreFiles payload (F-125). */
-    private cursor?: string
+    private cursor?: string | undefined
 
     constructor(
         core: UpupCore,
