@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { Readable } from 'node:stream'
+import type { UpupServerConfig } from '@upup/server'
 
 // Capture the Web Request the core handler receives, and control its Response.
 const received: { req?: Request } = {}
@@ -28,22 +29,33 @@ function mockReq(opts: {
     return req
 }
 
-function mockRes() {
-    const res: any = {
+interface MockRes {
+    statusCode: number
+    headers: Record<string, string>
+    body: unknown
+    status: ReturnType<typeof vi.fn>
+    setHeader: ReturnType<typeof vi.fn>
+    send: ReturnType<typeof vi.fn>
+    json: ReturnType<typeof vi.fn>
+    end: ReturnType<typeof vi.fn>
+}
+
+function mockRes(): MockRes {
+    const res: MockRes = {
         statusCode: 0,
-        headers: {} as Record<string, string>,
-        body: undefined as unknown,
-        status: vi.fn(function (this: any, c: number) {
+        headers: {},
+        body: undefined,
+        status: vi.fn(function (this: MockRes, c: number) {
             this.statusCode = c
             return this
         }),
-        setHeader: vi.fn(function (this: any, k: string, v: string) {
+        setHeader: vi.fn(function (this: MockRes, k: string, v: string) {
             this.headers[k.toLowerCase()] = v
         }),
-        send: vi.fn(function (this: any, b: unknown) {
+        send: vi.fn(function (this: MockRes, b: unknown) {
             this.body = b
         }),
-        json: vi.fn(function (this: any, b: unknown) {
+        json: vi.fn(function (this: MockRes, b: unknown) {
             this.body = b
         }),
         end: vi.fn(),
@@ -63,7 +75,7 @@ describe('createUpupPagesHandler', () => {
                 status: 200,
                 headers: { 'content-type': 'application/json' },
             })
-        const handler = createUpupPagesHandler({} as any)
+        const handler = createUpupPagesHandler({} as UpupServerConfig)
         const req = mockReq({
             method: 'POST',
             url: '/api/upup-pages/presign',
@@ -90,7 +102,7 @@ describe('createUpupPagesHandler', () => {
     })
 
     it('does not read a body for GET', async () => {
-        const handler = createUpupPagesHandler({} as any)
+        const handler = createUpupPagesHandler({} as UpupServerConfig)
         const req = mockReq({
             method: 'GET',
             url: '/api/upup-pages/files/google-drive',
@@ -107,7 +119,7 @@ describe('createUpupPagesHandler', () => {
                 status: 302,
                 headers: { location: 'https://accounts.google.com/o' },
             })
-        const handler = createUpupPagesHandler({} as any)
+        const handler = createUpupPagesHandler({} as UpupServerConfig)
         const res = mockRes()
         await handler(
             mockReq({
@@ -124,7 +136,7 @@ describe('createUpupPagesHandler', () => {
         respond = async () => {
             throw new Error('boom')
         }
-        const handler = createUpupPagesHandler({} as any)
+        const handler = createUpupPagesHandler({} as UpupServerConfig)
         const res = mockRes()
         await handler(
             mockReq({
@@ -141,14 +153,14 @@ describe('createUpupPagesHandler', () => {
     it('passes binary response bytes through intact', async () => {
         const bytes = new Uint8Array([0, 1, 2, 250, 255])
         respond = async () => new Response(bytes, { status: 200 })
-        const handler = createUpupPagesHandler({} as any)
+        const handler = createUpupPagesHandler({} as UpupServerConfig)
         const res = mockRes()
         await handler(mockReq({ method: 'GET', url: '/api/upup-pages/x' }), res)
         expect(Array.from(res.body as Buffer)).toEqual([0, 1, 2, 250, 255])
     })
 
     it('uses an explicit baseUrl for the Web Request origin', async () => {
-        const handler = createUpupPagesHandler({} as any, {
+        const handler = createUpupPagesHandler({} as UpupServerConfig, {
             baseUrl: 'https://app.example.com',
         })
         await handler(
@@ -161,7 +173,7 @@ describe('createUpupPagesHandler', () => {
     })
 
     it('derives the origin from the first x-forwarded-* value when trustProxy is set', async () => {
-        const handler = createUpupPagesHandler({} as any, { trustProxy: true })
+        const handler = createUpupPagesHandler({} as UpupServerConfig, { trustProxy: true })
         await handler(
             mockReq({
                 method: 'GET',

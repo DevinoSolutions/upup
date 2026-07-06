@@ -17,7 +17,7 @@ try {
   console.log(`[copy-styles] ${src} -> ${dest}`)
 } catch (err) {
   throw new Error(
-    '[copy-styles] Failed to copy @upup/react styles — ensure @upup/react is built first (turbo ^build handles this in CI).\n' +
-      err.message,
+    '[copy-styles] Failed to copy @upup/react styles — ensure @upup/react is built first (turbo ^build handles this in CI).',
+    { cause: err },
   )
 }

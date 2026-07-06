@@ -61,16 +61,23 @@ export function createUpupPagesHandler(
             const webRes = await handler(webReq)
             await writeWebResponse(
                 {
-                    status: c => res.status(c),
-                    setHeader: (k, v) => res.setHeader(k, v),
-                    send: b => res.send(b),
+                    status: (c) => {
+                        res.status(c)
+                    },
+                    setHeader: (k, v) => {
+                        res.setHeader(k, v)
+                    },
+                    send: (b) => {
+                        res.send(b)
+                    },
                 },
                 webRes,
             )
-        } catch (err) {
-            res.status(500).json({
-                error: (err as Error).message || 'Internal error',
-            })
+        } catch (err: unknown) {
+            // upup-catch: Pages Router top-level catch — maps handler errors to 500 JSON
+            const message =
+                err instanceof Error ? err.message : 'Internal error'
+            res.status(500).json({ error: message })
         }
     }
 }

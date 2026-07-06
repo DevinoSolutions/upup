@@ -12,7 +12,8 @@ function isNonEmpty(v: unknown): v is string {
 export function defineUpupConfig(config: UpupServerConfig): UpupServerConfig {
     const missing: string[] = []
 
-    if (!config.storage) {
+    // Runtime guard: callers may pass partial/invalid objects at boot time
+    if (!(config as Partial<UpupServerConfig>).storage) {
         missing.push('storage')
     } else {
         if (!isNonEmpty(config.storage.bucket)) missing.push('storage.bucket')
