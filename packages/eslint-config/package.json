@@ -7,14 +7,26 @@
   "exports": {
     ".": "./index.mjs"
   },
-  "files": ["index.mjs"],
+  "files": [
+    "index.mjs",
+    "rules"
+  ],
+  "scripts": {
+    "test": "vitest run"
+  },
   "dependencies": {
+    "@eslint-community/eslint-plugin-eslint-comments": "^4.7.2",
     "@eslint/js": "^9.19.0",
+    "eslint-plugin-oxlint": "^1.72.0",
     "eslint-plugin-react-hooks": "^7.1.1",
-    "typescript-eslint": "^8.46.2",
-    "globals": "^15.14.0"
+    "globals": "^15.14.0",
+    "typescript-eslint": "^8.46.2"
   },
   "peerDependencies": {
     "eslint": "^9"
+  },
+  "devDependencies": {
+    "eslint": "^9.39.4",
+    "vitest": "4.1.2"
   }
 }
