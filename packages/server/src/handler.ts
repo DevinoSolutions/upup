@@ -98,6 +98,9 @@ export function createUpupHandler(config: UpupServerConfig): RouteHandler {
             const authMatch = path.match(/\/auth\/([\w-]+?)(?:\/(cb))?$/)
             if (req.method === 'GET' && authMatch) {
                 const provider = authMatch[1]
+                if (provider === undefined) {
+                    return res.json({ error: 'Not found' }, 404)
+                }
                 const isCallback = authMatch[2] === 'cb'
                 if (isCallback) {
                     return handleOAuthCallback(req, config, provider, res)
@@ -111,6 +114,9 @@ export function createUpupHandler(config: UpupServerConfig): RouteHandler {
             )
             if (filesMatch) {
                 const provider = filesMatch[1]
+                if (provider === undefined) {
+                    return res.json({ error: 'Not found' }, 404)
+                }
                 const isTransfer = filesMatch[2] === 'transfer'
                 if (req.method === 'POST' && isTransfer) {
                     return handleFileTransfer(req, config, provider, res)

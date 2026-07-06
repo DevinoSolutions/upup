@@ -194,6 +194,7 @@ async function* chunkedStream(
             let offset = 0
             while (remaining > 0 && buffered.length > 0) {
                 const head = buffered[0]
+                if (head === undefined) break
                 const take = Math.min(head.byteLength, remaining)
                 out.set(head.subarray(0, take), offset)
                 offset += take
