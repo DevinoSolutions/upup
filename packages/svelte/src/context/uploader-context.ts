@@ -96,26 +96,32 @@ export type ContextTheme = Omit<
     slots: Readable<BaseContextTheme['slots']>
 }
 
-export type ContextProps = Required<
-    Pick<
-        UploaderProps,
-        | 'sources'
-        | 'isProcessing'
-        | 'allowPreview'
-        | 'mini'
-        | 'onFileClick'
-        | 'onIntegrationClick'
-        | 'onFilesDragOver'
-        | 'onFilesDragLeave'
-        | 'onFilesDrop'
-        | 'onWarn'
-        | 'enablePaste'
-        | 'onError'
-        | 'showBranding'
-        | 'className'
-        | 'style'
-        | 'disableDragDrop'
-    >
+// Under `exactOptionalPropertyTypes`, `Required<Pick<T, K>>` strips the `?`
+// modifier but keeps the explicit `| undefined` from the widened base props.
+// These fields are always assigned with defaults by the controller, so
+// consumers see non-undefined values — strip both `?` and `undefined`.
+type RequiredDefined<T, K extends keyof T> = {
+    [P in K]-?: NonNullable<T[P]>
+}
+
+export type ContextProps = RequiredDefined<
+    UploaderProps,
+    | 'sources'
+    | 'isProcessing'
+    | 'allowPreview'
+    | 'mini'
+    | 'onFileClick'
+    | 'onIntegrationClick'
+    | 'onFilesDragOver'
+    | 'onFilesDragLeave'
+    | 'onFilesDrop'
+    | 'onWarn'
+    | 'enablePaste'
+    | 'onError'
+    | 'showBranding'
+    | 'className'
+    | 'style'
+    | 'disableDragDrop'
 > &
     // Explicit `| undefined` (via indexed access) rather than `Pick`: under
     // `exactOptionalPropertyTypes` the bridge assigns these from destructured
