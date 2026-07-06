@@ -1,5 +1,5 @@
 import { onMount, onDestroy } from 'svelte'
-import { derived } from 'svelte/store'
+import { derived, type Readable } from 'svelte/store'
 import { ServerModeDriveController } from '@upup/core/internal'
 import type { ServerModeProvider, ServerDriveFile } from '@upup/core'
 import { useUploaderRuntime } from '../context/uploader-context'
@@ -7,7 +7,22 @@ import { toReadable } from '../lib/to-readable'
 
 export type { ServerModeProvider, ServerDriveFile }
 
-export function useServerModeDrive(provider: ServerModeProvider) {
+type ServerDriveSnapshot = ReturnType<ServerModeDriveController['getSnapshot']>
+
+export interface UseServerModeDriveReturn {
+    state: Readable<ServerDriveSnapshot['state']>
+    folderId: Readable<ServerDriveSnapshot['folderId']>
+    setFolderId: (id: string | undefined) => void
+    search: Readable<ServerDriveSnapshot['search']>
+    setSearch: (s: string) => void
+    refresh: ServerModeDriveController['refresh']
+    transfer: ServerModeDriveController['transfer']
+    startAuth: ServerModeDriveController['startAuth']
+}
+
+export function useServerModeDrive(
+    provider: ServerModeProvider,
+): UseServerModeDriveReturn {
     const { serverUrl } = useUploaderRuntime()
     const controller = new ServerModeDriveController({
         provider,
@@ -15,8 +30,12 @@ export function useServerModeDrive(provider: ServerModeProvider) {
     })
 
     const state = toReadable(controller)
-    onMount(() => controller.init())
-    onDestroy(() => controller.destroy())
+    onMount(() => {
+        controller.init()
+    })
+    onDestroy(() => {
+        controller.destroy()
+    })
 
     return {
         state: derived(state, $s => $s.state),
@@ -28,8 +47,8 @@ export function useServerModeDrive(provider: ServerModeProvider) {
         setSearch(s: string) {
             controller.setSearch(s)
         }, // svelte: NO auto-relist
-        refresh: controller.refresh,
-        transfer: controller.transfer,
-        startAuth: controller.startAuth,
+        refresh: controller.refresh.bind(controller),
+        transfer: controller.transfer.bind(controller),
+        startAuth: controller.startAuth.bind(controller),
     }
 }

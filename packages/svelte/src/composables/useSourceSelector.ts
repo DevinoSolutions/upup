@@ -8,7 +8,15 @@ import {
 } from '../context/uploader-context'
 import { uploadSourceObject } from '../lib/constants'
 
-export default function useSourceSelector() {
+type SourceOption = (typeof uploadSourceObject)[string] & { name: string }
+
+export interface UseSourceSelectorReturn {
+    chosenSources: SourceOption[]
+    handleSourceClick: (sourceId: FileSource) => void
+    handleInputFileChange: (e: Event) => void
+}
+
+export default function useSourceSelector(): UseSourceSelectorReturn {
     const { core, openFilePicker } = useUploaderRuntime()
     const { setActiveSource } = useUploaderSource()
     const { setFiles } = useUploaderFiles()

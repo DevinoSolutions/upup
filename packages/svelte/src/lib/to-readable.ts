@@ -14,7 +14,9 @@ export interface HeadlessStore<S> {
  */
 export function toReadable<S>(store: HeadlessStore<S>): Readable<S> {
     return readable(store.getSnapshot(), set => {
-        const unsub = store.subscribe(() => set(store.getSnapshot()))
+        const unsub = store.subscribe(() => {
+            set(store.getSnapshot())
+        })
         return unsub
     })
 }

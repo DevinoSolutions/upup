@@ -222,29 +222,41 @@ export function provideUploaderContext(value: IUploaderContext): void {
 }
 
 // ─── Consumers (throw outside <UpupUploader />) ─────────────
-function read<T>(key: symbol, name: string): T {
-    const value = getContext<T | undefined>(key)
-    if (!value) throw new Error(`${name} must be used inside <UpupUploader />`)
+// `value` carries T so the generic relates the passed-in context to the return
+// (a real generic, not a disguised assertion): each consumer reads its own
+// typed getContext and this asserts presence at the <UpupUploader /> boundary.
+function read<T>(name: string, value: T | undefined): T {
+    if (value === undefined)
+        throw new Error(`${name} must be used inside <UpupUploader />`)
     return value
 }
 
-export const useUploaderContext = () =>
-    read<IUploaderContext>(RootKey, 'useUploaderContext')
-export const useUploaderRuntime = () =>
-    read<ContextRuntime>(RuntimeKey, 'useUploaderRuntime')
-export const useUploaderSource = () =>
-    read<ContextSource>(SourceKey, 'useUploaderSource')
-export const useUploaderI18n = () =>
-    read<ContextI18n>(I18nKey, 'useUploaderI18n')
-export const useUploaderFiles = () =>
-    read<ContextFiles>(FilesKey, 'useUploaderFiles')
-export const useUploaderUploadControls = () =>
-    read<ContextUploadControls>(UploadControlsKey, 'useUploaderUploadControls')
-export const useUploaderView = () =>
-    read<ContextView>(ViewKey, 'useUploaderView')
-export const useUploaderEditor = () =>
-    read<ContextEditor>(EditorKey, 'useUploaderEditor')
-export const useUploaderOptions = () =>
-    read<ContextProps>(OptionsKey, 'useUploaderOptions')
-export const useUploaderTheme = () =>
-    read<ContextTheme>(ThemeKey, 'useUploaderTheme')
+export const useUploaderContext = (): IUploaderContext =>
+    read(
+        'useUploaderContext',
+        getContext<IUploaderContext | undefined>(RootKey),
+    )
+export const useUploaderRuntime = (): ContextRuntime =>
+    read(
+        'useUploaderRuntime',
+        getContext<ContextRuntime | undefined>(RuntimeKey),
+    )
+export const useUploaderSource = (): ContextSource =>
+    read('useUploaderSource', getContext<ContextSource | undefined>(SourceKey))
+export const useUploaderI18n = (): ContextI18n =>
+    read('useUploaderI18n', getContext<ContextI18n | undefined>(I18nKey))
+export const useUploaderFiles = (): ContextFiles =>
+    read('useUploaderFiles', getContext<ContextFiles | undefined>(FilesKey))
+export const useUploaderUploadControls = (): ContextUploadControls =>
+    read(
+        'useUploaderUploadControls',
+        getContext<ContextUploadControls | undefined>(UploadControlsKey),
+    )
+export const useUploaderView = (): ContextView =>
+    read('useUploaderView', getContext<ContextView | undefined>(ViewKey))
+export const useUploaderEditor = (): ContextEditor =>
+    read('useUploaderEditor', getContext<ContextEditor | undefined>(EditorKey))
+export const useUploaderOptions = (): ContextProps =>
+    read('useUploaderOptions', getContext<ContextProps | undefined>(OptionsKey))
+export const useUploaderTheme = (): ContextTheme =>
+    read('useUploaderTheme', getContext<ContextTheme | undefined>(ThemeKey))

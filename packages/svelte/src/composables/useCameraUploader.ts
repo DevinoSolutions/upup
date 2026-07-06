@@ -1,4 +1,10 @@
-import { derived, writable } from 'svelte/store'
+import {
+    derived,
+    get,
+    writable,
+    type Readable,
+    type Writable,
+} from 'svelte/store'
 import { onDestroy } from 'svelte'
 import {
     useUploaderFiles,
@@ -14,7 +20,23 @@ export enum FacingMode {
     User = 'user',
 }
 
-export default function useCameraUploader() {
+export interface UseCameraUploaderReturn {
+    setVideoEl: (el: HTMLVideoElement | null) => void
+    capturedUrl: Writable<string>
+    facingMode: Writable<FacingMode>
+    newCameraSide: Readable<'front' | 'back'>
+    startCamera: () => Promise<void>
+    stopCamera: () => void
+    capture: () => void
+    clearUrl: () => void
+    handleFetchImage: () => Promise<void>
+    handleCameraSwitch: () => void
+    translations: ReturnType<typeof useUploaderI18n>['translations']
+    props: ReturnType<typeof useUploaderOptions>
+    theme: ReturnType<typeof useUploaderTheme>
+}
+
+export default function useCameraUploader(): UseCameraUploaderReturn {
     const { core } = useUploaderRuntime()
     const { setFiles } = useUploaderFiles()
     const { setActiveSource } = useUploaderSource()
@@ -39,35 +61,33 @@ export default function useCameraUploader() {
 
     async function startCamera() {
         try {
-            let currentStream: MediaStream | null = null
-            stream.subscribe(s => {
-                currentStream = s
-            })()
+            const currentStream = get(stream)
             if (currentStream) {
-                ;(currentStream as MediaStream)
-                    .getTracks()
-                    .forEach(t => t.stop())
+                currentStream.getTracks().forEach(t => {
+                    t.stop()
+                })
             }
-            let currentFacing: FacingMode = FacingMode.Environment
-            facingMode.subscribe(f => {
-                currentFacing = f
-            })()
+            const currentFacing = get(facingMode)
             const mediaStream = await navigator.mediaDevices.getUserMedia({
                 video: { facingMode: currentFacing },
             })
             stream.set(mediaStream)
             if (videoEl) {
                 videoEl.srcObject = mediaStream
-                videoEl.play()
+                await videoEl.play()
             }
         } catch {
-            // camera unavailable — leave stream null
+            // upup-catch: getUserMedia/play() unavailable (denied permission or
+            // blocked autoplay) — leave stream null; the UI shows no preview.
         }
     }
 
     function stopCamera() {
         stream.update(s => {
-            if (s) s.getTracks().forEach(t => t.stop())
+            if (s)
+                s.getTracks().forEach(t => {
+                    t.stop()
+                })
             return null
         })
         if (videoEl) {
@@ -95,10 +115,7 @@ export default function useCameraUploader() {
     }
 
     async function handleFetchImage() {
-        let currentUrl = ''
-        capturedUrl.subscribe(u => {
-            currentUrl = u
-        })()
+        const currentUrl = get(capturedUrl)
         if (!currentUrl) return
 
         const response = await fetch(currentUrl)

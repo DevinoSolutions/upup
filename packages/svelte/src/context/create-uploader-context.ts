@@ -97,7 +97,7 @@ export function createUploaderContext(props: UploaderProps): IUploaderContext {
     const factoryOptions: UploaderControllerOptions = {
         provider,
         mode: modeProp,
-        sources: sources as UploaderControllerOptions['sources'],
+        sources: sources,
         uploadEndpoint,
         serverUrl,
         maxFiles,
@@ -115,9 +115,8 @@ export function createUploaderContext(props: UploaderProps): IUploaderContext {
         autoUpload,
         maxConcurrentUploads,
         crashRecovery,
-        allowedFileTypes: (typeof acceptProp === 'string'
-            ? acceptProp
-            : (acceptProp as string[]).join(',')) as string | undefined,
+        allowedFileTypes:
+            typeof acceptProp === 'string' ? acceptProp : acceptProp.join(','),
         mini,
         isProcessing,
         allowPreview,
@@ -162,14 +161,20 @@ export function createUploaderContext(props: UploaderProps): IUploaderContext {
     const { connectSSE } = useSSEProcessing({
         processingEndpoint,
         onFileProcessed,
-        onError: err => onError(err.message),
+        onError: err => {
+            onError(err.message)
+        },
         processingTimeout,
     })
 
     // ── Root controller (created once, owns orchestrator/theme/plugins/commands) ──
     const root = createUploaderController(
         { core: upload.core, options: factoryOptions, normalized },
-        { connectSSE: file => connectSSE(file) },
+        {
+            connectSSE: file => {
+                connectSSE(file)
+            },
+        },
     )
     root.updateCallbacks({
         onError,
@@ -202,16 +207,23 @@ export function createUploaderContext(props: UploaderProps): IUploaderContext {
     //   status-change dedup, crash recovery.
     // root.destroy() owns: orchestrator.destroy, theme.destroy, plugin cleanup.
     // core lifecycle remains owned by useUpupUpload's onDestroy.
-    onMount(() => root.init())
-    onDestroy(() => root.destroy())
+    onMount(() => {
+        root.init()
+    })
+    onDestroy(() => {
+        root.destroy()
+    })
 
     // ── Input ref: delegate to factory (Svelte bind:this registration) ──────
     // UpupUploader.svelte: $effect(() => ctx.registerFileInput(inputEl))
     // must keep these field names; bodies delegate to root.*.
-    const registerFileInput = (el: HTMLInputElement | null) =>
+    const registerFileInput = (el: HTMLInputElement | null) => {
         root.registerFileInput(el)
+    }
     const getFileInput = (): HTMLInputElement | null => root.getFileInput()
-    const openFilePicker = () => root.openFilePicker()
+    const openFilePicker = () => {
+        root.openFilePicker()
+    }
 
     // ── Icons resolution (framework-specific) ───────────────────
     const resolvedIcons = {
@@ -238,12 +250,17 @@ export function createUploaderContext(props: UploaderProps): IUploaderContext {
         // Reactive so consumers (SourceView/UploaderPanel/FileList) re-render when the
         // active source changes.
         activeSource: derived(orchState, $s => $s.activeSource),
-        setActiveSource: (source: FileSource | undefined) =>
-            root.commands.setActiveSource(source),
+        setActiveSource: (source: FileSource | undefined) => {
+            root.commands.setActiveSource(source)
+        },
         isAddingMore: derived(orchState, $s => $s.isAddingMore),
-        setIsAddingMore: (v: boolean) => root.commands.setIsAddingMore(v),
+        setIsAddingMore: (v: boolean) => {
+            root.commands.setIsAddingMore(v)
+        },
         viewMode: derived(orchState, $s => $s.viewMode),
-        setViewMode: (m: 'grid' | 'list') => root.commands.setViewMode(m),
+        setViewMode: (m: 'grid' | 'list') => {
+            root.commands.setViewMode(m)
+        },
         isOnline: derived(orchState, $s => $s.isOnline),
         translations: resolved.translations,
         translator: resolved.translator,
@@ -262,27 +279,53 @@ export function createUploaderContext(props: UploaderProps): IUploaderContext {
             slots: derived(themeState, $s => $s.slots),
         },
         files: derived(orchState, $s => $s.files),
-        setFiles: (newFiles: File[]) =>
-            root.commands.handleSetSelectedFiles(newFiles),
+        // ContextFiles.setFiles is fire-and-forget (`=> void`); route the async
+        // command's rejection to onError rather than floating the promise.
+        setFiles: (newFiles: File[]) => {
+            root.commands
+                .handleSetSelectedFiles(newFiles)
+                .catch((error: unknown) => {
+                    onError(
+                        error instanceof Error ? error.message : String(error),
+                    )
+                })
+        },
         uploadFiles: (newFiles: File[] | UploadFile[]) =>
             root.commands.uploadFiles(newFiles),
-        resetState: () => root.commands.resetState(),
-        replaceFiles: (newFiles: File[] | UploadFile[]) =>
-            root.commands.replaceFiles(newFiles),
-        handleDone: () => root.commands.handleDone(),
-        handleCancel: () => root.commands.handleCancel(),
-        handlePause: () => root.commands.handlePause(),
-        handleResume: () => root.commands.handleResume(),
-        handleFileRemove: (fileId: string) =>
-            root.commands.handleFileRemove(fileId),
+        resetState: () => {
+            root.commands.resetState()
+        },
+        replaceFiles: (newFiles: File[] | UploadFile[]) => {
+            root.commands.replaceFiles(newFiles)
+        },
+        handleDone: () => {
+            root.commands.handleDone()
+        },
+        handleCancel: () => {
+            root.commands.handleCancel()
+        },
+        handlePause: () => {
+            root.commands.handlePause()
+        },
+        handleResume: () => {
+            root.commands.handleResume()
+        },
+        handleFileRemove: (fileId: string) => {
+            root.commands.handleFileRemove(fileId)
+        },
         editingFile: derived(orchState, $s => $s.editingFile),
-        openImageEditor: (file: UploadFile) =>
-            root.commands.openImageEditor(file),
-        closeImageEditor: () => root.commands.closeImageEditor(),
-        saveImageEdit: (editedImageData: string, mimeType?: string) =>
-            root.commands.saveImageEdit(editedImageData, mimeType),
-        replaceFile: (fileId: string, newFile: UploadFile) =>
-            root.commands.replaceFile(fileId, newFile),
+        openImageEditor: (file: UploadFile) => {
+            root.commands.openImageEditor(file)
+        },
+        closeImageEditor: () => {
+            root.commands.closeImageEditor()
+        },
+        saveImageEdit: (editedImageData: string, mimeType?: string) => {
+            root.commands.saveImageEdit(editedImageData, mimeType)
+        },
+        replaceFile: (fileId: string, newFile: UploadFile) => {
+            root.commands.replaceFile(fileId, newFile)
+        },
         cloudDrives: resolved.cloudDrives,
         upload: {
             totalProgress: derived(orchState, $s => $s.totalProgress),

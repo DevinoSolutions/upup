@@ -17,15 +17,21 @@ type Options = {
  * received is parsed as JSON and forwarded to `onFileProcessed`. The
  * connection is closed automatically on message, error, or timeout.
  */
+export interface UseSSEProcessingReturn {
+    connectSSE: (file: UploadFile) => void
+}
+
 export function useSSEProcessing({
     processingEndpoint,
     onFileProcessed,
     onError,
     processingTimeout = 60_000,
-}: Options) {
+}: Options): UseSSEProcessingReturn {
     const processor = new SSEProcessor()
 
-    onDestroy(() => processor.destroy())
+    onDestroy(() => {
+        processor.destroy()
+    })
 
     function connectSSE(file: UploadFile) {
         const key = file.key
@@ -34,7 +40,9 @@ export function useSSEProcessing({
         processor.subscribe(
             key,
             processingEndpoint,
-            (data: Record<string, unknown>) => onFileProcessed(file, data),
+            (data: Record<string, unknown>) => {
+                onFileProcessed(file, data)
+            },
             (error: Error) => onError?.(error),
             processingTimeout,
         )

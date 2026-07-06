@@ -1,4 +1,4 @@
-import { writable, get } from 'svelte/store'
+import { writable, get, type Writable } from 'svelte/store'
 import { deriveFetchedFileName } from '@upup/core/internal'
 import {
     useUploaderOptions,
@@ -7,7 +7,12 @@ import {
 
 export { deriveFetchedFileName }
 
-export default function useFetchFileByUrl() {
+export interface UseFetchFileByUrlReturn {
+    loading: Writable<boolean>
+    fetchImage: (url: string) => Promise<File | undefined>
+}
+
+export default function useFetchFileByUrl(): UseFetchFileByUrlReturn {
     const { core } = useUploaderRuntime()
     const { onError } = useUploaderOptions()
     const loading = writable(false)
