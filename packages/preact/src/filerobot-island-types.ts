@@ -13,7 +13,7 @@ export interface IslandProps {
     tabsIds?: unknown[]
     onSave?: (imageData: unknown, designState?: unknown) => void
     onClose?: () => void
-    onBeforeSave?: (imageData?: unknown) => boolean | void
+    onBeforeSave?: (imageData?: unknown) => boolean | undefined
     [key: string]: unknown
 }
 

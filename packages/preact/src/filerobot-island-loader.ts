@@ -14,5 +14,6 @@ import type { IslandModule } from './filerobot-island-types'
  * (vi.mock('../filerobot-island-loader')).
  */
 export function loadIsland(): Promise<IslandModule> {
-    return import('./filerobot-island.js' as string) as Promise<IslandModule>
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion -- cast to non-literal string prevents TS from resolving the import into the preact/compat type program
+    return import('./filerobot-island.js' as string)
 }

@@ -14,7 +14,7 @@ export { TABS, TOOLS } from './filerobot-constants'
  * Props mirror what the chrome passes to <EditorComponent> and are forwarded
  * verbatim to the island (no transformation — save logic stays in the chrome).
  */
-export default function FilerobotBridge(props: IslandProps) {
+export default function FilerobotBridge(props: IslandProps): JSX.Element {
     const hostRef = useRef<HTMLDivElement | null>(null)
     const handleRef = useRef<IslandHandle | null>(null)
     const propsRef = useRef<IslandProps>(props)
@@ -42,7 +42,6 @@ export default function FilerobotBridge(props: IslandProps) {
             handleRef.current?.unmount()
             handleRef.current = null
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
     // Forward later prop changes to the mounted island (no-op until mounted).
