@@ -68,7 +68,7 @@ export type BaseContextSource = {
 
 export type BaseContextI18n = {
     translations: Translations
-    translator?: Translator
+    translator?: Translator | undefined
     lang: string
     dir: 'ltr' | 'rtl'
 }
