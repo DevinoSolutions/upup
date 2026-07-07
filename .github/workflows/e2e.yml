@@ -25,7 +25,7 @@ jobs:
             - name: Setup PNPM environment
               if: steps.cache-primes.outputs.cache-hit != 'true'
               run: |
-                  npm install -g pnpm@latest
+                  npm install -g pnpm@10.11.0
                   pnpm config set store-dir ~/.pnpm-store
 
             - name: Cache PNPM dependencies
@@ -61,7 +61,7 @@ jobs:
                   node-version-file: '.nvmrc'
             - name: Setup PNPM environment
               run: |
-                  npm install -g pnpm@latest
+                  npm install -g pnpm@10.11.0
                   pnpm config set store-dir ~/.pnpm-store
             - uses: actions/cache@v4
               with:

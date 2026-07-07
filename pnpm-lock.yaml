@@ -316,10 +316,10 @@ importers:
   apps/mastra:
     dependencies:
       '@mastra/client-js':
-        specifier: latest
+        specifier: ^1.31.0
         version: 1.31.0(@grpc/grpc-js@1.14.3)(express@5.2.1)(rxjs@7.8.2)(zod@3.25.76)
       '@mastra/core':
-        specifier: latest
+        specifier: ^1.50.0
         version: 1.50.0(@grpc/grpc-js@1.14.3)(express@5.2.1)(rxjs@7.8.2)(zod@3.25.76)
       zod:
         specifier: ^3.23.8
@@ -329,7 +329,7 @@ importers:
         specifier: ^20.11.0
         version: 20.19.37
       mastra:
-        specifier: latest
+        specifier: ^1.18.1
         version: 1.18.1(@hono/node-server@1.19.14(hono@4.12.16))(@mastra/core@1.50.0(@grpc/grpc-js@1.14.3)(express@5.2.1)(rxjs@7.8.2)(zod@3.25.76))(rxjs@7.8.2)(typescript@5.6.3)(zod@3.25.76)
       tsx:
         specifier: ^4.0.0
@@ -1010,7 +1010,7 @@ importers:
   packages/interactive-example:
     dependencies:
       '@mastra/client-js':
-        specifier: latest
+        specifier: ^1.31.0
         version: 1.31.0(express@4.22.1)(zod@4.4.3)
       '@upup/core':
         specifier: workspace:*
@@ -1121,7 +1121,7 @@ importers:
         specifier: ^3.2.4
         version: 3.2.4(preact@10.29.2)
       '@types/node':
-        specifier: '*'
+        specifier: ^20.19.37
         version: 20.19.37
       '@types/react':
         specifier: ^19

@@ -1,70 +1,92 @@
 {
-  "name": "@upup/preact",
-  "version": "2.2.0",
-  "description": "Preact file uploader with cloud-drive sources, resumable uploads, theming, and ICU i18n.",
-  "repository": "https://github.com/DevinoSolutions/upup",
-  "license": "MIT",
-  "type": "module",
-  "sideEffects": ["*.css"],
-  "engines": { "node": ">=20" },
-  "exports": {
-    ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js", "require": "./dist/index.cjs" },
-    "./styles": "./dist/tailwind-prefixed.css"
-  },
-  "main": "./dist/index.cjs",
-  "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "scripts": {
-    "build": "node scripts/clean-dist.mjs && tsup && pnpm run build:css",
-    "build:css": "node scripts/copy-styles.mjs",
-    "dev": "tsup --watch",
-    "lint": "eslint .",
-    "pretest": "pnpm run build",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "typecheck": "tsc --noEmit && tsc -p tsconfig.island.json --noEmit"
-  },
-  "files": ["dist"],
-  "dependencies": {
-    "@upup/core": "workspace:*",
-    "@upup/react": "workspace:*"
-  },
-  "peerDependencies": {
-    "preact": "^10.13.0",
-    "react": ">=18.0.0",
-    "react-dom": ">=18.0.0",
-    "react-filerobot-image-editor": ">=4.0.0",
-    "konva": ">=9.0.0",
-    "react-konva": ">=18.0.0",
-    "styled-components": ">=5.0.0"
-  },
-  "peerDependenciesMeta": {
-    "react": { "optional": true },
-    "react-dom": { "optional": true },
-    "react-filerobot-image-editor": { "optional": true },
-    "konva": { "optional": true },
-    "react-konva": { "optional": true },
-    "styled-components": { "optional": true }
-  },
-  "devDependencies": {
-    "@testing-library/preact": "^3.2.4",
-    "@types/node": "*",
-    "@types/react": ">=18.0.0",
-    "@types/react-dom": ">=18.0.0",
-    "@upup/eslint-config": "workspace:*",
-    "@vitest/coverage-v8": "^4.1.2",
-    "eslint": "^10.6.0",
-    "jsdom": "22.1.0",
-    "konva": "^10.3.0",
-    "preact": "^10.29.2",
-    "preact-render-to-string": "^6.5.0",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "react-filerobot-image-editor": "^4.9.1",
-    "react-konva": "^19.2.4",
-    "styled-components": ">=5.0.0",
-    "tsup": "^8.4.0",
-    "typescript": "^5.6.0",
-    "vitest": "^4.1.2"
-  }
+    "name": "@upup/preact",
+    "version": "2.2.0",
+    "description": "Preact file uploader with cloud-drive sources, resumable uploads, theming, and ICU i18n.",
+    "repository": "https://github.com/DevinoSolutions/upup",
+    "license": "MIT",
+    "type": "module",
+    "sideEffects": [
+        "*.css"
+    ],
+    "engines": {
+        "node": ">=20"
+    },
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.js",
+            "require": "./dist/index.cjs"
+        },
+        "./styles": "./dist/tailwind-prefixed.css"
+    },
+    "main": "./dist/index.cjs",
+    "module": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "scripts": {
+        "build": "node scripts/clean-dist.mjs && tsup && pnpm run build:css",
+        "build:css": "node scripts/copy-styles.mjs",
+        "dev": "tsup --watch",
+        "lint": "eslint .",
+        "pretest": "pnpm run build",
+        "test": "vitest run",
+        "test:watch": "vitest",
+        "typecheck": "tsc --noEmit && tsc -p tsconfig.island.json --noEmit"
+    },
+    "files": [
+        "dist"
+    ],
+    "dependencies": {
+        "@upup/core": "workspace:*",
+        "@upup/react": "workspace:*"
+    },
+    "peerDependencies": {
+        "preact": "^10.13.0",
+        "react": ">=18.0.0",
+        "react-dom": ">=18.0.0",
+        "react-filerobot-image-editor": ">=4.0.0",
+        "konva": ">=9.0.0",
+        "react-konva": ">=18.0.0",
+        "styled-components": ">=5.0.0"
+    },
+    "peerDependenciesMeta": {
+        "react": {
+            "optional": true
+        },
+        "react-dom": {
+            "optional": true
+        },
+        "react-filerobot-image-editor": {
+            "optional": true
+        },
+        "konva": {
+            "optional": true
+        },
+        "react-konva": {
+            "optional": true
+        },
+        "styled-components": {
+            "optional": true
+        }
+    },
+    "devDependencies": {
+        "@testing-library/preact": "^3.2.4",
+        "@types/node": "^20.19.37",
+        "@types/react": ">=18.0.0",
+        "@types/react-dom": ">=18.0.0",
+        "@upup/eslint-config": "workspace:*",
+        "@vitest/coverage-v8": "^4.1.2",
+        "eslint": "^10.6.0",
+        "jsdom": "22.1.0",
+        "konva": "^10.3.0",
+        "preact": "^10.29.2",
+        "preact-render-to-string": "^6.5.0",
+        "react": "^19.0.0",
+        "react-dom": "^19.0.0",
+        "react-filerobot-image-editor": "^4.9.1",
+        "react-konva": "^19.2.4",
+        "styled-components": ">=5.0.0",
+        "tsup": "^8.4.0",
+        "typescript": "^5.6.0",
+        "vitest": "^4.1.2"
+    }
 }
