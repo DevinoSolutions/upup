@@ -8,25 +8,26 @@ React events mirror core upload state.
 
 ```tsx
 <UpupUploader
-  uploadEndpoint="/api/upload-token"
-  onFilesSelected={(files) => console.log(files)}
-  onUploadStart={() => console.log('started')}
-  onFileUploadComplete={(file) => console.log(file)}
-  onUploadComplete={(files) => console.log(files)}
-  onError={(error) => console.error(error)}
+    uploadEndpoint="/api/upload-token"
+    onFilesSelected={files => console.log(files)}
+    onUploadStart={() => console.log('started')}
+    onFileUploadComplete={file => console.log(file)}
+    onUploadComplete={files => console.log(files)}
+    onError={error => console.error(error)}
 />
 ```
 
 Common handlers:
 
-| Handler | Called when |
-| --- | --- |
-| `onFilesSelected` | Files enter core state. |
-| `onFileRemoved` | A file is removed. |
-| `onUploadStart` | Upload begins. |
-| `onUploadProgress` | Byte progress changes. |
-| `onFileUploadComplete` | One file succeeds. |
-| `onUploadComplete` | All files succeed. |
-| `onError` | Validation, config, network, or provider failure occurs. |
+| Handler                 | Called when                                              |
+| ----------------------- | -------------------------------------------------------- |
+| `onFilesSelected`       | Files enter core state.                                  |
+| `onFileRemoved`         | A file is removed.                                       |
+| `onUploadStart`         | Upload begins.                                           |
+| `onFileUploadProgress`  | Byte progress changes for one file.                      |
+| `onFilesUploadProgress` | Aggregate byte progress across the batch.                |
+| `onFileUploadComplete`  | One file succeeds.                                       |
+| `onUploadComplete`      | All files succeed.                                       |
+| `onError`               | Validation, config, network, or provider failure occurs. |
 
 File objects use the `UploadFile` contract from `@upup/core/contracts`.
