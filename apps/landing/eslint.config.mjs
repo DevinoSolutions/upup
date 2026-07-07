@@ -1,39 +1,23 @@
-import nextConfig from "eslint-config-next";
-import tseslint from "typescript-eslint";
+import tseslint from 'typescript-eslint';
+import { reactHooksConfig } from '@upup/eslint-config';
 
-const eslintConfig = [
-  // Use the flat config that ships with Next.js 16
-  ...nextConfig,
-  // Override specific rules for certain files
+export default tseslint.config(
+  { ignores: ['.next/**', 'public/**'] },
+  ...tseslint.configs.recommended,
+  ...reactHooksConfig,
   {
-    files: ["next.config.mjs"],
+    files: ['**/*.{ts,tsx}'],
     rules: {
-      "@typescript-eslint/no-require-imports": "off", // In case you revert to `require()`
+      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-unused-vars': 'off',
+      '@typescript-eslint/no-unused-expressions': 'off',
+      'prefer-const': 'off',
     },
   },
   {
-    files: ["**/*.{ts,tsx}"],
-    plugins: {
-      "@typescript-eslint": tseslint.plugin,
+    files: ['**/*.config.{ts,mts,cts,js,cjs,mjs}'],
+    rules: {
+      '@typescript-eslint/no-require-imports': 'off',
     },
-    rules: {
-      "@typescript-eslint/no-explicit-any": "off",
-      "@typescript-eslint/no-unused-vars": "off",
-      "@typescript-eslint/no-unused-expressions": "off"
-    }
   },
-  {
-    ignores: ["public/**"],
-  },
-  {
-    rules: {
-      "@next/next/inline-script-id": "off",
-      "react/no-unescaped-entities": "off", // Disable React entity escaping rule
-      "prefer-const": "off",
-      "react-hooks/exhaustive-deps": "warn",
-      "react-hooks/set-state-in-effect": "warn"
-    }
-  }
-];
-
-export default eslintConfig;
+);
