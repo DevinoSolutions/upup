@@ -5,8 +5,12 @@
   "repository": "https://github.com/DevinoSolutions/upup",
   "license": "MIT",
   "type": "module",
-  "sideEffects": ["*.css"],
-  "engines": { "node": ">=20" },
+  "sideEffects": [
+    "*.css"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
   "svelte": "./dist/index.js",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
@@ -19,7 +23,9 @@
     },
     "./styles": "./dist/tailwind-prefixed.css"
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "svelte-package --input src --output dist && pnpm run build:css",
     "build:css": "postcss src/tailwind.css -o ./dist/tailwind-prefixed.css",
@@ -31,10 +37,7 @@
   },
   "dependencies": {
     "@tanstack/svelte-virtual": "^3.13.0",
-    "@upup/core": "workspace:*",
-    "clsx": "^2.1.1",
-    "load-script": "^2.0.0",
-    "tailwind-merge": "^3.6.0"
+    "@upup/core": "workspace:*"
   },
   "peerDependencies": {
     "svelte": "^5.0.0"

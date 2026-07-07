@@ -16,10 +16,9 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@mastra/client-js": "latest",
     "@upup/core": "workspace:*",
     "@upup/react": "workspace:*",
-    "@mastra/client-js": "latest",
-    "clsx": "^2.1.1",
     "lucide-react": "^0.503.0",
     "pako": "^2.1.0"
   },
