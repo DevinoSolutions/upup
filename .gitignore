@@ -49,8 +49,12 @@ apps/*/storybook-static
 # Brainstorm companion sessions
 .superpowers/
 
-# Audit screenshots and working snapshots (kept local, not in repo)
-docs/superpowers/audits/*.png
-docs/superpowers/audits/**/*.png
-docs/superpowers/audits/verbose-snapshot.txt
+# Local AI-session workspaces — specs, plans, audit records. Deliberately
+# untracked (see CLAUDE.md "Git & commits"); durable process truth is promoted
+# into CLAUDE.md, everything else stays on this machine.
+docs/superpowers/
+audit/
 tmp-*.txt
+
+# App build outputs (packages/*/dist is covered above)
+apps/*/dist
