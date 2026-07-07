@@ -75,7 +75,7 @@ jobs:
             - name: Run all package unit suites # F-163 / F-502 — every package, not just react
               run: pnpm run test # after P1 === `turbo run test --continue`
 
-            - name: Coverage floor (core/server/react) # F-162 / F-503 — floors live in each vitest.config.ts
+            - name: Coverage floors (all 9 publishable packages) # F-162 / F-503 — floors live in each vitest.config.ts; --no-bail so one package cannot mask the rest
               run: pnpm run test:coverage
 
             - name: Env schema drift
