@@ -148,6 +148,11 @@ pnpm run lint           # eslint flat-config: 9 @upup/* packages + 3 apps (playg
 pnpm run lint:ox        # oxlint fast first-line (built-ins only, seconds)
 pnpm run knip           # dead-code / unused-dep detection (workspace-aware)
 pnpm run env:check      # .env.minio.example ↔ validate-env schema drift guard
+pnpm run smoke:packages # real npm-tarball consumer (packs all 9, isolated vite
+                        # build, dist-shape + entry-budget asserts). Slow (~5m);
+                        # run it after anything that can grow core/react's
+                        # mandatory path — it sat red for weeks (487>450 KiB
+                        # after P12/P19) because it only ran in never-executed CI
 ```
 
 Baseline: every unit suite is green (16 packages, all 16 turbo `test` tasks
