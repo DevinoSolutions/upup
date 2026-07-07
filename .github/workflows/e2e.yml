@@ -53,10 +53,24 @@ jobs:
             # oversized-PUT rejection, multipart size-envelope abort, sha256 byte
             # round-trips) lives in @upup/server tests/integration and is gated on
             # UPUP_E2E_MINIO=1 (provided by the env file via the dotenv wrapper).
-            # Without this step it silently skips everywhere except a dev laptop.
-            # Runs after the e2e gate: that step builds the workspace (server's
-            # vitest resolves @upup/core via dist) and leaves MinIO up (compose,
-            # booted by the cf global-setup; e2e:minio:up reuse is idempotent).
+            # Without these steps it silently skips everywhere except a dev laptop.
+            # Runs after the e2e gate because that step builds the workspace
+            # (server's vitest resolves @upup/core via dist). MinIO must be booted
+            # HERE: the cf global-teardown stops the compose stack its own setup
+            # started, so nothing from the e2e gate survives into this step
+            # (proven by an ECONNREFUSED :9100 on this step's first CI execution).
+            - name: Boot MinIO for the integration suites
+              run: |
+                  pnpm run e2e:minio:up
+                  for i in $(seq 1 45); do
+                    if curl -sf http://localhost:9100/minio/health/live > /dev/null; then
+                      echo "MinIO healthy on :9100"; exit 0
+                    fi
+                    sleep 2
+                  done
+                  echo "MinIO failed to become healthy on :9100" >&2
+                  exit 1
+
             - name: Server trust-model + byte-integrity suites (real MinIO)
               run: pnpm run e2e:minio:test
 
