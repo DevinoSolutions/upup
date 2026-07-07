@@ -110,6 +110,9 @@ function addRecording() {
             setFiles([file])
             setActiveSource(undefined)
         })
+        .catch(() => {
+            // upup-catch: replaying an in-memory object URL cannot fail in practice; ignore
+        })
 }
 
 function retryRecording() {

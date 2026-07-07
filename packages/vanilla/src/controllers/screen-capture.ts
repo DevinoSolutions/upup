@@ -143,6 +143,9 @@ export class ScreenCaptureController implements SourceController<ScreenSnapshot>
                 await this.deps.setFiles([file])
                 this.deps.setActiveSource(undefined)
             })
+            .catch(() => {
+                // upup-catch: replaying an in-memory object URL cannot fail in practice; ignore
+            })
     }
 
     retryRecording(): void {

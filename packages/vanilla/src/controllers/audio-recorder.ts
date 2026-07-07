@@ -113,6 +113,9 @@ export class AudioRecorderController implements SourceController<AudioSnapshot> 
                 await this.deps.setFiles([file])
                 this.deps.setActiveSource(undefined)
             })
+            .catch(() => {
+                // upup-catch: replaying an in-memory object URL cannot fail in practice; ignore
+            })
     }
 
     formatTime(s: number): string {
