@@ -36,7 +36,7 @@ jobs:
 
             - name: Install dependencies
               if: steps.cache-primes.outputs.cache-hit != 'true'
-              run: pnpm install
+              run: pnpm install --frozen-lockfile
 
             - name: Prettier Check
               run: pnpm run prettier-check
@@ -70,7 +70,7 @@ jobs:
 
             - name: Install dependencies
               if: steps.cache-primes.outputs.cache-hit != 'true'
-              run: pnpm install
+              run: pnpm install --frozen-lockfile
 
             - name: Run all package unit suites # F-163 / F-502 — every package, not just react
               run: pnpm run test # after P1 === `turbo run test --continue`
@@ -117,7 +117,7 @@ jobs:
 
             - name: Install dependencies
               if: steps.cache-primes.outputs.cache-hit != 'true'
-              run: pnpm install
+              run: pnpm install --frozen-lockfile
 
             - name: Build
               run: pnpm run build
@@ -151,7 +151,7 @@ jobs:
 
             - name: Install dependencies
               if: steps.cache-primes.outputs.cache-hit != 'true'
-              run: pnpm install
+              run: pnpm install --frozen-lockfile
 
             - name: Typecheck
               run: pnpm run typecheck
@@ -185,7 +185,7 @@ jobs:
 
             - name: Install dependencies
               if: steps.cache-primes.outputs.cache-hit != 'true'
-              run: pnpm install
+              run: pnpm install --frozen-lockfile
 
             - name: Build
               run: pnpm run build
@@ -218,7 +218,7 @@ jobs:
                       ${{ runner.os }}-pnpm-v3-
             - name: Install dependencies
               if: steps.cache-primes.outputs.cache-hit != 'true'
-              run: pnpm install
+              run: pnpm install --frozen-lockfile
             - name: Prod dependency audit (publishable packages, fail on high+)
               run: pnpm run audit:prod
 
@@ -247,7 +247,7 @@ jobs:
                       ${{ runner.os }}-pnpm-v3-
             - name: Install dependencies
               if: steps.cache-primes.outputs.cache-hit != 'true'
-              run: pnpm install
+              run: pnpm install --frozen-lockfile
             - name: Lint
               run: pnpm run lint
 
@@ -275,7 +275,7 @@ jobs:
                       ${{ runner.os }}-pnpm-v3-
             - name: Install dependencies
               if: steps.cache-primes.outputs.cache-hit != 'true'
-              run: pnpm install
+              run: pnpm install --frozen-lockfile
             - name: Oxlint
               run: pnpm run lint:ox
 
@@ -304,7 +304,7 @@ jobs:
                       ${{ runner.os }}-pnpm-v3-
             - name: Install dependencies
               if: steps.cache-primes.outputs.cache-hit != 'true'
-              run: pnpm install
+              run: pnpm install --frozen-lockfile
             - name: Knip
               run: pnpm run knip
 

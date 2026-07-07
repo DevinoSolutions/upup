@@ -37,7 +37,7 @@ jobs:
                       ${{ runner.os }}-pnpm-v3-
 
             - name: Install dependencies
-              run: pnpm install
+              run: pnpm install --frozen-lockfile
 
             - name: Install Playwright Chromium
               run: pnpm --filter e2e-test exec playwright install --with-deps chromium
@@ -70,6 +70,6 @@ jobs:
                   restore-keys: |
                       ${{ runner.os }}-pnpm-v3-
             - name: Install dependencies
-              run: pnpm install
+              run: pnpm install --frozen-lockfile
             - name: Package smoke (packs all 9, isolated consumer, vite build, dist-shape asserts)
               run: pnpm run smoke:packages # self-builds via build:package; no browser, no MinIO
