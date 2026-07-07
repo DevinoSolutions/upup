@@ -136,7 +136,10 @@ pnpm run e2e            # the REAL gate — see next section
 pnpm run prettier-check # CI blocks on this (repo-wide: all 9 publishable packages' src, one root config)
 pnpm run size           # size-limit bundle budgets
 pnpm run audit:prod     # high+ advisories in the publishable prod trees
-pnpm run lint           # eslint flat-config: 9 @upup/* packages + 3 apps — CI's Lint job scopes to the publishable packages only (`turbo run lint --filter='./packages/*'`); the 3 apps' lint is local-only until two pre-existing app-config defects (F-708, F-709) land
+pnpm run lint           # eslint flat-config: 9 @upup/* packages + 3 apps (playground, landing, docs)
+pnpm run lint:ox        # oxlint fast first-line (built-ins only, seconds)
+pnpm run knip           # dead-code / unused-dep detection (workspace-aware)
+pnpm run env:check      # .env.minio.example ↔ validate-env schema drift guard
 ```
 
 Baseline: every unit suite is green (16 packages, all 16 turbo `test` tasks
@@ -276,52 +279,52 @@ if needed; never silently "improve" them:
 - **Per-framework duplication is intentional** (principle 4). The parallel
   hooks/components across frameworks are not a refactor target.
 - **Core state/event contract (P6).** Three rulings future changes must not break:
-  - **One upload-failure event.** The core event surface has exactly ONE — `upload-error`;
-    the bare `'error'` event is retired (`resume()` failures route through `upload-error`;
-    the HEIC step diagnostic is `pipeline-error`; angular's `@Output() error` and vanilla's
-    `upup:error` DOM event source `upload-error`). Do not reintroduce a second upload-failure
-    channel. (`DriveEventMap['error']` is a separate, drive-scoped type — plugins emit
-    namespaced `<provider>:error`, never bare `error`.)
-  - **`destroy()` is terminal.** After it, `upload/resume/retry/addFiles/setFiles` throw;
-    `crashRecovery`/`pipelineEngine` refs are released (but crash-recovery STORAGE is not
-    cleared — a normal unmount stays recoverable); `fileManager` is kept so the
-    `files`/`progress` getters keep working. Frameworks create a fresh core per mount.
-  - **`UploadFile` is immutable in the state layer.** Status/key/metadata transitions go
-    through `FileManager.updateFile`, which produces a NEW `File` reference (never an
-    in-place mutation) — an object-spread clone would strip File's blob slots. `uploadStatus`
-    is a single-source projection of core's `state-change{status}` in the orchestrator;
-    a run is single-flight (`activeRun`).
-  - **The `core.files` getter is a read-only view** (a defensive copy — completes the
-    ownership story the previous ruling opened). No path mutates `FileManager`'s collection
-    except through its own methods (`updateFile`/`applyProcessed`/`restore`/`setFiles`/
-    `addFiles`/`removeFile`/`removeAll`/`reorderFiles`).
+    - **One upload-failure event.** The core event surface has exactly ONE — `upload-error`;
+      the bare `'error'` event is retired (`resume()` failures route through `upload-error`;
+      the HEIC step diagnostic is `pipeline-error`; angular's `@Output() error` and vanilla's
+      `upup:error` DOM event source `upload-error`). Do not reintroduce a second upload-failure
+      channel. (`DriveEventMap['error']` is a separate, drive-scoped type — plugins emit
+      namespaced `<provider>:error`, never bare `error`.)
+    - **`destroy()` is terminal.** After it, `upload/resume/retry/addFiles/setFiles` throw;
+      `crashRecovery`/`pipelineEngine` refs are released (but crash-recovery STORAGE is not
+      cleared — a normal unmount stays recoverable); `fileManager` is kept so the
+      `files`/`progress` getters keep working. Frameworks create a fresh core per mount.
+    - **`UploadFile` is immutable in the state layer.** Status/key/metadata transitions go
+      through `FileManager.updateFile`, which produces a NEW `File` reference (never an
+      in-place mutation) — an object-spread clone would strip File's blob slots. `uploadStatus`
+      is a single-source projection of core's `state-change{status}` in the orchestrator;
+      a run is single-flight (`activeRun`).
+    - **The `core.files` getter is a read-only view** (a defensive copy — completes the
+      ownership story the previous ruling opened). No path mutates `FileManager`'s collection
+      except through its own methods (`updateFile`/`applyProcessed`/`restore`/`setFiles`/
+      `addFiles`/`removeFile`/`removeAll`/`reorderFiles`).
 - **Drive-plugin architecture (P16).** Four rulings:
-  - **`init(emitter)` is the ONE plugin lifecycle hook.** `UpupPlugin` is
-    `{ name; init?(emitter) }` — `setup()` is retired. `PluginManager.register` only
-    dedups + stores; `UpupCore.use()` invokes `init` with core's event bus (an
-    `EventEmitter`, NOT the core). Consequence: a plugin can't register extensions from
-    its lifecycle hook — `core.registerExtension()` is the path (no production plugin did
-    lifecycle-time registration). Do not reintroduce `setup`.
-  - **`PopupOAuthPlugin` (`drives/popup-oauth-plugin.ts`) owns the client-mode popup
-    skeleton** — PKCE, popup poll, token exchange/refresh, proactive-expiry
-    (`ensureValidToken` 60 s), lifecycle, and the `apiRequest` 401-retry. Box / OneDrive /
-    Dropbox are thin subclasses supplying a `PopupOAuthSpec` (endpoints, scopes, event
-    prefix, storage keys, `displayName`, `authParams`) + their genuinely provider-specific
-    domain methods (`loadFiles`/`loadMoreFiles`/`downloadFiles`/`mapEntry`/
-    `fetchUserProfile`/`searchFiles`), moved verbatim. It is INTERNAL (not in the public
-    barrel — that's a future ruling). GoogleDrive is NOT a subclass: its GIS access-token
-    model has no PKCE popup / refresh token, so it stays a standalone `implements
-    DrivePlugin`. All three popup providers now persist a token-expiry key and refresh
-    proactively (Box gained this — F-126); the base emits only the namespaced lifecycle
-    events (`<prefix>:state-change`/`:authenticated`/`:session-expired`/`:error`/
-    `:signed-out`/`:files-loaded`).
-  - **`ServerModeDriveController` is the single server-mode drive abstraction.** The
-    unused `ServerOAuth`/`OAuthStrategy` twin (plus the orphaned `OAuthTokens`/`RemoteFile`
-    types) is deleted — do not reintroduce a second server-drive path. `CloudProvider`
-    stays (consumed by `strategies/server-transfer.ts`).
-  - **Adding a provider = a subclass + spec, not a skeleton copy.** A new popup provider
-    supplies only its `spec` + domain methods; never re-hand-roll the auth/popup/refresh
-    skeleton (that is the F-121 duplication P16 removed).
+    - **`init(emitter)` is the ONE plugin lifecycle hook.** `UpupPlugin` is
+      `{ name; init?(emitter) }` — `setup()` is retired. `PluginManager.register` only
+      dedups + stores; `UpupCore.use()` invokes `init` with core's event bus (an
+      `EventEmitter`, NOT the core). Consequence: a plugin can't register extensions from
+      its lifecycle hook — `core.registerExtension()` is the path (no production plugin did
+      lifecycle-time registration). Do not reintroduce `setup`.
+    - **`PopupOAuthPlugin` (`drives/popup-oauth-plugin.ts`) owns the client-mode popup
+      skeleton** — PKCE, popup poll, token exchange/refresh, proactive-expiry
+      (`ensureValidToken` 60 s), lifecycle, and the `apiRequest` 401-retry. Box / OneDrive /
+      Dropbox are thin subclasses supplying a `PopupOAuthSpec` (endpoints, scopes, event
+      prefix, storage keys, `displayName`, `authParams`) + their genuinely provider-specific
+      domain methods (`loadFiles`/`loadMoreFiles`/`downloadFiles`/`mapEntry`/
+      `fetchUserProfile`/`searchFiles`), moved verbatim. It is INTERNAL (not in the public
+      barrel — that's a future ruling). GoogleDrive is NOT a subclass: its GIS access-token
+      model has no PKCE popup / refresh token, so it stays a standalone `implements
+DrivePlugin`. All three popup providers now persist a token-expiry key and refresh
+      proactively (Box gained this — F-126); the base emits only the namespaced lifecycle
+      events (`<prefix>:state-change`/`:authenticated`/`:session-expired`/`:error`/
+      `:signed-out`/`:files-loaded`).
+    - **`ServerModeDriveController` is the single server-mode drive abstraction.** The
+      unused `ServerOAuth`/`OAuthStrategy` twin (plus the orphaned `OAuthTokens`/`RemoteFile`
+      types) is deleted — do not reintroduce a second server-drive path. `CloudProvider`
+      stays (consumed by `strategies/server-transfer.ts`).
+    - **Adding a provider = a subclass + spec, not a skeleton copy.** A new popup provider
+      supplies only its `spec` + domain methods; never re-hand-roll the auth/popup/refresh
+      skeleton (that is the F-121 duplication P16 removed).
 
 ## Git & commits
 
