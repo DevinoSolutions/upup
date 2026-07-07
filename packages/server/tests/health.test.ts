@@ -1,87 +1,100 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
-vi.mock("../src/providers/aws", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("../src/providers/aws")>();
-  return {
-    ...actual,
-    checkStorageReachable: vi.fn(),
-  };
-});
+vi.mock('../src/providers/aws', async importOriginal => {
+    const actual = await importOriginal<typeof import('../src/providers/aws')>()
+    return {
+        ...actual,
+        checkStorageReachable: vi.fn(),
+    }
+})
 
-import { handleHealth, _resetStorageCheckCacheForTests } from "../src/health";
-import { checkStorageReachable } from "../src/providers/aws";
-import type { UpupServerConfig } from "../src/config";
+import { handleHealth, _resetStorageCheckCacheForTests } from '../src/health'
+import { createResponder } from '../src/respond'
+import { checkStorageReachable } from '../src/providers/aws'
+import type { UpupServerConfig } from '../src/config'
 
 const baseConfig: UpupServerConfig = {
-  storage: { type: "aws", bucket: "test-bucket", region: "us-east-1" },
-  uploadTokenSecret: "health-test-secret-0123456789ab",
-};
+    storage: { type: 'aws', bucket: 'test-bucket', region: 'us-east-1' },
+    uploadTokenSecret: 'health-test-secret-0123456789ab',
+}
 
-describe("handleHealth", () => {
-  beforeEach(() => {
-    vi.mocked(checkStorageReachable).mockReset();
-    _resetStorageCheckCacheForTests();
-  });
-  afterEach(() => {
-    vi.restoreAllMocks();
-  });
+// handleHealth returns through the per-request Responder (F-715) — build a
+// real one, not a stub, so header behavior matches production.
+const responder = (config: UpupServerConfig = baseConfig) =>
+    createResponder(new Request('http://localhost/health'), config)
 
-  it("reports ok/ok when config is complete and storage is reachable", async () => {
-    vi.mocked(checkStorageReachable).mockResolvedValue({ ok: true });
-    const res = await handleHealth(baseConfig, {});
-    const body = await res.json();
-    expect(res.status).toBe(200);
-    expect(body.status).toBe("ok");
-    expect(body.checks.config).toBe("ok");
-    expect(body.checks.storage).toBe("ok");
-  });
+describe('handleHealth', () => {
+    beforeEach(() => {
+        vi.mocked(checkStorageReachable).mockReset()
+        _resetStorageCheckCacheForTests()
+    })
+    afterEach(() => {
+        vi.restoreAllMocks()
+    })
 
-  it("reports config incomplete when the bucket is missing", async () => {
-    vi.mocked(checkStorageReachable).mockResolvedValue({ ok: true });
-    const incomplete: UpupServerConfig = {
-      ...baseConfig,
-      storage: { type: "aws", bucket: "", region: "us-east-1" },
-    };
-    const res = await handleHealth(incomplete, {});
-    const body = await res.json();
-    expect(body.checks.config).toBe("incomplete");
-  });
+    it('reports ok/ok when config is complete and storage is reachable', async () => {
+        vi.mocked(checkStorageReachable).mockResolvedValue({ ok: true })
+        const res = await handleHealth(baseConfig, responder())
+        const body = await res.json()
+        expect(res.status).toBe(200)
+        expect(body.status).toBe('ok')
+        expect(body.checks.config).toBe('ok')
+        expect(body.checks.storage).toBe('ok')
+    })
 
-  it("reports storage error and fires config.onError when the probe throws", async () => {
-    const onError = vi.fn();
-    vi.mocked(checkStorageReachable).mockResolvedValue({
-      ok: false,
-      error: new Error("bucket not found"),
-    });
-    const res = await handleHealth({ ...baseConfig, onError }, {});
-    const body = await res.json();
-    expect(body.checks.storage).toBe("error");
-    expect(onError).toHaveBeenCalledTimes(1);
-  });
+    it('returns through the Responder: x-upup-request-id present (F-715)', async () => {
+        vi.mocked(checkStorageReachable).mockResolvedValue({ ok: true })
+        const res = await handleHealth(baseConfig, responder())
+        expect(res.headers.get('x-upup-request-id')).toBeTruthy()
+        expect(res.headers.get('Content-Type')).toBe('application/json')
+    })
 
-  it("omits the secret fingerprint by default", async () => {
-    vi.mocked(checkStorageReachable).mockResolvedValue({ ok: true });
-    const res = await handleHealth(baseConfig, {});
-    const body = await res.json();
-    expect(body.uploadTokenFingerprint).toBeUndefined();
-  });
+    it('reports config incomplete when the bucket is missing', async () => {
+        vi.mocked(checkStorageReachable).mockResolvedValue({ ok: true })
+        const incomplete: UpupServerConfig = {
+            ...baseConfig,
+            storage: { type: 'aws', bucket: '', region: 'us-east-1' },
+        }
+        const res = await handleHealth(incomplete, responder(incomplete))
+        const body = await res.json()
+        expect(body.checks.config).toBe('incomplete')
+    })
 
-  it("includes the secret fingerprint when opted in", async () => {
-    vi.mocked(checkStorageReachable).mockResolvedValue({ ok: true });
-    const res = await handleHealth(
-      { ...baseConfig, health: { exposeSecretFingerprint: true } },
-      {},
-    );
-    const body = await res.json();
-    expect(typeof body.uploadTokenFingerprint).toBe("string");
-    expect(body.uploadTokenFingerprint).toHaveLength(8);
-  });
+    it('reports storage error and fires config.onError when the probe throws', async () => {
+        const onError = vi.fn()
+        vi.mocked(checkStorageReachable).mockResolvedValue({
+            ok: false,
+            error: new Error('bucket not found'),
+        })
+        const res = await handleHealth({ ...baseConfig, onError }, responder())
+        const body = await res.json()
+        expect(body.checks.storage).toBe('error')
+        expect(onError).toHaveBeenCalledTimes(1)
+    })
 
-  it("caches the storage probe result within the TTL window (does not re-probe every request)", async () => {
-    vi.mocked(checkStorageReachable).mockResolvedValue({ ok: true });
-    await handleHealth(baseConfig, {});
-    await handleHealth(baseConfig, {});
-    await handleHealth(baseConfig, {});
-    expect(checkStorageReachable).toHaveBeenCalledTimes(1);
-  });
-});
+    it('omits the secret fingerprint by default', async () => {
+        vi.mocked(checkStorageReachable).mockResolvedValue({ ok: true })
+        const res = await handleHealth(baseConfig, responder())
+        const body = await res.json()
+        expect(body.uploadTokenFingerprint).toBeUndefined()
+    })
+
+    it('includes the secret fingerprint when opted in', async () => {
+        vi.mocked(checkStorageReachable).mockResolvedValue({ ok: true })
+        const res = await handleHealth(
+            { ...baseConfig, health: { exposeSecretFingerprint: true } },
+            responder(),
+        )
+        const body = await res.json()
+        expect(typeof body.uploadTokenFingerprint).toBe('string')
+        expect(body.uploadTokenFingerprint).toHaveLength(8)
+    })
+
+    it('caches the storage probe result within the TTL window (does not re-probe every request)', async () => {
+        vi.mocked(checkStorageReachable).mockResolvedValue({ ok: true })
+        await handleHealth(baseConfig, responder())
+        await handleHealth(baseConfig, responder())
+        await handleHealth(baseConfig, responder())
+        expect(checkStorageReachable).toHaveBeenCalledTimes(1)
+    })
+})

@@ -67,7 +67,7 @@ export function createUpupHandler(config: UpupServerConfig): RouteHandler {
             // Health check sits BEFORE the auth gate so uptime/deploy probes work
             // unauthenticated (F-426/F-428).
             if (req.method === 'GET' && path.endsWith('/health')) {
-                return await handleHealth(config, res.headers)
+                return await handleHealth(config, res)
             }
 
             // Auth check

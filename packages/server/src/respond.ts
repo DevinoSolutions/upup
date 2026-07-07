@@ -53,10 +53,9 @@ export function corsHeaders(
 }
 
 export type Responder = {
-    /** The baked headers (CORS + x-upup-request-id). Exposed so a route that
-     *  delegates to a self-contained helper (e.g. handleHealth) can hand it the
-     *  same header set the responder uses. */
-    headers: ResponseHeaders
+    /** This request's correlation id — also emitted as the
+     *  x-upup-request-id header on every response. */
+    requestId: string
     json(data: unknown, status?: number): Response
     html(body: string, status?: number): Response
     redirect(location: string, status?: number): Response
@@ -78,9 +77,10 @@ export function createResponder(
     req: Request,
     config: UpupServerConfig,
 ): Responder {
+    const requestId = crypto.randomUUID()
     const headers: ResponseHeaders = {
         ...corsHeaders(req, config),
-        'x-upup-request-id': crypto.randomUUID(),
+        'x-upup-request-id': requestId,
     }
     const json = (data: unknown, status = 200): Response =>
         new Response(JSON.stringify(data), {
@@ -88,7 +88,7 @@ export function createResponder(
             headers: { 'Content-Type': 'application/json', ...headers },
         })
     return {
-        headers,
+        requestId,
         json,
         html: (body, status = 200) =>
             new Response(body, {
@@ -111,7 +111,7 @@ export function createResponder(
                 status,
                 code,
                 message,
-                requestId: headers['x-upup-request-id'],
+                requestId,
                 error: toSafeError(error),
             })
             return json({ error: message, code }, status)

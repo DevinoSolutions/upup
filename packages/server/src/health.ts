@@ -9,10 +9,9 @@
 // without being reversible to the secret itself.
 
 import type { UpupServerConfig } from './config'
+import type { Responder } from './respond'
 import { checkStorageReachable } from './providers/aws'
 import { reportServerError } from './observability'
-
-type ResponseHeaders = Record<string, string>
 
 type StorageCheckCache = { ok: true } | { ok: false } | undefined
 let cachedStorageCheck: StorageCheckCache
@@ -25,17 +24,6 @@ const STORAGE_CHECK_TTL_MS = 30_000
 export function _resetStorageCheckCacheForTests(): void {
     cachedStorageCheck = undefined
     cachedAt = 0
-}
-
-function json(
-    data: unknown,
-    status = 200,
-    headers: ResponseHeaders = {},
-): Response {
-    return new Response(JSON.stringify(data), {
-        status,
-        headers: { 'Content-Type': 'application/json', ...headers },
-    })
 }
 
 function isConfigComplete(config: UpupServerConfig): boolean {
@@ -57,7 +45,7 @@ async function sha256Hex(input: string): Promise<string> {
 
 export async function handleHealth(
     config: UpupServerConfig,
-    responseHeaders: ResponseHeaders,
+    res: Responder,
 ): Promise<Response> {
     const configOk = isConfigComplete(config)
 
@@ -102,5 +90,5 @@ export async function handleHealth(
     // Always 200: this is a liveness-friendly endpoint (deploy/orchestration
     // probes should not 5xx a container just because S3 blipped); the `status`
     // field carries the actual health signal for humans/dashboards.
-    return json(body, 200, responseHeaders)
+    return res.json(body)
 }

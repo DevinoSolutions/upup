@@ -65,8 +65,10 @@ Publishable (`packages/`):
   (`getDriveClient(provider)` — adding a provider is one client-fn pair + one
   row, no dual switch). Residual `handler.ts` is the thin router:
   secret/identity/`storage.type` construct guards + route dispatch building one
-  `Responder`. `health.ts` keeps its own self-contained response construction
-  (the router hands it `res.headers`).
+  `Responder`. `health.ts` routes through that `Responder` too (F-715) — the
+  contract has zero exceptions and is pinned by
+  `packages/server/tests/response-contract.test.ts`, so health responses carry
+  `x-upup-request-id` like every other route.
 
 Private (`packages/`): `interactive-example`, `storybook-config`,
 `tailwind-config` (shared Tailwind/postcss factory — theme edits happen in one

@@ -83,7 +83,7 @@ async function verifyTokenOrRespond(
                 status: 403,
                 code: e.code,
                 message: 'Invalid upload token',
-                requestId: res.headers['x-upup-request-id'],
+                requestId: res.requestId,
                 error: toSafeError(e),
             })
             return res.json(
