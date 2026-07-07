@@ -13,7 +13,12 @@ type ImageOutputOptions = {
  */
 export function dataURLtoBlob(dataURL: string): Blob {
     const [header = '', base64Data = ''] = dataURL.split(',')
-    const mime = header.match(/:(.*?);/)?.[1] ?? 'application/octet-stream'
+    // Linear string parse of "data:<mime>;base64" — a lazy regex here is
+    // polynomial-time on adversarial input (CodeQL js/polynomial-redos).
+    const colon = header.indexOf(':')
+    const semi = colon === -1 ? -1 : header.indexOf(';', colon + 1)
+    const mime =
+        semi === -1 ? 'application/octet-stream' : header.slice(colon + 1, semi)
     const binary = atob(base64Data)
     const bytes = new Uint8Array(binary.length)
     for (let i = 0; i < binary.length; i++) {
