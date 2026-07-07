@@ -18,12 +18,10 @@ jobs:
 
             - name: Setup Node.js environment
               uses: actions/setup-node@v4
-              id: cache-primes
               with:
                   node-version-file: '.nvmrc'
 
             - name: Setup PNPM environment
-              if: steps.cache-primes.outputs.cache-hit != 'true'
               run: |
                   npm install -g pnpm@10.11.0
                   pnpm config set store-dir ~/.pnpm-store
@@ -50,6 +48,17 @@ jobs:
 
             - name: Run e2e gate (deep React + cross-framework smoke)
               run: pnpm run e2e
+
+            # The strongest adversarial verification in the repo (forged-token 403s,
+            # oversized-PUT rejection, multipart size-envelope abort, sha256 byte
+            # round-trips) lives in @upup/server tests/integration and is gated on
+            # UPUP_E2E_MINIO=1 (provided by the env file via the dotenv wrapper).
+            # Without this step it silently skips everywhere except a dev laptop.
+            # Runs after the e2e gate: that step builds the workspace (server's
+            # vitest resolves @upup/core via dist) and leaves MinIO up (compose,
+            # booted by the cf global-setup; e2e:minio:up reuse is idempotent).
+            - name: Server trust-model + byte-integrity suites (real MinIO)
+              run: pnpm run e2e:minio:test
 
     Smoke-Packages:
         name: Package smoke (real tarball consumer)
