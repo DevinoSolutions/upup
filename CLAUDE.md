@@ -28,6 +28,12 @@ Publishable (`packages/`):
   a deep-import-only subpath alongside the existing `./contracts`/`./i18n`/
   `./theme`/`./strategies` pattern — if you need one of them outside core's own
   `src/`, import it from `./internal`, never re-add it to the public entry.
+  Adding a NEW core subpath needs two extras: a `typesVersions` fallback
+  (ng-packagr cannot resolve `exports` conditional subpaths — angular's
+  library build throws TS2307 without it), and a
+  `packages/core/vitest.config.ts` alias entry placed BEFORE the bare
+  `@upup/core` key (Vite matches aliases in object order; the bare key
+  prefix-shadows subpaths — do not alphabetize).
   Every one of the nine `@upup/*` packages carries a `public-api.test.ts`
   (or `.spec.ts`, matching that package's own vitest convention) pinning its
   exact runtime export list, plus core alone also pins `./internal`'s list
@@ -146,10 +152,16 @@ pnpm run env:check      # .env.minio.example ↔ validate-env schema drift guard
 
 Baseline: every unit suite is green (16 packages, all 16 turbo `test` tasks
 pass). There is no accepted red baseline — a failing spec is a real signal,
-never noise. `pnpm run test` runs with `--continue` (one package's failure
-can't silently cancel the others' scheduling) and the `test` task depends on
-`^build`, so downstream suites always run against freshly-built sibling
+never noise. Both `test` and `typecheck` run with `--continue` (one package's
+failure can't silently cancel or mask the others) and the `test` task depends
+on `^build`, so downstream suites always run against freshly-built sibling
 `dist/`, not stale output.
+
+Type errors are caught ONLY by the typecheck gate: package builds
+(tsup/esbuild) and vitest are transpile-only, and the pre-commit hook runs
+unit suites, not `tsc` — a change with a hard interface error can land on a
+green hook and a green build (it has, twice: P16 and F-715). Run
+`pnpm run typecheck` before trusting any type-touching change.
 
 `prettier-check`/`prettier-write` are repo-wide (P22, 2026-07-04): one root
 `.prettierrc.json` + `.prettierignore` govern all 9 publishable packages'
@@ -158,13 +170,49 @@ byte-identical settings). Run either through `rtk proxy`: the rtk filter has
 reported "all files formatted" on a red `--check` (see Machine-local notes).
 
 Flake protocol: if a test fails only in the full run, re-run it isolated
-before suspecting your change. Known load-sensitive case:
-`@upup/server tests/token-refresh.test.ts` ("refresh success") can exceed its
-5 s timeout when the whole suite runs but passes alone.
+before suspecting your change. Known load-sensitive cases:
+`@upup/server tests/token-refresh.test.ts` ("refresh success") and
+`tests/transfer.test.ts` (the 4 MB single-PUT case) can exceed their 5 s
+timeouts when the whole suite runs but pass alone; six-storybook cf boots
+can throw transient Windows `STATUS_STACK_BUFFER_OVERRUN`s.
 
 Dev loops: `pnpm run dev` (playground + landing + docs + package watchers),
 `pnpm run dev:playground` for the quick loop, `pnpm run dev:storybook` for the
 framework storybooks.
+
+## Verification discipline
+
+Habits that repeatedly separated real green from coincidental green during
+the 2026-07 foundational audit; they apply to any non-trivial change:
+
+- Census before change: grep the BROAD token (`\bsetup\b`, not `setup:`) and
+  filter by hand — removing an interface member breaks object literals and
+  shorthand props, not just classes. Sweep data-driven tables (event-name
+  arrays, forwarding maps), not only static call sites. Include `tests/`
+  explicitly: most package tsconfigs `include: ["src"]`, so tsc never
+  type-checks test trees and a stale test can keep passing coincidentally.
+- "Passes after the change" ≠ "correct after the change" — verify the
+  mechanism (that the intended code path ran), not just the color.
+- Plan claims decay: re-verify every file/inventory precondition at
+  execution HEAD, using the same execution-grade counter the change will use
+  (an eyeballed export inventory undercounted a real one 3x).
+- Prefer structural acceptance criteria ("zero `new Response(` outside
+  respond.ts") over numeric budgets — counts re-base as neighbors change,
+  structure doesn't. Criteria are literal: a claim that silently narrows
+  scope ("lint passes" — but only packages) ships a red CI job. A new
+  package must also land its registration surfaces (pnpm-workspace globs,
+  barrels) or import probes fail.
+- Cloning platform objects needs a mechanism, not a spread: `{...file}`
+  strips `File`'s blob slots — use `new File([prev], …)` + `Object.assign`.
+- Re-pin, don't delete: when a refactor kills a test's mechanism, re-express
+  its intent through the supported API (a re-pinned test surfaced F-716; a
+  deleted one would have buried it). The pre-commit hook blocks red-test
+  commits — prove RED with direct vitest output quoted in the commit/PR
+  body, then fold test+fix into one green commit. Never `--no-verify`.
+- The first cast of a widened net (new parity capture, broader lint scope)
+  should EXPECT pre-existing rot: pre-authorize a self-liquidating
+  exceptions list (the KNOWN_DIVERGENCES + inverse-forcing-check pattern)
+  instead of blocking the widening on fixing everything it reveals.
 
 ## E2E — the real verification
 
@@ -185,6 +233,10 @@ pnpm run e2e:minio:down  # NOTE: uses -v — wipes the bucket volume
   performs the login during live checks. Never automate or type credentials.
 - Secrets live in `local-dev/.env.minio` and `.env.local` files — never commit
   or print their values.
+- Ad-hoc e2e/integration invocations must reproduce the root scripts' dotenv
+  wrapper (`dotenv -e local-dev/.env.minio -- <cmd>`) — never hand-source the
+  env file. An unwrapped run starves the harness of creds and, before F-707
+  moved the fallbacks to :9100, silently reached a foreign MinIO on :9000.
 
 ### Cross-framework parity harness
 
@@ -369,10 +421,14 @@ DrivePlugin`. All three popup providers now persist a token-expiry key and refre
 
 ## Machine-local notes (primary dev box only)
 
-- The `rtk` token-filter hook rewrites shell commands. Playwright must run
-  unfiltered: prefix with `rtk proxy` (e.g. `rtk proxy pnpm run e2e`),
-  otherwise the filter mangles the reporter output. Same for prettier: the
-  filter has reported "all files formatted" on a red `--check` — use
-  `rtk proxy` for any prettier run whose result you act on.
+- The `rtk` token-filter hook rewrites shell commands and has FALSIFIED
+  observations four proven ways: mangled Playwright reporter output;
+  "all files formatted" on a red prettier `--check`; a 0 exit from a `tsc`
+  run that had 18 real errors; a clean-looking `knip` that was really exit 1.
+  Rules: Playwright/prettier via `rtk proxy` (e.g. `rtk proxy pnpm run e2e`);
+  counts via PowerShell `Select-String`/`Measure-Object`, never bash pipes;
+  any gate verdict you act on comes from `rtk proxy` plus the raw exit code
+  (or PowerShell `$LASTEXITCODE`); confirm a suspicious zero/clean twice, by
+  two methods.
 - Long-running user processes (e.g. a Python scraper) may be present — never
   kill unfamiliar PIDs.
