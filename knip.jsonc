@@ -1,0 +1,51 @@
+{
+  "$schema": "https://unpkg.com/knip@latest/schema.json",
+  "workspaces": {
+    "packages/core": {
+      "project": ["src/**/*.ts", "tests/**/*.ts"],
+      "ignore": ["src/uploader/index.ts"]
+    },
+    "packages/react": {
+      "project": ["src/**/*.{ts,tsx}", "tests/**/*.{ts,tsx}"]
+    },
+    "packages/vue": {
+      "project": ["src/**/*.{ts,tsx,vue}", "tests/**/*.{ts,tsx}"]
+    },
+    "packages/svelte": {
+      "project": ["src/**/*.{ts,tsx,svelte}", "tests/**/*.{ts,tsx}"],
+      "ignoreDependencies": ["@testing-library/svelte"]
+    },
+    "packages/angular": {
+      "entry": ["src/public-api.ts"],
+      "project": ["src/**/*.ts"]
+    },
+    "packages/vanilla": {
+      "project": ["src/**/*.ts", "tests/**/*.ts"]
+    },
+    "packages/preact": {
+      "project": ["src/**/*.{ts,tsx}"],
+      "ignoreDependencies": ["@upup/core"]
+    },
+    "packages/next": {
+      "project": ["src/**/*.{ts,tsx}"],
+      "ignoreDependencies": ["@upup/core"]
+    },
+    "packages/server": {
+      "project": ["src/**/*.ts", "tests/**/*.ts"]
+    },
+    "packages/eslint-config": {},
+    "packages/tailwind-config": {},
+    "packages/storybook-config": {
+      "project": ["src/**/*.ts"]
+    },
+    "packages/interactive-example": {
+      "project": ["src/**/*.{ts,tsx}"]
+    }
+  },
+  "ignore": [
+    "audit/**",
+    "apps/**",
+    "scripts/**"
+  ],
+  "exclude": ["exports", "types", "enumMembers", "duplicates"]
+}
