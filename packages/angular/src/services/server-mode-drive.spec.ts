@@ -80,13 +80,17 @@ function makeStoreMock() {
     } as unknown as UpupStore
 }
 
-/** Drain microtask ticks. Bumped from 2 to 3 (P4/C8): list()/transfer() now
- *  await an extra res.clone().json() hop to distinguish drive-reauth from
- *  app-auth on a 401, one tick deeper than the pre-C8 status-only check. */
-const flush = async () => {
-    await Promise.resolve()
-    await Promise.resolve()
-    await Promise.resolve()
+/** Await until `pred()` holds, draining real timer hops (bounded ~2 s).
+ *  Replaces the fixed-tick flush(): counting microtask hops broke every time
+ *  the service's async chain gained a hop (already re-bumped 2→3 at P4/C8),
+ *  and undici's json()/stream scheduling differs across platforms — the
+ *  3-tick version passed on Windows and failed on Linux CI runners. On
+ *  timeout the caller's assertion still runs and reports the real state. */
+const waitFor = async (pred: () => boolean): Promise<void> => {
+    const deadline = Date.now() + 2000
+    while (!pred() && Date.now() < deadline) {
+        await new Promise<void>(resolve => setTimeout(resolve, 0))
+    }
 }
 
 // ── Guard 1: 401 → sign-in fallback ──────────────────────────────────────────
@@ -124,7 +128,7 @@ describe('ServerModeDriveService — guard 1: 401 → reauth state', () => {
         })
         const svc = TestBed.inject(ServerModeDriveService)
         svc.init('google-drive')
-        await flush()
+        await waitFor(() => svc.listState().status !== 'loading')
 
         expect(svc.listState().status).toBe('reauth')
     })
@@ -168,8 +172,9 @@ describe('ServerModeDriveUploaderComponent — guard 1: 401 → auth fallback re
         fixture.componentInstance.onBack = () => {}
         fixture.detectChanges()
 
-        // Wait for the 401 microtask to complete, then re-render
-        await flush()
+        // Wait for the 401 round-trip to settle, then re-render
+        const svc = fixture.debugElement.injector.get(ServerModeDriveService)
+        await waitFor(() => svc.listState().status !== 'loading')
         fixture.detectChanges()
 
         const text = fixture.nativeElement.textContent as string
@@ -216,8 +221,8 @@ describe('ServerModeDriveService — guard 2: destroy aborts in-flight list requ
         const svc = TestBed.inject(ServerModeDriveService)
         svc.init('google-drive')
 
-        // Let the fetch call fire (one tick for the async init)
-        await flush()
+        // Let the fetch call fire (init is async)
+        await waitFor(() => captured !== undefined)
 
         expect(captured).toBeTruthy()
         expect(captured!.aborted).toBe(false)
@@ -275,7 +280,7 @@ describe('ServerModeDriveService — guard 3: destroy removes window message lis
         })
         const svc = TestBed.inject(ServerModeDriveService)
         svc.init('google-drive')
-        await flush()
+        await waitFor(() => svc.listState().status !== 'loading')
 
         // Must be in 'reauth' state before startAuth makes sense
         expect(svc.listState().status).toBe('reauth')
@@ -343,7 +348,7 @@ describe('ServerModeDriveService — startAuth() de-dups the re-auth message lis
         })
         const svc = TestBed.inject(ServerModeDriveService)
         svc.init('google-drive')
-        await flush()
+        await waitFor(() => svc.listState().status !== 'loading')
         expect(svc.listState().status).toBe('reauth')
 
         // First startAuth() arms listener #1
