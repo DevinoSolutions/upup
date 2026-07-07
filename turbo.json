@@ -1,55 +1,52 @@
 {
-  "$schema": "https://turbo.build/schema.json",
-  "tasks": {
-    "build": {
-      "dependsOn": ["^build"],
-      "outputs": [
-        "dist/**",
-        "dist-node/**",
-        ".next/**",
-        "build/**",
-        "!.next/cache/**"
-      ]
-    },
-    "docs#build": {
-      "outputs": [
-        "build/**",
-        "../landing/public/documentation/**"
-      ]
-    },
-    "@upup/landing#build": {
-      "dependsOn": ["docs#build"]
-    },
-    "playground#build": {},
-    "build-storybook": {
-      "dependsOn": ["^build"],
-      "outputs": ["storybook-static/**"]
-    },
-    "@upup/storybook-vanilla#build-storybook": {
-      "dependsOn": ["^build"],
-      "outputs": ["storybook-static/**"]
-    },
-    "dev": {
-      "cache": false,
-      "persistent": true
-    },
-    "lint": {
-      "dependsOn": []
-    },
-    "test": {
-      "dependsOn": ["^test", "^build"]
-    },
-    "@upup/vanilla#test": {
-      "dependsOn": ["^test", "^build", "build"]
-    },
-    "@upup/preact#test": {
-      "dependsOn": ["^test", "^build", "build"]
-    },
-    "typecheck": {
-      "dependsOn": ["^typecheck"]
-    },
-    "clean": {
-      "cache": false
+    "$schema": "https://turbo.build/schema.json",
+    "tasks": {
+        "build": {
+            "dependsOn": ["^build"],
+            "outputs": [
+                "dist/**",
+                "dist-node/**",
+                ".next/**",
+                "build/**",
+                "!.next/cache/**"
+            ]
+        },
+        "docs#build": {
+            "outputs": ["build/**", "../landing/public/documentation/**"]
+        },
+        "@upup/landing#build": {
+            "dependsOn": ["docs#build"]
+        },
+        "playground#build": {},
+        "build-storybook": {
+            "dependsOn": ["^build"],
+            "outputs": ["storybook-static/**"]
+        },
+        "@upup/storybook-vanilla#build-storybook": {
+            "dependsOn": ["^build"],
+            "outputs": ["storybook-static/**"]
+        },
+        "dev": {
+            "cache": false,
+            "persistent": true
+        },
+        "lint": {
+            "dependsOn": ["^build"]
+        },
+        "test": {
+            "dependsOn": ["^test", "^build"]
+        },
+        "@upup/vanilla#test": {
+            "dependsOn": ["^test", "^build", "build"]
+        },
+        "@upup/preact#test": {
+            "dependsOn": ["^test", "^build", "build"]
+        },
+        "typecheck": {
+            "dependsOn": ["^typecheck", "^build"]
+        },
+        "clean": {
+            "cache": false
+        }
     }
-  }
 }
