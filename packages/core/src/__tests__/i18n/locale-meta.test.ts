@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { normalizeBcp47, LOCALE_META } from '../../i18n/locale-meta'
+import { LOCALE_CODES } from '../../i18n/locales/registry'
 import { createTranslator } from '../../i18n/create-translator'
 import { enUS } from '../../i18n/locales/en-US'
 
@@ -61,8 +62,10 @@ describe('normalizeBcp47()', () => {
 // LOCALE_META — structure
 // ─────────────────────────────────────────────
 describe('LOCALE_META', () => {
-    it('contains 9 locale entries', () => {
-        expect(Object.keys(LOCALE_META).length).toBe(9)
+    it('contains one entry per registered locale', () => {
+        // Derived from the registry, not a hand-maintained count — a literal
+        // here breaks on every locale addition (F-710 / F-401 class).
+        expect(Object.keys(LOCALE_META).length).toBe(LOCALE_CODES.length)
     })
 
     it('en-US is ltr', () => {
