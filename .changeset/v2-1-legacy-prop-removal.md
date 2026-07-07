@@ -1,13 +1,13 @@
 ---
-"@upup/core": major
-"@upup/server": major
-"@upup/react": major
-"@upup/vue": major
-"@upup/svelte": major
-"@upup/angular": major
-"@upup/vanilla": major
-"@upup/preact": major
-"@upup/next": major
+'@upup/core': major
+'@upup/server': major
+'@upup/react': major
+'@upup/vue': major
+'@upup/svelte': major
+'@upup/angular': major
+'@upup/vanilla': major
+'@upup/preact': major
+'@upup/next': major
 ---
 
 ## Removed four legacy v1 props
@@ -20,7 +20,7 @@
 ## Wired `theme.slots` end-to-end
 
 Previously `theme.slots` was publicly typed but the runtime ignored
-it. A new `flattenSlotsToClassNames()` in `@upup/shared` bridges the
+it. A new `flattenSlotsToClassNames()` in `@upup/core` bridges the
 nested slot shape onto the internal flat map every component reads.
 Four new slots added to `UpupThemeSlots` to cover v1 `classNames`
 keys that had no v2 equivalent.
@@ -35,4 +35,6 @@ keys that had no v2 equivalent.
   `LocaleBundle | UpupLocaleCode`. `CoreOptions.translations` from
   `unknown` to `Partial<UpupMessages>`. Runtime unchanged.
 
-See `docs/migration/v2-to-v2.1.md` for the find-and-replace guide.
+See the migration guide on the docs site
+(`apps/docs/docs/migration/v2-to-v2.1.md` in the repo) for the
+find-and-replace table.
