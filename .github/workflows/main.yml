@@ -12,10 +12,10 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - name: Checkout the repository
-              uses: actions/checkout@v3
+              uses: actions/checkout@v4
 
             - name: Setup Node.js environment
-              uses: actions/setup-node@v3
+              uses: actions/setup-node@v4
               id: cache-primes
               with:
                   node-version-file: '.nvmrc'
@@ -27,7 +27,7 @@ jobs:
                   pnpm config set store-dir ~/.pnpm-store
 
             - name: Cache PNPM dependencies
-              uses: actions/cache@v3
+              uses: actions/cache@v4
               with:
                   path: ~/.pnpm-store
                   key: ${{ runner.os }}-pnpm-v3-${{ hashFiles('pnpm-lock.yaml') }}
@@ -47,9 +47,9 @@ jobs:
         needs: [Prettier-check]
         steps:
             - name: Checkout repo
-              uses: actions/checkout@v3
+              uses: actions/checkout@v4
 
-            - uses: actions/setup-node@v3
+            - uses: actions/setup-node@v4
               id: cache-primes
               with:
                   node-version-file: '.nvmrc'
@@ -61,7 +61,7 @@ jobs:
                   pnpm config set store-dir ~/.pnpm-store
 
             - name: Cache PNPM dependencies
-              uses: actions/cache@v3
+              uses: actions/cache@v4
               with:
                   path: ~/.pnpm-store
                   key: ${{ runner.os }}-pnpm-v3-${{ hashFiles('pnpm-lock.yaml') }}
@@ -94,9 +94,9 @@ jobs:
         needs: [Prettier-check, Test]
         steps:
             - name: Checkout repo
-              uses: actions/checkout@v3
+              uses: actions/checkout@v4
 
-            - uses: actions/setup-node@v3
+            - uses: actions/setup-node@v4
               id: cache-primes
               with:
                   node-version-file: '.nvmrc'
@@ -108,7 +108,7 @@ jobs:
                   pnpm config set store-dir ~/.pnpm-store
 
             - name: Cache PNPM dependencies
-              uses: actions/cache@v3
+              uses: actions/cache@v4
               with:
                   path: ~/.pnpm-store
                   key: ${{ runner.os }}-pnpm-v3-${{ hashFiles('pnpm-lock.yaml') }}
@@ -128,9 +128,9 @@ jobs:
         needs: [Prettier-check]
         steps:
             - name: Checkout repo
-              uses: actions/checkout@v3
+              uses: actions/checkout@v4
 
-            - uses: actions/setup-node@v3
+            - uses: actions/setup-node@v4
               id: cache-primes
               with:
                   node-version-file: '.nvmrc'
@@ -142,7 +142,7 @@ jobs:
                   pnpm config set store-dir ~/.pnpm-store
 
             - name: Cache PNPM dependencies
-              uses: actions/cache@v3
+              uses: actions/cache@v4
               with:
                   path: ~/.pnpm-store
                   key: ${{ runner.os }}-pnpm-v3-${{ hashFiles('pnpm-lock.yaml') }}
@@ -162,9 +162,9 @@ jobs:
         needs: [Build]
         steps:
             - name: Checkout repo
-              uses: actions/checkout@v3
+              uses: actions/checkout@v4
 
-            - uses: actions/setup-node@v3
+            - uses: actions/setup-node@v4
               id: cache-primes
               with:
                   node-version-file: '.nvmrc'
@@ -176,7 +176,7 @@ jobs:
                   pnpm config set store-dir ~/.pnpm-store
 
             - name: Cache PNPM dependencies
-              uses: actions/cache@v3
+              uses: actions/cache@v4
               with:
                   path: ~/.pnpm-store
                   key: ${{ runner.os }}-pnpm-v3-${{ hashFiles('pnpm-lock.yaml') }}
@@ -199,8 +199,8 @@ jobs:
         needs: [Prettier-check]
         steps:
             - name: Checkout repo
-              uses: actions/checkout@v3
-            - uses: actions/setup-node@v3
+              uses: actions/checkout@v4
+            - uses: actions/setup-node@v4
               id: cache-primes
               with:
                   node-version-file: '.nvmrc'
@@ -210,7 +210,7 @@ jobs:
                   npm install -g pnpm@latest
                   pnpm config set store-dir ~/.pnpm-store
             - name: Cache PNPM dependencies
-              uses: actions/cache@v3
+              uses: actions/cache@v4
               with:
                   path: ~/.pnpm-store
                   key: ${{ runner.os }}-pnpm-v3-${{ hashFiles('pnpm-lock.yaml') }}
@@ -228,8 +228,8 @@ jobs:
         needs: [Prettier-check]
         steps:
             - name: Checkout repo
-              uses: actions/checkout@v3
-            - uses: actions/setup-node@v3
+              uses: actions/checkout@v4
+            - uses: actions/setup-node@v4
               id: cache-primes
               with:
                   node-version-file: '.nvmrc'
@@ -239,7 +239,7 @@ jobs:
                   npm install -g pnpm@latest
                   pnpm config set store-dir ~/.pnpm-store
             - name: Cache PNPM dependencies
-              uses: actions/cache@v3
+              uses: actions/cache@v4
               with:
                   path: ~/.pnpm-store
                   key: ${{ runner.os }}-pnpm-v3-${{ hashFiles('pnpm-lock.yaml') }}
@@ -256,8 +256,8 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - name: Checkout repo
-              uses: actions/checkout@v3
-            - uses: actions/setup-node@v3
+              uses: actions/checkout@v4
+            - uses: actions/setup-node@v4
               id: cache-primes
               with:
                   node-version-file: '.nvmrc'
@@ -267,7 +267,7 @@ jobs:
                   npm install -g pnpm@latest
                   pnpm config set store-dir ~/.pnpm-store
             - name: Cache PNPM dependencies
-              uses: actions/cache@v3
+              uses: actions/cache@v4
               with:
                   path: ~/.pnpm-store
                   key: ${{ runner.os }}-pnpm-v3-${{ hashFiles('pnpm-lock.yaml') }}
@@ -285,8 +285,8 @@ jobs:
         needs: [Prettier-check]
         steps:
             - name: Checkout repo
-              uses: actions/checkout@v3
-            - uses: actions/setup-node@v3
+              uses: actions/checkout@v4
+            - uses: actions/setup-node@v4
               id: cache-primes
               with:
                   node-version-file: '.nvmrc'
@@ -296,7 +296,7 @@ jobs:
                   npm install -g pnpm@latest
                   pnpm config set store-dir ~/.pnpm-store
             - name: Cache PNPM dependencies
-              uses: actions/cache@v3
+              uses: actions/cache@v4
               with:
                   path: ~/.pnpm-store
                   key: ${{ runner.os }}-pnpm-v3-${{ hashFiles('pnpm-lock.yaml') }}

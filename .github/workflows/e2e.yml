@@ -1,75 +1,75 @@
 name: E2E
 
 permissions:
-  contents: read
+    contents: read
 
 on:
-  pull_request:
-    branches: [master, dev]
-  workflow_dispatch:
+    pull_request:
+        branches: [master, dev]
+    workflow_dispatch:
 
 jobs:
-  E2E:
-    name: Cross-framework E2E (Playwright + MinIO)
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout the repository
-        uses: actions/checkout@v3
+    E2E:
+        name: Cross-framework E2E (Playwright + MinIO)
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout the repository
+              uses: actions/checkout@v4
 
-      - name: Setup Node.js environment
-        uses: actions/setup-node@v3
-        id: cache-primes
-        with:
-          node-version-file: '.nvmrc'
+            - name: Setup Node.js environment
+              uses: actions/setup-node@v4
+              id: cache-primes
+              with:
+                  node-version-file: '.nvmrc'
 
-      - name: Setup PNPM environment
-        if: steps.cache-primes.outputs.cache-hit != 'true'
-        run: |
-          npm install -g pnpm@latest
-          pnpm config set store-dir ~/.pnpm-store
+            - name: Setup PNPM environment
+              if: steps.cache-primes.outputs.cache-hit != 'true'
+              run: |
+                  npm install -g pnpm@latest
+                  pnpm config set store-dir ~/.pnpm-store
 
-      - name: Cache PNPM dependencies
-        uses: actions/cache@v3
-        with:
-          path: ~/.pnpm-store
-          key: ${{ runner.os }}-pnpm-v3-${{ hashFiles('pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-v3-
+            - name: Cache PNPM dependencies
+              uses: actions/cache@v4
+              with:
+                  path: ~/.pnpm-store
+                  key: ${{ runner.os }}-pnpm-v3-${{ hashFiles('pnpm-lock.yaml') }}
+                  restore-keys: |
+                      ${{ runner.os }}-pnpm-v3-
 
-      - name: Install dependencies
-        run: pnpm install
+            - name: Install dependencies
+              run: pnpm install
 
-      - name: Install Playwright Chromium
-        run: pnpm --filter e2e-test exec playwright install --with-deps chromium
+            - name: Install Playwright Chromium
+              run: pnpm --filter e2e-test exec playwright install --with-deps chromium
 
-      - name: Provision MinIO env (defaults; smoke is OAuth-free)
-        run: cp local-dev/.env.minio.example local-dev/.env.minio
+            - name: Provision MinIO env (defaults; smoke is OAuth-free)
+              run: cp local-dev/.env.minio.example local-dev/.env.minio
 
-      - name: Guard against fixture/baseline regen in CI (F-205)
-        run: if [ -n "$UPDATE_PARITY" ] || [ -n "$UPDATE_A11Y_BASELINE" ]; then echo "regen env forbidden in CI"; exit 1; fi
+            - name: Guard against fixture/baseline regen in CI (F-205)
+              run: if [ -n "$UPDATE_PARITY" ] || [ -n "$UPDATE_A11Y_BASELINE" ]; then echo "regen env forbidden in CI"; exit 1; fi
 
-      - name: Run e2e gate (deep React + cross-framework smoke)
-        run: pnpm run e2e
+            - name: Run e2e gate (deep React + cross-framework smoke)
+              run: pnpm run e2e
 
-  Smoke-Packages:
-    name: Package smoke (real tarball consumer)
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version-file: '.nvmrc'
-      - name: Setup PNPM environment
-        run: |
-          npm install -g pnpm@latest
-          pnpm config set store-dir ~/.pnpm-store
-      - uses: actions/cache@v3
-        with:
-          path: ~/.pnpm-store
-          key: ${{ runner.os }}-pnpm-v3-${{ hashFiles('pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-v3-
-      - name: Install dependencies
-        run: pnpm install
-      - name: Package smoke (packs all 9, isolated consumer, vite build, dist-shape asserts)
-        run: pnpm run smoke:packages    # self-builds via build:package; no browser, no MinIO
+    Smoke-Packages:
+        name: Package smoke (real tarball consumer)
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+            - uses: actions/setup-node@v4
+              with:
+                  node-version-file: '.nvmrc'
+            - name: Setup PNPM environment
+              run: |
+                  npm install -g pnpm@latest
+                  pnpm config set store-dir ~/.pnpm-store
+            - uses: actions/cache@v4
+              with:
+                  path: ~/.pnpm-store
+                  key: ${{ runner.os }}-pnpm-v3-${{ hashFiles('pnpm-lock.yaml') }}
+                  restore-keys: |
+                      ${{ runner.os }}-pnpm-v3-
+            - name: Install dependencies
+              run: pnpm install
+            - name: Package smoke (packs all 9, isolated consumer, vite build, dist-shape asserts)
+              run: pnpm run smoke:packages # self-builds via build:package; no browser, no MinIO
