@@ -38,6 +38,13 @@ export default tseslint.config(
             '**/*.vue',
             '**/*.svelte',
             '**/*.html',
+            // tsup bundles its config to an ephemeral tsup.config.bundled_<rand>.mjs
+            // and deletes it when the build ends. In CI, turbo runs a package's
+            // `build` beside a sibling's `lint` in the same job; `eslint .` globs
+            // the temp file, tsup deletes it, eslint opens it -> ENOENT, exit 2
+            // (first hit: @upup/vue, PR #320 round of 2026-07-07, when fresh
+            // caches let build+lint overlap for the first time).
+            '**/tsup.config.bundled_*.mjs',
         ],
     },
     js.configs.recommended,
