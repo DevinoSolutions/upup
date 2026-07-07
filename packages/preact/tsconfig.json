@@ -1,23 +1,31 @@
 {
-  "compilerOptions": {
-    "target": "ES2019",
-    "module": "ESNext",
-    "moduleResolution": "Bundler",
-    "lib": ["ES2019", "DOM", "DOM.Iterable"],
-    "jsx": "react-jsx",
-    "jsxImportSource": "preact",
-    "strict": true,
-    "noUncheckedIndexedAccess": true,
-    "noImplicitOverride": true,
-    "noFallthroughCasesInSwitch": true,
-    "exactOptionalPropertyTypes": true,
-    "skipLibCheck": true,
-    "esModuleInterop": true,
-    "noEmit": true,
-    "baseUrl": ".",
-    "paths": { "react": ["node_modules/preact/compat"], "react-dom": ["node_modules/preact/compat"] },
-    "types": ["node"]
-  },
-  "include": ["src", "tsup.config.ts", "vitest.config.ts"],
-  "exclude": ["src/filerobot-island.tsx"]
+    "compilerOptions": {
+        "target": "ES2019",
+        "module": "ESNext",
+        "moduleResolution": "Bundler",
+        "lib": ["ES2019", "DOM", "DOM.Iterable"],
+        "jsx": "react-jsx",
+        "jsxImportSource": "preact",
+        "strict": true,
+        "noUncheckedIndexedAccess": true,
+        "noImplicitOverride": true,
+        "noFallthroughCasesInSwitch": true,
+        "exactOptionalPropertyTypes": true,
+        "skipLibCheck": true,
+        "esModuleInterop": true,
+        "noEmit": true,
+        "baseUrl": ".",
+        "paths": {
+            "react": ["node_modules/preact/compat"],
+            "react-dom": ["node_modules/preact/compat"]
+        },
+        "types": ["node"]
+    },
+    "include": [
+        "src",
+        "tsup.config.ts",
+        "vitest.config.ts",
+        "vitest.global-setup.ts"
+    ],
+    "exclude": ["src/filerobot-island.tsx"]
 }
