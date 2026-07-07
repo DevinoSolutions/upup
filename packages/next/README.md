@@ -13,7 +13,7 @@ import { UpupUploader } from '@upup/next'
 import '@upup/next/styles'
 
 export default function Page() {
-  return <UpupUploader mode="server" serverUrl="/api/upup" />
+    return <UpupUploader mode="server" serverUrl="/api/upup" />
 }
 ```
 
@@ -26,9 +26,13 @@ export const dynamic = 'force-dynamic'
 export const maxDuration = 60
 
 export const { GET, POST, PUT, DELETE } = createUpupNextHandler(
-  defineUpupConfig({
-    storage: { type: 'aws', bucket: process.env.S3_BUCKET!, region: process.env.S3_REGION! /* creds... */ },
-  }),
+    defineUpupConfig({
+        storage: {
+            type: 'aws',
+            bucket: process.env.S3_BUCKET!,
+            region: process.env.S3_REGION! /* creds... */,
+        },
+    }),
 )
 ```
 
@@ -39,7 +43,9 @@ import { createUpupPagesHandler, defineUpupConfig } from '@upup/next/server'
 
 export const config = { api: { bodyParser: false } } // REQUIRED — we read the raw body
 
-export default createUpupPagesHandler(defineUpupConfig({ /* storage, providers */ }))
+export default createUpupPagesHandler(
+    defineUpupConfig({/* storage, providers */}),
+)
 ```
 
 ## Deploying to serverless (Vercel / Lambda / Netlify)
@@ -47,14 +53,15 @@ export default createUpupPagesHandler(defineUpupConfig({ /* storage, providers *
 - **Persist OAuth state + tokens.** The default `InMemoryTokenStore` keeps OAuth
   `state` and drive tokens in a process-local `Map`. On serverless the redirect and
   callback can hit different instances, so login fails with `400 "Invalid or expired
-  state"`. Implement the `TokenStore { get, set, delete }` interface against Redis /
+state"`. Implement the `TokenStore { get, set, delete }` interface against Redis /
   Upstash / KV and pass it as `config.tokenStore`.
-- **Function timeout.** Server-mode drive→S3 transfer streams *through* the function.
+- **Function timeout.** Server-mode drive→S3 transfer streams _through_ the function.
   Set `maxDuration` (App Router segment config) and raise it toward your platform max
   for large files. (Direct local uploads bypass the function via presigned PUT.)
-- **Memory.** `@upup/server` buffers files below `multipartThreshold` (default 100 MB)
-  in RAM during transfer. On 128–256 MB functions, lower `multipartThreshold` so
-  transfers stream in chunks instead.
+- **Memory.** Server-mode drive→S3 transfers stream in fixed 5 MiB chunks (files
+  ≤ 5 MiB upload as a single PUT), so the per-transfer memory envelope is one chunk
+  regardless of file size — even 128–256 MB functions are fine. This bound is not
+  configurable by design.
 - **Proxy/CDN origin.** Behind a proxy, pass `createUpupNextHandler(config, { baseUrl })`
   (or `{ trustProxy: true }` to read `x-forwarded-*`) so the OAuth callback URL is
   correct. No-op on Vercel App Router (`req.url` is already public).
@@ -69,8 +76,8 @@ export default createUpupPagesHandler(defineUpupConfig({ /* storage, providers *
 
 - The in-memory store works for a single instance but breaks across replicas/restarts
   — use a shared `TokenStore` when scaling horizontally.
-- No function timeout, so large transfers are fine; the `multipartThreshold` guidance
-  still helps under concurrency.
+- No function timeout, so large transfers are fine; memory stays bounded at ~5 MiB
+  per concurrent transfer.
 
 ## S3 bucket CORS
 
