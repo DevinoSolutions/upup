@@ -166,8 +166,15 @@ describe('UpupCore — upload control sequencing', () => {
 describe('UpupCore — upload run re-entrancy (F-149)', () => {
     const hangingFetchCore = async () => {
         // presign never resolves → the run stays in flight for the duration of the test
-        vi.stubGlobal('fetch', vi.fn(() => new Promise<Response>(() => {})))
-        const core = new UpupCore({ provider: 'aws', uploadEndpoint: '/api/presign', maxRetries: 0 })
+        vi.stubGlobal(
+            'fetch',
+            vi.fn(() => new Promise<Response>(() => {})),
+        )
+        const core = new UpupCore({
+            provider: 'aws',
+            uploadEndpoint: '/api/presign',
+            maxRetries: 0,
+        })
         await core.addFiles([new File(['x'], 'a.txt', { type: 'text/plain' })])
         return core
     }

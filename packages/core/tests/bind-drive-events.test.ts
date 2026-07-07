@@ -30,7 +30,10 @@ describe('bindDriveEvents', () => {
         }
         bindDriveEvents(core as unknown as UpupCore, 'box', callbacks)
         expect(core.on).toHaveBeenCalledTimes(6)
-        expect(core.on).toHaveBeenCalledWith('box:authenticated', expect.any(Function))
+        expect(core.on).toHaveBeenCalledWith(
+            'box:authenticated',
+            expect.any(Function),
+        )
         expect(core.on).toHaveBeenCalledWith('box:error', expect.any(Function))
     })
 
@@ -46,7 +49,9 @@ describe('bindDriveEvents', () => {
         }
         bindDriveEvents(core as unknown as UpupCore, 'box', callbacks)
         core._emit('box:authenticated', { user: { name: 'Test' } })
-        expect(callbacks.onAuthenticated).toHaveBeenCalledWith({ user: { name: 'Test' } })
+        expect(callbacks.onAuthenticated).toHaveBeenCalledWith({
+            user: { name: 'Test' },
+        })
     })
 
     it('returns cleanup function that unsubscribes all', () => {
@@ -59,7 +64,11 @@ describe('bindDriveEvents', () => {
             onStateChange: vi.fn(),
             onError: vi.fn(),
         }
-        const cleanup = bindDriveEvents(core as unknown as UpupCore, 'box', callbacks)
+        const cleanup = bindDriveEvents(
+            core as unknown as UpupCore,
+            'box',
+            callbacks,
+        )
         cleanup()
         core._emit('box:authenticated', { user: { name: 'Test' } })
         expect(callbacks.onAuthenticated).not.toHaveBeenCalled()
@@ -76,6 +85,9 @@ describe('bindDriveEvents', () => {
             onError: vi.fn(),
         }
         bindDriveEvents(core as unknown as UpupCore, 'google-drive', callbacks)
-        expect(core.on).toHaveBeenCalledWith('google-drive:authenticated', expect.any(Function))
+        expect(core.on).toHaveBeenCalledWith(
+            'google-drive:authenticated',
+            expect.any(Function),
+        )
     })
 })

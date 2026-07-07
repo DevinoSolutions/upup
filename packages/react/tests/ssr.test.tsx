@@ -12,7 +12,10 @@ import { UpupUploader } from '../src'
 describe('UpupUploader SSR', () => {
     let originalNavigator: PropertyDescriptor | undefined
     beforeEach(() => {
-        originalNavigator = Object.getOwnPropertyDescriptor(globalThis, 'navigator')
+        originalNavigator = Object.getOwnPropertyDescriptor(
+            globalThis,
+            'navigator',
+        )
         // Simulate Node 21+ / Next.js where `navigator` is defined but `onLine` is not.
         Object.defineProperty(globalThis, 'navigator', {
             value: { userAgent: 'node' },
@@ -65,11 +68,15 @@ describe('UpupUploader SSR', () => {
         try {
             expect(() =>
                 renderToString(
-                    <UpupUploader provider="s3" serverUrl="https://example.com" />,
+                    <UpupUploader
+                        provider="s3"
+                        serverUrl="https://example.com"
+                    />,
                 ),
             ).not.toThrow()
         } finally {
-            if (originalWindow !== undefined) (globalThis as Record<string, unknown>).window = originalWindow
+            if (originalWindow !== undefined)
+                (globalThis as Record<string, unknown>).window = originalWindow
         }
     })
 })

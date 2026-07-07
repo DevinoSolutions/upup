@@ -14,28 +14,28 @@ import { renderToString } from 'vue/server-renderer'
 import { UpupUploader } from '../src'
 
 describe('UpupUploader SSR', () => {
-  it('renders without throwing under vue/server-renderer (no window/document)', async () => {
-    const app = createSSRApp({
-      render: () => h(UpupUploader, { sources: ['local'] }),
+    it('renders without throwing under vue/server-renderer (no window/document)', async () => {
+        const app = createSSRApp({
+            render: () => h(UpupUploader, { sources: ['local'] }),
+        })
+        const html = await renderToString(app)
+        expect(typeof html).toBe('string')
     })
-    const html = await renderToString(app)
-    expect(typeof html).toBe('string')
-  })
 
-  it('renders the container shell on the server', async () => {
-    const app = createSSRApp({
-      render: () => h(UpupUploader, { sources: ['local'] }),
+    it('renders the container shell on the server', async () => {
+        const app = createSSRApp({
+            render: () => h(UpupUploader, { sources: ['local'] }),
+        })
+        const html = await renderToString(app)
+        expect(html).toContain('data-testid="upup-container"')
+        expect(html).toContain('upup-scope')
     })
-    const html = await renderToString(app)
-    expect(html).toContain('data-testid="upup-container"')
-    expect(html).toContain('upup-scope')
-  })
 
-  it('does not render the offline banner on SSR (isOnline defaults to true)', async () => {
-    const app = createSSRApp({
-      render: () => h(UpupUploader, { sources: ['local'] }),
+    it('does not render the offline banner on SSR (isOnline defaults to true)', async () => {
+        const app = createSSRApp({
+            render: () => h(UpupUploader, { sources: ['local'] }),
+        })
+        const html = await renderToString(app)
+        expect(html).not.toContain('No internet connection')
     })
-    const html = await renderToString(app)
-    expect(html).not.toContain('No internet connection')
-  })
 })

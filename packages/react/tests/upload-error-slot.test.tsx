@@ -12,7 +12,12 @@ let _uploadErrorCode: string | undefined = undefined
 function makeFilesMap(count: number): Map<string, UploadFile> {
     const map = new Map<string, UploadFile>()
     for (let i = 0; i < count; i++) {
-        map.set(`f${i}`, { id: `f${i}`, name: `file-${i}.txt`, size: 1000, type: 'text/plain' } as unknown as UploadFile)
+        map.set(`f${i}`, {
+            id: `f${i}`,
+            name: `file-${i}.txt`,
+            size: 1000,
+            type: 'text/plain',
+        } as unknown as UploadFile)
     }
     return map
 }
@@ -79,7 +84,9 @@ vi.mock('../src/context/UploaderContext', () => ({
 }))
 
 vi.mock('../src/components/FileItem', () => ({
-    default: ({ file }: { file: UploadFile }) => <div data-testid="file-item">{file.name}</div>,
+    default: ({ file }: { file: UploadFile }) => (
+        <div data-testid="file-item">{file.name}</div>
+    ),
 }))
 vi.mock('../src/components/shared/UploaderHeader', () => ({
     default: () => <div data-testid="uploader-header" />,
@@ -103,14 +110,18 @@ describe('FileList — default upload-error slot (P4/C10)', () => {
         _uploadStatus = 'ONGOING'
         _uploadError = ''
         const { container } = render(<FileList />)
-        expect(container.querySelector('[data-testid="upup-upload-error"]')).toBeNull()
+        expect(
+            container.querySelector('[data-testid="upup-upload-error"]'),
+        ).toBeNull()
     })
 
     it('renders no error slot when FAILED but uploadError is empty', () => {
         _uploadStatus = 'FAILED'
         _uploadError = ''
         const { container } = render(<FileList />)
-        expect(container.querySelector('[data-testid="upup-upload-error"]')).toBeNull()
+        expect(
+            container.querySelector('[data-testid="upup-upload-error"]'),
+        ).toBeNull()
     })
 
     it('renders the error slot with the mapped message when FAILED and uploadError is set (no code)', () => {

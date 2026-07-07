@@ -64,7 +64,11 @@ describe('cn', () => {
     it('handles mixed strings, objects, and conditionals', () => {
         const isActive = true
         const isDisabled = false
-        const result = cn('base', { active: isActive, disabled: isDisabled }, 'extra')
+        const result = cn(
+            'base',
+            { active: isActive, disabled: isDisabled },
+            'extra',
+        )
         expect(result).toContain('base')
         expect(result).toContain('active')
         expect(result).toContain('extra')

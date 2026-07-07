@@ -3,7 +3,13 @@ import { thumbnailStep } from '../../src/steps/thumbnail'
 import type { UploadFile, PipelineContext } from '@upup/core'
 
 function makeFile(name: string, type: string): UploadFile {
-    return { id: 'f1', name, type, size: 512, status: 'idle' } as unknown as UploadFile
+    return {
+        id: 'f1',
+        name,
+        type,
+        size: 512,
+        status: 'idle',
+    } as unknown as UploadFile
 }
 
 const ctx: PipelineContext = {
@@ -31,49 +37,79 @@ describe('thumbnailStep', () => {
 
     // shouldProcess — image types
     it('shouldProcess returns true for image/jpeg', () => {
-        expect(thumbnailStep().shouldProcess!(makeFile('a.jpg', 'image/jpeg'))).toBe(true)
+        expect(
+            thumbnailStep().shouldProcess!(makeFile('a.jpg', 'image/jpeg')),
+        ).toBe(true)
     })
 
     it('shouldProcess returns true for image/png', () => {
-        expect(thumbnailStep().shouldProcess!(makeFile('a.png', 'image/png'))).toBe(true)
+        expect(
+            thumbnailStep().shouldProcess!(makeFile('a.png', 'image/png')),
+        ).toBe(true)
     })
 
     it('shouldProcess returns true for image/webp', () => {
-        expect(thumbnailStep().shouldProcess!(makeFile('a.webp', 'image/webp'))).toBe(true)
+        expect(
+            thumbnailStep().shouldProcess!(makeFile('a.webp', 'image/webp')),
+        ).toBe(true)
     })
 
     it('shouldProcess returns true for image/gif', () => {
-        expect(thumbnailStep().shouldProcess!(makeFile('a.gif', 'image/gif'))).toBe(true)
+        expect(
+            thumbnailStep().shouldProcess!(makeFile('a.gif', 'image/gif')),
+        ).toBe(true)
     })
 
     // shouldProcess — video types
     it('shouldProcess returns false for video/mp4', () => {
-        expect(thumbnailStep().shouldProcess!(makeFile('v.mp4', 'video/mp4'))).toBe(false)
+        expect(
+            thumbnailStep().shouldProcess!(makeFile('v.mp4', 'video/mp4')),
+        ).toBe(false)
     })
 
     it('shouldProcess returns false for video/webm', () => {
-        expect(thumbnailStep().shouldProcess!(makeFile('v.webm', 'video/webm'))).toBe(false)
+        expect(
+            thumbnailStep().shouldProcess!(makeFile('v.webm', 'video/webm')),
+        ).toBe(false)
     })
 
     it('shouldProcess returns false for video/quicktime', () => {
-        expect(thumbnailStep().shouldProcess!(makeFile('v.mov', 'video/quicktime'))).toBe(false)
+        expect(
+            thumbnailStep().shouldProcess!(
+                makeFile('v.mov', 'video/quicktime'),
+            ),
+        ).toBe(false)
     })
 
     // shouldProcess — rejected types
     it('shouldProcess returns false for application/pdf', () => {
-        expect(thumbnailStep().shouldProcess!(makeFile('doc.pdf', 'application/pdf'))).toBe(false)
+        expect(
+            thumbnailStep().shouldProcess!(
+                makeFile('doc.pdf', 'application/pdf'),
+            ),
+        ).toBe(false)
     })
 
     it('shouldProcess returns false for text/plain', () => {
-        expect(thumbnailStep().shouldProcess!(makeFile('readme.txt', 'text/plain'))).toBe(false)
+        expect(
+            thumbnailStep().shouldProcess!(
+                makeFile('readme.txt', 'text/plain'),
+            ),
+        ).toBe(false)
     })
 
     it('shouldProcess returns false for audio/mp3', () => {
-        expect(thumbnailStep().shouldProcess!(makeFile('track.mp3', 'audio/mp3'))).toBe(false)
+        expect(
+            thumbnailStep().shouldProcess!(makeFile('track.mp3', 'audio/mp3')),
+        ).toBe(false)
     })
 
     it('shouldProcess returns false for application/zip', () => {
-        expect(thumbnailStep().shouldProcess!(makeFile('archive.zip', 'application/zip'))).toBe(false)
+        expect(
+            thumbnailStep().shouldProcess!(
+                makeFile('archive.zip', 'application/zip'),
+            ),
+        ).toBe(false)
     })
 
     // process — pass-through

@@ -59,7 +59,9 @@ describe('uploadSourceObject', () => {
     })
 
     it('microphone entry has a Component', () => {
-        expect(uploadSourceObject[FileSource.MICROPHONE].Component).toBeDefined()
+        expect(
+            uploadSourceObject[FileSource.MICROPHONE].Component,
+        ).toBeDefined()
     })
 
     it('screen entry has a Component', () => {
@@ -67,7 +69,9 @@ describe('uploadSourceObject', () => {
     })
 
     it('googleDrive entry has a Component', () => {
-        expect(uploadSourceObject[FileSource.GOOGLE_DRIVE].Component).toBeDefined()
+        expect(
+            uploadSourceObject[FileSource.GOOGLE_DRIVE].Component,
+        ).toBeDefined()
     })
 
     it('oneDrive entry has a Component', () => {

@@ -87,7 +87,10 @@ describe('checkFileSize', () => {
     function makeFile(sizeBytes: number): File {
         const file = new File([], 'test.bin')
         // File.size is a read-only getter — override with defineProperty
-        Object.defineProperty(file, 'size', { value: sizeBytes, configurable: true })
+        Object.defineProperty(file, 'size', {
+            value: sizeBytes,
+            configurable: true,
+        })
         return file
     }
 

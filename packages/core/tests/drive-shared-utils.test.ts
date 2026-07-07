@@ -1,6 +1,10 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { generateCodeVerifier, generateCodeChallenge } from '../src/drives/pkce'
-import { storageGet, storageSet, storageDel } from '../src/drives/session-storage'
+import {
+    storageGet,
+    storageSet,
+    storageDel,
+} from '../src/drives/session-storage'
 import { guessMimeType } from '../src/drives/mime'
 
 describe('pkce', () => {

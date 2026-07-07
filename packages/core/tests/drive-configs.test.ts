@@ -1,5 +1,11 @@
 import { describe, it, expectTypeOf } from 'vitest'
-import type { GoogleDriveConfig, OneDriveConfig, DropboxConfig, BoxConfig, CloudDrivesConfig } from '../src'
+import type {
+    GoogleDriveConfig,
+    OneDriveConfig,
+    DropboxConfig,
+    BoxConfig,
+    CloudDrivesConfig,
+} from '../src'
 
 describe('drive configs exported from core (one camelCase shape)', () => {
     it('GoogleDriveConfig requires clientId/apiKey/appId', () => {

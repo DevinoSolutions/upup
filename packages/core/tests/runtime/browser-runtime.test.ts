@@ -20,28 +20,28 @@ describe('BrowserRuntime — shape', () => {
     it('createObjectURL is a function or undefined (browser-only)', () => {
         expect(
             BrowserRuntime.createObjectURL === undefined ||
-            typeof BrowserRuntime.createObjectURL === 'function',
+                typeof BrowserRuntime.createObjectURL === 'function',
         ).toBe(true)
     })
 
     it('revokeObjectURL is a function or undefined (browser-only)', () => {
         expect(
             BrowserRuntime.revokeObjectURL === undefined ||
-            typeof BrowserRuntime.revokeObjectURL === 'function',
+                typeof BrowserRuntime.revokeObjectURL === 'function',
         ).toBe(true)
     })
 
     it('createImageBitmap is a function or undefined', () => {
         expect(
             BrowserRuntime.createImageBitmap === undefined ||
-            typeof BrowserRuntime.createImageBitmap === 'function',
+                typeof BrowserRuntime.createImageBitmap === 'function',
         ).toBe(true)
     })
 
     it('createWorker is a function or undefined', () => {
         expect(
             BrowserRuntime.createWorker === undefined ||
-            typeof BrowserRuntime.createWorker === 'function',
+                typeof BrowserRuntime.createWorker === 'function',
         ).toBe(true)
     })
 })
@@ -66,7 +66,9 @@ describe('BrowserRuntime — computeHash', () => {
     it('produces the known SHA-256 of an empty buffer', async () => {
         // SHA-256("") = e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
         const hash = await BrowserRuntime.computeHash(new ArrayBuffer(0))
-        expect(hash).toBe('e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855')
+        expect(hash).toBe(
+            'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+        )
     })
 
     it('is deterministic — same input yields same hash', async () => {
@@ -79,8 +81,12 @@ describe('BrowserRuntime — computeHash', () => {
     })
 
     it('different inputs produce different hashes', async () => {
-        const a = await BrowserRuntime.computeHash(new TextEncoder().encode('foo').buffer)
-        const b = await BrowserRuntime.computeHash(new TextEncoder().encode('bar').buffer)
+        const a = await BrowserRuntime.computeHash(
+            new TextEncoder().encode('foo').buffer,
+        )
+        const b = await BrowserRuntime.computeHash(
+            new TextEncoder().encode('bar').buffer,
+        )
         expect(a).not.toBe(b)
     })
 })
@@ -130,7 +136,9 @@ describe('BrowserRuntime — createObjectURL / revokeObjectURL', () => {
 
     it('createObjectURL delegates to URL.createObjectURL when available', () => {
         if (!BrowserRuntime.createObjectURL) return
-        const stub = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:test-url')
+        const stub = vi
+            .spyOn(URL, 'createObjectURL')
+            .mockReturnValue('blob:test-url')
         const blob = new Blob(['data'])
         const result = BrowserRuntime.createObjectURL(blob)
         expect(stub).toHaveBeenCalledWith(blob)
@@ -139,7 +147,9 @@ describe('BrowserRuntime — createObjectURL / revokeObjectURL', () => {
 
     it('revokeObjectURL delegates to URL.revokeObjectURL when available', () => {
         if (!BrowserRuntime.revokeObjectURL) return
-        const stub = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {})
+        const stub = vi
+            .spyOn(URL, 'revokeObjectURL')
+            .mockImplementation(() => {})
         BrowserRuntime.revokeObjectURL('blob:test-url')
         expect(stub).toHaveBeenCalledWith('blob:test-url')
     })

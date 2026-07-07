@@ -20,7 +20,9 @@ function getStepNames(core: UpupCore): string[] {
 describe('Dynamic pipeline — boolean option → step', () => {
     it('heicConversion adds a heic step', async () => {
         const core = new UpupCore({ heicConversion: true })
-        try { await core.upload() } catch {
+        try {
+            await core.upload()
+        } catch {
             // upup-catch: no endpoint configured; upload() is only called to trigger
             // lazy pipeline construction before inspecting step names — the rejection
             // itself is expected and irrelevant to this assertion.
@@ -31,7 +33,9 @@ describe('Dynamic pipeline — boolean option → step', () => {
 
     it('stripExifData adds an exif step', async () => {
         const core = new UpupCore({ stripExifData: true })
-        try { await core.upload() } catch {
+        try {
+            await core.upload()
+        } catch {
             // upup-catch: no endpoint configured; upload() is only called to trigger
             // lazy pipeline construction before inspecting step names — the rejection
             // itself is expected and irrelevant to this assertion.
@@ -42,7 +46,9 @@ describe('Dynamic pipeline — boolean option → step', () => {
 
     it('imageCompression adds a compress step', async () => {
         const core = new UpupCore({ imageCompression: true })
-        try { await core.upload() } catch {
+        try {
+            await core.upload()
+        } catch {
             // upup-catch: no endpoint configured; upload() is only called to trigger
             // lazy pipeline construction before inspecting step names — the rejection
             // itself is expected and irrelevant to this assertion.
@@ -53,7 +59,9 @@ describe('Dynamic pipeline — boolean option → step', () => {
 
     it('checksumVerification adds a hash step', async () => {
         const core = new UpupCore({ checksumVerification: true })
-        try { await core.upload() } catch {
+        try {
+            await core.upload()
+        } catch {
             // upup-catch: no endpoint configured; upload() is only called to trigger
             // lazy pipeline construction before inspecting step names — the rejection
             // itself is expected and irrelevant to this assertion.
@@ -69,7 +77,9 @@ describe('Dynamic pipeline — boolean option → step', () => {
             imageCompression: true,
             checksumVerification: true,
         })
-        try { await core.upload() } catch {
+        try {
+            await core.upload()
+        } catch {
             // upup-catch: no endpoint configured; upload() is only called to trigger
             // lazy pipeline construction before inspecting step names — the rejection
             // itself is expected and irrelevant to this assertion.
@@ -81,7 +91,9 @@ describe('Dynamic pipeline — boolean option → step', () => {
 
     it('no boolean flags produce an empty pipeline', async () => {
         const core = new UpupCore({})
-        try { await core.upload() } catch {
+        try {
+            await core.upload()
+        } catch {
             // upup-catch: no endpoint configured; upload() is only called to trigger
             // lazy pipeline construction before inspecting step names — the rejection
             // itself is expected and irrelevant to this assertion.
@@ -148,12 +160,15 @@ describe('Dynamic pipeline — explicit pipeline', () => {
         })
         core.on('upload-error', uploadError)
         await core.addFiles([
-            Object.assign(new File(['x'], 'photo.jpg', { type: 'image/jpeg' }), {
-                id: 'photo',
-                source: FileSource.LOCAL,
-                status: UploadStatus.IDLE,
-                metadata: {},
-            }),
+            Object.assign(
+                new File(['x'], 'photo.jpg', { type: 'image/jpeg' }),
+                {
+                    id: 'photo',
+                    source: FileSource.LOCAL,
+                    status: UploadStatus.IDLE,
+                    metadata: {},
+                },
+            ),
         ])
 
         await expect(core.upload()).rejects.toThrow('pipeline boom')
@@ -162,10 +177,14 @@ describe('Dynamic pipeline — explicit pipeline', () => {
         expect([...core.files.values()]).toHaveLength(1)
         expect([...core.files.values()][0]!.status).toBe(UploadStatus.FAILED)
         expect(core.error?.message).toBe('pipeline boom')
-        expect(onError).toHaveBeenCalledWith(expect.objectContaining({ message: 'pipeline boom' }))
-        expect(uploadError).toHaveBeenCalledWith(expect.objectContaining({
-            error: expect.objectContaining({ message: 'pipeline boom' }),
-        }))
+        expect(onError).toHaveBeenCalledWith(
+            expect.objectContaining({ message: 'pipeline boom' }),
+        )
+        expect(uploadError).toHaveBeenCalledWith(
+            expect.objectContaining({
+                error: expect.objectContaining({ message: 'pipeline boom' }),
+            }),
+        )
         core.destroy()
     })
 })

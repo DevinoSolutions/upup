@@ -56,7 +56,9 @@ describe('UpupUploader boolean-prop defaults (Vue Boolean-coercion parity)', () 
         const wrapper = mount(UpupUploader, {
             slots: { default: () => h('div') },
         })
-        expect(wrapper.find('[data-testid="upup-branding"]').exists()).toBe(true)
+        expect(wrapper.find('[data-testid="upup-branding"]').exists()).toBe(
+            true,
+        )
         wrapper.unmount()
     })
 })

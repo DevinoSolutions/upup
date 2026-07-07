@@ -78,13 +78,21 @@ describe('getFilerobotTheme', () => {
         const dark = getFilerobotTheme(true)
         const light = getFilerobotTheme(false)
         expect(dark.palette['bg-primary']).not.toBe(light.palette['bg-primary'])
-        expect(dark.palette['accent-primary']).not.toBe(light.palette['accent-primary'])
-        expect(dark.palette['txt-primary']).not.toBe(light.palette['txt-primary'])
+        expect(dark.palette['accent-primary']).not.toBe(
+            light.palette['accent-primary'],
+        )
+        expect(dark.palette['txt-primary']).not.toBe(
+            light.palette['txt-primary'],
+        )
     })
 
     it('both themes include accent opacity token', () => {
-        expect(getFilerobotTheme(true).palette['accent_1_2_opacity']).toBeTruthy()
-        expect(getFilerobotTheme(false).palette['accent_1_2_opacity']).toBeTruthy()
+        expect(
+            getFilerobotTheme(true).palette['accent_1_2_opacity'],
+        ).toBeTruthy()
+        expect(
+            getFilerobotTheme(false).palette['accent_1_2_opacity'],
+        ).toBeTruthy()
     })
 })
 
@@ -144,6 +152,8 @@ describe('getImageEditorCssOverrides', () => {
     })
 
     it('dark and light overrides are different strings', () => {
-        expect(getImageEditorCssOverrides(true)).not.toBe(getImageEditorCssOverrides(false))
+        expect(getImageEditorCssOverrides(true)).not.toBe(
+            getImageEditorCssOverrides(false),
+        )
     })
 })

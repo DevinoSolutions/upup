@@ -53,7 +53,9 @@ describe('UpupCore — updateOptions sync behavior', () => {
         const core = new UpupCore({ allowedFileTypes: 'image/*' })
         core.updateOptions({ allowedFileTypes: 'text/plain' })
 
-        await core.addFiles([new File(['hello'], 'hello.txt', { type: 'text/plain' })])
+        await core.addFiles([
+            new File(['hello'], 'hello.txt', { type: 'text/plain' }),
+        ])
 
         expect(core.files.size).toBe(1)
         core.destroy()
@@ -95,8 +97,12 @@ describe('UpupCore — updateOptions sync behavior', () => {
         core.updateOptions({ autoUpload: true })
 
         expect(handler).toHaveBeenCalledTimes(2)
-        expect(handler).toHaveBeenNthCalledWith(1, { partial: { maxRetries: 1 } })
-        expect(handler).toHaveBeenNthCalledWith(2, { partial: { autoUpload: true } })
+        expect(handler).toHaveBeenNthCalledWith(1, {
+            partial: { maxRetries: 1 },
+        })
+        expect(handler).toHaveBeenNthCalledWith(2, {
+            partial: { autoUpload: true },
+        })
         core.destroy()
     })
 

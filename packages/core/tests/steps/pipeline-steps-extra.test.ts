@@ -35,22 +35,30 @@ describe('compressStep', () => {
 
     it('shouldProcess returns true for image/png', () => {
         const step = compressStep()
-        expect(step.shouldProcess!(makeFile('photo.png', 'image/png'))).toBe(true)
+        expect(step.shouldProcess!(makeFile('photo.png', 'image/png'))).toBe(
+            true,
+        )
     })
 
     it('shouldProcess returns true for image/jpeg', () => {
         const step = compressStep()
-        expect(step.shouldProcess!(makeFile('photo.jpg', 'image/jpeg'))).toBe(true)
+        expect(step.shouldProcess!(makeFile('photo.jpg', 'image/jpeg'))).toBe(
+            true,
+        )
     })
 
     it('shouldProcess returns false for application/pdf', () => {
         const step = compressStep()
-        expect(step.shouldProcess!(makeFile('doc.pdf', 'application/pdf'))).toBe(false)
+        expect(
+            step.shouldProcess!(makeFile('doc.pdf', 'application/pdf')),
+        ).toBe(false)
     })
 
     it('shouldProcess returns false for text/plain', () => {
         const step = compressStep()
-        expect(step.shouldProcess!(makeFile('notes.txt', 'text/plain'))).toBe(false)
+        expect(step.shouldProcess!(makeFile('notes.txt', 'text/plain'))).toBe(
+            false,
+        )
     })
 
     it('process returns the same file reference', async () => {
@@ -71,12 +79,16 @@ describe('exifStep', () => {
 
     it('shouldProcess returns true for image/jpeg', () => {
         const step = exifStep()
-        expect(step.shouldProcess!(makeFile('photo.jpg', 'image/jpeg'))).toBe(true)
+        expect(step.shouldProcess!(makeFile('photo.jpg', 'image/jpeg'))).toBe(
+            true,
+        )
     })
 
     it('shouldProcess returns false for video/mp4', () => {
         const step = exifStep()
-        expect(step.shouldProcess!(makeFile('clip.mp4', 'video/mp4'))).toBe(false)
+        expect(step.shouldProcess!(makeFile('clip.mp4', 'video/mp4'))).toBe(
+            false,
+        )
     })
 
     it('process returns the same file reference', async () => {
@@ -97,27 +109,39 @@ describe('heicStep', () => {
 
     it('shouldProcess returns true for image/heic type', () => {
         const step = heicStep()
-        expect(step.shouldProcess!(makeFile('photo.heic', 'image/heic'))).toBe(true)
+        expect(step.shouldProcess!(makeFile('photo.heic', 'image/heic'))).toBe(
+            true,
+        )
     })
 
     it('shouldProcess returns true for image/heif type', () => {
         const step = heicStep()
-        expect(step.shouldProcess!(makeFile('photo.heif', 'image/heif'))).toBe(true)
+        expect(step.shouldProcess!(makeFile('photo.heif', 'image/heif'))).toBe(
+            true,
+        )
     })
 
     it('shouldProcess returns true for .heic extension regardless of type', () => {
         const step = heicStep()
-        expect(step.shouldProcess!(makeFile('IMG_1234.HEIC', 'application/octet-stream'))).toBe(true)
+        expect(
+            step.shouldProcess!(
+                makeFile('IMG_1234.HEIC', 'application/octet-stream'),
+            ),
+        ).toBe(true)
     })
 
     it('shouldProcess returns false for image/jpeg', () => {
         const step = heicStep()
-        expect(step.shouldProcess!(makeFile('photo.jpg', 'image/jpeg'))).toBe(false)
+        expect(step.shouldProcess!(makeFile('photo.jpg', 'image/jpeg'))).toBe(
+            false,
+        )
     })
 
     it('shouldProcess returns false for non-heic without extension', () => {
         const step = heicStep()
-        expect(step.shouldProcess!(makeFile('file.png', 'image/png'))).toBe(false)
+        expect(step.shouldProcess!(makeFile('file.png', 'image/png'))).toBe(
+            false,
+        )
     })
 
     it('process returns the same file reference', async () => {

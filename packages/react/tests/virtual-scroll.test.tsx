@@ -76,7 +76,9 @@ vi.mock('../src/context/UploaderContext', () => ({
 }))
 
 vi.mock('../src/components/FileItem', () => ({
-    default: ({ file }: { file: UploadFile }) => <div data-testid="file-item">{file.name}</div>,
+    default: ({ file }: { file: UploadFile }) => (
+        <div data-testid="file-item">{file.name}</div>
+    ),
 }))
 vi.mock('../src/components/shared/UploaderHeader', () => ({
     default: () => <div data-testid="uploader-header" />,
@@ -99,21 +101,29 @@ describe('FileList — virtual scrolling', () => {
         _fileCount = 19
         _viewMode = 'list'
         const { container } = render(<FileList />)
-        expect(container.querySelector('[data-upup-slot="file-list-virtual"]')).toBeNull()
-        expect(container.querySelectorAll('[data-testid="file-item"]').length).toBe(19)
+        expect(
+            container.querySelector('[data-upup-slot="file-list-virtual"]'),
+        ).toBeNull()
+        expect(
+            container.querySelectorAll('[data-testid="file-item"]').length,
+        ).toBe(19)
     })
 
     it('DOES use virtual scroll when files >= threshold (20 files, list)', () => {
         _fileCount = 20
         _viewMode = 'list'
         const { container } = render(<FileList />)
-        expect(container.querySelector('[data-upup-slot="file-list-virtual"]')).not.toBeNull()
+        expect(
+            container.querySelector('[data-upup-slot="file-list-virtual"]'),
+        ).not.toBeNull()
     })
 
     it('does NOT use virtual scroll in grid mode even with many files', () => {
         _fileCount = 30
         _viewMode = 'grid'
         const { container } = render(<FileList />)
-        expect(container.querySelector('[data-upup-slot="file-list-virtual"]')).toBeNull()
+        expect(
+            container.querySelector('[data-upup-slot="file-list-virtual"]'),
+        ).toBeNull()
     })
 })

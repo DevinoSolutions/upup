@@ -14,8 +14,10 @@ import {
 } from '../src/file-utils'
 
 describe('sizeToBytes', () => {
-    it('converts MB to bytes', () => expect(sizeToBytes(1, 'MB')).toBe(1_048_576))
-    it('converts GB to bytes', () => expect(sizeToBytes(1, 'GB')).toBe(1_073_741_824))
+    it('converts MB to bytes', () =>
+        expect(sizeToBytes(1, 'MB')).toBe(1_048_576))
+    it('converts GB to bytes', () =>
+        expect(sizeToBytes(1, 'GB')).toBe(1_073_741_824))
     it('returns bytes as-is', () => expect(sizeToBytes(512, 'B')).toBe(512))
 })
 
@@ -44,33 +46,50 @@ describe('PREVIEW_MAX_TEXT_SIZE', () => {
 })
 
 describe('fileGetIsImage', () => {
-    it('detects image/png', () => expect(fileGetIsImage('image/png')).toBe(true))
-    it('rejects text/plain', () => expect(fileGetIsImage('text/plain')).toBe(false))
-    it('returns false for undefined', () => expect(fileGetIsImage(undefined)).toBe(false))
+    it('detects image/png', () =>
+        expect(fileGetIsImage('image/png')).toBe(true))
+    it('rejects text/plain', () =>
+        expect(fileGetIsImage('text/plain')).toBe(false))
+    it('returns false for undefined', () =>
+        expect(fileGetIsImage(undefined)).toBe(false))
 })
 
 describe('fileGetIsPdf', () => {
-    it('detects by mime', () => expect(fileGetIsPdf('application/pdf')).toBe(true))
-    it('detects by extension', () => expect(fileGetIsPdf(undefined, 'doc.pdf')).toBe(true))
-    it('rejects non-pdf', () => expect(fileGetIsPdf('text/plain', 'doc.txt')).toBe(false))
+    it('detects by mime', () =>
+        expect(fileGetIsPdf('application/pdf')).toBe(true))
+    it('detects by extension', () =>
+        expect(fileGetIsPdf(undefined, 'doc.pdf')).toBe(true))
+    it('rejects non-pdf', () =>
+        expect(fileGetIsPdf('text/plain', 'doc.txt')).toBe(false))
 })
 
 describe('fileGetIsText', () => {
-    it('detects text/* mime', () => expect(fileGetIsText('text/plain')).toBe(true))
-    it('returns false with no fileType', () => expect(fileGetIsText(undefined, 'data.json')).toBe(false))
-    it('detects .json with text mime', () => expect(fileGetIsText('text/json', 'data.json')).toBe(true))
+    it('detects text/* mime', () =>
+        expect(fileGetIsText('text/plain')).toBe(true))
+    it('returns false with no fileType', () =>
+        expect(fileGetIsText(undefined, 'data.json')).toBe(false))
+    it('detects .json with text mime', () =>
+        expect(fileGetIsText('text/json', 'data.json')).toBe(true))
 })
 
 describe('fileCanPreviewText', () => {
-    it('allows small text file', () => expect(fileCanPreviewText('text/plain', 'a.txt', 1000)).toBe(true))
-    it('rejects large text file', () => expect(fileCanPreviewText('text/plain', 'a.txt', 600_000)).toBe(false))
-    it('allows unknown size', () => expect(fileCanPreviewText('text/plain', 'a.txt', undefined)).toBe(true))
+    it('allows small text file', () =>
+        expect(fileCanPreviewText('text/plain', 'a.txt', 1000)).toBe(true))
+    it('rejects large text file', () =>
+        expect(fileCanPreviewText('text/plain', 'a.txt', 600_000)).toBe(false))
+    it('allows unknown size', () =>
+        expect(fileCanPreviewText('text/plain', 'a.txt', undefined)).toBe(true))
 })
 
 describe('fileGetExtension', () => {
-    it('extracts from mime', () => expect(fileGetExtension('image/png')).toBe('png'))
-    it('falls back to filename', () => expect(fileGetExtension(undefined, 'photo.jpg')).toBe('jpg'))
-    it('handles complex mime with dot', () => expect(fileGetExtension('application/vnd.ms-excel', 'file.xls')).toBe('xls'))
+    it('extracts from mime', () =>
+        expect(fileGetExtension('image/png')).toBe('png'))
+    it('falls back to filename', () =>
+        expect(fileGetExtension(undefined, 'photo.jpg')).toBe('jpg'))
+    it('handles complex mime with dot', () =>
+        expect(fileGetExtension('application/vnd.ms-excel', 'file.xls')).toBe(
+            'xls',
+        ))
 })
 
 describe('fileIs3D', () => {
@@ -80,9 +99,21 @@ describe('fileIs3D', () => {
 })
 
 describe('searchDriveFiles', () => {
-    const files = [{ name: 'Report.pdf' }, { name: 'notes.txt' }, { name: 'Report-final.pdf' }]
-    it('filters by search term', () => expect(searchDriveFiles(files, 'report')).toHaveLength(2))
-    it('returns all with empty search', () => expect(searchDriveFiles(files, '')).toHaveLength(3))
-    it('respects case sensitivity', () => expect(searchDriveFiles(files, 'Report', { caseSensitive: true })).toHaveLength(2))
-    it('supports exact match', () => expect(searchDriveFiles(files, 'notes.txt', { exactMatch: true })).toHaveLength(1))
+    const files = [
+        { name: 'Report.pdf' },
+        { name: 'notes.txt' },
+        { name: 'Report-final.pdf' },
+    ]
+    it('filters by search term', () =>
+        expect(searchDriveFiles(files, 'report')).toHaveLength(2))
+    it('returns all with empty search', () =>
+        expect(searchDriveFiles(files, '')).toHaveLength(3))
+    it('respects case sensitivity', () =>
+        expect(
+            searchDriveFiles(files, 'Report', { caseSensitive: true }),
+        ).toHaveLength(2))
+    it('supports exact match', () =>
+        expect(
+            searchDriveFiles(files, 'notes.txt', { exactMatch: true }),
+        ).toHaveLength(1))
 })

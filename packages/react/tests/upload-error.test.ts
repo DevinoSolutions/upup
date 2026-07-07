@@ -14,7 +14,9 @@ describe('UploadError — defaults', () => {
     })
 
     it('sets message correctly', () => {
-        expect(new UploadError('something went wrong').message).toBe('something went wrong')
+        expect(new UploadError('something went wrong').message).toBe(
+            'something went wrong',
+        )
     })
 
     it('name is UploadError', () => {
@@ -22,7 +24,9 @@ describe('UploadError — defaults', () => {
     })
 
     it('defaults type to UNKNOWN_UPLOAD_ERROR', () => {
-        expect(new UploadError('oops').type).toBe(UploadErrorType.UNKNOWN_UPLOAD_ERROR)
+        expect(new UploadError('oops').type).toBe(
+            UploadErrorType.UNKNOWN_UPLOAD_ERROR,
+        )
     })
 
     it('defaults retryable to false', () => {
@@ -39,22 +43,39 @@ describe('UploadError — defaults', () => {
 // ─────────────────────────────────────────────
 describe('UploadError — explicit values', () => {
     it('sets type when provided', () => {
-        const err = new UploadError('forbidden', UploadErrorType.PERMISSION_ERROR)
+        const err = new UploadError(
+            'forbidden',
+            UploadErrorType.PERMISSION_ERROR,
+        )
         expect(err.type).toBe(UploadErrorType.PERMISSION_ERROR)
     })
 
     it('sets retryable=true when provided', () => {
-        const err = new UploadError('network', UploadErrorType.UNKNOWN_UPLOAD_ERROR, true)
+        const err = new UploadError(
+            'network',
+            UploadErrorType.UNKNOWN_UPLOAD_ERROR,
+            true,
+        )
         expect(err.retryable).toBe(true)
     })
 
     it('sets explicit status when provided', () => {
-        const err = new UploadError('not found', UploadErrorType.PRESIGNED_URL_ERROR, false, 404)
+        const err = new UploadError(
+            'not found',
+            UploadErrorType.PRESIGNED_URL_ERROR,
+            false,
+            404,
+        )
         expect(err.status).toBe(404)
     })
 
     it('falls back to 500 when status is undefined', () => {
-        const err = new UploadError('error', UploadErrorType.UNKNOWN_UPLOAD_ERROR, false, undefined)
+        const err = new UploadError(
+            'error',
+            UploadErrorType.UNKNOWN_UPLOAD_ERROR,
+            false,
+            undefined,
+        )
         expect(err.status).toBe(500)
     })
 })
@@ -63,10 +84,13 @@ describe('UploadError — explicit values', () => {
 // All error types
 // ─────────────────────────────────────────────
 describe('UploadError — all UploadErrorType values', () => {
-    it.each(Object.values(UploadErrorType))('can be constructed with type %s', (type) => {
-        const err = new UploadError('test', type)
-        expect(err.type).toBe(type)
-    })
+    it.each(Object.values(UploadErrorType))(
+        'can be constructed with type %s',
+        type => {
+            const err = new UploadError('test', type)
+            expect(err.type).toBe(type)
+        },
+    )
 })
 
 // ─────────────────────────────────────────────
@@ -99,7 +123,11 @@ describe('UploadError — catch behavior', () => {
     it('preserves retryable after catch', () => {
         let caught: unknown
         try {
-            throw new UploadError('retry me', UploadErrorType.CORS_CONFIG_ERROR, true)
+            throw new UploadError(
+                'retry me',
+                UploadErrorType.CORS_CONFIG_ERROR,
+                true,
+            )
         } catch (e) {
             // upup-catch: test deliberately captures the thrown error to assert its retryable flag survives the catch
             caught = e

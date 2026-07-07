@@ -3,7 +3,6 @@ import { renderHook } from '@testing-library/react'
 import { useUpupUpload } from '../src/use-upup-upload'
 
 describe('useUpupUpload — accessibility and prop-getter states', () => {
-
     it('getDropzoneProps includes aria-dropeffect=none when not dragging', () => {
         const { result } = renderHook(() =>
             useUpupUpload({ provider: 'S3' as const }),

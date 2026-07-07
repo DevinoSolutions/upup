@@ -13,9 +13,16 @@ describe('ServerTransfer — constructor', () => {
     it('strips trailing slash from serverUrl', async () => {
         mockFetch.mockResolvedValue({
             ok: true,
-            json: () => Promise.resolve({ provider: 'dropbox', fileId: 'f1', status: 'ok' }),
+            json: () =>
+                Promise.resolve({
+                    provider: 'dropbox',
+                    fileId: 'f1',
+                    status: 'ok',
+                }),
         })
-        const transfer = new ServerTransfer({ serverUrl: 'https://api.example.com/' })
+        const transfer = new ServerTransfer({
+            serverUrl: 'https://api.example.com/',
+        })
         await transfer.transfer('dropbox', 'f1')
         expect(mockFetch).toHaveBeenCalledWith(
             'https://api.example.com/files/dropbox/transfer',
@@ -26,7 +33,12 @@ describe('ServerTransfer — constructor', () => {
     it('includes custom headers on requests', async () => {
         mockFetch.mockResolvedValue({
             ok: true,
-            json: () => Promise.resolve({ provider: 'onedrive', fileId: 'f1', status: 'ok' }),
+            json: () =>
+                Promise.resolve({
+                    provider: 'onedrive',
+                    fileId: 'f1',
+                    status: 'ok',
+                }),
         })
         const transfer = new ServerTransfer({
             serverUrl: 'https://api.example.com',
@@ -44,9 +56,16 @@ describe('ServerTransfer — constructor', () => {
     it('maps googleDrive to google-drive slug', async () => {
         mockFetch.mockResolvedValue({
             ok: true,
-            json: () => Promise.resolve({ provider: 'google-drive', fileId: 'g1', status: 'ok' }),
+            json: () =>
+                Promise.resolve({
+                    provider: 'google-drive',
+                    fileId: 'g1',
+                    status: 'ok',
+                }),
         })
-        const transfer = new ServerTransfer({ serverUrl: 'https://api.example.com' })
+        const transfer = new ServerTransfer({
+            serverUrl: 'https://api.example.com',
+        })
         await transfer.transfer('googleDrive', 'g1')
         expect(mockFetch).toHaveBeenCalledWith(
             expect.stringContaining('/files/google-drive/transfer'),

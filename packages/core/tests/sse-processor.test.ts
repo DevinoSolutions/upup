@@ -27,12 +27,20 @@ describe('SSEProcessor', () => {
             mockSource.onerror = null
             // Proxy handler assignments back to mockSource
             Object.defineProperty(this, 'onmessage', {
-                set(fn) { mockSource.onmessage = fn },
-                get() { return mockSource.onmessage },
+                set(fn) {
+                    mockSource.onmessage = fn
+                },
+                get() {
+                    return mockSource.onmessage
+                },
             })
             Object.defineProperty(this, 'onerror', {
-                set(fn) { mockSource.onerror = fn },
-                get() { return mockSource.onerror },
+                set(fn) {
+                    mockSource.onerror = fn
+                },
+                get() {
+                    return mockSource.onerror
+                },
             })
             this.close = mockClose
         })
@@ -41,21 +49,38 @@ describe('SSEProcessor', () => {
 
     it('opens an EventSource with the correct URL', () => {
         const processor = new SSEProcessor()
-        processor.subscribe('abc', 'https://api.example.com/process', vi.fn(), vi.fn())
-        expect(EventSource).toHaveBeenCalledWith('https://api.example.com/process?key=abc')
+        processor.subscribe(
+            'abc',
+            'https://api.example.com/process',
+            vi.fn(),
+            vi.fn(),
+        )
+        expect(EventSource).toHaveBeenCalledWith(
+            'https://api.example.com/process?key=abc',
+        )
     })
 
     it('calls onMessage when data arrives', () => {
         const processor = new SSEProcessor()
         const onMessage = vi.fn()
-        processor.subscribe('abc', 'https://api.example.com/process', onMessage, vi.fn())
+        processor.subscribe(
+            'abc',
+            'https://api.example.com/process',
+            onMessage,
+            vi.fn(),
+        )
         mockSource.onmessage!({ data: '{"status":"done"}' })
         expect(onMessage).toHaveBeenCalledWith({ status: 'done' })
     })
 
     it('closes the source after message', () => {
         const processor = new SSEProcessor()
-        processor.subscribe('abc', 'https://api.example.com/process', vi.fn(), vi.fn())
+        processor.subscribe(
+            'abc',
+            'https://api.example.com/process',
+            vi.fn(),
+            vi.fn(),
+        )
         mockSource.onmessage!({ data: '{}' })
         expect(mockClose).toHaveBeenCalled()
     })
@@ -63,14 +88,24 @@ describe('SSEProcessor', () => {
     it('calls onError on stream failure', () => {
         const processor = new SSEProcessor()
         const onError = vi.fn()
-        processor.subscribe('abc', 'https://api.example.com/process', vi.fn(), onError)
+        processor.subscribe(
+            'abc',
+            'https://api.example.com/process',
+            vi.fn(),
+            onError,
+        )
         mockSource.onerror!()
         expect(onError).toHaveBeenCalledWith(expect.any(Error))
     })
 
     it('destroy closes all connections', () => {
         const processor = new SSEProcessor()
-        processor.subscribe('a', 'https://api.example.com/process', vi.fn(), vi.fn())
+        processor.subscribe(
+            'a',
+            'https://api.example.com/process',
+            vi.fn(),
+            vi.fn(),
+        )
         processor.destroy()
         expect(mockClose).toHaveBeenCalled()
     })

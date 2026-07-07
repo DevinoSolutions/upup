@@ -55,7 +55,9 @@ describe('Restrictions — minFileSize', () => {
 describe('Restrictions — accept types', () => {
     it('rejects file with wrong MIME type', async () => {
         const core = new UpupCore({ allowedFileTypes: 'image/png' })
-        await expect(core.addFiles([makeFile('doc.txt', 10, 'text/plain')])).rejects.toThrow()
+        await expect(
+            core.addFiles([makeFile('doc.txt', 10, 'text/plain')]),
+        ).rejects.toThrow()
         core.destroy()
     })
 
@@ -81,7 +83,9 @@ describe('Restrictions — accept types', () => {
     })
 
     it('accepts from comma-separated accept list', async () => {
-        const core = new UpupCore({ allowedFileTypes: 'image/png, text/plain, .pdf' })
+        const core = new UpupCore({
+            allowedFileTypes: 'image/png, text/plain, .pdf',
+        })
         await core.addFiles([makeFile('doc.txt', 10, 'text/plain')])
         expect(core.files.size).toBe(1)
         core.destroy()
@@ -153,7 +157,9 @@ describe('Restrictions — onBeforeFileAdded', () => {
 
     it('accepts when callback returns a File object', async () => {
         const replacement = makeFile('replaced.txt', 5, 'text/plain')
-        const core = new UpupCore({ onBeforeFileAdded: async () => replacement })
+        const core = new UpupCore({
+            onBeforeFileAdded: async () => replacement,
+        })
         await core.addFiles([makeFile('original.txt', 5)])
         expect(core.files.size).toBe(1)
         core.destroy()

@@ -76,7 +76,9 @@ describe('EventEmitter — extended', () => {
     it('handler can unsubscribe itself during emit', () => {
         const emitter = new EventEmitter()
         const other = vi.fn()
-        const selfRemove = () => { unsub() }
+        const selfRemove = () => {
+            unsub()
+        }
         const unsub = emitter.on('self-remove', selfRemove)
         emitter.on('self-remove', other)
         emitter.emit('self-remove')
@@ -89,7 +91,10 @@ describe('EventEmitter — extended', () => {
         const emitter = new EventEmitter()
         const handler = vi.fn()
         emitter.on('complex', handler)
-        const payload = { nested: { arr: [1, 2], fn: () => {} }, date: new Date() }
+        const payload = {
+            nested: { arr: [1, 2], fn: () => {} },
+            date: new Date(),
+        }
         emitter.emit('complex', payload)
         expect(handler).toHaveBeenCalledWith(payload)
     })

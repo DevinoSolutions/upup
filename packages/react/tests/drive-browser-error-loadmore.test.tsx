@@ -58,7 +58,9 @@ describe('DriveBrowser — error banner + load-more (F-124, F-125)', () => {
             />,
         )
 
-        const banner = container.querySelector('[data-testid="upup-drive-error"]')
+        const banner = container.querySelector(
+            '[data-testid="upup-drive-error"]',
+        )
         expect(banner).not.toBeNull()
         expect(banner?.textContent).toContain('nope')
         expect(banner?.getAttribute('role')).toBe('alert')

@@ -14,12 +14,19 @@ describe('useUpupUpload — flat file restrictions', () => {
             }),
         )
         await act(async () => {
-            await result.current.addFiles([makeFile('a.txt'), makeFile('b.txt')])
+            await result.current.addFiles([
+                makeFile('a.txt'),
+                makeFile('b.txt'),
+            ])
         })
         expect(result.current.files.length).toBe(2)
 
         await act(async () => {
-            try { await result.current.addFiles([makeFile('c.txt')]) } catch { /* upup-catch: expected rejection in this negative-path test; asserted below */ }
+            try {
+                await result.current.addFiles([makeFile('c.txt')])
+            } catch {
+                /* upup-catch: expected rejection in this negative-path test; asserted below */
+            }
         })
         expect(result.current.files.length).toBe(2) // still 2
     })
@@ -32,7 +39,11 @@ describe('useUpupUpload — flat file restrictions', () => {
             }),
         )
         await act(async () => {
-            try { await result.current.addFiles([makeFile('big.txt', 50)]) } catch { /* upup-catch: expected rejection in this negative-path test; asserted below */ }
+            try {
+                await result.current.addFiles([makeFile('big.txt', 50)])
+            } catch {
+                /* upup-catch: expected rejection in this negative-path test; asserted below */
+            }
         })
         expect(result.current.files.length).toBe(0)
     })
@@ -45,12 +56,20 @@ describe('useUpupUpload — flat file restrictions', () => {
             }),
         )
         await act(async () => {
-            try { await result.current.addFiles([makeFile('doc.txt', 10, 'text/plain')]) } catch { /* upup-catch: expected rejection in this negative-path test; asserted below */ }
+            try {
+                await result.current.addFiles([
+                    makeFile('doc.txt', 10, 'text/plain'),
+                ])
+            } catch {
+                /* upup-catch: expected rejection in this negative-path test; asserted below */
+            }
         })
         expect(result.current.files.length).toBe(0)
 
         await act(async () => {
-            await result.current.addFiles([makeFile('pic.png', 10, 'image/png')])
+            await result.current.addFiles([
+                makeFile('pic.png', 10, 'image/png'),
+            ])
         })
         expect(result.current.files.length).toBe(1)
     })
@@ -92,7 +111,11 @@ describe('useUpupUpload — onBeforeFileAdded', () => {
             }),
         )
         await act(async () => {
-            await result.current.addFiles([makeFile('a.txt'), makeFile('b.txt'), makeFile('c.txt')])
+            await result.current.addFiles([
+                makeFile('a.txt'),
+                makeFile('b.txt'),
+                makeFile('c.txt'),
+            ])
         })
         expect(cb).toHaveBeenCalledTimes(3)
     })
@@ -111,7 +134,9 @@ describe('useUpupUpload — combined options', () => {
             }),
         )
         await act(async () => {
-            await result.current.addFiles([makeFile('ok.txt', 10, 'text/plain')])
+            await result.current.addFiles([
+                makeFile('ok.txt', 10, 'text/plain'),
+            ])
         })
         expect(result.current.files.length).toBe(1)
         expect(cb).toHaveBeenCalledTimes(1)

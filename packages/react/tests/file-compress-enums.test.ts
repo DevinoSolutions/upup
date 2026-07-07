@@ -5,7 +5,12 @@ import {
     PREVIEW_TEXT_TRUNCATE_LENGTH,
 } from '../src/lib/file'
 import { FacingMode } from '../src/hooks/useCameraUploader'
-import { FileSource, StorageProvider, UploadStatus, type UploadFile } from '@upup/core'
+import {
+    FileSource,
+    StorageProvider,
+    UploadStatus,
+    type UploadFile,
+} from '@upup/core'
 
 // ─────────────────────────────────────────────
 // Preview size constants

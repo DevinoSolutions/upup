@@ -37,7 +37,12 @@ describe('adapter plugin stubs', () => {
 
     it('plugins accept emitter via init and release via destroy', () => {
         const emitter = new EventEmitter()
-        const plugins = [new DropboxPlugin(), new GoogleDrivePlugin(), new BoxPlugin(), new OneDrivePlugin()]
+        const plugins = [
+            new DropboxPlugin(),
+            new GoogleDrivePlugin(),
+            new BoxPlugin(),
+            new OneDrivePlugin(),
+        ]
         plugins.forEach(p => {
             p.init(emitter)
             p.destroy()

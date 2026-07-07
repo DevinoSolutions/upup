@@ -1,9 +1,19 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
-import { fileFingerprint, saveSession, loadSession, updateSessionProgress, removeSession, clearAllSessions, MultipartSession } from '@upup/core/internal'
+import {
+    fileFingerprint,
+    saveSession,
+    loadSession,
+    updateSessionProgress,
+    removeSession,
+    clearAllSessions,
+    MultipartSession,
+} from '@upup/core/internal'
 
 const STORAGE_PREFIX = 'upup_mp_'
 
-function makeSession(overrides: Partial<MultipartSession> = {}): MultipartSession {
+function makeSession(
+    overrides: Partial<MultipartSession> = {},
+): MultipartSession {
     return {
         provider: 'S3',
         key: 'uploads/test-file.txt',
@@ -14,7 +24,12 @@ function makeSession(overrides: Partial<MultipartSession> = {}): MultipartSessio
     }
 }
 
-function makeFile(name = 'test.txt', size = 1024, lastModified = 1700000000000, type = 'text/plain'): File {
+function makeFile(
+    name = 'test.txt',
+    size = 1024,
+    lastModified = 1700000000000,
+    type = 'text/plain',
+): File {
     const file = new File(['x'.repeat(size)], name, { type, lastModified })
     return file
 }
@@ -105,7 +120,9 @@ describe('saveSession + loadSession', () => {
 
     it('returns null and removes session when TTL is exceeded', () => {
         const fp = 'expired-fp'
-        const expired = makeSession({ updatedAt: Date.now() - 25 * 60 * 60 * 1000 }) // 25h ago
+        const expired = makeSession({
+            updatedAt: Date.now() - 25 * 60 * 60 * 1000,
+        }) // 25h ago
         saveSession(fp, expired)
         const loaded = loadSession(fp)
         expect(loaded).toBeNull()

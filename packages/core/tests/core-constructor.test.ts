@@ -7,7 +7,9 @@ import type { CoreOptions } from '../src/options/types'
 // no longer special-cases that shape.
 describe('UpupCore constructor — no implicit hosted apiKey URL', () => {
     it('does not set serverUrl from apiKey-like legacy input', () => {
-        const core = new UpupCore({ apiKey: 'key_123' } as unknown as CoreOptions)
+        const core = new UpupCore({
+            apiKey: 'key_123',
+        } as unknown as CoreOptions)
         expect(core.options.serverUrl).toBeUndefined()
         core.destroy()
     })
@@ -55,8 +57,15 @@ describe('UpupCore constructor — flat option storage', () => {
 describe('UpupCore constructor — cloudDrives', () => {
     it('stores the camelCase cloudDrives config as-is (all four drives)', () => {
         const cloudDrives = {
-            googleDrive: { clientId: 'gd-id', apiKey: 'gd-key', appId: 'gd-app' },
-            oneDrive: { clientId: 'od-id', redirectUri: 'https://app.example/od' },
+            googleDrive: {
+                clientId: 'gd-id',
+                apiKey: 'gd-key',
+                appId: 'gd-app',
+            },
+            oneDrive: {
+                clientId: 'od-id',
+                redirectUri: 'https://app.example/od',
+            },
             dropbox: { clientId: 'db-id' },
             box: { clientId: 'bx-id', redirectUri: 'https://app.example/box' },
         }

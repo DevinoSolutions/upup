@@ -25,7 +25,8 @@ describe('URL source file naming', () => {
             deriveFetchedFileName(
                 'https://cdn.example.com/files/download',
                 response({
-                    'content-disposition': 'attachment; filename="report final.txt"',
+                    'content-disposition':
+                        'attachment; filename="report final.txt"',
                     'content-type': 'text/plain',
                 }),
                 blob,

@@ -3,8 +3,7 @@ import { UpupCore } from '../src/core'
 import { UploadStatus } from '@upup/core'
 import type { UploadFile } from '@upup/core'
 
-const makeFile = (name: string) =>
-    new File(['x'], name, { type: 'text/plain' })
+const makeFile = (name: string) => new File(['x'], name, { type: 'text/plain' })
 
 describe('UpupCore — snapshot extended', () => {
     it('getSnapshot captures current files and status', async () => {

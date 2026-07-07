@@ -84,7 +84,9 @@ describe('createSecureStorage — expiry', () => {
         const storage = createSecureStorage()
         // Manually inject an expired entry by bypassing setItem
         const oldTs = Date.now() - 31 * 24 * 60 * 60 * 1000
-        const payload = btoa(JSON.stringify({ value: 'stale', timestamp: oldTs }))
+        const payload = btoa(
+            JSON.stringify({ value: 'stale', timestamp: oldTs }),
+        )
         const encodedKey = btoa('k:expiredKey')
         localStorage.setItem(encodedKey, payload)
         expect(storage.getItem('expiredKey')).toBeNull()

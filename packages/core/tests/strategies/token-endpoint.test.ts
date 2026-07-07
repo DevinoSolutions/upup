@@ -18,20 +18,28 @@ interface FetchCallOpts {
 // ─────────────────────────────────────────────
 describe('TokenEndpointCredentials — constructor', () => {
     it('instantiates without throwing', () => {
-        expect(() => new TokenEndpointCredentials({ url: 'https://example.com/presign' })).not.toThrow()
+        expect(
+            () =>
+                new TokenEndpointCredentials({
+                    url: 'https://example.com/presign',
+                }),
+        ).not.toThrow()
     })
 
     it('accepts optional headers', () => {
-        expect(() =>
-            new TokenEndpointCredentials({
-                url: 'https://example.com/presign',
-                headers: { Authorization: 'Bearer token' },
-            }),
+        expect(
+            () =>
+                new TokenEndpointCredentials({
+                    url: 'https://example.com/presign',
+                    headers: { Authorization: 'Bearer token' },
+                }),
         ).not.toThrow()
     })
 
     it('has a getPresignedUrl method', () => {
-        const creds = new TokenEndpointCredentials({ url: 'https://example.com/presign' })
+        const creds = new TokenEndpointCredentials({
+            url: 'https://example.com/presign',
+        })
         expect(typeof creds.getPresignedUrl).toBe('function')
     })
 })
@@ -40,7 +48,10 @@ describe('TokenEndpointCredentials — constructor', () => {
 // getPresignedUrl — success path
 // ─────────────────────────────────────────────
 describe('TokenEndpointCredentials — getPresignedUrl success', () => {
-    const mockResponse = { url: 'https://s3.example.com/upload', key: 'uploads/photo.jpg' }
+    const mockResponse = {
+        url: 'https://s3.example.com/upload',
+        key: 'uploads/photo.jpg',
+    }
 
     beforeEach(() => {
         vi.stubGlobal(
@@ -57,13 +68,20 @@ describe('TokenEndpointCredentials — getPresignedUrl success', () => {
     })
 
     it('calls fetch with the configured URL', async () => {
-        const creds = new TokenEndpointCredentials({ url: 'https://example.com/presign' })
+        const creds = new TokenEndpointCredentials({
+            url: 'https://example.com/presign',
+        })
         await creds.getPresignedUrl(FILE_META)
-        expect(fetch).toHaveBeenCalledWith('https://example.com/presign', expect.any(Object))
+        expect(fetch).toHaveBeenCalledWith(
+            'https://example.com/presign',
+            expect.any(Object),
+        )
     })
 
     it('sends a POST request', async () => {
-        const creds = new TokenEndpointCredentials({ url: 'https://example.com/presign' })
+        const creds = new TokenEndpointCredentials({
+            url: 'https://example.com/presign',
+        })
         await creds.getPresignedUrl(FILE_META)
         const [, opts] = vi.mocked(fetch).mock.calls[0] as unknown as [
             string,
@@ -73,7 +91,9 @@ describe('TokenEndpointCredentials — getPresignedUrl success', () => {
     })
 
     it('sends Content-Type: application/json', async () => {
-        const creds = new TokenEndpointCredentials({ url: 'https://example.com/presign' })
+        const creds = new TokenEndpointCredentials({
+            url: 'https://example.com/presign',
+        })
         await creds.getPresignedUrl(FILE_META)
         const [, opts] = vi.mocked(fetch).mock.calls[0] as unknown as [
             string,
@@ -83,7 +103,9 @@ describe('TokenEndpointCredentials — getPresignedUrl success', () => {
     })
 
     it('sends file metadata in the request body', async () => {
-        const creds = new TokenEndpointCredentials({ url: 'https://example.com/presign' })
+        const creds = new TokenEndpointCredentials({
+            url: 'https://example.com/presign',
+        })
         await creds.getPresignedUrl(FILE_META)
         const [, opts] = vi.mocked(fetch).mock.calls[0] as unknown as [
             string,
@@ -110,7 +132,9 @@ describe('TokenEndpointCredentials — getPresignedUrl success', () => {
     })
 
     it('returns the parsed JSON response', async () => {
-        const creds = new TokenEndpointCredentials({ url: 'https://example.com/presign' })
+        const creds = new TokenEndpointCredentials({
+            url: 'https://example.com/presign',
+        })
         const result = await creds.getPresignedUrl(FILE_META)
         expect(result).toEqual(mockResponse)
     })
@@ -127,34 +151,63 @@ describe('TokenEndpointCredentials — getPresignedUrl errors', () => {
     it('throws UpupNetworkError when response is not ok (403)', async () => {
         vi.stubGlobal(
             'fetch',
-            vi.fn().mockResolvedValue({ ok: false, status: 403, statusText: 'Forbidden' }),
+            vi.fn().mockResolvedValue({
+                ok: false,
+                status: 403,
+                statusText: 'Forbidden',
+            }),
         )
-        const creds = new TokenEndpointCredentials({ url: 'https://example.com/presign' })
-        await expect(creds.getPresignedUrl(FILE_META)).rejects.toBeInstanceOf(UpupNetworkError)
+        const creds = new TokenEndpointCredentials({
+            url: 'https://example.com/presign',
+        })
+        await expect(creds.getPresignedUrl(FILE_META)).rejects.toBeInstanceOf(
+            UpupNetworkError,
+        )
     })
 
     it('throws UpupNetworkError when response is 500', async () => {
         vi.stubGlobal(
             'fetch',
-            vi.fn().mockResolvedValue({ ok: false, status: 500, statusText: 'Internal Server Error' }),
+            vi.fn().mockResolvedValue({
+                ok: false,
+                status: 500,
+                statusText: 'Internal Server Error',
+            }),
         )
-        const creds = new TokenEndpointCredentials({ url: 'https://example.com/presign' })
-        await expect(creds.getPresignedUrl(FILE_META)).rejects.toBeInstanceOf(UpupNetworkError)
+        const creds = new TokenEndpointCredentials({
+            url: 'https://example.com/presign',
+        })
+        await expect(creds.getPresignedUrl(FILE_META)).rejects.toBeInstanceOf(
+            UpupNetworkError,
+        )
     })
 
     it('includes the HTTP status in the thrown error', async () => {
         vi.stubGlobal(
             'fetch',
-            vi.fn().mockResolvedValue({ ok: false, status: 401, statusText: 'Unauthorized' }),
+            vi.fn().mockResolvedValue({
+                ok: false,
+                status: 401,
+                statusText: 'Unauthorized',
+            }),
         )
-        const creds = new TokenEndpointCredentials({ url: 'https://example.com/presign' })
+        const creds = new TokenEndpointCredentials({
+            url: 'https://example.com/presign',
+        })
         const err = await creds.getPresignedUrl(FILE_META).catch(e => e)
         expect(err.status).toBe(401)
     })
 
     it('propagates network-level fetch errors', async () => {
-        vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('Network unreachable')))
-        const creds = new TokenEndpointCredentials({ url: 'https://example.com/presign' })
-        await expect(creds.getPresignedUrl(FILE_META)).rejects.toThrow('Network unreachable')
+        vi.stubGlobal(
+            'fetch',
+            vi.fn().mockRejectedValue(new Error('Network unreachable')),
+        )
+        const creds = new TokenEndpointCredentials({
+            url: 'https://example.com/presign',
+        })
+        await expect(creds.getPresignedUrl(FILE_META)).rejects.toThrow(
+            'Network unreachable',
+        )
     })
 })
