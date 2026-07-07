@@ -75,6 +75,9 @@ jobs:
             - name: Env schema drift
               run: pnpm run env:check
 
+            - name: Retired-vocabulary census # naming sweeps must land in EVERY layer (identifiers, DOM strings, fixtures) — see scripts/check-retired-vocab.mjs
+              run: pnpm run vocab:check
+
             - name: Archive code coverage results
               uses: actions/upload-artifact@v4
               with:

@@ -27,7 +27,7 @@ import { LayoutListIconComponent } from './icons/layout-list-icon.component'
  *   - handleCancel (() => void) — passed from the parent (UploaderPanel) on cancel button click.
  */
 @Component({
-    selector: 'upup-main-box-header',
+    selector: 'upup-uploader-header',
     standalone: true,
     imports: [
         LayoutGridIconComponent,

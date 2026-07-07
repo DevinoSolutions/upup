@@ -29,7 +29,7 @@ export function uploaderPanel(ctx: UploaderContext): TemplateResult {
     return html`
         <div
             data-testid="upup-dropzone"
-            data-upup-slot="main-box"
+            data-upup-slot="uploader-panel"
             role="button"
             tabindex="0"
             aria-label=${tr.dropzoneLabel}

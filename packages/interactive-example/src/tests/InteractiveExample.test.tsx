@@ -8,7 +8,9 @@ describe('InteractiveExample', () => {
     it('renders sidebar and preview by default', () => {
         render(<InteractiveExample />)
         expect(screen.getByText('Upload')).toBeTruthy()
-        expect(document.querySelector('[data-upup-slot="main-box"]')).toBeTruthy()
+        expect(
+            document.querySelector('[data-upup-slot="uploader-panel"]'),
+        ).toBeTruthy()
     })
 
     it('Code tab switches to show generated code', async () => {
@@ -27,7 +29,9 @@ describe('InteractiveExample', () => {
         render(<InteractiveExample focus={['mini']} />)
         expect(screen.queryByText('Upload')).toBeNull()
         expect(screen.getByText('Mini mode')).toBeTruthy()
-        expect(document.querySelector('[data-upup-slot="main-box"]')).toBeTruthy()
+        expect(
+            document.querySelector('[data-upup-slot="uploader-panel"]'),
+        ).toBeTruthy()
     })
 
     it('defaultExpanded opens specified sections', () => {

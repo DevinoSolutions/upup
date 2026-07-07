@@ -70,7 +70,7 @@ const ESTIMATED_ITEM_HEIGHT = 76
             data-upup-slot="file-list"
             [class]="fileListClass"
         >
-            <upup-main-box-header [handleCancel]="handleCancelFn" />
+            <upup-uploader-header [handleCancel]="handleCancelFn" />
 
             <!-- Scroll container — @ViewChild binds this ref for the virtualizer -->
             <div #scrollContainer [class]="scrollContainerClass">

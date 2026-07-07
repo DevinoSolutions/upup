@@ -22,13 +22,13 @@ import { FileListComponent } from './file-list.component'
  * Drag/drop/paste/keydown logic 1:1 from useUploaderPanel.ts.
  */
 @Component({
-    selector: 'upup-main-box',
+    selector: 'upup-uploader-panel',
     standalone: true,
     imports: [SourceViewComponent, SourceSelectorComponent, FileListComponent],
     template: `
         <div
             data-testid="upup-dropzone"
-            data-upup-slot="main-box"
+            data-upup-slot="uploader-panel"
             role="button"
             tabindex="0"
             [attr.aria-label]="store.translations?.().dropzoneLabel"

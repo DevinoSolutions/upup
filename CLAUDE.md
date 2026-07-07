@@ -148,6 +148,10 @@ pnpm run lint           # eslint flat-config: 9 @upup/* packages + 3 apps (playg
 pnpm run lint:ox        # oxlint fast first-line (built-ins only, seconds)
 pnpm run knip           # dead-code / unused-dep detection (workspace-aware)
 pnpm run env:check      # .env.minio.example ↔ validate-env schema drift guard
+pnpm run vocab:check    # retired-vocabulary census: a naming sweep must land in
+                        # EVERY layer (identifiers, DOM strings, templates,
+                        # fixtures) — fails on any surviving retired token;
+                        # exceptions are self-liquidating (a stale entry fails)
 pnpm run smoke:packages # real npm-tarball consumer (packs all 9, isolated vite
                         # build, dist-shape + entry-budget asserts). Slow (~5m);
                         # run it after anything that can grow core/react's
@@ -309,6 +313,12 @@ recurring visual traps it will never flag — check these live:
   the canon is now `data-testid="upup-source-selector"` /
   `data-testid="upup-source-view"`, `data-upup-slot="source-selector"` /
   `"source-view"`, and the `upup-source-*` / `uploader-source-*` CSS hooks.
+  The panel's DOM strings joined the canon on 2026-07-07 (the one family N4
+  missed, caught by the grading audit): `data-upup-slot="uploader-panel"` and
+  the Angular selectors `upup-uploader-panel` / `upup-uploader-header` —
+  `main-box` is retired in every layer, and `pnpm run vocab:check` (CI-gated)
+  now fails on ANY retired token surviving in any layer, so a sweep can no
+  longer half-land.
   Renaming any of these is again a cross-framework breaking change — sweep
   every package, the e2e helpers, and `parity-fixtures.json` in one pass (same
   codemod method). Do not introduce new `Adapter*`/`Root*` names, and do not

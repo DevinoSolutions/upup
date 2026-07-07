@@ -23,7 +23,7 @@ describe('vanilla dropzone border recovery', () => {
         const up = createUploader(host, { sources: ['local'], maxFiles: 5 })
         const hasBorder = () => {
             const box = host.querySelector(
-                '[data-upup-slot="main-box"]',
+                '[data-upup-slot="uploader-panel"]',
             ) as HTMLElement | null
             return !!box && box.classList.contains('upup-border')
         }

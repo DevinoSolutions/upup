@@ -30,6 +30,7 @@
         "e2e": "turbo run build && pnpm --filter e2e-test test:e2e && dotenv -e local-dev/.env.minio -- pnpm --filter e2e-test test:e2e:cf",
         "e2e:minio:up": "dotenv -e local-dev/.env.minio -- node scripts/validate-env.mjs && dotenv -e local-dev/.env.minio -- docker compose up -d",
         "env:check": "node scripts/validate-env.mjs --example local-dev/.env.minio.example",
+        "vocab:check": "node scripts/check-retired-vocab.mjs",
         "e2e:minio:down": "docker compose down -v",
         "e2e:minio:server": "dotenv -e local-dev/.env.minio -- node scripts/upup-e2e-server.mjs",
         "e2e:minio:test": "dotenv -e local-dev/.env.minio -- pnpm --filter @upup/server exec vitest run tests/integration",

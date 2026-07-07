@@ -11,7 +11,7 @@ describe('UploaderPanel accessibility', () => {
             <UpupUploader provider="s3" serverUrl="https://example.com" />,
         )
         const uploaderPanel = container.querySelector(
-            '[data-upup-slot="main-box"]',
+            '[data-upup-slot="uploader-panel"]',
         )
         expect(uploaderPanel?.getAttribute('aria-dropeffect')).toBe('none')
     })
@@ -21,7 +21,7 @@ describe('UploaderPanel accessibility', () => {
             <UpupUploader provider="s3" serverUrl="https://example.com" />,
         )
         const uploaderPanel = container.querySelector(
-            '[data-upup-slot="main-box"]',
+            '[data-upup-slot="uploader-panel"]',
         ) as HTMLElement
         expect(uploaderPanel?.getAttribute('role')).toBe('button')
         expect(
@@ -34,7 +34,7 @@ describe('UploaderPanel accessibility', () => {
             <UpupUploader provider="s3" serverUrl="https://example.com" />,
         )
         const uploaderPanel = container.querySelector(
-            '[data-upup-slot="main-box"]',
+            '[data-upup-slot="uploader-panel"]',
         ) as HTMLElement
         const hasLabel =
             uploaderPanel?.hasAttribute('aria-label') ||

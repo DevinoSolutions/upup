@@ -4,7 +4,7 @@ import { UpupUploader } from '../src'
 
 const REQUIRED_SLOTS = [
     'root',
-    'main-box',
+    'uploader-panel',
     'source-selector',
     'file-list',
     'progress-bar',

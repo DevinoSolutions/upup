@@ -11,7 +11,9 @@ describe('UploaderPreview', () => {
                 <UploaderPreview />
             </ConfigProvider>,
         )
-        expect(document.querySelector('[data-upup-slot="main-box"]')).toBeTruthy()
+        expect(
+            document.querySelector('[data-upup-slot="uploader-panel"]'),
+        ).toBeTruthy()
     })
 
     it('applies current config as props on UpupUploader', () => {
@@ -20,6 +22,8 @@ describe('UploaderPreview', () => {
                 <UploaderPreview />
             </ConfigProvider>,
         )
-        expect(document.querySelector('[data-upup-slot="main-box"]')).toBeTruthy()
+        expect(
+            document.querySelector('[data-upup-slot="uploader-panel"]'),
+        ).toBeTruthy()
     })
 })

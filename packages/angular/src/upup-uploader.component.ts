@@ -67,7 +67,7 @@ const FORWARDED: ReadonlyArray<
                         aria-labelledby="drop-instructions"
                         [class]="containerClass()"
                     >
-                        <upup-main-box />
+                        <upup-uploader-panel />
 
                         @if (store.uiProps?.imageEditor?.enabled) {
                             <upup-image-editor-stub />

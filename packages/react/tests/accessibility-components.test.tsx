@@ -93,7 +93,7 @@ function stubFileInput(input: HTMLInputElement, files: File[]) {
 describe('axe — UploaderPanel (DropZone)', () => {
     it('has no violations in default state', async () => {
         const { container } = renderUploader()
-        const results = await scanSlot(container, 'main-box', {
+        const results = await scanSlot(container, 'uploader-panel', {
             rules: {
                 // role="button" on the droppable region + nested controls is the
                 // WAI-ARIA dropzone pattern, not a violation.

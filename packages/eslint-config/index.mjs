@@ -143,6 +143,11 @@ export default tseslint.config(
                     message:
                         'Adapter DOM vocabulary was swept to source-* in N4 — a rename here is a cross-framework breaking change; see CLAUDE.md.',
                 },
+                {
+                    selector: 'Literal[value=/main-box/]',
+                    message:
+                        'main-box DOM vocabulary was swept to uploader-panel (slot value; upup-uploader-panel / upup-uploader-header Angular selectors) — a rename here is a cross-framework breaking change; see CLAUDE.md.',
+                },
             ],
             'no-restricted-imports': [
                 'error',

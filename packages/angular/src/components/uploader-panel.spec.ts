@@ -61,7 +61,7 @@ describe('UploaderPanelComponent', () => {
         const el: HTMLElement = fixture.nativeElement
         const dropzone = el.querySelector('[data-testid="upup-dropzone"]')
         expect(dropzone).not.toBeNull()
-        expect(dropzone?.getAttribute('data-upup-slot')).toBe('main-box')
+        expect(dropzone?.getAttribute('data-upup-slot')).toBe('uploader-panel')
     })
 
     it('always renders upup-file-list', async () => {
@@ -79,7 +79,7 @@ describe('UploaderPanelComponent', () => {
         // hidden via `upup-hidden` when there are no files). A stray header at
         // the UploaderPanel root would always be visible and show a phantom
         // "files selected" band in the empty state.
-        const headers = el.querySelectorAll('upup-main-box-header')
+        const headers = el.querySelectorAll('upup-uploader-header')
         expect(headers.length).toBe(1)
         expect(headers[0]!.closest('upup-file-list')).not.toBeNull()
     })
