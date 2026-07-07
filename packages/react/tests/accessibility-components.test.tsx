@@ -15,13 +15,11 @@ afterEach(() => {
  * Render <UpupUploader> with the minimum props needed across the suite.
  * Every component in this suite lives inside this tree — no mock context.
  */
-function renderUploader(extra: Partial<React.ComponentProps<typeof UpupUploader>> = {}) {
+function renderUploader(
+    extra: Partial<React.ComponentProps<typeof UpupUploader>> = {},
+) {
     return render(
-        <UpupUploader
-            provider="aws"
-            uploadEndpoint="/api/upload"
-            {...extra}
-        />,
+        <UpupUploader provider="aws" uploadEndpoint="/api/upload" {...extra} />,
     )
 }
 
@@ -198,16 +196,12 @@ describe('axe — FileList', () => {
         ) as HTMLInputElement
         expect(input).not.toBeNull()
 
-        const file1 = new File(
-            [new Uint8Array(2048).fill(120)],
-            'alpha.txt',
-            { type: 'text/plain' },
-        )
-        const file2 = new File(
-            [new Uint8Array(2048).fill(120)],
-            'beta.txt',
-            { type: 'text/plain' },
-        )
+        const file1 = new File([new Uint8Array(2048).fill(120)], 'alpha.txt', {
+            type: 'text/plain',
+        })
+        const file2 = new File([new Uint8Array(2048).fill(120)], 'beta.txt', {
+            type: 'text/plain',
+        })
 
         stubFileInput(input, [file1, file2])
 
@@ -234,11 +228,9 @@ describe('axe — FilePreview', () => {
             '[data-testid="upup-file-input"]',
         ) as HTMLInputElement
 
-        const file = new File(
-            [new Uint8Array(2048).fill(120)],
-            'preview.txt',
-            { type: 'text/plain' },
-        )
+        const file = new File([new Uint8Array(2048).fill(120)], 'preview.txt', {
+            type: 'text/plain',
+        })
 
         stubFileInput(input, [file])
 
