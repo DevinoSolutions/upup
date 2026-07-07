@@ -1,70 +1,70 @@
 {
-  "name": "@upup/react",
-  "version": "2.2.0",
-  "description": "React file uploader with cloud-drive sources, resumable uploads, image editor, theming, and ICU i18n.",
-  "repository": "https://github.com/DevinoSolutions/upup",
-  "license": "MIT",
-  "type": "module",
-  "sideEffects": [
-    "*.css"
-  ],
-  "engines": {
-    "node": ">=20"
-  },
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs"
+    "name": "@upup/react",
+    "version": "2.2.0",
+    "description": "React file uploader with cloud-drive sources, resumable uploads, image editor, theming, and ICU i18n.",
+    "repository": "https://github.com/DevinoSolutions/upup",
+    "license": "MIT",
+    "type": "module",
+    "sideEffects": [
+        "*.css"
+    ],
+    "engines": {
+        "node": ">=20"
     },
-    "./styles": "./dist/tailwind-prefixed.css"
-  },
-  "main": "./dist/index.cjs",
-  "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "scripts": {
-    "build": "tsup && pnpm run build:css",
-    "build:css": "postcss src/tailwind.css -o ./dist/tailwind-prefixed.css",
-    "dev": "tsup --watch --onSuccess \"pnpm run build:css\"",
-    "lint": "eslint .",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "typecheck": "tsc --noEmit"
-  },
-  "files": [
-    "dist"
-  ],
-  "dependencies": {
-    "@tanstack/react-virtual": "^3.13.23",
-    "@upup/core": "workspace:*",
-    "konva": "^10.3.0",
-    "pako": "^2.1.0",
-    "react-filerobot-image-editor": "^4.9.1",
-    "react-konva": "^19.2.4",
-    "react-webcam": "^7.2.0",
-    "styled-components": ">=5.0.0"
-  },
-  "peerDependencies": {
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0"
-  },
-  "devDependencies": {
-    "@testing-library/react": "^16.0.1",
-    "@testing-library/user-event": "^14.6.1",
-    "@types/jest-axe": "^3.5.9",
-    "@types/pako": "^2.0.4",
-    "@types/react": ">=18.0.0",
-    "@types/react-dom": ">=18.0.0",
-    "@upup/eslint-config": "workspace:*",
-    "@upup/tailwind-config": "workspace:*",
-    "@vitest/coverage-v8": "^4.1.2",
-    "eslint": "^10.6.0",
-    "jest-axe": "^10.0.0",
-    "jsdom": "22.1.0",
-    "postcss": "^8.5.2",
-    "postcss-cli": "^11.0.1",
-    "tsup": "^8.4.0",
-    "typescript": "^5.3.2",
-    "vitest": "^4.1.2"
-  }
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.js",
+            "require": "./dist/index.cjs"
+        },
+        "./styles": "./dist/tailwind-prefixed.css"
+    },
+    "main": "./dist/index.cjs",
+    "module": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "scripts": {
+        "build": "tsup && pnpm run build:css",
+        "build:css": "postcss src/tailwind.css -o ./dist/tailwind-prefixed.css",
+        "dev": "tsup --watch --onSuccess \"pnpm run build:css\"",
+        "lint": "eslint .",
+        "test": "vitest run",
+        "test:watch": "vitest",
+        "typecheck": "tsc --noEmit && tsc -p tsconfig.test.json --noEmit"
+    },
+    "files": [
+        "dist"
+    ],
+    "dependencies": {
+        "@tanstack/react-virtual": "^3.13.23",
+        "@upup/core": "workspace:*",
+        "konva": "^10.3.0",
+        "pako": "^2.1.0",
+        "react-filerobot-image-editor": "^4.9.1",
+        "react-konva": "^19.2.4",
+        "react-webcam": "^7.2.0",
+        "styled-components": ">=5.0.0"
+    },
+    "peerDependencies": {
+        "react": "^19.0.0",
+        "react-dom": "^19.0.0"
+    },
+    "devDependencies": {
+        "@testing-library/react": "^16.0.1",
+        "@testing-library/user-event": "^14.6.1",
+        "@types/jest-axe": "^3.5.9",
+        "@types/pako": "^2.0.4",
+        "@types/react": ">=18.0.0",
+        "@types/react-dom": ">=18.0.0",
+        "@upup/eslint-config": "workspace:*",
+        "@upup/tailwind-config": "workspace:*",
+        "@vitest/coverage-v8": "^4.1.2",
+        "eslint": "^10.6.0",
+        "jest-axe": "^10.0.0",
+        "jsdom": "22.1.0",
+        "postcss": "^8.5.2",
+        "postcss-cli": "^11.0.1",
+        "tsup": "^8.4.0",
+        "typescript": "^5.3.2",
+        "vitest": "^4.1.2"
+    }
 }

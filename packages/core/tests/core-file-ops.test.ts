@@ -15,7 +15,7 @@ describe('UpupCore.setFiles', () => {
 
         await core.setFiles([makeFile('new.txt')])
         expect(core.files.size).toBe(1)
-        expect([...core.files.values()][0].name).toBe('new.txt')
+        expect([...core.files.values()][0]!.name).toBe('new.txt')
         core.destroy()
     })
 
@@ -59,9 +59,9 @@ describe('UpupCore.removeFile', () => {
         await core.addFiles([makeFile('a.txt'), makeFile('b.txt')])
         const [id] = [...core.files.keys()]
 
-        core.removeFile(id)
+        core.removeFile(id!)
         expect(core.files.size).toBe(1)
-        expect(core.files.has(id)).toBe(false)
+        expect(core.files.has(id!)).toBe(false)
         core.destroy()
     })
 
@@ -72,10 +72,10 @@ describe('UpupCore.removeFile', () => {
 
         const handler = vi.fn()
         core.on('file-removed', handler)
-        core.removeFile(id)
+        core.removeFile(id!)
 
         expect(handler).toHaveBeenCalledOnce()
-        const removed = handler.mock.calls[0][0]
+        const removed = handler.mock.calls[0]![0]
         expect(removed.name).toBe('target.txt')
         core.destroy()
     })
@@ -91,7 +91,11 @@ describe('UpupCore.removeFile', () => {
 
     it('removes the correct file from a multi-file set', async () => {
         const core = new UpupCore({})
-        await core.addFiles([makeFile('keep.txt'), makeFile('remove.txt'), makeFile('also-keep.txt')])
+        await core.addFiles([
+            makeFile('keep.txt'),
+            makeFile('remove.txt'),
+            makeFile('also-keep.txt'),
+        ])
         const entries = [...core.files.entries()]
         const removeId = entries.find(([, f]) => f.name === 'remove.txt')![0]
 

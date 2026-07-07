@@ -13,7 +13,11 @@ const makeCore = () =>
 describe('UpupCore — files-reordered event', () => {
     it('emits files-reordered with the new order', async () => {
         const core = makeCore()
-        await core.addFiles([makeFile('a.txt'), makeFile('b.txt'), makeFile('c.txt')])
+        await core.addFiles([
+            makeFile('a.txt'),
+            makeFile('b.txt'),
+            makeFile('c.txt'),
+        ])
         const ids = [...core.files.keys()]
 
         const handler = vi.fn()
@@ -44,7 +48,7 @@ describe('UpupCore — files-reordered event', () => {
 
         const handler = vi.fn()
         core.on('files-reordered', handler)
-        core.reorderFiles([id])
+        core.reorderFiles([id!])
 
         expect(handler).toHaveBeenCalledWith({ fileIds: [id] })
     })
@@ -107,7 +111,7 @@ describe('UpupCore — files-set event', () => {
 
         await core.setFiles([makeFile('only.txt')])
 
-        const call = handler.mock.calls[0][0] as { count: number }
+        const call = handler.mock.calls[0]![0] as { count: number }
         expect(call.count).toBe(core.files.size)
     })
 

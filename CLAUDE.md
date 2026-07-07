@@ -172,6 +172,17 @@ unit suites, not `tsc` — a change with a hard interface error can land on a
 green hook and a green build (it has, twice: P16 and F-715). Run
 `pnpm run typecheck` before trusting any type-touching change.
 
+Since 2026-07-07 the typecheck gate also covers the TEST trees: each
+package's `typecheck` script runs its `tsconfig.test.json` after the base
+config (angular reuses its pre-existing `tsconfig.spec.json`; preact/next
+co-locate specs under `src` and were already covered). This closed the
+grading audit's consensus #1 — the type-level halves of the public-API pins
+(`expectTypeOf`, `@ts-expect-error` negatives) used to be dead in every gate.
+Its first execution surfaced real drift the runtime suites tolerated (specs
+importing types `@upup/core/internal` never exported, tests pinning the
+retired `enableWorkers`/`appKey` option names, a dead `"link"` source id) —
+treat a red test-tree typecheck as an API-drift signal, not test noise.
+
 `prettier-check`/`prettier-write` are repo-wide (P22, 2026-07-04): one root
 `.prettierrc.json` + `.prettierignore` govern all 9 publishable packages'
 `src` (`packages/react/.prettierrc.json` is gone — promoted to root,
@@ -198,8 +209,10 @@ the 2026-07 foundational audit; they apply to any non-trivial change:
   filter by hand — removing an interface member breaks object literals and
   shorthand props, not just classes. Sweep data-driven tables (event-name
   arrays, forwarding maps), not only static call sites. Include `tests/`
-  explicitly: most package tsconfigs `include: ["src"]`, so tsc never
-  type-checks test trees and a stale test can keep passing coincidentally.
+  explicitly: base package tsconfigs `include: ["src"]`, so a src-only grep
+  misses them (the typecheck gate now runs `tsconfig.test.json` per package,
+  so drift turns red there — but a census still has to LOOK at tests to
+  understand what a change breaks before the gate tells you).
 - "Passes after the change" ≠ "correct after the change" — verify the
   mechanism (that the intended code path ran), not just the color.
 - Plan claims decay: re-verify every file/inventory precondition at
@@ -437,9 +450,11 @@ DrivePlugin`. All three popup providers now persist a token-expiry key and refre
 ## Machine-local notes (primary dev box only)
 
 - The `rtk` token-filter hook rewrites shell commands and has FALSIFIED
-  observations four proven ways: mangled Playwright reporter output;
+  observations five proven ways: mangled Playwright reporter output;
   "all files formatted" on a red prettier `--check`; a 0 exit from a `tsc`
-  run that had 18 real errors; a clean-looking `knip` that was really exit 1.
+  run that had 18 real errors; a clean-looking `knip` that was really exit 1;
+  a fabricated 20-byte "PASS (226) FAIL (0)" summary for a plain `vitest run`
+  (2026-07-07 — real counts only via `rtk proxy`).
   Rules: Playwright/prettier via `rtk proxy` (e.g. `rtk proxy pnpm run e2e`);
   counts via PowerShell `Select-String`/`Measure-Object`, never bash pipes;
   any gate verdict you act on comes from `rtk proxy` plus the raw exit code

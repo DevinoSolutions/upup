@@ -13,14 +13,16 @@ describe('BrowserRuntime — computeHash', () => {
     })
 
     it('is deterministic for the same input', async () => {
-        const buf = new TextEncoder().encode('deterministic').buffer as ArrayBuffer
+        const buf = new TextEncoder().encode('deterministic')
+            .buffer as ArrayBuffer
         const r1 = await BrowserRuntime.computeHash(buf)
         const r2 = await BrowserRuntime.computeHash(buf)
         expect(r1).toBe(r2)
     })
 
     it('produces different hashes for different inputs', async () => {
-        const encode = (s: string) => new TextEncoder().encode(s).buffer as ArrayBuffer
+        const encode = (s: string) =>
+            new TextEncoder().encode(s).buffer as ArrayBuffer
         const r1 = await BrowserRuntime.computeHash(encode('foo'))
         const r2 = await BrowserRuntime.computeHash(encode('bar'))
         expect(r1).not.toBe(r2)
@@ -37,7 +39,9 @@ describe('BrowserRuntime — computeHash', () => {
 // ─────────────────────────────────────────────
 describe('BrowserRuntime — readAsArrayBuffer', () => {
     it('returns an ArrayBuffer for a File', async () => {
-        const file = new File(['hello world'], 'test.txt', { type: 'text/plain' })
+        const file = new File(['hello world'], 'test.txt', {
+            type: 'text/plain',
+        })
         const result = await BrowserRuntime.readAsArrayBuffer(file)
         expect(result).toBeInstanceOf(ArrayBuffer)
     })
@@ -62,7 +66,10 @@ describe('BrowserRuntime — readAsArrayBuffer', () => {
 // ─────────────────────────────────────────────
 describe('BrowserRuntime — URL helpers', () => {
     it('createObjectURL is defined when URL.createObjectURL is available', () => {
-        if (typeof URL !== 'undefined' && URL.createObjectURL) {
+        if (
+            typeof URL !== 'undefined' &&
+            typeof URL.createObjectURL === 'function'
+        ) {
             expect(BrowserRuntime.createObjectURL).toBeDefined()
             expect(typeof BrowserRuntime.createObjectURL).toBe('function')
         } else {
@@ -71,7 +78,10 @@ describe('BrowserRuntime — URL helpers', () => {
     })
 
     it('revokeObjectURL is defined when URL.revokeObjectURL is available', () => {
-        if (typeof URL !== 'undefined' && URL.revokeObjectURL) {
+        if (
+            typeof URL !== 'undefined' &&
+            typeof URL.revokeObjectURL === 'function'
+        ) {
             expect(BrowserRuntime.revokeObjectURL).toBeDefined()
             expect(typeof BrowserRuntime.revokeObjectURL).toBe('function')
         } else {
@@ -91,7 +101,9 @@ describe('BrowserRuntime — computeHash round-trip with readAsArrayBuffer', () 
         const hash = await BrowserRuntime.computeHash(buf)
         expect(hash).toHaveLength(64)
         // Same content → same hash on second pass
-        const buf2 = await BrowserRuntime.readAsArrayBuffer(new File([content], 'rt2.txt'))
+        const buf2 = await BrowserRuntime.readAsArrayBuffer(
+            new File([content], 'rt2.txt'),
+        )
         const hash2 = await BrowserRuntime.computeHash(buf2)
         expect(hash).toBe(hash2)
     })

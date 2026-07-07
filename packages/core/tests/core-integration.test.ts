@@ -11,7 +11,10 @@ type CoreWithPluginCount = UpupCore & { _pluginCount?: () => number }
 
 describe('UpupCore — integration lifecycle', () => {
     it('add → getSnapshot → destroy → restore round-trip', async () => {
-        const core = new UpupCore({ provider: 'aws', uploadEndpoint: '/api/upload' })
+        const core = new UpupCore({
+            provider: 'aws',
+            uploadEndpoint: '/api/upload',
+        })
 
         await core.addFiles([makeFile('a.txt'), makeFile('b.txt')])
         expect(core.files.size).toBe(2)
@@ -24,7 +27,10 @@ describe('UpupCore — integration lifecycle', () => {
         expect(core.files.size).toBe(0)
 
         // New core restores from snapshot
-        const core2 = new UpupCore({ provider: 'aws', uploadEndpoint: '/api/upload' })
+        const core2 = new UpupCore({
+            provider: 'aws',
+            uploadEndpoint: '/api/upload',
+        })
         core2.restore(snapshot)
         expect(core2.files.size).toBe(2)
         expect(core2.status).toBe(UploadStatus.IDLE)
@@ -32,12 +38,19 @@ describe('UpupCore — integration lifecycle', () => {
     })
 
     it('add → removeFile → removeAll clears everything', async () => {
-        const core = new UpupCore({ provider: 'aws', uploadEndpoint: '/api/upload' })
-        await core.addFiles([makeFile('a.txt'), makeFile('b.txt'), makeFile('c.txt')])
+        const core = new UpupCore({
+            provider: 'aws',
+            uploadEndpoint: '/api/upload',
+        })
+        await core.addFiles([
+            makeFile('a.txt'),
+            makeFile('b.txt'),
+            makeFile('c.txt'),
+        ])
         expect(core.files.size).toBe(3)
 
         const [firstId] = [...core.files.keys()]
-        core.removeFile(firstId)
+        core.removeFile(firstId!)
         expect(core.files.size).toBe(2)
 
         core.removeAll()
@@ -46,8 +59,15 @@ describe('UpupCore — integration lifecycle', () => {
     })
 
     it('add → reorder preserves all files', async () => {
-        const core = new UpupCore({ provider: 'aws', uploadEndpoint: '/api/upload' })
-        await core.addFiles([makeFile('x.txt'), makeFile('y.txt'), makeFile('z.txt')])
+        const core = new UpupCore({
+            provider: 'aws',
+            uploadEndpoint: '/api/upload',
+        })
+        await core.addFiles([
+            makeFile('x.txt'),
+            makeFile('y.txt'),
+            makeFile('z.txt'),
+        ])
         const ids = [...core.files.keys()]
 
         core.reorderFiles([...ids].reverse())
@@ -58,7 +78,10 @@ describe('UpupCore — integration lifecycle', () => {
     })
 
     it('add → setFiles replaces all files', async () => {
-        const core = new UpupCore({ provider: 'aws', uploadEndpoint: '/api/upload' })
+        const core = new UpupCore({
+            provider: 'aws',
+            uploadEndpoint: '/api/upload',
+        })
         await core.addFiles([makeFile('old.txt')])
         expect(core.files.size).toBe(1)
 
@@ -84,15 +107,18 @@ describe('UpupCore — integration lifecycle', () => {
         ])
 
         expect(results).toHaveLength(2)
-        expect(results[0].valid).toBe(true)
-        expect(results[1].valid).toBe(false)
+        expect(results[0]!.valid).toBe(true)
+        expect(results[1]!.valid).toBe(false)
         // Original file list unchanged
         expect(core.files.size).toBe(1)
         core.destroy()
     })
 
     it('pause → cancel resets to IDLE', () => {
-        const core = new UpupCore({ provider: 'aws', uploadEndpoint: '/api/upload' })
+        const core = new UpupCore({
+            provider: 'aws',
+            uploadEndpoint: '/api/upload',
+        })
         core.pause()
         expect(core.status).toBe(UploadStatus.PAUSED)
         core.cancel()
@@ -101,7 +127,10 @@ describe('UpupCore — integration lifecycle', () => {
     })
 
     it('full event flow for add → remove emits in correct order', async () => {
-        const core = new UpupCore({ provider: 'aws', uploadEndpoint: '/api/upload' })
+        const core = new UpupCore({
+            provider: 'aws',
+            uploadEndpoint: '/api/upload',
+        })
         const events: string[] = []
         core.on('files-added', () => events.push('files-added'))
         core.on('file-removed', () => events.push('file-removed'))
@@ -110,19 +139,25 @@ describe('UpupCore — integration lifecycle', () => {
 
         await core.addFiles([makeFile('a.txt')])
         const [id] = [...core.files.keys()]
-        core.removeFile(id)
+        core.removeFile(id!)
         core.removeAll()
 
         expect(events).toEqual([
-            'files-added', 'state-change',      // addFiles
-            'file-removed', 'state-change',     // removeFile
-            'state-change', 'files-cleared',    // removeAll
+            'files-added',
+            'state-change', // addFiles
+            'file-removed',
+            'state-change', // removeFile
+            'state-change',
+            'files-cleared', // removeAll
         ])
         core.destroy()
     })
 
     it('updateOptions emits options-updated and updates core.options', () => {
-        const core = new UpupCore({ provider: 'aws', uploadEndpoint: '/api/upload' })
+        const core = new UpupCore({
+            provider: 'aws',
+            uploadEndpoint: '/api/upload',
+        })
         const handler = vi.fn()
         core.on('options-updated', handler)
 
@@ -133,10 +168,13 @@ describe('UpupCore — integration lifecycle', () => {
     })
 
     it('plugin registration survives addFiles/removeAll', async () => {
-        const core = new UpupCore({ provider: 'aws', uploadEndpoint: '/api/upload' })
+        const core = new UpupCore({
+            provider: 'aws',
+            uploadEndpoint: '/api/upload',
+        })
         core.use({
             name: 'counter',
-            init: (emitter) => {
+            init: emitter => {
                 let count = 0
                 emitter.on('files-added', () => {
                     count++

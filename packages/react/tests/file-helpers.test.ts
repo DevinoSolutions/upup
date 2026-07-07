@@ -61,7 +61,9 @@ describe('fileAppendParams', () => {
     })
 
     it('uses webkitRelativePath for id when present', () => {
-        const f = new File(['data'], 'photo.png') as unknown as UploadFile & { webkitRelativePath?: string }
+        const f = new File(['data'], 'photo.png') as unknown as UploadFile & {
+            webkitRelativePath?: string
+        }
         f.webkitRelativePath = 'folder/photo.png'
         const result = fileAppendParams(f)
         // id should be based on the relative path, not just the name
@@ -127,20 +129,26 @@ describe('searchDriveFiles', () => {
     })
 
     it('is case-sensitive when caseSensitive=true', () => {
-        const results = searchDriveFiles(files, 'report', { caseSensitive: true })
+        const results = searchDriveFiles(files, 'report', {
+            caseSensitive: true,
+        })
         // Only lowercase 'report-2024.pdf' matches
         expect(results).toHaveLength(1)
-        expect(results[0].name).toBe('report-2024.pdf')
+        expect(results[0]!.name).toBe('report-2024.pdf')
     })
 
     it('returns exact match only when exactMatch=true', () => {
-        const results = searchDriveFiles(files, 'notes.txt', { exactMatch: true })
+        const results = searchDriveFiles(files, 'notes.txt', {
+            exactMatch: true,
+        })
         expect(results).toHaveLength(1)
-        expect(results[0].name).toBe('notes.txt')
+        expect(results[0]!.name).toBe('notes.txt')
     })
 
     it('respects maxResults limit', () => {
-        const many = Array.from({ length: 20 }, (_, i) => ({ name: `file-${i}.txt` }))
+        const many = Array.from({ length: 20 }, (_, i) => ({
+            name: `file-${i}.txt`,
+        }))
         expect(searchDriveFiles(many, '', { maxResults: 5 })).toHaveLength(5)
     })
 
@@ -193,7 +201,9 @@ describe('fileGetIsText', () => {
     })
 
     it('returns true for .md files by extension when fileType is non-empty', () => {
-        expect(fileGetIsText('application/octet-stream', 'README.md')).toBe(true)
+        expect(fileGetIsText('application/octet-stream', 'README.md')).toBe(
+            true,
+        )
     })
 
     it('returns true for .ts/.js files by extension when fileType is non-empty', () => {
@@ -223,11 +233,19 @@ describe('fileCanPreviewText', () => {
     })
 
     it('returns false for text files exceeding PREVIEW_MAX_TEXT_SIZE', () => {
-        expect(fileCanPreviewText('text/plain', 'big.txt', PREVIEW_MAX_TEXT_SIZE + 1)).toBe(false)
+        expect(
+            fileCanPreviewText(
+                'text/plain',
+                'big.txt',
+                PREVIEW_MAX_TEXT_SIZE + 1,
+            ),
+        ).toBe(false)
     })
 
     it('returns true when fileSize is undefined (unknown size)', () => {
-        expect(fileCanPreviewText('text/plain', 'notes.txt', undefined)).toBe(true)
+        expect(fileCanPreviewText('text/plain', 'notes.txt', undefined)).toBe(
+            true,
+        )
     })
 
     it('returns false for non-text files', () => {

@@ -13,6 +13,12 @@ import { createResponder } from '../src/respond'
 import { checkStorageReachable } from '../src/providers/aws'
 import type { UpupServerConfig } from '../src/config'
 
+type HealthBody = {
+    status: string
+    checks: { config: string; storage: string }
+    uploadTokenFingerprint?: string
+}
+
 const baseConfig: UpupServerConfig = {
     storage: { type: 'aws', bucket: 'test-bucket', region: 'us-east-1' },
     uploadTokenSecret: 'health-test-secret-0123456789ab',
@@ -35,7 +41,7 @@ describe('handleHealth', () => {
     it('reports ok/ok when config is complete and storage is reachable', async () => {
         vi.mocked(checkStorageReachable).mockResolvedValue({ ok: true })
         const res = await handleHealth(baseConfig, responder())
-        const body = await res.json()
+        const body = (await res.json()) as HealthBody
         expect(res.status).toBe(200)
         expect(body.status).toBe('ok')
         expect(body.checks.config).toBe('ok')
@@ -56,7 +62,7 @@ describe('handleHealth', () => {
             storage: { type: 'aws', bucket: '', region: 'us-east-1' },
         }
         const res = await handleHealth(incomplete, responder(incomplete))
-        const body = await res.json()
+        const body = (await res.json()) as HealthBody
         expect(body.checks.config).toBe('incomplete')
     })
 
@@ -67,7 +73,7 @@ describe('handleHealth', () => {
             error: new Error('bucket not found'),
         })
         const res = await handleHealth({ ...baseConfig, onError }, responder())
-        const body = await res.json()
+        const body = (await res.json()) as HealthBody
         expect(body.checks.storage).toBe('error')
         expect(onError).toHaveBeenCalledTimes(1)
     })
@@ -75,7 +81,7 @@ describe('handleHealth', () => {
     it('omits the secret fingerprint by default', async () => {
         vi.mocked(checkStorageReachable).mockResolvedValue({ ok: true })
         const res = await handleHealth(baseConfig, responder())
-        const body = await res.json()
+        const body = (await res.json()) as HealthBody
         expect(body.uploadTokenFingerprint).toBeUndefined()
     })
 
@@ -85,7 +91,7 @@ describe('handleHealth', () => {
             { ...baseConfig, health: { exposeSecretFingerprint: true } },
             responder(),
         )
-        const body = await res.json()
+        const body = (await res.json()) as HealthBody
         expect(typeof body.uploadTokenFingerprint).toBe('string')
         expect(body.uploadTokenFingerprint).toHaveLength(8)
     })

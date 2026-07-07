@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
+import type { HTMLAttributes } from 'react'
 import { useUpupUpload } from '../src/use-upup-upload'
 
 const makeFile = (name: string, size = 10, type = 'text/plain') =>
@@ -18,7 +19,7 @@ describe('useUpupUpload — onBeforeFileAdded File replacement', () => {
             await result.current.addFiles([makeFile('original.txt')])
         })
         expect(result.current.files.length).toBe(1)
-        expect(result.current.files[0].name).toBe('renamed.txt')
+        expect(result.current.files[0]!.name).toBe('renamed.txt')
     })
 
     it('callback receives the file being added', async () => {
@@ -33,7 +34,9 @@ describe('useUpupUpload — onBeforeFileAdded File replacement', () => {
         await act(async () => {
             await result.current.addFiles([file])
         })
-        expect(cb).toHaveBeenCalledWith(expect.objectContaining({ name: 'check.txt' }))
+        expect(cb).toHaveBeenCalledWith(
+            expect.objectContaining({ name: 'check.txt' }),
+        )
     })
 })
 
@@ -70,7 +73,7 @@ describe('useUpupUpload — getRootProps', () => {
             'data-testid': 'root',
         } as unknown as HTMLAttributes<HTMLElement>)
         expect(props.className).toBe('my-uploader')
-        expect(props['data-testid']).toBe('root')
+        expect((props as Record<string, unknown>)['data-testid']).toBe('root')
         expect(props.role).toBe('application')
     })
 })

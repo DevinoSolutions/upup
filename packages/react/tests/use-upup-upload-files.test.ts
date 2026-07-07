@@ -10,7 +10,11 @@ beforeEach(() => {
     })
 })
 
-function makeFile(name = 'test.txt', content = 'hello', type = 'text/plain'): File {
+function makeFile(
+    name = 'test.txt',
+    content = 'hello',
+    type = 'text/plain',
+): File {
     return new File([content], name, { type })
 }
 
@@ -19,23 +23,32 @@ function makeFile(name = 'test.txt', content = 'hello', type = 'text/plain'): Fi
 // ─────────────────────────────────────────────
 describe('useUpupUpload — addFiles', () => {
     it('adding files increases the files array length', async () => {
-        const { result } = renderHook(() => useUpupUpload({ provider: 'S3' as const }))
+        const { result } = renderHook(() =>
+            useUpupUpload({ provider: 'S3' as const }),
+        )
         await act(async () => {
-            await result.current.addFiles([makeFile('a.txt'), makeFile('b.txt')])
+            await result.current.addFiles([
+                makeFile('a.txt'),
+                makeFile('b.txt'),
+            ])
         })
         expect(result.current.files.length).toBe(2)
     })
 
     it('files have the correct names after addFiles', async () => {
-        const { result } = renderHook(() => useUpupUpload({ provider: 'S3' as const }))
+        const { result } = renderHook(() =>
+            useUpupUpload({ provider: 'S3' as const }),
+        )
         await act(async () => {
             await result.current.addFiles([makeFile('hello.txt')])
         })
-        expect(result.current.files[0].name).toBe('hello.txt')
+        expect(result.current.files[0]!.name).toBe('hello.txt')
     })
 
     it('adding an empty array leaves files unchanged', async () => {
-        const { result } = renderHook(() => useUpupUpload({ provider: 'S3' as const }))
+        const { result } = renderHook(() =>
+            useUpupUpload({ provider: 'S3' as const }),
+        )
         await act(async () => {
             await result.current.addFiles([])
         })
@@ -43,7 +56,9 @@ describe('useUpupUpload — addFiles', () => {
     })
 
     it('calling addFiles twice accumulates files', async () => {
-        const { result } = renderHook(() => useUpupUpload({ provider: 'S3' as const }))
+        const { result } = renderHook(() =>
+            useUpupUpload({ provider: 'S3' as const }),
+        )
         await act(async () => {
             await result.current.addFiles([makeFile('a.txt')])
         })
@@ -59,11 +74,13 @@ describe('useUpupUpload — addFiles', () => {
 // ─────────────────────────────────────────────
 describe('useUpupUpload — removeFile', () => {
     it('removes a file by id', async () => {
-        const { result } = renderHook(() => useUpupUpload({ provider: 'S3' as const }))
+        const { result } = renderHook(() =>
+            useUpupUpload({ provider: 'S3' as const }),
+        )
         await act(async () => {
             await result.current.addFiles([makeFile('remove-me.txt')])
         })
-        const fileId = result.current.files[0].id
+        const fileId = result.current.files[0]!.id
         act(() => {
             result.current.removeFile(fileId)
         })
@@ -71,21 +88,34 @@ describe('useUpupUpload — removeFile', () => {
     })
 
     it('does not throw when removing a non-existent id', () => {
-        const { result } = renderHook(() => useUpupUpload({ provider: 'S3' as const }))
+        const { result } = renderHook(() =>
+            useUpupUpload({ provider: 'S3' as const }),
+        )
         expect(() => {
-            act(() => { result.current.removeFile('ghost-id') })
+            act(() => {
+                result.current.removeFile('ghost-id')
+            })
         }).not.toThrow()
     })
 
     it('only removes the targeted file', async () => {
-        const { result } = renderHook(() => useUpupUpload({ provider: 'S3' as const }))
+        const { result } = renderHook(() =>
+            useUpupUpload({ provider: 'S3' as const }),
+        )
         await act(async () => {
-            await result.current.addFiles([makeFile('keep.txt'), makeFile('remove.txt')])
+            await result.current.addFiles([
+                makeFile('keep.txt'),
+                makeFile('remove.txt'),
+            ])
         })
-        const removeId = result.current.files.find(f => f.name === 'remove.txt')!.id
-        act(() => { result.current.removeFile(removeId) })
+        const removeId = result.current.files.find(
+            f => f.name === 'remove.txt',
+        )!.id
+        act(() => {
+            result.current.removeFile(removeId)
+        })
         expect(result.current.files.length).toBe(1)
-        expect(result.current.files[0].name).toBe('keep.txt')
+        expect(result.current.files[0]!.name).toBe('keep.txt')
     })
 })
 
@@ -94,18 +124,30 @@ describe('useUpupUpload — removeFile', () => {
 // ─────────────────────────────────────────────
 describe('useUpupUpload — removeAll', () => {
     it('removes all files', async () => {
-        const { result } = renderHook(() => useUpupUpload({ provider: 'S3' as const }))
+        const { result } = renderHook(() =>
+            useUpupUpload({ provider: 'S3' as const }),
+        )
         await act(async () => {
-            await result.current.addFiles([makeFile('a.txt'), makeFile('b.txt'), makeFile('c.txt')])
+            await result.current.addFiles([
+                makeFile('a.txt'),
+                makeFile('b.txt'),
+                makeFile('c.txt'),
+            ])
         })
-        act(() => { result.current.removeAll() })
+        act(() => {
+            result.current.removeAll()
+        })
         expect(result.current.files.length).toBe(0)
     })
 
     it('does not throw when no files are present', () => {
-        const { result } = renderHook(() => useUpupUpload({ provider: 'S3' as const }))
+        const { result } = renderHook(() =>
+            useUpupUpload({ provider: 'S3' as const }),
+        )
         expect(() => {
-            act(() => { result.current.removeAll() })
+            act(() => {
+                result.current.removeAll()
+            })
         }).not.toThrow()
     })
 })
@@ -115,7 +157,9 @@ describe('useUpupUpload — removeAll', () => {
 // ─────────────────────────────────────────────
 describe('useUpupUpload — setFiles', () => {
     it('replaces all existing files', async () => {
-        const { result } = renderHook(() => useUpupUpload({ provider: 'S3' as const }))
+        const { result } = renderHook(() =>
+            useUpupUpload({ provider: 'S3' as const }),
+        )
         await act(async () => {
             await result.current.addFiles([makeFile('old.txt')])
         })
@@ -123,11 +167,13 @@ describe('useUpupUpload — setFiles', () => {
             await result.current.setFiles([makeFile('new.txt')])
         })
         expect(result.current.files.length).toBe(1)
-        expect(result.current.files[0].name).toBe('new.txt')
+        expect(result.current.files[0]!.name).toBe('new.txt')
     })
 
     it('setFiles with empty array clears all files', async () => {
-        const { result } = renderHook(() => useUpupUpload({ provider: 'S3' as const }))
+        const { result } = renderHook(() =>
+            useUpupUpload({ provider: 'S3' as const }),
+        )
         await act(async () => {
             await result.current.addFiles([makeFile('a.txt')])
         })

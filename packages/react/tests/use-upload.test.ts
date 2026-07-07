@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import useUpload from '../src/hooks/useUpload'
-import { UploadStatus } from '@upup/core'
+import { UploadStatus, FileSource } from '@upup/core'
 import type { UploadFile } from '@upup/core'
 
 function makeUploadCtx(overrides: Record<string, unknown> = {}) {
@@ -23,7 +23,12 @@ function makeUploadCtx(overrides: Record<string, unknown> = {}) {
 function makeFiles(...names: string[]) {
     const map = new Map<string, UploadFile>()
     for (const name of names) {
-        const f = Object.assign(new File(['x'], name, { type: 'text/plain' }), { id: name })
+        const f = Object.assign(new File(['x'], name, { type: 'text/plain' }), {
+            id: name,
+            source: FileSource.LOCAL,
+            status: UploadStatus.IDLE,
+            metadata: {},
+        })
         map.set(name, f)
     }
     return map
@@ -161,7 +166,9 @@ describe('useUpload', () => {
 
     it('handles undefined upload gracefully', () => {
         const result = useUpload({
-            upload: undefined as unknown as Parameters<typeof useUpload>[0]['upload'],
+            upload: undefined as unknown as Parameters<
+                typeof useUpload
+            >[0]['upload'],
             files: new Map(),
             setFiles: vi.fn(),
             replaceFiles: vi.fn(),

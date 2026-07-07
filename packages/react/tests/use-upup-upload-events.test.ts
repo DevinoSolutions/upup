@@ -25,8 +25,10 @@ describe('useUpupUpload — event callbacks', () => {
         await act(async () => {
             await result.current.addFiles([makeFile('r.txt')])
         })
-        const id = result.current.files[0].id
-        act(() => { result.current.removeFile(id) })
+        const id = result.current.files[0]!.id
+        act(() => {
+            result.current.removeFile(id)
+        })
         expect(onFileRemoved).toHaveBeenCalled()
     })
 })
@@ -35,7 +37,9 @@ describe('useUpupUpload — on() event subscription', () => {
     it('subscribes to files-added event', async () => {
         const handler = vi.fn()
         const { result } = renderHook(() => useUpupUpload(opts))
-        act(() => { result.current.on('files-added', handler) })
+        act(() => {
+            result.current.on('files-added', handler)
+        })
 
         await act(async () => {
             await result.current.addFiles([makeFile('evt.txt')])
@@ -46,13 +50,17 @@ describe('useUpupUpload — on() event subscription', () => {
     it('subscribes to file-removed event', async () => {
         const handler = vi.fn()
         const { result } = renderHook(() => useUpupUpload(opts))
-        act(() => { result.current.on('file-removed', handler) })
+        act(() => {
+            result.current.on('file-removed', handler)
+        })
 
         await act(async () => {
             await result.current.addFiles([makeFile('rm.txt')])
         })
-        const id = result.current.files[0].id
-        act(() => { result.current.removeFile(id) })
+        const id = result.current.files[0]!.id
+        act(() => {
+            result.current.removeFile(id)
+        })
         expect(handler).toHaveBeenCalled()
     })
 
@@ -60,14 +68,18 @@ describe('useUpupUpload — on() event subscription', () => {
         const handler = vi.fn()
         const { result } = renderHook(() => useUpupUpload(opts))
         let unsub: () => void
-        act(() => { unsub = result.current.on('files-added', handler) })
+        act(() => {
+            unsub = result.current.on('files-added', handler)
+        })
 
         await act(async () => {
             await result.current.addFiles([makeFile('first.txt')])
         })
         expect(handler).toHaveBeenCalledTimes(1)
 
-        act(() => { unsub() })
+        act(() => {
+            unsub()
+        })
         await act(async () => {
             await result.current.addFiles([makeFile('second.txt')])
         })
@@ -77,8 +89,12 @@ describe('useUpupUpload — on() event subscription', () => {
     it('subscribes to custom events via emit', () => {
         const handler = vi.fn()
         const { result } = renderHook(() => useUpupUpload(opts))
-        act(() => { result.current.on('my-custom-event', handler) })
-        act(() => { result.current.core.emit('my-custom-event', { data: 'test' }) })
+        act(() => {
+            result.current.on('my-custom-event', handler)
+        })
+        act(() => {
+            result.current.core.emit('my-custom-event', { data: 'test' })
+        })
         expect(handler).toHaveBeenCalledWith({ data: 'test' })
     })
 })
@@ -87,12 +103,18 @@ describe('useUpupUpload — reorderFiles', () => {
     it('reorders files by id array', async () => {
         const { result } = renderHook(() => useUpupUpload(opts))
         await act(async () => {
-            await result.current.addFiles([makeFile('a.txt'), makeFile('b.txt'), makeFile('c.txt')])
+            await result.current.addFiles([
+                makeFile('a.txt'),
+                makeFile('b.txt'),
+                makeFile('c.txt'),
+            ])
         })
         const ids = result.current.files.map(f => f.id)
         const reversed = [...ids].reverse()
 
-        act(() => { result.current.reorderFiles(reversed) })
+        act(() => {
+            result.current.reorderFiles(reversed)
+        })
 
         const newIds = result.current.files.map(f => f.id)
         expect(newIds).toEqual(reversed)
@@ -101,11 +123,16 @@ describe('useUpupUpload — reorderFiles', () => {
     it('preserves file count after reorder', async () => {
         const { result } = renderHook(() => useUpupUpload(opts))
         await act(async () => {
-            await result.current.addFiles([makeFile('x.txt'), makeFile('y.txt')])
+            await result.current.addFiles([
+                makeFile('x.txt'),
+                makeFile('y.txt'),
+            ])
         })
         const ids = result.current.files.map(f => f.id)
 
-        act(() => { result.current.reorderFiles([...ids].reverse()) })
+        act(() => {
+            result.current.reorderFiles([...ids].reverse())
+        })
         expect(result.current.files.length).toBe(2)
     })
 })

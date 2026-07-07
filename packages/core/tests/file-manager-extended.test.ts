@@ -1,5 +1,9 @@
 import { describe, it, expect } from 'vitest'
-import { FileManager, fileSizeInBytes, matchesAccept } from '../src/file-manager'
+import {
+    FileManager,
+    fileSizeInBytes,
+    matchesAccept,
+} from '../src/file-manager'
 import type { MaxFileSizeObject } from '../src/contracts'
 
 function makeFile(name = 'test.txt', size = 100, type = 'text/plain'): File {
@@ -31,7 +35,12 @@ describe('fileSizeInBytes', () => {
     })
 
     it('falls back to 1 for unknown unit', () => {
-        expect(fileSizeInBytes({ size: 10, unit: 'XB' as unknown as MaxFileSizeObject['unit'] })).toBe(10)
+        expect(
+            fileSizeInBytes({
+                size: 10,
+                unit: 'XB' as unknown as MaxFileSizeObject['unit'],
+            }),
+        ).toBe(10)
     })
 })
 
@@ -85,7 +94,11 @@ describe('matchesAccept', () => {
     })
 
     it('rejects when no token matches in comma-separated list', () => {
-        const f = makeFile('doc.docx', 100, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document')
+        const f = makeFile(
+            'doc.docx',
+            100,
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        )
         expect(matchesAccept(f, 'image/png, .pdf')).toBe(false)
     })
 })
@@ -120,7 +133,9 @@ describe('FileManager — minFileSize', () => {
 // ─────────────────────────────────────────────
 describe('FileManager — maxTotalFileSize', () => {
     it('throws TOTAL_SIZE_EXCEEDED when total exceeds limit', async () => {
-        const fm = new FileManager({ maxTotalFileSize: { size: 100, unit: 'B' } })
+        const fm = new FileManager({
+            maxTotalFileSize: { size: 100, unit: 'B' },
+        })
         const f1 = makeFile('a.txt', 60)
         const f2 = makeFile('b.txt', 60) // 120 > 100
         await fm.addFiles([f1])
@@ -128,7 +143,9 @@ describe('FileManager — maxTotalFileSize', () => {
     })
 
     it('accepts batch within total limit', async () => {
-        const fm = new FileManager({ maxTotalFileSize: { size: 200, unit: 'B' } })
+        const fm = new FileManager({
+            maxTotalFileSize: { size: 200, unit: 'B' },
+        })
         const f1 = makeFile('a.txt', 80)
         const f2 = makeFile('b.txt', 80)
         await fm.addFiles([f1])
@@ -144,7 +161,7 @@ describe('FileManager — removeFile return value', () => {
     it('returns the removed file', async () => {
         const fm = new FileManager({})
         const [added] = await fm.addFiles([makeFile('x.txt')])
-        const removed = fm.removeFile(added.id)
+        const removed = fm.removeFile(added!.id)
         expect(removed).toBeDefined()
         expect(removed?.name).toBe('x.txt')
     })
@@ -165,7 +182,7 @@ describe('FileManager — onBeforeFileAdded returns File', () => {
             onBeforeFileAdded: () => renamed,
         })
         const result = await fm.addFiles([makeFile('original.txt')])
-        expect(result[0].name).toBe('renamed.txt')
+        expect(result[0]!.name).toBe('renamed.txt')
     })
 })
 
@@ -183,14 +200,20 @@ describe('FileManager — contentDeduplication', () => {
 
         expect(result).toHaveLength(1)
         expect(fm.getFiles().size).toBe(1)
-        expect(result[0].fileHash).toBeDefined()
-        expect(result[0].metadata?.originalContentHash).toBe(result[0].fileHash)
+        expect(result[0]!.fileHash).toBeDefined()
+        expect(result[0]!.metadata?.originalContentHash).toBe(
+            result[0]!.fileHash,
+        )
     })
 
     it('skips duplicate content against existing files', async () => {
         const fm = new FileManager({ contentDeduplication: true })
-        await fm.addFiles([new File(['same bytes'], 'first.txt', { type: 'text/plain' })])
-        const result = await fm.addFiles([new File(['same bytes'], 'second.txt', { type: 'text/plain' })])
+        await fm.addFiles([
+            new File(['same bytes'], 'first.txt', { type: 'text/plain' }),
+        ])
+        const result = await fm.addFiles([
+            new File(['same bytes'], 'second.txt', { type: 'text/plain' }),
+        ])
 
         expect(result).toHaveLength(0)
         expect(fm.getFiles().size).toBe(1)

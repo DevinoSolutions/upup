@@ -24,12 +24,16 @@ function mockFetchResponse(
         ok,
         status,
         json: vi.fn().mockResolvedValue(body),
-        text: vi.fn().mockResolvedValue(
-            typeof body === 'string' ? body : JSON.stringify(body),
-        ),
-        blob: vi.fn().mockResolvedValue(
-            new Blob(['file-content'], { type: 'text/plain' }),
-        ),
+        text: vi
+            .fn()
+            .mockResolvedValue(
+                typeof body === 'string' ? body : JSON.stringify(body),
+            ),
+        blob: vi
+            .fn()
+            .mockResolvedValue(
+                new Blob(['file-content'], { type: 'text/plain' }),
+            ),
     })
 }
 
@@ -153,7 +157,6 @@ describe('BoxPlugin', () => {
             )
             expect(postDestroyEvents).toHaveLength(0)
         })
-
     })
 
     // ────────────────────────────────────────────
@@ -182,7 +185,9 @@ describe('BoxPlugin', () => {
         it('returns a valid Box OAuth URL with PKCE params', async () => {
             const url = await plugin.getAuthUrl()
 
-            expect(url).toContain('https://account.box.com/api/oauth2/authorize')
+            expect(url).toContain(
+                'https://account.box.com/api/oauth2/authorize',
+            )
             const parsed = new URL(url)
             expect(parsed.searchParams.get('client_id')).toBe('test-client-id')
             expect(parsed.searchParams.get('response_type')).toBe('code')
@@ -232,7 +237,8 @@ describe('BoxPlugin', () => {
 
             vi.stubGlobal(
                 'fetch',
-                vi.fn()
+                vi
+                    .fn()
                     // Token exchange
                     .mockResolvedValueOnce({
                         ok: true,
@@ -266,7 +272,8 @@ describe('BoxPlugin', () => {
             )
             expect(authEvents).toHaveLength(1)
             expect(
-                (authEvents[0].payload as { user: { name: string } }).user.name,
+                (authEvents[0]!.payload as { user: { name: string } }).user
+                    .name,
             ).toBe('Test User')
 
             // Tokens saved to session storage
@@ -285,7 +292,8 @@ describe('BoxPlugin', () => {
 
             vi.stubGlobal(
                 'fetch',
-                vi.fn()
+                vi
+                    .fn()
                     .mockResolvedValueOnce({
                         ok: true,
                         status: 200,
@@ -347,13 +355,11 @@ describe('BoxPlugin', () => {
 
             expect(plugin.getState()).toBe('idle')
 
-            const errorEvents = events.filter(
-                e => e.event === 'box:error',
-            )
+            const errorEvents = events.filter(e => e.event === 'box:error')
             expect(errorEvents).toHaveLength(1)
-            expect(
-                (errorEvents[0].payload as { action: string }).action,
-            ).toBe('authenticate')
+            expect((errorEvents[0]!.payload as { action: string }).action).toBe(
+                'authenticate',
+            )
         })
 
         it('still authenticates if user profile fetch fails', async () => {
@@ -361,7 +367,8 @@ describe('BoxPlugin', () => {
 
             vi.stubGlobal(
                 'fetch',
-                vi.fn()
+                vi
+                    .fn()
                     .mockResolvedValueOnce({
                         ok: true,
                         status: 200,
@@ -382,7 +389,7 @@ describe('BoxPlugin', () => {
             )
             expect(authEvents).toHaveLength(1)
             expect(
-                (authEvents[0].payload as { user?: unknown }).user,
+                (authEvents[0]!.payload as { user?: unknown }).user,
             ).toBeUndefined()
         })
     })
@@ -397,7 +404,8 @@ describe('BoxPlugin', () => {
 
             vi.stubGlobal(
                 'fetch',
-                vi.fn()
+                vi
+                    .fn()
                     .mockResolvedValueOnce({
                         ok: true,
                         status: 200,
@@ -457,7 +465,8 @@ describe('BoxPlugin', () => {
 
             vi.stubGlobal(
                 'fetch',
-                vi.fn()
+                vi
+                    .fn()
                     .mockResolvedValueOnce({
                         ok: true,
                         status: 200,
@@ -505,9 +514,9 @@ describe('BoxPlugin', () => {
 
             const errors = events.filter(e => e.event === 'box:error')
             expect(errors).toHaveLength(1)
-            expect(
-                (errors[0].payload as { action: string }).action,
-            ).toBe('refreshAccessToken')
+            expect((errors[0]!.payload as { action: string }).action).toBe(
+                'refreshAccessToken',
+            )
         })
     })
 
@@ -520,7 +529,8 @@ describe('BoxPlugin', () => {
             await plugin.getAuthUrl()
             vi.stubGlobal(
                 'fetch',
-                vi.fn()
+                vi
+                    .fn()
                     .mockResolvedValueOnce({
                         ok: true,
                         status: 200,
@@ -549,9 +559,7 @@ describe('BoxPlugin', () => {
             expect(plugin.isAuthenticated()).toBe(false)
             expect(plugin.getAccessToken()).toBeNull()
 
-            const signedOut = events.filter(
-                e => e.event === 'box:signed-out',
-            )
+            const signedOut = events.filter(e => e.event === 'box:signed-out')
             expect(signedOut).toHaveLength(1)
 
             expect(sessionStorage.removeItem).toHaveBeenCalledWith(
@@ -568,9 +576,9 @@ describe('BoxPlugin', () => {
                 e => e.event === 'box:state-change',
             )
             expect(stateChanges).toHaveLength(1)
-            expect(
-                (stateChanges[0].payload as { state: string }).state,
-            ).toBe('idle')
+            expect((stateChanges[0]!.payload as { state: string }).state).toBe(
+                'idle',
+            )
         })
     })
 
@@ -615,9 +623,9 @@ describe('BoxPlugin', () => {
                 e => e.event === 'box:state-change',
             )
             expect(stateChanges).toHaveLength(1)
-            expect(
-                (stateChanges[0].payload as { state: string }).state,
-            ).toBe('authenticated')
+            expect((stateChanges[0]!.payload as { state: string }).state).toBe(
+                'authenticated',
+            )
         })
     })
 
@@ -682,10 +690,10 @@ describe('BoxPlugin', () => {
             await plugin.loadFiles()
 
             // The refresh (token endpoint) fired first — proactively, with NO prior 401.
-            expect(fetchMock.mock.calls[0][0]).toBe(
+            expect(fetchMock.mock.calls[0]![0]).toBe(
                 'https://api.box.com/oauth2/token',
             )
-            expect(fetchMock.mock.calls[1][0]).toContain(
+            expect(fetchMock.mock.calls[1]![0]).toContain(
                 'https://api.box.com/2.0/folders',
             )
         })
@@ -718,19 +726,16 @@ describe('BoxPlugin', () => {
                 },
             ]
 
-            vi.stubGlobal(
-                'fetch',
-                mockFetchResponse({ entries: boxEntries }),
-            )
+            vi.stubGlobal('fetch', mockFetchResponse({ entries: boxEntries }))
 
             const result = await plugin.loadFiles('0')
 
             expect(result.files).toHaveLength(2)
-            expect(result.files[0].name).toBe('document.pdf')
-            expect(result.files[0].mimeType).toBe('application/pdf')
-            expect(result.files[0].isFolder).toBe(false)
-            expect(result.files[1].name).toBe('Photos')
-            expect(result.files[1].isFolder).toBe(true)
+            expect(result.files[0]!.name).toBe('document.pdf')
+            expect(result.files[0]!.mimeType).toBe('application/pdf')
+            expect(result.files[0]!.isFolder).toBe(false)
+            expect(result.files[1]!.name).toBe('Photos')
+            expect(result.files[1]!.isFolder).toBe(true)
             expect(result.folderId).toBe('0')
         })
 
@@ -751,11 +756,9 @@ describe('BoxPlugin', () => {
 
             await plugin.loadFiles('123')
 
-            const loaded = events.filter(
-                e => e.event === 'box:files-loaded',
-            )
+            const loaded = events.filter(e => e.event === 'box:files-loaded')
             expect(loaded).toHaveLength(1)
-            const payload = loaded[0].payload as {
+            const payload = loaded[0]!.payload as {
                 files: DriveFile[]
                 folderId: string
             }
@@ -764,10 +767,7 @@ describe('BoxPlugin', () => {
         })
 
         it('transitions state to browsing then back to authenticated', async () => {
-            vi.stubGlobal(
-                'fetch',
-                mockFetchResponse({ entries: [] }),
-            )
+            vi.stubGlobal('fetch', mockFetchResponse({ entries: [] }))
 
             await plugin.loadFiles('0')
 
@@ -789,9 +789,9 @@ describe('BoxPlugin', () => {
 
             const errors = events.filter(e => e.event === 'box:error')
             expect(errors).toHaveLength(1)
-            expect(
-                (errors[0].payload as { action: string }).action,
-            ).toBe('loadFiles')
+            expect((errors[0]!.payload as { action: string }).action).toBe(
+                'loadFiles',
+            )
         })
 
         it('throws when not authenticated', async () => {
@@ -811,7 +811,7 @@ describe('BoxPlugin', () => {
             await plugin.loadFiles()
 
             expect(fetchMock).toHaveBeenCalled()
-            const calledUrl = fetchMock.mock.calls[0][0] as string
+            const calledUrl = fetchMock.mock.calls[0]![0] as string
             expect(calledUrl).toContain('/folders/0/items')
         })
 
@@ -819,7 +819,9 @@ describe('BoxPlugin', () => {
             vi.stubGlobal(
                 'fetch',
                 mockFetchResponse({
-                    entries: [{ type: 'file', id: '1', name: 'a.txt', size: 1 }],
+                    entries: [
+                        { type: 'file', id: '1', name: 'a.txt', size: 1 },
+                    ],
                     total_count: 5,
                     offset: 0,
                 }),
@@ -835,7 +837,9 @@ describe('BoxPlugin', () => {
             vi.stubGlobal(
                 'fetch',
                 mockFetchResponse({
-                    entries: [{ type: 'file', id: '1', name: 'a.txt', size: 1 }],
+                    entries: [
+                        { type: 'file', id: '1', name: 'a.txt', size: 1 },
+                    ],
                     total_count: 1,
                     offset: 0,
                 }),
@@ -850,10 +854,7 @@ describe('BoxPlugin', () => {
         it('falls back to a length-based hasMore when total_count is absent', async () => {
             // Existing fixtures across this file mock { entries } with no total_count —
             // must not regress into a false "always more" state.
-            vi.stubGlobal(
-                'fetch',
-                mockFetchResponse({ entries: [] }),
-            )
+            vi.stubGlobal('fetch', mockFetchResponse({ entries: [] }))
 
             const result = await plugin.loadFiles('0')
 
@@ -872,7 +873,9 @@ describe('BoxPlugin', () => {
             vi.stubGlobal(
                 'fetch',
                 mockFetchResponse({
-                    entries: [{ type: 'file', id: '2', name: 'b.txt', size: 2 }],
+                    entries: [
+                        { type: 'file', id: '2', name: 'b.txt', size: 2 },
+                    ],
                     total_count: 2,
                     offset: 1,
                 }),
@@ -881,7 +884,7 @@ describe('BoxPlugin', () => {
             const result = await plugin.loadMoreFiles('0:1')
 
             expect(result.files).toHaveLength(1)
-            expect(result.files[0].name).toBe('b.txt')
+            expect(result.files[0]!.name).toBe('b.txt')
             expect(result.hasMore).toBe(false)
             expect(result.cursor).toBeUndefined()
         })
@@ -896,9 +899,9 @@ describe('BoxPlugin', () => {
 
             const errors = events.filter(e => e.event === 'box:error')
             expect(errors).toHaveLength(1)
-            expect(
-                (errors[0].payload as { action: string }).action,
-            ).toBe('loadMoreFiles')
+            expect((errors[0]!.payload as { action: string }).action).toBe(
+                'loadMoreFiles',
+            )
         })
     })
 
@@ -921,31 +924,28 @@ describe('BoxPlugin', () => {
 
             vi.stubGlobal(
                 'fetch',
-                vi.fn()
+                vi
+                    .fn()
                     // Download file 1
                     .mockResolvedValueOnce({
                         ok: true,
                         status: 200,
-                        blob: vi
-                            .fn()
-                            .mockResolvedValue(
-                                new Blob(['content1'], {
-                                    type: 'text/plain',
-                                }),
-                            ),
+                        blob: vi.fn().mockResolvedValue(
+                            new Blob(['content1'], {
+                                type: 'text/plain',
+                            }),
+                        ),
                         text: vi.fn().mockResolvedValue(''),
                     })
                     // Download file 2
                     .mockResolvedValueOnce({
                         ok: true,
                         status: 200,
-                        blob: vi
-                            .fn()
-                            .mockResolvedValue(
-                                new Blob(['content2'], {
-                                    type: 'text/plain',
-                                }),
-                            ),
+                        blob: vi.fn().mockResolvedValue(
+                            new Blob(['content2'], {
+                                type: 'text/plain',
+                            }),
+                        ),
                         text: vi.fn().mockResolvedValue(''),
                     }),
             )
@@ -953,8 +953,8 @@ describe('BoxPlugin', () => {
             const results = await plugin.downloadFiles(driveFiles)
 
             expect(results).toHaveLength(2)
-            expect(results[0].name).toBe('a.txt')
-            expect(results[1].name).toBe('b.txt')
+            expect(results[0]!.name).toBe('a.txt')
+            expect(results[1]!.name).toBe('b.txt')
         })
 
         it('skips folders', async () => {
@@ -979,7 +979,8 @@ describe('BoxPlugin', () => {
 
             vi.stubGlobal(
                 'fetch',
-                vi.fn()
+                vi
+                    .fn()
                     // Download file 1 - fails
                     .mockResolvedValueOnce({
                         ok: false,
@@ -1003,13 +1004,13 @@ describe('BoxPlugin', () => {
             const results = await plugin.downloadFiles(driveFiles)
 
             expect(results).toHaveLength(1)
-            expect(results[0].name).toBe('ok.txt')
+            expect(results[0]!.name).toBe('ok.txt')
 
             const errors = events.filter(e => e.event === 'box:error')
             expect(errors.length).toBeGreaterThanOrEqual(1)
-            expect(
-                (errors[0].payload as { action: string }).action,
-            ).toBe('downloadFiles')
+            expect((errors[0]!.payload as { action: string }).action).toBe(
+                'downloadFiles',
+            )
         })
     })
 
@@ -1042,7 +1043,7 @@ describe('BoxPlugin', () => {
             const results = await plugin.searchFiles('found')
 
             expect(results).toHaveLength(1)
-            expect(results[0].name).toBe('found.txt')
+            expect(results[0]!.name).toBe('found.txt')
         })
 
         it('passes query parameter in the URL', async () => {
@@ -1052,23 +1053,20 @@ describe('BoxPlugin', () => {
             await plugin.searchFiles('my query')
 
             expect(fetchMock).toHaveBeenCalled()
-            const calledUrl = fetchMock.mock.calls[0][0] as string
+            const calledUrl = fetchMock.mock.calls[0]![0] as string
             expect(calledUrl).toContain('query=my+query')
         })
 
         it('emits error on failure', async () => {
-            vi.stubGlobal(
-                'fetch',
-                mockFetchResponse('err', 500, false),
-            )
+            vi.stubGlobal('fetch', mockFetchResponse('err', 500, false))
 
             await expect(plugin.searchFiles('query')).rejects.toThrow()
 
             const errors = events.filter(e => e.event === 'box:error')
             expect(errors).toHaveLength(1)
-            expect(
-                (errors[0].payload as { action: string }).action,
-            ).toBe('searchFiles')
+            expect((errors[0]!.payload as { action: string }).action).toBe(
+                'searchFiles',
+            )
         })
     })
 
@@ -1087,15 +1085,14 @@ describe('BoxPlugin', () => {
         it('retries with refreshed token on 401', async () => {
             vi.stubGlobal(
                 'fetch',
-                vi.fn()
+                vi
+                    .fn()
                     // First attempt -> 401
                     .mockResolvedValueOnce({
                         ok: false,
                         status: 401,
                         json: vi.fn().mockResolvedValue({}),
-                        text: vi
-                            .fn()
-                            .mockResolvedValue('unauthorized'),
+                        text: vi.fn().mockResolvedValue('unauthorized'),
                     })
                     // Refresh token call
                     .mockResolvedValueOnce({
@@ -1136,9 +1133,7 @@ describe('BoxPlugin', () => {
                     ok: false,
                     status: 401,
                     json: vi.fn().mockResolvedValue({}),
-                    text: vi
-                        .fn()
-                        .mockResolvedValue('unauthorized'),
+                    text: vi.fn().mockResolvedValue('unauthorized'),
                 }),
             )
 
@@ -1175,7 +1170,10 @@ describe('BoxPlugin', () => {
             ['pic.webp', 'image/webp'],
             ['icon.svg', 'image/svg+xml'],
             ['doc.pdf', 'application/pdf'],
-            ['report.docx', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
+            [
+                'report.docx',
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            ],
             ['data.csv', 'text/csv'],
             ['unknown.xyz', 'application/octet-stream'],
         ])('maps %s to %s', async (filename, expectedMime) => {
@@ -1194,7 +1192,7 @@ describe('BoxPlugin', () => {
             )
 
             const result = await plugin.loadFiles('0')
-            expect(result.files[0].mimeType).toBe(expectedMime)
+            expect(result.files[0]!.mimeType).toBe(expectedMime)
         })
 
         it('maps folders with mimeType folder', async () => {
@@ -1212,8 +1210,8 @@ describe('BoxPlugin', () => {
             )
 
             const result = await plugin.loadFiles('0')
-            expect(result.files[0].mimeType).toBe('folder')
-            expect(result.files[0].size).toBe(0)
+            expect(result.files[0]!.mimeType).toBe('folder')
+            expect(result.files[0]!.size).toBe(0)
         })
     })
 
@@ -1239,18 +1237,15 @@ describe('BoxPlugin', () => {
             )
 
             const result = await plugin.loadFiles('0')
-            expect(result.files[0].id).toBe('')
-            expect(result.files[0].name).toBe('')
+            expect(result.files[0]!.id).toBe('')
+            expect(result.files[0]!.name).toBe('')
         })
 
         it('handles empty entries array', async () => {
             sessionStore.set('upup_box_access_token', 'tok')
             plugin.restoreSession()
 
-            vi.stubGlobal(
-                'fetch',
-                mockFetchResponse({ entries: [] }),
-            )
+            vi.stubGlobal('fetch', mockFetchResponse({ entries: [] }))
 
             const result = await plugin.loadFiles('0')
             expect(result.files).toHaveLength(0)
@@ -1260,10 +1255,7 @@ describe('BoxPlugin', () => {
             sessionStore.set('upup_box_access_token', 'tok')
             plugin.restoreSession()
 
-            vi.stubGlobal(
-                'fetch',
-                mockFetchResponse({}),
-            )
+            vi.stubGlobal('fetch', mockFetchResponse({}))
 
             const result = await plugin.loadFiles('0')
             expect(result.files).toHaveLength(0)

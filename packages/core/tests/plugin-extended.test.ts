@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import { UpupCore } from '../src/core'
-import type { UpupPlugin } from '../src/plugin'
+import type { UpupPlugin, ExtensionMethods } from '../src/plugin'
 
 // ─────────────────────────────────────────────
 // UpupCore.use() chaining
@@ -17,8 +17,7 @@ describe('UpupCore.use() — chaining and integration', () => {
     it('chains multiple plugins in sequence', () => {
         const order: string[] = []
         const core = new UpupCore({})
-        core
-            .use({ name: 'first', init: () => order.push('first') })
+        core.use({ name: 'first', init: () => order.push('first') })
             .use({ name: 'second', init: () => order.push('second') })
             .use({ name: 'third', init: () => order.push('third') })
         expect(order).toEqual(['first', 'second', 'third'])
@@ -30,7 +29,7 @@ describe('UpupCore.use() — chaining and integration', () => {
         const handler = vi.fn()
         core.use({
             name: 'event-listener',
-            init: (emitter) => {
+            init: emitter => {
                 emitter.on('files-added', handler)
             },
         })
@@ -64,12 +63,12 @@ describe('UpupCore.getExtension() — extension access', () => {
             init: () => {
                 core.registerExtension('math', {
                     add: (a: number, b: number) => a + b,
-                })
+                } as unknown as ExtensionMethods)
             },
         })
         const math = core.getExtension('math')
         expect(math).toBeDefined()
-        expect(math!.add(2, 3)).toBe(5)
+        expect(math!.add!(2, 3)).toBe(5)
         core.destroy()
     })
 
@@ -77,7 +76,7 @@ describe('UpupCore.getExtension() — extension access', () => {
         const core = new UpupCore({})
         core.use({
             name: 'counter-ext',
-            init: (emitter) => {
+            init: emitter => {
                 let count = 0
                 emitter.on('files-added', () => count++)
                 core.registerExtension('counter', {
@@ -90,7 +89,7 @@ describe('UpupCore.getExtension() — extension access', () => {
         await core.addFiles([new File(['b'], 'b.txt', { type: 'text/plain' })])
 
         const counter = core.getExtension('counter')
-        expect(counter!.getCount()).toBe(2)
+        expect(counter!.getCount!()).toBe(2)
         core.destroy()
     })
 
@@ -143,7 +142,7 @@ describe('UpupCore.use() — init(emitter) lifecycle hook (F-607)', () => {
         let received: unknown
         const plugin: UpupPlugin = {
             name: 'init-only',
-            init: (emitter) => {
+            init: emitter => {
                 received = emitter
             },
         }
@@ -166,7 +165,7 @@ describe('UpupCore.use() — init(emitter) lifecycle hook (F-607)', () => {
         const handler = vi.fn()
         core.use({
             name: 'init-subscriber',
-            init: (emitter) => {
+            init: emitter => {
                 emitter.on('files-added', handler)
             },
         })

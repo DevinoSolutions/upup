@@ -9,40 +9,56 @@ describe('useUpupUpload — configuration variants', () => {
             useUpupUpload({
                 provider: 'S3' as const,
                 cloudDrives: {
-                    googleDrive: { clientId: 'gd-id', apiKey: 'gd-key', appId: 'gd-app' },
-                    dropbox: { appKey: 'db-key' },
+                    googleDrive: {
+                        clientId: 'gd-id',
+                        apiKey: 'gd-key',
+                        appId: 'gd-app',
+                    },
+                    dropbox: { clientId: 'db-key' },
                     oneDrive: { clientId: 'od-id' },
                 },
             }),
         )
         expect(result.current.status).toBe(UploadStatus.IDLE)
-        expect(result.current.core.options.cloudDrives?.googleDrive?.clientId).toBe('gd-id')
+        expect(
+            result.current.core.options.cloudDrives?.googleDrive?.clientId,
+        ).toBe('gd-id')
     })
 
     it('does not infer hosted serverUrl from apiKey-like legacy input', () => {
         const { result } = renderHook(() =>
-            useUpupUpload({ provider: 'S3' as const, apiKey: 'key-123' } as unknown as Parameters<typeof useUpupUpload>[0]),
+            useUpupUpload({
+                provider: 'S3' as const,
+                apiKey: 'key-123',
+            } as unknown as Parameters<typeof useUpupUpload>[0]),
         )
         expect(result.current.core.options.serverUrl).toBeUndefined()
     })
 
     it('keeps explicit serverUrl when legacy apiKey-like input is present', () => {
         const { result } = renderHook(() =>
-            useUpupUpload({ provider: 'S3' as const, apiKey: 'key', serverUrl: 'https://custom.api' } as unknown as Parameters<typeof useUpupUpload>[0]),
+            useUpupUpload({
+                provider: 'S3' as const,
+                apiKey: 'key',
+                serverUrl: 'https://custom.api',
+            } as unknown as Parameters<typeof useUpupUpload>[0]),
         )
         expect(result.current.core.options.serverUrl).toBe('https://custom.api')
     })
 
-    it('accepts enableWorkers option', () => {
+    it('accepts webWorker option', () => {
         const { result } = renderHook(() =>
-            useUpupUpload({ provider: 'S3' as const, enableWorkers: true }),
+            useUpupUpload({ provider: 'S3' as const, webWorker: true }),
         )
-        expect(result.current.core.options.enableWorkers).toBe(true)
+        expect(result.current.core.options.webWorker).toBe(true)
     })
 
     it('accepts checksumVerification option', () => {
         const { result } = renderHook(() =>
-            useUpupUpload({ provider: 'S3' as const, checksumVerification: true }),
+            useUpupUpload({
+                provider: 'S3' as const,
+                checksumVerification: true,
+            }),
         )
         expect(result.current.core.options.checksumVerification).toBe(true)
     })

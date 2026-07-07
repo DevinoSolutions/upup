@@ -76,11 +76,15 @@ describe.skipIf(!RUN)('MinIO real-storage upload validation', () => {
                 }),
             )
         } catch (err) {
-            throw new Error(
+            // tsconfig's lib is ES2020, which predates the 2-arg
+            // Error(message, { cause }) constructor overload -- attach cause
+            // as a property instead of widening the repo's lib target.
+            const error = new Error(
                 `MinIO unreachable at ${storage.endpoint} (bucket ${storage.bucket}). ` +
                     `Run "pnpm e2e:minio:up" first. Underlying: ${(err as Error).message}`,
-                { cause: err },
             )
+            ;(error as Error & { cause?: unknown }).cause = err
+            throw error
         }
     })
 
@@ -111,7 +115,7 @@ describe.skipIf(!RUN)('MinIO real-storage upload validation', () => {
         uploadedKeys.push(key)
         const put = await fetch(uploadUrl, {
             method: 'PUT',
-            headers: uploadHeaders,
+            ...(uploadHeaders ? { headers: uploadHeaders } : {}),
             body: bytes,
         })
         expect(put.status).toBe(200)

@@ -36,7 +36,7 @@ describe('vanilla dropzone border recovery', () => {
         await up.addFiles([fileOf('a.txt')])
         await Promise.resolve()
         expect(hasBorder()).toBe(false) // file present → no border
-        up.removeFile(up.getState().files[0].id)
+        up.removeFile(up.getState().files[0]!.id)
         await Promise.resolve()
         expect(hasBorder()).toBe(true) // last file gone → border returns
         up.destroy()

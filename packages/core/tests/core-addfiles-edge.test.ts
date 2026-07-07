@@ -25,7 +25,7 @@ describe('UpupCore.addFiles — onBeforeFileAdded returning File', () => {
             onBeforeFileAdded: async () => true,
         })
         await core.addFiles([makeFile('keep-me.txt')])
-        expect([...core.files.values()][0].name).toBe('keep-me.txt')
+        expect([...core.files.values()][0]!.name).toBe('keep-me.txt')
         core.destroy()
     })
 
@@ -41,7 +41,11 @@ describe('UpupCore.addFiles — onBeforeFileAdded returning File', () => {
     it('callback is called for each file in the batch', async () => {
         const fn = vi.fn(async () => true)
         const core = new UpupCore({ onBeforeFileAdded: fn })
-        await core.addFiles([makeFile('a.txt'), makeFile('b.txt'), makeFile('c.txt')])
+        await core.addFiles([
+            makeFile('a.txt'),
+            makeFile('b.txt'),
+            makeFile('c.txt'),
+        ])
         expect(fn).toHaveBeenCalledTimes(3)
         core.destroy()
     })
@@ -52,7 +56,9 @@ describe('UpupCore.addFiles — onBeforeFileAdded returning File', () => {
 // ─────────────────────────────────────────────
 describe('UpupCore.addFiles — maxTotalFileSize', () => {
     it('accepts files within total size limit', async () => {
-        const core = new UpupCore({ maxTotalFileSize: { size: 100, unit: 'B' } })
+        const core = new UpupCore({
+            maxTotalFileSize: { size: 100, unit: 'B' },
+        })
         await core.addFiles([makeFile('a.txt', 30), makeFile('b.txt', 30)])
         expect(core.files.size).toBe(2)
         core.destroy()
@@ -75,7 +81,10 @@ describe('UpupCore.addFiles — mixed valid/invalid in batch', () => {
         const core = new UpupCore({ allowedFileTypes: 'text/plain' })
         // Adding a mix — behavior depends on implementation
         await expect(
-            core.addFiles([makeFile('ok.txt', 10, 'text/plain'), makeFile('bad.png', 10, 'image/png')]),
+            core.addFiles([
+                makeFile('ok.txt', 10, 'text/plain'),
+                makeFile('bad.png', 10, 'image/png'),
+            ]),
         ).rejects.toThrow()
         core.destroy()
     })
@@ -101,7 +110,7 @@ describe('UpupCore.addFiles — event emission', () => {
         core.on('files-added', handler)
         await core.addFiles([makeFile('x.txt')])
         expect(handler).toHaveBeenCalledOnce()
-        const added = handler.mock.calls[0][0]
+        const added = handler.mock.calls[0]![0]
         expect(Array.isArray(added)).toBe(true)
         expect(added[0].name).toBe('x.txt')
         core.destroy()

@@ -24,12 +24,16 @@ function mockFetchResponse(
         ok,
         status,
         json: vi.fn().mockResolvedValue(body),
-        text: vi.fn().mockResolvedValue(
-            typeof body === 'string' ? body : JSON.stringify(body),
-        ),
-        blob: vi.fn().mockResolvedValue(
-            new Blob(['file-content'], { type: 'text/plain' }),
-        ),
+        text: vi
+            .fn()
+            .mockResolvedValue(
+                typeof body === 'string' ? body : JSON.stringify(body),
+            ),
+        blob: vi
+            .fn()
+            .mockResolvedValue(
+                new Blob(['file-content'], { type: 'text/plain' }),
+            ),
     })
 }
 
@@ -194,9 +198,7 @@ describe('DropboxPlugin', () => {
             const parsed = new URL(url)
             expect(parsed.searchParams.get('client_id')).toBe('test-client-id')
             expect(parsed.searchParams.get('response_type')).toBe('code')
-            expect(parsed.searchParams.get('token_access_type')).toBe(
-                'offline',
-            )
+            expect(parsed.searchParams.get('token_access_type')).toBe('offline')
             expect(parsed.searchParams.get('code_challenge_method')).toBe(
                 'S256',
             )
@@ -247,7 +249,8 @@ describe('DropboxPlugin', () => {
 
             vi.stubGlobal(
                 'fetch',
-                vi.fn()
+                vi
+                    .fn()
                     // Token exchange
                     .mockResolvedValueOnce({
                         ok: true,
@@ -282,7 +285,8 @@ describe('DropboxPlugin', () => {
             )
             expect(authEvents).toHaveLength(1)
             expect(
-                (authEvents[0].payload as { user: { name: string } }).user.name,
+                (authEvents[0]!.payload as { user: { name: string } }).user
+                    .name,
             ).toBe('Test User')
 
             // Tokens saved to session storage
@@ -301,7 +305,8 @@ describe('DropboxPlugin', () => {
 
             vi.stubGlobal(
                 'fetch',
-                vi.fn()
+                vi
+                    .fn()
                     .mockResolvedValueOnce({
                         ok: true,
                         status: 200,
@@ -364,13 +369,11 @@ describe('DropboxPlugin', () => {
 
             expect(plugin.getState()).toBe('idle')
 
-            const errorEvents = events.filter(
-                e => e.event === 'dropbox:error',
-            )
+            const errorEvents = events.filter(e => e.event === 'dropbox:error')
             expect(errorEvents).toHaveLength(1)
-            expect(
-                (errorEvents[0].payload as { action: string }).action,
-            ).toBe('authenticate')
+            expect((errorEvents[0]!.payload as { action: string }).action).toBe(
+                'authenticate',
+            )
         })
 
         it('still authenticates if user profile fetch fails', async () => {
@@ -378,7 +381,8 @@ describe('DropboxPlugin', () => {
 
             vi.stubGlobal(
                 'fetch',
-                vi.fn()
+                vi
+                    .fn()
                     .mockResolvedValueOnce({
                         ok: true,
                         status: 200,
@@ -401,7 +405,7 @@ describe('DropboxPlugin', () => {
             expect(authEvents).toHaveLength(1)
             // user is undefined since profile fetch failed
             expect(
-                (authEvents[0].payload as { user?: unknown }).user,
+                (authEvents[0]!.payload as { user?: unknown }).user,
             ).toBeUndefined()
         })
     })
@@ -417,7 +421,8 @@ describe('DropboxPlugin', () => {
 
             vi.stubGlobal(
                 'fetch',
-                vi.fn()
+                vi
+                    .fn()
                     .mockResolvedValueOnce({
                         ok: true,
                         status: 200,
@@ -480,7 +485,8 @@ describe('DropboxPlugin', () => {
 
             vi.stubGlobal(
                 'fetch',
-                vi.fn()
+                vi
+                    .fn()
                     .mockResolvedValueOnce({
                         ok: true,
                         status: 200,
@@ -529,9 +535,9 @@ describe('DropboxPlugin', () => {
 
             const errors = events.filter(e => e.event === 'dropbox:error')
             expect(errors).toHaveLength(1)
-            expect(
-                (errors[0].payload as { action: string }).action,
-            ).toBe('refreshAccessToken')
+            expect((errors[0]!.payload as { action: string }).action).toBe(
+                'refreshAccessToken',
+            )
         })
     })
 
@@ -545,7 +551,8 @@ describe('DropboxPlugin', () => {
             await plugin.getAuthUrl()
             vi.stubGlobal(
                 'fetch',
-                vi.fn()
+                vi
+                    .fn()
                     .mockResolvedValueOnce({
                         ok: true,
                         status: 200,
@@ -598,9 +605,9 @@ describe('DropboxPlugin', () => {
                 e => e.event === 'dropbox:state-change',
             )
             expect(stateChanges).toHaveLength(1)
-            expect(
-                (stateChanges[0].payload as { state: string }).state,
-            ).toBe('idle')
+            expect((stateChanges[0]!.payload as { state: string }).state).toBe(
+                'idle',
+            )
         })
     })
 
@@ -649,9 +656,9 @@ describe('DropboxPlugin', () => {
                 e => e.event === 'dropbox:state-change',
             )
             expect(stateChanges).toHaveLength(1)
-            expect(
-                (stateChanges[0].payload as { state: string }).state,
-            ).toBe('authenticated')
+            expect((stateChanges[0]!.payload as { state: string }).state).toBe(
+                'authenticated',
+            )
         })
     })
 
@@ -697,11 +704,11 @@ describe('DropboxPlugin', () => {
             const result = await plugin.loadFiles('')
 
             expect(result.files).toHaveLength(2)
-            expect(result.files[0].name).toBe('document.pdf')
-            expect(result.files[0].mimeType).toBe('application/pdf')
-            expect(result.files[0].isFolder).toBe(false)
-            expect(result.files[1].name).toBe('Photos')
-            expect(result.files[1].isFolder).toBe(true)
+            expect(result.files[0]!.name).toBe('document.pdf')
+            expect(result.files[0]!.mimeType).toBe('application/pdf')
+            expect(result.files[0]!.isFolder).toBe(false)
+            expect(result.files[1]!.name).toBe('Photos')
+            expect(result.files[1]!.isFolder).toBe(true)
             expect(result.hasMore).toBe(false)
             expect(result.cursor).toBe('cursor-abc')
         })
@@ -729,7 +736,7 @@ describe('DropboxPlugin', () => {
                 e => e.event === 'dropbox:files-loaded',
             )
             expect(loaded).toHaveLength(1)
-            const payload = loaded[0].payload as {
+            const payload = loaded[0]!.payload as {
                 files: DriveFile[]
                 path: string
                 hasMore: boolean
@@ -765,9 +772,9 @@ describe('DropboxPlugin', () => {
 
             const errors = events.filter(e => e.event === 'dropbox:error')
             expect(errors).toHaveLength(1)
-            expect(
-                (errors[0].payload as { action: string }).action,
-            ).toBe('loadFiles')
+            expect((errors[0]!.payload as { action: string }).action).toBe(
+                'loadFiles',
+            )
         })
 
         it('throws when not authenticated', async () => {
@@ -835,18 +842,15 @@ describe('DropboxPlugin', () => {
         })
 
         it('emits error on failure', async () => {
-            vi.stubGlobal(
-                'fetch',
-                mockFetchResponse('err', 500, false),
-            )
+            vi.stubGlobal('fetch', mockFetchResponse('err', 500, false))
 
             await expect(plugin.loadMoreFiles('cursor')).rejects.toThrow()
 
             const errors = events.filter(e => e.event === 'dropbox:error')
             expect(errors).toHaveLength(1)
-            expect(
-                (errors[0].payload as { action: string }).action,
-            ).toBe('loadMoreFiles')
+            expect((errors[0]!.payload as { action: string }).action).toBe(
+                'loadMoreFiles',
+            )
         })
     })
 
@@ -864,7 +868,8 @@ describe('DropboxPlugin', () => {
         it('fetches all pages recursively', async () => {
             vi.stubGlobal(
                 'fetch',
-                vi.fn()
+                vi
+                    .fn()
                     // First page
                     .mockResolvedValueOnce({
                         ok: true,
@@ -907,8 +912,8 @@ describe('DropboxPlugin', () => {
             const files = await plugin.loadAllFilesInFolder('/folder')
 
             expect(files).toHaveLength(2)
-            expect(files[0].name).toBe('a.txt')
-            expect(files[1].name).toBe('b.txt')
+            expect(files[0]!.name).toBe('a.txt')
+            expect(files[1]!.name).toBe('b.txt')
         })
 
         it('excludes folders from results', async () => {
@@ -937,14 +942,11 @@ describe('DropboxPlugin', () => {
             const files = await plugin.loadAllFilesInFolder('/folder')
 
             expect(files).toHaveLength(1)
-            expect(files[0].name).toBe('doc.pdf')
+            expect(files[0]!.name).toBe('doc.pdf')
         })
 
         it('emits error on failure', async () => {
-            vi.stubGlobal(
-                'fetch',
-                mockFetchResponse('err', 500, false),
-            )
+            vi.stubGlobal('fetch', mockFetchResponse('err', 500, false))
 
             await expect(
                 plugin.loadAllFilesInFolder('/folder'),
@@ -952,9 +954,9 @@ describe('DropboxPlugin', () => {
 
             const errors = events.filter(e => e.event === 'dropbox:error')
             expect(errors).toHaveLength(1)
-            expect(
-                (errors[0].payload as { action: string }).action,
-            ).toBe('loadAllFilesInFolder')
+            expect((errors[0]!.payload as { action: string }).action).toBe(
+                'loadAllFilesInFolder',
+            )
         })
     })
 
@@ -977,53 +979,46 @@ describe('DropboxPlugin', () => {
 
             vi.stubGlobal(
                 'fetch',
-                vi.fn()
+                vi
+                    .fn()
                     // Temp link for file 1
                     .mockResolvedValueOnce({
                         ok: true,
                         status: 200,
-                        json: vi
-                            .fn()
-                            .mockResolvedValue({
-                                link: 'https://dl.dropbox.com/temp1',
-                            }),
+                        json: vi.fn().mockResolvedValue({
+                            link: 'https://dl.dropbox.com/temp1',
+                        }),
                         text: vi.fn().mockResolvedValue(''),
                     })
                     // Download file 1
                     .mockResolvedValueOnce({
                         ok: true,
                         status: 200,
-                        blob: vi
-                            .fn()
-                            .mockResolvedValue(
-                                new Blob(['content1'], {
-                                    type: 'text/plain',
-                                }),
-                            ),
+                        blob: vi.fn().mockResolvedValue(
+                            new Blob(['content1'], {
+                                type: 'text/plain',
+                            }),
+                        ),
                         text: vi.fn().mockResolvedValue(''),
                     })
                     // Temp link for file 2
                     .mockResolvedValueOnce({
                         ok: true,
                         status: 200,
-                        json: vi
-                            .fn()
-                            .mockResolvedValue({
-                                link: 'https://dl.dropbox.com/temp2',
-                            }),
+                        json: vi.fn().mockResolvedValue({
+                            link: 'https://dl.dropbox.com/temp2',
+                        }),
                         text: vi.fn().mockResolvedValue(''),
                     })
                     // Download file 2
                     .mockResolvedValueOnce({
                         ok: true,
                         status: 200,
-                        blob: vi
-                            .fn()
-                            .mockResolvedValue(
-                                new Blob(['content2'], {
-                                    type: 'text/plain',
-                                }),
-                            ),
+                        blob: vi.fn().mockResolvedValue(
+                            new Blob(['content2'], {
+                                type: 'text/plain',
+                            }),
+                        ),
                         text: vi.fn().mockResolvedValue(''),
                     }),
             )
@@ -1031,8 +1026,8 @@ describe('DropboxPlugin', () => {
             const results = await plugin.downloadFiles(driveFiles)
 
             expect(results).toHaveLength(2)
-            expect(results[0].name).toBe('a.txt')
-            expect(results[1].name).toBe('b.txt')
+            expect(results[0]!.name).toBe('a.txt')
+            expect(results[1]!.name).toBe('b.txt')
         })
 
         it('skips folders', async () => {
@@ -1051,13 +1046,18 @@ describe('DropboxPlugin', () => {
 
         it('continues downloading remaining files on individual failure', async () => {
             const driveFiles = [
-                makeDriveFile({ id: 'id:1', name: 'fail.txt', path: '/fail.txt' }),
+                makeDriveFile({
+                    id: 'id:1',
+                    name: 'fail.txt',
+                    path: '/fail.txt',
+                }),
                 makeDriveFile({ id: 'id:2', name: 'ok.txt', path: '/ok.txt' }),
             ]
 
             vi.stubGlobal(
                 'fetch',
-                vi.fn()
+                vi
+                    .fn()
                     // Temp link for file 1 - fails
                     .mockResolvedValueOnce({
                         ok: false,
@@ -1069,11 +1069,9 @@ describe('DropboxPlugin', () => {
                     .mockResolvedValueOnce({
                         ok: true,
                         status: 200,
-                        json: vi
-                            .fn()
-                            .mockResolvedValue({
-                                link: 'https://dl.dropbox.com/temp2',
-                            }),
+                        json: vi.fn().mockResolvedValue({
+                            link: 'https://dl.dropbox.com/temp2',
+                        }),
                         text: vi.fn().mockResolvedValue(''),
                     })
                     // Download file 2
@@ -1092,13 +1090,13 @@ describe('DropboxPlugin', () => {
             const results = await plugin.downloadFiles(driveFiles)
 
             expect(results).toHaveLength(1)
-            expect(results[0].name).toBe('ok.txt')
+            expect(results[0]!.name).toBe('ok.txt')
 
             const errors = events.filter(e => e.event === 'dropbox:error')
             expect(errors.length).toBeGreaterThanOrEqual(1)
-            expect(
-                (errors[0].payload as { action: string }).action,
-            ).toBe('downloadFiles')
+            expect((errors[0]!.payload as { action: string }).action).toBe(
+                'downloadFiles',
+            )
         })
     })
 
@@ -1136,7 +1134,7 @@ describe('DropboxPlugin', () => {
             const results = await plugin.searchFiles('found')
 
             expect(results).toHaveLength(1)
-            expect(results[0].name).toBe('found.txt')
+            expect(results[0]!.name).toBe('found.txt')
         })
 
         it('passes path filter when provided', async () => {
@@ -1146,25 +1144,20 @@ describe('DropboxPlugin', () => {
             await plugin.searchFiles('query', '/some/path')
 
             expect(fetchMock).toHaveBeenCalled()
-            const body = JSON.parse(
-                fetchMock.mock.calls[0][1].body as string,
-            )
+            const body = JSON.parse(fetchMock.mock.calls[0]![1].body as string)
             expect(body.options.path).toBe('/some/path')
         })
 
         it('emits error on failure', async () => {
-            vi.stubGlobal(
-                'fetch',
-                mockFetchResponse('err', 500, false),
-            )
+            vi.stubGlobal('fetch', mockFetchResponse('err', 500, false))
 
             await expect(plugin.searchFiles('query')).rejects.toThrow()
 
             const errors = events.filter(e => e.event === 'dropbox:error')
             expect(errors).toHaveLength(1)
-            expect(
-                (errors[0].payload as { action: string }).action,
-            ).toBe('searchFiles')
+            expect((errors[0]!.payload as { action: string }).action).toBe(
+                'searchFiles',
+            )
         })
     })
 
@@ -1187,15 +1180,14 @@ describe('DropboxPlugin', () => {
         it('retries with refreshed token on 401', async () => {
             vi.stubGlobal(
                 'fetch',
-                vi.fn()
+                vi
+                    .fn()
                     // First attempt -> 401
                     .mockResolvedValueOnce({
                         ok: false,
                         status: 401,
                         json: vi.fn().mockResolvedValue({}),
-                        text: vi
-                            .fn()
-                            .mockResolvedValue('expired_access_token'),
+                        text: vi.fn().mockResolvedValue('expired_access_token'),
                     })
                     // Refresh token call
                     .mockResolvedValueOnce({
@@ -1237,9 +1229,7 @@ describe('DropboxPlugin', () => {
                     ok: false,
                     status: 401,
                     json: vi.fn().mockResolvedValue({}),
-                    text: vi
-                        .fn()
-                        .mockResolvedValue('expired_access_token'),
+                    text: vi.fn().mockResolvedValue('expired_access_token'),
                 }),
             )
 
@@ -1281,7 +1271,10 @@ describe('DropboxPlugin', () => {
             ['pic.webp', 'image/webp'],
             ['icon.svg', 'image/svg+xml'],
             ['doc.pdf', 'application/pdf'],
-            ['report.docx', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
+            [
+                'report.docx',
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            ],
             ['data.csv', 'text/csv'],
             ['unknown.xyz', 'application/octet-stream'],
         ])('maps %s to %s', async (filename, expectedMime) => {
@@ -1302,7 +1295,7 @@ describe('DropboxPlugin', () => {
             )
 
             const result = await plugin.loadFiles('')
-            expect(result.files[0].mimeType).toBe(expectedMime)
+            expect(result.files[0]!.mimeType).toBe(expectedMime)
         })
 
         it('maps folders with mimeType folder', async () => {
@@ -1322,8 +1315,8 @@ describe('DropboxPlugin', () => {
             )
 
             const result = await plugin.loadFiles('')
-            expect(result.files[0].mimeType).toBe('folder')
-            expect(result.files[0].size).toBe(0)
+            expect(result.files[0]!.mimeType).toBe('folder')
+            expect(result.files[0]!.size).toBe(0)
         })
     })
 
@@ -1344,7 +1337,7 @@ describe('DropboxPlugin', () => {
 
             await plugin.loadFiles()
 
-            const body = JSON.parse(fetchMock.mock.calls[0][1].body as string)
+            const body = JSON.parse(fetchMock.mock.calls[0]![1].body as string)
             expect(body.path).toBe('')
         })
 
@@ -1366,9 +1359,9 @@ describe('DropboxPlugin', () => {
             )
 
             const result = await plugin.loadFiles('')
-            expect(result.files[0].id).toBe('')
-            expect(result.files[0].name).toBe('')
-            expect(result.files[0].path).toBe('')
+            expect(result.files[0]!.id).toBe('')
+            expect(result.files[0]!.name).toBe('')
+            expect(result.files[0]!.path).toBe('')
         })
 
         it('handles empty entries array', async () => {

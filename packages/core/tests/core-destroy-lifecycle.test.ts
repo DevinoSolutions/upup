@@ -5,8 +5,7 @@ import type { PluginManager } from '../src/plugin'
 import type { CrashRecoveryManager } from '../src/crash-recovery'
 import type { PipelineEngine } from '../src/pipeline/engine'
 
-const makeFile = (name: string) =>
-    new File(['x'], name, { type: 'text/plain' })
+const makeFile = (name: string) => new File(['x'], name, { type: 'text/plain' })
 
 // Reaches into UpupCore's private fields for lifecycle assertions the public
 // API doesn't expose (plugin registry + manager refs released on destroy).
@@ -41,7 +40,9 @@ describe('UpupCore — destroy lifecycle', () => {
     it('emits destroyed event before clearing listeners', () => {
         const core = new UpupCore({})
         let eventFired = false
-        core.on('destroyed', () => { eventFired = true })
+        core.on('destroyed', () => {
+            eventFired = true
+        })
         core.destroy()
         expect(eventFired).toBe(true)
     })
@@ -61,7 +62,9 @@ describe('UpupCore — destroy lifecycle', () => {
         core.use({
             name: 'test-ext',
             init: () => {
-                ;(core as unknown as CoreInternals).pluginManager.registerExtension('test', {
+                ;(
+                    core as unknown as CoreInternals
+                ).pluginManager.registerExtension('test', {
                     val: () => 1,
                 })
             },
@@ -108,25 +111,35 @@ describe('UpupCore — destroy lifecycle', () => {
         const core2 = new UpupCore({})
         await core2.addFiles([makeFile('new.txt')])
         expect(core2.files.size).toBe(1)
-        expect([...core2.files.values()][0].name).toBe('new.txt')
+        expect([...core2.files.values()][0]!.name).toBe('new.txt')
         core2.destroy()
     })
 
     // ── F-148: destroy() is terminal ──────────────────────────────
     describe('terminal destroy (F-148)', () => {
         it('the run/mutation entry points throw after destroy()', async () => {
-            const core = new UpupCore({ provider: 'aws', uploadEndpoint: '/api/upload' })
+            const core = new UpupCore({
+                provider: 'aws',
+                uploadEndpoint: '/api/upload',
+            })
             core.destroy()
 
             await expect(core.upload()).rejects.toThrow(/after destroy/)
             await expect(core.retry()).rejects.toThrow(/after destroy/)
             expect(() => core.resume()).toThrow(/after destroy/)
-            await expect(core.addFiles([makeFile('a.txt')])).rejects.toThrow(/after destroy/)
-            await expect(core.setFiles([makeFile('b.txt')])).rejects.toThrow(/after destroy/)
+            await expect(core.addFiles([makeFile('a.txt')])).rejects.toThrow(
+                /after destroy/,
+            )
+            await expect(core.setFiles([makeFile('b.txt')])).rejects.toThrow(
+                /after destroy/,
+            )
         })
 
         it('releases the crashRecovery and pipelineEngine manager refs', () => {
-            const core = new UpupCore({ crashRecovery: true, imageCompression: true })
+            const core = new UpupCore({
+                crashRecovery: true,
+                imageCompression: true,
+            })
             core.destroy()
             expect((core as unknown as CoreInternals).crashRecovery).toBeNull()
             expect((core as unknown as CoreInternals).pipelineEngine).toBeNull()
@@ -138,7 +151,11 @@ describe('UpupCore — destroy lifecycle', () => {
             core.destroy()
             // getters read through fileManager; nulling it would NPE these.
             expect(core.files.size).toBe(0)
-            expect(core.progress).toEqual({ totalFiles: 0, completedFiles: 0, percentage: 0 })
+            expect(core.progress).toEqual({
+                totalFiles: 0,
+                completedFiles: 0,
+                percentage: 0,
+            })
         })
     })
 })

@@ -1,0 +1,19 @@
+{
+    "extends": "./tsconfig.json",
+    "compilerOptions": {
+        "noEmit": true,
+        "declaration": false,
+        "declarationMap": false,
+        "rootDir": ".",
+        "types": ["vitest/globals", "node"],
+        "paths": {
+            "@upup/core/contracts": ["./src/contracts.ts"],
+            "@upup/core/internal": ["./src/internal.ts"],
+            "@upup/core/i18n": ["./src/i18n/index.ts"],
+            "@upup/core/theme": ["./src/theme/index.ts"],
+            "@upup/core/strategies": ["./src/strategies/index.ts"],
+            "@upup/core": ["./src/index.ts"]
+        }
+    },
+    "include": ["src", "tests"]
+}

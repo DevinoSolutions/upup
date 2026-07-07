@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
 import { useUpupUpload } from '../src/use-upup-upload'
-import { UploadStatus } from '@upup/core'
+import { UploadStatus, type ExtensionMethods } from '@upup/core'
 
 const opts = { provider: 'S3' as const }
 const makeFile = (name: string) => new File(['x'], name, { type: 'text/plain' })
@@ -30,7 +30,9 @@ describe('useUpupUpload — cleanup on unmount', () => {
         const handler = vi.fn()
         const { result, unmount } = renderHook(() => useUpupUpload(opts))
         const core = result.current.core
-        act(() => { result.current.on('files-added', handler) })
+        act(() => {
+            result.current.on('files-added', handler)
+        })
 
         await act(async () => {
             await result.current.addFiles([makeFile('c.txt')])
@@ -44,7 +46,9 @@ describe('useUpupUpload — cleanup on unmount', () => {
     })
 
     it('re-mounting creates a fresh instance', async () => {
-        const { result: r1, unmount: u1 } = renderHook(() => useUpupUpload(opts))
+        const { result: r1, unmount: u1 } = renderHook(() =>
+            useUpupUpload(opts),
+        )
         await act(async () => {
             await r1.current.addFiles([makeFile('old.txt')])
         })
@@ -59,7 +63,9 @@ describe('useUpupUpload — cleanup on unmount', () => {
     it('status resets after unmount', () => {
         const { result, unmount } = renderHook(() => useUpupUpload(opts))
         const core = result.current.core
-        act(() => { core.pause() })
+        act(() => {
+            core.pause()
+        })
         unmount()
         expect(core.status).toBe(UploadStatus.IDLE) // destroy resets
     })
@@ -75,7 +81,9 @@ describe('useUpupUpload — cleanup on unmount', () => {
         // Register through the public core API (F-607: init no longer hands the
         // plugin the core; core.registerExtension is the supported path).
         act(() => {
-            core.registerExtension('tmp', { v: 1 })
+            core.registerExtension('tmp', {
+                v: 1,
+            } as unknown as ExtensionMethods)
         })
         expect(core.getExtension('tmp')).toBeDefined()
         unmount()

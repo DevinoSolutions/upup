@@ -10,7 +10,11 @@ beforeEach(() => {
     })
 })
 
-function makeFile(name = 'test.txt', content = 'hello', type = 'text/plain'): File {
+function makeFile(
+    name = 'test.txt',
+    content = 'hello',
+    type = 'text/plain',
+): File {
     return new File([content], name, { type })
 }
 
@@ -19,33 +23,56 @@ function makeFile(name = 'test.txt', content = 'hello', type = 'text/plain'): Fi
 // ─────────────────────────────────────────────
 describe('useUpupUpload — reorderFiles', () => {
     it('reorders files to the given sequence', async () => {
-        const { result } = renderHook(() => useUpupUpload({ provider: 'S3' as const }))
+        const { result } = renderHook(() =>
+            useUpupUpload({ provider: 'S3' as const }),
+        )
         await act(async () => {
-            await result.current.addFiles([makeFile('a.txt'), makeFile('b.txt'), makeFile('c.txt')])
+            await result.current.addFiles([
+                makeFile('a.txt'),
+                makeFile('b.txt'),
+                makeFile('c.txt'),
+            ])
         })
         const ids = result.current.files.map(f => f.id)
         const reversed = [...ids].reverse()
-        act(() => { result.current.reorderFiles(reversed) })
+        act(() => {
+            result.current.reorderFiles(reversed)
+        })
         expect(result.current.files.map(f => f.id)).toEqual(reversed)
     })
 
     it('preserves order when given the same sequence', async () => {
-        const { result } = renderHook(() => useUpupUpload({ provider: 'S3' as const }))
+        const { result } = renderHook(() =>
+            useUpupUpload({ provider: 'S3' as const }),
+        )
         await act(async () => {
-            await result.current.addFiles([makeFile('a.txt'), makeFile('b.txt')])
+            await result.current.addFiles([
+                makeFile('a.txt'),
+                makeFile('b.txt'),
+            ])
         })
         const ids = result.current.files.map(f => f.id)
-        act(() => { result.current.reorderFiles(ids) })
+        act(() => {
+            result.current.reorderFiles(ids)
+        })
         expect(result.current.files.map(f => f.id)).toEqual(ids)
     })
 
     it('supports partial reorder (swap two)', async () => {
-        const { result } = renderHook(() => useUpupUpload({ provider: 'S3' as const }))
+        const { result } = renderHook(() =>
+            useUpupUpload({ provider: 'S3' as const }),
+        )
         await act(async () => {
-            await result.current.addFiles([makeFile('a.txt'), makeFile('b.txt'), makeFile('c.txt')])
+            await result.current.addFiles([
+                makeFile('a.txt'),
+                makeFile('b.txt'),
+                makeFile('c.txt'),
+            ])
         })
         const [id0, id1, id2] = result.current.files.map(f => f.id)
-        act(() => { result.current.reorderFiles([id1, id0, id2]) })
+        act(() => {
+            result.current.reorderFiles([id1!, id0!, id2!])
+        })
         const names = result.current.files.map(f => f.name)
         expect(names[0]).toBe('b.txt')
         expect(names[1]).toBe('a.txt')
@@ -58,32 +85,64 @@ describe('useUpupUpload — reorderFiles', () => {
 // ─────────────────────────────────────────────
 describe('useUpupUpload — upload controls', () => {
     it('pause() does not throw when idle', () => {
-        const { result } = renderHook(() => useUpupUpload({ provider: 'S3' as const }))
-        expect(() => { act(() => { result.current.pause() }) }).not.toThrow()
+        const { result } = renderHook(() =>
+            useUpupUpload({ provider: 'S3' as const }),
+        )
+        expect(() => {
+            act(() => {
+                result.current.pause()
+            })
+        }).not.toThrow()
     })
 
     it('resume() does not throw when idle', () => {
-        const { result } = renderHook(() => useUpupUpload({ provider: 'S3' as const }))
-        expect(() => { act(() => { result.current.resume() }) }).not.toThrow()
+        const { result } = renderHook(() =>
+            useUpupUpload({ provider: 'S3' as const }),
+        )
+        expect(() => {
+            act(() => {
+                result.current.resume()
+            })
+        }).not.toThrow()
     })
 
     it('cancel() does not throw when idle', () => {
-        const { result } = renderHook(() => useUpupUpload({ provider: 'S3' as const }))
-        expect(() => { act(() => { result.current.cancel() }) }).not.toThrow()
+        const { result } = renderHook(() =>
+            useUpupUpload({ provider: 'S3' as const }),
+        )
+        expect(() => {
+            act(() => {
+                result.current.cancel()
+            })
+        }).not.toThrow()
     })
 
     it('retry() without fileId does not throw', () => {
-        const { result } = renderHook(() => useUpupUpload({ provider: 'S3' as const }))
-        expect(() => { act(() => { result.current.retry() }) }).not.toThrow()
+        const { result } = renderHook(() =>
+            useUpupUpload({ provider: 'S3' as const }),
+        )
+        expect(() => {
+            act(() => {
+                result.current.retry()
+            })
+        }).not.toThrow()
     })
 
     it('retry() with a nonexistent fileId does not throw', () => {
-        const { result } = renderHook(() => useUpupUpload({ provider: 'S3' as const }))
-        expect(() => { act(() => { result.current.retry('nonexistent-id') }) }).not.toThrow()
+        const { result } = renderHook(() =>
+            useUpupUpload({ provider: 'S3' as const }),
+        )
+        expect(() => {
+            act(() => {
+                result.current.retry('nonexistent-id')
+            })
+        }).not.toThrow()
     })
 
     it('pause then resume does not throw', () => {
-        const { result } = renderHook(() => useUpupUpload({ provider: 'S3' as const }))
+        const { result } = renderHook(() =>
+            useUpupUpload({ provider: 'S3' as const }),
+        )
         expect(() => {
             act(() => {
                 result.current.pause()
@@ -105,8 +164,10 @@ describe('useUpupUpload — onFileRemoved callback', () => {
         await act(async () => {
             await result.current.addFiles([makeFile('to-remove.txt')])
         })
-        const fileId = result.current.files[0].id
-        act(() => { result.current.removeFile(fileId) })
+        const fileId = result.current.files[0]!.id
+        act(() => {
+            result.current.removeFile(fileId)
+        })
         expect(onFileRemoved).toHaveBeenCalled()
     })
 
@@ -115,7 +176,9 @@ describe('useUpupUpload — onFileRemoved callback', () => {
         const { result } = renderHook(() =>
             useUpupUpload({ provider: 'S3' as const, onFileRemoved }),
         )
-        act(() => { result.current.removeFile('ghost-id') })
+        act(() => {
+            result.current.removeFile('ghost-id')
+        })
         expect(onFileRemoved).not.toHaveBeenCalled()
     })
 
@@ -125,11 +188,18 @@ describe('useUpupUpload — onFileRemoved callback', () => {
             useUpupUpload({ provider: 'S3' as const, onFileRemoved }),
         )
         await act(async () => {
-            await result.current.addFiles([makeFile('a.txt'), makeFile('b.txt')])
+            await result.current.addFiles([
+                makeFile('a.txt'),
+                makeFile('b.txt'),
+            ])
         })
         const [id0, id1] = result.current.files.map(f => f.id)
-        act(() => { result.current.removeFile(id0) })
-        act(() => { result.current.removeFile(id1) })
+        act(() => {
+            result.current.removeFile(id0!)
+        })
+        act(() => {
+            result.current.removeFile(id1!)
+        })
         expect(onFileRemoved).toHaveBeenCalledTimes(2)
     })
 })

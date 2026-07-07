@@ -51,7 +51,7 @@ async function scanSlot(
         },
         { timeout: 5000 },
     )
-    return axe(node, overrides)
+    return axe(node!, overrides)
 }
 
 /**

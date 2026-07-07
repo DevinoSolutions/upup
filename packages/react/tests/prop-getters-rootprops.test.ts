@@ -5,7 +5,9 @@ import { createPropGetters } from '../src/prop-getters'
 // getRootProps/getInputProps carry no drag/drop/paste logic (F-606 only touched
 // getDropzoneProps' delegation to DragDropController) — dragDrop stays undefined
 // here since these tests never call getDropzoneProps.
-function makeDeps(overrides: Partial<Parameters<typeof createPropGetters>[0]> = {}) {
+function makeDeps(
+    overrides: Partial<Parameters<typeof createPropGetters>[0]> = {},
+) {
     return {
         addFiles: vi.fn(),
         status: 'idle',
@@ -36,7 +38,9 @@ describe('getRootProps', () => {
     })
 
     it('aria-busy is true when uploading', () => {
-        const { getRootProps } = createPropGetters(makeDeps({ status: 'uploading' }))
+        const { getRootProps } = createPropGetters(
+            makeDeps({ status: 'uploading' }),
+        )
         expect(getRootProps()['aria-busy']).toBe(true)
     })
 
@@ -47,7 +51,7 @@ describe('getRootProps', () => {
             'data-testid': 'root',
         } as React.HTMLAttributes<HTMLElement>)
         expect(props.className).toBe('my-root')
-        expect(props['data-testid']).toBe('root')
+        expect((props as Record<string, unknown>)['data-testid']).toBe('root')
         expect(props.role).toBe('application') // base preserved
     })
 })
@@ -62,7 +66,9 @@ describe('getInputProps — edge cases', () => {
     })
 
     it('sets multiple=false when configured', () => {
-        const { getInputProps } = createPropGetters(makeDeps({ multiple: false }))
+        const { getInputProps } = createPropGetters(
+            makeDeps({ multiple: false }),
+        )
         expect(getInputProps().multiple).toBe(false)
     })
 
@@ -72,7 +78,9 @@ describe('getInputProps — edge cases', () => {
     })
 
     it('accept is passed through when set', () => {
-        const { getInputProps } = createPropGetters(makeDeps({ allowedFileTypes: 'image/*,.pdf' }))
+        const { getInputProps } = createPropGetters(
+            makeDeps({ allowedFileTypes: 'image/*,.pdf' }),
+        )
         expect(getInputProps().accept).toBe('image/*,.pdf')
     })
 
@@ -93,7 +101,7 @@ describe('getInputProps — edge cases', () => {
         const event = {
             target: { files: [file] },
         } as unknown as React.ChangeEvent<HTMLInputElement>
-        getInputProps().onChange(event)
+        getInputProps().onChange!(event)
         expect(deps.addFiles).toHaveBeenCalledWith([file])
     })
 })

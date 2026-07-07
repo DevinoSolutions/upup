@@ -24,12 +24,16 @@ function mockFetchResponse(
         ok,
         status,
         json: vi.fn().mockResolvedValue(body),
-        text: vi.fn().mockResolvedValue(
-            typeof body === 'string' ? body : JSON.stringify(body),
-        ),
-        blob: vi.fn().mockResolvedValue(
-            new Blob(['file-content'], { type: 'text/plain' }),
-        ),
+        text: vi
+            .fn()
+            .mockResolvedValue(
+                typeof body === 'string' ? body : JSON.stringify(body),
+            ),
+        blob: vi
+            .fn()
+            .mockResolvedValue(
+                new Blob(['file-content'], { type: 'text/plain' }),
+            ),
     })
 }
 
@@ -204,9 +208,9 @@ describe('GoogleDrivePlugin', () => {
                 e => e.event === 'google-drive:state-change',
             )
             expect(stateChanges).toHaveLength(1)
-            expect(
-                (stateChanges[0].payload as { state: string }).state,
-            ).toBe('authenticated')
+            expect((stateChanges[0]!.payload as { state: string }).state).toBe(
+                'authenticated',
+            )
         })
 
         it('works without expiresIn', () => {
@@ -241,7 +245,7 @@ describe('GoogleDrivePlugin', () => {
                 e => e.event === 'google-drive:authenticated',
             )
             expect(authEvents).toHaveLength(1)
-            const payload = authEvents[0].payload as {
+            const payload = authEvents[0]!.payload as {
                 user: { name: string; email: string; picture: string }
             }
             expect(payload.user.name).toBe('Test User')
@@ -282,7 +286,7 @@ describe('GoogleDrivePlugin', () => {
             )
             expect(authEvents).toHaveLength(1)
             expect(
-                (authEvents[0].payload as { user?: unknown }).user,
+                (authEvents[0]!.payload as { user?: unknown }).user,
             ).toBeUndefined()
         })
     })
@@ -328,9 +332,9 @@ describe('GoogleDrivePlugin', () => {
                 e => e.event === 'google-drive:state-change',
             )
             expect(stateChanges).toHaveLength(1)
-            expect(
-                (stateChanges[0].payload as { state: string }).state,
-            ).toBe('idle')
+            expect((stateChanges[0]!.payload as { state: string }).state).toBe(
+                'idle',
+            )
         })
     })
 
@@ -401,9 +405,9 @@ describe('GoogleDrivePlugin', () => {
                 e => e.event === 'google-drive:state-change',
             )
             expect(stateChanges).toHaveLength(1)
-            expect(
-                (stateChanges[0].payload as { state: string }).state,
-            ).toBe('authenticated')
+            expect((stateChanges[0]!.payload as { state: string }).state).toBe(
+                'authenticated',
+            )
         })
     })
 
@@ -451,7 +455,7 @@ describe('GoogleDrivePlugin', () => {
                 }),
             )
 
-            const headers = fetchMock.mock.calls[0][1].headers as Headers
+            const headers = fetchMock.mock.calls[0]![1].headers as Headers
             expect(headers.get('Authorization')).toBe('Bearer valid-token')
         })
 
@@ -492,22 +496,19 @@ describe('GoogleDrivePlugin', () => {
                 },
             ]
 
-            vi.stubGlobal(
-                'fetch',
-                mockFetchResponse({ files: driveEntries }),
-            )
+            vi.stubGlobal('fetch', mockFetchResponse({ files: driveEntries }))
 
             const result = await plugin.loadFiles()
 
             expect(result.files).toHaveLength(2)
-            expect(result.files[0].name).toBe('document.pdf')
-            expect(result.files[0].mimeType).toBe('application/pdf')
-            expect(result.files[0].isFolder).toBe(false)
-            expect(result.files[0].size).toBe(1024)
-            expect(result.files[0].thumbnail).toBe('https://thumb.url')
-            expect(result.files[1].name).toBe('Photos')
-            expect(result.files[1].isFolder).toBe(true)
-            expect(result.files[1].mimeType).toBe('folder')
+            expect(result.files[0]!.name).toBe('document.pdf')
+            expect(result.files[0]!.mimeType).toBe('application/pdf')
+            expect(result.files[0]!.isFolder).toBe(false)
+            expect(result.files[0]!.size).toBe(1024)
+            expect(result.files[0]!.thumbnail).toBe('https://thumb.url')
+            expect(result.files[1]!.name).toBe('Photos')
+            expect(result.files[1]!.isFolder).toBe(true)
+            expect(result.files[1]!.mimeType).toBe('folder')
             expect(result.folderId).toBe('root')
         })
 
@@ -520,7 +521,7 @@ describe('GoogleDrivePlugin', () => {
             expect(result.folderId).toBe('folder-xyz')
 
             // Check the query parameter
-            const url = fetchMock.mock.calls[0][0] as string
+            const url = fetchMock.mock.calls[0]![0] as string
             expect(url).toContain('folder-xyz')
         })
 
@@ -530,7 +531,7 @@ describe('GoogleDrivePlugin', () => {
 
             await plugin.loadFiles()
 
-            const url = fetchMock.mock.calls[0][0] as string
+            const url = fetchMock.mock.calls[0]![0] as string
             const parsed = new URL(url)
             const q = parsed.searchParams.get('q')
             expect(q).toContain("'root' in parents")
@@ -542,7 +543,7 @@ describe('GoogleDrivePlugin', () => {
 
             await plugin.loadFiles()
 
-            const url = fetchMock.mock.calls[0][0] as string
+            const url = fetchMock.mock.calls[0]![0] as string
             expect(url).toContain('key=test-api-key')
         })
 
@@ -567,7 +568,7 @@ describe('GoogleDrivePlugin', () => {
                 e => e.event === 'google-drive:files-loaded',
             )
             expect(loaded).toHaveLength(1)
-            const payload = loaded[0].payload as {
+            const payload = loaded[0]!.payload as {
                 files: DriveFile[]
                 folderId: string
             }
@@ -576,10 +577,7 @@ describe('GoogleDrivePlugin', () => {
         })
 
         it('transitions state to browsing then back to authenticated', async () => {
-            vi.stubGlobal(
-                'fetch',
-                mockFetchResponse({ files: [] }),
-            )
+            vi.stubGlobal('fetch', mockFetchResponse({ files: [] }))
 
             await plugin.loadFiles()
 
@@ -599,13 +597,11 @@ describe('GoogleDrivePlugin', () => {
 
             await expect(plugin.loadFiles()).rejects.toThrow()
 
-            const errors = events.filter(
-                e => e.event === 'google-drive:error',
-            )
+            const errors = events.filter(e => e.event === 'google-drive:error')
             expect(errors).toHaveLength(1)
-            expect(
-                (errors[0].payload as { action: string }).action,
-            ).toBe('loadFiles')
+            expect((errors[0]!.payload as { action: string }).action).toBe(
+                'loadFiles',
+            )
         })
 
         it('throws when not authenticated', async () => {
@@ -617,16 +613,11 @@ describe('GoogleDrivePlugin', () => {
             })
             fresh.init(emitter)
 
-            await expect(fresh.loadFiles()).rejects.toThrow(
-                'Not authenticated',
-            )
+            await expect(fresh.loadFiles()).rejects.toThrow('Not authenticated')
         })
 
         it('handles empty files array', async () => {
-            vi.stubGlobal(
-                'fetch',
-                mockFetchResponse({ files: [] }),
-            )
+            vi.stubGlobal('fetch', mockFetchResponse({ files: [] }))
 
             const result = await plugin.loadFiles()
             expect(result.files).toHaveLength(0)
@@ -641,9 +632,9 @@ describe('GoogleDrivePlugin', () => {
             )
 
             const result = await plugin.loadFiles()
-            expect(result.files[0].id).toBe('x')
-            expect(result.files[0].name).toBe('')
-            expect(result.files[0].size).toBe(0)
+            expect(result.files[0]!.id).toBe('x')
+            expect(result.files[0]!.name).toBe('')
+            expect(result.files[0]!.size).toBe(0)
         })
 
         it('computes hasMore/cursor from nextPageToken (F-125)', async () => {
@@ -659,15 +650,15 @@ describe('GoogleDrivePlugin', () => {
 
             expect(result.hasMore).toBe(true)
             expect(result.cursor).toBe(
-                JSON.stringify({ folderId: 'my-folder', pageToken: 'page-2-token' }),
+                JSON.stringify({
+                    folderId: 'my-folder',
+                    pageToken: 'page-2-token',
+                }),
             )
         })
 
         it('hasMore is false when nextPageToken is absent (last page)', async () => {
-            vi.stubGlobal(
-                'fetch',
-                mockFetchResponse({ files: [] }),
-            )
+            vi.stubGlobal('fetch', mockFetchResponse({ files: [] }))
 
             const result = await plugin.loadFiles()
 
@@ -688,17 +679,22 @@ describe('GoogleDrivePlugin', () => {
             })
             vi.stubGlobal('fetch', fetchMock)
 
-            const cursor = JSON.stringify({ folderId: 'my-folder', pageToken: 'page-2-token' })
+            const cursor = JSON.stringify({
+                folderId: 'my-folder',
+                pageToken: 'page-2-token',
+            })
             const result = await plugin.loadMoreFiles(cursor)
 
             expect(result.files).toHaveLength(1)
-            expect(result.files[0].name).toBe('b.txt')
+            expect(result.files[0]!.name).toBe('b.txt')
             expect(result.hasMore).toBe(false)
 
-            const url = fetchMock.mock.calls[0][0] as string
+            const url = fetchMock.mock.calls[0]![0] as string
             const parsed = new URL(url)
             expect(parsed.searchParams.get('pageToken')).toBe('page-2-token')
-            expect(parsed.searchParams.get('q')).toContain("'my-folder' in parents")
+            expect(parsed.searchParams.get('q')).toContain(
+                "'my-folder' in parents",
+            )
         })
 
         it('emits error on failure', async () => {
@@ -712,9 +708,9 @@ describe('GoogleDrivePlugin', () => {
 
             const errors = events.filter(e => e.event === 'google-drive:error')
             expect(errors).toHaveLength(1)
-            expect(
-                (errors[0].payload as { action: string }).action,
-            ).toBe('loadMoreFiles')
+            expect((errors[0]!.payload as { action: string }).action).toBe(
+                'loadMoreFiles',
+            )
         })
     })
 
@@ -736,7 +732,8 @@ describe('GoogleDrivePlugin', () => {
 
             vi.stubGlobal(
                 'fetch',
-                vi.fn()
+                vi
+                    .fn()
                     // Download file 1
                     .mockResolvedValueOnce({
                         ok: true,
@@ -764,8 +761,8 @@ describe('GoogleDrivePlugin', () => {
             const results = await plugin.downloadFiles(driveFiles)
 
             expect(results).toHaveLength(2)
-            expect(results[0].name).toBe('a.txt')
-            expect(results[1].name).toBe('b.txt')
+            expect(results[0]!.name).toBe('a.txt')
+            expect(results[1]!.name).toBe('b.txt')
         })
 
         it('uses correct download URL with alt=media', async () => {
@@ -787,7 +784,7 @@ describe('GoogleDrivePlugin', () => {
 
             await plugin.downloadFiles(driveFiles)
 
-            const url = fetchMock.mock.calls[0][0] as string
+            const url = fetchMock.mock.calls[0]![0] as string
             expect(url).toContain(
                 'https://www.googleapis.com/drive/v3/files/file-123',
             )
@@ -816,7 +813,8 @@ describe('GoogleDrivePlugin', () => {
 
             vi.stubGlobal(
                 'fetch',
-                vi.fn()
+                vi
+                    .fn()
                     // File 1 - fails
                     .mockResolvedValueOnce({
                         ok: false,
@@ -840,15 +838,13 @@ describe('GoogleDrivePlugin', () => {
             const results = await plugin.downloadFiles(driveFiles)
 
             expect(results).toHaveLength(1)
-            expect(results[0].name).toBe('ok.txt')
+            expect(results[0]!.name).toBe('ok.txt')
 
-            const errors = events.filter(
-                e => e.event === 'google-drive:error',
-            )
+            const errors = events.filter(e => e.event === 'google-drive:error')
             expect(errors.length).toBeGreaterThanOrEqual(1)
-            expect(
-                (errors[0].payload as { action: string }).action,
-            ).toBe('downloadFiles')
+            expect((errors[0]!.payload as { action: string }).action).toBe(
+                'downloadFiles',
+            )
         })
     })
 
@@ -886,12 +882,12 @@ describe('GoogleDrivePlugin', () => {
             const results = await plugin.downloadFiles(driveFiles)
 
             expect(results).toHaveLength(1)
-            expect(results[0].name).toBe('My Document.docx')
-            expect(results[0].type).toBe(
+            expect(results[0]!.name).toBe('My Document.docx')
+            expect(results[0]!.type).toBe(
                 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
             )
 
-            const url = fetchMock.mock.calls[0][0] as string
+            const url = fetchMock.mock.calls[0]![0] as string
             expect(url).toContain(
                 'https://docs.google.com/document/d/doc-id/export?format=docx',
             )
@@ -921,9 +917,9 @@ describe('GoogleDrivePlugin', () => {
             const results = await plugin.downloadFiles(driveFiles)
 
             expect(results).toHaveLength(1)
-            expect(results[0].name).toBe('My Sheet.xlsx')
+            expect(results[0]!.name).toBe('My Sheet.xlsx')
 
-            const url = fetchMock.mock.calls[0][0] as string
+            const url = fetchMock.mock.calls[0]![0] as string
             expect(url).toContain(
                 'https://docs.google.com/spreadsheets/d/sheet-id/export?format=xlsx',
             )
@@ -953,9 +949,9 @@ describe('GoogleDrivePlugin', () => {
             const results = await plugin.downloadFiles(driveFiles)
 
             expect(results).toHaveLength(1)
-            expect(results[0].name).toBe('My Presentation.pptx')
+            expect(results[0]!.name).toBe('My Presentation.pptx')
 
-            const url = fetchMock.mock.calls[0][0] as string
+            const url = fetchMock.mock.calls[0]![0] as string
             expect(url).toContain(
                 'https://docs.google.com/presentation/d/slide-id/export?format=pptx',
             )
@@ -973,9 +969,11 @@ describe('GoogleDrivePlugin', () => {
             const fetchMock = vi.fn().mockResolvedValue({
                 ok: true,
                 status: 200,
-                blob: vi.fn().mockResolvedValue(
-                    new Blob(['png-content'], { type: 'image/png' }),
-                ),
+                blob: vi
+                    .fn()
+                    .mockResolvedValue(
+                        new Blob(['png-content'], { type: 'image/png' }),
+                    ),
                 text: vi.fn().mockResolvedValue(''),
             })
             vi.stubGlobal('fetch', fetchMock)
@@ -983,10 +981,10 @@ describe('GoogleDrivePlugin', () => {
             const results = await plugin.downloadFiles(driveFiles)
 
             expect(results).toHaveLength(1)
-            expect(results[0].name).toBe('My Drawing.png')
-            expect(results[0].type).toBe('image/png')
+            expect(results[0]!.name).toBe('My Drawing.png')
+            expect(results[0]!.type).toBe('image/png')
 
-            const url = fetchMock.mock.calls[0][0] as string
+            const url = fetchMock.mock.calls[0]![0] as string
             expect(url).toContain(
                 'https://docs.google.com/drawings/d/draw-id/export?format=png',
             )
@@ -1012,7 +1010,7 @@ describe('GoogleDrivePlugin', () => {
             )
 
             const results = await plugin.downloadFiles(driveFiles)
-            expect(results[0].name).toBe('Document.docx')
+            expect(results[0]!.name).toBe('Document.docx')
         })
     })
 
@@ -1032,9 +1030,11 @@ describe('GoogleDrivePlugin', () => {
                 vi.fn().mockResolvedValue({
                     ok: true,
                     status: 200,
-                    blob: vi.fn().mockResolvedValue(
-                        new Blob(['data'], { type: 'application/pdf' }),
-                    ),
+                    blob: vi
+                        .fn()
+                        .mockResolvedValue(
+                            new Blob(['data'], { type: 'application/pdf' }),
+                        ),
                     text: vi.fn().mockResolvedValue(''),
                 }),
             )
@@ -1150,10 +1150,7 @@ describe('GoogleDrivePlugin', () => {
         it('works fine with non-expired token', async () => {
             plugin.setAccessToken('tok', 3600) // 1 hour from now
 
-            vi.stubGlobal(
-                'fetch',
-                mockFetchResponse({ files: [] }),
-            )
+            vi.stubGlobal('fetch', mockFetchResponse({ files: [] }))
 
             const result = await plugin.loadFiles()
             expect(result.files).toHaveLength(0)
@@ -1185,9 +1182,9 @@ describe('GoogleDrivePlugin', () => {
             )
 
             const result = await plugin.loadFiles()
-            expect(result.files[0].isFolder).toBe(true)
-            expect(result.files[0].mimeType).toBe('folder')
-            expect(result.files[0].size).toBe(0)
+            expect(result.files[0]!.isFolder).toBe(true)
+            expect(result.files[0]!.mimeType).toBe('folder')
+            expect(result.files[0]!.size).toBe(0)
         })
 
         it('maps file entries with size', async () => {
@@ -1206,9 +1203,9 @@ describe('GoogleDrivePlugin', () => {
             )
 
             const result = await plugin.loadFiles()
-            expect(result.files[0].isFolder).toBe(false)
-            expect(result.files[0].mimeType).toBe('image/jpeg')
-            expect(result.files[0].size).toBe(2048)
+            expect(result.files[0]!.isFolder).toBe(false)
+            expect(result.files[0]!.mimeType).toBe('image/jpeg')
+            expect(result.files[0]!.size).toBe(2048)
         })
 
         it('maps workspace file entries', async () => {
@@ -1226,8 +1223,8 @@ describe('GoogleDrivePlugin', () => {
             )
 
             const result = await plugin.loadFiles()
-            expect(result.files[0].isFolder).toBe(false)
-            expect(result.files[0].mimeType).toBe(
+            expect(result.files[0]!.isFolder).toBe(false)
+            expect(result.files[0]!.mimeType).toBe(
                 'application/vnd.google-apps.document',
             )
         })
@@ -1249,7 +1246,7 @@ describe('GoogleDrivePlugin', () => {
             )
 
             const result = await plugin.loadFiles()
-            expect(result.files[0].thumbnail).toBe(
+            expect(result.files[0]!.thumbnail).toBe(
                 'https://thumb.example.com/img',
             )
         })

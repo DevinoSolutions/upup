@@ -15,7 +15,7 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { TestBed } from '@angular/core/testing'
-import type { DriveFile, DriveFolder } from '@upup/core/internal'
+import type { DriveFile, DriveFolder } from '@upup/core'
 import { DriveBrowserController } from '@upup/core/internal'
 import { UpupStore } from '../upup-store.service'
 import { GoogleDriveService } from './google-drive.service'

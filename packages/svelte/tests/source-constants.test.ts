@@ -23,13 +23,16 @@ describe('uploadSourceObject', () => {
     })
 
     it('local entry has undefined Component (device file picker)', () => {
-        expect(uploadSourceObject[FileSource.LOCAL].Component).toBeUndefined()
+        expect(uploadSourceObject[FileSource.LOCAL]!.Component).toBeUndefined()
     })
 
     it('every non-local entry has a Component', () => {
         for (const [key, entry] of Object.entries(uploadSourceObject)) {
             if (key === FileSource.LOCAL) continue
-            expect(entry.Component, `${key} entry has a Component`).toBeDefined()
+            expect(
+                entry.Component,
+                `${key} entry has a Component`,
+            ).toBeDefined()
         }
     })
 

@@ -28,7 +28,7 @@ function abortableFetch() {
 }
 
 describe('useFetchFileByUrl — cancellation', () => {
-    const originalFetch = global.fetch
+    const originalFetch = globalThis.fetch
 
     beforeEach(() => {
         emit.mockClear()
@@ -36,7 +36,7 @@ describe('useFetchFileByUrl — cancellation', () => {
     })
 
     afterEach(() => {
-        global.fetch = originalFetch
+        globalThis.fetch = originalFetch
     })
 
     it('exposes a cancelFetch function', () => {
@@ -51,7 +51,7 @@ describe('useFetchFileByUrl — cancellation', () => {
                 headers: { 'content-type': 'text/plain' },
             }),
         )
-        global.fetch = fetchMock as unknown as typeof fetch
+        globalThis.fetch = fetchMock as unknown as typeof fetch
 
         const { result } = renderHook(() => useFetchFileByUrl())
         await act(async () => {
@@ -59,17 +59,19 @@ describe('useFetchFileByUrl — cancellation', () => {
         })
 
         expect(fetchMock).toHaveBeenCalledTimes(1)
-        expect(fetchMock.mock.calls[0][1]?.signal).toBeInstanceOf(AbortSignal)
+        expect(fetchMock.mock.calls[0]![1]?.signal).toBeInstanceOf(AbortSignal)
     })
 
     it('cancelFetch aborts an in-flight fetch, emits url-fetch-cancel, and does not call onError', async () => {
-        global.fetch = abortableFetch() as unknown as typeof fetch
+        globalThis.fetch = abortableFetch() as unknown as typeof fetch
 
         const { result } = renderHook(() => useFetchFileByUrl())
 
         let pending: Promise<unknown> | undefined
         act(() => {
-            pending = result.current.fetchImage('https://cdn.example.com/slow.bin')
+            pending = result.current.fetchImage(
+                'https://cdn.example.com/slow.bin',
+            )
         })
         act(() => {
             result.current.cancelFetch()
@@ -86,13 +88,15 @@ describe('useFetchFileByUrl — cancellation', () => {
     })
 
     it('unmounting cancels an in-flight fetch (no onError, emits url-fetch-cancel)', async () => {
-        global.fetch = abortableFetch() as unknown as typeof fetch
+        globalThis.fetch = abortableFetch() as unknown as typeof fetch
 
         const { result, unmount } = renderHook(() => useFetchFileByUrl())
 
         let pending: Promise<unknown> | undefined
         act(() => {
-            pending = result.current.fetchImage('https://cdn.example.com/onunmount.bin')
+            pending = result.current.fetchImage(
+                'https://cdn.example.com/onunmount.bin',
+            )
         })
         unmount()
         await act(async () => {

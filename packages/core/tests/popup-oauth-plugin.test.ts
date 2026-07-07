@@ -66,15 +66,19 @@ class FakePopupPlugin extends PopupOAuthPlugin {
 }
 
 const NO_SCOPE_SPEC: PopupOAuthSpec = {
-    ...FAKE_SPEC,
     id: 'fakebox',
+    displayName: FAKE_SPEC.displayName,
     eventPrefix: 'fakebox',
-    scopes: undefined,
-    authParams: undefined,
+    popupName: FAKE_SPEC.popupName,
+    authUrl: FAKE_SPEC.authUrl,
+    tokenUrl: FAKE_SPEC.tokenUrl,
+    redirectPath: FAKE_SPEC.redirectPath,
+    storageKeys: FAKE_SPEC.storageKeys,
+    // no scopes/authParams — covers the Box (no-scope) branch.
 }
 
 class FakeNoScopePlugin extends FakePopupPlugin {
-    readonly spec = NO_SCOPE_SPEC
+    override readonly spec = NO_SCOPE_SPEC
 }
 
 // ── Browser-global mocks (mirrors box-plugin.test.ts) ──
@@ -208,7 +212,7 @@ describe('PopupOAuthPlugin (base skeleton)', () => {
             await plugin.authenticate('auth-code')
 
             // First fetch is the token exchange
-            const [url, opts] = fetchMock.mock.calls[0]
+            const [url, opts] = fetchMock.mock.calls[0]!
             expect(url).toBe('https://api.example.com/token')
             expect(opts.method).toBe('POST')
             const body = opts.body as URLSearchParams
@@ -287,37 +291,35 @@ describe('PopupOAuthPlugin (base skeleton)', () => {
             )
             plugin.restoreSession()
 
-            const fetchMock = vi.fn(
-                (url: string) => {
-                    // token endpoint = refresh; everything else = the data call
-                    if (url === 'https://api.example.com/token') {
-                        return Promise.resolve({
-                            ok: true,
-                            status: 200,
-                            json: vi.fn().mockResolvedValue({
-                                access_token: 'fresh',
-                                expires_in: 3600,
-                            }),
-                            text: vi.fn().mockResolvedValue(''),
-                        })
-                    }
+            const fetchMock = vi.fn((url: string) => {
+                // token endpoint = refresh; everything else = the data call
+                if (url === 'https://api.example.com/token') {
                     return Promise.resolve({
                         ok: true,
                         status: 200,
-                        json: vi.fn().mockResolvedValue({ ok: 1 }),
+                        json: vi.fn().mockResolvedValue({
+                            access_token: 'fresh',
+                            expires_in: 3600,
+                        }),
                         text: vi.fn().mockResolvedValue(''),
                     })
-                },
-            )
+                }
+                return Promise.resolve({
+                    ok: true,
+                    status: 200,
+                    json: vi.fn().mockResolvedValue({ ok: 1 }),
+                    text: vi.fn().mockResolvedValue(''),
+                })
+            })
             vi.stubGlobal('fetch', fetchMock)
 
             await plugin.loadFiles()
 
             // The refresh (token endpoint) fired BEFORE any 401 — first call is refresh.
-            expect(fetchMock.mock.calls[0][0]).toBe(
+            expect(fetchMock.mock.calls[0]![0]).toBe(
                 'https://api.example.com/token',
             )
-            expect(fetchMock.mock.calls[1][0]).toBe(
+            expect(fetchMock.mock.calls[1]![0]).toBe(
                 'https://api.example.com/files',
             )
         })
@@ -406,7 +408,7 @@ describe('PopupOAuthPlugin (base skeleton)', () => {
 
             const token = await plugin.refreshAccessToken()
             expect(token).toBe('at2')
-            const [url, opts] = fetchMock.mock.calls[0]
+            const [url, opts] = fetchMock.mock.calls[0]!
             expect(url).toBe('https://api.example.com/token')
             const body = opts.body as URLSearchParams
             expect(body.get('grant_type')).toBe('refresh_token')

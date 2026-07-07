@@ -23,7 +23,9 @@ function makeFile(id: string, type = 'text/plain'): UploadFile {
     } as unknown as UploadFile
 }
 
-function makeContext(overrides: Partial<PipelineContext> = {}): PipelineContext {
+function makeContext(
+    overrides: Partial<PipelineContext> = {},
+): PipelineContext {
     return {
         files: new Map(),
         options: {},
@@ -66,12 +68,16 @@ describe('PipelineEngine — processAll', () => {
     it('preserves mutations applied by steps across all files', async () => {
         const step: PipelineStep = {
             name: 'stamp',
-            process: async file => Object.assign(file, { fileHash: `hash-${file.id}` }),
+            process: async file =>
+                Object.assign(file, { fileHash: `hash-${file.id}` }),
         }
         const engine = new PipelineEngine([step])
-        const results = await engine.processAll([makeFile('p'), makeFile('q')], makeContext())
-        expect(results[0].fileHash).toBe('hash-p')
-        expect(results[1].fileHash).toBe('hash-q')
+        const results = await engine.processAll(
+            [makeFile('p'), makeFile('q')],
+            makeContext(),
+        )
+        expect(results[0]!.fileHash).toBe('hash-p')
+        expect(results[1]!.fileHash).toBe('hash-q')
     })
 
     it('returns an empty array for empty input', async () => {
@@ -83,7 +89,10 @@ describe('PipelineEngine — processAll', () => {
     it('emits events for each file independently', async () => {
         const emit = vi.fn()
         const engine = new PipelineEngine([passthroughStep])
-        await engine.processAll([makeFile('f1'), makeFile('f2')], makeContext({ emit }))
+        await engine.processAll(
+            [makeFile('f1'), makeFile('f2')],
+            makeContext({ emit }),
+        )
         // pipeline-start + pipeline-step + pipeline-complete per file = 6 calls total
         expect(emit).toHaveBeenCalledTimes(6)
     })
@@ -96,7 +105,10 @@ describe('PipelineEngine — processAll', () => {
             process: processFn,
         }
         const engine = new PipelineEngine([step])
-        const files = [makeFile('img', 'image/png'), makeFile('txt', 'text/plain')]
+        const files = [
+            makeFile('img', 'image/png'),
+            makeFile('txt', 'text/plain'),
+        ]
         await engine.processAll(files, makeContext())
         expect(processFn).toHaveBeenCalledTimes(1)
     })
@@ -110,6 +122,8 @@ describe('PipelineEngine — processAll', () => {
             },
         }
         const engine = new PipelineEngine([step])
-        await expect(engine.processAll([makeFile('a'), makeFile('b')], makeContext())).rejects.toThrow('boom')
+        await expect(
+            engine.processAll([makeFile('a'), makeFile('b')], makeContext()),
+        ).rejects.toThrow('boom')
     })
 })

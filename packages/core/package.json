@@ -1,150 +1,150 @@
 {
-  "name": "@upup/core",
-  "version": "2.2.0",
-  "license": "MIT",
-  "type": "module",
-  "sideEffects": false,
-  "engines": {
-    "node": ">=20"
-  },
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs"
+    "name": "@upup/core",
+    "version": "2.2.0",
+    "license": "MIT",
+    "type": "module",
+    "sideEffects": false,
+    "engines": {
+        "node": ">=20"
     },
-    "./contracts": {
-      "types": "./dist/contracts.d.ts",
-      "import": "./dist/contracts.js",
-      "require": "./dist/contracts.cjs"
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.js",
+            "require": "./dist/index.cjs"
+        },
+        "./contracts": {
+            "types": "./dist/contracts.d.ts",
+            "import": "./dist/contracts.js",
+            "require": "./dist/contracts.cjs"
+        },
+        "./internal": {
+            "types": "./dist/internal.d.ts",
+            "import": "./dist/internal.js",
+            "require": "./dist/internal.cjs"
+        },
+        "./i18n": {
+            "types": "./dist/i18n/index.d.ts",
+            "import": "./dist/i18n/index.js",
+            "require": "./dist/i18n/index.cjs"
+        },
+        "./theme": {
+            "types": "./dist/theme/index.d.ts",
+            "import": "./dist/theme/index.js",
+            "require": "./dist/theme/index.cjs"
+        },
+        "./strategies": {
+            "types": "./dist/strategies/index.d.ts",
+            "import": "./dist/strategies/index.js",
+            "require": "./dist/strategies/index.cjs"
+        },
+        "./strategies/tus-upload": {
+            "types": "./dist/strategies/tus-upload.d.ts",
+            "import": "./dist/strategies/tus-upload.js",
+            "require": "./dist/strategies/tus-upload.cjs"
+        },
+        "./pipeline": {
+            "types": "./dist/pipeline/index.d.ts",
+            "import": "./dist/pipeline/index.js",
+            "require": "./dist/pipeline/index.cjs"
+        },
+        "./steps/hash": {
+            "types": "./dist/steps/hash.d.ts",
+            "import": "./dist/steps/hash.js",
+            "require": "./dist/steps/hash.cjs"
+        },
+        "./steps/heic": {
+            "types": "./dist/steps/heic.d.ts",
+            "import": "./dist/steps/heic.js",
+            "require": "./dist/steps/heic.cjs"
+        },
+        "./steps/exif": {
+            "types": "./dist/steps/exif.d.ts",
+            "import": "./dist/steps/exif.js",
+            "require": "./dist/steps/exif.cjs"
+        },
+        "./steps/compress": {
+            "types": "./dist/steps/compress.d.ts",
+            "import": "./dist/steps/compress.js",
+            "require": "./dist/steps/compress.cjs"
+        },
+        "./steps/thumbnail": {
+            "types": "./dist/steps/thumbnail.d.ts",
+            "import": "./dist/steps/thumbnail.js",
+            "require": "./dist/steps/thumbnail.cjs"
+        }
     },
-    "./internal": {
-      "types": "./dist/internal.d.ts",
-      "import": "./dist/internal.js",
-      "require": "./dist/internal.cjs"
+    "main": "./dist/index.cjs",
+    "module": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "typesVersions": {
+        "*": {
+            "contracts": [
+                "dist/contracts.d.ts"
+            ],
+            "internal": [
+                "dist/internal.d.ts"
+            ],
+            "i18n": [
+                "dist/i18n/index.d.ts"
+            ],
+            "theme": [
+                "dist/theme/index.d.ts"
+            ],
+            "strategies": [
+                "dist/strategies/index.d.ts"
+            ],
+            "strategies/tus-upload": [
+                "dist/strategies/tus-upload.d.ts"
+            ],
+            "pipeline": [
+                "dist/pipeline/index.d.ts"
+            ],
+            "steps/hash": [
+                "dist/steps/hash.d.ts"
+            ],
+            "steps/heic": [
+                "dist/steps/heic.d.ts"
+            ],
+            "steps/exif": [
+                "dist/steps/exif.d.ts"
+            ],
+            "steps/compress": [
+                "dist/steps/compress.d.ts"
+            ],
+            "steps/thumbnail": [
+                "dist/steps/thumbnail.d.ts"
+            ]
+        }
     },
-    "./i18n": {
-      "types": "./dist/i18n/index.d.ts",
-      "import": "./dist/i18n/index.js",
-      "require": "./dist/i18n/index.cjs"
+    "files": [
+        "dist",
+        "NOTICE"
+    ],
+    "scripts": {
+        "build": "tsup",
+        "dev": "tsup --watch",
+        "lint": "eslint .",
+        "test": "vitest run",
+        "test:watch": "vitest",
+        "typecheck": "tsc --noEmit && tsc -p tsconfig.test.json --noEmit"
     },
-    "./theme": {
-      "types": "./dist/theme/index.d.ts",
-      "import": "./dist/theme/index.js",
-      "require": "./dist/theme/index.cjs"
+    "dependencies": {
+        "clsx": "^2.1.1",
+        "intl-messageformat": "^11.2.0",
+        "tailwind-merge": "^3.6.0"
     },
-    "./strategies": {
-      "types": "./dist/strategies/index.d.ts",
-      "import": "./dist/strategies/index.js",
-      "require": "./dist/strategies/index.cjs"
+    "optionalDependencies": {
+        "libheif-js": "^1.19.8",
+        "tus-js-client": "^4.3.1"
     },
-    "./strategies/tus-upload": {
-      "types": "./dist/strategies/tus-upload.d.ts",
-      "import": "./dist/strategies/tus-upload.js",
-      "require": "./dist/strategies/tus-upload.cjs"
-    },
-    "./pipeline": {
-      "types": "./dist/pipeline/index.d.ts",
-      "import": "./dist/pipeline/index.js",
-      "require": "./dist/pipeline/index.cjs"
-    },
-    "./steps/hash": {
-      "types": "./dist/steps/hash.d.ts",
-      "import": "./dist/steps/hash.js",
-      "require": "./dist/steps/hash.cjs"
-    },
-    "./steps/heic": {
-      "types": "./dist/steps/heic.d.ts",
-      "import": "./dist/steps/heic.js",
-      "require": "./dist/steps/heic.cjs"
-    },
-    "./steps/exif": {
-      "types": "./dist/steps/exif.d.ts",
-      "import": "./dist/steps/exif.js",
-      "require": "./dist/steps/exif.cjs"
-    },
-    "./steps/compress": {
-      "types": "./dist/steps/compress.d.ts",
-      "import": "./dist/steps/compress.js",
-      "require": "./dist/steps/compress.cjs"
-    },
-    "./steps/thumbnail": {
-      "types": "./dist/steps/thumbnail.d.ts",
-      "import": "./dist/steps/thumbnail.js",
-      "require": "./dist/steps/thumbnail.cjs"
+    "devDependencies": {
+        "@types/node": "^22",
+        "@upup/eslint-config": "workspace:*",
+        "@vitest/coverage-v8": "^4.1.2",
+        "eslint": "^10.6.0",
+        "tsup": "^8.4.0",
+        "typescript": "^5.3.2",
+        "vitest": "^4.1.2"
     }
-  },
-  "main": "./dist/index.cjs",
-  "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "typesVersions": {
-    "*": {
-      "contracts": [
-        "dist/contracts.d.ts"
-      ],
-      "internal": [
-        "dist/internal.d.ts"
-      ],
-      "i18n": [
-        "dist/i18n/index.d.ts"
-      ],
-      "theme": [
-        "dist/theme/index.d.ts"
-      ],
-      "strategies": [
-        "dist/strategies/index.d.ts"
-      ],
-      "strategies/tus-upload": [
-        "dist/strategies/tus-upload.d.ts"
-      ],
-      "pipeline": [
-        "dist/pipeline/index.d.ts"
-      ],
-      "steps/hash": [
-        "dist/steps/hash.d.ts"
-      ],
-      "steps/heic": [
-        "dist/steps/heic.d.ts"
-      ],
-      "steps/exif": [
-        "dist/steps/exif.d.ts"
-      ],
-      "steps/compress": [
-        "dist/steps/compress.d.ts"
-      ],
-      "steps/thumbnail": [
-        "dist/steps/thumbnail.d.ts"
-      ]
-    }
-  },
-  "files": [
-    "dist",
-    "NOTICE"
-  ],
-  "scripts": {
-    "build": "tsup",
-    "dev": "tsup --watch",
-    "lint": "eslint .",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "typecheck": "tsc --noEmit"
-  },
-  "dependencies": {
-    "clsx": "^2.1.1",
-    "intl-messageformat": "^11.2.0",
-    "tailwind-merge": "^3.6.0"
-  },
-  "optionalDependencies": {
-    "libheif-js": "^1.19.8",
-    "tus-js-client": "^4.3.1"
-  },
-  "devDependencies": {
-    "@types/node": "^22",
-    "@upup/eslint-config": "workspace:*",
-    "@vitest/coverage-v8": "^4.1.2",
-    "eslint": "^10.6.0",
-    "tsup": "^8.4.0",
-    "typescript": "^5.3.2",
-    "vitest": "^4.1.2"
-  }
 }

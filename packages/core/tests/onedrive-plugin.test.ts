@@ -24,12 +24,16 @@ function mockFetchResponse(
         ok,
         status,
         json: vi.fn().mockResolvedValue(body),
-        text: vi.fn().mockResolvedValue(
-            typeof body === 'string' ? body : JSON.stringify(body),
-        ),
-        blob: vi.fn().mockResolvedValue(
-            new Blob(['file-content'], { type: 'text/plain' }),
-        ),
+        text: vi
+            .fn()
+            .mockResolvedValue(
+                typeof body === 'string' ? body : JSON.stringify(body),
+            ),
+        blob: vi
+            .fn()
+            .mockResolvedValue(
+                new Blob(['file-content'], { type: 'text/plain' }),
+            ),
     })
 }
 
@@ -187,7 +191,9 @@ describe('OneDrivePlugin', () => {
             const parsed = new URL(url)
             expect(parsed.searchParams.get('client_id')).toBe('test-client-id')
             expect(parsed.searchParams.get('response_type')).toBe('code')
-            expect(parsed.searchParams.get('code_challenge_method')).toBe('S256')
+            expect(parsed.searchParams.get('code_challenge_method')).toBe(
+                'S256',
+            )
             expect(parsed.searchParams.get('code_challenge')).toBeTruthy()
             expect(parsed.searchParams.get('redirect_uri')).toBeTruthy()
             expect(parsed.searchParams.get('scope')).toContain('user.read')
@@ -237,7 +243,8 @@ describe('OneDrivePlugin', () => {
 
             vi.stubGlobal(
                 'fetch',
-                vi.fn()
+                vi
+                    .fn()
                     // Token exchange
                     .mockResolvedValueOnce({
                         ok: true,
@@ -272,7 +279,8 @@ describe('OneDrivePlugin', () => {
             )
             expect(authEvents).toHaveLength(1)
             expect(
-                (authEvents[0].payload as { user: { name: string } }).user.name,
+                (authEvents[0]!.payload as { user: { name: string } }).user
+                    .name,
             ).toBe('Test User')
 
             // Tokens saved to session storage
@@ -291,7 +299,8 @@ describe('OneDrivePlugin', () => {
 
             vi.stubGlobal(
                 'fetch',
-                vi.fn()
+                vi
+                    .fn()
                     .mockResolvedValueOnce({
                         ok: true,
                         status: 200,
@@ -354,13 +363,11 @@ describe('OneDrivePlugin', () => {
 
             expect(plugin.getState()).toBe('idle')
 
-            const errorEvents = events.filter(
-                e => e.event === 'onedrive:error',
-            )
+            const errorEvents = events.filter(e => e.event === 'onedrive:error')
             expect(errorEvents).toHaveLength(1)
-            expect(
-                (errorEvents[0].payload as { action: string }).action,
-            ).toBe('authenticate')
+            expect((errorEvents[0]!.payload as { action: string }).action).toBe(
+                'authenticate',
+            )
         })
 
         it('still authenticates if user profile fetch fails', async () => {
@@ -368,7 +375,8 @@ describe('OneDrivePlugin', () => {
 
             vi.stubGlobal(
                 'fetch',
-                vi.fn()
+                vi
+                    .fn()
                     .mockResolvedValueOnce({
                         ok: true,
                         status: 200,
@@ -390,7 +398,7 @@ describe('OneDrivePlugin', () => {
             )
             expect(authEvents).toHaveLength(1)
             expect(
-                (authEvents[0].payload as { user?: unknown }).user,
+                (authEvents[0]!.payload as { user?: unknown }).user,
             ).toBeUndefined()
         })
 
@@ -399,7 +407,8 @@ describe('OneDrivePlugin', () => {
 
             vi.stubGlobal(
                 'fetch',
-                vi.fn()
+                vi
+                    .fn()
                     .mockResolvedValueOnce({
                         ok: true,
                         status: 200,
@@ -426,7 +435,8 @@ describe('OneDrivePlugin', () => {
                 e => e.event === 'onedrive:authenticated',
             )
             expect(
-                (authEvents[0].payload as { user: { email: string } }).user.email,
+                (authEvents[0]!.payload as { user: { email: string } }).user
+                    .email,
             ).toBe('user@org.onmicrosoft.com')
         })
     })
@@ -441,7 +451,8 @@ describe('OneDrivePlugin', () => {
 
             vi.stubGlobal(
                 'fetch',
-                vi.fn()
+                vi
+                    .fn()
                     .mockResolvedValueOnce({
                         ok: true,
                         status: 200,
@@ -501,7 +512,8 @@ describe('OneDrivePlugin', () => {
 
             vi.stubGlobal(
                 'fetch',
-                vi.fn()
+                vi
+                    .fn()
                     .mockResolvedValueOnce({
                         ok: true,
                         status: 200,
@@ -549,9 +561,9 @@ describe('OneDrivePlugin', () => {
 
             const errors = events.filter(e => e.event === 'onedrive:error')
             expect(errors).toHaveLength(1)
-            expect(
-                (errors[0].payload as { action: string }).action,
-            ).toBe('refreshAccessToken')
+            expect((errors[0]!.payload as { action: string }).action).toBe(
+                'refreshAccessToken',
+            )
         })
     })
 
@@ -564,7 +576,8 @@ describe('OneDrivePlugin', () => {
             await plugin.getAuthUrl()
             vi.stubGlobal(
                 'fetch',
-                vi.fn()
+                vi
+                    .fn()
                     .mockResolvedValueOnce({
                         ok: true,
                         status: 200,
@@ -616,9 +629,9 @@ describe('OneDrivePlugin', () => {
                 e => e.event === 'onedrive:state-change',
             )
             expect(stateChanges).toHaveLength(1)
-            expect(
-                (stateChanges[0].payload as { state: string }).state,
-            ).toBe('idle')
+            expect((stateChanges[0]!.payload as { state: string }).state).toBe(
+                'idle',
+            )
         })
     })
 
@@ -667,9 +680,9 @@ describe('OneDrivePlugin', () => {
                 e => e.event === 'onedrive:state-change',
             )
             expect(stateChanges).toHaveLength(1)
-            expect(
-                (stateChanges[0].payload as { state: string }).state,
-            ).toBe('authenticated')
+            expect((stateChanges[0]!.payload as { state: string }).state).toBe(
+                'authenticated',
+            )
         })
     })
 
@@ -701,21 +714,18 @@ describe('OneDrivePlugin', () => {
                 },
             ]
 
-            vi.stubGlobal(
-                'fetch',
-                mockFetchResponse({ value: graphItems }),
-            )
+            vi.stubGlobal('fetch', mockFetchResponse({ value: graphItems }))
 
             const result = await plugin.loadFiles()
 
             expect(result.files).toHaveLength(2)
-            expect(result.files[0].name).toBe('document.pdf')
-            expect(result.files[0].mimeType).toBe('application/pdf')
-            expect(result.files[0].isFolder).toBe(false)
-            expect(result.files[0].size).toBe(1024)
-            expect(result.files[1].name).toBe('Photos')
-            expect(result.files[1].isFolder).toBe(true)
-            expect(result.files[1].size).toBe(0)
+            expect(result.files[0]!.name).toBe('document.pdf')
+            expect(result.files[0]!.mimeType).toBe('application/pdf')
+            expect(result.files[0]!.isFolder).toBe(false)
+            expect(result.files[0]!.size).toBe(1024)
+            expect(result.files[1]!.name).toBe('Photos')
+            expect(result.files[1]!.isFolder).toBe(true)
+            expect(result.files[1]!.size).toBe(0)
             expect(result.folderId).toBe('root')
         })
 
@@ -725,7 +735,7 @@ describe('OneDrivePlugin', () => {
 
             await plugin.loadFiles('folder-123')
 
-            const calledUrl = fetchMock.mock.calls[0][0] as string
+            const calledUrl = fetchMock.mock.calls[0]![0] as string
             expect(calledUrl).toContain('/me/drive/items/folder-123/children')
         })
 
@@ -750,7 +760,7 @@ describe('OneDrivePlugin', () => {
                 e => e.event === 'onedrive:files-loaded',
             )
             expect(loaded).toHaveLength(1)
-            const payload = loaded[0].payload as {
+            const payload = loaded[0]!.payload as {
                 files: DriveFile[]
                 folderId: string
             }
@@ -759,10 +769,7 @@ describe('OneDrivePlugin', () => {
         })
 
         it('transitions state to browsing then back to authenticated', async () => {
-            vi.stubGlobal(
-                'fetch',
-                mockFetchResponse({ value: [] }),
-            )
+            vi.stubGlobal('fetch', mockFetchResponse({ value: [] }))
 
             await plugin.loadFiles()
 
@@ -784,9 +791,9 @@ describe('OneDrivePlugin', () => {
 
             const errors = events.filter(e => e.event === 'onedrive:error')
             expect(errors).toHaveLength(1)
-            expect(
-                (errors[0].payload as { action: string }).action,
-            ).toBe('loadFiles')
+            expect((errors[0]!.payload as { action: string }).action).toBe(
+                'loadFiles',
+            )
         })
 
         it('throws when not authenticated', async () => {
@@ -794,9 +801,7 @@ describe('OneDrivePlugin', () => {
             fresh.configure({ clientId: 'id' })
             fresh.init(emitter)
 
-            await expect(fresh.loadFiles()).rejects.toThrow(
-                'Not authenticated',
-            )
+            await expect(fresh.loadFiles()).rejects.toThrow('Not authenticated')
         })
 
         it('extracts thumbnail from thumbnails array', async () => {
@@ -822,7 +827,7 @@ describe('OneDrivePlugin', () => {
             )
 
             const result = await plugin.loadFiles()
-            expect(result.files[0].thumbnail).toBe(
+            expect(result.files[0]!.thumbnail).toBe(
                 'https://thumb.example.com/medium.jpg',
             )
         })
@@ -833,7 +838,14 @@ describe('OneDrivePlugin', () => {
             vi.stubGlobal(
                 'fetch',
                 mockFetchResponse({
-                    value: [{ id: '1', name: 'a.txt', file: { mimeType: 'text/plain' }, size: 1 }],
+                    value: [
+                        {
+                            id: '1',
+                            name: 'a.txt',
+                            file: { mimeType: 'text/plain' },
+                            size: 1,
+                        },
+                    ],
                     '@odata.nextLink': nextLink,
                 }),
             )
@@ -865,18 +877,25 @@ describe('OneDrivePlugin', () => {
             const nextLink =
                 'https://graph.microsoft.com/v1.0/me/drive/root/children?$skiptoken=abc'
             const fetchMock = mockFetchResponse({
-                value: [{ id: '2', name: 'b.txt', file: { mimeType: 'text/plain' }, size: 2 }],
+                value: [
+                    {
+                        id: '2',
+                        name: 'b.txt',
+                        file: { mimeType: 'text/plain' },
+                        size: 2,
+                    },
+                ],
             })
             vi.stubGlobal('fetch', fetchMock)
 
             const result = await plugin.loadMoreFiles(nextLink)
 
             expect(result.files).toHaveLength(1)
-            expect(result.files[0].name).toBe('b.txt')
+            expect(result.files[0]!.name).toBe('b.txt')
             expect(result.hasMore).toBe(false)
             // graphRequest already tolerates an absolute URL (path.startsWith('http'))
             // — loadMoreFiles needs no new fetch plumbing, just calling it through.
-            expect(fetchMock.mock.calls[0][0]).toBe(nextLink)
+            expect(fetchMock.mock.calls[0]![0]).toBe(nextLink)
         })
 
         it('emits error on failure', async () => {
@@ -886,14 +905,16 @@ describe('OneDrivePlugin', () => {
             )
 
             await expect(
-                plugin.loadMoreFiles('https://graph.microsoft.com/v1.0/me/drive/root/children?x'),
+                plugin.loadMoreFiles(
+                    'https://graph.microsoft.com/v1.0/me/drive/root/children?x',
+                ),
             ).rejects.toThrow()
 
             const errors = events.filter(e => e.event === 'onedrive:error')
             expect(errors).toHaveLength(1)
-            expect(
-                (errors[0].payload as { action: string }).action,
-            ).toBe('loadMoreFiles')
+            expect((errors[0]!.payload as { action: string }).action).toBe(
+                'loadMoreFiles',
+            )
         })
     })
 
@@ -916,7 +937,8 @@ describe('OneDrivePlugin', () => {
 
             vi.stubGlobal(
                 'fetch',
-                vi.fn()
+                vi
+                    .fn()
                     // Item metadata for file 1 (get download URL)
                     .mockResolvedValueOnce({
                         ok: true,
@@ -931,9 +953,11 @@ describe('OneDrivePlugin', () => {
                     .mockResolvedValueOnce({
                         ok: true,
                         status: 200,
-                        blob: vi.fn().mockResolvedValue(
-                            new Blob(['content1'], { type: 'text/plain' }),
-                        ),
+                        blob: vi
+                            .fn()
+                            .mockResolvedValue(
+                                new Blob(['content1'], { type: 'text/plain' }),
+                            ),
                         text: vi.fn().mockResolvedValue(''),
                     })
                     // Item metadata for file 2
@@ -950,9 +974,11 @@ describe('OneDrivePlugin', () => {
                     .mockResolvedValueOnce({
                         ok: true,
                         status: 200,
-                        blob: vi.fn().mockResolvedValue(
-                            new Blob(['content2'], { type: 'text/plain' }),
-                        ),
+                        blob: vi
+                            .fn()
+                            .mockResolvedValue(
+                                new Blob(['content2'], { type: 'text/plain' }),
+                            ),
                         text: vi.fn().mockResolvedValue(''),
                     }),
             )
@@ -960,8 +986,8 @@ describe('OneDrivePlugin', () => {
             const results = await plugin.downloadFiles(driveFiles)
 
             expect(results).toHaveLength(2)
-            expect(results[0].name).toBe('a.txt')
-            expect(results[1].name).toBe('b.txt')
+            expect(results[0]!.name).toBe('a.txt')
+            expect(results[1]!.name).toBe('b.txt')
         })
 
         it('skips folders', async () => {
@@ -986,7 +1012,8 @@ describe('OneDrivePlugin', () => {
 
             vi.stubGlobal(
                 'fetch',
-                vi.fn()
+                vi
+                    .fn()
                     // Item metadata for file 1 - fails
                     .mockResolvedValueOnce({
                         ok: false,
@@ -1008,9 +1035,11 @@ describe('OneDrivePlugin', () => {
                     .mockResolvedValueOnce({
                         ok: true,
                         status: 200,
-                        blob: vi.fn().mockResolvedValue(
-                            new Blob(['ok'], { type: 'text/plain' }),
-                        ),
+                        blob: vi
+                            .fn()
+                            .mockResolvedValue(
+                                new Blob(['ok'], { type: 'text/plain' }),
+                            ),
                         text: vi.fn().mockResolvedValue(''),
                     }),
             )
@@ -1018,23 +1047,22 @@ describe('OneDrivePlugin', () => {
             const results = await plugin.downloadFiles(driveFiles)
 
             expect(results).toHaveLength(1)
-            expect(results[0].name).toBe('ok.txt')
+            expect(results[0]!.name).toBe('ok.txt')
 
             const errors = events.filter(e => e.event === 'onedrive:error')
             expect(errors.length).toBeGreaterThanOrEqual(1)
-            expect(
-                (errors[0].payload as { action: string }).action,
-            ).toBe('downloadFiles')
+            expect((errors[0]!.payload as { action: string }).action).toBe(
+                'downloadFiles',
+            )
         })
 
         it('uses @content.downloadUrl as fallback', async () => {
-            const driveFiles = [
-                makeDriveFile({ id: 'id1', name: 'alt.txt' }),
-            ]
+            const driveFiles = [makeDriveFile({ id: 'id1', name: 'alt.txt' })]
 
             vi.stubGlobal(
                 'fetch',
-                vi.fn()
+                vi
+                    .fn()
                     .mockResolvedValueOnce({
                         ok: true,
                         status: 200,
@@ -1048,7 +1076,9 @@ describe('OneDrivePlugin', () => {
                         ok: true,
                         status: 200,
                         blob: vi.fn().mockResolvedValue(
-                            new Blob(['alt-content'], { type: 'text/plain' }),
+                            new Blob(['alt-content'], {
+                                type: 'text/plain',
+                            }),
                         ),
                         text: vi.fn().mockResolvedValue(''),
                     }),
@@ -1056,7 +1086,7 @@ describe('OneDrivePlugin', () => {
 
             const results = await plugin.downloadFiles(driveFiles)
             expect(results).toHaveLength(1)
-            expect(results[0].name).toBe('alt.txt')
+            expect(results[0]!.name).toBe('alt.txt')
         })
     })
 
@@ -1082,8 +1112,8 @@ describe('OneDrivePlugin', () => {
 
             const user = await plugin.getUserInfo()
 
-            expect(user.name).toBe('John Doe')
-            expect(user.email).toBe('john@example.com')
+            expect(user!.name).toBe('John Doe')
+            expect(user!.email).toBe('john@example.com')
         })
 
         it('falls back to userPrincipalName when mail is null', async () => {
@@ -1097,7 +1127,7 @@ describe('OneDrivePlugin', () => {
             )
 
             const user = await plugin.getUserInfo()
-            expect(user.email).toBe('jane@org.onmicrosoft.com')
+            expect(user!.email).toBe('jane@org.onmicrosoft.com')
         })
 
         it('resolves null instead of throwing when the Graph request fails (F-123)', async () => {
@@ -1129,13 +1159,16 @@ describe('OneDrivePlugin', () => {
         it('retries with refreshed token on 401', async () => {
             vi.stubGlobal(
                 'fetch',
-                vi.fn()
+                vi
+                    .fn()
                     // First attempt -> 401
                     .mockResolvedValueOnce({
                         ok: false,
                         status: 401,
                         json: vi.fn().mockResolvedValue({}),
-                        text: vi.fn().mockResolvedValue('InvalidAuthenticationToken'),
+                        text: vi
+                            .fn()
+                            .mockResolvedValue('InvalidAuthenticationToken'),
                     })
                     // Refresh token call
                     .mockResolvedValueOnce({
@@ -1175,7 +1208,9 @@ describe('OneDrivePlugin', () => {
                     ok: false,
                     status: 401,
                     json: vi.fn().mockResolvedValue({}),
-                    text: vi.fn().mockResolvedValue('InvalidAuthenticationToken'),
+                    text: vi
+                        .fn()
+                        .mockResolvedValue('InvalidAuthenticationToken'),
                 }),
             )
 
@@ -1212,7 +1247,10 @@ describe('OneDrivePlugin', () => {
             ['pic.webp', 'image/webp'],
             ['icon.svg', 'image/svg+xml'],
             ['doc.pdf', 'application/pdf'],
-            ['report.docx', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
+            [
+                'report.docx',
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            ],
             ['data.csv', 'text/csv'],
             ['unknown.xyz', 'application/octet-stream'],
         ])('maps %s to %s', async (filename, expectedMime) => {
@@ -1231,7 +1269,7 @@ describe('OneDrivePlugin', () => {
             )
 
             const result = await plugin.loadFiles()
-            expect(result.files[0].mimeType).toBe(expectedMime)
+            expect(result.files[0]!.mimeType).toBe(expectedMime)
         })
 
         it('uses file.mimeType from Graph when available', async () => {
@@ -1250,7 +1288,7 @@ describe('OneDrivePlugin', () => {
             )
 
             const result = await plugin.loadFiles()
-            expect(result.files[0].mimeType).toBe('application/x-custom')
+            expect(result.files[0]!.mimeType).toBe('application/x-custom')
         })
 
         it('maps folders with mimeType folder', async () => {
@@ -1268,8 +1306,8 @@ describe('OneDrivePlugin', () => {
             )
 
             const result = await plugin.loadFiles()
-            expect(result.files[0].mimeType).toBe('folder')
-            expect(result.files[0].size).toBe(0)
+            expect(result.files[0]!.mimeType).toBe('folder')
+            expect(result.files[0]!.size).toBe(0)
         })
     })
 
@@ -1287,7 +1325,7 @@ describe('OneDrivePlugin', () => {
 
             const result = await plugin.loadFiles()
 
-            const calledUrl = fetchMock.mock.calls[0][0] as string
+            const calledUrl = fetchMock.mock.calls[0]![0] as string
             expect(calledUrl).toContain('/me/drive/root/children')
             expect(result.folderId).toBe('root')
         })
@@ -1309,18 +1347,15 @@ describe('OneDrivePlugin', () => {
             )
 
             const result = await plugin.loadFiles()
-            expect(result.files[0].id).toBe('')
-            expect(result.files[0].name).toBe('')
+            expect(result.files[0]!.id).toBe('')
+            expect(result.files[0]!.name).toBe('')
         })
 
         it('handles empty value array', async () => {
             sessionStore.set('upup_onedrive_access_token', 'tok')
             plugin.restoreSession()
 
-            vi.stubGlobal(
-                'fetch',
-                mockFetchResponse({ value: [] }),
-            )
+            vi.stubGlobal('fetch', mockFetchResponse({ value: [] }))
 
             const result = await plugin.loadFiles()
             expect(result.files).toHaveLength(0)
@@ -1330,10 +1365,7 @@ describe('OneDrivePlugin', () => {
             sessionStore.set('upup_onedrive_access_token', 'tok')
             plugin.restoreSession()
 
-            vi.stubGlobal(
-                'fetch',
-                mockFetchResponse({}),
-            )
+            vi.stubGlobal('fetch', mockFetchResponse({}))
 
             const result = await plugin.loadFiles()
             expect(result.files).toHaveLength(0)

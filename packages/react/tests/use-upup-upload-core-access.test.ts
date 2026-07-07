@@ -16,7 +16,7 @@ describe('useUpupUpload — core.validateFiles access', () => {
             makeFile('ok.txt', 10, 'text/plain'),
         ])
         expect(results).toHaveLength(1)
-        expect(results[0].valid).toBe(true)
+        expect(results[0]!.valid).toBe(true)
     })
 
     it('validates a bad file type as invalid', async () => {
@@ -26,8 +26,8 @@ describe('useUpupUpload — core.validateFiles access', () => {
         const results = await result.current.core.validateFiles([
             makeFile('bad.png', 10, 'image/png'),
         ])
-        expect(results[0].valid).toBe(false)
-        expect(results[0].errors[0].code).toBe('TYPE_MISMATCH')
+        expect(results[0]!.valid).toBe(false)
+        expect(results[0]!.errors[0]!.code).toBe('TYPE_MISMATCH')
     })
 
     it('validates file too large', async () => {
@@ -37,8 +37,8 @@ describe('useUpupUpload — core.validateFiles access', () => {
         const results = await result.current.core.validateFiles([
             makeFile('big.txt', 50),
         ])
-        expect(results[0].valid).toBe(false)
-        expect(results[0].errors[0].code).toBe('FILE_TOO_LARGE')
+        expect(results[0]!.valid).toBe(false)
+        expect(results[0]!.errors[0]!.code).toBe('FILE_TOO_LARGE')
     })
 
     it('validateFiles does not modify hook files', async () => {
@@ -64,7 +64,10 @@ describe('useUpupUpload — core.progress access', () => {
     it('progress reflects added files', async () => {
         const { result } = renderHook(() => useUpupUpload(opts))
         await act(async () => {
-            await result.current.addFiles([makeFile('a.txt'), makeFile('b.txt')])
+            await result.current.addFiles([
+                makeFile('a.txt'),
+                makeFile('b.txt'),
+            ])
         })
         expect(result.current.core.progress.totalFiles).toBe(2)
         expect(result.current.core.progress.completedFiles).toBe(0)

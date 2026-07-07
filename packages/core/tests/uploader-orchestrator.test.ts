@@ -85,8 +85,12 @@ function setOrchState(
 }
 
 /** Create a minimal UploadFile for testing. */
-function createUploadFile(overrides: Partial<UploadFile> & { name: string }): UploadFile {
-    const file = new File(['content'], overrides.name, { type: overrides.type ?? 'text/plain' })
+function createUploadFile(
+    overrides: Partial<UploadFile> & { name: string },
+): UploadFile {
+    const file = new File(['content'], overrides.name, {
+        type: overrides.type ?? 'text/plain',
+    })
     return Object.assign(file, {
         id: overrides.id ?? overrides.name,
         source: overrides.source ?? FileSource.LOCAL,
@@ -159,8 +163,11 @@ describe('UploaderOrchestrator', () => {
             const core = new UpupCore({})
             const orch = new UploaderOrchestrator(core, {})
             orch.init()
-            await core.addFiles([new File(['data'], 'test.txt', { type: 'text/plain' })])
-            const fileId = orch.getSnapshot().files.keys().next().value as string
+            await core.addFiles([
+                new File(['data'], 'test.txt', { type: 'text/plain' }),
+            ])
+            const fileId = orch.getSnapshot().files.keys().next()
+                .value as string
 
             orch.removeFile(fileId)
 
@@ -172,8 +179,11 @@ describe('UploaderOrchestrator', () => {
             const core = new UpupCore({})
             const orch = new UploaderOrchestrator(core, {})
             orch.init()
-            await core.addFiles([new File(['data'], 'test.txt', { type: 'text/plain' })])
-            const fileId = orch.getSnapshot().files.keys().next().value as string
+            await core.addFiles([
+                new File(['data'], 'test.txt', { type: 'text/plain' }),
+            ])
+            const fileId = orch.getSnapshot().files.keys().next()
+                .value as string
 
             orch.removeFile(fileId)
 
@@ -188,7 +198,8 @@ describe('UploaderOrchestrator', () => {
             orch.init()
 
             await core.addFiles([new File(['data'], 'callback-test.txt')])
-            const fileId = orch.getSnapshot().files.keys().next().value as string
+            const fileId = orch.getSnapshot().files.keys().next()
+                .value as string
             const file = orch.getSnapshot().files.get(fileId)
 
             orch.removeFile(fileId)
@@ -200,17 +211,24 @@ describe('UploaderOrchestrator', () => {
 
         it('revokes blob URL before removing', async () => {
             const revokeObjectURL = vi.fn()
-            vi.stubGlobal('URL', { ...globalThis.URL, createObjectURL: () => 'blob:http://localhost/test', revokeObjectURL })
+            vi.stubGlobal('URL', {
+                ...globalThis.URL,
+                createObjectURL: () => 'blob:http://localhost/test',
+                revokeObjectURL,
+            })
 
             const core = new UpupCore({})
             const orch = new UploaderOrchestrator(core, {})
             orch.init()
             await core.addFiles([new File(['data'], 'blob-test.txt')])
-            const fileId = orch.getSnapshot().files.keys().next().value as string
+            const fileId = orch.getSnapshot().files.keys().next()
+                .value as string
 
             orch.removeFile(fileId)
 
-            expect(revokeObjectURL).toHaveBeenCalledWith('blob:http://localhost/test')
+            expect(revokeObjectURL).toHaveBeenCalledWith(
+                'blob:http://localhost/test',
+            )
             vi.unstubAllGlobals()
             core.destroy()
         })
@@ -232,7 +250,8 @@ describe('UploaderOrchestrator', () => {
             const orch = new UploaderOrchestrator(core, {})
             orch.init()
             await core.addFiles([new File(['data'], 'notify.txt')])
-            const fileId = orch.getSnapshot().files.keys().next().value as string
+            const fileId = orch.getSnapshot().files.keys().next()
+                .value as string
 
             // Subscribe AFTER the add (its notify already fired) so the only
             // notify counted is the single removal's — pinning exactly-once.
@@ -268,7 +287,9 @@ describe('UploaderOrchestrator', () => {
             expect(orch.getSnapshot().activeSource).toBeUndefined()
 
             orch.setActiveSource(FileSource.GOOGLE_DRIVE)
-            expect(orch.getSnapshot().activeSource).toBe(FileSource.GOOGLE_DRIVE)
+            expect(orch.getSnapshot().activeSource).toBe(
+                FileSource.GOOGLE_DRIVE,
+            )
         })
 
         it('can clear activeSource with undefined', () => {
@@ -354,9 +375,13 @@ describe('UploaderOrchestrator', () => {
         it('calls core.upload() and returns result', async () => {
             const core = createMockCore()
             const mockFiles = [createUploadFile({ name: 'a.txt' })]
-            core.upload.mockResolvedValue(mockFiles)
+            vi.mocked(core.upload).mockResolvedValue(mockFiles)
             const orch = new UploaderOrchestrator(core, {})
-            setOrchState(orch, { files: new Map([['f1', createUploadFile({ name: 'a.txt', id: 'f1' })]]) })
+            setOrchState(orch, {
+                files: new Map([
+                    ['f1', createUploadFile({ name: 'a.txt', id: 'f1' })],
+                ]),
+            })
 
             const result = await orch.startUpload()
 
@@ -376,9 +401,13 @@ describe('UploaderOrchestrator', () => {
 
         it('clears uploadError before uploading', async () => {
             const core = createMockCore()
-            core.upload.mockResolvedValue([])
+            vi.mocked(core.upload).mockResolvedValue([])
             const orch = new UploaderOrchestrator(core, {})
-            setOrchState(orch, { files: new Map([['f1', createUploadFile({ name: 'a.txt', id: 'f1' })]]) })
+            setOrchState(orch, {
+                files: new Map([
+                    ['f1', createUploadFile({ name: 'a.txt', id: 'f1' })],
+                ]),
+            })
             await orch.startUpload()
 
             expect(orch.getSnapshot().uploadError).toBe('')
@@ -386,10 +415,12 @@ describe('UploaderOrchestrator', () => {
 
         it('clears uploadErrorCode before uploading (P4/C9)', async () => {
             const core = createMockCore()
-            core.upload.mockResolvedValue([])
+            vi.mocked(core.upload).mockResolvedValue([])
             const orch = new UploaderOrchestrator(core, {})
             setOrchState(orch, {
-                files: new Map([['f1', createUploadFile({ name: 'a.txt', id: 'f1' })]]),
+                files: new Map([
+                    ['f1', createUploadFile({ name: 'a.txt', id: 'f1' })],
+                ]),
                 uploadErrorCode: 'SignatureDoesNotMatch',
             })
             await orch.startUpload()
@@ -399,12 +430,16 @@ describe('UploaderOrchestrator', () => {
 
         it('calls onPrepareFiles callback if provided', async () => {
             const core = createMockCore()
-            core.upload.mockResolvedValue([])
-            core.addFiles.mockResolvedValue(undefined)
+            vi.mocked(core.upload).mockResolvedValue([])
+            vi.mocked(core.addFiles).mockResolvedValue(undefined)
             const prepared = [new File(['prepared'], 'prepared.txt')]
             const onPrepareFiles = vi.fn().mockResolvedValue(prepared)
             const orch = new UploaderOrchestrator(core, { onPrepareFiles })
-            setOrchState(orch, { files: new Map([['f1', createUploadFile({ name: 'a.txt', id: 'f1' })]]) })
+            setOrchState(orch, {
+                files: new Map([
+                    ['f1', createUploadFile({ name: 'a.txt', id: 'f1' })],
+                ]),
+            })
 
             await orch.startUpload()
 
@@ -415,11 +450,15 @@ describe('UploaderOrchestrator', () => {
 
         it('does not replace files if onPrepareFiles returns same array', async () => {
             const core = createMockCore()
-            core.upload.mockResolvedValue([])
+            vi.mocked(core.upload).mockResolvedValue([])
             const orch = new UploaderOrchestrator(core, {
-                onPrepareFiles: (files) => files,
+                onPrepareFiles: files => files,
             })
-            setOrchState(orch, { files: new Map([['f1', createUploadFile({ name: 'a.txt', id: 'f1' })]]) })
+            setOrchState(orch, {
+                files: new Map([
+                    ['f1', createUploadFile({ name: 'a.txt', id: 'f1' })],
+                ]),
+            })
 
             await orch.startUpload()
 
@@ -432,9 +471,13 @@ describe('UploaderOrchestrator', () => {
         it('calls core.retry() with no arg for retry-all', async () => {
             const core = createMockCore()
             const mockFiles = [createUploadFile({ name: 'a.txt' })]
-            core.retry.mockResolvedValue(mockFiles)
+            vi.mocked(core.retry).mockResolvedValue(mockFiles)
             const orch = new UploaderOrchestrator(core, {})
-            setOrchState(orch, { files: new Map([['f1', createUploadFile({ name: 'a.txt', id: 'f1' })]]) })
+            setOrchState(orch, {
+                files: new Map([
+                    ['f1', createUploadFile({ name: 'a.txt', id: 'f1' })],
+                ]),
+            })
 
             const result = await orch.retryUpload()
 
@@ -444,9 +487,13 @@ describe('UploaderOrchestrator', () => {
 
         it('calls core.retry(fileId) for single-file retry', async () => {
             const core = createMockCore()
-            core.retry.mockResolvedValue([])
+            vi.mocked(core.retry).mockResolvedValue([])
             const orch = new UploaderOrchestrator(core, {})
-            setOrchState(orch, { files: new Map([['f1', createUploadFile({ name: 'a.txt', id: 'f1' })]]) })
+            setOrchState(orch, {
+                files: new Map([
+                    ['f1', createUploadFile({ name: 'a.txt', id: 'f1' })],
+                ]),
+            })
 
             await orch.retryUpload('file-123')
 
@@ -465,9 +512,13 @@ describe('UploaderOrchestrator', () => {
 
         it('clears uploadError before retrying', async () => {
             const core = createMockCore()
-            core.retry.mockResolvedValue([])
+            vi.mocked(core.retry).mockResolvedValue([])
             const orch = new UploaderOrchestrator(core, {})
-            setOrchState(orch, { files: new Map([['f1', createUploadFile({ name: 'a.txt', id: 'f1' })]]) })
+            setOrchState(orch, {
+                files: new Map([
+                    ['f1', createUploadFile({ name: 'a.txt', id: 'f1' })],
+                ]),
+            })
 
             await orch.retryUpload()
 
@@ -476,10 +527,12 @@ describe('UploaderOrchestrator', () => {
 
         it('clears uploadErrorCode before retrying (P4/C9)', async () => {
             const core = createMockCore()
-            core.retry.mockResolvedValue([])
+            vi.mocked(core.retry).mockResolvedValue([])
             const orch = new UploaderOrchestrator(core, {})
             setOrchState(orch, {
-                files: new Map([['f1', createUploadFile({ name: 'a.txt', id: 'f1' })]]),
+                files: new Map([
+                    ['f1', createUploadFile({ name: 'a.txt', id: 'f1' })],
+                ]),
                 uploadErrorCode: 'bad_signature',
             })
 
@@ -503,13 +556,31 @@ describe('UploaderOrchestrator', () => {
         it('revokes blob URLs for all files', () => {
             const core = createMockCore()
             const revokeObjectURL = vi.fn()
-            vi.stubGlobal('URL', { ...globalThis.URL, createObjectURL: () => 'blob:http://localhost/cancel', revokeObjectURL })
+            vi.stubGlobal('URL', {
+                ...globalThis.URL,
+                createObjectURL: () => 'blob:http://localhost/cancel',
+                revokeObjectURL,
+            })
 
             const orch = new UploaderOrchestrator(core, {})
             setOrchState(orch, {
                 files: new Map([
-                    ['f1', createUploadFile({ name: 'a.txt', id: 'f1', url: 'blob:http://localhost/cancel' })],
-                    ['f2', createUploadFile({ name: 'b.txt', id: 'f2', url: 'blob:http://localhost/cancel' })],
+                    [
+                        'f1',
+                        createUploadFile({
+                            name: 'a.txt',
+                            id: 'f1',
+                            url: 'blob:http://localhost/cancel',
+                        }),
+                    ],
+                    [
+                        'f2',
+                        createUploadFile({
+                            name: 'b.txt',
+                            id: 'f2',
+                            url: 'blob:http://localhost/cancel',
+                        }),
+                    ],
                 ]),
             })
 
@@ -640,11 +711,24 @@ describe('UploaderOrchestrator', () => {
             const core = createMockCore()
             core.emit = vi.fn()
             const revokeObjectURL = vi.fn()
-            vi.stubGlobal('URL', { ...globalThis.URL, createObjectURL: () => 'blob:http://localhost/reset', revokeObjectURL })
+            vi.stubGlobal('URL', {
+                ...globalThis.URL,
+                createObjectURL: () => 'blob:http://localhost/reset',
+                revokeObjectURL,
+            })
 
             const orch = new UploaderOrchestrator(core, {})
             setOrchState(orch, {
-                files: new Map([['f1', createUploadFile({ name: 'a.txt', id: 'f1', url: 'blob:http://localhost/reset' })]]),
+                files: new Map([
+                    [
+                        'f1',
+                        createUploadFile({
+                            name: 'a.txt',
+                            id: 'f1',
+                            url: 'blob:http://localhost/reset',
+                        }),
+                    ],
+                ]),
             })
 
             orch.resetState()
@@ -675,7 +759,10 @@ describe('UploaderOrchestrator', () => {
         it('sets editingFile in state', () => {
             const core = createMockCore()
             const orch = new UploaderOrchestrator(core, {})
-            const file = createUploadFile({ name: 'photo.png', type: 'image/png' })
+            const file = createUploadFile({
+                name: 'photo.png',
+                type: 'image/png',
+            })
 
             orch.openImageEditor(file)
 
@@ -686,9 +773,17 @@ describe('UploaderOrchestrator', () => {
             const core = createMockCore()
             const onOpen = vi.fn()
             const orch = new UploaderOrchestrator(core, {
-                imageEditorOptions: { enabled: true, autoOpen: 'never', display: 'inline', onOpen },
+                imageEditorOptions: {
+                    enabled: true,
+                    autoOpen: 'never',
+                    display: 'inline',
+                    onOpen,
+                },
             })
-            const file = createUploadFile({ name: 'photo.png', type: 'image/png' })
+            const file = createUploadFile({
+                name: 'photo.png',
+                type: 'image/png',
+            })
 
             orch.openImageEditor(file)
 
@@ -698,11 +793,16 @@ describe('UploaderOrchestrator', () => {
         it('emits image-editor-open event on core', () => {
             const core = createMockCore()
             const orch = new UploaderOrchestrator(core, {})
-            const file = createUploadFile({ name: 'photo.png', type: 'image/png' })
+            const file = createUploadFile({
+                name: 'photo.png',
+                type: 'image/png',
+            })
 
             orch.openImageEditor(file)
 
-            expect(core.emit).toHaveBeenCalledWith('image-editor-open', { file })
+            expect(core.emit).toHaveBeenCalledWith('image-editor-open', {
+                file,
+            })
         })
 
         it('notifies listeners', () => {
@@ -711,7 +811,9 @@ describe('UploaderOrchestrator', () => {
             const listener = vi.fn()
             orch.subscribe(listener)
 
-            orch.openImageEditor(createUploadFile({ name: 'photo.png', type: 'image/png' }))
+            orch.openImageEditor(
+                createUploadFile({ name: 'photo.png', type: 'image/png' }),
+            )
 
             expect(listener).toHaveBeenCalled()
         })
@@ -721,7 +823,10 @@ describe('UploaderOrchestrator', () => {
         it('clears editingFile in state', () => {
             const core = createMockCore()
             const orch = new UploaderOrchestrator(core, {})
-            const file = createUploadFile({ name: 'photo.png', type: 'image/png' })
+            const file = createUploadFile({
+                name: 'photo.png',
+                type: 'image/png',
+            })
             orch.openImageEditor(file)
 
             orch.closeImageEditor()
@@ -733,9 +838,17 @@ describe('UploaderOrchestrator', () => {
             const core = createMockCore()
             const onCancel = vi.fn()
             const orch = new UploaderOrchestrator(core, {
-                imageEditorOptions: { enabled: true, autoOpen: 'never', display: 'inline', onCancel },
+                imageEditorOptions: {
+                    enabled: true,
+                    autoOpen: 'never',
+                    display: 'inline',
+                    onCancel,
+                },
             })
-            const file = createUploadFile({ name: 'photo.png', type: 'image/png' })
+            const file = createUploadFile({
+                name: 'photo.png',
+                type: 'image/png',
+            })
             orch.openImageEditor(file)
 
             orch.closeImageEditor()
@@ -746,19 +859,29 @@ describe('UploaderOrchestrator', () => {
         it('emits image-editor-cancel event on core', () => {
             const core = createMockCore()
             const orch = new UploaderOrchestrator(core, {})
-            const file = createUploadFile({ name: 'photo.png', type: 'image/png' })
+            const file = createUploadFile({
+                name: 'photo.png',
+                type: 'image/png',
+            })
             orch.openImageEditor(file)
 
             orch.closeImageEditor()
 
-            expect(core.emit).toHaveBeenCalledWith('image-editor-cancel', { file })
+            expect(core.emit).toHaveBeenCalledWith('image-editor-cancel', {
+                file,
+            })
         })
 
         it('does not invoke onCancel when no file was being edited', () => {
             const core = createMockCore()
             const onCancel = vi.fn()
             const orch = new UploaderOrchestrator(core, {
-                imageEditorOptions: { enabled: true, autoOpen: 'never', display: 'inline', onCancel },
+                imageEditorOptions: {
+                    enabled: true,
+                    autoOpen: 'never',
+                    display: 'inline',
+                    onCancel,
+                },
             })
 
             orch.closeImageEditor()
@@ -769,8 +892,16 @@ describe('UploaderOrchestrator', () => {
         it('auto-opens next file from editor queue', () => {
             const core = createMockCore()
             const orch = new UploaderOrchestrator(core, {})
-            const file1 = createUploadFile({ name: 'a.png', id: 'a', type: 'image/png' })
-            const file2 = createUploadFile({ name: 'b.png', id: 'b', type: 'image/png' })
+            const file1 = createUploadFile({
+                name: 'a.png',
+                id: 'a',
+                type: 'image/png',
+            })
+            const file2 = createUploadFile({
+                name: 'b.png',
+                id: 'b',
+                type: 'image/png',
+            })
 
             // Open first file, enqueue second
             orch.openImageEditor(file1)
@@ -797,7 +928,11 @@ describe('UploaderOrchestrator', () => {
         it('replaces the file with edited version and clears editingFile', () => {
             const core = createMockCore()
             const orch = new UploaderOrchestrator(core, {})
-            const file = createUploadFile({ name: 'photo.png', id: 'photo-1', type: 'image/png' })
+            const file = createUploadFile({
+                name: 'photo.png',
+                id: 'photo-1',
+                type: 'image/png',
+            })
 
             // Add the file to state so revokeAndReplace can find it
             const filesMap = new Map<string, UploadFile>()
@@ -810,16 +945,28 @@ describe('UploaderOrchestrator', () => {
 
             expect(orch.getSnapshot().editingFile).toBeNull()
             expect(core.replaceFile).toHaveBeenCalledTimes(1)
-            expect(core.replaceFile).toHaveBeenCalledWith('photo-1', expect.any(Object))
+            expect(core.replaceFile).toHaveBeenCalledWith(
+                'photo-1',
+                expect.any(Object),
+            )
         })
 
         it('invokes onSave callback with edited and original file', () => {
             const core = createMockCore()
             const onSave = vi.fn()
             const orch = new UploaderOrchestrator(core, {
-                imageEditorOptions: { enabled: true, autoOpen: 'never', display: 'inline', onSave },
+                imageEditorOptions: {
+                    enabled: true,
+                    autoOpen: 'never',
+                    display: 'inline',
+                    onSave,
+                },
             })
-            const file = createUploadFile({ name: 'photo.png', id: 'photo-1', type: 'image/png' })
+            const file = createUploadFile({
+                name: 'photo.png',
+                id: 'photo-1',
+                type: 'image/png',
+            })
             orch.openImageEditor(file)
 
             orch.saveImageEdit('data:image/png;base64,iVBORw0KGgo=')
@@ -831,7 +978,11 @@ describe('UploaderOrchestrator', () => {
         it('emits image-editor-save event', () => {
             const core = createMockCore()
             const orch = new UploaderOrchestrator(core, {})
-            const file = createUploadFile({ name: 'photo.png', id: 'photo-1', type: 'image/png' })
+            const file = createUploadFile({
+                name: 'photo.png',
+                id: 'photo-1',
+                type: 'image/png',
+            })
             orch.openImageEditor(file)
 
             orch.saveImageEdit('data:image/png;base64,iVBORw0KGgo=')
@@ -846,23 +997,43 @@ describe('UploaderOrchestrator', () => {
             const core = createMockCore()
             const onSave = vi.fn()
             const orch = new UploaderOrchestrator(core, {
-                imageEditorOptions: { enabled: true, autoOpen: 'never', display: 'inline', onSave },
+                imageEditorOptions: {
+                    enabled: true,
+                    autoOpen: 'never',
+                    display: 'inline',
+                    onSave,
+                },
             })
-            const file = createUploadFile({ name: 'photo.png', id: 'photo-1', type: 'image/png' })
+            const file = createUploadFile({
+                name: 'photo.png',
+                id: 'photo-1',
+                type: 'image/png',
+            })
             orch.openImageEditor(file)
 
-            orch.saveImageEdit('data:image/png;base64,iVBORw0KGgo=', 'image/webp')
+            orch.saveImageEdit(
+                'data:image/png;base64,iVBORw0KGgo=',
+                'image/webp',
+            )
 
             // The new file passed to onSave should have the requested MIME type
-            const newFile = onSave.mock.calls[0][0] as UploadFile
+            const newFile = onSave.mock.calls[0]![0] as UploadFile
             expect(newFile.type).toBe('image/webp')
         })
 
         it('processes editor queue after saving', () => {
             const core = createMockCore()
             const orch = new UploaderOrchestrator(core, {})
-            const file1 = createUploadFile({ name: 'a.png', id: 'a', type: 'image/png' })
-            const file2 = createUploadFile({ name: 'b.png', id: 'b', type: 'image/png' })
+            const file1 = createUploadFile({
+                name: 'a.png',
+                id: 'a',
+                type: 'image/png',
+            })
+            const file2 = createUploadFile({
+                name: 'b.png',
+                id: 'b',
+                type: 'image/png',
+            })
 
             orch.openImageEditor(file1)
             orch.enqueueForEditor([file2])
@@ -879,22 +1050,36 @@ describe('UploaderOrchestrator', () => {
         it('replaces a file in state by id', () => {
             const core = createMockCore()
             const orch = new UploaderOrchestrator(core, {})
-            const original = createUploadFile({ name: 'original.txt', id: 'file-1' })
+            const original = createUploadFile({
+                name: 'original.txt',
+                id: 'file-1',
+            })
             setOrchState(orch, { files: new Map([['file-1', original]]) })
 
-            const replacement = createUploadFile({ name: 'replacement.txt', id: 'file-1' })
+            const replacement = createUploadFile({
+                name: 'replacement.txt',
+                id: 'file-1',
+            })
             orch.replaceFile('file-1', replacement)
 
-            expect(orch.getSnapshot().files.get('file-1')?.name).toBe('replacement.txt')
+            expect(orch.getSnapshot().files.get('file-1')?.name).toBe(
+                'replacement.txt',
+            )
         })
 
         it('calls core.replaceFile', () => {
             const core = createMockCore()
             const orch = new UploaderOrchestrator(core, {})
-            const original = createUploadFile({ name: 'original.txt', id: 'file-1' })
+            const original = createUploadFile({
+                name: 'original.txt',
+                id: 'file-1',
+            })
             setOrchState(orch, { files: new Map([['file-1', original]]) })
 
-            const replacement = createUploadFile({ name: 'replacement.txt', id: 'file-1' })
+            const replacement = createUploadFile({
+                name: 'replacement.txt',
+                id: 'file-1',
+            })
             orch.replaceFile('file-1', replacement)
 
             expect(core.replaceFile).toHaveBeenCalledWith('file-1', replacement)
@@ -903,29 +1088,48 @@ describe('UploaderOrchestrator', () => {
         it('revokes old blob URL', () => {
             const core = createMockCore()
             const revokeObjectURL = vi.fn()
-            vi.stubGlobal('URL', { ...globalThis.URL, createObjectURL: () => 'blob:http://localhost/old', revokeObjectURL })
+            vi.stubGlobal('URL', {
+                ...globalThis.URL,
+                createObjectURL: () => 'blob:http://localhost/old',
+                revokeObjectURL,
+            })
 
             const orch = new UploaderOrchestrator(core, {})
-            const original = createUploadFile({ name: 'original.txt', id: 'file-1', url: 'blob:http://localhost/old' })
+            const original = createUploadFile({
+                name: 'original.txt',
+                id: 'file-1',
+                url: 'blob:http://localhost/old',
+            })
             setOrchState(orch, { files: new Map([['file-1', original]]) })
 
-            const replacement = createUploadFile({ name: 'replacement.txt', id: 'file-1' })
+            const replacement = createUploadFile({
+                name: 'replacement.txt',
+                id: 'file-1',
+            })
             orch.replaceFile('file-1', replacement)
 
-            expect(revokeObjectURL).toHaveBeenCalledWith('blob:http://localhost/old')
+            expect(revokeObjectURL).toHaveBeenCalledWith(
+                'blob:http://localhost/old',
+            )
             vi.unstubAllGlobals()
         })
 
         it('notifies listeners', () => {
             const core = createMockCore()
             const orch = new UploaderOrchestrator(core, {})
-            const original = createUploadFile({ name: 'original.txt', id: 'file-1' })
+            const original = createUploadFile({
+                name: 'original.txt',
+                id: 'file-1',
+            })
             setOrchState(orch, { files: new Map([['file-1', original]]) })
 
             const listener = vi.fn()
             orch.subscribe(listener)
 
-            const replacement = createUploadFile({ name: 'replacement.txt', id: 'file-1' })
+            const replacement = createUploadFile({
+                name: 'replacement.txt',
+                id: 'file-1',
+            })
             orch.replaceFile('file-1', replacement)
 
             expect(listener).toHaveBeenCalled()
@@ -936,11 +1140,25 @@ describe('UploaderOrchestrator', () => {
         it('adds files to the editor queue', () => {
             const core = createMockCore()
             const orch = new UploaderOrchestrator(core, {})
-            const file1 = createUploadFile({ name: 'a.png', id: 'a', type: 'image/png' })
-            const file2 = createUploadFile({ name: 'b.png', id: 'b', type: 'image/png' })
+            const file1 = createUploadFile({
+                name: 'a.png',
+                id: 'a',
+                type: 'image/png',
+            })
+            const file2 = createUploadFile({
+                name: 'b.png',
+                id: 'b',
+                type: 'image/png',
+            })
 
             // Must have something editing so queue isn't immediately processed
-            orch.openImageEditor(createUploadFile({ name: 'current.png', id: 'current', type: 'image/png' }))
+            orch.openImageEditor(
+                createUploadFile({
+                    name: 'current.png',
+                    id: 'current',
+                    type: 'image/png',
+                }),
+            )
             orch.enqueueForEditor([file1, file2])
 
             expect(orch.getSnapshot().editorQueue).toEqual([file1, file2])
@@ -960,8 +1178,16 @@ describe('UploaderOrchestrator', () => {
         it('auto-opens first file if nothing is being edited', () => {
             const core = createMockCore()
             const orch = new UploaderOrchestrator(core, {})
-            const file1 = createUploadFile({ name: 'a.png', id: 'a', type: 'image/png' })
-            const file2 = createUploadFile({ name: 'b.png', id: 'b', type: 'image/png' })
+            const file1 = createUploadFile({
+                name: 'a.png',
+                id: 'a',
+                type: 'image/png',
+            })
+            const file2 = createUploadFile({
+                name: 'b.png',
+                id: 'b',
+                type: 'image/png',
+            })
 
             orch.enqueueForEditor([file1, file2])
 
@@ -973,15 +1199,37 @@ describe('UploaderOrchestrator', () => {
         it('appends to existing queue', () => {
             const core = createMockCore()
             const orch = new UploaderOrchestrator(core, {})
-            const file1 = createUploadFile({ name: 'a.png', id: 'a', type: 'image/png' })
-            const file2 = createUploadFile({ name: 'b.png', id: 'b', type: 'image/png' })
-            const file3 = createUploadFile({ name: 'c.png', id: 'c', type: 'image/png' })
+            const file1 = createUploadFile({
+                name: 'a.png',
+                id: 'a',
+                type: 'image/png',
+            })
+            const file2 = createUploadFile({
+                name: 'b.png',
+                id: 'b',
+                type: 'image/png',
+            })
+            const file3 = createUploadFile({
+                name: 'c.png',
+                id: 'c',
+                type: 'image/png',
+            })
 
-            orch.openImageEditor(createUploadFile({ name: 'current.png', id: 'current', type: 'image/png' }))
+            orch.openImageEditor(
+                createUploadFile({
+                    name: 'current.png',
+                    id: 'current',
+                    type: 'image/png',
+                }),
+            )
             orch.enqueueForEditor([file1])
             orch.enqueueForEditor([file2, file3])
 
-            expect(orch.getSnapshot().editorQueue).toEqual([file1, file2, file3])
+            expect(orch.getSnapshot().editorQueue).toEqual([
+                file1,
+                file2,
+                file3,
+            ])
         })
     })
 
@@ -1035,9 +1283,9 @@ describe('UploaderOrchestrator', () => {
             const orch = new UploaderOrchestrator(core, {})
             orch.init()
 
-            const subscribedEvents = (core.on as ReturnType<typeof vi.fn>).mock.calls.map(
-                (call: unknown[]) => call[0],
-            )
+            const subscribedEvents = (
+                core.on as ReturnType<typeof vi.fn>
+            ).mock.calls.map((call: unknown[]) => call[0])
             expect(subscribedEvents).toContain('upload-start')
             expect(subscribedEvents).toContain('file-upload-start')
             // state-change drives the files projection (replaces files-cleared map mirror)
@@ -1060,7 +1308,7 @@ describe('UploaderOrchestrator', () => {
                 orch.init()
 
                 const before = orch.getSnapshot().uploadStatus
-                handlers['upload-start']({})
+                handlers['upload-start']!({})
 
                 expect(onUploadStart).toHaveBeenCalledTimes(1)
                 // uploadStatus now arrives via state-change{status}, not the discrete listener.
@@ -1072,11 +1320,13 @@ describe('UploaderOrchestrator', () => {
             it('calls onFileUploadStart with the file', () => {
                 const { core, handlers } = createMockCoreWithHandlers()
                 const onFileUploadStart = vi.fn()
-                const orch = new UploaderOrchestrator(core, { onFileUploadStart })
+                const orch = new UploaderOrchestrator(core, {
+                    onFileUploadStart,
+                })
                 orch.init()
 
                 const file = createUploadFile({ name: 'test.txt' })
-                handlers['file-upload-start']({ file })
+                handlers['file-upload-start']!({ file })
 
                 expect(onFileUploadStart).toHaveBeenCalledWith(file)
             })
@@ -1095,7 +1345,7 @@ describe('UploaderOrchestrator', () => {
                 orch.init()
 
                 const files = [createUploadFile({ name: 'a.txt', id: 'a' })]
-                handlers['files-added'](files)
+                handlers['files-added']!(files)
 
                 expect(onFilesSelected).toHaveBeenCalledWith(files)
             })
@@ -1106,7 +1356,7 @@ describe('UploaderOrchestrator', () => {
                 const orch = new UploaderOrchestrator(core, { onFilesSelected })
                 orch.init()
 
-                handlers['files-added']([])
+                handlers['files-added']!([])
 
                 expect(onFilesSelected).not.toHaveBeenCalled()
                 expect(orch.getSnapshot().files.size).toBe(0)
@@ -1115,13 +1365,25 @@ describe('UploaderOrchestrator', () => {
             it('enqueues images for editor when autoOpen is always', () => {
                 const { core, handlers } = createMockCoreWithHandlers()
                 const orch = new UploaderOrchestrator(core, {
-                    imageEditorOptions: { enabled: true, autoOpen: 'always', display: 'inline' },
+                    imageEditorOptions: {
+                        enabled: true,
+                        autoOpen: 'always',
+                        display: 'inline',
+                    },
                 })
                 orch.init()
 
-                const img = createUploadFile({ name: 'photo.png', id: 'img1', type: 'image/png' })
-                const txt = createUploadFile({ name: 'doc.txt', id: 'txt1', type: 'text/plain' })
-                handlers['files-added']([img, txt])
+                const img = createUploadFile({
+                    name: 'photo.png',
+                    id: 'img1',
+                    type: 'image/png',
+                })
+                const txt = createUploadFile({
+                    name: 'doc.txt',
+                    id: 'txt1',
+                    type: 'text/plain',
+                })
+                handlers['files-added']!([img, txt])
 
                 // Image should be opened in editor (auto-opened from queue)
                 expect(orch.getSnapshot().editingFile).toBe(img)
@@ -1130,12 +1392,20 @@ describe('UploaderOrchestrator', () => {
             it('enqueues single image for editor when autoOpen is single', () => {
                 const { core, handlers } = createMockCoreWithHandlers()
                 const orch = new UploaderOrchestrator(core, {
-                    imageEditorOptions: { enabled: true, autoOpen: 'single', display: 'inline' },
+                    imageEditorOptions: {
+                        enabled: true,
+                        autoOpen: 'single',
+                        display: 'inline',
+                    },
                 })
                 orch.init()
 
-                const img = createUploadFile({ name: 'photo.png', id: 'img1', type: 'image/png' })
-                handlers['files-added']([img])
+                const img = createUploadFile({
+                    name: 'photo.png',
+                    id: 'img1',
+                    type: 'image/png',
+                })
+                handlers['files-added']!([img])
 
                 expect(orch.getSnapshot().editingFile).toBe(img)
             })
@@ -1143,13 +1413,25 @@ describe('UploaderOrchestrator', () => {
             it('does not auto-open when autoOpen is single but multiple images added', () => {
                 const { core, handlers } = createMockCoreWithHandlers()
                 const orch = new UploaderOrchestrator(core, {
-                    imageEditorOptions: { enabled: true, autoOpen: 'single', display: 'inline' },
+                    imageEditorOptions: {
+                        enabled: true,
+                        autoOpen: 'single',
+                        display: 'inline',
+                    },
                 })
                 orch.init()
 
-                const img1 = createUploadFile({ name: 'a.png', id: 'a', type: 'image/png' })
-                const img2 = createUploadFile({ name: 'b.png', id: 'b', type: 'image/png' })
-                handlers['files-added']([img1, img2])
+                const img1 = createUploadFile({
+                    name: 'a.png',
+                    id: 'a',
+                    type: 'image/png',
+                })
+                const img2 = createUploadFile({
+                    name: 'b.png',
+                    id: 'b',
+                    type: 'image/png',
+                })
+                handlers['files-added']!([img1, img2])
 
                 // Nothing opened because 2 images with 'single' mode
                 expect(orch.getSnapshot().editingFile).toBeNull()
@@ -1159,13 +1441,17 @@ describe('UploaderOrchestrator', () => {
                 vi.useFakeTimers()
                 const { core, handlers } = createMockCoreWithHandlers()
                 core.upload = vi.fn().mockResolvedValue([])
-                const orch = new UploaderOrchestrator(core, { autoUpload: true })
+                const orch = new UploaderOrchestrator(core, {
+                    autoUpload: true,
+                })
                 orch.init()
 
                 const file = createUploadFile({ name: 'a.txt', id: 'a' })
-                handlers['files-added']([file])
+                handlers['files-added']!([file])
 
-                expect(core.emit).toHaveBeenCalledWith('auto-upload', { count: 1 })
+                expect(core.emit).toHaveBeenCalledWith('auto-upload', {
+                    count: 1,
+                })
 
                 vi.runAllTimers()
                 expect(core.upload).toHaveBeenCalled()
@@ -1176,11 +1462,13 @@ describe('UploaderOrchestrator', () => {
                 vi.useFakeTimers()
                 const { core, handlers } = createMockCoreWithHandlers()
                 core.upload = vi.fn().mockResolvedValue([])
-                const orch = new UploaderOrchestrator(core, { autoUpload: true })
+                const orch = new UploaderOrchestrator(core, {
+                    autoUpload: true,
+                })
                 orch.init()
 
                 const file = createUploadFile({ name: 'a.txt', id: 'a' })
-                handlers['files-added']([file]) // schedules the 0-ms auto-upload timer
+                handlers['files-added']!([file]) // schedules the 0-ms auto-upload timer
                 orch.destroy() // unmount before the timer fires
                 vi.runAllTimers()
 
@@ -1202,7 +1490,7 @@ describe('UploaderOrchestrator', () => {
                 orch.init()
 
                 const file = createUploadFile({ name: 'removed.txt' })
-                handlers['file-removed'](file)
+                handlers['file-removed']!(file)
 
                 expect(onFileRemoved).toHaveBeenCalledWith(file)
             })
@@ -1221,8 +1509,11 @@ describe('UploaderOrchestrator', () => {
 
                 const listener = vi.fn()
                 orch.subscribe(listener)
-                const ghost = createUploadFile({ name: 'ghost.txt', id: 'ghost' })
-                handlers['file-removed'](ghost)
+                const ghost = createUploadFile({
+                    name: 'ghost.txt',
+                    id: 'ghost',
+                })
+                handlers['file-removed']!(ghost)
 
                 // file-removed handler is callback-only — no setState, so no notify
                 expect(listener).not.toHaveBeenCalled()
@@ -1245,7 +1536,11 @@ describe('UploaderOrchestrator', () => {
                 const orch = new UploaderOrchestrator(core, {})
                 orch.init()
 
-                handlers['upload-progress']({ fileId: 'f1', loaded: 500, total: 1000 })
+                handlers['upload-progress']!({
+                    fileId: 'f1',
+                    loaded: 500,
+                    total: 1000,
+                })
 
                 const state = orch.getSnapshot()
                 expect(state.filesProgressMap['f1']).toEqual({
@@ -1260,20 +1555,31 @@ describe('UploaderOrchestrator', () => {
                 // Use real core so the files map is populated via state-change projection
                 const core = new UpupCore({})
                 const onFileUploadProgress = vi.fn()
-                const orch = new UploaderOrchestrator(core, { onFileUploadProgress })
+                const orch = new UploaderOrchestrator(core, {
+                    onFileUploadProgress,
+                })
                 orch.init()
 
                 // Seed a file via real core so orchestrator projection reflects it
-                await core.addFiles([new File(['data'], 'a.txt', { type: 'text/plain' })])
-                const [fileId, file] = [...orch.getSnapshot().files.entries()][0]
+                await core.addFiles([
+                    new File(['data'], 'a.txt', { type: 'text/plain' }),
+                ])
+                const [fileId, file] = [
+                    ...orch.getSnapshot().files.entries(),
+                ][0]!
 
                 // Simulate the upload-progress event directly on core
-                core.emit('upload-progress', { fileId, loaded: 300, total: 1000 })
+                core.emit('upload-progress', {
+                    fileId,
+                    loaded: 300,
+                    total: 1000,
+                })
 
-                expect(onFileUploadProgress).toHaveBeenCalledWith(
-                    file,
-                    { loaded: 300, total: 1000, percentage: 30 },
-                )
+                expect(onFileUploadProgress).toHaveBeenCalledWith(file, {
+                    loaded: 300,
+                    total: 1000,
+                    percentage: 30,
+                })
                 core.destroy()
             })
 
@@ -1284,10 +1590,16 @@ describe('UploaderOrchestrator', () => {
                     percentage: 50,
                 })
                 const onFilesUploadProgress = vi.fn()
-                const orch = new UploaderOrchestrator(core, { onFilesUploadProgress })
+                const orch = new UploaderOrchestrator(core, {
+                    onFilesUploadProgress,
+                })
                 orch.init()
 
-                handlers['upload-progress']({ fileId: 'f1', loaded: 500, total: 1000 })
+                handlers['upload-progress']!({
+                    fileId: 'f1',
+                    loaded: 500,
+                    total: 1000,
+                })
 
                 expect(onFilesUploadProgress).toHaveBeenCalledWith(1, 2)
             })
@@ -1297,28 +1609,41 @@ describe('UploaderOrchestrator', () => {
             it('calls onFileUploadComplete with file and key', () => {
                 const { core, handlers } = createMockCoreWithHandlers()
                 const onFileUploadComplete = vi.fn()
-                const orch = new UploaderOrchestrator(core, { onFileUploadComplete })
+                const orch = new UploaderOrchestrator(core, {
+                    onFileUploadComplete,
+                })
                 orch.init()
 
                 const file = createUploadFile({ name: 'a.txt' })
-                handlers['upload-success']({ file, result: { key: 'uploads/a.txt' } })
+                handlers['upload-success']!({
+                    file,
+                    result: { key: 'uploads/a.txt' },
+                })
 
-                expect(onFileUploadComplete).toHaveBeenCalledWith(file, 'uploads/a.txt')
+                expect(onFileUploadComplete).toHaveBeenCalledWith(
+                    file,
+                    'uploads/a.txt',
+                )
             })
 
             it('falls back to file.key when result has no key', () => {
                 const { core, handlers } = createMockCoreWithHandlers()
                 const onFileUploadComplete = vi.fn()
-                const orch = new UploaderOrchestrator(core, { onFileUploadComplete })
+                const orch = new UploaderOrchestrator(core, {
+                    onFileUploadComplete,
+                })
                 orch.init()
 
                 const file = Object.assign(
                     createUploadFile({ name: 'a.txt' }),
                     { key: 'fallback-key' },
                 )
-                handlers['upload-success']({ file, result: {} })
+                handlers['upload-success']!({ file, result: {} })
 
-                expect(onFileUploadComplete).toHaveBeenCalledWith(file, 'fallback-key')
+                expect(onFileUploadComplete).toHaveBeenCalledWith(
+                    file,
+                    'fallback-key',
+                )
             })
         })
 
@@ -1329,7 +1654,7 @@ describe('UploaderOrchestrator', () => {
                 orch.init()
 
                 const before = orch.getSnapshot().uploadStatus
-                handlers['upload-all-complete']([])
+                handlers['upload-all-complete']!([])
 
                 // SUCCESSFUL now arrives via the state-change{status} core emits alongside.
                 expect(orch.getSnapshot().uploadStatus).toBe(before)
@@ -1339,11 +1664,14 @@ describe('UploaderOrchestrator', () => {
                 const { core, handlers } = createMockCoreWithHandlers()
                 const onFilesUploadComplete = vi.fn()
                 const onUploadComplete = vi.fn()
-                const orch = new UploaderOrchestrator(core, { onFilesUploadComplete, onUploadComplete })
+                const orch = new UploaderOrchestrator(core, {
+                    onFilesUploadComplete,
+                    onUploadComplete,
+                })
                 orch.init()
 
                 const files = [createUploadFile({ name: 'a.txt' })]
-                handlers['upload-all-complete'](files)
+                handlers['upload-all-complete']!(files)
 
                 expect(onFilesUploadComplete).toHaveBeenCalledWith(files)
                 expect(onUploadComplete).toHaveBeenCalledWith(files)
@@ -1357,7 +1685,9 @@ describe('UploaderOrchestrator', () => {
                 orch.init()
 
                 const before = orch.getSnapshot().uploadStatus
-                handlers['upload-error']({ error: new Error('Network failure') })
+                handlers['upload-error']!({
+                    error: new Error('Network failure'),
+                })
 
                 expect(orch.getSnapshot().uploadError).toBe('Network failure')
                 // FAILED now arrives via the state-change{status: FAILED} core emits right after.
@@ -1370,7 +1700,7 @@ describe('UploaderOrchestrator', () => {
                 const orch = new UploaderOrchestrator(core, { onError })
                 orch.init()
 
-                handlers['upload-error']({ error: new Error('Timeout') })
+                handlers['upload-error']!({ error: new Error('Timeout') })
 
                 expect(onError).toHaveBeenCalledWith('Timeout')
             })
@@ -1380,12 +1710,20 @@ describe('UploaderOrchestrator', () => {
                 const orch = new UploaderOrchestrator(core, {})
                 orch.init()
 
-                const err = new UpupStorageError('Signature mismatch', 'S3', 'upload')
+                const err = new UpupStorageError(
+                    'Signature mismatch',
+                    'S3',
+                    'upload',
+                )
                 err.code = 'SignatureDoesNotMatch'
-                handlers['upload-error']({ error: err })
+                handlers['upload-error']!({ error: err })
 
-                expect(orch.getSnapshot().uploadError).toBe('Signature mismatch')
-                expect(orch.getSnapshot().uploadErrorCode).toBe('SignatureDoesNotMatch')
+                expect(orch.getSnapshot().uploadError).toBe(
+                    'Signature mismatch',
+                )
+                expect(orch.getSnapshot().uploadErrorCode).toBe(
+                    'SignatureDoesNotMatch',
+                )
             })
 
             it('leaves uploadErrorCode undefined for a plain Error (no code)', () => {
@@ -1393,7 +1731,7 @@ describe('UploaderOrchestrator', () => {
                 const orch = new UploaderOrchestrator(core, {})
                 orch.init()
 
-                handlers['upload-error']({ error: new Error('plain failure') })
+                handlers['upload-error']!({ error: new Error('plain failure') })
 
                 expect(orch.getSnapshot().uploadErrorCode).toBeUndefined()
             })
@@ -1414,7 +1752,7 @@ describe('UploaderOrchestrator', () => {
                     UploadStatus.PAUSED,
                     UploadStatus.IDLE,
                 ]) {
-                    handlers['state-change']({ status })
+                    handlers['state-change']!({ status })
                     expect(orch.getSnapshot().uploadStatus).toBe(status)
                 }
             })
@@ -1424,9 +1762,11 @@ describe('UploaderOrchestrator', () => {
                 const orch = new UploaderOrchestrator(core, {})
                 orch.init()
 
-                handlers['state-change']({ status: UploadStatus.UPLOADING })
-                handlers['state-change']({}) // e.g. a files-only or progress-only change
-                expect(orch.getSnapshot().uploadStatus).toBe(UploadStatus.UPLOADING)
+                handlers['state-change']!({ status: UploadStatus.UPLOADING })
+                handlers['state-change']!({}) // e.g. a files-only or progress-only change
+                expect(orch.getSnapshot().uploadStatus).toBe(
+                    UploadStatus.UPLOADING,
+                )
             })
 
             it('there is exactly ONE writer of uploadStatus (the discrete listeners do not touch it)', () => {
@@ -1434,19 +1774,24 @@ describe('UploaderOrchestrator', () => {
                 const orch = new UploaderOrchestrator(core, {})
                 orch.init()
 
-                handlers['state-change']({ status: UploadStatus.UPLOADING })
-                handlers['upload-start']({})
-                handlers['upload-all-complete']([])
-                handlers['upload-error']({ error: new Error('x') })
+                handlers['state-change']!({ status: UploadStatus.UPLOADING })
+                handlers['upload-start']!({})
+                handlers['upload-all-complete']!([])
+                handlers['upload-error']!({ error: new Error('x') })
                 // None of the three discrete listeners moved uploadStatus off UPLOADING.
-                expect(orch.getSnapshot().uploadStatus).toBe(UploadStatus.UPLOADING)
+                expect(orch.getSnapshot().uploadStatus).toBe(
+                    UploadStatus.UPLOADING,
+                )
             })
         })
 
         // ── F-145: real core ⇄ orchestrator — pause/resume/cancel now propagate ──
         describe('real-core status convergence (F-145)', () => {
             const makeRealCore = () =>
-                new UpupCore({ provider: 'aws', uploadEndpoint: '/api/presign' })
+                new UpupCore({
+                    provider: 'aws',
+                    uploadEndpoint: '/api/presign',
+                })
             const realFile = (name: string) =>
                 new File(['x'], name, { type: 'text/plain' })
 
@@ -1455,7 +1800,9 @@ describe('UploaderOrchestrator', () => {
                 const orch = new UploaderOrchestrator(core, {})
                 orch.init()
                 core.pause()
-                expect(orch.getSnapshot().uploadStatus).toBe(UploadStatus.PAUSED)
+                expect(orch.getSnapshot().uploadStatus).toBe(
+                    UploadStatus.PAUSED,
+                )
                 orch.destroy()
             })
 
@@ -1464,7 +1811,9 @@ describe('UploaderOrchestrator', () => {
                 const orch = new UploaderOrchestrator(core, {})
                 orch.init()
                 core.resume()
-                expect(orch.getSnapshot().uploadStatus).toBe(UploadStatus.UPLOADING)
+                expect(orch.getSnapshot().uploadStatus).toBe(
+                    UploadStatus.UPLOADING,
+                )
                 orch.destroy()
             })
 
@@ -1524,13 +1873,31 @@ describe('UploaderOrchestrator', () => {
         it('revokes blob URLs for every still-selected file', () => {
             const core = createMockCore()
             const revokeObjectURL = vi.fn()
-            vi.stubGlobal('URL', { ...globalThis.URL, createObjectURL: () => 'blob:http://localhost/destroy', revokeObjectURL })
+            vi.stubGlobal('URL', {
+                ...globalThis.URL,
+                createObjectURL: () => 'blob:http://localhost/destroy',
+                revokeObjectURL,
+            })
 
             const orch = new UploaderOrchestrator(core, {})
             setOrchState(orch, {
                 files: new Map([
-                    ['f1', createUploadFile({ name: 'a.txt', id: 'f1', url: 'blob:http://localhost/destroy' })],
-                    ['f2', createUploadFile({ name: 'b.txt', id: 'f2', url: 'blob:http://localhost/destroy' })],
+                    [
+                        'f1',
+                        createUploadFile({
+                            name: 'a.txt',
+                            id: 'f1',
+                            url: 'blob:http://localhost/destroy',
+                        }),
+                    ],
+                    [
+                        'f2',
+                        createUploadFile({
+                            name: 'b.txt',
+                            id: 'f2',
+                            url: 'blob:http://localhost/destroy',
+                        }),
+                    ],
                 ]),
             })
 
@@ -1574,7 +1941,7 @@ describe('UploaderOrchestrator', () => {
             const { core, orch } = setup()
             await core.addFiles([realFile('a.txt'), realFile('b.txt')])
             const ids = [...core.files.keys()]
-            core.reorderFiles([ids[1], ids[0]])
+            core.reorderFiles([ids[1]!, ids[0]!])
             expect(names(orch)).toEqual(['b.txt', 'a.txt'])
             core.destroy()
         })
@@ -1585,7 +1952,7 @@ describe('UploaderOrchestrator', () => {
             const [id] = [...core.files.keys()]
             // Build a replacement matching core.replaceFile's expected arg type
             // (core.replaceFile takes File | UploadFile; pass a plain File)
-            core.replaceFile(id, realFile('a-edited.txt') as never)
+            core.replaceFile(id!, realFile('a-edited.txt') as never)
             expect(names(orch)).toEqual(['a-edited.txt'])
             core.destroy()
         })
@@ -1635,10 +2002,10 @@ describe('UploaderOrchestrator', () => {
             expect(orch.getSnapshot().files.size).toBe(2)
 
             const [id] = [...core.files.keys()]
-            core.removeFile(id)
+            core.removeFile(id!)
 
             expect(orch.getSnapshot().files.size).toBe(1)
-            expect(orch.getSnapshot().files.has(id)).toBe(false)
+            expect(orch.getSnapshot().files.has(id!)).toBe(false)
             orch.destroy()
         })
 

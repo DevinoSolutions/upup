@@ -35,7 +35,9 @@ function makeDataURL(mime: string, text: string): string {
 }
 
 function makeUploadFile(overrides: Partial<UploadFile> = {}): UploadFile {
-    const base = new File(['content'], 'photo.png', { type: 'image/png' }) as UploadFile
+    const base = new File(['content'], 'photo.png', {
+        type: 'image/png',
+    }) as UploadFile
     base.id = overrides.id ?? 'file-1'
     base.url = overrides.url ?? 'blob:original-url'
     base.source = overrides.source ?? FileSource.LOCAL
@@ -43,7 +45,7 @@ function makeUploadFile(overrides: Partial<UploadFile> = {}): UploadFile {
     base.metadata = overrides.metadata ?? {}
     base.key = overrides.key ?? 'uploads/photo.png'
     base.fileHash = overrides.fileHash ?? 'abc123'
-    base.thumbnail = overrides.thumbnail ?? ({ file: base } as UploadFile['thumbnail'])
+    base.thumbnail = overrides.thumbnail ?? { file: base }
     return base
 }
 
@@ -116,10 +118,13 @@ describe('blobToUploadFile', () => {
     })
 
     it('preserves original thumbnail', () => {
-        const original = makeUploadFile({ thumbnail: 'blob:thumb-123' })
+        const thumbnail = {
+            file: new File(['thumb'], 'thumb.png', { type: 'image/png' }),
+        }
+        const original = makeUploadFile({ thumbnail })
         const blob = new Blob(['data'], { type: 'image/png' })
         const result = blobToUploadFile(blob, original)
-        expect(result.thumbnail).toBe('blob:thumb-123')
+        expect(result.thumbnail).toBe(thumbnail)
     })
 
     it('uses original filename by default', () => {
@@ -154,12 +159,14 @@ describe('blobToUploadFile', () => {
     })
 
     it('falls back to original.type when blob has no type', () => {
-        const original = new File(['content'], 'photo.png', { type: 'image/png' }) as UploadFile
+        const original = new File(['content'], 'photo.png', {
+            type: 'image/png',
+        }) as UploadFile
         original.id = 'f1'
         original.url = 'blob:x'
         original.key = 'k'
         original.fileHash = 'h'
-        original.thumbnail = 't'
+        original.thumbnail = { file: original }
         const blob = new Blob(['data']) // no type
         const result = blobToUploadFile(blob, original)
         expect(result.type).toBe('image/png')
@@ -219,7 +226,10 @@ describe('revokeAndReplace', () => {
         const f1 = makeUploadFile({ id: 'f1', url: 'blob:f1' })
         const f2 = makeUploadFile({ id: 'f2', url: 'blob:f2' })
         const newF1 = makeUploadFile({ id: 'f1', url: 'blob:f1-new' })
-        const map = new Map([['f1', f1], ['f2', f2]])
+        const map = new Map([
+            ['f1', f1],
+            ['f2', f2],
+        ])
         const result = revokeAndReplace(map, 'f1', newF1)
         expect(result.get('f2')).toBe(f2)
         expect(result.size).toBe(2)

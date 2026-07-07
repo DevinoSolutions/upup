@@ -12,7 +12,14 @@ import { createPropGetters } from '../src/prop-getters'
 // rules). This file now pins the DELEGATION + event-composition contract at the
 // prop-getters layer: each getDropzoneProps handler must call the matching
 // dragDrop.handle* method with the (cast) native event, and still compose overrides.
-function makeFakeDragDrop(overrides: Partial<Record<'handleDragOver' | 'handleDragLeave' | 'handleDrop' | 'handlePaste', ReturnType<typeof vi.fn>>> = {}) {
+function makeFakeDragDrop(
+    overrides: Partial<
+        Record<
+            'handleDragOver' | 'handleDragLeave' | 'handleDrop' | 'handlePaste',
+            ReturnType<typeof vi.fn>
+        >
+    > = {},
+) {
     return {
         handleDragOver: vi.fn(),
         handleDragLeave: vi.fn(),
@@ -22,7 +29,9 @@ function makeFakeDragDrop(overrides: Partial<Record<'handleDragOver' | 'handleDr
     } as unknown as DragDropController
 }
 
-function makeDeps(overrides: Partial<Parameters<typeof createPropGetters>[0]> = {}) {
+function makeDeps(
+    overrides: Partial<Parameters<typeof createPropGetters>[0]> = {},
+) {
     return {
         addFiles: vi.fn(),
         status: 'idle',
@@ -44,7 +53,9 @@ function makeDragEvent(files: File[] = []) {
     } as unknown as React.DragEvent<HTMLElement>
 }
 
-function makeClipboardEvent(items: { kind: string; getAsFile?: () => File | null }[]) {
+function makeClipboardEvent(
+    items: { kind: string; getAsFile?: () => File | null }[],
+) {
     return {
         preventDefault: vi.fn(),
         clipboardData: { items },
@@ -59,7 +70,7 @@ describe('getDropzoneProps — onDragOver', () => {
         const dragDrop = makeFakeDragDrop()
         const { getDropzoneProps } = createPropGetters(makeDeps({ dragDrop }))
         const e = makeDragEvent()
-        getDropzoneProps().onDragOver(e)
+        getDropzoneProps().onDragOver!(e)
         expect(dragDrop.handleDragOver).toHaveBeenCalledWith(e)
     })
 
@@ -68,7 +79,7 @@ describe('getDropzoneProps — onDragOver', () => {
         const override = vi.fn()
         const { getDropzoneProps } = createPropGetters(makeDeps({ dragDrop }))
         const e = makeDragEvent()
-        getDropzoneProps({ onDragOver: override }).onDragOver(e)
+        getDropzoneProps({ onDragOver: override }).onDragOver!(e)
         expect(dragDrop.handleDragOver).toHaveBeenCalledWith(e)
         expect(override).toHaveBeenCalledWith(e)
     })
@@ -82,7 +93,7 @@ describe('getDropzoneProps — onDragLeave', () => {
         const dragDrop = makeFakeDragDrop()
         const { getDropzoneProps } = createPropGetters(makeDeps({ dragDrop }))
         const e = makeDragEvent()
-        getDropzoneProps().onDragLeave(e)
+        getDropzoneProps().onDragLeave!(e)
         expect(dragDrop.handleDragLeave).toHaveBeenCalledWith(e)
     })
 })
@@ -96,7 +107,7 @@ describe('getDropzoneProps — onDrop', () => {
         const { getDropzoneProps } = createPropGetters(makeDeps({ dragDrop }))
         const file = new File(['x'], 'test.txt', { type: 'text/plain' })
         const e = makeDragEvent([file])
-        getDropzoneProps().onDrop(e)
+        getDropzoneProps().onDrop!(e)
         expect(dragDrop.handleDrop).toHaveBeenCalledWith(e)
     })
 })
@@ -110,7 +121,7 @@ describe('getDropzoneProps — onPaste', () => {
         const { getDropzoneProps } = createPropGetters(makeDeps({ dragDrop }))
         const file = new File(['x'], 'paste.png', { type: 'image/png' })
         const e = makeClipboardEvent([{ kind: 'file', getAsFile: () => file }])
-        getDropzoneProps().onPaste(e)
+        getDropzoneProps().onPaste!(e)
         expect(dragDrop.handlePaste).toHaveBeenCalledWith(e)
     })
 })

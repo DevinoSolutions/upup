@@ -73,7 +73,9 @@ describe('useUpupUpload — extended', () => {
     })
 
     it('getInputProps passes accept option', () => {
-        const { result } = renderHook(() => useUpupUpload({ ...opts, allowedFileTypes: 'image/*' }))
+        const { result } = renderHook(() =>
+            useUpupUpload({ ...opts, allowedFileTypes: 'image/*' }),
+        )
         const props = result.current.getInputProps()
         expect(props.accept).toBe('image/*')
     })
@@ -107,7 +109,9 @@ describe('useUpupUpload — extended', () => {
             ])
         })
         expect(result.current.files.length).toBe(2)
-        act(() => { result.current.removeAll() })
+        act(() => {
+            result.current.removeAll()
+        })
         expect(result.current.files.length).toBe(0)
     })
 
@@ -119,8 +123,10 @@ describe('useUpupUpload — extended', () => {
                 new File(['b'], 'b.txt', { type: 'text/plain' }),
             ])
         })
-        const fileId = result.current.files[0].id
-        act(() => { result.current.removeFile(fileId) })
+        const fileId = result.current.files[0]!.id
+        act(() => {
+            result.current.removeFile(fileId)
+        })
         expect(result.current.files.length).toBe(1)
     })
 
@@ -128,9 +134,13 @@ describe('useUpupUpload — extended', () => {
     it('on() subscribes to core events', async () => {
         const { result } = renderHook(() => useUpupUpload(opts))
         const handler = vi.fn()
-        act(() => { result.current.on('files-added', handler) })
+        act(() => {
+            result.current.on('files-added', handler)
+        })
         await act(async () => {
-            await result.current.addFiles([new File(['x'], 't.txt', { type: 'text/plain' })])
+            await result.current.addFiles([
+                new File(['x'], 't.txt', { type: 'text/plain' }),
+            ])
         })
         expect(handler).toHaveBeenCalled()
     })
@@ -138,13 +148,17 @@ describe('useUpupUpload — extended', () => {
     it('on() returns unsubscribe function', () => {
         const { result } = renderHook(() => useUpupUpload(opts))
         let unsub: () => void
-        act(() => { unsub = result.current.on('custom', vi.fn()) })
+        act(() => {
+            unsub = result.current.on('custom', vi.fn())
+        })
         expect(typeof unsub!).toBe('function')
     })
 
     // ── Options ──
     it('accepts limit option', () => {
-        const { result } = renderHook(() => useUpupUpload({ ...opts, limit: 3 }))
+        const { result } = renderHook(() =>
+            useUpupUpload({ ...opts, limit: 3 }),
+        )
         expect(result.current).toBeDefined()
     })
 
@@ -167,7 +181,9 @@ describe('useUpupUpload — extended', () => {
         const { result: r1 } = renderHook(() => useUpupUpload(opts))
         const { result: r2 } = renderHook(() => useUpupUpload(opts))
         await act(async () => {
-            await r1.current.addFiles([new File(['x'], 'x.txt', { type: 'text/plain' })])
+            await r1.current.addFiles([
+                new File(['x'], 'x.txt', { type: 'text/plain' }),
+            ])
         })
         expect(r1.current.files.length).toBe(1)
         expect(r2.current.files.length).toBe(0)

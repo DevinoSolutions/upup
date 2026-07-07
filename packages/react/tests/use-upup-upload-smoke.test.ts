@@ -36,18 +36,26 @@ describe('useUpupUpload — end-to-end smoke test', () => {
 
         // 3. Add files
         await act(async () => {
-            await result.current.addFiles([makeFile('a.txt'), makeFile('b.txt'), makeFile('c.txt')])
+            await result.current.addFiles([
+                makeFile('a.txt'),
+                makeFile('b.txt'),
+                makeFile('c.txt'),
+            ])
         })
         expect(result.current.files.length).toBe(3)
         expect(onFileAdded).toHaveBeenCalled()
 
         // 4. Reorder
         const ids = result.current.files.map(f => f.id)
-        act(() => { result.current.reorderFiles([...ids].reverse()) })
+        act(() => {
+            result.current.reorderFiles([...ids].reverse())
+        })
         expect(result.current.files.map(f => f.id)).toEqual([...ids].reverse())
 
         // 5. Remove one file
-        act(() => { result.current.removeFile(result.current.files[0].id) })
+        act(() => {
+            result.current.removeFile(result.current.files[0]!.id)
+        })
         expect(result.current.files.length).toBe(2)
         expect(onFileRemoved).toHaveBeenCalled()
 
@@ -69,11 +77,13 @@ describe('useUpupUpload — end-to-end smoke test', () => {
         const validationResults = await result.current.core.validateFiles([
             makeFile('valid.txt'),
         ])
-        expect(validationResults[0].valid).toBe(true)
+        expect(validationResults[0]!.valid).toBe(true)
         expect(result.current.files.length).toBe(3) // unchanged
 
         // 10. Remove all
-        act(() => { result.current.removeAll() })
+        act(() => {
+            result.current.removeAll()
+        })
         expect(result.current.files.length).toBe(0)
 
         // 11. Verify prop getters still work
@@ -106,8 +116,12 @@ describe('useUpupUpload — end-to-end smoke test', () => {
         // Reject wrong type
         await act(async () => {
             try {
-                await result.current.addFiles([new File(['x'], 'bad.png', { type: 'image/png' })])
-            } catch { /* upup-catch: expected rejection in this negative-path test; asserted below */ }
+                await result.current.addFiles([
+                    new File(['x'], 'bad.png', { type: 'image/png' }),
+                ])
+            } catch {
+                /* upup-catch: expected rejection in this negative-path test; asserted below */
+            }
         })
         expect(result.current.files.length).toBe(1)
 
@@ -115,7 +129,9 @@ describe('useUpupUpload — end-to-end smoke test', () => {
         await act(async () => {
             try {
                 await result.current.addFiles([makeFile('huge.txt', 100)])
-            } catch { /* upup-catch: expected rejection in this negative-path test; asserted below */ }
+            } catch {
+                /* upup-catch: expected rejection in this negative-path test; asserted below */
+            }
         })
         expect(result.current.files.length).toBe(1)
 
@@ -129,7 +145,9 @@ describe('useUpupUpload — end-to-end smoke test', () => {
         await act(async () => {
             try {
                 await result.current.addFiles([makeFile('over.txt', 5)])
-            } catch { /* upup-catch: expected rejection in this negative-path test; asserted below */ }
+            } catch {
+                /* upup-catch: expected rejection in this negative-path test; asserted below */
+            }
         })
         expect(result.current.files.length).toBe(2) // limit enforced
     })

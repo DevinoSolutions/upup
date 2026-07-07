@@ -62,7 +62,7 @@ describe('UpupCore — smoke tests', () => {
         expect(core.files.size).toBe(2)
 
         const [firstId] = [...core.files.keys()]
-        core.removeFile(firstId)
+        core.removeFile(firstId!)
         expect(core.files.size).toBe(1)
 
         core.removeAll()
@@ -80,7 +80,11 @@ describe('UpupCore — smoke tests', () => {
 
     it('reorderFiles preserves count', async () => {
         const core = new UpupCore({})
-        await core.addFiles([makeFile('a.txt'), makeFile('b.txt'), makeFile('c.txt')])
+        await core.addFiles([
+            makeFile('a.txt'),
+            makeFile('b.txt'),
+            makeFile('c.txt'),
+        ])
         const ids = [...core.files.keys()]
         core.reorderFiles([...ids].reverse())
         expect(core.files.size).toBe(3)
@@ -140,7 +144,7 @@ describe('UpupCore — smoke tests', () => {
         await core.addFiles([makeFile('keep.txt')])
         const results = await core.validateFiles([makeFile('check.txt')])
         expect(results).toHaveLength(1)
-        expect(results[0].valid).toBe(true)
+        expect(results[0]!.valid).toBe(true)
         expect(core.files.size).toBe(1) // unchanged
         core.destroy()
     })
@@ -183,7 +187,7 @@ describe('UpupCore — smoke tests', () => {
 
         // Simulate one file completed
         const [id] = [...core.files.keys()]
-        internals(core).fileManager.updateFile(id, { key: 'uploaded/a.txt' })
+        internals(core).fileManager.updateFile(id!, { key: 'uploaded/a.txt' })
         expect(core.progress.completedFiles).toBe(1)
         expect(core.progress.percentage).toBe(50)
         core.destroy()

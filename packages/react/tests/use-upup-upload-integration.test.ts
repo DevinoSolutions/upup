@@ -18,34 +18,51 @@ describe('useUpupUpload — capstone integration', () => {
                 provider: 'S3' as const,
                 allowedFileTypes: 'text/plain',
                 limit: 5,
-                plugins: [{
-                    name: 'lifecycle-tracker',
-                    init: (emitter) => {
-                        emitter.on('files-added', () => log.push('files-added'))
-                        emitter.on('file-removed', () => log.push('file-removed'))
-                        emitter.on('files-cleared', () => log.push('files-cleared'))
-                        emitter.on('files-reordered', () => log.push('files-reordered'))
-                        emitter.on('files-set', () => log.push('files-set'))
-                        emitter.on('destroyed', () => log.push('destroyed'))
+                plugins: [
+                    {
+                        name: 'lifecycle-tracker',
+                        init: emitter => {
+                            emitter.on('files-added', () =>
+                                log.push('files-added'),
+                            )
+                            emitter.on('file-removed', () =>
+                                log.push('file-removed'),
+                            )
+                            emitter.on('files-cleared', () =>
+                                log.push('files-cleared'),
+                            )
+                            emitter.on('files-reordered', () =>
+                                log.push('files-reordered'),
+                            )
+                            emitter.on('files-set', () => log.push('files-set'))
+                            emitter.on('destroyed', () => log.push('destroyed'))
+                        },
                     },
-                }],
+                ],
             }),
         )
 
         // Add files
         await act(async () => {
-            await result.current.addFiles([makeFile('a.txt'), makeFile('b.txt')])
+            await result.current.addFiles([
+                makeFile('a.txt'),
+                makeFile('b.txt'),
+            ])
         })
         expect(log).toContain('files-added')
         expect(result.current.files.length).toBe(2)
 
         // Reorder (functional check — event may not propagate through hook layer)
         const ids = result.current.files.map(f => f.id)
-        act(() => { result.current.reorderFiles([...ids].reverse()) })
+        act(() => {
+            result.current.reorderFiles([...ids].reverse())
+        })
         expect(result.current.files.map(f => f.id)).toEqual([...ids].reverse())
 
         // Remove one
-        act(() => { result.current.removeFile(result.current.files[0].id) })
+        act(() => {
+            result.current.removeFile(result.current.files[0]!.id)
+        })
         expect(log).toContain('file-removed')
         expect(result.current.files.length).toBe(1)
 
@@ -56,14 +73,20 @@ describe('useUpupUpload — capstone integration', () => {
         expect(result.current.files.length).toBe(1)
 
         // Remove all
-        act(() => { result.current.removeAll() })
+        act(() => {
+            result.current.removeAll()
+        })
         expect(result.current.files.length).toBe(0)
 
         // Unmount cleanly
         unmount()
         // Verify the full log captured add + remove events
-        expect(log.filter(e => e === 'files-added').length).toBeGreaterThanOrEqual(1)
-        expect(log.filter(e => e === 'file-removed').length).toBeGreaterThanOrEqual(1)
+        expect(
+            log.filter(e => e === 'files-added').length,
+        ).toBeGreaterThanOrEqual(1)
+        expect(
+            log.filter(e => e === 'file-removed').length,
+        ).toBeGreaterThanOrEqual(1)
     })
 
     it('analytics extension tracks metrics through hook', async () => {
@@ -75,13 +98,15 @@ describe('useUpupUpload — capstone integration', () => {
         const { result } = renderHook(() =>
             useUpupUpload({
                 provider: 'S3' as const,
-                plugins: [{
-                    name: 'analytics',
-                    init: (emitter) => {
-                        emitter.on('files-added', () => metrics.adds++)
-                        emitter.on('file-removed', () => metrics.removes++)
+                plugins: [
+                    {
+                        name: 'analytics',
+                        init: emitter => {
+                            emitter.on('files-added', () => metrics.adds++)
+                            emitter.on('file-removed', () => metrics.removes++)
+                        },
                     },
-                }],
+                ],
             }),
         )
 
@@ -96,10 +121,15 @@ describe('useUpupUpload — capstone integration', () => {
             await result.current.addFiles([makeFile('y.txt')])
         })
 
-        const id = result.current.files[0].id
-        act(() => { result.current.removeFile(id) })
+        const id = result.current.files[0]!.id
+        act(() => {
+            result.current.removeFile(id)
+        })
 
-        const m = result.current.ext.analytics.getMetrics()
+        const m = result.current.ext.analytics!.getMetrics!() as {
+            adds: number
+            removes: number
+        }
         expect(m.adds).toBe(2)
         expect(m.removes).toBe(1)
     })
@@ -113,42 +143,64 @@ describe('useUpupUpload — capstone integration', () => {
                 allowedFileTypes: 'text/plain',
                 maxFileSize: { size: 50, unit: 'B' },
                 limit: 2,
-                plugins: [{
-                    name: 'rejection-logger',
-                    init: (emitter) => {
-                        emitter.on('file-rejected', () => rejections.push('rejected'))
+                plugins: [
+                    {
+                        name: 'rejection-logger',
+                        init: emitter => {
+                            emitter.on('file-rejected', () =>
+                                rejections.push('rejected'),
+                            )
+                        },
                     },
-                }],
+                ],
             }),
         )
 
         // Valid file
         await act(async () => {
-            await result.current.addFiles([makeFile('ok.txt', 10, 'text/plain')])
+            await result.current.addFiles([
+                makeFile('ok.txt', 10, 'text/plain'),
+            ])
         })
         expect(result.current.files.length).toBe(1)
 
         // Wrong type — rejected
         await act(async () => {
-            try { await result.current.addFiles([makeFile('bad.png', 10, 'image/png')]) } catch { /* upup-catch: expected rejection in this negative-path test; asserted below */ }
+            try {
+                await result.current.addFiles([
+                    makeFile('bad.png', 10, 'image/png'),
+                ])
+            } catch {
+                /* upup-catch: expected rejection in this negative-path test; asserted below */
+            }
         })
         expect(result.current.files.length).toBe(1)
 
         // Too large — rejected
         await act(async () => {
-            try { await result.current.addFiles([makeFile('huge.txt', 100)]) } catch { /* upup-catch: expected rejection in this negative-path test; asserted below */ }
+            try {
+                await result.current.addFiles([makeFile('huge.txt', 100)])
+            } catch {
+                /* upup-catch: expected rejection in this negative-path test; asserted below */
+            }
         })
         expect(result.current.files.length).toBe(1)
 
         // Second valid file
         await act(async () => {
-            await result.current.addFiles([makeFile('ok2.txt', 20, 'text/plain')])
+            await result.current.addFiles([
+                makeFile('ok2.txt', 20, 'text/plain'),
+            ])
         })
         expect(result.current.files.length).toBe(2)
 
         // Over limit — rejected
         await act(async () => {
-            try { await result.current.addFiles([makeFile('over.txt', 5)]) } catch { /* upup-catch: expected rejection in this negative-path test; asserted below */ }
+            try {
+                await result.current.addFiles([makeFile('over.txt', 5)])
+            } catch {
+                /* upup-catch: expected rejection in this negative-path test; asserted below */
+            }
         })
         expect(result.current.files.length).toBe(2)
 
@@ -164,18 +216,32 @@ describe('useUpupUpload — capstone integration', () => {
         const { result: r1 } = renderHook(() =>
             useUpupUpload({
                 provider: 'S3' as const,
-                plugins: [{ name: 'p1', init: (e) => e.on('files-added', () => log1.push('h1')) }],
+                plugins: [
+                    {
+                        name: 'p1',
+                        init: e => e.on('files-added', () => log1.push('h1')),
+                    },
+                ],
             }),
         )
         const { result: r2 } = renderHook(() =>
             useUpupUpload({
                 provider: 'S3' as const,
-                plugins: [{ name: 'p2', init: (e) => e.on('files-added', () => log2.push('h2')) }],
+                plugins: [
+                    {
+                        name: 'p2',
+                        init: e => e.on('files-added', () => log2.push('h2')),
+                    },
+                ],
             }),
         )
 
-        await act(async () => { await r1.current.addFiles([makeFile('a.txt')]) })
-        await act(async () => { await r2.current.addFiles([makeFile('b.txt')]) })
+        await act(async () => {
+            await r1.current.addFiles([makeFile('a.txt')])
+        })
+        await act(async () => {
+            await r2.current.addFiles([makeFile('b.txt')])
+        })
 
         expect(log1).toEqual(['h1'])
         expect(log2).toEqual(['h2'])

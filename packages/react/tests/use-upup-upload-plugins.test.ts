@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
 import { useUpupUpload } from '../src/use-upup-upload'
+import type { ExtensionMethods } from '@upup/core'
 
 describe('useUpupUpload — plugin integration', () => {
     it('accepts plugins via options', () => {
@@ -20,15 +21,21 @@ describe('useUpupUpload — plugin integration', () => {
         const { result } = renderHook(() =>
             useUpupUpload({
                 provider: 'S3' as const,
-                plugins: [{
-                    name: 'observer',
-                    init: (emitter) => { emitter.on('files-added', fileHandler) },
-                }],
+                plugins: [
+                    {
+                        name: 'observer',
+                        init: emitter => {
+                            emitter.on('files-added', fileHandler)
+                        },
+                    },
+                ],
             }),
         )
 
         await act(async () => {
-            await result.current.addFiles([new File(['x'], 'test.txt', { type: 'text/plain' })])
+            await result.current.addFiles([
+                new File(['x'], 'test.txt', { type: 'text/plain' }),
+            ])
         })
 
         expect(fileHandler).toHaveBeenCalled()
@@ -45,7 +52,9 @@ describe('useUpupUpload — plugin integration', () => {
             useUpupUpload({ provider: 'S3' as const }),
         )
         act(() => {
-            result.current.core.registerExtension('myExt', { value: 42 })
+            result.current.core.registerExtension('myExt', {
+                value: 42,
+            } as unknown as ExtensionMethods)
         })
         expect(result.current.core.ext.myExt).toEqual({ value: 42 })
     })

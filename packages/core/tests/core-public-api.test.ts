@@ -101,7 +101,9 @@ describe('UpupCore — progress getter', () => {
         ])
         // Simulate one file completed by setting its key
         const [id] = [...core.files.keys()]
-        ;(core as unknown as { fileManager: FileManager }).fileManager.updateFile(id, {
+        ;(
+            core as unknown as { fileManager: FileManager }
+        ).fileManager.updateFile(id!, {
             key: 'uploaded/a.txt',
         })
 
@@ -114,7 +116,9 @@ describe('UpupCore — progress getter', () => {
         const core = makeCore()
         await core.addFiles([new File(['x'], 'x.txt', { type: 'text/plain' })])
         const [id] = [...core.files.keys()]
-        ;(core as unknown as { fileManager: FileManager }).fileManager.updateFile(id, {
+        ;(
+            core as unknown as { fileManager: FileManager }
+        ).fileManager.updateFile(id!, {
             key: 'uploaded/x.txt',
         })
 

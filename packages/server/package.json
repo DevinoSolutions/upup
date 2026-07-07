@@ -1,70 +1,72 @@
 {
-  "name": "@upup/server",
-  "version": "2.2.0",
-  "description": "Node-side Server Mode handler for @upup/react. Proxies drive APIs, stores OAuth tokens, streams drive → S3. Framework-agnostic with Next.js/Express/Fastify/Hono adapters.",
-  "repository": "https://github.com/DevinoSolutions/upup",
-  "license": "MIT",
-  "type": "module",
-  "sideEffects": false,
-  "engines": { "node": ">=20" },
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs"
+    "name": "@upup/server",
+    "version": "2.2.0",
+    "description": "Node-side Server Mode handler for @upup/react. Proxies drive APIs, stores OAuth tokens, streams drive → S3. Framework-agnostic with Next.js/Express/Fastify/Hono adapters.",
+    "repository": "https://github.com/DevinoSolutions/upup",
+    "license": "MIT",
+    "type": "module",
+    "sideEffects": false,
+    "engines": {
+        "node": ">=20"
     },
-    "./next": {
-      "types": "./dist/next.d.ts",
-      "import": "./dist/next.js",
-      "require": "./dist/next.cjs"
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.js",
+            "require": "./dist/index.cjs"
+        },
+        "./next": {
+            "types": "./dist/next.d.ts",
+            "import": "./dist/next.js",
+            "require": "./dist/next.cjs"
+        },
+        "./express": {
+            "types": "./dist/express.d.ts",
+            "import": "./dist/express.js",
+            "require": "./dist/express.cjs"
+        },
+        "./hono": {
+            "types": "./dist/hono.d.ts",
+            "import": "./dist/hono.js",
+            "require": "./dist/hono.cjs"
+        },
+        "./fastify": {
+            "types": "./dist/fastify.d.ts",
+            "import": "./dist/fastify.js",
+            "require": "./dist/fastify.cjs"
+        },
+        "./node-bridge": {
+            "types": "./dist/node-http-bridge.d.ts",
+            "import": "./dist/node-http-bridge.js",
+            "require": "./dist/node-http-bridge.cjs"
+        }
     },
-    "./express": {
-      "types": "./dist/express.d.ts",
-      "import": "./dist/express.js",
-      "require": "./dist/express.cjs"
+    "main": "./dist/index.cjs",
+    "module": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "scripts": {
+        "build": "tsup",
+        "dev": "tsup --watch",
+        "lint": "eslint .",
+        "test": "vitest run",
+        "test:watch": "vitest",
+        "typecheck": "tsc --noEmit && tsc -p tsconfig.test.json --noEmit"
     },
-    "./hono": {
-      "types": "./dist/hono.d.ts",
-      "import": "./dist/hono.js",
-      "require": "./dist/hono.cjs"
+    "files": [
+        "dist"
+    ],
+    "dependencies": {
+        "@upup/core": "workspace:*",
+        "@aws-sdk/client-s3": "^3.689.0",
+        "@aws-sdk/s3-request-presigner": "^3.689.0"
     },
-    "./fastify": {
-      "types": "./dist/fastify.d.ts",
-      "import": "./dist/fastify.js",
-      "require": "./dist/fastify.cjs"
-    },
-    "./node-bridge": {
-      "types": "./dist/node-http-bridge.d.ts",
-      "import": "./dist/node-http-bridge.js",
-      "require": "./dist/node-http-bridge.cjs"
+    "devDependencies": {
+        "@types/node": "^20.10.0",
+        "@upup/eslint-config": "workspace:*",
+        "@vitest/coverage-v8": "^4.1.2",
+        "eslint": "^10.6.0",
+        "tsup": "^8.4.0",
+        "typescript": "^5.3.2",
+        "vitest": "^4.1.2"
     }
-  },
-  "main": "./dist/index.cjs",
-  "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "scripts": {
-    "build": "tsup",
-    "dev": "tsup --watch",
-    "lint": "eslint .",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "typecheck": "tsc --noEmit"
-  },
-  "files": [
-    "dist"
-  ],
-  "dependencies": {
-    "@upup/core": "workspace:*",
-    "@aws-sdk/client-s3": "^3.689.0",
-    "@aws-sdk/s3-request-presigner": "^3.689.0"
-  },
-  "devDependencies": {
-    "@types/node": "^20.10.0",
-    "@upup/eslint-config": "workspace:*",
-    "@vitest/coverage-v8": "^4.1.2",
-    "eslint": "^10.6.0",
-    "tsup": "^8.4.0",
-    "typescript": "^5.3.2",
-    "vitest": "^4.1.2"
-  }
 }

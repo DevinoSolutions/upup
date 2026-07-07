@@ -573,12 +573,15 @@ describe('ClientGoogleDriveUploaderComponent', () => {
     })
 
     it('renders upup-drive-browser when token is present', () => {
-        const folder = {
+        const folder: DriveFolder = {
             id: 'root',
             name: 'Drive',
+            path: '/',
+            size: 0,
+            mimeType: '',
             children: [],
             isFolder: true,
-        } as DriveFolder
+        }
         const { fixture } = mountWithState({
             token: { access_token: 'tok', expires_in: 3600 },
             path: [folder],
@@ -641,12 +644,15 @@ describe('ClientDropboxUploaderComponent', () => {
     })
 
     it('renders upup-drive-browser when authenticated', () => {
-        const folder = {
+        const folder: DriveFolder = {
             id: 'root',
             name: 'Dropbox',
+            path: '/',
+            size: 0,
+            mimeType: '',
             children: [],
             isFolder: true,
-        } as DriveFolder
+        }
         const fixture = mountWithState({
             isAuthenticated: true,
             isLoading: false,

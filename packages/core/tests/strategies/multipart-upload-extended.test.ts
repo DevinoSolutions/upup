@@ -69,7 +69,9 @@ describe('MultipartUpload — extended', () => {
             credentials: creds,
             chunkSizeBytes: 10 * 1024 * 1024,
         })
-        const file = new File([new ArrayBuffer(1024)], 'tiny.txt', { type: 'text/plain' })
+        const file = new File([new ArrayBuffer(1024)], 'tiny.txt', {
+            type: 'text/plain',
+        })
 
         await strategy.upload(file, dummyCredentials, {
             onProgress: vi.fn(),
@@ -118,7 +120,9 @@ describe('MultipartUpload — extended', () => {
             chunkSizeBytes: 5 * 1024 * 1024,
         })
         const fileSize = 12 * 1024 * 1024
-        const file = new File([new ArrayBuffer(fileSize)], 'big.bin', { type: 'application/octet-stream' })
+        const file = new File([new ArrayBuffer(fileSize)], 'big.bin', {
+            type: 'application/octet-stream',
+        })
         const onProgress = vi.fn()
 
         await strategy.upload(file, dummyCredentials, {
@@ -129,8 +133,8 @@ describe('MultipartUpload — extended', () => {
         expect(onProgress).toHaveBeenCalled()
         // Last progress call should have loaded close to total
         const lastCall = onProgress.mock.calls[onProgress.mock.calls.length - 1]
-        expect(lastCall[0]).toBeGreaterThan(0) // loaded > 0
-        expect(lastCall[1]).toBe(fileSize) // total = file size
+        expect(lastCall![0]).toBeGreaterThan(0) // loaded > 0
+        expect(lastCall![1]).toBe(fileSize) // total = file size
     })
 
     it('throws when a part upload returns non-ok response', async () => {

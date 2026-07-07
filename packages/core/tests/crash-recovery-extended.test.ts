@@ -8,8 +8,12 @@ function makeStorage(): PersistentStorage & { store: Map<string, unknown> } {
     return {
         store,
         get: vi.fn(async (key: string) => store.get(key)),
-        set: vi.fn(async (key: string, value: unknown) => { store.set(key, value) }),
-        delete: vi.fn(async (key: string) => { store.delete(key) }),
+        set: vi.fn(async (key: string, value: unknown) => {
+            store.set(key, value)
+        }),
+        delete: vi.fn(async (key: string) => {
+            store.delete(key)
+        }),
     }
 }
 
@@ -105,12 +109,15 @@ describe('UpupCore crash recovery integration', () => {
 
     it('restores active snapshots as paused so users can resume explicitly', async () => {
         const storage = makeStorage()
-        const file = Object.assign(new File(['hello'], 'recover.txt', { type: 'text/plain' }), {
-            id: 'recover-1',
-            source: FileSource.LOCAL,
-            status: UploadStatus.UPLOADING,
-            metadata: {},
-        })
+        const file = Object.assign(
+            new File(['hello'], 'recover.txt', { type: 'text/plain' }),
+            {
+                id: 'recover-1',
+                source: FileSource.LOCAL,
+                status: UploadStatus.UPLOADING,
+                metadata: {},
+            },
+        )
         storage.store.set(storageKey, {
             files: [['recover-1', file]],
             status: UploadStatus.UPLOADING,
@@ -127,16 +134,29 @@ describe('UpupCore crash recovery integration', () => {
     it('stores UploadFile metadata outside the File object for IndexedDB-safe recovery', async () => {
         const storage = makeStorage()
         const core = new UpupCore({ crashRecovery: { storage } })
-        await core.addFiles([new File(['hello'], 'serialized.txt', { type: 'text/plain' })])
+        await core.addFiles([
+            new File(['hello'], 'serialized.txt', { type: 'text/plain' }),
+        ])
 
         await vi.waitFor(() => {
             expect(storage.store.has(storageKey)).toBe(true)
         })
 
         const snapshot = storage.store.get(storageKey) as {
-            files: [string, { file: File; id: string; name: string; type: string; source: FileSource; status: UploadStatus; metadata: Record<string, unknown> }][]
+            files: [
+                string,
+                {
+                    file: File
+                    id: string
+                    name: string
+                    type: string
+                    source: FileSource
+                    status: UploadStatus
+                    metadata: Record<string, unknown>
+                },
+            ][]
         }
-        const [id, saved] = snapshot.files[0]
+        const [id, saved] = snapshot.files[0]!
         expect(saved.file).toBeInstanceOf(File)
         expect(saved.file.name).toBe('serialized.txt')
         expect(saved.name).toBe('serialized.txt')
@@ -149,28 +169,36 @@ describe('UpupCore crash recovery integration', () => {
 
     it('revives IndexedDB-cloned snapshots whose File object lost custom props', async () => {
         const storage = makeStorage()
-        const uploadFile = Object.assign(new File(['hello'], 'cloned.txt', { type: 'text/plain' }), {
-            id: 'recover-cloned',
-            source: FileSource.LOCAL,
-            status: UploadStatus.UPLOADING,
-            metadata: { checksum: 'abc123' },
-        })
-        storage.store.set(storageKey, structuredClone({
-            files: [[
-                'recover-cloned',
-                {
-                    file: uploadFile,
-                    id: uploadFile.id,
-                    name: uploadFile.name,
-                    type: uploadFile.type,
-                    lastModified: uploadFile.lastModified,
-                    source: uploadFile.source,
-                    status: uploadFile.status,
-                    metadata: uploadFile.metadata,
-                },
-            ]],
-            status: UploadStatus.UPLOADING,
-        }))
+        const uploadFile = Object.assign(
+            new File(['hello'], 'cloned.txt', { type: 'text/plain' }),
+            {
+                id: 'recover-cloned',
+                source: FileSource.LOCAL,
+                status: UploadStatus.UPLOADING,
+                metadata: { checksum: 'abc123' },
+            },
+        )
+        storage.store.set(
+            storageKey,
+            structuredClone({
+                files: [
+                    [
+                        'recover-cloned',
+                        {
+                            file: uploadFile,
+                            id: uploadFile.id,
+                            name: uploadFile.name,
+                            type: uploadFile.type,
+                            lastModified: uploadFile.lastModified,
+                            source: uploadFile.source,
+                            status: uploadFile.status,
+                            metadata: uploadFile.metadata,
+                        },
+                    ],
+                ],
+                status: UploadStatus.UPLOADING,
+            }),
+        )
 
         const core = new UpupCore({ crashRecovery: { storage } })
         await expect(core.restoreFromCrashRecovery()).resolves.toBe(true)
@@ -186,7 +214,9 @@ describe('UpupCore crash recovery integration', () => {
     it('does not clear saved recovery data on destroy', async () => {
         const storage = makeStorage()
         const core = new UpupCore({ crashRecovery: { storage } })
-        await core.addFiles([new File(['hello'], 'persist.txt', { type: 'text/plain' })])
+        await core.addFiles([
+            new File(['hello'], 'persist.txt', { type: 'text/plain' }),
+        ])
 
         await vi.waitFor(() => {
             expect(storage.store.has(storageKey)).toBe(true)
@@ -199,7 +229,9 @@ describe('UpupCore crash recovery integration', () => {
     it('clears saved recovery data when files are explicitly removed', async () => {
         const storage = makeStorage()
         const core = new UpupCore({ crashRecovery: { storage } })
-        await core.addFiles([new File(['hello'], 'remove.txt', { type: 'text/plain' })])
+        await core.addFiles([
+            new File(['hello'], 'remove.txt', { type: 'text/plain' }),
+        ])
 
         await vi.waitFor(() => {
             expect(storage.store.has(storageKey)).toBe(true)
@@ -215,15 +247,23 @@ describe('UpupCore crash recovery integration', () => {
     it('clears saved recovery data instead of persisting successful terminal state', async () => {
         const storage = makeStorage()
         const core = new UpupCore({ crashRecovery: { storage } })
-        await core.addFiles([new File(['hello'], 'complete.txt', { type: 'text/plain' })])
+        await core.addFiles([
+            new File(['hello'], 'complete.txt', { type: 'text/plain' }),
+        ])
 
         await vi.waitFor(() => {
             expect(storage.store.has(storageKey)).toBe(true)
         })
 
         const file = [...core.files.values()][0]
-        Object.assign(file, { key: 'uploads/complete.txt', status: UploadStatus.SUCCESSFUL })
-        core.restore({ files: [[file.id, file]], status: UploadStatus.SUCCESSFUL })
+        Object.assign(file!, {
+            key: 'uploads/complete.txt',
+            status: UploadStatus.SUCCESSFUL,
+        })
+        core.restore({
+            files: [[file!.id, file!]],
+            status: UploadStatus.SUCCESSFUL,
+        })
 
         await vi.waitFor(() => {
             expect(storage.store.has(storageKey)).toBe(false)

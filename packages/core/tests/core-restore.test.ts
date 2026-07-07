@@ -29,7 +29,10 @@ describe('UpupCore — restore() and snapshot-restored event', () => {
         core.on('snapshot-restored', handler)
 
         const snapshot = {
-            files: [['f1', makeUploadFile('f1')], ['f2', makeUploadFile('f2')]] as [string, UploadFile][],
+            files: [
+                ['f1', makeUploadFile('f1')],
+                ['f2', makeUploadFile('f2')],
+            ] as [string, UploadFile][],
             status: UploadStatus.SUCCESSFUL,
         }
         core.restore(snapshot)
@@ -67,7 +70,9 @@ describe('UpupCore — restore() and snapshot-restored event', () => {
 
     it('clears existing files before restoring', async () => {
         const core = makeCore()
-        await core.addFiles([new File(['x'], 'old.txt', { type: 'text/plain' })])
+        await core.addFiles([
+            new File(['x'], 'old.txt', { type: 'text/plain' }),
+        ])
         expect(core.files.size).toBe(1)
 
         core.restore({ files: [], status: UploadStatus.IDLE })
@@ -90,11 +95,14 @@ describe('UpupCore — restore() and snapshot-restored event', () => {
     it('getSnapshot returns the restored state', () => {
         const core = makeCore()
         const file = makeUploadFile('snap')
-        core.restore({ files: [['snap', file]], status: UploadStatus.SUCCESSFUL })
+        core.restore({
+            files: [['snap', file]],
+            status: UploadStatus.SUCCESSFUL,
+        })
 
         const snapshot = core.getSnapshot()
         expect(snapshot.files).toHaveLength(1)
-        expect(snapshot.files[0][0]).toBe('snap')
+        expect(snapshot.files[0]![0]).toBe('snap')
         expect(snapshot.status).toBe(UploadStatus.SUCCESSFUL)
     })
 })

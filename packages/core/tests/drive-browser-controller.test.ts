@@ -25,7 +25,11 @@ describe('drive-browser descriptors', () => {
     it('only google-drive uses gis auth + cached-children selection', () => {
         expect(GOOGLE_DRIVE_DESCRIPTOR.auth).toBe('gis')
         expect(GOOGLE_DRIVE_DESCRIPTOR.selectFolder).toBe('cached-children')
-        for (const d of [ONE_DRIVE_DESCRIPTOR, DROPBOX_DESCRIPTOR, BOX_DESCRIPTOR]) {
+        for (const d of [
+            ONE_DRIVE_DESCRIPTOR,
+            DROPBOX_DESCRIPTOR,
+            BOX_DESCRIPTOR,
+        ]) {
             expect(d.auth).toBe('popup')
             expect(d.selectFolder).toBe('load-all')
         }
@@ -45,7 +49,6 @@ class FakeDrivePlugin {
     nextPage: { files: DriveFile[]; hasMore: boolean; cursor?: string } = {
         files: [],
         hasMore: false,
-        cursor: undefined,
     }
     constructor(id: string) {
         this.id = id
@@ -75,7 +78,9 @@ class FakeDrivePlugin {
     async loadAllFilesInFolder(): Promise<DriveFile[]> {
         return []
     }
-    async loadMoreFiles(_cursor: string): Promise<{ files: DriveFile[]; hasMore: boolean; cursor?: string }> {
+    async loadMoreFiles(
+        _cursor: string,
+    ): Promise<{ files: DriveFile[]; hasMore: boolean; cursor?: string }> {
         return this.nextPage
     }
     async authenticate(): Promise<void> {
@@ -92,11 +97,19 @@ class FakeDrivePlugin {
     }
 }
 
-function file(id: string, name: string, isFolder = false, path = ''): DriveFile {
+function file(
+    id: string,
+    name: string,
+    isFolder = false,
+    path = '',
+): DriveFile {
     return { id, name, path, size: 0, mimeType: '', isFolder }
 }
 
-function setup(descriptor = GOOGLE_DRIVE_DESCRIPTOR, pluginId = descriptor.pluginId) {
+function setup(
+    descriptor = GOOGLE_DRIVE_DESCRIPTOR,
+    pluginId = descriptor.pluginId,
+) {
     const core = new UpupCore({})
     const plugin = new FakeDrivePlugin(pluginId)
     core.use(plugin)
@@ -132,7 +145,10 @@ describe('DriveBrowserController — events', () => {
 
     it('files-loaded handles dropbox path-based folders', () => {
         const { core, controller } = setup(DROPBOX_DESCRIPTOR)
-        core.emit('dropbox:files-loaded', { files: [], path: '/Photos/Vacation' })
+        core.emit('dropbox:files-loaded', {
+            files: [],
+            path: '/Photos/Vacation',
+        })
         const snap = controller.getSnapshot()
         expect(snap.folder?.name).toBe('Vacation')
         expect(snap.folder?.id).toBe('/Photos/Vacation')
@@ -147,7 +163,10 @@ describe('DriveBrowserController — events', () => {
 
     it('signed-out clears user/folder/token (regression for the emitter wiring fix)', () => {
         const { core, controller } = setup()
-        core.emit('google-drive:files-loaded', { files: [file('1', 'a')], folderId: 'root' })
+        core.emit('google-drive:files-loaded', {
+            files: [file('1', 'a')],
+            folderId: 'root',
+        })
         core.emit('google-drive:signed-out', {})
         const snap = controller.getSnapshot()
         expect(snap.folder).toBeUndefined()
@@ -254,7 +273,7 @@ describe('DriveBrowserController — actions', () => {
         controller.handleClick(file('2', 'b.txt'))
         await controller.handleSubmit()
         expect(onFilesSelected).toHaveBeenCalledTimes(1)
-        expect(onFilesSelected.mock.calls[0][0]).toHaveLength(2)
+        expect(onFilesSelected.mock.calls[0]![0]).toHaveLength(2)
         expect(onClose).toHaveBeenCalledTimes(1)
         expect(controller.getSnapshot().selectedFiles).toHaveLength(0)
     })
@@ -281,28 +300,50 @@ describe('DriveBrowserController — actions', () => {
 
     it('files-loaded seeds the root folder as the path trail', () => {
         const { core, controller } = setup()
-        core.emit('google-drive:files-loaded', { files: [file('f1', 'Folder', true)], folderId: 'root' })
+        core.emit('google-drive:files-loaded', {
+            files: [file('f1', 'Folder', true)],
+            folderId: 'root',
+        })
         const snap = controller.getSnapshot()
         expect(snap.path.map(p => p.id)).toEqual(['root'])
-        expect(snap.path[0].name).toBe('Drive')
+        expect(snap.path[0]!.name).toBe('Drive')
     })
 
     it('navigating into folders accumulates a unique path trail (no duplicate, no collapse)', () => {
         const { core, controller } = setup()
-        core.emit('google-drive:files-loaded', { files: [file('f1', 'Folder', true)], folderId: 'root' })
+        core.emit('google-drive:files-loaded', {
+            files: [file('f1', 'Folder', true)],
+            folderId: 'root',
+        })
         controller.handleClick(file('f1', 'Folder', true))
-        core.emit('google-drive:files-loaded', { files: [file('x', 'child.txt')], folderId: 'f1' })
-        expect(controller.getSnapshot().path.map(p => p.id)).toEqual(['root', 'f1'])
+        core.emit('google-drive:files-loaded', {
+            files: [file('x', 'child.txt')],
+            folderId: 'f1',
+        })
+        expect(controller.getSnapshot().path.map(p => p.id)).toEqual([
+            'root',
+            'f1',
+        ])
         controller.handleClick(file('f2', 'Sub', true))
         core.emit('google-drive:files-loaded', { files: [], folderId: 'f2' })
-        expect(controller.getSnapshot().path.map(p => p.id)).toEqual(['root', 'f1', 'f2'])
+        expect(controller.getSnapshot().path.map(p => p.id)).toEqual([
+            'root',
+            'f1',
+            'f2',
+        ])
     })
 
     it('navigated folder crumbs show the clicked folder name, not the raw id', () => {
         const { core, controller } = setup()
-        core.emit('google-drive:files-loaded', { files: [file('f1', 'Reports', true)], folderId: 'root' })
+        core.emit('google-drive:files-loaded', {
+            files: [file('f1', 'Reports', true)],
+            folderId: 'root',
+        })
         controller.handleClick(file('f1', 'Reports', true))
-        core.emit('google-drive:files-loaded', { files: [file('f2', '2024', true)], folderId: 'f1' })
+        core.emit('google-drive:files-loaded', {
+            files: [file('f2', '2024', true)],
+            folderId: 'f1',
+        })
         controller.handleClick(file('f2', '2024', true))
         core.emit('google-drive:files-loaded', { files: [], folderId: 'f2' })
         expect(controller.getSnapshot().path.map(p => p.name)).toEqual([
@@ -315,7 +356,10 @@ describe('DriveBrowserController — actions', () => {
 
     it('dropbox navigated folder crumb keeps the clicked name (path-keyed)', () => {
         const { core, controller } = setup(DROPBOX_DESCRIPTOR)
-        core.emit('dropbox:files-loaded', { files: [file('/Photos', 'Photos', true, '/Photos')], path: '' })
+        core.emit('dropbox:files-loaded', {
+            files: [file('/Photos', 'Photos', true, '/Photos')],
+            path: '',
+        })
         controller.handleClick(file('/Photos', 'Photos', true, '/Photos'))
         core.emit('dropbox:files-loaded', { files: [], path: '/Photos' })
         const last = controller.getSnapshot().path.at(-1)
@@ -331,15 +375,24 @@ describe('DriveBrowserController — actions', () => {
         })
         controller.handleClick(file('f1', 'Reports', true))
         core.emit('google-drive:files-loaded', { files: [], folderId: 'f1' })
-        expect(controller.getSnapshot().path.map(p => p.id)).toEqual(['root', 'f1'])
+        expect(controller.getSnapshot().path.map(p => p.id)).toEqual([
+            'root',
+            'f1',
+        ])
         // breadcrumb-back to root (header truncates via setPath(slice(0, i+1)); no reload)
         controller.setPath(controller.getSnapshot().path.slice(0, 1))
         expect(controller.getSnapshot().path.map(p => p.id)).toEqual(['root'])
         // descend into a DIFFERENT sibling — must not resurrect a stale/duplicate crumb
         controller.handleClick(file('f2', 'Photos', true))
         core.emit('google-drive:files-loaded', { files: [], folderId: 'f2' })
-        expect(controller.getSnapshot().path.map(p => p.id)).toEqual(['root', 'f2'])
-        expect(controller.getSnapshot().path.map(p => p.name)).toEqual(['Drive', 'Photos'])
+        expect(controller.getSnapshot().path.map(p => p.id)).toEqual([
+            'root',
+            'f2',
+        ])
+        expect(controller.getSnapshot().path.map(p => p.name)).toEqual([
+            'Drive',
+            'Photos',
+        ])
     })
 
     it('breadcrumb truncation (setPath) navigates back up the trail', () => {
@@ -360,7 +413,10 @@ describe('DriveBrowserController — actions', () => {
         controller.handleClick(file('f2', 'F2', true))
         core.emit('google-drive:files-loaded', { files: [], folderId: 'f2' })
         core.emit('google-drive:files-loaded', { files: [], folderId: 'f1' })
-        expect(controller.getSnapshot().path.map(p => p.id)).toEqual(['root', 'f1'])
+        expect(controller.getSnapshot().path.map(p => p.id)).toEqual([
+            'root',
+            'f1',
+        ])
     })
 
     it('dropbox path-keyed trail accumulates by path id', () => {
@@ -368,7 +424,10 @@ describe('DriveBrowserController — actions', () => {
         core.emit('dropbox:files-loaded', { files: [], path: '' })
         expect(controller.getSnapshot().path.map(p => p.id)).toEqual(['root'])
         core.emit('dropbox:files-loaded', { files: [], path: '/Photos' })
-        expect(controller.getSnapshot().path.map(p => p.id)).toEqual(['root', '/Photos'])
+        expect(controller.getSnapshot().path.map(p => p.id)).toEqual([
+            'root',
+            '/Photos',
+        ])
     })
 
     it('loadMore appends and advances the cursor (F-125)', async () => {
@@ -381,7 +440,7 @@ describe('DriveBrowserController — actions', () => {
         })
         expect(controller.getSnapshot().hasMore).toBe(true)
 
-        plugin.nextPage = { files: [file('x', 'x.txt')], hasMore: false, cursor: undefined }
+        plugin.nextPage = { files: [file('x', 'x.txt')], hasMore: false }
         await controller.loadMore()
 
         const snap = controller.getSnapshot()

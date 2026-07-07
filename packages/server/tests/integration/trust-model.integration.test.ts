@@ -55,6 +55,16 @@ const post = (
         }),
     )
 
+// Shapes of the JSON bodies this exploit harness reads back from the real
+// handler's presign / multipart routes (see src/upload-routes.ts).
+type PresignBody = {
+    key: string
+    uploadUrl: string
+    uploadHeaders: Record<string, string>
+}
+type MultipartInitBody = { key: string; uploadId: string; token: string }
+type SignedPartBody = { uploadUrl: string }
+
 describe.skipIf(!RUN)('trust model — exploit harness', () => {
     beforeAll(async () => {
         try {
@@ -65,11 +75,15 @@ describe.skipIf(!RUN)('trust model — exploit harness', () => {
                 }),
             )
         } catch (err) {
-            throw new Error(
+            // tsconfig's lib is ES2020, which predates the 2-arg
+            // Error(message, { cause }) constructor overload -- attach cause
+            // as a property instead of widening the repo's lib target.
+            const error = new Error(
                 `MinIO unreachable at ${storage.endpoint} (bucket ${storage.bucket}). ` +
                     `Run "pnpm e2e:minio:up" first. Underlying: ${(err as Error).message}`,
-                { cause: err },
             )
+            ;(error as Error & { cause?: unknown }).cause = err
+            throw error
         }
     })
 
@@ -83,7 +97,8 @@ describe.skipIf(!RUN)('trust model — exploit harness', () => {
             type: 'application/octet-stream',
         })
         expect(res.status).toBe(200)
-        const { key, uploadUrl, uploadHeaders } = await res.json()
+        const { key, uploadUrl, uploadHeaders } =
+            (await res.json()) as PresignBody
         createdKeys.push(key)
 
         const oversized = new Uint8Array(declared * 4) // 4 KiB body vs 1 KiB signed
@@ -103,24 +118,24 @@ describe.skipIf(!RUN)('trust model — exploit harness', () => {
     it('S1 (multipart): rejects complete when uploaded bytes exceed the signed smax', async () => {
         const handler = createUpupHandler(config)
         const declaredSize = 1024 // tiny declared size -> smax = 1024 bytes
-        const init = await (
+        const init = (await (
             await post(handler, '/multipart/init', {
                 name: 's1-multipart-oversized.bin',
                 size: declaredSize,
                 type: 'application/octet-stream',
             })
-        ).json()
+        ).json()) as MultipartInitBody
         createdKeys.push(init.key)
         expect(typeof init.token).toBe('string')
 
         // Upload ONE real part far larger than the declared/signed size.
         const oversizedPart = new Uint8Array(5 * 1024 * 1024).fill(3) // 5 MiB >> 1 KiB declared
-        const signed = await (
+        const signed = (await (
             await post(handler, '/multipart/sign-part', {
                 token: init.token,
                 partNumber: 1,
             })
-        ).json()
+        ).json()) as SignedPartBody
         const put = await fetch(signed.uploadUrl, {
             method: 'PUT',
             body: oversizedPart,
@@ -172,25 +187,25 @@ describe.skipIf(!RUN)('trust model — exploit harness', () => {
         const part1 = new Uint8Array(5 * 1024 * 1024).fill(7) // 5 MiB
         const part2 = new Uint8Array(4096).fill(9)
 
-        const init = await (
+        const init = (await (
             await post(handler, '/multipart/init', {
                 name: 'mp-roundtrip.bin',
                 size: part1.byteLength + part2.byteLength,
                 type: 'application/octet-stream',
             })
-        ).json()
+        ).json()) as MultipartInitBody
         createdKeys.push(init.key)
         expect(typeof init.token).toBe('string')
 
         const parts: { partNumber: number; eTag: string }[] = []
         let n = 1
         for (const chunk of [part1, part2]) {
-            const signed = await (
+            const signed = (await (
                 await post(handler, '/multipart/sign-part', {
                     token: init.token,
                     partNumber: n,
                 })
-            ).json()
+            ).json()) as SignedPartBody
             const put = await fetch(signed.uploadUrl, {
                 method: 'PUT',
                 body: chunk,
@@ -212,13 +227,13 @@ describe.skipIf(!RUN)('trust model — exploit harness', () => {
 
     it('ignores a client-sent key — the token is authoritative', async () => {
         const handler = createUpupHandler(config)
-        const init = await (
+        const init = (await (
             await post(handler, '/multipart/init', {
                 name: 'authoritative.bin',
                 size: 8 * 1024 * 1024,
                 type: 'application/octet-stream',
             })
-        ).json()
+        ).json()) as MultipartInitBody
         createdKeys.push(init.key)
 
         // Sign a part with the real token but ALSO send an attacker key in the body.
@@ -228,7 +243,7 @@ describe.skipIf(!RUN)('trust model — exploit harness', () => {
             partNumber: 1,
         })
         expect(signed.status).toBe(200)
-        const { uploadUrl } = await signed.json()
+        const { uploadUrl } = (await signed.json()) as SignedPartBody
         // The presigned part URL must target the token's key, not the attacker key.
         expect(decodeURIComponent(uploadUrl)).toContain(init.key)
         expect(decodeURIComponent(uploadUrl)).not.toContain('attacker/evil.bin')
