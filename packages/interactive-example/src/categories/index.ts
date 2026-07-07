@@ -24,19 +24,32 @@ export const categories: CategoryDefinition[] = [
 ]
 
 export function allEntries(): ToggleEntry[] {
-    return categories.flatMap((c) => c.entries)
+    return categories.flatMap(c => c.entries)
 }
 
 export function findEntry(propId: string): ToggleEntry | undefined {
-    return allEntries().find((e) => e.id === propId)
+    return allEntries().find(e => e.id === propId)
 }
 
 /**
  * Walk a dotted path like "theme.mode" or "cloudDrives.googleDrive.clientId" and
  * set the value on the target object, creating intermediate objects as needed.
  */
-function setByPath(target: Record<string, unknown>, path: string, value: unknown): void {
+function setByPath(
+    target: Record<string, unknown>,
+    path: string,
+    value: unknown,
+): void {
     const parts = path.split('.')
+    // Refuse prototype-polluting segments outright — writing through
+    // __proto__/constructor/prototype would mutate Object.prototype.
+    if (
+        parts.some(
+            p => p === '__proto__' || p === 'constructor' || p === 'prototype',
+        )
+    ) {
+        return
+    }
     let cursor: Record<string, unknown> = target
     for (let i = 0; i < parts.length - 1; i++) {
         const key = parts[i]
