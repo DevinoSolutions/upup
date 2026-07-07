@@ -250,6 +250,28 @@ export const coreConfig = [
 ];
 
 /**
+ * App env-validation enforcement — bans raw process.env reads outside the
+ * validated env module (src/lib/env.ts) and config files. Composed by each
+ * app's eslint.config.mjs after Task 9 (F-708/F-709) wires them to the
+ * shared config.
+ */
+export const appEnvConfig = [
+  {
+    files: ['src/**/*.{ts,tsx}'],
+    ignores: ['**/env.ts', '**/*.config.*'],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: "MemberExpression[object.object.name='process'][object.property.name='env']",
+          message: "Read env through the app's validated env module (src/lib/env.ts), not process.env directly.",
+        },
+      ],
+    },
+  },
+];
+
+/**
  * @upup/server scope layer — errors use the taxonomy; respond.ts is the single
  * CORS-safe response home (P15), so a raw `new Response()` anywhere else is a
  * defect. Composed by `packages/server/eslint.config.mjs`.
