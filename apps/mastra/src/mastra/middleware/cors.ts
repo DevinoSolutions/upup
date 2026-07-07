@@ -1,5 +1,6 @@
 type Context = { req: { method: string; header: (name: string) => string | undefined; url: string }; header: (name: string, value: string) => void }
 type Next = () => Promise<void>
+import { env } from '../../lib/env.js'
 
 /**
  * CORS middleware.
@@ -10,7 +11,7 @@ type Next = () => Promise<void>
  * be in the allowlist and the browser will block the request.
  */
 export function corsMiddleware() {
-    const raw = process.env.ALLOWED_ORIGINS?.trim()
+    const raw = env.ALLOWED_ORIGINS?.trim()
     const allowList = raw
         ? raw.split(',').map((s) => s.trim()).filter(Boolean)
         : [

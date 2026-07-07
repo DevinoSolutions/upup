@@ -6,6 +6,7 @@ import { UpupUploader } from "@upup/react";
 import "@upup/react/styles";
 import type { LocaleBundle } from "@upup/core";
 import { ThemeContext } from "@/lib/contexts";
+import { clientEnv } from "@/lib/env";
 import { toast } from "react-toastify";
 
 interface Props {
@@ -37,11 +38,10 @@ export default function Uploader({
 
   const currentTheme = theme || "blue";
   const useRealStorage =
-    process.env.NEXT_PUBLIC_UPUP_USE_REAL_STORAGE === "true";
-  const serverUrl =
-    process.env.NEXT_PUBLIC_BASE_URL
-      ? process.env.NEXT_PUBLIC_BASE_URL + "/api/upup"
-      : "/api/upup";
+    clientEnv.NEXT_PUBLIC_UPUP_USE_REAL_STORAGE === "true";
+  const serverUrl = clientEnv.NEXT_PUBLIC_BASE_URL
+    ? clientEnv.NEXT_PUBLIC_BASE_URL + "/api/upup"
+    : "/api/upup";
 
   const customSlots = {
     uploader: {
@@ -90,15 +90,15 @@ export default function Uploader({
         sources={sources as any}
         cloudDrives={{
           googleDrive: {
-            clientId: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "",
-            apiKey: process.env.NEXT_PUBLIC_GOOGLE_API_KEY || "",
-            appId: process.env.NEXT_PUBLIC_GOOGLE_APP_ID || "",
+            clientId: clientEnv.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
+            apiKey: clientEnv.NEXT_PUBLIC_GOOGLE_API_KEY,
+            appId: clientEnv.NEXT_PUBLIC_GOOGLE_APP_ID,
           },
           oneDrive: {
-            clientId: process.env.NEXT_PUBLIC_ONEDRIVE_CLIENT_ID || "",
+            clientId: clientEnv.NEXT_PUBLIC_ONEDRIVE_CLIENT_ID,
           },
           dropbox: {
-            clientId: process.env.NEXT_PUBLIC_DROPBOX_CLIENT_ID || "",
+            clientId: clientEnv.NEXT_PUBLIC_DROPBOX_CLIENT_ID,
           },
         }}
         theme={{ mode: isDarkMode ? "dark" : "light", slots: customSlots }}

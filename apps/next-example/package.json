@@ -12,7 +12,8 @@
     "@upup/next": "workspace:*",
     "next": "16.1.6",
     "react": "^19.2.0",
-    "react-dom": "^19.2.0"
+    "react-dom": "^19.2.0",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@types/node": "^20",

@@ -1,6 +1,7 @@
 type Context = { req: { url: string; header: (name: string) => string | undefined } }
 type Next = () => Promise<void>
 type MaybeResponse = Response | void
+import { env } from '../../lib/env.js'
 
 /**
  * Token-bucket rate limiter, in-memory.
@@ -16,8 +17,8 @@ type MaybeResponse = Response | void
 type Bucket = { tokens: number; updatedAt: number }
 const buckets = new Map<string, Bucket>()
 
-const CAPACITY = Number(process.env.RATE_LIMIT_CAPACITY ?? 30) // requests
-const WINDOW_MS = Number(process.env.RATE_LIMIT_WINDOW_MS ?? 60 * 1000) // 1 min
+const CAPACITY = env.RATE_LIMIT_CAPACITY
+const WINDOW_MS = env.RATE_LIMIT_WINDOW_MS
 
 function clientId(c: Context): string {
     // Prefer CF / forwarded headers, fall back to socket address. Mastra runs

@@ -1,4 +1,5 @@
 import { Mastra } from '@mastra/core'
+import { env } from '../lib/env.js'
 import { playgroundAgent } from './agents/playground-agent.js'
 import { corsMiddleware } from './middleware/cors.js'
 import { authMiddleware } from './middleware/auth.js'
@@ -21,8 +22,8 @@ import { schemaRoute } from './routes/schema.js'
 export const mastra = new Mastra({
     agents: { playgroundAgent },
     server: {
-        port: Number(process.env.PORT ?? 4111),
-        host: process.env.MASTRA_HOST ?? 'localhost',
+        port: env.PORT,
+        host: env.MASTRA_HOST,
         middleware: [
             { handler: corsMiddleware() as any, path: '/*' },
             { handler: dailyBudgetMiddleware() as any, path: '/*' },

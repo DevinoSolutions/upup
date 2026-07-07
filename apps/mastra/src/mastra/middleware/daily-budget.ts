@@ -1,6 +1,7 @@
 type Context = { req: { url: string } }
 type Next = () => Promise<void>
 type MaybeResponse = Response | void
+import { env } from '../../lib/env.js'
 
 /**
  * Daily request budget — protects against runaway LLM spend.
@@ -18,7 +19,7 @@ type MaybeResponse = Response | void
  * deploying multi-region.
  */
 
-const CAP = Number(process.env.DAILY_REQUEST_CAP ?? 5000)
+const CAP = env.DAILY_REQUEST_CAP
 
 let dayKey = utcDayKey(Date.now())
 let count = 0

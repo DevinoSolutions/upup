@@ -7,23 +7,24 @@ import type {LocaleBundle} from '@upup/core'
 
 import "@upup/react/styles";
 import {ThemeContext} from "@/lib/contexts";
+import {clientEnv} from "@/lib/env";
 import {toast} from "react-toastify";
 
 const customFields = {
-    uploadEndpoint: process.env.NEXT_PUBLIC_BASE_URL
-        ? process.env.NEXT_PUBLIC_BASE_URL + "/api/getPresignedUrl"
-        : "/api/getPresignedUrl", // fallback to relative path
+    uploadEndpoint: clientEnv.NEXT_PUBLIC_BASE_URL
+        ? clientEnv.NEXT_PUBLIC_BASE_URL + "/api/getPresignedUrl"
+        : "/api/getPresignedUrl",
     cloudDrives: {
         googleDrive: {
-            clientId: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "",
-            apiKey: process.env.NEXT_PUBLIC_GOOGLE_API_KEY || "",
-            appId: process.env.NEXT_PUBLIC_GOOGLE_APP_ID || "",
+            clientId: clientEnv.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
+            apiKey: clientEnv.NEXT_PUBLIC_GOOGLE_API_KEY,
+            appId: clientEnv.NEXT_PUBLIC_GOOGLE_APP_ID,
         },
         oneDrive: {
-            clientId: process.env.NEXT_PUBLIC_ONEDRIVE_CLIENT_ID || "",
+            clientId: clientEnv.NEXT_PUBLIC_ONEDRIVE_CLIENT_ID,
         },
         dropbox: {
-            clientId: process.env.NEXT_PUBLIC_DROPBOX_CLIENT_ID || "",
+            clientId: clientEnv.NEXT_PUBLIC_DROPBOX_CLIENT_ID,
         },
     },
 };

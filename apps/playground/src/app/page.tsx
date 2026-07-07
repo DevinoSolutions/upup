@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { InteractiveExample } from "@upup/interactive-example";
 import "@upup/interactive-example/styles";
 import Toast from "@/components/Toast";
+import { clientEnv } from "@/lib/env";
 
 /**
  * Build a cloudDrives seed from NEXT_PUBLIC_*_CLIENT_ID env vars so the
@@ -13,19 +14,19 @@ import Toast from "@/components/Toast";
  */
 function cloudDrivesFromEnv() {
   const out: Record<string, unknown> = {};
-  const g = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+  const g = clientEnv.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
   if (g) {
     out.googleDrive = {
       clientId: g,
-      apiKey: process.env.NEXT_PUBLIC_GOOGLE_API_KEY ?? "",
-      appId: process.env.NEXT_PUBLIC_GOOGLE_APP_ID ?? "",
+      apiKey: clientEnv.NEXT_PUBLIC_GOOGLE_API_KEY,
+      appId: clientEnv.NEXT_PUBLIC_GOOGLE_APP_ID,
     };
   }
-  const o = process.env.NEXT_PUBLIC_ONEDRIVE_CLIENT_ID;
+  const o = clientEnv.NEXT_PUBLIC_ONEDRIVE_CLIENT_ID;
   if (o) out.oneDrive = { clientId: o };
-  const d = process.env.NEXT_PUBLIC_DROPBOX_CLIENT_ID;
+  const d = clientEnv.NEXT_PUBLIC_DROPBOX_CLIENT_ID;
   if (d) out.dropbox = { clientId: d };
-  const b = process.env.NEXT_PUBLIC_BOX_CLIENT_ID;
+  const b = clientEnv.NEXT_PUBLIC_BOX_CLIENT_ID;
   if (b) out.box = { clientId: b };
   return Object.keys(out).length > 0 ? out : undefined;
 }
@@ -59,7 +60,7 @@ export default function Home() {
   const params = useMemo(() => paramsFromSearch(search), [search]);
   const cloudDrives = cloudDrivesFromEnv();
   const uploadEndpoint =
-    process.env.NEXT_PUBLIC_UPUP_UPLOAD_ENDPOINT ?? mockUploadEndpoint(params);
+    clientEnv.NEXT_PUBLIC_UPUP_UPLOAD_ENDPOINT ?? mockUploadEndpoint(params);
   const initialConfig = {
     uploadEndpoint,
     ...(cloudDrives ? { cloudDrives } : {}),

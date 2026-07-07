@@ -13,6 +13,10 @@
     "clean": "rm -rf .next node_modules/.cache"
   },
   "dependencies": {
+    "@upup/core": "workspace:*",
+    "@upup/interactive-example": "workspace:*",
+    "@upup/react": "workspace:*",
+    "@upup/server": "workspace:*",
     "clsx": "^2.1.1",
     "lucide-react": "^0.503.0",
     "next": "16.1.6",
@@ -22,10 +26,7 @@
     "react-icons": "^5.5.0",
     "react-toastify": "^11.0.5",
     "react-tooltip": "^5.29.1",
-    "@upup/core": "workspace:*",
-    "@upup/react": "workspace:*",
-    "@upup/server": "workspace:*",
-    "@upup/interactive-example": "workspace:*"
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

@@ -15,9 +15,11 @@ type EvalResult =
     | { case: EvalCase; ok: true; patch: Record<string, unknown> }
     | { case: EvalCase; ok: false; reason: string; patch?: Record<string, unknown> }
 
-const baseUrl = process.env.MASTRA_API_URL ?? 'http://localhost:4111'
-const agentId = process.env.AGENT_ID ?? 'playground-agent'
-const FAIL_THRESHOLD = Number(process.env.EVAL_FAIL_THRESHOLD ?? 0.1)
+import { env } from '../lib/env.js'
+
+const baseUrl = env.MASTRA_API_URL
+const agentId = env.AGENT_ID
+const FAIL_THRESHOLD = env.EVAL_FAIL_THRESHOLD
 
 async function runOne(client: MastraClient, c: EvalCase): Promise<EvalResult> {
     try {

@@ -1,6 +1,7 @@
 type Context = { req: { header: (name: string) => string | undefined } }
 type Next = () => Promise<void>
 import { createHmac, timingSafeEqual } from 'node:crypto'
+import { env } from '../../lib/env.js'
 
 /**
  * Origin-token auth middleware.
@@ -37,7 +38,7 @@ export function signOriginToken(origin: string, secret: string, now = Date.now()
 }
 
 export function authMiddleware() {
-    const secret = process.env.ORIGIN_TOKEN_SECRET?.trim()
+    const secret = env.ORIGIN_TOKEN_SECRET?.trim()
     if (!secret) {
         // Disabled: no-op middleware so dev curl works.
         return async (_c: Context, next: Next) => {
