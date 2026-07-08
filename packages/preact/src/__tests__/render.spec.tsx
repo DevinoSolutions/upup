@@ -35,11 +35,11 @@ describe('@upup/preact render parity on compat', () => {
 
     test('mounts dropzone inside the container', () => {
         render(<UpupUploader />)
-        // upup-dropzone: UploaderPanel.tsx:36, role="button" with drag/drop handlers
+        // upup-dropzone: UploaderPanel.tsx, role="region" (F-765) with drag/drop handlers
         const dropzone = screen.getByTestId('upup-dropzone')
         expect(dropzone).toBeTruthy()
         // The dropzone also carries the correct role
-        expect(dropzone.getAttribute('role')).toBe('button')
+        expect(dropzone.getAttribute('role')).toBe('region')
     })
 
     // ── Branding ────────────────────────────────────────────────────────────────

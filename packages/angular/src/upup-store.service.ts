@@ -33,13 +33,13 @@ type ThemeSnapshot = ReturnType<ThemeStore['getSnapshot']>
 export class UpupStore {
     private props?: UploaderProps
     private upload!: UpupUploadHandle
-    private root!: UploaderController
+    private controller!: UploaderController
     core!: UpupUploadHandle['core']
     private orchState!: SignalStore<OrchSnapshot>
 
     /** The orchestrator instance, exposed for the dropzone DragDropController. Set during init(). */
     get orchestrator(): UploaderOrchestrator {
-        return this.root.orchestrator
+        return this.controller.orchestrator
     }
 
     private themeState!: SignalStore<ThemeSnapshot>
@@ -128,7 +128,7 @@ export class UpupStore {
         this.props = props
     }
 
-    // Single error/warn routing (mirrors svelte create-uploader-controller lines 152-158).
+    // Single error/warn routing (mirrors svelte create-uploader-context.ts's onError/onWarn, ~lines 85-90).
     private onError(message: string): void {
         this.props?.onError?.(message)
     }
@@ -243,10 +243,10 @@ export class UpupStore {
             sse.destroy()
         })
 
-        // ── Root controller (FRESH per init() call) ──────────────
+        // ── Uploader controller (FRESH per init() call) ──────────────
         // Owns orchestrator, theme, plugin registration, callback proxy,
         // status-change dedup, crash recovery, file-input registration.
-        this.root = createUploaderController(
+        this.controller = createUploaderController(
             { core: this.upload.core, options: factoryOptions, normalized },
             {
                 connectSSE: file => {
@@ -256,7 +256,7 @@ export class UpupStore {
         )
 
         // ── Callback proxy — updateCallbacks feeds the proxy's mutable ref ──
-        this.root.updateCallbacks({
+        this.controller.updateCallbacks({
             onError: (message: string) => {
                 this.onError(message)
             },
@@ -281,8 +281,8 @@ export class UpupStore {
         })
 
         // ── Signal bridges (KEEP: toSignalStore separately for orch + theme) ──────
-        this.orchState = toSignalStore(this.root.orchestrator)
-        this.themeState = toSignalStore(this.root.theme)
+        this.orchState = toSignalStore(this.controller.orchestrator)
+        this.themeState = toSignalStore(this.controller.theme)
 
         // ── Assign computeds AFTER stores exist ──────────────────
         this.files = computed(() => this.orchState.state().files)
@@ -321,7 +321,7 @@ export class UpupStore {
         this.slots = computed(() => this.themeState.state().slots)
 
         // ── Factory lifecycle (orchestrator.init + theme.init + plugins + status) ──
-        this.root.init()
+        this.controller.init()
 
         // ── Cloud drive config (from factory's resolved, not re-computed inline) ──
         this.cloudDrives = resolved.cloudDrives
@@ -388,84 +388,84 @@ export class UpupStore {
 
     // ── Input ref helpers (delegated to factory) ─────────────────
     registerFileInput = (el: HTMLInputElement | null): void => {
-        this.root.registerFileInput(el)
+        this.controller.registerFileInput(el)
     }
-    getFileInput = (): HTMLInputElement | null => this.root.getFileInput()
+    getFileInput = (): HTMLInputElement | null => this.controller.getFileInput()
     openFilePicker = (): void => {
-        this.root.openFilePicker()
+        this.controller.openFilePicker()
     }
 
-    // ── Orchestrator passthroughs (delegated to root.commands) ───
+    // ── Orchestrator passthroughs (delegated to controller.commands) ───
     setActiveSource(a: FileSource | undefined): void {
-        this.root.commands.setActiveSource(a)
+        this.controller.commands.setActiveSource(a)
     }
     setIsAddingMore(v: boolean): void {
-        this.root.commands.setIsAddingMore(v)
+        this.controller.commands.setIsAddingMore(v)
     }
     setViewMode(m: 'grid' | 'list'): void {
-        this.root.commands.setViewMode(m)
+        this.controller.commands.setViewMode(m)
     }
 
-    // ── File operations (delegated to root.commands) ─────────────
+    // ── File operations (delegated to controller.commands) ─────────────
     async handleSetSelectedFiles(newFiles: File[]): Promise<void> {
-        await this.root.commands.handleSetSelectedFiles(newFiles)
+        await this.controller.commands.handleSetSelectedFiles(newFiles)
     }
 
     handleFileRemove(fileId: string): void {
-        this.root.commands.handleFileRemove(fileId)
+        this.controller.commands.handleFileRemove(fileId)
     }
 
     async uploadFiles(
         newFiles: File[] | UploadFile[],
     ): Promise<UploadFile[] | undefined> {
-        return this.root.commands.uploadFiles(newFiles)
+        return this.controller.commands.uploadFiles(newFiles)
     }
 
     replaceFiles(newFiles: File[] | UploadFile[]): void {
-        this.root.commands.replaceFiles(newFiles)
+        this.controller.commands.replaceFiles(newFiles)
     }
 
-    // ── Upload controls (delegated to root.commands) ─────────────
+    // ── Upload controls (delegated to controller.commands) ─────────────
     async startUpload(): Promise<UploadFile[] | undefined> {
-        return this.root.commands.startUpload()
+        return this.controller.commands.startUpload()
     }
 
     async retryUpload(fileId?: string): Promise<UploadFile[] | undefined> {
-        return this.root.commands.retryUpload(fileId)
+        return this.controller.commands.retryUpload(fileId)
     }
 
     handleCancel(): void {
-        this.root.commands.handleCancel()
+        this.controller.commands.handleCancel()
     }
 
     handlePause(): void {
-        this.root.commands.handlePause()
+        this.controller.commands.handlePause()
     }
 
     handleResume(): void {
-        this.root.commands.handleResume()
+        this.controller.commands.handleResume()
     }
 
     handleDone(): void {
-        this.root.commands.handleDone()
+        this.controller.commands.handleDone()
     }
 
     resetState(): void {
-        this.root.commands.resetState()
+        this.controller.commands.resetState()
     }
 
-    // ── Image editor passthroughs (delegated to root.commands) ───
+    // ── Image editor passthroughs (delegated to controller.commands) ───
     openImageEditor(file: UploadFile): void {
-        this.root.commands.openImageEditor(file)
+        this.controller.commands.openImageEditor(file)
     }
     closeImageEditor(): void {
-        this.root.commands.closeImageEditor()
+        this.controller.commands.closeImageEditor()
     }
     saveImageEdit(editedImageData: string, mimeType?: string): void {
-        this.root.commands.saveImageEdit(editedImageData, mimeType)
+        this.controller.commands.saveImageEdit(editedImageData, mimeType)
     }
     replaceFile(fileId: string, newFile: UploadFile): void {
-        this.root.commands.replaceFile(fileId, newFile)
+        this.controller.commands.replaceFile(fileId, newFile)
     }
 
     destroy(): void {
@@ -477,7 +477,7 @@ export class UpupStore {
             c()
         })
         this.cleanups.length = 0
-        this.root?.destroy() // orchestrator/theme/plugins/status — idempotent
+        this.controller?.destroy() // orchestrator/theme/plugins/status — idempotent
         this.orchState?.destroy()
         this.themeState?.destroy()
         this.upload?.destroy() // createUpupUpload owns core.destroy()

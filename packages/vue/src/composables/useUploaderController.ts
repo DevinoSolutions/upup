@@ -197,8 +197,8 @@ export default function useUploaderController(
         processingTimeout,
     })
 
-    // ── Root controller (created once, owns orchestrator/theme/plugins/commands) ──
-    const root = createUploaderController(
+    // ── Uploader controller (created once, owns orchestrator/theme/plugins/commands) ──
+    const controller = createUploaderController(
         { core, options: factoryOptions, normalized },
         {
             connectSSE: file => {
@@ -206,7 +206,7 @@ export default function useUploaderController(
             },
         },
     )
-    root.updateCallbacks({
+    controller.updateCallbacks({
         onError,
         onWarn,
         onUploadStart,
@@ -227,18 +227,20 @@ export default function useUploaderController(
     })
 
     // ── Subscribe to orchestrator state (Vue pattern: shallowRef + subscribe) ─
-    const state = shallowRef<OrchestratorState>(root.orchestrator.getSnapshot())
-    const unsub = root.orchestrator.subscribe(() => {
-        state.value = root.orchestrator.getSnapshot()
+    const state = shallowRef<OrchestratorState>(
+        controller.orchestrator.getSnapshot(),
+    )
+    const unsub = controller.orchestrator.subscribe(() => {
+        state.value = controller.orchestrator.getSnapshot()
     })
 
     // ── Subscribe to theme state (Vue pattern: shallowRef + subscribe) ────────
-    const themeState = shallowRef(root.theme.getSnapshot())
+    const themeState = shallowRef(controller.theme.getSnapshot())
     let unsubTheme: (() => void) | null = null
 
     onMounted(() => {
-        unsubTheme = root.theme.subscribe(() => {
-            themeState.value = root.theme.getSnapshot()
+        unsubTheme = controller.theme.subscribe(() => {
+            themeState.value = controller.theme.getSnapshot()
         })
     })
     onUnmounted(() => {
@@ -246,15 +248,15 @@ export default function useUploaderController(
     })
 
     // ── Lifecycle via factory (idempotent init/destroy) ──────────
-    // root.init() owns: orchestrator.init, theme.init, plugin registration,
+    // controller.init() owns: orchestrator.init, theme.init, plugin registration,
     //   status-change dedup, crash recovery.
-    // root.destroy() owns: orchestrator.destroy, theme.destroy, plugin cleanup.
+    // controller.destroy() owns: orchestrator.destroy, theme.destroy, plugin cleanup.
     // core lifecycle remains owned by useUpupUpload's onUnmounted.
     onMounted(() => {
-        root.init()
+        controller.init()
     })
     onUnmounted(() => {
-        root.destroy()
+        controller.destroy()
         unsub()
     })
 
@@ -281,7 +283,7 @@ export default function useUploaderController(
     // ── Assemble IUploaderContext ────────────────────────────────────
     return {
         core,
-        orchestrator: root.orchestrator,
+        orchestrator: controller.orchestrator,
         mode: resolved.mode,
         serverUrl: resolved.serverUrl,
         inputRef,
@@ -289,15 +291,15 @@ export default function useUploaderController(
         // Reactive so consumers re-render when the active source changes.
         activeSource: computed(() => state.value.activeSource),
         setActiveSource: (source: FileSource | undefined) => {
-            root.commands.setActiveSource(source)
+            controller.commands.setActiveSource(source)
         },
         isAddingMore: computed(() => state.value.isAddingMore),
         setIsAddingMore: (v: boolean) => {
-            root.commands.setIsAddingMore(v)
+            controller.commands.setIsAddingMore(v)
         },
         viewMode: computed(() => state.value.viewMode),
         setViewMode: (m: 'grid' | 'list') => {
-            root.commands.setViewMode(m)
+            controller.commands.setViewMode(m)
         },
         isOnline: computed(() => state.value.isOnline),
         translations: resolved.translations,
@@ -319,54 +321,55 @@ export default function useUploaderController(
         // handleSetSelectedFiles self-handles addFiles errors and never rejects;
         // route any unexpected rejection to onError to honor the void contract.
         setFiles: (newFiles: File[]) => {
-            root.commands
+            controller.commands
                 .handleSetSelectedFiles(newFiles)
                 .catch((err: unknown) => {
                     onError(err instanceof Error ? err.message : String(err))
                 })
         },
         uploadFiles: async (newFiles: File[] | UploadFile[]) =>
-            root.commands.uploadFiles(newFiles),
+            controller.commands.uploadFiles(newFiles),
         resetState: () => {
-            root.commands.resetState()
+            controller.commands.resetState()
         },
         replaceFiles: (newFiles: File[] | UploadFile[]) => {
-            root.commands.replaceFiles(newFiles)
+            controller.commands.replaceFiles(newFiles)
         },
         handleDone: () => {
-            root.commands.handleDone()
+            controller.commands.handleDone()
         },
         handleCancel: () => {
-            root.commands.handleCancel()
+            controller.commands.handleCancel()
         },
         handlePause: () => {
-            root.commands.handlePause()
+            controller.commands.handlePause()
         },
         handleResume: () => {
-            root.commands.handleResume()
+            controller.commands.handleResume()
         },
         handleFileRemove: (fileId: string) => {
-            root.commands.handleFileRemove(fileId)
+            controller.commands.handleFileRemove(fileId)
         },
         editingFile: computed(() => state.value.editingFile),
         openImageEditor: (file: UploadFile) => {
-            root.commands.openImageEditor(file)
+            controller.commands.openImageEditor(file)
         },
         closeImageEditor: () => {
-            root.commands.closeImageEditor()
+            controller.commands.closeImageEditor()
         },
         saveImageEdit: (editedImageData: string, mimeType?: string) => {
-            root.commands.saveImageEdit(editedImageData, mimeType)
+            controller.commands.saveImageEdit(editedImageData, mimeType)
         },
         replaceFile: (fileId: string, newFile: UploadFile) => {
-            root.commands.replaceFile(fileId, newFile)
+            controller.commands.replaceFile(fileId, newFile)
         },
         cloudDrives: resolved.cloudDrives,
         upload: {
             totalProgress: computed(() => state.value.totalProgress),
             filesProgressMap: computed(() => state.value.filesProgressMap),
-            startUpload: () => root.commands.startUpload(),
-            retryUpload: (fileId?: string) => root.commands.retryUpload(fileId),
+            startUpload: () => controller.commands.startUpload(),
+            retryUpload: (fileId?: string) =>
+                controller.commands.retryUpload(fileId),
             uploadStatus: computed(() => state.value.uploadStatus),
             uploadError: computed(() => state.value.uploadError),
             uploadErrorCode: computed(() => state.value.uploadErrorCode),

@@ -20,7 +20,7 @@ import { FileListComponent } from './file-list.component'
  *   - SourceSelector (when no adapter + no files / adding more)
  *   - FileList (always)
  *
- * Drag/drop/paste/keydown logic 1:1 from useUploaderPanel.ts.
+ * Drag/drop/paste logic 1:1 from useUploaderPanel.ts.
  */
 @Component({
     selector: 'upup-uploader-panel',
@@ -141,6 +141,12 @@ export class UploaderPanelComponent implements OnInit, OnDestroy {
                 return tr.announceUploadComplete
             case UploadStatus.FAILED:
                 return tr.announceUploadFailed
+            // Non-transition states (and the pre-init undefined) leave the live
+            // region empty — there is nothing to announce.
+            case UploadStatus.IDLE:
+            case UploadStatus.PROCESSING:
+            case UploadStatus.READY:
+            case UploadStatus.PAUSED:
             default:
                 return ''
         }
@@ -159,19 +165,6 @@ export class UploaderPanelComponent implements OnInit, OnDestroy {
     }
     handlePaste(e: ClipboardEvent): void {
         this.dragController.handlePaste(e)
-    }
-
-    // ── Keyboard handler ──────────────────────────────────────────────────────
-    onKeyDown(e: KeyboardEvent): void {
-        if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault()
-            const el = this.store.getFileInput()
-            if (el) {
-                el.removeAttribute('webkitdirectory')
-                el.removeAttribute('directory')
-            }
-            this.store.openFilePicker()
-        }
     }
 
     ngOnDestroy(): void {

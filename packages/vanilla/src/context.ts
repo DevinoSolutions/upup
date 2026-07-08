@@ -81,22 +81,22 @@ export function buildUploaderContext(
             }),
         )
 
-    // ── 4. Root controller (owns orchestrator, theme, plugins, commands, crash recovery) ──
-    const root = createUploaderController(
+    // ── 4. Uploader controller (owns orchestrator, theme, plugins, commands, crash recovery) ──
+    const controller = createUploaderController(
         { core, options, normalized },
         { invalidate },
     )
 
     // ── 5. setFiles wrapper (routes through factory command for onFilesSelected + auto-upload) ──
     async function setFiles(newFiles: File[]) {
-        return root.commands.handleSetSelectedFiles(newFiles)
+        return controller.commands.handleSetSelectedFiles(newFiles)
     }
 
     // ── 6. Child controllers ──
     const fileInputHandle = createChildController(
         () =>
             new FileInputController({
-                getFileInput: () => root.getFileInput(),
+                getFileInput: () => controller.getFileInput(),
                 setFiles,
                 invalidate,
             }),
@@ -106,7 +106,7 @@ export function buildUploaderContext(
         () =>
             new DragDropController({
                 core,
-                orchestrator: root.orchestrator,
+                orchestrator: controller.orchestrator,
                 setFiles,
                 // Vanilla reads its file list straight from core.files (not the orchestrator snapshot),
                 // so derive the border's file count from core too.
@@ -208,7 +208,7 @@ export function buildUploaderContext(
     // ── 8. setActiveSource (vanilla-specific: destroys active adapters before delegating to factory command) ──
     function setActiveSource(a: FileSource | undefined) {
         controllers.destroyActive()
-        root.commands.setActiveSource(a)
+        controller.commands.setActiveSource(a)
     }
 
     // ── 9. Vanilla-specific file-removal wrappers (KEEP: nudge dragDrop.recompute() after core-only mutations) ──
@@ -218,16 +218,16 @@ export function buildUploaderContext(
     // cached snapshot. Nudge it to refresh so the empty-state border returns when
     // the last file is removed (C-1 border-recovery fix; losing this reintroduces the bug).
     function handleFileRemove(fileId: string) {
-        root.commands.handleFileRemove(fileId)
+        controller.commands.handleFileRemove(fileId)
         dragDropHandle.controller.recompute()
     }
     function handleRemoveAll() {
-        root.commands.handleRemoveAll()
+        controller.commands.handleRemoveAll()
         dragDropHandle.controller.recompute()
     }
 
-    // ── 10. Props assembly (from root.resolved + vanilla-only fields) ──
-    const { resolved } = root
+    // ── 10. Props assembly (from controller.resolved + vanilla-only fields) ──
+    const { resolved } = controller
     const props: UploaderContextProps = {
         mini: resolved.mini,
         sources: resolved.sources,
@@ -250,8 +250,8 @@ export function buildUploaderContext(
     // ── 11. UploaderContext assembly ──
     const ctx: UploaderContext = {
         core,
-        orchestrator: root.orchestrator,
-        theme: root.theme,
+        orchestrator: controller.orchestrator,
+        theme: controller.theme,
         mode: resolved.mode,
         serverUrl: options.serverUrl,
         translations: resolved.translations,
@@ -261,35 +261,36 @@ export function buildUploaderContext(
         props,
         cloudDrives: resolved.cloudDrives,
         registerFileInput: el => {
-            root.registerFileInput(el)
+            controller.registerFileInput(el)
         },
-        getFileInput: () => root.getFileInput(),
+        getFileInput: () => controller.getFileInput(),
         openFilePicker: () => {
-            root.openFilePicker()
+            controller.openFilePicker()
         },
         setActiveSource,
         setIsAddingMore: v => {
-            root.commands.setIsAddingMore(v)
+            controller.commands.setIsAddingMore(v)
         },
         setViewMode: m => {
-            root.commands.setViewMode(m)
+            controller.commands.setViewMode(m)
         },
         setFiles,
         handleFileRemove,
         handleRemoveAll,
-        startUpload: () => root.commands.startUpload(),
-        retryUpload: (fileId?: string) => root.commands.retryUpload(fileId),
+        startUpload: () => controller.commands.startUpload(),
+        retryUpload: (fileId?: string) =>
+            controller.commands.retryUpload(fileId),
         handleDone: () => {
-            root.commands.handleDone()
+            controller.commands.handleDone()
         },
         handleCancel: () => {
-            root.commands.handleCancel()
+            controller.commands.handleCancel()
         },
         handlePause: () => {
-            root.commands.handlePause()
+            controller.commands.handlePause()
         },
         handleResume: () => {
-            root.commands.handleResume()
+            controller.commands.handleResume()
         },
         controllers,
         invalidate,
@@ -301,7 +302,7 @@ export function buildUploaderContext(
         ctx,
         subscribeAll(onChange: () => void) {
             const subs = [
-                root.subscribe(onChange),
+                controller.subscribe(onChange),
                 dragDropHandle.controller.subscribe(onChange),
             ]
             return () => {
@@ -311,7 +312,7 @@ export function buildUploaderContext(
             }
         },
         init() {
-            root.init()
+            controller.init()
             fileInputHandle.init()
             dragDropHandle.init()
         },
@@ -319,7 +320,7 @@ export function buildUploaderContext(
             if (destroyed) return
             destroyed = true
             controllers.destroyAll()
-            root.destroy()
+            controller.destroy()
             unsubs.forEach(u => {
                 u()
             })

@@ -12,7 +12,6 @@
  *   - disableDragDrop suppresses drag handlers (handleSetSelectedFiles NOT called, isDragging stays false)
  *   - active adapter suppresses drag action
  *   - handlePaste with clipboard files calls handleSetSelectedFiles + emits 'paste'
- *   - onKeyDown Enter → openFilePicker called
  */
 import { describe, it, expect, afterEach, vi } from 'vitest'
 import { TestBed } from '@angular/core/testing'
@@ -304,36 +303,5 @@ describe('UploaderPanelComponent', () => {
         expect(handleSetSpy).toHaveBeenCalled()
         const passed = handleSetSpy.mock.calls[0]![0] as File[]
         expect(passed[0]!.name).toMatch(/^pasted-\d+\.png$/)
-    })
-
-    // ── Keyboard ────────────────────────────────────────────────────────────
-
-    it('onKeyDown Enter calls openFilePicker', async () => {
-        store = makeStore()
-        const fixture = await setup(store)
-        const comp = fixture.componentInstance
-
-        const openSpy = vi.spyOn(store, 'openFilePicker')
-        const keyEvent = new KeyboardEvent('keydown', { key: 'Enter' })
-        // Spy on preventDefault
-        const preventSpy = vi.spyOn(keyEvent, 'preventDefault')
-
-        comp.onKeyDown(keyEvent)
-
-        expect(preventSpy).toHaveBeenCalled()
-        expect(openSpy).toHaveBeenCalled()
-    })
-
-    it('onKeyDown Space calls openFilePicker', async () => {
-        store = makeStore()
-        const fixture = await setup(store)
-        const comp = fixture.componentInstance
-
-        const openSpy = vi.spyOn(store, 'openFilePicker')
-        const keyEvent = new KeyboardEvent('keydown', { key: ' ' })
-
-        comp.onKeyDown(keyEvent)
-
-        expect(openSpy).toHaveBeenCalled()
     })
 })

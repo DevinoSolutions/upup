@@ -84,7 +84,7 @@ const SERVER_SNAPSHOT: OrchestratorState = {
 }
 
 /** Shape a resolved theme into the ThemeStoreState snapshot (mirrors ThemeStore.compute()).
- *  Pure — used for the pre-mount / SSR fallback when `root` (hence root.theme) is not yet created. */
+ *  Pure — used for the pre-mount / SSR fallback when `controller` (hence controller.theme) is not yet created. */
 function themeStateFromResolved(
     resolved: ThemeStoreState['resolved'],
 ): ThemeStoreState {
@@ -225,7 +225,7 @@ export default function useUploaderController(
             resumable,
             i18n,
             onBeforeFileAdded,
-            // Callbacks: set to current stable refs; updated live via root.updateCallbacks() each render
+            // Callbacks: set to current stable refs; updated live via controller.updateCallbacks() each render
             onError: errorHandler,
             onWarn: warningHandler,
             onUploadStart,
@@ -272,10 +272,10 @@ export default function useUploaderController(
     const connectSSERef = useRef(connectSSE)
     connectSSERef.current = connectSSE
 
-    // ── Root controller (created once, guarded ref) ──────────────
-    const rootRef = useRef<UploaderController | null>(null)
-    if (!rootRef.current && core) {
-        rootRef.current = createUploaderController(
+    // ── Uploader controller (created once, guarded ref) ──────────────
+    const controllerRef = useRef<UploaderController | null>(null)
+    if (!controllerRef.current && core) {
+        controllerRef.current = createUploaderController(
             { core, options: factoryOptions, normalized },
             {
                 connectSSE: file => {
@@ -284,12 +284,12 @@ export default function useUploaderController(
             },
         )
     }
-    const root = rootRef.current
+    const controller = controllerRef.current
 
     // Refresh proxied callbacks every render (replaces old callbackRefs.current overwrite).
     // Must call before any render-path reads from the proxy.
-    if (root) {
-        root.updateCallbacks({
+    if (controller) {
+        controller.updateCallbacks({
             onError,
             onWarn,
             onUploadStart,
@@ -313,8 +313,8 @@ export default function useUploaderController(
     // ── Subscribe to orchestrator state (React 18 useSyncExternalStore) ──
     const getServerSnapshot = useCallback(() => SERVER_SNAPSHOT, [])
     const state = useSyncExternalStore(
-        root?.orchestrator.subscribe ?? (() => () => {}),
-        root?.orchestrator.getSnapshot ?? (() => SERVER_SNAPSHOT),
+        controller?.orchestrator.subscribe ?? (() => () => {}),
+        controller?.orchestrator.getSnapshot ?? (() => SERVER_SNAPSHOT),
         getServerSnapshot,
     )
 
@@ -324,7 +324,7 @@ export default function useUploaderController(
     // ThemeStoreState fields (themeMode, isDark, tokens, resolved, slotOverrides, slots)
     // map 1:1 to ContextTheme — no field renaming needed.
     //
-    // First-paint parity: on the very first render `root` is null (core is created in
+    // First-paint parity: on the very first render `controller` is null (core is created in
     // useUpupUpload's post-paint effect), so the store/server snapshot is used. It must
     // resolve the EXPLICIT mode synchronously to match the OLD synchronous resolveTheme:
     //   - mode 'dark'   → dark on first paint (no light→dark flash)
@@ -350,8 +350,8 @@ export default function useUploaderController(
         [themeFallback],
     )
     const themeState = useSyncExternalStore(
-        root?.theme.subscribe ?? (() => () => {}),
-        root?.theme.getSnapshot ?? (() => themeFallback),
+        controller?.theme.subscribe ?? (() => () => {}),
+        controller?.theme.getSnapshot ?? (() => themeFallback),
         getThemeServerSnapshot,
     )
 
@@ -369,11 +369,11 @@ export default function useUploaderController(
     // So after StrictMode init→destroy→init on the same core, cloud plugins could be dead.
     // This is NOT a regression — the original React adapter had the same behavior.
     useEffect(() => {
-        root?.init()
+        controller?.init()
         return () => {
-            root?.destroy()
+            controller?.destroy()
         }
-    }, [root])
+    }, [controller])
 
     // ── Input ref (React-specific) ──────────────────────────────
     const inputRef = useRef<HTMLInputElement>(null)
@@ -384,86 +384,86 @@ export default function useUploaderController(
     // ── Commands (delegate to factory commands) ──────────────────
     const handleSetSelectedFiles = useCallback(
         (newFiles: File[]) => {
-            void root?.commands.handleSetSelectedFiles(newFiles)
+            void controller?.commands.handleSetSelectedFiles(newFiles)
         },
-        [root],
+        [controller],
     )
 
     const handleFileRemove = useCallback(
         (fileId: string) => {
-            root?.commands.handleFileRemove(fileId)
+            controller?.commands.handleFileRemove(fileId)
         },
-        [root],
+        [controller],
     )
 
     const uploadFiles = useCallback(
         async (newFiles: File[] | UploadFile[]) => {
-            return root?.commands.uploadFiles(newFiles)
+            return controller?.commands.uploadFiles(newFiles)
         },
-        [root],
+        [controller],
     )
 
     const replaceFiles = useCallback(
         (newFiles: File[] | UploadFile[]) => {
-            root?.commands.replaceFiles(newFiles)
+            controller?.commands.replaceFiles(newFiles)
         },
-        [root],
+        [controller],
     )
 
     const startUpload = useCallback(async () => {
-        return root?.commands.startUpload()
-    }, [root])
+        return controller?.commands.startUpload()
+    }, [controller])
 
     const retryUpload = useCallback(
         async (fileId?: string) => {
-            return root?.commands.retryUpload(fileId)
+            return controller?.commands.retryUpload(fileId)
         },
-        [root],
+        [controller],
     )
 
     const handleCancel = useCallback(() => {
-        root?.commands.handleCancel()
-    }, [root])
+        controller?.commands.handleCancel()
+    }, [controller])
 
     const handlePause = useCallback(() => {
-        root?.commands.handlePause()
-    }, [root])
+        controller?.commands.handlePause()
+    }, [controller])
 
     const handleResume = useCallback(() => {
-        root?.commands.handleResume()
-    }, [root])
+        controller?.commands.handleResume()
+    }, [controller])
 
     const handleDone = useCallback(() => {
-        root?.commands.handleDone()
-    }, [root])
+        controller?.commands.handleDone()
+    }, [controller])
 
     const resetState = useCallback(() => {
-        root?.commands.resetState()
-    }, [root])
+        controller?.commands.resetState()
+    }, [controller])
 
     const openImageEditor = useCallback(
         (file: UploadFile) => {
-            root?.commands.openImageEditor(file)
+            controller?.commands.openImageEditor(file)
         },
-        [root],
+        [controller],
     )
 
     const closeImageEditor = useCallback(() => {
-        root?.commands.closeImageEditor()
-    }, [root])
+        controller?.commands.closeImageEditor()
+    }, [controller])
 
     const saveImageEdit = useCallback(
         (editedImageData: string, mimeType?: string) => {
-            root?.commands.saveImageEdit(editedImageData, mimeType)
+            controller?.commands.saveImageEdit(editedImageData, mimeType)
         },
-        [root],
+        [controller],
     )
 
     const replaceFile = useCallback(
         (fileId: string, newFile: UploadFile) => {
-            root?.commands.replaceFile(fileId, newFile)
+            controller?.commands.replaceFile(fileId, newFile)
         },
-        [root],
+        [controller],
     )
 
     // ── Dispatch<SetStateAction> setters (preserve functional-update branch) ──
@@ -471,40 +471,46 @@ export default function useUploaderController(
         useCallback(
             (value: SetStateAction<FileSource | undefined>) => {
                 if (typeof value === 'function') {
-                    root?.commands.setActiveSource(
-                        value(root.orchestrator.getSnapshot().activeSource),
+                    controller?.commands.setActiveSource(
+                        value(
+                            controller.orchestrator.getSnapshot().activeSource,
+                        ),
                     )
                 } else {
-                    root?.commands.setActiveSource(value)
+                    controller?.commands.setActiveSource(value)
                 }
             },
-            [root],
+            [controller],
         )
     const setIsAddingMore: Dispatch<SetStateAction<boolean>> = useCallback(
         (value: SetStateAction<boolean>) => {
             if (typeof value === 'function') {
-                root?.commands.setIsAddingMore(
+                controller?.commands.setIsAddingMore(
                     value(
-                        root.orchestrator.getSnapshot().isAddingMore ?? false,
+                        controller.orchestrator.getSnapshot().isAddingMore ??
+                            false,
                     ),
                 )
             } else {
-                root?.commands.setIsAddingMore(value)
+                controller?.commands.setIsAddingMore(value)
             }
         },
-        [root],
+        [controller],
     )
     const setViewMode: Dispatch<SetStateAction<'grid' | 'list'>> = useCallback(
         (value: SetStateAction<'grid' | 'list'>) => {
             if (typeof value === 'function') {
-                root?.commands.setViewMode(
-                    value(root.orchestrator.getSnapshot().viewMode ?? 'grid'),
+                controller?.commands.setViewMode(
+                    value(
+                        controller.orchestrator.getSnapshot().viewMode ??
+                            'grid',
+                    ),
                 )
             } else {
-                root?.commands.setViewMode(value)
+                controller?.commands.setViewMode(value)
             }
         },
-        [root],
+        [controller],
     )
 
     // ── Icons resolution (React-specific) ───────────────────────
@@ -537,7 +543,7 @@ export default function useUploaderController(
     // themeState fields match ContextTheme 1:1 (ThemeStoreState ≡ ContextTheme shape)
     return {
         core,
-        orchestrator: root?.orchestrator ?? null,
+        orchestrator: controller?.orchestrator ?? null,
         mode: resolved.mode,
         serverUrl: resolved.serverUrl,
         inputRef,
