@@ -442,11 +442,6 @@ export function fileList(
                       </div>`
             }
         </div>
-        ${progressBar(ctx, {
-            progress: ctx.core.progress.percentage,
-            showValue: true,
-            class: 'upup-px-3',
-        })}
         ${footer}
     </div>`
 }
