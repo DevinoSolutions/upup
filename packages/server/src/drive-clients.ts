@@ -64,9 +64,10 @@ async function driveFetch(
 ): Promise<Response> {
     const res = await fetch(url, init)
     if (res.status === 401) {
-        const err = new Error('Drive API 401') as Error & { status: number }
-        err.status = 401
-        throw err
+        // Typed 401 sentinel: UpupNetworkError already carries `.status`, so the
+        // reauth branch in drive-routes can `instanceof`-check it instead of
+        // duck-typing an ad-hoc untyped property (F-747).
+        throw new UpupNetworkError('Drive API 401', 401)
     }
     if (!res.ok) {
         const text = await res.text().catch(() => '')

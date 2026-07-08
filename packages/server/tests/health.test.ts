@@ -17,6 +17,13 @@ type HealthBody = {
     status: string
     checks: { config: string; storage: string }
     uploadTokenFingerprint?: string
+    summary?: {
+        storageType: string
+        anonymousUploads: boolean
+        anonymousDrives: boolean
+        driveProviders: number
+        uploadTokenTtlSeconds: number
+    }
 }
 
 const baseConfig: UpupServerConfig = {
@@ -102,5 +109,45 @@ describe('handleHealth', () => {
         await handleHealth(baseConfig, responder())
         await handleHealth(baseConfig, responder())
         expect(checkStorageReachable).toHaveBeenCalledTimes(1)
+    })
+
+    it('includes a non-secret operational summary (storage type, anon flags, drive count, token TTL)', async () => {
+        vi.mocked(checkStorageReachable).mockResolvedValue({ ok: true })
+        const cfg: UpupServerConfig = {
+            ...baseConfig,
+            allowAnonymousUploads: true,
+            providers: {
+                googleDrive: { clientId: 'g', clientSecret: 'gs' },
+                dropbox: { appKey: 'd', appSecret: 'ds' },
+            },
+        }
+        const res = await handleHealth(cfg, responder(cfg))
+        const body = (await res.json()) as HealthBody
+        expect(body.summary).toMatchObject({
+            storageType: 'aws',
+            anonymousUploads: true,
+            anonymousDrives: false,
+            driveProviders: 2,
+        })
+        expect(typeof body.summary!.uploadTokenTtlSeconds).toBe('number')
+        // The summary must never carry a secret VALUE.
+        const serialized = JSON.stringify(body.summary)
+        expect(serialized).not.toContain('health-test-secret-0123456789ab')
+    })
+
+    it('propagates the request id into the storage-error event (F-742)', async () => {
+        const onError = vi.fn()
+        vi.mocked(checkStorageReachable).mockResolvedValue({
+            ok: false,
+            error: new Error('bucket not found'),
+        })
+        const r = responder({ ...baseConfig, onError })
+        await handleHealth({ ...baseConfig, onError }, r)
+        expect(onError).toHaveBeenCalledTimes(1)
+        expect(onError.mock.calls[0]![0]).toMatchObject({
+            route: 'health',
+            code: 'STORAGE_ERROR',
+            requestId: r.requestId,
+        })
     })
 })

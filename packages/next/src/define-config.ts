@@ -1,65 +1,16 @@
 import type { UpupServerConfig } from '@upup/server'
 
-function isNonEmpty(v: unknown): v is string {
-    return typeof v === 'string' && v.trim().length > 0
-}
-
 /**
- * Validate a server config at startup and return it unchanged. Throws ONE error
- * listing every missing required field, so a forgotten env var fails fast and
- * loud instead of surfacing as a confusing 500 at request time.
+ * Typed helper for authoring a server config with full editor autocomplete and
+ * type-checking. Returns the config unchanged — a thin pass-through.
+ *
+ * Required-field validation is intentionally NOT performed here (F-852): it
+ * lives at construct time inside @upup/server's `createUpupHandler`, so it runs
+ * for EVERY caller — including apps that call `createUpupNextHandler({...})`
+ * directly without this wrapper (playground/landing did exactly that). A
+ * `defineUpupConfig` that validated on its own left those direct callers
+ * unprotected, which was the original bug this fold-in closes.
  */
 export function defineUpupConfig(config: UpupServerConfig): UpupServerConfig {
-    const missing: string[] = []
-
-    // Runtime guard: callers may pass partial/invalid objects at boot time
-    if (!(config as Partial<UpupServerConfig>).storage) {
-        missing.push('storage')
-    } else {
-        if (!isNonEmpty(config.storage.bucket)) missing.push('storage.bucket')
-        if (!isNonEmpty(config.storage.region)) missing.push('storage.region')
-        // Both-or-neither: undefined creds are OK (IAM role), but a half-set pair
-        // (the classic `process.env.X!` -> "" bug) must fail loudly.
-        const hasId = config.storage.accessKeyId !== undefined
-        const hasSecret = config.storage.secretAccessKey !== undefined
-        if (hasId || hasSecret) {
-            if (!isNonEmpty(config.storage.accessKeyId))
-                missing.push('storage.accessKeyId')
-            if (!isNonEmpty(config.storage.secretAccessKey))
-                missing.push('storage.secretAccessKey')
-        }
-    }
-
-    const p = config.providers
-    if (p?.googleDrive) {
-        if (!isNonEmpty(p.googleDrive.clientId))
-            missing.push('providers.googleDrive.clientId')
-        if (!isNonEmpty(p.googleDrive.clientSecret))
-            missing.push('providers.googleDrive.clientSecret')
-    }
-    if (p?.dropbox) {
-        if (!isNonEmpty(p.dropbox.appKey))
-            missing.push('providers.dropbox.appKey')
-        if (!isNonEmpty(p.dropbox.appSecret))
-            missing.push('providers.dropbox.appSecret')
-    }
-    if (p?.oneDrive) {
-        if (!isNonEmpty(p.oneDrive.clientId))
-            missing.push('providers.oneDrive.clientId')
-        if (!isNonEmpty(p.oneDrive.clientSecret))
-            missing.push('providers.oneDrive.clientSecret')
-    }
-    if (p?.box) {
-        if (!isNonEmpty(p.box.clientId)) missing.push('providers.box.clientId')
-        if (!isNonEmpty(p.box.clientSecret))
-            missing.push('providers.box.clientSecret')
-    }
-
-    if (missing.length > 0) {
-        throw new Error(
-            '[@upup/next] Invalid upup config — missing/empty required field(s):\n' +
-                missing.map(m => `  - ${m}`).join('\n'),
-        )
-    }
     return config
 }

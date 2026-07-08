@@ -1064,3 +1064,137 @@ describe('handler — upload-token replay (F-107)', () => {
         expect(third.status).toBe(200)
     })
 })
+
+// ─────────────────────────────────────────────
+// F-740: malformed JSON on the multipart continuation routes is a client
+// error (400 BAD_REQUEST), never a 500 STORAGE_ERROR reported to onError.
+// ─────────────────────────────────────────────
+describe('handler — malformed JSON on continuation routes → 400 (F-740)', () => {
+    for (const route of [
+        'multipart/sign-part',
+        'multipart/complete',
+        'multipart/abort',
+    ]) {
+        it(`${route} rejects malformed JSON with 400 BAD_REQUEST (not 500), and does not fire onError`, async () => {
+            const onError = vi.fn()
+            const handler = createUpupHandler({ ...config, onError })
+            const res = await handler(
+                new Request(`http://localhost/${route}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: '{not valid json',
+                }),
+            )
+            const body = (await res.json()) as ResBody
+            expect(res.status).toBe(400)
+            expect(body.code).toBe('BAD_REQUEST')
+            // A client parse error must not pollute the operator's error sink.
+            expect(onError).not.toHaveBeenCalled()
+        })
+    }
+})
+
+// ─────────────────────────────────────────────
+// F-745: a throwing post-completion hook must NOT turn a durably-completed
+// upload into a 500 — it is logged and the success response still returns.
+// ─────────────────────────────────────────────
+describe('handler — post-completion hook throw does not fail a completed upload (F-745)', () => {
+    it('multipart/complete returns 200 (not 500) and logs when onFileUploaded throws', async () => {
+        const onError = vi.fn()
+        const handler = createUpupHandler({
+            ...config,
+            onError,
+            hooks: {
+                onFileUploaded: async () => {
+                    throw new Error('integrator hook boom')
+                },
+            },
+        })
+
+        const init = (await (
+            await handler(
+                new Request('http://localhost/multipart/init', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: 'big.zip',
+                        size: 50 * 1024 * 1024,
+                        type: 'application/zip',
+                    }),
+                }),
+            )
+        ).json()) as ResBody
+
+        const res = await handler(
+            new Request('http://localhost/multipart/complete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    token: init.token,
+                    parts: [{ partNumber: 1, eTag: '"etag1"' }],
+                }),
+            }),
+        )
+
+        // The object is durably in S3; a throwing hook must not re-code it as 500.
+        expect(res.status).toBe(200)
+        expect(onError).toHaveBeenCalledTimes(1)
+        expect(onError.mock.calls[0]![0]).toMatchObject({
+            route: 'multipart/complete',
+            status: 200,
+        })
+    })
+})
+
+// ─────────────────────────────────────────────
+// F-852: construct-time config validation runs for every createUpupHandler
+// caller (folded out of @upup/next's opt-in defineUpupConfig).
+// ─────────────────────────────────────────────
+describe('handler — construct-time config validation (F-852)', () => {
+    const secret = 'construct-validation-secret-0123456789'
+
+    it('throws listing empty bucket/region', () => {
+        expect(() =>
+            createUpupHandler({
+                storage: { type: 'aws', bucket: '', region: '' },
+                uploadTokenSecret: secret,
+            }),
+        ).toThrow(/storage\.bucket/)
+    })
+
+    it('throws on a half-set credential pair', () => {
+        expect(() =>
+            createUpupHandler({
+                storage: {
+                    type: 'aws',
+                    bucket: 'b',
+                    region: 'r',
+                    accessKeyId: 'id',
+                    secretAccessKey: '',
+                },
+                uploadTokenSecret: secret,
+            }),
+        ).toThrow(/storage\.secretAccessKey/)
+    })
+
+    it('throws on a configured provider missing creds (before the getUserId guard)', () => {
+        expect(() =>
+            createUpupHandler({
+                storage: { type: 'aws', bucket: 'b', region: 'r' },
+                uploadTokenSecret: secret,
+                providers: {
+                    googleDrive: { clientId: 'id', clientSecret: '' },
+                },
+            }),
+        ).toThrow(/providers\.googleDrive\.clientSecret/)
+    })
+
+    it('accepts a complete config', () => {
+        expect(() =>
+            createUpupHandler({
+                storage: { type: 'aws', bucket: 'b', region: 'r' },
+                uploadTokenSecret: secret,
+            }),
+        ).not.toThrow()
+    })
+})

@@ -55,26 +55,48 @@ describe('observability — toSafeError', () => {
     })
 })
 
-describe('observability — redaction', () => {
-    it('a bad_signature event never contains the token literal or the secret', () => {
-        const token = 'eyJhbGciOiJIUzI1NiJ9.some-forged-body.some-forged-sig'
-        const secret = 'super-secret-hmac-key-do-not-leak-0123456789'
-        const err = new Error('Upload token signature is invalid')
-
-        // This mirrors exactly what handler.ts's verifyTokenOrRespond constructs —
-        // built ONLY from route/method/status/code/message/error.name/message/stack.
-        const event: UpupServerErrorEvent = {
-            route: 'multipart/sign-part',
+describe('observability — redaction (F-746)', () => {
+    it('scrubs Authorization/bearer/AKIA/X-Amz-Signature from a reported error via the public seam', () => {
+        const logged: UpupServerErrorEvent[] = []
+        const token = 'eyJhbGciOiJIUzI1NiJ9.forged-body.forged-sig'
+        // A poisoned error whose message accidentally interpolated secrets. The
+        // OLD test hand-built a clean event and asserted an invented token was
+        // absent — a tautology. This drives the real seam (reportServerError
+        // with toSafeError, exactly how every route builds its event), so the
+        // scrubbing is what makes the assertion pass, not the token never being
+        // present in the first place.
+        const poisoned = new Error(
+            `Request failed: Authorization: Bearer ${token} ` +
+                'X-Amz-Signature=deadbeefcafefeed AKIA1234567890ABCDEF',
+        )
+        reportServerError(e => logged.push(e), {
+            route: 'files/google-drive/transfer',
             method: 'POST',
-            status: 403,
-            code: 'bad_signature',
-            message: 'Invalid upload token',
-            requestId: 'req-123',
-            error: toSafeError(err),
-        }
-
-        const serialized = JSON.stringify(event)
+            status: 500,
+            code: 'STORAGE_ERROR',
+            message: 'Drive request failed',
+            requestId: 'req-1',
+            error: toSafeError(poisoned),
+        })
+        const serialized = JSON.stringify(logged[0])
         expect(serialized).not.toContain(token)
-        expect(serialized).not.toContain(secret)
+        expect(serialized).not.toContain('deadbeefcafefeed')
+        expect(serialized).not.toContain('AKIA1234567890ABCDEF')
+        // Proof the scrubber actually ran (not merely an absent secret).
+        expect(serialized).toContain('[REDACTED')
+    })
+
+    it('leaves an ordinary message + stack intact (conservative — no over-redaction)', () => {
+        const logged: UpupServerErrorEvent[] = []
+        reportServerError(e => logged.push(e), {
+            route: 'presign',
+            method: 'POST',
+            status: 500,
+            code: 'PRESIGN_FAILED',
+            message: 'Presign failed',
+            error: toSafeError(new Error('boom')),
+        })
+        expect(logged[0]!.message).toBe('Presign failed')
+        expect(logged[0]!.error?.message).toBe('boom')
     })
 })

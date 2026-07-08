@@ -6,11 +6,12 @@
 // to ./drive-clients. Extracted verbatim from handler.ts. The dynamic
 // `import('./transfer')` keeps its path (same src/ dir). No behavior change.
 
-import { UpupErrorCode } from '@upup/core'
+import { UpupErrorCode, UpupNetworkError } from '@upup/core'
 import type { UpupServerConfig } from './config'
 import { getTokens, deleteTokens, resolveUserId } from './tokenStore'
 import { isValidProvider, refreshAccessToken } from './oauth'
 import { getDriveClient } from './drive-clients'
+import { matchesAllowedType, runPostCompletionHooks } from './upload-routes'
 import { type Responder } from './respond'
 
 export async function handleListFiles(
@@ -60,7 +61,7 @@ export async function handleListFiles(
         )
         return res.json({ provider, files }, 200)
     } catch (err) {
-        if ((err as { status?: number }).status === 401) {
+        if (err instanceof UpupNetworkError && err.status === 401) {
             await deleteTokens(config.tokenStore, userId, provider)
             return res.json({ reauth: true, provider }, 401)
         }
@@ -124,6 +125,9 @@ export async function handleFileTransfer(
     }
     if (!body.fileId) return res.json({ error: 'Missing fileId' }, 400)
 
+    // Fast client-declared-size reject (cheap early-out before we open the
+    // drive stream); the AUTHORITATIVE cap is enforced against actual streamed
+    // bytes inside transferDriveFileToS3 via `maxBytes` below (F-743).
     if (
         config.maxFileSize &&
         typeof body.size === 'number' &&
@@ -131,11 +135,10 @@ export async function handleFileTransfer(
     ) {
         return res.json({ error: 'File too large' }, 413)
     }
-    if (
-        config.allowedTypes?.length &&
-        body.mimeType &&
-        !config.allowedTypes.includes(body.mimeType)
-    ) {
+    // One shared allowed-types policy with the upload path (F-743): honour the
+    // `image/*` wildcard, and treat an ABSENT mimeType as a non-match against a
+    // non-empty allowlist (`?? ''`) rather than silently bypassing the check.
+    if (!matchesAllowedType(body.mimeType ?? '', config.allowedTypes)) {
         return res.json({ error: 'File type not allowed' }, 415)
     }
 
@@ -150,13 +153,29 @@ export async function handleFileTransfer(
             fileName,
             mimeType,
             storage: config.storage,
+            // Enforce maxFileSize against the ACTUAL streamed bytes, and route
+            // an abort-cleanup failure through onError instead of swallowing it
+            // (F-743 / F-744).
+            maxBytes: config.maxFileSize,
+            onError: config.onError,
+            requestId: res.requestId,
         })
-        if (config.hooks?.onFileUploaded) {
-            await config.hooks.onFileUploaded(result, req)
-        }
+        // Post-commit: object durably in S3. A throwing onFileUploaded hook is
+        // logged + swallowed by runPostCompletionHooks, never bubbling to the
+        // catch below as a 500 (F-745).
+        await runPostCompletionHooks(
+            config,
+            res,
+            `files/${provider}/transfer`,
+            req.method,
+            async () => {
+                if (config.hooks?.onFileUploaded)
+                    await config.hooks.onFileUploaded(result, req)
+            },
+        )
         return res.json({ provider, ...result }, 200)
     } catch (err) {
-        if ((err as { status?: number }).status === 401) {
+        if (err instanceof UpupNetworkError && err.status === 401) {
             await deleteTokens(config.tokenStore, userId, provider)
             return res.json({ reauth: true, provider }, 401)
         }

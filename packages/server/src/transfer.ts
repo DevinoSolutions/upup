@@ -5,10 +5,15 @@ import {
     CompleteMultipartUploadCommand,
     AbortMultipartUploadCommand,
 } from '@aws-sdk/client-s3'
-import { UpupStorageError } from '@upup/core'
+import { UpupStorageError, UpupErrorCode } from '@upup/core'
 import type { UpupServerConfig, UploadedFile } from './config'
 import { createS3Client } from './providers/s3-client'
 import { MIN_PART_SIZE, generateSignedPublicUrl } from './providers/aws'
+import {
+    reportServerError,
+    toSafeError,
+    type UpupServerLogger,
+} from './observability'
 
 // Hard cap on buffered memory per transfer: files at or under this size are
 // singlePut (whole body buffered once); everything else streams through
@@ -24,6 +29,13 @@ export async function transferDriveFileToS3(opts: {
     fileName: string
     mimeType: string
     storage: UpupServerConfig['storage']
+    /** Authoritative cap enforced against the ACTUAL streamed bytes (not the
+     *  client/drive-declared size). Exceeding it aborts + rejects (F-743). */
+    maxBytes?: number | undefined
+    /** Observability sink so a failed compensating abort is reported, not
+     *  swallowed (F-744). */
+    onError?: UpupServerLogger | undefined
+    requestId?: string | undefined
 }): Promise<UploadedFile> {
     const key = `${crypto.randomUUID()}-${opts.fileName}`
 
@@ -40,8 +52,19 @@ async function singlePut(opts: {
     mimeType: string
     storage: UpupServerConfig['storage']
     key: string
+    maxBytes?: number | undefined
 }): Promise<UploadedFile> {
     const buffer = await streamToUint8Array(opts.stream)
+    // Enforce maxFileSize against the bytes we actually received before writing
+    // anything to S3 (F-743): the routing decision used a declared size the
+    // server never reconciled with the real payload.
+    if (opts.maxBytes !== undefined && buffer.byteLength > opts.maxBytes) {
+        throw new UpupStorageError(
+            `Drive file exceeds the configured maxFileSize (${buffer.byteLength} > ${opts.maxBytes} bytes)`,
+            opts.storage.type,
+            'upload',
+        )
+    }
     const client = createS3Client(opts.storage)
     await client.send(
         new PutObjectCommand({
@@ -68,6 +91,9 @@ async function streamingMultipart(opts: {
     mimeType: string
     storage: UpupServerConfig['storage']
     key: string
+    maxBytes?: number | undefined
+    onError?: UpupServerLogger | undefined
+    requestId?: string | undefined
 }): Promise<UploadedFile> {
     const client = createS3Client(opts.storage)
 
@@ -111,6 +137,16 @@ async function streamingMultipart(opts: {
             }
             parts.push({ PartNumber: partNumber, ETag: res.ETag })
             totalBytes += chunk.byteLength
+            // Enforce the cap against real egress; exceeding it throws into the
+            // catch below, which aborts the whole multipart upload so no partial
+            // object persists (F-743).
+            if (opts.maxBytes !== undefined && totalBytes > opts.maxBytes) {
+                throw new UpupStorageError(
+                    `Drive file exceeds the configured maxFileSize (${totalBytes} > ${opts.maxBytes} bytes)`,
+                    opts.storage.type,
+                    'upload',
+                )
+            }
             partNumber++
         }
 
@@ -131,15 +167,31 @@ async function streamingMultipart(opts: {
             }),
         )
     } catch (err) {
-        await client
-            .send(
+        try {
+            await client.send(
                 new AbortMultipartUploadCommand({
                     Bucket: opts.storage.bucket,
                     Key: opts.key,
                     UploadId: uploadId,
                 }),
             )
-            .catch(() => {})
+        } catch (abortErr) {
+            // upup-catch: the transfer already failed AND the compensating abort
+            // failed too, leaving an incomplete multipart upload lingering
+            // (billable until a lifecycle rule reaps it). REPORT it through the
+            // observability seam (F-744) — the old code swallowed it with a bare
+            // `.catch(() => {})` — then re-throw the ORIGINAL error below so the
+            // route still surfaces the real cause.
+            reportServerError(opts.onError, {
+                route: 'files/transfer',
+                method: 'POST',
+                status: 500,
+                code: UpupErrorCode.STORAGE_ERROR,
+                message: `Failed to abort multipart upload after a transfer error (uploadId=${uploadId}, key=${opts.key})`,
+                requestId: opts.requestId,
+                error: toSafeError(abortErr),
+            })
+        }
         throw err
     }
 

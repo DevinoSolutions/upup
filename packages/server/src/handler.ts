@@ -5,6 +5,7 @@ import {
 } from '@upup/core'
 import type { UpupServerConfig } from './config'
 import { assertUploadTokenSecret } from './uploadToken'
+import { validateServerConfig } from './validate-config'
 import { handleHealth } from './health'
 import { createResponder } from './respond'
 import {
@@ -24,6 +25,13 @@ export function createUpupHandler(config: UpupServerConfig): RouteHandler {
     // are always live and issue/verify tokens), and drive/tokenStore use requires
     // a real identity resolver unless anonymous is explicitly opted into.
     assertUploadTokenSecret(config.uploadTokenSecret)
+
+    // Fail-fast on missing/empty required fields (bucket/region, half-set creds,
+    // provider creds) so a forgotten env var throws HERE, not as a confusing 500
+    // at request time — and regardless of whether the app went through the opt-in
+    // defineUpupConfig wrapper (F-852). Runs before the storage.type check below
+    // so an entirely-missing `storage` is reported as such, not a TypeError.
+    validateServerConfig(config)
 
     // Fail-fast (F-657): storage.type accepted all 21 StorageProvider values, but
     // the S3 upload path (buildS3ClientConfig) is honored by none of them — it
@@ -51,6 +59,17 @@ export function createUpupHandler(config: UpupServerConfig): RouteHandler {
             '[@upup/server] drive providers / tokenStore require config.getUserId to ' +
                 'scope tokens per user. Set getUserId, or set allowAnonymous:true to ' +
                 'intentionally share ONE anonymous namespace (demos only).',
+        )
+    }
+
+    // Loud construct-time signal: anonymous uploads accept unauthenticated
+    // callers under a shared namespace. One line so a demo flag left on in
+    // production is impossible to miss in the boot logs.
+    if (config.allowAnonymousUploads) {
+        console.warn(
+            '[@upup/server] allowAnonymousUploads:true — /presign and /multipart/init ' +
+                'accept UNAUTHENTICATED uploads under a shared anonymous namespace. ' +
+                'Demos / upstream-auth deployments only; never enable in multi-tenant production.',
         )
     }
 

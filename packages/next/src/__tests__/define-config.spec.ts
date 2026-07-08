@@ -1,6 +1,9 @@
 import { describe, it, expect } from 'vitest'
 import { defineUpupConfig } from '../define-config'
+import { createUpupNextHandler } from '../server'
+import type { UpupServerConfig } from '@upup/server'
 
+const secret = 'x'.repeat(32)
 const validStorage = {
     type: 'aws',
     bucket: 'b',
@@ -9,60 +12,75 @@ const validStorage = {
     secretAccessKey: 'secret',
 }
 
-describe('defineUpupConfig', () => {
-    it('returns the same config object when valid', () => {
-        const cfg = { storage: validStorage }
+describe('defineUpupConfig — typed pass-through (F-852)', () => {
+    it('returns the same config object unchanged', () => {
+        const cfg = { storage: validStorage, uploadTokenSecret: secret }
         expect(defineUpupConfig(cfg)).toBe(cfg)
     })
 
-    it('allows storage with no creds (IAM role)', () => {
-        const cfg = { storage: { type: 'aws', bucket: 'b', region: 'r' } }
-        expect(() => defineUpupConfig(cfg)).not.toThrow()
+    it('no longer validates on its own — the guard moved to construct time', () => {
+        // A wrapper that validated by itself left direct createUpupNextHandler
+        // callers unprotected (the original F-852 bug). defineUpupConfig is now
+        // a typed pass-through; required-field validation lives in the handler.
+        const partial = {
+            storage: { type: 'aws', bucket: '', region: '' },
+        } as unknown as UpupServerConfig
+        expect(() => defineUpupConfig(partial)).not.toThrow()
+    })
+})
+
+describe('createUpupNextHandler — construct-time validation runs without the wrapper (F-852)', () => {
+    it('throws listing missing storage fields', () => {
+        expect(() =>
+            createUpupNextHandler({
+                storage: { type: 'aws', bucket: '', region: '' },
+                uploadTokenSecret: secret,
+            } as unknown as UpupServerConfig),
+        ).toThrow(/storage\.bucket/)
     })
 
-    it('throws listing every missing storage field', () => {
-        const cfg = { storage: { type: 'aws', bucket: '', region: '' } }
-        expect(() => defineUpupConfig(cfg)).toThrow(/storage\.bucket/)
-        expect(() => defineUpupConfig(cfg)).toThrow(/storage\.region/)
-    })
-
-    it('flags a half-set credential pair (the process.env.X! "" bug)', () => {
-        const cfg = {
-            storage: {
-                type: 'aws',
-                bucket: 'b',
-                region: 'r',
-                accessKeyId: 'id',
-                secretAccessKey: '',
-            },
-        }
-        expect(() => defineUpupConfig(cfg)).toThrow(/storage\.secretAccessKey/)
-    })
-
-    it('flags an absent secret when only accessKeyId is set', () => {
-        const cfg = {
-            storage: {
-                type: 'aws',
-                bucket: 'b',
-                region: 'r',
-                accessKeyId: 'id',
-            },
-        }
-        expect(() => defineUpupConfig(cfg)).toThrow(/storage\.secretAccessKey/)
+    it('throws on a half-set credential pair (the process.env.X! "" bug)', () => {
+        expect(() =>
+            createUpupNextHandler({
+                storage: {
+                    type: 'aws',
+                    bucket: 'b',
+                    region: 'r',
+                    accessKeyId: 'id',
+                    secretAccessKey: '',
+                },
+                uploadTokenSecret: secret,
+            } as unknown as UpupServerConfig),
+        ).toThrow(/storage\.secretAccessKey/)
     })
 
     it('requires provider creds only when that provider is configured', () => {
-        const cfg = {
-            storage: validStorage,
-            providers: { googleDrive: { clientId: 'id', clientSecret: '' } },
-        }
-        expect(() => defineUpupConfig(cfg)).toThrow(
-            /providers\.googleDrive\.clientSecret/,
-        )
+        expect(() =>
+            createUpupNextHandler({
+                storage: validStorage,
+                uploadTokenSecret: secret,
+                providers: {
+                    googleDrive: { clientId: 'id', clientSecret: '' },
+                },
+            } as unknown as UpupServerConfig),
+        ).toThrow(/providers\.googleDrive\.clientSecret/)
     })
 
-    it('does not require creds for providers that are absent', () => {
-        const cfg = { storage: validStorage, providers: {} }
-        expect(() => defineUpupConfig(cfg)).not.toThrow()
+    it('accepts a fully valid config (creds present)', () => {
+        expect(() =>
+            createUpupNextHandler({
+                storage: validStorage,
+                uploadTokenSecret: secret,
+            }),
+        ).not.toThrow()
+    })
+
+    it('accepts storage with no creds (IAM role)', () => {
+        expect(() =>
+            createUpupNextHandler({
+                storage: { type: 'aws', bucket: 'b', region: 'r' },
+                uploadTokenSecret: secret,
+            }),
+        ).not.toThrow()
     })
 })

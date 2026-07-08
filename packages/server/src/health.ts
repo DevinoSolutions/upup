@@ -11,7 +11,8 @@
 import type { UpupServerConfig } from './config'
 import type { Responder } from './respond'
 import { checkStorageReachable } from './providers/aws'
-import { reportServerError } from './observability'
+import { reportServerError, toSafeError } from './observability'
+import { DEFAULT_UPLOAD_TOKEN_TTL_SECONDS } from './uploadToken'
 
 type StorageCheckCache = { ok: true } | { ok: false } | undefined
 let cachedStorageCheck: StorageCheckCache
@@ -59,14 +60,8 @@ export async function handleHealth(
                 status: 200,
                 code: 'STORAGE_ERROR',
                 message: 'Health check: storage unreachable',
-                error:
-                    result.error instanceof Error
-                        ? {
-                              name: result.error.name,
-                              message: result.error.message,
-                              stack: result.error.stack,
-                          }
-                        : { name: 'NonError', message: String(result.error) },
+                requestId: res.requestId,
+                error: toSafeError(result.error),
             })
         }
         cachedStorageCheck = result.ok ? { ok: true } : { ok: false }
@@ -78,6 +73,20 @@ export async function handleHealth(
         checks: {
             config: configOk ? 'ok' : 'incomplete',
             storage: cachedStorageCheck.ok ? 'ok' : 'error',
+        },
+        // Non-secret operational summary — labels/flags/counts only, never any
+        // secret VALUE. Lets an operator eyeball how an instance is configured
+        // (which storage backend, whether anonymous access is open, how many
+        // drive providers are wired, the upload-token lifetime) from the same
+        // unauthenticated probe.
+        summary: {
+            storageType: config.storage.type,
+            anonymousUploads: Boolean(config.allowAnonymousUploads),
+            anonymousDrives: Boolean(config.allowAnonymous),
+            driveProviders: config.providers
+                ? Object.keys(config.providers).length
+                : 0,
+            uploadTokenTtlSeconds: DEFAULT_UPLOAD_TOKEN_TTL_SECONDS,
         },
     }
 

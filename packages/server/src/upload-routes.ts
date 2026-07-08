@@ -127,7 +127,15 @@ async function enforceTokenOwner(
     return null
 }
 
-function matchesAllowedType(type: string, allowedTypes?: string[]): boolean {
+/** The single allowed-types policy, shared by the presign/multipart path and
+ *  the drive-transfer path (F-743). No allowlist -> everything passes; an
+ *  `image/*` entry honours the wildcard; an absent/empty type does NOT match a
+ *  non-empty allowlist (callers pass `mimeType ?? ''` so a missing type is
+ *  rejected identically on both paths, never bypassed). */
+export function matchesAllowedType(
+    type: string,
+    allowedTypes?: string[],
+): boolean {
     if (!allowedTypes?.length) return true
     return allowedTypes.some(allowed => {
         if (allowed === type) return true
@@ -174,6 +182,41 @@ async function validateUploadMetadata(
     }
 
     return null
+}
+
+/** Run integrator post-completion hooks (onFileUploaded/onUploadComplete) AFTER
+ *  the object is durably written, in their OWN try so a throwing hook is logged
+ *  via onError and swallowed — never re-coded as a 500 that would tell the
+ *  client to retry an already-stored object (F-745). Shared by the multipart-
+ *  complete and drive-transfer completion paths so both behave identically. */
+export async function runPostCompletionHooks(
+    config: UpupServerConfig,
+    res: Responder,
+    route: string,
+    method: string,
+    run: () => Promise<void>,
+): Promise<void> {
+    if (!config.hooks) return
+    try {
+        await run()
+    } catch (error) {
+        // upup-catch: a post-completion hook failure is REPORTED (below) and
+        // deliberately swallowed — the upload already durably succeeded, so it
+        // must not propagate and re-code the committed write as a 500 (F-745).
+        reportServerError(config.onError, {
+            route,
+            method,
+            status: 200,
+            // No dedicated HOOK_ERROR code exists in @upup/core; the message
+            // carries the real meaning — the upload itself succeeded.
+            code: UpupErrorCode.STORAGE_ERROR,
+            message:
+                'Post-completion hook threw after a durably-completed upload; ' +
+                'the upload succeeded and the client was returned 200 (F-745).',
+            requestId: res.requestId,
+            error: toSafeError(error),
+        })
+    }
 }
 
 export async function handlePresign(
@@ -301,8 +344,10 @@ export async function handleMultipartSignPart(
     config: UpupServerConfig,
     res: Responder,
 ): Promise<Response> {
+    const parsed = await parseJsonBody(req, res)
+    if (!parsed.ok) return parsed.response
+    const body = parsed.value as { token: string; partNumber: number }
     try {
-        const body = (await req.json()) as { token: string; partNumber: number }
         const payload = await verifyTokenOrRespond(
             config,
             body.token,
@@ -344,11 +389,13 @@ export async function handleMultipartComplete(
     config: UpupServerConfig,
     res: Responder,
 ): Promise<Response> {
+    const parsed = await parseJsonBody(req, res)
+    if (!parsed.ok) return parsed.response
+    const body = parsed.value as {
+        token: string
+        parts: Array<{ partNumber: number; eTag: string }>
+    }
     try {
-        const body = (await req.json()) as {
-            token: string
-            parts: Array<{ partNumber: number; eTag: string }>
-        }
         const payload = await verifyTokenOrRespond(
             config,
             body.token,
@@ -399,10 +446,21 @@ export async function handleMultipartComplete(
             type: '', // not retained server-side on the multipart path
             url: result.downloadUrl ?? '',
         }
-        if (config.hooks?.onFileUploaded)
-            await config.hooks.onFileUploaded(uploaded, req)
-        if (config.hooks?.onUploadComplete)
-            await config.hooks.onUploadComplete([uploaded], req)
+
+        // Post-commit: the object is durably in S3. A throwing hook is logged +
+        // swallowed here, never bubbling to the catch below as a 500 (F-745).
+        await runPostCompletionHooks(
+            config,
+            res,
+            'multipart/complete',
+            req.method,
+            async () => {
+                if (config.hooks?.onFileUploaded)
+                    await config.hooks.onFileUploaded(uploaded, req)
+                if (config.hooks?.onUploadComplete)
+                    await config.hooks.onUploadComplete([uploaded], req)
+            },
+        )
 
         return res.json(result, 200)
     } catch (error) {
@@ -422,8 +480,10 @@ export async function handleMultipartAbort(
     config: UpupServerConfig,
     res: Responder,
 ): Promise<Response> {
+    const parsed = await parseJsonBody(req, res)
+    if (!parsed.ok) return parsed.response
+    const body = parsed.value as { token: string }
     try {
-        const body = (await req.json()) as { token: string }
         const payload = await verifyTokenOrRespond(
             config,
             body.token,

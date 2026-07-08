@@ -562,4 +562,60 @@ describe('POST /files/:provider/transfer', () => {
         )
         expect(res.status).toBe(415)
     })
+
+    it('rejects a transfer whose mimeType is ABSENT when allowedTypes is set (aligns with the upload path, F-743)', async () => {
+        const store = new InMemoryTokenStore()
+        await setTokens(store, DEFAULT_USER_ID, 'google-drive', {
+            accessToken: 'AT',
+        })
+        const handler = createUpupHandler({
+            ...baseConfig(store),
+            allowedTypes: ['image/*'],
+        })
+        const res = await handler(
+            new Request('http://localhost/files/google-drive/transfer', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ fileId: 'f1', size: 10 }),
+            }),
+        )
+        // Previously an absent mimeType short-circuited the `body.mimeType &&`
+        // guard and bypassed the allowlist entirely; now it is a non-match.
+        expect(res.status).toBe(415)
+    })
+
+    it('accepts a wildcard-matching mimeType (image/* accepts image/png) and reaches the drive call (F-743)', async () => {
+        const store = new InMemoryTokenStore()
+        await setTokens(store, DEFAULT_USER_ID, 'google-drive', {
+            accessToken: 'AT',
+        })
+        // Upstream 401 → the type gate must already have PASSED (image/png
+        // matches image/*, which the old exact Array.includes rejected), so we
+        // reach the drive fetch and get the reauth path — never a 415.
+        const fetchSpy = vi
+            .spyOn(globalThis, 'fetch')
+            .mockResolvedValue(new Response('', { status: 401 }))
+        try {
+            const handler = createUpupHandler({
+                ...baseConfig(store),
+                allowedTypes: ['image/*'],
+            })
+            const res = await handler(
+                new Request('http://localhost/files/google-drive/transfer', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        fileId: 'f1',
+                        size: 10,
+                        mimeType: 'image/png',
+                    }),
+                }),
+            )
+            expect(res.status).not.toBe(415)
+            expect(res.status).toBe(401)
+            expect(((await res.json()) as ResBody).reauth).toBe(true)
+        } finally {
+            fetchSpy.mockRestore()
+        }
+    })
 })
