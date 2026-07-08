@@ -44,6 +44,9 @@ export type UiTranslations = {
     pauseUpload: string
     paused: string
     uploadProgress: string
+    announceUploadStarted: string
+    announceUploadComplete: string
+    announceUploadFailed: string
     removeFile: string
     clickToPreview: string
     editImage: string
@@ -254,6 +257,9 @@ export function flattenTranslatorToUiTranslations(
         pauseUpload: tr('fileList.pauseUpload'),
         paused: tr('fileList.paused'),
         uploadProgress: tr('fileList.uploadProgress'),
+        announceUploadStarted: tr('fileList.announceUploadStarted'),
+        announceUploadComplete: tr('fileList.announceUploadComplete'),
+        announceUploadFailed: tr('fileList.announceUploadFailed'),
         removeFile: tr('filePreview.removeFile'),
         clickToPreview: tr('filePreview.clickToPreview'),
         editImage: tr('filePreview.editImage'),

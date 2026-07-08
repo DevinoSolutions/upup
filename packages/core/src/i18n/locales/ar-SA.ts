@@ -78,6 +78,9 @@ export const arSA: LocaleBundle = {
             retryUpload: 'Retry',
             paused: 'Paused',
             uploadProgress: 'Upload progress',
+            announceUploadStarted: 'بدأ الرفع',
+            announceUploadComplete: 'اكتمل الرفع',
+            announceUploadFailed: 'فشل الرفع',
         },
 
         filePreview: {

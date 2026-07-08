@@ -1,4 +1,5 @@
 import { html, nothing, type TemplateResult } from 'lit-html'
+import { UploadStatus } from '@upup/core'
 import { cn } from '../lib/cn'
 import type { UploaderContext } from '../lib/types'
 import { sourceView } from './source-view'
@@ -15,26 +16,21 @@ export function uploaderPanel(ctx: UploaderContext): TemplateResult {
     const isAddingMore = o.isAddingMore
     const isOnline = o.isOnline
 
-    const onKeyDown = (e: KeyboardEvent) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault()
-            const el = ctx.getFileInput()
-            if (el) {
-                el.removeAttribute('webkitdirectory')
-                el.removeAttribute('directory')
-            }
-            ctx.openFilePicker()
-        }
-    }
+    const uploadAnnouncement =
+        o.uploadStatus === UploadStatus.UPLOADING
+            ? tr.announceUploadStarted
+            : o.uploadStatus === UploadStatus.SUCCESSFUL
+              ? tr.announceUploadComplete
+              : o.uploadStatus === UploadStatus.FAILED
+                ? tr.announceUploadFailed
+                : ''
     return html`
         <div
             data-testid="upup-dropzone"
             data-upup-slot="uploader-panel"
-            role="button"
-            tabindex="0"
+            role="region"
             aria-label=${tr.dropzoneLabel}
             aria-dropeffect=${dd.isDragging ? 'copy' : 'none'}
-            @keydown=${onKeyDown}
             @dragover=${(e: DragEvent) => {
                 ctx.controllers.dragDrop.handleDragOver(e)
             }}
@@ -59,6 +55,9 @@ export function uploaderPanel(ctx: UploaderContext): TemplateResult {
                 },
             )}
         >
+            <div role="status" aria-live="polite" class="upup-sr-only">
+                ${uploadAnnouncement}
+            </div>
             ${
                 !isOnline
                     ? html`

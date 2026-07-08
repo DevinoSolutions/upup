@@ -53,6 +53,9 @@ export const zhTW: LocaleBundle = {
             retryUpload: 'Retry',
             paused: 'Paused',
             uploadProgress: 'Upload progress',
+            announceUploadStarted: '上傳已開始',
+            announceUploadComplete: '上傳已完成',
+            announceUploadFailed: '上傳失敗',
         },
         filePreview: {
             removeFile: '刪除檔案',

@@ -70,6 +70,9 @@ export const jaJP: LocaleBundle = {
             retryUpload: 'Retry',
             paused: 'Paused',
             uploadProgress: 'Upload progress',
+            announceUploadStarted: 'アップロードを開始しました',
+            announceUploadComplete: 'アップロードが完了しました',
+            announceUploadFailed: 'アップロードに失敗しました',
         },
 
         filePreview: {

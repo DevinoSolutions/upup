@@ -67,6 +67,9 @@ export const frFR: LocaleBundle = {
             retryUpload: 'Retry',
             paused: 'Paused',
             uploadProgress: 'Upload progress',
+            announceUploadStarted: 'Téléversement démarré',
+            announceUploadComplete: 'Téléversement terminé',
+            announceUploadFailed: 'Échec du téléversement',
         },
 
         filePreview: {

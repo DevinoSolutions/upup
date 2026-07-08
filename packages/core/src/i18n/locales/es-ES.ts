@@ -67,6 +67,9 @@ export const esES: LocaleBundle = {
             retryUpload: 'Retry',
             paused: 'Paused',
             uploadProgress: 'Upload progress',
+            announceUploadStarted: 'Subida iniciada',
+            announceUploadComplete: 'Subida completada',
+            announceUploadFailed: 'Error en la subida',
         },
 
         filePreview: {

@@ -92,10 +92,6 @@ function formatFileSize(bytes: number | undefined, tr: Translations) {
 function updateCanPreview(val: boolean) {
     emit('update:canPreview', val)
 }
-
-function onKeydown(e: KeyboardEvent) {
-    if (e.key === 'Enter' || e.key === ' ') emit('click')
-}
 </script>
 
 <template>
@@ -103,10 +99,6 @@ function onKeydown(e: KeyboardEvent) {
         :class="cn('upup-inline-block', themeSlots?.filePreview?.root)"
         data-testid="upup-file-preview"
         data-upup-slot="file-preview"
-        role="button"
-        :tabindex="0"
-        @click="emit('click')"
-        @keydown="onKeydown"
     >
         <div
             :class="cn(
@@ -120,6 +112,12 @@ function onKeydown(e: KeyboardEvent) {
             )"
             :style="isImage ? { backgroundImage: `url(${fileUrl})` } : undefined"
         >
+            <button
+                type="button"
+                :aria-label="fileName"
+                class="upup-absolute upup-inset-0 upup-z-0 upup-cursor-pointer"
+                @click="emit('click')"
+            ></button>
             <template v-if="!isImage">
                 <div class="upup-flex upup-h-full upup-items-center upup-justify-center upup-p-6">
                     <FilePreviewThumbnail

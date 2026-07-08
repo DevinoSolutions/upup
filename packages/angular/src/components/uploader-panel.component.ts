@@ -4,6 +4,7 @@ import {
     DragDropController,
     type DragDropSnapshot,
 } from '@upup/core/internal'
+import { UploadStatus } from '@upup/core'
 import { UpupStore } from '../upup-store.service'
 import { toSignalStore, type SignalStore } from '../lib/to-signal-store'
 import { SourceViewComponent } from './source-view.component'
@@ -29,17 +30,18 @@ import { FileListComponent } from './file-list.component'
         <div
             data-testid="upup-dropzone"
             data-upup-slot="uploader-panel"
-            role="button"
-            tabindex="0"
+            role="region"
             [attr.aria-label]="store.translations?.().dropzoneLabel"
             [attr.aria-dropeffect]="isDragging() ? 'copy' : 'none'"
-            (keydown)="onKeyDown($event)"
             (dragover)="handleDragOver($event)"
             (dragleave)="handleDragLeave($event)"
             (drop)="handleDrop($event)"
             (paste)="handlePaste($event)"
             [class]="boxClass()"
         >
+            <div role="status" aria-live="polite" class="upup-sr-only">
+                {{ uploadAnnouncement() }}
+            </div>
             @if (!store.isOnline?.()) {
                 <div [class]="offlineBannerClass()">
                     No internet connection — uploads will resume when you
@@ -125,6 +127,24 @@ export class UploaderPanelComponent implements OnInit, OnDestroy {
             { 'upup-bg-yellow-600': this.store.isDark() },
         ),
     )
+
+    // Polite SR announcement for upload-lifecycle transitions — a pure projection
+    // of uploadStatus (no new event plumbing). Rendered into the live region at the
+    // top of the panel; when the status flips, assistive tech announces the change.
+    readonly uploadAnnouncement = computed(() => {
+        const tr = this.store.translations?.()
+        if (!tr) return ''
+        switch (this.store.uploadStatus?.()) {
+            case UploadStatus.UPLOADING:
+                return tr.announceUploadStarted
+            case UploadStatus.SUCCESSFUL:
+                return tr.announceUploadComplete
+            case UploadStatus.FAILED:
+                return tr.announceUploadFailed
+            default:
+                return ''
+        }
+    })
 
     // ── Drag handlers — delegate to the shared @upup/core controller ──────────
     handleDragOver(e: DragEvent): void {

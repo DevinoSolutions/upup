@@ -88,6 +88,12 @@ export interface FileListMessages {
     retryUpload: string
     paused: string
     uploadProgress: string
+    /** SR live-region announcement when an upload begins */
+    announceUploadStarted: string
+    /** SR live-region announcement when an upload completes successfully */
+    announceUploadComplete: string
+    /** SR live-region announcement when an upload fails */
+    announceUploadFailed: string
 }
 
 export interface FilePreviewMessages {

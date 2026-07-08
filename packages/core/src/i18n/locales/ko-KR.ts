@@ -55,6 +55,9 @@ export const koKR: LocaleBundle = {
             retryUpload: 'Retry',
             paused: 'Paused',
             uploadProgress: 'Upload progress',
+            announceUploadStarted: '업로드 시작됨',
+            announceUploadComplete: '업로드 완료됨',
+            announceUploadFailed: '업로드 실패',
         },
         filePreview: {
             removeFile: '파일 삭제',

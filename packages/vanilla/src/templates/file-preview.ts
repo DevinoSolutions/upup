@@ -62,12 +62,6 @@ export function filePreview(
         class=${cn('upup-inline-block', themeSlots.filePreview?.root)}
         data-testid="upup-file-preview"
         data-upup-slot="file-preview"
-        role="button"
-        tabindex="0"
-        @click=${onFileClick}
-        @keydown=${(e: KeyboardEvent) => {
-            if (e.key === 'Enter' || e.key === ' ') onFileClick()
-        }}
     >
         <div
             class=${cn(
@@ -83,6 +77,12 @@ export function filePreview(
             )}
             style=${isImage ? `background-image: url(${fileUrl})` : ''}
         >
+            <button
+                type="button"
+                aria-label=${fileName}
+                class="upup-absolute upup-inset-0 upup-z-0 upup-cursor-pointer"
+                @click=${onFileClick}
+            ></button>
             ${
                 !isImage
                     ? html`

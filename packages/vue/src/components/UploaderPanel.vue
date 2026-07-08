@@ -5,10 +5,12 @@ import {
     useUploaderRuntime,
     useUploaderSource,
     useUploaderTheme,
+    useUploaderUploadControls,
     useUploaderView,
 } from '../context/uploader-context'
 import useUploaderPanel from '../composables/useUploaderPanel'
 import { cn } from '@upup/core/internal'
+import { UploadStatus } from '@upup/core'
 import SourceSelector from './SourceSelector.vue'
 import SourceView from './SourceView.vue'
 import FileList from './FileList.vue'
@@ -16,9 +18,12 @@ import FileList from './FileList.vue'
 const { files } = useUploaderFiles()
 const { activeSource } = useUploaderSource()
 const { isAddingMore } = useUploaderView()
-const { isOnline, inputRef, openFilePicker } = useUploaderRuntime()
+const { isOnline } = useUploaderRuntime()
 const { translations: tr } = useUploaderI18n()
 const { isDark: dark } = useUploaderTheme()
+const {
+    upload: { uploadStatus },
+} = useUploaderUploadControls()
 const {
     isDragging,
     absoluteIsDragging,
@@ -28,28 +33,15 @@ const {
     handleDrop,
     handlePaste,
 } = useUploaderPanel()
-
-function onKeyDown(e: KeyboardEvent) {
-    if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault()
-        if (inputRef.value) {
-            inputRef.value.removeAttribute('webkitdirectory')
-            inputRef.value.removeAttribute('directory')
-        }
-        openFilePicker()
-    }
-}
 </script>
 
 <template>
     <div
         data-testid="upup-dropzone"
         data-upup-slot="uploader-panel"
-        role="button"
-        :tabindex="0"
+        role="region"
         :aria-label="tr.dropzoneLabel"
         :aria-dropeffect="isDragging ? 'copy' : 'none'"
-        @keydown="onKeyDown"
         :class="
             cn(
                 'upup-relative upup-flex-1 upup-overflow-hidden upup-rounded-lg',
@@ -70,6 +62,17 @@ function onKeyDown(e: KeyboardEvent) {
         @drop="handleDrop"
         @paste="handlePaste"
     >
+        <div role="status" aria-live="polite" class="upup-sr-only">
+            {{
+                uploadStatus === UploadStatus.UPLOADING
+                    ? tr.announceUploadStarted
+                    : uploadStatus === UploadStatus.SUCCESSFUL
+                      ? tr.announceUploadComplete
+                      : uploadStatus === UploadStatus.FAILED
+                        ? tr.announceUploadFailed
+                        : ''
+            }}
+        </div>
         <template v-if="!isOnline">
             <div
                 :class="

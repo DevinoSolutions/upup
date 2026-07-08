@@ -46,12 +46,19 @@ import { FilePreviewThumbnailComponent } from './file-preview-thumbnail.componen
             [class]="rootClass"
             data-testid="upup-file-preview"
             data-upup-slot="file-preview"
-            role="button"
-            tabindex="0"
-            (click)="onclick.emit($event)"
-            (keydown)="onKeyDown($event)"
         >
             <div [class]="thumbnailWrapperClass" [style]="thumbnailBgStyle">
+                <!-- Whole-thumbnail click affordance: a real <button> that is a
+                     sibling of the edit/remove controls (never their ancestor), so
+                     no interactive element nests inside another (axe
+                     nested-interactive). Sits behind the action buttons
+                     (z-0 < z-10) and is transparent so the thumbnail shows through. -->
+                <button
+                    type="button"
+                    [attr.aria-label]="fileName"
+                    class="upup-absolute upup-inset-0 upup-z-0 upup-cursor-pointer"
+                    (click)="onclick.emit($event)"
+                ></button>
                 <!-- Thumbnail (image bg or object preview).
                      Non-images render the thumbnail centered inside the card;
                      images show via the background-image on the wrapper above.
@@ -330,11 +337,5 @@ export class FilePreviewComponent implements OnChanges {
         e.stopPropagation()
         const file = this.store.files().get(this.fileId)
         if (file) this.store.openImageEditor(file)
-    }
-
-    onKeyDown(e: KeyboardEvent): void {
-        if (e.key === 'Enter' || e.key === ' ') {
-            this.onclick.emit(new MouseEvent('click'))
-        }
     }
 }

@@ -16,17 +16,19 @@ describe('UploaderPanel accessibility', () => {
         expect(uploaderPanel?.getAttribute('aria-dropeffect')).toBe('none')
     })
 
-    it('UploaderPanel has role="button" and is keyboard focusable (tabIndex >= 0)', () => {
+    it('UploaderPanel is a non-interactive labelled region (no nested-interactive)', () => {
         const { container } = render(
             <UpupUploader provider="s3" serverUrl="https://example.com" />,
         )
         const uploaderPanel = container.querySelector(
             '[data-upup-slot="uploader-panel"]',
         ) as HTMLElement
-        expect(uploaderPanel?.getAttribute('role')).toBe('button')
-        expect(
-            Number(uploaderPanel?.getAttribute('tabindex')),
-        ).toBeGreaterThanOrEqual(0)
+        // The panel wraps interactive descendants (source buttons, file
+        // controls), so it must NOT itself be interactive/focusable — that would
+        // be an axe nested-interactive violation. It is a labelled region
+        // instead; keyboard users reach click-to-browse via the buttons inside.
+        expect(uploaderPanel?.getAttribute('role')).toBe('region')
+        expect(uploaderPanel?.hasAttribute('tabindex')).toBe(false)
     })
 
     it('UploaderPanel has an accessible label', () => {
@@ -46,14 +48,7 @@ describe('UploaderPanel accessibility', () => {
         const { container } = render(
             <UpupUploader provider="s3" serverUrl="https://example.com" />,
         )
-        const results = await axe(container, {
-            rules: {
-                // role="button" on the drop-zone container with inner controls is a
-                // deliberate pattern (droppable region + keyboard activation). The
-                // nested-interactive rule does not apply here.
-                'nested-interactive': { enabled: false },
-            },
-        })
+        const results = await axe(container)
         expect(results).toHaveNoViolations()
     })
 })
@@ -123,13 +118,7 @@ describe('FileList accessibility (ARIA)', () => {
         expect(status).not.toBeNull()
         expect(status?.getAttribute('aria-live')).toBe('polite')
 
-        const results = await axe(container, {
-            rules: {
-                // Same accepted pattern as the other describe blocks in this file:
-                // FileList's footer/header controls nest inside the list region.
-                'nested-interactive': { enabled: false },
-            },
-        })
+        const results = await axe(container)
         expect(results).toHaveNoViolations()
     })
 })

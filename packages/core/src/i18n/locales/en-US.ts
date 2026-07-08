@@ -64,6 +64,9 @@ export const enUS: LocaleBundle = {
             retryUpload: 'Retry',
             paused: 'Paused',
             uploadProgress: 'Upload progress',
+            announceUploadStarted: 'Upload started',
+            announceUploadComplete: 'Upload complete',
+            announceUploadFailed: 'Upload failed',
         },
 
         filePreview: {

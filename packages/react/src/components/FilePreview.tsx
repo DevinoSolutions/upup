@@ -122,14 +122,6 @@ export default memo(function FilePreview(props: Props) {
             className={cn('upup-inline-block', themeSlots?.filePreview?.root)}
             data-testid="upup-file-preview"
             data-upup-slot="file-preview"
-            role="button"
-            tabIndex={0}
-            onClick={onClick}
-            onKeyDown={e => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                    onClick?.(e as unknown as React.MouseEvent<HTMLDivElement>)
-                }
-            }}
             {...restProps}
         >
             <div
@@ -148,6 +140,21 @@ export default memo(function FilePreview(props: Props) {
                     isImage ? { backgroundImage: `url(${fileUrl})` } : undefined
                 }
             >
+                {/* Whole-thumbnail click affordance: a real <button> that is a
+                    sibling of the edit/remove controls (never their ancestor), so
+                    no interactive element nests inside another (axe
+                    nested-interactive). It sits behind the action buttons
+                    (z-0 < z-10) and is transparent so the thumbnail shows through. */}
+                <button
+                    type="button"
+                    aria-label={fileName}
+                    className="upup-absolute upup-inset-0 upup-z-0 upup-cursor-pointer"
+                    onClick={e =>
+                        onClick?.(
+                            e as unknown as React.MouseEvent<HTMLDivElement>,
+                        )
+                    }
+                />
                 {!isImage && (
                     <div className="upup-flex upup-h-full upup-items-center upup-justify-center upup-p-6">
                         <FilePreviewThumbnail

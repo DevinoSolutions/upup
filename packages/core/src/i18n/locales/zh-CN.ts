@@ -53,6 +53,9 @@ export const zhCN: LocaleBundle = {
             retryUpload: 'Retry',
             paused: 'Paused',
             uploadProgress: 'Upload progress',
+            announceUploadStarted: '上传已开始',
+            announceUploadComplete: '上传已完成',
+            announceUploadFailed: '上传失败',
         },
         filePreview: {
             removeFile: '删除文件',

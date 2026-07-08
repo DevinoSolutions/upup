@@ -92,10 +92,6 @@
   class={cn('upup-inline-block', $themeSlots?.filePreview?.root)}
   data-testid="upup-file-preview"
   data-upup-slot="file-preview"
-  role="button"
-  tabindex={0}
-  {onclick}
-  onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') onclick?.() }}
 >
   <div
     class={cn(
@@ -109,6 +105,12 @@
     )}
     style={isImage ? `background-image: url(${fileUrl})` : undefined}
   >
+    <button
+      type="button"
+      aria-label={fileName}
+      class="upup-absolute upup-inset-0 upup-z-0 upup-cursor-pointer"
+      {onclick}
+    ></button>
     {#if !isImage}
       <div class="upup-flex upup-h-full upup-items-center upup-justify-center upup-p-6">
         <FilePreviewThumbnail

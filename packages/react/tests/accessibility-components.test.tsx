@@ -93,13 +93,7 @@ function stubFileInput(input: HTMLInputElement, files: File[]) {
 describe('axe — UploaderPanel (DropZone)', () => {
     it('has no violations in default state', async () => {
         const { container } = renderUploader()
-        const results = await scanSlot(container, 'uploader-panel', {
-            rules: {
-                // role="button" on the droppable region + nested controls is the
-                // WAI-ARIA dropzone pattern, not a violation.
-                'nested-interactive': { enabled: false },
-            },
-        })
+        const results = await scanSlot(container, 'uploader-panel')
         expect(results).toHaveNoViolations()
     })
 })
@@ -211,12 +205,7 @@ describe('axe — FileList', () => {
                 throw new Error('file-list still hidden')
         })
 
-        const results = await scanSlot(container, 'file-list', {
-            rules: {
-                // FileList footer buttons nest inside the list region; intentional.
-                'nested-interactive': { enabled: false },
-            },
-        })
+        const results = await scanSlot(container, 'file-list')
         expect(results).toHaveNoViolations()
     })
 })
@@ -240,17 +229,7 @@ describe('axe — FilePreview', () => {
             if (!p) throw new Error('file-preview slot not yet rendered')
         })
 
-        const results = await scanSlot(container, 'file-preview', {
-            rules: {
-                // FilePreview card is role="button" (keyboard-activatable) yet
-                // contains nested controls (remove/edit buttons) — the same
-                // intentional clickable-region pattern already accepted for
-                // UploaderPanel / FileList / UploaderHeader. Keyboard activation is the
-                // accessibility win; the nested-interactive rule is disabled to
-                // match those precedents and the svelte/angular reference.
-                'nested-interactive': { enabled: false },
-            },
-        })
+        const results = await scanSlot(container, 'file-preview')
         expect(results).toHaveNoViolations()
     })
 })
@@ -294,12 +273,7 @@ describe('axe — UploaderHeader (header slot)', () => {
             if (!h) throw new Error('header slot not rendered yet')
         })
 
-        const results = await scanSlot(container, 'header', {
-            rules: {
-                // Header buttons live inline with the headline; intentional.
-                'nested-interactive': { enabled: false },
-            },
-        })
+        const results = await scanSlot(container, 'header')
         expect(results).toHaveNoViolations()
     })
 })

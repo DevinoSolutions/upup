@@ -67,6 +67,9 @@ export const deDE: LocaleBundle = {
             retryUpload: 'Retry',
             paused: 'Paused',
             uploadProgress: 'Upload progress',
+            announceUploadStarted: 'Upload gestartet',
+            announceUploadComplete: 'Upload abgeschlossen',
+            announceUploadFailed: 'Upload fehlgeschlagen',
         },
 
         filePreview: {
