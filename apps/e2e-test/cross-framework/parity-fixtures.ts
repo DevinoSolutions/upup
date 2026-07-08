@@ -28,9 +28,18 @@ export const PARITY_FIXTURES: Record<
  * excepted framework's capture starts matching canon) — the exception cannot
  * silently outlive the bug it documents. Empty when every port matches canon;
  * add an entry only while a divergence is deliberately carried, and remove it
- * (flip to all-six equality) the moment the fix lands. (F-711 Add-More icon +
- * F-712 angular progress-bar placement landed — entry removed.)
+ * (flip to all-six equality) the moment the fix lands. B5a prematurely
+ * zeroed this: vue/svelte/angular still lack the Add-More SVG icon (F-711)
+ * and angular's <upup-progress-bar> host wraps an extra node (F-712).
+ * Re-added with inverse forcing so they self-liquidate.
  */
 export const KNOWN_DIVERGENCES: Partial<
     Record<ParityComponent, { assertOnly: string[]; reason: string }>
-> = {}
+> = {
+    fileList: {
+        assertOnly: ['react', 'vanilla', 'preact'],
+        reason:
+            'F-711 Add-More SVG icon missing in vue/svelte/angular header; ' +
+            'F-712 angular <upup-progress-bar> host element wraps extra node',
+    },
+}
