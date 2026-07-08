@@ -14,12 +14,24 @@ function makeCtx(invalidate: () => void) {
             authenticatePrompt: 'Sign in to {{provider}}',
             signInWith: 'Sign in with {{provider}}',
         },
+        // The error snapshot the controller emits on an app-auth 401 carries a
+        // machine code, which the template localizes via ctx.translator.
+        translator: (key: string) => key,
         invalidate,
     } as Parameters<typeof serverModeDriveUploader>[0]
 }
 const flush = async () => {
     await Promise.resolve()
     await Promise.resolve()
+}
+// Drain micro- AND macro-tasks so the controller's async list() chain
+// (fetch -> Response.clone().json() -> setState) fully settles before we assert.
+// A real jsdom Response body read spans more than the two microtasks `flush` covers.
+const settle = async () => {
+    for (let i = 0; i < 10; i++) {
+        await Promise.resolve()
+        await new Promise(resolve => setTimeout(resolve, 0))
+    }
 }
 
 beforeEach(() => {
@@ -59,18 +71,26 @@ describe('serverModeDriveUploader', () => {
         vi.unstubAllGlobals()
     })
 
-    it('routes a 401 from list to the re-auth sign-in fallback (not the browser)', async () => {
+    it('routes a drive-reauth 401 ({reauth:true}) from list to the re-auth sign-in fallback (not the browser)', async () => {
         const invalidate = vi.fn()
         const ctx = makeCtx(invalidate)
+        // A drive-token 401 is signalled by the server with {reauth:true} on the body;
+        // ServerModeDriveController maps only that to the reauth view (F-427/C8).
         vi.stubGlobal(
             'fetch',
-            vi.fn(async () => new Response('', { status: 401 })),
+            vi.fn(
+                async () =>
+                    new Response(JSON.stringify({ reauth: true }), {
+                        status: 401,
+                        headers: { 'Content-Type': 'application/json' },
+                    }),
+            ),
         )
         serverModeDriveUploader(ctx, {
             provider: 'google-drive',
             onBack: () => {},
         }) // kicks the lazy list()
-        await flush()
+        await settle()
         const host = document.createElement('div')
         render(
             serverModeDriveUploader(ctx, {
@@ -83,6 +103,47 @@ describe('serverModeDriveUploader', () => {
             host.querySelector('[data-testid="upup-server-drive-browser"]'),
         ).toBeNull()
         expect(host.textContent).toContain('Sign in with Google Drive')
+        vi.unstubAllGlobals()
+    })
+
+    it('routes an app-auth 401 (no reauth flag) from list to the error view, NOT the reauth fallback (F-706 fail-closed)', async () => {
+        const invalidate = vi.fn()
+        const ctx = makeCtx(invalidate)
+        // An app-level 401 (config.auth denied the request — no {reauth:true}) must NOT
+        // show the reconnect prompt. Vanilla used to fail open here (unconditional
+        // 401->reauth); routing through the controller fails closed to the error view.
+        vi.stubGlobal(
+            'fetch',
+            vi.fn(
+                async () =>
+                    new Response(JSON.stringify({ error: 'Unauthorized' }), {
+                        status: 401,
+                        headers: { 'Content-Type': 'application/json' },
+                    }),
+            ),
+        )
+        serverModeDriveUploader(ctx, {
+            provider: 'google-drive',
+            onBack: () => {},
+        }) // kicks the lazy list()
+        await settle()
+        const host = document.createElement('div')
+        render(
+            serverModeDriveUploader(ctx, {
+                provider: 'google-drive',
+                onBack: () => {},
+            }),
+            host,
+        )
+        // Browser stays mounted with the error snapshot rendered inside it...
+        expect(
+            host.querySelector('[data-testid="upup-server-drive-browser"]'),
+        ).not.toBeNull()
+        expect(
+            host.querySelector('[data-testid="upup-drive-error"]'),
+        ).not.toBeNull()
+        // ...and the reauth sign-in fallback is NOT shown.
+        expect(host.textContent).not.toContain('Sign in with Google Drive')
         vi.unstubAllGlobals()
     })
 
@@ -114,7 +175,13 @@ describe('serverModeDriveUploader', () => {
         const ctx = makeCtx(invalidate)
         vi.stubGlobal(
             'fetch',
-            vi.fn(async () => new Response('', { status: 401 })),
+            vi.fn(
+                async () =>
+                    new Response(JSON.stringify({ reauth: true }), {
+                        status: 401,
+                        headers: { 'Content-Type': 'application/json' },
+                    }),
+            ),
         )
         vi.spyOn(window, 'open').mockReturnValue({
             closed: false,
@@ -125,7 +192,7 @@ describe('serverModeDriveUploader', () => {
             provider: 'google-drive',
             onBack: () => {},
         })
-        await flush()
+        await settle()
         const host = document.createElement('div')
         render(
             serverModeDriveUploader(ctx, {

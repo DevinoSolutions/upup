@@ -1,19 +1,12 @@
 import { html, nothing, type TemplateResult } from 'lit-html'
 import { repeat } from 'lit-html/directives/repeat.js'
 import { errorCodeToMessageKey } from '@upup/core'
-import { cn } from '@upup/core/internal'
+import { ServerModeDriveController, cn } from '@upup/core/internal'
 import type { ServerModeProvider, ServerDriveFile } from '@upup/core'
 export type { ServerModeProvider, ServerDriveFile }
 import type { UploaderContext } from '../lib/types'
 import { sourceViewContainer } from './shared/source-view-container'
 import { driveAuthFallback } from './shared/drive-auth-fallback'
-
-type ListState =
-    | { status: 'idle' }
-    | { status: 'loading' }
-    | { status: 'ready'; files: ServerDriveFile[] }
-    | { status: 'reauth' }
-    | { status: 'error'; message: string; code?: string }
 
 const PROVIDER_LABEL: Record<ServerModeProvider, string> = {
     'google-drive': 'Google Drive',
@@ -22,27 +15,31 @@ const PROVIDER_LABEL: Record<ServerModeProvider, string> = {
     box: 'Box',
 }
 
-interface ServerDriveState {
-    state: ListState
-    folderId: string | undefined
-    search: string
+// Server-mode drive flow is owned by core's ServerModeDriveController — the single
+// server-mode drive abstraction (CLAUDE.md P16). This template holds ONLY the lit-html
+// render bound to the controller's snapshot; the fetch / 401-reauth / abort / transfer
+// trust logic lives in core so vanilla stays byte-identical in behavior to the other
+// four ports and cannot re-diverge on 401 semantics (F-766 / F-706).
+interface ServerDriveCell {
+    controller: ServerModeDriveController
+    unsubscribe: () => void
+    // UI-only concerns (a consumer's selection + transfer flag), NOT part of the
+    // controller's list/folder/search state — mirrors angular's Angular-only signals.
     selected: Set<string>
     transferring: boolean
-    abort: AbortController | null
     inited: boolean
-    authListener: ((ev: MessageEvent) => void) | null
 }
 
-// Per-ctx, per-provider state. WeakMap keyed by UploaderContext => GC-safe + no cross-instance
+// Per-ctx, per-provider cell. WeakMap keyed by UploaderContext => GC-safe + no cross-instance
 // collision (replaces the fragile string-key/__id scheme).
 const cells = new WeakMap<
     UploaderContext,
-    Map<ServerModeProvider, ServerDriveState>
+    Map<ServerModeProvider, ServerDriveCell>
 >()
 function cell(
     ctx: UploaderContext,
     provider: ServerModeProvider,
-): ServerDriveState {
+): ServerDriveCell {
     let m = cells.get(ctx)
     if (!m) {
         m = new Map()
@@ -50,140 +47,23 @@ function cell(
     }
     let c = m.get(provider)
     if (!c) {
+        const controller = new ServerModeDriveController({
+            provider,
+            serverUrl: () => ctx.serverUrl,
+        })
         c = {
-            state: { status: 'idle' },
-            folderId: undefined,
-            search: '',
+            controller,
+            // Controller snapshot changes drive a re-render through the render loop.
+            unsubscribe: controller.subscribe(() => {
+                ctx.invalidate()
+            }),
             selected: new Set(),
             transferring: false,
-            abort: null,
             inited: false,
-            authListener: null,
         }
         m.set(provider, c)
     }
     return c
-}
-
-async function list(
-    ctx: UploaderContext,
-    provider: ServerModeProvider,
-    opts?: { folderId?: string; search?: string },
-) {
-    const c = cell(ctx, provider)
-    const serverUrl = ctx.serverUrl
-    if (!serverUrl) {
-        c.state = {
-            status: 'error',
-            message: 'Server Mode requires `serverUrl` prop',
-        }
-        ctx.invalidate()
-        return
-    }
-    c.abort?.abort()
-    const ac = new AbortController()
-    c.abort = ac
-    c.state = { status: 'loading' }
-    ctx.invalidate()
-    const params = new URLSearchParams()
-    const nextFolder = opts?.folderId ?? c.folderId
-    const nextSearch = opts?.search ?? c.search
-    if (nextFolder) params.set('folderId', nextFolder)
-    if (nextSearch) params.set('search', nextSearch)
-    try {
-        const res = await fetch(
-            `${serverUrl}/files/${provider}${params.toString() ? `?${params}` : ''}`,
-            { credentials: 'include', signal: ac.signal },
-        )
-        if (res.status === 401) {
-            c.state = { status: 'reauth' }
-            ctx.invalidate()
-            return
-        }
-        if (!res.ok) {
-            const text = await res.text().catch(() => '')
-            throw new Error(text || `${res.status}`)
-        }
-        const data = (await res.json()) as { files: ServerDriveFile[] }
-        c.state = { status: 'ready', files: data.files }
-        ctx.invalidate()
-    } catch (err) {
-        // upup-catch: drive-list failure is surfaced via the c.state error snapshot the template renders
-        if ((err as Error).name === 'AbortError') return
-        c.state = { status: 'error', message: (err as Error).message }
-        ctx.invalidate()
-    } finally {
-        if (c.abort === ac) c.abort = null
-    }
-}
-
-async function transfer(
-    ctx: UploaderContext,
-    provider: ServerModeProvider,
-    file: ServerDriveFile,
-): Promise<{ status: 'ok' | 'reauth' | 'error'; message?: string }> {
-    const serverUrl = ctx.serverUrl
-    if (!serverUrl)
-        return {
-            status: 'error',
-            message: 'Server Mode requires `serverUrl` prop',
-        }
-    try {
-        const res = await fetch(`${serverUrl}/files/${provider}/transfer`, {
-            method: 'POST',
-            credentials: 'include',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                fileId: file.id,
-                fileName: file.name,
-                size: file.size,
-                mimeType: file.mimeType,
-            }),
-        })
-        if (res.status === 401) return { status: 'reauth' }
-        if (!res.ok) {
-            const text = await res.text().catch(() => '')
-            return { status: 'error', message: text || `${res.status}` }
-        }
-        await res.json()
-        return { status: 'ok' }
-    } catch (err) {
-        // upup-catch: transfer failure is returned as an error result the caller surfaces to the user
-        return { status: 'error', message: (err as Error).message }
-    }
-}
-
-function startAuth(ctx: UploaderContext, provider: ServerModeProvider) {
-    const serverUrl = ctx.serverUrl
-    if (!serverUrl) return
-    const c = cell(ctx, provider)
-    if (c.authListener) {
-        window.removeEventListener('message', c.authListener)
-        c.authListener = null
-    }
-    const popup = window.open(
-        `${serverUrl}/auth/${provider}`,
-        'upup-oauth',
-        'width=600,height=700',
-    )
-    if (!popup) {
-        c.state = {
-            status: 'error',
-            message: 'Popup blocked. Allow popups and try again.',
-        }
-        ctx.invalidate()
-        return
-    }
-    const onMessage = (ev: MessageEvent) => {
-        const data = ev.data as { type?: string; provider?: string } | undefined
-        if (data?.type === 'upup:oauth-success' && data.provider === provider) {
-            window.removeEventListener('message', onMessage)
-            c.authListener = null
-            void list(ctx, provider)
-        }
-    }
-    c.authListener = onMessage
-    window.addEventListener('message', onMessage)
 }
 
 function formatBytes(bytes: number): string {
@@ -194,16 +74,13 @@ function formatBytes(bytes: number): string {
     return `${(bytes / (1024 * 1024 * 1024)).toFixed(1)} GB`
 }
 
-/** Teardown: abort in-flight + remove auth listeners + drop the ctx's cells. Called from create-uploader.destroy. */
+/** Teardown: destroy every provider controller (aborts in-flight + removes auth listeners) and drop the ctx's cells. Called from create-uploader.destroy. */
 export function destroyServerDrives(ctx: UploaderContext): void {
     const m = cells.get(ctx)
     if (!m) return
     for (const c of m.values()) {
-        c.abort?.abort()
-        if (c.authListener) {
-            window.removeEventListener('message', c.authListener)
-            c.authListener = null
-        }
+        c.unsubscribe()
+        c.controller.destroy()
     }
     cells.delete(ctx)
 }
@@ -218,21 +95,24 @@ export function serverModeDriveUploader(
 ): TemplateResult {
     const { provider, onBack } = opts
     const c = cell(ctx, provider)
+    const { controller } = c
     if (!c.inited) {
         c.inited = true
-        void list(ctx, provider)
+        controller.init()
     }
+    const snap = controller.getSnapshot()
     const isDark = ctx.theme.getSnapshot().isDark
     const resolvedSlot = opts.dataUpupSlot ?? `drive-browser-${provider}`
-    const isLoading = c.state.status === 'loading' || c.state.status === 'idle'
+    const isLoading =
+        snap.state.status === 'loading' || snap.state.status === 'idle'
     const files: ServerDriveFile[] =
-        c.state.status === 'ready' ? c.state.files : []
+        snap.state.status === 'ready' ? snap.state.files : []
 
-    if (c.state.status === 'reauth') {
+    if (snap.state.status === 'reauth') {
         return driveAuthFallback(ctx, {
             providerName: PROVIDER_LABEL[provider],
             onRetry: () => {
-                startAuth(ctx, provider)
+                controller.startAuth()
             },
         })
     }
@@ -247,9 +127,9 @@ export function serverModeDriveUploader(
         ctx.invalidate()
         try {
             for (const file of files.filter(f => c.selected.has(f.id))) {
-                const result = await transfer(ctx, provider, file)
+                const result = await controller.transfer(file)
                 if (result.status === 'reauth') {
-                    startAuth(ctx, provider)
+                    controller.startAuth()
                     return
                 }
             }
@@ -279,14 +159,13 @@ export function serverModeDriveUploader(
                 type="search"
                 name="upup-drive-search"
                 aria-label="Search"
-                .value=${c.search}
+                .value=${snap.search}
                 @input=${(e: Event) => {
-                    c.search = (e.target as HTMLInputElement).value
-                    ctx.invalidate()
+                    controller.setSearch((e.target as HTMLInputElement).value)
                 }}
                 @keydown=${(e: KeyboardEvent) => {
                     if (e.key === 'Enter')
-                        void list(ctx, provider, {
+                        void controller.list({
                             search: (e.target as HTMLInputElement).value,
                         })
                 }}
@@ -301,7 +180,7 @@ export function serverModeDriveUploader(
         </div>
         <div class="upup-overflow-auto">
             ${
-                c.state.status === 'error'
+                snap.state.status === 'error'
                     ? html`<p
                           data-testid="upup-drive-error"
                           data-upup-slot="drive-error"
@@ -314,12 +193,12 @@ export function serverModeDriveUploader(
                           )}
                       >
                           ${
-                              c.state.code
+                              snap.state.code
                                   ? ctx.translator(
-                                        `errors.${errorCodeToMessageKey(c.state.code)}`,
-                                        { code: c.state.code },
+                                        `errors.${errorCodeToMessageKey(snap.state.code)}`,
+                                        { code: snap.state.code },
                                     )
-                                  : c.state.message
+                                  : snap.state.message
                           }
                       </p>`
                     : nothing
@@ -342,7 +221,7 @@ export function serverModeDriveUploader(
                         )}
                         @click=${() => {
                             file.isFolder
-                                ? void list(ctx, provider, {
+                                ? void controller.list({
                                       folderId: file.id,
                                   })
                                 : toggle(file.id)
