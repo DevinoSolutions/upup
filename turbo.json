@@ -18,7 +18,7 @@
         "@upup/landing#build": {
             "dependsOn": ["^build", "docs#build"]
         },
-        "playground#build": {
+        "@upup/playground#build": {
             "dependsOn": ["^build"]
         },
         "build-storybook": {
