@@ -51,8 +51,6 @@ export {
     UpupQuotaError,
     UpupStorageError,
     UpupConfigError,
-    UploadErrorType,
-    UploadError,
 } from './errors'
 export type { RestrictionFailedReason } from './errors'
 

@@ -149,7 +149,7 @@ describe('useUpupUpload — extended', () => {
         const { result } = renderHook(() => useUpupUpload(opts))
         let unsub: () => void
         act(() => {
-            unsub = result.current.on('custom', vi.fn())
+            unsub = result.current.on('custom:event', vi.fn())
         })
         expect(typeof unsub!).toBe('function')
     })

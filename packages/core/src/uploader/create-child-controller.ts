@@ -1,6 +1,7 @@
-// CONVENTION (approach B): Adapters own child controllers. Create them from the
-// adapter's OWN lifecycle hook (the same hook used today) via createChildController.
-// Never create child controllers inside createUploaderController.
+// CONVENTION (approach B): Framework hosts own child controllers. Create them
+// from the host package's OWN lifecycle hook (the same hook used today) via
+// createChildController. Never create child controllers inside
+// createUploaderController.
 
 export interface ChildControllerLike {
     init?(): void

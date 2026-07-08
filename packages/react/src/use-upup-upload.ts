@@ -10,6 +10,7 @@ import {
 } from 'react'
 import { UpupCore, type CoreOptions } from '@upup/core'
 import { DragDropController, UploaderOrchestrator } from '@upup/core/internal'
+import type { CoreEvents } from '@upup/core/internal'
 import { UploadStatus, type UploadFile, type UpupError } from '@upup/core'
 import type { ExtensionMethods } from '@upup/core'
 import { createPropGetters } from './prop-getters'
@@ -32,7 +33,16 @@ export interface UseUpupUploadReturn {
     cancel(): void
     retry(fileId?: string): Promise<UploadFile[]>
 
-    on(event: string, handler: (...args: unknown[]) => void): () => void
+    // Mirrors UpupCore.on (F-723): bare names are the typed CoreEvents
+    // catalog; namespaced '<provider>:<event>' names pass through untyped.
+    on<K extends keyof CoreEvents>(
+        event: K,
+        handler: (payload: CoreEvents[K]) => void,
+    ): () => void
+    on(
+        event: `${string}:${string}`,
+        handler: (payload: unknown) => void,
+    ): () => void
     ext: Record<string, ExtensionMethods>
 
     core: UpupCore
@@ -264,8 +274,15 @@ export function useUpupUpload(
         [],
     )
     const on = useCallback(
-        (event: string, handler: (...args: unknown[]) => void) => {
-            return coreRef.current?.on(event, handler) ?? (() => {})
+        (event: string, handler: (payload: never) => void) => {
+            // Single untyped dispatch point — the overloads on
+            // UseUpupUploadReturn['on'] are the consumer-facing contract.
+            const subscribe = coreRef.current?.on.bind(coreRef.current) as
+                ((e: string, h: (p: unknown) => void) => () => void) | undefined
+            return (
+                subscribe?.(event, handler as (p: unknown) => void) ??
+                (() => {})
+            )
         },
         [],
     )

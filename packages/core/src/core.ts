@@ -60,15 +60,7 @@ export class UpupCore {
     constructor(options: CoreOptions) {
         this.options = { ...options }
 
-        this.fileManager = new FileManager({
-            allowedFileTypes: this.options.allowedFileTypes,
-            limit: this.options.limit,
-            maxFileSize: this.options.maxFileSize,
-            minFileSize: this.options.minFileSize,
-            maxTotalFileSize: this.options.maxTotalFileSize,
-            contentDeduplication: this.options.contentDeduplication,
-            onBeforeFileAdded: this.options.onBeforeFileAdded,
-        })
+        this.fileManager = new FileManager(this.fileManagerOptions())
 
         if (options.pipeline) {
             this.pipelineEngine = new PipelineEngine(options.pipeline)
@@ -82,6 +74,20 @@ export class UpupCore {
         }
 
         this.configureCrashRecovery(options.crashRecovery)
+    }
+
+    /** The one projection of CoreOptions the FileManager consumes — construction
+     *  and updateOptions() must stay in lockstep, so both call this. */
+    private fileManagerOptions(): import('./file-manager').FileManagerOptions {
+        return {
+            allowedFileTypes: this.options.allowedFileTypes,
+            limit: this.options.limit,
+            maxFileSize: this.options.maxFileSize,
+            minFileSize: this.options.minFileSize,
+            maxTotalFileSize: this.options.maxTotalFileSize,
+            contentDeduplication: this.options.contentDeduplication,
+            onBeforeFileAdded: this.options.onBeforeFileAdded,
+        }
     }
 
     get files(): ReadonlyMap<string, UploadFile> {
@@ -111,6 +117,23 @@ export class UpupCore {
         }
     }
 
+    /**
+     * Crash-recovery persistence is best-effort by design — a failed save/clear
+     * must never break an upload. But full silence hides a dead durability
+     * opt-in (F-734): surface failures dev-only, matching the worker-fallback
+     * convention in maybeCreateWorkerProvider().
+     */
+    private warnCrashRecoveryFailure(op: 'save' | 'clear') {
+        return (err: unknown): void => {
+            if (
+                typeof process !== 'undefined' &&
+                process.env.NODE_ENV !== 'production'
+            ) {
+                console.warn(`[upup] crash-recovery ${op} failed`, err)
+            }
+        }
+    }
+
     private configureCrashRecovery(
         crashRecovery: CoreOptions['crashRecovery'],
     ): void {
@@ -124,12 +147,14 @@ export class UpupCore {
         this.crashRecoveryUnsubscribe = this.on('state-change', () => {
             if (this.destroyed || this.files.size === 0) return
             if (this._status === UploadStatus.SUCCESSFUL) {
-                this.crashRecovery?.clear().catch(() => {})
+                this.crashRecovery
+                    ?.clear()
+                    .catch(this.warnCrashRecoveryFailure('clear'))
                 return
             }
             this.crashRecovery
                 ?.save(serializeCrashRecovery(this.files, this._status))
-                .catch(() => {})
+                .catch(this.warnCrashRecoveryFailure('save'))
         })
     }
 
@@ -138,11 +163,11 @@ export class UpupCore {
         this.crashRecoveryUnsubscribe?.()
         this.crashRecoveryUnsubscribe = null
         this.crashRecovery = null
-        manager?.clear().catch(() => {})
+        manager?.clear().catch(this.warnCrashRecoveryFailure('clear'))
     }
 
     use(plugin: UpupPlugin): this {
-        this.pluginManager.register(plugin, this)
+        this.pluginManager.register(plugin)
         // init(emitter) is the one plugin lifecycle hook (F-607). Drive plugins
         // (Google Drive, Dropbox, OneDrive, Box) emit their events through this
         // emitter, so wiring core's bus here is what makes events like
@@ -211,7 +236,9 @@ export class UpupCore {
     removeAll(): void {
         this.fileManager.removeAll()
         this.fileOverrides.clear()
-        this.crashRecovery?.clear().catch(() => {})
+        this.crashRecovery
+            ?.clear()
+            .catch(this.warnCrashRecoveryFailure('clear'))
         this.emitter.emit('state-change', { files: this.files })
         this.emitter.emit('files-cleared', {})
     }
@@ -240,15 +267,7 @@ export class UpupCore {
         const pipelineFlagChanged = PIPELINE_FLAGS.some(k => k in partial)
         Object.assign(this.options, partial)
 
-        this.fileManager.updateOptions({
-            allowedFileTypes: this.options.allowedFileTypes,
-            limit: this.options.limit,
-            maxFileSize: this.options.maxFileSize,
-            minFileSize: this.options.minFileSize,
-            maxTotalFileSize: this.options.maxTotalFileSize,
-            contentDeduplication: this.options.contentDeduplication,
-            onBeforeFileAdded: this.options.onBeforeFileAdded,
-        })
+        this.fileManager.updateOptions(this.fileManagerOptions())
 
         // Invalidate the cached auto-pipeline when a flag that shapes it changes, so the next
         // upload() rebuilds from the new flags — unless an explicit pipeline was supplied
@@ -525,7 +544,9 @@ export class UpupCore {
             this._error = null
             this.emitter.emit('upload-all-complete', [...this.files.values()])
             this.emitter.emit('state-change', { status: this._status })
-            this.crashRecovery?.clear().catch(() => {})
+            this.crashRecovery
+                ?.clear()
+                .catch(this.warnCrashRecoveryFailure('clear'))
 
             return [...this.files.values()]
         } catch (error) {
@@ -544,18 +565,30 @@ export class UpupCore {
                 this.emitter.emit('state-change', { status: this._status })
                 return [...this.files.values()]
             }
-            this._status = UploadStatus.FAILED
-            this._error = err
-            this.markUnsuccessfulFilesFailed()
-            this.options.onError?.(err)
-            this.emitter.emit('upload-error', { error: err })
-            this.emitter.emit('state-change', {
-                status: this._status,
-                error: err,
-                files: this.files,
-            })
+            this.terminalRunFailure(err)
             throw err
         }
+    }
+
+    /**
+     * The single terminal-failure path shared by all three run flavors
+     * (runUpload / runRetry / resume). They previously diverged (F-729): only
+     * runUpload marked leftover files FAILED, and resume never invoked
+     * options.onError — a retry/resume failure looked different to consumers
+     * than the identical first-run failure for no reason.
+     */
+    private terminalRunFailure(err: Error): void {
+        this.uploadManager = null
+        this._status = UploadStatus.FAILED
+        this._error = err
+        this.markUnsuccessfulFilesFailed()
+        this.options.onError?.(err)
+        this.emitter.emit('upload-error', { error: err })
+        this.emitter.emit('state-change', {
+            status: this._status,
+            error: err,
+            files: this.files,
+        })
     }
 
     replaceFile(id: string, file: File | UploadFile): void {
@@ -618,14 +651,9 @@ export class UpupCore {
                         this.destroyed
                     )
                         return
-                    this._status = UploadStatus.FAILED
-                    this._error =
-                        err instanceof Error ? err : new Error(String(err))
-                    this.emitter.emit('upload-error', { error: this._error })
-                    this.emitter.emit('state-change', {
-                        status: this._status,
-                        error: this._error,
-                    })
+                    this.terminalRunFailure(
+                        err instanceof Error ? err : new Error(String(err)),
+                    )
                 })
                 .finally(() => {
                     this.activeRun = null
@@ -695,41 +723,51 @@ export class UpupCore {
                 this.emitter.emit('upload-all-complete', [
                     ...this.files.values(),
                 ])
-                this.crashRecovery?.clear().catch(() => {})
+                this.crashRecovery
+                    ?.clear()
+                    .catch(this.warnCrashRecoveryFailure('clear'))
             }
             this.emitter.emit('state-change', { status: this._status })
             return uploaded
         } catch (error) {
             const err =
                 error instanceof Error ? error : new Error(String(error))
-            this.uploadManager = null
-            this._status = UploadStatus.FAILED
-            this._error = err
-            this.options.onError?.(err)
-            this.emitter.emit('upload-error', { error: err })
-            this.emitter.emit('state-change', {
-                status: this._status,
-                error: err,
-            })
+            this.terminalRunFailure(err)
             throw err
         }
     }
 
+    /**
+     * Bare event names are the typed CoreEvents catalog and nothing else —
+     * the untyped string overload is gone (F-723), so an unknown bare event is
+     * now a compile error at the emit/subscribe site. Namespaced drive-plugin
+     * events ('<provider>:<event>', e.g. 'google-drive:files-loaded') are
+     * dynamic by design — plugins emit them through core's bus (see use()) —
+     * and keep a template-literal passthrough.
+     */
     on<K extends keyof CoreEvents>(
         event: K,
         handler: (payload: CoreEvents[K]) => void,
     ): () => void
-    on(event: string, handler: (payload: unknown) => void): () => void
+    on(
+        event: `${string}:${string}`,
+        handler: (payload: unknown) => void,
+    ): () => void
     on(event: string, handler: (payload: unknown) => void): () => void {
         return this.emitter.on(event, handler)
     }
 
+    off<K extends keyof CoreEvents>(
+        event: K,
+        handler: (payload: CoreEvents[K]) => void,
+    ): void
+    off(event: `${string}:${string}`, handler: (payload: unknown) => void): void
     off(event: string, handler: (payload: unknown) => void): void {
         this.emitter.off(event, handler)
     }
 
     emit<K extends keyof CoreEvents>(event: K, payload: CoreEvents[K]): void
-    emit(event: string, data?: unknown): void
+    emit(event: `${string}:${string}`, data?: unknown): void
     emit(event: string, data?: unknown): void {
         this.emitter.emit(event, data)
     }

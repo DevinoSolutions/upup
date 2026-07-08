@@ -78,6 +78,12 @@ function storedContentHash(file: UploadFile): string | undefined {
     )
 }
 
+/**
+ * Stamp a content hash onto a file NOT yet in the state layer (freshly built
+ * by nativeToUploadFile, pre-insertion). Files already stored in the manager
+ * are immutable (P6) — those go through updateFile with contentHashPatch()
+ * instead; never call this on a live entry.
+ */
 function applyContentHash(file: UploadFile, hash: string): UploadFile {
     // Keep the grandfathered top-level `fileHash` in sync (superseded by
     // metadata.originalContentHash) through a non-deprecated view.
@@ -88,6 +94,18 @@ function applyContentHash(file: UploadFile, hash: string): UploadFile {
         originalContentHash: hash,
     }
     return file
+}
+
+/** The same hash stamp as applyContentHash, expressed as an updateFile patch. */
+function contentHashPatch(file: UploadFile, hash: string): Partial<UploadFile> {
+    // Built as an untyped record so the grandfathered `fileHash` slot can be
+    // written without referencing the deprecated declaration (same dodge as
+    // applyContentHash).
+    const patch: Record<string, unknown> = {
+        fileHash: hash,
+        metadata: { ...file.metadata, originalContentHash: hash },
+    }
+    return patch as Partial<UploadFile>
 }
 
 function nativeToUploadFile(
@@ -261,7 +279,17 @@ export class FileManager {
                     ? await computeContentHash(nativeExisting)
                     : undefined)
             if (hash) {
-                applyContentHash(existing, hash)
+                // Memoize the computed hash on the STORED entry immutably —
+                // `existing` is a live state-layer file, so the write must go
+                // through updateFile (new reference), never mutate in place
+                // (P6/F-730). Entries not in the store (setFiles passes [])
+                // simply skip the memoization.
+                if (storedContentHash(existing) !== hash) {
+                    this.updateFile(
+                        existing.id,
+                        contentHashPatch(existing, hash),
+                    )
+                }
                 seen.add(hash)
             }
         }

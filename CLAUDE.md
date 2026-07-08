@@ -141,10 +141,10 @@ pnpm run typecheck      # turbo, all packages
 pnpm run test           # turbo, all unit suites
 pnpm run build          # turbo, all packages
 pnpm run e2e            # the REAL gate — see next section
-pnpm run prettier-check # CI blocks on this (repo-wide: all 9 publishable packages' src, one root config)
+pnpm run prettier-check # CI blocks on this (all 9 publishable packages' src, .ts/.tsx ONLY — .vue/.svelte SFC + .css are NOT covered; one root config)
 pnpm run size           # size-limit bundle budgets
 pnpm run audit:prod     # high+ advisories in the publishable prod trees
-pnpm run lint           # eslint flat-config: 9 @upup/* packages + 3 apps (playground, landing, docs)
+pnpm run lint           # eslint flat-config: 9 @upup/* packages + 3 apps (playground, landing, docs); each leaf is `eslint . --max-warnings 0` so warnings gate (F-784)
 pnpm run lint:ox        # oxlint fast first-line (built-ins only, seconds)
 pnpm run knip           # dead-code / unused-dep detection (workspace-aware)
 pnpm run env:check      # .env.minio.example ↔ validate-env schema drift guard
@@ -183,11 +183,16 @@ importing types `@upup/core/internal` never exported, tests pinning the
 retired `enableWorkers`/`appKey` option names, a dead `"link"` source id) —
 treat a red test-tree typecheck as an API-drift signal, not test noise.
 
-`prettier-check`/`prettier-write` are repo-wide (P22, 2026-07-04): one root
-`.prettierrc.json` + `.prettierignore` govern all 9 publishable packages'
-`src` (`packages/react/.prettierrc.json` is gone — promoted to root,
-byte-identical settings). Run either through `rtk proxy`: the rtk filter has
-reported "all files formatted" on a red `--check` (see Machine-local notes).
+`prettier-check`/`prettier-write` cover all 9 publishable packages' `src` —
+but **`.ts`/`.tsx` ONLY** (P22, 2026-07-04): one root `.prettierrc.json` +
+`.prettierignore`, byte-identical across packages (`packages/react/.prettierrc.json`
+is gone — promoted to root). NOT repo-wide: the 78 `.vue`/`.svelte` SFCs under
+`packages/{vue,svelte}/src` and all `.css` are deliberately ungated — no SFC
+formatter parser (prettier-plugin-svelte / vue) is wired, an F-782 phase-2
+deferral mirroring lint's SFC gap. The SFCs are the canonical DOM ports, so
+style drift in them is invisible to CI; check it by hand until the parser lands.
+Run either through `rtk proxy`: the rtk filter has reported "all files
+formatted" on a red `--check` (see Machine-local notes).
 
 Flake protocol: if a test fails only in the full run, re-run it isolated
 before suspecting your change. Known load-sensitive cases:
@@ -314,8 +319,12 @@ recurring visual traps it will never flag — check these live:
 - One name per function, one function per name: no aliased re-exports, and a
   name means the same thing in every package (`createUpupHandler` = the
   @upup/server core factory; `createUpupNextHandler` = its Next wrapper).
-- `UploadError` and its subclasses keep their `Upload*` names — error
-  taxonomy, not UI vocabulary; only `Adapter*`/`Root*` were retired.
+- The error taxonomy is `UpupError` + its subclasses plus
+  `uploadErrorFromResponse` — those `Upload*`-prefixed FUNCTION names stay
+  (error domain, not UI vocabulary; only `Adapter*`/`Root*` were retired).
+  The legacy parallel `UploadError`/`UploadErrorType` CLASS family was deleted
+  in pass 2 (F-724, zero production call sites) — do not reintroduce a second
+  error family.
 - The `Adapter*`/`Root*` → `Drive*`/`Uploader*`/`Source*` vocabulary sweep is
   COMPLETE in code, i18n keys, and theme slots (N1, 2026-07-01); the cloud-drive
   config is ONE camelCase `cloudDrives` shape end-to-end (N2, 2026-07-02 — the
@@ -429,8 +438,13 @@ DrivePlugin`. All three popup providers now persist a token-expiry key and refre
 ## CI (`.github/workflows`)
 
 - `main.yml` — PRs to master/dev: prettier → all-package unit suites
-  (`pnpm run test`) + uniform v8 coverage floors on all nine publishable
-  packages (`pnpm run test:coverage`) → typecheck → build → size-limit → a prod-scoped
+  (`pnpm run test`) + per-package v8 coverage **anti-regression ratchets** on all
+  nine publishable packages (`pnpm run test:coverage`) — NOT a uniform bar: each
+  threshold is hand-tuned ~3 pts below that package's measured coverage and they
+  span ~12%–97% (svelte/preact floors are near-vacuous), so the gate's real
+  strength is uneven (F-789). `test:coverage` is a turbo task (F-790), so
+  preact/vanilla coverage sees fresh dist regardless of invocation order →
+  typecheck → build → size-limit → a prod-scoped
   dependency-audit gate (`pnpm run audit:prod`, `scripts/audit-prod.mjs`) that
   fails on high+ advisories reachable from the 9 publishable packages'
   production trees only (dev-only apps/private-package noise is excluded by
@@ -446,6 +460,12 @@ DrivePlugin`. All three popup providers now persist a token-expiry key and refre
   need publishing) a pre-publish gate — typecheck, unit suites, build, size,
   `smoke:packages` — before `pnpm run release` (`changeset publish`, which
   skips versions already on npm); on dev: `test-release` dry-run.
+- **Branch protection must require BOTH rollup checks** (F-780): `Status Check`
+  (main.yml) AND `E2E Status Check` (e2e.yml). main.yml's rollup aggregates only
+  its own jobs; e2e.yml's rollup aggregates E2E + Smoke-Packages. Requiring only
+  the one obvious `Status Check` would leave the strongest gates in the repo —
+  the trust-model 403s, oversized-PUT rejection, the real-tarball consumer —
+  entirely non-blocking.
 
 ## Machine-local notes (primary dev box only)
 

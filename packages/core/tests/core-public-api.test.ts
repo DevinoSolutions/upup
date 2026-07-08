@@ -7,22 +7,25 @@ const makeCore = () =>
 
 // ─────────────────────────────────────────────
 // on / off / emit (public event API)
+// Dispatch mechanics are exercised through the namespaced passthrough —
+// since F-723, bare names are the typed CoreEvents catalog only, and
+// arbitrary/dynamic events are the '<namespace>:<event>' form.
 // ─────────────────────────────────────────────
 describe('UpupCore — on() / off() / emit()', () => {
     it('on() returns an unsubscribe function', () => {
         const core = makeCore()
         const handler = vi.fn()
-        const unsub = core.on('custom', handler)
+        const unsub = core.on('custom:event', handler)
         expect(typeof unsub).toBe('function')
     })
 
     it('unsubscribe prevents further calls', () => {
         const core = makeCore()
         const handler = vi.fn()
-        const unsub = core.on('custom', handler)
-        core.emit('custom', 'a')
+        const unsub = core.on('custom:event', handler)
+        core.emit('custom:event', 'a')
         unsub()
-        core.emit('custom', 'b')
+        core.emit('custom:event', 'b')
         expect(handler).toHaveBeenCalledTimes(1)
         expect(handler).toHaveBeenCalledWith('a')
     })
@@ -30,25 +33,25 @@ describe('UpupCore — on() / off() / emit()', () => {
     it('off() removes the handler', () => {
         const core = makeCore()
         const handler = vi.fn()
-        core.on('test', handler)
-        core.off('test', handler)
-        core.emit('test')
+        core.on('custom:test', handler)
+        core.off('custom:test', handler)
+        core.emit('custom:test')
         expect(handler).not.toHaveBeenCalled()
     })
 
     it('emit() fires registered handlers with data', () => {
         const core = makeCore()
         const handler = vi.fn()
-        core.on('bridge-event', handler)
-        core.emit('bridge-event', { key: 'val' })
+        core.on('custom:bridge-event', handler)
+        core.emit('custom:bridge-event', { key: 'val' })
         expect(handler).toHaveBeenCalledWith({ key: 'val' })
     })
 
     it('emit() with no data passes undefined', () => {
         const core = makeCore()
         const handler = vi.fn()
-        core.on('ping', handler)
-        core.emit('ping')
+        core.on('custom:ping', handler)
+        core.emit('custom:ping')
         expect(handler).toHaveBeenCalledWith(undefined)
     })
 
@@ -56,16 +59,16 @@ describe('UpupCore — on() / off() / emit()', () => {
         const core = makeCore()
         const h1 = vi.fn()
         const h2 = vi.fn()
-        core.on('multi', h1)
-        core.on('multi', h2)
-        core.emit('multi', 'data')
+        core.on('custom:multi', h1)
+        core.on('custom:multi', h2)
+        core.emit('custom:multi', 'data')
         expect(h1).toHaveBeenCalledWith('data')
         expect(h2).toHaveBeenCalledWith('data')
     })
 
     it('emit does not throw for events with no listeners', () => {
         const core = makeCore()
-        expect(() => core.emit('nonexistent')).not.toThrow()
+        expect(() => core.emit('custom:nonexistent')).not.toThrow()
     })
 })
 

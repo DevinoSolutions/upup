@@ -13,6 +13,7 @@ import {
 } from '@angular/core'
 import { isPlatformBrowser } from '@angular/common'
 import { cn } from '@upup/core/internal'
+import type { CoreEvents } from '@upup/core/internal'
 import { UpupStore } from './upup-store.service'
 import type { UploaderProps } from './shared/types'
 import type { UploadFile } from '@upup/core'
@@ -20,9 +21,12 @@ import { UploaderPanelComponent } from './components/uploader-panel.component'
 import { ImageEditorStubComponent } from './components/image-editor-stub.component'
 import { devinoDark, devinoLight, logoDark, logoLight } from './assets/logos'
 
+// The event column is typed against the CoreEvents catalog (F-723): a retired
+// or misspelled event name in this table is now a compile error, not a
+// silently-dead forwarding row.
 const FORWARDED: ReadonlyArray<
     readonly [
-        string,
+        keyof CoreEvents,
         (
             | 'filesAdded'
             | 'fileRemoved'

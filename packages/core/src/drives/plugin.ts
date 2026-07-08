@@ -3,8 +3,8 @@ import type { EventEmitter } from '../events'
 import type { DriveFile, DriveListPage, DriveUser } from './types'
 
 /**
- * The single drive-adapter contract. Extends the generic UpupPlugin registration
- * base with the adapter lifecycle (id/init/destroy) AND the runtime surface the
+ * The single drive-plugin contract. Extends the generic UpupPlugin registration
+ * base with the drive lifecycle (id/init/destroy) AND the runtime surface the
  * DriveBrowserController drives. The four concrete *Plugin classes implement this.
  * Members marked optional may be omitted by a future provider that doesn't need them:
  * authenticate is implemented by all current providers but only invoked on the GIS path;

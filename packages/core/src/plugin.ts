@@ -19,8 +19,7 @@ export class PluginManager {
     private plugins = new Map<string, UpupPlugin>()
     private extensions = new Map<string, ExtensionMethods>()
 
-    register(plugin: UpupPlugin, core: unknown): void {
-        void core
+    register(plugin: UpupPlugin): void {
         if (this.plugins.has(plugin.name)) {
             throw new UpupConfigError(
                 `Plugin "${plugin.name}" is already registered`,

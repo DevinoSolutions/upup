@@ -86,14 +86,15 @@ describe('useUpupUpload — on() event subscription', () => {
         expect(handler).toHaveBeenCalledTimes(1) // no new call
     })
 
-    it('subscribes to custom events via emit', () => {
+    it('subscribes to custom (namespaced) events via emit', () => {
         const handler = vi.fn()
         const { result } = renderHook(() => useUpupUpload(opts))
         act(() => {
-            result.current.on('my-custom-event', handler)
+            // Dynamic event names live on the namespaced surface (F-723).
+            result.current.on('custom:my-event', handler)
         })
         act(() => {
-            result.current.core.emit('my-custom-event', { data: 'test' })
+            result.current.core.emit('custom:my-event', { data: 'test' })
         })
         expect(handler).toHaveBeenCalledWith({ data: 'test' })
     })

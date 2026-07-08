@@ -84,7 +84,15 @@ export function createUploader(
             ctx.handleCancel()
         },
         retry: (id?: string) => ctx.core.retry(id),
-        on: (event, h) => ctx.core.on(event, h),
+        // Untyped passthrough — this port's public `on` stays string-typed;
+        // the typed CoreEvents surface lives on core itself (F-723).
+        on: (event, h) =>
+            (
+                ctx.core.on as (
+                    ev: string,
+                    hh: (p: unknown) => void,
+                ) => () => void
+            )(event, h),
         ext: ctx.core.ext,
         core: ctx.core,
         el,

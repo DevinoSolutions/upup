@@ -37,7 +37,7 @@ export interface DriveBrowserState {
 export interface DriveBrowserCallbacks {
     /** Push downloaded files into the uploader (host maps to context setFiles). */
     onFilesSelected: (files: File[]) => void
-    /** Close the adapter browser view (host maps to setActiveSource(undefined)). */
+    /** Close the drive browser view (host maps to setActiveSource(undefined)). */
     onClose: () => void
 }
 
@@ -63,7 +63,7 @@ const GIS_SCOPE =
 
 /**
  * Framework-agnostic cloud-drive browser store. One instance per provider per
- * mounted adapter view. Mirrors UploaderOrchestrator's subscribe/getSnapshot
+ * mounted drive view. Mirrors UploaderOrchestrator's subscribe/getSnapshot
  * pattern so every framework binds it the same way.
  */
 export class DriveBrowserController {
@@ -193,7 +193,7 @@ export class DriveBrowserController {
         }
     }
 
-    // ── Event subscriptions (the 6 canonical adapter events) ─────
+    // ── Event subscriptions (the 6 canonical drive events) ─────
 
     private bindEvents(): () => void {
         const isGis = this.descriptor.auth === 'gis'

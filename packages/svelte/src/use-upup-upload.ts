@@ -131,7 +131,13 @@ export function useUpupUpload(
             core.cancel()
         },
         retry: (id?: string) => core.retry(id),
-        on: (e: string, h: (...args: unknown[]) => void) => core.on(e, h),
+        // Untyped passthrough — this port's public `on` stays string-typed;
+        // the typed CoreEvents surface lives on core itself (F-723).
+        on: (e: string, h: (...args: unknown[]) => void) =>
+            (core.on as (ev: string, hh: (p: unknown) => void) => () => void)(
+                e,
+                h,
+            ),
         ext: core.ext,
         core,
     }

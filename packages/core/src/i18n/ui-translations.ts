@@ -3,7 +3,7 @@ import type { Translator } from './types'
 /**
  * Flat UI messages consumed by the React renderer.
  *
- * Core owns this adapter because the message catalog and ICU translator live in
+ * Core owns this bridge because the message catalog and ICU translator live in
  * core. React should render these resolved labels, not maintain a parallel i18n
  * runtime.
  */

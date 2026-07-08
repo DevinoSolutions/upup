@@ -112,6 +112,66 @@ describe('createUploaderController', () => {
         root.destroy()
     })
 
+    it('upload-control commands delegate to the orchestrator — single owner (F-722)', () => {
+        const { root } = build()
+        root.init()
+        const spies = {
+            startUpload: vi
+                .spyOn(root.orchestrator, 'startUpload')
+                .mockResolvedValue(undefined),
+            retryUpload: vi
+                .spyOn(root.orchestrator, 'retryUpload')
+                .mockResolvedValue(undefined),
+            handleCancel: vi
+                .spyOn(root.orchestrator, 'handleCancel')
+                .mockImplementation(() => {}),
+            handlePause: vi
+                .spyOn(root.orchestrator, 'handlePause')
+                .mockImplementation(() => {}),
+            handleResume: vi
+                .spyOn(root.orchestrator, 'handleResume')
+                .mockImplementation(() => {}),
+            handleDone: vi
+                .spyOn(root.orchestrator, 'handleDone')
+                .mockImplementation(() => {}),
+            resetState: vi
+                .spyOn(root.orchestrator, 'resetState')
+                .mockImplementation(() => {}),
+            removeFile: vi
+                .spyOn(root.orchestrator, 'removeFile')
+                .mockImplementation(() => {}),
+        }
+        void root.commands.startUpload()
+        void root.commands.retryUpload('file-1')
+        root.commands.handleCancel()
+        root.commands.handlePause()
+        root.commands.handleResume()
+        root.commands.handleDone()
+        root.commands.resetState()
+        root.commands.handleFileRemove('file-2')
+        expect(spies.startUpload).toHaveBeenCalledTimes(1)
+        expect(spies.retryUpload).toHaveBeenCalledWith('file-1')
+        expect(spies.handleCancel).toHaveBeenCalledTimes(1)
+        expect(spies.handlePause).toHaveBeenCalledTimes(1)
+        expect(spies.handleResume).toHaveBeenCalledTimes(1)
+        expect(spies.handleDone).toHaveBeenCalledTimes(1)
+        expect(spies.resetState).toHaveBeenCalledTimes(1)
+        expect(spies.removeFile).toHaveBeenCalledWith('file-2')
+        root.destroy()
+    })
+
+    it('startUpload clears a previous upload error on the live command path (F-722)', async () => {
+        const { root, core } = build()
+        root.init()
+        await core.addFiles([new File(['x'], 'a.txt')])
+        core.emit('upload-error', { error: new Error('boom') })
+        expect(root.orchestrator.getSnapshot().uploadError).toBe('boom')
+        vi.spyOn(core, 'upload').mockResolvedValue([])
+        await root.commands.startUpload()
+        expect(root.orchestrator.getSnapshot().uploadError).toBe('')
+        root.destroy()
+    })
+
     it('image-editor commands delegate to the orchestrator', () => {
         const { root } = build()
         const open = vi

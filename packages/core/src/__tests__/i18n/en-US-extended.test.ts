@@ -8,7 +8,7 @@ describe('en-US locale — content validity', () => {
         expect(typeof enUS.messages.common.loading).toBe('string')
     })
 
-    it('sources namespace has all adapter names', () => {
+    it('sources namespace has all source names', () => {
         const sources = enUS.messages.sources
         expect(sources.myDevice).toBeDefined()
         expect(sources.googleDrive).toBeDefined()

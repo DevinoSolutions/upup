@@ -191,10 +191,13 @@ export function createUploaderController(
                 }
             }
         },
+        // Upload-control commands are pure delegation: UploaderOrchestrator is
+        // the single owner of the upload-control flow (F-722) — it holds the
+        // projected state, clears uploadError/uploadErrorCode before a new
+        // run, and owns the done/state-reset emissions. Re-implementing any of
+        // these here re-creates the drifting second copy pass 2 removed.
         handleFileRemove(fileId: string) {
-            const file = core.files.get(fileId)
-            if (file) revokeFileUrl(file)
-            core.removeFile(fileId)
+            orchestrator.removeFile(fileId)
         },
         handleRemoveAll() {
             core.removeAll()
@@ -209,42 +212,26 @@ export function createUploaderController(
             })
             void core.setFiles(newFiles as File[])
         },
-        async startUpload() {
-            const current = filesArray()
-            if (current.length === 0) return undefined
-            const prepared = callbackRefs.onPrepareFiles
-                ? await callbackRefs.onPrepareFiles(current)
-                : current
-            if (prepared !== current) await core.setFiles(prepared)
-            return core.upload()
+        startUpload() {
+            return orchestrator.startUpload()
         },
-        async retryUpload(fileId?: string) {
-            if (filesArray().length === 0) return undefined
-            return core.retry(fileId)
+        retryUpload(fileId?: string) {
+            return orchestrator.retryUpload(fileId)
         },
         handleCancel() {
-            core.cancel()
-            filesArray().forEach(f => {
-                revokeFileUrl(f)
-            })
-            core.removeAll()
             orchestrator.handleCancel()
         },
         handlePause() {
-            core.pause()
+            orchestrator.handlePause()
         },
         handleResume() {
-            core.resume()
+            orchestrator.handleResume()
         },
         handleDone() {
-            callbackRefs.onDoneClicked?.()
-            core.emit('done', {})
-            commands.handleCancel()
+            orchestrator.handleDone()
         },
         resetState() {
-            orchestrator.setIsAddingMore(false)
-            core.emit('state-reset', {})
-            commands.handleDone()
+            orchestrator.resetState()
         },
         openImageEditor(file: UploadFile) {
             orchestrator.openImageEditor(file)
@@ -319,7 +306,16 @@ export function createUploaderController(
             }
         })
         if (options.crashRecovery)
-            void core.restoreFromCrashRecovery().catch(() => undefined)
+            void core.restoreFromCrashRecovery().catch((err: unknown) => {
+                // Restore is best-effort — but silence hides a dead durability
+                // opt-in (F-734): surface dev-only, like core's save/clear path.
+                if (
+                    typeof process !== 'undefined' &&
+                    process.env.NODE_ENV !== 'production'
+                ) {
+                    console.warn('[upup] crash-recovery restore failed', err)
+                }
+            })
     }
 
     function destroy() {

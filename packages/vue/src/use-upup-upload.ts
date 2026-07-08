@@ -142,8 +142,15 @@ export function useUpupUpload(
         },
         retry: (id?: string) => core.retry(id),
 
+        // Untyped passthrough — this port's public `on` stays string-typed;
+        // the typed CoreEvents surface lives on core itself (F-723).
         on: (event: string, handler: (...args: unknown[]) => void) =>
-            core.on(event, handler),
+            (
+                core.on as (
+                    ev: string,
+                    h: (payload: unknown) => void,
+                ) => () => void
+            )(event, handler),
         ext: core.ext,
 
         core,

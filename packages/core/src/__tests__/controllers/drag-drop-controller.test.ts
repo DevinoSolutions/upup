@@ -133,7 +133,7 @@ describe('DragDropController', () => {
         expect(core.emit).not.toHaveBeenCalled()
     })
 
-    it('is a no-op when an adapter is active or an upload is in progress', () => {
+    it('is a no-op when a source view is active or an upload is in progress', () => {
         const { deps, orch, core } = makeDeps()
         const c = new DragDropController(deps)
         orch._set({ activeSource: FileSource.GOOGLE_DRIVE })
@@ -190,7 +190,7 @@ describe('DragDropController', () => {
         expect(setFiles).not.toHaveBeenCalled()
     })
 
-    it('snapshot reflects orchestrator: active adapter clears absoluteIsDragging', () => {
+    it('snapshot reflects orchestrator: active source view clears absoluteIsDragging', () => {
         const { deps, orch } = makeDeps()
         const c = new DragDropController(deps)
         c.init()
@@ -232,7 +232,7 @@ describe('DragDropController', () => {
         const { deps, core } = makeDeps()
         const c = new DragDropController(deps)
         c.init()
-        // Empty + no active adapter → empty-state border shown.
+        // Empty + no active source view → empty-state border shown.
         expect(c.getSnapshot().absoluteHasBorder).toBe(true)
         // A framework mutates core.files directly (e.g. vanilla core.removeFile) with no
         // orchestrator notify — the cached snapshot stays stale until recompute() runs.

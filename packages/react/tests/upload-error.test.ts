@@ -1,137 +1,69 @@
-import { describe, it, expect } from 'vitest'
-import { UploadError, UploadErrorType } from '@upup/core'
+import { describe, expect, it } from 'vitest'
+import * as core from '@upup/core'
+import {
+    UpupError,
+    UpupErrorCode,
+    UpupNetworkError,
+    UpupValidationError,
+} from '@upup/core'
 
-// ─────────────────────────────────────────────
-// Construction — defaults
-// ─────────────────────────────────────────────
-describe('UploadError — defaults', () => {
-    it('is an instance of Error', () => {
-        expect(new UploadError('oops')).toBeInstanceOf(Error)
-    })
-
-    it('is an instance of UploadError', () => {
-        expect(new UploadError('oops')).toBeInstanceOf(UploadError)
-    })
-
-    it('sets message correctly', () => {
-        expect(new UploadError('something went wrong').message).toBe(
-            'something went wrong',
-        )
-    })
-
-    it('name is UploadError', () => {
-        expect(new UploadError('oops').name).toBe('UploadError')
-    })
-
-    it('defaults type to UNKNOWN_UPLOAD_ERROR', () => {
-        expect(new UploadError('oops').type).toBe(
-            UploadErrorType.UNKNOWN_UPLOAD_ERROR,
-        )
-    })
-
-    it('defaults retryable to false', () => {
-        expect(new UploadError('oops').retryable).toBe(false)
-    })
-
-    it('defaults status to 500', () => {
-        expect(new UploadError('oops').status).toBe(500)
-    })
-})
-
-// ─────────────────────────────────────────────
-// Construction — explicit values
-// ─────────────────────────────────────────────
-describe('UploadError — explicit values', () => {
-    it('sets type when provided', () => {
-        const err = new UploadError(
-            'forbidden',
-            UploadErrorType.PERMISSION_ERROR,
-        )
-        expect(err.type).toBe(UploadErrorType.PERMISSION_ERROR)
-    })
-
-    it('sets retryable=true when provided', () => {
-        const err = new UploadError(
-            'network',
-            UploadErrorType.UNKNOWN_UPLOAD_ERROR,
-            true,
-        )
+/**
+ * Error-contract pin from the React consumer's viewpoint.
+ *
+ * Re-expressed in pass 2 (F-724): this file used to test the legacy
+ * `UploadError`/`UploadErrorType` family, a parallel error taxonomy with zero
+ * production call sites that was deleted from @upup/core. The supported
+ * surface a React consumer catches is the UpupError taxonomy — same intent
+ * (the error contract UI code relies on), supported API.
+ */
+describe('UpupError taxonomy — consumer contract', () => {
+    it('UpupError is an Error with name, machine code, and retryable flag', () => {
+        const err = new UpupError('boom', UpupErrorCode.UPLOAD_FAILED, true)
+        expect(err).toBeInstanceOf(Error)
+        expect(err).toBeInstanceOf(UpupError)
+        expect(err.name).toBe('UpupError')
+        expect(err.message).toBe('boom')
+        expect(err.code).toBe(UpupErrorCode.UPLOAD_FAILED)
         expect(err.retryable).toBe(true)
     })
 
-    it('sets explicit status when provided', () => {
-        const err = new UploadError(
-            'not found',
-            UploadErrorType.PRESIGNED_URL_ERROR,
-            false,
-            404,
+    it('subclasses remain catchable as UpupError with their own names', () => {
+        const network = new UpupNetworkError('offline', 503)
+        expect(network).toBeInstanceOf(UpupError)
+        expect(network.name).toBe('UpupNetworkError')
+        expect(network.code).toBe(UpupErrorCode.NETWORK_ERROR)
+        expect(network.retryable).toBe(true)
+        expect(network.status).toBe(503)
+
+        const file = new File(['x'], 'a.txt')
+        const validation = new UpupValidationError(
+            'too big',
+            UpupErrorCode.FILE_TOO_LARGE,
+            file,
         )
-        expect(err.status).toBe(404)
+        expect(validation).toBeInstanceOf(UpupError)
+        expect(validation.name).toBe('UpupValidationError')
+        expect(validation.reason).toBe(UpupErrorCode.FILE_TOO_LARGE)
+        expect(validation.file).toBe(file)
     })
 
-    it('falls back to 500 when status is undefined', () => {
-        const err = new UploadError(
-            'error',
-            UploadErrorType.UNKNOWN_UPLOAD_ERROR,
-            false,
-            undefined,
-        )
-        expect(err.status).toBe(500)
-    })
-})
-
-// ─────────────────────────────────────────────
-// All error types
-// ─────────────────────────────────────────────
-describe('UploadError — all UploadErrorType values', () => {
-    it.each(Object.values(UploadErrorType))(
-        'can be constructed with type %s',
-        type => {
-            const err = new UploadError('test', type)
-            expect(err.type).toBe(type)
-        },
-    )
-})
-
-// ─────────────────────────────────────────────
-// instanceof and catch
-// ─────────────────────────────────────────────
-describe('UploadError — catch behavior', () => {
-    it('can be thrown and caught as Error', () => {
-        expect(() => {
-            throw new UploadError('thrown')
-        }).toThrow(Error)
-    })
-
-    it('can be thrown and caught with the right message', () => {
-        expect(() => {
-            throw new UploadError('specific message')
-        }).toThrow('specific message')
-    })
-
-    it('preserves type after catch', () => {
+    it('throw/catch preserves the taxonomy through instanceof narrowing', () => {
         let caught: unknown
         try {
-            throw new UploadError('err', UploadErrorType.EXPIRED_URL)
+            throw new UpupNetworkError('timeout', 408)
         } catch (e) {
-            // upup-catch: test deliberately captures the thrown error to assert its identity survives the catch
             caught = e
         }
-        expect((caught as UploadError).type).toBe(UploadErrorType.EXPIRED_URL)
+        expect(caught).toBeInstanceOf(UpupError)
+        if (caught instanceof UpupError) {
+            expect(caught.code).toBe(UpupErrorCode.NETWORK_ERROR)
+            expect(caught.status).toBe(408)
+        }
     })
 
-    it('preserves retryable after catch', () => {
-        let caught: unknown
-        try {
-            throw new UploadError(
-                'retry me',
-                UploadErrorType.CORS_CONFIG_ERROR,
-                true,
-            )
-        } catch (e) {
-            // upup-catch: test deliberately captures the thrown error to assert its retryable flag survives the catch
-            caught = e
-        }
-        expect((caught as UploadError).retryable).toBe(true)
+    it('the legacy UploadError family is gone from the public surface (F-724)', () => {
+        expect(
+            Object.keys(core).filter(k => k.startsWith('UploadError')),
+        ).toEqual([])
     })
 })

@@ -153,11 +153,13 @@ describe('UpupCore — smoke tests', () => {
     it('on/off/emit work correctly', () => {
         const core = new UpupCore({})
         const handler = vi.fn()
-        const unsub = core.on('custom', handler)
-        core.emit('custom', { data: 1 })
+        // Dynamic event names live on the namespaced surface (F-723) —
+        // bare names are the typed CoreEvents catalog only.
+        const unsub = core.on('custom:event', handler)
+        core.emit('custom:event', { data: 1 })
         expect(handler).toHaveBeenCalledWith({ data: 1 })
         unsub()
-        core.emit('custom', { data: 2 })
+        core.emit('custom:event', { data: 2 })
         expect(handler).toHaveBeenCalledTimes(1)
         core.destroy()
     })

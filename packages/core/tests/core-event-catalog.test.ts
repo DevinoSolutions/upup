@@ -1,172 +1,130 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, expectTypeOf, vi } from 'vitest'
 import { UpupCore } from '../src/core'
+import type { CoreEvents } from '../src/types/core-events'
 
 /**
- * Catalog test: ensures every documented UpupCore event can be emitted
- * and received via the public on()/emit() API.
+ * Catalog pin, re-expressed for F-800/F-840: the checked-in list below must
+ * stay EXACTLY equal to `keyof CoreEvents` in both directions — the typed
+ * emit/on surface (F-723) is the single source of truth for bare event names,
+ * so an event silently added to or removed from CoreEvents turns this test
+ * red until the list is updated deliberately (same discipline as the
+ * public-api pins).
+ *
+ * History: the previous version of this file round-tripped ~110 hand-listed
+ * strings through the then-untyped emit overload — a tautology that passed
+ * for ANY string and pinned ~60 event names core never emitted (F-800).
+ * Namespaced drive events ('<provider>:<event>') are dynamic by design and
+ * pinned separately below.
  */
+const CORE_EVENT_CATALOG = [
+    // State + lifecycle
+    'state-change',
+    'snapshot-restored',
+    'crash-recovery-restored',
+    'options-updated',
+    'plugin-registered',
+    'destroyed',
+    // Files
+    'files-added',
+    'file-removed',
+    'file-rejected',
+    'file-replaced',
+    'files-cleared',
+    'files-set',
+    'files-reordered',
+    'restriction-failed',
+    // Upload flow
+    'upload-start',
+    'file-upload-start',
+    'upload-progress',
+    'upload-success',
+    'upload-error',
+    'upload-all-complete',
+    'upload-pause',
+    'upload-resume',
+    'upload-cancel',
+    'retry',
+    // UI flow (orchestrator/controller)
+    'done',
+    'state-reset',
+    'auto-upload',
+    'connection-online',
+    'connection-offline',
+    // Image editor
+    'image-editor-open',
+    'image-editor-cancel',
+    'image-editor-save',
+    // Drag/drop + paste
+    'drag-over',
+    'drag-leave',
+    'drop',
+    'folder-drop-blocked',
+    'paste',
+    // Pipeline diagnostics
+    'pipeline-start',
+    'pipeline-step',
+    'pipeline-complete',
+    'pipeline-error',
+    // UI telemetry (framework ports; react payload canon)
+    'source-click',
+    'source-view-cancel',
+    'browse-files',
+    'folder-select',
+    'url-submit',
+    'url-fetch',
+    'url-fetch-cancel',
+    'camera-capture',
+    'camera-confirm',
+    'file-preview-open',
+    'file-preview-close',
+] as const
+
+type CatalogKey = (typeof CORE_EVENT_CATALOG)[number]
+
 describe('UpupCore — event catalog', () => {
-    const events = [
-        // Lifecycle
-        'ready',
-        'destroyed',
-        'options-updated',
-        // Files
-        'files-added',
-        'file-removed',
-        'files-cleared',
-        'files-set',
-        'files-reordered',
-        'files-replaced',
-        'file-replaced',
-        'file-rejected',
-        // Upload flow
-        'upload-start',
-        'upload-progress',
-        'upload-success',
-        'upload-all-complete',
-        'upload-error',
-        'upload-pause',
-        'upload-resume',
-        'upload-cancel',
-        'file-upload-start',
-        'retry',
-        // State
-        'state-change',
-        'snapshot-restored',
-        'crash-recovery-restored',
-        // Restrictions
-        'restriction-failed',
-        // UI interactions
-        'source-click',
-        'source-view-cancel',
-        'browse-files',
-        'folder-select',
-        'drag-over',
-        'drag-leave',
-        'drop',
-        'paste',
-        'url-submit',
-        'url-fetch',
-        'url-fetch-cancel',
-        'camera-capture',
-        'camera-confirm',
-        'file-preview-open',
-        'file-preview-close',
-        // Image editor
-        'image-editor-open',
-        'image-editor-save',
-        'image-editor-cancel',
-        // UI and integration telemetry
-        'view-mode-change',
-        'theme-change',
-        'locale-change',
-        'limit-change',
-        'adding-more',
-        'source-change',
-        'total-progress-change',
-        'upload-metrics',
-        'editor-queue-change',
-        'editing-file-change',
-        'upload-error-change',
-        'files-count-change',
-        'progress-map-change',
-        'connection-online',
-        'connection-offline',
-        // Cloud providers
-        'gdrive-auth-success',
-        'gdrive-sign-out',
-        'gdrive-files-submit',
-        'gdrive-cancel',
-        'gdrive-folder-submit',
-        'gdrive-download-error',
-        'gdrive-api-error',
-        'gdrive-auth-error',
-        'gdrive-auth-popup-error',
-        'gdrive-submit-error',
-        'gdrive-folder-submit-error',
-        'gdrive-folder-select-error',
-        'dropbox-auth-success',
-        'dropbox-files-submit',
-        'dropbox-cancel',
-        'dropbox-folder-submit',
-        'dropbox-download-error',
-        'dropbox-folder-error',
-        'dropbox-api-error',
-        'dropbox-init-error',
-        'dropbox-session-expired',
-        'dropbox-user-info-error',
-        'dropbox-no-token',
-        'dropbox-submit-error',
-        'dropbox-folder-submit-error',
-        'dropbox-folder-select-error',
-        'dropbox-auth-profile-error',
-        'dropbox-auth-poll-error',
-        'dropbox-auth-token-refreshed',
-        'dropbox-auth-refresh-error',
-        'dropbox-auth-config-error',
-        'dropbox-auth-popup-blocked',
-        'dropbox-auth-logout',
-        'dropbox-files-loaded',
-        'onedrive-auth-success',
-        'onedrive-auth-logout',
-        'onedrive-graph-ready',
-        'onedrive-files-submit',
-        'onedrive-cancel',
-        'onedrive-folder-submit',
-        'onedrive-download-error',
-        'onedrive-graph-error',
-        'onedrive-init-error',
-        'onedrive-msal-ready',
-        'onedrive-msal-error',
-        'onedrive-msal-config-error',
-        'onedrive-auth-error',
-        'onedrive-auth-logout-error',
-        'onedrive-auth-silent-error',
-        'onedrive-auth-init-error',
-        'onedrive-auth-signin-error',
-        'onedrive-folder-fetch-error',
-        'onedrive-graph-not-ready',
-        'onedrive-folder-select-error',
-        'onedrive-submit-error',
-        'onedrive-folder-submit-error',
-        // Misc
-        'warn',
-        'done',
-        'auto-upload',
-        'prepare-files',
-        'state-reset',
-        'compression-error',
-    ]
-
-    it(`catalog contains ${events.length} event types`, () => {
-        expect(events.length).toBeGreaterThan(80)
+    it('catalog is exactly keyof CoreEvents (both directions)', () => {
+        // A key present in CoreEvents but missing here — or listed here but
+        // gone from CoreEvents — fails the test-tree typecheck gate.
+        expectTypeOf<CatalogKey>().toEqualTypeOf<keyof CoreEvents>()
+        expect(CORE_EVENT_CATALOG.length).toBeGreaterThan(0)
     })
 
-    it('all catalog events are unique', () => {
-        expect(new Set(events).size).toBe(events.length)
+    it('catalog entries are unique', () => {
+        expect(new Set(CORE_EVENT_CATALOG).size).toBe(CORE_EVENT_CATALOG.length)
     })
 
-    it('all catalog events can be emitted and received via on()/emit()', () => {
+    it('typed on()/emit() dispatch + unsubscribe round-trip', () => {
         const core = new UpupCore({})
-        for (const event of events) {
-            const handler = vi.fn()
-            core.on(event, handler)
-            core.emit(event, { test: true })
-            expect(handler).toHaveBeenCalledWith({ test: true })
-        }
+        const received: unknown[] = []
+        const unsub = core.on('files-set', payload => {
+            received.push(payload)
+        })
+        core.emit('files-set', { count: 2 })
+        expect(received).toEqual([{ count: 2 }])
+        unsub()
+        core.emit('files-set', { count: 3 })
+        expect(received).toHaveLength(1)
         core.destroy()
     })
 
-    it('unsubscribing prevents reception for all catalog events', () => {
+    it('unknown bare event names are compile errors on the typed surface', () => {
         const core = new UpupCore({})
-        for (const event of events) {
-            const handler = vi.fn()
-            const unsub = core.on(event, handler)
-            unsub()
-            core.emit(event, { test: true })
-            expect(handler).not.toHaveBeenCalled()
-        }
+        // @ts-expect-error — 'not-a-real-event' is not in CoreEvents (F-723)
+        core.on('not-a-real-event', () => {})
+        // @ts-expect-error — bare emits must come from the catalog
+        core.emit('not-a-real-event', {})
+        core.destroy()
+    })
+
+    it("namespaced drive-plugin events ('<provider>:<event>') pass through dynamically", () => {
+        const core = new UpupCore({})
+        const handler = vi.fn()
+        const unsub = core.on('google-drive:files-loaded', handler)
+        core.emit('google-drive:files-loaded', { files: [] })
+        expect(handler).toHaveBeenCalledWith({ files: [] })
+        unsub()
+        core.emit('google-drive:files-loaded', { files: [] })
+        expect(handler).toHaveBeenCalledTimes(1)
         core.destroy()
     })
 })

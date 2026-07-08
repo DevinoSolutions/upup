@@ -11,6 +11,7 @@ import {
 } from '../utils/image-helpers'
 import type { UploadResult } from '../contracts-strategies'
 import { UpupError } from '../errors'
+import { computeSpeedEta, type SpeedSample } from './upload-speed'
 
 export class UploaderOrchestrator {
     private state: OrchestratorState
@@ -244,7 +245,7 @@ export class UploaderOrchestrator {
 
     // ── Lifecycle ────────────────────────────────────────────────────
 
-    private speedSamples: { time: number; bytes: number }[] = []
+    private speedSamples: SpeedSample[] = []
 
     /**
      * Project orchestrator state from core — the single source of truth (F-145).
@@ -290,6 +291,13 @@ export class UploaderOrchestrator {
     }
 
     init(): void {
+        // Project whatever core already holds: files added BEFORE init() (a
+        // host may seed core first, mount later) emitted their state-change
+        // while nobody was listening — without this, upload commands see an
+        // empty projection until the next core event (surfaced by F-722's
+        // delegation; the old controller copy read core.files directly).
+        this.projectFromCore()
+
         // ── upload-start (callback only; uploadStatus is projected from state-change) ──
         this.unsubs.push(
             this.core.on('upload-start', () => {
@@ -386,38 +394,20 @@ export class UploaderOrchestrator {
                         },
                     }
 
-                    const now = Date.now()
                     const nextUploaded = Object.values(nextProgressMap).reduce(
                         (sum, item) => sum + item.loaded,
                         0,
                     )
 
-                    // Speed / ETA calculation
-                    this.speedSamples.push({ time: now, bytes: nextUploaded })
-                    this.speedSamples = this.speedSamples.filter(
-                        s => s.time >= now - 3000,
-                    )
-
-                    let speed = this.state.uploadSpeed
-                    let eta = this.state.uploadEta
-                    if (this.speedSamples.length >= 2) {
-                        const oldest = this.speedSamples[0]
-                        const newest =
-                            this.speedSamples[this.speedSamples.length - 1]
-                        if (oldest && newest) {
-                            const elapsed = (newest.time - oldest.time) / 1000
-                            if (elapsed > 0) {
-                                speed = Math.max(
-                                    0,
-                                    (newest.bytes - oldest.bytes) / elapsed,
-                                )
-                                const remaining =
-                                    this.state.totalBytes - nextUploaded
-                                eta =
-                                    speed > 0 ? Math.ceil(remaining / speed) : 0
-                            }
-                        }
-                    }
+                    const { samples, speed, eta } = computeSpeedEta({
+                        samples: this.speedSamples,
+                        now: Date.now(),
+                        uploadedBytes: nextUploaded,
+                        totalBytes: this.state.totalBytes,
+                        previousSpeed: this.state.uploadSpeed,
+                        previousEta: this.state.uploadEta,
+                    })
+                    this.speedSamples = samples
 
                     this.setState({
                         filesProgressMap: nextProgressMap,

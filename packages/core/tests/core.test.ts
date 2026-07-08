@@ -99,7 +99,7 @@ describe('UpupCore', () => {
             provider: 'aws',
             uploadEndpoint: '/api/upload',
         })
-        core.on('test', vi.fn())
+        core.on('custom:test', vi.fn())
         core.destroy()
         expect(core.status).toBe(UploadStatus.IDLE)
     })

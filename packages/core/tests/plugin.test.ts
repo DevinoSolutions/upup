@@ -9,16 +9,16 @@ describe('PluginManager', () => {
 
         // register() only dedups + stores; the lifecycle hook init(emitter) is
         // invoked later by UpupCore.use() (F-607), not by register().
-        manager.register(plugin, {})
+        manager.register(plugin)
 
         expect(manager.getPlugin('test')).toBe(plugin)
     })
 
     it('rejects duplicate plugin names', () => {
         const manager = new PluginManager()
-        manager.register({ name: 'dupe' }, {})
+        manager.register({ name: 'dupe' })
 
-        expect(() => manager.register({ name: 'dupe' }, {})).toThrow(
+        expect(() => manager.register({ name: 'dupe' })).toThrow(
             'Plugin "dupe" is already registered',
         )
     })
@@ -56,7 +56,7 @@ describe('PluginManager', () => {
 
     it('registers extensions independently of plugins', () => {
         const manager = new PluginManager()
-        manager.register({ name: 'with-ext' }, {})
+        manager.register({ name: 'with-ext' })
         manager.registerExtension('myExt', {
             getValue: () => 42,
         })
@@ -76,7 +76,7 @@ describe('PluginManager', () => {
 
     it('cleans up everything on destroy()', () => {
         const manager = new PluginManager()
-        manager.register({ name: 'test' }, {})
+        manager.register({ name: 'test' })
         manager.registerExtension('ext', { fn: () => {} })
 
         manager.destroy()

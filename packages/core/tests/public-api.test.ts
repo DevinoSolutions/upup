@@ -135,10 +135,10 @@ type _Internal_OrchestratorState = coreInternal.OrchestratorState
 
 describe('@upup/core public API surface (pin test)', () => {
     it('runtime value export list matches the curated, checked-in list', () => {
-        // The final curated public surface (D2). Dumped from the built
-        // dist/index.cjs via Object.keys() to avoid hand-transcription error;
-        // matches audit/tmp/p18-sets.json's keepPublic.values (53 entries,
-        // including the new PopupOAuthPlugin) exactly.
+        // The curated public surface (D2), updated in pass 2: the legacy
+        // parallel UploadError/UploadErrorType family was deleted (F-724) —
+        // the UpupError taxonomy + uploadErrorFromResponse (via ./internal)
+        // are the one error surface. 51 entries.
         const EXPECTED_PUBLIC_VALUE_EXPORTS: string[] = [
             'ACCEPT_PRESETS',
             'BOX_DESCRIPTOR',
@@ -159,8 +159,6 @@ describe('@upup/core public API surface (pin test)', () => {
             'PopupOAuthPlugin',
             'StorageProvider',
             'UPUP_VAR_PREFIX',
-            'UploadError',
-            'UploadErrorType',
             'UploadStatus',
             'UpupAuthError',
             'UpupConfigError',

@@ -47,7 +47,14 @@ describe('P6 contract — one upload-failure channel (F-146)', () => {
         await core.addFiles([realFile('a.txt')]) // key == null → resume will attempt it
 
         const errorSpy = vi.fn()
-        core.on('error', errorSpy) // the retired channel — must NEVER fire
+        // The retired bare 'error' channel must NEVER fire (P6). Since F-723
+        // subscribing to it is also a compile error — bypass the typed surface
+        // deliberately so the runtime "stays silent" pin keeps executing.
+        const onUntyped = core.on.bind(core) as (
+            event: string,
+            handler: (payload: unknown) => void,
+        ) => () => void
+        onUntyped('error', errorSpy)
 
         // Wait for the whole resume flow to settle (core reaches FAILED), so we observe
         // the resume-level failure emission — not just the earlier per-file upload-error.
