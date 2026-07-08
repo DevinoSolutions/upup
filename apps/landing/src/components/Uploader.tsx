@@ -1,19 +1,22 @@
-"use client";
+'use client'
 
-import React, {useContext} from "react";
+import React, { useContext } from 'react'
 
-import {UpupUploader} from '@upup/react'
-import type {LocaleBundle} from '@upup/core'
+import { UpupUploader } from '@upup/react'
+import type { LocaleBundle } from '@upup/core'
 
-import "@upup/react/styles";
-import {ThemeContext} from "@/lib/contexts";
-import {clientEnv} from "@/lib/env";
-import {toast} from "react-toastify";
+import '@upup/react/styles'
+import { ThemeContext } from '@/lib/contexts'
+import { clientEnv } from '@/lib/env'
+import { toast } from 'react-toastify'
 
 const customFields = {
-    uploadEndpoint: clientEnv.NEXT_PUBLIC_BASE_URL
-        ? clientEnv.NEXT_PUBLIC_BASE_URL + "/api/getPresignedUrl"
-        : "/api/getPresignedUrl",
+    // Point at the mounted @upup/server handler (src/app/api/upup/[...path]/route.ts);
+    // the client derives /presign and /multipart/* from this base. The previous
+    // /api/getPresignedUrl path does not exist in this app, so every upload 404'd.
+    serverUrl: clientEnv.NEXT_PUBLIC_BASE_URL
+        ? clientEnv.NEXT_PUBLIC_BASE_URL + '/api/upup'
+        : '/api/upup',
     cloudDrives: {
         googleDrive: {
             clientId: clientEnv.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
@@ -27,38 +30,38 @@ const customFields = {
             clientId: clientEnv.NEXT_PUBLIC_DROPBOX_CLIENT_ID,
         },
     },
-};
+}
 
 interface Props {
-    limit: number;
-    mini: boolean;
-    theme?: string;
-    sources?: string[];
-    allowPreview?: boolean;
-    shouldCompress?: boolean;
-    fileSizeLimit?: number; // in MB
-    maxRetries?: number;
-    locale?: LocaleBundle;
-    imageEditor?: boolean;
+    limit: number
+    mini: boolean
+    theme?: string
+    sources?: string[]
+    allowPreview?: boolean
+    shouldCompress?: boolean
+    fileSizeLimit?: number // in MB
+    maxRetries?: number
+    locale?: LocaleBundle
+    imageEditor?: boolean
 }
 
 export default function Uploader({
-                                     limit,
-                                     mini,
-                                     theme = "blue",
-                                     sources = ["local", "googleDrive", "oneDrive", "url", "camera"],
-                                     allowPreview = true,
-                                     shouldCompress = false,
-                                     fileSizeLimit = 25,
-                                     maxRetries,
-                                     locale,
-                                     imageEditor = false,
-                                 }: Readonly<Props>) {
+    limit,
+    mini,
+    theme = 'blue',
+    sources = ['local', 'googleDrive', 'oneDrive', 'url', 'camera'],
+    allowPreview = true,
+    shouldCompress = false,
+    fileSizeLimit = 25,
+    maxRetries,
+    locale,
+    imageEditor = false,
+}: Readonly<Props>) {
     // Detect dark mode using Tailwind's class strategy
-    const {isDarkMode} = useContext(ThemeContext)
+    const { isDarkMode } = useContext(ThemeContext)
 
     // Get the current theme
-    const currentTheme = theme || "blue";
+    const currentTheme = theme || 'blue'
 
     // Per-slot class overrides — v2 nested shape fed through theme.slots.
     const customSlots = {
@@ -96,49 +99,52 @@ export default function Uploader({
         cameraUploader: {
             addButton: `uploader-btn-${currentTheme}`,
         },
-    };
+    }
 
     return (
-      <div className="flex justify-center items-center w-full h-full lg:min-h-[auto] min-h-[70vh]">
-        <UpupUploader
-          provider="backblaze"
-          maxFiles={limit}
-          uploadEndpoint={customFields.uploadEndpoint}
-          sources={sources as any}
-          cloudDrives={customFields.cloudDrives}
-          theme={{ mode: isDarkMode ? 'dark' : 'light', slots: customSlots }}
-          mini={mini}
-          allowPreview={allowPreview}
-          imageCompression={shouldCompress}
-          imageEditor={imageEditor}
-          maxFileSize={{ size: fileSizeLimit, unit: "MB" }}
-          maxRetries={maxRetries}
-          resumable={{ protocol: "multipart" }}
-          i18n={locale ? { locale } : undefined}
-          onFilesUploadComplete={(files) => {
-            console.log("Files uploaded successfully:", files);
-            toast.success("Files uploaded successfully!");
-          }}
-          onError={(e) => {
-            console.error(e);
-            toast.error(e);
-          }}
-          onWarn={(warning) => {
-            console.warn(warning);
-            toast.warn(warning);
-          }}
-          onFileTypeMismatch={(file, acceptedTypes) => {
-            toast.error(
-              `File type not supported. Accepted types: ${acceptedTypes}`,
-            );
-          }}
-          onFileUploadStart={(file) => {
-            toast.info(`Starting upload: ${file.name}`);
-          }}
-          onFileUploadComplete={(file) => {
-            toast.success(`Upload complete: ${file.name}`);
-          }}
-        />
-      </div>
-    );
+        <div className="flex justify-center items-center w-full h-full lg:min-h-[auto] min-h-[70vh]">
+            <UpupUploader
+                provider="backblaze"
+                maxFiles={limit}
+                serverUrl={customFields.serverUrl}
+                sources={sources as any}
+                cloudDrives={customFields.cloudDrives}
+                theme={{
+                    mode: isDarkMode ? 'dark' : 'light',
+                    slots: customSlots,
+                }}
+                mini={mini}
+                allowPreview={allowPreview}
+                imageCompression={shouldCompress}
+                imageEditor={imageEditor}
+                maxFileSize={{ size: fileSizeLimit, unit: 'MB' }}
+                maxRetries={maxRetries}
+                resumable={{ protocol: 'multipart' }}
+                i18n={locale ? { locale } : undefined}
+                onFilesUploadComplete={files => {
+                    console.log('Files uploaded successfully:', files)
+                    toast.success('Files uploaded successfully!')
+                }}
+                onError={e => {
+                    console.error(e)
+                    toast.error(e)
+                }}
+                onWarn={warning => {
+                    console.warn(warning)
+                    toast.warn(warning)
+                }}
+                onFileTypeMismatch={(file, acceptedTypes) => {
+                    toast.error(
+                        `File type not supported. Accepted types: ${acceptedTypes}`,
+                    )
+                }}
+                onFileUploadStart={file => {
+                    toast.info(`Starting upload: ${file.name}`)
+                }}
+                onFileUploadComplete={file => {
+                    toast.success(`Upload complete: ${file.name}`)
+                }}
+            />
+        </div>
+    )
 }
