@@ -102,7 +102,7 @@ export function uploaderHeader(
                           }}
                           ?disabled=${isUploading || isProcessing}
                       >
-                          ${nothing} ${tr.addMore}
+                          ${icon('plus')} ${tr.addMore}
                       </button>`
                     : nothing
             }

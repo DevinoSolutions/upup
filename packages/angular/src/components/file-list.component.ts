@@ -102,13 +102,6 @@ const ESTIMATED_ITEM_HEIGHT = 76
                 }
             </div>
 
-            <!-- Overall progress bar -->
-            <upup-progress-bar
-                class="upup-px-3"
-                [progress]="store.totalProgress()"
-                [showValue]="true"
-            />
-
             <!-- Footer: upload / retry / done + pause/cancel controls + ETA -->
             <div [class]="footerClass">
                 <!-- Upload button -->
@@ -212,6 +205,13 @@ const ESTIMATED_ITEM_HEIGHT = 76
                                 <upup-x-icon [size]="14" />
                             </button>
                         }
+
+                        <upup-progress-bar
+                            class="upup-flex-1"
+                            progressBarClassName="upup-rounded"
+                            [progress]="store.totalProgress()"
+                            [showValue]="true"
+                        />
 
                         @if (showProgressText) {
                             <span [class]="progressTextClass">
