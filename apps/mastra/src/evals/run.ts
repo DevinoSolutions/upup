@@ -4,8 +4,8 @@ import { EVAL_CASES, type EvalCase } from './canned-prompts.js'
 /**
  * Run the canned-prompt eval against a running Mastra server.
  *
- *   pnpm --filter mastra dev      # in another terminal
- *   pnpm --filter mastra eval
+ *   pnpm --filter @upup/mastra dev      # in another terminal
+ *   pnpm --filter @upup/mastra eval
  *
  * Exits 0 when all cases pass, non-zero otherwise. Suitable for CI as a
  * regression gate — break the agent, the build fails.
@@ -13,7 +13,12 @@ import { EVAL_CASES, type EvalCase } from './canned-prompts.js'
 
 type EvalResult =
     | { case: EvalCase; ok: true; patch: Record<string, unknown> }
-    | { case: EvalCase; ok: false; reason: string; patch?: Record<string, unknown> }
+    | {
+          case: EvalCase
+          ok: false
+          reason: string
+          patch?: Record<string, unknown>
+      }
 
 import { env } from '../lib/env.js'
 
@@ -33,10 +38,15 @@ async function runOne(client: MastraClient, c: EvalCase): Promise<EvalResult> {
         const collect = (results: any[] | undefined) => {
             if (!Array.isArray(results)) return
             for (const r of results) {
-                const id: string | undefined = r?.toolCallId ?? r?.payload?.toolCallId
+                const id: string | undefined =
+                    r?.toolCallId ?? r?.payload?.toolCallId
                 if (id && seen.has(id)) continue
                 const name = r?.toolName ?? r?.payload?.toolName
-                if (name !== 'apply-config-patch' && name !== 'applyConfigPatch') continue
+                if (
+                    name !== 'apply-config-patch' &&
+                    name !== 'applyConfigPatch'
+                )
+                    continue
                 const data = r?.result ?? r?.payload?.result
                 if (!data?.patch) continue
                 if (id) seen.add(id)
@@ -49,7 +59,11 @@ async function runOne(client: MastraClient, c: EvalCase): Promise<EvalResult> {
         }
 
         if (patches.length === 0) {
-            return { case: c, ok: false, reason: 'agent did not call apply-config-patch' }
+            return {
+                case: c,
+                ok: false,
+                reason: 'agent did not call apply-config-patch',
+            }
         }
 
         // Merge any multi-call patches into a single object for assertion.
@@ -110,7 +124,7 @@ async function main() {
         console.log(`  [${tag}] ${c.name}${reason}`)
     }
 
-    const failed = results.filter((r) => !r.ok)
+    const failed = results.filter(r => !r.ok)
     const failRate = failed.length / results.length
     const summary = `\n${results.length - failed.length}/${results.length} passed (${(failRate * 100).toFixed(1)}% fail rate)`
 
@@ -134,11 +148,13 @@ async function main() {
         )
         process.exit(1)
     }
-    console.log(`\nFail rate within tolerance (≤${(FAIL_THRESHOLD * 100).toFixed(1)}%) — exit 0.`)
+    console.log(
+        `\nFail rate within tolerance (≤${(FAIL_THRESHOLD * 100).toFixed(1)}%) — exit 0.`,
+    )
     process.exit(0)
 }
 
-main().catch((e) => {
+main().catch(e => {
     console.error(e)
     process.exit(1)
 })

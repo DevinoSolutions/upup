@@ -11,12 +11,12 @@
                 "!.next/cache/**"
             ]
         },
-        "docs#build": {
+        "@upup/docs#build": {
             "dependsOn": ["^build"],
             "outputs": ["build/**", "../landing/public/documentation/**"]
         },
         "@upup/landing#build": {
-            "dependsOn": ["^build", "docs#build"]
+            "dependsOn": ["^build", "@upup/docs#build"]
         },
         "@upup/playground#build": {
             "dependsOn": ["^build"]

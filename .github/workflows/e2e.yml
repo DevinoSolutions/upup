@@ -32,7 +32,7 @@ jobs:
               run: pnpm install --frozen-lockfile
 
             - name: Install Playwright Chromium
-              run: pnpm --filter e2e-test exec playwright install --with-deps chromium
+              run: pnpm --filter @upup/e2e-test exec playwright install --with-deps chromium
 
             - name: Provision MinIO env (defaults; smoke is OAuth-free)
               run: cp local-dev/.env.minio.example local-dev/.env.minio

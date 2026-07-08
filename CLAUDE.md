@@ -273,7 +273,7 @@ and compares normalized DOM + a11y against `parity-fixtures.json`. React is the
 source of truth. After an intentional UI change:
 
 1. Set `UPDATE_PARITY=1` and run the parity spec with `--project react`
-   (`pnpm --filter e2e-test test:e2e:cf -- --project react`) — fixtures are
+   (`pnpm --filter @upup/e2e-test test:e2e:cf -- --project react`) — fixtures are
    rewritten from React's DOM.
 2. Review the `parity-fixtures.json` diff like code.
 3. Unset the env var and run the full cross-framework suite — all six must pass.
