@@ -1,20 +1,45 @@
 # Changelog
 
-All notable changes to this project are documented here. **Two npm
-packages ship from this repo** (as of v2.2):
+All notable changes to this project are documented here. Dates use `YYYY-MM-DD`.
 
-- `upup-react-file-uploader` (sources at `packages/react`) — the
-  client/browser runtime. Always required.
-- `@upup/server` (sources at `packages/server`) — optional Node-side
-  handler for Server Mode (`mode="server"`). Client Mode consumers do
-  not install this.
+## Current architecture (2.2.0)
 
-Internal workspace packages `@upup/core` and `@upup/shared` remain
-private sources of modular testability but are bundled into both
-published artifacts — consumers never install them directly. The
-legacy `packages/upup` v1 codebase was retired in v2.1.
+upup ships as **nine published `@upup/*` packages**, versioned and released
+together via [changesets](https://github.com/changesets/changesets):
 
-Dates use `YYYY-MM-DD`.
+- **`@upup/core`** — the headless engine (file state, upload pipeline,
+  cloud-drive plugins, i18n, theme). Zero framework dependencies, and published
+  in its own right — not a private, bundled-in source.
+- **`@upup/react`** — the canonical UI. `@upup/vue`, `@upup/svelte`,
+  `@upup/angular`, and `@upup/vanilla` are native, DOM-identical ports of it, and
+  `@upup/preact` is a `preact/compat` re-export of `@upup/react`.
+- **`@upup/next`** — client re-export plus `/server` route handlers (App and
+  Pages routers).
+- **`@upup/server`** — optional Server Mode endpoints (S3/MinIO presign + proxy
+  upload, drive-token exchange) behind an HMAC-signed upload-token trust model.
+  The framework-agnostic factory is `createUpupHandler` (`createUpupNextHandler`
+  wraps it for Next.js). The server-side drive→S3 transfer buffer is bounded at a
+  fixed 5 MB (`SINGLE_PUT_MAX_BYTES`).
+
+Client Mode (browser ↔ storage direct) is the default; Server Mode is strictly
+opt-in.
+
+**Versioning and release notes are generated per package by changesets** —
+consult each package's own `CHANGELOG.md` for its published history going
+forward, and `.github/workflows/publish.yml` for how the nine packages are
+released together.
+
+---
+
+> **Historical log — pre-v2 / early-v2.** _(Editorial note added 2026-07-08.)_
+> The dated entries below predate the architecture described above and are kept
+> verbatim as a historical record. They describe a superseded design whose names
+> no longer exist in the codebase: a two-package publish
+> (`upup-react-file-uploader` plus a private `@upup/shared`), a `createHandler()`
+> server API, a configurable `multipartThreshold` server knob, and the `Adapter*`
+> UI vocabulary (`sourceSelector.adapterButton`, the uploader's "adapter row")
+> since swept to `Source*` / `Drive*` / `Uploader*` names. Read them as history,
+> not as the current 2.2.0 API.
 
 ---
 
@@ -99,7 +124,7 @@ the one-page migration guide.
   `@upup/react`.
 - `CoreOptions.locale` and `CoreOptions.translations` in `@upup/core`
   changed from `unknown` to proper types (`LocaleBundle |
-  UpupLocaleCode` and `Partial<UpupMessages>` respectively). No
+UpupLocaleCode` and `Partial<UpupMessages>` respectively). No
   runtime change — consumers passing `unknown` now fail type-check.
 
 ### Added
@@ -200,6 +225,7 @@ The in-app playground got a full UX pass:
 - All 1,774 tests green across shared / core / react / interactive-example
 
 Totals by package (after this release):
+
 - shared: 360 tests
 - core: 571 tests
 - react: 780 tests
