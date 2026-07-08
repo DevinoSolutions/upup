@@ -31,7 +31,8 @@ export default function UploaderPanel(): React.ReactElement | null {
     } = useUploaderPanel()
 
     const dropEffectProps: React.AriaAttributes = {
-        // eslint-disable-next-line @typescript-eslint/no-deprecated -- aria-dropeffect is intentionally set for drag-and-drop assistive-tech feedback; still honored by current screen readers
+        // aria-dropeffect is intentionally set for drag-and-drop
+        // assistive-tech feedback; still honored by current screen readers.
         'aria-dropeffect': isDragging ? 'copy' : 'none',
     }
 

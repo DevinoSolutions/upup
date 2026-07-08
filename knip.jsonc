@@ -47,5 +47,19 @@
     "apps/**",
     "scripts/**"
   ],
+  // F-788: re-enabling `exports`/`duplicates` was attempted and REVERTED. It
+  // surfaced 38 unused + 12 duplicate exports dominated by INTENTIONAL
+  // per-framework parity (principle 4): parallel composables export both a named
+  // and a default (`useBox`/`useDropbox`/`useGoogleDrive`/`useOneDrive` across
+  // vue+svelte), the angular icon barrel, and `deriveFetchedFileName` /
+  // `useGoogleDrive` / `UploadStatus` mirrored across vue/svelte/angular — plus
+  // barrels consumed only by `apps/**` (which this config ignores). Greening it
+  // needs src deletions (out of the CI/config batch's scope) or a large, fragile
+  // ignore-list that would mask real signal; the handful of genuinely
+  // candidate-dead exports are recorded in the audit for a dedicated burn-down.
+  // TRUE knip scope here is therefore NARROW: unused FILES + unused DEPS within
+  // packages/* — NOT unused exports/types/enum-members/duplicate-exports. Do not
+  // mistake this gate for full dead-code coverage (CLAUDE.md's "dead-code /
+  // unused-dep detection" describes the intent, not the enforced surface).
   "exclude": ["exports", "types", "enumMembers", "duplicates"]
 }

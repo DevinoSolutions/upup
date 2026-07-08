@@ -104,6 +104,12 @@ export function useUpupUpload(
         core.destroy()
     })
 
+    // Untyped passthrough for the port's string-typed public `on` — the typed
+    // CoreEvents surface lives on core itself (F-723). Dynamic string names
+    // route through the namespaced overload (same runtime dispatch).
+    const onUntyped = (ev: string, hh: (p: unknown) => void): (() => void) =>
+        core.on(ev as `${string}:${string}`, hh)
+
     return {
         files,
         status,
@@ -131,13 +137,7 @@ export function useUpupUpload(
             core.cancel()
         },
         retry: (id?: string) => core.retry(id),
-        // Untyped passthrough — this port's public `on` stays string-typed;
-        // the typed CoreEvents surface lives on core itself (F-723).
-        on: (e: string, h: (...args: unknown[]) => void) =>
-            (core.on as (ev: string, hh: (p: unknown) => void) => () => void)(
-                e,
-                h,
-            ),
+        on: (e: string, h: (...args: unknown[]) => void) => onUntyped(e, h),
         ext: core.ext,
         core,
     }

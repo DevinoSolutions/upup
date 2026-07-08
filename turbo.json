@@ -12,12 +12,15 @@
             ]
         },
         "docs#build": {
+            "dependsOn": ["^build"],
             "outputs": ["build/**", "../landing/public/documentation/**"]
         },
         "@upup/landing#build": {
-            "dependsOn": ["docs#build"]
+            "dependsOn": ["^build", "docs#build"]
         },
-        "playground#build": {},
+        "playground#build": {
+            "dependsOn": ["^build"]
+        },
         "build-storybook": {
             "dependsOn": ["^build"],
             "outputs": ["storybook-static/**"]
@@ -41,6 +44,15 @@
         },
         "@upup/preact#test": {
             "dependsOn": ["^test", "^build", "build"]
+        },
+        "test:coverage": {
+            "dependsOn": ["^build"]
+        },
+        "@upup/vanilla#test:coverage": {
+            "dependsOn": ["^build", "build"]
+        },
+        "@upup/preact#test:coverage": {
+            "dependsOn": ["^build", "build"]
         },
         "typecheck": {
             "dependsOn": ["^typecheck", "^build"]

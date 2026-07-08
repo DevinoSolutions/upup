@@ -26,8 +26,9 @@
         "build": "tsup && pnpm run build:css",
         "build:css": "postcss src/tailwind.css -o ./dist/tailwind-prefixed.css",
         "dev": "tsup --watch --onSuccess \"pnpm run build:css\"",
-        "lint": "eslint .",
+        "lint": "eslint . --max-warnings 0",
         "test": "vitest run",
+        "test:coverage": "vitest run --coverage",
         "test:watch": "vitest",
         "typecheck": "tsc --noEmit && tsc -p tsconfig.test.json --noEmit"
     },

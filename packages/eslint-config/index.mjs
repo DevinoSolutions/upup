@@ -34,6 +34,9 @@ export default tseslint.config(
             'coverage/**',
             'storybook-static/**',
             '.next/**',
+            // svelte-package's generated output — compiled copies of src (with
+            // comments intact) that must never gate lint.
+            '.svelte-kit/**',
             '**/*.d.ts',
             '**/*.vue',
             '**/*.svelte',
@@ -102,11 +105,17 @@ export default tseslint.config(
                     caughtErrorsIgnorePattern: '^_',
                 },
             ],
-            '@typescript-eslint/no-unnecessary-condition': 'warn', // noisy: ratchet after burn-down
-            '@typescript-eslint/restrict-template-expressions': [
-                'warn',
-                { allowNumber: true, allowBoolean: true },
-            ],
+            // F-784: these were the ONLY two warn-level rules in the config.
+            // With `--max-warnings 0` now gating every leaf lint script, a warn
+            // that can't be burned down here (their violations live in package
+            // src — no-unnecessary-condition ~40 in core/react/angular,
+            // restrict-template-expressions a handful — which is out of this
+            // change's scope) would wall CI red forever. At 'warn' with no
+            // --max-warnings they enforced nothing anyway (decorative). Turned
+            // OFF to cut the noise per F-784's sanctioned branch; reintroduce as
+            // 'error' in a dedicated burn-down (the original ratchet intent).
+            '@typescript-eslint/no-unnecessary-condition': 'off',
+            '@typescript-eslint/restrict-template-expressions': 'off',
 
             // ---- F-167 phase-2 ratchet: the parked warns come back to error ----
             'no-control-regex': 'error',
@@ -334,8 +343,14 @@ export const appEnvConfig = [
             'no-restricted-syntax': [
                 'error',
                 {
+                    // NODE_ENV is exempt: it is the framework build-mode flag
+                    // (set by Next/the bundler and statically inlined at build),
+                    // not app config or a secret — the app env modules
+                    // deliberately don't validate it, so it cannot and should not
+                    // be routed through them. Every other process.env.<KEY> read
+                    // in app src is banned and must go through the env module.
                     selector:
-                        "MemberExpression[object.object.name='process'][object.property.name='env']",
+                        "MemberExpression[object.object.name='process'][object.property.name='env']:not([property.name='NODE_ENV'])",
                     message:
                         "Read env through the app's validated env module (src/lib/env.ts), not process.env directly.",
                 },

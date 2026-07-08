@@ -52,6 +52,7 @@ describe('UpupError taxonomy — consumer contract', () => {
         try {
             throw new UpupNetworkError('timeout', 408)
         } catch (e) {
+            // upup-catch: the test asserts on the caught value below
             caught = e
         }
         expect(caught).toBeInstanceOf(UpupError)

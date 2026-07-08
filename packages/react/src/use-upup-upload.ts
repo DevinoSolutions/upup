@@ -277,11 +277,13 @@ export function useUpupUpload(
         (event: string, handler: (payload: never) => void) => {
             // Single untyped dispatch point — the overloads on
             // UseUpupUploadReturn['on'] are the consumer-facing contract.
-            const subscribe = coreRef.current?.on.bind(coreRef.current) as
-                ((e: string, h: (p: unknown) => void) => () => void) | undefined
+            // Dynamic names route through the namespaced overload (same
+            // runtime dispatch).
             return (
-                subscribe?.(event, handler as (p: unknown) => void) ??
-                (() => {})
+                coreRef.current?.on(
+                    event as `${string}:${string}`,
+                    handler as (p: unknown) => void,
+                ) ?? (() => {})
             )
         },
         [],

@@ -28,8 +28,9 @@
         "build": "ng-packagr -p ng-package.json && pnpm run build:css",
         "build:css": "postcss src/tailwind.css -o ./dist/tailwind-prefixed.css",
         "dev": "ng-packagr -p ng-package.json --watch",
-        "lint": "eslint .",
+        "lint": "eslint . --max-warnings 0",
         "test": "vitest run",
+        "test:coverage": "vitest run --coverage",
         "test:watch": "vitest",
         "typecheck": "tsc -p tsconfig.lib.json --noEmit && tsc -p tsconfig.spec.json --noEmit"
     },

@@ -8,31 +8,25 @@ on:
         branches: [master, dev]
     workflow_dispatch:
 
+# Actions pinned to full commit SHAs (F-792); pnpm via pnpm/action-setup +
+# setup-node cache:pnpm (F-787) — same mechanism as main.yml / publish.yml.
+
 jobs:
     E2E:
         name: Cross-framework E2E (Playwright + MinIO)
         runs-on: ubuntu-latest
         steps:
             - name: Checkout the repository
-              uses: actions/checkout@v4
+              uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
-            - name: Setup Node.js environment
-              uses: actions/setup-node@v4
+            - name: Setup pnpm
+              uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4.4.0
+
+            - name: Setup Node.js
+              uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
               with:
                   node-version-file: '.nvmrc'
-
-            - name: Setup PNPM environment
-              run: |
-                  npm install -g pnpm@10.11.0
-                  pnpm config set store-dir ~/.pnpm-store
-
-            - name: Cache PNPM dependencies
-              uses: actions/cache@v4
-              with:
-                  path: ~/.pnpm-store
-                  key: ${{ runner.os }}-pnpm-v3-${{ hashFiles('pnpm-lock.yaml') }}
-                  restore-keys: |
-                      ${{ runner.os }}-pnpm-v3-
+                  cache: pnpm
 
             - name: Install dependencies
               run: pnpm install --frozen-lockfile
@@ -78,21 +72,38 @@ jobs:
         name: Package smoke (real tarball consumer)
         runs-on: ubuntu-latest
         steps:
-            - uses: actions/checkout@v4
-            - uses: actions/setup-node@v4
+            - name: Checkout the repository
+              uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+            - name: Setup pnpm
+              uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4.4.0
+
+            - name: Setup Node.js
+              uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
               with:
                   node-version-file: '.nvmrc'
-            - name: Setup PNPM environment
-              run: |
-                  npm install -g pnpm@10.11.0
-                  pnpm config set store-dir ~/.pnpm-store
-            - uses: actions/cache@v4
-              with:
-                  path: ~/.pnpm-store
-                  key: ${{ runner.os }}-pnpm-v3-${{ hashFiles('pnpm-lock.yaml') }}
-                  restore-keys: |
-                      ${{ runner.os }}-pnpm-v3-
+                  cache: pnpm
+
             - name: Install dependencies
               run: pnpm install --frozen-lockfile
+
             - name: Package smoke (packs all 9, isolated consumer, vite build, dist-shape asserts)
               run: pnpm run smoke:packages # self-builds via build:package; no browser, no MinIO
+
+    # Rollup aggregator for this workflow (F-780): main.yml's Status-Check spans
+    # only main.yml jobs, so E2E + Smoke-Packages were aggregated by nothing.
+    # Branch protection must require BOTH this job AND main.yml's Status Check.
+    E2E-Status:
+        name: E2E Status Check
+        runs-on: ubuntu-latest
+        needs: [E2E, Smoke-Packages]
+        if: always()
+        steps:
+            - name: Check status
+              run: |
+                  if [ "${{ needs.E2E.result }}" != "success" ] || \
+                     [ "${{ needs.Smoke-Packages.result }}" != "success" ]; then
+                    echo "One or more E2E jobs failed"
+                    exit 1
+                  fi
+                  echo "All E2E jobs passed successfully"

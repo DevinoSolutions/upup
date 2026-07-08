@@ -6,31 +6,29 @@ on:
     pull_request:
         branches: [master, dev]
 
+# Actions are pinned to full commit SHAs (F-792) to match docker-compose's
+# digest-pinning posture; the trailing comment records the human version.
+# Dependabot's github-actions group updates the SHA pins weekly.
+# pnpm is bootstrapped via pnpm/action-setup (reads packageManager from
+# package.json) + setup-node cache:pnpm — one mechanism across all workflows
+# (F-787). Do not reintroduce the hardcoded `npm install -g pnpm@x` bootstrap.
+
 jobs:
     Prettier-check:
         name: Prettier Check
         runs-on: ubuntu-latest
         steps:
             - name: Checkout the repository
-              uses: actions/checkout@v4
+              uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
-            - name: Setup Node.js environment
-              uses: actions/setup-node@v4
+            - name: Setup pnpm
+              uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4.4.0
+
+            - name: Setup Node.js
+              uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
               with:
                   node-version-file: '.nvmrc'
-
-            - name: Setup PNPM environment
-              run: |
-                  npm install -g pnpm@10.11.0
-                  pnpm config set store-dir ~/.pnpm-store
-
-            - name: Cache PNPM dependencies
-              uses: actions/cache@v4
-              with:
-                  path: ~/.pnpm-store
-                  key: ${{ runner.os }}-pnpm-v3-${{ hashFiles('pnpm-lock.yaml') }}
-                  restore-keys: |
-                      ${{ runner.os }}-pnpm-v3-
+                  cache: pnpm
 
             - name: Install dependencies
               run: pnpm install --frozen-lockfile
@@ -44,24 +42,16 @@ jobs:
         needs: [Prettier-check]
         steps:
             - name: Checkout repo
-              uses: actions/checkout@v4
+              uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
-            - uses: actions/setup-node@v4
+            - name: Setup pnpm
+              uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4.4.0
+
+            - name: Setup Node.js
+              uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
               with:
                   node-version-file: '.nvmrc'
-
-            - name: Setup PNPM environment
-              run: |
-                  npm install -g pnpm@10.11.0
-                  pnpm config set store-dir ~/.pnpm-store
-
-            - name: Cache PNPM dependencies
-              uses: actions/cache@v4
-              with:
-                  path: ~/.pnpm-store
-                  key: ${{ runner.os }}-pnpm-v3-${{ hashFiles('pnpm-lock.yaml') }}
-                  restore-keys: |
-                      ${{ runner.os }}-pnpm-v3-
+                  cache: pnpm
 
             - name: Install dependencies
               run: pnpm install --frozen-lockfile
@@ -69,7 +59,7 @@ jobs:
             - name: Run all package unit suites # F-163 / F-502 — every package, not just react
               run: pnpm run test # after P1 === `turbo run test --continue`
 
-            - name: Coverage floors (all 9 publishable packages) # F-162 / F-503 — floors live in each vitest.config.ts; --no-bail so one package cannot mask the rest
+            - name: Coverage floors (all 9 publishable packages) # F-162 / F-503 — per-package anti-regression ratchets in each vitest.config.ts; turbo --continue so one package cannot mask the rest (F-790: routed through turbo so preact/vanilla see fresh dist)
               run: pnpm run test:coverage
 
             - name: Env schema drift
@@ -79,7 +69,7 @@ jobs:
               run: pnpm run vocab:check
 
             - name: Archive code coverage results
-              uses: actions/upload-artifact@v4
+              uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
               with:
                   name: code-coverage-report
                   path: coverage/
@@ -91,24 +81,16 @@ jobs:
         needs: [Prettier-check, Test]
         steps:
             - name: Checkout repo
-              uses: actions/checkout@v4
+              uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
-            - uses: actions/setup-node@v4
+            - name: Setup pnpm
+              uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4.4.0
+
+            - name: Setup Node.js
+              uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
               with:
                   node-version-file: '.nvmrc'
-
-            - name: Setup PNPM environment
-              run: |
-                  npm install -g pnpm@10.11.0
-                  pnpm config set store-dir ~/.pnpm-store
-
-            - name: Cache PNPM dependencies
-              uses: actions/cache@v4
-              with:
-                  path: ~/.pnpm-store
-                  key: ${{ runner.os }}-pnpm-v3-${{ hashFiles('pnpm-lock.yaml') }}
-                  restore-keys: |
-                      ${{ runner.os }}-pnpm-v3-
+                  cache: pnpm
 
             - name: Install dependencies
               run: pnpm install --frozen-lockfile
@@ -122,24 +104,16 @@ jobs:
         needs: [Prettier-check]
         steps:
             - name: Checkout repo
-              uses: actions/checkout@v4
+              uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
-            - uses: actions/setup-node@v4
+            - name: Setup pnpm
+              uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4.4.0
+
+            - name: Setup Node.js
+              uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
               with:
                   node-version-file: '.nvmrc'
-
-            - name: Setup PNPM environment
-              run: |
-                  npm install -g pnpm@10.11.0
-                  pnpm config set store-dir ~/.pnpm-store
-
-            - name: Cache PNPM dependencies
-              uses: actions/cache@v4
-              with:
-                  path: ~/.pnpm-store
-                  key: ${{ runner.os }}-pnpm-v3-${{ hashFiles('pnpm-lock.yaml') }}
-                  restore-keys: |
-                      ${{ runner.os }}-pnpm-v3-
+                  cache: pnpm
 
             - name: Install dependencies
               run: pnpm install --frozen-lockfile
@@ -153,24 +127,16 @@ jobs:
         needs: [Build]
         steps:
             - name: Checkout repo
-              uses: actions/checkout@v4
+              uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
-            - uses: actions/setup-node@v4
+            - name: Setup pnpm
+              uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4.4.0
+
+            - name: Setup Node.js
+              uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
               with:
                   node-version-file: '.nvmrc'
-
-            - name: Setup PNPM environment
-              run: |
-                  npm install -g pnpm@10.11.0
-                  pnpm config set store-dir ~/.pnpm-store
-
-            - name: Cache PNPM dependencies
-              uses: actions/cache@v4
-              with:
-                  path: ~/.pnpm-store
-                  key: ${{ runner.os }}-pnpm-v3-${{ hashFiles('pnpm-lock.yaml') }}
-                  restore-keys: |
-                      ${{ runner.os }}-pnpm-v3-
+                  cache: pnpm
 
             - name: Install dependencies
               run: pnpm install --frozen-lockfile
@@ -187,23 +153,20 @@ jobs:
         needs: [Prettier-check]
         steps:
             - name: Checkout repo
-              uses: actions/checkout@v4
-            - uses: actions/setup-node@v4
+              uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+            - name: Setup pnpm
+              uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4.4.0
+
+            - name: Setup Node.js
+              uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
               with:
                   node-version-file: '.nvmrc'
-            - name: Setup PNPM environment
-              run: |
-                  npm install -g pnpm@10.11.0
-                  pnpm config set store-dir ~/.pnpm-store
-            - name: Cache PNPM dependencies
-              uses: actions/cache@v4
-              with:
-                  path: ~/.pnpm-store
-                  key: ${{ runner.os }}-pnpm-v3-${{ hashFiles('pnpm-lock.yaml') }}
-                  restore-keys: |
-                      ${{ runner.os }}-pnpm-v3-
+                  cache: pnpm
+
             - name: Install dependencies
               run: pnpm install --frozen-lockfile
+
             - name: Prod dependency audit (publishable packages, fail on high+)
               run: pnpm run audit:prod
 
@@ -213,23 +176,20 @@ jobs:
         needs: [Prettier-check]
         steps:
             - name: Checkout repo
-              uses: actions/checkout@v4
-            - uses: actions/setup-node@v4
+              uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+            - name: Setup pnpm
+              uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4.4.0
+
+            - name: Setup Node.js
+              uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
               with:
                   node-version-file: '.nvmrc'
-            - name: Setup PNPM environment
-              run: |
-                  npm install -g pnpm@10.11.0
-                  pnpm config set store-dir ~/.pnpm-store
-            - name: Cache PNPM dependencies
-              uses: actions/cache@v4
-              with:
-                  path: ~/.pnpm-store
-                  key: ${{ runner.os }}-pnpm-v3-${{ hashFiles('pnpm-lock.yaml') }}
-                  restore-keys: |
-                      ${{ runner.os }}-pnpm-v3-
+                  cache: pnpm
+
             - name: Install dependencies
               run: pnpm install --frozen-lockfile
+
             - name: Lint
               run: pnpm run lint
 
@@ -238,23 +198,20 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - name: Checkout repo
-              uses: actions/checkout@v4
-            - uses: actions/setup-node@v4
+              uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+            - name: Setup pnpm
+              uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4.4.0
+
+            - name: Setup Node.js
+              uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
               with:
                   node-version-file: '.nvmrc'
-            - name: Setup PNPM environment
-              run: |
-                  npm install -g pnpm@10.11.0
-                  pnpm config set store-dir ~/.pnpm-store
-            - name: Cache PNPM dependencies
-              uses: actions/cache@v4
-              with:
-                  path: ~/.pnpm-store
-                  key: ${{ runner.os }}-pnpm-v3-${{ hashFiles('pnpm-lock.yaml') }}
-                  restore-keys: |
-                      ${{ runner.os }}-pnpm-v3-
+                  cache: pnpm
+
             - name: Install dependencies
               run: pnpm install --frozen-lockfile
+
             - name: Oxlint
               run: pnpm run lint:ox
 
@@ -264,23 +221,20 @@ jobs:
         needs: [Prettier-check]
         steps:
             - name: Checkout repo
-              uses: actions/checkout@v4
-            - uses: actions/setup-node@v4
+              uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+            - name: Setup pnpm
+              uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4.4.0
+
+            - name: Setup Node.js
+              uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
               with:
                   node-version-file: '.nvmrc'
-            - name: Setup PNPM environment
-              run: |
-                  npm install -g pnpm@10.11.0
-                  pnpm config set store-dir ~/.pnpm-store
-            - name: Cache PNPM dependencies
-              uses: actions/cache@v4
-              with:
-                  path: ~/.pnpm-store
-                  key: ${{ runner.os }}-pnpm-v3-${{ hashFiles('pnpm-lock.yaml') }}
-                  restore-keys: |
-                      ${{ runner.os }}-pnpm-v3-
+                  cache: pnpm
+
             - name: Install dependencies
               run: pnpm install --frozen-lockfile
+
             - name: Knip
               run: pnpm run knip
 

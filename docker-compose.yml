@@ -6,38 +6,41 @@
 # upload-validation gate was verified against. To bump: pull :latest, then
 # `docker image inspect minio/minio:latest --format '{{index .RepoDigests 0}}'`.
 services:
-  minio:
-    image: minio/minio@sha256:14cea493d9a34af32f524e538b8346cf79f3321eff8e708c1e2960462bd8936e
-    command: server /data --console-address ":9001"
-    ports:
-      # Host ports default to 9000/9001; override (e.g. in local-dev/.env.minio)
-      # if those are already taken on your machine. Container ports are fixed.
-      - "${UPUP_MINIO_API_PORT:-9000}:9000"
-      - "${UPUP_MINIO_CONSOLE_PORT:-9001}:9001"
-    environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-upupadmin}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-upupadmin123}
-      # Browser CORS for presigned PUT/GET from the storybook origin. "*" is fine locally.
-      MINIO_API_CORS_ALLOW_ORIGIN: ${MINIO_CORS_ORIGINS:-*}
-    volumes:
-      - upup-minio-data:/data
+    minio:
+        image: minio/minio@sha256:14cea493d9a34af32f524e538b8346cf79f3321eff8e708c1e2960462bd8936e
+        command: server /data --console-address ":9001"
+        ports:
+            # Host ports default to 9100/9101 (the upup-reserved pair — validate-env.mjs
+            # FORBIDS 9000/9001, which belong to other MinIO instances; see CLAUDE.md).
+            # Override (e.g. in local-dev/.env.minio) if those are taken. Container
+            # ports are fixed. Defaulting to the reserved pair keeps a bare
+            # `docker compose up` (no env file) off the forbidden 9000/9001.
+            - '${UPUP_MINIO_API_PORT:-9100}:9000'
+            - '${UPUP_MINIO_CONSOLE_PORT:-9101}:9001'
+        environment:
+            MINIO_ROOT_USER: ${MINIO_ROOT_USER:-upupadmin}
+            MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-upupadmin123}
+            # Browser CORS for presigned PUT/GET from the storybook origin. "*" is fine locally.
+            MINIO_API_CORS_ALLOW_ORIGIN: ${MINIO_CORS_ORIGINS:-*}
+        volumes:
+            - upup-minio-data:/data
 
-  minio-setup:
-    image: minio/mc@sha256:a7fe349ef4bd8521fb8497f55c6042871b2ae640607cf99d9bede5e9bdf11727
-    depends_on:
-      - minio
-    environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-upupadmin}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-upupadmin123}
-      UPUP_E2E_BUCKET: ${UPUP_E2E_BUCKET:-upup-e2e}
-    entrypoint: >
-      /bin/sh -c "
-      until mc alias set local http://minio:9000 \"$$MINIO_ROOT_USER\" \"$$MINIO_ROOT_PASSWORD\"; do
-        echo 'waiting for minio...'; sleep 1;
-      done &&
-      mc mb --ignore-existing local/\"$$UPUP_E2E_BUCKET\" &&
-      echo \"upup minio ready: bucket=$$UPUP_E2E_BUCKET\"
-      "
+    minio-setup:
+        image: minio/mc@sha256:a7fe349ef4bd8521fb8497f55c6042871b2ae640607cf99d9bede5e9bdf11727
+        depends_on:
+            - minio
+        environment:
+            MINIO_ROOT_USER: ${MINIO_ROOT_USER:-upupadmin}
+            MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-upupadmin123}
+            UPUP_E2E_BUCKET: ${UPUP_E2E_BUCKET:-upup-e2e}
+        entrypoint: >
+            /bin/sh -c "
+            until mc alias set local http://minio:9000 \"$$MINIO_ROOT_USER\" \"$$MINIO_ROOT_PASSWORD\"; do
+              echo 'waiting for minio...'; sleep 1;
+            done &&
+            mc mb --ignore-existing local/\"$$UPUP_E2E_BUCKET\" &&
+            echo \"upup minio ready: bucket=$$UPUP_E2E_BUCKET\"
+            "
 
 volumes:
-  upup-minio-data:
+    upup-minio-data:

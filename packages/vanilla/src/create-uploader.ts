@@ -85,14 +85,9 @@ export function createUploader(
         },
         retry: (id?: string) => ctx.core.retry(id),
         // Untyped passthrough — this port's public `on` stays string-typed;
-        // the typed CoreEvents surface lives on core itself (F-723).
-        on: (event, h) =>
-            (
-                ctx.core.on as (
-                    ev: string,
-                    hh: (p: unknown) => void,
-                ) => () => void
-            )(event, h),
+        // the typed CoreEvents surface lives on core itself (F-723). Dynamic
+        // names route through the namespaced overload (same runtime dispatch).
+        on: (event, h) => ctx.core.on(event as `${string}:${string}`, h),
         ext: ctx.core.ext,
         core: ctx.core,
         el,

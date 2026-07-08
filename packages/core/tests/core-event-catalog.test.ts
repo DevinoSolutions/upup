@@ -109,9 +109,9 @@ describe('UpupCore — event catalog', () => {
 
     it('unknown bare event names are compile errors on the typed surface', () => {
         const core = new UpupCore({})
-        // @ts-expect-error — 'not-a-real-event' is not in CoreEvents (F-723)
+        // @ts-expect-error: 'not-a-real-event' is not in CoreEvents (F-723)
         core.on('not-a-real-event', () => {})
-        // @ts-expect-error — bare emits must come from the catalog
+        // @ts-expect-error: bare emits must come from the catalog
         core.emit('not-a-real-event', {})
         core.destroy()
     })

@@ -30,8 +30,9 @@
         "build": "svelte-package --input src --output dist && pnpm run build:css",
         "build:css": "postcss src/tailwind.css -o ./dist/tailwind-prefixed.css",
         "dev": "svelte-package --input src --output dist --watch",
-        "lint": "eslint .",
+        "lint": "eslint . --max-warnings 0",
         "test": "vitest run",
+        "test:coverage": "vitest run --coverage",
         "test:watch": "vitest",
         "typecheck": "svelte-check --tsconfig ./tsconfig.json && svelte-check --tsconfig ./tsconfig.test.json"
     },

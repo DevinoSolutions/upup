@@ -26,9 +26,10 @@
         "build": "node scripts/clean-dist.mjs && tsup && pnpm run build:css",
         "build:css": "node scripts/copy-styles.mjs",
         "dev": "tsup --watch",
-        "lint": "eslint .",
+        "lint": "eslint . --max-warnings 0",
         "pretest": "pnpm run build",
         "test": "vitest run",
+        "test:coverage": "vitest run --coverage",
         "test:watch": "vitest",
         "typecheck": "tsc --noEmit && tsc -p tsconfig.island.json --noEmit"
     },

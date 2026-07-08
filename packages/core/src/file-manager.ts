@@ -105,7 +105,7 @@ function contentHashPatch(file: UploadFile, hash: string): Partial<UploadFile> {
         fileHash: hash,
         metadata: { ...file.metadata, originalContentHash: hash },
     }
-    return patch as Partial<UploadFile>
+    return patch
 }
 
 function nativeToUploadFile(
