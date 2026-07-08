@@ -1,7 +1,12 @@
 import { createUpupPagesHandler } from '@upup/next/server'
-import { upupConfig } from '@/lib/upup-config'
+import type { NextApiRequest, NextApiResponse } from 'next'
+import { getUpupConfig } from '@/lib/upup-config'
 
-// REQUIRED so the bridge receives the raw request body.
 export const config = { api: { bodyParser: false } }
 
-export default createUpupPagesHandler(upupConfig)
+let _handler: ReturnType<typeof createUpupPagesHandler> | null = null
+
+export default function handler(req: NextApiRequest, res: NextApiResponse) {
+    _handler ??= createUpupPagesHandler(getUpupConfig())
+    return _handler(req, res)
+}

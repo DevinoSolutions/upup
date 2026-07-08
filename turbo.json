@@ -1,5 +1,25 @@
 {
     "$schema": "https://turbo.build/schema.json",
+    "globalPassThroughEnv": [
+        "MINIO_ROOT_USER",
+        "MINIO_ROOT_PASSWORD",
+        "UPUP_UPLOAD_TOKEN_SECRET",
+        "UPUP_E2E_BUCKET",
+        "UPUP_E2E_REGION",
+        "UPUP_E2E_ENDPOINT",
+        "S3_BUCKET",
+        "S3_REGION",
+        "S3_KEY_ID",
+        "S3_SECRET",
+        "S3_ENDPOINT",
+        "GOOGLE_CLIENT_ID",
+        "GOOGLE_CLIENT_SECRET",
+        "DROPBOX_CLIENT_ID",
+        "DROPBOX_APP_SECRET",
+        "ONEDRIVE_CLIENT_ID",
+        "ONEDRIVE_CLIENT_SECRET",
+        "DANGEROUSLY_BOOT_WITH_MISSING_REQUIRED_ENV_AND_SKIP_VALIDATION"
+    ],
     "tasks": {
         "build": {
             "dependsOn": ["^build"],

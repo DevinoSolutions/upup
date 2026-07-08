@@ -97,6 +97,13 @@ jobs:
 
             - name: Build
               run: pnpm run build
+              env:
+                  MINIO_ROOT_USER: upupadmin
+                  MINIO_ROOT_PASSWORD: upupadmin123
+                  UPUP_UPLOAD_TOKEN_SECRET: upup-e2e-upload-token-secret-dev-only
+                  UPUP_E2E_BUCKET: upup-e2e
+                  UPUP_E2E_REGION: us-east-1
+                  UPUP_E2E_ENDPOINT: http://localhost:9100
 
     Typecheck:
         name: Typecheck project
@@ -143,6 +150,13 @@ jobs:
 
             - name: Build
               run: pnpm run build
+              env:
+                  MINIO_ROOT_USER: upupadmin
+                  MINIO_ROOT_PASSWORD: upupadmin123
+                  UPUP_UPLOAD_TOKEN_SECRET: upup-e2e-upload-token-secret-dev-only
+                  UPUP_E2E_BUCKET: upup-e2e
+                  UPUP_E2E_REGION: us-east-1
+                  UPUP_E2E_ENDPOINT: http://localhost:9100
 
             - name: Size limit
               run: pnpm run size

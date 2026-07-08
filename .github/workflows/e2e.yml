@@ -42,6 +42,13 @@ jobs:
 
             - name: Run e2e gate (deep React + cross-framework smoke)
               run: pnpm run e2e
+              env:
+                  MINIO_ROOT_USER: upupadmin
+                  MINIO_ROOT_PASSWORD: upupadmin123
+                  UPUP_UPLOAD_TOKEN_SECRET: upup-e2e-upload-token-secret-dev-only
+                  UPUP_E2E_BUCKET: upup-e2e
+                  UPUP_E2E_REGION: us-east-1
+                  UPUP_E2E_ENDPOINT: http://localhost:9100
 
             # The strongest adversarial verification in the repo (forged-token 403s,
             # oversized-PUT rejection, multipart size-envelope abort, sha256 byte
