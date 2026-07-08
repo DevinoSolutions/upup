@@ -1,5 +1,5 @@
 import { Component, inject, OnInit, OnDestroy } from '@angular/core'
-import { OneDriveService } from '../services/onedrive.service'
+import { OneDriveService } from '../services/one-drive.service'
 import { DriveAuthFallbackComponent } from './shared/drive-auth-fallback.component'
 import { DriveBrowserComponent } from './shared/drive-browser.component'
 
@@ -9,7 +9,7 @@ import { DriveBrowserComponent } from './shared/drive-browser.component'
  * Popup auth: shows fallback when !isAuthenticated && !token && !isLoading.
  */
 @Component({
-    selector: 'upup-client-onedrive-uploader',
+    selector: 'upup-client-one-drive-uploader',
     standalone: true,
     providers: [OneDriveService],
     imports: [DriveAuthFallbackComponent, DriveBrowserComponent],
@@ -18,14 +18,14 @@ import { DriveBrowserComponent } from './shared/drive-browser.component'
             <upup-drive-auth-fallback
                 providerName="OneDrive"
                 [onRetry]="authenticate"
-                slotName="onedrive-uploader"
+                slotName="one-drive-uploader"
             />
         } @else {
             <upup-drive-browser
                 [driveFiles]="svc.oneDriveFiles"
                 [user]="svc.user"
                 [handleSignOut]="handleSignOut"
-                slotName="onedrive-uploader"
+                slotName="one-drive-uploader"
                 [path]="svc.path"
                 [setPath]="setPath"
                 [isClickLoading]="svc.isClickLoading"

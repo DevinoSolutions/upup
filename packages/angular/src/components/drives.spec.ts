@@ -23,11 +23,11 @@ import { DriveBrowserItemComponent } from './shared/drive-browser-item.component
 import { ClientGoogleDriveUploaderComponent } from './client-google-drive-uploader.component'
 import { ClientDropboxUploaderComponent } from './client-dropbox-uploader.component'
 import { ClientBoxUploaderComponent } from './client-box-uploader.component'
-import { ClientOneDriveUploaderComponent } from './client-onedrive-uploader.component'
+import { ClientOneDriveUploaderComponent } from './client-one-drive-uploader.component'
 import { GoogleDriveService } from '../services/google-drive.service'
 import { DropboxService } from '../services/dropbox.service'
 import { BoxService } from '../services/box.service'
-import { OneDriveService } from '../services/onedrive.service'
+import { OneDriveService } from '../services/one-drive.service'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 

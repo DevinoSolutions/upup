@@ -1,7 +1,8 @@
 import { UpupNetworkError } from '../errors'
 import type { ObservableController } from './types'
 
-export type ServerModeProvider = 'google-drive' | 'onedrive' | 'dropbox' | 'box'
+export type ServerModeProvider =
+    'google-drive' | 'one-drive' | 'dropbox' | 'box'
 
 export interface ServerDriveFile {
     id: string

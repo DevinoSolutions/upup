@@ -36,14 +36,14 @@ async function handleSignOut() {
         v-if="!isAuthenticated && !token && !isLoading"
         provider-name="OneDrive"
         :on-retry="authenticate"
-        data-upup-slot="onedrive-uploader"
+        data-upup-slot="one-drive-uploader"
     />
     <DriveBrowser
         v-else
         :drive-files="driveFiles"
         :user="user"
         :handle-sign-out="handleSignOut"
-        data-upup-slot="onedrive-uploader"
+        data-upup-slot="one-drive-uploader"
         :path="path"
         :set-path="setPath"
         :is-click-loading="isClickLoading"

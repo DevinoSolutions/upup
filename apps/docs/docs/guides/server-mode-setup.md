@@ -85,7 +85,7 @@ For each drive you enable:
 | Provider     | Console                                                  | Callback URL                                        |
 | ------------ | -------------------------------------------------------- | --------------------------------------------------- |
 | Google Drive | `console.cloud.google.com` → APIs → OAuth 2.0 Client IDs | `https://yourapp.com/api/upup/auth/google-drive/cb` |
-| OneDrive     | `portal.azure.com` → App registrations                   | `https://yourapp.com/api/upup/auth/onedrive/cb`     |
+| OneDrive     | `portal.azure.com` → App registrations                   | `https://yourapp.com/api/upup/auth/one-drive/cb`    |
 | Dropbox      | `www.dropbox.com/developers/apps`                        | `https://yourapp.com/api/upup/auth/dropbox/cb`      |
 | Box          | `app.box.com/developers/console`                         | `https://yourapp.com/api/upup/auth/box/cb`          |
 

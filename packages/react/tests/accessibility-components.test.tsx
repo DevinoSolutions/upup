@@ -177,7 +177,7 @@ describe('axe — OneDriveUploader', () => {
         // oneDrive is not in the default sources list; pass it explicitly
         const { container } = renderUploader({ sources: ['oneDrive'] })
         await activateSource(container, 'oneDrive')
-        const results = await scanSlot(container, 'onedrive-uploader')
+        const results = await scanSlot(container, 'one-drive-uploader')
         expect(results).toHaveNoViolations()
     })
 })

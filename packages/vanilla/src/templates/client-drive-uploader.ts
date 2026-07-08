@@ -12,7 +12,7 @@ const META: Record<string, { providerName: string; slot: string }> = {
     },
     [FileSource.ONE_DRIVE]: {
         providerName: 'OneDrive',
-        slot: 'onedrive-uploader',
+        slot: 'one-drive-uploader',
     },
     [FileSource.DROPBOX]: { providerName: 'Dropbox', slot: 'dropbox-uploader' },
     [FileSource.BOX]: { providerName: 'Box', slot: 'box-uploader' },

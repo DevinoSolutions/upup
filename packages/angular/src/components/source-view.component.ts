@@ -6,7 +6,7 @@ import { CameraUploaderComponent } from './camera-uploader.component'
 import { AudioUploaderComponent } from './audio-uploader.component'
 import { ScreenCaptureUploaderComponent } from './screen-capture-uploader.component'
 import { GoogleDriveUploaderComponent } from './google-drive-uploader.component'
-import { OneDriveUploaderComponent } from './onedrive-uploader.component'
+import { OneDriveUploaderComponent } from './one-drive-uploader.component'
 import { DropboxUploaderComponent } from './dropbox-uploader.component'
 import { BoxUploaderComponent } from './box-uploader.component'
 import { ImageEditorStubComponent } from './image-editor-stub.component'
@@ -81,7 +81,7 @@ import { NgComponentOutlet } from '@angular/common'
                             <upup-google-drive-icon />
                         }
                         @case ('oneDrive') {
-                            <upup-onedrive-icon />
+                            <upup-one-drive-icon />
                         }
                         @case ('dropbox') {
                             <upup-dropbox-icon />
@@ -131,7 +131,7 @@ import { NgComponentOutlet } from '@angular/common'
                             <upup-google-drive-uploader />
                         }
                         @case ('oneDrive') {
-                            <upup-onedrive-uploader />
+                            <upup-one-drive-uploader />
                         }
                         @case ('dropbox') {
                             <upup-dropbox-uploader />

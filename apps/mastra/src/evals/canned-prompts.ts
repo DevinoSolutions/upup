@@ -72,7 +72,7 @@ export const EVAL_CASES: readonly EvalCase[] = [
         mustSet: ['sources'],
     },
     {
-        name: 'add-onedrive',
+        name: 'add-one-drive',
         prompt: 'Let people pull from OneDrive',
         mustSet: ['sources'],
     },

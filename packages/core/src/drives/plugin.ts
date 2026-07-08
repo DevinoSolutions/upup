@@ -22,7 +22,7 @@ export interface DrivePlugin extends UpupPlugin {
     restoreSession(): boolean
     isAuthenticated(): boolean
     getAccessToken(): string | null
-    // box/dropbox/onedrive resolve to `… | null`; keep all three so a typed getPlugin()
+    // box/dropbox/one-drive resolve to `… | null`; keep all three so a typed getPlugin()
     // still satisfies this — the `if (userInfo)` guards in the controller handle it.
     getUserInfo(): Promise<DriveUser | null | undefined>
     loadFiles(folderArg?: string): Promise<unknown>

@@ -14,7 +14,7 @@ export default function OneDriveUploader(): React.ReactElement | null {
     if (mode === 'server') {
         return (
             <ServerModeDriveUploader
-                provider="onedrive"
+                provider="one-drive"
                 onBack={() => {
                     setActiveSource(undefined)
                 }}
@@ -46,7 +46,7 @@ function ClientOneDriveUploader() {
             <DriveAuthFallback
                 providerName="OneDrive"
                 onRetry={authenticate}
-                data-upup-slot="onedrive-uploader"
+                data-upup-slot="one-drive-uploader"
             />
         )
     }
@@ -56,7 +56,7 @@ function ClientOneDriveUploader() {
             driveFiles={driveFiles}
             user={user}
             handleSignOut={handleSignOut}
-            data-upup-slot="onedrive-uploader"
+            data-upup-slot="one-drive-uploader"
             {...uploaderProps}
         />
     )

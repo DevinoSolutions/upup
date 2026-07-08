@@ -24,7 +24,7 @@ import { UpupStore } from '../upup-store.service'
 import { SourceSelectorComponent } from './source-selector.component'
 import { SourceViewComponent } from './source-view.component'
 import { GoogleDriveUploaderComponent } from './google-drive-uploader.component'
-import { OneDriveUploaderComponent } from './onedrive-uploader.component'
+import { OneDriveUploaderComponent } from './one-drive-uploader.component'
 import { DropboxUploaderComponent } from './dropbox-uploader.component'
 import { BoxUploaderComponent } from './box-uploader.component'
 import { ImageEditorStubComponent } from './image-editor-stub.component'
@@ -515,7 +515,7 @@ describe('OneDriveUploaderComponent — wrapper routing', () => {
         await fixture.whenStable()
 
         const clientEl = fixture.nativeElement.querySelector(
-            'upup-client-onedrive-uploader',
+            'upup-client-one-drive-uploader',
         )
         expect(clientEl).not.toBeNull()
     })

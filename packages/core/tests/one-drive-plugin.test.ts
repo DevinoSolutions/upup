@@ -144,7 +144,7 @@ describe('OneDrivePlugin', () => {
         it('init() sets the emitter', () => {
             plugin.signOut()
             const signedOutEvents = events.filter(
-                e => e.event === 'onedrive:signed-out',
+                e => e.event === 'one-drive:signed-out',
             )
             expect(signedOutEvents).toHaveLength(1)
         })
@@ -153,7 +153,7 @@ describe('OneDrivePlugin', () => {
             plugin.destroy()
             plugin.signOut()
             const postDestroyEvents = events.filter(
-                e => e.event === 'onedrive:signed-out',
+                e => e.event === 'one-drive:signed-out',
             )
             expect(postDestroyEvents).toHaveLength(0)
         })
@@ -275,7 +275,7 @@ describe('OneDrivePlugin', () => {
             expect(plugin.getAccessToken()).toBe('access-123')
 
             const authEvents = events.filter(
-                e => e.event === 'onedrive:authenticated',
+                e => e.event === 'one-drive:authenticated',
             )
             expect(authEvents).toHaveLength(1)
             expect(
@@ -285,11 +285,11 @@ describe('OneDrivePlugin', () => {
 
             // Tokens saved to session storage
             expect(sessionStorage.setItem).toHaveBeenCalledWith(
-                'upup_onedrive_access_token',
+                'upup_one-drive_access_token',
                 'access-123',
             )
             expect(sessionStorage.setItem).toHaveBeenCalledWith(
-                'upup_onedrive_refresh_token',
+                'upup_one-drive_refresh_token',
                 'refresh-456',
             )
         })
@@ -324,7 +324,7 @@ describe('OneDrivePlugin', () => {
             await plugin.authenticate('code')
 
             const stateChanges = events
-                .filter(e => e.event === 'onedrive:state-change')
+                .filter(e => e.event === 'one-drive:state-change')
                 .map(e => (e.payload as { state: string }).state)
 
             expect(stateChanges).toContain('authenticating')
@@ -363,7 +363,9 @@ describe('OneDrivePlugin', () => {
 
             expect(plugin.getState()).toBe('idle')
 
-            const errorEvents = events.filter(e => e.event === 'onedrive:error')
+            const errorEvents = events.filter(
+                e => e.event === 'one-drive:error',
+            )
             expect(errorEvents).toHaveLength(1)
             expect((errorEvents[0]!.payload as { action: string }).action).toBe(
                 'authenticate',
@@ -394,7 +396,7 @@ describe('OneDrivePlugin', () => {
 
             expect(plugin.getState()).toBe('authenticated')
             const authEvents = events.filter(
-                e => e.event === 'onedrive:authenticated',
+                e => e.event === 'one-drive:authenticated',
             )
             expect(authEvents).toHaveLength(1)
             expect(
@@ -432,7 +434,7 @@ describe('OneDrivePlugin', () => {
             await plugin.authenticate('code')
 
             const authEvents = events.filter(
-                e => e.event === 'onedrive:authenticated',
+                e => e.event === 'one-drive:authenticated',
             )
             expect(
                 (authEvents[0]!.payload as { user: { email: string } }).user
@@ -555,11 +557,11 @@ describe('OneDrivePlugin', () => {
             expect(plugin.getAccessToken()).toBeNull()
 
             const expired = events.filter(
-                e => e.event === 'onedrive:session-expired',
+                e => e.event === 'one-drive:session-expired',
             )
             expect(expired).toHaveLength(1)
 
-            const errors = events.filter(e => e.event === 'onedrive:error')
+            const errors = events.filter(e => e.event === 'one-drive:error')
             expect(errors).toHaveLength(1)
             expect((errors[0]!.payload as { action: string }).action).toBe(
                 'refreshAccessToken',
@@ -608,25 +610,25 @@ describe('OneDrivePlugin', () => {
             expect(plugin.getAccessToken()).toBeNull()
 
             const signedOut = events.filter(
-                e => e.event === 'onedrive:signed-out',
+                e => e.event === 'one-drive:signed-out',
             )
             expect(signedOut).toHaveLength(1)
 
             expect(sessionStorage.removeItem).toHaveBeenCalledWith(
-                'upup_onedrive_access_token',
+                'upup_one-drive_access_token',
             )
             expect(sessionStorage.removeItem).toHaveBeenCalledWith(
-                'upup_onedrive_refresh_token',
+                'upup_one-drive_refresh_token',
             )
             expect(sessionStorage.removeItem).toHaveBeenCalledWith(
-                'upup_onedrive_token_expiry',
+                'upup_one-drive_token_expiry',
             )
         })
 
         it('emits state-change to idle', () => {
             plugin.signOut()
             const stateChanges = events.filter(
-                e => e.event === 'onedrive:state-change',
+                e => e.event === 'one-drive:state-change',
             )
             expect(stateChanges).toHaveLength(1)
             expect((stateChanges[0]!.payload as { state: string }).state).toBe(
@@ -641,10 +643,10 @@ describe('OneDrivePlugin', () => {
 
     describe('restoreSession()', () => {
         it('restores session from sessionStorage', () => {
-            sessionStore.set('upup_onedrive_access_token', 'stored-token')
-            sessionStore.set('upup_onedrive_refresh_token', 'stored-refresh')
+            sessionStore.set('upup_one-drive_access_token', 'stored-token')
+            sessionStore.set('upup_one-drive_refresh_token', 'stored-refresh')
             sessionStore.set(
-                'upup_onedrive_token_expiry',
+                'upup_one-drive_token_expiry',
                 String(Date.now() + 3600_000),
             )
 
@@ -663,7 +665,7 @@ describe('OneDrivePlugin', () => {
         })
 
         it('restores even without refresh token', () => {
-            sessionStore.set('upup_onedrive_access_token', 'token-only')
+            sessionStore.set('upup_one-drive_access_token', 'token-only')
 
             const result = plugin.restoreSession()
 
@@ -672,12 +674,12 @@ describe('OneDrivePlugin', () => {
         })
 
         it('emits state-change to authenticated', () => {
-            sessionStore.set('upup_onedrive_access_token', 'tok')
+            sessionStore.set('upup_one-drive_access_token', 'tok')
 
             plugin.restoreSession()
 
             const stateChanges = events.filter(
-                e => e.event === 'onedrive:state-change',
+                e => e.event === 'one-drive:state-change',
             )
             expect(stateChanges).toHaveLength(1)
             expect((stateChanges[0]!.payload as { state: string }).state).toBe(
@@ -692,7 +694,7 @@ describe('OneDrivePlugin', () => {
 
     describe('loadFiles()', () => {
         beforeEach(() => {
-            sessionStore.set('upup_onedrive_access_token', 'valid-token')
+            sessionStore.set('upup_one-drive_access_token', 'valid-token')
             plugin.restoreSession()
             events.length = 0
         })
@@ -757,7 +759,7 @@ describe('OneDrivePlugin', () => {
             await plugin.loadFiles('some-folder')
 
             const loaded = events.filter(
-                e => e.event === 'onedrive:files-loaded',
+                e => e.event === 'one-drive:files-loaded',
             )
             expect(loaded).toHaveLength(1)
             const payload = loaded[0]!.payload as {
@@ -774,7 +776,7 @@ describe('OneDrivePlugin', () => {
             await plugin.loadFiles()
 
             const stateChanges = events
-                .filter(e => e.event === 'onedrive:state-change')
+                .filter(e => e.event === 'one-drive:state-change')
                 .map(e => (e.payload as { state: string }).state)
 
             expect(stateChanges).toContain('browsing')
@@ -789,7 +791,7 @@ describe('OneDrivePlugin', () => {
 
             await expect(plugin.loadFiles()).rejects.toThrow()
 
-            const errors = events.filter(e => e.event === 'onedrive:error')
+            const errors = events.filter(e => e.event === 'one-drive:error')
             expect(errors).toHaveLength(1)
             expect((errors[0]!.payload as { action: string }).action).toBe(
                 'loadFiles',
@@ -868,7 +870,7 @@ describe('OneDrivePlugin', () => {
 
     describe('loadMoreFiles()', () => {
         beforeEach(() => {
-            sessionStore.set('upup_onedrive_access_token', 'valid-token')
+            sessionStore.set('upup_one-drive_access_token', 'valid-token')
             plugin.restoreSession()
             events.length = 0
         })
@@ -910,7 +912,7 @@ describe('OneDrivePlugin', () => {
                 ),
             ).rejects.toThrow()
 
-            const errors = events.filter(e => e.event === 'onedrive:error')
+            const errors = events.filter(e => e.event === 'one-drive:error')
             expect(errors).toHaveLength(1)
             expect((errors[0]!.payload as { action: string }).action).toBe(
                 'loadMoreFiles',
@@ -924,7 +926,7 @@ describe('OneDrivePlugin', () => {
 
     describe('downloadFiles()', () => {
         beforeEach(() => {
-            sessionStore.set('upup_onedrive_access_token', 'valid-token')
+            sessionStore.set('upup_one-drive_access_token', 'valid-token')
             plugin.restoreSession()
             events.length = 0
         })
@@ -945,7 +947,7 @@ describe('OneDrivePlugin', () => {
                         status: 200,
                         json: vi.fn().mockResolvedValue({
                             '@microsoft.graph.downloadUrl':
-                                'https://dl.onedrive.com/file1',
+                                'https://dl.one-drive.com/file1',
                         }),
                         text: vi.fn().mockResolvedValue(''),
                     })
@@ -966,7 +968,7 @@ describe('OneDrivePlugin', () => {
                         status: 200,
                         json: vi.fn().mockResolvedValue({
                             '@microsoft.graph.downloadUrl':
-                                'https://dl.onedrive.com/file2',
+                                'https://dl.one-drive.com/file2',
                         }),
                         text: vi.fn().mockResolvedValue(''),
                     })
@@ -1027,7 +1029,7 @@ describe('OneDrivePlugin', () => {
                         status: 200,
                         json: vi.fn().mockResolvedValue({
                             '@microsoft.graph.downloadUrl':
-                                'https://dl.onedrive.com/file2',
+                                'https://dl.one-drive.com/file2',
                         }),
                         text: vi.fn().mockResolvedValue(''),
                     })
@@ -1049,7 +1051,7 @@ describe('OneDrivePlugin', () => {
             expect(results).toHaveLength(1)
             expect(results[0]!.name).toBe('ok.txt')
 
-            const errors = events.filter(e => e.event === 'onedrive:error')
+            const errors = events.filter(e => e.event === 'one-drive:error')
             expect(errors.length).toBeGreaterThanOrEqual(1)
             expect((errors[0]!.payload as { action: string }).action).toBe(
                 'downloadFiles',
@@ -1068,7 +1070,7 @@ describe('OneDrivePlugin', () => {
                         status: 200,
                         json: vi.fn().mockResolvedValue({
                             '@content.downloadUrl':
-                                'https://dl.onedrive.com/alt',
+                                'https://dl.one-drive.com/alt',
                         }),
                         text: vi.fn().mockResolvedValue(''),
                     })
@@ -1096,7 +1098,7 @@ describe('OneDrivePlugin', () => {
 
     describe('getUserInfo()', () => {
         beforeEach(() => {
-            sessionStore.set('upup_onedrive_access_token', 'valid-token')
+            sessionStore.set('upup_one-drive_access_token', 'valid-token')
             plugin.restoreSession()
             events.length = 0
         })
@@ -1146,10 +1148,10 @@ describe('OneDrivePlugin', () => {
 
     describe('API request 401 handling', () => {
         beforeEach(() => {
-            sessionStore.set('upup_onedrive_access_token', 'expired-token')
-            sessionStore.set('upup_onedrive_refresh_token', 'refresh-tok')
+            sessionStore.set('upup_one-drive_access_token', 'expired-token')
+            sessionStore.set('upup_one-drive_refresh_token', 'refresh-tok')
             sessionStore.set(
-                'upup_onedrive_token_expiry',
+                'upup_one-drive_token_expiry',
                 String(Date.now() + 3600_000),
             )
             plugin.restoreSession()
@@ -1198,7 +1200,7 @@ describe('OneDrivePlugin', () => {
         })
 
         it('emits session-expired when 401 and no refresh token', async () => {
-            sessionStore.delete('upup_onedrive_refresh_token')
+            sessionStore.delete('upup_one-drive_refresh_token')
             plugin.restoreSession()
             events.length = 0
 
@@ -1217,12 +1219,12 @@ describe('OneDrivePlugin', () => {
             await expect(plugin.loadFiles()).rejects.toThrow()
 
             const expired = events.filter(
-                e => e.event === 'onedrive:session-expired',
+                e => e.event === 'one-drive:session-expired',
             )
             expect(expired.length).toBeGreaterThanOrEqual(1)
 
             const stateChanges = events
-                .filter(e => e.event === 'onedrive:state-change')
+                .filter(e => e.event === 'one-drive:state-change')
                 .map(e => (e.payload as { state: string }).state)
             expect(stateChanges).toContain('session-expired')
         })
@@ -1234,7 +1236,7 @@ describe('OneDrivePlugin', () => {
 
     describe('MIME type mapping (via loadFiles)', () => {
         beforeEach(() => {
-            sessionStore.set('upup_onedrive_access_token', 'valid-token')
+            sessionStore.set('upup_one-drive_access_token', 'valid-token')
             plugin.restoreSession()
             events.length = 0
         })
@@ -1317,7 +1319,7 @@ describe('OneDrivePlugin', () => {
 
     describe('edge cases', () => {
         it('loadFiles defaults folderId to root', async () => {
-            sessionStore.set('upup_onedrive_access_token', 'tok')
+            sessionStore.set('upup_one-drive_access_token', 'tok')
             plugin.restoreSession()
 
             const fetchMock = mockFetchResponse({ value: [] })
@@ -1331,7 +1333,7 @@ describe('OneDrivePlugin', () => {
         })
 
         it('mapGraphItem handles missing fields gracefully', async () => {
-            sessionStore.set('upup_onedrive_access_token', 'tok')
+            sessionStore.set('upup_one-drive_access_token', 'tok')
             plugin.restoreSession()
 
             vi.stubGlobal(
@@ -1352,7 +1354,7 @@ describe('OneDrivePlugin', () => {
         })
 
         it('handles empty value array', async () => {
-            sessionStore.set('upup_onedrive_access_token', 'tok')
+            sessionStore.set('upup_one-drive_access_token', 'tok')
             plugin.restoreSession()
 
             vi.stubGlobal('fetch', mockFetchResponse({ value: [] }))
@@ -1362,7 +1364,7 @@ describe('OneDrivePlugin', () => {
         })
 
         it('handles missing value key in response', async () => {
-            sessionStore.set('upup_onedrive_access_token', 'tok')
+            sessionStore.set('upup_one-drive_access_token', 'tok')
             plugin.restoreSession()
 
             vi.stubGlobal('fetch', mockFetchResponse({}))

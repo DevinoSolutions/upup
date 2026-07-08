@@ -7,7 +7,7 @@ import { serverModeDriveUploader } from './server-mode-drive-uploader'
 export function oneDriveUploader(ctx: UploaderContext): TemplateResult {
     return ctx.mode === 'server'
         ? serverModeDriveUploader(ctx, {
-              provider: 'onedrive',
+              provider: 'one-drive',
               onBack: () => {
                   ctx.setActiveSource(undefined)
               },

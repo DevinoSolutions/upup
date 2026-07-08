@@ -34,7 +34,7 @@ export class ServerTransfer {
             case 'googleDrive':
                 return 'google-drive'
             case 'oneDrive':
-                return 'onedrive'
+                return 'one-drive'
             case 'dropbox':
                 return 'dropbox'
             case 'box':

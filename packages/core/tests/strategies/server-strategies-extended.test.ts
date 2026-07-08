@@ -35,7 +35,7 @@ describe('ServerTransfer — constructor', () => {
             ok: true,
             json: () =>
                 Promise.resolve({
-                    provider: 'onedrive',
+                    provider: 'one-drive',
                     fileId: 'f1',
                     status: 'ok',
                 }),

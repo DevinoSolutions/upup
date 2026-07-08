@@ -66,7 +66,7 @@ describe('ServerTransfer', () => {
             ok: true,
             json: () =>
                 Promise.resolve({
-                    provider: 'onedrive',
+                    provider: 'one-drive',
                     fileId: 'f2',
                     status: 'ok',
                 }),
@@ -81,7 +81,7 @@ describe('ServerTransfer', () => {
         })
 
         expect(mockFetch).toHaveBeenCalledWith(
-            expect.stringContaining('/files/onedrive/transfer'),
+            expect.stringContaining('/files/one-drive/transfer'),
             expect.objectContaining({
                 body: JSON.stringify({
                     fileId: 'f2',

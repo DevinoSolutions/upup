@@ -10,7 +10,7 @@ import { driveAuthFallback } from './shared/drive-auth-fallback'
 
 const PROVIDER_LABEL: Record<ServerModeProvider, string> = {
     'google-drive': 'Google Drive',
-    onedrive: 'OneDrive',
+    'one-drive': 'OneDrive',
     dropbox: 'Dropbox',
     box: 'Box',
 }

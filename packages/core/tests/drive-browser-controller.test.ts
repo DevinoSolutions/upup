@@ -10,9 +10,9 @@ import {
 } from '../src/drives/drive-browser-descriptors'
 
 describe('drive-browser descriptors', () => {
-    it('one-drive uses the onedrive event prefix despite its one-drive plugin id', () => {
+    it('one-drive uses the one-drive event prefix despite its one-drive plugin id', () => {
         expect(ONE_DRIVE_DESCRIPTOR.pluginId).toBe('one-drive')
-        expect(ONE_DRIVE_DESCRIPTOR.eventPrefix).toBe('onedrive')
+        expect(ONE_DRIVE_DESCRIPTOR.eventPrefix).toBe('one-drive')
     })
 
     it('dropbox is path-based, the others are id-based', () => {
@@ -137,9 +137,9 @@ describe('DriveBrowserController — events', () => {
         expect(snap.isClickLoading).toBe(false)
     })
 
-    it('files-loaded respects the onedrive event prefix (one-drive plugin id)', () => {
+    it('files-loaded respects the one-drive event prefix (one-drive plugin id)', () => {
         const { core, controller } = setup(ONE_DRIVE_DESCRIPTOR)
-        core.emit('onedrive:files-loaded', { files: [], folderId: 'root' })
+        core.emit('one-drive:files-loaded', { files: [], folderId: 'root' })
         expect(controller.getSnapshot().folder?.name).toBe('OneDrive')
     })
 
@@ -183,9 +183,9 @@ describe('DriveBrowserController — events', () => {
 
     it('popup state-change drives isLoading on authenticating/browsing', () => {
         const { core, controller } = setup(ONE_DRIVE_DESCRIPTOR)
-        core.emit('onedrive:state-change', { state: 'authenticating' })
+        core.emit('one-drive:state-change', { state: 'authenticating' })
         expect(controller.getSnapshot().isLoading).toBe(true)
-        core.emit('onedrive:state-change', { state: 'idle' })
+        core.emit('one-drive:state-change', { state: 'idle' })
         expect(controller.getSnapshot().isLoading).toBe(false)
     })
 

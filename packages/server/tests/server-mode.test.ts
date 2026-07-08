@@ -114,8 +114,8 @@ describe('token helpers', () => {
 
     it('returns null on malformed persisted JSON', async () => {
         const store = new InMemoryTokenStore()
-        await store.set('upup:tokens:u:onedrive', 'not-json', undefined)
-        expect(await getTokens(store, 'u', 'onedrive')).toBeNull()
+        await store.set('upup:tokens:u:one-drive', 'not-json', undefined)
+        expect(await getTokens(store, 'u', 'one-drive')).toBeNull()
     })
 
     it('scopes by userId and provider independently', async () => {
@@ -221,7 +221,7 @@ describe('GET /auth/:provider redirect', () => {
     it('redirects to Microsoft with tenant path', async () => {
         const handler = createUpupHandler(baseConfig())
         const res = await handler(
-            new Request('http://localhost/auth/onedrive', { method: 'GET' }),
+            new Request('http://localhost/auth/one-drive', { method: 'GET' }),
         )
         expect(res.status).toBe(302)
         expect(res.headers.get('Location')).toContain(

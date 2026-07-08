@@ -45,8 +45,10 @@ their own `@upup/react` dependency, not through anything `@upup/next` embeds.
 This rides the pending v2→3.0.0 major (see `v2-1-legacy-prop-removal.md`)
 rather than adding a second major bump.
 
-F-654 (the `oneDrive`/`one-drive`/`onedrive` provider-slug spelling split) was
-reviewed for this sweep and explicitly deferred — it is a three-subsystem
+F-654 (the `oneDrive`/`one-drive`/`onedrive` provider-slug spelling split)
+was reviewed for this sweep and explicitly deferred — it is a three-subsystem
 public-API/enum change (not a DOM string), and folding it in here would
 silently rewrite a public enum inside a "DOM-vocabulary" commit. Left
-unchanged; recommended as a future, separately-scoped item.
+unchanged; recommended as a future, separately-scoped item. (That item has
+since landed: the bare `onedrive` third form is retired repo-wide, gated by
+`vocab:check` — see the B7 provider-slug sweep, 2026-07-08.)

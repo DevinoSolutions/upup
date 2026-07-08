@@ -13,7 +13,6 @@ export interface DriveProviderDescriptor {
     pluginId: string
     /**
      * Prefix used to build event names for bindDriveEvents(core, eventPrefix, …).
-     * NOTE: one-drive emits with the 'onedrive' prefix despite its id being 'one-drive'.
      */
     eventPrefix: string
     /** Display name for the root folder. */
@@ -48,7 +47,7 @@ export const GOOGLE_DRIVE_DESCRIPTOR: DriveProviderDescriptor = {
 
 export const ONE_DRIVE_DESCRIPTOR: DriveProviderDescriptor = {
     pluginId: 'one-drive',
-    eventPrefix: 'onedrive',
+    eventPrefix: 'one-drive',
     rootFolderName: 'OneDrive',
     rootFolderId: 'root',
     folderKey: 'id',

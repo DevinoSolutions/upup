@@ -79,6 +79,15 @@ const RETIRED = [
         pattern: /onFileRemove(?!d)/,
         useInstead: 'onFileRemoved',
     },
+    // Provider-slug two-form convergence (F-654 / F-725, B7): the bare third
+    // form `onedrive` is dead — camelCase `oneDrive` in-app, kebab `one-drive`
+    // on the wire/DOM. Case-sensitive, so it never matches `OneDrive`/`oneDrive`
+    // (the KEEP brand/camel forms) nor the hyphenated `one-drive`.
+    {
+        name: 'onedrive',
+        pattern: /onedrive/,
+        useInstead: 'one-drive (wire/DOM) or oneDrive (in-app)',
+    },
 ]
 
 // ── Scan set ─────────────────────────────────────────────────────────────
@@ -129,6 +138,11 @@ const KNOWN_EXCEPTIONS = [
         ],
         reason: 'the retired-name eslint bans (identifier, property, and string-literal layers) name their own targets',
     },
+    {
+        file: 'packages/interactive-example/src/ai/localAssistant.ts',
+        tokens: ['onedrive'],
+        reason: 'matches USER-TYPED intent text; the assistant aliases onedrive / one drive / one-drive so a user can type any spelling',
+    },
 ]
 
 // ── Census ───────────────────────────────────────────────────────────────
@@ -149,7 +163,18 @@ const exceptionSeen = new Map(KNOWN_EXCEPTIONS.map(e => [e.file, new Set()]))
 
 const violations = []
 for (const file of files) {
-    const text = readFileSync(file, 'utf8')
+    let text
+    try {
+        text = readFileSync(file, 'utf8')
+    } catch (err) {
+        // `git ls-files` can list a path that is momentarily absent on disk
+        // during an unstaged rename (the pre-rename path lingers in the index
+        // until it is staged). A missing file has no content to scan and its
+        // renamed successor is scanned once tracked, so skip it; any other
+        // read error still throws loudly.
+        if (err.code === 'ENOENT') continue
+        throw err
+    }
     for (const token of RETIRED) {
         if (!token.pattern.test(text)) continue
         if (exceptionIndex.get(file)?.has(token.name)) {

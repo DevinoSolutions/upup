@@ -22,7 +22,7 @@ import { type Responder } from './respond'
 
 export const VALID_PROVIDERS = [
     'google-drive',
-    'onedrive',
+    'one-drive',
     'dropbox',
     'box',
 ] as const
@@ -63,7 +63,7 @@ function getProviderMeta(
                 extra: { access_type: 'offline', prompt: 'consent' },
             }
         }
-        case 'onedrive': {
+        case 'one-drive': {
             const oc = providers.oneDrive
             if (!oc) return { error: 'OneDrive not configured', status: 400 }
             const tenant = oc.tenantId ?? 'common'

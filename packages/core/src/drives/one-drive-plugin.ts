@@ -54,15 +54,15 @@ export class OneDrivePlugin extends PopupOAuthPlugin {
     readonly spec: PopupOAuthSpec = {
         id: 'one-drive',
         displayName: 'OneDrive',
-        eventPrefix: 'onedrive',
+        eventPrefix: 'one-drive',
         popupName: 'UpupOneDriveAuth',
         authUrl: AUTH_URL,
         tokenUrl: TOKEN_URL,
         redirectPath: '/od_redirect',
         storageKeys: {
-            access: 'upup_onedrive_access_token',
-            refresh: 'upup_onedrive_refresh_token',
-            expiry: 'upup_onedrive_token_expiry',
+            access: 'upup_one-drive_access_token',
+            refresh: 'upup_one-drive_refresh_token',
+            expiry: 'upup_one-drive_token_expiry',
         },
         scopes: OAUTH_SCOPES,
         authParams: { response_mode: 'query' },
@@ -106,7 +106,7 @@ export class OneDrivePlugin extends PopupOAuthPlugin {
             const hasMore = !!nextLink
 
             this.setState('authenticated')
-            this.emitter?.emit('onedrive:files-loaded', {
+            this.emitter?.emit('one-drive:files-loaded', {
                 files,
                 folderId: folderId ?? 'root',
                 hasMore,
@@ -121,7 +121,7 @@ export class OneDrivePlugin extends PopupOAuthPlugin {
             }
         } catch (err) {
             this.setState('authenticated')
-            this.emitter?.emit('onedrive:error', {
+            this.emitter?.emit('one-drive:error', {
                 error: err instanceof Error ? err : new Error(String(err)),
                 action: 'loadFiles',
             })
@@ -153,7 +153,7 @@ export class OneDrivePlugin extends PopupOAuthPlugin {
                 ...(nextLink !== undefined ? { cursor: nextLink } : {}),
             }
         } catch (err) {
-            this.emitter?.emit('onedrive:error', {
+            this.emitter?.emit('one-drive:error', {
                 error: err instanceof Error ? err : new Error(String(err)),
                 action: 'loadMoreFiles',
             })
@@ -175,7 +175,7 @@ export class OneDrivePlugin extends PopupOAuthPlugin {
                     results.push(file)
                 }
             } catch (err) {
-                this.emitter?.emit('onedrive:error', {
+                this.emitter?.emit('one-drive:error', {
                     error: err instanceof Error ? err : new Error(String(err)),
                     action: 'downloadFiles',
                 })
@@ -203,7 +203,7 @@ export class OneDrivePlugin extends PopupOAuthPlugin {
             }
             return allFiles
         } catch (err) {
-            this.emitter?.emit('onedrive:error', {
+            this.emitter?.emit('one-drive:error', {
                 error: err instanceof Error ? err : new Error(String(err)),
                 action: 'loadAllFilesInFolder',
             })

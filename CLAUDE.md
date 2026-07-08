@@ -310,6 +310,18 @@ recurring visual traps it will never flag — check these live:
   `UploaderHeader`, `useUploaderController`, `UploaderContext`, `UploaderRef`.
 - `Source*` — upload-source selection UI: `SourceSelector`, `SourceView`.
 - `Drive*` — cloud-drive browsing: `DriveBrowser`, `DriveFile`.
+- Provider identity is exactly TWO forms (F-654 / F-725, B7 2026-07-08):
+  camelCase in-app (`oneDrive` / `googleDrive` — `FileSource` values,
+  `CloudProvider`, the `cloudDrives` config, i18n keys) and kebab-case on the
+  wire / plugin / DOM (`one-drive` / `google-drive` — plugin ids, server
+  provider slugs, event prefixes, `data-upup-slot` / selector strings).
+  `providerSlug()` in `@upup/core` `strategies/server-transfer.ts` is the ONE
+  camel→kebab mapping boundary. The bare third form `onedrive` is RETIRED in
+  every layer — `pnpm run vocab:check` fails on any surviving bare token; the
+  sole KEEP is `interactive-example`'s `localAssistant.ts`, which matches
+  user-typed text and now aliases `onedrive` / `one drive` / `one-drive`.
+  `dropbox` / `box` are single-word — identical in both forms. Do not
+  reintroduce a bare-concatenated provider slug.
 - Upload commands: `startUpload`, `uploadFiles`, `replaceFiles`.
 - Lifecycle verb: `destroy()` everywhere (`dispose`/`teardown` are dead);
   removal callback: `onFileRemoved` (past tense — the `onFileRemove` alias is

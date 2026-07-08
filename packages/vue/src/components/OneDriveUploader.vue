@@ -10,7 +10,7 @@ const { setActiveSource } = useUploaderSource()
 <template>
     <ServerModeDriveUploader
         v-if="mode === 'server'"
-        provider="onedrive"
+        provider="one-drive"
         :on-back="() => setActiveSource(undefined)"
     />
     <ClientOneDriveUploader v-else />

@@ -35,14 +35,14 @@
   <DriveAuthFallback
     providerName="OneDrive"
     onRetry={authenticate}
-    dataUpupSlot="onedrive-uploader"
+    dataUpupSlot="one-drive-uploader"
   />
 {:else}
   <DriveBrowser
     {driveFiles}
     {user}
     {handleSignOut}
-    dataUpupSlot="onedrive-uploader"
+    dataUpupSlot="one-drive-uploader"
     {path}
     {setPath}
     {isClickLoading}

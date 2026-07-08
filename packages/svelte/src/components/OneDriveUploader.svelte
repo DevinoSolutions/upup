@@ -9,7 +9,7 @@
 
 {#if mode === 'server'}
   <ServerModeDriveUploader
-    provider="onedrive"
+    provider="one-drive"
     onBack={() => setActiveSource(undefined)}
   />
 {:else}

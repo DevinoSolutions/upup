@@ -1,24 +1,24 @@
 import { Component, inject } from '@angular/core'
 import { UpupStore } from '../upup-store.service'
-import { ClientOneDriveUploaderComponent } from './client-onedrive-uploader.component'
+import { ClientOneDriveUploaderComponent } from './client-one-drive-uploader.component'
 import { ServerModeDriveUploaderComponent } from './server-mode-drive-uploader.component'
 
 /**
  * OneDriveUploaderComponent — Angular port of OneDriveUploader.svelte.
  *
  * Routes by store.mode:
- *   'server' → ServerModeDriveUploaderComponent(provider="onedrive")
+ *   'server' → ServerModeDriveUploaderComponent(provider="one-drive")
  *   'client' → ClientOneDriveUploaderComponent
  *
  * Mirrors svelte:
  *   {#if mode === 'server'}
- *     <ServerModeDriveUploader provider="onedrive" onBack={...} />
+ *     <ServerModeDriveUploader provider="one-drive" onBack={...} />
  *   {:else}
  *     <ClientOneDriveUploader />
  *   {/if}
  */
 @Component({
-    selector: 'upup-onedrive-uploader',
+    selector: 'upup-one-drive-uploader',
     standalone: true,
     imports: [
         ClientOneDriveUploaderComponent,
@@ -27,11 +27,11 @@ import { ServerModeDriveUploaderComponent } from './server-mode-drive-uploader.c
     template: `
         @if (store.mode === 'server') {
             <upup-server-mode-drive-uploader
-                provider="onedrive"
+                provider="one-drive"
                 [onBack]="handleBack"
             />
         } @else {
-            <upup-client-onedrive-uploader />
+            <upup-client-one-drive-uploader />
         }
     `,
 })

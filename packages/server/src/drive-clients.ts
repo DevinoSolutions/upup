@@ -49,7 +49,7 @@ const DRIVE_CLIENTS: Record<OAuthProvider, DriveClient> = {
         listFiles: listGoogleDriveFiles,
         fetchFile: fetchGoogleDriveFile,
     },
-    onedrive: { listFiles: listOneDriveFiles, fetchFile: fetchOneDriveFile },
+    'one-drive': { listFiles: listOneDriveFiles, fetchFile: fetchOneDriveFile },
     dropbox: { listFiles: listDropboxFiles, fetchFile: fetchDropboxFile },
     box: { listFiles: listBoxFiles, fetchFile: fetchBoxFile },
 }

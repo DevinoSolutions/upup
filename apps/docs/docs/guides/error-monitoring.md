@@ -106,7 +106,7 @@ Each drive provider emits namespaced errors. Listen per-provider or catch all
 four:
 
 ```ts
-const providers = ['google-drive', 'onedrive', 'dropbox', 'box'] as const
+const providers = ['google-drive', 'one-drive', 'dropbox', 'box'] as const
 
 for (const p of providers) {
     core.on(`${p}:error`, ({ error, action }) => {
