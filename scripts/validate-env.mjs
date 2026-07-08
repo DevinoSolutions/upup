@@ -21,7 +21,13 @@ const REQUIRED_STRINGS = [
     'UPUP_E2E_BUCKET',
     'UPUP_E2E_REGION',
     'UPUP_E2E_ENDPOINT',
+    // Server-mode HMAC upload-token secret. The demo apps stopped shipping a
+    // committed fallback (F-851) — the e2e harness must provide one
+    // explicitly, and the server rejects secrets shorter than 16 chars.
+    'UPUP_UPLOAD_TOKEN_SECRET',
 ]
+
+const MIN_SECRET_LENGTHS = { UPUP_UPLOAD_TOKEN_SECRET: 16 }
 
 const PORT_KEYS = ['UPUP_MINIO_API_PORT', 'UPUP_MINIO_CONSOLE_PORT']
 
@@ -31,6 +37,13 @@ function validate(vars) {
     for (const key of REQUIRED_STRINGS) {
         if (!vars[key]?.trim()) {
             errors.push(`${key}: required but missing or empty`)
+        }
+    }
+
+    for (const [key, min] of Object.entries(MIN_SECRET_LENGTHS)) {
+        const val = vars[key]?.trim()
+        if (val && val.length < min) {
+            errors.push(`${key}: must be at least ${min} characters`)
         }
     }
 
@@ -53,7 +66,9 @@ function validate(vars) {
         try {
             new URL(endpoint)
         } catch {
-            errors.push(`UPUP_E2E_ENDPOINT: must be a valid URL (got "${endpoint}")`)
+            errors.push(
+                `UPUP_E2E_ENDPOINT: must be a valid URL (got "${endpoint}")`,
+            )
         }
     }
 
