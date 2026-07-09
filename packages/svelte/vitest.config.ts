@@ -3,6 +3,13 @@ import { svelte } from '@sveltejs/vite-plugin-svelte'
 
 export default defineConfig({
     plugins: [svelte({ hot: false })],
+    // Svelte 5's exports map defaults the bare 'svelte' specifier to the
+    // SERVER build (index-server.js), whose onMount/onDestroy throw
+    // lifecycle_function_unavailable — without the browser condition, no
+    // client-mounted component test can run under jsdom (the pre-existing
+    // ssr tests sidestep this by importing 'svelte/server' under a node
+    // environment). Required by tests/helpers.ts's render()-based withSetup.
+    resolve: { conditions: ['browser'] },
     test: {
         environment: 'jsdom',
         globals: true,
