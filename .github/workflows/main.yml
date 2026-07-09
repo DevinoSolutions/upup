@@ -5,6 +5,7 @@ permissions:
 on:
     pull_request:
         branches: [master, dev]
+    workflow_dispatch:
 
 # Actions are pinned to full commit SHAs (F-792) to match docker-compose's
 # digest-pinning posture; the trailing comment records the human version.
@@ -55,6 +56,12 @@ jobs:
 
             - name: Install dependencies
               run: pnpm install --frozen-lockfile
+
+            - name: Test-quality guard # committed .only, silent skips, vague names, unjustified sleeps, integration-layer mocks, regen-guard presence
+              run: pnpm run test:quality
+
+            - name: Script self-tests (quality guard, affected resolver, tarball lib)
+              run: pnpm run test:scripts
 
             - name: Run all package unit suites # F-163 / F-502 — every package, not just react
               run: pnpm run test # after P1 === `turbo run test --continue`

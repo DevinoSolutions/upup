@@ -103,6 +103,7 @@ async function runAxe(page: Page): Promise<AxeViolation[]> {
                     Date.now() > deadline
                 )
                     throw err
+                // sleep-allow(bounded backoff until axe's global lock frees — the lock holder emits no event to await)
                 await new Promise(resolve => setTimeout(resolve, 250))
             }
         }
@@ -135,6 +136,15 @@ test.describe('cross-framework a11y + overflow', () => {
     test('4a: axe-core a11y scan (ratchet serious/critical against baseline)', async ({
         page,
     }, testInfo) => {
+        // Baseline regen must never run in CI — it would launder a regression
+        // into the reviewed ceiling. Same in-spec belt parity.spec.ts carries
+        // (its guard only protects its own spec); workflow-level shell guards
+        // are the braces, and this spec runs under configs those don't cover.
+        if (process.env.CI && process.env.UPDATE_A11Y_BASELINE) {
+            throw new Error(
+                'Baseline regen (UPDATE_A11Y_BASELINE) must never run in CI — it would launder a regression into the canon.',
+            )
+        }
         const fw = byName(testInfo.project.name)
         await page.goto(PLAYGROUND(fw.name))
         await expect(page.locator('[data-testid="upup-root"]')).toBeVisible({
@@ -245,7 +255,7 @@ test.describe('cross-framework a11y + overflow', () => {
                     container,
                     `${view.src} adapter container (slot=${view.slot}) rendered`,
                 ).toBeVisible({ timeout: 15_000 })
-                // Let media autoplay / layout settle so the measurement reflects steady state.
+                // sleep-allow(media autoplay/layout must settle so the geometry measurement reflects steady state — no event marks "settled")
                 await page.waitForTimeout(500)
 
                 const m = await measureOverflow(container)

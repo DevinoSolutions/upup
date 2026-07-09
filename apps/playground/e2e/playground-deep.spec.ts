@@ -603,6 +603,7 @@ async function routeMultipartMock(
                 return
             }
             if (delayMs) {
+                // sleep-allow(mock network latency — parametrized delayMs shapes the response timing the test observes)
                 await new Promise(resolve => setTimeout(resolve, delayMs))
             }
             try {
@@ -1584,6 +1585,7 @@ test('limits concurrent direct uploads and shows live byte speed details', async
         activePuts += 1
         maxActivePuts = Math.max(maxActivePuts, activePuts)
         try {
+            // sleep-allow(mock PUT latency — holds each upload open long enough to observe the concurrency ceiling)
             await new Promise(resolve => setTimeout(resolve, 900))
             completedPuts.push(route.request().url())
             await route.fulfill({ status: 200, body: '' })
@@ -1657,6 +1659,7 @@ test('runs the checksum pipeline before deterministic mock upload and records up
     })
 
     await page.route('**/api/upup-mock/object/**', async route => {
+        // sleep-allow(mock PUT latency — keeps the upload in-flight long enough for the checksum-pipeline UI state to render)
         await new Promise(resolve => setTimeout(resolve, 350))
         await route.continue()
     })
@@ -1936,6 +1939,7 @@ test('pauses, resumes, and cancels slow multipart uploads', async ({
     )
     await expect(page.getByTestId('upup-root')).toContainText('Paused')
     const signCountWhilePaused = multipart.signBodies.length
+    // sleep-allow(negative-assertion window — proves NO further sign-part requests fire while paused; absence has no event to await)
     await page.waitForTimeout(500)
     expect(multipart.signBodies.length).toBe(signCountWhilePaused)
     await expect
@@ -3110,6 +3114,7 @@ test('camera and microphone capture flows create real queued files with fake bro
     await expect(
         page.getByRole('button', { name: 'Stop Recording' }),
     ).toBeVisible()
+    // sleep-allow(record real audio for a nonzero duration so stopping yields a non-empty media file)
     await page.waitForTimeout(500)
     await page.getByRole('button', { name: 'Stop Recording' }).click()
     await expect(
@@ -3134,6 +3139,7 @@ test('screen capture source records a mocked display stream and queues the recor
     await expect(
         page.getByRole('button', { name: 'Stop Recording' }),
     ).toBeVisible()
+    // sleep-allow(record the mocked display stream for a nonzero duration so stopping yields a non-empty media file)
     await page.waitForTimeout(500)
     await page.getByRole('button', { name: 'Stop Recording' }).click()
     await expect(
