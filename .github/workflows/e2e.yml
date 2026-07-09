@@ -11,10 +11,49 @@ on:
 # Actions pinned to full commit SHAs (F-792); pnpm via pnpm/action-setup +
 # setup-node cache:pnpm (F-787) — same mechanism as main.yml / publish.yml.
 
+# Affected-test routing: Resolve-Affected classifies the PR's changed files
+# via scripts/ci/resolve-affected-tests.mjs (the impact map lives IN CODE and
+# is unit-tested by `pnpm run test:scripts`). Heavy jobs skip only when the
+# resolver proves them unaffected; an unmatched path fails open to every
+# suite, and the E2E-Status rollup fails on any skip the resolver did NOT
+# sanction — so branch protection semantics are preserved. main.yml is
+# deliberately unrouted (static + unit gates always run).
+
 jobs:
+    Resolve-Affected:
+        name: Resolve affected suites
+        runs-on: ubuntu-latest
+        outputs:
+            e2e: ${{ steps.resolve.outputs.e2e }}
+            minio: ${{ steps.resolve.outputs.minio }}
+            smoke: ${{ steps.resolve.outputs.smoke }}
+        steps:
+            - name: Checkout the repository (full history for merge-base diff)
+              uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+              with:
+                  fetch-depth: 0
+
+            - name: Setup Node.js
+              uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+              with:
+                  node-version-file: '.nvmrc'
+
+            - name: Resolve affected suites (zero-dep script, no install)
+              id: resolve
+              run: |
+                  if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+                    node scripts/ci/resolve-affected-tests.mjs --all
+                  else
+                    node scripts/ci/resolve-affected-tests.mjs \
+                      --base "${{ github.event.pull_request.base.sha }}" \
+                      --head "${{ github.event.pull_request.head.sha }}"
+                  fi
+
     E2E:
         name: Cross-framework E2E (Playwright + MinIO)
         runs-on: ubuntu-latest
+        needs: [Resolve-Affected]
+        if: needs.Resolve-Affected.outputs.e2e == 'true' || needs.Resolve-Affected.outputs.minio == 'true'
         steps:
             - name: Checkout the repository
               uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
@@ -61,6 +100,7 @@ jobs:
             # started, so nothing from the e2e gate survives into this step
             # (proven by an ECONNREFUSED :9100 on this step's first CI execution).
             - name: Boot MinIO for the integration suites
+              if: needs.Resolve-Affected.outputs.minio == 'true'
               run: |
                   pnpm run e2e:minio:up
                   for i in $(seq 1 45); do
@@ -73,11 +113,14 @@ jobs:
                   exit 1
 
             - name: Server trust-model + byte-integrity suites (real MinIO)
+              if: needs.Resolve-Affected.outputs.minio == 'true'
               run: pnpm run e2e:minio:test
 
     Smoke-Packages:
         name: Package smoke (real tarball consumer)
         runs-on: ubuntu-latest
+        needs: [Resolve-Affected]
+        if: needs.Resolve-Affected.outputs.smoke == 'true'
         steps:
             - name: Checkout the repository
               uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
@@ -100,17 +143,46 @@ jobs:
     # Rollup aggregator for this workflow (F-780): main.yml's Status-Check spans
     # only main.yml jobs, so E2E + Smoke-Packages were aggregated by nothing.
     # Branch protection must require BOTH this job AND main.yml's Status Check.
+    # Routing-aware: a job may be SKIPPED only when Resolve-Affected proved it
+    # unaffected; any other non-success (including a skip caused by a failed
+    # resolver) fails the rollup, so routing can never hide required coverage.
     E2E-Status:
         name: E2E Status Check
         runs-on: ubuntu-latest
-        needs: [E2E, Smoke-Packages]
+        needs: [Resolve-Affected, E2E, Smoke-Packages]
         if: always()
         steps:
-            - name: Check status
+            - name: Check status (respecting resolver-sanctioned skips)
+              env:
+                  RESOLVE_RESULT: ${{ needs.Resolve-Affected.result }}
+                  E2E_RESULT: ${{ needs.E2E.result }}
+                  E2E_WANTED: ${{ needs.Resolve-Affected.outputs.e2e == 'true' || needs.Resolve-Affected.outputs.minio == 'true' }}
+                  SMOKE_RESULT: ${{ needs.Smoke-Packages.result }}
+                  SMOKE_WANTED: ${{ needs.Resolve-Affected.outputs.smoke }}
               run: |
-                  if [ "${{ needs.E2E.result }}" != "success" ] || \
-                     [ "${{ needs.Smoke-Packages.result }}" != "success" ]; then
-                    echo "One or more E2E jobs failed"
+                  fail=0
+                  if [ "$RESOLVE_RESULT" != "success" ]; then
+                    echo "Resolve-Affected did not succeed ($RESOLVE_RESULT) — cannot trust any skip"
+                    fail=1
+                  fi
+                  check() {
+                    name="$1"; result="$2"; wanted="$3"
+                    if [ "$wanted" = "true" ]; then
+                      if [ "$result" != "success" ]; then
+                        echo "$name is required for this change set but finished '$result'"
+                        fail=1
+                      fi
+                    else
+                      if [ "$result" != "skipped" ] && [ "$result" != "success" ]; then
+                        echo "$name was not required but finished '$result'"
+                        fail=1
+                      fi
+                    fi
+                  }
+                  check "E2E" "$E2E_RESULT" "$E2E_WANTED"
+                  check "Smoke-Packages" "$SMOKE_RESULT" "$SMOKE_WANTED"
+                  if [ "$fail" -ne 0 ]; then
+                    echo "E2E status check failed"
                     exit 1
                   fi
-                  echo "All E2E jobs passed successfully"
+                  echo "All required E2E jobs passed (unaffected suites legitimately skipped)"
