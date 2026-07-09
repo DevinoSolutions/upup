@@ -152,6 +152,15 @@ pnpm run vocab:check    # retired-vocabulary census: a naming sweep must land in
                         # EVERY layer (identifiers, DOM strings, templates,
                         # fixtures) — fails on any surviving retired token;
                         # exceptions are self-liquidating (a stale entry fails)
+pnpm run test:quality   # test-suite hygiene guard: committed .only, disabled
+                        # tests without skip-allow(owner/reason/until) markers,
+                        # tautological asserts, vague test names/filenames,
+                        # unjustified Playwright sleeps (sleep-allow), mocks in
+                        # integration/e2e layers (boundary-mock), regen-guard
+                        # presence, continue-on-error in workflows. Exceptions
+                        # list ships EMPTY and is inverse-forced.
+pnpm run test:scripts   # node:test self-tests for scripts/ci (the guard + the
+                        # affected-test resolver's impact map) + scripts/lib
 pnpm run smoke:packages # real npm-tarball consumer (packs all 9, isolated vite
                         # build, dist-shape + entry-budget asserts). Slow (~5m);
                         # run it after anything that can grow core/react's
@@ -440,16 +449,19 @@ DrivePlugin`. All three popup providers now persist a token-expiry key and refre
 - `docs/superpowers/` is an intentionally untracked local workspace for specs,
   plans, and audit records. This file is the committed source of process truth;
   promote anything durable from there into here.
-- The pre-commit hook runs the package unit suites (core, react, server) and is
-  **auto-wired via `prepare: husky` on `pnpm install`** — no manual
-  `git config core.hooksPath` step; the two dead nested `.husky` dirs
-  (`apps/landing`, `apps/playground`) were removed. Never bypass the hook
-  (`--no-verify`) — fix the underlying failure instead, and see the flake
-  protocol above before assuming your change broke something.
+- The pre-commit hook runs lint-staged plus the package unit suites (core,
+  react, server); the **pre-push hook** runs `typecheck`, `turbo run lint
+--continue`, and `knip`. Both are **auto-wired via `prepare: husky` on
+  `pnpm install`** — no manual `git config core.hooksPath` step; the two dead
+  nested `.husky` dirs (`apps/landing`, `apps/playground`) were removed. Never
+  bypass either hook (`--no-verify`) — fix the underlying failure instead, and
+  see the flake protocol above before assuming your change broke something.
 
 ## CI (`.github/workflows`)
 
-- `main.yml` — PRs to master/dev: prettier → all-package unit suites
+- `main.yml` — PRs to master/dev (+ manual dispatch): prettier → test-quality
+  guard (`pnpm run test:quality`) + script self-tests (`pnpm run test:scripts`)
+  → all-package unit suites
   (`pnpm run test`) + per-package v8 coverage **anti-regression ratchets** on all
   nine publishable packages (`pnpm run test:coverage`) — NOT a uniform bar: each
   threshold is hand-tuned ~3 pts below that package's measured coverage and they
@@ -463,11 +475,26 @@ DrivePlugin`. All three popup providers now persist a token-expiry key and refre
   design). **Dependabot** (`.github/dependabot.yml`) now proposes weekly,
   grouped dependency-update PRs against the workspace + `packages/*` +
   CI-action pins; majors are paused (F-189's deferred migration clusters).
-- `e2e.yml` — PRs to master/dev: full `pnpm run e2e` gate (OAuth-free; MinIO
-  env provisioned from the example file), plus `smoke:packages` as a
-  sibling `Smoke-Packages` job (real npm-tarball consumer). The
-  `apps/playground` deep functional suite (`playground-deep.spec.ts`) is
-  local-only — its first gated run surfaced real failures, tracked as F-704.
+- `e2e.yml` — PRs to master/dev: **affected-test routed**. A `Resolve-Affected`
+  job classifies the diff via `scripts/ci/resolve-affected-tests.mjs` (impact
+  map in code, unit-tested by `test:scripts`; fail-open — an unmatched path
+  runs everything; docs-only PRs skip the heavy jobs); the `E2E` job (full
+  `pnpm run e2e`, OAuth-free, MinIO env from the example file, plus the
+  real-MinIO trust/byte-integrity steps when `minio` is affected) and
+  `Smoke-Packages` (real npm-tarball consumer) run per that verdict, and the
+  `E2E Status Check` rollup fails on any skip the resolver did not sanction.
+  `workflow_dispatch` forces all suites. The `apps/playground` deep functional
+  suite (`playground-deep.spec.ts`) is local-only — its first gated run
+  surfaced real failures, tracked as F-704.
+- `nightly.yml` — 03:17 UTC schedule + manual dispatch, no routing, no
+  publishing: full e2e + real-MinIO suites + the a11y/overflow sweep
+  (`pnpm run e2e:a11y` — the axe serious/critical ratchet vs
+  `a11y-baseline.json`; runs in NO PR gate), static `build:storybook` for all
+  six frameworks, `smoke:packages`, and the mastra LLM evals (only when the
+  `OPENROUTER_API_KEY` Actions secret exists — absent, the job goes green with
+  a loud skip notice, never silently). Playwright traces/reports upload as
+  artifacts on failure. `docs/testing.md` is the testing deep-dive (layers,
+  routing table, parity workflow, credentials policy).
 - `publish.yml` — push to master: changesets release PR, then (when packages
   need publishing) a pre-publish gate — typecheck, unit suites, build, size,
   `smoke:packages` — before `pnpm run release` (`changeset publish`, which

@@ -2,11 +2,11 @@
 
 We love your input! We want to make contributing to Upup as easy and transparent as possible, whether it's:
 
--   Reporting a bug
--   Discussing the current state of the code
--   Submitting a fix
--   Proposing new features
--   Becoming a maintainer
+- Reporting a bug
+- Discussing the current state of the code
+- Submitting a fix
+- Proposing new features
+- Becoming a maintainer
 
 ## Development Process
 
@@ -23,25 +23,28 @@ We love your input! We want to make contributing to Upup as easy and transparent
    looks right — some UI strings have no test or story. Packages consume each
    other's built `dist/`, not `src/`, so an edit to `packages/<pkg>/src` is
    invisible until it is rebuilt:
-   - Fastest: run `pnpm dev`, then open the playground at
-     `http://localhost:53004` — the package watchers rebuild `packages/*/src`
-     on save and the playground hot-reloads.
-   - Storybook: build the package once (`pnpm --filter @upup/react build`) or
-     keep `pnpm run dev:package` running, then
-     `pnpm --filter @upup/storybook-react storybook` (`http://localhost:53050`).
+    - Fastest: run `pnpm dev`, then open the playground at
+      `http://localhost:53004` — the package watchers rebuild `packages/*/src`
+      on save and the playground hot-reloads.
+    - Storybook: build the package once (`pnpm --filter @upup/react build`) or
+      keep `pnpm run dev:package` running, then
+      `pnpm --filter @upup/storybook-react storybook` (`http://localhost:53050`).
 5. Run the checks CI enforces before opening your PR. CLAUDE.md's **Gates**
-   section is the authoritative list, and its **E2E** section documents the
+   section is the authoritative list, `docs/testing.md` explains every test
+   layer and how CI routes them, and CLAUDE.md's **E2E** section documents the
    MinIO setup that `pnpm run e2e` needs:
-   - `pnpm run prettier-check` — formatting (note: today this only checks
-     `@upup/react`'s `src/`)
-   - `pnpm run typecheck`
-   - `pnpm run test`
-   - `pnpm run build`
-   - `pnpm run size`
-   - `pnpm run e2e` — the real gate: real MinIO + real uploads
-   `pnpm run lint` is also worth running locally (it is not yet a required CI
-   check). CI additionally runs a package-smoke suite (a real tarball consumer
-   build).
+    - `pnpm run prettier-check` — formatting (all nine publishable packages'
+      `src/`, `.ts`/`.tsx` only)
+    - `pnpm run lint` — required in CI (an input to the Status Check rollup)
+    - `pnpm run typecheck`
+    - `pnpm run test`
+    - `pnpm run test:quality` — test-suite hygiene guard (no `.only`, silent
+      skips, vague names, unjustified sleeps)
+    - `pnpm run build`
+    - `pnpm run size`
+    - `pnpm run e2e` — the real gate: real MinIO + real uploads
+      CI additionally runs a package-smoke suite (a real tarball consumer build),
+      and heavy suites are routed by changed paths — see `docs/testing.md`.
 6. Create a pull request!
 
 ## Pull Request Process
@@ -61,11 +64,11 @@ We use GitHub issues to track public bugs.
 
 **Great Bug Reports** tend to have:
 
--   A quick summary and/or background
--   Steps to reproduce
--   What you expected would happen
--   What actually happens
--   Notes (possibly including why you think this might be happening)
+- A quick summary and/or background
+- Steps to reproduce
+- What you expected would happen
+- What actually happens
+- Notes (possibly including why you think this might be happening)
 
 ## License
 
