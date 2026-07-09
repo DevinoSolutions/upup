@@ -182,6 +182,64 @@ describe.skipIf(!RUN)('trust model — exploit harness', () => {
         expect(res.status).toBe(403)
     }, 30_000)
 
+    // Prove the abort route's teardown is REAL, not just a 200 status: after
+    // a valid abort, the multipart upload must no longer exist in S3/MinIO —
+    // a dangling incomplete upload would otherwise sit there consuming
+    // storage and remain completable by anyone who still held the token.
+    it('a valid abort tears down the multipart upload: ListParts and HeadObject both reject afterward', async () => {
+        const handler = createUpupHandler(config)
+        const init = (await (
+            await post(handler, '/multipart/init', {
+                name: 'abort-teardown.bin',
+                size: 5 * 1024 * 1024,
+                type: 'application/octet-stream',
+            })
+        ).json()) as MultipartInitBody
+        createdKeys.push(init.key)
+        expect(typeof init.token).toBe('string')
+
+        // Upload one real part so MinIO actually has something to tear down.
+        const signed = (await (
+            await post(handler, '/multipart/sign-part', {
+                token: init.token,
+                partNumber: 1,
+            })
+        ).json()) as SignedPartBody
+        const part = new Uint8Array(5 * 1024 * 1024).fill(5)
+        const put = await fetch(signed.uploadUrl, {
+            method: 'PUT',
+            body: part,
+        })
+        expect(put.status).toBe(200)
+
+        const aborted = await post(handler, '/multipart/abort', {
+            token: init.token,
+        })
+        expect(aborted.status).toBe(200)
+
+        // The multipart upload no longer exists — ListParts on a dead
+        // uploadId is rejected by S3/MinIO.
+        await expect(
+            s3.send(
+                new ListPartsCommand({
+                    Bucket: storage.bucket,
+                    Key: init.key,
+                    UploadId: init.uploadId,
+                }),
+            ),
+        ).rejects.toThrow()
+
+        // Nothing was ever finalized under this key.
+        await expect(
+            s3.send(
+                new HeadObjectCommand({
+                    Bucket: storage.bucket,
+                    Key: init.key,
+                }),
+            ),
+        ).rejects.toThrow()
+    }, 30_000)
+
     it('multipart round-trip via the handler stores correct bytes', async () => {
         const handler = createUpupHandler(config)
         const part1 = new Uint8Array(5 * 1024 * 1024).fill(7) // 5 MiB

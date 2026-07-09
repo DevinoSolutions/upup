@@ -632,6 +632,62 @@ describe('handler — presign edge cases', () => {
 })
 
 // ─────────────────────────────────────────────
+// Adversarial presign metadata: validateUploadMetadata only checks
+// name/type/size SHAPE (non-empty string / finite non-negative number) — it
+// does not bound length or strip control characters. Sanitization happens
+// downstream in defaultKeyStrategy's sanitizeFilename call, before the name
+// ever reaches the S3 object key. Pin BOTH halves of that contract: the
+// route does not reject on shape grounds, and the raw adversarial name
+// never survives into the key handed to the storage layer (asserted via
+// generatePresignedUrl's actual call argument — the mocked response body's
+// `key` is a fixed stub and proves nothing here).
+// ─────────────────────────────────────────────
+describe('handler — presign adversarial filename metadata', () => {
+    it('accepts a 10,000-char filename (not rejected at validation) but never lets it reach the S3 key unsanitized', async () => {
+        const handler = createUpupHandler(config)
+        const hugeName = `${'x'.repeat(10_000)}.png`
+        const req = new Request('http://localhost/presign', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                name: hugeName,
+                size: 100,
+                type: 'image/png',
+            }),
+        })
+        const res = await handler(req)
+        expect(res.status).toBe(200)
+
+        const { generatePresignedUrl } = await import('../src/providers/aws')
+        const lastCall = vi.mocked(generatePresignedUrl).mock.calls.at(-1)!
+        const actualKey = lastCall[1] as string
+        // sanitizeFilename bounds the filename segment to 128 chars — the
+        // 10,000-char raw name must never reach the object key.
+        expect(actualKey.length).toBeLessThan(200)
+    })
+
+    it('accepts a filename containing a null byte (not rejected at validation) but strips it before it reaches the S3 key', async () => {
+        const handler = createUpupHandler(config)
+        const req = new Request('http://localhost/presign', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                name: 'evil\0name.png',
+                size: 100,
+                type: 'image/png',
+            }),
+        })
+        const res = await handler(req)
+        expect(res.status).toBe(200)
+
+        const { generatePresignedUrl } = await import('../src/providers/aws')
+        const lastCall = vi.mocked(generatePresignedUrl).mock.calls.at(-1)!
+        const actualKey = lastCall[1] as string
+        expect(actualKey).not.toContain('\0')
+    })
+})
+
+// ─────────────────────────────────────────────
 // /health route wiring (P4/C4)
 // ─────────────────────────────────────────────
 describe('handler — GET /health', () => {
@@ -1006,6 +1062,124 @@ describe('handler — multipart uid binding (F-106)', () => {
         )
         expect(first.status).toBe(200)
         expect(second.status).toBe(200)
+    })
+})
+
+// ─────────────────────────────────────────────
+// multipart-abort trust boundary: the forged-token / uid-binding /
+// token-possession guarantees already proven above for sign-part/complete
+// (F-106) must also hold for /multipart/abort.
+// ─────────────────────────────────────────────
+describe('handler — multipart abort trust boundary', () => {
+    const identityConfig = {
+        storage: { type: 'aws', bucket: 'test-bucket', region: 'us-east-1' },
+        uploadTokenSecret: 'handler-ext-abort-secret-0123456789',
+        getUserId: async (req: Request) => req.headers.get('x-uid'),
+    }
+
+    const initAs = async (uid: string) => {
+        const handler = createUpupHandler(identityConfig)
+        const res = await handler(
+            new Request('http://localhost/multipart/init', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'x-uid': uid },
+                body: JSON.stringify({
+                    name: 'big.zip',
+                    size: 50 * 1024 * 1024,
+                    type: 'application/zip',
+                }),
+            }),
+        )
+        return (await res.json()) as ResBody
+    }
+
+    it('a client with a forged upload token cannot abort a multipart upload, and receives 403 with the invalid-token code', async () => {
+        const handler = createUpupHandler(config)
+        const res = await handler(
+            new Request('http://localhost/multipart/abort', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ token: 'forged.token' }),
+            }),
+        )
+        const body = (await res.json()) as ResBody
+        expect(res.status).toBe(403)
+        expect(body.code).toBe('bad_signature')
+    })
+
+    it("an authenticated user whose id differs from the token's bound uid cannot abort, and receives 403 AUTH_DENIED", async () => {
+        const init = await initAs('alice')
+        const handler = createUpupHandler(identityConfig)
+        const res = await handler(
+            new Request('http://localhost/multipart/abort', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-uid': 'bob',
+                },
+                body: JSON.stringify({ token: init.token }),
+            }),
+        )
+        const body = (await res.json()) as ResBody
+        expect(res.status).toBe(403)
+        expect(body.code).toBe('AUTH_DENIED')
+    })
+
+    it("the token's owner can abort their own multipart upload, and receives 200 with abortMultipartUpload invoked on storage", async () => {
+        const init = await initAs('alice')
+        const { abortMultipartUpload } = await import('../src/providers/aws')
+        const handler = createUpupHandler(identityConfig)
+        const res = await handler(
+            new Request('http://localhost/multipart/abort', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-uid': 'alice',
+                },
+                body: JSON.stringify({ token: init.token }),
+            }),
+        )
+        expect(res.status).toBe(200)
+        expect(abortMultipartUpload).toHaveBeenCalledWith(
+            identityConfig.storage,
+            init.key,
+            init.uploadId,
+        )
+    })
+
+    it('a caller can abort with bare token possession when no getUserId resolver is configured, and receives 200', async () => {
+        const anonConfig = {
+            storage: {
+                type: 'aws',
+                bucket: 'test-bucket',
+                region: 'us-east-1',
+            },
+            uploadTokenSecret: 'handler-ext-abort-anon-secret-0123456789',
+            allowAnonymousUploads: true,
+        }
+        const handler = createUpupHandler(anonConfig)
+        const init = (await (
+            await handler(
+                new Request('http://localhost/multipart/init', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: 'big.zip',
+                        size: 50 * 1024 * 1024,
+                        type: 'application/zip',
+                    }),
+                }),
+            )
+        ).json()) as ResBody
+
+        const res = await handler(
+            new Request('http://localhost/multipart/abort', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ token: init.token }),
+            }),
+        )
+        expect(res.status).toBe(200)
     })
 })
 

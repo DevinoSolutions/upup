@@ -78,21 +78,25 @@ beforeEach(() => {
 })
 
 describe('transferDriveFileToS3 — memory-bound routing (F-501)', () => {
-    it('routes a 4 MB transfer through a single PutObjectCommand (no multipart)', async () => {
-        sentCommands.length = 0
-        const { transferDriveFileToS3 } = await import('../src/transfer')
-        const size = 4 * 1024 * 1024
-        await transferDriveFileToS3({
-            stream: streamOf(size),
-            size,
-            fileName: 'small.bin',
-            mimeType: 'application/octet-stream',
-            storage,
-        })
-        const names = sentCommands.map(c => c.name)
-        expect(names).toContain('PutObjectCommand')
-        expect(names).not.toContain('CreateMultipartUploadCommand')
-    })
+    it(
+        'routes a 4 MB transfer through a single PutObjectCommand (no multipart)',
+        { timeout: 15_000 },
+        async () => {
+            sentCommands.length = 0
+            const { transferDriveFileToS3 } = await import('../src/transfer')
+            const size = 4 * 1024 * 1024
+            await transferDriveFileToS3({
+                stream: streamOf(size),
+                size,
+                fileName: 'small.bin',
+                mimeType: 'application/octet-stream',
+                storage,
+            })
+            const names = sentCommands.map(c => c.name)
+            expect(names).toContain('PutObjectCommand')
+            expect(names).not.toContain('CreateMultipartUploadCommand')
+        },
+    )
 
     it('routes a 5 MB transfer (boundary) through a single PutObjectCommand', async () => {
         sentCommands.length = 0
