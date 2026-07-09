@@ -3,24 +3,15 @@ import * as core from '@upup/core'
 import type * as coreInternal from '@upup/core/internal'
 
 // ─────────────────────────────────────────────────────────────
-// IMPORTANT — how this file's type-level assertions are verified:
-// packages/core/tsconfig.json's `include` is `["src"]` only (true of every
-// package in this workspace -- react/vue/svelte/angular/vanilla/server all
-// scope `include` to their src equivalent), so `pnpm --filter @upup/core
-// typecheck` (`tsc --noEmit`) never actually compiles this file. The type
-// aliases and `@ts-expect-error` directives below therefore have NO effect
-// on any command in the gate -- they are correct-or-not only as far as a
-// manual, scoped `tsc` invocation says so. Verified via:
-//   npx tsc --noEmit --strict --esModuleInterop --skipLibCheck
-//     --moduleResolution bundler --module ESNext --target ES2019
-//     packages/core/tests/public-api.test.ts
-// (see audit/fixes/P18-report.md, Phase D, for the exact output). This is a
-// pre-existing repo-wide gap this plan inherits rather than introduces --
-// flagged as a candidate finding, out of P18's own scope to fix (it would
-// mean auditing every existing test file across all nine packages for
-// latent type errors before safely widening any tsconfig `include`).
-// The runtime value-list assertion below is NOT subject to this gap -- it
-// runs and is enforced by ordinary `vitest run`.
+// How this file's type-level assertions are verified: since 2026-07-07 the
+// typecheck gate covers the TEST trees — `pnpm --filter @upup/core typecheck`
+// runs `tsconfig.test.json` (include: ["src", "tests"]) after the base
+// config, so the type aliases and `@ts-expect-error` directives below ARE
+// compiled and enforced by `pnpm run typecheck` (CLAUDE.md, "Gates"). The
+// runtime value-list assertion is separately enforced by ordinary
+// `vitest run`. (This note previously documented the pre-2026-07-07 gap
+// where base tsconfigs' src-only `include` left these assertions dead in
+// every gate — that gap is closed.)
 // ─────────────────────────────────────────────────────────────
 
 // Positive: every KEEP-public type is reachable from '@upup/core'. One line
