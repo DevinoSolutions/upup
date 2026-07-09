@@ -29,13 +29,12 @@ function utcDayKey(ms: number): string {
     return `${d.getUTCFullYear()}-${d.getUTCMonth()}-${d.getUTCDate()}`
 }
 
-function tick() {
+function rolloverIfNewDay() {
     const today = utcDayKey(Date.now())
     if (today !== dayKey) {
         dayKey = today
         count = 0
     }
-    count += 1
 }
 
 export function dailyBudgetMiddleware() {
@@ -44,15 +43,23 @@ export function dailyBudgetMiddleware() {
         const path = new URL(c.req.url).pathname
         if (path === '/healthz') return next()
 
+        // Must run BEFORE the cap check: the capped branch returns early,
+        // so a reset placed after it can never fire once the cap trips —
+        // the 503 would persist past UTC midnight until process restart.
+        rolloverIfNewDay()
+
         if (count >= CAP) {
             return new Response(
                 JSON.stringify({
                     error: 'Daily request budget reached. The AI assistant is taking a break.',
                 }),
-                { status: 503, headers: { 'content-type': 'application/json' } },
+                {
+                    status: 503,
+                    headers: { 'content-type': 'application/json' },
+                },
             )
         }
-        tick()
+        count += 1
         await next()
     }
 }
