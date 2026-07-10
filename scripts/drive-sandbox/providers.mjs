@@ -18,7 +18,7 @@
 //                  is its 6-month-inactivity heartbeat).
 //   - one-drive:   refresh_token grant (MS rotates the refresh token on every
 //                  use — the nightly job writes the rotated value back via
-//                  refresh-onedrive-token.mjs; here we just mint).
+//                  refresh-one-drive-token.mjs; here we just mint).
 //
 // CI shortcut: if UPUP_TEST_<P>_ACCESS_TOKEN is set, mintAccessToken returns it
 // verbatim and performs NO grant. The OneDrive nightly path uses this so the

@@ -251,7 +251,7 @@ jobs:
                   # token to be persisted. Absent → OneDrive is skipped (the stored
                   # refresh token is left untouched); see the script's header.
                   GH_SECRETS_WRITE_PAT: ${{ secrets.GH_SECRETS_WRITE_PAT }}
-              run: node scripts/drive-sandbox/refresh-onedrive-token.mjs
+              run: node scripts/drive-sandbox/refresh-one-drive-token.mjs
 
             - name: Seed fixture files (idempotent) into every configured account
               if: steps.creds.outputs.present == 'true'

@@ -530,7 +530,7 @@ DrivePlugin`. All three popup providers now persist a token-expiry key and refre
   consent → refresh token, idempotent `seed.mjs`, `providers.mjs`/`fixtures.mjs`
   foundation); Box uses a Client Credentials service account (no refresh token),
   OneDrive's refresh token ROTATES and is written back nightly via
-  `refresh-onedrive-token.mjs` (needs the `GH_SECRETS_WRITE_PAT` secret — absent,
+  `refresh-one-drive-token.mjs` (needs the `GH_SECRETS_WRITE_PAT` secret — absent,
   OneDrive is skipped and its stored token untouched). We never automate the
   consent — a human clicks "Allow" once. Full runbook:
   `docs/drive-sandbox-setup.md`. Playwright traces/reports upload as

@@ -1,4 +1,4 @@
-// scripts/drive-sandbox/refresh-onedrive-token.mjs
+// scripts/drive-sandbox/refresh-one-drive-token.mjs
 //
 // OneDrive is the one sandbox provider whose refresh token ROTATES on every use
 // (Microsoft invalidates the old one and issues a new one on each refresh, with
