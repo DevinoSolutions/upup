@@ -23,6 +23,7 @@ import {
     type DriveClient,
     type DriveFile,
 } from '../../src/drive-clients'
+import { UpupNetworkError } from '@upup/core'
 
 // The four wire slugs, as a const tuple so each element is assignable to
 // getDriveClient's OAuthProvider parameter.
@@ -275,6 +276,21 @@ for (const provider of PROVIDERS) {
             // the search query-building / escaping / response-parsing path
             // end-to-end without a timing-dependent expectation.
             expect(Array.isArray(results)).toBe(true)
+        })
+
+        it(`an invalid access token surfaces as a 401 UpupNetworkError from ${provider}, exercising the driveFetch reauth sentinel`, async () => {
+            // A deliberately-invalid bearer token: every provider answers 401,
+            // which driveFetch must surface as the typed UpupNetworkError(401)
+            // sentinel drive-routes instanceof-checks to trigger reauth (F-747).
+            // Only the mocked unit tests otherwise prove this boundary; here it
+            // is proven against the real API, and it is deterministic (a bad
+            // token is 401 with no indexing/timing dependence). One request.
+            const err = await client
+                .listFiles('upup-invalid-sandbox-token', {})
+                .then(() => undefined)
+                .catch((e: unknown) => e)
+            expect(err).toBeInstanceOf(UpupNetworkError)
+            expect((err as UpupNetworkError).status).toBe(401)
         })
     })
 }
