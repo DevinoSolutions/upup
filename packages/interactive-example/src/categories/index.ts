@@ -35,32 +35,41 @@ export function findEntry(propId: string): ToggleEntry | undefined {
  * Walk a dotted path like "theme.mode" or "cloudDrives.googleDrive.clientId" and
  * set the value on the target object, creating intermediate objects as needed.
  */
-function setByPath(
+export function setByPath(
     target: Record<string, unknown>,
     path: string,
     value: unknown,
 ): void {
     const parts = path.split('.')
-    // Refuse prototype-polluting segments outright — writing through
-    // __proto__/constructor/prototype would mutate Object.prototype.
-    if (
-        parts.some(
-            p => p === '__proto__' || p === 'constructor' || p === 'prototype',
-        )
-    ) {
-        return
-    }
     let cursor: Record<string, unknown> = target
     for (let i = 0; i < parts.length - 1; i++) {
         const key = parts[i]
         if (key === undefined) continue
+        // Refuse prototype-polluting segments at the point of write — a
+        // __proto__/constructor/prototype key would let the dotted path reach
+        // Object.prototype and mutate every object in the realm.
+        if (
+            key === '__proto__' ||
+            key === 'constructor' ||
+            key === 'prototype'
+        ) {
+            return
+        }
         if (typeof cursor[key] !== 'object' || cursor[key] === null) {
             cursor[key] = {}
         }
         cursor = cursor[key] as Record<string, unknown>
     }
     const lastKey = parts[parts.length - 1]
-    if (lastKey !== undefined) cursor[lastKey] = value
+    if (
+        lastKey === undefined ||
+        lastKey === '__proto__' ||
+        lastKey === 'constructor' ||
+        lastKey === 'prototype'
+    ) {
+        return
+    }
+    cursor[lastKey] = value
 }
 
 /**
