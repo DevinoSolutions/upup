@@ -185,6 +185,93 @@ jobs:
                   kill $MASTRA_PID || true
                   exit $EVAL_EXIT
 
+    Drive-Sandbox:
+        name: Cloud-drive live integration (sandbox creds; explicit skip without them)
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout the repository
+              uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+            - name: Detect drive sandbox credentials
+              id: creds
+              env:
+                  UPUP_TEST_BOX_CLIENT_ID: ${{ secrets.UPUP_TEST_BOX_CLIENT_ID }}
+                  UPUP_TEST_DROPBOX_REFRESH_TOKEN: ${{ secrets.UPUP_TEST_DROPBOX_REFRESH_TOKEN }}
+                  UPUP_TEST_GDRIVE_REFRESH_TOKEN: ${{ secrets.UPUP_TEST_GDRIVE_REFRESH_TOKEN }}
+                  UPUP_TEST_ONEDRIVE_REFRESH_TOKEN: ${{ secrets.UPUP_TEST_ONEDRIVE_REFRESH_TOKEN }}
+              run: |
+                  if [ -n "$UPUP_TEST_BOX_CLIENT_ID" ] || [ -n "$UPUP_TEST_DROPBOX_REFRESH_TOKEN" ] || [ -n "$UPUP_TEST_GDRIVE_REFRESH_TOKEN" ] || [ -n "$UPUP_TEST_ONEDRIVE_REFRESH_TOKEN" ]; then
+                    echo "present=true" >> "$GITHUB_OUTPUT"
+                  else
+                    echo "present=false" >> "$GITHUB_OUTPUT"
+                    echo "::notice title=Drive sandbox skipped::No UPUP_TEST_* drive sandbox secrets are configured — the live cloud-drive integration suite did NOT run. drive-clients.ts stays covered by its mocked unit tests. Any provider left unconfigured skips individually inside the suite."
+                    echo "## Drive sandbox: SKIPPED (no UPUP_TEST_* secrets)" >> "$GITHUB_STEP_SUMMARY"
+                  fi
+
+            - name: Setup pnpm
+              if: steps.creds.outputs.present == 'true'
+              uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4.4.0
+
+            - name: Setup Node.js
+              if: steps.creds.outputs.present == 'true'
+              uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+              with:
+                  node-version-file: '.nvmrc'
+                  cache: pnpm
+
+            - name: Install dependencies
+              if: steps.creds.outputs.present == 'true'
+              run: pnpm install --frozen-lockfile
+
+            - name: Build @upup/core (the live suite imports drive-clients.ts → @upup/core)
+              if: steps.creds.outputs.present == 'true'
+              run: pnpm --filter @upup/core build
+
+            - name: Rotate + write back the OneDrive refresh token (single mint point)
+              if: steps.creds.outputs.present == 'true'
+              env:
+                  UPUP_TEST_ONEDRIVE_CLIENT_ID: ${{ secrets.UPUP_TEST_ONEDRIVE_CLIENT_ID }}
+                  UPUP_TEST_ONEDRIVE_CLIENT_SECRET: ${{ secrets.UPUP_TEST_ONEDRIVE_CLIENT_SECRET }}
+                  UPUP_TEST_ONEDRIVE_REFRESH_TOKEN: ${{ secrets.UPUP_TEST_ONEDRIVE_REFRESH_TOKEN }}
+                  UPUP_TEST_ONEDRIVE_TENANT: ${{ secrets.UPUP_TEST_ONEDRIVE_TENANT }}
+                  # Fine-grained PAT with repo Secrets:write — enables the rotated
+                  # token to be persisted. Absent → OneDrive is skipped (the stored
+                  # refresh token is left untouched); see the script's header.
+                  GH_SECRETS_WRITE_PAT: ${{ secrets.GH_SECRETS_WRITE_PAT }}
+              run: node scripts/drive-sandbox/refresh-onedrive-token.mjs
+
+            - name: Seed fixture files (idempotent) into every configured account
+              if: steps.creds.outputs.present == 'true'
+              env:
+                  UPUP_TEST_BOX_CLIENT_ID: ${{ secrets.UPUP_TEST_BOX_CLIENT_ID }}
+                  UPUP_TEST_BOX_CLIENT_SECRET: ${{ secrets.UPUP_TEST_BOX_CLIENT_SECRET }}
+                  UPUP_TEST_BOX_ENTERPRISE_ID: ${{ secrets.UPUP_TEST_BOX_ENTERPRISE_ID }}
+                  UPUP_TEST_DROPBOX_APP_KEY: ${{ secrets.UPUP_TEST_DROPBOX_APP_KEY }}
+                  UPUP_TEST_DROPBOX_APP_SECRET: ${{ secrets.UPUP_TEST_DROPBOX_APP_SECRET }}
+                  UPUP_TEST_DROPBOX_REFRESH_TOKEN: ${{ secrets.UPUP_TEST_DROPBOX_REFRESH_TOKEN }}
+                  UPUP_TEST_GDRIVE_CLIENT_ID: ${{ secrets.UPUP_TEST_GDRIVE_CLIENT_ID }}
+                  UPUP_TEST_GDRIVE_CLIENT_SECRET: ${{ secrets.UPUP_TEST_GDRIVE_CLIENT_SECRET }}
+                  UPUP_TEST_GDRIVE_REFRESH_TOKEN: ${{ secrets.UPUP_TEST_GDRIVE_REFRESH_TOKEN }}
+                  # OneDrive uses the access token the rotation step wrote to
+                  # $GITHUB_ENV (UPUP_TEST_ONEDRIVE_ACCESS_TOKEN) — its refresh
+                  # token is deliberately NOT exposed to seed/test steps.
+              run: node scripts/drive-sandbox/seed.mjs all
+
+            - name: Run the live cloud-drive integration suite
+              if: steps.creds.outputs.present == 'true'
+              env:
+                  UPUP_DRIVE_SANDBOX: '1'
+                  UPUP_TEST_BOX_CLIENT_ID: ${{ secrets.UPUP_TEST_BOX_CLIENT_ID }}
+                  UPUP_TEST_BOX_CLIENT_SECRET: ${{ secrets.UPUP_TEST_BOX_CLIENT_SECRET }}
+                  UPUP_TEST_BOX_ENTERPRISE_ID: ${{ secrets.UPUP_TEST_BOX_ENTERPRISE_ID }}
+                  UPUP_TEST_DROPBOX_APP_KEY: ${{ secrets.UPUP_TEST_DROPBOX_APP_KEY }}
+                  UPUP_TEST_DROPBOX_APP_SECRET: ${{ secrets.UPUP_TEST_DROPBOX_APP_SECRET }}
+                  UPUP_TEST_DROPBOX_REFRESH_TOKEN: ${{ secrets.UPUP_TEST_DROPBOX_REFRESH_TOKEN }}
+                  UPUP_TEST_GDRIVE_CLIENT_ID: ${{ secrets.UPUP_TEST_GDRIVE_CLIENT_ID }}
+                  UPUP_TEST_GDRIVE_CLIENT_SECRET: ${{ secrets.UPUP_TEST_GDRIVE_CLIENT_SECRET }}
+                  UPUP_TEST_GDRIVE_REFRESH_TOKEN: ${{ secrets.UPUP_TEST_GDRIVE_REFRESH_TOKEN }}
+              run: pnpm --filter @upup/server exec vitest run tests/integration/drive-clients-live.integration.test.ts
+
     # Rollup aggregator, mirroring Status Check / E2E Status Check. Not a
     # branch-protection input (nightly has no PR) — it exists so one signal
     # summarizes the night. Mastra-Evals is green-with-notice when the key is
@@ -192,7 +279,14 @@ jobs:
     Nightly-Status:
         name: Nightly Status Check
         runs-on: ubuntu-latest
-        needs: [E2E-Full, Storybook-Builds, Smoke-Packages, Mastra-Evals]
+        needs:
+            [
+                E2E-Full,
+                Storybook-Builds,
+                Smoke-Packages,
+                Mastra-Evals,
+                Drive-Sandbox,
+            ]
         if: always()
         steps:
             - name: Check status
@@ -200,7 +294,8 @@ jobs:
                   if [ "${{ needs.E2E-Full.result }}" != "success" ] || \
                      [ "${{ needs.Storybook-Builds.result }}" != "success" ] || \
                      [ "${{ needs.Smoke-Packages.result }}" != "success" ] || \
-                     [ "${{ needs.Mastra-Evals.result }}" != "success" ]; then
+                     [ "${{ needs.Mastra-Evals.result }}" != "success" ] || \
+                     [ "${{ needs.Drive-Sandbox.result }}" != "success" ]; then
                     echo "One or more nightly jobs failed"
                     exit 1
                   fi

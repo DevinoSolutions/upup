@@ -495,9 +495,23 @@ DrivePlugin`. All three popup providers now persist a token-expiry key and refre
   publishing: full e2e + real-MinIO suites + the a11y/overflow sweep
   (`pnpm run e2e:a11y` — the axe serious/critical ratchet vs
   `a11y-baseline.json`; runs in NO PR gate), static `build:storybook` for all
-  six frameworks, `smoke:packages`, and the mastra LLM evals (only when the
+  six frameworks, `smoke:packages`, the mastra LLM evals (only when the
   `OPENROUTER_API_KEY` Actions secret exists — absent, the job goes green with
-  a loud skip notice, never silently). Playwright traces/reports upload as
+  a loud skip notice, never silently), and the **Drive-Sandbox** job — the live
+  cloud-drive integration suite
+  (`packages/server/tests/integration/drive-clients-live.integration.test.ts`)
+  that exercises `drive-clients.ts` list/download byte-integrity against real
+  disposable sandbox accounts. It is gated by `UPUP_DRIVE_SANDBOX=1` + the
+  per-provider `UPUP_TEST_*` secrets: absent → skip green (per-provider inside
+  the suite, whole-job `::notice` if none set); a configured-but-broken token →
+  RED. The harness lives in `scripts/drive-sandbox/` (one-time `mint.mjs`
+  consent → refresh token, idempotent `seed.mjs`, `providers.mjs`/`fixtures.mjs`
+  foundation); Box uses a Client Credentials service account (no refresh token),
+  OneDrive's refresh token ROTATES and is written back nightly via
+  `refresh-onedrive-token.mjs` (needs the `GH_SECRETS_WRITE_PAT` secret — absent,
+  OneDrive is skipped and its stored token untouched). We never automate the
+  consent — a human clicks "Allow" once. Full runbook:
+  `docs/drive-sandbox-setup.md`. Playwright traces/reports upload as
   artifacts on failure. `docs/testing.md` is the testing deep-dive (layers,
   routing table, parity workflow, credentials policy).
 - `publish.yml` — push to master: changesets release PR, then (when packages

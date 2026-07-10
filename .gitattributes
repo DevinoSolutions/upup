@@ -2,3 +2,8 @@
 # a CRLF checkout (Windows core.autocrlf) makes knip extract binary names with
 # a trailing \r ("lint-staged\r"), failing the gate on any Windows clone (N7).
 .husky/* text eol=lf
+
+# Drive-sandbox test fixtures are byte-exact assets: the live cloud-drive
+# integration suite uploads them and hash-checks the round-tripped bytes, so no
+# platform EOL normalization may touch them.
+scripts/drive-sandbox/fixtures/** binary
