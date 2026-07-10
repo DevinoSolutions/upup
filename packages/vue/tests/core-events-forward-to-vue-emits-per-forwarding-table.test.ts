@@ -108,10 +108,11 @@ describe('useUpupUpload — core events forward to vue callback options (P6 forw
         // two @ts-expect-error directives below, which the test-tree typecheck
         // gate (packages/vue's `tsconfig.test.json`) enforces.
         const { result, unmount } = withSetup(() => useUpupUpload({ limit: 5 }))
-        // @ts-expect-error — 'error' is not `keyof CoreEvents`; only the
+        // @ts-expect-error: 'error' is not `keyof CoreEvents`; only the
         // namespaced '<provider>:error' form and 'upload-error' are valid.
+        // eslint-disable-next-line no-restricted-syntax -- deliberate probe of the retired bare-'error' channel; the P6 ban this rule enforces is exactly what this pin proves
         result.core.emit('error', {})
-        // @ts-expect-error — same pin on the subscribe side.
+        // @ts-expect-error: same pin on the subscribe side.
         result.core.on('error', () => {})
         unmount()
     })

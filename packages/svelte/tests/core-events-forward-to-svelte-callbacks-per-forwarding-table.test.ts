@@ -2,7 +2,6 @@ import { describe, it, expect, vi, afterEach } from 'vitest'
 import { cleanup } from '@testing-library/svelte'
 import { UpupCore } from '@upup/core'
 import type { UploadFile } from '@upup/core'
-import { useUpupUpload } from '../src/use-upup-upload'
 import { withSetup } from './helpers'
 
 afterEach(() => cleanup())
@@ -102,10 +101,11 @@ describe('useUpupUpload — core events forward to svelte callback options (P6 f
         // typecheck gate (packages/svelte's `tsconfig.test.json`, run via
         // svelte-check) enforces.
         const { result, unmount } = withSetup({ limit: 5 })
-        // @ts-expect-error — 'error' is not `keyof CoreEvents`; only the
+        // @ts-expect-error: 'error' is not `keyof CoreEvents`; only the
         // namespaced '<provider>:error' form and 'upload-error' are valid.
+        // eslint-disable-next-line no-restricted-syntax -- deliberate probe of the retired bare-'error' channel; the P6 ban this rule enforces is exactly what this pin proves
         result.core.emit('error', {})
-        // @ts-expect-error — same pin on the subscribe side.
+        // @ts-expect-error: same pin on the subscribe side.
         result.core.on('error', () => {})
         unmount()
     })

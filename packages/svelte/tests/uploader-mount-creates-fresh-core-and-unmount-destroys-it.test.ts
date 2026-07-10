@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
 import { cleanup } from '@testing-library/svelte'
 import { UploadStatus } from '@upup/core'
-import { useUpupUpload } from '../src/use-upup-upload'
 import { withSetup } from './helpers'
 
 const makeFile = (name: string) => new File(['x'], name, { type: 'text/plain' })

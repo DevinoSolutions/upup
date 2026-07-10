@@ -8,11 +8,13 @@ import { buildHeicFile } from '../helpers/fixtures'
 import { heicToJpegBlob } from '../../src/steps/heic-decode'
 
 // libheif-js is an optionalDependency; skip cleanly if the WASM bundle is absent.
-let libheifAvailable = false
+let libheifAvailable: boolean
 try {
     await import('libheif-js/libheif-wasm/libheif-bundle.mjs')
     libheifAvailable = true
 } catch {
+    // upup-catch: libheif-js is an optionalDependency — absence is this
+    // suite's expected skipIf condition, not an error to report
     libheifAvailable = false
 }
 

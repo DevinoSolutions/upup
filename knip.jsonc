@@ -12,8 +12,7 @@
       "project": ["src/**/*.{ts,tsx,vue}", "tests/**/*.{ts,tsx}"]
     },
     "packages/svelte": {
-      "project": ["src/**/*.{ts,tsx,svelte}", "tests/**/*.{ts,tsx}"],
-      "ignoreDependencies": ["@testing-library/svelte"]
+      "project": ["src/**/*.{ts,tsx,svelte}", "tests/**/*.{ts,tsx}"]
     },
     "packages/angular": {
       "entry": ["src/public-api.ts"],
