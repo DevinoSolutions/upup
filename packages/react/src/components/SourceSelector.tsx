@@ -244,9 +244,6 @@ export default function SourceSelector(): React.ReactElement | null {
                                 },
                                 slotClasses.sourceButton,
                             )}
-                            onKeyDown={e => {
-                                if (e.key === 'Enter') e.preventDefault()
-                            }}
                             onClick={() => {
                                 handleSourceClick(id)
                             }}

@@ -168,10 +168,6 @@ export function sourceSelector(ctx: UploaderContext): TemplateResult {
         }
     }
 
-    function onSourceKeydown(e: KeyboardEvent) {
-        if (e.key === 'Enter') e.preventDefault()
-    }
-
     return html`
         <div
             data-testid="upup-source-selector"
@@ -265,7 +261,6 @@ export function sourceSelector(ctx: UploaderContext): TemplateResult {
                                               },
                                               slot.sourceButton,
                                           )}
-                                          @keydown=${onSourceKeydown}
                                           @click=${() => {
                                               handleSourceClick(id)
                                           }}

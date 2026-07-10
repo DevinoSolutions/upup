@@ -123,9 +123,6 @@ import { cn } from '@upup/core/internal'
     }
   }
 
-  function onSourceKeydown(e: KeyboardEvent) {
-    if (e.key === 'Enter') e.preventDefault()
-  }
 </script>
 
 <div
@@ -197,7 +194,6 @@ import { cn } from '@upup/core/internal'
             { 'upup-border-[#6D6D6D] dark:upup-border-[#6D6D6D]': $dark },
             $slotClasses.sourceButton,
           )}
-          onkeydown={onSourceKeydown}
           onclick={() => handleSourceClick(id)}
         >
           <Icon class={$slotClasses.sourceButtonIcon || undefined} />

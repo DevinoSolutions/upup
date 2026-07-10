@@ -123,9 +123,6 @@ async function handleSelectFolderClick() {
     }
 }
 
-function onSourceKeydown(e: KeyboardEvent) {
-    if (e.key === 'Enter') e.preventDefault()
-}
 </script>
 
 <template>
@@ -199,7 +196,6 @@ function onSourceKeydown(e: KeyboardEvent) {
                         { 'upup-border-[#6D6D6D] dark:upup-border-[#6D6D6D]': dark },
                         slotClasses.sourceButton,
                     )"
-                    @keydown="onSourceKeydown"
                     @click="handleSourceClick(id)"
                 >
                     <component :is="Icon" :class="slotClasses.sourceButtonIcon" />

@@ -90,7 +90,6 @@ interface SourceEntry {
                             [attr.data-testid]="'upup-source-' + source.id"
                             [class]="tileClass"
                             (click)="handleSourceClick(source.id)"
-                            (keydown)="onSourceKeydown($event)"
                         >
                             <ng-container
                                 *ngComponentOutlet="
@@ -377,10 +376,6 @@ export class SourceSelectorComponent {
 
     onCancelAddingMore(): void {
         this.store.setIsAddingMore(false)
-    }
-
-    onSourceKeydown(e: KeyboardEvent): void {
-        if (e.key === 'Enter') e.preventDefault()
     }
 
     handleBrowseFilesClick(): void {
