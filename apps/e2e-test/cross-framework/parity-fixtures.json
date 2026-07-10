@@ -498,6 +498,16 @@
             "children": [
                 {
                     "tag": "div",
+                    "classes": ["upup-sr-only"],
+                    "children": [],
+                    "role": "status",
+                    "aria": {
+                        "aria-live": "polite"
+                    },
+                    "text": "2 files selected"
+                },
+                {
+                    "tag": "div",
                     "classes": [
                         "upup-bg-black/[0.025]",
                         "upup-grid",

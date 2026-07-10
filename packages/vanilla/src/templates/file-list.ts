@@ -368,6 +368,11 @@ export function fileList(
         data-testid="upup-file-list"
         data-upup-slot="file-list"
     >
+        <div role="status" aria-live="polite" class="upup-sr-only">
+            ${t(plural(tr, 'filesSelected', files.length), {
+                count: files.length,
+            })}
+        </div>
         ${uploaderHeader(ctx, () => {
             ctx.handleCancel()
         })}

@@ -4,6 +4,14 @@
  * consumed by both the normalizer (as `$eval` args, since normalizeElement
  * must stay self-contained/serializable) and the forcing-check in
  * parity.spec.ts. Replacing two previously-hardcoded skip sites.
+ *
+ * Self-liquidating: an entry whose `ported` list covers EVERY framework has
+ * healed and must be DELETED (parity.spec.ts enforces this) — a healed entry
+ * left in place would silently exclude its token from parity capture forever.
+ * Deleting an entry changes what the normalizer captures, so recapture the
+ * fixtures (`UPDATE_PARITY=1`, react project) in the same change. The
+ * `sr-only-live-region` entry (aria-live status region, healed by C1 across
+ * all six frameworks) was removed under this rule on 2026-07-09.
  */
 export interface A11yGap {
     id: string
@@ -19,13 +27,6 @@ export interface A11yGap {
 // react and genuinely carries every React-first a11y feature below. `ported`
 // lists both.
 export const A11Y_GAPS: A11yGap[] = [
-    {
-        id: 'sr-only-live-region',
-        kind: 'class',
-        token: 'upup-sr-only',
-        reason: 'C1 ported the aria-live status region to all six frameworks',
-        ported: ['react', 'vue', 'svelte', 'vanilla', 'angular', 'preact'],
-    },
     {
         id: 'list-role',
         kind: 'role',
