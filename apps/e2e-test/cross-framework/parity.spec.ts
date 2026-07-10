@@ -16,6 +16,7 @@ import {
     type ParityComponent,
 } from './parity-fixtures'
 import { A11Y_GAPS, gapSkipClasses, gapSkipRoles } from './parity-a11y-gaps'
+import { captureProductStateScreenshot } from '../visual/product-state-screenshots'
 
 const HERE = dirname(fileURLToPath(import.meta.url))
 const FIXTURE_PATH = join(HERE, 'parity-fixtures.json')
@@ -115,6 +116,15 @@ test.describe('cross-framework DOM + a11y parity', () => {
                 { timeout: 30_000 },
             )
 
+            // Visual layer (snapvisor): freeze the rendered mount state. The DOM
+            // parity below can never see geometry/paint — the screenshot can.
+            await captureProductStateScreenshot(page, {
+                suite: 'cross-framework',
+                framework: fw.name,
+                flow: `uploader-parity-${variant}`,
+                state: 'mount-source-selector',
+            })
+
             // SourceSelector is present at mount (files.size === 0).
             const sourceSelector = await normalize(
                 page,
@@ -144,6 +154,15 @@ test.describe('cross-framework DOM + a11y parity', () => {
             await expect(
                 page.locator('[data-testid="upup-file-item"]').first(),
             ).toBeVisible({ timeout: 15_000 })
+
+            // Visual layer (snapvisor): the populated file list — image preview
+            // plus PDF icon row — in every framework, same name contract.
+            await captureProductStateScreenshot(page, {
+                suite: 'cross-framework',
+                framework: fw.name,
+                flow: `uploader-parity-${variant}`,
+                state: 'image-and-pdf-files-added',
+            })
 
             const fileItem = await normalize(
                 page,

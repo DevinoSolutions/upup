@@ -7,23 +7,24 @@ disagree, fix the drift in the same PR.
 
 ## Test layers
 
-| Layer                         | Lives in                                                                                                                                     | Proves                                                                                                                                                                                                                                      | Command                                                                               |
-| ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| Core unit/behavior            | `packages/core/tests` + `src/**/__tests__` (~1,600 tests)                                                                                    | uploader state machine, restrictions, event contract + order, destroy/crash-recovery semantics, pipeline steps, worker offload, strategies, i18n, theme, drive plugins, multipart session store                                             | `pnpm --filter @upup/core test`                                                       |
-| Core real-I/O integration     | `packages/core/tests/integration`                                                                                                            | real HEIC WASM decode, real Skia canvas compression/thumbnail — no mocks of the code under test                                                                                                                                             | runs inside the core `test` task                                                      |
-| Framework adapters            | `packages/{react,vue,svelte,angular,vanilla,preact,next}/tests` (or `src/**/*.spec.ts`)                                                      | hook/component behavior, SSR safety, accessibility (jest-axe), fresh-core-per-mount, event forwarding, public-API pins                                                                                                                      | `pnpm --filter @upup/<fw> test`                                                       |
-| Server trust model            | `packages/server/tests`                                                                                                                      | HMAC upload-token trust (forged → 403), signed size envelope, key/uploadId/uid binding on sign-part/complete/abort, CORS + `x-upup-request-id` on every route (structural pin), OAuth return safety, token stores, 5 MB transfer bound      | `pnpm --filter @upup/server test`                                                     |
-| Server ↔ real MinIO           | `packages/server/tests/integration` (env-gated `UPUP_E2E_MINIO=1`)                                                                           | byte integrity (sha256 round-trips), presigned-PUT oversize rejection at the storage layer, multipart envelope abort with Head/ListParts negative proofs                                                                                    | `pnpm run e2e:minio:test` (MinIO up first)                                            |
-| Cloud-drive live integration  | `packages/server/tests/integration/drive-clients-live.integration.test.ts` (env-gated `UPUP_DRIVE_SANDBOX=1` + per-provider sandbox secrets) | real list/folder-nav/search/download against Box/Dropbox/Google Drive/OneDrive sandbox accounts — byte-exact sha256 round-trips through `drive-clients.ts`; skips green without a provider's secrets, reds on a configured-but-broken token | `pnpm run drive:sandbox:test` (nightly-only in CI; see `docs/drive-sandbox-setup.md`) |
-| Deep React e2e                | `apps/e2e-test/e2e` (Playwright, vite app on :3333)                                                                                          | render, file interactions, restrictions UI, upload flow vs mock endpoints, keyboard-only operation                                                                                                                                          | `pnpm --filter @upup/e2e-test test:e2e`                                               |
-| Cross-framework parity        | `apps/e2e-test/cross-framework` (six storybooks)                                                                                             | byte-identical normalized DOM + a11y contract across react/vue/svelte/vanilla/angular/preact, real uploads to MinIO                                                                                                                         | `pnpm run e2e` (both suites)                                                          |
-| A11y ratchet + overflow sweep | `apps/e2e-test/cross-framework/a11y-overflow.spec.ts` (own config, serial)                                                                   | axe serious/critical ratchet vs `a11y-baseline.json`; media views never clip their fixed-height container                                                                                                                                   | `pnpm run e2e:a11y` (nightly in CI)                                                   |
-| Package smoke                 | `scripts/package-smoke-consumer.mjs`                                                                                                         | packed tarballs install into an isolated vite consumer: exports resolve, no `workspace:` leaks, worker chunk stays separate, no server deps in browser bundles, size budgets                                                                | `pnpm run smoke:packages`                                                             |
-| Script self-tests             | `scripts/ci/*.test.mjs`, `scripts/lib/tarball.test.mjs` (node:test)                                                                          | the quality guard's rules and the CI impact map themselves                                                                                                                                                                                  | `pnpm run test:scripts`                                                               |
-| Test-quality guard            | `scripts/ci/test-quality-guard.mjs`                                                                                                          | no committed `.only`, silent skips, tautologies, vague names, unjustified sleeps, integration-layer mocks; regen guards stay present; no `continue-on-error`                                                                                | `pnpm run test:quality`                                                               |
-| Mastra deterministic          | `apps/mastra/src/**/*.test.ts`                                                                                                               | config-patch tool zod boundary, middleware guards, schema↔core drift, canned-prompt key validity — offline, zero LLM calls                                                                                                                  | `pnpm --filter @upup/mastra test`                                                     |
-| Mastra LLM evals              | `apps/mastra/src/evals/run.ts` (~20 canned prompts)                                                                                          | the live agent produces patches with required/forbidden keys                                                                                                                                                                                | `pnpm --filter @upup/mastra eval` (live server + paid key; nightly-only in CI)        |
-| Playground deep suite         | `apps/playground/e2e`                                                                                                                        | broad mobile-viewport product flows                                                                                                                                                                                                         | local-only (F-704)                                                                    |
+| Layer                         | Lives in                                                                                                                                                  | Proves                                                                                                                                                                                                                                                 | Command                                                                               |
+| ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------- |
+| Core unit/behavior            | `packages/core/tests` + `src/**/__tests__` (~1,600 tests)                                                                                                 | uploader state machine, restrictions, event contract + order, destroy/crash-recovery semantics, pipeline steps, worker offload, strategies, i18n, theme, drive plugins, multipart session store                                                        | `pnpm --filter @upup/core test`                                                       |
+| Core real-I/O integration     | `packages/core/tests/integration`                                                                                                                         | real HEIC WASM decode, real Skia canvas compression/thumbnail — no mocks of the code under test                                                                                                                                                        | runs inside the core `test` task                                                      |
+| Framework adapters            | `packages/{react,vue,svelte,angular,vanilla,preact,next}/tests` (or `src/**/*.spec.ts`)                                                                   | hook/component behavior, SSR safety, accessibility (jest-axe), fresh-core-per-mount, event forwarding, public-API pins                                                                                                                                 | `pnpm --filter @upup/<fw> test`                                                       |
+| Server trust model            | `packages/server/tests`                                                                                                                                   | HMAC upload-token trust (forged → 403), signed size envelope, key/uploadId/uid binding on sign-part/complete/abort, CORS + `x-upup-request-id` on every route (structural pin), OAuth return safety, token stores, 5 MB transfer bound                 | `pnpm --filter @upup/server test`                                                     |
+| Server ↔ real MinIO           | `packages/server/tests/integration` (env-gated `UPUP_E2E_MINIO=1`)                                                                                        | byte integrity (sha256 round-trips), presigned-PUT oversize rejection at the storage layer, multipart envelope abort with Head/ListParts negative proofs                                                                                               | `pnpm run e2e:minio:test` (MinIO up first)                                            |
+| Cloud-drive live integration  | `packages/server/tests/integration/drive-clients-live.integration.test.ts` (env-gated `UPUP_DRIVE_SANDBOX=1` + per-provider sandbox secrets)              | real list/folder-nav/search/download against Box/Dropbox/Google Drive/OneDrive sandbox accounts — byte-exact sha256 round-trips through `drive-clients.ts`; skips green without a provider's secrets, reds on a configured-but-broken token            | `pnpm run drive:sandbox:test` (nightly-only in CI; see `docs/drive-sandbox-setup.md`) |
+| Deep React e2e                | `apps/e2e-test/e2e` (Playwright, vite app on :3333)                                                                                                       | render, file interactions, restrictions UI, upload flow vs mock endpoints, keyboard-only operation                                                                                                                                                     | `pnpm --filter @upup/e2e-test test:e2e`                                               |
+| Cross-framework parity        | `apps/e2e-test/cross-framework` (six storybooks)                                                                                                          | byte-identical normalized DOM + a11y contract across react/vue/svelte/vanilla/angular/preact, real uploads to MinIO                                                                                                                                    | `pnpm run e2e` (both suites)                                                          |
+| A11y ratchet + overflow sweep | `apps/e2e-test/cross-framework/a11y-overflow.spec.ts` (own config, serial)                                                                                | axe serious/critical ratchet vs `a11y-baseline.json`; media views never clip their fixed-height container                                                                                                                                              | `pnpm run e2e:a11y` (nightly in CI)                                                   |
+| Visual product-state PNGs     | `apps/e2e-test/visual/product-state-screenshots.ts` + captures inside the parity/smoke specs and `e2e/visual-product-states-frozen-for-snapvisor.spec.ts` | deterministic screenshots of named product states (parity mount/populated ×6 frameworks, real-upload success ×6, deep-react themes/lifecycle/restrictions) — the rendered geometry/paint the DOM harness can never see; future snapvisor.io diff input | captured by `pnpm run e2e`; PNGs land in `apps/e2e-test/screenshots/`                 |
+| Package smoke                 | `scripts/package-smoke-consumer.mjs`                                                                                                                      | packed tarballs install into an isolated vite consumer: exports resolve, no `workspace:` leaks, worker chunk stays separate, no server deps in browser bundles, size budgets                                                                           | `pnpm run smoke:packages`                                                             |
+| Script self-tests             | `scripts/ci/*.test.mjs`, `scripts/lib/tarball.test.mjs` (node:test)                                                                                       | the quality guard's rules and the CI impact map themselves                                                                                                                                                                                             | `pnpm run test:scripts`                                                               |
+| Test-quality guard            | `scripts/ci/test-quality-guard.mjs`                                                                                                                       | no committed `.only`, silent skips, tautologies, vague names, unjustified sleeps, integration-layer mocks; regen guards stay present; no `continue-on-error`                                                                                           | `pnpm run test:quality`                                                               |
+| Mastra deterministic          | `apps/mastra/src/**/*.test.ts`                                                                                                                            | config-patch tool zod boundary, middleware guards, schema↔core drift, canned-prompt key validity — offline, zero LLM calls                                                                                                                             | `pnpm --filter @upup/mastra test`                                                     |
+| Mastra LLM evals              | `apps/mastra/src/evals/run.ts` (~20 canned prompts)                                                                                                       | the live agent produces patches with required/forbidden keys                                                                                                                                                                                           | `pnpm --filter @upup/mastra eval` (live server + paid key; nightly-only in CI)        |
+| Playground deep suite         | `apps/playground/e2e`                                                                                                                                     | broad mobile-viewport product flows                                                                                                                                                                                                                    | local-only (F-704)                                                                    |
 
 Every one of the nine publishable packages also pins its exact public export
 list (`public-api.test.ts`/`.spec.ts`; core additionally pins `./internal`),
@@ -81,8 +82,13 @@ not sanction (and on a failed resolver), so routing cannot hide required
 coverage. Branch protection must require BOTH rollups (F-780).
 `workflow_dispatch` forces every suite (`--all`).
 
+The E2E job uploads two artifacts: `e2e-visual-screenshots` (**always** — the
+visual layer's PNGs, see "Visual screenshots" below) and
+`e2e-playwright-artifacts` (traces + reports, failure only).
+
 **Nightly (nightly.yml, 03:17 UTC + manual):** full e2e + MinIO suites +
-a11y/overflow sweep (with Playwright trace/report artifacts on failure),
+a11y/overflow sweep (with `nightly-visual-screenshots` uploaded always and
+Playwright trace/report artifacts on failure),
 static builds of all six storybooks, package smoke, the mastra LLM evals, and
 the cloud-drive live integration suite (`Drive-Sandbox` job). Nothing publishes
 from nightly. Both the evals and the drive-sandbox job skip green (with a
@@ -117,6 +123,53 @@ regenerate deliberately with `UPDATE_A11Y_BASELINE=1` (never in CI).
 What no DOM harness can catch — check live: fixed-height panel overflow
 (media views need `min-h-0 flex-1 object-contain`), `srcObject` binding after
 mount, density/spacing cramping. See CLAUDE.md "What the harness cannot catch".
+The visual-screenshot layer below narrows this hole (geometry/paint drift
+becomes a reviewable image diff) but does not replace the live checks: it only
+sees the states the suites drive.
+
+## Visual screenshots (snapvisor.io)
+
+The e2e suites freeze named product states as PNGs via
+`apps/e2e-test/visual/product-state-screenshots.ts`
+(`captureProductStateScreenshot`). This is the geometry/paint complement to
+the DOM parity harness, and the input for **snapvisor.io** — our Argos-style
+visual-diff service — once its uploader is wired into CI. Until then the PNGs
+ship as plain workflow artifacts (`e2e-visual-screenshots` on PRs,
+`nightly-visual-screenshots` on nightly) and are reviewed by humans.
+
+**Naming contract** (snapvisor will key diffs on these paths — treat renames
+like fixture changes, not refactors):
+
+```
+apps/e2e-test/screenshots/<suite>/<framework>/<flow>--<state>.png
+  suite      cross-framework | deep-react
+  framework  react | vue | svelte | vanilla | angular | preact
+  flow       product flow, e.g. uploader-parity-default, real-upload-client
+  state      frozen state, e.g. mount-source-selector, upload-failed
+```
+
+**Current inventory:** parity spec captures `mount-source-selector` +
+`image-and-pdf-files-added` per framework (12), the real-upload smoke captures
+`upload-successful` per framework (6), and the deep-react visual spec
+(`e2e/visual-product-states-frozen-for-snapvisor.spec.ts`) captures both
+themes, the link source view, and the upload lifecycle
+(selected/uploading/successful/failed) plus the restriction-rejection contract
+(8).
+
+**Determinism rules** (all enforced inside the helper — no caller sleeps):
+element screenshots of the uploader root only, CSS-pixel scale (DPR-agnostic),
+animations fast-forwarded, caret hidden, `document.fonts.ready` + image
+`decode()` awaited first, and inherently-live regions (progress bars) masked
+by the caller in `#ff00ff`. There are **no committed golden images and no
+regen mode** — snapvisor owns baselines server-side, so a capture can never
+launder a regression into this repo (nothing here for the regen guards to
+protect).
+
+**Adding a capture:** reach the state with a real behavioral assertion first
+(`data-state`, slot visibility — the screenshot proves what it looked like,
+the assertion proves it happened), then call `captureProductStateScreenshot`
+with a flow/state pair that reads as product language. Mask anything a human
+would describe as "mid-motion".
 
 ## MinIO
 

@@ -1,1 +1,13 @@
-{ "compilerOptions": { "target": "ES2020", "module": "ESNext", "moduleResolution": "bundler", "jsx": "react-jsx", "strict": true, "noEmit": true, "skipLibCheck": true, "allowImportingTsExtensions": true }, "include": ["src", "e2e", "cross-framework", "*.config.ts"] }
+{
+    "compilerOptions": {
+        "target": "ES2020",
+        "module": "ESNext",
+        "moduleResolution": "bundler",
+        "jsx": "react-jsx",
+        "strict": true,
+        "noEmit": true,
+        "skipLibCheck": true,
+        "allowImportingTsExtensions": true
+    },
+    "include": ["src", "e2e", "cross-framework", "visual", "*.config.ts"]
+}

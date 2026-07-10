@@ -297,10 +297,28 @@ hooks) are shared across all frameworks and asserted by tests. Renaming one is
 a cross-framework breaking change: grep every package plus the fixtures before
 touching them.
 
+### Visual screenshots (snapvisor.io)
+
+The e2e suites also freeze named product states as PNGs —
+`apps/e2e-test/visual/product-state-screenshots.ts` is the one capture path
+(element shot of the uploader root, CSS-pixel scale, animations/caret/fonts
+settled, live regions masked). Naming contract
+`screenshots/<suite>/<framework>/<flow>--<state>.png` is what snapvisor.io
+(our Argos-style visual-diff service) will key on once its uploader lands in
+CI; until then the PNGs upload as workflow artifacts
+(`e2e-visual-screenshots` / `nightly-visual-screenshots`, always — not just on
+failure). No golden images are committed and there is no regen mode: baselines
+live server-side in snapvisor, so there is nothing here for the regen guards
+to protect. Every capture sits AFTER a real behavioral assertion — the
+assertion proves the state happened, the pixels prove what it looked like.
+Deep-dive: `docs/testing.md` "Visual screenshots".
+
 ### What the harness cannot catch
 
 The harness compares normalized DOM structure, not rendered geometry. Three
-recurring visual traps it will never flag — check these live:
+recurring visual traps it will never flag — check these live (the screenshot
+layer turns some of this into reviewable image diffs, but only for the states
+the suites actually drive):
 
 - The uploader panel is a fixed-height container by design; unbounded media
   clips. Every media element (camera, screen capture, previews) needs

@@ -73,6 +73,19 @@ jobs:
             - name: A11y ratchet + overflow sweep (six storybooks, serial)
               run: pnpm run e2e:a11y
 
+            # Visual layer: same capture set as e2e.yml (parity mount/populated
+            # states x6 frameworks, real-upload success x6, deep-react product
+            # states) — nightly's copy is the unrouted full-breadth run and the
+            # future snapvisor.io baseline feed.
+            - name: Upload visual product-state screenshots
+              if: always()
+              uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+              with:
+                  name: nightly-visual-screenshots
+                  path: apps/e2e-test/screenshots/
+                  if-no-files-found: warn
+                  retention-days: 14
+
             - name: Upload Playwright traces and reports
               if: failure()
               uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2

@@ -116,6 +116,31 @@ jobs:
               if: needs.Resolve-Affected.outputs.minio == 'true'
               run: pnpm run e2e:minio:test
 
+            # Visual layer: the suites freeze named product states as PNGs
+            # (apps/e2e-test/visual/product-state-screenshots.ts). Uploaded on
+            # success AND failure — they are review evidence now and the
+            # snapvisor.io (Argos-style) diff input once its uploader is wired
+            # into this job. An empty upload warns: e2e ran but captured
+            # nothing, which means the capture layer itself broke.
+            - name: Upload visual product-state screenshots
+              if: always()
+              uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+              with:
+                  name: e2e-visual-screenshots
+                  path: apps/e2e-test/screenshots/
+                  if-no-files-found: warn
+                  retention-days: 14
+
+            - name: Upload Playwright traces and reports
+              if: failure()
+              uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+              with:
+                  name: e2e-playwright-artifacts
+                  path: |
+                      apps/e2e-test/playwright-report/
+                      apps/e2e-test/test-results/
+                  retention-days: 14
+
     Smoke-Packages:
         name: Package smoke (real tarball consumer)
         runs-on: ubuntu-latest

@@ -59,3 +59,7 @@ tmp-*.txt
 
 # App build outputs (packages/*/dist is covered above)
 apps/*/dist
+
+# Visual-layer captures (CI artifact -> future snapvisor.io input; no goldens
+# are committed — snapvisor owns baselines server-side)
+apps/e2e-test/screenshots/
