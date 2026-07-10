@@ -365,6 +365,20 @@ export function analyzeRegenGuards(readFile) {
 
 export const KNOWN_EXCEPTIONS = []
 
+// The guard's own self-test is an adversarial fixture corpus: its string
+// literals are deliberately-bad test specimens (.only, tautologies, silent
+// skips, vague names) that the node:test cases feed to analyzeTestFile().
+// Scanning it flags its own test DATA — the one file the scanner cannot
+// meaningfully analyze. Excluded by exact path rather than through
+// KNOWN_EXCEPTIONS, which must keep shipping empty; the self-test pins this
+// set's exact contents so it cannot quietly grow into a bypass list.
+// (Trap that motivated this: discovery reads `git ls-files`, so the
+// pre-commit verification run could not see the then-untracked self-test —
+// the commit that landed the guard is what made its corpus scannable.)
+export const SELF_TEST_FIXTURE_FILES = new Set([
+    'scripts/ci/test-quality-guard.test.mjs',
+])
+
 // ── Census ───────────────────────────────────────────────────────────────
 
 const read = file => readFileSync(file, 'utf8')
@@ -378,7 +392,9 @@ function main() {
         .split('\n')
         .filter(Boolean)
 
-    const testFiles = tracked.filter(f => TEST_FILE_RE.test(f))
+    const testFiles = tracked.filter(
+        f => TEST_FILE_RE.test(f) && !SELF_TEST_FIXTURE_FILES.has(f),
+    )
     const workflowFiles = tracked.filter(f =>
         /^\.github\/workflows\/[^/]+\.ya?ml$/.test(f),
     )

@@ -158,7 +158,12 @@ pnpm run test:quality   # test-suite hygiene guard: committed .only, disabled
                         # unjustified Playwright sleeps (sleep-allow), mocks in
                         # integration/e2e layers (boundary-mock), regen-guard
                         # presence, continue-on-error in workflows. Exceptions
-                        # list ships EMPTY and is inverse-forced.
+                        # list ships EMPTY and is inverse-forced; the ONE named
+                        # carve-out is the guard's own self-test (its fixture
+                        # corpus is deliberate rot specimens), pinned exactly.
+                        # Discovery is `git ls-files` — an UNTRACKED new test
+                        # file is invisible until staged, so verify after
+                        # `git add`, not before.
 pnpm run test:scripts   # node:test self-tests for scripts/ci (the guard + the
                         # affected-test resolver's impact map) + scripts/lib
 pnpm run smoke:packages # real npm-tarball consumer (packs all 9, isolated vite

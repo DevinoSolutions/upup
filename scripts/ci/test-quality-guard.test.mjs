@@ -12,6 +12,7 @@ import {
     analyzeTestFileName,
     analyzeWorkflow,
     KNOWN_EXCEPTIONS,
+    SELF_TEST_FIXTURE_FILES,
 } from './test-quality-guard.mjs'
 
 const UNIT = 'packages/example/tests/example-behavior.test.ts'
@@ -198,4 +199,11 @@ test('the regen-guard check fails when a guarded spec loses its CI throw and pas
 
 test('the exceptions list ships empty so findings are fixed rather than pinned', () => {
     assert.deepEqual(KNOWN_EXCEPTIONS, [])
+})
+
+test('the self-scan exclusion contains exactly this fixture-corpus file, so it cannot grow into a bypass list', () => {
+    assert.deepEqual(
+        [...SELF_TEST_FIXTURE_FILES],
+        ['scripts/ci/test-quality-guard.test.mjs'],
+    )
 })
