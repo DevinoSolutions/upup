@@ -9,5 +9,12 @@
         "skipLibCheck": true,
         "allowImportingTsExtensions": true
     },
-    "include": ["src", "e2e", "cross-framework", "visual", "*.config.ts"]
+    "include": [
+        "src",
+        "e2e",
+        "cross-framework",
+        "visual",
+        "drive-sandbox",
+        "*.config.ts"
+    ]
 }

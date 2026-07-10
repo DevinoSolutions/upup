@@ -1,0 +1,413 @@
+// Box + Dropbox proven through the REAL @upup/server HTTP surface.
+//
+// The vitest live suite (packages/server/tests/integration/
+// drive-clients-live.integration.test.ts) already proves drive-clients.ts
+// list/download byte-integrity by calling those functions DIRECTLY. This
+// Playwright layer proves the *same* real sandbox credentials work through the
+// HTTP handler: route dispatch (handler.ts) -> Responder -> drive-routes auth
+// -> drive->S3 transfer into a real MinIO bucket.
+//
+// Injection point (no interactive OAuth popup, no trust-model change):
+// handleListFiles/handleFileTransfer read the provider access token from
+// config.tokenStore keyed by resolveUserId()+provider (drive-routes.ts:29-51,
+// 91-111) — the OAuth callback is merely what normally WRITES that token via
+// setTokens (oauth.ts:235). So we mint a REAL access token (Box CCG /
+// Dropbox refresh grant, exactly as the vitest suite does) and pre-seed the
+// SAME store with the public setTokens(); the routes then consume it through
+// getTokens() identically to a post-OAuth request. getUserId is set to a fixed
+// id — what a real multi-tenant deployment must set, not a bypass flag. No
+// mocks, no allowAnonymous*, HMAC/upload-token routes untouched.
+//
+// Gating mirrors the vitest suite: UPUP_DRIVE_SANDBOX=1 + per-provider creds +
+// MinIO env -> run; absent -> skip GREEN (loud notice, exit 0); a
+// configured-but-broken token throws during mint in beforeAll -> RED.
+//
+// Run (nightly / manual):
+//   dotenv -e local-dev/.env.minio -e local-dev/.env.test -- \
+//     pnpm --filter @upup/e2e-test test:e2e:drive-sandbox
+
+import { test, expect, type APIRequestContext } from '@playwright/test'
+import { createServer, type Server } from 'node:http'
+import type { AddressInfo } from 'node:net'
+import { createHash } from 'node:crypto'
+import { readFileSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
+import { dirname, join } from 'node:path'
+import {
+    createUpupHandler,
+    InMemoryTokenStore,
+    setTokens,
+    type TokenStore,
+    type UpupServerConfig,
+} from '@upup/server'
+import { toWebRequest, writeWebResponse } from '@upup/server/node-bridge'
+
+// ── Providers under test (kebab wire slugs; camelCase only lives in-app) ────
+const PROVIDERS = ['box', 'dropbox'] as const
+type Provider = (typeof PROVIDERS)[number]
+
+const USER_ID = 'drive-sandbox-e2e'
+const SANDBOX_FOLDER = 'upup-sandbox-fixtures'
+
+// ── Real token minting (inlined + typed, mirroring the vitest live suite;
+//    the server test-tree typecheck cannot import providers.mjs untyped) ─────
+const AUTH: Record<
+    Provider,
+    {
+        accessTokenEnv: string
+        clientIdEnv: string
+        clientSecretEnv: string
+        // Box: enterprise id (client-credentials). Dropbox: refresh token.
+        thirdSecretEnv: string
+    }
+> = {
+    box: {
+        accessTokenEnv: 'UPUP_TEST_BOX_ACCESS_TOKEN',
+        clientIdEnv: 'UPUP_TEST_BOX_CLIENT_ID',
+        clientSecretEnv: 'UPUP_TEST_BOX_CLIENT_SECRET',
+        thirdSecretEnv: 'UPUP_TEST_BOX_ENTERPRISE_ID',
+    },
+    dropbox: {
+        accessTokenEnv: 'UPUP_TEST_DROPBOX_ACCESS_TOKEN',
+        clientIdEnv: 'UPUP_TEST_DROPBOX_APP_KEY',
+        clientSecretEnv: 'UPUP_TEST_DROPBOX_APP_SECRET',
+        thirdSecretEnv: 'UPUP_TEST_DROPBOX_REFRESH_TOKEN',
+    },
+}
+
+function env(name: string): string | undefined {
+    return process.env[name]
+}
+
+function requireEnv(name: string): string {
+    const value = process.env[name]
+    if (!value) throw new Error(`missing env ${name}`)
+    return value
+}
+
+// Configured = a ready-made access token OR the full mint triplet.
+function isConfigured(provider: Provider): boolean {
+    const c = AUTH[provider]
+    if (env(c.accessTokenEnv)) return true
+    return Boolean(
+        env(c.clientIdEnv) && env(c.clientSecretEnv) && env(c.thirdSecretEnv),
+    )
+}
+
+async function requestToken(
+    tokenUrl: string,
+    form: Record<string, string>,
+): Promise<string> {
+    const res = await fetch(tokenUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams(form).toString(),
+    })
+    if (!res.ok) {
+        const detail = (await res.text().catch(() => '')).slice(0, 300)
+        throw new Error(
+            `sandbox token mint failed: ${res.status} ${res.statusText} at ${tokenUrl} - ${detail}`,
+        )
+    }
+    const data = (await res.json()) as { access_token?: string }
+    if (!data.access_token) {
+        throw new Error(
+            `sandbox token mint returned no access_token from ${tokenUrl}`,
+        )
+    }
+    return data.access_token
+}
+
+// A fresh access token for a provider. The *_ACCESS_TOKEN shortcut short-circuits
+// with zero network; Box uses a client-credentials enterprise grant; Dropbox
+// exchanges its long-lived refresh token.
+async function mintAccessToken(provider: Provider): Promise<string> {
+    const c = AUTH[provider]
+    const shortcut = env(c.accessTokenEnv)
+    if (shortcut) return shortcut
+
+    const clientId = requireEnv(c.clientIdEnv)
+    const clientSecret = requireEnv(c.clientSecretEnv)
+
+    if (provider === 'box') {
+        return requestToken('https://api.box.com/oauth2/token', {
+            grant_type: 'client_credentials',
+            client_id: clientId,
+            client_secret: clientSecret,
+            box_subject_type: 'enterprise',
+            box_subject_id: requireEnv(c.thirdSecretEnv),
+        })
+    }
+    return requestToken('https://api.dropboxapi.com/oauth2/token', {
+        grant_type: 'refresh_token',
+        refresh_token: requireEnv(c.thirdSecretEnv),
+        client_id: clientId,
+        client_secret: clientSecret,
+    })
+}
+
+// ── Fixtures: committed bytes are the source of truth (read via fs, same as
+//    the vitest suite — no import of the untyped fixtures.mjs) ───────────────
+function sha256(bytes: Uint8Array): string {
+    return createHash('sha256').update(bytes).digest('hex')
+}
+
+const FIXTURES_DIR = join(
+    dirname(fileURLToPath(import.meta.url)),
+    '../../../scripts/drive-sandbox/fixtures',
+)
+
+type Fixture = {
+    name: string
+    mimeType: string
+    bytes: Uint8Array
+    sha256: string
+}
+
+function loadFixture(name: string, mimeType: string): Fixture {
+    const bytes = new Uint8Array(readFileSync(join(FIXTURES_DIR, name)))
+    return { name, mimeType, bytes, sha256: sha256(bytes) }
+}
+
+// upup-sandbox-hello.txt (UTF-8 text incl. a multibyte char) +
+// upup-sandbox-bytes.bin (256-byte 0x00–0xFF blob) — together they prove the
+// list->transfer pipe is byte-exact for both text and non-textual binary.
+const FIXTURES: readonly Fixture[] = [
+    loadFixture('upup-sandbox-hello.txt', 'text/plain'),
+    loadFixture('upup-sandbox-bytes.bin', 'application/octet-stream'),
+]
+
+// ── Env gating ──────────────────────────────────────────────────────────────
+const MINIO_ENV = [
+    'UPUP_E2E_BUCKET',
+    'UPUP_E2E_REGION',
+    'UPUP_E2E_ENDPOINT',
+    'MINIO_ROOT_USER',
+    'MINIO_ROOT_PASSWORD',
+] as const
+const minioReady = MINIO_ENV.every(k => Boolean(process.env[k]))
+const sandboxOn = process.env.UPUP_DRIVE_SANDBOX === '1'
+const enabled: Record<Provider, boolean> = {
+    box: sandboxOn && minioReady && isConfigured('box'),
+    dropbox: sandboxOn && minioReady && isConfigured('dropbox'),
+}
+const anyEnabled = PROVIDERS.some(p => enabled[p])
+
+if (!anyEnabled) {
+    const why = !sandboxOn
+        ? 'UPUP_DRIVE_SANDBOX!=1'
+        : !minioReady
+          ? 'MinIO env missing (UPUP_E2E_*/MINIO_ROOT_*)'
+          : 'no per-provider creds (UPUP_TEST_BOX_* / UPUP_TEST_DROPBOX_*)'
+    // Loud, single-line skip notice — the run still exits 0 (all tests skip).
+    console.log(
+        `[drive-sandbox-e2e] SKIP (green): ${why}. See docs/drive-sandbox-setup.md.`,
+    )
+}
+
+// ── One real in-process @upup/server wired to the live MinIO, shared by both
+//    provider groups; the tokenStore is seeded with real minted tokens ───────
+function buildConfig(store: TokenStore): UpupServerConfig {
+    return {
+        storage: {
+            type: 'aws',
+            bucket: requireEnv('UPUP_E2E_BUCKET'),
+            region: requireEnv('UPUP_E2E_REGION'),
+            endpoint: requireEnv('UPUP_E2E_ENDPOINT'),
+            forcePathStyle: true,
+            accessKeyId: requireEnv('MINIO_ROOT_USER'),
+            secretAccessKey: requireEnv('MINIO_ROOT_PASSWORD'),
+        },
+        uploadTokenSecret:
+            process.env.UPUP_UPLOAD_TOKEN_SECRET ??
+            'drive-sandbox-e2e-upload-token-secret-not-for-prod',
+        tokenStore: store,
+        // A real identity resolver (what a multi-tenant deployment sets) — NOT a
+        // bypass flag. Every request maps to the one seeded sandbox user.
+        getUserId: async () => USER_ID,
+    }
+}
+
+let server: Server | undefined
+let baseURL = ''
+
+test.beforeAll(async () => {
+    if (!anyEnabled) return
+
+    const store = new InMemoryTokenStore()
+    // Mint both providers in parallel (independent APIs). A
+    // broken-but-configured token throws HERE -> the run goes RED.
+    await Promise.all(
+        PROVIDERS.filter(provider => enabled[provider]).map(async provider => {
+            const accessToken = await mintAccessToken(provider)
+            await setTokens(store, USER_ID, provider, { accessToken })
+        }),
+    )
+
+    const handler = createUpupHandler(buildConfig(store))
+    server = createServer((req, res) => {
+        void (async () => {
+            const chunks: Buffer[] = []
+            for await (const chunk of req) chunks.push(chunk as Buffer)
+            const port = (server!.address() as AddressInfo).port
+            const webReq = toWebRequest({
+                url: `http://127.0.0.1:${port}${req.url ?? '/'}`,
+                method: req.method ?? 'GET',
+                headers: req.headers,
+                body: chunks.length ? Buffer.concat(chunks) : undefined,
+            })
+            const webRes = await handler(webReq)
+            await writeWebResponse(
+                {
+                    status: (code: number) => {
+                        res.statusCode = code
+                    },
+                    setHeader: (name: string, value: string) => {
+                        res.setHeader(name, value)
+                    },
+                    send: (buf: Buffer) => {
+                        res.end(buf)
+                    },
+                },
+                webRes,
+            )
+        })().catch((err: unknown) => {
+            res.statusCode = 500
+            res.end(String(err))
+        })
+    })
+    await new Promise<void>(resolve => server!.listen(0, '127.0.0.1', resolve))
+    baseURL = `http://127.0.0.1:${(server.address() as AddressInfo).port}`
+})
+
+test.afterAll(async () => {
+    if (server)
+        await new Promise<void>(resolve => server!.close(() => resolve()))
+})
+
+// ── HTTP helpers driving the real routes ────────────────────────────────────
+type ListedFile = {
+    id: string
+    name: string
+    size?: number
+    mimeType?: string
+    isFolder: boolean
+    modifiedAt?: string
+}
+type ListResponse = { provider: string; files: ListedFile[] }
+type TransferResponse = {
+    provider: string
+    key: string
+    name: string
+    size: number
+    type: string
+    url: string
+}
+
+async function listFiles(
+    request: APIRequestContext,
+    provider: Provider,
+    folderId?: string,
+): Promise<ListedFile[]> {
+    const url =
+        `${baseURL}/files/${provider}` +
+        (folderId ? `?folderId=${encodeURIComponent(folderId)}` : '')
+    const res = await request.get(url)
+    expect(
+        res.ok(),
+        `GET /files/${provider} -> HTTP ${res.status()}`,
+    ).toBeTruthy()
+    const body = (await res.json()) as ListResponse
+    expect(body.provider).toBe(provider)
+    return body.files
+}
+
+// ── Suites (one per provider; conditional-skips GREEN unless enabled) ────────
+for (const provider of PROVIDERS) {
+    test.describe(`server-mode drive list + transfer through @upup/server — ${provider}`, () => {
+        test.skip(
+            () => !enabled[provider],
+            `${provider} drive-sandbox not configured (needs UPUP_DRIVE_SANDBOX=1 + creds + MinIO up)`,
+        )
+
+        test(`GET /files/${provider} lists the seeded "${SANDBOX_FOLDER}" folder and both fixtures with exact byte sizes`, async ({
+            request,
+        }) => {
+            const root = await listFiles(request, provider)
+            const folder = root.find(f => f.name === SANDBOX_FOLDER)
+            expect(
+                folder,
+                `"${SANDBOX_FOLDER}" present in ${provider} root listing`,
+            ).toBeDefined()
+            expect(folder!.isFolder).toBe(true)
+
+            const contents = await listFiles(request, provider, folder!.id)
+            for (const fixture of FIXTURES) {
+                const listed = contents.find(f => f.name === fixture.name)
+                expect(
+                    listed,
+                    `${fixture.name} listed inside the ${provider} sandbox folder`,
+                ).toBeDefined()
+                expect(listed!.isFolder).toBe(false)
+                // Some providers omit size on listings; assert it only when present.
+                if (typeof listed!.size === 'number') {
+                    expect(listed!.size).toBe(fixture.bytes.length)
+                }
+            }
+        })
+
+        test(`POST /files/${provider}/transfer streams a fixture into MinIO byte-exact (sha256 matches the committed fixture)`, async ({
+            request,
+        }) => {
+            const root = await listFiles(request, provider)
+            const folder = root.find(f => f.name === SANDBOX_FOLDER)
+            expect(folder, `"${SANDBOX_FOLDER}" present`).toBeDefined()
+            const contents = await listFiles(request, provider, folder!.id)
+
+            // Transfer the binary fixture — proves non-textual byte fidelity.
+            const fixture = FIXTURES.find(
+                f => f.name === 'upup-sandbox-bytes.bin',
+            )
+            expect(fixture, 'binary fixture loaded from disk').toBeDefined()
+            const listed = contents.find(f => f.name === fixture!.name)
+            expect(
+                listed,
+                `${fixture!.name} present in ${provider} folder to transfer`,
+            ).toBeDefined()
+
+            const transferRes = await request.post(
+                `${baseURL}/files/${provider}/transfer`,
+                {
+                    data: {
+                        fileId: listed!.id,
+                        fileName: fixture!.name,
+                        size: fixture!.bytes.length,
+                        mimeType: fixture!.mimeType,
+                    },
+                },
+            )
+            expect(
+                transferRes.ok(),
+                `POST /files/${provider}/transfer -> HTTP ${transferRes.status()}`,
+            ).toBeTruthy()
+            const body = (await transferRes.json()) as TransferResponse
+            expect(body.provider).toBe(provider)
+            expect(body.size).toBe(fixture!.bytes.length)
+            expect(
+                body.url,
+                'transfer returns a presigned MinIO URL',
+            ).toBeTruthy()
+
+            // Download the object straight from MinIO via the presigned GET the
+            // server handed back, and prove the bytes are byte-exact.
+            const objectRes = await request.get(body.url)
+            expect(
+                objectRes.ok(),
+                `MinIO GET of transferred object -> HTTP ${objectRes.status()}`,
+            ).toBeTruthy()
+            const downloaded = new Uint8Array(await objectRes.body())
+            expect(downloaded.length).toBe(fixture!.bytes.length)
+            expect(sha256(downloaded)).toBe(fixture!.sha256)
+        })
+    })
+}
