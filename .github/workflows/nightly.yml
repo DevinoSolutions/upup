@@ -285,6 +285,44 @@ jobs:
                   UPUP_TEST_GDRIVE_REFRESH_TOKEN: ${{ secrets.UPUP_TEST_GDRIVE_REFRESH_TOKEN }}
               run: pnpm --filter @upup/server exec vitest run tests/integration/drive-clients-live.integration.test.ts
 
+            - name: Provision MinIO env (defaults; the HTTP-surface suite needs a live bucket)
+              if: steps.creds.outputs.present == 'true'
+              run: cp local-dev/.env.minio.example local-dev/.env.minio
+
+            - name: Boot MinIO for the drive-sandbox HTTP-surface suite # ephemeral CI runner — no teardown
+              if: steps.creds.outputs.present == 'true'
+              run: |
+                  pnpm run e2e:minio:up
+                  for i in $(seq 1 45); do
+                    if curl -sf http://localhost:9100/minio/health/live > /dev/null; then
+                      echo "MinIO healthy on :9100"; exit 0
+                    fi
+                    sleep 2
+                  done
+                  echo "MinIO failed to become healthy on :9100" >&2
+                  exit 1
+
+            - name: Build @upup/server (the Playwright HTTP-surface suite imports its built dist)
+              if: steps.creds.outputs.present == 'true'
+              run: pnpm --filter @upup/server build
+
+            - name: Box/Dropbox server-transfer through the real @upup/server HTTP surface (Playwright)
+              if: steps.creds.outputs.present == 'true'
+              env:
+                  UPUP_DRIVE_SANDBOX: '1'
+                  UPUP_TEST_BOX_CLIENT_ID: ${{ secrets.UPUP_TEST_BOX_CLIENT_ID }}
+                  UPUP_TEST_BOX_CLIENT_SECRET: ${{ secrets.UPUP_TEST_BOX_CLIENT_SECRET }}
+                  UPUP_TEST_BOX_ENTERPRISE_ID: ${{ secrets.UPUP_TEST_BOX_ENTERPRISE_ID }}
+                  UPUP_TEST_DROPBOX_APP_KEY: ${{ secrets.UPUP_TEST_DROPBOX_APP_KEY }}
+                  UPUP_TEST_DROPBOX_APP_SECRET: ${{ secrets.UPUP_TEST_DROPBOX_APP_SECRET }}
+                  UPUP_TEST_DROPBOX_REFRESH_TOKEN: ${{ secrets.UPUP_TEST_DROPBOX_REFRESH_TOKEN }}
+                  MINIO_ROOT_USER: upupadmin
+                  MINIO_ROOT_PASSWORD: upupadmin123
+                  UPUP_E2E_BUCKET: upup-e2e
+                  UPUP_E2E_REGION: us-east-1
+                  UPUP_E2E_ENDPOINT: http://localhost:9100
+              run: pnpm --filter @upup/e2e-test test:e2e:drive-sandbox
+
     # Rollup aggregator, mirroring Status Check / E2E Status Check. Not a
     # branch-protection input (nightly has no PR) — it exists so one signal
     # summarizes the night. Mastra-Evals is green-with-notice when the key is

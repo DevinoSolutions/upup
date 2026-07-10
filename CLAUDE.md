@@ -522,7 +522,11 @@ DrivePlugin`. All three popup providers now persist a token-expiry key and refre
   disposable sandbox accounts. It is gated by `UPUP_DRIVE_SANDBOX=1` + the
   per-provider `UPUP_TEST_*` secrets: absent → skip green (per-provider inside
   the suite, whole-job `::notice` if none set); a configured-but-broken token →
-  RED. The harness lives in `scripts/drive-sandbox/` (one-time `mint.mjs`
+  RED. That same job also boots MinIO and runs a Playwright HTTP-surface layer
+  (`apps/e2e-test/drive-sandbox/box-dropbox-server-transfer.spec.ts`) proving the
+  same Box/Dropbox sandbox creds through `@upup/server`'s route dispatch → drive
+  auth → drive→S3 transfer into a real bucket, under the same per-provider
+  skip-green/red gating. The harness lives in `scripts/drive-sandbox/` (one-time `mint.mjs`
   consent → refresh token, idempotent `seed.mjs`, `providers.mjs`/`fixtures.mjs`
   foundation); Box uses a Client Credentials service account (no refresh token),
   OneDrive's refresh token ROTATES and is written back nightly via

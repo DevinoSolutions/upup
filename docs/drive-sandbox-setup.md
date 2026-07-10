@@ -31,7 +31,7 @@ real HTTP round-trip, real bytes back.
   never type credentials into a provider's page — that is repo policy. (Box has
   no consent screen at all; see its section.)
 - **PR CI needs none of this.** No pull-request check reads these credentials.
-  The live suite runs only in `nightly.yml`'s `Drive-Sandbox` job, and only
+  The live suites run only in `nightly.yml`'s `Drive-Sandbox` job, and only
   when the secrets are present. With no secrets the job **skips green** with a
   notice; `drive-clients.ts` stays covered by its mocked unit tests. Any single
   provider you leave unconfigured skips individually inside the suite — you can
@@ -109,6 +109,29 @@ The three scripts are thin dotenv wrappers (they load `local-dev/.env.test`):
 `drive:sandbox:mint` runs the one-time consent CLI, `drive:sandbox:seed` uploads
 the fixture set, and `drive:sandbox:test` builds `@upup/core` and runs the gated
 vitest suite.
+
+### Also: the HTTP-surface layer (Playwright)
+
+The vitest suite calls `drive-clients.ts` directly. A parallel Playwright suite
+(`apps/e2e-test/drive-sandbox/box-dropbox-server-transfer.spec.ts`) proves the
+same **Box/Dropbox** creds end to end through `@upup/server`'s HTTP surface —
+route dispatch → drive auth → drive→S3 transfer — into a real MinIO bucket, then
+verifies the transferred bytes are a byte-exact sha256 match. Bring MinIO up
+first (`pnpm run e2e:minio:up`), then run it with the same dotenv wrapper (it
+loads the MinIO env and your drive creds together):
+
+```bash
+dotenv -e local-dev/.env.minio -e local-dev/.env.test -- \
+  pnpm --filter @upup/e2e-test test:e2e:drive-sandbox
+```
+
+Its gating mirrors the vitest suite: it runs only with `UPUP_DRIVE_SANDBOX=1`,
+per-provider creds, and a live MinIO; absent → skip green (exit 0, loud notice);
+a configured-but-broken token → RED. Only Box and Dropbox are covered here
+(Google Drive and OneDrive stay vitest-only). Nightly's `Drive-Sandbox` job runs
+**both** layers: the vitest client-direct suite, then this Playwright
+HTTP-surface suite (the job boots MinIO in-job and builds `@upup/server` before
+it).
 
 ### What gets seeded, and why write scope is required
 
