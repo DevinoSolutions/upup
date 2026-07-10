@@ -432,6 +432,40 @@ test('the CLI leaves GITHUB_OUTPUT untouched under --json because JSON mode is f
     assert.throws(() => readFileSync(outFile, 'utf8'), /ENOENT/)
 })
 
+// Count the pipes in a markdown table row that remain real column delimiters. A
+// pipe is escaped only when preceded by an ODD-length run of backslashes, so an
+// even run (zero included) leaves it live. A fully escaped 3-column reason cell
+// contributes none, keeping the row at its 4 structural delimiters.
+function structuralPipeCount(row) {
+    let count = 0
+    for (let i = 0; i < row.length; i++) {
+        if (row[i] !== '|') continue
+        let backslashes = 0
+        for (let j = i - 1; j >= 0 && row[j] === '\\'; j--) backslashes++
+        if (backslashes % 2 === 0) count++
+    }
+    return count
+}
+
+test('the markdown step summary escapes backslashes as well as pipes so a reason path carrying a literal backslash-pipe cannot inject an extra table column', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'affected-summary-'))
+    const summaryFile = join(dir, 'step-summary.md')
+    // A crafted core path carrying a literal "\|". Escaping only the pipe emits
+    // "\\|" — a pipe behind an even backslash run, still a live delimiter that
+    // splits the 3-column row into 4; escaping the backslash first emits the
+    // inert "\\\|". The path starts with packages/core/, so it routes to e2e.
+    const result = runCli(['--files', 'packages/core/a\\|b.ts'], {
+        GITHUB_STEP_SUMMARY: summaryFile,
+    })
+    assert.equal(result.status, 0, result.stderr)
+    const summary = readFileSync(summaryFile, 'utf8')
+    const reasonRow = summary
+        .split('\n')
+        .find(line => line.startsWith('| e2e '))
+    assert.ok(reasonRow, 'expected an e2e row in the markdown step summary')
+    assert.equal(structuralPipeCount(reasonRow), 4)
+})
+
 test('the CLI forces every suite under --all so a manual re-run can bypass routing entirely', () => {
     const result = runCli(['--all', '--json'])
     assert.equal(result.status, 0, result.stderr)

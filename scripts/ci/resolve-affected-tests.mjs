@@ -379,7 +379,12 @@ function formatReasonTable(result) {
 }
 
 function formatMarkdownSummary(result) {
-    const escape = value => String(value).replace(/\|/g, '\\|')
+    // Escape the backslash FIRST, then the pipe — otherwise a literal backslash
+    // in a reason (e.g. a Windows-style path) leaves the following pipe behind an
+    // even-length backslash run, where it stays a live table delimiter and can
+    // inject a column into the GitHub step summary.
+    const escape = value =>
+        String(value).replace(/\\/g, '\\\\').replace(/\|/g, '\\|')
     const rows = SUITES.map(
         suite =>
             `| ${suite} | ${result.suites[suite] ? 'run' : 'skip'} | ${escape(
