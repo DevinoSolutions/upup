@@ -1,9 +1,15 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { execFileSync, spawnSync } from 'node:child_process'
-import { readFileSync, mkdtempSync } from 'node:fs'
+import {
+    readFileSync,
+    mkdtempSync,
+    writeFileSync,
+    mkdirSync,
+    rmSync,
+} from 'node:fs'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import {
     SUITES,
@@ -17,10 +23,11 @@ const SCRIPT = fileURLToPath(
 )
 
 /** Run the CLI in a child process; never throws on nonzero exit. */
-function runCli(args, env = {}) {
+function runCli(args, env = {}, cwd) {
     return spawnSync(process.execPath, [SCRIPT, ...args], {
         encoding: 'utf8',
         env: { ...process.env, ...env },
+        cwd,
     })
 }
 
@@ -445,11 +452,42 @@ test('the CLI exits nonzero when given no mode at all because silently running n
 })
 
 test('the CLI computes an affected set from real git history so the git-diff path is exercised end to end', () => {
-    const result = runCli(['--json', '--base', 'HEAD~1', '--head', 'HEAD'])
-    assert.equal(result.status, 0, result.stderr)
-    const parsed = JSON.parse(result.stdout)
-    assert.ok(Array.isArray(parsed.changedFiles))
-    assert.ok('e2e' in parsed.suites)
-    assert.ok('minio' in parsed.suites)
-    assert.ok('smoke' in parsed.suites)
+    // Build a throwaway two-commit repo so the real git-diff subprocess runs
+    // against history the test OWNS, not the host checkout — CI checks out with
+    // fetch-depth 1, where HEAD~1 does not exist.
+    const repo = mkdtempSync(join(tmpdir(), 'affected-git-'))
+    const git = (...gitArgs) =>
+        execFileSync('git', gitArgs, { cwd: repo, encoding: 'utf8' })
+    try {
+        git('init')
+        git('config', 'user.email', 'ci-fixture@upup.test')
+        git('config', 'user.name', 'CI Fixture')
+        git('config', 'commit.gpgsign', 'false')
+
+        // Commit 1: a seed doc (routes to no suite on its own).
+        writeFileSync(join(repo, 'README.md'), '# fixture\n')
+        git('add', 'README.md')
+        git('commit', '-m', 'seed')
+
+        // Commit 2: a core src change. The impact map routes packages/core to
+        // every heavy suite, so HEAD~1...HEAD carries an unambiguous verdict.
+        const coreRel = 'packages/core/src/x.ts'
+        const coreAbs = join(repo, coreRel)
+        mkdirSync(dirname(coreAbs), { recursive: true })
+        writeFileSync(coreAbs, 'export const x = 1\n')
+        git('add', coreRel)
+        git('commit', '-m', 'touch core')
+
+        const result = runCli(
+            ['--json', '--base', 'HEAD~1', '--head', 'HEAD'],
+            {},
+            repo,
+        )
+        assert.equal(result.status, 0, result.stderr)
+        const parsed = JSON.parse(result.stdout)
+        assert.deepEqual(parsed.changedFiles, [coreRel])
+        assert.deepEqual(parsed.suites, { e2e: true, minio: true, smoke: true })
+    } finally {
+        rmSync(repo, { recursive: true, force: true, maxRetries: 3 })
+    }
 })
