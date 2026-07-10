@@ -51,7 +51,13 @@ test.describe('Keyboard-only source activation and file removal', () => {
         await tabUntilFocused(page, linkSource)
         await expect(linkSource).toBeFocused()
 
-        await page.keyboard.press('Enter')
+        // Activate through the focused locator, not page.keyboard: locator.press
+        // re-commits focus and waits for actionability right before dispatching
+        // the key, closing a load-sensitive race where the raw press beat focus
+        // commit and the native activation was dropped (the filechooser flake,
+        // CI run 29117051500). tabUntilFocused still proves Tab-reachability and
+        // the real Enter still proves keyboard activation.
+        await linkSource.press('Enter')
         await expect(page.getByPlaceholder('Enter file url')).toBeVisible()
 
         // Space must also activate (native button contract) — leave the view
@@ -59,7 +65,8 @@ test.describe('Keyboard-only source activation and file removal', () => {
         // source button, so the walk restarts from the document top.
         const cancel = page.getByRole('button', { name: 'Cancel' })
         await tabUntilFocused(page, cancel)
-        await page.keyboard.press('Space')
+        await expect(cancel).toBeFocused()
+        await cancel.press('Space')
 
         await expect(page.getByPlaceholder('Enter file url')).not.toBeVisible()
         await expect(linkSource).toBeVisible()
@@ -70,9 +77,14 @@ test.describe('Keyboard-only source activation and file removal', () => {
     }) => {
         const browse = page.locator('[data-testid="upup-browse-files"]')
         await tabUntilFocused(page, browse)
+        await expect(browse).toBeFocused()
 
+        // See the Link test: browse.press re-commits focus + gates on
+        // actionability, so Enter can't race focus commit. This is the exact
+        // site that flaked in CI — the snapshot showed the button [active]
+        // (still focused) yet the raw Enter never opened the chooser.
         const chooserPromise = page.waitForEvent('filechooser')
-        await page.keyboard.press('Enter')
+        await browse.press('Enter')
         const chooser = await chooserPromise
 
         // maxFiles=99 in the harness app — the chooser must allow multi-select.
@@ -96,7 +108,9 @@ test.describe('Keyboard-only source activation and file removal', () => {
         // keyboard user reaches it without any hover.
         const remove = page.locator('[data-testid="upup-file-remove"]')
         await tabUntilFocused(page, remove)
-        await page.keyboard.press('Enter')
+        await expect(remove).toBeFocused()
+        // Same hardening as the source/browse presses above (locator.press).
+        await remove.press('Enter')
 
         await expect(
             page.locator('[data-testid="upup-file-item"]'),
