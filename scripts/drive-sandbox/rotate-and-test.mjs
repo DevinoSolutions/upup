@@ -116,7 +116,7 @@ async function rotateOneDrive() {
         syncGithubSecret(refreshToken)
     } else {
         log(
-            `OneDrive: WARNING — the refresh grant already CONSUMED the previous refresh token, but it wasn't found verbatim in ${ENV_FILE} to swap in the rotated one (env/file drift). The stored token is now STALE and can't be recovered by hand; re-mint with: pnpm run drive:sandbox:mint`,
+            `OneDrive: WARNING — the refresh grant already CONSUMED the previous refresh token, but it wasn't found verbatim in ${ENV_FILE} to swap in the rotated one (env/file drift). The stored token is now STALE and can't be recovered by hand; re-mint with: pnpm run drive:sandbox:mint one-drive`,
         )
     }
 

@@ -11,8 +11,10 @@
 // The fixtures dir is marked binary in .gitattributes so no platform EOL
 // normalization can perturb the bytes (a byte-exact sha256 is the whole point).
 // upup-sandbox-hello.txt carries a multibyte UTF-8 char; upup-sandbox-bytes.bin
-// is a 256-byte 0x00–0xFF blob — together they prove the list→download pipe is
-// byte-exact for both UTF-8 text and non-textual binary, not just ASCII.
+// is a 256-byte 0x00–0xFF blob; upup-sandbox-ünï 'q' & (1).txt has a unicode name
+// with spaces and punctuation — together they prove the list→download pipe is
+// byte-exact for both UTF-8 text and non-textual binary (not just ASCII) and
+// name-safe for a filename that needs URL/header encoding.
 
 import { readFileSync } from 'node:fs'
 import { createHash } from 'node:crypto'

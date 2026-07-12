@@ -204,8 +204,10 @@ function loadFixture(name: string, mimeType: string): Fixture {
 }
 
 // upup-sandbox-hello.txt (UTF-8 text incl. a multibyte char) +
-// upup-sandbox-bytes.bin (256-byte 0x00–0xFF blob) — together they prove the
-// list->transfer pipe is byte-exact for both text and non-textual binary.
+// upup-sandbox-bytes.bin (256-byte 0x00–0xFF blob) +
+// upup-sandbox-ünï 'q' & (1).txt (unicode name with spaces and punctuation) —
+// together they prove the list->transfer pipe is byte-exact for both text and
+// non-textual binary, and that a name needing URL/header encoding round-trips intact.
 const FIXTURES: readonly Fixture[] = [
     loadFixture('upup-sandbox-hello.txt', 'text/plain'),
     loadFixture('upup-sandbox-bytes.bin', 'application/octet-stream'),
@@ -468,7 +470,7 @@ for (const provider of PROVIDERS) {
             `${provider} drive-sandbox not configured (needs UPUP_DRIVE_SANDBOX=1 + creds + MinIO up)`,
         )
 
-        test(`GET /files/${provider} lists the seeded "${SANDBOX_FOLDER}" folder and both fixtures with exact byte sizes`, async ({
+        test(`GET /files/${provider} lists the seeded "${SANDBOX_FOLDER}" folder and all fixtures with exact byte sizes`, async ({
             request,
         }) => {
             const root = await listFiles(request, provider)
