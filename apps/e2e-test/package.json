@@ -19,6 +19,7 @@
         "react-dom": "^18.2.0"
     },
     "devDependencies": {
+        "@aws-sdk/client-s3": "^3.1004.0",
         "@playwright/test": "^1.58.2",
         "@types/node": "^22.0.0",
         "@types/react": "^18.2.0",

@@ -39,6 +39,11 @@ import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'node:path'
 import {
+    S3Client,
+    ListMultipartUploadsCommand,
+    ListObjectsV2Command,
+} from '@aws-sdk/client-s3'
+import {
     createUpupHandler,
     InMemoryTokenStore,
     setTokens,
@@ -205,6 +210,73 @@ const FIXTURES: readonly Fixture[] = [
     loadFixture('upup-sandbox-hello.txt', 'text/plain'),
     loadFixture('upup-sandbox-bytes.bin', 'application/octet-stream'),
 ]
+
+// ── Large fixture: TS twin of scripts/drive-sandbox/fixtures.mjs — the shared
+//    sha256 pin is the cross-implementation drift guard (mismatch = throw
+//    before any network call) ────────────────────────────────────────────────
+const LARGE_FIXTURE_SEED = 'upup-sandbox-large-v1'
+const LARGE_FIXTURE_SIZE = 6 * 1024 * 1024 + 45
+const LARGE_FIXTURE_SHA256 =
+    'a97b029edbb8bdd512a6980623272921ed4a53ea0d3b61f8cf01cbaa9b94ef3b'
+const LARGE_FIXTURE_NAME = `upup-sandbox-large-${LARGE_FIXTURE_SHA256.slice(0, 8)}.bin`
+
+function generateLargeFixtureBytes(): Uint8Array {
+    const out = new Uint8Array(LARGE_FIXTURE_SIZE)
+    let offset = 0
+    for (let block = 0; offset < LARGE_FIXTURE_SIZE; block++) {
+        const digest = createHash('sha256')
+            .update(`${LARGE_FIXTURE_SEED}:${block}`)
+            .digest()
+        const take = Math.min(digest.length, LARGE_FIXTURE_SIZE - offset)
+        out.set(digest.subarray(0, take), offset)
+        offset += take
+    }
+    if (sha256(out) !== LARGE_FIXTURE_SHA256) {
+        throw new Error(
+            'large-fixture generator drifted from its sha256 pin (must match scripts/drive-sandbox/fixtures.mjs)',
+        )
+    }
+    return out
+}
+
+function minioClient(): S3Client {
+    return new S3Client({
+        region: requireEnv('UPUP_E2E_REGION'),
+        endpoint: requireEnv('UPUP_E2E_ENDPOINT'),
+        forcePathStyle: true,
+        credentials: {
+            accessKeyId: requireEnv('MINIO_ROOT_USER'),
+            secretAccessKey: requireEnv('MINIO_ROOT_PASSWORD'),
+        },
+    })
+}
+
+async function countOpenMultipartUploads(): Promise<number> {
+    const res = await minioClient().send(
+        new ListMultipartUploadsCommand({
+            Bucket: requireEnv('UPUP_E2E_BUCKET'),
+        }),
+    )
+    return res.Uploads?.length ?? 0
+}
+
+async function countObjectsWithSuffix(suffix: string): Promise<number> {
+    let count = 0
+    let token: string | undefined
+    do {
+        const res = await minioClient().send(
+            new ListObjectsV2Command({
+                Bucket: requireEnv('UPUP_E2E_BUCKET'),
+                ContinuationToken: token,
+            }),
+        )
+        count += (res.Contents ?? []).filter(o =>
+            o.Key?.endsWith(suffix),
+        ).length
+        token = res.IsTruncated ? res.NextContinuationToken : undefined
+    } while (token)
+    return count
+}
 
 // ── Env gating ──────────────────────────────────────────────────────────────
 const MINIO_ENV = [
@@ -431,6 +503,49 @@ for (const provider of PROVIDERS) {
                 expect(downloaded.length).toBe(fixture.bytes.length)
                 expect(sha256(downloaded)).toBe(fixture.sha256)
             }
+        })
+
+        test(`POST /files/${provider}/transfer streams the >5 MiB fixture through the multipart path byte-exact, leaving no incomplete multipart upload`, async ({
+            request,
+        }) => {
+            test.setTimeout(240_000)
+            const expectedBytes = generateLargeFixtureBytes()
+            const root = await listFiles(request, provider)
+            const folder = root.find(f => f.name === SANDBOX_FOLDER)
+            expect(folder, `"${SANDBOX_FOLDER}" present`).toBeDefined()
+            const contents = await listFiles(request, provider, folder!.id)
+            const listed = contents.find(f => f.name === LARGE_FIXTURE_NAME)
+            expect(
+                listed,
+                `${LARGE_FIXTURE_NAME} seeded in ${provider} (run drive:sandbox:seed)`,
+            ).toBeDefined()
+
+            const mpuBefore = await countOpenMultipartUploads()
+            const transferRes = await request.post(
+                `${baseURL}/files/${provider}/transfer`,
+                {
+                    data: {
+                        fileId: listed!.id,
+                        fileName: LARGE_FIXTURE_NAME,
+                        size: LARGE_FIXTURE_SIZE,
+                        mimeType: 'application/octet-stream',
+                    },
+                },
+            )
+            expect(
+                transferRes.ok(),
+                `POST /files/${provider}/transfer (large) -> HTTP ${transferRes.status()}`,
+            ).toBeTruthy()
+            const body = (await transferRes.json()) as TransferResponse
+            expect(body.size).toBe(LARGE_FIXTURE_SIZE)
+
+            const objectRes = await request.get(body.url)
+            expect(objectRes.ok()).toBeTruthy()
+            const downloaded = new Uint8Array(await objectRes.body())
+            expect(downloaded.length).toBe(expectedBytes.length)
+            expect(sha256(downloaded)).toBe(LARGE_FIXTURE_SHA256)
+            // Completed transfer leaves no incomplete multipart upload behind.
+            expect(await countOpenMultipartUploads()).toBe(mpuBefore)
         })
     })
 }
