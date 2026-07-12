@@ -306,7 +306,7 @@ jobs:
               if: steps.creds.outputs.present == 'true'
               run: pnpm --filter @upup/server build
 
-            - name: Box/Dropbox server-transfer through the real @upup/server HTTP surface (Playwright)
+            - name: All-provider server-transfer through the real @upup/server HTTP surface (Playwright)
               if: steps.creds.outputs.present == 'true'
               env:
                   UPUP_DRIVE_SANDBOX: '1'
@@ -316,6 +316,11 @@ jobs:
                   UPUP_TEST_DROPBOX_APP_KEY: ${{ secrets.UPUP_TEST_DROPBOX_APP_KEY }}
                   UPUP_TEST_DROPBOX_APP_SECRET: ${{ secrets.UPUP_TEST_DROPBOX_APP_SECRET }}
                   UPUP_TEST_DROPBOX_REFRESH_TOKEN: ${{ secrets.UPUP_TEST_DROPBOX_REFRESH_TOKEN }}
+                  UPUP_TEST_GDRIVE_CLIENT_ID: ${{ secrets.UPUP_TEST_GDRIVE_CLIENT_ID }}
+                  UPUP_TEST_GDRIVE_CLIENT_SECRET: ${{ secrets.UPUP_TEST_GDRIVE_CLIENT_SECRET }}
+                  UPUP_TEST_GDRIVE_REFRESH_TOKEN: ${{ secrets.UPUP_TEST_GDRIVE_REFRESH_TOKEN }}
+                  # OneDrive: UPUP_TEST_ONEDRIVE_ACCESS_TOKEN arrives via $GITHUB_ENV
+                  # from the rotation step — nothing OneDrive-specific is set here.
                   MINIO_ROOT_USER: upupadmin
                   MINIO_ROOT_PASSWORD: upupadmin123
                   UPUP_E2E_BUCKET: upup-e2e

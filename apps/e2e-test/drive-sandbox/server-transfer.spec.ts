@@ -1,4 +1,4 @@
-// Box + Dropbox proven through the REAL @upup/server HTTP surface.
+// All four cloud providers proven through the REAL @upup/server HTTP surface.
 //
 // The vitest live suite (packages/server/tests/integration/
 // drive-clients-live.integration.test.ts) already proves drive-clients.ts
@@ -12,11 +12,16 @@
 // config.tokenStore keyed by resolveUserId()+provider (drive-routes.ts:29-51,
 // 91-111) — the OAuth callback is merely what normally WRITES that token via
 // setTokens (oauth.ts:235). So we mint a REAL access token (Box CCG /
-// Dropbox refresh grant, exactly as the vitest suite does) and pre-seed the
+// Dropbox|Google refresh grant / OneDrive pre-injected token) and pre-seed the
 // SAME store with the public setTokens(); the routes then consume it through
 // getTokens() identically to a post-OAuth request. getUserId is set to a fixed
 // id — what a real multi-tenant deployment must set, not a bypass flag. No
 // mocks, no allowAnonymous*, HMAC/upload-token routes untouched.
+//
+// OneDrive is access-token-ONLY here: its refresh grant ROTATES the stored
+// refresh token, and a spec must never consume shared credential state — CI's
+// rotation step and rotate-and-test.mjs inject UPUP_TEST_ONEDRIVE_ACCESS_TOKEN;
+// without it the one-drive group skips green.
 //
 // Gating mirrors the vitest suite: UPUP_DRIVE_SANDBOX=1 + per-provider creds +
 // MinIO env -> run; absent -> skip GREEN (loud notice, exit 0); a
@@ -43,7 +48,7 @@ import {
 import { toWebRequest, writeWebResponse } from '@upup/server/node-bridge'
 
 // ── Providers under test (kebab wire slugs; camelCase only lives in-app) ────
-const PROVIDERS = ['box', 'dropbox'] as const
+const PROVIDERS = ['box', 'dropbox', 'google-drive', 'one-drive'] as const
 type Provider = (typeof PROVIDERS)[number]
 
 const USER_ID = 'drive-sandbox-e2e'
@@ -57,7 +62,7 @@ const AUTH: Record<
         accessTokenEnv: string
         clientIdEnv: string
         clientSecretEnv: string
-        // Box: enterprise id (client-credentials). Dropbox: refresh token.
+        // Box: enterprise id (client-credentials). Others: refresh token.
         thirdSecretEnv: string
     }
 > = {
@@ -73,6 +78,18 @@ const AUTH: Record<
         clientSecretEnv: 'UPUP_TEST_DROPBOX_APP_SECRET',
         thirdSecretEnv: 'UPUP_TEST_DROPBOX_REFRESH_TOKEN',
     },
+    'google-drive': {
+        accessTokenEnv: 'UPUP_TEST_GDRIVE_ACCESS_TOKEN',
+        clientIdEnv: 'UPUP_TEST_GDRIVE_CLIENT_ID',
+        clientSecretEnv: 'UPUP_TEST_GDRIVE_CLIENT_SECRET',
+        thirdSecretEnv: 'UPUP_TEST_GDRIVE_REFRESH_TOKEN',
+    },
+    'one-drive': {
+        accessTokenEnv: 'UPUP_TEST_ONEDRIVE_ACCESS_TOKEN',
+        clientIdEnv: 'UPUP_TEST_ONEDRIVE_CLIENT_ID',
+        clientSecretEnv: 'UPUP_TEST_ONEDRIVE_CLIENT_SECRET',
+        thirdSecretEnv: 'UPUP_TEST_ONEDRIVE_REFRESH_TOKEN',
+    },
 }
 
 function env(name: string): string | undefined {
@@ -85,10 +102,14 @@ function requireEnv(name: string): string {
     return value
 }
 
-// Configured = a ready-made access token OR the full mint triplet.
+// Configured = a ready-made access token OR the full mint triplet — EXCEPT
+// one-drive, which is access-token-ONLY here: its refresh grant ROTATES the
+// stored refresh token, and this spec must never consume shared credential
+// state. CI's rotation step and rotate-and-test.mjs inject the shortcut.
 function isConfigured(provider: Provider): boolean {
     const c = AUTH[provider]
     if (env(c.accessTokenEnv)) return true
+    if (provider === 'one-drive') return false
     return Boolean(
         env(c.clientIdEnv) && env(c.clientSecretEnv) && env(c.thirdSecretEnv),
     )
@@ -119,8 +140,8 @@ async function requestToken(
 }
 
 // A fresh access token for a provider. The *_ACCESS_TOKEN shortcut short-circuits
-// with zero network; Box uses a client-credentials enterprise grant; Dropbox
-// exchanges its long-lived refresh token.
+// with zero network; Box uses a client-credentials enterprise grant; Dropbox and
+// Google exchange a long-lived refresh token; OneDrive is access-token-only here.
 async function mintAccessToken(provider: Provider): Promise<string> {
     const c = AUTH[provider]
     const shortcut = env(c.accessTokenEnv)
@@ -138,7 +159,15 @@ async function mintAccessToken(provider: Provider): Promise<string> {
             box_subject_id: requireEnv(c.thirdSecretEnv),
         })
     }
-    return requestToken('https://api.dropboxapi.com/oauth2/token', {
+    if (provider === 'one-drive') {
+        // Guarded by isConfigured — reaching here without the shortcut is a bug.
+        return requireEnv(c.accessTokenEnv)
+    }
+    const refreshTokenUrls: Record<'dropbox' | 'google-drive', string> = {
+        dropbox: 'https://api.dropboxapi.com/oauth2/token',
+        'google-drive': 'https://oauth2.googleapis.com/token',
+    }
+    return requestToken(refreshTokenUrls[provider], {
         grant_type: 'refresh_token',
         refresh_token: requireEnv(c.thirdSecretEnv),
         client_id: clientId,
@@ -187,10 +216,9 @@ const MINIO_ENV = [
 ] as const
 const minioReady = MINIO_ENV.every(k => Boolean(process.env[k]))
 const sandboxOn = process.env.UPUP_DRIVE_SANDBOX === '1'
-const enabled: Record<Provider, boolean> = {
-    box: sandboxOn && minioReady && isConfigured('box'),
-    dropbox: sandboxOn && minioReady && isConfigured('dropbox'),
-}
+const enabled = Object.fromEntries(
+    PROVIDERS.map(p => [p, sandboxOn && minioReady && isConfigured(p)]),
+) as Record<Provider, boolean>
 const anyEnabled = PROVIDERS.some(p => enabled[p])
 
 if (!anyEnabled) {
@@ -198,7 +226,7 @@ if (!anyEnabled) {
         ? 'UPUP_DRIVE_SANDBOX!=1'
         : !minioReady
           ? 'MinIO env missing (UPUP_E2E_*/MINIO_ROOT_*)'
-          : 'no per-provider creds (UPUP_TEST_BOX_* / UPUP_TEST_DROPBOX_*)'
+          : 'no per-provider creds (UPUP_TEST_BOX_* / UPUP_TEST_DROPBOX_* / UPUP_TEST_GDRIVE_* / UPUP_TEST_ONEDRIVE_*)'
     // Loud, single-line skip notice — the run still exits 0 (all tests skip).
     console.log(
         `[drive-sandbox-e2e] SKIP (green): ${why}. See docs/drive-sandbox-setup.md.`,
@@ -356,7 +384,7 @@ for (const provider of PROVIDERS) {
             }
         })
 
-        test(`POST /files/${provider}/transfer streams a fixture into MinIO byte-exact (sha256 matches the committed fixture)`, async ({
+        test(`POST /files/${provider}/transfer streams every fixture into MinIO byte-exact with its declared content-type`, async ({
             request,
         }) => {
             const root = await listFiles(request, provider)
@@ -364,50 +392,45 @@ for (const provider of PROVIDERS) {
             expect(folder, `"${SANDBOX_FOLDER}" present`).toBeDefined()
             const contents = await listFiles(request, provider, folder!.id)
 
-            // Transfer the binary fixture — proves non-textual byte fidelity.
-            const fixture = FIXTURES.find(
-                f => f.name === 'upup-sandbox-bytes.bin',
-            )
-            expect(fixture, 'binary fixture loaded from disk').toBeDefined()
-            const listed = contents.find(f => f.name === fixture!.name)
-            expect(
-                listed,
-                `${fixture!.name} present in ${provider} folder to transfer`,
-            ).toBeDefined()
+            for (const fixture of FIXTURES) {
+                const listed = contents.find(f => f.name === fixture.name)
+                expect(
+                    listed,
+                    `${fixture.name} present in ${provider} folder to transfer`,
+                ).toBeDefined()
 
-            const transferRes = await request.post(
-                `${baseURL}/files/${provider}/transfer`,
-                {
-                    data: {
-                        fileId: listed!.id,
-                        fileName: fixture!.name,
-                        size: fixture!.bytes.length,
-                        mimeType: fixture!.mimeType,
+                const transferRes = await request.post(
+                    `${baseURL}/files/${provider}/transfer`,
+                    {
+                        data: {
+                            fileId: listed!.id,
+                            fileName: fixture.name,
+                            size: fixture.bytes.length,
+                            mimeType: fixture.mimeType,
+                        },
                     },
-                },
-            )
-            expect(
-                transferRes.ok(),
-                `POST /files/${provider}/transfer -> HTTP ${transferRes.status()}`,
-            ).toBeTruthy()
-            const body = (await transferRes.json()) as TransferResponse
-            expect(body.provider).toBe(provider)
-            expect(body.size).toBe(fixture!.bytes.length)
-            expect(
-                body.url,
-                'transfer returns a presigned MinIO URL',
-            ).toBeTruthy()
+                )
+                expect(
+                    transferRes.ok(),
+                    `POST /files/${provider}/transfer (${fixture.name}) -> HTTP ${transferRes.status()}`,
+                ).toBeTruthy()
+                const body = (await transferRes.json()) as TransferResponse
+                expect(body.provider).toBe(provider)
+                expect(body.name).toBe(fixture.name)
+                expect(body.key.endsWith(`-${fixture.name}`)).toBe(true)
+                expect(body.size).toBe(fixture.bytes.length)
+                expect(body.url, 'presigned MinIO URL returned').toBeTruthy()
 
-            // Download the object straight from MinIO via the presigned GET the
-            // server handed back, and prove the bytes are byte-exact.
-            const objectRes = await request.get(body.url)
-            expect(
-                objectRes.ok(),
-                `MinIO GET of transferred object -> HTTP ${objectRes.status()}`,
-            ).toBeTruthy()
-            const downloaded = new Uint8Array(await objectRes.body())
-            expect(downloaded.length).toBe(fixture!.bytes.length)
-            expect(sha256(downloaded)).toBe(fixture!.sha256)
+                const objectRes = await request.get(body.url)
+                expect(objectRes.ok()).toBeTruthy()
+                // Content-Type fidelity: what a consuming app will render with.
+                expect(objectRes.headers()['content-type']).toBe(
+                    fixture.mimeType,
+                )
+                const downloaded = new Uint8Array(await objectRes.body())
+                expect(downloaded.length).toBe(fixture.bytes.length)
+                expect(sha256(downloaded)).toBe(fixture.sha256)
+            }
         })
     })
 }
