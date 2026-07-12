@@ -329,28 +329,17 @@ function buildConfig(store: TokenStore): UpupServerConfig {
     }
 }
 
-let server: Server | undefined
-let baseURL = ''
-
-test.beforeAll(async () => {
-    if (!anyEnabled) return
-
-    const store = new InMemoryTokenStore()
-    // Mint both providers in parallel (independent APIs). A
-    // broken-but-configured token throws HERE -> the run goes RED.
-    await Promise.all(
-        PROVIDERS.filter(provider => enabled[provider]).map(async provider => {
-            const accessToken = await mintAccessToken(provider)
-            await setTokens(store, USER_ID, provider, { accessToken })
-        }),
-    )
-
-    const handler = createUpupHandler(buildConfig(store))
-    server = createServer((req, res) => {
+// Boot ONE real in-process @upup/server behind a node:http listener via the
+// node-bridge (toWebRequest/writeWebResponse). Parameterized over the handler
+// so both the main and the policy-configured server share this exact plumbing.
+async function bootNodeServer(
+    handler: (req: Request) => Promise<Response>,
+): Promise<{ server: Server; baseURL: string }> {
+    const srv = createServer((req, res) => {
         void (async () => {
             const chunks: Buffer[] = []
             for await (const chunk of req) chunks.push(chunk as Buffer)
-            const port = (server!.address() as AddressInfo).port
+            const port = (srv.address() as AddressInfo).port
             const webReq = toWebRequest({
                 url: `http://127.0.0.1:${port}${req.url ?? '/'}`,
                 method: req.method ?? 'GET',
@@ -377,13 +366,49 @@ test.beforeAll(async () => {
             res.end(String(err))
         })
     })
-    await new Promise<void>(resolve => server!.listen(0, '127.0.0.1', resolve))
-    baseURL = `http://127.0.0.1:${(server.address() as AddressInfo).port}`
+    await new Promise<void>(resolve => srv.listen(0, '127.0.0.1', resolve))
+    return {
+        server: srv,
+        baseURL: `http://127.0.0.1:${(srv.address() as AddressInfo).port}`,
+    }
+}
+
+let server: Server | undefined
+let baseURL = ''
+let policyServer: Server | undefined
+let policyBaseURL = ''
+
+test.beforeAll(async () => {
+    if (!anyEnabled) return
+
+    const store = new InMemoryTokenStore()
+    // Mint both providers in parallel (independent APIs). A
+    // broken-but-configured token throws HERE -> the run goes RED.
+    await Promise.all(
+        PROVIDERS.filter(provider => enabled[provider]).map(async provider => {
+            const accessToken = await mintAccessToken(provider)
+            await setTokens(store, USER_ID, provider, { accessToken })
+        }),
+    )
+
+    ;({ server, baseURL } = await bootNodeServer(
+        createUpupHandler(buildConfig(store)),
+    ))
+    // A SECOND server off the SAME seeded token store, but policy-constrained:
+    // 1 MiB cap (under the large fixture, over the small ones) + text/plain-only.
+    ;({ server: policyServer, baseURL: policyBaseURL } = await bootNodeServer(
+        createUpupHandler({
+            ...buildConfig(store),
+            maxFileSize: 1024 * 1024,
+            allowedTypes: ['text/plain'],
+        }),
+    ))
 })
 
 test.afterAll(async () => {
-    if (server)
-        await new Promise<void>(resolve => server!.close(() => resolve()))
+    for (const srv of [server, policyServer]) {
+        if (srv) await new Promise<void>(resolve => srv.close(() => resolve()))
+    }
 })
 
 // ── HTTP helpers driving the real routes ────────────────────────────────────
@@ -405,13 +430,14 @@ type TransferResponse = {
     url: string
 }
 
-async function listFiles(
+async function listFilesAt(
     request: APIRequestContext,
+    base: string,
     provider: Provider,
     folderId?: string,
 ): Promise<ListedFile[]> {
     const url =
-        `${baseURL}/files/${provider}` +
+        `${base}/files/${provider}` +
         (folderId ? `?folderId=${encodeURIComponent(folderId)}` : '')
     const res = await request.get(url)
     expect(
@@ -421,6 +447,14 @@ async function listFiles(
     const body = (await res.json()) as ListResponse
     expect(body.provider).toBe(provider)
     return body.files
+}
+
+async function listFiles(
+    request: APIRequestContext,
+    provider: Provider,
+    folderId?: string,
+): Promise<ListedFile[]> {
+    return listFilesAt(request, baseURL, provider, folderId)
 }
 
 // ── Suites (one per provider; conditional-skips GREEN unless enabled) ────────
@@ -575,3 +609,91 @@ for (const provider of PROVIDERS) {
         })
     })
 }
+
+// ── Policy boundary proven through the real routes (F-743) ───────────────────
+// A SECOND server, same seeded store, configured maxFileSize 1 MiB +
+// allowedTypes ['text/plain'], must: (a) 413 an over-declared size before any
+// drive call, (b) 415 a disallowed mimeType before any drive call, and (c) —
+// when the declared size is OMITTED so the cheap gate can't fire — let the
+// AUTHORITATIVE streamed-byte cap inside transferDriveFileToS3 abort the real
+// 6 MiB transfer mid-stream (error, no object persisted, no lingering MPU).
+// Box only: CCG mint, no rotating token, cheapest of the four.
+const POLICY_PROVIDER = 'box' as const
+
+test.describe('server-mode policy boundary through the real routes — box', () => {
+    test.skip(
+        () => !enabled[POLICY_PROVIDER],
+        'needs box sandbox creds + MinIO',
+    )
+
+    test('a client-declared size over maxFileSize is rejected 413 before any drive call', async ({
+        request,
+    }) => {
+        const res = await request.post(`${policyBaseURL}/files/box/transfer`, {
+            data: {
+                fileId: 'irrelevant-never-fetched',
+                fileName: 'big.txt',
+                size: 2 * 1024 * 1024,
+                mimeType: 'text/plain',
+            },
+        })
+        expect(res.status()).toBe(413)
+    })
+
+    test('a disallowed mimeType is rejected 415 before any drive call', async ({
+        request,
+    }) => {
+        const res = await request.post(`${policyBaseURL}/files/box/transfer`, {
+            data: {
+                fileId: 'irrelevant-never-fetched',
+                fileName: 'x.bin',
+                mimeType: 'application/octet-stream',
+            },
+        })
+        expect(res.status()).toBe(415)
+    })
+
+    test('streamed bytes over maxFileSize abort the transfer: error status, no object persisted, no lingering multipart upload', async ({
+        request,
+    }) => {
+        test.setTimeout(240_000)
+        // Use the real >5 MiB fixture but OMIT the declared size, so the cheap
+        // 413 gate cannot fire — only the authoritative streamed-byte cap inside
+        // transferDriveFileToS3 can reject it (F-743). Declared mimeType lies
+        // "text/plain" to pass the 415 gate; the cap is the subject here.
+        const root = await listFilesAt(request, policyBaseURL, POLICY_PROVIDER)
+        const folder = root.find(f => f.name === SANDBOX_FOLDER)
+        expect(folder).toBeDefined()
+        const contents = await listFilesAt(
+            request,
+            policyBaseURL,
+            POLICY_PROVIDER,
+            folder!.id,
+        )
+        const listed = contents.find(f => f.name === LARGE_FIXTURE_NAME)
+        expect(listed, `${LARGE_FIXTURE_NAME} seeded in box`).toBeDefined()
+
+        const objectsBefore = await countObjectsWithSuffix(
+            `-${LARGE_FIXTURE_NAME}`,
+        )
+        const mpuBefore = await countOpenMultipartUploads()
+        const res = await request.post(`${policyBaseURL}/files/box/transfer`, {
+            data: {
+                fileId: listed!.id,
+                fileName: LARGE_FIXTURE_NAME,
+                mimeType: 'text/plain',
+            },
+            // The server downloads ~1 MiB+ from Box before the cap fires;
+            // Playwright's default 30s per-request cap is NOT raised by
+            // test.setTimeout — match the multipart test's explicit override.
+            timeout: 180_000,
+        })
+        // Authoritative-cap rejection surfaces as the route's 500 STORAGE_ERROR
+        // (drive-routes.ts:177-190) — pinned shape, not a bug.
+        expect(res.status()).toBe(500)
+        expect(await countObjectsWithSuffix(`-${LARGE_FIXTURE_NAME}`)).toBe(
+            objectsBefore,
+        )
+        expect(await countOpenMultipartUploads()).toBe(mpuBefore)
+    })
+})
