@@ -626,24 +626,23 @@ for (const provider of PROVIDERS) {
             test('transferring a NATIVE Google Doc fails clean: 500 JSON error, nothing persisted (pins the current no-export limitation)', async ({
                 request,
             }) => {
+                // One source of truth for the fixture name, so the transferred
+                // fileName and the counted object suffix cannot drift apart.
+                const NAME = 'upup-sandbox-native-doc'
                 const root = await listFiles(request, provider)
                 const folder = root.find(f => f.name === SANDBOX_FOLDER)
                 expect(folder).toBeDefined()
                 const contents = await listFiles(request, provider, folder!.id)
-                const doc = contents.find(
-                    f => f.name === 'upup-sandbox-native-doc',
-                )
+                const doc = contents.find(f => f.name === NAME)
                 expect(doc, 'native doc seeded').toBeDefined()
 
-                const before = await countObjectsWithSuffix(
-                    '-upup-sandbox-native-doc',
-                )
+                const before = await countObjectsWithSuffix(`-${NAME}`)
                 const res = await request.post(
                     `${baseURL}/files/${provider}/transfer`,
                     {
                         data: {
                             fileId: doc!.id,
-                            fileName: 'upup-sandbox-native-doc',
+                            fileName: NAME,
                             mimeType: 'application/vnd.google-apps.document',
                         },
                     },
@@ -651,9 +650,7 @@ for (const provider of PROVIDERS) {
                 expect(res.status()).toBe(500)
                 const body = (await res.json()) as { error?: unknown }
                 expect(body.error, 'clean JSON error body').toBeDefined()
-                expect(
-                    await countObjectsWithSuffix('-upup-sandbox-native-doc'),
-                ).toBe(before)
+                expect(await countObjectsWithSuffix(`-${NAME}`)).toBe(before)
             })
         }
     })
