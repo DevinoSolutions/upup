@@ -552,6 +552,10 @@ for (const provider of PROVIDERS) {
                         size: LARGE_FIXTURE_SIZE,
                         mimeType: 'application/octet-stream',
                     },
+                    // The server streams a 6 MiB provider download before the
+                    // MinIO upload; a slow/cold provider can exceed Playwright's
+                    // default 30s per-request cap even under the 240s test budget.
+                    timeout: 180_000,
                 },
             )
             expect(
@@ -561,7 +565,7 @@ for (const provider of PROVIDERS) {
             const body = (await transferRes.json()) as TransferResponse
             expect(body.size).toBe(LARGE_FIXTURE_SIZE)
 
-            const objectRes = await request.get(body.url)
+            const objectRes = await request.get(body.url, { timeout: 180_000 })
             expect(objectRes.ok()).toBeTruthy()
             const downloaded = new Uint8Array(await objectRes.body())
             expect(downloaded.length).toBe(expectedBytes.length)
