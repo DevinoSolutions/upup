@@ -40,6 +40,7 @@
         "drive:sandbox:mint": "dotenv -e local-dev/.env.test -- node scripts/drive-sandbox/mint.mjs",
         "drive:sandbox:seed": "dotenv -e local-dev/.env.test -- node scripts/drive-sandbox/seed.mjs",
         "drive:sandbox:test": "pnpm --filter @upup/core build && dotenv -e local-dev/.env.test -- pnpm --filter @upup/server exec vitest run tests/integration/drive-clients-live.integration.test.ts",
+        "drive:sandbox": "pnpm --filter @upup/core build && pnpm --filter @upup/server build && dotenv -e local-dev/.env.test -- node scripts/drive-sandbox/rotate-and-test.mjs",
         "smoke:packages": "node scripts/package-smoke-consumer.mjs",
         "audit:prod": "node scripts/audit-prod.mjs",
         "knip": "knip --config knip.jsonc",
