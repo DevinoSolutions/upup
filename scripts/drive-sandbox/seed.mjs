@@ -396,6 +396,37 @@ async function seedGoogleDrive(token) {
         )
         results.push({ name: LARGE_FIXTURE_NAME, status: 'created' })
     }
+
+    // A NATIVE Google Doc (no binary content): alt=media cannot download these.
+    // The fixture exists to PIN how the surface fails for a real user today —
+    // export support is a future maintainer decision, not silently added.
+    const GDOC_NAME = 'upup-sandbox-native-doc'
+    const gdocQuery = encodeURIComponent(
+        `name='${escapeGDriveQueryValue(GDOC_NAME)}' and '${folderId}' in parents and trashed=false`,
+    )
+    const gdocExists = await api(
+        `https://www.googleapis.com/drive/v3/files?q=${gdocQuery}&fields=files(id)`,
+        { headers },
+        'google-drive find native doc',
+    )
+    if ((await gdocExists.json()).files.length > 0) {
+        results.push({ name: GDOC_NAME, status: 'exists (skipped)' })
+    } else {
+        await api(
+            'https://www.googleapis.com/drive/v3/files',
+            {
+                method: 'POST',
+                headers: { ...headers, 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name: GDOC_NAME,
+                    parents: [folderId],
+                    mimeType: 'application/vnd.google-apps.document',
+                }),
+            },
+            'google-drive create native doc',
+        )
+        results.push({ name: GDOC_NAME, status: 'created' })
+    }
     return results
 }
 

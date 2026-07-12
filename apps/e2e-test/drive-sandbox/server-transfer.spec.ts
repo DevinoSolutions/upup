@@ -607,6 +607,41 @@ for (const provider of PROVIDERS) {
             // Completed transfer leaves no incomplete multipart upload behind.
             expect(await countOpenMultipartUploads()).toBe(mpuBefore)
         })
+
+        if (provider === 'google-drive') {
+            test('transferring a NATIVE Google Doc fails clean: 500 JSON error, nothing persisted (pins the current no-export limitation)', async ({
+                request,
+            }) => {
+                const root = await listFiles(request, provider)
+                const folder = root.find(f => f.name === SANDBOX_FOLDER)
+                expect(folder).toBeDefined()
+                const contents = await listFiles(request, provider, folder!.id)
+                const doc = contents.find(
+                    f => f.name === 'upup-sandbox-native-doc',
+                )
+                expect(doc, 'native doc seeded').toBeDefined()
+
+                const before = await countObjectsWithSuffix(
+                    '-upup-sandbox-native-doc',
+                )
+                const res = await request.post(
+                    `${baseURL}/files/${provider}/transfer`,
+                    {
+                        data: {
+                            fileId: doc!.id,
+                            fileName: 'upup-sandbox-native-doc',
+                            mimeType: 'application/vnd.google-apps.document',
+                        },
+                    },
+                )
+                expect(res.status()).toBe(500)
+                const body = (await res.json()) as { error?: unknown }
+                expect(body.error, 'clean JSON error body').toBeDefined()
+                expect(
+                    await countObjectsWithSuffix('-upup-sandbox-native-doc'),
+                ).toBe(before)
+            })
+        }
     })
 }
 

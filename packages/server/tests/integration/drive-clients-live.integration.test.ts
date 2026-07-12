@@ -300,5 +300,30 @@ for (const provider of PROVIDERS) {
             expect(err).toBeInstanceOf(UpupNetworkError)
             expect((err as UpupNetworkError).status).toBe(401)
         })
+
+        if (provider === 'google-drive') {
+            it('a native Google Doc lists cleanly (document mimeType, not a folder) from google-drive', async () => {
+                const folder = await findSandboxFolder(client, accessToken)
+                expect(folder).toBeDefined()
+                if (!folder) return
+                const contents = await client.listFiles(accessToken, {
+                    folderId: folder.id,
+                })
+                const doc = contents.find(
+                    f => f.name === 'upup-sandbox-native-doc',
+                )
+                expect(doc).toBeDefined()
+                expect(doc?.isFolder).toBe(false)
+                expect(doc?.mimeType).toBe(
+                    'application/vnd.google-apps.document',
+                )
+                // Drive v3 DOES report a size for a native Doc (its storage-quota
+                // footprint, ~1 KiB) even though the file has NO downloadable
+                // binary content — alt=media 403s. The listing looks ordinary; the
+                // no-export limitation only surfaces at transfer time (pinned by
+                // the server-transfer e2e spec).
+                expect(typeof doc?.size).toBe('number')
+            })
+        }
     })
 }
