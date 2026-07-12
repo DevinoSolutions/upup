@@ -47,6 +47,22 @@ async function api(url, options, label) {
     return res
 }
 
+/** Dropbox-API-Arg is an HTTP HEADER: escape every char ≥ 0x7F as \uXXXX
+ *  (headers are latin-1; undici rejects non-ASCII header values outright).
+ *  Mirrors httpHeaderSafeJson in packages/server/src/drive-clients.ts. */
+function headerSafeJson(value) {
+    return JSON.stringify(value).replace(
+        /[\u007f-\uffff]/g,
+        c => '\\u' + c.charCodeAt(0).toString(16).padStart(4, '0'),
+    )
+}
+
+/** Escape a value for a Drive query single-quoted literal (backslashes first).
+ *  Mirrors escapeDriveQueryValue in packages/server/src/drive-clients.ts. */
+function escapeGDriveQueryValue(value) {
+    return value.replace(/\\/g, '\\\\').replace(/'/g, "\\'")
+}
+
 // ── box (service account; root folder id is '0', CCG token) ──────────────────
 
 /** Create the sandbox folder in Box root, tolerating a 409 name-conflict from a
@@ -174,7 +190,7 @@ async function seedDropbox(token) {
 
     const results = []
     for (const fixture of SANDBOX_FIXTURES) {
-        const apiArg = JSON.stringify({
+        const apiArg = headerSafeJson({
             path: `/${SANDBOX_FOLDER}/${fixture.name}`,
             mode: 'overwrite',
             mute: true,
@@ -219,7 +235,7 @@ async function seedDropbox(token) {
                 method: 'POST',
                 headers: {
                     ...headers,
-                    'Dropbox-API-Arg': JSON.stringify({
+                    'Dropbox-API-Arg': headerSafeJson({
                         path: `/${SANDBOX_FOLDER}/${LARGE_FIXTURE_NAME}`,
                         mode: 'overwrite',
                         mute: true,
@@ -283,7 +299,9 @@ async function uploadGoogleDriveResumable(
 async function seedGoogleDrive(token) {
     const headers = { Authorization: `Bearer ${token}` }
     const folderQuery = encodeURIComponent(
-        `name='${SANDBOX_FOLDER}' and mimeType='application/vnd.google-apps.folder' and trashed=false`,
+        `name='${escapeGDriveQueryValue(
+            SANDBOX_FOLDER,
+        )}' and mimeType='application/vnd.google-apps.folder' and trashed=false`,
     )
     const findRes = await api(
         `https://www.googleapis.com/drive/v3/files?q=${folderQuery}&fields=files(id,name)`,
@@ -311,7 +329,9 @@ async function seedGoogleDrive(token) {
     const results = []
     for (const fixture of SANDBOX_FIXTURES) {
         const fileQuery = encodeURIComponent(
-            `name='${fixture.name}' and '${folderId}' in parents and trashed=false`,
+            `name='${escapeGDriveQueryValue(
+                fixture.name,
+            )}' and '${folderId}' in parents and trashed=false`,
         )
         const existsRes = await api(
             `https://www.googleapis.com/drive/v3/files?q=${fileQuery}&fields=files(id,name)`,
@@ -355,7 +375,9 @@ async function seedGoogleDrive(token) {
     }
 
     const largeQuery = encodeURIComponent(
-        `name='${LARGE_FIXTURE_NAME}' and '${folderId}' in parents and trashed=false`,
+        `name='${escapeGDriveQueryValue(
+            LARGE_FIXTURE_NAME,
+        )}' and '${folderId}' in parents and trashed=false`,
     )
     const largeExists = await api(
         `https://www.googleapis.com/drive/v3/files?q=${largeQuery}&fields=files(id)`,

@@ -28,6 +28,7 @@ export const SANDBOX_FOLDER = 'upup-sandbox-fixtures'
 export const SANDBOX_FIXTURES = [
     { name: 'upup-sandbox-hello.txt', mimeType: 'text/plain' },
     { name: 'upup-sandbox-bytes.bin', mimeType: 'application/octet-stream' },
+    { name: "upup-sandbox-ünï 'q' & (1).txt", mimeType: 'text/plain' },
 ].map(f => ({
     ...f,
     bytes: new Uint8Array(readFileSync(join(fixturesDir, f.name))),

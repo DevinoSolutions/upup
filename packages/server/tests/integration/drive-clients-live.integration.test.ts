@@ -175,6 +175,7 @@ function loadFixture(name: string): Fixture {
 const FIXTURES: readonly Fixture[] = [
     loadFixture('upup-sandbox-hello.txt'),
     loadFixture('upup-sandbox-bytes.bin'),
+    loadFixture("upup-sandbox-ünï 'q' & (1).txt"),
 ]
 
 // ── Stream + discovery helpers ───────────────────────────────────────────
@@ -275,6 +276,13 @@ for (const provider of PROVIDERS) {
             // fixture is present would be flaky. The value here is exercising
             // the search query-building / escaping / response-parsing path
             // end-to-end without a timing-dependent expectation.
+            expect(Array.isArray(results)).toBe(true)
+        })
+
+        it(`a unicode search term survives the ${provider} query-escaping path end-to-end`, async () => {
+            const results = await client.listFiles(accessToken, {
+                search: "ünï 'q' & (1)",
+            })
             expect(Array.isArray(results)).toBe(true)
         })
 

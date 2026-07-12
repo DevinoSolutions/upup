@@ -209,6 +209,7 @@ function loadFixture(name: string, mimeType: string): Fixture {
 const FIXTURES: readonly Fixture[] = [
     loadFixture('upup-sandbox-hello.txt', 'text/plain'),
     loadFixture('upup-sandbox-bytes.bin', 'application/octet-stream'),
+    loadFixture("upup-sandbox-ünï 'q' & (1).txt", 'text/plain'),
 ]
 
 // ── Large fixture: TS twin of scripts/drive-sandbox/fixtures.mjs — the shared
@@ -487,21 +488,42 @@ for (const provider of PROVIDERS) {
                     `POST /files/${provider}/transfer (${fixture.name}) -> HTTP ${transferRes.status()}`,
                 ).toBeTruthy()
                 const body = (await transferRes.json()) as TransferResponse
-                expect(body.provider).toBe(provider)
-                expect(body.name).toBe(fixture.name)
-                expect(body.key.endsWith(`-${fixture.name}`)).toBe(true)
-                expect(body.size).toBe(fixture.bytes.length)
+                expect(
+                    body.provider,
+                    `transfer response provider for ${fixture.name}`,
+                ).toBe(provider)
+                expect(
+                    body.name,
+                    `transfer response name for ${fixture.name}`,
+                ).toBe(fixture.name)
+                expect(
+                    body.key.endsWith(`-${fixture.name}`),
+                    `transfer key ends with -${fixture.name}`,
+                ).toBe(true)
+                expect(
+                    body.size,
+                    `transfer response size for ${fixture.name}`,
+                ).toBe(fixture.bytes.length)
                 expect(body.url, 'presigned MinIO URL returned').toBeTruthy()
 
                 const objectRes = await request.get(body.url)
-                expect(objectRes.ok()).toBeTruthy()
+                expect(
+                    objectRes.ok(),
+                    `GET presigned URL for ${fixture.name}`,
+                ).toBeTruthy()
                 // Content-Type fidelity: what a consuming app will render with.
-                expect(objectRes.headers()['content-type']).toBe(
-                    fixture.mimeType,
-                )
+                expect(
+                    objectRes.headers()['content-type'],
+                    `content-type of ${fixture.name}`,
+                ).toBe(fixture.mimeType)
                 const downloaded = new Uint8Array(await objectRes.body())
-                expect(downloaded.length).toBe(fixture.bytes.length)
-                expect(sha256(downloaded)).toBe(fixture.sha256)
+                expect(
+                    downloaded.length,
+                    `downloaded byte length for ${fixture.name}`,
+                ).toBe(fixture.bytes.length)
+                expect(sha256(downloaded), `sha256 of ${fixture.name}`).toBe(
+                    fixture.sha256,
+                )
             }
         })
 

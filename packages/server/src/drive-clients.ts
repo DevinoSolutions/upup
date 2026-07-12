@@ -95,6 +95,22 @@ export function escapeODataSearchValue(value: string): string {
     return value.replace(/'/g, "''")
 }
 
+/**
+ * Dropbox-API-Arg travels as an HTTP HEADER, and HTTP headers are latin-1: a
+ * unicode filename (Dropbox file ids ARE path strings) is either rejected by
+ * undici outright (code points > 0xFF) or sent mis-encoded as latin-1 bytes
+ * that Dropbox cannot match to its UTF-8 path (a 409 path/not_found) — the
+ * download breaks either way. Dropbox prescribes "HTTP header safe JSON":
+ * escape every char >= 0x7F as \uXXXX. (The list/search calls put their JSON in
+ * the request BODY — UTF-8 is fine there.)
+ */
+export function httpHeaderSafeJson(value: unknown): string {
+    return JSON.stringify(value).replace(
+        /[\u007f-\uffff]/g,
+        c => '\\u' + c.charCodeAt(0).toString(16).padStart(4, '0'),
+    )
+}
+
 async function listGoogleDriveFiles(
     accessToken: string,
     opts: { folderId?: string; search?: string },
@@ -308,7 +324,7 @@ async function fetchDropboxFile(
             method: 'POST',
             headers: {
                 Authorization: `Bearer ${accessToken}`,
-                'Dropbox-API-Arg': JSON.stringify({ path: body.fileId }),
+                'Dropbox-API-Arg': httpHeaderSafeJson({ path: body.fileId }),
             },
         },
     )
