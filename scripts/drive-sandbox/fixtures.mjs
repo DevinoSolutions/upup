@@ -38,3 +38,41 @@ export const SANDBOX_FIXTURES = [
 export function sha256(bytes) {
     return createHash('sha256').update(bytes).digest('hex')
 }
+
+// ── Large fixture (generated, NOT stored on disk — 6 MiB in git is bloat) ────
+//
+// Deterministic bytes from a sha256 counter chain: block i =
+// sha256(`${seed}:${i}`), concatenated then truncated. Incompressible, stable
+// across runs/platforms/languages. The size exceeds MIN_PART_SIZE (5 MiB —
+// packages/server/src/providers/aws.ts:30), so a server-mode transfer of this
+// file is FORCED down transfer.ts's streamingMultipart path; the +45 tail makes
+// the final part a short one. The sha256 pin is the cross-implementation drift
+// guard: the TS twin in apps/e2e-test/drive-sandbox/server-transfer.spec.ts
+// must hash to the same value or it refuses to run before any network call.
+// The content hash is baked into the NAME, so an already-present file with this
+// name is guaranteed current (skip-safe) and a generator change reseeds fresh.
+export const LARGE_FIXTURE_SEED = 'upup-sandbox-large-v1'
+export const LARGE_FIXTURE_SIZE = 6 * 1024 * 1024 + 45
+export const LARGE_FIXTURE_SHA256 =
+    'a97b029edbb8bdd512a6980623272921ed4a53ea0d3b61f8cf01cbaa9b94ef3b'
+export const LARGE_FIXTURE_NAME = `upup-sandbox-large-${LARGE_FIXTURE_SHA256.slice(0, 8)}.bin`
+export const LARGE_FIXTURE_MIME = 'application/octet-stream'
+
+export function generateLargeFixtureBytes() {
+    const out = new Uint8Array(LARGE_FIXTURE_SIZE)
+    let offset = 0
+    for (let block = 0; offset < LARGE_FIXTURE_SIZE; block++) {
+        const digest = createHash('sha256')
+            .update(`${LARGE_FIXTURE_SEED}:${block}`)
+            .digest()
+        const take = Math.min(digest.length, LARGE_FIXTURE_SIZE - offset)
+        out.set(digest.subarray(0, take), offset)
+        offset += take
+    }
+    if (sha256(out) !== LARGE_FIXTURE_SHA256) {
+        throw new Error(
+            '[drive-sandbox] large-fixture generator drifted from its sha256 pin',
+        )
+    }
+    return out
+}

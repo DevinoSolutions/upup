@@ -22,7 +22,14 @@ import {
     isProviderConfigured,
     mintAccessToken,
 } from './providers.mjs'
-import { SANDBOX_FIXTURES, SANDBOX_FOLDER } from './fixtures.mjs'
+import {
+    SANDBOX_FIXTURES,
+    SANDBOX_FOLDER,
+    LARGE_FIXTURE_NAME,
+    LARGE_FIXTURE_SIZE,
+    LARGE_FIXTURE_MIME,
+    generateLargeFixtureBytes,
+} from './fixtures.mjs'
 
 /** fetch that throws on any non-2xx, with the response body (truncated) in the
  *  message so a broken sandbox reports WHY. Returns the ok Response — the caller
@@ -111,6 +118,28 @@ async function seedBox(token) {
         )
         results.push({ name: fixture.name, status: 'created' })
     }
+
+    // Large fixture: the content hash is in the name → present ⇒ current.
+    if (existing.has(LARGE_FIXTURE_NAME)) {
+        results.push({ name: LARGE_FIXTURE_NAME, status: 'exists (skipped)' })
+    } else {
+        const bytes = generateLargeFixtureBytes()
+        const fd = new FormData()
+        fd.append(
+            'attributes',
+            JSON.stringify({
+                name: LARGE_FIXTURE_NAME,
+                parent: { id: folderId },
+            }),
+        )
+        fd.append('file', new Blob([bytes]), LARGE_FIXTURE_NAME)
+        await api(
+            'https://upload.box.com/api/2.0/files/content',
+            { method: 'POST', headers, body: fd },
+            `box upload ${LARGE_FIXTURE_NAME}`,
+        )
+        results.push({ name: LARGE_FIXTURE_NAME, status: 'created' })
+    }
     return results
 }
 
@@ -167,12 +196,89 @@ async function seedDropbox(token) {
         // overwrite is a create-or-replace — always report as created.
         results.push({ name: fixture.name, status: 'created' })
     }
+
+    const largeProbe = await fetch(
+        'https://api.dropboxapi.com/2/files/get_metadata',
+        {
+            method: 'POST',
+            headers: { ...headers, 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                path: `/${SANDBOX_FOLDER}/${LARGE_FIXTURE_NAME}`,
+            }),
+        },
+    )
+    if (
+        largeProbe.ok &&
+        (await largeProbe.json()).size === LARGE_FIXTURE_SIZE
+    ) {
+        results.push({ name: LARGE_FIXTURE_NAME, status: 'exists (skipped)' })
+    } else {
+        await api(
+            'https://content.dropboxapi.com/2/files/upload',
+            {
+                method: 'POST',
+                headers: {
+                    ...headers,
+                    'Dropbox-API-Arg': JSON.stringify({
+                        path: `/${SANDBOX_FOLDER}/${LARGE_FIXTURE_NAME}`,
+                        mode: 'overwrite',
+                        mute: true,
+                        autorename: false,
+                    }),
+                    'Content-Type': 'application/octet-stream',
+                },
+                body: Buffer.from(generateLargeFixtureBytes()),
+            },
+            `dropbox upload ${LARGE_FIXTURE_NAME}`,
+        )
+        results.push({ name: LARGE_FIXTURE_NAME, status: 'created' })
+    }
     return results
 }
 
 // ── google-drive (drive.file scope; multipart/related upload) ────────────────
 
 const GDRIVE_BOUNDARY = 'upup-sandbox-boundary-7c1f9a2e8d3b'
+
+/** uploadType=multipart caps at 5 MB — larger fixtures go through a resumable
+ *  session: init (metadata → session URL) then one PUT of all bytes. */
+async function uploadGoogleDriveResumable(
+    headers,
+    folderId,
+    name,
+    bytes,
+    mimeType,
+) {
+    const initRes = await api(
+        'https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable',
+        {
+            method: 'POST',
+            headers: {
+                ...headers,
+                'Content-Type': 'application/json; charset=UTF-8',
+                'X-Upload-Content-Type': mimeType,
+                'X-Upload-Content-Length': String(bytes.length),
+            },
+            body: JSON.stringify({ name, parents: [folderId] }),
+        },
+        `google-drive resumable init ${name}`,
+    )
+    const session = initRes.headers.get('Location')
+    if (!session) {
+        throw new Error(
+            `[drive-sandbox] google-drive resumable init for ${name} returned no session Location`,
+        )
+    }
+    await api(
+        session,
+        {
+            method: 'PUT',
+            headers: { 'Content-Type': mimeType },
+            body: Buffer.from(bytes),
+        },
+        `google-drive resumable put ${name}`,
+    )
+}
 
 async function seedGoogleDrive(token) {
     const headers = { Authorization: `Bearer ${token}` }
@@ -247,10 +353,61 @@ async function seedGoogleDrive(token) {
         )
         results.push({ name: fixture.name, status: 'created' })
     }
+
+    const largeQuery = encodeURIComponent(
+        `name='${LARGE_FIXTURE_NAME}' and '${folderId}' in parents and trashed=false`,
+    )
+    const largeExists = await api(
+        `https://www.googleapis.com/drive/v3/files?q=${largeQuery}&fields=files(id)`,
+        { headers },
+        `google-drive find ${LARGE_FIXTURE_NAME}`,
+    )
+    if ((await largeExists.json()).files.length > 0) {
+        results.push({ name: LARGE_FIXTURE_NAME, status: 'exists (skipped)' })
+    } else {
+        await uploadGoogleDriveResumable(
+            headers,
+            folderId,
+            LARGE_FIXTURE_NAME,
+            generateLargeFixtureBytes(),
+            LARGE_FIXTURE_MIME,
+        )
+        results.push({ name: LARGE_FIXTURE_NAME, status: 'created' })
+    }
     return results
 }
 
 // ── one-drive (/me/drive; simple PUT = create-or-replace) ────────────────────
+
+/** Simple PUT :/content is for small files only — large fixtures go through a
+ *  Graph upload session. One chunk = the FINAL chunk, so the 320 KiB multiple
+ *  rule doesn't apply; the session URL is pre-authorized (no auth header). */
+async function uploadOneDriveSession(name, bytes, headers) {
+    const encodedName = encodeURIComponent(name)
+    const sessionRes = await api(
+        `https://graph.microsoft.com/v1.0/me/drive/root:/${SANDBOX_FOLDER}/${encodedName}:/createUploadSession`,
+        {
+            method: 'POST',
+            headers: { ...headers, 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                item: { '@microsoft.graph.conflictBehavior': 'replace', name },
+            }),
+        },
+        `one-drive create upload session ${name}`,
+    )
+    const { uploadUrl } = await sessionRes.json()
+    await api(
+        uploadUrl,
+        {
+            method: 'PUT',
+            headers: {
+                'Content-Range': `bytes 0-${bytes.length - 1}/${bytes.length}`,
+            },
+            body: Buffer.from(bytes),
+        },
+        `one-drive upload session put ${name}`,
+    )
+}
 
 async function seedOneDrive(token) {
     const headers = { Authorization: `Bearer ${token}` }
@@ -296,6 +453,26 @@ async function seedOneDrive(token) {
         )
         // Simple upload is a create-or-replace — always report as created.
         results.push({ name: fixture.name, status: 'created' })
+    }
+
+    const largeProbe = await fetch(
+        `https://graph.microsoft.com/v1.0/me/drive/root:/${SANDBOX_FOLDER}/${encodeURIComponent(
+            LARGE_FIXTURE_NAME,
+        )}`,
+        { headers },
+    )
+    if (
+        largeProbe.ok &&
+        (await largeProbe.json()).size === LARGE_FIXTURE_SIZE
+    ) {
+        results.push({ name: LARGE_FIXTURE_NAME, status: 'exists (skipped)' })
+    } else {
+        await uploadOneDriveSession(
+            LARGE_FIXTURE_NAME,
+            generateLargeFixtureBytes(),
+            headers,
+        )
+        results.push({ name: LARGE_FIXTURE_NAME, status: 'created' })
     }
     return results
 }
