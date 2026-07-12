@@ -113,10 +113,15 @@ vitest suite.
 ### Also: the HTTP-surface layer (Playwright)
 
 The vitest suite calls `drive-clients.ts` directly. A parallel Playwright suite
-(`apps/e2e-test/drive-sandbox/box-dropbox-server-transfer.spec.ts`) proves the
-same **Box/Dropbox** creds end to end through `@upup/server`'s HTTP surface —
-route dispatch → drive auth → drive→S3 transfer — into a real MinIO bucket, then
-verifies the transferred bytes are a byte-exact sha256 match. Bring MinIO up
+(`apps/e2e-test/drive-sandbox/server-transfer.spec.ts`) proves the same creds for
+**all four providers** end to end through `@upup/server`'s HTTP surface — route
+dispatch → drive auth → drive→S3 transfer — into a real MinIO bucket, then
+verifies the transferred bytes are a byte-exact sha256 match. It covers the full
+server-mode journey (browse → pick → provider download → drive→S3 → byte-exact
+sha256) plus the **>5 MiB streaming-multipart** path, **unicode filenames**, the
+**policy boundaries** (413 over-size / 415 disallowed-type / streamed-cap abort
+with nothing persisted), and the pinned **native Google Doc** behavior (lists
+with a quota size, transfer fails clean 500). Bring MinIO up
 first (`pnpm run e2e:minio:up`), then run it with the same dotenv wrapper (it
 loads the MinIO env and your drive creds together):
 
@@ -127,20 +132,58 @@ dotenv -e local-dev/.env.minio -e local-dev/.env.test -- \
 
 Its gating mirrors the vitest suite: it runs only with `UPUP_DRIVE_SANDBOX=1`,
 per-provider creds, and a live MinIO; absent → skip green (exit 0, loud notice);
-a configured-but-broken token → RED. Only Box and Dropbox are covered here
-(Google Drive and OneDrive stay vitest-only). Nightly's `Drive-Sandbox` job runs
+a configured-but-broken token → RED. All four providers are covered here (each
+skips individually when its creds are absent). Nightly's `Drive-Sandbox` job runs
 **both** layers: the vitest client-direct suite, then this Playwright
 HTTP-surface suite (the job boots MinIO in-job and builds `@upup/server` before
 it).
 
+**Local one-shot.** `pnpm run drive:sandbox` is the single safe local entry point
+for a full run: it rotates OneDrive's token once, seeds every configured account
+(idempotent), then runs **both** live layers — the vitest client-direct suite and
+(when MinIO is up on `:9100`) the Playwright HTTP-surface suite. Bring MinIO up
+first with `pnpm run e2e:minio:up`. By default it also syncs OneDrive's rotated
+token to the CI secret; add `-- --no-sync-github` for an offline run (leaving the
+CI secret stale). See the OneDrive token-lineage note below.
+
 ### What gets seeded, and why write scope is required
 
 `seed.mjs` creates a folder named `upup-sandbox-fixtures` in each account's root
-and uploads two committed fixtures into it: `upup-sandbox-hello.txt` (UTF-8 text
-with a multibyte character) and `upup-sandbox-bytes.bin` (a 256-byte 0x00–0xFF
-blob). Together they prove the list→download path is byte-exact for both text
-and non-textual binary. The suite discovers the per-account file IDs at runtime
-by listing the folder and matching on name — no file IDs are ever committed.
+and idempotently seeds this fixture set into it:
+
+- **Three committed disk fixtures** (their bytes are the source of truth, marked
+  binary in `.gitattributes` so no EOL normalization can perturb them):
+  `upup-sandbox-hello.txt` (UTF-8 text with a multibyte character),
+  `upup-sandbox-bytes.bin` (a 256-byte 0x00–0xFF blob), and
+  `upup-sandbox-ünï 'q' & (1).txt` (a unicode filename that stresses per-provider
+  filename/header encoding — it surfaced a real Dropbox `Dropbox-API-Arg`
+  header-encoding bug, now fixed by `httpHeaderSafeJson`).
+- **One generated large fixture**, `upup-sandbox-large-a97b029e.bin` (6291501
+  bytes, just over 6 MiB; sha256
+  `a97b029edbb8bdd512a6980623272921ed4a53ea0d3b61f8cf01cbaa9b94ef3b`). It is
+  **regenerated deterministically and never stored in git** — the content hash is
+  baked into the filename, so an already-present copy is guaranteed current and
+  skip-safe, and a generator change reseeds a fresh one. Its size clears the
+  5 MiB part threshold, so a server-mode transfer of it is forced down the
+  streaming-multipart path.
+- **One native Google Doc** (google-drive only), `upup-sandbox-native-doc`. It
+  pins how the surface behaves for a file with no downloadable binary: it lists
+  cleanly (Drive reports a small **storage-quota** size, ~1 KiB, even though
+  `alt=media` cannot export it), but a transfer fails clean (500). Export support
+  is a deliberate future decision, not something silently added.
+
+The seeder uploads the large fixture through each provider's large-file path,
+because the plain single-request upload caps out per provider: **Box** uses its
+direct upload (good to 50 MB); **Dropbox** a single `files/upload` (good to
+150 MB); **Google Drive** a **resumable** session (its `uploadType=multipart`
+endpoint caps at 5 MB); **OneDrive** a Graph **upload session** sent as one final
+chunk. The small fixtures use the plain single-request upload everywhere.
+
+Together the disk fixtures prove the list→download path is byte-exact for UTF-8
+text, non-textual binary, and unicode-named files; the large fixture proves the
+multipart path; the native doc pins the no-export limitation. The suite discovers
+the per-account file IDs at runtime by listing the folder and matching on name —
+no file IDs are ever committed.
 
 Note the asymmetry: the shipped `drive-clients.ts` only ever **reads** (list and
 download). But seeding has to **create** those fixtures, so the one-time consent
@@ -276,11 +319,15 @@ write-inclusive even though production drive access is read-only.
     Click **Allow**, then paste the refresh token into
     `UPUP_TEST_ONEDRIVE_REFRESH_TOKEN`.
 
-- **Heads-up (local runs):** OneDrive's refresh token rotates on every use, and
-  local runs do **not** write the rotated value back to `local-dev/.env.test`.
-  So after a local `seed`/`test` against OneDrive the stored token is stale —
-  re-mint before your next local OneDrive run, or just let the nightly CI job
-  (which does write the rotation back) own it.
+- **Heads-up (OneDrive token lineage):** OneDrive's refresh token rotates on
+  every use, so exactly one copy is live at a time. The bare `seed`/`test`
+  scripts consume it without writing the rotation back, so afterward the stored
+  `local-dev/.env.test` value is stale. `pnpm run drive:sandbox`
+  (rotate-and-test) is the exception — it writes the rotated token back to
+  `local-dev/.env.test` and syncs it to CI. And because the **nightly** job
+  rotates the token and writes it back to the GitHub secret (never to your
+  machine), any local `.env.test` copy is dead after a nightly run. Either way,
+  recover with `pnpm run drive:sandbox:mint one-drive` and paste the new token.
 
 ## Wiring CI secrets
 

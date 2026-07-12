@@ -526,7 +526,11 @@ DrivePlugin`. All three popup providers now persist a token-expiry key and refre
   (`apps/e2e-test/drive-sandbox/server-transfer.spec.ts`) proving the same
   sandbox creds for all four providers through `@upup/server`'s route dispatch →
   drive auth → drive→S3 transfer into a real bucket, under the same per-provider
-  skip-green/red gating. The harness lives in `scripts/drive-sandbox/` (one-time `mint.mjs`
+  skip-green/red gating. That HTTP-surface layer also proves the >5 MiB
+  streaming-multipart path (no incomplete upload left behind), the policy
+  boundaries (413 over-size / 415 disallowed-type / streamed-cap abort with
+  nothing persisted), and the pinned native-Google-Doc transfer failure. The
+  harness lives in `scripts/drive-sandbox/` (one-time `mint.mjs`
   consent → refresh token, idempotent `seed.mjs`, `providers.mjs`/`fixtures.mjs`
   foundation); Box uses a Client Credentials service account (no refresh token),
   OneDrive's refresh token ROTATES and is written back nightly via
