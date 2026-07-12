@@ -6,6 +6,7 @@ import { Geist, Geist_Mono } from 'next/font/google'
 import Script from 'next/script'
 import ThemeProvider from '@/app/theme-provider'
 import { Providers } from '@/components/providers'
+import { PostHogProvider } from '@/components/posthog-provider'
 import SplashCursor from '@/components/SplashCursor'
 import Navbar from '@/components/Navbar'
 
@@ -169,15 +170,17 @@ export default function RootLayout({
                 data-hydration-stable="true"
                 key="main-body"
             >
-                <Providers>
-                    <ThemeProvider>
-                        <SplashCursor />
-                        <div className="flex flex-col min-h-screen w-full bg-gradient-to-br from-slate-50 to-blue-50 dark:from-gray-950 dark:to-slate-900">
-                            <Navbar />
-                            {children}
-                        </div>
-                    </ThemeProvider>
-                </Providers>
+                <PostHogProvider>
+                    <Providers>
+                        <ThemeProvider>
+                            <SplashCursor />
+                            <div className="flex flex-col min-h-screen w-full bg-gradient-to-br from-slate-50 to-blue-50 dark:from-gray-950 dark:to-slate-900">
+                                <Navbar />
+                                {children}
+                            </div>
+                        </ThemeProvider>
+                    </Providers>
+                </PostHogProvider>
             </body>
         </html>
     )
