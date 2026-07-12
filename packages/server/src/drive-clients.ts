@@ -80,7 +80,8 @@ async function driveFetch(
 }
 
 /** Escape a value for use inside a Google Drive API query string literal (single-quoted).
- * Backslashes must be escaped before quotes to prevent query injection (audit S5). */
+ * Backslashes must be escaped before quotes to prevent query injection (audit S5).
+ * Twin: scripts/drive-sandbox/seed.mjs escapeGDriveQueryValue — keep in sync. */
 export function escapeDriveQueryValue(value: string): string {
     return value.replace(/\\/g, '\\\\').replace(/'/g, "\\'")
 }
@@ -103,6 +104,7 @@ export function escapeODataSearchValue(value: string): string {
  * download breaks either way. Dropbox prescribes "HTTP header safe JSON":
  * escape every char >= 0x7F as \uXXXX. (The list/search calls put their JSON in
  * the request BODY — UTF-8 is fine there.)
+ * Twin: scripts/drive-sandbox/seed.mjs headerSafeJson — keep in sync.
  */
 export function httpHeaderSafeJson(value: unknown): string {
     return JSON.stringify(value).replace(

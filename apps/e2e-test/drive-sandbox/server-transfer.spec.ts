@@ -252,6 +252,9 @@ function minioClient(): S3Client {
     })
 }
 
+// Single-page list: the test bucket holds ~0-few open multipart uploads, so
+// pagination is unnecessary here (unlike countObjectsWithSuffix below, which
+// paginates its object listing).
 async function countOpenMultipartUploads(): Promise<number> {
     const res = await minioClient().send(
         new ListMultipartUploadsCommand({
@@ -382,7 +385,7 @@ test.beforeAll(async () => {
     if (!anyEnabled) return
 
     const store = new InMemoryTokenStore()
-    // Mint both providers in parallel (independent APIs). A
+    // Mint all four providers in parallel (independent APIs). A
     // broken-but-configured token throws HERE -> the run goes RED.
     await Promise.all(
         PROVIDERS.filter(provider => enabled[provider]).map(async provider => {
@@ -538,7 +541,10 @@ for (const provider of PROVIDERS) {
                     body.size,
                     `transfer response size for ${fixture.name}`,
                 ).toBe(fixture.bytes.length)
-                expect(body.url, 'presigned MinIO URL returned').toBeTruthy()
+                expect(
+                    body.url,
+                    `presigned MinIO URL returned for ${fixture.name}`,
+                ).toBeTruthy()
 
                 const objectRes = await request.get(body.url)
                 expect(
@@ -565,6 +571,11 @@ for (const provider of PROVIDERS) {
             request,
         }) => {
             test.setTimeout(240_000)
+            // The multipart path is GUARANTEED by declared-size routing, not by
+            // the MPU-count assert below: transfer.ts routes size >
+            // SINGLE_PUT_MAX_BYTES (= MIN_PART_SIZE, 5 MiB, non-configurable)
+            // through streamingMultipart, so a 6 MiB declared size can never
+            // take the single-PUT branch. The assert only proves clean teardown.
             const expectedBytes = generateLargeFixtureBytes()
             const root = await listFiles(request, provider)
             const folder = root.find(f => f.name === SANDBOX_FOLDER)
@@ -605,7 +616,10 @@ for (const provider of PROVIDERS) {
             expect(downloaded.length).toBe(expectedBytes.length)
             expect(sha256(downloaded)).toBe(LARGE_FIXTURE_SHA256)
             // Completed transfer leaves no incomplete multipart upload behind.
-            expect(await countOpenMultipartUploads()).toBe(mpuBefore)
+            expect(
+                await countOpenMultipartUploads(),
+                `no incomplete multipart upload left behind (${provider})`,
+            ).toBe(mpuBefore)
         })
 
         if (provider === 'google-drive') {
@@ -654,6 +668,10 @@ for (const provider of PROVIDERS) {
 // 6 MiB transfer mid-stream (error, no object persisted, no lingering MPU).
 // Box only: CCG mint, no rotating token, cheapest of the four.
 const POLICY_PROVIDER = 'box' as const
+// The describe TITLE below stays the literal 'box' — test titles should be
+// greppable constant strings, not interpolated. The request paths and assert
+// messages below use POLICY_PROVIDER so switching the policy provider is a
+// one-line edit.
 
 test.describe('server-mode policy boundary through the real routes — box', () => {
     test.skip(
@@ -664,27 +682,33 @@ test.describe('server-mode policy boundary through the real routes — box', () 
     test('a client-declared size over maxFileSize is rejected 413 before any drive call', async ({
         request,
     }) => {
-        const res = await request.post(`${policyBaseURL}/files/box/transfer`, {
-            data: {
-                fileId: 'irrelevant-never-fetched',
-                fileName: 'big.txt',
-                size: 2 * 1024 * 1024,
-                mimeType: 'text/plain',
+        const res = await request.post(
+            `${policyBaseURL}/files/${POLICY_PROVIDER}/transfer`,
+            {
+                data: {
+                    fileId: 'irrelevant-never-fetched',
+                    fileName: 'big.txt',
+                    size: 2 * 1024 * 1024,
+                    mimeType: 'text/plain',
+                },
             },
-        })
+        )
         expect(res.status()).toBe(413)
     })
 
     test('a disallowed mimeType is rejected 415 before any drive call', async ({
         request,
     }) => {
-        const res = await request.post(`${policyBaseURL}/files/box/transfer`, {
-            data: {
-                fileId: 'irrelevant-never-fetched',
-                fileName: 'x.bin',
-                mimeType: 'application/octet-stream',
+        const res = await request.post(
+            `${policyBaseURL}/files/${POLICY_PROVIDER}/transfer`,
+            {
+                data: {
+                    fileId: 'irrelevant-never-fetched',
+                    fileName: 'x.bin',
+                    mimeType: 'application/octet-stream',
+                },
             },
-        })
+        )
         expect(res.status()).toBe(415)
     })
 
@@ -706,23 +730,30 @@ test.describe('server-mode policy boundary through the real routes — box', () 
             folder!.id,
         )
         const listed = contents.find(f => f.name === LARGE_FIXTURE_NAME)
-        expect(listed, `${LARGE_FIXTURE_NAME} seeded in box`).toBeDefined()
+        expect(
+            listed,
+            `${LARGE_FIXTURE_NAME} seeded in ${POLICY_PROVIDER}`,
+        ).toBeDefined()
 
         const objectsBefore = await countObjectsWithSuffix(
             `-${LARGE_FIXTURE_NAME}`,
         )
         const mpuBefore = await countOpenMultipartUploads()
-        const res = await request.post(`${policyBaseURL}/files/box/transfer`, {
-            data: {
-                fileId: listed!.id,
-                fileName: LARGE_FIXTURE_NAME,
-                mimeType: 'text/plain',
+        const res = await request.post(
+            `${policyBaseURL}/files/${POLICY_PROVIDER}/transfer`,
+            {
+                data: {
+                    fileId: listed!.id,
+                    fileName: LARGE_FIXTURE_NAME,
+                    mimeType: 'text/plain',
+                },
+                // The server accumulates the first full 5 MiB part from Box before
+                // the streamed-byte cap trips; Playwright's default 30s per-request
+                // cap is NOT raised by test.setTimeout — match the multipart test's
+                // explicit override.
+                timeout: 180_000,
             },
-            // The server downloads ~1 MiB+ from Box before the cap fires;
-            // Playwright's default 30s per-request cap is NOT raised by
-            // test.setTimeout — match the multipart test's explicit override.
-            timeout: 180_000,
-        })
+        )
         // Authoritative-cap rejection surfaces as the route's 500 STORAGE_ERROR
         // (drive-routes.ts:177-190) — pinned shape, not a bug.
         expect(res.status()).toBe(500)

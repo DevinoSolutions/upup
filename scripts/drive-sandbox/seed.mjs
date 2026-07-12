@@ -449,6 +449,11 @@ async function uploadOneDriveSession(name, bytes, headers) {
         `one-drive create upload session ${name}`,
     )
     const { uploadUrl } = await sessionRes.json()
+    if (!uploadUrl) {
+        throw new Error(
+            `[drive-sandbox] one-drive createUploadSession for ${name} returned no uploadUrl`,
+        )
+    }
     await api(
         uploadUrl,
         {

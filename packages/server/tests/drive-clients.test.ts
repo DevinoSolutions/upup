@@ -10,8 +10,8 @@ import { getDriveClient, httpHeaderSafeJson } from '../src/drive-clients'
 describe('httpHeaderSafeJson', () => {
     it('escapes every char >= 0x7F so the value is header-legal ASCII', () => {
         const out = httpHeaderSafeJson({ path: "/f/ünï 'q' & (1).txt" })
-        // header-legal = every char is ASCII (code point <= 0x7F)
-        expect([...out].every(ch => ch.charCodeAt(0) <= 0x7f)).toBe(true)
+        // header-legal = every char <= 0x7E (the fn escapes 0x7F DEL too)
+        expect([...out].every(ch => ch.charCodeAt(0) <= 0x7e)).toBe(true)
         expect(JSON.parse(out)).toEqual({ path: "/f/ünï 'q' & (1).txt" })
     })
 
@@ -43,7 +43,7 @@ describe('httpHeaderSafeJson', () => {
         }
         const arg = captured['dropbox-api-arg']
         expect(arg).toBeDefined()
-        expect([...arg!].every(ch => ch.charCodeAt(0) <= 0x7f)).toBe(true)
+        expect([...arg!].every(ch => ch.charCodeAt(0) <= 0x7e)).toBe(true)
         expect(JSON.parse(arg!)).toEqual({ path: "/f/ünï 'q'.txt" })
     })
 })

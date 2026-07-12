@@ -84,6 +84,11 @@ const AUTH: Record<
 
 // Configured = a ready-made access token, OR the full mint triplet (client id +
 // secret + [enterprise id for box | refresh token for the others]).
+// OneDrive divergence: the Playwright HTTP-surface spec
+// (server-transfer.spec.ts) is access-token-ONLY for one-drive and never
+// consumes its rotating refresh token. THIS suite may refresh one-drive in
+// sandboxAccessToken; rotate-and-test.mjs injects a fresh access token first
+// so the stored refresh token is not rotated away here.
 function isConfigured(provider: ProviderSlug): boolean {
     const c = AUTH[provider]
     if (env(c.accessTokenEnv)) return true
@@ -283,6 +288,9 @@ for (const provider of PROVIDERS) {
             const results = await client.listFiles(accessToken, {
                 search: "ünï 'q' & (1)",
             })
+            // Deliberately a weak assert: provider search indexing/semantics
+            // vary, so the point is only that the escaped unicode query does not
+            // 400 or throw — not that it returns any particular match.
             expect(Array.isArray(results)).toBe(true)
         })
 

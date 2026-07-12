@@ -116,7 +116,7 @@ async function rotateOneDrive() {
         syncGithubSecret(refreshToken)
     } else {
         log(
-            `OneDrive: WARNING — could not find old refresh token in ${ENV_FILE}; update it manually`,
+            `OneDrive: WARNING — the refresh grant already CONSUMED the previous refresh token, but it wasn't found verbatim in ${ENV_FILE} to swap in the rotated one (env/file drift). The stored token is now STALE and can't be recovered by hand; re-mint with: pnpm run drive:sandbox:mint`,
         )
     }
 
@@ -158,7 +158,9 @@ async function main() {
             log('FAILED — see Playwright output above')
             process.exit(1)
         }
-        log('DONE — vitest live suite + HTTP-surface layer both passed')
+        log(
+            'DONE — vitest live suite + HTTP-surface layer both passed. NOTE: a suite is GREEN even when providers skip for missing creds; check the per-provider skip notices above to confirm which actually ran.',
+        )
     } else {
         log('MinIO not reachable on :9100 — HTTP-surface layer SKIPPED.')
         log(

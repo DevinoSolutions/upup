@@ -46,8 +46,11 @@ export function sha256(bytes) {
 // sha256(`${seed}:${i}`), concatenated then truncated. Incompressible, stable
 // across runs/platforms/languages. The size exceeds MIN_PART_SIZE (5 MiB —
 // packages/server/src/providers/aws.ts:30), so a server-mode transfer of this
-// file is FORCED down transfer.ts's streamingMultipart path; the +45 tail makes
-// the final part a short one. The sha256 pin is the cross-implementation drift
+// file is FORCED down transfer.ts's streamingMultipart path. The final
+// multipart part is short because 6 MiB is not a whole multiple of the 5 MiB
+// part size; the +45 tail also makes the TOTAL size non-round, exercising the
+// generator's truncation branch (its last sha256 block is sliced, not whole).
+// The sha256 pin is the cross-implementation drift
 // guard: the TS twin in apps/e2e-test/drive-sandbox/server-transfer.spec.ts
 // must hash to the same value or it refuses to run before any network call.
 // The content hash is baked into the NAME, so an already-present file with this

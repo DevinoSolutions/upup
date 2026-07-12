@@ -1,6 +1,7 @@
 import { defineConfig } from '@playwright/test'
 
-// Dedicated config for the live Box/Dropbox -> @upup/server -> MinIO proof.
+// Dedicated config for the live four-provider -> @upup/server -> MinIO proof
+// (box, dropbox, google-drive, one-drive).
 // Deliberately isolated from the default suites: its own testDir keeps it OUT
 // of `test:e2e` (testDir ./e2e) and `test:e2e:cf`, so `pnpm run e2e` never runs
 // it. There is NO webServer here — the spec boots one real in-process
