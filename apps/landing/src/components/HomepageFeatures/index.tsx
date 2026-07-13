@@ -76,40 +76,40 @@ interface EmailModalProps {
 
 const mainFeatures = [
     {
-        icon: <FaCloud className="w-6 h-6" />,
-        title: 'Multi-Cloud Support',
-        description:
-            'Connect to AWS S3, DigitalOcean Spaces, Backblaze B2, Azure Blob, and more cloud providers',
-    },
-    {
         icon: <FaUpload className="w-6 h-6" />,
-        title: 'Drag & Drop / Dropzone',
+        title: 'Six Frameworks, One Uploader',
         description:
-            'Intuitive drag-and-drop file dropzone and file picker with an upload button — built for a modern, customizable UI',
-    },
-    {
-        icon: <FaEye className="w-6 h-6" />,
-        title: 'Image & Video Previews',
-        description:
-            'File upload with preview — see images, videos, documents, and other media files instantly before uploading',
-    },
-    {
-        icon: <FaGlobe className="w-6 h-6" />,
-        title: 'Cloud Integration',
-        description:
-            'Upload directly from Google Drive, OneDrive, and other cloud storage services',
+            'Native UI for React, Vue, Svelte, Angular, Vanilla JS, and Preact — one uploader that renders byte-identical DOM in every framework, enforced by a cross-framework parity suite',
     },
     {
         icon: <FaBolt className="w-6 h-6" />,
-        title: 'Progress Bar & Retry Logic',
+        title: 'Headless Core',
         description:
-            'Real-time upload progress bar with automatic retry on failure, resumable chunked uploads, and server-side optimization',
+            'The engine lives in a framework-agnostic @upup/core package — use the built-in UI or build your own on the same hooks, orchestrator, and upload pipeline',
+    },
+    {
+        icon: <FaGlobe className="w-6 h-6" />,
+        title: 'Cloud Drives, Camera & Screen Capture',
+        description:
+            'Let users import files straight from Google Drive, OneDrive, Dropbox, and Box — plus device camera, screen capture, and link (URL) imports',
+    },
+    {
+        icon: <FaCloud className="w-6 h-6" />,
+        title: 'Any S3-Compatible Storage',
+        description:
+            'Upload to AWS S3, Cloudflare R2, MinIO, DigitalOcean Spaces, Backblaze B2, Wasabi, and more — plus Azure Blob — using pre-signed URLs',
     },
     {
         icon: <FaShieldAlt className="w-6 h-6" />,
-        title: 'Multiple Files & Validation',
+        title: 'Secure Server Mode',
         description:
-            'Upload multiple files — including large files — with file size limit validation, pre-signed URLs, and enterprise-grade security',
+            'Optional server mode proxies uploads through your own backend with an HMAC-signed trust model, keeping storage credentials off the client — forged requests stay rejected',
+    },
+    {
+        icon: <FaEye className="w-6 h-6" />,
+        title: 'Previews, Progress & Retry',
+        description:
+            'Image and video previews, a real-time progress bar, automatic retry, and resumable chunked uploads for large files',
     },
 ]
 
@@ -513,7 +513,7 @@ const EmailModal: React.FC<EmailModalProps> = ({
                                 transition={{ delay: 0.2 }}
                             >
                                 {isCustom
-                                    ? "Tell us which storage provider you'd like us to integrate with UpUp and we'll notify you when it's ready."
+                                    ? "Tell us which storage provider you'd like us to integrate with upup and we'll notify you when it's ready."
                                     : `We'll send you an email as soon as the ${integrationName} integration is ready for beta testing.`}
                             </motion.p>
 
@@ -871,11 +871,11 @@ export default function HomepageFeatures() {
                         className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto"
                         variants={itemVariants}
                     >
-                        A customizable React file upload component for Next.js,
-                        Vite, Remix & Gatsby — with drag-and-drop dropzone, file
-                        picker, upload button, progress bar, retry logic, and
-                        server-side helpers for image, video, and multiple file
-                        uploads.
+                        One uploader with a headless core and native UI for
+                        React, Vue, Svelte, Angular, Vanilla JS, and Preact —
+                        with a drag-and-drop dropzone, file picker, cloud-drive
+                        sources, camera and screen capture, and optional
+                        server-mode uploads to any S3-compatible storage.
                     </motion.p>
                 </motion.div>
 
@@ -943,7 +943,7 @@ export default function HomepageFeatures() {
                                 variants={itemVariants}
                             >
                                 Users can directly upload from these providers
-                                in UpUp
+                                in upup
                             </motion.p>
                         </motion.div>
 
@@ -1136,7 +1136,7 @@ export default function HomepageFeatures() {
                                 className="text-lg text-gray-600 dark:text-gray-300"
                                 variants={itemVariants}
                             >
-                                You can connect to UpUp using any S3 provider.
+                                You can connect to upup using any S3 provider.
                                 We also support some non-S3 connections.
                             </motion.p>
                         </motion.div>

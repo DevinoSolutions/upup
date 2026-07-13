@@ -1,0 +1,29 @@
+# upup
+
+upup is an open-source, MIT-licensed file uploader: one headless core (`@upup/core`) with native UI packages for six frameworks — React, Vue, Svelte, Angular, Vanilla JS, and Preact — that render byte-identical DOM. It supports drag-and-drop, cloud-drive sources (Google Drive, OneDrive, Dropbox, Box), camera, screen capture, and link imports, and uploads to any S3-compatible storage (AWS S3, Cloudflare R2, MinIO, DigitalOcean Spaces, Backblaze B2, Wasabi, and more) plus Azure Blob. It runs in client mode (the browser uploads directly with short-lived credentials) or server mode (uploads proxied through your backend with `@upup/server` behind an HMAC-signed trust model).
+
+## Docs
+
+- [Getting Started](https://useupup.com/documentation/getting-started): Install a framework package and render the uploader in a few lines.
+- [Server-Mode Setup](https://useupup.com/documentation/guides/server-mode-setup): Configure `@upup/server` and the HMAC-signed trust model for credential-isolated uploads.
+- [Error Handling](https://useupup.com/documentation/error-handling): Handle upload failures and the `upload-error` event across frameworks.
+- [React Quickstart](https://useupup.com/documentation/quickstarts/react): Add the uploader to a React app.
+- [Next.js Quickstart](https://useupup.com/documentation/quickstarts/next): Add the uploader to a Next.js app (App or Pages router) with the optional @upup/next server routes.
+- [Vue Quickstart](https://useupup.com/documentation/quickstarts/vue): Add the uploader to a Vue 3 app.
+- [Svelte Quickstart](https://useupup.com/documentation/quickstarts/svelte): Add the uploader to a Svelte 5 app.
+- [Angular Quickstart](https://useupup.com/documentation/quickstarts/angular): Add the standalone uploader component to an Angular app.
+- [Vanilla JS Quickstart](https://useupup.com/documentation/quickstarts/vanilla): Mount the uploader into any DOM element without a framework.
+- [Preact Quickstart](https://useupup.com/documentation/quickstarts/preact): Add the uploader to a Preact app via preact/compat.
+- [upup vs Uppy](https://useupup.com/documentation/comparisons/upup-vs-uppy): How upup compares to Uppy.
+- [upup vs FilePond](https://useupup.com/documentation/comparisons/upup-vs-filepond): How upup compares to FilePond.
+- [upup vs react-dropzone](https://useupup.com/documentation/comparisons/upup-vs-react-dropzone): How upup compares to react-dropzone.
+- [upup vs uploadthing](https://useupup.com/documentation/comparisons/upup-vs-uploadthing): How upup compares to uploadthing.
+- [AI Assistants](https://useupup.com/documentation/ai-assistants): Guidance and context for using upup with AI coding assistants.
+- [Code Examples](https://useupup.com/documentation/code-examples): Copy-paste examples for common upload scenarios.
+- [Credentials Configuration](https://useupup.com/documentation/credentials-configuration): Configure storage providers and cloud-drive credentials.
+- [Localization](https://useupup.com/documentation/localization): Translate the uploader UI with ICU i18n.
+- [Resumable Uploads](https://useupup.com/documentation/resumable-uploads): Enable resumable, chunked uploads for large files.
+
+## Optional
+
+- [GitHub Repository](https://github.com/DevinoSolutions/upup): Source code, issues, and releases.

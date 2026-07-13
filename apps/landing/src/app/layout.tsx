@@ -1,61 +1,62 @@
 // app/layout.tsx
-import {Metadata, Viewport} from "next";
-import "./globals.css";
-import { siteConfig } from "@/lib/siteConfig";
-import {Geist, Geist_Mono} from "next/font/google";
-import Script from "next/script";
-import ThemeProvider from "@/app/theme-provider";
-import {Providers} from "@/components/providers";
-import SplashCursor from "@/components/SplashCursor";
-import Navbar from "@/components/Navbar";
+import { Metadata, Viewport } from 'next'
+import './globals.css'
+import { siteConfig } from '@/lib/siteConfig'
+import { Geist, Geist_Mono } from 'next/font/google'
+import Script from 'next/script'
+import ThemeProvider from '@/app/theme-provider'
+import { Providers } from '@/components/providers'
+import SplashCursor from '@/components/SplashCursor'
+import Navbar from '@/components/Navbar'
 
 const geistSans = Geist({
-    variable: "--font-geist-sans",
-    subsets: ["latin"],
-});
+    variable: '--font-geist-sans',
+    subsets: ['latin'],
+})
 
 const geistMono = Geist_Mono({
-    variable: "--font-geist-mono",
-    subsets: ["latin"],
-});
+    variable: '--font-geist-mono',
+    subsets: ['latin'],
+})
 
 export const viewport: Viewport = {
-    themeColor: "#ffffff",
+    themeColor: '#ffffff',
 }
 
 export const metadata: Metadata = {
+    metadataBase: new URL('https://useupup.com'),
     title: siteConfig.title,
     description: siteConfig.tagline,
     openGraph: {
-        title: "Upup – Open-Source React File Upload Library",
+        title: 'upup – One File Uploader for Every Framework',
         description:
-            "Free React & TypeScript file upload library & npm package. Customizable drag & drop dropzone with progress bar, retry, file picker & upload button. Upload images, videos & large files via S3 or Azure.",
-        images: ["https://useupup.com/img/social-card.png"],
-        url: "https://useupup.com/",
-        type: "website",
-        siteName: "Upup – React File Uploader",
+            'One open-source file uploader with a headless core and native UI for React, Vue, Svelte, Angular, Vanilla JS, and Preact. Cloud drives, camera, screen capture, and secure server-mode uploads to any S3-compatible storage. MIT-licensed.',
+        images: ['https://useupup.com/img/social-card.png'],
+        url: 'https://useupup.com/',
+        type: 'website',
+        siteName: 'upup',
     },
     twitter: {
-        card: "summary_large_image",
-        title: "Upup – Open-Source React File Upload Library",
+        card: 'summary_large_image',
+        title: 'upup – One File Uploader for Every Framework',
         description:
-            "React & TypeScript file upload npm package with drag & drop dropzone, file picker, progress bar & retry. Upload images, videos & large files to S3, Azure or Google Drive. Open-source.",
-        images: ["https://useupup.com/img/social-card.png"],
+            'One uploader, native UI for React, Vue, Svelte, Angular, Vanilla JS & Preact. Headless core, cloud drives, and secure server-mode uploads to any S3-compatible storage. Open-source, MIT.',
+        images: ['https://useupup.com/img/social-card.png'],
     },
-};
+}
 
 export default function RootLayout({
-                                       children,
-                                   }: {
-    children: React.ReactNode;
+    children,
+}: {
+    children: React.ReactNode
 }) {
     return (
         <html lang="en" suppressHydrationWarning>
-        <head>
-            <meta name="theme-color" content="#ffffff" />
-            {/* Script to handle browser extension conflicts before hydration */}
-            <Script id="extension-handler" strategy="beforeInteractive">
-                {`
+            <head>
+                <meta name="theme-color" content="#ffffff" />
+                {/* Script to handle browser extension conflicts before hydration */}
+                <Script id="extension-handler" strategy="beforeInteractive">
+                    {`
             (function() {
               // Store original body attributes to prevent hydration mismatches
               const preserveBodyAttributes = () => {
@@ -89,11 +90,11 @@ export default function RootLayout({
               window.addEventListener('load', preserveBodyAttributes);
             })();
           `}
-            </Script>
+                </Script>
 
-            {/* Client-side script to handle dark mode and browser extension conflicts */}
-            <Script id="theme-script" strategy="beforeInteractive">
-                {`
+                {/* Client-side script to handle dark mode and browser extension conflicts */}
+                <Script id="theme-script" strategy="beforeInteractive">
+                    {`
             (function() {
               try {
                 // Prevent Grammarly and other extensions from causing hydration issues
@@ -140,14 +141,14 @@ export default function RootLayout({
               }
             })();
           `}
-            </Script>
-            {process.env.NODE_ENV === "production" && (
-                <>
-                    <Script
-                        defer
-                        strategy="afterInteractive"
-                        dangerouslySetInnerHTML={{
-                            __html: `
+                </Script>
+                {process.env.NODE_ENV === 'production' && (
+                    <>
+                        <Script
+                            defer
+                            strategy="afterInteractive"
+                            dangerouslySetInnerHTML={{
+                                __html: `
                               (function(h,o,t,j,a,r){
                                   h.hj=h.hj||function(){(h.hj.q=h.hj.q||[]).push(arguments)};
                                   h._hjSettings={hjid:6368230,hjsv:6};
@@ -157,27 +158,27 @@ export default function RootLayout({
                                   a.appendChild(r);
                               })(window,document,'https://static.hotjar.com/c/hotjar-','.js?sv=');
                             `,
-                        }}
-                    />
-                </>
-            )}
-        </head>
-        <body
-            className={`overflow-x-hidden ${geistSans.variable} ${geistMono.variable} antialiased dark:bg-slate-950`}
-            suppressHydrationWarning={true}
-            data-hydration-stable="true"
-            key="main-body"
-        >
-            <Providers>
-                <ThemeProvider>
-                    <SplashCursor />
-                    <div className="flex flex-col min-h-screen w-full bg-gradient-to-br from-slate-50 to-blue-50 dark:from-gray-950 dark:to-slate-900">
-                        <Navbar />
-                        {children}
-                    </div>
-                </ThemeProvider>
-            </Providers>
-        </body>
+                            }}
+                        />
+                    </>
+                )}
+            </head>
+            <body
+                className={`overflow-x-hidden ${geistSans.variable} ${geistMono.variable} antialiased dark:bg-slate-950`}
+                suppressHydrationWarning={true}
+                data-hydration-stable="true"
+                key="main-body"
+            >
+                <Providers>
+                    <ThemeProvider>
+                        <SplashCursor />
+                        <div className="flex flex-col min-h-screen w-full bg-gradient-to-br from-slate-50 to-blue-50 dark:from-gray-950 dark:to-slate-900">
+                            <Navbar />
+                            {children}
+                        </div>
+                    </ThemeProvider>
+                </Providers>
+            </body>
         </html>
-    );
+    )
 }
