@@ -1,192 +1,189 @@
-﻿<p align="center">
+<p align="center">
   <a href="https://useupup.com">
-    <img src="https://media2.dev.to/dynamic/image/width=1000,height=280,fit=cover,gravity=auto,format=auto/https%3A%2F%2Fdev-to-uploads.s3.amazonaws.com%2Fuploads%2Farticles%2Fbv3pa1myovex6hvw9n05.png" alt="Upup – React file upload component with drag and drop, progress bar, and cloud storage" />
+    <img src="./assets/upup-banner.png" alt="upup — one file uploader with native UI for React, Vue, Svelte, Angular, Vanilla JS, and Preact" width="720" />
   </a>
 </p>
 
-<h3 align="center">Open-source React file upload component with drag & drop, progress bar, and cloud integrations</h3>
+<h3 align="center">One file uploader. Every framework.</h3>
 
 <p align="center">
-  <a href="https://github.com/DevinoSolutions/upup/actions/workflows/publish.yml"><img src="https://github.com/DevinoSolutions/upup/actions/workflows/publish.yml/badge.svg?branch=master" alt="CI" /></a>
-  <a href="https://www.npmjs.com/package/@upup/react"><img src="https://img.shields.io/npm/v/@upup/react" alt="npm version" /></a>
-  <a href="https://www.npmjs.com/package/@upup/react"><img src="https://img.shields.io/npm/dw/@upup/react" alt="npm downloads" /></a>
-  <a href="https://bundlephobia.com/package/@upup/react"><img src="https://img.shields.io/bundlephobia/minzip/@upup/react" alt="bundle size" /></a>
+  A headless upload engine with native, byte-identical UI packages for
+  <b>React</b>, <b>Vue</b>, <b>Svelte</b>, <b>Angular</b>, <b>Vanilla&nbsp;JS</b>, and <b>Preact</b> —
+  with optional server-mode uploads, cloud drives, camera, screen capture, and link imports.
+</p>
+
+<!-- npm badges: add after first @upup publish -->
+<p align="center">
+  <a href="https://github.com/DevinoSolutions/upup/actions/workflows/main.yml"><img src="https://github.com/DevinoSolutions/upup/actions/workflows/main.yml/badge.svg" alt="CI" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT" /></a>
   <a href="https://discord.gg/ny5WUE9ayc"><img src="https://img.shields.io/discord/1299099371647930502?label=discord&logo=discord&logoColor=white&color=5865F2" alt="Discord" /></a>
 </p>
 
 <p align="center">
-  <a href="https://useupup.com">Website</a> · <a href="https://useupup.com/documentation/docs/getting-started">Docs</a> · <a href="https://useupup.com#demo">Live Demo</a> · <a href="https://stackblitz.com/edit/stackblitz-starters-flxnhixb">StackBlitz Playground</a> · <a href="https://discord.gg/ny5WUE9ayc">Discord</a>
+  <a href="https://useupup.com">Website</a> ·
+  <a href="https://useupup.com/documentation/getting-started">Docs</a> ·
+  <a href="https://useupup.com#demo">Live Demo</a> ·
+  <a href="https://discord.gg/ny5WUE9ayc">Discord</a>
 </p>
 
 ---
 
-**Upup** is a free, open-source **React & TypeScript file upload library** that gives you a production-ready drag-and-drop **dropzone**, **file picker**, **upload button**, **progress bar**, and **retry logic** — all in a single component. Upload images, videos, and multiple large files to **AWS S3**, **Azure Blob**, **Google Drive**, **OneDrive**, **DigitalOcean Spaces**, **Backblaze B2**, and more using **presigned URLs** and **resumable chunked uploads**.
-
-Works with **Next.js**, **Vite**, **Remix**, **Gatsby**, and any React framework.
-
-## Features
-
-- 🗂 **Drag & drop dropzone** — intuitive file picker with customizable upload button and UI
-- 📊 **Upload progress bar** — real-time feedback with automatic retry on failure
-- 🔄 **Resumable chunked uploads** — upload large files reliably with presigned URLs
-- 🖼 **File upload with preview** — image, video, and document previews before uploading
-- 📁 **Multiple file upload** — batch upload with file size limit validation
-- ☁️ **Multi-cloud support** — S3, R2, Wasabi, MinIO, GCS, Azure Blob, Google Drive, OneDrive, Dropbox, Box, DigitalOcean Spaces, Backblaze B2
-- 🔀 **Two modes** — **Client Mode** (browser ↔ storage direct, default) or **Server Mode** (`@upup/server` proxies drive APIs + storage writes for compliance / credential isolation)
-- 🎨 **Fully themeable** — `theme.slots` targets every rendered element, 9 locale packs, full ICU i18n
-- 📦 **TypeScript-first** — full type definitions out of the box
+**upup** is a free, MIT-licensed file uploader built as one headless
+[`@upup/core`](packages/core) engine with a matching native UI for every major
+framework. React is the visual canon; the Vue, Svelte, Angular, Vanilla, and
+Preact ports render the **same DOM** with the **same props**, verified
+byte-for-byte by a cross-framework parity harness. Upload straight from the
+browser to any S3-compatible storage (Client Mode), or route through your own
+backend with an HMAC-signed trust model (Server Mode via
+[`@upup/server`](packages/server)).
 
 ## Install
 
-```bash
-# Client Mode (default) — one package
-npm i @upup/react
+Pick the package for your framework — the component API and rendered DOM are identical across all of them:
 
-# Server Mode — add the Node-side handler
-npm i @upup/react @upup/server
-```
+| Package         | Install               | Get started                                                                 |
+| --------------- | --------------------- | --------------------------------------------------------------------------- |
+| `@upup/react`   | `npm i @upup/react`   | [React quickstart](https://useupup.com/documentation/quickstarts/react)     |
+| `@upup/vue`     | `npm i @upup/vue`     | [Vue quickstart](https://useupup.com/documentation/quickstarts/vue)         |
+| `@upup/svelte`  | `npm i @upup/svelte`  | [Svelte quickstart](https://useupup.com/documentation/quickstarts/svelte)   |
+| `@upup/angular` | `npm i @upup/angular` | [Angular quickstart](https://useupup.com/documentation/quickstarts/angular) |
+| `@upup/vanilla` | `npm i @upup/vanilla` | [Vanilla quickstart](https://useupup.com/documentation/quickstarts/vanilla) |
+| `@upup/preact`  | `npm i @upup/preact`  | [Preact quickstart](https://useupup.com/documentation/quickstarts/preact)   |
+| `@upup/next`    | `npm i @upup/next`    | Client re-export + `/server` route handlers (App & Pages routers)           |
+| `@upup/core`    | `npm i @upup/core`    | Headless engine — state, pipeline, drive plugins, i18n, theme               |
+| `@upup/server`  | `npm i @upup/server`  | Server Mode — S3 presign/proxy, drive OAuth, HMAC trust model               |
 
-Styles are in a separate import so consumers without Tailwind get the same look:
-
-```tsx
-import "@upup/react/styles";
-```
-
-See [CHANGELOG.md](CHANGELOG.md) for the full v2.1 / v2.2 notes.
-
-### Client Mode — Frontend (React / Next.js / Vite / Remix)
+## Quick start (React)
 
 ```tsx
-"use client";
-
-import { UpupUploader } from "@upup/react";
-import "@upup/react/styles";
+import { UpupUploader } from '@upup/react'
+import '@upup/react/styles'
 
 export default function Uploader() {
-  return (
-    <UpupUploader
-      provider="aws"
-      uploadEndpoint="/api/upload-token"
-    />
-  );
+    return <UpupUploader provider="aws" uploadEndpoint="/api/upload-token" />
 }
 ```
 
-### Server Mode — one handler, any framework
+Client Mode uploads directly from the browser to your storage; your server only
+issues short-lived presigned URLs at `uploadEndpoint` — a route you provide,
+either a small presign handler of your own or `@upup/server`'s
+`createUpupHandler` (see [Server mode](#server-mode) below). The stylesheet is a
+separate import so projects without Tailwind get the same look. Every other
+framework mounts the same component with the same props — see the per-framework
+quickstarts in the [install table](#install) above.
 
-Server Mode routes browser traffic through your server. Your credentials never reach the client; drive OAuth tokens live server-side in a `tokenStore` you control.
+## Server mode
+
+Route uploads through your own backend so storage credentials and drive OAuth
+tokens never reach the browser. `createUpupHandler` mounts on any Node or edge
+framework and enforces an HMAC-signed trust model — `uploadTokenSecret` is
+**required** and must be at least 16 characters:
 
 ```ts
 // app/api/upup/[...route]/route.ts  (Next.js App Router)
-import { createUpupHandler, InMemoryTokenStore } from "@upup/server";
+import { createUpupHandler } from '@upup/server'
 
 const handler = createUpupHandler({
-  storage: {
-    type: "aws",
-    bucket: process.env.S3_BUCKET!,
-    region: process.env.S3_REGION!,
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-  },
-  providers: {
-    googleDrive: { clientId: process.env.GOOGLE_CLIENT_ID!, clientSecret: process.env.GOOGLE_CLIENT_SECRET! },
-    dropbox:     { appKey:   process.env.DROPBOX_APP_KEY!,  appSecret:    process.env.DROPBOX_APP_SECRET! },
-  },
-  tokenStore: new InMemoryTokenStore(), // swap for Redis/KV/DynamoDB in prod
-  getUserId: async (req) => (await getSession(req))?.userId ?? null,
-});
+    storage: {
+        type: 'aws',
+        bucket: process.env.S3_BUCKET!,
+        region: process.env.S3_REGION!,
+    },
+    uploadTokenSecret: process.env.UPUP_UPLOAD_TOKEN_SECRET!, // required · stable · high-entropy · >=16 chars
+})
 
-export const GET = handler;
-export const POST = handler;
+export const GET = handler
+export const POST = handler
 ```
+
+S3 credentials resolve from the standard AWS environment
+(`AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` or an IAM role), or you can pass
+`accessKeyId` / `secretAccessKey` explicitly. Then point the uploader at the handler:
 
 ```tsx
 <UpupUploader mode="server" serverUrl="/api/upup" provider="aws" />
 ```
 
-Server handlers for Express, Fastify, Hono, and Next.js are published as subpath exports (`@upup/server/express`, `/fastify`, `/hono`, `/next`).
+Express, Fastify, and Hono handlers ship as subpath exports
+(`@upup/server/express`, `@upup/server/fastify`, `@upup/server/hono`), and
+`@upup/next` wraps both the App and Pages routers.
 
-> **Full docs → [useupup.com/documentation](https://useupup.com/documentation/docs/getting-started)** · **Mode comparison → [`apps/docs/docs/guides/modes.md`](apps/docs/docs/guides/modes.md)** · **Server Mode setup → [`apps/docs/docs/guides/server-mode-setup.md`](apps/docs/docs/guides/server-mode-setup.md)**
+> **Full docs → [useupup.com/documentation/getting-started](https://useupup.com/documentation/getting-started)** · **Server Mode setup → [`apps/docs/docs/guides/server-mode-setup.md`](apps/docs/docs/guides/server-mode-setup.md)**
 
-## Battle-tested in Production
+## Features
 
-- 📚 **uNotes** – AI doc uploads for past exams → [unotes.net](https://unotes.net)
-- 🎙 **Shorty** – media uploads for transcripts → [aishorty.com](https://aishorty.com)
+- **Headless core.** `@upup/core` is a zero-framework-dependency engine: file state, an upload pipeline (compression, HEIC→JPEG, EXIF stripping, checksums, thumbnails, optional Web Worker offload), cloud-drive plugins, i18n, and theming. Build your own UI on it, or use a native package.
+- **Native UI for six frameworks.** React, Vue, Svelte, Angular, Vanilla JS, and Preact — same DOM, same Tailwind classes, enforced byte-for-byte by a parity harness.
+- **Client or Server mode.** Direct browser → storage presigned uploads, or a server-proxied [`@upup/server`](packages/server) with an HMAC-signed trust model (signed length, key/uploadId binding, mandatory secrets).
+- **S3-compatible storage.** AWS S3, Cloudflare R2, MinIO, DigitalOcean Spaces, Backblaze B2, Wasabi — any S3-compatible endpoint.
+- **Cloud drives.** Import from Google Drive, OneDrive, Dropbox, and Box, in client or server mode.
+- **More sources.** Drag-and-drop, file picker, camera, screen capture, audio recording, and link (URL) import.
+- **Resumable uploads.** Optional chunked/resumable strategy (tus) for large files, loaded on demand so it never weighs down the core bundle.
+- **Image editor.** Crop, rotate, and annotate before upload (React / Preact only).
+- **i18n & theming.** ICU-based localization with 9 bundled locales and RTL support, plus a slot-level theming system that targets every rendered element.
+- **TypeScript-first.** Full type definitions out of the box.
+
+## Battle-tested in production
+
+- **uNotes** — AI doc uploads for past exams → [unotes.net](https://unotes.net)
+- **Shorty** — media uploads for transcripts → [aishorty.com](https://aishorty.com)
 
 ## Contributing
 
-We love PRs! Please see [CONTRIBUTING.md](CONTRIBUTING.md) and adhere to our [Code of Conduct](CODE_OF_CONDUCT.md).
-
-Found a vulnerability? Check our [Security Policy](SECURITY.md).
+PRs welcome. Please read [CONTRIBUTING.md](CONTRIBUTING.md) and our
+[Code of Conduct](CODE_OF_CONDUCT.md). Found a vulnerability? See the
+[Security Policy](SECURITY.md).
 
 ---
 
-## Monorepo Setup
+## Monorepo layout
 
-This repo is a monorepo managed with [pnpm workspaces](https://pnpm.io/workspaces) and [Turborepo](https://turbo.build/repo).
+This repo is a [pnpm workspace](https://pnpm.io/workspaces) driven by
+[Turborepo](https://turbo.build/repo).
 
 ```
 upup/
-├── packages/core/               # @upup/core — headless engine (state, pipeline, drive plugins, i18n, theme)
-├── packages/react/              # @upup/react — canonical UI
-├── packages/vue/                # @upup/vue — native Vue port (DOM-identical to react)
-├── packages/svelte/             # @upup/svelte — native Svelte port
-├── packages/angular/            # @upup/angular — native Angular port
-├── packages/vanilla/            # @upup/vanilla — framework-free port
-├── packages/preact/             # @upup/preact — preact/compat re-export of react
-├── packages/next/               # @upup/next — client re-export + /server route handlers
-├── packages/server/             # @upup/server — server-mode endpoints (S3 presign/proxy, drive tokens)
-├── packages/interactive-example/# In-browser playground engine (private)
-├── packages/storybook-config/   # Shared storybook config (private)
-├── packages/tailwind-config/    # Shared Tailwind/postcss factory (private)
-├── apps/playground/             # Main dev app
-├── apps/landing/                # Next.js marketing site at useupup.com
-├── apps/docs/                   # Docusaurus documentation site
-├── apps/e2e-test/               # Playwright: deep React suite + cross-framework parity
-├── apps/storybook-*/            # Six per-framework storybooks (style-parity references)
-├── apps/next-example/           # @upup/next example app
-├── apps/mastra/                 # Agents/tools for the interactive playground
-├── local-dev/                   # Port config & local dev helpers
-└── turbo.json                   # Build pipeline configuration
+├── packages/core/     # @upup/core    — headless engine (state, pipeline, drives, i18n, theme)
+├── packages/react/    # @upup/react   — canonical UI
+├── packages/vue/      # @upup/vue     — native Vue port (DOM-identical to react)
+├── packages/svelte/   # @upup/svelte  — native Svelte port
+├── packages/angular/  # @upup/angular — native Angular port
+├── packages/vanilla/  # @upup/vanilla — framework-free port
+├── packages/preact/   # @upup/preact  — preact/compat re-export of react
+├── packages/next/     # @upup/next    — client re-export + /server route handlers
+├── packages/server/   # @upup/server  — server-mode endpoints (S3 presign/proxy, drive OAuth)
+├── apps/playground/   # Main dev app
+├── apps/landing/      # Marketing site (useupup.com)
+├── apps/docs/         # Documentation site
+├── apps/e2e-test/     # Playwright: deep React suite + cross-framework parity harness
+└── turbo.json         # Build pipeline
 ```
 
-### Getting Started (Development)
-
-The package layout documented above lives on the **`v2-clean`** branch — the
-active v2 line, which is intentionally unmerged. `master` is the previous
-single-package (`packages/upup`) release, so a bare clone lands on the wrong tree.
+### Getting started (development)
 
 ```bash
 git clone https://github.com/DevinoSolutions/upup.git
 cd upup
-git checkout v2-clean   # active v2 branch (master is the pre-v2 monolith)
 nvm use                 # Node 20.20.2, pinned in .nvmrc
 pnpm install
-pnpm dev                # runs landing + docs + playground + package watchers via Turborepo
+pnpm dev                # landing + docs + playground + package watchers, via Turborepo
 ```
 
-### Commands
+| Command          | Description                         |
+| ---------------- | ----------------------------------- |
+| `pnpm dev`       | Run everything in watch mode        |
+| `pnpm build`     | Build all packages + apps           |
+| `pnpm test`      | Run every package's vitest suite    |
+| `pnpm typecheck` | `tsc --noEmit` across every package |
 
-| Command          | Description                                                         |
-| ---------------- | ------------------------------------------------------------------- |
-| `pnpm dev`       | Run everything in watch mode                                        |
-| `pnpm build`     | Build all packages + apps                                           |
-| `pnpm test`      | Run every package's vitest suite (continues past a failing package) |
-| `pnpm typecheck` | `tsc --noEmit` in every package                                     |
-
-### Publishing
-
-Releases go through [changesets](https://github.com/changesets/changesets): pushes to
-`master` open a release PR and publish all nine public packages via CI
-(`.github/workflows/publish.yml`). Locally, `pnpm run release` runs `changeset publish`
-after building all packages (skips any version already on npm, publishes the rest);
-`pnpm run test-release` dry-runs the same packing via `pnpm -r publish --dry-run`.
+Releases go through [changesets](https://github.com/changesets/changesets):
+pushes to `master` open a release PR and publish the public packages via CI
+(`.github/workflows/publish.yml`).
 
 ---
 
 <p align="center">
-  <a href="https://discord.gg/ny5WUE9ayc">💬 Discord</a> · <a href="https://github.com/DevinoSolutions/upup/issues">🐛 Issues</a> · <a href="https://www.npmjs.com/package/@upup/react">📦 npm</a> · <a href="https://useupup.com">🌐 Website</a>
+  <a href="https://discord.gg/ny5WUE9ayc">💬 Discord</a> · <a href="https://github.com/DevinoSolutions/upup/issues">🐛 Issues</a> · <a href="https://useupup.com">🌐 Website</a>
 </p>
 
 <p align="center">
