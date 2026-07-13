@@ -269,7 +269,9 @@ pnpm run e2e:minio:down  # NOTE: uses -v — wipes the bucket volume
 - Docker error "all predefined address pools have been fully subnetted" →
   `docker network prune -f`, then retry.
 - The cross-framework webServer boots six storybooks; its start timeout is
-  420 s. First boot is legitimately slow — don't kill it.
+  900 s (raised from 420 s after a cold 2-core CI runner blew the budget and
+  a loaded dev box blew 660 s, 2026-07-13). First boot is legitimately slow —
+  don't kill it.
 - Cloud-drive OAuth (Google/OneDrive/Dropbox/Box) is interactive: a human
   performs the login during live checks. Never automate or type credentials.
 - Secrets live in `local-dev/.env.minio` and `.env.local` files — never commit
