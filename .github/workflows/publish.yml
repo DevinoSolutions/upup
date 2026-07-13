@@ -113,9 +113,27 @@ jobs:
               if: github.ref == 'refs/heads/master' && steps.changesets.outputs.hasChangesets == 'false' && steps.package_meta.outputs.any_needs_publish == 'true'
               run: pnpm run smoke:packages
 
+            # Auth: changesets detects pnpm and spawns `pnpm publish`, which reads
+            # registry auth from the setup-node userconfig (.npmrc referencing
+            # NODE_AUTH_TOKEN). The FIRST publish of a package cannot use npm
+            # trusted publishing (trust is configured per EXISTING package on
+            # npmjs.com), so NPM_TOKEN (granular automation token scoped to
+            # @useupup, repo secret) is required until all nine packages exist;
+            # after configuring trusted publishers, OIDC takes precedence and the
+            # secret can be revoked. registry-url is scoped to this publish-gated
+            # step so install/gate steps never see a token-referencing .npmrc.
+            - name: Point npm registry auth at NODE_AUTH_TOKEN
+              if: github.ref == 'refs/heads/master' && steps.changesets.outputs.hasChangesets == 'false' && steps.package_meta.outputs.any_needs_publish == 'true'
+              uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+              with:
+                  node-version-file: '.nvmrc'
+                  registry-url: 'https://registry.npmjs.org'
+
             - name: Publish to npm
               if: github.ref == 'refs/heads/master' && steps.changesets.outputs.hasChangesets == 'false' && steps.package_meta.outputs.any_needs_publish == 'true'
               run: pnpm run release
+              env:
+                  NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
             - name: Dry-run release on dev
               if: github.ref == 'refs/heads/dev'
