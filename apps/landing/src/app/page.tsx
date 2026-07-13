@@ -1,5 +1,5 @@
-import { InteractiveExample } from '@upup/interactive-example'
-import '@upup/interactive-example/styles'
+import { InteractiveExample } from '@useupup/interactive-example'
+import '@useupup/interactive-example/styles'
 import HomepageFeatures from '@/components/HomepageFeatures'
 import FeedbackSection from '@/components/FeedbackSection'
 import Toast from '@/components/Toast'

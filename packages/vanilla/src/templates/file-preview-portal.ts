@@ -1,6 +1,6 @@
 import { html, nothing } from 'lit-html'
 import type { TemplateResult } from 'lit-html'
-import { formatUiMessage as t } from '@upup/core'
+import { formatUiMessage as t } from '@useupup/core'
 import {
     fileGetIsImage,
     fileGetIsPdf,
@@ -8,7 +8,7 @@ import {
     PREVIEW_MAX_TEXT_SIZE,
     PREVIEW_TEXT_TRUNCATE_LENGTH,
     cn,
-} from '@upup/core/internal'
+} from '@useupup/core/internal'
 import type { UploaderContext } from '../lib/types'
 
 // Text-preview fetch state, stored on the per-file FileItemState cell so it survives

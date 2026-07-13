@@ -296,11 +296,11 @@ export function generateCode(
     const coreImportNames = [...coreImports].sort()
     const coreImport =
         coreImportNames.length > 0
-            ? `import { ${coreImportNames.join(', ')} } from '@upup/core'\n`
+            ? `import { ${coreImportNames.join(', ')} } from '@useupup/core'\n`
             : ''
 
-    return `import { UpupUploader } from '@upup/react'
-import '@upup/react/styles'
+    return `import { UpupUploader } from '@useupup/react'
+import '@useupup/react/styles'
 ${coreImport}
 
 export default function App() {

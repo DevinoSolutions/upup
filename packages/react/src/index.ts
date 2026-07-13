@@ -7,7 +7,7 @@ export { default as UpupUploader, type UploaderRef } from './upup-uploader'
 export { useUpupUpload, type UseUpupUploadReturn } from './use-upup-upload'
 export { useIsClient } from './use-is-client'
 
-// ── Headless context hooks (parity with @upup/vue and @upup/svelte) ──
+// ── Headless context hooks (parity with @useupup/vue and @useupup/svelte) ──
 export {
     useUploaderContext,
     useUploaderRuntime,
@@ -36,7 +36,7 @@ export type {
 } from './context/UploaderContext'
 
 // ── Canonical shared enums/types ─────────────────────────
-export { FileSource, StorageProvider } from '@upup/core'
+export { FileSource, StorageProvider } from '@useupup/core'
 
 // ── React types ──────────────────────────────────────────
 export type {
@@ -50,7 +50,7 @@ export type {
     BoxConfig,
     CloudDrivesConfig,
     ResumableUploadOptions,
-} from '@upup/core'
+} from '@useupup/core'
 export type { UploaderProps, UploaderIcons } from './shared/types'
 
 // ── v2 core contract re-exports ───────────────────────
@@ -60,8 +60,8 @@ export type {
     UploadStatus,
     UpupThemeSlots,
     UpupSlotPath,
-} from '@upup/core'
-export type { DeepPartialSlots } from '@upup/core/internal'
+} from '@useupup/core'
+export type { DeepPartialSlots } from '@useupup/core/internal'
 
 // ── Brand icons (authentic colours, matches uploader adapter buttons) ──
 export {
@@ -77,8 +77,8 @@ export {
 } from './components/Icons'
 
 // ── Accept presets ──────────────────────────────────────
-export { ACCEPT_PRESETS, resolveAccept } from '@upup/core'
-export type { AcceptPreset, AcceptPresetDefinition } from '@upup/core'
+export { ACCEPT_PRESETS, resolveAccept } from '@useupup/core'
+export type { AcceptPreset, AcceptPresetDefinition } from '@useupup/core'
 
 // ── Theme ────────────────────────────────────────────────
 export { UpupThemeProvider } from './theme'

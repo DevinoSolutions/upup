@@ -1,5 +1,5 @@
 {
-    "name": "@upup/core",
+    "name": "@useupup/core",
     "version": "2.2.0",
     "description": "Headless, framework-agnostic file-upload engine powering the upup uploader — file state, upload pipeline (compression, HEIC, web-worker offload), cloud-drive sources, i18n, and theming.",
     "keywords": [
@@ -30,6 +30,9 @@
         "directory": "packages/core"
     },
     "license": "MIT",
+    "publishConfig": {
+        "access": "public"
+    },
     "type": "module",
     "sideEffects": false,
     "engines": {
@@ -169,7 +172,7 @@
     },
     "devDependencies": {
         "@types/node": "^22",
-        "@upup/eslint-config": "workspace:*",
+        "@useupup/eslint-config": "workspace:*",
         "@vitest/coverage-v8": "^4.1.2",
         "eslint": "^10.6.0",
         "tsup": "^8.4.0",

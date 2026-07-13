@@ -1,8 +1,8 @@
 <script lang="ts">
   import { useUploaderFiles, useUploaderI18n, useUploaderRuntime, useUploaderSource, useUploaderTheme, useUploaderUploadControls, useUploaderView } from '../context/uploader-context'
   import useUploaderPanel from '../composables/useUploaderPanel'
-  import { cn } from '@upup/core/internal'
-  import { UploadStatus } from '@upup/core'
+  import { cn } from '@useupup/core/internal'
+  import { UploadStatus } from '@useupup/core'
   import SourceView from './SourceView.svelte'
   import SourceSelector from './SourceSelector.svelte'
   import FileList from './FileList.svelte'

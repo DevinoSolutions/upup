@@ -1,5 +1,5 @@
 ---
-'@upup/core': patch
+'@useupup/core': patch
 ---
 
 core: `files` getter returns a read-only view (defensive clone); all collection

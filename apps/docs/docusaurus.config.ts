@@ -109,7 +109,7 @@ const config: Config = {
                     position: 'right',
                 },
                 {
-                    href: 'https://www.npmjs.com/package/@upup/react',
+                    href: 'https://www.npmjs.com/package/@useupup/react',
                     label: 'npm',
                     position: 'right',
                 },
@@ -133,7 +133,7 @@ const config: Config = {
                         },
                         {
                             label: 'npm',
-                            href: 'https://www.npmjs.com/package/@upup/react',
+                            href: 'https://www.npmjs.com/package/@useupup/react',
                         },
                     ],
                 },

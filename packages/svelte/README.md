@@ -1,4 +1,4 @@
-# @upup/svelte
+# @useupup/svelte
 
 Svelte 5 file uploader with cloud-drive sources (Google Drive, OneDrive, Dropbox,
 Box), resumable uploads, theming, and ICU i18n. A native port of the canonical
@@ -9,7 +9,7 @@ Requires Svelte 5 (`svelte` is a peer dependency).
 ## Install
 
 ```sh
-npm i @upup/svelte
+npm i @useupup/svelte
 ```
 
 ## Usage (Client Mode)
@@ -19,8 +19,8 @@ issues short-lived upload credentials at `uploadEndpoint`.
 
 ```svelte
 <script lang="ts">
-    import { UpupUploader } from '@upup/svelte'
-    import '@upup/svelte/styles'
+    import { UpupUploader } from '@useupup/svelte'
+    import '@useupup/svelte/styles'
 </script>
 
 <UpupUploader
@@ -37,7 +37,7 @@ the quickstart for a ready-made handler.
 ## Server Mode
 
 For credential isolation and server-proxied cloud drives, add
-[`@upup/server`](https://www.npmjs.com/package/@upup/server) and point the
+[`@useupup/server`](https://www.npmjs.com/package/@useupup/server) and point the
 uploader at it:
 
 ```svelte

@@ -1,13 +1,16 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import { UpupUploader, type UploaderProps } from '@upup/react'
-import { uploaderArgTypes, uploaderDefaultArgs } from '@upup/storybook-config'
+import { UpupUploader, type UploaderProps } from '@useupup/react'
+import {
+    uploaderArgTypes,
+    uploaderDefaultArgs,
+} from '@useupup/storybook-config'
 
 const meta: Meta<UploaderProps> = {
-  title: 'React/Limits',
-  component: UpupUploader,
-  argTypes: uploaderArgTypes,
-  args: uploaderDefaultArgs,
-  parameters: { layout: 'padded' },
+    title: 'React/Limits',
+    component: UpupUploader,
+    argTypes: uploaderArgTypes,
+    args: uploaderDefaultArgs,
+    parameters: { layout: 'padded' },
 }
 export default meta
 type Story = StoryObj<UploaderProps>

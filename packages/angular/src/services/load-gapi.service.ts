@@ -1,5 +1,5 @@
 import { Injectable, signal } from '@angular/core'
-import { loadGoogleIdentityServices } from '@upup/core/internal'
+import { loadGoogleIdentityServices } from '@useupup/core/internal'
 
 /**
  * Angular port of useLoadGAPI.ts (svelte composable).

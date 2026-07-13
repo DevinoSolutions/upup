@@ -1,5 +1,5 @@
 {
-    "name": "@upup/vue",
+    "name": "@useupup/vue",
     "version": "2.2.0",
     "description": "Vue 3 file uploader with cloud-drive sources, resumable uploads, theming, and ICU i18n.",
     "keywords": [
@@ -29,6 +29,9 @@
         "directory": "packages/vue"
     },
     "license": "MIT",
+    "publishConfig": {
+        "access": "public"
+    },
     "type": "module",
     "sideEffects": [
         "*.css"
@@ -62,14 +65,14 @@
     ],
     "dependencies": {
         "@tanstack/vue-virtual": "^3.13.0",
-        "@upup/core": "workspace:*"
+        "@useupup/core": "workspace:*"
     },
     "peerDependencies": {
         "vue": "^3.4.0"
     },
     "devDependencies": {
-        "@upup/eslint-config": "workspace:*",
-        "@upup/tailwind-config": "workspace:*",
+        "@useupup/eslint-config": "workspace:*",
+        "@useupup/tailwind-config": "workspace:*",
         "@vitejs/plugin-vue": "^5.0.0",
         "@vitest/coverage-v8": "^4.1.2",
         "@vue/test-utils": "^2.4.6",

@@ -1,12 +1,12 @@
 // Dev-only presign/transfer/OAuth server for the MinIO upload-validation
-// milestone. Wires @upup/server's express adapter to a local MinIO. NOT for
+// milestone. Wires @useupup/server's express adapter to a local MinIO. NOT for
 // production (single-user in-memory token store).
 //
 //   Run: pnpm e2e:minio:server   (loads local-dev/.env.minio via dotenv-cli)
-//   Requires: pnpm --filter @upup/server build  (resolves @upup/server/express)
+//   Requires: pnpm --filter @useupup/server build  (resolves @useupup/server/express)
 import express from 'express'
-import { createUpupMiddleware } from '@upup/server/express'
-import { InMemoryTokenStore } from '@upup/server'
+import { createUpupMiddleware } from '@useupup/server/express'
+import { InMemoryTokenStore } from '@useupup/server'
 
 const PORT = Number(process.env.UPUP_E2E_SERVER_PORT ?? 53060)
 // Comma-separated list so the cross-framework e2e gate can allow all six

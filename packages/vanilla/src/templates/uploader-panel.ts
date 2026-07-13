@@ -1,5 +1,5 @@
 import { html, nothing, type TemplateResult } from 'lit-html'
-import { UploadStatus } from '@upup/core'
+import { UploadStatus } from '@useupup/core'
 import { cn } from '../lib/cn'
 import type { UploaderContext } from '../lib/types'
 import { sourceView } from './source-view'

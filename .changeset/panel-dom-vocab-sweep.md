@@ -1,10 +1,10 @@
 ---
-'@upup/react': major
-'@upup/vue': major
-'@upup/svelte': major
-'@upup/vanilla': major
-'@upup/angular': major
-'@upup/preact': major
+'@useupup/react': major
+'@useupup/vue': major
+'@useupup/svelte': major
+'@useupup/vanilla': major
+'@useupup/angular': major
+'@useupup/preact': major
 ---
 
 ## Uploader-panel DOM vocabulary — `main-box` swept to `uploader-panel`
@@ -34,8 +34,8 @@ Not affected: `data-testid="upup-dropzone"` on the same element (unchanged),
 the `header` slot value on `UploaderHeader` (unchanged), and everything
 `p21-dom-vocab-unfreeze.md` already renamed. No accessibility semantics move.
 
-`@upup/core` and `@upup/server` ship no DOM strings in this surface, and
-`@upup/next` re-exports `@upup/react` without embedding DOM strings — all
+`@useupup/core` and `@useupup/server` ship no DOM strings in this surface, and
+`@useupup/next` re-exports `@useupup/react` without embedding DOM strings — all
 excluded, same reasoning as p21.
 
 Sweep completeness is now machine-enforced: a repo-wide retired-vocabulary

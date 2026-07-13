@@ -1,12 +1,12 @@
 ---
-"@upup/core": minor
-"@upup/angular": minor
-"@upup/vanilla": minor
+'@useupup/core': minor
+'@useupup/angular': minor
+'@useupup/vanilla': minor
 ---
 
 ## Core state/event contract
 
-The `@upup/core` state and event surface is now an explicit, single-source
+The `@useupup/core` state and event surface is now an explicit, single-source
 contract:
 
 - **One upload-failure event.** The bare `'error'` core event is retired;
@@ -35,7 +35,7 @@ contract:
   `checksumVerification`) via `updateOptions` rebuilds the auto-pipeline on the
   next upload; an explicit `pipeline` stays construction-only.
 
-`@upup/angular` (`@Output() error`) and `@upup/vanilla` (the `upup:error` DOM
+`@useupup/angular` (`@Output() error`) and `@useupup/vanilla` (the `upup:error` DOM
 custom event) now source `upload-error`, so their public error surfaces fire
 for every upload failure — not just the previously-unreachable resume path.
 Their public names are unchanged; the angular `error` output payload gains an

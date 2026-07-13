@@ -1,6 +1,6 @@
 import { ref, shallowRef, onMounted, onUnmounted } from 'vue'
-import { UpupCore, UploadStatus } from '@upup/core'
-import type { CoreOptions, UploadFile, ExtensionMethods } from '@upup/core'
+import { UpupCore, UploadStatus } from '@useupup/core'
+import type { CoreOptions, UploadFile, ExtensionMethods } from '@useupup/core'
 
 export interface UseUpupUploadOptions extends CoreOptions {
     onFileAdded?: (files: UploadFile[]) => void

@@ -5,7 +5,7 @@ import {
     ViewChild,
     ElementRef,
 } from '@angular/core'
-import { cn } from '@upup/core/internal'
+import { cn } from '@useupup/core/internal'
 import { UpupStore } from '../upup-store.service'
 import { SourceViewContainerComponent } from './source-view-container.component'
 

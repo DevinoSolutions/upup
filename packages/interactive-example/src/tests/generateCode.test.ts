@@ -4,8 +4,8 @@ import { generateCode } from '../code/generateCode'
 describe('generateCode', () => {
     it('renders minimal config with just provider', () => {
         const out = generateCode({ provider: 'backblaze' as any })
-        expect(out).toContain("import { UpupUploader } from '@upup/react'")
-        expect(out).toContain("import '@upup/react/styles'")
+        expect(out).toContain("import { UpupUploader } from '@useupup/react'")
+        expect(out).toContain("import '@useupup/react/styles'")
         expect(out).toContain('export default function App()')
         expect(out).toContain('<UpupUploader')
         expect(out).toContain('provider="backblaze"')
@@ -38,11 +38,21 @@ describe('generateCode', () => {
 
     it('emits onX handlers as console.log stubs when events toggles are set', () => {
         const out = generateCode({
-            events: { onError: true, onFileUploadComplete: true, onPrepareFiles: true } as any,
+            events: {
+                onError: true,
+                onFileUploadComplete: true,
+                onPrepareFiles: true,
+            } as any,
         } as any)
-        expect(out).toContain("onError={(...args) => console.log('onError', ...args)}")
-        expect(out).toContain("onFileUploadComplete={(...args) => console.log('onFileUploadComplete', ...args)}")
-        expect(out).toContain("onPrepareFiles={(files, ...args) => { console.log('onPrepareFiles', files, ...args); return files }}")
+        expect(out).toContain(
+            "onError={(...args) => console.log('onError', ...args)}",
+        )
+        expect(out).toContain(
+            "onFileUploadComplete={(...args) => console.log('onFileUploadComplete', ...args)}",
+        )
+        expect(out).toContain(
+            "onPrepareFiles={(files, ...args) => { console.log('onPrepareFiles', files, ...args); return files }}",
+        )
     })
 
     it('recursively omits nested defaults — only the diverging leaf appears', () => {
@@ -66,7 +76,10 @@ describe('generateCode', () => {
     })
 
     it('renders explicit false as {false}', () => {
-        const out = generateCode({ showBranding: false } as any, { showBranding: true } as any)
+        const out = generateCode(
+            { showBranding: false } as any,
+            { showBranding: true } as any,
+        )
         expect(out).toContain('showBranding={false}')
     })
 
@@ -100,28 +113,34 @@ describe('generateCode', () => {
     })
 
     it('imports locale bundles for copy-pasteable i18n config', () => {
-        const out = generateCode({
-            i18n: { locale: 'ar-SA', fallbackLocale: 'fr-FR' },
-        } as any, {
-            i18n: { locale: 'en-US', fallbackLocale: 'en-US' },
-        } as any)
+        const out = generateCode(
+            {
+                i18n: { locale: 'ar-SA', fallbackLocale: 'fr-FR' },
+            } as any,
+            {
+                i18n: { locale: 'en-US', fallbackLocale: 'en-US' },
+            } as any,
+        )
 
-        expect(out).toContain("import { arSA, frFR } from '@upup/core'")
+        expect(out).toContain("import { arSA, frFR } from '@useupup/core'")
         expect(out).toContain('locale: arSA')
         expect(out).toContain('fallbackLocale: frFR')
         expect(out).not.toContain("locale: 'ar-SA'")
     })
 
     it('does not import locale bundles that were removed by default diffing', () => {
-        const out = generateCode({
-            uploadEndpoint: '/api/upup-mock/presign',
-            i18n: { locale: 'en-US', fallbackLocale: 'en-US' },
-        } as any, {
-            i18n: { locale: 'en-US', fallbackLocale: 'en-US' },
-        } as any)
+        const out = generateCode(
+            {
+                uploadEndpoint: '/api/upup-mock/presign',
+                i18n: { locale: 'en-US', fallbackLocale: 'en-US' },
+            } as any,
+            {
+                i18n: { locale: 'en-US', fallbackLocale: 'en-US' },
+            } as any,
+        )
 
         expect(out).toContain('uploadEndpoint="/api/upup-mock/presign"')
-        expect(out).not.toContain("from '@upup/core'")
+        expect(out).not.toContain("from '@useupup/core'")
         expect(out).not.toContain('i18n=')
     })
 

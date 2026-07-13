@@ -1,9 +1,9 @@
-// @upup/core public barrel — the curated surface a library consumer is
+// @useupup/core public barrel — the curated surface a library consumer is
 // meant to construct or handle: `UpupCore` + its options, the error
 // taxonomy, public value enums, the i18n and theme surfaces, the plugin
 // authoring surface, and the primary public data types. Implementation
 // machinery (engine collaborators, the orchestrator, controllers, context
-// shapes, low-level utils) lives behind `@upup/core/internal` instead — see
+// shapes, low-level utils) lives behind `@useupup/core/internal` instead — see
 // CLAUDE.md's "Package map" entry and packages/core/tests/public-api.test.ts
 // for the pin that keeps this barrel from silently regrowing.
 

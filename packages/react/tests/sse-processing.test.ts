@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
 import { useSSEProcessing } from '../src/hooks/useSSEProcessing'
-import { FileSource, UploadStatus, type UploadFile } from '@upup/core'
+import { FileSource, UploadStatus, type UploadFile } from '@useupup/core'
 
 // Minimal EventSource mock
 type Handler = (event: MessageEvent) => void

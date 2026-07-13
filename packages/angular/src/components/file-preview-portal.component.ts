@@ -12,13 +12,13 @@ import {
     type SafeResourceUrl,
     type SafeUrl,
 } from '@angular/platform-browser'
-import { type Translations } from '@upup/core'
+import { type Translations } from '@useupup/core'
 import {
     fileGetIsImage,
     fileGetIsPdf,
     fileGetIsText,
     cn,
-} from '@upup/core/internal'
+} from '@useupup/core/internal'
 import { UpupStore } from '../upup-store.service'
 
 const TEXT_PREVIEW_MAX_BYTES = 1024 * 1024 // 1 MB cap — mirrors svelte portal

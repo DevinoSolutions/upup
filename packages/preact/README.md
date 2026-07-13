@@ -1,8 +1,8 @@
-# @upup/preact
+# @useupup/preact
 
 Preact file uploader with cloud-drive sources (Google Drive, OneDrive, Dropbox,
 Box), resumable uploads, theming, and ICU i18n. It is a **`preact/compat`
-re-export of [`@upup/react`](https://www.npmjs.com/package/@upup/react)** — the
+re-export of [`@useupup/react`](https://www.npmjs.com/package/@useupup/react)** — the
 same UI and API, resolved against Preact.
 
 Requires Preact 10.13+ (`preact` is a peer dependency; the image editor has
@@ -11,7 +11,7 @@ additional optional peers — see below).
 ## Install
 
 ```sh
-npm i @upup/preact
+npm i @useupup/preact
 ```
 
 ## Usage (Client Mode)
@@ -20,8 +20,8 @@ Client Mode uploads directly from the browser to your storage; your server only
 issues short-lived upload credentials at `uploadEndpoint`.
 
 ```tsx
-import { UpupUploader } from '@upup/preact'
-import '@upup/preact/styles'
+import { UpupUploader } from '@useupup/preact'
+import '@useupup/preact/styles'
 
 export function App() {
     return (
@@ -46,7 +46,7 @@ React-compatible library.
 ## Server Mode
 
 For credential isolation and server-proxied cloud drives, add
-[`@upup/server`](https://www.npmjs.com/package/@upup/server) and point the
+[`@useupup/server`](https://www.npmjs.com/package/@useupup/server) and point the
 uploader at it — server mode works identically through the `preact/compat`
 re-export:
 
@@ -65,7 +65,7 @@ enters your main Preact bundle. If you enable the editor, install its peers
 
 ## Also exported
 
-Because it re-exports `@upup/react`, the public surface matches `@upup/react`
+Because it re-exports `@useupup/react`, the public surface matches `@useupup/react`
 exactly (`UpupUploader`, `UpupThemeProvider`, the brand icons, and the `use*`
 hooks).
 

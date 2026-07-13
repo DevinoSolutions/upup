@@ -1,64 +1,60 @@
 {
-  "$schema": "https://unpkg.com/knip@latest/schema.json",
-  "workspaces": {
-    "packages/core": {
-      "project": ["src/**/*.ts", "tests/**/*.ts"],
-      "ignore": ["src/uploader/index.ts"]
+    "$schema": "https://unpkg.com/knip@latest/schema.json",
+    "workspaces": {
+        "packages/core": {
+            "project": ["src/**/*.ts", "tests/**/*.ts"],
+            "ignore": ["src/uploader/index.ts"],
+        },
+        "packages/react": {
+            "project": ["src/**/*.{ts,tsx}", "tests/**/*.{ts,tsx}"],
+        },
+        "packages/vue": {
+            "project": ["src/**/*.{ts,tsx,vue}", "tests/**/*.{ts,tsx}"],
+        },
+        "packages/svelte": {
+            "project": ["src/**/*.{ts,tsx,svelte}", "tests/**/*.{ts,tsx}"],
+        },
+        "packages/angular": {
+            "entry": ["src/public-api.ts"],
+            "project": ["src/**/*.ts"],
+        },
+        "packages/vanilla": {
+            "project": ["src/**/*.ts", "tests/**/*.ts"],
+        },
+        "packages/preact": {
+            "project": ["src/**/*.{ts,tsx}"],
+            "ignoreDependencies": ["@useupup/core"],
+        },
+        "packages/next": {
+            "project": ["src/**/*.{ts,tsx}"],
+            "ignoreDependencies": ["@useupup/core"],
+        },
+        "packages/server": {
+            "project": ["src/**/*.ts", "tests/**/*.ts"],
+        },
+        "packages/eslint-config": {},
+        "packages/tailwind-config": {},
+        "packages/storybook-config": {
+            "project": ["src/**/*.ts"],
+        },
+        "packages/interactive-example": {
+            "project": ["src/**/*.{ts,tsx}"],
+        },
     },
-    "packages/react": {
-      "project": ["src/**/*.{ts,tsx}", "tests/**/*.{ts,tsx}"]
-    },
-    "packages/vue": {
-      "project": ["src/**/*.{ts,tsx,vue}", "tests/**/*.{ts,tsx}"]
-    },
-    "packages/svelte": {
-      "project": ["src/**/*.{ts,tsx,svelte}", "tests/**/*.{ts,tsx}"]
-    },
-    "packages/angular": {
-      "entry": ["src/public-api.ts"],
-      "project": ["src/**/*.ts"]
-    },
-    "packages/vanilla": {
-      "project": ["src/**/*.ts", "tests/**/*.ts"]
-    },
-    "packages/preact": {
-      "project": ["src/**/*.{ts,tsx}"],
-      "ignoreDependencies": ["@upup/core"]
-    },
-    "packages/next": {
-      "project": ["src/**/*.{ts,tsx}"],
-      "ignoreDependencies": ["@upup/core"]
-    },
-    "packages/server": {
-      "project": ["src/**/*.ts", "tests/**/*.ts"]
-    },
-    "packages/eslint-config": {},
-    "packages/tailwind-config": {},
-    "packages/storybook-config": {
-      "project": ["src/**/*.ts"]
-    },
-    "packages/interactive-example": {
-      "project": ["src/**/*.{ts,tsx}"]
-    }
-  },
-  "ignore": [
-    "audit/**",
-    "apps/**",
-    "scripts/**"
-  ],
-  // F-788: re-enabling `exports`/`duplicates` was attempted and REVERTED. It
-  // surfaced 38 unused + 12 duplicate exports dominated by INTENTIONAL
-  // per-framework parity (principle 4): parallel composables export both a named
-  // and a default (`useBox`/`useDropbox`/`useGoogleDrive`/`useOneDrive` across
-  // vue+svelte), the angular icon barrel, and `deriveFetchedFileName` /
-  // `useGoogleDrive` / `UploadStatus` mirrored across vue/svelte/angular — plus
-  // barrels consumed only by `apps/**` (which this config ignores). Greening it
-  // needs src deletions (out of the CI/config batch's scope) or a large, fragile
-  // ignore-list that would mask real signal; the handful of genuinely
-  // candidate-dead exports are recorded in the audit for a dedicated burn-down.
-  // TRUE knip scope here is therefore NARROW: unused FILES + unused DEPS within
-  // packages/* — NOT unused exports/types/enum-members/duplicate-exports. Do not
-  // mistake this gate for full dead-code coverage (CLAUDE.md's "dead-code /
-  // unused-dep detection" describes the intent, not the enforced surface).
-  "exclude": ["exports", "types", "enumMembers", "duplicates"]
+    "ignore": ["audit/**", "apps/**", "scripts/**"],
+    // F-788: re-enabling `exports`/`duplicates` was attempted and REVERTED. It
+    // surfaced 38 unused + 12 duplicate exports dominated by INTENTIONAL
+    // per-framework parity (principle 4): parallel composables export both a named
+    // and a default (`useBox`/`useDropbox`/`useGoogleDrive`/`useOneDrive` across
+    // vue+svelte), the angular icon barrel, and `deriveFetchedFileName` /
+    // `useGoogleDrive` / `UploadStatus` mirrored across vue/svelte/angular — plus
+    // barrels consumed only by `apps/**` (which this config ignores). Greening it
+    // needs src deletions (out of the CI/config batch's scope) or a large, fragile
+    // ignore-list that would mask real signal; the handful of genuinely
+    // candidate-dead exports are recorded in the audit for a dedicated burn-down.
+    // TRUE knip scope here is therefore NARROW: unused FILES + unused DEPS within
+    // packages/* — NOT unused exports/types/enum-members/duplicate-exports. Do not
+    // mistake this gate for full dead-code coverage (CLAUDE.md's "dead-code /
+    // unused-dep detection" describes the intent, not the enforced surface).
+    "exclude": ["exports", "types", "enumMembers", "duplicates"],
 }

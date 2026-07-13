@@ -1,5 +1,5 @@
-import type { Translations } from '@upup/core'
-import { FileSource } from '@upup/core'
+import type { Translations } from '@useupup/core'
+import { FileSource } from '@useupup/core'
 import { lazy } from 'react'
 import {
     AudioIcon,
@@ -14,7 +14,7 @@ import {
 } from '../components/Icons'
 import UrlUploader from '../components/UrlUploader'
 
-export { sourceNameKeys } from '@upup/core/internal'
+export { sourceNameKeys } from '@useupup/core/internal'
 
 const AudioUploader = lazy(() => import('../components/AudioUploader'))
 const BoxUploader = lazy(() => import('../components/BoxUploader'))

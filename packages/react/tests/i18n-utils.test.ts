@@ -1,5 +1,9 @@
 import { describe, it, expect } from 'vitest'
-import { formatUiMessage, pluralUiMessage, type Translations } from '@upup/core'
+import {
+    formatUiMessage,
+    pluralUiMessage,
+    type Translations,
+} from '@useupup/core'
 
 const baseMessages = {
     cancel: 'Cancel',

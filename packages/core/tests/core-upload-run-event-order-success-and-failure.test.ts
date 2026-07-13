@@ -1,6 +1,6 @@
 import { describe, it, expect, afterEach, vi } from 'vitest'
 import { UpupCore } from '../src/core'
-import { UploadStatus } from '@upup/core'
+import { UploadStatus } from '@useupup/core'
 
 /**
  * Every other core-event test pins the catalog (core-event-catalog.test.ts)

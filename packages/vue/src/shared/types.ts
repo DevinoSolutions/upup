@@ -1,5 +1,5 @@
 import type { Component } from 'vue'
-import type { UploaderBaseProps } from '@upup/core'
+import type { UploaderBaseProps } from '@useupup/core'
 
 export type UploaderIcons = {
     ContainerAddMoreIcon?: Component

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, watch } from 'vue'
-import { formatUiMessage as t } from '@upup/core'
-import { cn } from '@upup/core/internal'
+import { formatUiMessage as t } from '@useupup/core'
+import { cn } from '@useupup/core/internal'
 import useCameraUploader from '../composables/useCameraUploader'
 import SourceViewContainer from './shared/SourceViewContainer.vue'
 

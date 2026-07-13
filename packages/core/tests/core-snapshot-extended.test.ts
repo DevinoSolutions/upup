@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
 import { UpupCore } from '../src/core'
-import { UploadStatus } from '@upup/core'
-import type { UploadFile } from '@upup/core'
+import { UploadStatus } from '@useupup/core'
+import type { UploadFile } from '@useupup/core'
 
 const makeFile = (name: string) => new File(['x'], name, { type: 'text/plain' })
 

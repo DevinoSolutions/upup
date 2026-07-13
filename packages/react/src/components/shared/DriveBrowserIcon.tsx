@@ -1,6 +1,6 @@
 import React, { ReactEventHandler } from 'react'
-import { type DriveFile } from '@upup/core'
-import { b64EncodeUnicode, cn } from '@upup/core/internal'
+import { type DriveFile } from '@useupup/core'
+import { b64EncodeUnicode, cn } from '@useupup/core/internal'
 import Icon from '../Icon'
 import { useUploaderTheme } from '../../context/UploaderContext'
 

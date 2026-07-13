@@ -1,11 +1,11 @@
-import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const repoRoot = join(__dirname, '../..');
+const __dirname = dirname(fileURLToPath(import.meta.url))
+const repoRoot = join(__dirname, '../..')
 
 /** @type {import('next').NextConfig} */
-const isDev = process.env.NODE_ENV !== 'production';
+const isDev = process.env.NODE_ENV !== 'production'
 
 const docsPort = process.env.DOCS_PORT || '53002'
 const docsOrigin = `http://localhost:${docsPort}`
@@ -18,7 +18,7 @@ const nextConfig = {
               optimizePackageImports: ['@stackblitz/sdk'],
           }
         : undefined,
-    transpilePackages: ['@stackblitz/sdk', '@upup/interactive-example'],
+    transpilePackages: ['@stackblitz/sdk', '@useupup/interactive-example'],
     trailingSlash: true,
     turbopack: {
         root: repoRoot,
@@ -38,7 +38,7 @@ const nextConfig = {
                 ],
                 afterFiles: [],
                 fallback: [],
-            };
+            }
         }
 
         return [
@@ -46,8 +46,8 @@ const nextConfig = {
                 source: '/documentation/:path*',
                 destination: '/documentation/index.html',
             },
-        ];
+        ]
     },
-};
+}
 
-export default nextConfig;
+export default nextConfig

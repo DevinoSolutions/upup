@@ -1,5 +1,5 @@
-import type { UploadFile } from '@upup/core'
-import { SSEProcessor } from '@upup/core/internal'
+import type { UploadFile } from '@useupup/core'
+import { SSEProcessor } from '@useupup/core/internal'
 
 export type SSEProcessingOptions = {
     processingEndpoint?: string | undefined
@@ -10,7 +10,7 @@ export type SSEProcessingOptions = {
 }
 
 /**
- * Framework-free SSE processing helper (ported from @upup/svelte useSSEProcessing).
+ * Framework-free SSE processing helper (ported from @useupup/svelte useSSEProcessing).
  * Returns { connectSSE(file), destroy() }.
  * - connectSSE opens an EventSource at processingEndpoint?key=file.key.
  * - destroy tears down all open EventSources and timers.

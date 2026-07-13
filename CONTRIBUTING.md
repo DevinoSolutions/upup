@@ -26,9 +26,9 @@ We love your input! We want to make contributing to Upup as easy and transparent
     - Fastest: run `pnpm dev`, then open the playground at
       `http://localhost:53004` — the package watchers rebuild `packages/*/src`
       on save and the playground hot-reloads.
-    - Storybook: build the package once (`pnpm --filter @upup/react build`) or
+    - Storybook: build the package once (`pnpm --filter @useupup/react build`) or
       keep `pnpm run dev:package` running, then
-      `pnpm --filter @upup/storybook-react storybook` (`http://localhost:53050`).
+      `pnpm --filter @useupup/storybook-react storybook` (`http://localhost:53050`).
 5. Run the checks CI enforces before opening your PR. CLAUDE.md's **Gates**
    section is the authoritative list, `docs/testing.md` explains every test
    layer and how CI routes them, and CLAUDE.md's **E2E** section documents the

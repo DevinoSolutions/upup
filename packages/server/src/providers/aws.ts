@@ -9,7 +9,7 @@ import {
     HeadBucketCommand,
 } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
-import { UpupStorageError } from '@upup/core'
+import { UpupStorageError } from '@useupup/core'
 import type {
     PresignedUrlResponse,
     MultipartInitResponse,
@@ -18,7 +18,7 @@ import type {
     MultipartAbortResponse,
     MultipartListPartsResponse,
     MultipartPart,
-} from '@upup/core'
+} from '@useupup/core'
 import type { UpupServerConfig } from '../config'
 import { createS3Client } from './s3-client'
 
@@ -227,7 +227,7 @@ export async function listMultipartParts(
 }
 
 /**
- * Server-internal only (not part of the shared `@upup/core` multipart contract):
+ * Server-internal only (not part of the shared `@useupup/core` multipart contract):
  * sums the ACTUAL bytes S3 has received for an in-progress multipart upload, by
  * reading `Size` off each part from `ListParts`. Used to enforce the signed size
  * envelope (`smin`/`smax`) at complete-time — the client can assert whatever

@@ -4,7 +4,7 @@ sidebar_position: 1
 
 # Client Mode vs Server Mode
 
-`@upup/react` supports local-only collection plus two upload hosts. `mode`
+`@useupup/react` supports local-only collection plus two upload hosts. `mode`
 controls where upload/provider operations run, not whether users can select
 local files.
 

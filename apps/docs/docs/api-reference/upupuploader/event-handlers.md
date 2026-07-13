@@ -30,4 +30,4 @@ Common handlers:
 | `onUploadComplete`      | All files succeed.                                       |
 | `onError`               | Validation, config, network, or provider failure occurs. |
 
-File objects use the `UploadFile` contract from `@upup/core/contracts`.
+File objects use the `UploadFile` contract from `@useupup/core/contracts`.

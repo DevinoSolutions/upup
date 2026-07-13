@@ -2,7 +2,7 @@ export {
     dataURLtoBlob,
     blobToUploadFile,
     revokeAndReplace,
-} from '@upup/core/internal'
+} from '@useupup/core/internal'
 
 type FilerobotTheme = {
     palette: Record<string, string>

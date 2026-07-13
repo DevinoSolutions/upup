@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { cn } from '@upup/core/internal'
+import { cn } from '@useupup/core/internal'
 import type { UploaderProps } from './shared/types'
 import useUploaderController from './composables/useUploaderController'
 import { provideUploaderContext } from './context/uploader-context'

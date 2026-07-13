@@ -9,7 +9,7 @@ import {
     useUploaderTheme,
 } from '../context/uploader-context'
 import useFetchFileByUrl from '../composables/useFetchFileByUrl'
-import { cn } from '@upup/core/internal'
+import { cn } from '@useupup/core/internal'
 import SourceViewContainer from './shared/SourceViewContainer.vue'
 
 const { core } = useUploaderRuntime()

@@ -9,8 +9,8 @@ import {
     useUploaderView,
 } from '../context/UploaderContext'
 import useUploaderPanel from '../hooks/useUploaderPanel'
-import { cn } from '@upup/core/internal'
-import { UploadStatus } from '@upup/core'
+import { cn } from '@useupup/core/internal'
+import { UploadStatus } from '@useupup/core'
 import SourceSelector from './SourceSelector'
 import SourceView from './SourceView'
 import FileList from './FileList'

@@ -1,7 +1,7 @@
-// @upup/core/internal — the explicit deep-import surface for implementation
-// details the sibling framework packages (@upup/react/vue/svelte/angular/
+// @useupup/core/internal — the explicit deep-import surface for implementation
+// details the sibling framework packages (@useupup/react/vue/svelte/angular/
 // vanilla) consume to build their UIs, but that a library consumer building
-// against the curated `@upup/core` public barrel should not depend on.
+// against the curated `@useupup/core` public barrel should not depend on.
 //
 // A symbol lands here, not in `./index.ts`, when it is part of the engine's
 // own machinery (state managers, controllers, the orchestrator, low-level

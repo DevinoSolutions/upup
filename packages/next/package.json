@@ -1,5 +1,5 @@
 {
-    "name": "@upup/next",
+    "name": "@useupup/next",
     "version": "2.2.0",
     "description": "Next.js integration for the upup uploader — App Router + Pages Router handlers, client UI, and serverless-correct config helpers.",
     "keywords": [
@@ -30,6 +30,9 @@
         "directory": "packages/next"
     },
     "license": "MIT",
+    "publishConfig": {
+        "access": "public"
+    },
     "type": "module",
     "sideEffects": [
         "*.css"
@@ -68,9 +71,9 @@
         "typecheck": "tsc --noEmit"
     },
     "dependencies": {
-        "@upup/core": "workspace:*",
-        "@upup/react": "workspace:*",
-        "@upup/server": "workspace:*"
+        "@useupup/core": "workspace:*",
+        "@useupup/react": "workspace:*",
+        "@useupup/server": "workspace:*"
     },
     "peerDependencies": {
         "next": ">=15.0.0",
@@ -81,7 +84,7 @@
         "@types/node": "^20.10.0",
         "@types/react": ">=18.0.0",
         "@types/react-dom": ">=18.0.0",
-        "@upup/eslint-config": "workspace:*",
+        "@useupup/eslint-config": "workspace:*",
         "@vitest/coverage-v8": "^4.1.2",
         "eslint": "^10.6.0",
         "jsdom": "22.1.0",

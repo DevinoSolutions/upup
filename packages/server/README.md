@@ -1,4 +1,4 @@
-# @upup/server
+# @useupup/server
 
 Server-mode endpoints for [upup](https://github.com/DevinoSolutions/upup): S3/MinIO
 presign + proxy upload, drive-token exchange (Google Drive / OneDrive /
@@ -7,18 +7,18 @@ never asserts the object key or S3 `uploadId` it's writing to.
 
 `createUpupHandler(config)` returns a framework-agnostic `(req: Request) =>
 Promise<Response>`. Thin adapters wire it into Express, Fastify, Hono, and
-Next.js (`@upup/server/express`, `/fastify`, `/hono`, `/next`).
+Next.js (`@useupup/server/express`, `/fastify`, `/hono`, `/next`).
 
 ## Install
 
 ```sh
-npm install @upup/server
+npm install @useupup/server
 ```
 
 ## Minimal config
 
 ```ts
-import { createUpupHandler } from '@upup/server'
+import { createUpupHandler } from '@useupup/server'
 
 const handler = createUpupHandler({
     storage: {
@@ -126,7 +126,7 @@ token itself, not a storage/auth outcome:
 | `bad_signature` | Token is well-shaped but the HMAC signature doesn't verify (wrong/rotated secret, or tampering) |
 | `expired`       | Token's `exp` claim is in the past                                                              |
 
-On the client, `@upup/core`'s upload strategies read these bodies and
+On the client, `@useupup/core`'s upload strategies read these bodies and
 construct typed errors (`UpupStorageError` / `UpupAuthError`) carrying the
 same `.code`, and `errorCodeToMessageKey()` maps a code to an i18n catalog
 key for display.
@@ -187,7 +187,7 @@ webhooks on top of these:**
   with a **single-element array** — the server completes one file per
   request and has no cross-file batching concept. If you need a true "all the
   user's files are done" signal, use the client-side `onUploadComplete` prop
-  in `@upup/core`/the UI packages instead, which does see the whole batch.
+  in `@useupup/core`/the UI packages instead, which does see the whole batch.
 - **Client-direct presigned-PUT uploads bypass the server entirely** (`POST
 /presign` only hands the client a URL; the browser then PUTs straight to
   S3), so **no server-side hook fires for that path at all** — the server
@@ -244,7 +244,7 @@ fingerprint publicly.
 ## `TokenStore` — bring your own in production
 
 ```ts
-import { InMemoryTokenStore } from '@upup/server'
+import { InMemoryTokenStore } from '@useupup/server'
 ```
 
 **`InMemoryTokenStore` is DEV-ONLY.** It is a zero-dependency reference

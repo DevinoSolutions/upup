@@ -1,4 +1,4 @@
-# @upup/react
+# @useupup/react
 
 React file uploader with drag-and-drop, a progress bar, file previews,
 cloud-drive sources (Google Drive, OneDrive, Dropbox, Box), resumable uploads, an
@@ -11,7 +11,7 @@ Requires React 19 (`react` and `react-dom` are peer dependencies).
 ## Install
 
 ```sh
-npm i @upup/react
+npm i @useupup/react
 ```
 
 ## Usage (Client Mode)
@@ -22,8 +22,8 @@ issues short-lived upload credentials at `uploadEndpoint`.
 ```tsx
 'use client'
 
-import { UpupUploader } from '@upup/react'
-import '@upup/react/styles'
+import { UpupUploader } from '@useupup/react'
+import '@useupup/react/styles'
 
 export default function Uploader() {
     return (
@@ -39,7 +39,7 @@ export default function Uploader() {
 ```
 
 `uploadEndpoint` is your own route that returns a presigned upload URL — see the
-quickstart for a ready-made handler, or use [`@upup/server`](https://www.npmjs.com/package/@upup/server).
+quickstart for a ready-made handler, or use [`@useupup/server`](https://www.npmjs.com/package/@useupup/server).
 
 The stylesheet is a separate import so projects without Tailwind get the same
 look.
@@ -47,7 +47,7 @@ look.
 ## Server Mode
 
 For credential isolation and server-proxied cloud drives, add
-[`@upup/server`](https://www.npmjs.com/package/@upup/server) and point the
+[`@useupup/server`](https://www.npmjs.com/package/@useupup/server) and point the
 uploader at it:
 
 ```tsx

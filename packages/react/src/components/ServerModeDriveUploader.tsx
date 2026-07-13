@@ -11,8 +11,8 @@ import {
 } from '../hooks/useServerModeDrive'
 import SourceViewContainer from './shared/SourceViewContainer'
 import DriveAuthFallback from './shared/DriveAuthFallback'
-import { errorCodeToMessageKey } from '@upup/core'
-import { cn } from '@upup/core/internal'
+import { errorCodeToMessageKey } from '@useupup/core'
+import { cn } from '@useupup/core/internal'
 
 type Props = {
     provider: ServerModeProvider

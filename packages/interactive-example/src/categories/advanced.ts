@@ -16,7 +16,8 @@ export const advancedCategory: CategoryDefinition = {
         {
             id: 'mode',
             label: 'Mode',
-            description: 'Client = browser ↔ storage directly. Server = browser talks only to your @upup/server mount; server proxies drive APIs + storage writes.',
+            description:
+                'Client = browser ↔ storage directly. Server = browser talks only to your @useupup/server mount; server proxies drive APIs + storage writes.',
             primitive: 'enum',
             defaultValue: 'client',
             options: {
@@ -36,7 +37,8 @@ export const advancedCategory: CategoryDefinition = {
         {
             id: 'serverUrl',
             label: 'Server URL',
-            description: 'Base path where @upup/server\'s createUpupHandler() is mounted.',
+            description:
+                "Base path where @useupup/server's createUpupHandler() is mounted.",
             primitive: 'string',
             defaultValue: '',
             options: { placeholder: '/api/upup' },
@@ -45,7 +47,8 @@ export const advancedCategory: CategoryDefinition = {
         {
             id: 'processingEndpoint',
             label: 'Processing endpoint (SSE)',
-            description: 'After each upload, open an SSE stream at this URL; emits onFileProcessed when done',
+            description:
+                'After each upload, open an SSE stream at this URL; emits onFileProcessed when done',
             primitive: 'string',
             defaultValue: '',
             options: { placeholder: '/api/processing/status' },
@@ -65,21 +68,42 @@ export const advancedCategory: CategoryDefinition = {
             defaultValue: undefined,
             options: {
                 fields: [
-                    { id: 'traceId', label: 'Trace ID', primitive: 'string', defaultValue: '' },
-                    { id: 'tenantId', label: 'Tenant ID', primitive: 'string', defaultValue: '' },
+                    {
+                        id: 'traceId',
+                        label: 'Trace ID',
+                        primitive: 'string',
+                        defaultValue: '',
+                    },
+                    {
+                        id: 'tenantId',
+                        label: 'Tenant ID',
+                        primitive: 'string',
+                        defaultValue: '',
+                    },
                 ],
             },
         },
         {
             id: 'cors',
             label: 'CORS',
-            description: 'Quick setup for storage CORS. dangerouslyAutoConfigure can mutate bucket config.',
+            description:
+                'Quick setup for storage CORS. dangerouslyAutoConfigure can mutate bucket config.',
             primitive: 'nested',
             defaultValue: undefined,
             options: {
                 fields: [
-                    { id: 'dangerouslyAutoConfigure', label: 'Dangerously auto-configure', primitive: 'bool', defaultValue: false },
-                    { id: 'allowedOrigins', label: 'Allowed origins', primitive: 'string', defaultValue: '' },
+                    {
+                        id: 'dangerouslyAutoConfigure',
+                        label: 'Dangerously auto-configure',
+                        primitive: 'bool',
+                        defaultValue: false,
+                    },
+                    {
+                        id: 'allowedOrigins',
+                        label: 'Allowed origins',
+                        primitive: 'string',
+                        defaultValue: '',
+                    },
                 ],
             },
         },
@@ -91,9 +115,24 @@ export const advancedCategory: CategoryDefinition = {
             options: {
                 legendIcon: CLOUD_DRIVE_META.googleDrive.Icon,
                 fields: [
-                    { id: 'clientId', label: 'Client ID', primitive: 'string', defaultValue: '' },
-                    { id: 'apiKey', label: 'API Key', primitive: 'string', defaultValue: '' },
-                    { id: 'appId', label: 'App ID', primitive: 'string', defaultValue: '' },
+                    {
+                        id: 'clientId',
+                        label: 'Client ID',
+                        primitive: 'string',
+                        defaultValue: '',
+                    },
+                    {
+                        id: 'apiKey',
+                        label: 'API Key',
+                        primitive: 'string',
+                        defaultValue: '',
+                    },
+                    {
+                        id: 'appId',
+                        label: 'App ID',
+                        primitive: 'string',
+                        defaultValue: '',
+                    },
                 ],
             },
         },
@@ -105,7 +144,12 @@ export const advancedCategory: CategoryDefinition = {
             options: {
                 legendIcon: CLOUD_DRIVE_META.oneDrive.Icon,
                 fields: [
-                    { id: 'clientId', label: 'Client ID', primitive: 'string', defaultValue: '' },
+                    {
+                        id: 'clientId',
+                        label: 'Client ID',
+                        primitive: 'string',
+                        defaultValue: '',
+                    },
                 ],
             },
         },
@@ -117,7 +161,12 @@ export const advancedCategory: CategoryDefinition = {
             options: {
                 legendIcon: CLOUD_DRIVE_META.dropbox.Icon,
                 fields: [
-                    { id: 'clientId', label: 'Client ID', primitive: 'string', defaultValue: '' },
+                    {
+                        id: 'clientId',
+                        label: 'Client ID',
+                        primitive: 'string',
+                        defaultValue: '',
+                    },
                 ],
             },
         },
@@ -129,7 +178,12 @@ export const advancedCategory: CategoryDefinition = {
             options: {
                 legendIcon: CLOUD_DRIVE_META.box.Icon,
                 fields: [
-                    { id: 'clientId', label: 'Client ID', primitive: 'string', defaultValue: '' },
+                    {
+                        id: 'clientId',
+                        label: 'Client ID',
+                        primitive: 'string',
+                        defaultValue: '',
+                    },
                 ],
             },
         },

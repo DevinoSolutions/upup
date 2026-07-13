@@ -9,8 +9,8 @@ import {
     effect,
 } from '@angular/core'
 import { NgComponentOutlet } from '@angular/common'
-import { formatUiMessage as t } from '@upup/core'
-import { cn } from '@upup/core/internal'
+import { formatUiMessage as t } from '@useupup/core'
+import { cn } from '@useupup/core/internal'
 import { UpupStore } from '../upup-store.service'
 import { CameraUploaderService } from '../services/camera-uploader.service'
 import { SourceViewContainerComponent } from './source-view-container.component'

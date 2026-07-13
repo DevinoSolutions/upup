@@ -1,5 +1,5 @@
 ---
-"@upup/core": patch
+'@useupup/core': patch
 ---
 
 ## Remove the deprecated i18n `utils.ts` engine (t/plural/mergeTranslations)

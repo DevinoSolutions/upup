@@ -8,8 +8,8 @@ import React, {
     useMemo,
 } from 'react'
 
-import { cn } from '@upup/core/internal'
-import type { Translations } from '@upup/core'
+import { cn } from '@useupup/core/internal'
+import type { Translations } from '@useupup/core'
 import {
     useUploaderEditor,
     useUploaderFiles,

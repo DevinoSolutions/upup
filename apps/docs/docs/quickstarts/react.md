@@ -2,12 +2,12 @@
 title: React Quickstart
 slug: /quickstarts/react
 sidebar_position: 1
-description: Add a full-featured file uploader to a React 19 app with @upup/react — drag-and-drop, cloud drives, camera, and resumable uploads, with no upload server to run.
+description: Add a full-featured file uploader to a React 19 app with @useupup/react — drag-and-drop, cloud drives, camera, and resumable uploads, with no upload server to run.
 ---
 
 # React Quickstart
 
-`@upup/react` is the canonical upup UI: a drag-and-drop uploader with file
+`@useupup/react` is the canonical upup UI: a drag-and-drop uploader with file
 previews, a progress bar, cloud-drive sources, an image editor, theming, and ICU
 i18n. This page gets you uploading in **client mode** — no server package required.
 
@@ -16,7 +16,7 @@ Requires React 19 (`react` and `react-dom` are peer dependencies).
 ## Install
 
 ```sh
-npm i @upup/react
+npm i @useupup/react
 ```
 
 ## Minimal example (client mode)
@@ -27,8 +27,8 @@ short-lived upload credentials at `uploadEndpoint`.
 ```tsx
 'use client'
 
-import { UpupUploader } from '@upup/react'
-import '@upup/react/styles'
+import { UpupUploader } from '@useupup/react'
+import '@useupup/react/styles'
 
 export default function Uploader() {
     return <UpupUploader provider="aws" uploadEndpoint="/api/upload-token" />
@@ -62,7 +62,7 @@ providers (client IDs come from each provider's developer console):
 ## Add server mode
 
 For credential isolation and server-proxied cloud drives, add
-[`@upup/server`](https://www.npmjs.com/package/@upup/server) and point the
+[`@useupup/server`](https://www.npmjs.com/package/@useupup/server) and point the
 uploader at it:
 
 ```tsx
@@ -73,7 +73,7 @@ The handler requires an `uploadTokenSecret` of **at least 16 characters** —
 `createUpupHandler` throws at construction time if it is missing or too short:
 
 ```ts
-import { createUpupHandler } from '@upup/server'
+import { createUpupHandler } from '@useupup/server'
 
 export const handler = createUpupHandler({
     storage: {

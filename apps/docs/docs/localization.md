@@ -4,47 +4,47 @@ sidebar_position: 5
 
 # Localization (i18n)
 
-Upup uses ICU locale bundles from `@upup/core/i18n`.
+Upup uses ICU locale bundles from `@useupup/core/i18n`.
 
 ## Built-in Locales
 
 This table is generated from `LOCALE_CODES` (`packages/core/src/i18n/locales/registry.ts`) — the single source of truth for supported locales. Keep it in sync when the registry changes.
 
-| Export | Locale | Direction |
-| --- | --- | --- |
-| `enUS` | `en-US` | `ltr` |
-| `arSA` | `ar-SA` | `rtl` |
-| `deDE` | `de-DE` | `ltr` |
-| `esES` | `es-ES` | `ltr` |
-| `frFR` | `fr-FR` | `ltr` |
-| `jaJP` | `ja-JP` | `ltr` |
-| `koKR` | `ko-KR` | `ltr` |
-| `zhCN` | `zh-CN` | `ltr` |
-| `zhTW` | `zh-TW` | `ltr` |
+| Export | Locale  | Direction |
+| ------ | ------- | --------- |
+| `enUS` | `en-US` | `ltr`     |
+| `arSA` | `ar-SA` | `rtl`     |
+| `deDE` | `de-DE` | `ltr`     |
+| `esES` | `es-ES` | `ltr`     |
+| `frFR` | `fr-FR` | `ltr`     |
+| `jaJP` | `ja-JP` | `ltr`     |
+| `koKR` | `ko-KR` | `ltr`     |
+| `zhCN` | `zh-CN` | `ltr`     |
+| `zhTW` | `zh-TW` | `ltr`     |
 
 ## Using a Locale
 
 ```tsx
-import { UpupUploader } from '@upup/react'
-import '@upup/react/styles'
-import { jaJP } from '@upup/core/i18n'
+import { UpupUploader } from '@useupup/react'
+import '@useupup/react/styles'
+import { jaJP } from '@useupup/core/i18n'
 
 export default function Uploader() {
-  return (
-    <UpupUploader
-      uploadEndpoint="/api/upload-token"
-      i18n={{ locale: jaJP }}
-    />
-  )
+    return (
+        <UpupUploader
+            uploadEndpoint="/api/upload-token"
+            i18n={{ locale: jaJP }}
+        />
+    )
 }
 ```
 
 Arabic automatically sets right-to-left layout:
 
 ```tsx
-import { arSA } from '@upup/core/i18n'
+import { arSA } from '@useupup/core/i18n'
 
-<UpupUploader i18n={{ locale: arSA }} />
+;<UpupUploader i18n={{ locale: arSA }} />
 ```
 
 ## Overrides
@@ -52,15 +52,15 @@ import { arSA } from '@upup/core/i18n'
 Use `i18n.overrides` for small copy changes.
 
 ```tsx
-import { frFR } from '@upup/core/i18n'
+import { frFR } from '@useupup/core/i18n'
 
-<UpupUploader
-  i18n={{
-    locale: frFR,
-    overrides: {
-      browseFiles: 'choisir des fichiers',
-    },
-  }}
+;<UpupUploader
+    i18n={{
+        locale: frFR,
+        overrides: {
+            browseFiles: 'choisir des fichiers',
+        },
+    }}
 />
 ```
 

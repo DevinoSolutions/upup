@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { DirectUpload } from '../../src/strategies/direct-upload'
-import { UpupNetworkError, UpupStorageError, UpupError } from '@upup/core'
+import { UpupNetworkError, UpupStorageError, UpupError } from '@useupup/core'
 
 // ─────────────────────────────────────────────
 // Fake XHR factory

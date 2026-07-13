@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { render } from '@testing-library/react'
 import { UpupUploader } from '../src'
-import { enUS } from '@upup/core'
+import { enUS } from '@useupup/core'
 
 describe('RTL support', () => {
     it('root has lang="en-US" and dir="ltr" by default', () => {

@@ -14,7 +14,7 @@ upup reports failures as a typed `UpupError` (or one of its subclasses). Every
 
 ## Error types
 
-Import the error classes and the code enum from `@upup/core`:
+Import the error classes and the code enum from `@useupup/core`:
 
 ```typescript
 import {
@@ -26,7 +26,7 @@ import {
     UpupQuotaError,
     UpupStorageError,
     UpupConfigError,
-} from '@upup/core'
+} from '@useupup/core'
 ```
 
 | Class                 | Raised when                                                 | Extra fields                   |
@@ -51,7 +51,7 @@ Upload failures surface through the core `upload-error` event with the full
 `code`:
 
 ```typescript
-import { UpupError, UpupErrorCode, UpupValidationError } from '@upup/core'
+import { UpupError, UpupErrorCode, UpupValidationError } from '@useupup/core'
 
 // error is the Error object from an upload-error event (see Error Monitoring).
 function describeUploadError(error: unknown): string {

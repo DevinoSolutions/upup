@@ -1,6 +1,6 @@
 import { html, type TemplateResult } from 'lit-html'
 import { cn } from '../lib/cn'
-import { fileTypeIconName } from '@upup/core'
+import { fileTypeIconName } from '@useupup/core'
 import type { UploaderContext } from '../lib/types'
 import { icon } from './icon'
 

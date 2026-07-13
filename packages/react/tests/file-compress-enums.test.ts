@@ -10,7 +10,7 @@ import {
     StorageProvider,
     UploadStatus,
     type UploadFile,
-} from '@upup/core'
+} from '@useupup/core'
 
 // ─────────────────────────────────────────────
 // Preview size constants

@@ -5,7 +5,10 @@ import {
     useRef,
     useSyncExternalStore,
 } from 'react'
-import { DragDropController, type DragDropSnapshot } from '@upup/core/internal'
+import {
+    DragDropController,
+    type DragDropSnapshot,
+} from '@useupup/core/internal'
 import {
     useUploaderFiles,
     useUploaderOptions,

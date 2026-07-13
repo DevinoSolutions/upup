@@ -2,7 +2,7 @@
 export function resolveTarget(target: string | HTMLElement): HTMLElement {
     if (typeof document === 'undefined') {
         throw new TypeError(
-            '@upup/vanilla: createUploader() must run in a browser — `document` is undefined (SSR). ' +
+            '@useupup/vanilla: createUploader() must run in a browser — `document` is undefined (SSR). ' +
                 'Call it from client-side code (e.g. inside onMounted / useEffect / a DOMContentLoaded handler).',
         )
     }
@@ -12,7 +12,7 @@ export function resolveTarget(target: string | HTMLElement): HTMLElement {
             : target
     if (!el) {
         throw new TypeError(
-            `@upup/vanilla: createUploader() target not found: ${
+            `@useupup/vanilla: createUploader() target not found: ${
                 typeof target === 'string'
                     ? `selector "${target}"`
                     : 'the provided element is null'

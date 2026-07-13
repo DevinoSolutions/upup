@@ -15,8 +15,8 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { TestBed } from '@angular/core/testing'
-import type { DriveFile, DriveFolder } from '@upup/core'
-import { DriveBrowserController } from '@upup/core/internal'
+import type { DriveFile, DriveFolder } from '@useupup/core'
+import { DriveBrowserController } from '@useupup/core/internal'
 import { UpupStore } from '../upup-store.service'
 import { GoogleDriveService } from './google-drive.service'
 import { OneDriveService } from './one-drive.service'
@@ -74,7 +74,7 @@ describe('LoadGapiService', () => {
     it('load() calls loadGoogleIdentityServices', async () => {
         const spy = vi
             .spyOn(
-                await import('@upup/core/internal'),
+                await import('@useupup/core/internal'),
                 'loadGoogleIdentityServices',
             )
             .mockResolvedValue(undefined)

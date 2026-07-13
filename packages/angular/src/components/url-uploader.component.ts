@@ -1,6 +1,6 @@
 import { Component, inject, Type } from '@angular/core'
 import { NgComponentOutlet } from '@angular/common'
-import { cn } from '@upup/core/internal'
+import { cn } from '@useupup/core/internal'
 import { UpupStore } from '../upup-store.service'
 import { FetchFileByUrlService } from '../services/fetch-file-by-url.service'
 import { SourceViewContainerComponent } from './source-view-container.component'

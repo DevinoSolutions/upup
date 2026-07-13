@@ -1,5 +1,5 @@
 {
-    "name": "@upup/playground",
+    "name": "@useupup/playground",
     "version": "0.1.0",
     "private": true,
     "scripts": {
@@ -13,10 +13,10 @@
         "clean": "rm -rf .next node_modules/.cache"
     },
     "dependencies": {
-        "@upup/core": "workspace:*",
-        "@upup/interactive-example": "workspace:*",
-        "@upup/react": "workspace:*",
-        "@upup/server": "workspace:*",
+        "@useupup/core": "workspace:*",
+        "@useupup/interactive-example": "workspace:*",
+        "@useupup/react": "workspace:*",
+        "@useupup/server": "workspace:*",
         "clsx": "^2.1.1",
         "lucide-react": "^0.503.0",
         "next": "16.1.6",
@@ -37,7 +37,7 @@
         "@types/node": "^20",
         "@types/react": "^19",
         "@types/react-dom": "^19",
-        "@upup/eslint-config": "workspace:*",
+        "@useupup/eslint-config": "workspace:*",
         "autoprefixer": "^10.4.19",
         "eslint": "^10.6.0",
         "tailwindcss": "^3.4.3",

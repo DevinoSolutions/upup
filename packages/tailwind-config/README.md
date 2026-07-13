@@ -1,10 +1,10 @@
-# @upup/tailwind-config
+# @useupup/tailwind-config
 
-Shared PostCSS/Tailwind config factory for the upup UI packages (`@upup/react`,
-`@upup/vue`, `@upup/svelte`, `@upup/vanilla`, `@upup/angular`).
+Shared PostCSS/Tailwind config factory for the upup UI packages (`@useupup/react`,
+`@useupup/vue`, `@useupup/svelte`, `@useupup/vanilla`, `@useupup/angular`).
 
 Private, source-only, never published — consumed directly across the workspace
-(same pattern as `@upup/storybook-config`). CommonJS, because PostCSS configs are `.cjs`.
+(same pattern as `@useupup/storybook-config`). CommonJS, because PostCSS configs are `.cjs`.
 
 ## What it provides
 
@@ -18,7 +18,7 @@ upup UI package feeds to `postcss-cli`. It bundles the entire shared CSS pipelin
   never double-prefixes an already-scoped selector, so re-processed `dist` CSS is safe).
 - `autoprefixer`.
 
-The shared `@upup/core` icon-registry path (`../core/src/icons/registry.ts`) is
+The shared `@useupup/core` icon-registry path (`../core/src/icons/registry.ts`) is
 appended to `content` internally, so consumers pass only their own source globs.
 
 ## Usage
@@ -26,18 +26,18 @@ appended to `content` internally, so consumers pass only their own source globs.
 Each consumer's `postcss.config.cjs` is one line — only `content` differs:
 
 ```js
-module.exports = require('@upup/tailwind-config').createPostcssConfig({
+module.exports = require('@useupup/tailwind-config').createPostcssConfig({
     content: ['./src/**/*.{tsx,ts,css}'], // react
 })
 ```
 
-| package | content |
-|---------|---------|
-| react   | `['./src/**/*.{tsx,ts,css}']` |
-| vue     | `['./src/**/*.{vue,ts,css}']` |
+| package | content                          |
+| ------- | -------------------------------- |
+| react   | `['./src/**/*.{tsx,ts,css}']`    |
+| vue     | `['./src/**/*.{vue,ts,css}']`    |
 | svelte  | `['./src/**/*.{svelte,ts,css}']` |
-| vanilla | `['./src/**/*.{ts,css}']` |
-| angular | `['./src/**/*.{ts,css,html}']` |
+| vanilla | `['./src/**/*.{ts,css}']`        |
+| angular | `['./src/**/*.{ts,css,html}']`   |
 
 ## The single knob: `content`
 

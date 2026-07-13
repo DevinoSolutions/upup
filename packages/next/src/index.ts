@@ -1,2 +1,2 @@
 'use client'
-export * from '@upup/react'
+export * from '@useupup/react'

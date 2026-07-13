@@ -1,6 +1,6 @@
 import { html, nothing, type TemplateResult } from 'lit-html'
 import { unsafeSVG } from 'lit-html/directives/unsafe-svg.js'
-import { ICONS, type IconName } from '@upup/core'
+import { ICONS, type IconName } from '@useupup/core'
 import { cn } from '../lib/cn'
 
 export function icon(

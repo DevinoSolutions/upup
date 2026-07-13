@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { CrashRecoveryManager, PersistentStorage } from '../src/crash-recovery'
 import { UpupCore } from '../src/core'
-import { FileSource, UploadStatus } from '@upup/core'
+import { FileSource, UploadStatus } from '@useupup/core'
 
 function makeStorage(): PersistentStorage & { store: Map<string, unknown> } {
     const store = new Map<string, unknown>()

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import type { DriveFile } from '@upup/core'
+import type { DriveFile } from '@useupup/core'
 import {
     GOOGLE_WORKSPACE_EXPORTS,
     getWorkspaceExportInfo,

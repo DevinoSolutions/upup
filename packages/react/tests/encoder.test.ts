@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { b64EncodeUnicode } from '@upup/core/internal'
+import { b64EncodeUnicode } from '@useupup/core/internal'
 
 // Split out of the former utils.test.ts (one utility per behavior-named file,
 // matching core's cn-util.test.ts / encoder.test.ts sibling convention).

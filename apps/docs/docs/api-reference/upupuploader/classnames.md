@@ -8,13 +8,13 @@ The stable styling API is `theme.slots`.
 
 ```tsx
 <UpupUploader
-  theme={{
-    mode: 'system',
-    slots: {
-      root: 'rounded-lg border',
-      uploadButton: 'bg-black text-white',
-    },
-  }}
+    theme={{
+        mode: 'system',
+        slots: {
+            root: 'rounded-lg border',
+            uploadButton: 'bg-black text-white',
+        },
+    }}
 />
 ```
 
@@ -24,7 +24,7 @@ Use `theme.mode` for color scheme:
 <UpupUploader theme={{ mode: 'dark' }} />
 ```
 
-Slot contracts are exported from `@upup/core/theme`.
+Slot contracts are exported from `@useupup/core/theme`.
 
 ## Internals (what actually renders)
 

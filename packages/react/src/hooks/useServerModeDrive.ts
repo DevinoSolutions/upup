@@ -1,10 +1,10 @@
 import { useEffect, useRef, useSyncExternalStore } from 'react'
-import { ServerModeDriveController } from '@upup/core/internal'
+import { ServerModeDriveController } from '@useupup/core/internal'
 import type {
     ServerDriveSnapshot,
     ServerDriveTransferResult,
-} from '@upup/core/internal'
-import type { ServerModeProvider, ServerDriveFile } from '@upup/core'
+} from '@useupup/core/internal'
+import type { ServerModeProvider, ServerDriveFile } from '@useupup/core'
 import { useUploaderRuntime } from '../context/UploaderContext'
 
 // Re-export so existing consumers that imported these from this module keep working.

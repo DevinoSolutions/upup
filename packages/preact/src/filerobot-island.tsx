@@ -15,7 +15,7 @@ import type { IslandHandle, IslandProps } from './filerobot-island-types'
  */
 
 // Filerobot's styled-components leak these custom props to the DOM; filter them
-// (mirrors FILEROBOT_CUSTOM_PROPS in @upup/react's editor chrome).
+// (mirrors FILEROBOT_CUSTOM_PROPS in @useupup/react's editor chrome).
 const FILEROBOT_CUSTOM_PROPS = new Set([
     'active',
     'noMargin',

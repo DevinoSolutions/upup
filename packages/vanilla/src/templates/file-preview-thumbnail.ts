@@ -6,7 +6,7 @@ import {
     fileGetIsText,
     fileIs3D,
     cn,
-} from '@upup/core/internal'
+} from '@useupup/core/internal'
 import type { UploaderContext } from '../lib/types'
 import { fileIcon } from './file-icon'
 

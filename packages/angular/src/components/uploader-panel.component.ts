@@ -3,8 +3,8 @@ import {
     cn,
     DragDropController,
     type DragDropSnapshot,
-} from '@upup/core/internal'
-import { UploadStatus } from '@upup/core'
+} from '@useupup/core/internal'
+import { UploadStatus } from '@useupup/core'
 import { UpupStore } from '../upup-store.service'
 import { toSignalStore, type SignalStore } from '../lib/to-signal-store'
 import { SourceViewComponent } from './source-view.component'
@@ -67,7 +67,7 @@ import { FileListComponent } from './file-list.component'
 export class UploaderPanelComponent implements OnInit, OnDestroy {
     readonly store = inject(UpupStore)
 
-    // ── Dropzone controller (shared @upup/core) + its Angular-signal view ─────
+    // ── Dropzone controller (shared @useupup/core) + its Angular-signal view ─────
     private dragController!: DragDropController
     private dragStore?: SignalStore<DragDropSnapshot>
 
@@ -152,7 +152,7 @@ export class UploaderPanelComponent implements OnInit, OnDestroy {
         }
     })
 
-    // ── Drag handlers — delegate to the shared @upup/core controller ──────────
+    // ── Drag handlers — delegate to the shared @useupup/core controller ──────────
     handleDragOver(e: DragEvent): void {
         this.dragController.handleDragOver(e)
     }

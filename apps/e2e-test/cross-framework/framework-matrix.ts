@@ -15,37 +15,67 @@ export type ParityVariant = 'default'
 export const PARITY_VARIANTS: readonly ParityVariant[] = ['default']
 
 export interface FrameworkEntry {
-  /** Playwright project name AND the `@upup/storybook-<name>` package suffix. */
-  name: string
-  /** Dev-server port (baked into the storybook package's own script). */
-  port: number
-  /** Storybook story id for the real-upload smoke. */
-  storyId: string
-  /** Story id for the deterministic DOM-parity fixture (autoUpload off), per variant. */
-  parityStoryIds: Record<ParityVariant, string>
+    /** Playwright project name AND the `@useupup/storybook-<name>` package suffix. */
+    name: string
+    /** Dev-server port (baked into the storybook package's own script). */
+    port: number
+    /** Storybook story id for the real-upload smoke. */
+    storyId: string
+    /** Story id for the deterministic DOM-parity fixture (autoUpload off), per variant. */
+    parityStoryIds: Record<ParityVariant, string>
 }
 
 export const FRAMEWORKS: FrameworkEntry[] = [
-  { name: 'react',   port: 53050, storyId: 'react-uploader--real-upload-client',   parityStoryIds: { default: 'react-uploader--parity' } },
-  { name: 'vue',     port: 53051, storyId: 'vue-uploader--real-upload-client',     parityStoryIds: { default: 'vue-uploader--parity' } },
-  { name: 'svelte',  port: 53052, storyId: 'svelte-uploader--real-upload-client',  parityStoryIds: { default: 'svelte-uploader--parity' } },
-  { name: 'vanilla', port: 53053, storyId: 'vanilla-uploader--real-upload-client', parityStoryIds: { default: 'vanilla-uploader--parity' } },
-  { name: 'angular', port: 53054, storyId: 'angular-uploader--real-upload-client', parityStoryIds: { default: 'angular-uploader--parity' } },
-  { name: 'preact',  port: 53055, storyId: 'preact-uploader--real-upload-client',  parityStoryIds: { default: 'preact-uploader--parity' } },
+    {
+        name: 'react',
+        port: 53050,
+        storyId: 'react-uploader--real-upload-client',
+        parityStoryIds: { default: 'react-uploader--parity' },
+    },
+    {
+        name: 'vue',
+        port: 53051,
+        storyId: 'vue-uploader--real-upload-client',
+        parityStoryIds: { default: 'vue-uploader--parity' },
+    },
+    {
+        name: 'svelte',
+        port: 53052,
+        storyId: 'svelte-uploader--real-upload-client',
+        parityStoryIds: { default: 'svelte-uploader--parity' },
+    },
+    {
+        name: 'vanilla',
+        port: 53053,
+        storyId: 'vanilla-uploader--real-upload-client',
+        parityStoryIds: { default: 'vanilla-uploader--parity' },
+    },
+    {
+        name: 'angular',
+        port: 53054,
+        storyId: 'angular-uploader--real-upload-client',
+        parityStoryIds: { default: 'angular-uploader--parity' },
+    },
+    {
+        name: 'preact',
+        port: 53055,
+        storyId: 'preact-uploader--real-upload-client',
+        parityStoryIds: { default: 'preact-uploader--parity' },
+    },
 ]
 
 /** All six storybook origins, comma-joined (for the harness CORS allowlist). */
 export const ALL_STORYBOOK_ORIGINS = FRAMEWORKS.map(
-  (f) => `http://localhost:${f.port}`,
+    f => `http://localhost:${f.port}`,
 ).join(',')
 
 /** Storybook preview URL for a story id (resolved against the project baseURL). */
 export const storyUrl = (storyId: string) =>
-  `/iframe.html?id=${storyId}&viewMode=story`
+    `/iframe.html?id=${storyId}&viewMode=story`
 
 /** Look up a framework entry by Playwright project name. */
 export function byName(name: string): FrameworkEntry {
-  const entry = FRAMEWORKS.find((f) => f.name === name)
-  if (!entry) throw new Error(`Unknown framework project: "${name}"`)
-  return entry
+    const entry = FRAMEWORKS.find(f => f.name === name)
+    if (!entry) throw new Error(`Unknown framework project: "${name}"`)
+    return entry
 }

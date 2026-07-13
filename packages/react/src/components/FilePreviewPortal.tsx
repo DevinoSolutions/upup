@@ -8,8 +8,8 @@ import React, {
     useState,
 } from 'react'
 import { createPortal } from 'react-dom'
-import { formatUiMessage as t } from '@upup/core'
-import { cn } from '@upup/core/internal'
+import { formatUiMessage as t } from '@useupup/core'
+import { cn } from '@useupup/core/internal'
 import { useUploaderI18n, useUploaderTheme } from '../context/UploaderContext'
 import {
     fileGetIsImage,

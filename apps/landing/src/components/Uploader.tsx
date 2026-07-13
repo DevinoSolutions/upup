@@ -2,16 +2,16 @@
 
 import React, { useContext } from 'react'
 
-import { UpupUploader } from '@upup/react'
-import type { LocaleBundle } from '@upup/core'
+import { UpupUploader } from '@useupup/react'
+import type { LocaleBundle } from '@useupup/core'
 
-import '@upup/react/styles'
+import '@useupup/react/styles'
 import { ThemeContext } from '@/lib/contexts'
 import { clientEnv } from '@/lib/env'
 import { toast } from 'react-toastify'
 
 const customFields = {
-    // Point at the mounted @upup/server handler (src/app/api/upup/[...path]/route.ts);
+    // Point at the mounted @useupup/server handler (src/app/api/upup/[...path]/route.ts);
     // the client derives /presign and /multipart/* from this base. The previous
     // /api/getPresignedUrl path does not exist in this app, so every upload 404'd.
     serverUrl: clientEnv.NEXT_PUBLIC_BASE_URL

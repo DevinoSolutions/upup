@@ -419,7 +419,7 @@ describe('handler — CORS', () => {
     // browser, so their actual (non-OPTIONS) responses — including 401 reauth
     // and success — MUST carry Access-Control-Allow-Origin, or the browser
     // blocks them and the client sees "Failed to fetch" (never learning it
-    // must re-auth). Caught by live stealth-chrome verification of @upup/next.
+    // must re-auth). Caught by live stealth-chrome verification of @useupup/next.
     const serverCors = (tokenStore = new InMemoryTokenStore()) => ({
         ...config,
         tokenStore,
@@ -1322,7 +1322,7 @@ describe('handler — post-completion hook throw does not fail a completed uploa
 
 // ─────────────────────────────────────────────
 // F-852: construct-time config validation runs for every createUpupHandler
-// caller (folded out of @upup/next's opt-in defineUpupConfig).
+// caller (folded out of @useupup/next's opt-in defineUpupConfig).
 // ─────────────────────────────────────────────
 describe('handler — construct-time config validation (F-852)', () => {
     const secret = 'construct-validation-secret-0123456789'

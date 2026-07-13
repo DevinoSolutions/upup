@@ -1,6 +1,6 @@
 import type { CategoryDefinition } from '../types'
 import { Languages } from 'lucide-react'
-import { LOCALE_CODES } from '@upup/core'
+import { LOCALE_CODES } from '@useupup/core'
 
 export const languageCategory: CategoryDefinition = {
     id: 'language',
@@ -11,7 +11,8 @@ export const languageCategory: CategoryDefinition = {
         {
             id: 'i18n.locale',
             label: 'Locale',
-            description: 'Active locale — controls all UI strings and text direction.',
+            description:
+                'Active locale — controls all UI strings and text direction.',
             primitive: 'enum',
             defaultValue: 'en-US',
             options: {
@@ -31,7 +32,8 @@ export const languageCategory: CategoryDefinition = {
         {
             id: 'i18n.overrides',
             label: 'Message overrides (visible labels)',
-            description: 'Replace the bundled copy on a per-key basis. Pick a tone preset to start, or type your own — everything else falls back to the active locale.',
+            description:
+                'Replace the bundled copy on a per-key basis. Pick a tone preset to start, or type your own — everything else falls back to the active locale.',
             primitive: 'nested',
             defaultValue: undefined,
             options: {
@@ -43,9 +45,13 @@ export const languageCategory: CategoryDefinition = {
                         primitive: 'combo',
                         defaultValue: '',
                         options: {
-                            placeholder: 'Upload {count, plural, one {# file} other {# files}}',
+                            placeholder:
+                                'Upload {count, plural, one {# file} other {# files}}',
                             presets: [
-                                { label: 'Friendly', value: 'Upload {count, plural, one {my file} other {my files}}' },
+                                {
+                                    label: 'Friendly',
+                                    value: 'Upload {count, plural, one {my file} other {my files}}',
+                                },
                                 { label: 'Concise', value: 'Upload' },
                                 { label: 'Action', value: 'Send now' },
                             ],
@@ -54,7 +60,8 @@ export const languageCategory: CategoryDefinition = {
                     {
                         id: 'common.cancel',
                         label: 'common.cancel',
-                        description: 'Cancel/abort label across confirmation prompts.',
+                        description:
+                            'Cancel/abort label across confirmation prompts.',
                         primitive: 'combo',
                         defaultValue: '',
                         options: {
@@ -69,7 +76,8 @@ export const languageCategory: CategoryDefinition = {
                     {
                         id: 'dropzone.browseFiles',
                         label: 'dropzone.browseFiles',
-                        description: 'Clickable browse label inside the empty drop zone.',
+                        description:
+                            'Clickable browse label inside the empty drop zone.',
                         primitive: 'combo',
                         defaultValue: '',
                         options: {
@@ -84,15 +92,26 @@ export const languageCategory: CategoryDefinition = {
                     {
                         id: 'header.filesSelected',
                         label: 'header.filesSelected',
-                        description: 'Status header above the file list. Use ICU {count, plural, ...} for the count.',
+                        description:
+                            'Status header above the file list. Use ICU {count, plural, ...} for the count.',
                         primitive: 'combo',
                         defaultValue: '',
                         options: {
-                            placeholder: '{count, plural, one {# file ready} other {# files ready}}',
+                            placeholder:
+                                '{count, plural, one {# file ready} other {# files ready}}',
                             presets: [
-                                { label: 'Conversational', value: '{count, plural, one {# file ready to upload} other {# files ready to upload}}' },
-                                { label: 'Status', value: '{count, plural, one {# selected} other {# selected}}' },
-                                { label: 'Brief', value: '{count, plural, one {# file} other {# files}}' },
+                                {
+                                    label: 'Conversational',
+                                    value: '{count, plural, one {# file ready to upload} other {# files ready to upload}}',
+                                },
+                                {
+                                    label: 'Status',
+                                    value: '{count, plural, one {# selected} other {# selected}}',
+                                },
+                                {
+                                    label: 'Brief',
+                                    value: '{count, plural, one {# file} other {# files}}',
+                                },
                             ],
                         },
                     },

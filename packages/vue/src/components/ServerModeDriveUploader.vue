@@ -12,8 +12,8 @@ import {
 } from '../composables/useServerModeDrive'
 import SourceViewContainer from './shared/SourceViewContainer.vue'
 import DriveAuthFallback from './shared/DriveAuthFallback.vue'
-import { errorCodeToMessageKey } from '@upup/core'
-import { cn } from '@upup/core/internal'
+import { errorCodeToMessageKey } from '@useupup/core'
+import { cn } from '@useupup/core/internal'
 
 const props = defineProps<{
     provider: ServerModeProvider

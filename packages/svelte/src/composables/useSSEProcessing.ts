@@ -1,6 +1,6 @@
 import { onDestroy } from 'svelte'
-import type { UploadFile } from '@upup/core'
-import { SSEProcessor } from '@upup/core/internal'
+import type { UploadFile } from '@useupup/core'
+import { SSEProcessor } from '@useupup/core/internal'
 
 type Options = {
     processingEndpoint?: string | undefined

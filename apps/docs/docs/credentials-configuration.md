@@ -15,12 +15,12 @@ origins that will upload files.
 
 ```tsx
 <UpupUploader
-  cors={{
-    dangerouslyAutoConfigure: true,
-    allowedOrigins: ['http://localhost:3000'],
-    allowedMethods: ['PUT', 'POST', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-  }}
+    cors={{
+        dangerouslyAutoConfigure: true,
+        allowedOrigins: ['http://localhost:3000'],
+        allowedMethods: ['PUT', 'POST', 'OPTIONS'],
+        allowedHeaders: ['Content-Type', 'Authorization'],
+    }}
 />
 ```
 
@@ -29,5 +29,5 @@ setup and controlled admin tooling, not broad production defaults.
 
 ## Server Credentials
 
-Use `@upup/server` for storage access keys, OAuth client secrets, provider
+Use `@useupup/server` for storage access keys, OAuth client secrets, provider
 token refresh, audit logging, and server-side transfers.

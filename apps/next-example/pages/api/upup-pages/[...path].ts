@@ -1,4 +1,4 @@
-import { createUpupPagesHandler } from '@upup/next/server'
+import { createUpupPagesHandler } from '@useupup/next/server'
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { getUpupConfig } from '@/lib/upup-config'
 

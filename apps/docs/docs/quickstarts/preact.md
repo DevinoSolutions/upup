@@ -2,13 +2,13 @@
 title: Preact Quickstart
 slug: /quickstarts/preact
 sidebar_position: 6
-description: Add a full-featured file uploader to a Preact app with @upup/preact — a preact/compat re-export of @upup/react, same UI and API, with cloud drives, camera, and resumable uploads.
+description: Add a full-featured file uploader to a Preact app with @useupup/preact — a preact/compat re-export of @useupup/react, same UI and API, with cloud drives, camera, and resumable uploads.
 ---
 
 # Preact Quickstart
 
-`@upup/preact` is a **`preact/compat` re-export of
-[`@upup/react`](./react.md)** — the same UI and API, resolved against
+`@useupup/preact` is a **`preact/compat` re-export of
+[`@useupup/react`](./react.md)** — the same UI and API, resolved against
 Preact: cloud-drive sources, resumable uploads, theming, and ICU i18n. This page
 gets you uploading in **client mode**, no server package required.
 
@@ -18,7 +18,7 @@ additional optional peers — see below).
 ## Install
 
 ```sh
-npm i @upup/preact
+npm i @useupup/preact
 ```
 
 Use it in a Preact project with the standard `preact/compat` aliases
@@ -31,8 +31,8 @@ In client mode the browser uploads directly to your storage; your app only issue
 short-lived upload credentials at `uploadEndpoint`.
 
 ```tsx
-import { UpupUploader } from '@upup/preact'
-import '@upup/preact/styles'
+import { UpupUploader } from '@useupup/preact'
+import '@useupup/preact/styles'
 
 export function App() {
     return <UpupUploader provider="aws" uploadEndpoint="/api/upload-token" />
@@ -75,7 +75,7 @@ enters your main Preact bundle. If you enable the editor, install its peers
 ## Add server mode
 
 For credential isolation and server-proxied cloud drives, add
-[`@upup/server`](https://www.npmjs.com/package/@upup/server) and point the
+[`@useupup/server`](https://www.npmjs.com/package/@useupup/server) and point the
 uploader at it:
 
 ```tsx
@@ -86,7 +86,7 @@ The handler requires an `uploadTokenSecret` of **at least 16 characters** —
 `createUpupHandler` throws at construction time if it is missing or too short:
 
 ```ts
-import { createUpupHandler } from '@upup/server'
+import { createUpupHandler } from '@useupup/server'
 
 export const handler = createUpupHandler({
     storage: {
@@ -114,6 +114,6 @@ binding; and production token stores.
 
 ## Also exported
 
-Because it re-exports `@upup/react`, the public surface matches `@upup/react`
+Because it re-exports `@useupup/react`, the public surface matches `@useupup/react`
 exactly: `UpupThemeProvider`, the brand source icons, and the `use*` hooks
 (`useUpupUpload`, `useUploaderFiles`, `useUploaderContext`, and more).

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { cn } from '@upup/core/internal'
+import { cn } from '@useupup/core/internal'
 
 describe('cn() — tailwind class merge utility', () => {
     it('merges simple class names', () => {

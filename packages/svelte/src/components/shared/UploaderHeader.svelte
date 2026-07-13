@@ -1,7 +1,7 @@
 <script lang="ts">
   import { derived } from 'svelte/store'
-  import { formatUiMessage as t, pluralUiMessage as plural } from '@upup/core'
-import { isUploadActive, cn } from '@upup/core/internal'
+  import { formatUiMessage as t, pluralUiMessage as plural } from '@useupup/core'
+import { isUploadActive, cn } from '@useupup/core/internal'
   import {
     useUploaderFiles,
     useUploaderI18n,

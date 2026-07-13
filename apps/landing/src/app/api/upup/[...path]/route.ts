@@ -1,4 +1,4 @@
-import { createUpupNextHandler } from '@upup/server/next'
+import { createUpupNextHandler } from '@useupup/server/next'
 import { env, requireServerEnv } from '@/lib/env'
 
 let _handler: ReturnType<typeof createUpupNextHandler> | null = null

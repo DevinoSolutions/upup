@@ -1,6 +1,6 @@
 import { memo, SVGAttributes } from 'react'
-import { fileTypeIconName } from '@upup/core'
-import { cn } from '@upup/core/internal'
+import { fileTypeIconName } from '@useupup/core'
+import { cn } from '@useupup/core/internal'
 import { useUploaderTheme } from '../context/UploaderContext'
 import Icon from './Icon'
 

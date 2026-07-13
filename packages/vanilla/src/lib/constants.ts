@@ -1,5 +1,5 @@
-import { FileSource } from '@upup/core'
-import type { Translations } from '@upup/core'
+import { FileSource } from '@useupup/core'
+import type { Translations } from '@useupup/core'
 import type { TemplateResult } from 'lit-html'
 import type { UploaderContext } from './types'
 import {
@@ -22,7 +22,7 @@ import { oneDriveUploader } from '../templates/one-drive-uploader'
 import { dropboxUploader } from '../templates/dropbox-uploader'
 import { boxUploader } from '../templates/box-uploader'
 
-export { sourceNameKeys } from '@upup/core/internal'
+export { sourceNameKeys } from '@useupup/core/internal'
 
 type SourceEntry = {
     id: FileSource

@@ -1,11 +1,11 @@
 ---
-"@upup/server": minor
-"@upup/core": minor
+'@useupup/server': minor
+'@useupup/core': minor
 ---
 
 ## Trust posture: secure-by-default uploads, uid enforcement, bounded transfer
 
-`@upup/server` upload routes (`POST /presign`, `POST /multipart/init`) now
+`@useupup/server` upload routes (`POST /presign`, `POST /multipart/init`) now
 reject anonymous callers by default with `403 { code: 'AUTH_REQUIRED' }`
 unless `auth`, `getUserId`, or the new opt-in `allowAnonymousUploads: true`
 is configured. This is a breaking change for any deployment relying on the
@@ -25,7 +25,7 @@ of being buffered whole. The configurable `multipartThreshold` config field
 and `DEFAULT_MULTIPART_THRESHOLD` export are **removed**; memory safety is no
 longer a raisable knob.
 
-New `UpupErrorCode.AUTH_REQUIRED` (additive enum member) on `@upup/core`.
+New `UpupErrorCode.AUTH_REQUIRED` (additive enum member) on `@useupup/core`.
 
 See `packages/server/README.md` for the new `allowAnonymousUploads` config
 note and a "Token semantics: TTL & replay" section documenting the upload

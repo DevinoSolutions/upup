@@ -85,7 +85,7 @@ const mainFeatures = [
         icon: <FaBolt className="w-6 h-6" />,
         title: 'Headless Core',
         description:
-            'The engine lives in a framework-agnostic @upup/core package — use the built-in UI or build your own on the same hooks, orchestrator, and upload pipeline',
+            'The engine lives in a framework-agnostic @useupup/core package — use the built-in UI or build your own on the same hooks, orchestrator, and upload pipeline',
     },
     {
         icon: <FaGlobe className="w-6 h-6" />,

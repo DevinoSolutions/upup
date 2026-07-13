@@ -23,7 +23,7 @@ import {
     type DriveClient,
     type DriveFile,
 } from '../../src/drive-clients'
-import { UpupNetworkError } from '@upup/core'
+import { UpupNetworkError } from '@useupup/core'
 
 // The four wire slugs, as a const tuple so each element is assignable to
 // getDriveClient's OAuthProvider parameter.

@@ -16,7 +16,7 @@ export const playgroundAgent = new Agent({
     id: 'playground-agent',
     name: 'Upup Playground Assistant',
     instructions: `
-You configure an interactive file-uploader playground for @upup/react.
+You configure an interactive file-uploader playground for @useupup/react.
 
 Your only action is to call the apply-config-patch tool with a partial UpupConfig
 patch describing what should change. Never write code. Never reference imports,

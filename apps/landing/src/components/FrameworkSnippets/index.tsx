@@ -19,11 +19,11 @@ const FRAMEWORKS: Framework[] = [
     {
         id: 'react',
         name: 'React',
-        pkg: '@upup/react',
+        pkg: '@useupup/react',
         file: 'Uploader.tsx',
         code: `'use client'
-import { UpupUploader } from '@upup/react'
-import '@upup/react/styles'
+import { UpupUploader } from '@useupup/react'
+import '@useupup/react/styles'
 
 export default function Uploader() {
   return <UpupUploader provider="aws" uploadEndpoint="/api/upload-token" />
@@ -32,11 +32,11 @@ export default function Uploader() {
     {
         id: 'vue',
         name: 'Vue',
-        pkg: '@upup/vue',
+        pkg: '@useupup/vue',
         file: 'Uploader.vue',
         code: `<script setup lang="ts">
-import { UpupUploader } from '@upup/vue'
-import '@upup/vue/styles'
+import { UpupUploader } from '@useupup/vue'
+import '@useupup/vue/styles'
 </script>
 
 <template>
@@ -46,11 +46,11 @@ import '@upup/vue/styles'
     {
         id: 'svelte',
         name: 'Svelte',
-        pkg: '@upup/svelte',
+        pkg: '@useupup/svelte',
         file: 'Uploader.svelte',
         code: `<script lang="ts">
-  import { UpupUploader } from '@upup/svelte'
-  import '@upup/svelte/styles'
+  import { UpupUploader } from '@useupup/svelte'
+  import '@useupup/svelte/styles'
 </script>
 
 <UpupUploader provider="aws" uploadEndpoint="/api/upload-token" />`,
@@ -58,11 +58,11 @@ import '@upup/vue/styles'
     {
         id: 'angular',
         name: 'Angular',
-        pkg: '@upup/angular',
+        pkg: '@useupup/angular',
         file: 'app.component.ts',
         code: `import { Component } from '@angular/core'
-import { UpupUploaderComponent } from '@upup/angular'
-// Load styles once: add '@upup/angular/styles' to angular.json → "styles"
+import { UpupUploaderComponent } from '@useupup/angular'
+// Load styles once: add '@useupup/angular/styles' to angular.json → "styles"
 
 @Component({
   selector: 'app-root',
@@ -77,10 +77,10 @@ export class AppComponent {}`,
     {
         id: 'vanilla',
         name: 'Vanilla JS',
-        pkg: '@upup/vanilla',
+        pkg: '@useupup/vanilla',
         file: 'uploader.ts',
-        code: `import { createUploader } from '@upup/vanilla'
-import '@upup/vanilla/styles'
+        code: `import { createUploader } from '@useupup/vanilla'
+import '@useupup/vanilla/styles'
 
 createUploader('#uploader', {
   provider: 'aws',
@@ -90,10 +90,10 @@ createUploader('#uploader', {
     {
         id: 'preact',
         name: 'Preact',
-        pkg: '@upup/preact',
+        pkg: '@useupup/preact',
         file: 'App.tsx',
-        code: `import { UpupUploader } from '@upup/preact'
-import '@upup/preact/styles'
+        code: `import { UpupUploader } from '@useupup/preact'
+import '@useupup/preact/styles'
 
 export function App() {
   return <UpupUploader provider="aws" uploadEndpoint="/api/upload-token" />

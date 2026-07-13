@@ -1,26 +1,26 @@
 {
-  "name": "@upup/storybook-config",
-  "version": "0.1.0",
-  "private": true,
-  "type": "module",
-  "exports": {
-    ".": {
-      "types": "./src/index.ts",
-      "default": "./src/index.ts"
+    "name": "@useupup/storybook-config",
+    "version": "0.1.0",
+    "private": true,
+    "type": "module",
+    "exports": {
+        ".": {
+            "types": "./src/index.ts",
+            "default": "./src/index.ts"
+        },
+        "./brand.css": "./src/brand.css"
     },
-    "./brand.css": "./src/brand.css"
-  },
-  "scripts": {
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "typecheck": "tsc --noEmit"
-  },
-  "dependencies": {
-    "msw": "^2.7.0"
-  },
-  "devDependencies": {
-    "storybook": "^9",
-    "typescript": "^5.3.2",
-    "vitest": "^4.1.2"
-  }
+    "scripts": {
+        "test": "vitest run",
+        "test:watch": "vitest",
+        "typecheck": "tsc --noEmit"
+    },
+    "dependencies": {
+        "msw": "^2.7.0"
+    },
+    "devDependencies": {
+        "storybook": "^9",
+        "typescript": "^5.3.2",
+        "vitest": "^4.1.2"
+    }
 }

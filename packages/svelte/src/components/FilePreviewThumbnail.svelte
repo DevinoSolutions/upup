@@ -1,7 +1,7 @@
 <script lang="ts">
-  import type { Translations } from '@upup/core'
-import type { InternalFlatClassNames } from '@upup/core/internal'
-  import { fileGetExtension, fileGetIsPdf, fileGetIsText, fileIs3D, cn } from '@upup/core/internal'
+  import type { Translations } from '@useupup/core'
+import type { InternalFlatClassNames } from '@useupup/core/internal'
+  import { fileGetExtension, fileGetIsPdf, fileGetIsText, fileIs3D, cn } from '@useupup/core/internal'
   import FileIcon from './FileIcon.svelte'
 
   let {

@@ -2,8 +2,8 @@ import type { StorybookConfig } from '@storybook/preact-vite'
 import preact from '@preact/preset-vite'
 
 // We re-apply `@preact/preset-vite` in the preview so its `react -> preact/compat`
-// aliasing + preact dedupe are in effect. @upup/preact is a preact/compat-compiled
-// build of @upup/react; without this aliasing the story and the renderer resolve
+// aliasing + preact dedupe are in effect. @useupup/preact is a preact/compat-compiled
+// build of @useupup/react; without this aliasing the story and the renderer resolve
 // two different preact instances and rendering throws
 // "Cannot read properties of undefined (reading '__H')" (preact hooks dispatcher
 // mismatch).
@@ -17,18 +17,18 @@ import preact from '@preact/preset-vite'
 // makes `transform-hook-names` return before that require — its only use of
 // zimmerframe — while leaving the aliasing/dedupe intact.
 const config: StorybookConfig = {
-  framework: { name: '@storybook/preact-vite', options: {} },
-  stories: ['../src/**/*.mdx', '../src/**/*.stories.@(ts|tsx)'],
-  addons: [
-    '@storybook/addon-docs',
-    '@storybook/addon-a11y',
-    '@storybook/addon-themes',
-    'msw-storybook-addon',
-  ],
-  async viteFinal(cfg) {
-    cfg.plugins = cfg.plugins ?? []
-    cfg.plugins.push(preact({ devToolsEnabled: false }))
-    return cfg
-  },
+    framework: { name: '@storybook/preact-vite', options: {} },
+    stories: ['../src/**/*.mdx', '../src/**/*.stories.@(ts|tsx)'],
+    addons: [
+        '@storybook/addon-docs',
+        '@storybook/addon-a11y',
+        '@storybook/addon-themes',
+        'msw-storybook-addon',
+    ],
+    async viteFinal(cfg) {
+        cfg.plugins = cfg.plugins ?? []
+        cfg.plugins.push(preact({ devToolsEnabled: false }))
+        return cfg
+    },
 }
 export default config

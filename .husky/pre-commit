@@ -1,5 +1,5 @@
 #!/usr/bin/env sh
 pnpm exec lint-staged
-pnpm --filter @upup/core run test
-pnpm --filter @upup/react run test
-pnpm --filter @upup/server run test
+pnpm --filter @useupup/core run test
+pnpm --filter @useupup/react run test
+pnpm --filter @useupup/server run test

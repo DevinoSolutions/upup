@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
 import { useUpupUpload } from '../src/use-upup-upload'
-import { UploadStatus } from '@upup/core'
+import { UploadStatus } from '@useupup/core'
 
 const opts = { provider: 'S3' as const }
 

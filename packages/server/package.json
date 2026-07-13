@@ -1,5 +1,5 @@
 {
-    "name": "@upup/server",
+    "name": "@useupup/server",
     "version": "2.2.0",
     "description": "Server-mode endpoints for the upup uploader — S3-compatible presign + proxy uploads, cloud-drive token exchange, and an HMAC-signed upload-token trust model. Framework-agnostic with Next.js/Express/Fastify/Hono adapters.",
     "keywords": [
@@ -30,6 +30,9 @@
         "directory": "packages/server"
     },
     "license": "MIT",
+    "publishConfig": {
+        "access": "public"
+    },
     "type": "module",
     "sideEffects": false,
     "engines": {
@@ -83,13 +86,13 @@
         "dist"
     ],
     "dependencies": {
-        "@upup/core": "workspace:*",
+        "@useupup/core": "workspace:*",
         "@aws-sdk/client-s3": "^3.689.0",
         "@aws-sdk/s3-request-presigner": "^3.689.0"
     },
     "devDependencies": {
         "@types/node": "^20.10.0",
-        "@upup/eslint-config": "workspace:*",
+        "@useupup/eslint-config": "workspace:*",
         "@vitest/coverage-v8": "^4.1.2",
         "eslint": "^10.6.0",
         "tsup": "^8.4.0",

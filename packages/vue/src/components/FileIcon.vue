@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useUploaderTheme } from '../context/uploader-context'
-import { fileTypeIconName } from '@upup/core'
-import { cn } from '@upup/core/internal'
+import { fileTypeIconName } from '@useupup/core'
+import { cn } from '@useupup/core/internal'
 import Icon from './Icon'
 
 const props = withDefaults(

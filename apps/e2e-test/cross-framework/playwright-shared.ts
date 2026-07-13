@@ -2,7 +2,10 @@ import { FRAMEWORKS } from './framework-matrix'
 
 /** One Playwright project per framework, baseURL = its storybook origin. */
 export const frameworkProjects = () =>
-  FRAMEWORKS.map((fw) => ({ name: fw.name, use: { baseURL: `http://localhost:${fw.port}` } }))
+    FRAMEWORKS.map(fw => ({
+        name: fw.name,
+        use: { baseURL: `http://localhost:${fw.port}` },
+    }))
 
 // One dev server per storybook. The port is baked into each package's own
 // `storybook` script; reuseExistingServer lets a local dev keep theirs running.
@@ -13,9 +16,9 @@ export const frameworkProjects = () =>
 // a warm `reuseExistingServer` start is instant — so this ceiling costs nothing
 // on the happy path; it only prevents a premature cold-start failure.
 export const frameworkWebServers = () =>
-  FRAMEWORKS.map((fw) => ({
-    command: `pnpm --filter @upup/storybook-${fw.name} storybook`,
-    port: fw.port,
-    reuseExistingServer: true,
-    timeout: 420_000,
-  }))
+    FRAMEWORKS.map(fw => ({
+        command: `pnpm --filter @useupup/storybook-${fw.name} storybook`,
+        port: fw.port,
+        reuseExistingServer: true,
+        timeout: 420_000,
+    }))

@@ -1,5 +1,5 @@
-import type { Translations } from '@upup/core'
-import { FileSource } from '@upup/core'
+import type { Translations } from '@useupup/core'
+import { FileSource } from '@useupup/core'
 import { defineAsyncComponent, type Component } from 'vue'
 import {
     AudioIcon,
@@ -13,7 +13,7 @@ import {
     ScreenCaptureIcon,
 } from '../components/Icons'
 
-export { sourceNameKeys } from '@upup/core/internal'
+export { sourceNameKeys } from '@useupup/core/internal'
 
 // ESLint lints with the plain-tsc program (not vue-tsc), so `.vue` dynamic
 // imports resolve to `any` under lint; the explicit `as Component` narrows the

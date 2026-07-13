@@ -1,6 +1,6 @@
 import { html, type TemplateResult } from 'lit-html'
-import { FileSource } from '@upup/core'
-import type { DriveFile, DriveFolder } from '@upup/core'
+import { FileSource } from '@useupup/core'
+import type { DriveFile, DriveFolder } from '@useupup/core'
 import type { UploaderContext } from '../lib/types'
 import { driveAuthFallback } from './shared/drive-auth-fallback'
 import { driveBrowser } from './shared/drive-browser'

@@ -7,8 +7,8 @@ import React, {
     useRef,
     useState,
 } from 'react'
-import { cn } from '@upup/core/internal'
-import type { UploadFile } from '@upup/core'
+import { cn } from '@useupup/core/internal'
+import type { UploadFile } from '@useupup/core'
 import {
     useUploaderOptions,
     useUploaderTheme,

@@ -2,8 +2,8 @@ import { describe, it, expect } from 'vitest'
 import { render } from '@testing-library/react'
 import React from 'react'
 import { UpupUploader } from '../src'
-import { frFR } from '@upup/core'
-import type { LocaleBundle } from '@upup/core'
+import { frFR } from '@useupup/core'
+import type { LocaleBundle } from '@useupup/core'
 
 describe('Locale switching', () => {
     it('renders English strings by default', () => {

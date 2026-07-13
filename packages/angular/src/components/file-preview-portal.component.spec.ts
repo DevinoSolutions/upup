@@ -12,7 +12,7 @@
 
 import { describe, it, expect, vi } from 'vitest'
 import { TestBed } from '@angular/core/testing'
-import type { Translations } from '@upup/core'
+import type { Translations } from '@useupup/core'
 import { UpupStore } from '../upup-store.service'
 import { FilePreviewPortalComponent } from './file-preview-portal.component'
 

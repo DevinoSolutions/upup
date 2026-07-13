@@ -9,12 +9,12 @@ of the signature.
 
 ```ts
 type PresignedUrlResponse = {
-  key: string
-  uploadUrl: string
-  uploadHeaders?: Record<string, string>
-  publicUrl?: string
-  downloadUrl?: string
-  expiresIn: number
+    key: string
+    uploadUrl: string
+    uploadHeaders?: Record<string, string>
+    publicUrl?: string
+    downloadUrl?: string
+    expiresIn: number
 }
 ```
 
@@ -24,14 +24,14 @@ browser `PUT` requests. If the content type is signed, return it in
 
 ```ts
 return Response.json({
-  key,
-  uploadUrl,
-  uploadHeaders: {
-    'Content-Type': body.type || 'application/octet-stream',
-  },
-  downloadUrl,
-  expiresIn: 3600,
+    key,
+    uploadUrl,
+    uploadHeaders: {
+        'Content-Type': body.type || 'application/octet-stream',
+    },
+    downloadUrl,
+    expiresIn: 3600,
 })
 ```
 
-Use `@upup/server` when you want the server package to host these routes.
+Use `@useupup/server` when you want the server package to host these routes.

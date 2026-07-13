@@ -1,4 +1,4 @@
-// All four cloud providers proven through the REAL @upup/server HTTP surface.
+// All four cloud providers proven through the REAL @useupup/server HTTP surface.
 //
 // The vitest live suite (packages/server/tests/integration/
 // drive-clients-live.integration.test.ts) already proves drive-clients.ts
@@ -29,7 +29,7 @@
 //
 // Run (nightly / manual):
 //   dotenv -e local-dev/.env.minio -e local-dev/.env.test -- \
-//     pnpm --filter @upup/e2e-test test:e2e:drive-sandbox
+//     pnpm --filter @useupup/e2e-test test:e2e:drive-sandbox
 
 import { test, expect, type APIRequestContext } from '@playwright/test'
 import { createServer, type Server } from 'node:http'
@@ -49,8 +49,8 @@ import {
     setTokens,
     type TokenStore,
     type UpupServerConfig,
-} from '@upup/server'
-import { toWebRequest, writeWebResponse } from '@upup/server/node-bridge'
+} from '@useupup/server'
+import { toWebRequest, writeWebResponse } from '@useupup/server/node-bridge'
 
 // ── Providers under test (kebab wire slugs; camelCase only lives in-app) ────
 const PROVIDERS = ['box', 'dropbox', 'google-drive', 'one-drive'] as const
@@ -311,7 +311,7 @@ if (!anyEnabled) {
     )
 }
 
-// ── One real in-process @upup/server wired to the live MinIO, shared by both
+// ── One real in-process @useupup/server wired to the live MinIO, shared by both
 //    provider groups; the tokenStore is seeded with real minted tokens ───────
 function buildConfig(store: TokenStore): UpupServerConfig {
     return {
@@ -334,7 +334,7 @@ function buildConfig(store: TokenStore): UpupServerConfig {
     }
 }
 
-// Boot ONE real in-process @upup/server behind a node:http listener via the
+// Boot ONE real in-process @useupup/server behind a node:http listener via the
 // node-bridge (toWebRequest/writeWebResponse). Parameterized over the handler
 // so both the main and the policy-configured server share this exact plumbing.
 async function bootNodeServer(
@@ -464,7 +464,7 @@ async function listFiles(
 
 // ── Suites (one per provider; conditional-skips GREEN unless enabled) ────────
 for (const provider of PROVIDERS) {
-    test.describe(`server-mode drive list + transfer through @upup/server — ${provider}`, () => {
+    test.describe(`server-mode drive list + transfer through @useupup/server — ${provider}`, () => {
         test.skip(
             () => !enabled[provider],
             `${provider} drive-sandbox not configured (needs UPUP_DRIVE_SANDBOX=1 + creds + MinIO up)`,

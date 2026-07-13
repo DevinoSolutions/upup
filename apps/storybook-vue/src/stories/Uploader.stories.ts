@@ -1,29 +1,34 @@
 import type { Meta, StoryObj } from '@storybook/vue3-vite'
-import { UpupUploader } from '@upup/vue'
-import { uploaderArgTypes, uploaderDefaultArgs } from '@upup/storybook-config'
+import { UpupUploader } from '@useupup/vue'
+import {
+    uploaderArgTypes,
+    uploaderDefaultArgs,
+} from '@useupup/storybook-config'
 
 function buildProps(args: Record<string, unknown>) {
-  const { themeMode, primaryColor, ...rest } = args
-  const theme = {
-    ...(themeMode ? { mode: themeMode } : {}),
-    ...(primaryColor ? { tokens: { color: { primary: primaryColor } } } : {}),
-  }
-  return { ...rest, ...(Object.keys(theme).length ? { theme } : {}) }
+    const { themeMode, primaryColor, ...rest } = args
+    const theme = {
+        ...(themeMode ? { mode: themeMode } : {}),
+        ...(primaryColor
+            ? { tokens: { color: { primary: primaryColor } } }
+            : {}),
+    }
+    return { ...rest, ...(Object.keys(theme).length ? { theme } : {}) }
 }
 
 const meta: Meta<typeof UpupUploader> = {
-  title: 'Vue/Uploader',
-  component: UpupUploader,
-  argTypes: uploaderArgTypes,
-  args: uploaderDefaultArgs,
-  render: (args) => ({
-    components: { UpupUploader },
-    setup() {
-      return { props: buildProps(args as Record<string, unknown>) }
-    },
-    template: '<UpupUploader v-bind="props" />',
-  }),
-  parameters: { layout: 'padded' },
+    title: 'Vue/Uploader',
+    component: UpupUploader,
+    argTypes: uploaderArgTypes,
+    args: uploaderDefaultArgs,
+    render: args => ({
+        components: { UpupUploader },
+        setup() {
+            return { props: buildProps(args as Record<string, unknown>) }
+        },
+        template: '<UpupUploader v-bind="props" />',
+    }),
+    parameters: { layout: 'padded' },
 }
 export default meta
 
@@ -32,18 +37,18 @@ type Story = StoryObj<typeof UpupUploader>
 export const Playground: Story = {}
 
 export const Basic: Story = {
-  args: { sources: ['local'], showBranding: false, maxFiles: 1 },
+    args: { sources: ['local'], showBranding: false, maxFiles: 1 },
 }
 
 export const Smoke: Story = {
-  play: async ({ canvasElement }) => {
-    if (!canvasElement.querySelector('.upup-scope')) {
-      throw new Error('Smoke: uploader (.upup-scope) did not mount')
-    }
-  },
+    play: async ({ canvasElement }) => {
+        if (!canvasElement.querySelector('.upup-scope')) {
+            throw new Error('Smoke: uploader (.upup-scope) did not mount')
+        }
+    },
 }
 
-// ── Real storage (MinIO via the @upup/server harness on :53060) ──────────────
+// ── Real storage (MinIO via the @useupup/server harness on :53060) ──────────────
 // Opt-in story for the cross-framework e2e smoke. DISABLES MSW and points at the
 // local harness via `serverUrl` (selects the ServerCredentials strategy -> POST
 // /presign), clearing the MSW `uploadEndpoint` default. `sources: ['local']`

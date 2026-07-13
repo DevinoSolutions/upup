@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { compressStep } from '../../src/steps/compress'
 import { exifStep } from '../../src/steps/exif'
 import { heicStep } from '../../src/steps/heic'
-import type { UploadFile, PipelineContext } from '@upup/core'
+import type { UploadFile, PipelineContext } from '@useupup/core'
 
 function makeFile(name: string, type: string): UploadFile {
     const f = new File(['x'], name, { type })

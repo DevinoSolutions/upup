@@ -1,10 +1,10 @@
 ---
-"@upup/core": minor
-"@upup/react": minor
-"@upup/vue": minor
-"@upup/svelte": minor
-"@upup/angular": minor
-"@upup/vanilla": minor
+'@useupup/core': minor
+'@useupup/react': minor
+'@useupup/vue': minor
+'@useupup/svelte': minor
+'@useupup/angular': minor
+'@useupup/vanilla': minor
 ---
 
 ## Drive-browse error surface + pagination; retire dead download events
@@ -43,8 +43,8 @@ uploader panel stays fixed-height. `ServerModeDriveUploader`'s existing
 server-mode error surface now renders through the server-side error code map
 when a code is present, falling back to the raw message otherwise. Two new
 i18n keys (`driveBrowser.loadError`, `driveBrowser.loadMore`) land in all 9
-locales. `@upup/preact` needs no source change — it inherits through its
-`@upup/react` re-export.
+locales. `@useupup/preact` needs no source change — it inherits through its
+`@useupup/react` re-export.
 
 Two dead surfaces are retired from `DriveEventMap` and every framework's
 drive hooks/composables/services: the `file-downloaded` event (emitted by

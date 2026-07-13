@@ -17,7 +17,7 @@ import {
     FileSource,
     UpupCore,
     GoogleDrivePlugin,
-} from '@upup/core'
+} from '@useupup/core'
 import { UpupStore } from './upup-store.service'
 import type { UploaderProps } from './shared/types'
 import { EmptyIconComponent } from './components/icons/empty-icon.component'

@@ -21,8 +21,8 @@ import {
     UploadStatus,
     type UploadFile,
     type Translations,
-} from '@upup/core'
-import { isUploadActive, cn } from '@upup/core/internal'
+} from '@useupup/core'
+import { isUploadActive, cn } from '@useupup/core/internal'
 import { UpupStore } from '../upup-store.service'
 import { UploaderHeaderComponent } from './uploader-header.component'
 import { ProgressBarComponent } from './progress-bar.component'

@@ -1,13 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { Readable } from 'node:stream'
 import type { NextApiResponse } from 'next'
-import type { UpupServerConfig } from '@upup/server'
+import type { UpupServerConfig } from '@useupup/server'
 
 // Capture the Web Request the core handler receives, and control its Response.
 const received: { req?: Request } = {}
 let respond: (req: Request) => Promise<Response>
 
-vi.mock('@upup/server', () => ({
+vi.mock('@useupup/server', () => ({
     createUpupHandler: () => async (req: Request) => {
         received.req = req
         return respond(req)

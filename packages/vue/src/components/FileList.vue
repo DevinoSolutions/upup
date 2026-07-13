@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useVirtualizer } from '@tanstack/vue-virtual'
-import { formatUiMessage as t, pluralUiMessage as plural, UploadStatus } from '@upup/core'
-import { isUploadActive, cn } from '@upup/core/internal'
+import { formatUiMessage as t, pluralUiMessage as plural, UploadStatus } from '@useupup/core'
+import { isUploadActive, cn } from '@useupup/core/internal'
 import {
     useUploaderFiles,
     useUploaderI18n,

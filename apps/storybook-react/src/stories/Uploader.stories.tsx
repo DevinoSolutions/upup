@@ -1,25 +1,30 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import { UpupUploader, type UploaderProps } from '@upup/react'
-import { uploaderArgTypes, uploaderDefaultArgs } from '@upup/storybook-config'
+import { UpupUploader, type UploaderProps } from '@useupup/react'
+import {
+    uploaderArgTypes,
+    uploaderDefaultArgs,
+} from '@useupup/storybook-config'
 
 // Pull virtual controls out of args and fold them into the real `theme` prop.
 function render(args: Record<string, unknown>) {
-  const { themeMode, primaryColor, ...rest } = args
-  const theme = {
-    ...(themeMode ? { mode: themeMode } : {}),
-    ...(primaryColor ? { tokens: { color: { primary: primaryColor } } } : {}),
-  }
-  const props = { ...rest, ...(Object.keys(theme).length ? { theme } : {}) }
-  return <UpupUploader {...(props as UploaderProps)} />
+    const { themeMode, primaryColor, ...rest } = args
+    const theme = {
+        ...(themeMode ? { mode: themeMode } : {}),
+        ...(primaryColor
+            ? { tokens: { color: { primary: primaryColor } } }
+            : {}),
+    }
+    const props = { ...rest, ...(Object.keys(theme).length ? { theme } : {}) }
+    return <UpupUploader {...(props as UploaderProps)} />
 }
 
 const meta: Meta<UploaderProps> = {
-  title: 'React/Uploader',
-  component: UpupUploader,
-  argTypes: uploaderArgTypes,
-  args: uploaderDefaultArgs,
-  render,
-  parameters: { layout: 'padded' },
+    title: 'React/Uploader',
+    component: UpupUploader,
+    argTypes: uploaderArgTypes,
+    args: uploaderDefaultArgs,
+    render,
+    parameters: { layout: 'padded' },
 }
 export default meta
 
@@ -28,18 +33,18 @@ type Story = StoryObj<UploaderProps>
 export const Playground: Story = {}
 
 export const Basic: Story = {
-  args: { sources: ['local'], showBranding: false, maxFiles: 1 },
+    args: { sources: ['local'], showBranding: false, maxFiles: 1 },
 }
 
 export const Smoke: Story = {
-  play: async ({ canvasElement }) => {
-    if (!canvasElement.querySelector('.upup-scope')) {
-      throw new Error('Smoke: uploader (.upup-scope) did not mount')
-    }
-  },
+    play: async ({ canvasElement }) => {
+        if (!canvasElement.querySelector('.upup-scope')) {
+            throw new Error('Smoke: uploader (.upup-scope) did not mount')
+        }
+    },
 }
 
-// ── Real storage (MinIO via the @upup/server harness on :53060) ──────────────
+// ── Real storage (MinIO via the @useupup/server harness on :53060) ──────────────
 // Opt-in story for the cross-framework e2e smoke. DISABLES MSW and points at the
 // local harness via `serverUrl` (selects the ServerCredentials strategy -> POST
 // /presign), clearing the MSW `uploadEndpoint` default. `sources: ['local']`

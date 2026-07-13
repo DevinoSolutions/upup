@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, watch } from 'vue'
-import type { Translations } from '@upup/core'
+import type { Translations } from '@useupup/core'
 import {
     useUploaderEditor,
     useUploaderFiles,
@@ -9,8 +9,8 @@ import {
     useUploaderTheme,
     useUploaderUploadControls,
 } from '../context/uploader-context'
-import { fileCanPreviewText, fileGetIsImage, fileGetIsPdf, fileGetIsText } from '@upup/core/internal'
-import { cn } from '@upup/core/internal'
+import { fileCanPreviewText, fileGetIsImage, fileGetIsPdf, fileGetIsText } from '@useupup/core/internal'
+import { cn } from '@useupup/core/internal'
 import FilePreviewThumbnail from './FilePreviewThumbnail.vue'
 import ProgressBar from './shared/ProgressBar.vue'
 

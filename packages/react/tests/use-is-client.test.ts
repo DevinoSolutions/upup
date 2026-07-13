@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
 import { useIsClient } from '../src/use-is-client'
-import { FileSource } from '@upup/core'
+import { FileSource } from '@useupup/core'
 
 // ─────────────────────────────────────────────
 // useIsClient

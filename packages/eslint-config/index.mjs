@@ -7,7 +7,7 @@ import oxlint from 'eslint-plugin-oxlint'
 import upup from './rules/index.mjs'
 
 /**
- * Shared flat ESLint config for the publishable @upup/* packages — v2.
+ * Shared flat ESLint config for the publishable @useupup/* packages — v2.
  * v2 (2026-07-06 quality gates): TYPE-AWARE via projectService; oxlint runs
  * first as the fast line (built-ins only — R3), eslint-plugin-oxlint disables
  * the overlap here; all custom/audit-derived rules live in this file + the
@@ -45,7 +45,7 @@ export default tseslint.config(
             // and deletes it when the build ends. In CI, turbo runs a package's
             // `build` beside a sibling's `lint` in the same job; `eslint .` globs
             // the temp file, tsup deletes it, eslint opens it -> ENOENT, exit 2
-            // (first hit: @upup/vue, PR #320 round of 2026-07-07, when fresh
+            // (first hit: @useupup/vue, PR #320 round of 2026-07-07, when fresh
             // caches let build+lint overlap for the first time).
             '**/tsup.config.bundled_*.mjs',
         ],
@@ -170,7 +170,7 @@ export default tseslint.config(
                 {
                     patterns: [
                         {
-                            group: ['@upup/*/src/*', '**/packages/*/src/**'],
+                            group: ['@useupup/*/src/*', '**/packages/*/src/**'],
                             message:
                                 "Packages consume each other's dist/, never src/ (principle 5). Use the package entry or its public subpaths.",
                         },
@@ -179,12 +179,12 @@ export default tseslint.config(
                         {
                             name: 'libheif-js',
                             message:
-                                'Heavy dep — dynamic import() behind @upup/core/steps/heic only (principle 6).',
+                                'Heavy dep — dynamic import() behind @useupup/core/steps/heic only (principle 6).',
                         },
                         {
                             name: 'tus-js-client',
                             message:
-                                'Heavy dep — dynamic import() behind @upup/core/strategies/tus-upload only (principle 6).',
+                                'Heavy dep — dynamic import() behind @useupup/core/strategies/tus-upload only (principle 6).',
                         },
                     ],
                 },
@@ -249,7 +249,7 @@ export default tseslint.config(
 /**
  * The typescript-eslint "disable type-checked" config object, re-exported so a
  * consumer package can lint a genuinely out-of-project source file syntactically
- * without depending on typescript-eslint directly. Used by @upup/preact for its
+ * without depending on typescript-eslint directly. Used by @useupup/preact for its
  * real-React Filerobot island (built by tsconfig.island.json, deliberately
  * excluded from the main preact tsconfig — so projectService can't type it).
  * `no-explicit-any` (R1) and `upup/no-silent-catch` still fire on such files.
@@ -257,7 +257,7 @@ export default tseslint.config(
 export const disableTypeChecked = tseslint.configs.disableTypeChecked
 
 /**
- * Opt-in react-hooks rules for @upup/react + @upup/preact — NOT in the shared
+ * Opt-in react-hooks rules for @useupup/react + @useupup/preact — NOT in the shared
  * default (vue/svelte composables are also named use* and would false-positive).
  * v2: ratcheted warn -> error (F-167 phase 2 done).
  */
@@ -273,7 +273,7 @@ export const reactHooksConfig = [
 ]
 
 /**
- * @upup/core scope layer — core is framework-free and its errors use the
+ * @useupup/core scope layer — core is framework-free and its errors use the
  * taxonomy. Composed by `packages/core/eslint.config.mjs` (package-relative
  * `src/**` glob, since `eslint .` runs with cwd = the package dir).
  */
@@ -298,15 +298,15 @@ export const coreConfig = [
                                 'preact/*',
                             ],
                             message:
-                                '@upup/core has ZERO framework dependencies — keep it that way.',
+                                '@useupup/core has ZERO framework dependencies — keep it that way.',
                         },
                         {
-                            group: ['@upup/core', '@upup/core/*'],
+                            group: ['@useupup/core', '@useupup/core/*'],
                             message:
                                 'Do not import the public barrel from inside core (cycle risk) — use relative imports.',
                         },
                         {
-                            group: ['@upup/*/src/*', '**/packages/*/src/**'],
+                            group: ['@useupup/*/src/*', '**/packages/*/src/**'],
                             message:
                                 'Packages consume dist/, never src/ (principle 5).',
                         },
@@ -360,7 +360,7 @@ export const appEnvConfig = [
 ]
 
 /**
- * @upup/server scope layer — errors use the taxonomy; respond.ts is the single
+ * @useupup/server scope layer — errors use the taxonomy; respond.ts is the single
  * CORS-safe response home (P15), so a raw `new Response()` anywhere else is a
  * defect. Composed by `packages/server/eslint.config.mjs`.
  */

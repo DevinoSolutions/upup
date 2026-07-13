@@ -1,8 +1,8 @@
 <script lang="ts">
   import { writable, derived } from 'svelte/store'
   import { untrack } from 'svelte'
-  import { errorCodeToMessageKey } from '@upup/core'
-import { cn } from '@upup/core/internal'
+  import { errorCodeToMessageKey } from '@useupup/core'
+import { cn } from '@useupup/core/internal'
   import {
     useUploaderI18n,
     useUploaderOptions,

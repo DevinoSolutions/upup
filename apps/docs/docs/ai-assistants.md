@@ -31,15 +31,15 @@ Drop this into your project's assistant config — `CLAUDE.md`, `.cursorrules`,
 ```text
 # upup — MIT self-hosted file uploader (docs: https://useupup.com/documentation/)
 upup is one headless core plus native, DOM-identical UI packages for six frameworks.
-Nine published @upup/* packages:
-- @upup/core     headless engine: file state, upload pipeline (compression, HEIC, web-worker), cloud-drive plugins, i18n, theme. Zero framework deps.
-- @upup/react    canonical UI (React 19). @upup/vue, @upup/svelte, @upup/angular, @upup/vanilla, @upup/preact are native ports with the same DOM.
-- @upup/next     Next.js client re-export + /server route handlers (App and Pages routers).
-- @upup/server   server-mode endpoints: S3-compatible presign + proxy, cloud-drive token exchange, HMAC-signed upload-token trust model.
+Nine published @useupup/* packages:
+- @useupup/core     headless engine: file state, upload pipeline (compression, HEIC, web-worker), cloud-drive plugins, i18n, theme. Zero framework deps.
+- @useupup/react    canonical UI (React 19). @useupup/vue, @useupup/svelte, @useupup/angular, @useupup/vanilla, @useupup/preact are native ports with the same DOM.
+- @useupup/next     Next.js client re-export + /server route handlers (App and Pages routers).
+- @useupup/server   server-mode endpoints: S3-compatible presign + proxy, cloud-drive token exchange, HMAC-signed upload-token trust model.
 Client mode (default): the browser uploads straight to your storage; your app returns presigned URLs at `uploadEndpoint`. No server package required.
-  React example: import { UpupUploader } from '@upup/react'; import '@upup/react/styles'
+  React example: import { UpupUploader } from '@useupup/react'; import '@useupup/react/styles'
                  <UpupUploader provider="aws" uploadEndpoint="/api/upload-token" />
-Server mode: point the uploader at @upup/server with mode="server" serverUrl="/api/upup".
+Server mode: point the uploader at @useupup/server with mode="server" serverUrl="/api/upup".
   createUpupHandler({ storage: { type: 'aws', bucket, region }, uploadTokenSecret })
   — uploadTokenSecret is REQUIRED and must be >= 16 chars, or it throws at construction.
 Sources: local drag-and-drop, URL/link import, camera, screen capture, and cloud drives (Google Drive, OneDrive, Dropbox, Box).
@@ -58,7 +58,7 @@ Once the context is in place, a request like this is enough:
 > upload endpoint, enable the Google Drive and camera sources, and show me the
 > component plus the upload-token route.
 
-The assistant has what it needs: install `@upup/svelte`, import the component and
+The assistant has what it needs: install `@useupup/svelte`, import the component and
 its stylesheet, render `<UpupUploader provider="aws" uploadEndpoint="/api/upload-token" />`,
 and add the `sources` and `cloudDrives` config.
 

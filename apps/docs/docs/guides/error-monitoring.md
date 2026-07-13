@@ -34,7 +34,7 @@ prop as a message string — this is the supported wiring for the shipped
 component today:
 
 ```tsx
-import { UpupUploader } from '@upup/react'
+import { UpupUploader } from '@useupup/react'
 import * as Sentry from '@sentry/react'
 
 ;<UpupUploader
@@ -53,17 +53,17 @@ The component does not currently expose its internal core — `UploaderRef`
 exposes `useUpload()` only — so the rich `upload-error` payload (the full
 `Error` with `code`/`retryable`, plus the failing file) is not reachable
 from the component API. A ref-level core accessor is on the roadmap. The
-event examples below apply when you drive `@upup/core` yourself (headless
+event examples below apply when you drive `@useupup/core` yourself (headless
 or custom-UI integrations).
 :::
 
-### Full-fidelity events (headless `@upup/core`)
+### Full-fidelity events (headless `@useupup/core`)
 
 On the headless core, the `upload-error` event gives you the richest
 context — the full `Error` object plus the file that failed:
 
 ```ts
-import { UpupCore, UpupError } from '@upup/core'
+import { UpupCore, UpupError } from '@useupup/core'
 import * as Sentry from '@sentry/browser'
 
 const core = new UpupCore({/* ...your options */})
@@ -129,7 +129,7 @@ presign or multipart call surfaces as a caught exception in your route.
 If you instrument manually:
 
 ```ts
-import { createUpupHandler } from '@upup/server'
+import { createUpupHandler } from '@useupup/server'
 import * as Sentry from '@sentry/node'
 
 const handle = createUpupHandler({/* storage, uploadTokenSecret, ... */})

@@ -1,5 +1,5 @@
 {
-    "name": "@upup/preact",
+    "name": "@useupup/preact",
     "version": "2.2.0",
     "description": "Preact file uploader with cloud-drive sources, resumable uploads, an image editor (real Filerobot as a lazy real-React island), theming, and ICU i18n.",
     "keywords": [
@@ -28,6 +28,9 @@
         "directory": "packages/preact"
     },
     "license": "MIT",
+    "publishConfig": {
+        "access": "public"
+    },
     "type": "module",
     "sideEffects": [
         "*.css"
@@ -61,8 +64,8 @@
         "dist"
     ],
     "dependencies": {
-        "@upup/core": "workspace:*",
-        "@upup/react": "workspace:*"
+        "@useupup/core": "workspace:*",
+        "@useupup/react": "workspace:*"
     },
     "peerDependencies": {
         "preact": "^10.13.0",
@@ -98,7 +101,7 @@
         "@types/node": "^20.19.37",
         "@types/react": ">=18.0.0",
         "@types/react-dom": ">=18.0.0",
-        "@upup/eslint-config": "workspace:*",
+        "@useupup/eslint-config": "workspace:*",
         "@vitest/coverage-v8": "^4.1.2",
         "eslint": "^10.6.0",
         "jsdom": "22.1.0",

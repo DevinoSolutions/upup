@@ -28,7 +28,7 @@ import { OneDriveUploaderComponent } from './one-drive-uploader.component'
 import { DropboxUploaderComponent } from './dropbox-uploader.component'
 import { BoxUploaderComponent } from './box-uploader.component'
 import { ImageEditorStubComponent } from './image-editor-stub.component'
-import { type FileSource } from '@upup/core'
+import { type FileSource } from '@useupup/core'
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 

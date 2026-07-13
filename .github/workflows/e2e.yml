@@ -71,7 +71,7 @@ jobs:
               run: pnpm install --frozen-lockfile
 
             - name: Install Playwright Chromium
-              run: pnpm --filter @upup/e2e-test exec playwright install --with-deps chromium
+              run: pnpm --filter @useupup/e2e-test exec playwright install --with-deps chromium
 
             - name: Provision MinIO env (defaults; smoke is OAuth-free)
               run: cp local-dev/.env.minio.example local-dev/.env.minio
@@ -91,11 +91,11 @@ jobs:
 
             # The strongest adversarial verification in the repo (forged-token 403s,
             # oversized-PUT rejection, multipart size-envelope abort, sha256 byte
-            # round-trips) lives in @upup/server tests/integration and is gated on
+            # round-trips) lives in @useupup/server tests/integration and is gated on
             # UPUP_E2E_MINIO=1 (provided by the env file via the dotenv wrapper).
             # Without these steps it silently skips everywhere except a dev laptop.
             # Runs after the e2e gate because that step builds the workspace
-            # (server's vitest resolves @upup/core via dist). MinIO must be booted
+            # (server's vitest resolves @useupup/core via dist). MinIO must be booted
             # HERE: the cf global-teardown stops the compose stack its own setup
             # started, so nothing from the e2e gate survives into this step
             # (proven by an ECONNREFUSED :9100 on this step's first CI execution).

@@ -1,3 +1,3 @@
-module.exports = require('@upup/tailwind-config').createPostcssConfig({
+module.exports = require('@useupup/tailwind-config').createPostcssConfig({
     content: ['./src/**/*.{ts,css,html}'],
 })

@@ -1,5 +1,5 @@
 import { Injectable, inject, signal } from '@angular/core'
-import { deriveFetchedFileName } from '@upup/core/internal'
+import { deriveFetchedFileName } from '@useupup/core/internal'
 import { UpupStore } from '../upup-store.service'
 
 export { deriveFetchedFileName }

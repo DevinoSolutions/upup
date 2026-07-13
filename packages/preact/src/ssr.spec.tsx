@@ -1,11 +1,11 @@
 // @vitest-environment node
 /**
- * ssr.spec.tsx — SSR regression tests for @upup/preact
+ * ssr.spec.tsx — SSR regression tests for @useupup/preact
  *
  * Mirrors packages/react/tests/ssr.test.tsx. Renders the compat component with
  * preact-render-to-string in a pure Node environment (no jsdom — no window,
  * document, or navigator at all) to prove the compiled-on-preact/compat output
- * is safe to render on the server. Does NOT re-test @upup/react logic (659
+ * is safe to render on the server. Does NOT re-test @useupup/react logic (659
  * tests cover that).
  *
  * Markers verified against react source (see render.spec.tsx for the full map):
@@ -20,7 +20,7 @@ import { renderToString } from 'preact-render-to-string'
 import { describe, expect, test } from 'vitest'
 import { UpupUploader } from './index'
 
-describe('@upup/preact SSR (preact-render-to-string, no window/document)', () => {
+describe('@useupup/preact SSR (preact-render-to-string, no window/document)', () => {
     test('renders without throwing', () => {
         expect(() => renderToString(<UpupUploader />)).not.toThrow()
     })

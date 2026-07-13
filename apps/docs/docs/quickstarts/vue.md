@@ -2,12 +2,12 @@
 title: Vue Quickstart
 slug: /quickstarts/vue
 sidebar_position: 2
-description: Add a full-featured file uploader to a Vue 3 app with @upup/vue — a native port of the canonical React UI, DOM-identical, with cloud drives, camera, and resumable uploads.
+description: Add a full-featured file uploader to a Vue 3 app with @useupup/vue — a native port of the canonical React UI, DOM-identical, with cloud drives, camera, and resumable uploads.
 ---
 
 # Vue Quickstart
 
-`@upup/vue` is a native Vue 3 port of the canonical upup React UI — DOM-identical
+`@useupup/vue` is a native Vue 3 port of the canonical upup React UI — DOM-identical
 to it — with cloud-drive sources, resumable uploads, theming, and ICU i18n. This
 page gets you uploading in **client mode**, no server package required.
 
@@ -16,7 +16,7 @@ Requires Vue 3.4+ (`vue` is a peer dependency).
 ## Install
 
 ```sh
-npm i @upup/vue
+npm i @useupup/vue
 ```
 
 ## Minimal example (client mode)
@@ -26,8 +26,8 @@ short-lived upload credentials at `uploadEndpoint`.
 
 ```vue
 <script setup lang="ts">
-import { UpupUploader } from '@upup/vue'
-import '@upup/vue/styles'
+import { UpupUploader } from '@useupup/vue'
+import '@useupup/vue/styles'
 </script>
 
 <template>
@@ -71,7 +71,7 @@ providers (client IDs come from each provider's developer console):
 ## Add server mode
 
 For credential isolation and server-proxied cloud drives, add
-[`@upup/server`](https://www.npmjs.com/package/@upup/server) and point the
+[`@useupup/server`](https://www.npmjs.com/package/@useupup/server) and point the
 uploader at it:
 
 ```vue
@@ -84,7 +84,7 @@ The handler requires an `uploadTokenSecret` of **at least 16 characters** —
 `createUpupHandler` throws at construction time if it is missing or too short:
 
 ```ts
-import { createUpupHandler } from '@upup/server'
+import { createUpupHandler } from '@useupup/server'
 
 export const handler = createUpupHandler({
     storage: {

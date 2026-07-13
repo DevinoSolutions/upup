@@ -1,7 +1,7 @@
 import { html, nothing, type TemplateResult } from 'lit-html'
 import { repeat } from 'lit-html/directives/repeat.js'
-import { cn } from '@upup/core/internal'
-import type { DriveFolder } from '@upup/core'
+import { cn } from '@useupup/core/internal'
+import type { DriveFolder } from '@useupup/core'
 import type { UploaderContext } from '../../lib/types'
 import { icon } from '../icon'
 

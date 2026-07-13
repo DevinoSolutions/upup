@@ -7,7 +7,7 @@ import {
     type UiTranslations,
     type Translator,
     type ResolvedImageEditorOptions,
-} from '@upup/core'
+} from '@useupup/core'
 import {
     UploaderOrchestrator,
     ThemeStore,
@@ -15,7 +15,7 @@ import {
     createUploaderController,
     type UploaderControllerOptions,
     type UploaderController,
-} from '@upup/core/internal'
+} from '@useupup/core/internal'
 import { createUpupUpload, type UpupUploadHandle } from './lib/use-upup-upload'
 import { createSSEProcessing } from './lib/use-sse-processing'
 import { toSignalStore, type SignalStore } from './lib/to-signal-store'

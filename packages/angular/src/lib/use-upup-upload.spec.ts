@@ -1,5 +1,5 @@
 import { vi } from 'vitest'
-import type { UploadFile } from '@upup/core'
+import type { UploadFile } from '@useupup/core'
 import { createUpupUpload, type UseUpupUploadOptions } from './use-upup-upload'
 
 // Minimal valid CoreOptions — all fields are optional; empty object is sufficient.

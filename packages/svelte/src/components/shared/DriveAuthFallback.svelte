@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { Readable } from 'svelte/store'
-  import { type DriveBrowserError, formatUiMessage as t } from '@upup/core'
-import { cn } from '@upup/core/internal'
+  import { type DriveBrowserError, formatUiMessage as t } from '@useupup/core'
+import { cn } from '@useupup/core/internal'
   import { useUploaderI18n, useUploaderTheme } from '../../context/uploader-context'
   import SourceViewContainer from './SourceViewContainer.svelte'
 

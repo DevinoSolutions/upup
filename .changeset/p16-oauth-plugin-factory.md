@@ -1,5 +1,5 @@
 ---
-'@upup/core': major
+'@useupup/core': major
 ---
 
 ## Extract the popup-OAuth skeleton (`PopupOAuthPlugin`), formalize `init`, retire `ServerOAuth`
@@ -23,6 +23,6 @@ production consumers:
   (F-121). Public plugin constructors + the `DrivePlugin` runtime surface are unchanged.
 
 - **`ServerOAuth` (value) and `OAuthStrategy`, `OAuthTokens`, `RemoteFile` (types) are
-  removed from `@upup/core` (F-655).** They had zero non-test consumers;
+  removed from `@useupup/core` (F-655).** They had zero non-test consumers;
   `ServerModeDriveController` is the canonical server-mode drive abstraction. `CloudProvider`
   is retained.

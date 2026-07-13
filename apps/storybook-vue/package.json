@@ -1,41 +1,41 @@
 {
-  "name": "@upup/storybook-vue",
-  "version": "0.1.0",
-  "private": true,
-  "type": "module",
-  "scripts": {
-    "storybook": "storybook dev -p 53051 --no-open",
-    "build-storybook": "storybook build -o storybook-static",
-    "test": "vitest run --passWithNoTests",
-    "typecheck": "vue-tsc --noEmit"
-  },
-  "dependencies": {
-    "@upup/core": "workspace:*",
-    "@upup/vue": "workspace:*",
-    "vue": "^3.4.0"
-  },
-  "devDependencies": {
-    "@upup/storybook-config": "workspace:*",
-    "storybook": "^9",
-    "@storybook/vue3-vite": "^9",
-    "@storybook/addon-docs": "^9",
-    "@storybook/addon-a11y": "^9",
-    "@storybook/addon-themes": "^9",
-    "msw": "^2.7.0",
-    "msw-storybook-addon": "^2.0.4",
-    "@tailwindcss/forms": "^0.5.7",
-    "@tailwindcss/typography": "^0.5.16",
-    "autoprefixer": "^10.4.20",
-    "postcss": "^8.5.2",
-    "tailwindcss": "^3.4.17",
-    "typescript": "^5.3.2",
-    "vite": "^7",
-    "vue-tsc": "^2.0.0",
-    "vitest": "^4.1.2"
-  },
-  "msw": {
-    "workerDirectory": [
-      "public"
-    ]
-  }
+    "name": "@useupup/storybook-vue",
+    "version": "0.1.0",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "storybook": "storybook dev -p 53051 --no-open",
+        "build-storybook": "storybook build -o storybook-static",
+        "test": "vitest run --passWithNoTests",
+        "typecheck": "vue-tsc --noEmit"
+    },
+    "dependencies": {
+        "@useupup/core": "workspace:*",
+        "@useupup/vue": "workspace:*",
+        "vue": "^3.4.0"
+    },
+    "devDependencies": {
+        "@useupup/storybook-config": "workspace:*",
+        "storybook": "^9",
+        "@storybook/vue3-vite": "^9",
+        "@storybook/addon-docs": "^9",
+        "@storybook/addon-a11y": "^9",
+        "@storybook/addon-themes": "^9",
+        "msw": "^2.7.0",
+        "msw-storybook-addon": "^2.0.4",
+        "@tailwindcss/forms": "^0.5.7",
+        "@tailwindcss/typography": "^0.5.16",
+        "autoprefixer": "^10.4.20",
+        "postcss": "^8.5.2",
+        "tailwindcss": "^3.4.17",
+        "typescript": "^5.3.2",
+        "vite": "^7",
+        "vue-tsc": "^2.0.0",
+        "vitest": "^4.1.2"
+    },
+    "msw": {
+        "workerDirectory": [
+            "public"
+        ]
+    }
 }

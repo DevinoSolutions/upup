@@ -2,13 +2,13 @@
  * Real Filerobot TABS/TOOLS identifiers, mirrored from
  * react-filerobot-image-editor's exported `TABS`/`TOOLS`.
  *
- * Read SYNCHRONOUSLY by the @upup/react chrome off the bridge's module namespace
+ * Read SYNCHRONOUSLY by the @useupup/react chrome off the bridge's module namespace
  * (mod.TABS / mod.TOOLS) and forwarded as `defaultTabId` / `tabsIds` straight into
  * the real editor — so the VALUES must match the library exactly.
  * `src/__tests__/filerobot-constants.spec.ts` guards this with a parity assertion.
  *
  * Keyed UPPERCASE because the chrome does `TABS[tab.toUpperCase()]`, where `tab`
- * is a capitalized @upup/core ImageEditorOptions value ('Adjust', 'Crop', …).
+ * is a capitalized @useupup/core ImageEditorOptions value ('Adjust', 'Crop', …).
  */
 export const TABS = {
     ADJUST: 'Adjust',

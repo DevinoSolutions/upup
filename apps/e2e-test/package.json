@@ -1,5 +1,5 @@
 {
-    "name": "@upup/e2e-test",
+    "name": "@useupup/e2e-test",
     "private": true,
     "type": "module",
     "scripts": {
@@ -14,7 +14,7 @@
         "test:e2e:drive-sandbox": "playwright test --config playwright.drive-sandbox.config.ts"
     },
     "dependencies": {
-        "@upup/react": "workspace:*",
+        "@useupup/react": "workspace:*",
         "react": "^18.2.0",
         "react-dom": "^18.2.0"
     },

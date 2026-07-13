@@ -4,7 +4,7 @@ import {
     blobToUploadFile,
     revokeAndReplace,
 } from '../src/lib/imageEditorHelpers'
-import { FileSource, UploadStatus, type UploadFile } from '@upup/core'
+import { FileSource, UploadStatus, type UploadFile } from '@useupup/core'
 
 // jsdom does not implement createObjectURL / revokeObjectURL
 const objectURLs = new Map<string, Blob>()

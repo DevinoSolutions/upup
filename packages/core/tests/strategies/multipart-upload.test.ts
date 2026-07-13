@@ -5,7 +5,7 @@ import type {
     MultipartInitResponse,
     MultipartCompleteResponse,
     PresignedUrlResponse,
-} from '@upup/core'
+} from '@useupup/core'
 
 describe('MultipartUpload', () => {
     const mockCredentials: CredentialStrategy = {

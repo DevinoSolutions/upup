@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
 import useUpload from '../src/hooks/useUpload'
-import { UploadStatus, FileSource } from '@upup/core'
-import type { UploadFile } from '@upup/core'
+import { UploadStatus, FileSource } from '@useupup/core'
+import type { UploadFile } from '@useupup/core'
 
 function makeUploadCtx(overrides: Record<string, unknown> = {}) {
     return {

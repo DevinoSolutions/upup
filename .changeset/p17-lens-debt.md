@@ -1,10 +1,10 @@
 ---
-'@upup/server': minor
-'@upup/core': patch
-'@upup/react': patch
-'@upup/next': patch
-'@upup/angular': patch
-'@upup/vanilla': patch
+'@useupup/server': minor
+'@useupup/core': patch
+'@useupup/react': patch
+'@useupup/next': patch
+'@useupup/angular': patch
+'@useupup/vanilla': patch
 ---
 
 lens-debt small fixes (F-605, F-606, F-651, F-652, F-657):
@@ -17,9 +17,9 @@ lens-debt small fixes (F-605, F-606, F-651, F-652, F-657):
   `enablePaste`/`isProcessing`/folder-drop/filename-normalization are honored
   headlessly too (`UseUpupUploadOptions` gains `enablePaste`/`disableDragDrop`/
   `isProcessing`/`folderUpload`/`onWarn`)
-- server: a new `@upup/server/node-bridge` subpath (`toWebRequest`/
+- server: a new `@useupup/server/node-bridge` subpath (`toWebRequest`/
   `writeWebResponse`) is the one Node<->Web bridge for express/fastify/
-  `@upup/next`'s pages-handler, replacing three drifted hand-rolled copies
+  `@useupup/next`'s pages-handler, replacing three drifted hand-rolled copies
 - server: `createUpupPlugin` (fastify) accepts an optional `{ path }` to
   override its previously-hardcoded `/upup/*` mount path
 - server: `createUpupHandler` now throws at construct time if `storage.type`

@@ -1,5 +1,5 @@
 ---
-"@upup/core": minor
+'@useupup/core': minor
 ---
 
 ## CLDR-correct UI plurals + single locale registry

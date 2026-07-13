@@ -23,10 +23,10 @@ export default function HeroSection() {
 
     const packageManagers = useMemo(
         () => [
-            { id: 'npm', name: 'npm', command: 'npm install @upup/react' },
-            { id: 'pnpm', name: 'pnpm', command: 'pnpm add @upup/react' },
-            { id: 'yarn', name: 'Yarn', command: 'yarn add @upup/react' },
-            { id: 'bun', name: 'Bun', command: 'bun add @upup/react' },
+            { id: 'npm', name: 'npm', command: 'npm install @useupup/react' },
+            { id: 'pnpm', name: 'pnpm', command: 'pnpm add @useupup/react' },
+            { id: 'yarn', name: 'Yarn', command: 'yarn add @useupup/react' },
+            { id: 'bun', name: 'Bun', command: 'bun add @useupup/react' },
         ],
         [],
     )

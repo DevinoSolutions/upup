@@ -23,8 +23,8 @@ import { FilePreviewComponent } from './file-preview.component'
 import { FilePreviewPortalComponent } from './file-preview-portal.component'
 import { FilePreviewThumbnailComponent } from './file-preview-thumbnail.component'
 import { EmptyIconComponent } from './icons/empty-icon.component'
-import { UploadStatus } from '@upup/core'
-import type { UploadFile, Translations } from '@upup/core'
+import { UploadStatus } from '@useupup/core'
+import type { UploadFile, Translations } from '@useupup/core'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 

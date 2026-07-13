@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest'
-import * as coreInternal from '@upup/core/internal'
+import * as coreInternal from '@useupup/core/internal'
 
 /**
- * Pins @upup/core/internal's runtime value export list (F-142). This is the
+ * Pins @useupup/core/internal's runtime value export list (F-142). This is the
  * other half of the public-api.test.ts pin: that test locks the curated
  * public `.` entry from silently re-growing; this one locks the `./internal`
  * seam from silently shrinking (or losing a name sibling packages depend on
@@ -74,7 +74,7 @@ const EXPECTED_INTERNAL_VALUE_EXPORTS: string[] = [
     'updateSessionProgress',
 ].sort()
 
-describe('@upup/core/internal surface (pin test)', () => {
+describe('@useupup/core/internal surface (pin test)', () => {
     it('runtime value export list matches the curated, checked-in list', () => {
         const actual = Object.keys(coreInternal).sort()
         expect(actual).toEqual(EXPECTED_INTERNAL_VALUE_EXPORTS)

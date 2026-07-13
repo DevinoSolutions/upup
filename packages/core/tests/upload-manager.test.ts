@@ -4,7 +4,7 @@ import type {
     CredentialStrategy,
     UploadStrategy,
 } from '../src/contracts-strategies'
-import type { UploadFile } from '@upup/core'
+import type { UploadFile } from '@useupup/core'
 
 // Helper to create a minimal UploadFile using a plain object
 function makeFile(id: string, name: string): UploadFile {
@@ -169,7 +169,7 @@ describe('UploadManager', () => {
     })
 
     it('retries on retryable UpupNetworkError', async () => {
-        const { UpupNetworkError } = await import('@upup/core')
+        const { UpupNetworkError } = await import('@useupup/core')
 
         let callCount = 0
         const flakyUpload = vi.fn().mockImplementation(async () => {
@@ -193,7 +193,7 @@ describe('UploadManager', () => {
     })
 
     it('calls onFileError, completes other files, then throws a batch error', async () => {
-        const { UpupNetworkError } = await import('@upup/core')
+        const { UpupNetworkError } = await import('@useupup/core')
 
         let callIdx = 0
         const partialFailUpload = vi.fn().mockImplementation(async () => {

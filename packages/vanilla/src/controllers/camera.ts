@@ -1,4 +1,4 @@
-import type { UpupCore, FileSource } from '@upup/core'
+import type { UpupCore, FileSource } from '@useupup/core'
 import type { SourceController } from '../lib/types'
 
 export enum FacingMode {

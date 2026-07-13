@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { renderHook } from '@testing-library/react'
 import { useUpupUpload } from '../src/use-upup-upload'
-import { UploadStatus, type UploadFile } from '@upup/core'
+import { UploadStatus, type UploadFile } from '@useupup/core'
 
 describe('useUpupUpload — configuration variants', () => {
     it('accepts cloudDrives nested config', () => {

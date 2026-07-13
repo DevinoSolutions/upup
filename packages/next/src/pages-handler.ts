@@ -1,8 +1,8 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
-import { createUpupHandler } from '@upup/server'
-import type { UpupServerConfig } from '@upup/server'
-import type { UpupNextOptions } from '@upup/server/next'
-import { toWebRequest, writeWebResponse } from '@upup/server/node-bridge'
+import { createUpupHandler } from '@useupup/server'
+import type { UpupServerConfig } from '@useupup/server'
+import type { UpupNextOptions } from '@useupup/server/next'
+import { toWebRequest, writeWebResponse } from '@useupup/server/node-bridge'
 
 function firstHeaderValue(
     value: string | string[] | undefined,

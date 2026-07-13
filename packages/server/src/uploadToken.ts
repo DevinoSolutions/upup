@@ -7,7 +7,7 @@
 // runs on Node 18+, edge, and Cloudflare Workers — matching the rest of the
 // package (already uses global crypto.randomUUID / getRandomValues).
 
-import { UpupConfigError } from '@upup/core'
+import { UpupConfigError } from '@useupup/core'
 
 export interface UploadTokenPayload {
     /** Object key the upload is bound to. */
@@ -44,7 +44,7 @@ export function assertUploadTokenSecret(
 ): asserts secret is string {
     if (!secret || secret.length < MIN_SECRET_LENGTH) {
         throw new UpupConfigError(
-            `[@upup/server] config.uploadTokenSecret is required and must be at least ${MIN_SECRET_LENGTH} characters. ` +
+            `[@useupup/server] config.uploadTokenSecret is required and must be at least ${MIN_SECRET_LENGTH} characters. ` +
                 'Generate a stable, high-entropy secret (e.g. `openssl rand -hex 32`) and share the SAME value across every server instance/worker.',
         )
     }

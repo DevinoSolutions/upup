@@ -1,5 +1,5 @@
-import { defineUpupConfig } from '@upup/next/server'
-import type { UpupServerConfig } from '@upup/next/server'
+import { defineUpupConfig } from '@useupup/next/server'
+import type { UpupServerConfig } from '@useupup/next/server'
 import { env, requireServerEnv } from './env'
 
 // Lazy singleton: Next.js imports route modules at build time for page-data

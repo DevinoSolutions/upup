@@ -1,4 +1,4 @@
-# @upup/angular
+# @useupup/angular
 
 Angular 19+ standalone file uploader with cloud-drive sources (Google Drive,
 OneDrive, Dropbox, Box), resumable uploads, theming, and ICU i18n. A native port
@@ -11,7 +11,7 @@ dependencies).
 ## Install
 
 ```sh
-npm i @upup/angular
+npm i @useupup/angular
 ```
 
 ## Usage (Client Mode)
@@ -24,7 +24,7 @@ your storage; your server only issues short-lived upload credentials at
 
 ```ts
 import { Component } from '@angular/core'
-import { UpupUploaderComponent } from '@upup/angular'
+import { UpupUploaderComponent } from '@useupup/angular'
 
 @Component({
     selector: 'app-root',
@@ -37,8 +37,8 @@ import { UpupUploaderComponent } from '@upup/angular'
 export class AppComponent {}
 ```
 
-Load the stylesheet once globally — add `@upup/angular/styles` to the `styles`
-array in `angular.json`, or `@import '@upup/angular/styles';` in your global
+Load the stylesheet once globally — add `@useupup/angular/styles` to the `styles`
+array in `angular.json`, or `@import '@useupup/angular/styles';` in your global
 `styles.css`. `uploadEndpoint` is your own route returning a presigned upload URL
 — see the quickstart for a ready-made handler. Wire completion via the config's
 `onFileUploadComplete` callback or the component's `(uploadAllComplete)` output.
@@ -46,7 +46,7 @@ array in `angular.json`, or `@import '@upup/angular/styles';` in your global
 ## Server Mode
 
 For credential isolation and server-proxied cloud drives, add
-[`@upup/server`](https://www.npmjs.com/package/@upup/server) and set the mode:
+[`@useupup/server`](https://www.npmjs.com/package/@useupup/server) and set the mode:
 
 ```html
 <upup-uploader

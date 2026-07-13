@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
 import { useUpupUpload } from '../src/use-upup-upload'
-import { UploadStatus, type ExtensionMethods } from '@upup/core'
+import { UploadStatus, type ExtensionMethods } from '@useupup/core'
 
 const opts = { provider: 'S3' as const }
 const makeFile = (name: string) => new File(['x'], name, { type: 'text/plain' })

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import { FileSource } from '@upup/core'
-import { sourceNameKeys } from '@upup/core/internal'
+import { FileSource } from '@useupup/core'
+import { sourceNameKeys } from '@useupup/core/internal'
 
 /**
  * source-constants.spec.ts — angular has no `uploadSourceObject` map (its

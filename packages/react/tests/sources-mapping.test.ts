@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { FileSource } from '@upup/core'
+import { FileSource } from '@useupup/core'
 
 const sourceById: Record<string, FileSource> = {
     local: FileSource.LOCAL,

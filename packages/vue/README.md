@@ -1,4 +1,4 @@
-# @upup/vue
+# @useupup/vue
 
 Vue 3 file uploader with cloud-drive sources (Google Drive, OneDrive, Dropbox,
 Box), resumable uploads, theming, and ICU i18n. A native port of the canonical
@@ -9,7 +9,7 @@ Requires Vue 3.4+ (`vue` is a peer dependency).
 ## Install
 
 ```sh
-npm i @upup/vue
+npm i @useupup/vue
 ```
 
 ## Usage (Client Mode)
@@ -19,8 +19,8 @@ issues short-lived upload credentials at `uploadEndpoint`.
 
 ```vue
 <script setup lang="ts">
-import { UpupUploader } from '@upup/vue'
-import '@upup/vue/styles'
+import { UpupUploader } from '@useupup/vue'
+import '@useupup/vue/styles'
 </script>
 
 <template>
@@ -41,7 +41,7 @@ the quickstart for a ready-made handler.
 ## Server Mode
 
 For credential isolation and server-proxied cloud drives, add
-[`@upup/server`](https://www.npmjs.com/package/@upup/server) and point the
+[`@useupup/server`](https://www.npmjs.com/package/@useupup/server) and point the
 uploader at it:
 
 ```vue

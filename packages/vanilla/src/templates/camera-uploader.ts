@@ -1,7 +1,7 @@
 import { html, nothing, type TemplateResult } from 'lit-html'
 import { ref } from 'lit-html/directives/ref.js'
-import { formatUiMessage as t } from '@upup/core'
-import { cn } from '@upup/core/internal'
+import { formatUiMessage as t } from '@useupup/core'
+import { cn } from '@useupup/core/internal'
 import type { UploaderContext } from '../lib/types'
 import { sourceViewContainer } from './shared/source-view-container'
 

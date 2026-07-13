@@ -2,12 +2,12 @@
 title: Vanilla JS Quickstart
 slug: /quickstarts/vanilla
 sidebar_position: 5
-description: Add a full-featured file uploader to any page with @upup/vanilla — framework-free, DOM-identical to the canonical React UI, with cloud drives, camera, and resumable uploads.
+description: Add a full-featured file uploader to any page with @useupup/vanilla — framework-free, DOM-identical to the canonical React UI, with cloud drives, camera, and resumable uploads.
 ---
 
 # Vanilla JS Quickstart
 
-`@upup/vanilla` is the framework-free upup uploader (built on lit-html) —
+`@useupup/vanilla` is the framework-free upup uploader (built on lit-html) —
 DOM-identical to the canonical React UI — with cloud-drive sources, resumable
 uploads, theming, and ICU i18n. Mount it into any DOM element; no framework
 required. This page gets you uploading in **client mode**, no server package
@@ -16,7 +16,7 @@ required.
 ## Install
 
 ```sh
-npm i @upup/vanilla
+npm i @useupup/vanilla
 ```
 
 ## Minimal example (client mode)
@@ -26,8 +26,8 @@ npm i @upup/vanilla
 app only issues short-lived upload credentials at `uploadEndpoint`.
 
 ```ts
-import { createUploader } from '@upup/vanilla'
-import '@upup/vanilla/styles'
+import { createUploader } from '@useupup/vanilla'
+import '@useupup/vanilla/styles'
 
 const uploader = createUploader('#uploader', {
     provider: 'aws',
@@ -48,10 +48,10 @@ See [Code Examples](../code-examples.md) for a ready-to-copy presign handler.
 ## Custom element
 
 A `<upup-uploader>` custom element is also published. Importing
-`@upup/vanilla/element` registers it, after which you can use it declaratively:
+`@useupup/vanilla/element` registers it, after which you can use it declaratively:
 
 ```ts
-import '@upup/vanilla/element'
+import '@useupup/vanilla/element'
 ```
 
 ```html
@@ -81,7 +81,7 @@ createUploader('#uploader', {
 ## Add server mode
 
 For credential isolation and server-proxied cloud drives, add
-[`@upup/server`](https://www.npmjs.com/package/@upup/server) and set the mode:
+[`@useupup/server`](https://www.npmjs.com/package/@useupup/server) and set the mode:
 
 ```ts
 createUploader('#uploader', {
@@ -95,7 +95,7 @@ The handler requires an `uploadTokenSecret` of **at least 16 characters** —
 `createUpupHandler` throws at construction time if it is missing or too short:
 
 ```ts
-import { createUpupHandler } from '@upup/server'
+import { createUpupHandler } from '@useupup/server'
 
 export const handler = createUpupHandler({
     storage: {

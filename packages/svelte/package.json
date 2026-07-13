@@ -1,5 +1,5 @@
 {
-    "name": "@upup/svelte",
+    "name": "@useupup/svelte",
     "version": "2.2.0",
     "description": "Svelte 5 file uploader with cloud-drive sources, resumable uploads, theming, and ICU i18n.",
     "keywords": [
@@ -29,6 +29,9 @@
         "directory": "packages/svelte"
     },
     "license": "MIT",
+    "publishConfig": {
+        "access": "public"
+    },
     "type": "module",
     "sideEffects": [
         "*.css"
@@ -63,7 +66,7 @@
     },
     "dependencies": {
         "@tanstack/svelte-virtual": "^3.13.0",
-        "@upup/core": "workspace:*"
+        "@useupup/core": "workspace:*"
     },
     "peerDependencies": {
         "svelte": "^5.0.0"
@@ -72,8 +75,8 @@
         "@sveltejs/package": "^2.3.0",
         "@sveltejs/vite-plugin-svelte": "^6.0.0",
         "@testing-library/svelte": "^5.2.0",
-        "@upup/eslint-config": "workspace:*",
-        "@upup/tailwind-config": "workspace:*",
+        "@useupup/eslint-config": "workspace:*",
+        "@useupup/tailwind-config": "workspace:*",
         "@vitest/coverage-v8": "^4.1.2",
         "eslint": "^10.6.0",
         "jsdom": "22.1.0",

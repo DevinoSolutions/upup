@@ -1,13 +1,13 @@
 ---
-'@upup/core': major
-'@upup/server': major
-'@upup/react': major
-'@upup/vue': major
-'@upup/svelte': major
-'@upup/angular': major
-'@upup/vanilla': major
-'@upup/preact': major
-'@upup/next': major
+'@useupup/core': major
+'@useupup/server': major
+'@useupup/react': major
+'@useupup/vue': major
+'@useupup/svelte': major
+'@useupup/angular': major
+'@useupup/vanilla': major
+'@useupup/preact': major
+'@useupup/next': major
 ---
 
 ## Removed four legacy v1 props
@@ -20,7 +20,7 @@
 ## Wired `theme.slots` end-to-end
 
 Previously `theme.slots` was publicly typed but the runtime ignored
-it. A new `flattenSlotsToClassNames()` in `@upup/core` bridges the
+it. A new `flattenSlotsToClassNames()` in `@useupup/core` bridges the
 nested slot shape onto the internal flat map every component reads.
 Four new slots added to `UpupThemeSlots` to cover v1 `classNames`
 keys that had no v2 equivalent.
@@ -28,10 +28,10 @@ keys that had no v2 equivalent.
 ## Other breaking bits
 
 - `UpupUploaderPropsClassNames` is no longer a public export of
-  `@upup/react` (still internal).
+  `@useupup/react` (still internal).
 - `theme.slots` is now typed as `DeepPartialSlots` so partial
   overrides compile.
-- `CoreOptions.locale` (`@upup/core`) changed from `unknown` to
+- `CoreOptions.locale` (`@useupup/core`) changed from `unknown` to
   `LocaleBundle | UpupLocaleCode`. `CoreOptions.translations` from
   `unknown` to `Partial<UpupMessages>`. Runtime unchanged.
 

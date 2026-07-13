@@ -1,7 +1,7 @@
 'use client'
 import React, { useContext, useEffect, useMemo, useState } from 'react'
-import { UpupUploader } from '@upup/react'
-import '@upup/react/styles'
+import { UpupUploader } from '@useupup/react'
+import '@useupup/react/styles'
 import {
     enUS,
     arSA,
@@ -13,7 +13,7 @@ import {
     zhCN,
     zhTW,
     type LocaleBundle,
-} from '@upup/core'
+} from '@useupup/core'
 import { ConfigContext } from '../state/ConfigContext'
 import { useEventLog } from '../state/EventLogContext'
 import type { UpupConfig } from '../types'
@@ -54,9 +54,10 @@ function usePageThemeIsDark(): boolean {
             attributes: true,
             attributeFilter: ['class', 'data-theme'],
         })
-        const mq = typeof window.matchMedia === 'function'
-            ? window.matchMedia('(prefers-color-scheme: dark)')
-            : null
+        const mq =
+            typeof window.matchMedia === 'function'
+                ? window.matchMedia('(prefers-color-scheme: dark)')
+                : null
         mq?.addEventListener?.('change', update)
         return () => {
             observer.disconnect()
@@ -73,7 +74,10 @@ function resolvePageTheme(): boolean {
     const explicit = html.getAttribute('data-theme')
     if (explicit === 'dark') return true
     if (explicit === 'light') return false
-    if (typeof window !== 'undefined' && typeof window.matchMedia === 'function') {
+    if (
+        typeof window !== 'undefined' &&
+        typeof window.matchMedia === 'function'
+    ) {
         return window.matchMedia('(prefers-color-scheme: dark)').matches
     }
     return false
@@ -111,24 +115,36 @@ function eventLoggers(
 
 function parseOrigins(value: unknown): string[] | undefined {
     if (Array.isArray(value)) {
-        return value.filter((item): item is string => typeof item === 'string' && item.trim() !== '')
+        return value.filter(
+            (item): item is string =>
+                typeof item === 'string' && item.trim() !== '',
+        )
     }
     if (typeof value !== 'string') return undefined
     const origins = value
         .split(/[,\n]/)
-        .map((item) => item.trim())
+        .map(item => item.trim())
         .filter(Boolean)
     return origins.length > 0 ? origins : undefined
 }
 
-function normalizeFolderUpload(value: unknown): Record<string, unknown> | undefined {
-    if (!value || typeof value !== 'object' || Array.isArray(value)) return undefined
+function normalizeFolderUpload(
+    value: unknown,
+): Record<string, unknown> | undefined {
+    if (!value || typeof value !== 'object' || Array.isArray(value))
+        return undefined
     const rawFolder = value as Record<string, unknown>
     const folder: Record<string, unknown> = { ...rawFolder }
-    if (folder.allowDrop === undefined && typeof rawFolder.enabled === 'boolean') {
+    if (
+        folder.allowDrop === undefined &&
+        typeof rawFolder.enabled === 'boolean'
+    ) {
         folder.allowDrop = rawFolder.enabled
     }
-    if (folder.showSelectFolderButton === undefined && typeof rawFolder.showPickerButton === 'boolean') {
+    if (
+        folder.showSelectFolderButton === undefined &&
+        typeof rawFolder.showPickerButton === 'boolean'
+    ) {
         folder.showSelectFolderButton = rawFolder.showPickerButton
     }
     delete folder.enabled
@@ -170,7 +186,11 @@ function normalizeRuntimeConfig(config: Record<string, unknown>): UpupConfig {
     return out as UpupConfig
 }
 
-export function UploaderPreview({ width = 'auto' }: { width?: number | 'auto' }) {
+export function UploaderPreview({
+    width = 'auto',
+}: {
+    width?: number | 'auto'
+}) {
     const ctx = useContext(ConfigContext)
     const log = useEventLog()
     const mounted = useMounted()
@@ -191,7 +211,10 @@ export function UploaderPreview({ width = 'auto' }: { width?: number | 'auto' })
     // (RTL for ar/he/fa, BCP-47 lang attribute) keeps working on permalinks.
     const localeStr = typeof i18n?.locale === 'string' ? i18n.locale : undefined
     const localeBundle = localeStr ? LOCALE_PACKS[localeStr] : undefined
-    const fallbackStr = typeof i18n?.fallbackLocale === 'string' ? i18n.fallbackLocale : undefined
+    const fallbackStr =
+        typeof i18n?.fallbackLocale === 'string'
+            ? i18n.fallbackLocale
+            : undefined
     const fallbackBundle = fallbackStr ? LOCALE_PACKS[fallbackStr] : undefined
     const resolvedI18n = {
         ...i18n,
@@ -204,13 +227,24 @@ export function UploaderPreview({ width = 'auto' }: { width?: number | 'auto' })
         [events, log?.record],
     )
     const runtimeConfig = normalizeRuntimeConfig(rest)
-    const style = width === 'auto' ? undefined : { width: `${width}px`, maxWidth: '100%' }
+    const style =
+        width === 'auto' ? undefined : { width: `${width}px`, maxWidth: '100%' }
     return (
         <div className="upup-ie-preview" style={style} suppressHydrationWarning>
             {mounted ? (
-                <UpupUploader provider="aws" serverUrl="" {...runtimeConfig} {...handlers} theme={effectiveTheme} i18n={resolvedI18n} />
+                <UpupUploader
+                    provider="aws"
+                    serverUrl=""
+                    {...runtimeConfig}
+                    {...handlers}
+                    theme={effectiveTheme}
+                    i18n={resolvedI18n}
+                />
             ) : (
-                <div className="upup-ie-preview-placeholder" aria-hidden="true" />
+                <div
+                    className="upup-ie-preview-placeholder"
+                    aria-hidden="true"
+                />
             )}
         </div>
     )

@@ -14,10 +14,10 @@ registration.
 ## 1. Install
 
 ```sh
-pnpm add @upup/react @upup/server
+pnpm add @useupup/react @useupup/server
 ```
 
-`@upup/server` is the Node-side handler. The React package has no
+`@useupup/server` is the Node-side handler. The React package has no
 dependency on it — your client bundle stays free of S3 SDKs.
 
 ## 2. Mount the handler
@@ -26,7 +26,7 @@ dependency on it — your client bundle stays free of S3 SDKs.
 
 ```ts
 // app/api/upup/[...route]/route.ts
-import { createUpupHandler, InMemoryTokenStore } from '@upup/server'
+import { createUpupHandler, InMemoryTokenStore } from '@useupup/server'
 
 const handler = createUpupHandler({
     storage: {

@@ -1,6 +1,6 @@
 // packages/server/src/respond.ts
 //
-// The single home for forming an HTTP response in @upup/server (F-108). A
+// The single home for forming an HTTP response in @useupup/server (F-108). A
 // per-request Responder closes over the request's CORS headers AND an
 // x-upup-request-id, so every route returns through `res.json`/`html`/
 // `redirect`/`noContent`/`fail` and can NEVER forget the headers — omission is
@@ -9,7 +9,7 @@
 
 import type { UpupServerConfig } from './config'
 import { reportServerError, toSafeError } from './observability'
-import { UpupErrorCode } from '@upup/core'
+import { UpupErrorCode } from '@useupup/core'
 
 export type ResponseHeaders = Record<string, string>
 

@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
 import { PipelineEngine } from '../src/pipeline/engine'
-import type { PipelineStep, PipelineContext } from '@upup/core'
-import type { UploadFile } from '@upup/core'
+import type { PipelineStep, PipelineContext } from '@useupup/core'
+import type { UploadFile } from '@useupup/core'
 
 const makeFile = (overrides: Partial<UploadFile> = {}): UploadFile =>
     ({

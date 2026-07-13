@@ -1,5 +1,5 @@
 {
-    "name": "@upup/react",
+    "name": "@useupup/react",
     "version": "2.2.0",
     "description": "React file uploader with drag-and-drop, cloud-drive sources, resumable uploads, image editor, theming, and ICU i18n.",
     "keywords": [
@@ -30,6 +30,9 @@
         "directory": "packages/react"
     },
     "license": "MIT",
+    "publishConfig": {
+        "access": "public"
+    },
     "type": "module",
     "sideEffects": [
         "*.css"
@@ -63,7 +66,7 @@
     ],
     "dependencies": {
         "@tanstack/react-virtual": "^3.13.23",
-        "@upup/core": "workspace:*",
+        "@useupup/core": "workspace:*",
         "konva": "^10.3.0",
         "pako": "^2.1.0",
         "react-filerobot-image-editor": "^4.9.1",
@@ -82,8 +85,8 @@
         "@types/pako": "^2.0.4",
         "@types/react": ">=18.0.0",
         "@types/react-dom": ">=18.0.0",
-        "@upup/eslint-config": "workspace:*",
-        "@upup/tailwind-config": "workspace:*",
+        "@useupup/eslint-config": "workspace:*",
+        "@useupup/tailwind-config": "workspace:*",
         "@vitest/coverage-v8": "^4.1.2",
         "eslint": "^10.6.0",
         "jest-axe": "^10.0.0",

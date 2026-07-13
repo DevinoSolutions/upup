@@ -6,9 +6,9 @@ import {
     fileGetIsText,
     fileIs3D,
     cn,
-} from '@upup/core/internal'
-import type { Translations } from '@upup/core'
-import type { InternalFlatClassNames } from '@upup/core/internal'
+} from '@useupup/core/internal'
+import type { Translations } from '@useupup/core'
+import type { InternalFlatClassNames } from '@useupup/core/internal'
 import { FileIconComponent } from './file-icon.component'
 
 /**

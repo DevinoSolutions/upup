@@ -1,13 +1,13 @@
 ---
-"@upup/server": minor
-"@upup/core": minor
-"@upup/react": minor
-"@upup/vue": minor
-"@upup/svelte": minor
-"@upup/vanilla": minor
-"@upup/angular": minor
-"@upup/preact": minor
-"@upup/next": minor
+'@useupup/server': minor
+'@useupup/core': minor
+'@useupup/react': minor
+'@useupup/vue': minor
+'@useupup/svelte': minor
+'@useupup/vanilla': minor
+'@useupup/angular': minor
+'@useupup/preact': minor
+'@useupup/next': minor
 ---
 
 ## Server + client error channel
@@ -18,7 +18,7 @@ leaking raw internal error text, and every server error is routed
 through a pluggable `UpupServerLogger` seam (`onError` /
 `reportServerError`) so hosts can observe failures without scraping
 stdout. A new `GET /health` route reports storage reachability
-(`@upup/server` `handleHealth`).
+(`@useupup/server` `handleHealth`).
 
 Client-side, upload failures now carry the machine `code` alongside
 the human message: `OrchestratorState.uploadErrorCode`,

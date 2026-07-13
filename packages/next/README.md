@@ -1,32 +1,32 @@
-# @upup/next
+# @useupup/next
 
 Next.js integration for the [upup](https://github.com/DevinoSolutions/upup) uploader. One install gives you the client UI and the server handlers, split across two entry points so the AWS SDK never reaches your client bundle.
 
 ## Install
 
 ```sh
-npm i @upup/next
+npm i @useupup/next
 ```
 
 ## Client (App Router or Pages Router)
 
 ```tsx
-import { UpupUploader } from '@upup/next'
-import '@upup/next/styles'
+import { UpupUploader } from '@useupup/next'
+import '@useupup/next/styles'
 
 export default function Page() {
     return <UpupUploader mode="server" serverUrl="/api/upup" />
 }
 ```
 
-`@upup/next` re-exports the full `@upup/react` client, so client mode
+`@useupup/next` re-exports the full `@useupup/react` client, so client mode
 (`<UpupUploader provider="aws" uploadEndpoint="/api/upload-token" />`, no
-`@upup/server`) works too.
+`@useupup/server`) works too.
 
 ## Server — App Router (`app/api/upup/[...path]/route.ts`)
 
 ```ts
-import { createUpupNextHandler, defineUpupConfig } from '@upup/next/server'
+import { createUpupNextHandler, defineUpupConfig } from '@useupup/next/server'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60
@@ -48,7 +48,7 @@ export const { GET, POST, PUT, DELETE } = createUpupNextHandler(
 ## Server — Pages Router (`pages/api/upup/[...path].ts`)
 
 ```ts
-import { createUpupPagesHandler, defineUpupConfig } from '@upup/next/server'
+import { createUpupPagesHandler, defineUpupConfig } from '@useupup/next/server'
 
 export const config = { api: { bodyParser: false } } // REQUIRED — we read the raw body
 
@@ -100,7 +100,7 @@ state"`. Implement the `TokenStore { get, set, delete }` interface against Redis
 
 Presigned uploads go browser→S3 directly, so the bucket's CORS policy must allow your
 site origin for `PUT` (and `GET` for previews). This is bucket configuration, not
-`@upup/next` code.
+`@useupup/next` code.
 
 ## Links
 
