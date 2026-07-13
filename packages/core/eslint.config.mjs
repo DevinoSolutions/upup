@@ -1,3 +1,3 @@
-import config, { coreConfig } from '@useupup/eslint-config'
+import config, { coreConfig } from '@upupjs/eslint-config'
 
 export default [...config, ...coreConfig]

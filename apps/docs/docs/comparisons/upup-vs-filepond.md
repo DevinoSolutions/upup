@@ -18,17 +18,17 @@ capture, and an S3-compatible server with an HMAC-signed trust model.
 
 ## At a glance
 
-| Feature                       | FilePond                                                                                                           | upup                                                                      |
-| ----------------------------- | ------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------- |
-| Native first-party UI         | Vanilla JS core + adapters: React, Vue, Angular, Svelte, jQuery                                                    | React, Vue, Svelte, Angular, Vanilla JS, Preact                           |
-| Headless core                 | No — renders its own UI component                                                                                  | Yes (`@useupup/core`)                                                     |
-| License / pricing             | MIT, free & open source (the Pintura image editor is a separate commercial product)                                | MIT, free & open source                                                   |
-| Self-host incl. S3-compatible | Yes — uploads to your own server endpoint (process / revert / restore), with chunk uploads; no built-in S3 signing | Yes — `@useupup/server` presigns and proxies to any S3-compatible storage |
-| Cloud-drive sources           | No (local files, directories, blobs, local/remote URLs, Data URIs, paste)                                          | Google Drive, OneDrive, Dropbox, Box                                      |
-| Camera / screen capture       | No                                                                                                                 | Yes (both)                                                                |
-| Image editor                  | Via plugins (crop / resize / transform); a full editor is Pintura (separate/commercial)                            | Yes — React/Preact only                                                   |
-| Resumable uploads             | Chunked uploads (server-driven)                                                                                    | Yes — optional (tus or S3 multipart)                                      |
-| i18n                          | Configurable label strings (no locale bundles)                                                                     | Yes (ICU locale bundles)                                                  |
+| Feature                       | FilePond                                                                                                           | upup                                                                     |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------ |
+| Native first-party UI         | Vanilla JS core + adapters: React, Vue, Angular, Svelte, jQuery                                                    | React, Vue, Svelte, Angular, Vanilla JS, Preact                          |
+| Headless core                 | No — renders its own UI component                                                                                  | Yes (`@upupjs/core`)                                                     |
+| License / pricing             | MIT, free & open source (the Pintura image editor is a separate commercial product)                                | MIT, free & open source                                                  |
+| Self-host incl. S3-compatible | Yes — uploads to your own server endpoint (process / revert / restore), with chunk uploads; no built-in S3 signing | Yes — `@upupjs/server` presigns and proxies to any S3-compatible storage |
+| Cloud-drive sources           | No (local files, directories, blobs, local/remote URLs, Data URIs, paste)                                          | Google Drive, OneDrive, Dropbox, Box                                     |
+| Camera / screen capture       | No                                                                                                                 | Yes (both)                                                               |
+| Image editor                  | Via plugins (crop / resize / transform); a full editor is Pintura (separate/commercial)                            | Yes — React/Preact only                                                  |
+| Resumable uploads             | Chunked uploads (server-driven)                                                                                    | Yes — optional (tus or S3 multipart)                                     |
+| i18n                          | Configurable label strings (no locale bundles)                                                                     | Yes (ICU locale bundles)                                                 |
 
 ## Choose FilePond if
 

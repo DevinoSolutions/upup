@@ -1,11 +1,11 @@
 ---
 sidebar_position: 1
-description: 'Choose between client mode (your presign endpoint) and server mode (@useupup/server proxies uploads) — what runs where and when to pick each.'
+description: 'Choose between client mode (your presign endpoint) and server mode (@upupjs/server proxies uploads) — what runs where and when to pick each.'
 ---
 
 # Client Mode vs Server Mode
 
-`@useupup/react` supports local-only collection plus two upload hosts. `mode`
+`@upupjs/react` supports local-only collection plus two upload hosts. `mode`
 controls where upload/provider operations run, not whether users can select
 local files.
 

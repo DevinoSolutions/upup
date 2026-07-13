@@ -7,7 +7,7 @@ description: Build your own uploader UI on top of upup's engine — the useUpupU
 # Headless Usage
 
 The upup UI is optional. Under it sits a framework-agnostic engine —
-`@useupup/core` — that owns file state, file-size and type limits, the processing pipeline
+`@upupjs/core` — that owns file state, file-size and type limits, the processing pipeline
 (hashing, HEIC, EXIF, thumbnails, compression), retries, progress, multipart
 and resumable uploads, and cloud-drive sources. Go headless when you want your
 own components and layout but keep all of that machinery.
@@ -22,8 +22,8 @@ Two paths:
 ## `useUpupUpload` (React)
 
 ```tsx
-import { useUpupUpload } from '@useupup/react'
-import '@useupup/react/styles' // only if you reuse upup's utility classes
+import { useUpupUpload } from '@upupjs/react'
+import '@upupjs/react/styles' // only if you reuse upup's utility classes
 
 function MyUploader() {
     const {
@@ -111,14 +111,14 @@ uploader: `uploadEndpoint`, `serverUrl`, `provider`, `mode`, `metadata`,
 
 ## Driving `UpupCore` directly
 
-`UpupCore` and its `CoreOptions` type are part of the public `@useupup/core`
+`UpupCore` and its `CoreOptions` type are part of the public `@upupjs/core`
 entry, so you can run the whole engine with no framework at all — a plain
 script, a Web Worker, or a framework upup has no dedicated hook for. This is
 the same class the React hook wraps.
 
 ```ts
-import { UpupCore } from '@useupup/core'
-import type { CoreOptions } from '@useupup/core'
+import { UpupCore } from '@upupjs/core'
+import type { CoreOptions } from '@upupjs/core'
 
 const options: CoreOptions = {
     uploadEndpoint: '/api/upload-token',
@@ -199,7 +199,7 @@ useUpupUpload({
 
 `heicConversion: true` converts HEIC/HEIF images to JPEG before upload. The
 decoder ships as an **optional dependency** (`libheif-js`) that the pipeline
-loads with a dynamic `import()` from `@useupup/core/steps/heic` only when the
+loads with a dynamic `import()` from `@upupjs/core/steps/heic` only when the
 option is on — so it never enters your base bundle. Install it alongside core:
 
 ```sh
@@ -215,7 +215,7 @@ useUpupUpload({ uploadEndpoint: '/api/upload-token', heicConversion: true })
 `resumable` enables chunked, resumable transfers. For the [tus](https://tus.io)
 protocol, set `protocol: 'tus'` and an `endpoint`; the tus client is the
 **optional dependency** `tus-js-client`, lazily imported from
-`@useupup/core/strategies/tus-upload` when configured. (The other protocol,
+`@upupjs/core/strategies/tus-upload` when configured. (The other protocol,
 `'multipart'`, resumes S3/server-mode multipart uploads and needs no extra
 dependency.)
 

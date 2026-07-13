@@ -7,7 +7,7 @@
 // here — auth is where "provider" originates — and is imported by the two drive
 // modules. This module imports NOTHING from the drive modules (acyclic DAG).
 
-import { UpupErrorCode } from '@useupup/core'
+import { UpupErrorCode } from '@upupjs/core'
 import type { UpupServerConfig, DriveTokens } from './config'
 import {
     generateOAuthState,

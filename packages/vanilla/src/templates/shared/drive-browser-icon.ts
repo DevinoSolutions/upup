@@ -1,6 +1,6 @@
 import { html, type TemplateResult } from 'lit-html'
-import { cn, b64EncodeUnicode } from '@useupup/core/internal'
-import type { DriveFile } from '@useupup/core'
+import { cn, b64EncodeUnicode } from '@upupjs/core/internal'
+import type { DriveFile } from '@upupjs/core'
 import type { UploaderContext } from '../../lib/types'
 import { icon } from '../icon'
 

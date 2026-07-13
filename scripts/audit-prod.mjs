@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Prod-scoped dependency audit for the PUBLISHED surface only (F-182).
 // Fails (exit 1) on any HIGH/CRITICAL advisory whose dependency path is rooted
-// at a publishable @useupup/* package's production tree. Dev-only advisories
+// at a publishable @upupjs/* package's production tree. Dev-only advisories
 // (docusaurus/next/storybook/mastra + private packages) are ignored by design —
 // they never ship to npm consumers.
 import { spawnSync } from 'node:child_process'
@@ -21,7 +21,7 @@ const publishable = readdirSync(pkgDir).filter(d => {
         return (
             pj.private !== true &&
             typeof pj.name === 'string' &&
-            pj.name.startsWith('@useupup/')
+            pj.name.startsWith('@upupjs/')
         )
     } catch {
         return false

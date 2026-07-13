@@ -35,7 +35,7 @@ function runCli(args, env = {}, cwd) {
 
 const TARGETED_CASES = [
     {
-        name: 'a core src change triggers e2e, minio, and smoke because every heavy suite consumes @useupup/core',
+        name: 'a core src change triggers e2e, minio, and smoke because every heavy suite consumes @upupjs/core',
         path: 'packages/core/src/upload/pipeline.ts',
         suites: ['e2e', 'minio', 'smoke'],
     },
@@ -494,7 +494,7 @@ test('the CLI computes an affected set from real git history so the git-diff pat
         execFileSync('git', gitArgs, { cwd: repo, encoding: 'utf8' })
     try {
         git('init')
-        git('config', 'user.email', 'ci-fixture@useupup.test')
+        git('config', 'user.email', 'ci-fixture@upupjs.test')
         git('config', 'user.name', 'CI Fixture')
         git('config', 'commit.gpgsign', 'false')
 

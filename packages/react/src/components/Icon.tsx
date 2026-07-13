@@ -1,6 +1,6 @@
 import { createElement, type ReactElement } from 'react'
-import { ICONS, type IconName } from '@useupup/core'
-import { cn } from '@useupup/core/internal'
+import { ICONS, type IconName } from '@upupjs/core'
+import { cn } from '@upupjs/core/internal'
 
 export interface IconProps {
     name: IconName

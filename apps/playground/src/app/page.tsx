@@ -1,8 +1,8 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { InteractiveExample } from '@useupup/interactive-example'
-import '@useupup/interactive-example/styles'
+import { InteractiveExample } from '@upupjs/interactive-example'
+import '@upupjs/interactive-example/styles'
 import Toast from '@/components/Toast'
 import { clientEnv } from '@/lib/env'
 

@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
 import { useUpupUpload } from '../src/use-upup-upload'
-import type { ExtensionMethods } from '@useupup/core'
+import type { ExtensionMethods } from '@upupjs/core'
 
 describe('useUpupUpload — plugin integration', () => {
     it('accepts plugins via options', () => {

@@ -51,7 +51,7 @@ export const uploaderArgTypes: Record<string, unknown> = {
             'screen',
         ],
         description:
-            'Values must match the UploadSource union from @useupup/core.',
+            'Values must match the UploadSource union from @upupjs/core.',
         ...cat('Sources'),
     },
     enablePaste: { control: 'boolean', ...cat('Sources') },

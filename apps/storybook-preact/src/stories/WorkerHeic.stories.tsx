@@ -1,11 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/preact-vite'
-import { UpupUploader } from '@useupup/preact'
+import { UpupUploader } from '@upupjs/preact'
 import {
     uploaderArgTypes,
     uploaderDefaultArgs,
     workerHeicArgs,
     workerHeicPlays,
-} from '@useupup/storybook-config'
+} from '@upupjs/storybook-config'
 
 function render(args: Record<string, unknown>) {
     const { themeMode, primaryColor, ...rest } = args

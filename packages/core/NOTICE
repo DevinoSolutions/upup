@@ -1,4 +1,4 @@
-@useupup/core bundles libheif (via libheif-js) for HEIC/HEIF image decoding.
+@upupjs/core bundles libheif (via libheif-js) for HEIC/HEIF image decoding.
 
 libheif is licensed under the GNU Lesser General Public License v3.0 (LGPL-3.0).
 Source: https://github.com/strukturag/libheif

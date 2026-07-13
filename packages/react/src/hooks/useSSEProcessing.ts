@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef } from 'react'
-import type { UploadFile } from '@useupup/core'
-import { SSEProcessor } from '@useupup/core/internal'
+import type { UploadFile } from '@upupjs/core'
+import { SSEProcessor } from '@upupjs/core/internal'
 
 type Options = {
     processingEndpoint?: string | undefined

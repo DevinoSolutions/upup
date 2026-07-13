@@ -1,9 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/preact-vite'
-import { UpupUploader } from '@useupup/preact'
-import {
-    uploaderArgTypes,
-    uploaderDefaultArgs,
-} from '@useupup/storybook-config'
+import { UpupUploader } from '@upupjs/preact'
+import { uploaderArgTypes, uploaderDefaultArgs } from '@upupjs/storybook-config'
 
 // Fold virtual controls (themeMode, primaryColor) into the real `theme` prop,
 // matching the other preact stories.

@@ -1,7 +1,7 @@
 import { defineConfig } from 'tsup'
 
 export default defineConfig([
-    // Client entry — re-exports @useupup/react UI. The banner GUARANTEES the
+    // Client entry — re-exports @upupjs/react UI. The banner GUARANTEES the
     // 'use client' directive survives bundling, so a Server Component can import
     // the uploader without the "needs use client" error.
     {
@@ -13,10 +13,10 @@ export default defineConfig([
         clean: false, // cleaned once up-front by scripts/clean-dist.mjs
         target: 'es2019',
         banner: { js: '"use client";' },
-        external: ['react', 'react-dom', '@useupup/react', '@useupup/core'],
+        external: ['react', 'react-dom', '@upupjs/react', '@upupjs/core'],
     },
     // Server entry — Node-only handlers. Never imported by the client entry, so
-    // @aws-sdk (pulled via @useupup/server) stays out of client bundles.
+    // @aws-sdk (pulled via @upupjs/server) stays out of client bundles.
     {
         entry: ['src/server.ts'],
         format: ['esm', 'cjs'],
@@ -27,8 +27,8 @@ export default defineConfig([
         target: 'node18',
         platform: 'node',
         external: [
-            '@useupup/server',
-            '@useupup/core',
+            '@upupjs/server',
+            '@upupjs/core',
             'next',
             'react',
             'react-dom',

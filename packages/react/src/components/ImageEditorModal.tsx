@@ -8,8 +8,8 @@ import React, {
     useState,
 } from 'react'
 import { createPortal } from 'react-dom'
-import { cn } from '@useupup/core/internal'
-import type { UploadFile } from '@useupup/core'
+import { cn } from '@upupjs/core/internal'
+import type { UploadFile } from '@upupjs/core'
 import {
     useUploaderOptions,
     useUploaderTheme,

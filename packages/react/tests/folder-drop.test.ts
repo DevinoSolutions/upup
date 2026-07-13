@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { collectDroppedFiles } from '@useupup/core/internal'
+import { collectDroppedFiles } from '@upupjs/core/internal'
 
 function fileEntry(file: File, fullPath = `/${file.name}`) {
     return {

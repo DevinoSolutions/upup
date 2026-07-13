@@ -1,6 +1,6 @@
 import { html, nothing, type TemplateResult } from 'lit-html'
 import { ref } from 'lit-html/directives/ref.js'
-import { cn } from '@useupup/core/internal'
+import { cn } from '@upupjs/core/internal'
 import type { UploaderContext } from '../lib/types'
 import { sourceViewContainer } from './shared/source-view-container'
 

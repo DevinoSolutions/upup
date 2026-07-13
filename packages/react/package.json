@@ -1,5 +1,5 @@
 {
-    "name": "@useupup/react",
+    "name": "@upupjs/react",
     "version": "3.0.0",
     "description": "React file uploader with drag-and-drop, cloud-drive sources, resumable uploads, image editor, theming, and ICU i18n.",
     "keywords": [
@@ -66,7 +66,7 @@
     ],
     "dependencies": {
         "@tanstack/react-virtual": "^3.13.23",
-        "@useupup/core": "workspace:*",
+        "@upupjs/core": "workspace:*",
         "konva": "^10.3.0",
         "pako": "^2.1.0",
         "react-filerobot-image-editor": "^4.9.1",
@@ -85,8 +85,8 @@
         "@types/pako": "^2.0.4",
         "@types/react": ">=18.0.0",
         "@types/react-dom": ">=18.0.0",
-        "@useupup/eslint-config": "workspace:*",
-        "@useupup/tailwind-config": "workspace:*",
+        "@upupjs/eslint-config": "workspace:*",
+        "@upupjs/tailwind-config": "workspace:*",
         "@vitest/coverage-v8": "^4.1.2",
         "eslint": "^10.6.0",
         "jest-axe": "^10.0.0",

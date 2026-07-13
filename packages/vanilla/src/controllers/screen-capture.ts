@@ -1,4 +1,4 @@
-import type { FileSource } from '@useupup/core'
+import type { FileSource } from '@upupjs/core'
 import type { SourceController } from '../lib/types'
 
 export type RecordingState = 'idle' | 'recording' | 'recorded'

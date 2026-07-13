@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url'
 export function copyDir(src, dest) {
     if (!existsSync(src)) {
         throw new Error(
-            `compose-vue: source not found at ${src} — build @useupup/storybook-vue first`,
+            `compose-vue: source not found at ${src} — build @upupjs/storybook-vue first`,
         )
     }
     mkdirSync(dest, { recursive: true })

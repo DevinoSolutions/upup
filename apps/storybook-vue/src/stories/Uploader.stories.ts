@@ -1,9 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/vue3-vite'
-import { UpupUploader } from '@useupup/vue'
-import {
-    uploaderArgTypes,
-    uploaderDefaultArgs,
-} from '@useupup/storybook-config'
+import { UpupUploader } from '@upupjs/vue'
+import { uploaderArgTypes, uploaderDefaultArgs } from '@upupjs/storybook-config'
 
 function buildProps(args: Record<string, unknown>) {
     const { themeMode, primaryColor, ...rest } = args
@@ -48,7 +45,7 @@ export const Smoke: Story = {
     },
 }
 
-// ── Real storage (MinIO via the @useupup/server harness on :53060) ──────────────
+// ── Real storage (MinIO via the @upupjs/server harness on :53060) ──────────────
 // Opt-in story for the cross-framework e2e smoke. DISABLES MSW and points at the
 // local harness via `serverUrl` (selects the ServerCredentials strategy -> POST
 // /presign), clearing the MSW `uploadEndpoint` default. `sources: ['local']`

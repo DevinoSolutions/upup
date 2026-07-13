@@ -1,6 +1,6 @@
 import type { CategoryDefinition } from '../types'
 import { Languages } from 'lucide-react'
-import { LOCALE_CODES } from '@useupup/core'
+import { LOCALE_CODES } from '@upupjs/core'
 
 export const languageCategory: CategoryDefinition = {
     id: 'language',

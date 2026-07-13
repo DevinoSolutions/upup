@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useUploaderEditor, useUploaderTheme } from '../context/uploader-context'
-import { cn } from '@useupup/core/internal'
+import { cn } from '@upupjs/core/internal'
 
 const { editingFile, closeImageEditor } = useUploaderEditor()
 const { slotOverrides } = useUploaderTheme()

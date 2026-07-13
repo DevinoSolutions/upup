@@ -145,15 +145,15 @@ class maps, switch to `DeepPartialSlots` (re-exported from the same
 package):
 
 ```diff
-- import type { UpupUploaderPropsClassNames } from '@useupup/react'
-+ import type { DeepPartialSlots } from '@useupup/react'
+- import type { UpupUploaderPropsClassNames } from '@upupjs/react'
++ import type { DeepPartialSlots } from '@upupjs/react'
 ```
 
-The public package set is now `@useupup/react`, `@useupup/core`, and
-`@useupup/server`. React UI types are re-exported from `@useupup/react`;
+The public package set is now `@upupjs/react`, `@upupjs/core`, and
+`@upupjs/server`. React UI types are re-exported from `@upupjs/react`;
 headless contracts, i18n bundles, and theme contracts live in
-`@useupup/core`; route handlers and framework adapters live in
-`@useupup/server`. The former public `@useupup/shared` package is removed.
+`@upupjs/core`; route handlers and framework adapters live in
+`@upupjs/server`. The former public `@upupjs/shared` package is removed.
 
 ## Events — no change
 
@@ -164,7 +164,7 @@ untouched.
 
 ## CoreOptions typing
 
-Consumers using the headless `UpupCore` class from `@useupup/core` who
+Consumers using the headless `UpupCore` class from `@upupjs/core` who
 pass `locale` or `translations` directly will see tighter types:
 
 ```diff
@@ -180,7 +180,7 @@ pass `locale` or `translations` directly will see tighter types:
 
 ## Full slot map reference
 
-See `@useupup/core/theme` for the canonical `UpupThemeSlots` interface.
+See `@upupjs/core/theme` for the canonical `UpupThemeSlots` interface.
 The top-level keys are:
 
 - `uploader` — outer wrapper / container

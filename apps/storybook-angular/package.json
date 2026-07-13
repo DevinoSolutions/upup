@@ -1,5 +1,5 @@
 {
-    "name": "@useupup/storybook-angular",
+    "name": "@upupjs/storybook-angular",
     "version": "0.1.1",
     "private": true,
     "scripts": {
@@ -8,11 +8,11 @@
         "typecheck": "tsc --noEmit"
     },
     "dependencies": {
-        "@useupup/angular": "workspace:*",
-        "@useupup/core": "workspace:*"
+        "@upupjs/angular": "workspace:*",
+        "@upupjs/core": "workspace:*"
     },
     "devDependencies": {
-        "@useupup/storybook-config": "workspace:*",
+        "@upupjs/storybook-config": "workspace:*",
         "storybook": "^9",
         "@storybook/angular": "^9",
         "@storybook/addon-docs": "^9",

@@ -1,8 +1,8 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte'
-  import { formatUiMessage as t } from '@useupup/core'
-import { cn } from '@useupup/core/internal'
-  import { fileGetIsImage, fileGetIsPdf, fileGetIsText, PREVIEW_MAX_TEXT_SIZE, PREVIEW_TEXT_TRUNCATE_LENGTH } from '@useupup/core/internal'
+  import { formatUiMessage as t } from '@upupjs/core'
+import { cn } from '@upupjs/core/internal'
+  import { fileGetIsImage, fileGetIsPdf, fileGetIsText, PREVIEW_MAX_TEXT_SIZE, PREVIEW_TEXT_TRUNCATE_LENGTH } from '@upupjs/core/internal'
   import { useUploaderI18n, useUploaderTheme } from '../context/uploader-context'
 
   let {

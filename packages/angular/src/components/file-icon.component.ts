@@ -1,6 +1,6 @@
 import { Component, Input, inject } from '@angular/core'
-import { fileTypeIconName, type IconName } from '@useupup/core'
-import { cn } from '@useupup/core/internal'
+import { fileTypeIconName, type IconName } from '@upupjs/core'
+import { cn } from '@upupjs/core/internal'
 import { UpupStore } from '../upup-store.service'
 import { FileIconSvgComponent } from './icons/file-icon-svg.component'
 

@@ -1,16 +1,16 @@
 ---
 title: Migrating from v1 to v2
-description: Upgrade from upup v1 (upup-react-file-uploader) to v2 — the package rename to @useupup/react, the full v1→v2 prop map, the UpupError/UpupErrorCode taxonomy, and client- vs server-mode uploads.
+description: Upgrade from upup v1 (upup-react-file-uploader) to v2 — the package rename to @upupjs/react, the full v1→v2 prop map, the UpupError/UpupErrorCode taxonomy, and client- vs server-mode uploads.
 sidebar_position: 1
 ---
 
 # Migrating from v1 to v2
 
 v1 shipped as a single React package, `upup-react-file-uploader`. v2 is a
-ground-up rewrite: a framework-agnostic headless core (`@useupup/core`) with a
+ground-up rewrite: a framework-agnostic headless core (`@upupjs/core`) with a
 native UI for **React, Vue, Svelte, Angular, Vanilla JS, and Preact**, an
-optional server package (`@useupup/server`) for signed uploads and
-server-proxied cloud drives, and a Next.js package (`@useupup/next`). The React
+optional server package (`@upupjs/server`) for signed uploads and
+server-proxied cloud drives, and a Next.js package (`@upupjs/next`). The React
 component keeps the same name — `UpupUploader` — and the same idea, but **most
 props were renamed or restructured**. This is a major upgrade, not a drop-in
 bump; budget time to sweep your props.
@@ -21,18 +21,18 @@ control on the ref API.
 
 ## What changed at a glance
 
-- **Package rename.** `upup-react-file-uploader` → `@useupup/react`. The
-  `/styles` and `/server` subpaths move to `@useupup/react/styles` and the
-  standalone `@useupup/server` package.
-- **Six frameworks.** The React UI is the canon; `@useupup/vue`,
-  `@useupup/svelte`, `@useupup/angular`, `@useupup/vanilla`, and
-  `@useupup/preact` render the same DOM.
-- **Headless core.** `@useupup/core` holds the engine, the error taxonomy, i18n
+- **Package rename.** `upup-react-file-uploader` → `@upupjs/react`. The
+  `/styles` and `/server` subpaths move to `@upupjs/react/styles` and the
+  standalone `@upupjs/server` package.
+- **Six frameworks.** The React UI is the canon; `@upupjs/vue`,
+  `@upupjs/svelte`, `@upupjs/angular`, `@upupjs/vanilla`, and
+  `@upupjs/preact` render the same DOM.
+- **Headless core.** `@upupjs/core` holds the engine, the error taxonomy, i18n
   bundles, and theme contracts. You can build a fully custom UI on it.
 - **Two upload modes.** v1's single `tokenEndpoint` becomes either
   `uploadEndpoint` (**client mode** — your route signs URLs, the browser uploads
   directly) or `mode="server"` + `serverUrl` (**server mode** — the browser
-  talks only to `@useupup/server`, which holds credentials and proxies drives).
+  talks only to `@upupjs/server`, which holds credentials and proxies drives).
 - **Prop renames.** `limit` → `maxFiles`, `accept` → `allowedFileTypes`, `dark`
   → `theme.mode`, `classNames` → `theme.slots`, `uploadAdapters` → `sources`,
   `driveConfigs` → `cloudDrives`, `customProps` → `metadata`,
@@ -40,26 +40,26 @@ control on the ref API.
   table below.
 - **Error taxonomy.** The `UploadError` / `UploadErrorType` pair becomes
   `UpupError` + the `UpupErrorCode` enum (with typed subclasses), exported from
-  `@useupup/core`.
+  `@upupjs/core`.
 
 ## Install
 
 ```sh
 npm uninstall upup-react-file-uploader
-npm i @useupup/react
+npm i @upupjs/react
 ```
 
-Add `@useupup/server` only if you adopt server mode:
+Add `@upupjs/server` only if you adopt server mode:
 
 ```sh
-npm i @useupup/server
+npm i @upupjs/server
 ```
 
 If you catch upload errors by type (see [Error handling](#error-handling)), also
 add the core package so you can import the error classes directly:
 
 ```sh
-npm i @useupup/core
+npm i @upupjs/core
 ```
 
 Then update your imports:
@@ -67,15 +67,15 @@ Then update your imports:
 ```diff
 - import { UpupUploader, UpupProvider } from 'upup-react-file-uploader'
 - import 'upup-react-file-uploader/styles'
-+ import { UpupUploader } from '@useupup/react'
-+ import '@useupup/react/styles'
++ import { UpupUploader } from '@upupjs/react'
++ import '@upupjs/react/styles'
 ```
 
 :::note
 `UpupProvider` and `UploadAdapter` are **gone** as exports. `provider` is now a
 plain string (`"aws"`), and upload methods are configured with `sources`
 (string ids), not the `UploadAdapter` enum. If you need the storage-provider
-type, `@useupup/react` re-exports `StorageProvider` from `@useupup/core`.
+type, `@upupjs/react` re-exports `StorageProvider` from `@upupjs/core`.
 :::
 
 ## Props: v1 → v2
@@ -98,7 +98,7 @@ left; exact v2 names on the right.
 | `uploadAdapters={[UploadAdapter.INTERNAL, …]}` | `sources={['local', …]}`                                                              | Enum array → string-id array. Mapping below.                                                                                                                                                                                                                          |
 | `driveConfigs={{ … }}`                         | `cloudDrives={{ … }}`                                                                 | Renamed, keys are camelCased. See [Sources & cloud drives](#sources--cloud-drives).                                                                                                                                                                                   |
 | `imageEditor={true}`                           | `imageEditor={true}`                                                                  | Unchanged (`boolean \| ImageEditorOptions`). React/Preact only.                                                                                                                                                                                                       |
-| `localePack={fr_FR}`                           | `i18n={{ locale: frFR }}`                                                             | Locale bundles now live under `i18n`. v1 exported snake_case bundles; v2's are camelCase, imported from `@useupup/core` (`enUS`, `frFR`, `arSA`, `deDE`, `esES`, `jaJP`, `koKR`, `zhCN`, `zhTW`).                                                                     |
+| `localePack={fr_FR}`                           | `i18n={{ locale: frFR }}`                                                             | Locale bundles now live under `i18n`. v1 exported snake_case bundles; v2's are camelCase, imported from `@upupjs/core` (`enUS`, `frFR`, `arSA`, `deDE`, `esES`, `jaJP`, `koKR`, `zhCN`, `zhTW`).                                                                      |
 | `translations={{ browseFiles: '…' }}`          | `i18n={{ overrides: { … } }}`                                                         | Per-key overrides move under `i18n.overrides`, and are **namespaced** (e.g. `{ fileList: { uploadFiles: '…' } }`) rather than flat.                                                                                                                                   |
 | `customProps={{ … }}`                          | `metadata={{ … }}`                                                                    | Renamed. Still forwarded to your upload route.                                                                                                                                                                                                                        |
 | `enableAutoCorsConfig={true}`                  | `cors={{ dangerouslyAutoConfigure: true, allowedOrigins: [...] }}`                    | Replaced by the `cors` object. Auto-configuration is now explicitly opt-in and named `dangerouslyAutoConfigure`.                                                                                                                                                      |
@@ -124,7 +124,7 @@ array). The order still controls tab order.
 - <UpupUploader
 -   uploadAdapters={[UploadAdapter.INTERNAL, UploadAdapter.GOOGLE_DRIVE]}
 - />
-+ import { UpupUploader } from '@useupup/react'
++ import { UpupUploader } from '@upupjs/react'
 + <UpupUploader sources={['local', 'googleDrive']} />
 ```
 
@@ -196,7 +196,7 @@ i18n props (`localePack`, `translations`) collapse into one `i18n` object.
 The flat `classNames` keys map one-to-one to nested slot paths; the
 [v2.0→v2.1 migration guide](./v2-to-v2.1.md) lists every key. For app-wide
 theming you can also wrap your tree in `UpupThemeProvider` (exported from
-`@useupup/react`).
+`@upupjs/react`).
 
 ## Events
 
@@ -232,7 +232,7 @@ shape:
 ```diff
 - import { UpupUploader, UpupUploaderRef } from 'upup-react-file-uploader'
 - const ref = useRef<UpupUploaderRef | null>(null)
-+ import { UpupUploader, type UploaderRef } from '@useupup/react'
++ import { UpupUploader, type UploaderRef } from '@upupjs/react'
 + const ref = useRef<UploaderRef | null>(null)
 
   // ref.current.useUpload() still returns { files, loading, progress, upload, error }
@@ -246,7 +246,7 @@ recommended way to drive uploads from your own UI. It returns reactive `files`,
 polling required.
 
 ```tsx
-import { useUpupUpload } from '@useupup/react'
+import { useUpupUpload } from '@upupjs/react'
 
 const { files, status, progress, error, addFiles, upload } = useUpupUpload({
     provider: 'aws',
@@ -258,11 +258,11 @@ const { files, status, progress, error, addFiles, upload } = useUpupUpload({
 
 v1 threw `UploadError` carrying an `UploadErrorType` enum. v2 replaces it with
 `UpupError` (base class) and typed subclasses, keyed by the `UpupErrorCode`
-enum. Both are exported from `@useupup/core`.
+enum. Both are exported from `@upupjs/core`.
 
 ```diff
 - import { UploadError, UploadErrorType } from 'upup-react-file-uploader'
-+ import { UpupError, UpupErrorCode } from '@useupup/core'
++ import { UpupError, UpupErrorCode } from '@upupjs/core'
 
   try {
     await doUpload()
@@ -310,7 +310,7 @@ URL per file.
 + <UpupUploader provider="aws" uploadEndpoint="/api/upload-token" />
 ```
 
-You can keep hand-rolling that route, or adopt `@useupup/server`'s handler
+You can keep hand-rolling that route, or adopt `@upupjs/server`'s handler
 (below), which implements presign, multipart, and drive OAuth for you. The v1
 server helpers (`s3GeneratePresignedUrl`, the `s3*MultipartUpload` family,
 `azureGenerateSasUrl`) are superseded by the handler's `/presign` and
@@ -318,14 +318,14 @@ server helpers (`s3GeneratePresignedUrl`, the `s3*MultipartUpload` family,
 
 ### Server mode (new)
 
-Point the uploader at a `@useupup/server` route and let it hold the credentials:
+Point the uploader at a `@upupjs/server` route and let it hold the credentials:
 
 ```tsx
 <UpupUploader provider="aws" mode="server" serverUrl="/api/upup" />
 ```
 
 ```ts
-import { createUpupHandler, InMemoryTokenStore } from '@useupup/server'
+import { createUpupHandler, InMemoryTokenStore } from '@upupjs/server'
 
 const handler = createUpupHandler({
     storage: {
@@ -360,10 +360,10 @@ In v1, cloud-drive integration was client-side only: the Google Drive
 the browser (which is the normal client-side OAuth model — those are not
 secrets). What v1 could **not** do is keep the OAuth **client secret** and the
 drive access tokens off the client. v2 server mode does: the client talks to
-your `serverUrl` for OAuth and drive access, and `@useupup/server` performs the
+your `serverUrl` for OAuth and drive access, and `@upupjs/server` performs the
 OAuth exchange and stores tokens in your `TokenStore`. For storage, both modes still upload the
 file bytes directly to storage via a presigned URL — the difference is that in
-server mode `@useupup/server` issues that URL, holding the storage credentials
+server mode `@upupjs/server` issues that URL, holding the storage credentials
 server-side exactly as your v1 `tokenEndpoint` did, and binds it to an HMAC
 token (a key + uploadId + size envelope). What server mode _additionally_
 proxies is cloud-drive transfers: the server fetches the drive file and writes
@@ -374,7 +374,7 @@ first-class choice.
 :::
 
 :::note
-`@useupup/server` speaks the S3 API only — set `storage.endpoint` for any
+`@upupjs/server` speaks the S3 API only — set `storage.endpoint` for any
 non-AWS S3-compatible backend (MinIO, R2, DO Spaces, …). `StorageProvider.Azure`
 has no S3 surface, so `createUpupHandler` rejects it at construction time; use
 client mode with your own signing route for Azure.
@@ -427,13 +427,13 @@ export default function Uploader() {
 }
 ```
 
-**v2** (`@useupup/react`):
+**v2** (`@upupjs/react`):
 
 ```tsx
 'use client'
 
-import { UpupUploader } from '@useupup/react'
-import '@useupup/react/styles'
+import { UpupUploader } from '@upupjs/react'
+import '@upupjs/react/styles'
 
 export default function Uploader() {
     return (

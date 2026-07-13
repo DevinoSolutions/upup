@@ -14,7 +14,7 @@
 //   2. Seed the four fixture accounts (idempotent).
 //   3. Run the vitest live drive-clients integration suite (all 4 providers).
 //   4. If MinIO is up on :9100, run the Playwright HTTP-surface layer
-//      (@useupup/server route dispatch → drive auth → drive→S3 transfer).
+//      (@upupjs/server route dispatch → drive auth → drive→S3 transfer).
 //
 // Box/Dropbox/GDrive need no rotation — their tokens are stable.
 //
@@ -45,7 +45,7 @@ const PROVIDER = 'one-drive'
 // injected OneDrive access token already live in process.env (the wrapper runs
 // under dotenv -e local-dev/.env.test) and pass straight through run()'s env.
 const SPEC_CMD =
-    'pnpm exec dotenv -e local-dev/.env.minio -- pnpm --filter @useupup/e2e-test test:e2e:drive-sandbox'
+    'pnpm exec dotenv -e local-dev/.env.minio -- pnpm --filter @upupjs/e2e-test test:e2e:drive-sandbox'
 
 function log(msg) {
     console.log(`[drive-sandbox] ${msg}`)
@@ -140,7 +140,7 @@ async function main() {
     log('running vitest live suite...')
     try {
         run(
-            'pnpm --filter @useupup/server exec vitest run tests/integration/drive-clients-live.integration.test.ts',
+            'pnpm --filter @upupjs/server exec vitest run tests/integration/drive-clients-live.integration.test.ts',
             120_000,
         )
     } catch {

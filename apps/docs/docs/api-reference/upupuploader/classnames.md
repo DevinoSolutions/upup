@@ -24,7 +24,7 @@ Use `theme.mode` for color scheme:
 <UpupUploader theme={{ mode: 'dark' }} />
 ```
 
-Slot contracts are exported from `@useupup/core/theme`.
+Slot contracts are exported from `@upupjs/core/theme`.
 
 ## Internals (what actually renders)
 

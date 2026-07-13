@@ -7,7 +7,7 @@
     useUploaderTheme,
   } from '../context/uploader-context'
   import { uploadSourceObject } from '../lib/constants'
-  import { cn } from '@useupup/core/internal'
+  import { cn } from '@upupjs/core/internal'
   import DefaultLoaderIcon from './DefaultLoaderIcon.svelte'
 
   const { core } = useUploaderRuntime()

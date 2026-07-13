@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { ICONS, type IconName } from '@useupup/core'
-import { cn } from '@useupup/core/internal'
+  import { ICONS, type IconName } from '@upupjs/core'
+import { cn } from '@upupjs/core/internal'
   let {
     name,
     size = undefined,

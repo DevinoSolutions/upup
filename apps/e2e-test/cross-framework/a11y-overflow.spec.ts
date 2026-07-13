@@ -7,7 +7,7 @@
 // not clip its media views: scrollHeight <= clientHeight (+tolerance).
 //
 // Run (dedicated config boots all six storybooks; MSW so no MinIO/e2e server):
-//   rtk proxy pnpm --filter @useupup/e2e-test exec playwright test --config playwright.a11y-overflow.config.ts
+//   rtk proxy pnpm --filter @upupjs/e2e-test exec playwright test --config playwright.a11y-overflow.config.ts
 import { test, expect, type Page, type Locator } from '@playwright/test'
 import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'

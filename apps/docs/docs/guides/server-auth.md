@@ -1,12 +1,12 @@
 ---
 title: Server Auth & Trust Model
 sidebar_position: 5
-description: How @useupup/server authenticates uploads — the mandatory HMAC upload-token secret, the secure-by-default 403 on anonymous uploads, per-user key scoping, and what forged requests get.
+description: How @upupjs/server authenticates uploads — the mandatory HMAC upload-token secret, the secure-by-default 403 on anonymous uploads, per-user key scoping, and what forged requests get.
 ---
 
 # Server Auth & Trust Model
 
-`@useupup/server` is the trust boundary between the browser and your storage.
+`@upupjs/server` is the trust boundary between the browser and your storage.
 In Server Mode the browser never holds storage credentials — it asks your
 handler to presign a PUT or to run a multipart upload, and the handler decides
 who is allowed and where the bytes land. This page explains that decision:
@@ -14,7 +14,7 @@ the mandatory secret, the secure-by-default gate, per-user scoping, and the
 signed upload token that makes the multipart lifecycle tamper-resistant.
 
 Everything here is enforced by `createUpupHandler` — the single factory
-exported from `@useupup/server`.
+exported from `@upupjs/server`.
 
 ## The mandatory upload-token secret
 
@@ -25,7 +25,7 @@ multipart session issues and verifies a signed token (see
 [The upload token](#the-upload-token)).
 
 ```ts
-import { createUpupHandler } from '@useupup/server'
+import { createUpupHandler } from '@upupjs/server'
 
 const handler = createUpupHandler({
     storage: {
@@ -239,7 +239,7 @@ it returns. Treat `auth` and `getUserId` as security-critical code, and keep
 cookie and scope every object to the user.
 
 ```ts
-import { createUpupHandler, InMemoryTokenStore } from '@useupup/server'
+import { createUpupHandler, InMemoryTokenStore } from '@upupjs/server'
 
 export const handler = createUpupHandler({
     storage: {

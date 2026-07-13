@@ -1,5 +1,5 @@
 {
-    "name": "@useupup/angular",
+    "name": "@upupjs/angular",
     "version": "3.0.0",
     "description": "Angular 19+ standalone file uploader with cloud-drive sources, resumable uploads, theming, and ICU i18n.",
     "keywords": [
@@ -39,13 +39,13 @@
     "engines": {
         "node": ">=20"
     },
-    "main": "./dist/fesm2022/useupup-angular.mjs",
-    "module": "./dist/fesm2022/useupup-angular.mjs",
+    "main": "./dist/fesm2022/upupjs-angular.mjs",
+    "module": "./dist/fesm2022/upupjs-angular.mjs",
     "types": "./dist/index.d.ts",
     "exports": {
         ".": {
             "types": "./dist/index.d.ts",
-            "default": "./dist/fesm2022/useupup-angular.mjs"
+            "default": "./dist/fesm2022/upupjs-angular.mjs"
         },
         "./styles": "./dist/tailwind-prefixed.css"
     },
@@ -64,7 +64,7 @@
     },
     "dependencies": {
         "@tanstack/virtual-core": "^3.13.0",
-        "@useupup/core": "workspace:*",
+        "@upupjs/core": "workspace:*",
         "tslib": "^2.6.0"
     },
     "peerDependencies": {
@@ -82,8 +82,8 @@
         "@angular/core": "^19.0.0",
         "@angular/platform-browser": "^19.0.0",
         "@angular/platform-browser-dynamic": "^19.0.0",
-        "@useupup/eslint-config": "workspace:*",
-        "@useupup/tailwind-config": "workspace:*",
+        "@upupjs/eslint-config": "workspace:*",
+        "@upupjs/tailwind-config": "workspace:*",
         "@vitest/coverage-v8": "^4.1.2",
         "eslint": "^10.6.0",
         "jsdom": "22.1.0",

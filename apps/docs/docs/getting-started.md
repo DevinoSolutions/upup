@@ -5,7 +5,7 @@ sidebar_position: 1
 # Getting Started
 
 upup is a file uploader with a native UI for **React, Vue, Svelte, Angular,
-Vanilla JS, and Preact**, built on a shared headless core (`@useupup/core`), with
+Vanilla JS, and Preact**, built on a shared headless core (`@upupjs/core`), with
 an optional server mode for signed uploads and cloud-drive sources (Google
 Drive, OneDrive, Dropbox, Box). Every package renders the same UI.
 
@@ -22,12 +22,12 @@ each mounts the same uploader with the same options:
 Install the React package and styles:
 
 ```bash
-npm i @useupup/react
+npm i @upupjs/react
 ```
 
 ```tsx
-import { UpupUploader } from '@useupup/react'
-import '@useupup/react/styles'
+import { UpupUploader } from '@upupjs/react'
+import '@upupjs/react/styles'
 ```
 
 ## Local File Collection
@@ -61,11 +61,11 @@ bytes directly to storage.
 
 ## Server Uploads
 
-Use `@useupup/server` when provider OAuth, token storage, storage credentials,
+Use `@upupjs/server` when provider OAuth, token storage, storage credentials,
 or transfer policy should live server-side.
 
 ```bash
-npm i @useupup/react @useupup/server
+npm i @upupjs/react @upupjs/server
 ```
 
 ```tsx
@@ -73,7 +73,7 @@ npm i @useupup/react @useupup/server
 ```
 
 ```ts
-import { createUpupHandler, InMemoryTokenStore } from '@useupup/server'
+import { createUpupHandler, InMemoryTokenStore } from '@upupjs/server'
 
 const handler = createUpupHandler({
     storage: {

@@ -3,28 +3,28 @@ import { fileURLToPath } from 'node:url'
 
 export default defineConfig({
     resolve: {
-        // ORDER CONSTRAINT: every '@useupup/core/<subpath>' key must precede the
-        // bare '@useupup/core' key below. Vite matches alias keys in object order;
+        // ORDER CONSTRAINT: every '@upupjs/core/<subpath>' key must precede the
+        // bare '@upupjs/core' key below. Vite matches alias keys in object order;
         // the bare key prefix-matches any subpath specifier, so listing it first
         // silently shadows all subpath aliases for real (non-type-only) runtime
         // imports. Do not alphabetize this object.
         alias: {
-            '@useupup/core/contracts': fileURLToPath(
+            '@upupjs/core/contracts': fileURLToPath(
                 new URL('./src/contracts.ts', import.meta.url),
             ),
-            '@useupup/core/internal': fileURLToPath(
+            '@upupjs/core/internal': fileURLToPath(
                 new URL('./src/internal.ts', import.meta.url),
             ),
-            '@useupup/core/i18n': fileURLToPath(
+            '@upupjs/core/i18n': fileURLToPath(
                 new URL('./src/i18n/index.ts', import.meta.url),
             ),
-            '@useupup/core/theme': fileURLToPath(
+            '@upupjs/core/theme': fileURLToPath(
                 new URL('./src/theme/index.ts', import.meta.url),
             ),
-            '@useupup/core/strategies': fileURLToPath(
+            '@upupjs/core/strategies': fileURLToPath(
                 new URL('./src/strategies/index.ts', import.meta.url),
             ),
-            '@useupup/core': fileURLToPath(
+            '@upupjs/core': fileURLToPath(
                 new URL('./src/index.ts', import.meta.url),
             ),
         },

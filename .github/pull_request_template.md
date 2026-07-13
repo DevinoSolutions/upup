@@ -22,11 +22,11 @@ Fixes # (issue)
 - [ ] I have made corresponding changes to the documentation
 - [ ] My changes generate no new warnings
 - [ ] I have added tests that prove my fix is effective or that my feature works, with behavior-driven names (see `docs/testing.md`)
-- [ ] I have added a changeset (`pnpm changeset`) if this PR changes any publishable `@useupup/*` package
+- [ ] I have added a changeset (`pnpm changeset`) if this PR changes any publishable `@upupjs/*` package
 
 ## Test-foundation checklist (delete rows that cannot apply)
 
-- [ ] UI change: landed in `@useupup/react` first, ported DOM-identically, and `parity-fixtures.json` was regenerated via `UPDATE_PARITY=1` + reviewed like code (never in CI)
+- [ ] UI change: landed in `@upupjs/react` first, ported DOM-identically, and `parity-fixtures.json` was regenerated via `UPDATE_PARITY=1` + reviewed like code (never in CI)
 - [ ] New/renamed story: name, id, args, and variants stay consistent across all six framework storybooks (or the divergence is documented where it lives)
 - [ ] Public export changed: the affected package's `public-api` pin was updated deliberately (core: also `internal-surface`)
 - [ ] Packaging/dependency change: `pnpm run smoke:packages` passes locally

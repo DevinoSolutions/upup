@@ -1,18 +1,18 @@
 import { describe, expect, it } from 'vitest'
-import * as core from '@useupup/core'
+import * as core from '@upupjs/core'
 import {
     UpupError,
     UpupErrorCode,
     UpupNetworkError,
     UpupValidationError,
-} from '@useupup/core'
+} from '@upupjs/core'
 
 /**
  * Error-contract pin from the React consumer's viewpoint.
  *
  * Re-expressed in pass 2 (F-724): this file used to test the legacy
  * `UploadError`/`UploadErrorType` family, a parallel error taxonomy with zero
- * production call sites that was deleted from @useupup/core. The supported
+ * production call sites that was deleted from @upupjs/core. The supported
  * surface a React consumer catches is the UpupError taxonomy — same intent
  * (the error contract UI code relies on), supported API.
  */

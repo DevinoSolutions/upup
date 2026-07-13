@@ -8,7 +8,7 @@ import {
 import {
     DragDropController,
     type DragDropSnapshot,
-} from '@useupup/core/internal'
+} from '@upupjs/core/internal'
 import {
     useUploaderFiles,
     useUploaderOptions,

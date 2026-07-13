@@ -1,12 +1,12 @@
 import type { Meta, StoryObj } from '@storybook/html-vite'
-import { createUploader } from '@useupup/vanilla'
-import type { CreateUploaderOptions, UpupInstance } from '@useupup/vanilla'
+import { createUploader } from '@upupjs/vanilla'
+import type { CreateUploaderOptions, UpupInstance } from '@upupjs/vanilla'
 import {
     uploaderArgTypes,
     uploaderDefaultArgs,
     workerHeicArgs,
     workerHeicPlays,
-} from '@useupup/storybook-config'
+} from '@upupjs/storybook-config'
 
 // Per-canvas mount record: the uploader instance plus the dedicated child host it
 // renders into. Keyed by canvasElement (Storybook reuses it across remounts).

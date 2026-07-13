@@ -7,12 +7,12 @@
         "rootDir": ".",
         "types": ["vitest/globals", "node"],
         "paths": {
-            "@useupup/core/contracts": ["./src/contracts.ts"],
-            "@useupup/core/internal": ["./src/internal.ts"],
-            "@useupup/core/i18n": ["./src/i18n/index.ts"],
-            "@useupup/core/theme": ["./src/theme/index.ts"],
-            "@useupup/core/strategies": ["./src/strategies/index.ts"],
-            "@useupup/core": ["./src/index.ts"]
+            "@upupjs/core/contracts": ["./src/contracts.ts"],
+            "@upupjs/core/internal": ["./src/internal.ts"],
+            "@upupjs/core/i18n": ["./src/i18n/index.ts"],
+            "@upupjs/core/theme": ["./src/theme/index.ts"],
+            "@upupjs/core/strategies": ["./src/strategies/index.ts"],
+            "@upupjs/core": ["./src/index.ts"]
         }
     },
     "include": ["src", "tests"]

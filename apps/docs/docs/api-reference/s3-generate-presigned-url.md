@@ -34,4 +34,4 @@ return Response.json({
 })
 ```
 
-Use `@useupup/server` when you want the server package to host these routes.
+Use `@upupjs/server` when you want the server package to host these routes.

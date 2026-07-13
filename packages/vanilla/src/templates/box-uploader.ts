@@ -1,5 +1,5 @@
 import type { TemplateResult } from 'lit-html'
-import { FileSource } from '@useupup/core'
+import { FileSource } from '@upupjs/core'
 import type { UploaderContext } from '../lib/types'
 import { clientDriveUploader } from './client-drive-uploader'
 import { serverModeDriveUploader } from './server-mode-drive-uploader'

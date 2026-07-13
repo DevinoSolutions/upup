@@ -4,11 +4,11 @@ import {
     ONE_DRIVE_DESCRIPTOR,
     type DriveFile,
     type DriveFolder,
-} from '@useupup/core'
+} from '@upupjs/core'
 import {
     DriveBrowserController,
     type DriveBrowserState,
-} from '@useupup/core/internal'
+} from '@upupjs/core/internal'
 import {
     useUploaderFiles,
     useUploaderRuntime,

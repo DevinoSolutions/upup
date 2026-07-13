@@ -18,7 +18,7 @@ for the original plan.
 cp .env.example .env
 # fill in OPENROUTER_API_KEY (default model is openrouter/anthropic/claude-haiku-4.5)
 pnpm install
-pnpm --filter @useupup/mastra dev
+pnpm --filter @upupjs/mastra dev
 ```
 
 This starts the Mastra dev server on `http://localhost:4111` and Mastra Studio
@@ -36,7 +36,7 @@ curl http://localhost:4111/api/agents/playground-agent/generate \
 
 ```bash
 # In another terminal while `dev` is running:
-pnpm --filter @useupup/mastra eval
+pnpm --filter @upupjs/mastra eval
 ```
 
 20 canned prompts; exits non-zero if the fail rate exceeds
@@ -55,5 +55,5 @@ registered agents automatically.
 ## Non-goals
 
 - No code generation — agents return validated config patches, never JSX/TS source
-- No editing of `@useupup/server` — that's a hosted reference backend, owned elsewhere
+- No editing of `@upupjs/server` — that's a hosted reference backend, owned elsewhere
 - No persistent chat history — sessions are ephemeral

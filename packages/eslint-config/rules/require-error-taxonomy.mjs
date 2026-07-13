@@ -1,5 +1,5 @@
 /**
- * upup/require-error-taxonomy — in @useupup/core + @useupup/server src:
+ * upup/require-error-taxonomy — in @upupjs/core + @upupjs/server src:
  *  - `throw` must throw an Error-taxonomy instance (Upload*Error) or rethrow
  *  - wrapping inside a catch must pass `{ cause }` so stack chains survive to Sentry
  * Bare `new Error` loses the taxonomy `code` used for fingerprinting.

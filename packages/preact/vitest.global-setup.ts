@@ -12,7 +12,7 @@ export default function ensurePreactDist(): void {
     )
     if (!existsSync(dist)) {
         throw new Error(
-            'packages/preact/dist/index.js missing — run `pnpm --filter @useupup/preact test` (pretest rebuilds the dist), not bare vitest',
+            'packages/preact/dist/index.js missing — run `pnpm --filter @upupjs/preact test` (pretest rebuilds the dist), not bare vitest',
         )
     }
 }

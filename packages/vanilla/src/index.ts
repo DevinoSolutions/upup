@@ -6,7 +6,7 @@ export type {
     UploaderContext,
 } from './lib/types'
 // re-export the same core types svelte re-exports
-export { FileSource, StorageProvider, UploadStatus } from '@useupup/core'
+export { FileSource, StorageProvider, UploadStatus } from '@upupjs/core'
 export type {
     UploadFile,
     CoreOptions,
@@ -14,4 +14,4 @@ export type {
     ResolvedImageEditorOptions,
     UploadSource,
     UploadProvider,
-} from '@useupup/core'
+} from '@upupjs/core'

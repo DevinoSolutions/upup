@@ -1,9 +1,9 @@
-import { UpupUploader } from '@useupup/next'
+import { UpupUploader } from '@upupjs/next'
 
 export default function PagesRouterDemo() {
     return (
         <main style={{ maxWidth: 720, margin: '40px auto', padding: 16 }}>
-            <h1>@useupup/next — Pages Router</h1>
+            <h1>@upupjs/next — Pages Router</h1>
             <p>
                 Server-mode uploader talking to the Pages Router handler at{' '}
                 <code>/api/upup-pages</code>.

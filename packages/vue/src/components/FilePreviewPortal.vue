@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from 'vue'
-import { formatUiMessage as t } from '@useupup/core'
-import { cn } from '@useupup/core/internal'
+import { formatUiMessage as t } from '@upupjs/core'
+import { cn } from '@upupjs/core/internal'
 import { useUploaderI18n, useUploaderTheme } from '../context/uploader-context'
-import { fileGetIsImage, fileGetIsPdf, fileGetIsText, PREVIEW_MAX_TEXT_SIZE, PREVIEW_TEXT_TRUNCATE_LENGTH } from '@useupup/core/internal'
+import { fileGetIsImage, fileGetIsPdf, fileGetIsText, PREVIEW_MAX_TEXT_SIZE, PREVIEW_TEXT_TRUNCATE_LENGTH } from '@upupjs/core/internal'
 
 const props = defineProps<{
     fileUrl: string

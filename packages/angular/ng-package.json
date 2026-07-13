@@ -5,6 +5,6 @@
     "allowedNonPeerDependencies": [
         "@tanstack/virtual-core",
         "tslib",
-        "@useupup/core"
+        "@upupjs/core"
     ]
 }

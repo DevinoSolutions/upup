@@ -8,19 +8,19 @@ sidebar_position: 1
 
 For actual uploads, configure exactly one target:
 
-| Prop                 | Type     | Use                                                                                                                         |
-| -------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------- |
-| `uploadEndpoint`     | `string` | Client-hosted presign route. The browser requests an upload URL, then uploads bytes directly to storage.                    |
-| `serverUrl`          | `string` | Server-hosted Upup route from `@useupup/server`. Your server owns provider calls, storage credentials, and transfer policy. |
-| `resumable.endpoint` | `string` | External Tus service endpoint when `resumable={{ protocol: 'tus', endpoint }}` is used.                                     |
+| Prop                 | Type     | Use                                                                                                                        |
+| -------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `uploadEndpoint`     | `string` | Client-hosted presign route. The browser requests an upload URL, then uploads bytes directly to storage.                   |
+| `serverUrl`          | `string` | Server-hosted Upup route from `@upupjs/server`. Your server owns provider calls, storage credentials, and transfer policy. |
+| `resumable.endpoint` | `string` | External Tus service endpoint when `resumable={{ protocol: 'tus', endpoint }}` is used.                                    |
 
 `provider` is required only when the selected target or server handler needs to know which storage backend to use.
 
 ## Client Upload Target
 
 ```tsx
-import { UpupUploader } from '@useupup/react'
-import '@useupup/react/styles'
+import { UpupUploader } from '@upupjs/react'
+import '@upupjs/react/styles'
 
 export default function Uploader() {
     return <UpupUploader provider="aws" uploadEndpoint="/api/upload-token" />
@@ -57,4 +57,4 @@ type PresignedUrlResponse = {
 <UpupUploader provider="aws" mode="server" serverUrl="/api/upup" />
 ```
 
-`serverUrl` should point to a handler created by `@useupup/server`.
+`serverUrl` should point to a handler created by `@upupjs/server`.

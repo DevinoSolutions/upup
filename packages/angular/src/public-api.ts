@@ -8,7 +8,7 @@ export type {
 export { toSignalStore } from './lib/to-signal-store'
 export type { SignalStore, HeadlessStore } from './lib/to-signal-store'
 export type { UploaderProps, UploaderIcons } from './shared/types'
-export { FileSource, StorageProvider, UploadStatus } from '@useupup/core'
+export { FileSource, StorageProvider, UploadStatus } from '@upupjs/core'
 export type {
     UploadFile,
     CoreOptions,
@@ -16,4 +16,4 @@ export type {
     ResolvedImageEditorOptions,
     UploadSource,
     UploadProvider,
-} from '@useupup/core'
+} from '@upupjs/core'

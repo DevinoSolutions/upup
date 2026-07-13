@@ -1,5 +1,5 @@
 {
-    "name": "@useupup/storybook-svelte",
+    "name": "@upupjs/storybook-svelte",
     "version": "0.1.1",
     "private": true,
     "type": "module",
@@ -10,12 +10,12 @@
         "typecheck": "svelte-check --tsconfig ./tsconfig.json"
     },
     "dependencies": {
-        "@useupup/core": "workspace:*",
-        "@useupup/svelte": "workspace:*",
+        "@upupjs/core": "workspace:*",
+        "@upupjs/svelte": "workspace:*",
         "svelte": "^5.0.0"
     },
     "devDependencies": {
-        "@useupup/storybook-config": "workspace:*",
+        "@upupjs/storybook-config": "workspace:*",
         "storybook": "^9",
         "@storybook/svelte-vite": "^9",
         "@storybook/addon-docs": "^9",

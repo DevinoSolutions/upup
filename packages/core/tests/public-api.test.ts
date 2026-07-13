@@ -1,10 +1,10 @@
 import { describe, it, expect } from 'vitest'
-import * as core from '@useupup/core'
-import type * as coreInternal from '@useupup/core/internal'
+import * as core from '@upupjs/core'
+import type * as coreInternal from '@upupjs/core/internal'
 
 // ─────────────────────────────────────────────────────────────
 // How this file's type-level assertions are verified: since 2026-07-07 the
-// typecheck gate covers the TEST trees — `pnpm --filter @useupup/core typecheck`
+// typecheck gate covers the TEST trees — `pnpm --filter @upupjs/core typecheck`
 // runs `tsconfig.test.json` (include: ["src", "tests"]) after the base
 // config, so the type aliases and `@ts-expect-error` directives below ARE
 // compiled and enforced by `pnpm run typecheck` (CLAUDE.md, "Gates"). The
@@ -14,7 +14,7 @@ import type * as coreInternal from '@useupup/core/internal'
 // every gate — that gap is closed.)
 // ─────────────────────────────────────────────────────────────
 
-// Positive: every KEEP-public type is reachable from '@useupup/core'. One line
+// Positive: every KEEP-public type is reachable from '@upupjs/core'. One line
 // per symbol in the reviewed audit/tmp/p18-sets.json `keepPublic.types` set
 // (74 symbols) -- if a future edit accidentally drops one from the barrel,
 // this fails to compile (per the manual-tsc caveat above).
@@ -95,7 +95,7 @@ type _Check_UpupThemeTokens = core.UpupThemeTokens
 type _Check_ValidationResult = core.ValidationResult
 
 // Negative: a representative sample of MOVE-internal types must NOT be
-// reachable from '@useupup/core' any more -- each line below should fail to
+// reachable from '@upupjs/core' any more -- each line below should fail to
 // compile without the `@ts-expect-error`, proving the curation actually cut
 // them from the public barrel (not just that Phase D happened to leave them
 // out by coincidence). NOTE per the plan's own B1 wording, `CoreEvents` was
@@ -105,7 +105,7 @@ type _Check_ValidationResult = core.ValidationResult
 // handler signature is inferred from UpupCore's own binding, not from an
 // imported `CoreEvents` type). Resolved in favor of the explicit tier-2
 // listing -- CoreEvents is internal. See audit/fixes/P18-report.md.
-// @ts-expect-error: FileManager is internal (moved to @useupup/core/internal)
+// @ts-expect-error: FileManager is internal (moved to @upupjs/core/internal)
 type _NotPublic_FileManager = core.FileManager
 // @ts-expect-error: UploadManager is internal
 type _NotPublic_UploadManager = core.UploadManager
@@ -116,7 +116,7 @@ type _NotPublic_BaseContextUpload = core.BaseContextUpload
 // @ts-expect-error: OrchestratorState is internal
 type _NotPublic_OrchestratorState = core.OrchestratorState
 
-// Positive: the moved symbols above ARE reachable via '@useupup/core/internal'
+// Positive: the moved symbols above ARE reachable via '@upupjs/core/internal'
 // -- proves the seam isn't accidentally emptied (companion to
 // internal-surface.test.ts's runtime check).
 type _Internal_FileManager = coreInternal.FileManager
@@ -124,7 +124,7 @@ type _Internal_CoreEvents = coreInternal.CoreEvents
 type _Internal_BaseContextUpload = coreInternal.BaseContextUpload
 type _Internal_OrchestratorState = coreInternal.OrchestratorState
 
-describe('@useupup/core public API surface (pin test)', () => {
+describe('@upupjs/core public API surface (pin test)', () => {
     it('runtime value export list matches the curated, checked-in list', () => {
         // The curated public surface (D2), updated in pass 2: the legacy
         // parallel UploadError/UploadErrorType family was deleted (F-724) —

@@ -1,6 +1,6 @@
 import { IUploaderContext } from '../context/UploaderContext'
-import type { UploadFile } from '@useupup/core'
-import { isUploadActive } from '@useupup/core/internal'
+import type { UploadFile } from '@upupjs/core'
+import { isUploadActive } from '@upupjs/core/internal'
 
 export default function useUpload({
     upload,

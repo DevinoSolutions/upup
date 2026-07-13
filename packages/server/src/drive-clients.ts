@@ -7,7 +7,7 @@
 // a provider registry in C6 (F-407). Imports only the provider identity type
 // from ./oauth (acyclic DAG).
 
-import { UpupNetworkError } from '@useupup/core'
+import { UpupNetworkError } from '@upupjs/core'
 import { type OAuthProvider } from './oauth'
 
 export type DriveFile = {

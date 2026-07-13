@@ -2,8 +2,8 @@
   import { onMount } from 'svelte'
   import { get } from 'svelte/store'
   import { createVirtualizer } from '@tanstack/svelte-virtual'
-  import { formatUiMessage as t, pluralUiMessage as plural, UploadStatus } from '@useupup/core'
-import { isUploadActive, cn } from '@useupup/core/internal'
+  import { formatUiMessage as t, pluralUiMessage as plural, UploadStatus } from '@upupjs/core'
+import { isUploadActive, cn } from '@upupjs/core/internal'
   import {
     useUploaderFiles,
     useUploaderI18n,

@@ -24,8 +24,8 @@ subtree in a theme provider for you — you do not need `UpupThemeProvider`
 unless you are building your own UI (see [Headless](#headless-upupthemeprovider)).
 
 ```tsx
-import { UpupUploader } from '@useupup/react'
-import '@useupup/react/styles'
+import { UpupUploader } from '@upupjs/react'
+import '@upupjs/react/styles'
 
 export default function Uploader() {
     return (
@@ -148,7 +148,7 @@ it:
 
 The class names you provide are appended to the component's own classes. The
 full set of component keys and their slots is the `UpupThemeSlots` type
-(exported from `@useupup/core`); `UpupSlotPath` is the union of every valid
+(exported from `@upupjs/core`); `UpupSlotPath` is the union of every valid
 `"component.slot"` string. Components include `uploader`, `sourceSelector`,
 `sourceView`, `fileList`, `filePreview`, `progressBar`, `driveBrowser`,
 `cameraUploader`, `audioUploader`, `screenCaptureUploader`, `urlUploader`, and
@@ -202,12 +202,12 @@ and `className` is only the root.
 
 If you build your own UI with the headless hook (see [Headless](./headless.md))
 but still want upup's tokens and dark-mode resolution, wrap your tree in
-`UpupThemeProvider` (exported from `@useupup/react`). It resolves the theme,
+`UpupThemeProvider` (exported from `@upupjs/react`). It resolves the theme,
 emits the `--upup-*` variables, and sets `data-theme="light|dark"` on its root
 element:
 
 ```tsx
-import { UpupThemeProvider } from '@useupup/react'
+import { UpupThemeProvider } from '@upupjs/react'
 
 function App() {
     return (
@@ -239,7 +239,7 @@ token, and slot state are the same in every framework because they come from
 the shared core theme store. See the per-framework
 [quickstarts](/quickstarts) for the full mount pattern.
 
-Preact re-exports `@useupup/react`, so it behaves identically to the React row
+Preact re-exports `@upupjs/react`, so it behaves identically to the React row
 (including `UpupThemeProvider`).
 
 ## Next steps

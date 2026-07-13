@@ -46,5 +46,5 @@ export const LOCALE_REGISTRY: Record<RegisteredLocaleCode, LocaleBundle> = {
 }
 
 // Named bundle re-exports kept public (consumed by core.ts, options, react,
-// apps, and the docs `import { jaJP } from '@useupup/core/i18n'` example).
+// apps, and the docs `import { jaJP } from '@upupjs/core/i18n'` example).
 export { enUS, arSA, deDE, esES, frFR, jaJP, koKR, zhCN, zhTW }

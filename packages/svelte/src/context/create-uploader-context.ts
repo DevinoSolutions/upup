@@ -1,11 +1,11 @@
 import { onMount, onDestroy } from 'svelte'
 import { derived } from 'svelte/store'
-import { FileSource, type UploadFile } from '@useupup/core'
+import { FileSource, type UploadFile } from '@upupjs/core'
 import {
     normalizeUploaderOptions,
     createUploaderController,
     type UploaderControllerOptions,
-} from '@useupup/core/internal'
+} from '@upupjs/core/internal'
 import type { Component } from 'svelte'
 import type { UploaderProps } from '../shared/types'
 import type { IUploaderContext } from './uploader-context'

@@ -139,7 +139,7 @@ export interface RequestCapture {
  * The uploader's pipeline (e.g. HEIC→JPEG) rewrites the file *for upload* but the
  * rendered file tile keeps the original name, so the presign request body — which
  * carries the converted `name`/`type`/`heicConverted` metadata — is the reliable
- * proof that conversion happened. `@useupup/core`'s presign call is a `fetch` in
+ * proof that conversion happened. `@upupjs/core`'s presign call is a `fetch` in
  * every framework, so wrapping `fetch` works for all six hosts. Default target is
  * `globalThis`; pass a stub `{ fetch }` to unit-test.
  */

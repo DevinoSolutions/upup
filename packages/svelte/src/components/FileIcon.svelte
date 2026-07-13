@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { fileTypeIconName } from '@useupup/core'
-import { cn } from '@useupup/core/internal'
+  import { fileTypeIconName } from '@upupjs/core'
+import { cn } from '@upupjs/core/internal'
   import { useUploaderTheme } from '../context/uploader-context'
   import Icon from './Icon.svelte'
 

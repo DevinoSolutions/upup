@@ -6,7 +6,7 @@
  * The fake exposes `onmessage`, `onerror`, `close()`, and captures the url it was opened with.
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
-import type { UploadFile } from '@useupup/core'
+import type { UploadFile } from '@upupjs/core'
 import { createSSEProcessing } from './use-sse-processing'
 
 // ── Minimal EventSource fake ──────────────────────────────────────────────────

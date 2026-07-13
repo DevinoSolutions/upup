@@ -4,8 +4,8 @@ import {
     formatUiMessage as t,
     pluralUiMessage as plural,
     FileSource,
-} from '@useupup/core'
-import { cn } from '@useupup/core/internal'
+} from '@upupjs/core'
+import { cn } from '@upupjs/core/internal'
 import type { UploaderContext } from '../lib/types'
 import { uploadSourceObject } from '../lib/constants'
 import { icon } from './icon'

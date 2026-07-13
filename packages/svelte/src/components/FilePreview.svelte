@@ -1,7 +1,7 @@
 <script lang="ts">
   import { get } from 'svelte/store'
-  import type { Translations } from '@useupup/core'
-  import { fileCanPreviewText, fileGetIsImage, fileGetIsPdf, fileGetIsText, cn } from '@useupup/core/internal'
+  import type { Translations } from '@upupjs/core'
+  import { fileCanPreviewText, fileGetIsImage, fileGetIsPdf, fileGetIsText, cn } from '@upupjs/core/internal'
   import {
     useUploaderEditor,
     useUploaderFiles,

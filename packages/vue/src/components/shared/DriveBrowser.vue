@@ -7,14 +7,14 @@ import {
     type DriveUser,
     formatUiMessage as t,
     pluralUiMessage as plural,
-} from '@useupup/core'
+} from '@upupjs/core'
 import {
     useUploaderI18n,
     useUploaderOptions,
     useUploaderTheme,
 } from '../../context/uploader-context'
-import { searchDriveFiles } from '@useupup/core/internal'
-import { cn } from '@useupup/core/internal'
+import { searchDriveFiles } from '@upupjs/core/internal'
+import { cn } from '@upupjs/core/internal'
 import SourceViewContainer from './SourceViewContainer.vue'
 import DriveBrowserHeader from './DriveBrowserHeader.vue'
 import DriveBrowserItem from './DriveBrowserItem.vue'

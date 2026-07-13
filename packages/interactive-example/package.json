@@ -1,5 +1,5 @@
 {
-    "name": "@useupup/interactive-example",
+    "name": "@upupjs/interactive-example",
     "version": "0.1.1",
     "private": true,
     "type": "module",
@@ -17,8 +17,8 @@
     },
     "dependencies": {
         "@mastra/client-js": "^1.31.0",
-        "@useupup/core": "workspace:*",
-        "@useupup/react": "workspace:*",
+        "@upupjs/core": "workspace:*",
+        "@upupjs/react": "workspace:*",
         "lucide-react": "^0.503.0",
         "pako": "^2.1.0"
     },

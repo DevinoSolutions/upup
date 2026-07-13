@@ -6,7 +6,7 @@ import type {
 } from '../src/use-upup-upload'
 
 /**
- * Svelte counterpart to @useupup/vue's tests/helpers.ts `withSetup`. Svelte's
+ * Svelte counterpart to @upupjs/vue's tests/helpers.ts `withSetup`. Svelte's
  * onMount/onDestroy only run inside a real component instance (there is no
  * bare `setup()` callback the way Vue's Composition API offers), so this
  * mounts useUpupUpload through a tiny harness component instead of calling

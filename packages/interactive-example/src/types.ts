@@ -1,5 +1,5 @@
 import type React from 'react'
-import type { UploaderProps } from '@useupup/react'
+import type { UploaderProps } from '@upupjs/react'
 
 export type CategoryId =
     | 'upload'

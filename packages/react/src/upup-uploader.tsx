@@ -2,8 +2,8 @@
 
 import React, { forwardRef, lazy, Suspense, useImperativeHandle } from 'react'
 import { devinoDark, devinoLight, logoDark, logoLight } from './assets/logos'
-import { cn } from '@useupup/core/internal'
-import type { UploadFile } from '@useupup/core'
+import { cn } from '@upupjs/core/internal'
+import type { UploadFile } from '@upupjs/core'
 import { UploaderProps } from './shared/types'
 import Icon from './components/Icon'
 import DefaultLoaderIcon from './components/DefaultLoaderIcon'

@@ -703,7 +703,7 @@ test('renders the real playground shell, uploader, source controls, and generate
         .getByRole('button', { name: 'Code' })
         .click()
     await expect(page.locator('.upup-ie-code-pre')).toContainText(
-        "import { UpupUploader } from '@useupup/react'",
+        "import { UpupUploader } from '@upupjs/react'",
     )
     await expect(page.locator('.upup-ie-code-pre')).toContainText(
         'uploadEndpoint=',
@@ -1025,7 +1025,7 @@ test('wires every playground category into copy-pasteable generated code', async
     )
 
     for (const text of [
-        "import { arSA, frFR } from '@useupup/core'",
+        "import { arSA, frFR } from '@upupjs/core'",
         'provider="backblaze"',
         'maxConcurrentUploads={5}',
         'maxRetries={2}',
@@ -1136,7 +1136,7 @@ test('wires every playground category into copy-pasteable generated code', async
     expect(code).not.toContain("fallbackLocale: 'fr-FR'")
     for (const forbidden of [
         'upup-react-file-uploader',
-        '@useupup/shared',
+        '@upupjs/shared',
         'ProviderSDK',
         'FileWithParams',
         'UploadAdapter',

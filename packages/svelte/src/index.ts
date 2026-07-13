@@ -31,7 +31,7 @@ export type {
 } from './context/uploader-context'
 export type { UploaderProps, UploaderIcons } from './shared/types'
 export { toReadable } from './lib/to-readable'
-export { FileSource, StorageProvider, UploadStatus } from '@useupup/core'
+export { FileSource, StorageProvider, UploadStatus } from '@upupjs/core'
 export type {
     UploadFile,
     CoreOptions,
@@ -39,4 +39,4 @@ export type {
     ResolvedImageEditorOptions,
     UploadSource,
     UploadProvider,
-} from '@useupup/core'
+} from '@upupjs/core'

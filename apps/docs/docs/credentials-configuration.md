@@ -29,5 +29,5 @@ setup and controlled admin tooling, not broad production defaults.
 
 ## Server Credentials
 
-Use `@useupup/server` for storage access keys, OAuth client secrets, provider
+Use `@upupjs/server` for storage access keys, OAuth client secrets, provider
 token refresh, audit logging, and server-side transfers.

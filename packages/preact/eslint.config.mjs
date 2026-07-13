@@ -1,7 +1,7 @@
 import config, {
     reactHooksConfig,
     disableTypeChecked,
-} from '@useupup/eslint-config'
+} from '@upupjs/eslint-config'
 
 export default [
     ...config,

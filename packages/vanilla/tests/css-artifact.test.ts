@@ -4,7 +4,7 @@ import { resolve } from 'node:path'
 
 const cssPath = resolve(__dirname, '../dist/tailwind-prefixed.css')
 
-describe('@useupup/vanilla CSS artifact', () => {
+describe('@upupjs/vanilla CSS artifact', () => {
     it('builds a non-empty, .upup-scope-prefixed stylesheet', () => {
         expect(existsSync(cssPath)).toBe(true)
         const css = readFileSync(cssPath, 'utf8')

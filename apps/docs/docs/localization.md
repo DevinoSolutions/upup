@@ -1,12 +1,12 @@
 ---
 title: Localization (i18n)
 sidebar_position: 5
-description: upup ships nine ICU locale bundles from @useupup/core/i18n — set the locale on any framework's uploader, override individual namespaced message keys, and get automatic RTL and pluralization.
+description: upup ships nine ICU locale bundles from @upupjs/core/i18n — set the locale on any framework's uploader, override individual namespaced message keys, and get automatic RTL and pluralization.
 ---
 
 # Localization (i18n)
 
-upup uses ICU locale bundles from `@useupup/core/i18n`. Messages are grouped
+upup uses ICU locale bundles from `@upupjs/core/i18n`. Messages are grouped
 into namespaces, formatted with ICU MessageFormat (so plurals and interpolation
 work in every language), and Arabic switches the layout to right-to-left
 automatically.
@@ -32,9 +32,9 @@ automatically.
 Pass a bundle to `i18n.locale`:
 
 ```tsx
-import { UpupUploader } from '@useupup/react'
-import '@useupup/react/styles'
-import { jaJP } from '@useupup/core/i18n'
+import { UpupUploader } from '@upupjs/react'
+import '@upupjs/react/styles'
+import { jaJP } from '@upupjs/core/i18n'
 
 export default function Uploader() {
     return (
@@ -49,7 +49,7 @@ export default function Uploader() {
 Arabic automatically sets right-to-left layout:
 
 ```tsx
-import { arSA } from '@useupup/core/i18n'
+import { arSA } from '@upupjs/core/i18n'
 
 ;<UpupUploader i18n={{ locale: arSA }} />
 ```
@@ -85,7 +85,7 @@ object — **keyed by namespace**, then by the message key inside it. `browseFil
 for example, lives under the `dropzone` namespace:
 
 ```tsx
-import { frFR } from '@useupup/core/i18n'
+import { frFR } from '@upupjs/core/i18n'
 
 ;<UpupUploader
     i18n={{
@@ -137,7 +137,7 @@ uploader props. Only the binding syntax differs:
 | Angular    | `<upup-uploader [config]="{ i18n: { locale: jaJP } }" />` |
 | Vanilla JS | `createUploader('#el', { i18n: { locale: jaJP } })`       |
 
-Preact re-exports `@useupup/react`, so its uploader takes the same `i18n` prop
+Preact re-exports `@upupjs/react`, so its uploader takes the same `i18n` prop
 as the React row.
 
 In the [headless](./guides/headless.md) path — `useUpupUpload` or `UpupCore` —

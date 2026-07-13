@@ -1,6 +1,6 @@
 // packages/server/src/observability.ts
 //
-// The one logger seam for @useupup/server. Every error path in handler.ts routes
+// The one logger seam for @upupjs/server. Every error path in handler.ts routes
 // through reportServerError() so integrators have exactly one place to wire an
 // external sink (Datadog/Sentry/etc.) via config.onError, and a sane default
 // (console.error) means the incident-blind-spot case is closed out of the box.

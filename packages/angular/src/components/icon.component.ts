@@ -1,7 +1,7 @@
 import { Component, Input, inject, type OnChanges } from '@angular/core'
 import { DomSanitizer, type SafeHtml } from '@angular/platform-browser'
-import { ICONS, type IconName } from '@useupup/core'
-import { cn } from '@useupup/core/internal'
+import { ICONS, type IconName } from '@upupjs/core'
+import { cn } from '@upupjs/core/internal'
 
 @Component({
     selector: 'upup-icon',

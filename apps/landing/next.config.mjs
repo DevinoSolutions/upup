@@ -18,7 +18,7 @@ const nextConfig = {
               optimizePackageImports: ['@stackblitz/sdk'],
           }
         : undefined,
-    transpilePackages: ['@stackblitz/sdk', '@useupup/interactive-example'],
+    transpilePackages: ['@stackblitz/sdk', '@upupjs/interactive-example'],
     trailingSlash: true,
     turbopack: {
         root: repoRoot,

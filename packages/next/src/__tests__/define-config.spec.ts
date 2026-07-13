@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { defineUpupConfig } from '../define-config'
 import { createUpupNextHandler } from '../server'
-import type { UpupServerConfig } from '@useupup/server'
+import type { UpupServerConfig } from '@upupjs/server'
 
 const secret = 'x'.repeat(32)
 const validStorage = {

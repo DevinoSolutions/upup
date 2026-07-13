@@ -1,7 +1,7 @@
 import { html, nothing, type TemplateResult } from 'lit-html'
-import { formatUiMessage as t } from '@useupup/core'
-import { cn } from '@useupup/core/internal'
-import type { DriveBrowserError } from '@useupup/core'
+import { formatUiMessage as t } from '@upupjs/core'
+import { cn } from '@upupjs/core/internal'
+import type { DriveBrowserError } from '@upupjs/core'
 import type { UploaderContext } from '../../lib/types'
 import { sourceViewContainer } from './source-view-container'
 

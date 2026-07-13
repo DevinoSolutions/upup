@@ -6,10 +6,10 @@ import {
     themeClassMap,
     defaultTheme,
     uploadHandlers,
-} from '@useupup/storybook-config'
+} from '@upupjs/storybook-config'
 
 // CSS is loaded via angular.json styles[] (webpack pipeline):
-//   1. ../../packages/angular/dist/tailwind-prefixed.css  → @useupup/angular component styles
+//   1. ../../packages/angular/dist/tailwind-prefixed.css  → @upupjs/angular component styles
 //   2. ../../packages/storybook-config/src/brand.css      → shared brand tokens
 //   3. src/tailwind.css                                   → story wrapper utilities
 // No CSS imports needed here.

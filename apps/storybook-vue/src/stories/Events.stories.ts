@@ -1,9 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/vue3-vite'
-import { UpupUploader } from '@useupup/vue'
-import {
-    uploaderArgTypes,
-    uploaderDefaultArgs,
-} from '@useupup/storybook-config'
+import { UpupUploader } from '@upupjs/vue'
+import { uploaderArgTypes, uploaderDefaultArgs } from '@upupjs/storybook-config'
 
 const meta: Meta<typeof UpupUploader> = {
     title: 'Vue/Events',

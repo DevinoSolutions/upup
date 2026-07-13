@@ -2,12 +2,9 @@
 import type { Meta, StoryObj } from '@storybook/angular'
 import { applicationConfig, moduleMetadata } from '@storybook/angular'
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async'
-import { UpupUploaderComponent } from '@useupup/angular'
-import type { UploaderProps } from '@useupup/angular'
-import {
-    uploaderArgTypes,
-    uploaderDefaultArgs,
-} from '@useupup/storybook-config'
+import { UpupUploaderComponent } from '@upupjs/angular'
+import type { UploaderProps } from '@upupjs/angular'
+import { uploaderArgTypes, uploaderDefaultArgs } from '@upupjs/storybook-config'
 
 // ── REAL_SERVER_URL (webpack-safe) ─────────────────────────────────────────────
 // The Angular storybook uses webpack, not Vite — import.meta.env is not defined.
@@ -45,7 +42,7 @@ function buildOptions(args: Record<string, unknown>): UploaderProps {
 // args / parameters / play. The render fn maps buildOptions(args) → config input.
 //
 // We intentionally type Meta/StoryObj loosely (no component generic) so the flat
-// argTypes from @useupup/storybook-config (sources, showBranding, themeMode, etc.)
+// argTypes from @upupjs/storybook-config (sources, showBranding, themeMode, etc.)
 // are accepted on each story's `args` without fighting Angular's signal-input
 // type derivation (StoryObj<UpupUploaderComponent> would narrow args to only the
 // @Input() properties of the component, which is just `config`).
@@ -179,7 +176,7 @@ export const Parity: Story = {
 }
 
 // ── 13. RealUploadServerDrive ─────────────────────────────────────────────────
-// Opt-in: disable MSW + server-mode presign via @useupup/server on :53060.
+// Opt-in: disable MSW + server-mode presign via @upupjs/server on :53060.
 export const RealUploadServerDrive: Story = {
     parameters: { msw: { handlers: [] } },
     args: {

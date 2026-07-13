@@ -6,7 +6,7 @@
 // to ./drive-clients. Extracted verbatim from handler.ts. The dynamic
 // `import('./transfer')` keeps its path (same src/ dir). No behavior change.
 
-import { UpupErrorCode, UpupNetworkError } from '@useupup/core'
+import { UpupErrorCode, UpupNetworkError } from '@upupjs/core'
 import type { UpupServerConfig } from './config'
 import { getTokens, deleteTokens, resolveUserId } from './tokenStore'
 import { isValidProvider, refreshAccessToken } from './oauth'

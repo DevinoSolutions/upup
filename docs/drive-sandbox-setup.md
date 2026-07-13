@@ -107,14 +107,14 @@ that you are at the repo root.
 
 The three scripts are thin dotenv wrappers (they load `local-dev/.env.test`):
 `drive:sandbox:mint` runs the one-time consent CLI, `drive:sandbox:seed` uploads
-the fixture set, and `drive:sandbox:test` builds `@useupup/core` and runs the gated
+the fixture set, and `drive:sandbox:test` builds `@upupjs/core` and runs the gated
 vitest suite.
 
 ### Also: the HTTP-surface layer (Playwright)
 
 The vitest suite calls `drive-clients.ts` directly. A parallel Playwright suite
 (`apps/e2e-test/drive-sandbox/server-transfer.spec.ts`) proves the same creds for
-**all four providers** end to end through `@useupup/server`'s HTTP surface — route
+**all four providers** end to end through `@upupjs/server`'s HTTP surface — route
 dispatch → drive auth → drive→S3 transfer — into a real MinIO bucket, then
 verifies the transferred bytes are a byte-exact sha256 match. It covers the full
 server-mode journey (browse → pick → provider download → drive→S3 → byte-exact
@@ -127,7 +127,7 @@ loads the MinIO env and your drive creds together):
 
 ```bash
 dotenv -e local-dev/.env.minio -e local-dev/.env.test -- \
-  pnpm --filter @useupup/e2e-test test:e2e:drive-sandbox
+  pnpm --filter @upupjs/e2e-test test:e2e:drive-sandbox
 ```
 
 Its gating mirrors the vitest suite: it runs only with `UPUP_DRIVE_SANDBOX=1`,
@@ -135,7 +135,7 @@ per-provider creds, and a live MinIO; absent → skip green (exit 0, loud notice
 a configured-but-broken token → RED. All four providers are covered here (each
 skips individually when its creds are absent). Nightly's `Drive-Sandbox` job runs
 **both** layers: the vitest client-direct suite, then this Playwright
-HTTP-surface suite (the job boots MinIO in-job and builds `@useupup/server` before
+HTTP-surface suite (the job boots MinIO in-job and builds `@upupjs/server` before
 it).
 
 **Local one-shot.** `pnpm run drive:sandbox` is the single safe local entry point

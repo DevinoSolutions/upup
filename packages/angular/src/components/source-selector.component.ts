@@ -3,8 +3,8 @@ import {
     FileSource,
     formatUiMessage as t,
     pluralUiMessage as plural,
-} from '@useupup/core'
-import { cn, sourceNameKeys } from '@useupup/core/internal'
+} from '@upupjs/core'
+import { cn, sourceNameKeys } from '@upupjs/core/internal'
 import { UpupStore } from '../upup-store.service'
 import {
     MyDeviceIconComponent,

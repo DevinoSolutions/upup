@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render } from '@testing-library/react'
 import React from 'react'
-import type { UploadFile } from '@useupup/core'
+import type { UploadFile } from '@upupjs/core'
 
 // Mutable state so individual tests can control file count + viewMode
 let _fileCount = 0

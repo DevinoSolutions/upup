@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { CameraController } from '../src/controllers/camera'
-import type { UpupCore } from '@useupup/core'
+import type { UpupCore } from '@upupjs/core'
 
 function mockMedia() {
     const track = { stop: vi.fn() }

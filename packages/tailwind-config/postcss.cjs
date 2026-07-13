@@ -1,7 +1,7 @@
 /**
  * Shared PostCSS config factory for the upup UI packages (react/vue/svelte/vanilla/angular).
  * Each consumer's postcss.config.cjs is one line:
- *   module.exports = require('@useupup/tailwind-config').createPostcssConfig({
+ *   module.exports = require('@upupjs/tailwind-config').createPostcssConfig({
  *     content: ['./src/<glob>'],
  *   })
  *
@@ -19,7 +19,7 @@ function createPostcssConfig({ content }) {
                 corePlugins: { preflight: true },
                 content: [
                     ...contentGlobs,
-                    // Brand-icon color classes (upup-text-[#hex]) live in @useupup/core's icon registry.
+                    // Brand-icon color classes (upup-text-[#hex]) live in @upupjs/core's icon registry.
                     // Relative to the consuming package's cwd at build time (../core == packages/core).
                     '../core/src/icons/registry.ts',
                 ],

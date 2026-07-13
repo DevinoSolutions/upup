@@ -4,18 +4,18 @@ All notable changes to this project are documented here. Dates use `YYYY-MM-DD`.
 
 ## Current architecture (2.2.0)
 
-upup ships as **nine published `@useupup/*` packages**, versioned and released
+upup ships as **nine published `@upupjs/*` packages**, versioned and released
 together via [changesets](https://github.com/changesets/changesets):
 
-- **`@useupup/core`** — the headless engine (file state, upload pipeline,
+- **`@upupjs/core`** — the headless engine (file state, upload pipeline,
   cloud-drive plugins, i18n, theme). Zero framework dependencies, and published
   in its own right — not a private, bundled-in source.
-- **`@useupup/react`** — the canonical UI. `@useupup/vue`, `@useupup/svelte`,
-  `@useupup/angular`, and `@useupup/vanilla` are native, DOM-identical ports of it, and
-  `@useupup/preact` is a `preact/compat` re-export of `@useupup/react`.
-- **`@useupup/next`** — client re-export plus `/server` route handlers (App and
+- **`@upupjs/react`** — the canonical UI. `@upupjs/vue`, `@upupjs/svelte`,
+  `@upupjs/angular`, and `@upupjs/vanilla` are native, DOM-identical ports of it, and
+  `@upupjs/preact` is a `preact/compat` re-export of `@upupjs/react`.
+- **`@upupjs/next`** — client re-export plus `/server` route handlers (App and
   Pages routers).
-- **`@useupup/server`** — optional Server Mode endpoints (S3/MinIO presign + proxy
+- **`@upupjs/server`** — optional Server Mode endpoints (S3/MinIO presign + proxy
   upload, drive-token exchange) behind an HMAC-signed upload-token trust model.
   The framework-agnostic factory is `createUpupHandler` (`createUpupNextHandler`
   wraps it for Next.js). The server-side drive→S3 transfer buffer is bounded at a
@@ -35,7 +35,7 @@ released together.
 > The dated entries below predate the architecture described above and are kept
 > verbatim as a historical record. They describe a superseded design whose names
 > no longer exist in the codebase: a two-package publish
-> (`upup-react-file-uploader` plus a private `@useupup/shared`), a `createHandler()`
+> (`upup-react-file-uploader` plus a private `@upupjs/shared`), a `createHandler()`
 > server API, a configurable `multipartThreshold` server knob, and the `Adapter*`
 > UI vocabulary (`sourceSelector.adapterButton`, the uploader's "adapter row")
 > since swept to `Source*` / `Drive*` / `Uploader*` names. Read them as history,
@@ -53,8 +53,8 @@ and remains the default — no migration required.
 - **`mode` prop on `<UpupUploader>`.** Accepts `'client'` (default) or
   `'server'`. In Server Mode the uploader talks only to the consumer's
   `serverUrl`; drive APIs and storage writes are proxied through
-  `@useupup/server`.
-- **`@useupup/server` Server Mode surface.** `createHandler()` now
+  `@upupjs/server`.
+- **`@upupjs/server` Server Mode surface.** `createHandler()` now
   implements the 3 TODO routes from v2.1: `/auth/:provider/cb`
   (OAuth code exchange for Google, Microsoft, Dropbox, Box),
   `/files/:provider` (list with search + folder navigation, normalised
@@ -85,7 +85,7 @@ and remains the default — no migration required.
 
 - Server Mode is strictly opt-in. `mode="client"` matches v2.0 / v2.1
   behaviour byte-for-byte.
-- `@useupup/server` remains Node-only and has no runtime entry in the
+- `@upupjs/server` remains Node-only and has no runtime entry in the
   React package's dist — your client bundle stays free of AWS SDKs.
 
 ---
@@ -102,7 +102,7 @@ the one-page migration guide.
 - **Entire package rewire.** The legacy v1 implementation that lived
   in `packages/upup` has been deleted; `upup-react-file-uploader@2.1`
   is now backed by the v2 code in `packages/react` with
-  `@useupup/core`/`@useupup/shared` bundled in. Consumers upgrading from
+  `@upupjs/core`/`@upupjs/shared` bundled in. Consumers upgrading from
   v2.0.0 get a fundamentally different runtime — the public prop
   surface is the migration guide (`docs/migration/v2-to-v2.1.md`)
   but the engine, internals, i18n, theming, pipeline, and server
@@ -115,14 +115,14 @@ the one-page migration guide.
   semantics.
 - **Removed `classNames` prop** — use `theme.slots` with the nested
   shape (`fileList.uploadButton`, `sourceSelector.adapterButton`, etc.).
-  A new `flattenSlotsToClassNames()` helper in `@useupup/shared` bridges
+  A new `flattenSlotsToClassNames()` helper in `@upupjs/shared` bridges
   the nested override onto the internal flat shape the component tree
   consumes.
 - `theme.slots` is typed as `DeepPartialSlots` so partial overrides
   compile.
 - `UpupUploaderPropsClassNames` is no longer publicly exported from
-  `@useupup/react`.
-- `CoreOptions.locale` and `CoreOptions.translations` in `@useupup/core`
+  `@upupjs/react`.
+- `CoreOptions.locale` and `CoreOptions.translations` in `@upupjs/core`
   changed from `unknown` to proper types (`LocaleBundle |
 UpupLocaleCode` and `Partial<UpupMessages>` respectively). No
   runtime change — consumers passing `unknown` now fail type-check.
@@ -141,7 +141,7 @@ UpupLocaleCode` and `Partial<UpupMessages>` respectively). No
   slots added to `UpupThemeSlots` to cover v1 `classNames` keys that
   had no v2 equivalent: `filePreview.icon`, `fileList.addMoreButton`,
   `driveBrowser.itemInner`, `driveBrowser.searchContainer`.
-- **Nine brand icons exported** from `@useupup/react` for reuse:
+- **Nine brand icons exported** from `@upupjs/react` for reuse:
   `MyDeviceIcon`, `BoxIcon`, `DropBoxIcon`, `GoogleDriveIcon`,
   `OneDriveIcon`, `LinkIcon`, `CameraIcon`, `AudioIcon`,
   `ScreenCastIcon`. These are the same SVGs used by the uploader's
@@ -170,7 +170,7 @@ UpupLocaleCode` and `Partial<UpupMessages>` respectively). No
 - Dropbox API errors logged via `console.error` now also route
   through the consumer-facing `onError` callback.
 
-### Interactive playground (`@useupup/interactive-example`)
+### Interactive playground (`@upupjs/interactive-example`)
 
 The in-app playground got a full UX pass:
 
@@ -217,8 +217,8 @@ The in-app playground got a full UX pass:
 
 ### Test coverage
 
-- +12 unit tests for `flattenSlotsToClassNames` in `@useupup/shared`
-- +3 DOM integration tests in `@useupup/react` proving `theme.slots`
+- +12 unit tests for `flattenSlotsToClassNames` in `@upupjs/shared`
+- +3 DOM integration tests in `@upupjs/react` proving `theme.slots`
   overrides reach the rendered markup
 - +3 new `EnumSelect` cases covering segmented default + auto-select
   fallback layouts

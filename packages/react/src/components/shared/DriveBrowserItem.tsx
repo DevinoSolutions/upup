@@ -1,6 +1,6 @@
 import React from 'react'
-import { type DriveFile } from '@useupup/core'
-import { cn } from '@useupup/core/internal'
+import { type DriveFile } from '@upupjs/core'
+import { cn } from '@upupjs/core/internal'
 import { useUploaderTheme } from '../../context/UploaderContext'
 import DriveBrowserIcon from './DriveBrowserIcon'
 

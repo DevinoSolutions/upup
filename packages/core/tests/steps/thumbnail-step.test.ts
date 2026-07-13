@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { thumbnailStep } from '../../src/steps/thumbnail'
-import type { UploadFile, PipelineContext } from '@useupup/core'
+import type { UploadFile, PipelineContext } from '@upupjs/core'
 
 function makeFile(name: string, type: string): UploadFile {
     return {

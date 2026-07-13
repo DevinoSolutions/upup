@@ -2,9 +2,9 @@
 
 import React, { useContext } from 'react'
 
-import { UpupUploader } from '@useupup/react'
-import '@useupup/react/styles'
-import type { LocaleBundle } from '@useupup/core'
+import { UpupUploader } from '@upupjs/react'
+import '@upupjs/react/styles'
+import type { LocaleBundle } from '@upupjs/core'
 import { ThemeContext } from '@/lib/contexts'
 import { clientEnv } from '@/lib/env'
 import { toast } from 'react-toastify'

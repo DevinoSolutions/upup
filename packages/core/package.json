@@ -1,5 +1,5 @@
 {
-    "name": "@useupup/core",
+    "name": "@upupjs/core",
     "version": "3.0.0",
     "description": "Headless, framework-agnostic file-upload engine powering the upup uploader — file state, upload pipeline (compression, HEIC, web-worker offload), cloud-drive sources, i18n, and theming.",
     "keywords": [
@@ -172,7 +172,7 @@
     },
     "devDependencies": {
         "@types/node": "^22",
-        "@useupup/eslint-config": "workspace:*",
+        "@upupjs/eslint-config": "workspace:*",
         "@vitest/coverage-v8": "^4.1.2",
         "eslint": "^10.6.0",
         "tsup": "^8.4.0",

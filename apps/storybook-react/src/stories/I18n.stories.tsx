@@ -1,10 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import { UpupUploader, type UploaderProps } from '@useupup/react'
-import { frFR, arSA, jaJP } from '@useupup/core'
-import {
-    uploaderArgTypes,
-    uploaderDefaultArgs,
-} from '@useupup/storybook-config'
+import { UpupUploader, type UploaderProps } from '@upupjs/react'
+import { frFR, arSA, jaJP } from '@upupjs/core'
+import { uploaderArgTypes, uploaderDefaultArgs } from '@upupjs/storybook-config'
 
 const meta: Meta<UploaderProps> = {
     title: 'React/i18n',

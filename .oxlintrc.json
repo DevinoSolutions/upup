@@ -14,11 +14,11 @@
                 "paths": [
                     {
                         "name": "libheif-js",
-                        "message": "Heavy dep: dynamic import() behind @useupup/core/steps/heic only (principle 6)."
+                        "message": "Heavy dep: dynamic import() behind @upupjs/core/steps/heic only (principle 6)."
                     },
                     {
                         "name": "tus-js-client",
-                        "message": "Heavy dep: dynamic import() behind @useupup/core/strategies/tus-upload only (principle 6)."
+                        "message": "Heavy dep: dynamic import() behind @upupjs/core/strategies/tus-upload only (principle 6)."
                     }
                 ]
             }

@@ -1,5 +1,5 @@
 import { Component, inject } from '@angular/core'
-import { cn } from '@useupup/core/internal'
+import { cn } from '@upupjs/core/internal'
 import { UpupStore } from '../upup-store.service'
 import { UrlUploaderComponent } from './url-uploader.component'
 import { CameraUploaderComponent } from './camera-uploader.component'

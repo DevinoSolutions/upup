@@ -1,9 +1,9 @@
 import { useVirtualizer } from '@tanstack/react-virtual'
 import React, { memo, useRef } from 'react'
 import Icon from './Icon'
-import { formatUiMessage as t, pluralUiMessage as plural } from '@useupup/core'
-import { cn, isUploadActive } from '@useupup/core/internal'
-import { UploadStatus } from '@useupup/core'
+import { formatUiMessage as t, pluralUiMessage as plural } from '@upupjs/core'
+import { cn, isUploadActive } from '@upupjs/core/internal'
+import { UploadStatus } from '@upupjs/core'
 import {
     useUploaderFiles,
     useUploaderI18n,

@@ -1,5 +1,5 @@
 {
-    "name": "@useupup/vanilla",
+    "name": "@upupjs/vanilla",
     "version": "3.0.0",
     "description": "Framework-free DOM file uploader (lit-html) with cloud-drive sources, resumable uploads, theming, and ICU i18n.",
     "keywords": [
@@ -73,12 +73,12 @@
     },
     "dependencies": {
         "@tanstack/virtual-core": "^3.13.0",
-        "@useupup/core": "workspace:*",
+        "@upupjs/core": "workspace:*",
         "lit-html": "^3.2.0"
     },
     "devDependencies": {
-        "@useupup/eslint-config": "workspace:*",
-        "@useupup/tailwind-config": "workspace:*",
+        "@upupjs/eslint-config": "workspace:*",
+        "@upupjs/tailwind-config": "workspace:*",
         "@vitest/coverage-v8": "^4.1.2",
         "eslint": "^10.6.0",
         "jsdom": "22.1.0",

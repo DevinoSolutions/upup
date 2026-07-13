@@ -1,5 +1,5 @@
 import { ChangeEventHandler, useCallback, useMemo } from 'react'
-import { FileSource } from '@useupup/core'
+import { FileSource } from '@upupjs/core'
 import {
     useUploaderFiles,
     useUploaderI18n,

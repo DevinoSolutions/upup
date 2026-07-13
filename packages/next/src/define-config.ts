@@ -1,11 +1,11 @@
-import type { UpupServerConfig } from '@useupup/server'
+import type { UpupServerConfig } from '@upupjs/server'
 
 /**
  * Typed helper for authoring a server config with full editor autocomplete and
  * type-checking. Returns the config unchanged — a thin pass-through.
  *
  * Required-field validation is intentionally NOT performed here (F-852): it
- * lives at construct time inside @useupup/server's `createUpupHandler`, so it runs
+ * lives at construct time inside @upupjs/server's `createUpupHandler`, so it runs
  * for EVERY caller — including apps that call `createUpupNextHandler({...})`
  * directly without this wrapper (playground/landing did exactly that). A
  * `defineUpupConfig` that validated on its own left those direct callers

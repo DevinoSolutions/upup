@@ -14,7 +14,7 @@
 
     // Test-only harness: useUpupUpload's onMount/onDestroy registration needs a
     // real component instance (Svelte's lifecycle hooks throw outside one) —
-    // mirrors @useupup/vue's tests/helpers.ts `withSetup`, which uses `createApp`
+    // mirrors @upupjs/vue's tests/helpers.ts `withSetup`, which uses `createApp`
     // for the same reason. `sink` is a plain object ref the test pre-creates so
     // it can read the composable's return value back out of this component,
     // the same one-shot-capture shape as UpupUploader.svelte's own `const ctx =

@@ -4,7 +4,7 @@ import type {
     HTMLAttributes,
     InputHTMLAttributes,
 } from 'react'
-import type { DragDropController } from '@useupup/core/internal'
+import type { DragDropController } from '@upupjs/core/internal'
 
 export interface PropGetterDeps {
     addFiles: (files: File[]) => Promise<void> | void

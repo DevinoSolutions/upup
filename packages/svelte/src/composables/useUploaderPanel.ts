@@ -1,6 +1,6 @@
 import { onMount, onDestroy } from 'svelte'
 import { derived, type Readable } from 'svelte/store'
-import { DragDropController } from '@useupup/core/internal'
+import { DragDropController } from '@upupjs/core/internal'
 import {
     useUploaderFiles,
     useUploaderOptions,

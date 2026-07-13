@@ -7,8 +7,8 @@ import {
     Type,
 } from '@angular/core'
 import { NgComponentOutlet } from '@angular/common'
-import { errorCodeToMessageKey } from '@useupup/core'
-import { cn } from '@useupup/core/internal'
+import { errorCodeToMessageKey } from '@upupjs/core'
+import { cn } from '@upupjs/core/internal'
 import { UpupStore } from '../upup-store.service'
 import {
     ServerModeDriveService,

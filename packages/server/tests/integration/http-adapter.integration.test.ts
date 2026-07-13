@@ -1,4 +1,4 @@
-// Real HTTP integration test for @useupup/server's Express adapter.
+// Real HTTP integration test for @upupjs/server's Express adapter.
 //
 // Every OTHER server test drives createUpupHandler as a plain function
 // (`handler(new Request(...))`), so the Express middleware chain, the

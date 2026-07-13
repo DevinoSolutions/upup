@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import { UpupCore } from '../src/core'
-import { UploadStatus } from '@useupup/core'
+import { UploadStatus } from '@upupjs/core'
 import type { PluginManager } from '../src/plugin'
 import type { CrashRecoveryManager } from '../src/crash-recovery'
 import type { PipelineEngine } from '../src/pipeline/engine'

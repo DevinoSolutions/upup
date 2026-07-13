@@ -7,7 +7,7 @@ import {
     useUploaderTheme,
 } from '../context/UploaderContext'
 import { uploadSourceObject } from '../lib/constants'
-import { cn } from '@useupup/core/internal'
+import { cn } from '@upupjs/core/internal'
 import DefaultLoaderIcon from './DefaultLoaderIcon'
 
 export default function SourceView(): React.ReactElement | null {

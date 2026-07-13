@@ -1,5 +1,5 @@
 import { computed, onUnmounted, ref, type Ref, type ComputedRef } from 'vue'
-import type { Translations } from '@useupup/core'
+import type { Translations } from '@upupjs/core'
 import {
     useUploaderFiles,
     useUploaderI18n,

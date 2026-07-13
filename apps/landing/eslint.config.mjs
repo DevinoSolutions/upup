@@ -1,5 +1,5 @@
 import tseslint from 'typescript-eslint'
-import { reactHooksConfig, appEnvConfig } from '@useupup/eslint-config'
+import { reactHooksConfig, appEnvConfig } from '@upupjs/eslint-config'
 
 export default tseslint.config(
     { ignores: ['.next/**', 'public/**'] },

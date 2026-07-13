@@ -1,3 +1,3 @@
-import config, { reactHooksConfig } from '@useupup/eslint-config'
+import config, { reactHooksConfig } from '@upupjs/eslint-config'
 
 export default [...config, ...reactHooksConfig]

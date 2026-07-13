@@ -1,1 +1,1 @@
-export * from '@useupup/react'
+export * from '@upupjs/react'

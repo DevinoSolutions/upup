@@ -9,8 +9,8 @@ import {
     useUploaderView,
 } from '../context/uploader-context'
 import useUploaderPanel from '../composables/useUploaderPanel'
-import { cn } from '@useupup/core/internal'
-import { UploadStatus } from '@useupup/core'
+import { cn } from '@upupjs/core/internal'
+import { UploadStatus } from '@upupjs/core'
 import SourceSelector from './SourceSelector.vue'
 import SourceView from './SourceView.vue'
 import FileList from './FileList.vue'

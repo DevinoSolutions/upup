@@ -1,7 +1,7 @@
 'use client'
 import React, { useEffect, useState } from 'react'
-import { resolveTheme, tokensToVars } from '@useupup/core'
-import type { UpupThemeConfig } from '@useupup/core'
+import { resolveTheme, tokensToVars } from '@upupjs/core'
+import type { UpupThemeConfig } from '@upupjs/core'
 
 interface UpupThemeProviderProps {
     theme?: UpupThemeConfig | undefined

@@ -1,6 +1,6 @@
 import { Component, Input } from '@angular/core'
 import { IconComponent } from '../icon.component'
-import type { IconName } from '@useupup/core'
+import type { IconName } from '@upupjs/core'
 
 @Component({
     selector: 'upup-file-icon-svg',

@@ -8,14 +8,11 @@ import {
     useState,
     useSyncExternalStore,
 } from 'react'
-import { UpupCore, type CoreOptions } from '@useupup/core'
-import {
-    DragDropController,
-    UploaderOrchestrator,
-} from '@useupup/core/internal'
-import type { CoreEvents } from '@useupup/core/internal'
-import { UploadStatus, type UploadFile, type UpupError } from '@useupup/core'
-import type { ExtensionMethods } from '@useupup/core'
+import { UpupCore, type CoreOptions } from '@upupjs/core'
+import { DragDropController, UploaderOrchestrator } from '@upupjs/core/internal'
+import type { CoreEvents } from '@upupjs/core/internal'
+import { UploadStatus, type UploadFile, type UpupError } from '@upupjs/core'
+import type { ExtensionMethods } from '@upupjs/core'
 import { createPropGetters } from './prop-getters'
 
 export interface UseUpupUploadReturn {
@@ -71,7 +68,7 @@ export interface UseUpupUploadOptions extends CoreOptions {
     // (packages/core/src/types/uploader-props.ts's UploaderBaseProps) so the
     // headless path can honor the SAME rules the visual panel does. These are
     // UI-package concerns, deliberately NOT added to core's engine-level
-    // CoreOptions (packages/core/src/options/types.ts) — @useupup/core stays
+    // CoreOptions (packages/core/src/options/types.ts) — @upupjs/core stays
     // framework-agnostic with zero opinions on drag/drop UI gating.
     /** Enable clipboard paste uploads (Ctrl+V / Cmd+V). Default false. */
     enablePaste?: boolean | undefined

@@ -1,5 +1,5 @@
 {
-    "name": "@useupup/storybook-config",
+    "name": "@upupjs/storybook-config",
     "version": "0.1.0",
     "private": true,
     "type": "module",

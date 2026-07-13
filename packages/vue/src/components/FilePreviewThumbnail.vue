@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import type { Translations } from '@useupup/core'
-import type { InternalFlatClassNames } from '@useupup/core/internal'
-import { fileGetExtension, fileGetIsPdf, fileGetIsText, fileIs3D } from '@useupup/core/internal'
-import { cn } from '@useupup/core/internal'
+import type { Translations } from '@upupjs/core'
+import type { InternalFlatClassNames } from '@upupjs/core/internal'
+import { fileGetExtension, fileGetIsPdf, fileGetIsText, fileIs3D } from '@upupjs/core/internal'
+import { cn } from '@upupjs/core/internal'
 import FileIcon from './FileIcon.vue'
 
 const props = defineProps<{

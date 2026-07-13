@@ -1,6 +1,6 @@
 import { defineComponent, h, type PropType } from 'vue'
-import { ICONS, type IconName } from '@useupup/core'
-import { cn } from '@useupup/core/internal'
+import { ICONS, type IconName } from '@upupjs/core'
+import { cn } from '@upupjs/core/internal'
 
 export const Icon = defineComponent({
     name: 'UpupIcon',

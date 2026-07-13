@@ -1,7 +1,7 @@
 import React, { Dispatch, SetStateAction, memo, useMemo } from 'react'
-import { cn } from '@useupup/core/internal'
-import type { Translations } from '@useupup/core'
-import type { InternalFlatClassNames } from '@useupup/core/internal'
+import { cn } from '@upupjs/core/internal'
+import type { Translations } from '@upupjs/core'
+import type { InternalFlatClassNames } from '@upupjs/core/internal'
 import {
     fileGetExtension,
     fileGetIsPdf,

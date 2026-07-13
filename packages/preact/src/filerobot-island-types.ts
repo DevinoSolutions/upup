@@ -2,7 +2,7 @@
  * Plain-data contract between the preact/compat bridge and the real-React island.
  * NO react / preact imports — typechecked under BOTH the main (preact/compat)
  * tsconfig and tsconfig.island.json (real react). Mirrors the loose prop surface
- * the @useupup/react chrome passes to <EditorComponent> (see ImageEditorModal.tsx).
+ * the @upupjs/react chrome passes to <EditorComponent> (see ImageEditorModal.tsx).
  */
 export interface IslandProps {
     source: string

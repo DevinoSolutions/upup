@@ -2,12 +2,12 @@
 title: Svelte Quickstart
 slug: /quickstarts/svelte
 sidebar_position: 3
-description: Add a full-featured file uploader to a Svelte 5 app with @useupup/svelte — a native port of the canonical React UI, DOM-identical, with cloud drives, camera, and resumable uploads.
+description: Add a full-featured file uploader to a Svelte 5 app with @upupjs/svelte — a native port of the canonical React UI, DOM-identical, with cloud drives, camera, and resumable uploads.
 ---
 
 # Svelte Quickstart
 
-`@useupup/svelte` is a native Svelte 5 port of the canonical upup React UI —
+`@upupjs/svelte` is a native Svelte 5 port of the canonical upup React UI —
 DOM-identical to it — with cloud-drive sources, resumable uploads, theming, and
 ICU i18n. This page gets you uploading in **client mode**, no server package
 required.
@@ -17,7 +17,7 @@ Requires Svelte 5 (`svelte` is a peer dependency).
 ## Install
 
 ```sh
-npm i @useupup/svelte
+npm i @upupjs/svelte
 ```
 
 ## Minimal example (client mode)
@@ -27,8 +27,8 @@ short-lived upload credentials at `uploadEndpoint`.
 
 ```svelte
 <script lang="ts">
-    import { UpupUploader } from '@useupup/svelte'
-    import '@useupup/svelte/styles'
+    import { UpupUploader } from '@upupjs/svelte'
+    import '@upupjs/svelte/styles'
 </script>
 
 <UpupUploader provider="aws" uploadEndpoint="/api/upload-token" />
@@ -61,7 +61,7 @@ providers (client IDs come from each provider's developer console):
 ## Add server mode
 
 For credential isolation and server-proxied cloud drives, add
-[`@useupup/server`](https://www.npmjs.com/package/@useupup/server) and point the
+[`@upupjs/server`](https://www.npmjs.com/package/@upupjs/server) and point the
 uploader at it:
 
 ```svelte
@@ -72,7 +72,7 @@ The handler requires an `uploadTokenSecret` of **at least 16 characters** —
 `createUpupHandler` throws at construction time if it is missing or too short:
 
 ```ts
-import { createUpupHandler } from '@useupup/server'
+import { createUpupHandler } from '@upupjs/server'
 
 export const handler = createUpupHandler({
     storage: {

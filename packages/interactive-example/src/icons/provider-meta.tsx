@@ -11,7 +11,7 @@ import {
     HardDrive,
     type LucideIcon,
 } from 'lucide-react'
-import { LOCALE_CODES } from '@useupup/core'
+import { LOCALE_CODES } from '@upupjs/core'
 import type { SourceMeta } from './source-meta'
 
 // Brand SVG paths sourced from Simple Icons (CC0). Inlined rather than
@@ -161,11 +161,11 @@ const EDITOR_AUTO_OPEN_META: Record<string, SourceMeta> = {
 
 const ADVANCED_MODE_META: Record<string, SourceMeta> = {
     client: { label: 'Client (browser → storage)' },
-    server: { label: 'Server (browser → @useupup/server)' },
+    server: { label: 'Server (browser → @upupjs/server)' },
 }
 
 // Humanised locale labels, keyed by BCP-47 code. This is an override map,
-// not the option list itself — the option KEYS derive from @useupup/core's
+// not the option list itself — the option KEYS derive from @upupjs/core's
 // LOCALE_CODES below, so a newly-registered locale shows up automatically
 // (falling back to its raw code if no humanised label has been added yet).
 const LOCALE_LABELS: Record<string, string> = {

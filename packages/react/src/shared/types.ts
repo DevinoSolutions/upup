@@ -1,5 +1,5 @@
 import { FC } from 'react'
-import type { UploaderBaseProps } from '@useupup/core'
+import type { UploaderBaseProps } from '@upupjs/core'
 
 export type UploaderIcons = {
     ContainerAddMoreIcon?: FC<{ className?: string | undefined }> | undefined

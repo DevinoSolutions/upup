@@ -12,7 +12,7 @@
   with optional server-mode uploads, cloud drives, camera, screen capture, and link imports.
 </p>
 
-<!-- npm badges: add after first @useupup publish -->
+<!-- npm badges: add after first @upupjs publish -->
 <p align="center">
   <a href="https://github.com/DevinoSolutions/upup/actions/workflows/main.yml"><img src="https://github.com/DevinoSolutions/upup/actions/workflows/main.yml/badge.svg" alt="CI" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT" /></a>
@@ -29,35 +29,35 @@
 ---
 
 **upup** is a free, MIT-licensed file uploader built as one headless
-[`@useupup/core`](packages/core) engine with a matching native UI for every major
+[`@upupjs/core`](packages/core) engine with a matching native UI for every major
 framework. React is the visual canon; the Vue, Svelte, Angular, Vanilla, and
 Preact ports render the **same DOM** with the **same props**, verified
 byte-for-byte by a cross-framework parity harness. Upload straight from the
 browser to any S3-compatible storage (Client Mode), or route through your own
 backend with an HMAC-signed trust model (Server Mode via
-[`@useupup/server`](packages/server)).
+[`@upupjs/server`](packages/server)).
 
 ## Install
 
 Pick the package for your framework — the component API and rendered DOM are identical across all of them:
 
-| Package            | Install                  | Get started                                                                 |
-| ------------------ | ------------------------ | --------------------------------------------------------------------------- |
-| `@useupup/react`   | `npm i @useupup/react`   | [React quickstart](https://useupup.com/documentation/quickstarts/react)     |
-| `@useupup/vue`     | `npm i @useupup/vue`     | [Vue quickstart](https://useupup.com/documentation/quickstarts/vue)         |
-| `@useupup/svelte`  | `npm i @useupup/svelte`  | [Svelte quickstart](https://useupup.com/documentation/quickstarts/svelte)   |
-| `@useupup/angular` | `npm i @useupup/angular` | [Angular quickstart](https://useupup.com/documentation/quickstarts/angular) |
-| `@useupup/vanilla` | `npm i @useupup/vanilla` | [Vanilla quickstart](https://useupup.com/documentation/quickstarts/vanilla) |
-| `@useupup/preact`  | `npm i @useupup/preact`  | [Preact quickstart](https://useupup.com/documentation/quickstarts/preact)   |
-| `@useupup/next`    | `npm i @useupup/next`    | Client re-export + `/server` route handlers (App & Pages routers)           |
-| `@useupup/core`    | `npm i @useupup/core`    | Headless engine — state, pipeline, drive plugins, i18n, theme               |
-| `@useupup/server`  | `npm i @useupup/server`  | Server Mode — S3 presign/proxy, drive OAuth, HMAC trust model               |
+| Package           | Install                 | Get started                                                                 |
+| ----------------- | ----------------------- | --------------------------------------------------------------------------- |
+| `@upupjs/react`   | `npm i @upupjs/react`   | [React quickstart](https://useupup.com/documentation/quickstarts/react)     |
+| `@upupjs/vue`     | `npm i @upupjs/vue`     | [Vue quickstart](https://useupup.com/documentation/quickstarts/vue)         |
+| `@upupjs/svelte`  | `npm i @upupjs/svelte`  | [Svelte quickstart](https://useupup.com/documentation/quickstarts/svelte)   |
+| `@upupjs/angular` | `npm i @upupjs/angular` | [Angular quickstart](https://useupup.com/documentation/quickstarts/angular) |
+| `@upupjs/vanilla` | `npm i @upupjs/vanilla` | [Vanilla quickstart](https://useupup.com/documentation/quickstarts/vanilla) |
+| `@upupjs/preact`  | `npm i @upupjs/preact`  | [Preact quickstart](https://useupup.com/documentation/quickstarts/preact)   |
+| `@upupjs/next`    | `npm i @upupjs/next`    | Client re-export + `/server` route handlers (App & Pages routers)           |
+| `@upupjs/core`    | `npm i @upupjs/core`    | Headless engine — state, pipeline, drive plugins, i18n, theme               |
+| `@upupjs/server`  | `npm i @upupjs/server`  | Server Mode — S3 presign/proxy, drive OAuth, HMAC trust model               |
 
 ## Quick start (React)
 
 ```tsx
-import { UpupUploader } from '@useupup/react'
-import '@useupup/react/styles'
+import { UpupUploader } from '@upupjs/react'
+import '@upupjs/react/styles'
 
 export default function Uploader() {
     return <UpupUploader provider="aws" uploadEndpoint="/api/upload-token" />
@@ -66,7 +66,7 @@ export default function Uploader() {
 
 Client Mode uploads directly from the browser to your storage; your server only
 issues short-lived presigned URLs at `uploadEndpoint` — a route you provide,
-either a small presign handler of your own or `@useupup/server`'s
+either a small presign handler of your own or `@upupjs/server`'s
 `createUpupHandler` (see [Server mode](#server-mode) below). The stylesheet is a
 separate import so projects without Tailwind get the same look. Every other
 framework mounts the same component with the same props — see the per-framework
@@ -81,7 +81,7 @@ framework and enforces an HMAC-signed trust model — `uploadTokenSecret` is
 
 ```ts
 // app/api/upup/[...route]/route.ts  (Next.js App Router)
-import { createUpupHandler } from '@useupup/server'
+import { createUpupHandler } from '@upupjs/server'
 
 const handler = createUpupHandler({
     storage: {
@@ -105,16 +105,16 @@ S3 credentials resolve from the standard AWS environment
 ```
 
 Express, Fastify, and Hono handlers ship as subpath exports
-(`@useupup/server/express`, `@useupup/server/fastify`, `@useupup/server/hono`), and
-`@useupup/next` wraps both the App and Pages routers.
+(`@upupjs/server/express`, `@upupjs/server/fastify`, `@upupjs/server/hono`), and
+`@upupjs/next` wraps both the App and Pages routers.
 
 > **Full docs → [useupup.com/documentation/getting-started](https://useupup.com/documentation/getting-started)** · **Server Mode setup → [`apps/docs/docs/guides/server-mode-setup.md`](apps/docs/docs/guides/server-mode-setup.md)**
 
 ## Features
 
-- **Headless core.** `@useupup/core` is a zero-framework-dependency engine: file state, an upload pipeline (compression, HEIC→JPEG, EXIF stripping, checksums, thumbnails, optional Web Worker offload), cloud-drive plugins, i18n, and theming. Build your own UI on it, or use a native package.
+- **Headless core.** `@upupjs/core` is a zero-framework-dependency engine: file state, an upload pipeline (compression, HEIC→JPEG, EXIF stripping, checksums, thumbnails, optional Web Worker offload), cloud-drive plugins, i18n, and theming. Build your own UI on it, or use a native package.
 - **Native UI for six frameworks.** React, Vue, Svelte, Angular, Vanilla JS, and Preact — same DOM, same Tailwind classes, enforced byte-for-byte by a parity harness.
-- **Client or Server mode.** Direct browser → storage presigned uploads, or a server-proxied [`@useupup/server`](packages/server) with an HMAC-signed trust model (signed length, key/uploadId binding, mandatory secrets).
+- **Client or Server mode.** Direct browser → storage presigned uploads, or a server-proxied [`@upupjs/server`](packages/server) with an HMAC-signed trust model (signed length, key/uploadId binding, mandatory secrets).
 - **S3-compatible storage.** AWS S3, Cloudflare R2, MinIO, DigitalOcean Spaces, Backblaze B2, Wasabi — any S3-compatible endpoint.
 - **Cloud drives.** Import from Google Drive, OneDrive, Dropbox, and Box, in client or server mode.
 - **More sources.** Drag-and-drop, file picker, camera, screen capture, audio recording, and link (URL) import.
@@ -143,15 +143,15 @@ This repo is a [pnpm workspace](https://pnpm.io/workspaces) driven by
 
 ```
 upup/
-├── packages/core/     # @useupup/core    — headless engine (state, pipeline, drives, i18n, theme)
-├── packages/react/    # @useupup/react   — canonical UI
-├── packages/vue/      # @useupup/vue     — native Vue port (DOM-identical to react)
-├── packages/svelte/   # @useupup/svelte  — native Svelte port
-├── packages/angular/  # @useupup/angular — native Angular port
-├── packages/vanilla/  # @useupup/vanilla — framework-free port
-├── packages/preact/   # @useupup/preact  — preact/compat re-export of react
-├── packages/next/     # @useupup/next    — client re-export + /server route handlers
-├── packages/server/   # @useupup/server  — server-mode endpoints (S3 presign/proxy, drive OAuth)
+├── packages/core/     # @upupjs/core    — headless engine (state, pipeline, drives, i18n, theme)
+├── packages/react/    # @upupjs/react   — canonical UI
+├── packages/vue/      # @upupjs/vue     — native Vue port (DOM-identical to react)
+├── packages/svelte/   # @upupjs/svelte  — native Svelte port
+├── packages/angular/  # @upupjs/angular — native Angular port
+├── packages/vanilla/  # @upupjs/vanilla — framework-free port
+├── packages/preact/   # @upupjs/preact  — preact/compat re-export of react
+├── packages/next/     # @upupjs/next    — client re-export + /server route handlers
+├── packages/server/   # @upupjs/server  — server-mode endpoints (S3 presign/proxy, drive OAuth)
 ├── apps/playground/   # Main dev app
 ├── apps/landing/      # Marketing site (useupup.com)
 ├── apps/docs/         # Documentation site

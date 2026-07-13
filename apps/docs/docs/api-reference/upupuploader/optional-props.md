@@ -56,10 +56,10 @@ Use `serverUrl` for OAuth client secrets, token storage, server-side transfers, 
 
 ## `i18n`
 
-Locale bundles are exported from `@useupup/core/i18n`.
+Locale bundles are exported from `@upupjs/core/i18n`.
 
 ```tsx
-import { frFR } from '@useupup/core/i18n'
+import { frFR } from '@upupjs/core/i18n'
 
 ;<UpupUploader
     i18n={{

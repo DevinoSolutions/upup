@@ -10,7 +10,7 @@ import {
     fileIs3D,
     PREVIEW_MAX_TEXT_SIZE,
 } from '../src/lib/file'
-import type { UploadFile } from '@useupup/core'
+import type { UploadFile } from '@upupjs/core'
 
 let urlCounter = 0
 beforeEach(() => {

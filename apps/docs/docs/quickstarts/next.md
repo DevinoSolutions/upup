@@ -2,15 +2,15 @@
 title: Next.js
 slug: /quickstarts/next
 sidebar_position: 7
-description: Add a full-featured file uploader to a Next.js app with @useupup/next — the client UI and the server handlers in one install, split so the AWS SDK never reaches your client bundle.
+description: Add a full-featured file uploader to a Next.js app with @upupjs/next — the client UI and the server handlers in one install, split so the AWS SDK never reaches your client bundle.
 ---
 
 # Next.js Quickstart
 
-`@useupup/next` is the Next.js integration for upup: one install gives you the client
+`@upupjs/next` is the Next.js integration for upup: one install gives you the client
 UI **and** the server handlers, split across two entry points so the AWS SDK never
 reaches your client bundle. The client entry re-exports the full
-[`@useupup/react`](./react.md) UI; the `/server` entry provides App Router and Pages
+[`@upupjs/react`](./react.md) UI; the `/server` entry provides App Router and Pages
 Router handlers.
 
 Requires Next.js 15+ and React 19 (`next`, `react`, and `react-dom` are peer
@@ -19,19 +19,19 @@ dependencies).
 ## Install
 
 ```sh
-npm i @useupup/next
+npm i @upupjs/next
 ```
 
 ## Client component
 
-`@useupup/next` re-exports `@useupup/react`, so `UpupUploader` (and its hooks, icons, and
-theme provider) come straight from `@useupup/next`. Render it in a client component:
+`@upupjs/next` re-exports `@upupjs/react`, so `UpupUploader` (and its hooks, icons, and
+theme provider) come straight from `@upupjs/next`. Render it in a client component:
 
 ```tsx
 'use client'
 
-import { UpupUploader } from '@useupup/next'
-import '@useupup/next/styles'
+import { UpupUploader } from '@upupjs/next'
+import '@upupjs/next/styles'
 
 export default function Uploader() {
     return <UpupUploader provider="aws" uploadEndpoint="/api/upload-token" />
@@ -53,7 +53,7 @@ Create a catch-all route at `app/api/upup/[...path]/route.ts`.
 you typed config.
 
 ```ts
-import { createUpupNextHandler, defineUpupConfig } from '@useupup/next/server'
+import { createUpupNextHandler, defineUpupConfig } from '@upupjs/next/server'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60
@@ -96,8 +96,8 @@ walkthrough — auth and user binding, production token stores, and serverless n
 
 ## Also exported
 
-From `@useupup/next`: the full `@useupup/react` surface (`UpupUploader`,
+From `@upupjs/next`: the full `@upupjs/react` surface (`UpupUploader`,
 `UpupThemeProvider`, the brand source icons, and the `use*` hooks). From
-`@useupup/next/server`: `createUpupNextHandler`, `createUpupPagesHandler`,
+`@upupjs/next/server`: `createUpupNextHandler`, `createUpupPagesHandler`,
 `defineUpupConfig`, and `InMemoryTokenStore` (dev-only — bring your own
 `TokenStore` in production).

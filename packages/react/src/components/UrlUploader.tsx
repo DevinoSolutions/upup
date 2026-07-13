@@ -8,7 +8,7 @@ import {
     useUploaderTheme,
 } from '../context/UploaderContext'
 import useFetchFileByUrl from '../hooks/useFetchFileByUrl'
-import { cn } from '@useupup/core/internal'
+import { cn } from '@upupjs/core/internal'
 import SourceViewContainer from './shared/SourceViewContainer'
 
 export default function UrlUploader(): React.ReactElement | null {

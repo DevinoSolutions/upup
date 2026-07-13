@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import { UpupCore } from '../src/core'
-import { UploadStatus } from '@useupup/core'
+import { UploadStatus } from '@upupjs/core'
 import type { UpupPlugin } from '../src/plugin'
 import type { UploadFile } from '../src/contracts'
 

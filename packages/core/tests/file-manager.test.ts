@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
 import { FileManager } from '../src/file-manager'
 import { UploadStatus } from '../src/types/upload-status'
-import type { UploadFile } from '@useupup/core'
+import type { UploadFile } from '@upupjs/core'
 
 const makeNativeFile = (
     name = 'test.jpg',

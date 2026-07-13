@@ -7,7 +7,7 @@ const config: StorybookConfig = {
         name: '@storybook/svelte-vite',
         options: {
             // No first-party .svelte components are authored in this Storybook: the
-            // stories are .ts and render the pre-built @useupup/svelte library. With
+            // stories are .ts and render the pre-built @upupjs/svelte library. With
             // nothing of our own to document, the docgen step (svelte2tsx) only ends
             // up parsing the library's *built* .svelte files — which it cannot parse
             // and has no reason to — and crashes the build. Skip it.

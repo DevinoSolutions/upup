@@ -1,5 +1,5 @@
 {
-    "name": "@useupup/storybook-vanilla",
+    "name": "@upupjs/storybook-vanilla",
     "version": "0.1.1",
     "private": true,
     "type": "module",
@@ -10,11 +10,11 @@
         "typecheck": "tsc --noEmit"
     },
     "dependencies": {
-        "@useupup/core": "workspace:*",
-        "@useupup/vanilla": "workspace:*"
+        "@upupjs/core": "workspace:*",
+        "@upupjs/vanilla": "workspace:*"
     },
     "devDependencies": {
-        "@useupup/storybook-config": "workspace:*",
+        "@upupjs/storybook-config": "workspace:*",
         "storybook": "^9",
         "@storybook/html-vite": "^9",
         "@storybook/addon-docs": "^9",

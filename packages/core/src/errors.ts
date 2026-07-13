@@ -120,7 +120,7 @@ export class UpupConfigError extends UpupError {
 //
 // Every upload strategy used to build its error from status+statusText only,
 // discarding the response body entirely — including S3's own error XML and
-// @useupup/server's `{error, code}` JSON. uploadErrorFromResponse() is the one
+// @upupjs/server's `{error, code}` JSON. uploadErrorFromResponse() is the one
 // place that reads the body and constructs a typed, code-carrying error.
 
 const MAX_ERROR_BODY_SNIPPET = 200

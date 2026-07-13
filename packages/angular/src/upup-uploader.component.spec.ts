@@ -1,7 +1,7 @@
 import { describe, it, expect, afterEach, vi } from 'vitest'
 import { PLATFORM_ID } from '@angular/core'
 import { TestBed } from '@angular/core/testing'
-import type { UploadFile } from '@useupup/core'
+import type { UploadFile } from '@upupjs/core'
 import type { UploaderProps } from './shared/types'
 import { UpupUploaderComponent } from './upup-uploader.component'
 

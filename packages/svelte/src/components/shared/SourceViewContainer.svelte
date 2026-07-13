@@ -1,6 +1,6 @@
 <script lang="ts">
   import { useUploaderTheme } from '../../context/uploader-context'
-  import { cn } from '@useupup/core/internal'
+  import { cn } from '@upupjs/core/internal'
   import type { Snippet } from 'svelte'
 
   const { isLoading = false, children, ...rest }: { isLoading?: boolean; children?: Snippet; [key: string]: unknown } = $props()

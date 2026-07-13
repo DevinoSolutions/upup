@@ -1,5 +1,5 @@
 {
-    "name": "@useupup/storybook-vue",
+    "name": "@upupjs/storybook-vue",
     "version": "0.1.1",
     "private": true,
     "type": "module",
@@ -10,12 +10,12 @@
         "typecheck": "vue-tsc --noEmit"
     },
     "dependencies": {
-        "@useupup/core": "workspace:*",
-        "@useupup/vue": "workspace:*",
+        "@upupjs/core": "workspace:*",
+        "@upupjs/vue": "workspace:*",
         "vue": "^3.4.0"
     },
     "devDependencies": {
-        "@useupup/storybook-config": "workspace:*",
+        "@upupjs/storybook-config": "workspace:*",
         "storybook": "^9",
         "@storybook/vue3-vite": "^9",
         "@storybook/addon-docs": "^9",

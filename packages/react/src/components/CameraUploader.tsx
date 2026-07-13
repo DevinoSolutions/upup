@@ -1,7 +1,7 @@
 import React from 'react'
 import Webcam from 'react-webcam'
-import { formatUiMessage as t } from '@useupup/core'
-import { cn } from '@useupup/core/internal'
+import { formatUiMessage as t } from '@upupjs/core'
+import { cn } from '@upupjs/core/internal'
 import useCameraUploader from '../hooks/useCameraUploader'
 import SourceViewContainer from './shared/SourceViewContainer'
 

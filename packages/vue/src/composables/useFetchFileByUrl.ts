@@ -1,5 +1,5 @@
 import { ref, type Ref } from 'vue'
-import { deriveFetchedFileName } from '@useupup/core/internal'
+import { deriveFetchedFileName } from '@upupjs/core/internal'
 import {
     useUploaderOptions,
     useUploaderRuntime,

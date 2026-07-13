@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
 import { cleanup } from '@testing-library/svelte'
-import { UploadStatus } from '@useupup/core'
+import { UploadStatus } from '@upupjs/core'
 import { withSetup } from './helpers'
 
 const makeFile = (name: string) => new File(['x'], name, { type: 'text/plain' })
@@ -10,9 +10,9 @@ afterEach(() => cleanup())
 // P6 core-state/event contract (CLAUDE.md): "frameworks create a FRESH core
 // per mount and destroy() it on unmount... After it, upload/resume/retry/
 // addFiles/setFiles throw... fileManager is kept so the files/progress
-// getters keep working." This pins that contract for @useupup/svelte's
+// getters keep working." This pins that contract for @upupjs/svelte's
 // useUpupUpload — the same seam react's use-upup-upload-cleanup.test.ts
-// covers for @useupup/react.
+// covers for @upupjs/react.
 describe('useUpupUpload — fresh core per mount, destroy() on unmount (P6)', () => {
     it('mount creates a live, usable core', async () => {
         const { result, unmount } = withSetup({ limit: 5 })

@@ -5,7 +5,7 @@ import {
     onUnmounted,
     type ComputedRef,
 } from 'vue'
-import { DragDropController } from '@useupup/core/internal'
+import { DragDropController } from '@upupjs/core/internal'
 import {
     useUploaderFiles,
     useUploaderOptions,

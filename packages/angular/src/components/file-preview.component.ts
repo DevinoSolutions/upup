@@ -10,7 +10,7 @@ import {
 } from '@angular/core'
 import { NgComponentOutlet } from '@angular/common'
 import { DomSanitizer, type SafeStyle } from '@angular/platform-browser'
-import { type Translations } from '@useupup/core'
+import { type Translations } from '@upupjs/core'
 import {
     fileCanPreviewText,
     fileGetIsImage,
@@ -18,7 +18,7 @@ import {
     fileGetIsText,
     cn,
     isUploadActive,
-} from '@useupup/core/internal'
+} from '@upupjs/core/internal'
 import { UpupStore } from '../upup-store.service'
 import { ProgressBarComponent } from './progress-bar.component'
 import { FilePreviewThumbnailComponent } from './file-preview-thumbnail.component'

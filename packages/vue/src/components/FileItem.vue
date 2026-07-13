@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import type { UploadFile } from '@useupup/core'
+import type { UploadFile } from '@upupjs/core'
 import {
     useUploaderFiles,
     useUploaderOptions,
     useUploaderRuntime,
     useUploaderTheme,
 } from '../context/uploader-context'
-import { cn } from '@useupup/core/internal'
+import { cn } from '@upupjs/core/internal'
 import FilePreview from './FilePreview.vue'
 import FilePreviewPortal from './FilePreviewPortal.vue'
 

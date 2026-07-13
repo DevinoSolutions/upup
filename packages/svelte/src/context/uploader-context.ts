@@ -6,7 +6,7 @@ import type {
     UpupThemeMode,
     ResolvedImageEditorOptions,
     FilesProgressMap,
-} from '@useupup/core'
+} from '@upupjs/core'
 import type {
     BaseContextUpload,
     BaseContextRuntime,
@@ -17,8 +17,8 @@ import type {
     BaseContextView,
     BaseContextEditor,
     BaseContextTheme,
-} from '@useupup/core/internal'
-import { UploadStatus } from '@useupup/core'
+} from '@upupjs/core/internal'
+import { UploadStatus } from '@upupjs/core'
 import type { UploaderProps, UploaderIcons } from '../shared/types'
 
 export { UploadStatus }

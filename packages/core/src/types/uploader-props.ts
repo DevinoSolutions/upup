@@ -46,7 +46,7 @@ export type UploaderBaseProps = {
     sources?: UploadSource[] | undefined
     /** Endpoint returning presigned upload URLs. */
     uploadEndpoint?: string | undefined
-    /** Server URL for @useupup/server handler. */
+    /** Server URL for @upupjs/server handler. */
     serverUrl?: string | undefined
     /** Maximum number of files that can be added. Default 10. */
     maxFiles?: number | undefined
@@ -124,11 +124,11 @@ export type UploaderBaseProps = {
     resumable?: ResumableUploadOptions | undefined
 
     // i18n / Localisation
-    /** i18n configuration. Uses ICU locale bundles from `@useupup/core`. */
+    /** i18n configuration. Uses ICU locale bundles from `@upupjs/core`. */
     i18n?:
         | {
               /**
-               * ICU-enabled locale bundle from `@useupup/core/i18n` (e.g. `import { enUS } from '@useupup/core'`).
+               * ICU-enabled locale bundle from `@upupjs/core/i18n` (e.g. `import { enUS } from '@upupjs/core'`).
                * When provided, enables ICU pluralization, namespaced key overrides, and runtime locale switching.
                * Takes precedence over `locale`.
                */

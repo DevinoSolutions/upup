@@ -1,8 +1,8 @@
 import { html, nothing, type TemplateResult } from 'lit-html'
 import { repeat } from 'lit-html/directives/repeat.js'
-import { errorCodeToMessageKey } from '@useupup/core'
-import { ServerModeDriveController, cn } from '@useupup/core/internal'
-import type { ServerModeProvider, ServerDriveFile } from '@useupup/core'
+import { errorCodeToMessageKey } from '@upupjs/core'
+import { ServerModeDriveController, cn } from '@upupjs/core/internal'
+import type { ServerModeProvider, ServerDriveFile } from '@upupjs/core'
 export type { ServerModeProvider, ServerDriveFile }
 import type { UploaderContext } from '../lib/types'
 import { sourceViewContainer } from './shared/source-view-container'

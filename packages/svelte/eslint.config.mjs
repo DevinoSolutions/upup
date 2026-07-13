@@ -1,3 +1,3 @@
-import config from '@useupup/eslint-config'
+import config from '@upupjs/eslint-config'
 
 export default config

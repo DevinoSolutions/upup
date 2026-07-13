@@ -242,15 +242,15 @@ mkdirSync(join(consumerDir, 'src'), { recursive: true })
 runPnpm(['run', 'build:package'])
 
 const allPackages = [
-    '@useupup/core',
-    '@useupup/server',
-    '@useupup/react',
-    '@useupup/vue',
-    '@useupup/svelte',
-    '@useupup/vanilla',
-    '@useupup/angular',
-    '@useupup/preact',
-    '@useupup/next',
+    '@upupjs/core',
+    '@upupjs/server',
+    '@upupjs/react',
+    '@upupjs/vue',
+    '@upupjs/svelte',
+    '@upupjs/vanilla',
+    '@upupjs/angular',
+    '@upupjs/preact',
+    '@upupjs/next',
 ]
 
 for (const packageName of allPackages) {
@@ -258,9 +258,9 @@ for (const packageName of allPackages) {
 }
 
 const tarballs = {
-    core: findTarball('@useupup/core'),
-    server: findTarball('@useupup/server'),
-    react: findTarball('@useupup/react'),
+    core: findTarball('@upupjs/core'),
+    server: findTarball('@upupjs/server'),
+    react: findTarball('@upupjs/react'),
 }
 
 for (const packageName of allPackages) {
@@ -293,9 +293,9 @@ writeFileSync(
                 build: 'vite build',
             },
             dependencies: {
-                '@useupup/core': toFileSpec(consumerDir, tarballs.core),
-                '@useupup/server': toFileSpec(consumerDir, tarballs.server),
-                '@useupup/react': toFileSpec(consumerDir, tarballs.react),
+                '@upupjs/core': toFileSpec(consumerDir, tarballs.core),
+                '@upupjs/server': toFileSpec(consumerDir, tarballs.server),
+                '@upupjs/react': toFileSpec(consumerDir, tarballs.react),
                 react: '^19.2.0',
                 'react-dom': '^19.2.0',
             },
@@ -308,7 +308,7 @@ writeFileSync(
             },
             pnpm: {
                 overrides: {
-                    '@useupup/core': toFileSpec(consumerDir, tarballs.core),
+                    '@upupjs/core': toFileSpec(consumerDir, tarballs.core),
                 },
             },
         },
@@ -398,17 +398,17 @@ import {
   FileSource,
   UpupUploader,
   type UploaderProps,
-} from '@useupup/react'
-import '@useupup/react/styles'
+} from '@upupjs/react'
+import '@upupjs/react/styles'
 import {
   UploadStatus,
   UpupCore,
   createTranslator,
   enUS,
   type UploadFile,
-} from '@useupup/core'
-import { arSA } from '@useupup/core/i18n'
-import { resolveTheme, tokensToVars } from '@useupup/core/theme'
+} from '@upupjs/core'
+import { arSA } from '@upupjs/core/i18n'
+import { resolveTheme, tokensToVars } from '@upupjs/core/theme'
 
 const core = new UpupCore({ limit: 2 })
 const translator = createTranslator({ bundle: enUS, fallback: arSA })
@@ -437,9 +437,9 @@ createRoot(document.getElementById('root')!).render(<App />)
 
 writeFileSync(
     join(consumerDir, 'src', 'server-smoke.ts'),
-    `import { StorageProvider } from '@useupup/core'
-import { createUpupHandler, InMemoryTokenStore, type UpupServerConfig } from '@useupup/server'
-import { createUpupNextHandler } from '@useupup/server/next'
+    `import { StorageProvider } from '@upupjs/core'
+import { createUpupHandler, InMemoryTokenStore, type UpupServerConfig } from '@upupjs/server'
+import { createUpupNextHandler } from '@upupjs/server/next'
 
 const tokenStore = new InMemoryTokenStore()
 

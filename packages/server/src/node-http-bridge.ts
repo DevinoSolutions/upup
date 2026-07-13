@@ -1,7 +1,7 @@
 /**
  * The ONE Node-request -> Web-`Request` and Web-`Response` -> Node-response bridge
- * for @useupup/server's Node adapters (F-651). express.ts, fastify.ts, and
- * @useupup/next's pages-handler.ts each hand-rolled this conversion and drifted:
+ * for @upupjs/server's Node adapters (F-651). express.ts, fastify.ts, and
+ * @upupjs/next's pages-handler.ts each hand-rolled this conversion and drifted:
  * two copied ALL response headers (incl. content-length) and sent a `.text()`
  * string; one correctly skipped content-length and sent a lossless Buffer. This
  * module pins the correct behavior for every future Node adapter to import

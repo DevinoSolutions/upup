@@ -4,8 +4,8 @@ import { generateCode } from '../code/generateCode'
 describe('generateCode', () => {
     it('renders minimal config with just provider', () => {
         const out = generateCode({ provider: 'backblaze' as any })
-        expect(out).toContain("import { UpupUploader } from '@useupup/react'")
-        expect(out).toContain("import '@useupup/react/styles'")
+        expect(out).toContain("import { UpupUploader } from '@upupjs/react'")
+        expect(out).toContain("import '@upupjs/react/styles'")
         expect(out).toContain('export default function App()')
         expect(out).toContain('<UpupUploader')
         expect(out).toContain('provider="backblaze"')
@@ -122,7 +122,7 @@ describe('generateCode', () => {
             } as any,
         )
 
-        expect(out).toContain("import { arSA, frFR } from '@useupup/core'")
+        expect(out).toContain("import { arSA, frFR } from '@upupjs/core'")
         expect(out).toContain('locale: arSA')
         expect(out).toContain('fallbackLocale: frFR')
         expect(out).not.toContain("locale: 'ar-SA'")
@@ -140,7 +140,7 @@ describe('generateCode', () => {
         )
 
         expect(out).toContain('uploadEndpoint="/api/upup-mock/presign"')
-        expect(out).not.toContain("from '@useupup/core'")
+        expect(out).not.toContain("from '@upupjs/core'")
         expect(out).not.toContain('i18n=')
     })
 

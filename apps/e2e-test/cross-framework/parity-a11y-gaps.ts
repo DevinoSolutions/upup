@@ -22,7 +22,7 @@ export interface A11yGap {
     ported: string[]
 }
 
-// preact is a compat re-export of @useupup/react (packages/preact has no FileList
+// preact is a compat re-export of @upupjs/react (packages/preact has no FileList
 // of its own -- confirmed via source grep), so it renders the SAME DOM as
 // react and genuinely carries every React-first a11y feature below. `ported`
 // lists both.

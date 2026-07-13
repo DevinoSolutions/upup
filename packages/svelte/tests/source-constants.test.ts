@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { FileSource } from '@useupup/core'
+import { FileSource } from '@upupjs/core'
 import { sourceNameKeys, uploadSourceObject } from '../src/lib/constants'
 
 // ─────────────────────────────────────────────

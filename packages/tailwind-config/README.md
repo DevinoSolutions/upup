@@ -1,10 +1,10 @@
-# @useupup/tailwind-config
+# @upupjs/tailwind-config
 
-Shared PostCSS/Tailwind config factory for the upup UI packages (`@useupup/react`,
-`@useupup/vue`, `@useupup/svelte`, `@useupup/vanilla`, `@useupup/angular`).
+Shared PostCSS/Tailwind config factory for the upup UI packages (`@upupjs/react`,
+`@upupjs/vue`, `@upupjs/svelte`, `@upupjs/vanilla`, `@upupjs/angular`).
 
 Private, source-only, never published — consumed directly across the workspace
-(same pattern as `@useupup/storybook-config`). CommonJS, because PostCSS configs are `.cjs`.
+(same pattern as `@upupjs/storybook-config`). CommonJS, because PostCSS configs are `.cjs`.
 
 ## What it provides
 
@@ -18,7 +18,7 @@ upup UI package feeds to `postcss-cli`. It bundles the entire shared CSS pipelin
   never double-prefixes an already-scoped selector, so re-processed `dist` CSS is safe).
 - `autoprefixer`.
 
-The shared `@useupup/core` icon-registry path (`../core/src/icons/registry.ts`) is
+The shared `@upupjs/core` icon-registry path (`../core/src/icons/registry.ts`) is
 appended to `content` internally, so consumers pass only their own source globs.
 
 ## Usage
@@ -26,7 +26,7 @@ appended to `content` internally, so consumers pass only their own source globs.
 Each consumer's `postcss.config.cjs` is one line — only `content` differs:
 
 ```js
-module.exports = require('@useupup/tailwind-config').createPostcssConfig({
+module.exports = require('@upupjs/tailwind-config').createPostcssConfig({
     content: ['./src/**/*.{tsx,ts,css}'], // react
 })
 ```

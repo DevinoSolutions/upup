@@ -1,5 +1,5 @@
 <script lang="ts">
-import { cn } from '@useupup/core/internal'
+import { cn } from '@upupjs/core/internal'
 import type { UploaderProps } from './shared/types'
 import { createUploaderContext } from './context/create-uploader-context'
 import { provideUploaderContext } from './context/uploader-context'

@@ -31,21 +31,21 @@
                 "!.next/cache/**"
             ]
         },
-        "@useupup/docs#build": {
+        "@upupjs/docs#build": {
             "dependsOn": ["^build"],
             "outputs": ["build/**", "../landing/public/documentation/**"]
         },
-        "@useupup/landing#build": {
-            "dependsOn": ["^build", "@useupup/docs#build"]
+        "@upupjs/landing#build": {
+            "dependsOn": ["^build", "@upupjs/docs#build"]
         },
-        "@useupup/playground#build": {
+        "@upupjs/playground#build": {
             "dependsOn": ["^build"]
         },
         "build-storybook": {
             "dependsOn": ["^build"],
             "outputs": ["storybook-static/**"]
         },
-        "@useupup/storybook-vanilla#build-storybook": {
+        "@upupjs/storybook-vanilla#build-storybook": {
             "dependsOn": ["^build"],
             "outputs": ["storybook-static/**"]
         },
@@ -59,19 +59,19 @@
         "test": {
             "dependsOn": ["^test", "^build"]
         },
-        "@useupup/vanilla#test": {
+        "@upupjs/vanilla#test": {
             "dependsOn": ["^test", "^build", "build"]
         },
-        "@useupup/preact#test": {
+        "@upupjs/preact#test": {
             "dependsOn": ["^test", "^build", "build"]
         },
         "test:coverage": {
             "dependsOn": ["^build"]
         },
-        "@useupup/vanilla#test:coverage": {
+        "@upupjs/vanilla#test:coverage": {
             "dependsOn": ["^build", "build"]
         },
-        "@useupup/preact#test:coverage": {
+        "@upupjs/preact#test:coverage": {
             "dependsOn": ["^build", "build"]
         },
         "typecheck": {

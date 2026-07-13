@@ -6,14 +6,14 @@ import {
     DROPBOX_DESCRIPTOR,
     BOX_DESCRIPTOR,
     type UploadFile,
-} from '@useupup/core'
+} from '@upupjs/core'
 import {
     DriveBrowserController,
     DragDropController,
     normalizeUploaderOptions,
     createUploaderController,
     createChildController,
-} from '@useupup/core/internal'
+} from '@upupjs/core/internal'
 import type {
     CreateUploaderOptions,
     UploaderContext,

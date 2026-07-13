@@ -14,7 +14,7 @@ import {
     resolveTheme,
     flattenSlotsToClassNames,
     type UploadFile,
-} from '@useupup/core'
+} from '@upupjs/core'
 import {
     normalizeUploaderOptions,
     createUploaderController,
@@ -22,7 +22,7 @@ import {
     type UploaderControllerOptions,
     type OrchestratorState,
     type ThemeStoreState,
-} from '@useupup/core/internal'
+} from '@upupjs/core/internal'
 import Icon from '../components/Icon'
 import { UploaderProps } from '../shared/types'
 import { IUploaderContext } from '../context/UploaderContext'

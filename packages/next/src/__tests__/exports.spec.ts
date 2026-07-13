@@ -9,13 +9,13 @@ import * as server from '../server'
 const distDir = resolve(dirname(fileURLToPath(import.meta.url)), '../../dist')
 const read = (f: string) => readFileSync(resolve(distDir, f), 'utf8')
 
-describe('client export surface (@useupup/next)', () => {
-    it('re-exports the uploader UI from @useupup/react', () => {
+describe('client export surface (@upupjs/next)', () => {
+    it('re-exports the uploader UI from @upupjs/react', () => {
         expect((client as Record<string, unknown>).UpupUploader).toBeDefined()
     })
 })
 
-describe('server export surface (@useupup/next/server)', () => {
+describe('server export surface (@upupjs/next/server)', () => {
     it('exposes the handlers + helpers + token-store utils', () => {
         expect(typeof server.createUpupNextHandler).toBe('function')
         expect(typeof server.createUpupPagesHandler).toBe('function')

@@ -7,7 +7,7 @@
 // can read the trust core without wading through OAuth or drive-provider code.
 // The HMAC/token/envelope logic is UNCHANGED — this is a move, not a rewrite.
 
-import { UpupErrorCode } from '@useupup/core'
+import { UpupErrorCode } from '@upupjs/core'
 import type { UpupServerConfig, FileMetadata, UploadedFile } from './config'
 import {
     generatePresignedUrl,
@@ -207,7 +207,7 @@ export async function runPostCompletionHooks(
             route,
             method,
             status: 200,
-            // No dedicated HOOK_ERROR code exists in @useupup/core; the message
+            // No dedicated HOOK_ERROR code exists in @upupjs/core; the message
             // carries the real meaning — the upload itself succeeded.
             code: UpupErrorCode.STORAGE_ERROR,
             message:

@@ -1,6 +1,6 @@
 // @vitest-environment node
 /**
- * SSR regression tests for @useupup/vue. Mirrors packages/react/tests/ssr.test.tsx
+ * SSR regression tests for @upupjs/vue. Mirrors packages/react/tests/ssr.test.tsx
  * and packages/svelte/tests/root-ssr.test.ts: render UpupUploader through Vue's
  * server renderer (no DOM — no window/document/navigator.onLine/matchMedia) and
  * assert it does not throw and emits the expected shell markers. Vue skips

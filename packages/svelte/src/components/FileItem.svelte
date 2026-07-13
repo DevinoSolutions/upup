@@ -1,6 +1,6 @@
 <script lang="ts">
-  import type { UploadFile } from '@useupup/core'
-  import { cn } from '@useupup/core/internal'
+  import type { UploadFile } from '@upupjs/core'
+  import { cn } from '@upupjs/core/internal'
   import {
     useUploaderFiles,
     useUploaderOptions,

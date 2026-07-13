@@ -1,5 +1,5 @@
-import type { Translations } from '@useupup/core'
-import { FileSource } from '@useupup/core'
+import type { Translations } from '@upupjs/core'
+import { FileSource } from '@upupjs/core'
 import type { Component } from 'svelte'
 import {
     AudioIcon,
@@ -13,7 +13,7 @@ import {
     ScreenCaptureIcon,
 } from '../components/Icons'
 
-export { sourceNameKeys } from '@useupup/core/internal'
+export { sourceNameKeys } from '@upupjs/core/internal'
 
 type LazyComponent = () => Promise<{ default: Component }>
 

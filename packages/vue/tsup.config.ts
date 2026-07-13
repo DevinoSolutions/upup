@@ -9,6 +9,6 @@ export default defineConfig({
     sourcemap: true,
     clean: true,
     target: 'es2019',
-    external: ['vue', '@useupup/core'],
+    external: ['vue', '@upupjs/core'],
     esbuildPlugins: [vue()],
 })

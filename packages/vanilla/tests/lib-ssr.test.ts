@@ -7,7 +7,7 @@ describe('lib/dom resolveTarget (SSR guard)', () => {
         const { resolveTarget } = await import('../src/lib/dom')
         expect(() => resolveTarget('#any')).toThrow(TypeError)
         expect(() => resolveTarget('#any')).toThrow(
-            /@useupup\/vanilla: createUploader\(\) must run in a browser/,
+            /@upupjs\/vanilla: createUploader\(\) must run in a browser/,
         )
     })
 })

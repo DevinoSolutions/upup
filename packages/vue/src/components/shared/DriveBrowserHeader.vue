@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { type DriveFolder, type DriveUser } from '@useupup/core'
+import { type DriveFolder, type DriveUser } from '@upupjs/core'
 import {
     useUploaderI18n,
     useUploaderSource,
     useUploaderTheme,
 } from '../../context/uploader-context'
-import { cn } from '@useupup/core/internal'
+import { cn } from '@upupjs/core/internal'
 import Icon from '../Icon'
 
 const props = defineProps<{

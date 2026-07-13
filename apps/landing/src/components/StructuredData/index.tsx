@@ -1,6 +1,6 @@
 // Server component: emits JSON-LD structured data for SEO (rendered server-side).
-// Facts here are code-backed — see the six @useupup/* framework packages, @useupup/core
-// (headless engine), @useupup/server (HMAC-signed server mode), and the cloud-drive
+// Facts here are code-backed — see the six @upupjs/* framework packages, @upupjs/core
+// (headless engine), @upupjs/server (HMAC-signed server mode), and the cloud-drive
 // plugins (Google Drive, OneDrive, Dropbox, Box).
 
 const SITE_URL = 'https://useupup.com'
@@ -44,11 +44,11 @@ const faqs: { question: string; answer: string }[] = [
     },
     {
         question: 'What is the difference between client mode and server mode?',
-        answer: 'In client mode the browser uploads directly to your storage using short-lived credentials issued by your server. In server mode uploads are proxied through your own server using the @useupup/server package, which isolates storage credentials behind an HMAC-signed trust model.',
+        answer: 'In client mode the browser uploads directly to your storage using short-lived credentials issued by your server. In server mode uploads are proxied through your own server using the @upupjs/server package, which isolates storage credentials behind an HMAC-signed trust model.',
     },
     {
         question: 'Can I use my own UI with upup?',
-        answer: 'Yes. The engine lives in @useupup/core, a framework-agnostic headless package. You can use the built-in native UI for your framework or build a fully custom interface on the same core using the exported hooks and controllers.',
+        answer: 'Yes. The engine lives in @upupjs/core, a framework-agnostic headless package. You can use the built-in native UI for your framework or build a fully custom interface on the same core using the exported hooks and controllers.',
     },
 ]
 

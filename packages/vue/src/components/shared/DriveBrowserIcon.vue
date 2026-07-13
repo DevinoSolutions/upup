@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { type DriveFile } from '@useupup/core'
-import { cn, b64EncodeUnicode } from '@useupup/core/internal'
+import { type DriveFile } from '@upupjs/core'
+import { cn, b64EncodeUnicode } from '@upupjs/core/internal'
 import { useUploaderTheme } from '../../context/uploader-context'
 import Icon from '../Icon'
 

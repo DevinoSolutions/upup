@@ -3,8 +3,8 @@ import {
     type DriveFolder,
     type DriveUser,
     type UiTranslations,
-} from '@useupup/core'
-import { cn } from '@useupup/core/internal'
+} from '@upupjs/core'
+import { cn } from '@upupjs/core/internal'
 import { UpupStore } from '../../upup-store.service'
 import { SearchIconComponent } from '../icons/search-icon.component'
 import { UserIconComponent } from '../icons/user-icon.component'

@@ -21,7 +21,7 @@ export function errorCodeToMessageKey(
     if (!code) return 'uploadFailed'
 
     switch (code) {
-        // Upload-token verification codes (@useupup/server's UploadTokenErrorCode)
+        // Upload-token verification codes (@upupjs/server's UploadTokenErrorCode)
         case 'expired':
             return 'failedToRefreshExpiredToken'
         case 'bad_signature':
@@ -39,7 +39,7 @@ export function errorCodeToMessageKey(
         case 'NoSuchBucket':
             return 'missingRequiredConfiguration'
 
-        // @useupup/server machine codes (UpupErrorCode)
+        // @upupjs/server machine codes (UpupErrorCode)
         case 'PRESIGN_FAILED':
             return 'signedUrlGenerationFailed'
         case 'STORAGE_ERROR':

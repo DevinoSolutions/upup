@@ -1,6 +1,6 @@
 // packages/server/src/validate-config.ts
 //
-// Construct-time required-field validation, folded out of @useupup/next's opt-in
+// Construct-time required-field validation, folded out of @upupjs/next's opt-in
 // defineUpupConfig so it runs for EVERY caller of createUpupHandler regardless
 // of wrapper (F-852). A server-package factory could never import a next-
 // package helper, so playground/landing — which call createUpupNextHandler
@@ -9,7 +9,7 @@
 // forgotten env var (the classic `process.env.X!` -> "") fails fast and loud
 // instead of surfacing as a confusing 500 at request time.
 
-import { UpupConfigError } from '@useupup/core'
+import { UpupConfigError } from '@upupjs/core'
 import type { UpupServerConfig } from './config'
 
 function isNonEmpty(v: unknown): v is string {
@@ -64,7 +64,7 @@ export function validateServerConfig(config: UpupServerConfig): void {
 
     if (missing.length > 0) {
         throw new UpupConfigError(
-            '[@useupup/server] Invalid config — missing/empty required field(s):\n' +
+            '[@upupjs/server] Invalid config — missing/empty required field(s):\n' +
                 missing.map(m => `  - ${m}`).join('\n'),
         )
     }

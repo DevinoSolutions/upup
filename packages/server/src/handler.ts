@@ -2,7 +2,7 @@ import {
     UpupErrorCode,
     UpupConfigError,
     NON_S3_STORAGE_PROVIDERS,
-} from '@useupup/core'
+} from '@upupjs/core'
 import type { UpupServerConfig } from './config'
 import { assertUploadTokenSecret } from './uploadToken'
 import { validateServerConfig } from './validate-config'
@@ -45,7 +45,7 @@ export function createUpupHandler(config: UpupServerConfig): RouteHandler {
         (NON_S3_STORAGE_PROVIDERS as ReadonlySet<string>).has(storageType)
     ) {
         throw new UpupConfigError(
-            `[@useupup/server] storage.type "${storageType}" has no S3-compatible API and cannot be served. ` +
+            `[@upupjs/server] storage.type "${storageType}" has no S3-compatible API and cannot be served. ` +
                 'upup uploads via the S3 API — use an S3-compatible provider ' +
                 '(aws, minio, r2, wasabi, …) and set storage.endpoint for non-AWS backends.',
         )
@@ -56,7 +56,7 @@ export function createUpupHandler(config: UpupServerConfig): RouteHandler {
         !config.allowAnonymous
     ) {
         throw new UpupConfigError(
-            '[@useupup/server] drive providers / tokenStore require config.getUserId to ' +
+            '[@upupjs/server] drive providers / tokenStore require config.getUserId to ' +
                 'scope tokens per user. Set getUserId, or set allowAnonymous:true to ' +
                 'intentionally share ONE anonymous namespace (demos only).',
         )
@@ -67,7 +67,7 @@ export function createUpupHandler(config: UpupServerConfig): RouteHandler {
     // production is impossible to miss in the boot logs.
     if (config.allowAnonymousUploads) {
         console.warn(
-            '[@useupup/server] allowAnonymousUploads:true — /presign and /multipart/init ' +
+            '[@upupjs/server] allowAnonymousUploads:true — /presign and /multipart/init ' +
                 'accept UNAUTHENTICATED uploads under a shared anonymous namespace. ' +
                 'Demos / upstream-auth deployments only; never enable in multi-tenant production.',
         )

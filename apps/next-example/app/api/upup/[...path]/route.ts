@@ -1,4 +1,4 @@
-import { createUpupNextHandler } from '@useupup/next/server'
+import { createUpupNextHandler } from '@upupjs/next/server'
 import { getUpupConfig } from '@/lib/upup-config'
 
 export const dynamic = 'force-dynamic'

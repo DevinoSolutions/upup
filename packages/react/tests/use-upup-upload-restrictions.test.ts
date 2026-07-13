@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
 import { useUpupUpload } from '../src/use-upup-upload'
-import { UploadStatus } from '@useupup/core'
+import { UploadStatus } from '@upupjs/core'
 
 const makeFile = (name: string, size = 10, type = 'text/plain') =>
     new File(['x'.repeat(size)], name, { type })

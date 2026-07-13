@@ -1,4 +1,4 @@
-import { type DriveFile } from '@useupup/core'
+import { type DriveFile } from '@upupjs/core'
 
 /**
  * Mapping of Google Workspace mimeTypes to their Office Open XML export formats.

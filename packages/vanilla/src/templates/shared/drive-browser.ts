@@ -1,13 +1,13 @@
 import { html, nothing, type TemplateResult } from 'lit-html'
 import { repeat } from 'lit-html/directives/repeat.js'
-import { formatUiMessage as t, pluralUiMessage as plural } from '@useupup/core'
-import { cn, searchDriveFiles } from '@useupup/core/internal'
+import { formatUiMessage as t, pluralUiMessage as plural } from '@upupjs/core'
+import { cn, searchDriveFiles } from '@upupjs/core/internal'
 import type {
     DriveBrowserError,
     DriveFile,
     DriveFolder,
     DriveUser,
-} from '@useupup/core'
+} from '@upupjs/core'
 import type { UploaderContext } from '../../lib/types'
 import { sourceViewContainer } from './source-view-container'
 import { driveBrowserHeader } from './drive-browser-header'

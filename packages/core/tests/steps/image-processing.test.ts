@@ -8,7 +8,7 @@ import {
     UploadStatus,
     type PipelineContext,
     type UploadFile,
-} from '@useupup/core'
+} from '@upupjs/core'
 
 vi.mock('libheif-js/libheif-wasm/libheif-bundle.mjs', () => ({
     default: () =>

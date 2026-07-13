@@ -1,9 +1,9 @@
 import { Injectable, inject, computed, type Signal } from '@angular/core'
-import { BOX_DESCRIPTOR, type DriveFile, type DriveFolder } from '@useupup/core'
+import { BOX_DESCRIPTOR, type DriveFile, type DriveFolder } from '@upupjs/core'
 import {
     DriveBrowserController,
     type DriveBrowserState,
-} from '@useupup/core/internal'
+} from '@upupjs/core/internal'
 import { UpupStore } from '../upup-store.service'
 import { toSignalStore } from '../lib/to-signal-store'
 

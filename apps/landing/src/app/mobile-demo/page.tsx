@@ -2,7 +2,7 @@
 
 import Uploader from '@/components/Uploader'
 import { useSearchParams } from 'next/navigation'
-import { enUS, LOCALE_REGISTRY, type RegisteredLocaleCode } from '@useupup/core'
+import { enUS, LOCALE_REGISTRY, type RegisteredLocaleCode } from '@upupjs/core'
 import { Suspense, useEffect } from 'react'
 
 const LOCALE_MAP = LOCALE_REGISTRY

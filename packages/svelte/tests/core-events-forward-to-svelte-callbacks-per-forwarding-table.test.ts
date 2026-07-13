@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
 import { cleanup } from '@testing-library/svelte'
-import { UpupCore } from '@useupup/core'
-import type { UploadFile } from '@useupup/core'
+import { UpupCore } from '@upupjs/core'
+import type { UploadFile } from '@upupjs/core'
 import { withSetup } from './helpers'
 
 afterEach(() => cleanup())

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
-import { UpupCore } from '@useupup/core'
-import type { UploadFile } from '@useupup/core'
+import { UpupCore } from '@upupjs/core'
+import type { UploadFile } from '@upupjs/core'
 import { useUpupUpload } from '../src/use-upup-upload'
 import { withSetup } from './helpers'
 

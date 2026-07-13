@@ -8,8 +8,8 @@ import {
     type UiTranslations,
     formatUiMessage as t,
     pluralUiMessage as plural,
-} from '@useupup/core'
-import { searchDriveFiles, cn } from '@useupup/core/internal'
+} from '@upupjs/core'
+import { searchDriveFiles, cn } from '@upupjs/core/internal'
 import { UpupStore } from '../../upup-store.service'
 import { SourceViewContainerComponent } from '../source-view-container.component'
 import { DriveBrowserHeaderComponent } from './drive-browser-header.component'

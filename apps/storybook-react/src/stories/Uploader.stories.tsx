@@ -1,9 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import { UpupUploader, type UploaderProps } from '@useupup/react'
-import {
-    uploaderArgTypes,
-    uploaderDefaultArgs,
-} from '@useupup/storybook-config'
+import { UpupUploader, type UploaderProps } from '@upupjs/react'
+import { uploaderArgTypes, uploaderDefaultArgs } from '@upupjs/storybook-config'
 
 // Pull virtual controls out of args and fold them into the real `theme` prop.
 function render(args: Record<string, unknown>) {
@@ -44,7 +41,7 @@ export const Smoke: Story = {
     },
 }
 
-// ── Real storage (MinIO via the @useupup/server harness on :53060) ──────────────
+// ── Real storage (MinIO via the @upupjs/server harness on :53060) ──────────────
 // Opt-in story for the cross-framework e2e smoke. DISABLES MSW and points at the
 // local harness via `serverUrl` (selects the ServerCredentials strategy -> POST
 // /presign), clearing the MSW `uploadEndpoint` default. `sources: ['local']`

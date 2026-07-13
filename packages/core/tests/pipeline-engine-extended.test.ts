@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import { PipelineEngine } from '../src/pipeline/engine'
-import type { PipelineStep, PipelineContext, UploadFile } from '@useupup/core'
+import type { PipelineStep, PipelineContext, UploadFile } from '@upupjs/core'
 
 function makeFile(id: string, type = 'text/plain'): UploadFile {
     return {

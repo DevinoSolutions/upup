@@ -30,5 +30,5 @@ type UploaderRef = {
 }
 ```
 
-`UploaderRef` is exported from `@useupup/react`; `UploadFile` is exported from
-`@useupup/core/contracts`.
+`UploaderRef` is exported from `@upupjs/react`; `UploadFile` is exported from
+`@upupjs/core/contracts`.

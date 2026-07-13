@@ -16,7 +16,7 @@
 import { describe, it, expect, afterEach, vi } from 'vitest'
 import { TestBed } from '@angular/core/testing'
 import { signal } from '@angular/core'
-import { FileSource } from '@useupup/core'
+import { FileSource } from '@upupjs/core'
 import type { UploaderProps } from '../shared/types'
 import { UpupStore } from '../upup-store.service'
 import { UploaderPanelComponent } from './uploader-panel.component'

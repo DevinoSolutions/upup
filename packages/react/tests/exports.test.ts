@@ -1,14 +1,14 @@
 import { describe, it, expect } from 'vitest'
 import * as ReactPackage from '../src/index'
 
-describe('@useupup/react public exports', () => {
+describe('@upupjs/react public exports', () => {
     it('exports the React uploader and headless hook', () => {
         expect(ReactPackage.UpupUploader).toBeDefined()
         expect(typeof ReactPackage.useUpupUpload).toBe('function')
         expect(typeof ReactPackage.useIsClient).toBe('function')
     })
 
-    it('exports canonical source and provider enums from @useupup/core', () => {
+    it('exports canonical source and provider enums from @upupjs/core', () => {
         expect(ReactPackage.FileSource.LOCAL).toBe('local')
         expect(ReactPackage.FileSource.GOOGLE_DRIVE).toBe('googleDrive')
         expect(ReactPackage.StorageProvider.AWS).toBe('aws')
@@ -45,7 +45,7 @@ describe('@useupup/react public exports', () => {
         ).toBeUndefined()
     })
 
-    it('exports the headless context hooks (parity with @useupup/vue and @useupup/svelte)', () => {
+    it('exports the headless context hooks (parity with @upupjs/vue and @upupjs/svelte)', () => {
         for (const hook of [
             'useUploaderContext',
             'useUploaderRuntime',

@@ -19,18 +19,18 @@ start with the primitive and later need the whole flow.
 
 ## At a glance
 
-| Feature                 | react-dropzone                                            | upup                                                                |
-| ----------------------- | --------------------------------------------------------- | ------------------------------------------------------------------- |
-| Scope                   | Drag-and-drop file-selection primitive (hook + component) | Full uploader: selection, UI, upload pipeline, and server           |
-| Native first-party UI   | No — you render your own; React only                      | React, Vue, Svelte, Angular, Vanilla JS, Preact                     |
-| Headless core           | Yes (a hook) — but file selection only, no uploading      | Yes (`@useupup/core`) — a full upload engine                        |
-| License / pricing       | MIT, free & open source                                   | MIT, free & open source                                             |
-| Uploading / self-host   | You implement uploads yourself, to any backend            | `@useupup/server` presigns and proxies to any S3-compatible storage |
-| Cloud-drive sources     | No                                                        | Google Drive, OneDrive, Dropbox, Box                                |
-| Camera / screen capture | No                                                        | Yes (both)                                                          |
-| Image editor            | No                                                        | Yes — React/Preact only                                             |
-| Resumable uploads       | No                                                        | Yes — optional (tus or S3 multipart)                                |
-| i18n                    | No                                                        | Yes (ICU locale bundles)                                            |
+| Feature                 | react-dropzone                                            | upup                                                               |
+| ----------------------- | --------------------------------------------------------- | ------------------------------------------------------------------ |
+| Scope                   | Drag-and-drop file-selection primitive (hook + component) | Full uploader: selection, UI, upload pipeline, and server          |
+| Native first-party UI   | No — you render your own; React only                      | React, Vue, Svelte, Angular, Vanilla JS, Preact                    |
+| Headless core           | Yes (a hook) — but file selection only, no uploading      | Yes (`@upupjs/core`) — a full upload engine                        |
+| License / pricing       | MIT, free & open source                                   | MIT, free & open source                                            |
+| Uploading / self-host   | You implement uploads yourself, to any backend            | `@upupjs/server` presigns and proxies to any S3-compatible storage |
+| Cloud-drive sources     | No                                                        | Google Drive, OneDrive, Dropbox, Box                               |
+| Camera / screen capture | No                                                        | Yes (both)                                                         |
+| Image editor            | No                                                        | Yes — React/Preact only                                            |
+| Resumable uploads       | No                                                        | Yes — optional (tus or S3 multipart)                               |
+| i18n                    | No                                                        | Yes (ICU locale bundles)                                           |
 
 ## Choose react-dropzone if
 

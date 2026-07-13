@@ -1,7 +1,7 @@
 'use client'
 import React, { useContext, useEffect, useMemo, useState } from 'react'
-import { UpupUploader } from '@useupup/react'
-import '@useupup/react/styles'
+import { UpupUploader } from '@upupjs/react'
+import '@upupjs/react/styles'
 import {
     enUS,
     arSA,
@@ -13,7 +13,7 @@ import {
     zhCN,
     zhTW,
     type LocaleBundle,
-} from '@useupup/core'
+} from '@upupjs/core'
 import { ConfigContext } from '../state/ConfigContext'
 import { useEventLog } from '../state/EventLogContext'
 import type { UpupConfig } from '../types'

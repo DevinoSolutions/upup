@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { Readable } from 'svelte/store'
-  import { type DriveBrowserError, type DriveFile, type DriveFolder, type DriveUser, formatUiMessage as t, pluralUiMessage as plural } from '@useupup/core'
-import { searchDriveFiles, cn } from '@useupup/core/internal'
+  import { type DriveBrowserError, type DriveFile, type DriveFolder, type DriveUser, formatUiMessage as t, pluralUiMessage as plural } from '@upupjs/core'
+import { searchDriveFiles, cn } from '@upupjs/core/internal'
   import {
     useUploaderI18n,
     useUploaderOptions,

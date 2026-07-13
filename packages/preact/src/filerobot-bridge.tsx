@@ -7,7 +7,7 @@ import type { IslandHandle, IslandProps } from './filerobot-island-types'
 export { TABS, TOOLS } from './filerobot-constants'
 
 /**
- * preact/compat bridge that the @useupup/react chrome resolves to in place of
+ * preact/compat bridge that the @upupjs/react chrome resolves to in place of
  * `react-filerobot-image-editor` (via the tsup esbuild alias). It renders a host
  * <div>, lazily loads the real-React island, and mounts the editor into it.
  *

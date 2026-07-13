@@ -1,7 +1,7 @@
 // src/testing/worker-probe.ts
 // Counts real Worker constructions so a story can prove the pipeline ran (or did
 // NOT run) in a Web Worker. Wraps the global Worker constructor — the same global
-// that @useupup/core's runtime/browser.ts calls via `new Worker(url)`.
+// that @upupjs/core's runtime/browser.ts calls via `new Worker(url)`.
 
 type WorkerCtorHost = { Worker?: unknown }
 

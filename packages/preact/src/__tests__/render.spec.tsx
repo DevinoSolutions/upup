@@ -1,8 +1,8 @@
 /**
- * render.spec.tsx — compat-seam render-level tests for @useupup/preact
+ * render.spec.tsx — compat-seam render-level tests for @upupjs/preact
  *
  * Verifies that the compiled-on-preact/compat output mounts the expected DOM
- * structure. Does NOT re-test @useupup/react logic (659 tests cover that).
+ * structure. Does NOT re-test @upupjs/react logic (659 tests cover that).
  *
  * All data-testids verified against react source:
  *   upup-root         → packages/react/src/upup-uploader.tsx:66
@@ -22,7 +22,7 @@ import { UpupUploader, useUpupUpload, FileSource } from '../index'
 
 afterEach(cleanup)
 
-describe('@useupup/preact render parity on compat', () => {
+describe('@upupjs/preact render parity on compat', () => {
     // ── Root structure ──────────────────────────────────────────────────────────
 
     test('mounts root + container', () => {

@@ -6,8 +6,8 @@ import {
     type DriveUser,
     formatUiMessage as t,
     pluralUiMessage as plural,
-} from '@useupup/core'
-import { cn } from '@useupup/core/internal'
+} from '@upupjs/core'
+import { cn } from '@upupjs/core/internal'
 import {
     useUploaderI18n,
     useUploaderOptions,

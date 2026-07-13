@@ -6,7 +6,7 @@ const bridge = fileURLToPath(
 )
 
 export default defineConfig([
-    // ── Main build: @useupup/react chrome compiled to preact/compat ────────────────
+    // ── Main build: @upupjs/react chrome compiled to preact/compat ────────────────
     {
         entry: ['src/index.ts'],
         format: ['esm', 'cjs'],
@@ -21,11 +21,11 @@ export default defineConfig([
         // preact/compat). Without this, a require()-kind reference falls through to the
         // CJS compat.js, whose `require("preact")` compiles to esbuild's __require shim
         // and throws "Dynamic require of preact is not supported" at runtime — which
-        // killed the lazy CameraUploader chunk (@useupup/preact camera view). preact stays
+        // killed the lazy CameraUploader chunk (@upupjs/preact camera view). preact stays
         // external, so no duplicate preact instance is bundled.
         platform: 'browser',
         noExternal: [
-            '@useupup/react',
+            '@upupjs/react',
             'react',
             'react-dom',
             'react-filerobot-image-editor',
@@ -35,7 +35,7 @@ export default defineConfig([
             'preact/compat',
             'preact/hooks',
             'preact/jsx-runtime',
-            '@useupup/core',
+            '@upupjs/core',
             /filerobot-island\.js$/, // leave the bridge's dynamic island import as a runtime ref (must NOT match filerobot-island-loader)
         ],
         esbuildOptions(options) {
@@ -68,7 +68,7 @@ export default defineConfig([
             'react-filerobot-image-editor',
             'styled-components',
         ],
-        external: ['preact', 'preact/compat', '@useupup/core'],
+        external: ['preact', 'preact/compat', '@upupjs/core'],
         esbuildOptions(options) {
             options.jsx = 'automatic'
             options.jsxImportSource = 'react'

@@ -1,6 +1,6 @@
 import React, { HTMLAttributes, PropsWithChildren } from 'react'
 import { useUploaderTheme } from '../../context/UploaderContext'
-import { cn } from '@useupup/core/internal'
+import { cn } from '@upupjs/core/internal'
 
 export default function SourceViewContainer({
     children,

@@ -23,7 +23,7 @@ export enum StorageProvider {
 }
 
 /**
- * Providers with no S3-compatible API surface (F-657). @useupup/server's storage
+ * Providers with no S3-compatible API surface (F-657). @upupjs/server's storage
  * path (buildS3ClientConfig) always builds an @aws-sdk/client-s3 client — it
  * cannot serve a provider in this set no matter what storage.type is set to.
  * Kept next to the enum so any future non-S3 addition is an explicit,

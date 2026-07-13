@@ -4,7 +4,7 @@ import {
     useUploaderTheme,
     useUploaderUploadControls,
 } from '../../context/UploaderContext'
-import { cn, isUploadActive } from '@useupup/core/internal'
+import { cn, isUploadActive } from '@upupjs/core/internal'
 
 type Props = {
     progress: number

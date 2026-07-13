@@ -1,9 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/svelte-vite'
-import { UpupUploader } from '@useupup/svelte'
-import {
-    uploaderArgTypes,
-    uploaderDefaultArgs,
-} from '@useupup/storybook-config'
+import { UpupUploader } from '@upupjs/svelte'
+import { uploaderArgTypes, uploaderDefaultArgs } from '@upupjs/storybook-config'
 
 function buildProps(args: Record<string, unknown>) {
     const { themeMode, primaryColor, ...rest } = args
@@ -48,7 +45,7 @@ export const Smoke: Story = {
     },
 }
 
-// ── Real storage (MinIO via the @useupup/server harness on :53060) ──────────────
+// ── Real storage (MinIO via the @upupjs/server harness on :53060) ──────────────
 // Opt-in stories for the real-bytes upload milestone. They DISABLE MSW
 // (parameters.msw.handlers = []) and point at the local harness server using
 // `serverUrl` (which selects the ServerCredentials strategy -> POST /presign),

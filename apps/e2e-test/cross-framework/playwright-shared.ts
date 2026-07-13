@@ -20,7 +20,7 @@ export const frameworkProjects = () =>
 // the ceiling is 900 s — it costs nothing unless a boot is genuinely wedged.
 export const frameworkWebServers = () =>
     FRAMEWORKS.map(fw => ({
-        command: `pnpm --filter @useupup/storybook-${fw.name} storybook`,
+        command: `pnpm --filter @upupjs/storybook-${fw.name} storybook`,
         port: fw.port,
         reuseExistingServer: true,
         timeout: 900_000,

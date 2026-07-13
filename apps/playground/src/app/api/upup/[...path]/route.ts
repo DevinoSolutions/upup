@@ -1,4 +1,4 @@
-import { createUpupNextHandler } from '@useupup/server/next'
+import { createUpupNextHandler } from '@upupjs/server/next'
 import { env, requireServerEnv } from '@/lib/env'
 
 // Lazy: Next.js imports route modules at build time for page-data collection,

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { UpupCore } from '../src/core'
-import { UploadStatus } from '@useupup/core'
+import { UploadStatus } from '@upupjs/core'
 
 const makeCore = () =>
     new UpupCore({ provider: 'aws', uploadEndpoint: '/api/upload' })

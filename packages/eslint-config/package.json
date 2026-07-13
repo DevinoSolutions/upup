@@ -1,5 +1,5 @@
 {
-    "name": "@useupup/eslint-config",
+    "name": "@upupjs/eslint-config",
     "version": "0.1.0",
     "private": true,
     "type": "module",

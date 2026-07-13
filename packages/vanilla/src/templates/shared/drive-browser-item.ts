@@ -1,6 +1,6 @@
 import { html, type TemplateResult } from 'lit-html'
-import { cn } from '@useupup/core/internal'
-import type { DriveFile, DriveFolder } from '@useupup/core'
+import { cn } from '@upupjs/core/internal'
+import type { DriveFile, DriveFolder } from '@upupjs/core'
 import type { UploaderContext } from '../../lib/types'
 import { driveBrowserIcon } from './drive-browser-icon'
 

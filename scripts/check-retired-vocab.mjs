@@ -89,12 +89,12 @@ const RETIRED = [
         useInstead: 'one-drive (wire/DOM) or oneDrive (in-app)',
     },
     // npm scope rename (2026-07-13, pre-first-publish): packages ship under
-    // @useupup. The old @upup scope never reached npm and must not reappear
-    // in any layer. \b never matches inside @useupup (no second `@`).
+    // @upupjs. The old @upup scope never reached npm and must not reappear
+    // in any layer. \b never matches inside @upupjs (no second `@`).
     {
         name: '@upup',
         pattern: /@upup\b/,
-        useInstead: '@useupup',
+        useInstead: '@upupjs',
     },
 ]
 

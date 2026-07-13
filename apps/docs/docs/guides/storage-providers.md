@@ -15,7 +15,7 @@ There are two ways to wire storage. In **client mode** the browser uploads bytes
 directly to storage using short-lived URLs your own presign endpoint signs — the
 storage credentials never leave your server, and upup never sees them. In
 **server mode** the browser talks only to your server and
-[`@useupup/server`](./server-mode-setup.md) holds the credentials and writes to
+[`@upupjs/server`](./server-mode-setup.md) holds the credentials and writes to
 storage for you. Which one to pick, and what changes on the wire, is covered in
 [Client Mode vs Server Mode](./modes.md).
 
@@ -24,11 +24,11 @@ This page focuses on server mode, where the storage provider is a
 
 ## Supported providers
 
-`@useupup/core` exports a `StorageProvider` enum with the values below. Every one
-except `azure` exposes an S3-compatible API and is served by `@useupup/server`;
+`@upupjs/core` exports a `StorageProvider` enum with the values below. Every one
+except `azure` exposes an S3-compatible API and is served by `@upupjs/server`;
 `azure` is the sole exception (see [Azure Blob Storage](#azure-blob-storage-no-s3-api)).
 
-| `storage.type` | Provider                          | `endpoint`    | Served by `@useupup/server`   |
+| `storage.type` | Provider                          | `endpoint`    | Served by `@upupjs/server`    |
 | -------------- | --------------------------------- | ------------- | ----------------------------- |
 | `aws`          | Amazon S3                         | not needed    | Yes                           |
 | `r2`           | Cloudflare R2                     | required      | Yes                           |
@@ -52,7 +52,7 @@ except `azure` exposes an S3-compatible API and is served by `@useupup/server`;
 | `ceph`         | Ceph (RADOS Gateway)              | required      | Yes                           |
 | `azure`        | Azure Blob Storage                | — (no S3 API) | No — throws at construct time |
 
-The `type` value is a label. `@useupup/server` builds the same AWS-SDK S3 client
+The `type` value is a label. `@upupjs/server` builds the same AWS-SDK S3 client
 for every S3-compatible value and reaches your backend through `endpoint` — it
 does not branch on `type`. Because `storage.type` also accepts any string, a
 store that isn't in the enum works too, as long as it speaks the S3 API: use the
@@ -97,7 +97,7 @@ Native AWS needs no `endpoint`.
 
 ```ts
 // app/api/upup/[...route]/route.ts
-import { createUpupHandler } from '@useupup/server'
+import { createUpupHandler } from '@upupjs/server'
 
 const handler = createUpupHandler({
     storage: {
@@ -223,7 +223,7 @@ const storage = {
 
 ## Azure Blob Storage (no S3 API)
 
-Azure Blob Storage does not expose an S3-compatible API, so `@useupup/server`
+Azure Blob Storage does not expose an S3-compatible API, so `@upupjs/server`
 cannot serve it — `createUpupHandler` throws an `UpupConfigError` the moment you
 pass `type: 'azure'`.
 

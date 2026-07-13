@@ -24,7 +24,7 @@
 // verbatim and performs NO grant. The OneDrive nightly path uses this so the
 // single rotation happens once (in the write-back step), not again per test.
 
-/** The four sandbox providers, wire-form slugs (match @useupup/server VALID_PROVIDERS). */
+/** The four sandbox providers, wire-form slugs (match @upupjs/server VALID_PROVIDERS). */
 export const PROVIDERS = ['box', 'dropbox', 'google-drive', 'one-drive']
 
 /** Fixed localhost callback the mint CLI listens on. Register this EXACT URI as

@@ -2,8 +2,8 @@ import type { StorybookConfig } from '@storybook/preact-vite'
 import preact from '@preact/preset-vite'
 
 // We re-apply `@preact/preset-vite` in the preview so its `react -> preact/compat`
-// aliasing + preact dedupe are in effect. @useupup/preact is a preact/compat-compiled
-// build of @useupup/react; without this aliasing the story and the renderer resolve
+// aliasing + preact dedupe are in effect. @upupjs/preact is a preact/compat-compiled
+// build of @upupjs/react; without this aliasing the story and the renderer resolve
 // two different preact instances and rendering throws
 // "Cannot read properties of undefined (reading '__H')" (preact hooks dispatcher
 // mismatch).
