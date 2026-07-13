@@ -10,7 +10,7 @@ local files.
 
 ```tsx
 <UpupUploader />                                 // local file collection only
-<UpupUploader uploadEndpoint="/api/upload" />    // client-hosted upload flow
+<UpupUploader uploadEndpoint="/api/upload-token" /> // client-hosted upload flow
 <UpupUploader mode="server" serverUrl="/api/upup" />
 ```
 
@@ -29,6 +29,7 @@ Cloud drives (Google Drive, OneDrive, Dropbox, Box) use OAuth from the
 browser — tokens stay in browser memory, never touch your server.
 
 **Choose Client Mode when:**
+
 - You want the simplest setup.
 - You're OK exposing OAuth client IDs (not secrets) to the browser.
 - You don't need server-side virus scanning or compliance logging
@@ -49,6 +50,7 @@ The uploader hits one origin. You own the access tokens and the
 storage credentials.
 
 **Choose Server Mode when:**
+
 - Compliance or policy forbids shipping OAuth client secrets or
   storage credentials to the browser.
 - You want to scan, log, or transform files on the server before they
@@ -60,21 +62,22 @@ storage credentials.
 
 ## What changes between modes?
 
-| Concern | Client Mode | Server Mode |
-|---|---|---|
-| Upload target | `uploadEndpoint` | `serverUrl` |
-| OAuth client ID | Shipped to browser | Server-only |
-| OAuth client secret | Not used | Server-only, required |
-| Drive API calls | Browser → provider | Server → provider |
-| Storage credentials | Signed URLs only | Server holds real creds |
-| Multipart | Browser-coordinated | Server-coordinated |
-| Re-auth on token expiry | Same: user re-signs-in | Same: user re-signs-in |
+| Concern                 | Client Mode            | Server Mode             |
+| ----------------------- | ---------------------- | ----------------------- |
+| Upload target           | `uploadEndpoint`       | `serverUrl`             |
+| OAuth client ID         | Shipped to browser     | Server-only             |
+| OAuth client secret     | Not used               | Server-only, required   |
+| Drive API calls         | Browser → provider     | Server → provider       |
+| Storage credentials     | Signed URLs only       | Server holds real creds |
+| Multipart               | Browser-coordinated    | Server-coordinated      |
+| Re-auth on token expiry | Same: user re-signs-in | Same: user re-signs-in  |
 
 ## Feature parity
 
-All 24 `UpupUploader` events (`onFilesSelected`, `onUploadStart`,
-`onFileUploadComplete`, etc.) fire identically in both modes. Theme
-slots, i18n, restrictions, image editor — all work the same.
+Every `UpupUploader` event callback (`onFilesSelected`, `onUploadStart`,
+`onFileUploadComplete`, etc.) fires identically in both modes. Theme
+slots, i18n, file limits (`maxFiles`, `maxFileSize`, `allowedFileTypes`),
+image editor — all work the same.
 
 The differences are strictly on the wire, not on the API surface.
 

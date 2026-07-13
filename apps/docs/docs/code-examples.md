@@ -1,5 +1,6 @@
 ---
 sidebar_position: 2
+description: Ready-to-copy upup snippets — source pickers, client-mode uploads, a presign endpoint handler, and server-mode wiring.
 ---
 
 # Code Examples
@@ -8,8 +9,8 @@ sidebar_position: 2
 
 ```tsx
 <UpupUploader
-  sources={['local', 'url']}
-  onFilesSelected={(files) => console.log(files)}
+    sources={['local', 'url']}
+    onFilesSelected={files => console.log(files)}
 />
 ```
 
@@ -17,29 +18,42 @@ sidebar_position: 2
 
 ```tsx
 <UpupUploader
-  provider="aws"
-  uploadEndpoint="/api/upload-token"
-  metadata={{ workspaceId: 'w_123' }}
+    provider="aws"
+    uploadEndpoint="/api/upload-token"
+    metadata={{ workspaceId: 'w_123' }}
 />
 ```
 
-```ts
-export async function POST(req: Request) {
-  const body = await req.json()
-  const presigned = await signUpload({
-    name: body.name,
-    type: body.type,
-    size: body.size,
-    metadata: body.metadata,
-  })
+Your token endpoint returns upup's presign contract (`key`, `uploadUrl`,
+`uploadHeaders`, `expiresIn`). Sign the URL however your storage prefers —
+here, AWS S3 via the AWS SDK:
 
-  return Response.json({
-    key: presigned.key,
-    uploadUrl: presigned.uploadUrl,
-    uploadHeaders: presigned.uploadHeaders,
-    downloadUrl: presigned.downloadUrl,
-    expiresIn: 3600,
-  })
+```ts
+import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3'
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
+
+const s3 = new S3Client({ region: process.env.S3_REGION! })
+
+export async function POST(req: Request) {
+    const body = await req.json()
+    const key = `uploads/${crypto.randomUUID()}/${body.name}`
+
+    const uploadUrl = await getSignedUrl(
+        s3,
+        new PutObjectCommand({
+            Bucket: process.env.S3_BUCKET!,
+            Key: key,
+            ContentType: body.type,
+        }),
+        { expiresIn: 3600 },
+    )
+
+    return Response.json({
+        key,
+        uploadUrl,
+        uploadHeaders: { 'Content-Type': body.type },
+        expiresIn: 3600,
+    })
 }
 ```
 
@@ -53,8 +67,8 @@ export async function POST(req: Request) {
 
 ```tsx
 <UpupUploader
-  uploadEndpoint="/api/upload-token"
-  resumable={{ protocol: 'multipart' }}
+    uploadEndpoint="/api/upload-token"
+    resumable={{ protocol: 'multipart' }}
 />
 ```
 
@@ -62,9 +76,9 @@ export async function POST(req: Request) {
 
 ```tsx
 <UpupUploader
-  resumable={{
-    protocol: 'tus',
-    endpoint: 'https://uploads.example.com/files',
-  }}
+    resumable={{
+        protocol: 'tus',
+        endpoint: 'https://uploads.example.com/files',
+    }}
 />
 ```

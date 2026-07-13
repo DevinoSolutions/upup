@@ -36,6 +36,9 @@ const handler = createUpupHandler({
         accessKeyId: process.env.AWS_ACCESS_KEY_ID,
         secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
     },
+    // Required, server-only: a stable, high-entropy secret (min 16 chars),
+    // shared across every server instance. createUpupHandler throws without it.
+    uploadTokenSecret: process.env.UPUP_UPLOAD_TOKEN_SECRET!,
     providers: {
         googleDrive: {
             clientId: process.env.GOOGLE_CLIENT_ID!,
@@ -127,7 +130,7 @@ DynamoDB, Postgres — anything shaped like this works.
 
 ```ts
 createUpupHandler({
-    // ...
+    // ...storage, uploadTokenSecret, and providers from step 2
     maxFileSize: 500 * 1024 * 1024, // 500 MB
     allowedTypes: ['image/*', 'video/*'],
     hooks: {

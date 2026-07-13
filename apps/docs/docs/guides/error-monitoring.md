@@ -37,11 +37,11 @@ component today:
 import { UpupUploader } from '@upup/react'
 import * as Sentry from '@sentry/react'
 
-<UpupUploader
-  onError={(message) => {
-    Sentry.captureMessage(message, { level: 'error' })
-  }}
-  {/* ...your props */}
+;<UpupUploader
+    onError={message => {
+        Sentry.captureMessage(message, { level: 'error' })
+    }}
+    // ...your other props
 />
 ```
 
@@ -132,7 +132,7 @@ If you instrument manually:
 import { createUpupHandler } from '@upup/server'
 import * as Sentry from '@sentry/node'
 
-const handle = createUpupHandler({/* config */})
+const handle = createUpupHandler({/* storage, uploadTokenSecret, ... */})
 
 export async function handler(req: Request): Promise<Response> {
     try {
@@ -151,20 +151,20 @@ export async function handler(req: Request): Promise<Response> {
 Every `UpupError` carries a `code` from the `UpupErrorCode` enum. Use these
 codes as Sentry tags to filter and alert:
 
-| Code                     | Meaning                            |
-| ------------------------ | ---------------------------------- |
-| `AUTH_EXPIRED`           | OAuth token expired mid-session    |
-| `AUTH_DENIED`            | Server rejected the upload token   |
-| `FILE_TOO_LARGE`         | File exceeds `maxFileSize`         |
-| `TYPE_MISMATCH`          | File type not in `accept` list     |
-| `LIMIT_EXCEEDED`         | `maxFiles` reached                 |
-| `UPLOAD_FAILED`          | S3/storage PUT failed              |
-| `UPLOAD_ABORTED`         | User or code called `abort()`      |
-| `PRESIGN_FAILED`         | Presign endpoint returned an error |
-| `CORS_ERROR`             | Browser blocked the S3 request     |
-| `NETWORK_ERROR`          | Fetch failed (offline, DNS, etc.)  |
-| `HEIC_CONVERSION_FAILED` | HEIC → JPEG pipeline step failed   |
-| `PIPELINE_STEP_FAILED`   | Generic pipeline step failure      |
+| Code                     | Meaning                             |
+| ------------------------ | ----------------------------------- |
+| `AUTH_EXPIRED`           | OAuth token expired mid-session     |
+| `AUTH_DENIED`            | Server rejected the upload token    |
+| `FILE_TOO_LARGE`         | File exceeds `maxFileSize`          |
+| `TYPE_MISMATCH`          | File type not in `allowedFileTypes` |
+| `LIMIT_EXCEEDED`         | `maxFiles` reached                  |
+| `UPLOAD_FAILED`          | S3/storage PUT failed               |
+| `UPLOAD_ABORTED`         | User or code called `abort()`       |
+| `PRESIGN_FAILED`         | Presign endpoint returned an error  |
+| `CORS_ERROR`             | Browser blocked the S3 request      |
+| `NETWORK_ERROR`          | Fetch failed (offline, DNS, etc.)   |
+| `HEIC_CONVERSION_FAILED` | HEIC → JPEG pipeline step failed    |
+| `PIPELINE_STEP_FAILED`   | Generic pipeline step failure       |
 
 The `retryable` flag tells you whether the error is transient. A Sentry alert
 rule on `upup_retryable: false` surfaces permanent failures that need human
