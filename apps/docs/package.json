@@ -1,6 +1,6 @@
 {
     "name": "@upup/docs",
-    "version": "0.0.0",
+    "version": "2.2.0",
     "private": true,
     "scripts": {
         "docusaurus": "docusaurus",
@@ -24,7 +24,7 @@
         "@docusaurus/plugin-pwa": "^3.7.0",
         "@docusaurus/preset-classic": "3.7.0",
         "@docusaurus/theme-common": "^3.7.0",
-        "@docusaurus/theme-mermaid": "^3.7.0",
+        "@docusaurus/theme-mermaid": "3.7.0",
         "@mdx-js/react": "^3.0.0",
         "@upup/react": "workspace:*",
         "clsx": "^2.0.0",
@@ -41,9 +41,11 @@
         "@docusaurus/plugin-content-docs": "3.7.0",
         "@docusaurus/tsconfig": "3.7.0",
         "@docusaurus/types": "3.7.0",
+        "@easyops-cn/docusaurus-search-local": "^0.55.2",
         "@eslint/compat": "^1.2.5",
         "@eslint/js": "^10.0.1",
         "@types/node": "^20.19.37",
+        "docusaurus-plugin-llms": "^0.4.0",
         "eslint": "^10.6.0",
         "eslint-plugin-react": "^7.37.4",
         "globals": "^17.7.0",
