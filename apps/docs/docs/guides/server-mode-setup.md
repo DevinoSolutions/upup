@@ -1,5 +1,6 @@
 ---
 sidebar_position: 2
+description: 'End-to-end mode="server" setup: mount createUpupHandler on a route, configure storage and uploadTokenSecret, and point the uploader at it.'
 ---
 
 # Server Mode — Setup

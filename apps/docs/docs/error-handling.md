@@ -42,7 +42,7 @@ import {
 The `code` values come from the `UpupErrorCode` enum — `NO_UPLOAD_TARGET`,
 `FILE_TOO_LARGE`, `TYPE_MISMATCH`, `LIMIT_EXCEEDED`, `PRESIGN_FAILED`,
 `UPLOAD_FAILED`, `NETWORK_ERROR`, `AUTH_EXPIRED`, and more. See [Error
-Monitoring](/docs/guides/error-monitoring.md) for the codes you'll tag most often.
+Monitoring](guides/error-monitoring.md) for the codes you'll tag most often.
 
 ## Inspecting an error
 
@@ -72,11 +72,11 @@ function describeUploadError(error: unknown): string {
 
 Both surfaces — the headless core's `upload-error` event (full `Error`) and the
 React `onError` prop (message string) — plus wiring them into an error tracker
-are covered in [Error Monitoring](/docs/guides/error-monitoring.md).
+are covered in [Error Monitoring](guides/error-monitoring.md).
 
 ## Retry Behavior
 
-You can configure automatic retries for failed uploads using the [`maxRetries`](/docs/api-reference/upupuploader/optional-props.md#maxretries) prop on the `UpupUploader` component. When set, each file upload is silently retried up to the specified number of times before being considered a failure.
+You can configure automatic retries for failed uploads using the [`maxRetries`](api-reference/upupuploader/optional-props.md#maxretries) prop on the `UpupUploader` component. When set, each file upload is silently retried up to the specified number of times before being considered a failure.
 
 ```tsx
 <UpupUploader
@@ -90,7 +90,7 @@ When `maxRetries` is not set, a manual **"Retry Upload"** button appears in the 
 
 ### Resumable Upload Recovery
 
-When [resumable multipart uploads](/docs/resumable-uploads.md) are enabled (`resumable={{ protocol: 'multipart' }}`), error recovery is enhanced:
+When [resumable multipart uploads](resumable-uploads.md) are enabled (`resumable={{ protocol: 'multipart' }}`), error recovery is enhanced:
 
 - On failure, the progress bar **preserves** the current progress instead of resetting to zero
 - The retry button shows **"Resume Upload"** instead of "Retry Upload"

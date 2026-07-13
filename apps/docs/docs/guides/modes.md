@@ -1,5 +1,6 @@
 ---
 sidebar_position: 1
+description: 'Choose between client mode (your presign endpoint) and server mode (@useupup/server proxies uploads) — what runs where and when to pick each.'
 ---
 
 # Client Mode vs Server Mode

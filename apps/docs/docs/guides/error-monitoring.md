@@ -1,5 +1,6 @@
 ---
 sidebar_position: 3
+description: "Wire upup's structured errors — upload-error events, UpupError codes, and the server onError seam — into your error tracker."
 ---
 
 # Error Monitoring

@@ -12,12 +12,12 @@ Drive, OneDrive, Dropbox, Box). Every package renders the same UI.
 This guide uses React. To start from another framework, use its quickstart —
 each mounts the same uploader with the same options:
 
-- [React quickstart](/docs/quickstarts/react.md)
-- [Vue quickstart](/docs/quickstarts/vue.md)
-- [Svelte quickstart](/docs/quickstarts/svelte.md)
-- [Angular quickstart](/docs/quickstarts/angular.md)
-- [Vanilla JS quickstart](/docs/quickstarts/vanilla.md)
-- [Preact quickstart](/docs/quickstarts/preact.md)
+- [React quickstart](quickstarts/react.md)
+- [Vue quickstart](quickstarts/vue.md)
+- [Svelte quickstart](quickstarts/svelte.md)
+- [Angular quickstart](quickstarts/angular.md)
+- [Vanilla JS quickstart](quickstarts/vanilla.md)
+- [Preact quickstart](quickstarts/preact.md)
 
 Install the React package and styles:
 
