@@ -23,11 +23,16 @@ issues short-lived upload credentials at `uploadEndpoint`.
     import '@upup/svelte/styles'
 </script>
 
-<UpupUploader provider="aws" uploadEndpoint="/api/upload-token" />
+<UpupUploader
+    provider="aws"
+    uploadEndpoint="/api/upload-token"
+    onFileUploadComplete={(file, key) => console.log('Uploaded', file.name, 'to', key)}
+/>
 ```
 
 The stylesheet is a separate import so projects without Tailwind get the same
-look.
+look. `uploadEndpoint` is your own route returning a presigned upload URL — see
+the quickstart for a ready-made handler.
 
 ## Server Mode
 
@@ -46,8 +51,9 @@ helpers, and the `FileSource`, `StorageProvider`, and `UploadStatus` enums.
 
 ## Links
 
-- Documentation: <https://useupup.com/documentation/docs/getting-started>
-- Monorepo & source: <https://github.com/DevinoSolutions/upup>
+- [Svelte quickstart](https://useupup.com/documentation/quickstarts/svelte)
+- [Documentation](https://useupup.com/documentation/)
+- [Source & monorepo](https://github.com/DevinoSolutions/upup)
 
 ## License
 

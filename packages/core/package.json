@@ -1,6 +1,34 @@
 {
     "name": "@upup/core",
     "version": "2.2.0",
+    "description": "Headless, framework-agnostic file-upload engine powering the upup uploader — file state, upload pipeline (compression, HEIC, web-worker offload), cloud-drive sources, i18n, and theming.",
+    "keywords": [
+        "file-upload",
+        "file-uploader",
+        "uploader",
+        "headless",
+        "drag-and-drop",
+        "dropzone",
+        "file-picker",
+        "image-upload",
+        "s3",
+        "presigned-url",
+        "google-drive",
+        "one-drive",
+        "dropbox",
+        "camera",
+        "cloud-storage",
+        "typescript"
+    ],
+    "homepage": "https://useupup.com",
+    "bugs": {
+        "url": "https://github.com/DevinoSolutions/upup/issues"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/DevinoSolutions/upup.git",
+        "directory": "packages/core"
+    },
     "license": "MIT",
     "type": "module",
     "sideEffects": false,

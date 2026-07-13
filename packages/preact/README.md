@@ -24,13 +24,35 @@ import { UpupUploader } from '@upup/preact'
 import '@upup/preact/styles'
 
 export function App() {
-    return <UpupUploader provider="aws" uploadEndpoint="/api/upload-token" />
+    return (
+        <UpupUploader
+            provider="aws"
+            uploadEndpoint="/api/upload-token"
+            onFileUploadComplete={(file, key) =>
+                console.log('Uploaded', file.name, 'to', key)
+            }
+        />
+    )
 }
 ```
+
+`uploadEndpoint` is your own route returning a presigned upload URL — see the
+quickstart for a ready-made handler.
 
 Use it in a Preact project that has the standard `preact/compat` aliases
 (`react` / `react-dom` → `preact/compat`) configured in its bundler, as with any
 React-compatible library.
+
+## Server Mode
+
+For credential isolation and server-proxied cloud drives, add
+[`@upup/server`](https://www.npmjs.com/package/@upup/server) and point the
+uploader at it — server mode works identically through the `preact/compat`
+re-export:
+
+```tsx
+<UpupUploader mode="server" serverUrl="/api/upup" provider="aws" />
+```
 
 ## Image editor
 
@@ -41,7 +63,7 @@ enters your main Preact bundle. If you enable the editor, install its peers
 `react-konva` / `styled-components` dependencies it needs — see this package's
 `peerDependencies`).
 
-## Exports
+## Also exported
 
 Because it re-exports `@upup/react`, the public surface matches `@upup/react`
 exactly (`UpupUploader`, `UpupThemeProvider`, the brand icons, and the `use*`
@@ -49,8 +71,9 @@ hooks).
 
 ## Links
 
-- Documentation: <https://useupup.com/documentation/docs/getting-started>
-- Monorepo & source: <https://github.com/DevinoSolutions/upup>
+- [Preact quickstart](https://useupup.com/documentation/quickstarts/preact)
+- [Documentation](https://useupup.com/documentation/)
+- [Source & monorepo](https://github.com/DevinoSolutions/upup)
 
 ## License
 

@@ -23,11 +23,14 @@ import '@upup/vanilla/styles'
 const uploader = createUploader('#uploader', {
     provider: 'aws',
     uploadEndpoint: '/api/upload-token',
+    onFileUploadComplete: (file, key) =>
+        console.log('Uploaded', file.name, 'to', key),
 })
 ```
 
 `createUploader(target, options)` accepts a CSS selector string or an
-`HTMLElement`.
+`HTMLElement`. `uploadEndpoint` is your own route returning a presigned upload
+URL — see the quickstart for a ready-made handler.
 
 ## Custom element
 
@@ -58,8 +61,9 @@ createUploader('#uploader', {
 
 ## Links
 
-- Documentation: <https://useupup.com/documentation/docs/getting-started>
-- Monorepo & source: <https://github.com/DevinoSolutions/upup>
+- [Vanilla quickstart](https://useupup.com/documentation/quickstarts/vanilla)
+- [Documentation](https://useupup.com/documentation/)
+- [Source & monorepo](https://github.com/DevinoSolutions/upup)
 
 ## License
 

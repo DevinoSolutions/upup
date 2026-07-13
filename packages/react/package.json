@@ -1,8 +1,34 @@
 {
     "name": "@upup/react",
     "version": "2.2.0",
-    "description": "React file uploader with cloud-drive sources, resumable uploads, image editor, theming, and ICU i18n.",
-    "repository": "https://github.com/DevinoSolutions/upup",
+    "description": "React file uploader with drag-and-drop, cloud-drive sources, resumable uploads, image editor, theming, and ICU i18n.",
+    "keywords": [
+        "file-upload",
+        "file-uploader",
+        "react",
+        "react-component",
+        "drag-and-drop",
+        "dropzone",
+        "file-picker",
+        "image-upload",
+        "image-editor",
+        "s3",
+        "presigned-url",
+        "google-drive",
+        "one-drive",
+        "dropbox",
+        "camera",
+        "typescript"
+    ],
+    "homepage": "https://useupup.com",
+    "bugs": {
+        "url": "https://github.com/DevinoSolutions/upup/issues"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/DevinoSolutions/upup.git",
+        "directory": "packages/react"
+    },
     "license": "MIT",
     "type": "module",
     "sideEffects": [

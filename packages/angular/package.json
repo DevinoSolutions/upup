@@ -2,7 +2,32 @@
     "name": "@upup/angular",
     "version": "2.2.0",
     "description": "Angular 19+ standalone file uploader with cloud-drive sources, resumable uploads, theming, and ICU i18n.",
-    "repository": "https://github.com/DevinoSolutions/upup",
+    "keywords": [
+        "file-upload",
+        "file-uploader",
+        "upload",
+        "uploader",
+        "angular",
+        "angular-component",
+        "drag-and-drop",
+        "dropzone",
+        "s3",
+        "presigned-url",
+        "google-drive",
+        "one-drive",
+        "dropbox",
+        "camera",
+        "typescript"
+    ],
+    "homepage": "https://useupup.com",
+    "bugs": {
+        "url": "https://github.com/DevinoSolutions/upup/issues"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/DevinoSolutions/upup.git",
+        "directory": "packages/angular"
+    },
     "license": "MIT",
     "type": "module",
     "sideEffects": [

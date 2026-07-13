@@ -32,12 +32,31 @@ const core = new UpupCore({
 `UpupCore` owns the file/progress state, the upload lifecycle, and the
 cloud-drive plugins. See the docs for the full event and method surface.
 
+## Errors
+
+Upload failures are typed. Catch `UpupError` and branch on its stable
+`UpupErrorCode`; the concrete subclasses (`UpupValidationError`,
+`UpupNetworkError`, `UpupStorageError`, `UpupAuthError`, `UpupQuotaError`,
+`UpupConfigError`) let you narrow further.
+
+```ts
+import { UpupError, UpupErrorCode } from '@upup/core'
+
+function isRetryable(err: unknown): boolean {
+    return err instanceof UpupError && err.code === UpupErrorCode.NETWORK_ERROR
+}
+```
+
+`StorageProvider` enumerates the supported storage providers
+(`StorageProvider.AWS`, `StorageProvider.CloudflareR2`, `StorageProvider.MinIO`,
+and more).
+
 ## Entry points
 
 The main `@upup/core` entry is a curated allow-list of stable exports (the
-`UpupCore` engine, the drive plugins, the `UploadError` taxonomy, the locale
-bundles, and the theme presets). Advanced, deep-import-only subpaths are also
-published:
+`UpupCore` engine, the drive plugins, the `UpupError` taxonomy — `UpupError`
+plus its typed subclasses and the `UpupErrorCode` enum — the locale bundles, and
+the theme presets). Advanced, deep-import-only subpaths are also published:
 
 - `@upup/core/internal` — implementation internals (managers, orchestrator, controllers)
 - `@upup/core/contracts`, `@upup/core/i18n`, `@upup/core/theme`, `@upup/core/strategies`
@@ -48,8 +67,8 @@ subpaths, so they never weigh down the main entry.
 
 ## Links
 
-- Documentation: <https://useupup.com/documentation/docs/getting-started>
-- Monorepo & source: <https://github.com/DevinoSolutions/upup>
+- [Documentation](https://useupup.com/documentation/)
+- [Source & monorepo](https://github.com/DevinoSolutions/upup)
 
 ## License
 

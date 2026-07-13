@@ -2,8 +2,10 @@
 
 Next.js integration for the [upup](https://github.com/DevinoSolutions/upup) uploader. One install gives you the client UI and the server handlers, split across two entry points so the AWS SDK never reaches your client bundle.
 
-```bash
-pnpm add @upup/next
+## Install
+
+```sh
+npm i @upup/next
 ```
 
 ## Client (App Router or Pages Router)
@@ -16,6 +18,10 @@ export default function Page() {
     return <UpupUploader mode="server" serverUrl="/api/upup" />
 }
 ```
+
+`@upup/next` re-exports the full `@upup/react` client, so client mode
+(`<UpupUploader provider="aws" uploadEndpoint="/api/upload-token" />`, no
+`@upup/server`) works too.
 
 ## Server — App Router (`app/api/upup/[...path]/route.ts`)
 
@@ -32,6 +38,9 @@ export const { GET, POST, PUT, DELETE } = createUpupNextHandler(
             bucket: process.env.S3_BUCKET!,
             region: process.env.S3_REGION! /* creds... */,
         },
+        // REQUIRED — HMAC-signs upload tokens. Must be ≥16 chars and identical
+        // on every instance; the handler THROWS at construction time without it.
+        uploadTokenSecret: process.env.UPUP_UPLOAD_TOKEN_SECRET!,
     }),
 )
 ```
@@ -44,7 +53,15 @@ import { createUpupPagesHandler, defineUpupConfig } from '@upup/next/server'
 export const config = { api: { bodyParser: false } } // REQUIRED — we read the raw body
 
 export default createUpupPagesHandler(
-    defineUpupConfig({/* storage, providers */}),
+    defineUpupConfig({
+        storage: {
+            type: 'aws',
+            bucket: process.env.S3_BUCKET!,
+            region: process.env.S3_REGION!,
+        },
+        // REQUIRED (≥16 chars) — the handler throws at construction without it.
+        uploadTokenSecret: process.env.UPUP_UPLOAD_TOKEN_SECRET!,
+    }),
 )
 ```
 
@@ -84,3 +101,13 @@ state"`. Implement the `TokenStore { get, set, delete }` interface against Redis
 Presigned uploads go browser→S3 directly, so the bucket's CORS policy must allow your
 site origin for `PUT` (and `GET` for previews). This is bucket configuration, not
 `@upup/next` code.
+
+## Links
+
+- [Next.js quickstart](https://useupup.com/documentation/quickstarts/next)
+- [Documentation](https://useupup.com/documentation/)
+- [Source & monorepo](https://github.com/DevinoSolutions/upup)
+
+## License
+
+MIT

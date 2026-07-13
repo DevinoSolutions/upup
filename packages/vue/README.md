@@ -24,12 +24,19 @@ import '@upup/vue/styles'
 </script>
 
 <template>
-    <UpupUploader provider="aws" upload-endpoint="/api/upload-token" />
+    <UpupUploader
+        provider="aws"
+        upload-endpoint="/api/upload-token"
+        :on-file-upload-complete="
+            (file, key) => console.log('Uploaded', file.name, 'to', key)
+        "
+    />
 </template>
 ```
 
 The stylesheet is a separate import so projects without Tailwind get the same
-look.
+look. `upload-endpoint` is your own route returning a presigned upload URL — see
+the quickstart for a ready-made handler.
 
 ## Server Mode
 
@@ -51,8 +58,9 @@ The `use*` uploader composables (`useUpupUpload`, `useUploaderFiles`,
 
 ## Links
 
-- Documentation: <https://useupup.com/documentation/docs/getting-started>
-- Monorepo & source: <https://github.com/DevinoSolutions/upup>
+- [Vue quickstart](https://useupup.com/documentation/quickstarts/vue)
+- [Documentation](https://useupup.com/documentation/)
+- [Source & monorepo](https://github.com/DevinoSolutions/upup)
 
 ## License
 

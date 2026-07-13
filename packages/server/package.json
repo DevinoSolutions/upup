@@ -1,8 +1,34 @@
 {
     "name": "@upup/server",
     "version": "2.2.0",
-    "description": "Node-side Server Mode handler for @upup/react. Proxies drive APIs, stores OAuth tokens, streams drive → S3. Framework-agnostic with Next.js/Express/Fastify/Hono adapters.",
-    "repository": "https://github.com/DevinoSolutions/upup",
+    "description": "Server-mode endpoints for the upup uploader — S3-compatible presign + proxy uploads, cloud-drive token exchange, and an HMAC-signed upload-token trust model. Framework-agnostic with Next.js/Express/Fastify/Hono adapters.",
+    "keywords": [
+        "file-upload",
+        "uploader",
+        "server",
+        "s3",
+        "s3-compatible",
+        "presigned-url",
+        "multipart",
+        "hmac",
+        "express",
+        "fastify",
+        "hono",
+        "google-drive",
+        "one-drive",
+        "drag-and-drop",
+        "dropzone",
+        "typescript"
+    ],
+    "homepage": "https://useupup.com",
+    "bugs": {
+        "url": "https://github.com/DevinoSolutions/upup/issues"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/DevinoSolutions/upup.git",
+        "directory": "packages/server"
+    },
     "license": "MIT",
     "type": "module",
     "sideEffects": false,

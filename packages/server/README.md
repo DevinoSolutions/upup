@@ -1,6 +1,6 @@
 # @upup/server
 
-Server-mode endpoints for [upup](https://github.com/upup-dev/upup): S3/MinIO
+Server-mode endpoints for [upup](https://github.com/DevinoSolutions/upup): S3/MinIO
 presign + proxy upload, drive-token exchange (Google Drive / OneDrive /
 Dropbox / Box), and an HMAC-signed upload-token trust model so the client
 never asserts the object key or S3 `uploadId` it's writing to.
@@ -21,15 +21,15 @@ npm install @upup/server
 import { createUpupHandler } from '@upup/server'
 
 const handler = createUpupHandler({
-  storage: {
-    type: 'aws',
-    bucket: 'my-bucket',
-    region: 'us-east-1',
-    // accessKeyId/secretAccessKey — omit to use the environment's default
-    // AWS credential chain. Set `endpoint` (+ optionally `forcePathStyle`)
-    // for MinIO / R2 / DigitalOcean Spaces / any S3-compatible provider.
-  },
-  uploadTokenSecret: process.env.UPUP_UPLOAD_TOKEN_SECRET,
+    storage: {
+        type: 'aws',
+        bucket: 'my-bucket',
+        region: 'us-east-1',
+        // accessKeyId/secretAccessKey — omit to use the environment's default
+        // AWS credential chain. Set `endpoint` (+ optionally `forcePathStyle`)
+        // for MinIO / R2 / DigitalOcean Spaces / any S3-compatible provider.
+    },
+    uploadTokenSecret: process.env.UPUP_UPLOAD_TOKEN_SECRET,
 })
 ```
 
@@ -79,7 +79,7 @@ carries no nonce — expiry is the only freshness check:
 - **TTL.** `exp` is set to `now + DEFAULT_UPLOAD_TOKEN_TTL_SECONDS` (3600s / 1
   hour) at init and is not refreshable. Once `exp` passes, every continuation
   route rejects it with `403 {code: 'expired'}`.
-- **Replay window.** Within that hour, the *same* token may be sent to
+- **Replay window.** Within that hour, the _same_ token may be sent to
   sign-part/complete/abort **any number of times** — this is by design, not a
   bug: a client legitimately re-signs a part after a network retry, or drives
   a multi-part upload with many sequential sign-part calls, all against one
@@ -104,27 +104,27 @@ Every non-2xx JSON response body is `{ error: <generic human message>, code:
 <machine code> }`. The human message is safe to log/display as-is; the
 `code` is the stable value to branch on (retry logic, alerting, i18n
 mapping). The real exception detail (name/message/stack) is **never** sent
-to the client — it goes only to the [`onError`](#onerror-logging-seam) seam.
+to the client — it goes only to the [`onError`](#onerror--the-logging-seam) seam.
 
-| `code` | Where it comes from | Typical cause |
-|---|---|---|
-| `PRESIGN_FAILED` | `POST /presign` 500 | Storage provider rejected the presign call |
-| `STORAGE_ERROR` | multipart init/sign-part/complete/abort 500, drive list/transfer 500, uncaught router error | S3/MinIO call failed, or an unhandled exception anywhere in routing |
-| `BAD_REQUEST` | any route, 400 | Empty body, malformed JSON, or invalid file metadata (missing/wrong-typed `name`/`type`/`size`) |
-| `AUTH_REQUIRED` | `POST /presign`, `POST /multipart/init`, 403 | Neither `auth`, `getUserId`, nor `allowAnonymousUploads` is configured — anonymous uploads are rejected by default |
-| `AUTH_DENIED` | multipart sign-part/complete/abort, 403 | The resolved caller (via `getUserId`) doesn't match the uid the upload token was issued to |
-| `AUTH_PROVIDER_ERROR` | OAuth token exchange, 502 | The provider's token endpoint rejected the code/refresh-token exchange |
-| `AUTH_EXPIRED` | drive token refresh failure (internal) | Refresh token dead/revoked — forces a clean re-auth |
+| `code`                | Where it comes from                                                                         | Typical cause                                                                                                      |
+| --------------------- | ------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `PRESIGN_FAILED`      | `POST /presign` 500                                                                         | Storage provider rejected the presign call                                                                         |
+| `STORAGE_ERROR`       | multipart init/sign-part/complete/abort 500, drive list/transfer 500, uncaught router error | S3/MinIO call failed, or an unhandled exception anywhere in routing                                                |
+| `BAD_REQUEST`         | any route, 400                                                                              | Empty body, malformed JSON, or invalid file metadata (missing/wrong-typed `name`/`type`/`size`)                    |
+| `AUTH_REQUIRED`       | `POST /presign`, `POST /multipart/init`, 403                                                | Neither `auth`, `getUserId`, nor `allowAnonymousUploads` is configured — anonymous uploads are rejected by default |
+| `AUTH_DENIED`         | multipart sign-part/complete/abort, 403                                                     | The resolved caller (via `getUserId`) doesn't match the uid the upload token was issued to                         |
+| `AUTH_PROVIDER_ERROR` | OAuth token exchange, 502                                                                   | The provider's token endpoint rejected the code/refresh-token exchange                                             |
+| `AUTH_EXPIRED`        | drive token refresh failure (internal)                                                      | Refresh token dead/revoked — forces a clean re-auth                                                                |
 
 Upload-token verification failures (multipart sign-part/complete/abort) are
 a separate, narrower vocabulary — always `403` — because they describe the
 token itself, not a storage/auth outcome:
 
-| Token `code` | Meaning |
-|---|---|
-| `malformed` | Token isn't the expected `body.signature` shape, or its payload is missing required fields |
+| Token `code`    | Meaning                                                                                         |
+| --------------- | ----------------------------------------------------------------------------------------------- |
+| `malformed`     | Token isn't the expected `body.signature` shape, or its payload is missing required fields      |
 | `bad_signature` | Token is well-shaped but the HMAC signature doesn't verify (wrong/rotated secret, or tampering) |
-| `expired` | Token's `exp` claim is in the past |
+| `expired`       | Token's `exp` claim is in the past                                                              |
 
 On the client, `@upup/core`'s upload strategies read these bodies and
 construct typed errors (`UpupStorageError` / `UpupAuthError`) carrying the
@@ -135,12 +135,12 @@ key for display.
 
 ```ts
 createUpupHandler({
-  // ...
-  onError(event) {
-    // event: { route, method, status, code, message, requestId?,
-    //          error?: { name, message, stack? } }
-    myLogger.error('upup-server', event)
-  },
+    // ...
+    onError(event) {
+        // event: { route, method, status, code, message, requestId?,
+        //          error?: { name, message, stack? } }
+        myLogger.error('upup-server', event)
+    },
 })
 ```
 
@@ -161,12 +161,16 @@ supply a no-op to silence it.
 
 ```ts
 createUpupHandler({
-  // ...
-  hooks: {
-    onBeforeUpload: async (file, req) => true, // reject by returning false
-    onFileUploaded: async (file, req) => { /* one file completed */ },
-    onUploadComplete: async (files, req) => { /* a request's file(s) completed */ },
-  },
+    // ...
+    hooks: {
+        onBeforeUpload: async (file, req) => true, // reject by returning false
+        onFileUploaded: async (file, req) => {
+            /* one file completed */
+        },
+        onUploadComplete: async (files, req) => {
+            /* a request's file(s) completed */
+        },
+    },
 })
 ```
 
@@ -185,7 +189,7 @@ webhooks on top of these:**
   user's files are done" signal, use the client-side `onUploadComplete` prop
   in `@upup/core`/the UI packages instead, which does see the whole batch.
 - **Client-direct presigned-PUT uploads bypass the server entirely** (`POST
-  /presign` only hands the client a URL; the browser then PUTs straight to
+/presign` only hands the client a URL; the browser then PUTs straight to
   S3), so **no server-side hook fires for that path at all** — the server
   never observes completion. If you need server-visibility into presigned
   uploads, use the client-side `onUploadComplete` prop, or point
@@ -262,11 +266,16 @@ stores directly:
 
 ```ts
 export interface TokenStore {
-  get(key: string): Promise<string | null>
-  set(key: string, value: string, ttlSeconds?: number): Promise<void>
-  delete(key: string): Promise<void>
+    get(key: string): Promise<string | null>
+    set(key: string, value: string, ttlSeconds?: number): Promise<void>
+    delete(key: string): Promise<void>
 }
 ```
+
+## Links
+
+- [Documentation](https://useupup.com/documentation/)
+- [Source & monorepo](https://github.com/DevinoSolutions/upup)
 
 ## License
 

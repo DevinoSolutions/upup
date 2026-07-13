@@ -26,9 +26,20 @@ import { UpupUploader } from '@upup/react'
 import '@upup/react/styles'
 
 export default function Uploader() {
-    return <UpupUploader provider="aws" uploadEndpoint="/api/upload-token" />
+    return (
+        <UpupUploader
+            provider="aws"
+            uploadEndpoint="/api/upload-token"
+            onFileUploadComplete={(file, key) =>
+                console.log('Uploaded', file.name, 'to', key)
+            }
+        />
+    )
 }
 ```
+
+`uploadEndpoint` is your own route that returns a presigned upload URL — see the
+quickstart for a ready-made handler, or use [`@upup/server`](https://www.npmjs.com/package/@upup/server).
 
 The stylesheet is a separate import so projects without Tailwind get the same
 look.
@@ -52,8 +63,9 @@ custom UIs on the same engine.
 
 ## Links
 
-- Documentation: <https://useupup.com/documentation/docs/getting-started>
-- Monorepo & source: <https://github.com/DevinoSolutions/upup>
+- [React quickstart](https://useupup.com/documentation/quickstarts/react)
+- [Documentation](https://useupup.com/documentation/)
+- [Source & monorepo](https://github.com/DevinoSolutions/upup)
 
 ## License
 

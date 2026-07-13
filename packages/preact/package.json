@@ -1,8 +1,32 @@
 {
     "name": "@upup/preact",
     "version": "2.2.0",
-    "description": "Preact file uploader with cloud-drive sources, resumable uploads, theming, and ICU i18n.",
-    "repository": "https://github.com/DevinoSolutions/upup",
+    "description": "Preact file uploader with cloud-drive sources, resumable uploads, an image editor (real Filerobot as a lazy real-React island), theming, and ICU i18n.",
+    "keywords": [
+        "file-upload",
+        "file-uploader",
+        "upload",
+        "uploader",
+        "preact",
+        "drag-and-drop",
+        "dropzone",
+        "s3",
+        "presigned-url",
+        "google-drive",
+        "one-drive",
+        "dropbox",
+        "camera",
+        "typescript"
+    ],
+    "homepage": "https://useupup.com",
+    "bugs": {
+        "url": "https://github.com/DevinoSolutions/upup/issues"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/DevinoSolutions/upup.git",
+        "directory": "packages/preact"
+    },
     "license": "MIT",
     "type": "module",
     "sideEffects": [

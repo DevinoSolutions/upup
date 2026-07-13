@@ -39,7 +39,9 @@ export class AppComponent {}
 
 Load the stylesheet once globally — add `@upup/angular/styles` to the `styles`
 array in `angular.json`, or `@import '@upup/angular/styles';` in your global
-`styles.css`.
+`styles.css`. `uploadEndpoint` is your own route returning a presigned upload URL
+— see the quickstart for a ready-made handler. Wire completion via the config's
+`onFileUploadComplete` callback or the component's `(uploadAllComplete)` output.
 
 ## Server Mode
 
@@ -60,8 +62,9 @@ and `UploadStatus` enums.
 
 ## Links
 
-- Documentation: <https://useupup.com/documentation/docs/getting-started>
-- Monorepo & source: <https://github.com/DevinoSolutions/upup>
+- [Angular quickstart](https://useupup.com/documentation/quickstarts/angular)
+- [Documentation](https://useupup.com/documentation/)
+- [Source & monorepo](https://github.com/DevinoSolutions/upup)
 
 ## License
 
