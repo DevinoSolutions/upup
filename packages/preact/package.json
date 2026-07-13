@@ -1,6 +1,6 @@
 {
     "name": "@useupup/preact",
-    "version": "2.2.0",
+    "version": "3.0.0",
     "description": "Preact file uploader with cloud-drive sources, resumable uploads, an image editor (real Filerobot as a lazy real-React island), theming, and ICU i18n.",
     "keywords": [
         "file-upload",

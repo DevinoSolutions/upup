@@ -1,6 +1,6 @@
 {
     "name": "@useupup/next-example",
-    "version": "0.0.0",
+    "version": "0.0.1",
     "private": true,
     "scripts": {
         "dev": "dotenv -e ../../local-dev/.env.minio -- next dev -p 53070",

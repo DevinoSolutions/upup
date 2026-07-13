@@ -1,6 +1,6 @@
 {
     "name": "@useupup/server",
-    "version": "2.2.0",
+    "version": "3.0.0",
     "description": "Server-mode endpoints for the upup uploader — S3-compatible presign + proxy uploads, cloud-drive token exchange, and an HMAC-signed upload-token trust model. Framework-agnostic with Next.js/Express/Fastify/Hono adapters.",
     "keywords": [
         "file-upload",
